@@ -1,0 +1,9 @@
+services:
+  froment-software:
+    container_name: froment-software
+    build:
+      context: "https://gitlab.com/sachahjkl/froment.software.git#main"
+      dockerfile: Dockerfile
+    ports:
+      - "8080:80"
+    restart: unless-stopped

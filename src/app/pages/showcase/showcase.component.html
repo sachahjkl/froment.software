@@ -1,0 +1,59 @@
+<section class="showcase-head">
+  <p class="ds-label">{{ i18n.t('showcase.kicker') }}</p>
+  <h1>{{ i18n.t('showcase.title') }}</h1>
+  <p>{{ i18n.t('showcase.lead') }}</p>
+</section>
+
+<section class="show-grid">
+  <article class="ds-panel card">
+    <p class="ds-label">{{ i18n.t('showcase.colors') }}</p>
+    <div class="swatches">
+      <span style="--c:#070707">#070707</span>
+      <span style="--c:#f5f5f0">#F5F5F0</span>
+      <span style="--c:#d7d7cc">#D7D7CC</span>
+      <span style="--c:#24c759">#24C759</span>
+      <span style="--c:#07812f">#07812F</span>
+    </div>
+  </article>
+
+  <article class="ds-panel card">
+    <p class="ds-label">{{ i18n.t('showcase.buttons') }}</p>
+    <div class="stack">
+      <button class="btn primary"><span aria-hidden="true">🚀</span>{{ i18n.t('showcase.execute') }}</button>
+      <button class="btn"><span aria-hidden="true">🛑</span>{{ i18n.t('showcase.cancel') }}</button>
+      <button class="btn dark"><span aria-hidden="true">🧱</span>{{ i18n.t('showcase.dense') }}</button>
+    </div>
+  </article>
+
+  <article class="ds-panel card">
+    <p class="ds-label">{{ i18n.t('showcase.form') }}</p>
+    <div class="stack">
+      <input class="input" [value]="i18n.t('showcase.clientProject')" />
+      <select class="select"><option>{{ i18n.t('showcase.production') }}</option><option>{{ i18n.t('showcase.staging') }}</option></select>
+      <label class="check"><input type="checkbox" checked /> {{ i18n.t('showcase.option') }}</label>
+    </div>
+  </article>
+
+  <article class="ds-panel card wide">
+    <p class="ds-label">{{ i18n.t('showcase.table') }}</p>
+    <table>
+      <thead><tr><th>{{ i18n.t('showcase.table.service') }}</th><th>{{ i18n.t('showcase.table.status') }}</th><th>{{ i18n.t('showcase.table.updated') }}</th><th>{{ i18n.t('showcase.table.action') }}</th></tr></thead>
+      <tbody>
+        @for (row of rows(); track row.service) {
+          <tr>
+            <td>{{ row.service }}</td>
+            <td><span class="badge" [class.ok]="row.statusClass === 'ok'" [class.warn]="row.statusClass === 'warn'" [class.err]="row.statusClass === 'err'">{{ row.statusLabel }}</span></td>
+            <td>{{ row.updatedAt }}</td>
+            <td><button class="mini">{{ i18n.t('showcase.table.open') }}</button></td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </article>
+
+  <article class="ds-panel card wide inverse">
+    <p class="ds-label">{{ i18n.t('showcase.block') }}</p>
+    <h2>{{ i18n.t('showcase.block.title') }}</h2>
+    <p>{{ i18n.t('showcase.block.copy') }}</p>
+  </article>
+</section>

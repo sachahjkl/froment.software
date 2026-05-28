@@ -1,0 +1,46 @@
+<div class="app-shell">
+  <header class="topbar" role="banner">
+    <a class="brand" routerLink="/" [attr.aria-label]="i18n.t('brand.home')">
+      <span class="mark" aria-hidden="true"><span></span><span></span></span>
+      <span class="brand-text"><b>FROMENT</b><small>.software</small></span>
+    </a>
+
+    <button
+      class="nav-toggle"
+      type="button"
+      [attr.aria-expanded]="navOpen()"
+      [attr.aria-label]="i18n.t('nav.primary')"
+      (click)="toggleNav()"
+    >
+      <span></span>
+      <span></span>
+      <span></span>
+    </button>
+
+    <nav class="nav" [class.open]="navOpen()" [attr.aria-label]="i18n.t('nav.primary')">
+      <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" (click)="closeNav()">{{ i18n.t('nav.home') }}</a>
+      <a routerLink="/tools" routerLinkActive="active" (click)="closeNav()">{{ i18n.t('nav.products') }}</a>
+      <a routerLink="/services" routerLinkActive="active" (click)="closeNav()">{{ i18n.t('nav.services') }}</a>
+      <a routerLink="/clients" routerLinkActive="active" (click)="closeNav()">{{ i18n.t('nav.clients') }}</a>
+    </nav>
+
+    <span class="topbar-line" aria-hidden="true"></span>
+  </header>
+
+  <main>
+    <router-outlet />
+  </main>
+
+  <footer class="footer">
+    <p>{{ i18n.tf('footer.rights', { year: currentYear }) }}</p>
+
+    <label class="footer-language">
+      <span>{{ i18n.t('footer.language') }}</span>
+      <select class="lang-select" [value]="i18n.language()" (change)="setLanguage($any($event.target).value)">
+        @for (language of i18n.languages; track language.code) {
+          <option [value]="language.code">{{ i18n.t(language.labelKey) }}</option>
+        }
+      </select>
+    </label>
+  </footer>
+</div>

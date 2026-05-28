@@ -1,0 +1,9 @@
+node_modules/
+dist/
+.angular/
+.git/
+.gitlab/
+.direnv/
+.vscode/
+npm-debug.log
+Dockerfile.generated

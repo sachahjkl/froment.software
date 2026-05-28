@@ -1,0 +1,33 @@
+<section class="clients-hero">
+  <p class="kicker">{{ i18n.t('clients.kicker') }}</p>
+  <h1>{{ i18n.t('clients.title') }}</h1>
+  <p class="lead">{{ i18n.t('clients.lead') }}</p>
+</section>
+
+<section class="clients-listing" aria-labelledby="clients-title">
+  <div class="listing-head">
+    <h2 id="clients-title">{{ i18n.t('clients.list.title') }}</h2>
+  </div>
+
+  <div class="listing-table ds-panel">
+    <div class="listing-row listing-row-head" aria-hidden="true">
+      <span>{{ i18n.t('clients.table.client') }}</span>
+      <span>{{ i18n.t('clients.table.type') }}</span>
+      <span>{{ i18n.t('clients.table.scope') }}</span>
+      <span>{{ i18n.t('clients.table.status') }}</span>
+    </div>
+
+    <div class="listing-empty">
+      <p class="empty-title">{{ i18n.t('clients.empty.title') }}</p>
+      <p class="empty-copy">{{ i18n.t('clients.empty.copy') }}</p>
+    </div>
+  </div>
+
+  <div class="references-block">
+    <div class="reference-list">
+      @for (reference of references; track reference) {
+        <span class="badge">{{ reference }}</span>
+      }
+    </div>
+  </div>
+</section>

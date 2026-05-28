@@ -1,0 +1,25 @@
+<section class="tools-hero">
+  <p class="kicker">{{ i18n.t('products.kicker') }}</p>
+  <h1>{{ i18n.t('products.title') }}</h1>
+  <p class="lead">{{ i18n.t('products.lead') }}</p>
+</section>
+
+<section class="tools-catalog" aria-labelledby="catalog-title">
+  <div class="catalog-head">
+    <h2 id="catalog-title">{{ i18n.t('products.catalog.title') }}</h2>
+  </div>
+
+  <div class="catalog-list ds-panel">
+    <div class="catalog-row catalog-row-head" aria-hidden="true">
+      <span>{{ i18n.t('products.table.product') }}</span>
+      <span>{{ i18n.t('products.table.type') }}</span>
+      <span>{{ i18n.t('products.table.license') }}</span>
+      <span>{{ i18n.t('products.table.price') }}</span>
+    </div>
+
+    <div class="catalog-empty">
+      <p class="empty-title">{{ i18n.t('products.empty.title') }}</p>
+      <p class="empty-copy">{{ i18n.t('products.empty.copy') }}</p>
+    </div>
+  </div>
+</section>

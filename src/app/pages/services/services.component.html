@@ -1,0 +1,25 @@
+<section class="services-hero">
+  <p class="kicker">{{ i18n.t('services.kicker') }}</p>
+  <h1>{{ i18n.t('services.title') }}</h1>
+  <p class="lead">{{ i18n.t('services.lead') }}</p>
+
+  <div class="actions">
+    <a class="btn primary" [href]="quoteMailto()"><span aria-hidden="true">📨</span>{{ i18n.t('services.quote') }}</a>
+    <a class="btn" [href]="calUrl" target="_blank" rel="noreferrer"><span aria-hidden="true">📅</span>{{ i18n.t('services.book') }}</a>
+  </div>
+</section>
+
+<section class="services-listing" aria-labelledby="services-title">
+  <div class="listing-head">
+    <h2 id="services-title">{{ i18n.t('services.list.title') }}</h2>
+  </div>
+
+  <div class="services-grid">
+    @for (service of services(); track service.title) {
+      <article class="service-card ds-panel">
+        <h3>{{ service.title }}</h3>
+        <p>{{ service.description }}</p>
+      </article>
+    }
+  </div>
+</section>
