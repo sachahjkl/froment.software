@@ -12,4 +12,6 @@ FROM joseluisq/static-web-server:2-alpine
 
 COPY --from=build /app/dist/froment-software/browser /var/public
 
+ENV SERVER_FALLBACK_PAGE=/var/public/index.html
+
 EXPOSE 80
