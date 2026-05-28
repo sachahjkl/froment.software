@@ -18,8 +18,8 @@ verify_nix:
   stage: verify
   image: nixos/nix:2.24.14
   script:
-    - nix flake show
-    - nix build .#dockerfile
+    - nix --extra-experimental-features 'nix-command flakes' flake show
+    - nix --extra-experimental-features 'nix-command flakes' build .#dockerfile
 
 build_site:
   stage: build

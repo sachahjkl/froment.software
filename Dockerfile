@@ -10,6 +10,6 @@ RUN npm run build
 
 FROM joseluisq/static-web-server:2-alpine
 
-COPY --from=build /app/dist/froment-software/browser /public
+COPY --from=build /app/dist/froment-software/browser /var/public
 
 EXPOSE 80
