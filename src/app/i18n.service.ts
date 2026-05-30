@@ -58,7 +58,9 @@ const translations = {
     'home.hero.title.sep2': 'et la',
     'home.hero.title.part3a': 'reprise',
     'home.hero.title.part3b': 'de legacy',
-    'home.hero.lead': 'Web, desktop, CLI, maintenance et conseil.',
+    'home.hero.kicker': 'froment.software',
+    'home.hero.title': 'Web. Desktop. CLI. Legacy. Moderne.',
+    'home.hero.lead': 'Un seul interlocuteur pour tout votre logiciel.',
     'home.hero.contact': 'Nous contacter',
     'home.hero.book': 'Prendre rendez-vous',
 
@@ -296,7 +298,9 @@ const translations = {
     'home.hero.title.sep2': 'and',
     'home.hero.title.part3a': 'legacy',
     'home.hero.title.part3b': 'takeover',
-    'home.hero.lead': 'Web, desktop, CLI, maintenance and consulting.',
+    'home.hero.kicker': 'froment.software',
+    'home.hero.title': 'Web. Desktop. CLI. Legacy. Modern.',
+    'home.hero.lead': 'One person for all your software.',
     'home.hero.contact': 'Contact us',
     'home.hero.book': 'Book a meeting',
 
