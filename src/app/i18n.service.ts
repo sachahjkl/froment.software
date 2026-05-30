@@ -27,7 +27,7 @@ const translations = {
     'page.description.products': 'Catalogue des applications et logiciels vendus directement par froment.software.',
     'page.description.showcase': 'Aperçu du système visuel et des composants utilisés par froment.software.',
 
-    'footer.rights': '© {year} froment.software. Tous droits réservés.',
+    'footer.rights': 'Froment.software © 1926',
     'footer.language': 'Langue',
     'lang.fr': 'Français',
     'lang.en': 'English',
@@ -164,7 +164,7 @@ const translations = {
     'page.description.products': 'Catalog of applications and software sold directly by froment.software.',
     'page.description.showcase': 'Visual system and component preview used by froment.software.',
 
-    'footer.rights': '© {year} froment.software. All rights reserved.',
+    'footer.rights': 'Froment.software © 1926',
     'footer.language': 'Language',
     'lang.fr': 'French',
     'lang.en': 'English',
