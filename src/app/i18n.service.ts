@@ -37,6 +37,8 @@ const translations = {
 
     'page.cookies': 'Cookies — froment.software',
     'page.description.cookies': "Politique d'utilisation des cookies de froment.software.",
+    'page.not_found': 'Page introuvable — froment.software',
+    'page.description.not_found': 'Oh non ! Page introuvable.',
     'page.description.home': 'Applications sur mesure, outils internes, reprise de legacy et conseil technique pragmatique.',
     'page.description.clients': 'Références, missions publiées et expérience de travail de froment.software.',
     'page.description.services': 'Conception d applications web et desktop, outils internes, maintenance, reprise d existant et consulting.',
@@ -195,6 +197,11 @@ const translations = {
     'about.faq.maintenance.a': 'Oui, possibilité de maintenance après livraison.',
     'about.faq.pricing.a': 'Forfait.',
     'about.faq.availability.a': 'Temps partiel.',
+    'not_found.title': 'Perdu·e ?',
+    'not_found.lead': "J'ai pas vu cette page passer.",
+    'not_found.sub': 'Elle est peut-être en cours de construction, ou alors t'as tapé de travers.',
+    'not_found.cta': 'Retour à l'accueil',
+
 
     'about.contact.title': 'Travaillons ensemble',
     'about.contact.copy': 'Vous avez un projet en tête ? Parlons-en.',
@@ -268,6 +275,8 @@ const translations = {
 
     'page.cookies': 'Cookies — froment.software',
     'page.description.cookies': "Cookie usage policy of froment.software.",
+    'page.not_found': 'Page not found — froment.software',
+    'page.description.not_found': 'Oops! Page not found.',
     'page.description.home': 'Custom software, internal tools, legacy takeovers and pragmatic technical consulting.',
     'page.description.clients': 'Published references, engagements and work experience from froment.software.',
     'page.description.services': 'Web and desktop application design, internal tools, maintenance, legacy takeovers and consulting.',
@@ -426,6 +435,11 @@ const translations = {
     'about.faq.maintenance.a': 'Yes, post-delivery maintenance available.',
     'about.faq.pricing.a': 'Fixed price.',
     'about.faq.availability.a': 'Part-time.',
+    'not_found.title': 'Lost?',
+    'not_found.lead': "I didn't see that page around.",
+    'not_found.sub': "Maybe it's being built, or maybe you typed wrong.",
+    'not_found.cta': 'Back home',
+
 
     'about.contact.title': "Let's work together",
     'about.contact.copy': 'Have a project in mind? Let\'s talk.',
