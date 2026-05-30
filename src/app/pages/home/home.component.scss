@@ -14,7 +14,7 @@
 .hero-copy .kicker {
   display: inline-block;
   margin-bottom: var(--space-4);
-  padding: .35rem .55rem;
+  padding: 6px 9px;
   background: var(--ink);
   color: var(--surface);
   font-weight: 700;
@@ -23,7 +23,7 @@
 }
 
 .hero-copy h1 {
-  font-size: clamp(2rem, 1rem + 4vw, 4rem);
+  font-size: clamp(32px, 16px + 4vw, 64px);
   line-height: 1.05;
   margin: 0;
 }
@@ -31,7 +31,7 @@
 .lead {
   max-width: 520px;
   margin: var(--space-3) auto 0;
-  font-size: 1rem;
+  font-size: 16px;
   color: var(--muted);
   line-height: 1.35;
 }
@@ -39,8 +39,8 @@
 
 .hero .btn {
   min-height: 52px;
-  padding: .8rem 1.2rem;
-  font-size: 1.05rem;
+  padding: 13px 19px;
+  font-size: 17px;
 }
 
 .timeline {
@@ -55,7 +55,7 @@
 
 .timeline-head h2 {
   margin: 0 0 var(--space-3);
-  font-size: clamp(1.45rem, 2vw, 1.9rem);
+  font-size: clamp(23px, 2vw, 30px);
 }
 
 .timeline-list {
@@ -74,7 +74,7 @@
 
 .timeline-marker {
   position: absolute;
-  top: 1.2rem;
+  top: 19px;
   left: calc(var(--space-4) * -1.15);
   width: 14px;
   height: 14px;
@@ -120,7 +120,7 @@
 
 .services-head h2 {
   margin: 0 0 var(--space-3);
-  font-size: clamp(1.45rem, 2vw, 1.9rem);
+  font-size: clamp(23px, 2vw, 30px);
 }
 
 .services-grid,
@@ -145,7 +145,7 @@
 }
 
 .catalog-card h2 {
-  font-size: clamp(1.3rem, 1.8vw, 1.7rem);
+  font-size: clamp(21px, 1.8vw, 27px);
   line-height: 1.05;
 }
 
@@ -172,7 +172,7 @@
 }
 
 .catalog-note > span {
-  font-size: .82rem;
+  font-size: 13px;
   font-weight: 700;
   text-transform: uppercase;
   color: var(--muted);

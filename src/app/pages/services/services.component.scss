@@ -5,13 +5,13 @@
 
 .services-hero h1 {
   margin: var(--space-2) 0 var(--space-3);
-  font-size: clamp(1.9rem, 1.2rem + 2.4vw, 3rem);
+  font-size: clamp(30px, 19px + 2.4vw, 48px);
   line-height: 1;
 }
 
 .services-hero .lead {
   max-width: 760px;
-  font-size: clamp(1rem, 1.2vw, 1.15rem);
+  font-size: clamp(16px, 1.2vw, 18px);
 }
 
 .actions {
@@ -23,8 +23,8 @@
 
 .services-hero .btn {
   min-height: 54px;
-  padding: .9rem 1.3rem;
-  font-size: 1.08rem;
+  padding: 14px 21px;
+  font-size: 17px;
 }
 
 .services-listing {
@@ -37,7 +37,7 @@
 
 .listing-head h2 {
   margin: 0;
-  font-size: clamp(1.35rem, 1.9vw, 1.75rem);
+  font-size: clamp(22px, 1.9vw, 28px);
 }
 
 .services-grid {

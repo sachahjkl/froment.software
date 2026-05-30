@@ -6,19 +6,19 @@
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: .08em;
-    font-size: .8rem;
+    font-size: 13px;
     margin: 0 0 var(--space-2);
     color: var(--muted);
   }
 
   h1 {
-    font-size: clamp(2rem, 5vw, 3.25rem);
+    font-size: clamp(32px, 5vw, 52px);
     line-height: 1.05;
     margin: 0 0 var(--space-3);
   }
 
   .lead {
-    font-size: 1.1rem;
+    font-size: 18px;
     max-width: 55ch;
     color: var(--muted);
   }
@@ -28,7 +28,7 @@
   padding: var(--space-5) var(--page-x);
 
   h2 {
-    font-size: 1.5rem;
+    font-size: 24px;
     margin: 0 0 var(--space-3);
   }
 
@@ -58,12 +58,12 @@
 
   .highlight-value {
     font-family: var(--font-mono);
-    font-size: 1.25rem;
+    font-size: 20px;
     font-weight: 700;
   }
 
   .highlight-label {
-    font-size: .8rem;
+    font-size: 13px;
     color: var(--muted);
     text-transform: uppercase;
     letter-spacing: .05em;
@@ -78,7 +78,7 @@
   margin-bottom: var(--space-4);
 
   h2 {
-    font-size: 1.5rem;
+    font-size: 24px;
     margin: 0 0 var(--space-2);
   }
 
@@ -105,7 +105,7 @@
     align-items: center;
     gap: var(--space-2);
     font-weight: 700;
-    font-size: .95rem;
+    font-size: 15px;
 
     &::-webkit-details-marker {
       display: none;
@@ -114,7 +114,7 @@
 
   .faq-chevron {
     transition: transform .2s;
-    font-size: .7rem;
+    font-size: 11px;
   }
 
   &[open] .faq-chevron {
@@ -131,7 +131,7 @@
 
 .faq-answer-placeholder {
   font-style: italic;
-  font-size: .9rem;
+  font-size: 14px;
   margin: 0;
 }
 
@@ -144,7 +144,7 @@
   max-width: 55ch;
 
   h2 {
-    font-size: 1.25rem;
+    font-size: 20px;
     margin: 0 0 var(--space-2);
   }
 
