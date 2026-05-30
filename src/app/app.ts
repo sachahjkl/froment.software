@@ -13,6 +13,7 @@ import { I18nService, TranslationKey } from './i18n.service';
 })
 export class App {
   protected readonly i18n = inject(I18nService);
+  protected readonly brandName = 'froment.software';
   protected readonly currentYear = new Date().getFullYear();
   protected readonly navOpen = signal(false);
   private readonly router = inject(Router);
