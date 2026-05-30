@@ -156,6 +156,6 @@
   .actions {
     display: flex;
     flex-wrap: wrap;
-    gap: var(--space-3) 2px;
+    gap: calc(var(--space-3) * 2) 2px;
   }
 }
