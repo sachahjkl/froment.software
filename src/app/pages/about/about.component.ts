@@ -1,18 +1,16 @@
 import { Component, inject } from '@angular/core';
-import { RouterLink } from '@angular/router';
-import { I18nService } from '../../i18n.service';
+import { I18nService, TranslationKey } from '../../i18n.service';
 
 @Component({
   selector: 'app-about',
   standalone: true,
-  imports: [RouterLink],
   templateUrl: './about.component.html',
   styleUrl: './about.component.scss',
 })
 export class AboutComponent {
   protected readonly i18n = inject(I18nService);
 
-  protected readonly faqKeys: { question: string; answerKey: string }[] = [
+  protected readonly faqKeys: { question: string; answerKey: TranslationKey }[] = [
     { question: this.i18n.t('about.faq.process.q'), answerKey: 'about.faq.process.a' },
     { question: this.i18n.t('about.faq.stack.q'), answerKey: 'about.faq.stack.a' },
     { question: this.i18n.t('about.faq.remote.q'), answerKey: 'about.faq.remote.a' },

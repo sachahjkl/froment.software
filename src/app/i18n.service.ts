@@ -199,8 +199,8 @@ const translations = {
     'about.faq.availability.a': 'Temps partiel.',
     'not_found.title': 'Perdu·e ?',
     'not_found.lead': "J'ai pas vu cette page passer.",
-    'not_found.sub': 'Elle est peut-être en cours de construction, ou alors t'as tapé de travers.',
-    'not_found.cta': 'Retour à l'accueil',
+    'not_found.sub': 'Elle est peut-être en cours de construction, ou alors t\'as tapé de travers.',
+    'not_found.cta': 'Retour à l\'accueil',
 
 
     'about.contact.title': 'Travaillons ensemble',
@@ -437,7 +437,7 @@ const translations = {
     'about.faq.availability.a': 'Part-time.',
     'not_found.title': 'Lost?',
     'not_found.lead': "I didn't see that page around.",
-    'not_found.sub': "Maybe it's being built, or maybe you typed wrong.",
+    'not_found.sub': 'Maybe it\'s being built, or maybe you typed wrong.',
     'not_found.cta': 'Back home',
 
 
