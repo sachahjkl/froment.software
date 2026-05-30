@@ -60,7 +60,7 @@ const translations = {
     'home.hero.title.part3b': 'de legacy',
     'home.hero.kicker': 'froment.software',
     'home.hero.title': 'Web. Desktop. CLI. Legacy. Moderne.',
-    'home.hero.lead': 'Un seul interlocuteur pour tout votre logiciel.',
+    'home.hero.lead': 'Du web au bare metal.',
     'home.hero.contact': 'Nous contacter',
     'home.hero.book': 'Prendre rendez-vous',
 
@@ -300,7 +300,7 @@ const translations = {
     'home.hero.title.part3b': 'takeover',
     'home.hero.kicker': 'froment.software',
     'home.hero.title': 'Web. Desktop. CLI. Legacy. Modern.',
-    'home.hero.lead': 'One person for all your software.',
+    'home.hero.lead': 'From web to bare metal.',
     'home.hero.contact': 'Contact us',
     'home.hero.book': 'Book a meeting',
 
