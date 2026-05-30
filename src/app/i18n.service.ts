@@ -193,8 +193,8 @@ const translations = {
     'about.faq.nda.a': 'Sur demande.',
     'about.faq.timeline.a': "Ça dépend de l'envergure du projet — à déterminer dans le devis.",
     'about.faq.maintenance.a': 'Oui, possibilité de maintenance après livraison.',
-    'about.faq.pricing.a': 'Réponse à venir…',
-    'about.faq.availability.a': 'Réponse à venir…',
+    'about.faq.pricing.a': 'Forfait.',
+    'about.faq.availability.a': 'Temps partiel.',
 
     'about.contact.title': 'Travaillons ensemble',
     'about.contact.copy': 'Vous avez un projet en tête ? Parlons-en.',
@@ -424,8 +424,8 @@ const translations = {
     'about.faq.nda.a': 'On request.',
     'about.faq.timeline.a': "Depends on the project scope — defined in the quote.",
     'about.faq.maintenance.a': 'Yes, post-delivery maintenance available.',
-    'about.faq.pricing.a': 'Answer coming soon…',
-    'about.faq.availability.a': 'Answer coming soon…',
+    'about.faq.pricing.a': 'Fixed price.',
+    'about.faq.availability.a': 'Part-time.',
 
     'about.contact.title': "Let's work together",
     'about.contact.copy': 'Have a project in mind? Let\'s talk.',
