@@ -18,7 +18,7 @@
 .actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 32px 2px;
+  gap: var(--space-8) 2px;
   margin-top: var(--space-4);
 }
 
