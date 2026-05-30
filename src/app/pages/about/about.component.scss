@@ -43,7 +43,7 @@
 .bio-highlights {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--space-3);
+  gap: var(--space-3) 2px;
   margin-top: var(--space-4);
 
   .highlight {
@@ -151,5 +151,11 @@
   p {
     color: var(--muted);
     margin: 0 0 var(--space-3);
+  }
+
+  .actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3) 2px;
   }
 }

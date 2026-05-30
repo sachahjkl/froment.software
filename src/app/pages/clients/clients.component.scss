@@ -40,7 +40,7 @@
 .reference-list {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--space-2);
+  gap: var(--space-2) 2px;
   margin-top: var(--space-4);
 }
 
