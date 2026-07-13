@@ -39,4 +39,3 @@ li:last-child a { display: inline-flex; align-items: center; min-height: var(--c
 
 .not-found-card { padding: clamp(var(--space-6), 5vw, var(--space-10)); border: var(--border-2) solid var(--color-ink); background: var(--color-surface); box-shadow: var(--shadow-panel); }
 .not-found-card::after { width: var(--space-20); background: var(--color-accent); }
-.error-code::before { color: var(--color-danger-strong); content: "ERR / "; }
