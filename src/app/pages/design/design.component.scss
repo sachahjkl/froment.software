@@ -77,7 +77,7 @@ th, td { padding: var(--space-3) var(--space-4); border-top: var(--border-1) sol
 thead th { background: var(--color-surface-sunken); font-size: var(--text-xs); letter-spacing: var(--tracking-label); text-transform: uppercase; }
 tbody th { font-size: var(--text-sm); }
 
-.details-stack details { padding: var(--space-4) 0; }
+.details-stack details { padding: var(--space-4); }
 .details-stack summary { font-weight: 650; cursor: pointer; }
 .details-stack details p { margin-top: var(--space-3); padding-top: var(--space-3); border-top: var(--border-1) solid var(--color-line); color: var(--color-muted); }
 .state-grid { grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr)); }
