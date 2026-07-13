@@ -75,7 +75,7 @@ podman build -t froment-software .
 podman run --rm -p 8080:80 froment-software
 ```
 
-`docker-compose.remote-build.yml` construit la branche `main` directement depuis GitLab et publie le service sur le port local `8080` :
+`docker-compose.remote-build.yml` construit la branche `main` directement depuis GitHub et publie le service sur le port local `8080` :
 
 ```bash
 podman compose -f docker-compose.remote-build.yml up -d --build

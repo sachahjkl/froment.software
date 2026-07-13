@@ -3,6 +3,6 @@ description: "Site d'entreprise - https://froment.software/"
 topics: []
 homepage: ""
 source:
-  provider: gitlab
+  provider: github
   namespace: "sachahjkl"
   path: "sachahjkl/froment.software"
