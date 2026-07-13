@@ -7,6 +7,62 @@
       <a class="btn primary" href="mailto:contact@froment.software">{{ i18n.t('home.hero.contact') }}</a>
       <a class="btn" [href]="calUrl" target="_blank" rel="noreferrer">{{ i18n.t('home.hero.book') }}</a>
     </div>
+    <div class="signal-field" aria-hidden="true">
+      <svg class="signal-map" viewBox="0 0 500 300" preserveAspectRatio="xMidYMid slice" focusable="false">
+        <defs>
+          <linearGradient id="terrain-fill" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stop-opacity=".18" style="stop-color: var(--color-accent)" />
+            <stop offset="1" stop-opacity=".04" style="stop-color: var(--signal-orange)" />
+          </linearGradient>
+          <pattern id="map-grid" width="20" height="20" patternUnits="userSpaceOnUse">
+            <path d="M20 0H0V20" fill="none" stroke="currentColor" stroke-opacity=".12" stroke-width="1" />
+          </pattern>
+          <filter id="map-grain" x="0" y="0" width="100%" height="100%">
+            <feTurbulence type="fractalNoise" baseFrequency=".72" numOctaves="2" stitchTiles="stitch" />
+            <feColorMatrix type="saturate" values="0" />
+            <feComponentTransfer><feFuncA type="table" tableValues="0 .09" /></feComponentTransfer>
+          </filter>
+        </defs>
+
+        <rect width="500" height="300" style="fill: color-mix(in srgb, var(--color-ink) 92%, var(--signal-teal))" />
+        <rect width="500" height="300" fill="url(#map-grid)" opacity=".58" />
+        <path d="M0 252C74 205 116 236 177 183s111-98 165-49 105 18 158-33v199H0Z" fill="url(#terrain-fill)" />
+        <g fill="none" stroke="var(--signal-orange)" stroke-width="1.6" opacity=".82">
+          <path d="M-20 258C61 208 111 242 180 187s117-104 174-55 104 11 165-42" />
+          <path d="M-22 276C68 231 119 259 190 211s113-92 169-53 97 18 154-15" />
+          <path d="M-18 292C75 255 127 278 199 237s107-74 163-44 91 24 146 0" />
+        </g>
+
+
+        <g fill="none" stroke="var(--signal-orange)" stroke-width="2" stroke-linecap="square" stroke-linejoin="bevel">
+          <path d="M60 88H142V74H185" />
+          <path d="M60 150H185" />
+          <path d="M60 218H148V216H185" />
+        </g>
+        <g fill="var(--color-accent)" stroke="var(--signal-teal)" stroke-width="1" opacity=".9" style="filter: drop-shadow(7px 9px 0 rgb(36 199 89 / .12))">
+          <rect x="185" y="60" width="24" height="180" />
+          <rect x="185" y="60" width="155" height="28" />
+          <rect x="185" y="132" width="118" height="24" />
+        </g>
+        <g fill="none" stroke="var(--color-accent)" stroke-width="2" stroke-linecap="square">
+          <path d="M340 74H405" />
+          <path d="M303 144H405" />
+          <path d="M209 218H405" />
+        </g>
+        <g fill="var(--color-ink)" stroke="var(--signal-orange)" stroke-width="2">
+          <circle cx="60" cy="88" r="6" />
+          <circle cx="60" cy="150" r="6" />
+          <circle cx="60" cy="218" r="6" />
+        </g>
+        <g fill="var(--color-ink)" stroke="var(--color-accent)" stroke-width="2">
+          <circle cx="405" cy="74" r="7" />
+          <circle cx="405" cy="144" r="7" />
+          <circle cx="405" cy="218" r="7" />
+        </g>
+
+        <rect width="500" height="300" fill="transparent" opacity=".42" filter="url(#map-grain)" style="mix-blend-mode: screen" />
+      </svg>
+    </div>
   </div>
 </header>
 
@@ -73,7 +129,7 @@
     <p>{{ i18n.t('home.clients.note') }}</p>
     <a class="btn" routerLink="/clients">{{ i18n.t('home.clients.cta') }}</a>
   </div>
-  <ul class="reference-list">
+  <ul class="reference-list ds-panel">
     @for (reference of references; track reference) {
       <li>{{ reference }}</li>
     }
@@ -81,7 +137,7 @@
 </section>
 
 <section class="engage page-section" aria-labelledby="engage-title">
-  <div class="engage-card">
+  <div class="engage-card ds-panel">
     <p class="ds-label">{{ i18n.t('home.engage.kicker') }}</p>
     <h2 id="engage-title">{{ i18n.t('home.engage.title') }}</h2>
     <p>{{ i18n.t('home.engage.copy') }}</p>

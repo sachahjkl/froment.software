@@ -8,12 +8,12 @@
         : 'A direct view of froment.software foundations, components, states, and responsive behavior.' }}
     </p>
     <nav class="workshop-nav" [attr.aria-label]="i18n.language() === 'fr' ? 'Sections de l’atelier' : 'Workshop sections'">
-      <a class="btn" href="#tokens">{{ i18n.language() === 'fr' ? 'Fondations' : 'Foundations' }}</a>
-      <a class="btn" href="#components">{{ i18n.language() === 'fr' ? 'Composants' : 'Components' }}</a>
-      <a class="btn" href="#data">{{ i18n.language() === 'fr' ? 'Données' : 'Data' }}</a>
-      <a class="btn" href="#states">{{ i18n.language() === 'fr' ? 'États' : 'States' }}</a>
-      <a class="btn" href="#layout">{{ i18n.language() === 'fr' ? 'Composition' : 'Layout' }}</a>
-      <a class="btn" href="#motion">{{ i18n.language() === 'fr' ? 'Mouvement' : 'Motion' }}</a>
+      <a class="btn" data-index="01" href="#tokens">{{ i18n.language() === 'fr' ? 'Fondations' : 'Foundations' }}</a>
+      <a class="btn" data-index="02" href="#components">{{ i18n.language() === 'fr' ? 'Composants' : 'Components' }}</a>
+      <a class="btn" data-index="03" href="#data">{{ i18n.language() === 'fr' ? 'Données' : 'Data' }}</a>
+      <a class="btn" data-index="04" href="#states">{{ i18n.language() === 'fr' ? 'États' : 'States' }}</a>
+      <a class="btn" data-index="05" href="#layout">{{ i18n.language() === 'fr' ? 'Composition' : 'Layout' }}</a>
+      <a class="btn" data-index="06" href="#motion">{{ i18n.language() === 'fr' ? 'Mouvement' : 'Motion' }}</a>
     </nav>
   </header>
 
@@ -25,14 +25,14 @@
     </div>
 
     <div class="swatch-grid" [attr.aria-label]="i18n.language() === 'fr' ? 'Tokens de couleur' : 'Color tokens'">
-      <div class="swatch ds-panel tone-ink"><span>Ink</span><code>--color-ink</code></div>
-      <div class="swatch ds-panel tone-muted"><span>Muted</span><code>--color-muted</code></div>
-      <div class="swatch ds-panel tone-canvas"><span>Canvas</span><code>--color-canvas</code></div>
-      <div class="swatch ds-panel tone-surface"><span>Surface</span><code>--color-surface</code></div>
-      <div class="swatch ds-panel tone-sunken"><span>Sunken</span><code>--color-surface-sunken</code></div>
-      <div class="swatch ds-panel tone-accent"><span>Accent</span><code>--color-accent</code></div>
-      <div class="swatch ds-panel tone-focus"><span>Focus</span><code>--color-focus</code></div>
-      <div class="swatch ds-panel tone-danger"><span>Danger</span><code>--color-danger</code></div>
+      <div class="swatch ds-panel" style="--tone: var(--color-ink); --tone-text: var(--color-on-dark)"><span>Ink</span><code>--color-ink</code></div>
+      <div class="swatch ds-panel" style="--tone: var(--color-muted); --tone-text: var(--color-on-dark)"><span>Muted</span><code>--color-muted</code></div>
+      <div class="swatch ds-panel" style="--tone: var(--color-canvas)"><span>Canvas</span><code>--color-canvas</code></div>
+      <div class="swatch ds-panel" style="--tone: var(--color-surface)"><span>Surface</span><code>--color-surface</code></div>
+      <div class="swatch ds-panel" style="--tone: var(--color-surface-sunken)"><span>Sunken</span><code>--color-surface-sunken</code></div>
+      <div class="swatch ds-panel" style="--tone: var(--color-accent)"><span>Accent</span><code>--color-accent</code></div>
+      <div class="swatch ds-panel" style="--tone: var(--color-focus); --tone-text: var(--color-on-dark)"><span>Focus</span><code>--color-focus</code></div>
+      <div class="swatch ds-panel" style="--tone: var(--color-danger); --tone-text: var(--color-on-dark)"><span>Danger</span><code>--color-danger</code></div>
     </div>
 
     <div class="specimen-grid">
@@ -47,11 +47,11 @@
 
       <article class="ds-panel specimen spacing-specimen grid">
         <p class="ds-label">{{ i18n.language() === 'fr' ? 'Rythme spatial' : 'Spacing rhythm' }}</p>
-        <div class="space-row"><span class="space-1"></span><code>04</code></div>
-        <div class="space-row"><span class="space-2"></span><code>08</code></div>
-        <div class="space-row"><span class="space-4"></span><code>16</code></div>
-        <div class="space-row"><span class="space-8"></span><code>32</code></div>
-        <div class="space-row"><span class="space-12"></span><code>48</code></div>
+        <div class="space-row"><span style="--size: var(--space-1)"></span><code>04</code></div>
+        <div class="space-row"><span style="--size: var(--space-2)"></span><code>08</code></div>
+        <div class="space-row"><span style="--size: var(--space-4)"></span><code>16</code></div>
+        <div class="space-row"><span style="--size: var(--space-8)"></span><code>32</code></div>
+        <div class="space-row"><span style="--size: var(--space-12)"></span><code>48</code></div>
         <div class="token-notes grid">
           <code>radius / 2 · 4 · 8</code>
           <code>border / 1 · 2</code>
@@ -137,10 +137,10 @@
     </div>
 
     <div class="notice-stack grid">
-      <div class="notice notice-info ds-panel"><strong>{{ i18n.language() === 'fr' ? 'Information' : 'Information' }}</strong><span>{{ i18n.language() === 'fr' ? 'La synchronisation est planifiée à 18:00.' : 'Synchronization is scheduled for 18:00.' }}</span></div>
-      <div class="notice notice-success ds-panel"><strong>{{ i18n.language() === 'fr' ? 'Succès' : 'Success' }}</strong><span>{{ i18n.language() === 'fr' ? 'Le déploiement est terminé.' : 'Deployment completed.' }}</span></div>
-      <div class="notice notice-warning ds-panel"><strong>{{ i18n.language() === 'fr' ? 'Attention' : 'Warning' }}</strong><span>{{ i18n.language() === 'fr' ? 'Deux changements nécessitent une revue.' : 'Two changes require review.' }}</span></div>
-      <div class="notice notice-error ds-panel"><strong>{{ i18n.language() === 'fr' ? 'Erreur' : 'Error' }}</strong><span>{{ i18n.language() === 'fr' ? 'La connexion au service a échoué.' : 'The service connection failed.' }}</span></div>
+      <div class="notice ds-panel" style="--notice: var(--color-mineral)"><strong>{{ i18n.language() === 'fr' ? 'Information' : 'Information' }}</strong><span>{{ i18n.language() === 'fr' ? 'La synchronisation est planifiée à 18:00.' : 'Synchronization is scheduled for 18:00.' }}</span></div>
+      <div class="notice ds-panel" style="--notice: var(--color-forest)"><strong>{{ i18n.language() === 'fr' ? 'Succès' : 'Success' }}</strong><span>{{ i18n.language() === 'fr' ? 'Le déploiement est terminé.' : 'Deployment completed.' }}</span></div>
+      <div class="notice ds-panel" style="--notice: var(--color-warning)"><strong>{{ i18n.language() === 'fr' ? 'Attention' : 'Warning' }}</strong><span>{{ i18n.language() === 'fr' ? 'Deux changements nécessitent une revue.' : 'Two changes require review.' }}</span></div>
+      <div class="notice ds-panel" style="--notice: var(--color-danger)"><strong>{{ i18n.language() === 'fr' ? 'Erreur' : 'Error' }}</strong><span>{{ i18n.language() === 'fr' ? 'La connexion au service a échoué.' : 'The service connection failed.' }}</span></div>
     </div>
 
     <div class="table-wrap ds-panel" tabindex="0" role="region" [attr.aria-label]="i18n.language() === 'fr' ? 'Tableau de services, défilement horizontal possible' : 'Services table, horizontally scrollable'">

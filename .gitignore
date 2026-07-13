@@ -15,6 +15,7 @@ pnpm-debug.log*
 
 # TypeScript / tooling
 *.tsbuildinfo
+.skills/
 
 # Sass / caches
 .sass-cache/
