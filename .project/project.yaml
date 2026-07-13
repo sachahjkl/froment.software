@@ -1,0 +1,8 @@
+name: "froment.software"
+description: "Site d'entreprise - https://froment.software/"
+topics: []
+homepage: ""
+source:
+  provider: gitlab
+  namespace: "sachahjkl"
+  path: "sachahjkl/froment.software"
