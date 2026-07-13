@@ -65,8 +65,8 @@ jobs:
           umask 077
           authfile="$RUNNER_TEMP/podman-auth-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}.json"
           trap 'rm -f "$authfile"' EXIT
-          printf '%s' "$GHCR_TOKEN" | nix --extra-experimental-features "nix-command flakes" shell nixpkgs#podman --command podman login --authfile "$authfile" ghcr.io --username "$GITHUB_ACTOR" --password-stdin
-          nix --extra-experimental-features "nix-command flakes" shell nixpkgs#podman --command podman pull --authfile "$authfile" "$IMAGE_NAME:latest" || true
+          printf '%s' "$GHCR_TOKEN" | podman login --authfile "$authfile" ghcr.io --username "$GITHUB_ACTOR" --password-stdin
+          podman pull --authfile "$authfile" "$IMAGE_NAME:latest" || true
 
           build_args=(--authfile "$authfile" --pull=always)
           while IFS= read -r tag; do
@@ -75,8 +75,8 @@ jobs:
           while IFS= read -r label; do
             [[ -n "$label" ]] && build_args+=(--label "$label")
           done <<< "$IMAGE_LABELS"
-          nix --extra-experimental-features "nix-command flakes" shell nixpkgs#podman --command podman build "${build_args[@]}" .
+          podman build "${build_args[@]}" .
 
           while IFS= read -r tag; do
-            [[ -n "$tag" ]] && nix --extra-experimental-features "nix-command flakes" shell nixpkgs#podman --command podman push --authfile "$authfile" "$tag"
+            [[ -n "$tag" ]] && podman push --authfile "$authfile" "$tag"
           done <<< "$IMAGE_TAGS"
