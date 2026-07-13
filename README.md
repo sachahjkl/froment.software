@@ -1,144 +1,88 @@
 # froment.software
 
-Site vitrine Angular pour `froment.software`.
+Site vitrine Angular 21 de Froment Software, pré-rendu en fichiers statiques puis servi par nginx.
 
-## Stack
+## Architecture
 
-- Angular 21
-- SCSS
-- i18n runtime `fr` / `en`
-- build statique
-- Docker + `joseluisq/static-web-server`
-- Nix flake pour le devshell et la génération du Dockerfile
+- `@angular/build:application` produit le navigateur et le rendu serveur avec `outputMode: "static"`.
+- `src/app/app.routes.server.ts` applique `RenderMode.Prerender` à toutes les routes Angular.
+- `npm run build` écrit le site déployable dans `dist/froment-software/browser` : chaque route connue dispose de son `index.html`, notamment `/404`.
+- `src/app/app.routes.ts` porte les composants et les métadonnées de route. `src/app/app.ts` met à jour titre, description, URL canonique, robots, Open Graph et Twitter lors de la navigation.
+- Les ressources publiques (`robots.txt`, `sitemap.xml`, favicons et `social-card.png`) sont dans `public/`. La carte sociale déclarée dans `src/index.html` mesure 1200 × 630.
+
+### Langues
+
+Le HTML initial et tout le pré-rendu sont en français (`<html lang="fr">`). Dans le navigateur, `I18nService` permet de passer entre français et anglais sans changer d’URL. Il restaure d’abord la préférence enregistrée dans `localStorage`, sinon choisit le français pour un navigateur francophone et l’anglais pour les autres.
+
+Cette préférence n’agit qu’après le chargement côté client : elle ne produit ni HTML anglais pré-rendu, ni URL localisée, ni version anglaise distincte pour les moteurs de recherche. Toute nouvelle copie et toute métadonnée doivent être ajoutées dans les deux dictionnaires de `src/app/i18n.service.ts`.
+
+## Routes et indexation
+
+Les routes publiques indexables sont `/`, `/about`, `/clients`, `/services`, `/tools`, `/showcase`, `/legal`, `/privacy` et `/cookies`. Elles figurent dans `public/sitemap.xml`; `/showcase` est bien une page publique, pas une page de test.
+
+- `/design` est un atelier de QA visuelle, volontairement absent de la navigation publique et du sitemap, avec `noindex, follow`.
+- `/404` est pré-rendue, porte `noindex, nofollow` et sert de contenu d’erreur.
+- La route Angular générique affiche le même composant pour une navigation cliente inconnue, mais nginx ne transforme pas les URL inconnues en réponses `200`.
+
+`nginx.conf` impose les URL sans slash final par redirection `308`. Il résout une route avec `$uri/index.html`; un fichier ou une route absente renvoie un vrai statut `404` avec le document `/404/index.html`. Ne pas remplacer cette règle par un fallback général vers `/index.html`, qui rendrait les erreurs indexables comme des succès.
+
+### Ajouter une route
+
+1. Ajouter le composant dans `src/app/pages/` et déclarer le chemin sans slash final dans `src/app/app.routes.ts`.
+2. Fournir `titleKey` et `descriptionKey`, avec les textes français et anglais correspondants dans `i18n.service.ts`. Définir explicitement `robots` pour une route non indexable.
+3. Ajouter les accès de navigation nécessaires. Ajouter l’URL canonique à `public/sitemap.xml` seulement si la route est publique et indexable.
+4. Le wildcard de `app.routes.server.ts` pré-rend automatiquement les routes statiques déclarées; conserver cette politique sauf besoin de rendu différent explicite.
+5. Vérifier le HTML produit, les métadonnées, le changement de langue et le comportement nginx de l’URL avec et sans slash.
+
+## Système de design et QA visuelle
+
+Les tokens globaux (couleurs sémantiques, typographie, espacements, rayons, ombres, mouvement et dimensions de mise en page) ainsi que les primitives partagées vivent dans `src/styles.scss`. Les styles de coque sont dans `src/app/app.scss`; les ajustements propres à une page restent avec son composant.
+
+Avant de modifier une valeur ou une primitive partagée, ouvrir `/design`. Cette route rassemble fondations, composants, données, états, compositions responsives et mouvement. Après une modification, maintenir ses spécimens à jour et contrôler au minimum :
+
+- français et anglais;
+- clavier, focus visible, états normal/survol/actif/désactivé/erreur;
+- largeurs mobile et bureau, sans débordement horizontal;
+- préférence système de réduction des animations.
+
+La route `/design` reste cachée et non indexable; ne pas l’ajouter au sitemap. `/showcase`, à l’inverse, fait partie du contenu public indexable.
 
 ## Développement local
 
-Pré-requis:
-
-- Node.js 22
-- npm 10
-
-Installation:
+Prérequis : Node.js 22 et npm 10 (ou `nix develop`).
 
 ```bash
 npm ci
+npm start       # serveur de développement
+npm run watch   # build de développement en continu
+npm run build   # pré-rendu de production
+npm test        # tests Angular
 ```
 
-Lancer le serveur de dev:
-
-```bash
-npm start
-```
-
-Build production:
-
-```bash
-npm run build
-```
-
-Le build est généré dans `dist/froment-software/browser`.
-
-## Nix
-
-Entrer dans le devshell:
-
-```bash
-nix develop
-```
-
-Afficher le Dockerfile généré par le flake:
+Le flake expose également le Dockerfile de référence :
 
 ```bash
 nix run .#dockerfile
-```
-
-Ou construire l'artefact correspondant:
-
-```bash
 nix build .#dockerfile
 ```
 
-## i18n
+## Déploiement Docker
 
-Le site fonctionne avec une traduction runtime:
-
-- détection automatique via `navigator.language`
-- fallback `fr` puis `en`
-- persistance du choix dans `localStorage`
-- changement de langue à chaud via le `select` du footer
-
-Le service principal est dans:
-
-- `src/app/i18n.service.ts`
-
-Cette approche est volontairement pragmatique pour un site vitrine avec switch runtime. Elle ne suit pas le mode Angular i18n compile-time classique basé sur fichiers d'extraction et builds séparés par locale.
-
-## SEO
-
-Le site inclut:
-
-- titres de page dynamiques
-- meta description par route
-- Open Graph de base
-- Twitter cards de base
-- `robots.txt`
-- `sitemap.xml`
-
-Fichiers concernés:
-
-- `src/app/app.ts`
-- `src/app/app.routes.ts`
-- `src/index.html`
-- `public/robots.txt`
-- `public/sitemap.xml`
-
-## Docker
-
-Build local de l'image:
+Le Dockerfile multi-étapes construit le pré-rendu avec Node 22, puis copie `dist/froment-software/browser` dans nginx 1.29 avec `nginx.conf`.
 
 ```bash
 docker build -t froment-software .
+docker run --rm -p 8080:80 froment-software
 ```
 
-L'image:
+`docker-compose.remote-build.yml` construit la branche `main` directement depuis GitLab et publie le service sur le port local `8080` :
 
-1. build l'application Angular
-2. copie le contenu de `dist/froment-software/browser`
-3. sert le site statique avec `joseluisq/static-web-server`
-
-## GitLab CI
-
-Pipeline défini dans `.gitlab-ci.yml`.
-
-Étapes:
-
-1. `build_site`
-   build Angular via `npm ci` puis `npm run build`
-2. `build_container`
-   build l'image Docker puis la pousse dans le registre GitLab
-
-Tags poussés:
-
-- `:$CI_COMMIT_SHA`
-- `:latest` sur la branche par défaut
-
-## Structure utile
-
-```text
-src/app/
-  app.ts
-  app.html
-  app.scss
-  app.routes.ts
-  i18n.service.ts
-  pages/
-
-public/
-  favicon.svg
-  robots.txt
-  sitemap.xml
-
-.gitlab-ci.yml
-Dockerfile
-flake.nix
+```bash
+docker compose -f docker-compose.remote-build.yml up -d --build
 ```
+
+La CI GitLab vérifie le flake, construit le site, puis publie l’image avec le SHA du commit et, sur la branche par défaut, le tag `latest`.
+
+## Contenus juridiques
+
+Les pages `/legal`, `/privacy` et `/cookies` utilisent les textes bilingues de `i18n.service.ts` et leurs templates de `src/app/pages/`. Toute modification de ces textes ou de leur date doit être précédée d’une revue du déploiement réel et de sa journalisation : les mentions sur l’hébergement, les données techniques, la conservation ou les cookies doivent décrire le comportement effectivement exploité, pas seulement le code de l’application.

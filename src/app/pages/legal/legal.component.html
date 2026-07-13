@@ -1,25 +1,60 @@
-<section class="legal">
-  <p class="kicker">{{ i18n.t('legal.kicker') }}</p>
-  <h1>{{ i18n.t('legal.title') }}</h1>
-  <p class="date">{{ i18n.t('legal.updated') }}</p>
+<section class="policy-page" aria-labelledby="legal-title">
+  <header class="policy-hero">
+    <p class="ds-label">{{ i18n.t('legal.kicker') }}</p>
+    <h1 id="legal-title">{{ i18n.t('legal.title') }}</h1>
+    <p class="policy-lead">{{ i18n.t('legal.lead') }}</p>
+    <time class="policy-date" datetime="2026-07-13">{{ i18n.t('legal.updated') }}</time>
+  </header>
 
-  <article class="legal-block">
-    <h2>{{ i18n.t('legal.publisher.title') }}</h2>
-    <p>{{ i18n.t('legal.publisher.content') }}</p>
-  </article>
+  <div class="policy-layout">
+    <aside class="policy-summary ds-panel inset" aria-labelledby="legal-summary-title">
+      <p class="section-index" aria-hidden="true">00</p>
+      <h2 id="legal-summary-title">{{ i18n.t('legal.summary.title') }}</h2>
+      <p>{{ i18n.t('legal.summary.content') }}</p>
+    </aside>
 
-  <article class="legal-block">
-    <h2>{{ i18n.t('legal.hosting.title') }}</h2>
-    <p>{{ i18n.t('legal.hosting.content') }}</p>
-  </article>
+    <div class="policy-content">
+      <section class="policy-section" aria-labelledby="legal-publisher-title">
+        <p class="section-index" aria-hidden="true">01</p>
+        <h2 id="legal-publisher-title">{{ i18n.t('legal.publisher.title') }}</h2>
+        <p>{{ i18n.t('legal.publisher.content') }}</p>
+        <p class="policy-link"><a href="mailto:contact@froment.software">contact@froment.software</a></p>
+      </section>
 
-  <article class="legal-block">
-    <h2>{{ i18n.t('legal.ip.title') }}</h2>
-    <p>{{ i18n.t('legal.ip.content') }}</p>
-  </article>
+      <section class="policy-section" aria-labelledby="legal-hosting-title">
+        <p class="section-index" aria-hidden="true">02</p>
+        <h2 id="legal-hosting-title">{{ i18n.t('legal.hosting.title') }}</h2>
+        <p>{{ i18n.t('legal.hosting.content') }}</p>
+      </section>
 
-  <article class="legal-block">
-    <h2>{{ i18n.t('legal.contact.title') }}</h2>
-    <p>{{ i18n.t('legal.contact.content') }}</p>
-  </article>
+      <section class="policy-section" aria-labelledby="legal-ip-title">
+        <p class="section-index" aria-hidden="true">03</p>
+        <h2 id="legal-ip-title">{{ i18n.t('legal.ip.title') }}</h2>
+        <p>{{ i18n.t('legal.ip.content') }}</p>
+      </section>
+
+      <section class="policy-section" aria-labelledby="legal-links-title">
+        <p class="section-index" aria-hidden="true">04</p>
+        <h2 id="legal-links-title">{{ i18n.t('legal.links.title') }}</h2>
+        <p>{{ i18n.t('legal.links.content') }}</p>
+      </section>
+
+      <section class="policy-section" aria-labelledby="legal-contact-title">
+        <p class="section-index" aria-hidden="true">05</p>
+        <h2 id="legal-contact-title">{{ i18n.t('legal.contact.title') }}</h2>
+        <p>{{ i18n.t('legal.contact.content') }}</p>
+        <p class="policy-link"><a href="mailto:contact@froment.software">contact@froment.software</a></p>
+      </section>
+
+      <section class="policy-section" aria-labelledby="legal-related-title">
+        <p class="section-index" aria-hidden="true">06</p>
+        <h2 id="legal-related-title">{{ i18n.t('legal.related.title') }}</h2>
+        <p>{{ i18n.t('legal.related.content') }}</p>
+        <nav class="policy-links" [attr.aria-label]="i18n.t('legal.related.title')">
+          <a routerLink="/privacy">{{ i18n.t('legal.related.privacy') }}</a>
+          <a routerLink="/cookies">{{ i18n.t('legal.related.cookies') }}</a>
+        </nav>
+      </section>
+    </div>
+  </div>
 </section>

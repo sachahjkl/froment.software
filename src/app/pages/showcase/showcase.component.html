@@ -1,57 +1,135 @@
-<section class="showcase-head">
+<header class="showcase-head">
   <p class="ds-label">{{ i18n.t('showcase.kicker') }}</p>
   <h1>{{ i18n.t('showcase.title') }}</h1>
   <p>{{ i18n.t('showcase.lead') }}</p>
-</section>
+</header>
 
-<section class="show-grid">
-  <article class="ds-panel card">
-    <p class="ds-label">{{ i18n.t('showcase.colors') }}</p>
+<section class="show-grid" [attr.aria-label]="i18n.t('showcase.title')">
+  <article class="ds-panel card colors-card">
+    <h2 class="ds-label">{{ i18n.t('showcase.colors') }}</h2>
     <div class="swatches">
-      <span style="--c:#070707">#070707</span>
-      <span style="--c:#f5f5f0">#F5F5F0</span>
-      <span style="--c:#d7d7cc">#D7D7CC</span>
-      <span style="--c:#24c759">#24C759</span>
-      <span style="--c:#07812f">#07812F</span>
+      <span class="swatch swatch-ink"><code>--color-ink</code></span>
+      <span class="swatch swatch-canvas"><code>--color-canvas</code></span>
+      <span class="swatch swatch-line"><code>--color-line</code></span>
+      <span class="swatch swatch-accent"><code>--color-accent</code></span>
+      <span class="swatch swatch-focus"><code>--color-focus</code></span>
     </div>
   </article>
 
-  <article class="ds-panel card">
-    <p class="ds-label">{{ i18n.t('showcase.buttons') }}</p>
-    <div class="stack">
-      <button class="btn primary"><span aria-hidden="true">🚀</span>{{ i18n.t('showcase.execute') }}</button>
-      <button class="btn"><span aria-hidden="true">🛑</span>{{ i18n.t('showcase.cancel') }}</button>
-      <button class="btn dark"><span aria-hidden="true">🧱</span>{{ i18n.t('showcase.dense') }}</button>
+  <article class="ds-panel card buttons-card">
+    <h2 class="ds-label">{{ i18n.t('showcase.buttons') }}</h2>
+    <div class="button-stack">
+      <button class="btn primary" type="button" (click)="setFeedback('showcase.feedback.executed')">
+        <span aria-hidden="true">→</span>{{ i18n.t('showcase.execute') }}
+      </button>
+      <button class="btn" type="button" (click)="setFeedback('showcase.feedback.cancelled')">
+        <span aria-hidden="true">×</span>{{ i18n.t('showcase.cancel') }}
+      </button>
+      <button class="btn dark" type="button" [attr.aria-pressed]="dense()" (click)="toggleDensity()">
+        <span aria-hidden="true">≡</span>{{ i18n.t('showcase.dense') }}
+      </button>
     </div>
-  </article>
-
-  <article class="ds-panel card">
-    <p class="ds-label">{{ i18n.t('showcase.form') }}</p>
-    <div class="stack">
-      <input class="input" [value]="i18n.t('showcase.clientProject')" />
-      <select class="select"><option>{{ i18n.t('showcase.production') }}</option><option>{{ i18n.t('showcase.staging') }}</option></select>
-      <label class="check"><input type="checkbox" checked /> {{ i18n.t('showcase.option') }}</label>
-    </div>
-  </article>
-
-  <article class="ds-panel card wide">
-    <p class="ds-label">{{ i18n.t('showcase.table') }}</p>
-    <table>
-      <thead><tr><th>{{ i18n.t('showcase.table.service') }}</th><th>{{ i18n.t('showcase.table.status') }}</th><th>{{ i18n.t('showcase.table.updated') }}</th><th>{{ i18n.t('showcase.table.action') }}</th></tr></thead>
-      <tbody>
-        @for (row of rows(); track row.service) {
-          <tr>
-            <td>{{ row.service }}</td>
-            <td><span class="badge" [class.ok]="row.statusClass === 'ok'" [class.warn]="row.statusClass === 'warn'" [class.err]="row.statusClass === 'err'">{{ row.statusLabel }}</span></td>
-            <td>{{ row.updatedAt }}</td>
-            <td><button class="mini">{{ i18n.t('showcase.table.open') }}</button></td>
-          </tr>
+    <div class="feedback-live">
+      <p class="demo-feedback" role="status" aria-atomic="true">
+        @if (feedbackChannel()) {
+          @if (feedbackKey(); as key) {
+            {{ i18n.t(key) }}
+          }
         }
-      </tbody>
-    </table>
+      </p>
+      <p class="demo-feedback" role="status" aria-atomic="true">
+        @if (!feedbackChannel()) {
+          @if (feedbackKey(); as key) {
+            {{ i18n.t(key) }}
+          }
+        }
+      </p>
+    </div>
   </article>
 
-  <article class="ds-panel card wide inverse">
+  <article class="ds-panel card form-card">
+    <h2 class="ds-label">{{ i18n.t('showcase.form') }}</h2>
+    <div class="fields">
+      <div class="field">
+        <label for="showcase-search">{{ i18n.t('showcase.search.label') }}</label>
+        <input
+          class="input"
+          id="showcase-search"
+          type="search"
+          autocomplete="off"
+          aria-controls="showcase-services"
+          [placeholder]="i18n.t('showcase.search.placeholder')"
+          [value]="query()"
+          (input)="updateQuery($event)"
+        />
+      </div>
+      <div class="field">
+        <label for="showcase-status">{{ i18n.t('showcase.filter.status') }}</label>
+        <select class="select" id="showcase-status" aria-controls="showcase-services" [value]="statusFilter()" (change)="updateStatus($event)">
+          <option value="all">{{ i18n.t('showcase.filter.all') }}</option>
+          <option value="ok">{{ i18n.t('showcase.status.ok') }}</option>
+          <option value="warn">{{ i18n.t('showcase.status.review') }}</option>
+          <option value="err">{{ i18n.t('showcase.status.error') }}</option>
+        </select>
+      </div>
+    </div>
+  </article>
+
+  <article class="ds-panel card table-card" [class.is-dense]="dense()">
+    <div class="table-heading">
+      <h2 class="ds-label">{{ i18n.t('showcase.table') }}</h2>
+      <output for="showcase-search showcase-status" aria-live="polite">{{ i18n.tf('showcase.table.results', { count: filteredRows().length }) }}</output>
+    </div>
+    <div class="table-region">
+      <table id="showcase-services">
+        <caption>{{ i18n.t('showcase.table.caption') }}</caption>
+        <thead>
+          <tr>
+            <th scope="col">{{ i18n.t('showcase.table.service') }}</th>
+            <th scope="col">{{ i18n.t('showcase.table.status') }}</th>
+            <th scope="col">{{ i18n.t('showcase.table.updated') }}</th>
+            <th scope="col">{{ i18n.t('showcase.table.action') }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (row of filteredRows(); track row.service) {
+            <tr class="data-row">
+              <th scope="row" [attr.data-label]="i18n.t('showcase.table.service')">{{ row.service }}</th>
+              <td [attr.data-label]="i18n.t('showcase.table.status')">
+                <span class="badge" [class.ok]="row.statusClass === 'ok'" [class.warn]="row.statusClass === 'warn'" [class.err]="row.statusClass === 'err'">{{ row.statusLabel }}</span>
+              </td>
+              <td [attr.data-label]="i18n.t('showcase.table.updated')">
+                <time [attr.datetime]="row.updatedOn">{{ row.updatedAt }}</time>
+              </td>
+              <td [attr.data-label]="i18n.t('showcase.table.action')">
+                <button
+                  class="mini"
+                  type="button"
+                  [attr.aria-expanded]="expandedService() === row.service"
+                  [attr.aria-controls]="'showcase-details-' + row.service"
+                  [attr.aria-label]="i18n.tf(expandedService() === row.service ? 'showcase.table.closeFor' : 'showcase.table.openFor', { service: row.service })"
+                  (click)="toggleDetails(row.service)"
+                >
+                  {{ i18n.t(expandedService() === row.service ? 'showcase.table.close' : 'showcase.table.open') }}
+                </button>
+              </td>
+            </tr>
+            <tr class="detail-row" [hidden]="expandedService() !== row.service">
+              <td [id]="'showcase-details-' + row.service" colspan="4">
+                {{ i18n.tf('showcase.table.details', { service: row.service, status: row.statusLabel, date: row.updatedAt }) }}
+              </td>
+            </tr>
+          } @empty {
+            <tr class="empty-row">
+              <td colspan="4">{{ i18n.t('showcase.table.empty') }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </article>
+
+  <article class="ds-panel card inverse">
     <p class="ds-label">{{ i18n.t('showcase.block') }}</p>
     <h2>{{ i18n.t('showcase.block.title') }}</h2>
     <p>{{ i18n.t('showcase.block.copy') }}</p>

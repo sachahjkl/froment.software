@@ -2,14 +2,14 @@ import { Component, computed, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { I18nService } from '../../i18n.service';
 
-type TimelineEntry = {
+type PublicEntry = {
   title: string;
   description: string;
-  href?: string;
-  cta?: string;
+  href: string;
+  cta: string;
 };
 
-type ServiceEntry = {
+type ContentEntry = {
   title: string;
   description: string;
 };
@@ -25,7 +25,7 @@ export class HomeComponent {
   protected readonly i18n = inject(I18nService);
   protected readonly calUrl = 'https://cal.com/sachahjkl';
 
-  protected readonly timelineEntries = computed<TimelineEntry[]>(() => [
+  protected readonly publicEntries = computed<PublicEntry[]>(() => [
     {
       title: 'albumator.sacha.house',
       description: this.i18n.t('home.timeline.albumator.desc'),
@@ -44,13 +44,24 @@ export class HomeComponent {
       href: 'https://sacha.house',
       cta: this.i18n.t('home.timeline.sacha.cta'),
     },
+  ]);
+
+  protected readonly fitEntries = computed<ContentEntry[]>(() => [
     {
-      title: this.i18n.t('home.timeline.empty.title'),
-      description: this.i18n.t('home.timeline.empty.desc'),
+      title: this.i18n.t('home.fit.internal.title'),
+      description: this.i18n.t('home.fit.internal.desc'),
+    },
+    {
+      title: this.i18n.t('home.fit.legacy.title'),
+      description: this.i18n.t('home.fit.legacy.desc'),
+    },
+    {
+      title: this.i18n.t('home.fit.delivery.title'),
+      description: this.i18n.t('home.fit.delivery.desc'),
     },
   ]);
 
-  protected readonly services = computed<ServiceEntry[]>(() => [
+  protected readonly services = computed<ContentEntry[]>(() => [
     {
       title: this.i18n.t('home.services.web.title'),
       description: this.i18n.t('home.services.web.desc'),

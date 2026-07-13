@@ -1,11 +1,15 @@
-<section class="not-found">
+<section class="not-found" aria-labelledby="not-found-title">
   <div class="not-found-card ds-panel">
-    <div class="not-found-emoji" aria-hidden="true">🙈</div>
-    <h1>{{ i18n.t('not_found.title') }}</h1>
+    <p class="error-code" aria-hidden="true">404</p>
+    <h1 id="not-found-title">{{ i18n.t('not_found.title') }}</h1>
     <p class="not-found-lead">{{ i18n.t('not_found.lead') }}</p>
     <p class="not-found-sub">{{ i18n.t('not_found.sub') }}</p>
-    <a class="btn primary" routerLink="/">
-      <span aria-hidden="true">🏠</span> {{ i18n.t('not_found.cta') }}
-    </a>
+    <nav [attr.aria-label]="i18n.t('not_found.links_label')">
+      <ul>
+        <li><a class="btn primary" routerLink="/">{{ i18n.t('not_found.cta') }}</a></li>
+        <li><a class="btn" routerLink="/services">{{ i18n.t('not_found.services') }}</a></li>
+        <li><a href="mailto:contact@froment.software">{{ i18n.t('not_found.contact') }}</a></li>
+      </ul>
+    </nav>
   </div>
 </section>

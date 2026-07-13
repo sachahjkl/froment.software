@@ -1,79 +1,93 @@
-<section class="hero">
-  <div class="hero-copy">
-    <p class="kicker">{{ i18n.t('home.hero.kicker') }}</p>
+<header class="hero">
+  <div class="hero-inner">
+    <p class="ds-label">{{ i18n.t('home.hero.kicker') }}</p>
     <h1>{{ i18n.t('home.hero.title') }}</h1>
     <p class="lead">{{ i18n.t('home.hero.lead') }}</p>
     <div class="actions">
-      <a class="btn primary" href="mailto:contact@froment.software"><span aria-hidden="true">📧</span>{{ i18n.t('home.hero.contact') }}</a>
-      <a class="btn" [href]="calUrl" target="_blank" rel="noreferrer"><span aria-hidden="true">📅</span>{{ i18n.t('home.hero.book') }}</a>
+      <a class="btn primary" href="mailto:contact@froment.software">{{ i18n.t('home.hero.contact') }}</a>
+      <a class="btn" [href]="calUrl" target="_blank" rel="noreferrer">{{ i18n.t('home.hero.book') }}</a>
     </div>
+  </div>
+</header>
+
+<section class="fit page-section" aria-labelledby="fit-title">
+  <div class="section-heading">
+    <p class="ds-label">{{ i18n.t('home.fit.kicker') }}</p>
+    <h2 id="fit-title">{{ i18n.t('home.fit.title') }}</h2>
+    <p>{{ i18n.t('home.fit.intro') }}</p>
+  </div>
+  <ol class="fit-grid">
+    @for (entry of fitEntries(); track entry.title; let index = $index) {
+      <li class="fit-card ds-panel">
+        <span class="card-index" aria-hidden="true">0{{ index + 1 }}</span>
+        <h3>{{ entry.title }}</h3>
+        <p>{{ entry.description }}</p>
+      </li>
+    }
+  </ol>
+</section>
+
+<section class="services page-section" aria-labelledby="services-title">
+  <div class="section-heading">
+    <p class="ds-label">{{ i18n.t('services.kicker') }}</p>
+    <h2 id="services-title">{{ i18n.t('home.services.title') }}</h2>
+    <p>{{ i18n.t('home.services.intro') }}</p>
+  </div>
+  <ul class="services-grid">
+    @for (service of services(); track service.title) {
+      <li class="service-card">
+        <h3>{{ service.title }}</h3>
+        <p>{{ service.description }}</p>
+      </li>
+    }
+  </ul>
+  <div class="section-actions">
+    <a class="btn primary" routerLink="/services">{{ i18n.t('home.services.cta') }}</a>
   </div>
 </section>
 
-<section class="timeline" aria-labelledby="timeline-title">
-  <div class="timeline-head">
-    <h2 id="timeline-title">{{ i18n.t('home.timeline.title') }}</h2>
+<section class="work page-section" aria-labelledby="work-title">
+  <div class="section-heading">
+    <p class="ds-label">{{ i18n.t('products.kicker') }}</p>
+    <h2 id="work-title">{{ i18n.t('home.timeline.title') }}</h2>
     <p>{{ i18n.t('home.timeline.intro') }}</p>
   </div>
-
-  <ol class="timeline-list">
-    @for (entry of timelineEntries(); track entry.title) {
-      <li class="timeline-item ds-panel inset">
-        <div class="timeline-marker" aria-hidden="true"></div>
-        <div class="timeline-card">
+  <ol class="work-list">
+    @for (entry of publicEntries(); track entry.title; let index = $index) {
+      <li class="work-item ds-panel">
+        <span class="card-index" aria-hidden="true">0{{ index + 1 }}</span>
+        <div>
           <h3>{{ entry.title }}</h3>
           <p>{{ entry.description }}</p>
-
-          @if (entry.href) {
-            <a class="timeline-link" [href]="entry.href" target="_blank" rel="noreferrer">{{ entry.cta }}</a>
-          }
+          <a [href]="entry.href" target="_blank" rel="noreferrer">{{ entry.cta }} <span class="link-icon" aria-hidden="true">↗</span></a>
         </div>
       </li>
     }
   </ol>
 </section>
 
-<section class="services" aria-labelledby="services-title">
-  <div class="services-head">
-    <h2 id="services-title">{{ i18n.t('home.services.title') }}</h2>
-    <p>{{ i18n.t('home.services.intro') }}</p>
+<section class="references page-section" aria-labelledby="references-title">
+  <div class="reference-copy">
+    <p class="ds-label">{{ i18n.t('home.clients.experience') }}</p>
+    <h2 id="references-title">{{ i18n.t('home.clients.title') }}</h2>
+    <p>{{ i18n.t('home.clients.note') }}</p>
+    <a class="btn" routerLink="/clients">{{ i18n.t('home.clients.cta') }}</a>
   </div>
-
-  <div class="services-grid">
-    @for (service of services(); track service.title) {
-      <article class="service-card ds-panel">
-        <h3>{{ service.title }}</h3>
-        <p>{{ service.description }}</p>
-      </article>
+  <ul class="reference-list">
+    @for (reference of references; track reference) {
+      <li>{{ reference }}</li>
     }
-  </div>
-
-  <div class="service-actions">
-    <a class="btn primary" routerLink="/services"><span aria-hidden="true">🛠️</span>{{ i18n.t('home.services.cta') }}</a>
-    <a class="btn" [href]="calUrl" target="_blank" rel="noreferrer"><span aria-hidden="true">📅</span>{{ i18n.t('home.services.book') }}</a>
-  </div>
+  </ul>
 </section>
 
-<section class="catalog" aria-labelledby="catalog-title">
-  <article class="catalog-card ds-panel">
-    <h2 id="catalog-title">{{ i18n.t('home.products.title') }}</h2>
-    <p class="construction-note">{{ i18n.t('home.products.note') }}</p>
-    <a class="btn" routerLink="/tools"><span aria-hidden="true">🧰</span>{{ i18n.t('home.products.cta') }}</a>
-  </article>
-
-  <article class="catalog-card ds-panel">
-    <h2>{{ i18n.t('home.clients.title') }}</h2>
-    <p class="construction-note">{{ i18n.t('home.clients.note') }}</p>
-    <a class="btn" routerLink="/clients"><span aria-hidden="true">🏢</span>{{ i18n.t('home.clients.cta') }}</a>
-
-    <div class="catalog-note">
-      <span>{{ i18n.t('home.clients.experience') }}</span>
-
-      <div class="reference-list">
-        @for (reference of references; track reference) {
-          <span class="badge">{{ reference }}</span>
-        }
-      </div>
+<section class="engage page-section" aria-labelledby="engage-title">
+  <div class="engage-card">
+    <p class="ds-label">{{ i18n.t('home.engage.kicker') }}</p>
+    <h2 id="engage-title">{{ i18n.t('home.engage.title') }}</h2>
+    <p>{{ i18n.t('home.engage.copy') }}</p>
+    <div class="actions">
+      <a class="btn primary" href="mailto:contact@froment.software">{{ i18n.t('home.engage.mail') }}</a>
+      <a class="btn dark" routerLink="/services">{{ i18n.t('home.engage.services') }}</a>
     </div>
-  </article>
+  </div>
 </section>

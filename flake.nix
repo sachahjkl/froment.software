@@ -24,9 +24,10 @@
           COPY . .
           RUN npm run build
 
-          FROM joseluisq/static-web-server:2-alpine
+          FROM nginx:1.29-alpine
 
-          COPY --from=build /app/dist/froment-software/browser /public
+          COPY nginx.conf /etc/nginx/nginx.conf
+          COPY --from=build /app/dist/froment-software/browser /usr/share/nginx/html
 
           EXPOSE 80
         '';

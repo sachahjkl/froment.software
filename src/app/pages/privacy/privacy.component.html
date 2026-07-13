@@ -1,30 +1,70 @@
-<section class="legal">
-  <p class="kicker">{{ i18n.t('privacy.kicker') }}</p>
-  <h1>{{ i18n.t('privacy.title') }}</h1>
-  <p class="date">{{ i18n.t('privacy.updated') }}</p>
+<section class="policy-page" aria-labelledby="privacy-title">
+  <header class="policy-hero">
+    <p class="ds-label">{{ i18n.t('privacy.kicker') }}</p>
+    <h1 id="privacy-title">{{ i18n.t('privacy.title') }}</h1>
+    <p class="policy-lead">{{ i18n.t('privacy.lead') }}</p>
+    <time class="policy-date" datetime="2026-07-13">{{ i18n.t('privacy.updated') }}</time>
+  </header>
 
-  <article class="legal-block">
-    <h2>{{ i18n.t('privacy.who.title') }}</h2>
-    <p>{{ i18n.t('privacy.who.content') }}</p>
-  </article>
+  <div class="policy-layout">
+    <aside class="policy-summary ds-panel inset" aria-labelledby="privacy-summary-title">
+      <p class="section-index" aria-hidden="true">00</p>
+      <h2 id="privacy-summary-title">{{ i18n.t('privacy.summary.title') }}</h2>
+      <p>{{ i18n.t('privacy.summary.content') }}</p>
+    </aside>
 
-  <article class="legal-block">
-    <h2>{{ i18n.t('privacy.data.title') }}</h2>
-    <p>{{ i18n.t('privacy.data.content') }}</p>
-  </article>
+    <div class="policy-content">
+      <section class="policy-section" aria-labelledby="privacy-who-title">
+        <p class="section-index" aria-hidden="true">01</p>
+        <h2 id="privacy-who-title">{{ i18n.t('privacy.who.title') }}</h2>
+        <p>{{ i18n.t('privacy.who.content') }}</p>
+      </section>
 
-  <article class="legal-block">
-    <h2>{{ i18n.t('privacy.cookies.title') }}</h2>
-    <p>{{ i18n.t('privacy.cookies.content') }}</p>
-  </article>
+      <section class="policy-section" aria-labelledby="privacy-data-title">
+        <p class="section-index" aria-hidden="true">02</p>
+        <h2 id="privacy-data-title">{{ i18n.t('privacy.data.title') }}</h2>
+        <p>{{ i18n.t('privacy.data.content') }}</p>
+      </section>
 
-  <article class="legal-block">
-    <h2>{{ i18n.t('privacy.rights.title') }}</h2>
-    <p>{{ i18n.t('privacy.rights.content') }}</p>
-  </article>
+      <section class="policy-section" aria-labelledby="privacy-retention-title">
+        <p class="section-index" aria-hidden="true">03</p>
+        <h2 id="privacy-retention-title">{{ i18n.t('privacy.retention.title') }}</h2>
+        <p>{{ i18n.t('privacy.retention.content') }}</p>
+      </section>
 
-  <article class="legal-block">
-    <h2>{{ i18n.t('privacy.contact.title') }}</h2>
-    <p>{{ i18n.t('privacy.contact.content') }}</p>
-  </article>
+      <section class="policy-section" aria-labelledby="privacy-storage-title">
+        <p class="section-index" aria-hidden="true">04</p>
+        <h2 id="privacy-storage-title">{{ i18n.t('privacy.storage.title') }}</h2>
+        <p>{{ i18n.t('privacy.storage.content') }}</p>
+      </section>
+
+      <section class="policy-section" aria-labelledby="privacy-external-title">
+        <p class="section-index" aria-hidden="true">05</p>
+        <h2 id="privacy-external-title">{{ i18n.t('privacy.external.title') }}</h2>
+        <p>{{ i18n.t('privacy.external.content') }}</p>
+      </section>
+
+      <section class="policy-section" aria-labelledby="privacy-rights-title">
+        <p class="section-index" aria-hidden="true">06</p>
+        <h2 id="privacy-rights-title">{{ i18n.t('privacy.rights.title') }}</h2>
+        <p>{{ i18n.t('privacy.rights.content') }}</p>
+      </section>
+
+      <section class="policy-section" aria-labelledby="privacy-contact-title">
+        <p class="section-index" aria-hidden="true">07</p>
+        <h2 id="privacy-contact-title">{{ i18n.t('privacy.contact.title') }}</h2>
+        <p>{{ i18n.t('privacy.contact.content') }}</p>
+        <p class="policy-link"><a href="mailto:contact@froment.software">contact@froment.software</a></p>
+      </section>
+
+      <section class="policy-section" aria-labelledby="privacy-related-title">
+        <p class="section-index" aria-hidden="true">08</p>
+        <h2 id="privacy-related-title">{{ i18n.t('privacy.related.title') }}</h2>
+        <nav class="policy-links" [attr.aria-label]="i18n.t('privacy.related.title')">
+          <a routerLink="/cookies">{{ i18n.t('privacy.related.cookies') }}</a>
+          <a routerLink="/legal">{{ i18n.t('privacy.related.legal') }}</a>
+        </nav>
+      </section>
+    </div>
+  </div>
 </section>

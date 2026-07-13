@@ -1,57 +1,77 @@
 <div class="app-shell">
-  <header class="topbar" role="banner">
-    <a class="brand" routerLink="/" [attr.aria-label]="i18n.t('brand.home')">
-      <span class="mark" aria-hidden="true"><span></span><span></span></span>
-      <span class="brand-text"><b>FROMENT</b><small>.software</small></span>
-    </a>
+  <a class="skip-link" href="#main-content">
+    {{ i18n.language() === 'fr' ? 'Aller au contenu' : 'Skip to content' }}
+  </a>
 
-    <button
-      class="nav-toggle"
-      type="button"
-      [attr.aria-expanded]="navOpen()"
-      [attr.aria-label]="i18n.t('nav.primary')"
-      (click)="toggleNav()"
-    >
-      <span></span>
-      <span></span>
-      <span></span>
-    </button>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a class="brand" routerLink="/" [attr.aria-label]="i18n.t('brand.home')">
+        <span class="mark" aria-hidden="true"><span></span><span></span></span>
+        <span class="brand-text"><b>FROMENT</b><small>.software</small></span>
+      </a>
 
-    <nav class="nav" [class.open]="navOpen()" [attr.aria-label]="i18n.t('nav.primary')">
-      <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" (click)="closeNav()">{{ i18n.t('nav.home') }}</a>
-      <a routerLink="/services" routerLinkActive="active" (click)="closeNav()">{{ i18n.t('nav.services') }}</a>
-      <a routerLink="/about" routerLinkActive="active" (click)="closeNav()">{{ i18n.t('nav.about') }}</a>
-      <a routerLink="/tools" routerLinkActive="active" (click)="closeNav()">{{ i18n.t('nav.products') }}</a>
-      <a routerLink="/clients" routerLinkActive="active" (click)="closeNav()">{{ i18n.t('nav.clients') }}</a>
-    </nav>
+      <button
+        #navToggle
+        class="nav-toggle"
+        type="button"
+        aria-controls="primary-navigation"
+        [attr.aria-expanded]="navOpen()"
+        [attr.aria-label]="navOpen()
+          ? (i18n.language() === 'fr' ? 'Fermer le menu' : 'Close menu')
+          : (i18n.language() === 'fr' ? 'Ouvrir le menu' : 'Open menu')"
+        (click)="toggleNav()"
+      >
+        <span class="nav-toggle-lines" aria-hidden="true">
+          <span></span>
+          <span></span>
+          <span></span>
+        </span>
+      </button>
 
-    <span class="topbar-line" aria-hidden="true"></span>
+      <nav
+        id="primary-navigation"
+        class="nav"
+        [class.open]="navOpen()"
+        [attr.aria-label]="i18n.t('nav.primary')"
+      >
+        <a routerLink="/" routerLinkActive="active" ariaCurrentWhenActive="page" [routerLinkActiveOptions]="{ exact: true }" (click)="closeNav()">{{ i18n.t('nav.home') }}</a>
+        <a routerLink="/services" routerLinkActive="active" ariaCurrentWhenActive="page" (click)="closeNav()">{{ i18n.t('nav.services') }}</a>
+        <a routerLink="/about" routerLinkActive="active" ariaCurrentWhenActive="page" (click)="closeNav()">{{ i18n.t('nav.about') }}</a>
+        <a routerLink="/tools" routerLinkActive="active" ariaCurrentWhenActive="page" (click)="closeNav()">{{ i18n.t('nav.products') }}</a>
+        <a routerLink="/clients" routerLinkActive="active" ariaCurrentWhenActive="page" (click)="closeNav()">{{ i18n.t('nav.clients') }}</a>
+      </nav>
+    </div>
   </header>
 
-  <main>
+  <main id="main-content" tabindex="-1">
     <router-outlet />
   </main>
 
   <footer class="footer">
-    <div class="footer-legal">
-      <a routerLink="/legal">{{ i18n.t('nav.legal') }}</a>
-      <span class="footer-sep" aria-hidden="true">•</span>
-      <a routerLink="/privacy">{{ i18n.t('nav.privacy') }}</a>
-      <span class="footer-sep" aria-hidden="true">•</span>
-      <a routerLink="/cookies">{{ i18n.t('nav.cookies') }}</a>
-    </div>
+    <div class="footer-inner">
+      <nav
+        class="footer-legal"
+        [attr.aria-label]="i18n.language() === 'fr' ? 'Navigation juridique' : 'Legal navigation'"
+      >
+        <a routerLink="/legal" routerLinkActive="active" ariaCurrentWhenActive="page">{{ i18n.t('nav.legal') }}</a>
+        <span class="footer-sep" aria-hidden="true">•</span>
+        <a routerLink="/privacy" routerLinkActive="active" ariaCurrentWhenActive="page">{{ i18n.t('nav.privacy') }}</a>
+        <span class="footer-sep" aria-hidden="true">•</span>
+        <a routerLink="/cookies" routerLinkActive="active" ariaCurrentWhenActive="page">{{ i18n.t('nav.cookies') }}</a>
+      </nav>
 
-    <div class="footer-main">
-      <p>{{ brandName }} © {{ currentYear }}</p>
+      <div class="footer-main">
+        <p>{{ brandName }} © {{ currentYear }}</p>
 
-      <label class="footer-language">
-      <span>{{ i18n.t('footer.language') }}</span>
-      <select class="lang-select" [value]="i18n.language()" (change)="setLanguage($any($event.target).value)">
-        @for (language of i18n.languages; track language.code) {
-          <option [value]="language.code">{{ i18n.t(language.labelKey) }}</option>
-        }
-      </select>
-    </label>
+        <label class="footer-language">
+          <span>{{ i18n.t('footer.language') }}</span>
+          <select class="lang-select" [value]="i18n.language()" (change)="setLanguage($any($event.target).value)">
+            @for (language of i18n.languages; track language.code) {
+              <option [value]="language.code">{{ i18n.t(language.labelKey) }}</option>
+            }
+          </select>
+        </label>
+      </div>
     </div>
   </footer>
 </div>

@@ -3,6 +3,7 @@ import { HomeComponent } from './pages/home/home.component';
 import { ClientsComponent } from './pages/clients/clients.component';
 import { ServicesComponent } from './pages/services/services.component';
 import { ShowcaseComponent } from './pages/showcase/showcase.component';
+import { DesignComponent } from './pages/design/design.component';
 import { ToolsComponent } from './pages/tools/tools.component';
 import { AboutComponent } from './pages/about/about.component';
 import { LegalComponent } from './pages/legal/legal.component';
@@ -18,8 +19,10 @@ export const routes: Routes = [
   { path: 'services', component: ServicesComponent, data: { titleKey: 'page.services', descriptionKey: 'page.description.services' } },
   { path: 'tools', component: ToolsComponent, data: { titleKey: 'page.products', descriptionKey: 'page.description.products' } },
   { path: 'showcase', component: ShowcaseComponent, data: { titleKey: 'page.showcase', descriptionKey: 'page.description.showcase' } },
+  { path: 'design', component: DesignComponent, data: { titleKey: 'page.design', descriptionKey: 'page.description.design', robots: 'noindex, follow' } },
   { path: 'legal', component: LegalComponent, data: { titleKey: 'page.legal', descriptionKey: 'page.description.legal' } },
   { path: 'privacy', component: PrivacyComponent, data: { titleKey: 'page.privacy', descriptionKey: 'page.description.privacy' } },
   { path: 'cookies', component: CookiesComponent, data: { titleKey: 'page.cookies', descriptionKey: 'page.description.cookies' } },
-  { path: '**', component: NotFoundComponent, data: { titleKey: 'page.not_found', descriptionKey: 'page.description.not_found' } },
+  { path: '404', component: NotFoundComponent, data: { titleKey: 'page.not_found', descriptionKey: 'page.description.not_found', robots: 'noindex, nofollow' } },
+  { path: '**', component: NotFoundComponent, data: { titleKey: 'page.not_found', descriptionKey: 'page.description.not_found', robots: 'noindex, nofollow' } },
 ];

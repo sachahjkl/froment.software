@@ -1,0 +1,210 @@
+<article class="design-workshop">
+  <header class="workshop-hero">
+    <p class="ds-label">{{ i18n.language() === 'fr' ? 'Atelier QA visuel' : 'Visual QA workshop' }}</p>
+    <h1>{{ i18n.language() === 'fr' ? 'Système de design' : 'Design system' }}</h1>
+    <p class="workshop-lead">
+      {{ i18n.language() === 'fr'
+        ? 'Une vue directe des fondations, composants, états et comportements responsives de froment.software.'
+        : 'A direct view of froment.software foundations, components, states, and responsive behavior.' }}
+    </p>
+    <nav class="workshop-nav" [attr.aria-label]="i18n.language() === 'fr' ? 'Sections de l’atelier' : 'Workshop sections'">
+      <a class="btn" href="#tokens">{{ i18n.language() === 'fr' ? 'Fondations' : 'Foundations' }}</a>
+      <a class="btn" href="#components">{{ i18n.language() === 'fr' ? 'Composants' : 'Components' }}</a>
+      <a class="btn" href="#data">{{ i18n.language() === 'fr' ? 'Données' : 'Data' }}</a>
+      <a class="btn" href="#states">{{ i18n.language() === 'fr' ? 'États' : 'States' }}</a>
+      <a class="btn" href="#layout">{{ i18n.language() === 'fr' ? 'Composition' : 'Layout' }}</a>
+      <a class="btn" href="#motion">{{ i18n.language() === 'fr' ? 'Mouvement' : 'Motion' }}</a>
+    </nav>
+  </header>
+
+  <section id="tokens" class="workshop-section" aria-labelledby="tokens-title">
+    <div class="section-heading">
+      <p class="ds-label">01 / {{ i18n.language() === 'fr' ? 'Tokens' : 'Tokens' }}</p>
+      <h2 id="tokens-title">{{ i18n.language() === 'fr' ? 'Fondations visuelles' : 'Visual foundations' }}</h2>
+      <p>{{ i18n.language() === 'fr' ? 'Les couleurs ont un rôle sémantique. La grille d’espacement repose sur quatre pixels.' : 'Colors have semantic roles. The spacing grid is based on four pixels.' }}</p>
+    </div>
+
+    <div class="swatch-grid" [attr.aria-label]="i18n.language() === 'fr' ? 'Tokens de couleur' : 'Color tokens'">
+      <div class="swatch ds-panel tone-ink"><span>Ink</span><code>--color-ink</code></div>
+      <div class="swatch ds-panel tone-muted"><span>Muted</span><code>--color-muted</code></div>
+      <div class="swatch ds-panel tone-canvas"><span>Canvas</span><code>--color-canvas</code></div>
+      <div class="swatch ds-panel tone-surface"><span>Surface</span><code>--color-surface</code></div>
+      <div class="swatch ds-panel tone-sunken"><span>Sunken</span><code>--color-surface-sunken</code></div>
+      <div class="swatch ds-panel tone-accent"><span>Accent</span><code>--color-accent</code></div>
+      <div class="swatch ds-panel tone-focus"><span>Focus</span><code>--color-focus</code></div>
+      <div class="swatch ds-panel tone-danger"><span>Danger</span><code>--color-danger</code></div>
+    </div>
+
+    <div class="specimen-grid">
+      <article class="ds-panel specimen type-specimen grid">
+        <p class="ds-label">{{ i18n.language() === 'fr' ? 'Échelle typographique' : 'Type scale' }}</p>
+        <p class="type-display">Aa</p>
+        <h3>{{ i18n.language() === 'fr' ? 'Construire avec précision' : 'Built with precision' }}</h3>
+        <h4>{{ i18n.language() === 'fr' ? 'Une hiérarchie éditoriale claire' : 'A clear editorial hierarchy' }}</h4>
+        <p>{{ i18n.language() === 'fr' ? 'Le texte courant privilégie la lecture, tandis que les libellés monospace conservent le caractère technique.' : 'Body copy favors reading, while monospace labels retain the technical character.' }}</p>
+        <code>SFMono-Regular / 13px / 700</code>
+      </article>
+
+      <article class="ds-panel specimen spacing-specimen grid">
+        <p class="ds-label">{{ i18n.language() === 'fr' ? 'Rythme spatial' : 'Spacing rhythm' }}</p>
+        <div class="space-row"><span class="space-1"></span><code>04</code></div>
+        <div class="space-row"><span class="space-2"></span><code>08</code></div>
+        <div class="space-row"><span class="space-4"></span><code>16</code></div>
+        <div class="space-row"><span class="space-8"></span><code>32</code></div>
+        <div class="space-row"><span class="space-12"></span><code>48</code></div>
+        <div class="token-notes grid">
+          <code>radius / 2 · 4 · 8</code>
+          <code>border / 1 · 2</code>
+          <code>motion / 120 · 180 · 240</code>
+          <code>container / 90rem</code>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <section id="components" class="workshop-section section-tint" aria-labelledby="components-title">
+    <div class="section-heading">
+      <p class="ds-label">02 / {{ i18n.language() === 'fr' ? 'Composants' : 'Components' }}</p>
+      <h2 id="components-title">{{ i18n.language() === 'fr' ? 'Actions et saisie' : 'Actions and input' }}</h2>
+      <p>{{ i18n.language() === 'fr' ? 'Des contrôles lisibles, tactiles et cohérents sur tous les modes de saisie.' : 'Controls remain readable, tactile, and consistent across input modes.' }}</p>
+    </div>
+
+    <div class="specimen-grid">
+      <article class="ds-panel specimen">
+        <p class="ds-label">{{ i18n.language() === 'fr' ? 'Boutons et liens' : 'Buttons & links' }}</p>
+        <div class="component-row">
+          <button class="btn primary" type="button">{{ i18n.language() === 'fr' ? 'Exécuter' : 'Execute' }}</button>
+          <button class="btn" type="button">{{ i18n.language() === 'fr' ? 'Secondaire' : 'Secondary' }}</button>
+          <button class="btn dark" type="button">{{ i18n.language() === 'fr' ? 'Dense' : 'Dense' }}</button>
+          <button class="btn" type="button" disabled>{{ i18n.language() === 'fr' ? 'Indisponible' : 'Unavailable' }}</button>
+        </div>
+        <div class="link-stack">
+          <a href="#data">{{ i18n.language() === 'fr' ? 'Lien dans le texte' : 'Inline text link' }}</a>
+          <a class="standalone-link" href="#layout">{{ i18n.language() === 'fr' ? 'Découvrir la composition' : 'Explore composition' }} <span aria-hidden="true">→</span></a>
+        </div>
+        <div class="component-row" [attr.aria-label]="i18n.language() === 'fr' ? 'Exemples de badges' : 'Badge examples'">
+          <span class="badge">{{ i18n.language() === 'fr' ? 'Brouillon' : 'Draft' }}</span>
+          <span class="badge ok">{{ i18n.language() === 'fr' ? 'En ligne' : 'Online' }}</span>
+          <span class="badge warn">{{ i18n.language() === 'fr' ? 'À revoir' : 'Review' }}</span>
+          <span class="badge err">{{ i18n.language() === 'fr' ? 'Erreur' : 'Error' }}</span>
+        </div>
+      </article>
+
+      <form class="ds-panel specimen form-specimen grid" action="#" (submit)="$event.preventDefault()">
+        <p class="ds-label">{{ i18n.language() === 'fr' ? 'Champs et sélection' : 'Fields and select' }}</p>
+        <label>
+          <span>{{ i18n.language() === 'fr' ? 'Nom du projet' : 'Project name' }}</span>
+          <input class="input" type="text" value="Atlas migration" />
+        </label>
+        <label>
+          <span>Email</span>
+          <input class="input" type="email" placeholder="team@example.com" />
+        </label>
+        <label>
+          <span>{{ i18n.language() === 'fr' ? 'Environnement' : 'Environment' }}</span>
+          <select class="select">
+            <option>{{ i18n.language() === 'fr' ? 'Production' : 'Production' }}</option>
+            <option>{{ i18n.language() === 'fr' ? 'Préproduction' : 'Staging' }}</option>
+            <option>{{ i18n.language() === 'fr' ? 'Développement' : 'Development' }}</option>
+          </select>
+        </label>
+        <label>
+          <span>{{ i18n.language() === 'fr' ? 'Contexte' : 'Context' }}</span>
+          <textarea class="input" rows="3" placeholder="{{ i18n.language() === 'fr' ? 'Décrivez le besoin' : 'Describe the need' }}"></textarea>
+        </label>
+        <label class="check-row"><input type="checkbox" checked /> <span>{{ i18n.language() === 'fr' ? 'Activer les notifications' : 'Enable notifications' }}</span></label>
+      </form>
+    </div>
+
+    <div class="panel-grid">
+      <article class="ds-panel panel-example grid">
+        <p class="ds-label">{{ i18n.language() === 'fr' ? 'Panneau standard' : 'Default panel' }}</p>
+        <h3>{{ i18n.language() === 'fr' ? 'Surface principale' : 'Primary surface' }}</h3>
+        <p>{{ i18n.language() === 'fr' ? 'Une bordure calme et une ombre courte suffisent à hiérarchiser.' : 'A quiet border and short shadow are enough to establish hierarchy.' }}</p>
+      </article>
+      <article class="ds-panel inset panel-example grid">
+        <p class="ds-label">{{ i18n.language() === 'fr' ? 'Panneau en retrait' : 'Inset panel' }}</p>
+        <h3>{{ i18n.language() === 'fr' ? 'Surface en retrait' : 'Recessed surface' }}</h3>
+        <p>{{ i18n.language() === 'fr' ? 'Utile pour un groupe secondaire sans imbriquer plusieurs cartes.' : 'Useful for a secondary group without nesting multiple cards.' }}</p>
+      </article>
+    </div>
+  </section>
+
+  <section id="data" class="workshop-section" aria-labelledby="data-title">
+    <div class="section-heading">
+      <p class="ds-label">03 / {{ i18n.language() === 'fr' ? 'Retour et données' : 'Feedback & data' }}</p>
+      <h2 id="data-title">{{ i18n.language() === 'fr' ? 'Statuts et informations' : 'Status and information' }}</h2>
+    </div>
+
+    <div class="notice-stack grid">
+      <div class="notice notice-info ds-panel"><strong>{{ i18n.language() === 'fr' ? 'Information' : 'Information' }}</strong><span>{{ i18n.language() === 'fr' ? 'La synchronisation est planifiée à 18:00.' : 'Synchronization is scheduled for 18:00.' }}</span></div>
+      <div class="notice notice-success ds-panel"><strong>{{ i18n.language() === 'fr' ? 'Succès' : 'Success' }}</strong><span>{{ i18n.language() === 'fr' ? 'Le déploiement est terminé.' : 'Deployment completed.' }}</span></div>
+      <div class="notice notice-warning ds-panel"><strong>{{ i18n.language() === 'fr' ? 'Attention' : 'Warning' }}</strong><span>{{ i18n.language() === 'fr' ? 'Deux changements nécessitent une revue.' : 'Two changes require review.' }}</span></div>
+      <div class="notice notice-error ds-panel"><strong>{{ i18n.language() === 'fr' ? 'Erreur' : 'Error' }}</strong><span>{{ i18n.language() === 'fr' ? 'La connexion au service a échoué.' : 'The service connection failed.' }}</span></div>
+    </div>
+
+    <div class="table-wrap ds-panel" tabindex="0" role="region" [attr.aria-label]="i18n.language() === 'fr' ? 'Tableau de services, défilement horizontal possible' : 'Services table, horizontally scrollable'">
+      <table>
+        <caption>{{ i18n.language() === 'fr' ? 'État des services' : 'Service status' }}</caption>
+        <thead><tr><th scope="col">Service</th><th scope="col">{{ i18n.language() === 'fr' ? 'Statut' : 'Status' }}</th><th scope="col">{{ i18n.language() === 'fr' ? 'Équipe' : 'Owner' }}</th><th scope="col">{{ i18n.language() === 'fr' ? 'Mise à jour' : 'Updated' }}</th></tr></thead>
+        <tbody>
+          <tr><th scope="row">api-gateway</th><td><span class="badge ok">{{ i18n.language() === 'fr' ? 'En ligne' : 'Online' }}</span></td><td>Platform</td><td>12:42</td></tr>
+          <tr><th scope="row">client-app</th><td><span class="badge warn">{{ i18n.language() === 'fr' ? 'À revoir' : 'Review' }}</span></td><td>Product</td><td>11:18</td></tr>
+          <tr><th scope="row">jobs-worker</th><td><span class="badge err">{{ i18n.language() === 'fr' ? 'Erreur' : 'Error' }}</span></td><td>Platform</td><td>09:06</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="details-stack grid">
+      <details class="ds-panel">
+        <summary>{{ i18n.language() === 'fr' ? 'Comment utiliser les tokens ?' : 'How should tokens be used?' }}</summary>
+        <p>{{ i18n.language() === 'fr' ? 'Composer avec les variables sémantiques plutôt qu’avec des valeurs isolées.' : 'Compose with semantic variables rather than isolated values.' }}</p>
+      </details>
+      <details class="ds-panel" open>
+        <summary>{{ i18n.language() === 'fr' ? 'Pourquoi si peu de rayons ?' : 'Why are radii restrained?' }}</summary>
+        <p>{{ i18n.language() === 'fr' ? 'Les petits rayons conservent le caractère éditorial et technique du site.' : 'Small radii preserve the site’s editorial and technical character.' }}</p>
+      </details>
+    </div>
+  </section>
+
+  <section id="states" class="workshop-section section-tint" aria-labelledby="states-title">
+    <div class="section-heading">
+      <p class="ds-label">04 / {{ i18n.language() === 'fr' ? 'États interactifs' : 'Interaction states' }}</p>
+      <h2 id="states-title">{{ i18n.language() === 'fr' ? 'Chaque état est explicite' : 'Every state is explicit' }}</h2>
+      <p>{{ i18n.language() === 'fr' ? 'Utilisez Tab pour contrôler le vrai focus, puis survolez ou activez les exemples.' : 'Use Tab to inspect real focus, then hover or activate the examples.' }}</p>
+    </div>
+
+    <div class="state-grid grid">
+      <div class="state-item ds-panel"><span class="ds-label">{{ i18n.language() === 'fr' ? 'Repos' : 'Rest' }}</span><button class="btn" type="button">{{ i18n.language() === 'fr' ? 'Bouton' : 'Button' }}</button></div>
+      <div class="state-item ds-panel"><span class="ds-label">{{ i18n.language() === 'fr' ? 'Aperçu du focus' : 'Focus preview' }}</span><button class="btn focus-preview" type="button">{{ i18n.language() === 'fr' ? 'Bouton' : 'Button' }}</button></div>
+      <div class="state-item ds-panel"><span class="ds-label">{{ i18n.language() === 'fr' ? 'Principal' : 'Primary' }}</span><button class="btn primary" type="button">{{ i18n.language() === 'fr' ? 'Bouton' : 'Button' }}</button></div>
+      <div class="state-item ds-panel"><span class="ds-label">{{ i18n.language() === 'fr' ? 'Désactivé' : 'Disabled' }}</span><button class="btn" type="button" disabled>{{ i18n.language() === 'fr' ? 'Bouton' : 'Button' }}</button></div>
+    </div>
+  </section>
+
+  <section id="layout" class="workshop-section" aria-labelledby="layout-title">
+    <div class="section-heading">
+      <p class="ds-label">05 / {{ i18n.language() === 'fr' ? 'Composition' : 'Layout' }}</p>
+      <h2 id="layout-title">{{ i18n.language() === 'fr' ? 'Composition responsive' : 'Responsive composition' }}</h2>
+      <p>{{ i18n.language() === 'fr' ? 'Les groupes se réorganisent sans perdre leur ordre de lecture.' : 'Groups reflow without losing their reading order.' }}</p>
+    </div>
+
+    <div class="layout-demo ds-panel">
+      <div class="layout-primary grid"><span class="ds-label">{{ i18n.language() === 'fr' ? 'Principal' : 'Main' }} / 2fr</span><h3>{{ i18n.language() === 'fr' ? 'Contenu principal' : 'Primary content' }}</h3><p>{{ i18n.language() === 'fr' ? 'Une colonne souple porte l’essentiel du récit.' : 'A flexible column carries the main narrative.' }}</p></div>
+      <aside class="layout-secondary grid"><span class="ds-label">{{ i18n.language() === 'fr' ? 'Complément' : 'Aside' }} / 1fr</span><h3>{{ i18n.language() === 'fr' ? 'Contexte' : 'Context' }}</h3><p>{{ i18n.language() === 'fr' ? 'Le complément reste proche, puis passe dessous sur écran étroit.' : 'Supporting detail stays nearby, then moves below on a narrow screen.' }}</p></aside>
+    </div>
+  </section>
+
+  <section id="motion" class="workshop-section section-tint" aria-labelledby="motion-title">
+    <div class="section-heading">
+      <p class="ds-label">06 / {{ i18n.language() === 'fr' ? 'Mouvement' : 'Motion' }}</p>
+      <h2 id="motion-title">{{ i18n.language() === 'fr' ? 'Mouvement fonctionnel' : 'Purposeful motion' }}</h2>
+      <p>{{ i18n.language() === 'fr' ? 'Survolez ou focalisez le rail. Seuls transform et opacity sont animés, en 240 ms maximum. Le mouvement disparaît si la préférence système le demande.' : 'Hover or focus the rail. Only transform and opacity animate, for no more than 240ms. Motion is removed when the system preference requests it.' }}</p>
+    </div>
+
+    <button class="btn motion-trigger" type="button">
+      <span class="motion-chip" aria-hidden="true"></span>
+      <span class="motion-label">{{ i18n.language() === 'fr' ? 'Survol / focus' : 'Hover / focus' }}</span>
+    </button>
+  </section>
+</article>

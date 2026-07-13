@@ -4,12 +4,27 @@
     <loc>https://froment.software/</loc>
   </url>
   <url>
-    <loc>https://froment.software/tools</loc>
+    <loc>https://froment.software/about</loc>
+  </url>
+  <url>
+    <loc>https://froment.software/clients</loc>
   </url>
   <url>
     <loc>https://froment.software/services</loc>
   </url>
   <url>
-    <loc>https://froment.software/clients</loc>
+    <loc>https://froment.software/tools</loc>
+  </url>
+  <url>
+    <loc>https://froment.software/showcase</loc>
+  </url>
+  <url>
+    <loc>https://froment.software/legal</loc>
+  </url>
+  <url>
+    <loc>https://froment.software/privacy</loc>
+  </url>
+  <url>
+    <loc>https://froment.software/cookies</loc>
   </url>
 </urlset>

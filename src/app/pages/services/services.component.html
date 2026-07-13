@@ -1,25 +1,55 @@
-<section class="services-hero">
-  <p class="kicker">{{ i18n.t('services.kicker') }}</p>
-  <h1>{{ i18n.t('services.title') }}</h1>
-  <p class="lead">{{ i18n.t('services.lead') }}</p>
-
-  <div class="actions">
-    <a class="btn primary" [href]="quoteMailto()"><span aria-hidden="true">📨</span>{{ i18n.t('services.quote') }}</a>
-    <a class="btn" [href]="calUrl" target="_blank" rel="noreferrer"><span aria-hidden="true">📅</span>{{ i18n.t('services.book') }}</a>
+<header class="services-hero">
+  <div class="hero-inner">
+    <p class="ds-label">{{ i18n.t('services.kicker') }}</p>
+    <h1>{{ i18n.t('services.title') }}</h1>
+    <p class="lead">{{ i18n.t('services.lead') }}</p>
+    <div class="actions">
+      <a class="btn primary" [href]="quoteMailto()">{{ i18n.t('services.quote') }}</a>
+      <a class="btn" [href]="calUrl" target="_blank" rel="noreferrer">{{ i18n.t('services.book') }}</a>
+    </div>
   </div>
-</section>
+</header>
 
-<section class="services-listing" aria-labelledby="services-title">
-  <div class="listing-head">
+<section class="services-listing page-section" aria-labelledby="services-title">
+  <div class="section-heading">
+    <p class="ds-label">{{ i18n.t('services.kicker') }}</p>
     <h2 id="services-title">{{ i18n.t('services.list.title') }}</h2>
   </div>
-
-  <div class="services-grid">
-    @for (service of services(); track service.title) {
-      <article class="service-card ds-panel">
+  <ol class="services-grid">
+    @for (service of services(); track service.title; let index = $index) {
+      <li class="service-card ds-panel">
+        <span class="card-index" aria-hidden="true">0{{ index + 1 }}</span>
         <h3>{{ service.title }}</h3>
         <p>{{ service.description }}</p>
-      </article>
+      </li>
     }
+  </ol>
+</section>
+
+<section class="delivery page-section" aria-labelledby="delivery-title">
+  <div class="section-heading delivery-heading">
+    <p class="ds-label">{{ i18n.t('services.process.kicker') }}</p>
+    <h2 id="delivery-title">{{ i18n.t('services.process.title') }}</h2>
+    <p>{{ i18n.t('services.process.intro') }}</p>
+  </div>
+  <ol class="process-list">
+    @for (step of process(); track step.title) {
+      <li>
+        <h3>{{ step.title }}</h3>
+        <p>{{ step.description }}</p>
+      </li>
+    }
+  </ol>
+</section>
+
+<section class="service-contact page-section" aria-labelledby="service-contact-title">
+  <div>
+    <p class="ds-label">{{ i18n.t('home.engage.kicker') }}</p>
+    <h2 id="service-contact-title">{{ i18n.t('home.engage.title') }}</h2>
+    <p>{{ i18n.t('home.engage.copy') }}</p>
+  </div>
+  <div class="actions">
+    <a class="btn primary" [href]="quoteMailto()">{{ i18n.t('services.quote') }}</a>
+    <a class="btn dark" [href]="calUrl" target="_blank" rel="noreferrer">{{ i18n.t('services.book') }}</a>
   </div>
 </section>
