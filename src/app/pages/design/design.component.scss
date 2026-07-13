@@ -89,9 +89,9 @@ tbody th { font-size: var(--text-sm); }
 .layout-secondary { border-left: var(--border-1) solid var(--color-line); background: var(--color-surface-sunken); }
 .layout-demo p:last-child { color: var(--color-muted); }
 
-.motion-trigger { width: min(100%, 32rem); min-height: var(--space-20); justify-content: flex-start; border-color: var(--color-ink); background: var(--color-surface-sunken); box-shadow: var(--shadow-panel); }
+.motion-trigger { display: grid; width: min(100%, 32rem); min-height: var(--space-20); grid-template-columns: var(--space-20) minmax(0, 1fr); column-gap: var(--space-4); justify-content: start; border-color: var(--color-ink); background: var(--color-surface-sunken); box-shadow: var(--shadow-panel); }
 .motion-chip { display: block; width: var(--space-8); height: var(--space-8); background: var(--color-accent); box-shadow: inset 0 -2px 0 rgb(0 0 0 / 0.18); transition: transform var(--duration-slow) var(--ease-in-out); }
-.motion-label { margin-left: var(--space-4); }
+.motion-label { min-width: 0; margin-left: 0; }
 .motion-trigger:focus-visible .motion-chip { transition-duration: 0ms; transform: translateX(var(--space-12)); }
 
 @media (hover: hover) and (pointer: fine) { .motion-trigger:hover .motion-chip { transform: translateX(var(--space-12)); } }

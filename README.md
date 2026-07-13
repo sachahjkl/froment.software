@@ -18,7 +18,7 @@ Cette préférence n’agit qu’après le chargement côté client : elle ne pr
 
 ## Routes et indexation
 
-Les routes publiques indexables sont `/`, `/about`, `/clients`, `/services`, `/tools`, `/showcase`, `/legal`, `/privacy` et `/cookies`. Elles figurent dans `public/sitemap.xml`; `/showcase` est bien une page publique, pas une page de test.
+Les routes publiques indexables sont `/`, `/about`, `/clients`, `/services`, `/tools`, `/legal`, `/privacy` et `/cookies`. Elles figurent dans `public/sitemap.xml`.
 
 - `/design` est un atelier de QA visuelle, volontairement absent de la navigation publique et du sitemap, avec `noindex, follow`.
 - `/404` est pré-rendue, porte `noindex, nofollow` et sert de contenu d’erreur.
@@ -45,7 +45,7 @@ Avant de modifier une valeur ou une primitive partagée, ouvrir `/design`. Cette
 - largeurs mobile et bureau, sans débordement horizontal;
 - préférence système de réduction des animations.
 
-La route `/design` reste cachée et non indexable; ne pas l’ajouter au sitemap. `/showcase`, à l’inverse, fait partie du contenu public indexable.
+La route `/design` reste cachée et non indexable; ne pas l’ajouter au sitemap.
 
 ## Développement local
 
