@@ -82,7 +82,7 @@
   .contact-actions { justify-content: stretch; }
 }
 
-@media (prefers-reduced-motion: reduce) { .lab-card a { transition-property: color; } }
+@media (prefers-reduced-motion: reduce) { .lab-card a:hover { transform: none; transition-property: color; } }
 
 .tools-hero,
 .page-section + .page-section { border-color: var(--color-ink); border-width: var(--border-2); }

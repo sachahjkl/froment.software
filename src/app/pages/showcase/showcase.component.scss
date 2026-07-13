@@ -124,10 +124,10 @@ tbody th { overflow-wrap: anywhere; font-family: var(--font-mono); font-size: va
   .data-row > th, .data-row > td { grid-template-columns: minmax(6.25rem, 0.75fr) minmax(0, 1fr); gap: var(--space-2); }
 }
 
-@media (prefers-reduced-motion: reduce) { .mini { transition-property: color, border-color; } }
+@media (prefers-reduced-motion: reduce) { .mini { transform: none; transition-property: color, border-color; } }
 
 .showcase-head { border-bottom-width: var(--border-2); border-bottom-color: var(--color-ink); }
 .card { padding: var(--space-4); border: var(--border-2) solid var(--color-ink); background: var(--color-surface); box-shadow: var(--shadow-panel); }
-.inverse { background: var(--color-ink); }
+.card.inverse { padding: clamp(var(--space-7), 5vw, var(--space-12)); border: 0; background: var(--color-ink); }
 .mini { border: var(--border-2) solid var(--color-ink); background: var(--color-surface-sunken); box-shadow: inset 2px 2px 0 var(--color-surface-raised), inset -2px -2px 0 var(--color-line-strong), 2px 2px 0 var(--color-ink); }
 .mini:active { transform: translate(var(--space-0\.5), var(--space-0\.5)); }

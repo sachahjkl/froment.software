@@ -137,7 +137,7 @@
   justify-content: space-between;
   gap: var(--space-4);
   min-height: var(--space-16);
-  padding-block: var(--space-3);
+  padding: var(--space-3) var(--space-4);
   font-weight: 650;
   cursor: pointer;
 }
@@ -145,7 +145,7 @@
 .faq-item summary::-webkit-details-marker { display: none; }
 .faq-chevron { flex: 0 0 auto; color: var(--color-clay-deep); font-family: var(--font-mono); font-size: var(--text-xl); }
 .faq-item[open] .faq-chevron { transform: rotate(45deg); }
-.faq-answer { padding: 0 0 var(--space-4); color: var(--color-muted); }
+.faq-answer { padding: 0 var(--space-4) var(--space-4); color: var(--color-muted); }
 
 .about-contact {
   display: grid;

@@ -43,7 +43,7 @@
 .swatch { display: flex; min-height: 8rem; justify-content: flex-end; padding: var(--space-3); flex-direction: column; gap: var(--space-1); background: var(--tone); color: var(--tone-text, var(--color-ink)); }
 .swatch span { font-weight: 700; }
 .swatch code, .type-specimen code, .space-row code { font-size: var(--text-xs); }
-.swatch code { white-space: nowrap; }
+.swatch code { overflow-wrap: anywhere; white-space: normal; }
 
 .specimen-grid,
 .panel-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-5); }
@@ -53,6 +53,7 @@
 .type-specimen > p:not(.ds-label),
 .panel-example p:last-child { color: var(--color-muted); }
 .type-display { font-family: var(--font-display); font-size: clamp(var(--text-3xl), 6vw, var(--text-display)); font-weight: 600; line-height: 0.9; letter-spacing: var(--tracking-display); }
+.type-specimen > code { font-family: var(--font-mono); font-weight: 700; }
 
 .space-row { display: grid; grid-template-columns: minmax(0, 1fr) var(--space-8); align-items: center; gap: var(--space-3); }
 .space-row span { display: block; width: var(--size); height: var(--space-3); background: var(--color-accent); }

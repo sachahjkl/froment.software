@@ -90,8 +90,8 @@
 .work { background: var(--color-surface-sunken); box-shadow: 50vw 0 var(--color-surface-sunken), -50vw 0 var(--color-surface-sunken); }
 .work-list { display: grid; gap: var(--space-4); }
 .work-item { display: grid; grid-template-columns: var(--space-8) minmax(0, 1fr); gap: var(--space-3); min-width: 0; padding: var(--space-4); }
-.work-item > div { display: grid; grid-template-columns: minmax(10rem, 0.7fr) minmax(0, 1.3fr) auto; gap: var(--space-4); align-items: start; min-width: 0; }
-.work-item h3 { margin-top: 0; padding-top: 0; overflow-wrap: anywhere; }
+.work-item > div { display: grid; grid-template-columns: 20rem minmax(0, 1fr) auto; gap: var(--space-4); align-items: start; min-width: 0; }
+.work-item h3 { margin-top: 0; padding-top: 0; overflow-wrap: normal; white-space: nowrap; }
 .work-item a { display: inline-flex; align-items: center; gap: var(--space-2); min-height: var(--control-height); font-weight: 700; transition: transform var(--duration-fast) var(--ease-out); }
 .link-icon { color: var(--color-accent-strong); }
 
@@ -122,6 +122,7 @@
   .section-heading, .services, .references { grid-template-columns: 1fr; }
   .services .section-actions { grid-column: 1; }
   .work-item > div { grid-template-columns: 1fr; gap: var(--space-2); }
+  .work-item h3 { overflow-wrap: anywhere; white-space: normal; }
 }
 
 @media (max-width: 38rem) {
@@ -135,4 +136,4 @@
   .actions .btn, .section-actions .btn { width: 100%; }
 }
 
-@media (prefers-reduced-motion: reduce) { .work-item a { transition-property: color; } }
+@media (prefers-reduced-motion: reduce) { .work-item a:hover { transform: none; transition-property: color; } }

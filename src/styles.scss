@@ -39,6 +39,7 @@
   --color-focus: #075fd8;
   --color-warning: #f4d35e;
   --color-danger: #e95657;
+  --color-danger-strong: #8a3035;
   --color-success-soft: #d7f3dc;
   --color-warning-soft: #fff0ad;
   --color-danger-soft: #ffd5d5;
@@ -302,6 +303,7 @@ a {
   html { scroll-behavior: auto; }
   *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; scroll-behavior: auto !important; }
   :where(.btn, a, button) { transition-property: color, background-color, border-color, opacity !important; }
+  :where(.btn, a, button):active { transform: none !important; }
 }
 
 @media (prefers-contrast: more) {
