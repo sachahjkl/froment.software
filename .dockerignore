@@ -2,6 +2,11 @@ node_modules/
 dist/
 .angular/
 .git/
+.github/
+.env
+.env.*
+**/.env
+**/.env.*
 .gitlab/
 .direnv/
 .vscode/

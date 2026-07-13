@@ -66,22 +66,22 @@ nix run .#dockerfile
 nix build .#dockerfile
 ```
 
-## Déploiement Docker
+## Déploiement Podman
 
 Le Dockerfile multi-étapes construit le pré-rendu avec Node 22, puis copie `dist/froment-software/browser` dans nginx 1.29 avec `nginx.conf`.
 
 ```bash
-docker build -t froment-software .
-docker run --rm -p 8080:80 froment-software
+podman build -t froment-software .
+podman run --rm -p 8080:80 froment-software
 ```
 
 `docker-compose.remote-build.yml` construit la branche `main` directement depuis GitLab et publie le service sur le port local `8080` :
 
 ```bash
-docker compose -f docker-compose.remote-build.yml up -d --build
+podman compose -f docker-compose.remote-build.yml up -d --build
 ```
 
-La CI GitLab vérifie le flake, construit le site, puis publie l’image avec le SHA du commit et, sur la branche par défaut, le tag `latest`.
+GitHub Actions vérifie le flake, construit le site, puis publie l’image avec le SHA et le tag `latest` sur la branche par défaut.
 
 ## Contenus juridiques
 

@@ -46,11 +46,11 @@
           packages = with pkgs; [
             nodejs_22
             git
-            docker-client
+            podman
           ];
 
           shellHook = ''
-            echo "🔨 Froment Software devshell"
+            echo "Froment Software dev shell"
             echo "   Node.js : $(node --version)"
             echo "   npm     : $(npm --version)"
             echo "   git     : $(git --version 2>&1 | awk '{print $3}')"
