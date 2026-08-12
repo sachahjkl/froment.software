@@ -10,6 +10,10 @@ import { PrivacyComponent } from './pages/privacy/privacy.component';
 import { CookiesComponent } from './pages/cookies/cookies.component';
 import { Blog } from './pages/blog/blog';
 import { BlogPost } from './pages/blog-post/blog-post';
+import { BackOfficeLogin } from './pages/back-office-login/back-office-login';
+import { BackOfficeDashboard } from './pages/back-office-dashboard/back-office-dashboard';
+import { BusinessCard } from './pages/business-card/business-card';
+import { backOfficeGuard } from './back-office/back-office-auth';
 
 import { NotFoundComponent } from './pages/not-found/not-found.component';
 
@@ -21,6 +25,9 @@ export const routes: Routes = [
   { path: 'tools', component: ToolsComponent, data: { titleKey: 'page.products', descriptionKey: 'page.description.products' } },
   { path: 'blog', component: Blog, data: { titleKey: 'page.blog', descriptionKey: 'page.description.blog' } },
   { path: 'blog/:slug', component: BlogPost },
+  { path: 'back-office', component: BackOfficeLogin, data: { titleKey: 'page.back_office', descriptionKey: 'page.description.back_office', robots: 'noindex, nofollow' } },
+  { path: 'back-office/dashboard', component: BackOfficeDashboard, canActivate: [backOfficeGuard], data: { titleKey: 'page.back_office', descriptionKey: 'page.description.back_office', robots: 'noindex, nofollow' } },
+  { path: 'back-office/business-card', component: BusinessCard, canActivate: [backOfficeGuard], data: { titleKey: 'page.business_card', descriptionKey: 'page.description.business_card', robots: 'noindex, nofollow' } },
   { path: 'design', component: DesignComponent, data: { titleKey: 'page.design', descriptionKey: 'page.description.design', robots: 'noindex, follow' } },
   { path: 'legal', component: LegalComponent, data: { titleKey: 'page.legal', descriptionKey: 'page.description.legal' } },
   { path: 'privacy', component: PrivacyComponent, data: { titleKey: 'page.privacy', descriptionKey: 'page.description.privacy' } },

@@ -1,0 +1,27 @@
+<article class="business-card-page">
+  <header class="card-toolbar">
+    <div>
+      <p><a routerLink="/back-office/dashboard">← Documents</a></p>
+      <h1>Carte de visite</h1>
+      <p>Format 85 × 55 mm. Imprimez en taille réelle, sans marges et avec les arrière-plans.</p>
+    </div>
+    <button class="btn primary" type="button" (click)="print()">Imprimer ou exporter en PDF</button>
+  </header>
+
+  <div class="card-sheet" aria-label="Aperçu recto-verso de la carte de visite">
+    <section class="business-card front" aria-label="Recto">
+      <div class="brand-line"><img src="/brand/favicon.png" width="42" height="42" alt="" /><strong>froment.software</strong></div>
+      <div class="identity"><h2>Sacha Froment</h2><p>Développement et rénovation de logiciels métier</p></div>
+    </section>
+
+    <section class="business-card back" aria-label="Verso">
+      <p class="card-kicker">Froment Software</p>
+      <div class="contact-details">
+        <p><strong>contact@froment.software</strong></p>
+        <p>froment.software</p>
+        <p>Applications web et desktop · Outils internes · Rénovation</p>
+      </div>
+      <p class="card-footer">France · Missions à distance</p>
+    </section>
+  </div>
+</article>

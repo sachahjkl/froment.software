@@ -62,6 +62,7 @@
       <p><strong>froment.software</strong> © {{ currentYear }}</p>
       <p><a href="mailto:contact@froment.software">contact@froment.software</a></p>
       <nav class="footer-legal" [attr.aria-label]="i18n.t('shell.legal_nav')">
+        <a routerLink="/back-office" routerLinkActive="active" ariaCurrentWhenActive="page">Back office</a>
         <a routerLink="/legal" routerLinkActive="active" ariaCurrentWhenActive="page">{{ i18n.t('nav.legal') }}</a>
         <a routerLink="/privacy" routerLinkActive="active" ariaCurrentWhenActive="page">{{ i18n.t('nav.privacy') }}</a>
         <a routerLink="/cookies" routerLinkActive="active" ariaCurrentWhenActive="page">{{ i18n.t('nav.cookies') }}</a>

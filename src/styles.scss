@@ -253,6 +253,12 @@ code { font-size: 0.9em; }
   .copy-notice { transition: none; }
 }
 
+@media print {
+  body:has(.business-card-page) { background: #fff; }
+  body:has(.business-card-page) :is(.site-header, .footer, .copy-notice, .skip-link) { display: none !important; }
+  body:has(.business-card-page) main { max-width: none; }
+}
+
 @media (prefers-contrast: more) {
   :root { --color-line: var(--color-contrast-line); --color-line-strong: var(--color-contrast-line-strong); --color-muted: var(--color-contrast-muted); }
 }

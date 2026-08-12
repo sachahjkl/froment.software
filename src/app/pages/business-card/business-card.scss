@@ -1,0 +1,29 @@
+:host { display: block; }
+.business-card-page { padding: var(--page-header-y) var(--page-x); }
+.card-toolbar { display: flex; justify-content: space-between; align-items: end; gap: var(--space-5); }
+.card-toolbar h1, .card-toolbar div > p:last-child { margin-top: var(--space-2); }
+.card-toolbar div > p:last-child { color: var(--color-muted); }
+.card-sheet { display: grid; grid-template-columns: repeat(2, 85mm); gap: 12mm; margin-top: var(--space-8); overflow-x: auto; padding: var(--space-4); border: 1px dashed var(--color-line-strong); background: #d9d9d9; }
+.business-card { position: relative; display: flex; width: 85mm; height: 55mm; overflow: hidden; flex-direction: column; justify-content: space-between; padding: 7mm; color: #20203c; font-family: var(--font-body); box-shadow: 0 3px 12px rgb(0 0 0 / 0.2); }
+.front { background: linear-gradient(145deg, #fff 0 68%, #f3efe1 68%); }
+.front::after { position: absolute; right: -13mm; bottom: -17mm; width: 43mm; height: 43mm; border: 9mm solid #25c65a; content: ''; transform: rotate(18deg); }
+.brand-line { display: flex; align-items: center; gap: 3mm; font-size: 4.5mm; letter-spacing: -0.03em; }
+.brand-line img { width: 9mm; height: 9mm; border: 0.25mm solid #b8b8c2; }
+.identity { position: relative; z-index: 1; max-width: 58mm; }
+.identity h2 { color: #20203c; font-size: 6mm; }
+.identity p { margin-top: 2mm; font-size: 3.3mm; line-height: 1.35; }
+.back { background: #20203c; color: #fff; }
+.card-kicker { color: #58e27e; font-family: var(--font-mono); font-size: 3mm; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; }
+.contact-details p { font-size: 3.4mm; }
+.contact-details p + p { margin-top: 1.6mm; }
+.contact-details p:last-child { max-width: 63mm; color: #d7d7e2; font-size: 2.8mm; }
+.card-footer { color: #aeadc2; font-size: 2.6mm; }
+@media (max-width: 48rem) { .card-toolbar { align-items: stretch; flex-direction: column; } }
+@media print {
+  @page { size: 85mm 55mm; margin: 0; }
+  .business-card-page { padding: 0; }
+  .card-toolbar { display: none; }
+  .card-sheet { display: block; margin: 0; padding: 0; border: 0; background: none; overflow: visible; }
+  .business-card { break-after: page; box-shadow: none; print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+  .business-card:last-child { break-after: auto; }
+}
