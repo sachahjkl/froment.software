@@ -6,9 +6,7 @@ import { I18nService } from './i18n.service';
 
 async function navigate(fixture: ComponentFixture<App>, router: Router, url: string): Promise<void> {
   expect(await router.navigateByUrl(url)).toBe(true);
-  fixture.detectChanges();
   await fixture.whenStable();
-  fixture.detectChanges();
 }
 
 function meta(selector: string): HTMLMetaElement {
@@ -33,7 +31,7 @@ describe('App shell', () => {
     i18n = TestBed.inject(I18nService);
     i18n.setLanguage('fr');
     fixture = TestBed.createComponent(App);
-    fixture.detectChanges();
+    await fixture.whenStable();
     element = fixture.nativeElement as HTMLElement;
   });
 
@@ -61,8 +59,7 @@ describe('App shell', () => {
     const frenchImageAlt = meta('meta[property="og:image:alt"]').content;
 
     i18n.setLanguage('en');
-    TestBed.tick();
-    fixture.detectChanges();
+    await fixture.whenStable();
 
     expect(meta('meta[property="og:title"]').content).not.toBe(frenchTitle);
     expect(meta('meta[property="og:description"]').content).not.toBe(frenchDescription);
@@ -120,21 +117,28 @@ describe('App shell', () => {
     expect(document.activeElement).toBe(target.querySelector('h2'));
   });
 
-  it('restores focus to the menu toggle when current-route navigation is skipped', async () => {
+  it('uses native details disclosure and closes it after navigation', async () => {
     await navigate(fixture, router, '/about');
 
-    const toggle = element.querySelector<HTMLButtonElement>('.nav-toggle')!;
-    toggle.click();
-    fixture.detectChanges();
+    const details = element.querySelector<HTMLDetailsElement>('.nav-details')!;
+    const summary = details.querySelector<HTMLElement>('summary')!;
+    summary.click();
+    expect(details.open).toBe(true);
 
-    const currentLink = element.querySelector<HTMLAnchorElement>('#primary-navigation a[aria-current="page"]')!;
-    currentLink.focus();
-    currentLink.click();
-    fixture.detectChanges();
+    const servicesLink = details.querySelector<HTMLAnchorElement>('a[href="/services"]')!;
+    servicesLink.click();
     await fixture.whenStable();
-    fixture.detectChanges();
 
-    expect(toggle.getAttribute('aria-expanded')).toBe('false');
-    expect(document.activeElement).toBe(toggle);
+    expect(details.open).toBe(false);
+    expect(router.url).toBe('/services');
+  });
+
+  it('closes the mobile navigation after an outside click', () => {
+    const details = element.querySelector<HTMLDetailsElement>('.nav-details')!;
+    details.open = true;
+
+    element.querySelector<HTMLElement>('main')!.click();
+
+    expect(details.open).toBe(false);
   });
 });

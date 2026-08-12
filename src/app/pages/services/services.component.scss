@@ -9,3 +9,17 @@
 .service-entry + .service-entry, .process-list li + li { margin-top: var(--space-3); }
 .service-entry p, .process-list p { margin-top: var(--space-2); color: var(--color-ink-soft); }
 .delivery-heading { margin-bottom: var(--space-5); }
+.section-break { width: var(--space-12); margin: 0 var(--page-x); border: 0; border-top: 1px solid var(--color-line-strong); }
+.practical-note { margin-top: var(--space-3); }
+.practical-note mark { padding-inline: var(--space-1); background: var(--color-warning-soft); color: inherit; }
+.practical-list { margin: var(--space-5) 0; }
+.practical-list div { display: grid; grid-template-columns: minmax(8rem, 0.45fr) minmax(0, 1.55fr); gap: var(--space-5); padding-block: var(--space-2); }
+.practical-list div + div { margin-top: var(--space-2); }
+.practical-list dt { font-weight: 700; }
+.practical-list dd { margin: 0; color: var(--color-ink-soft); }
+.criteria-list { margin: var(--space-3) 0 0; padding-left: var(--space-6); }
+.criteria-list li + li { margin-top: var(--space-2); }
+
+@media (max-width: 38rem) {
+  .practical-list div { grid-template-columns: 1fr; gap: var(--space-1); }
+}

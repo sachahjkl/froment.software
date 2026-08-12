@@ -23,6 +23,8 @@
   </ol>
 </section>
 
+<hr class="section-break" />
+
 <section class="delivery page-section" aria-labelledby="delivery-title">
   <div class="section-heading delivery-heading">
     <h2 id="delivery-title">{{ i18n.t('services.process.title') }}</h2>
@@ -37,6 +39,33 @@
     }
   </ol>
 </section>
+
+<section class="practical page-section" aria-labelledby="practical-title">
+  <h2 id="practical-title">{{ i18n.t('services.practical.title') }}</h2>
+  <p class="practical-note"><mark>{{ i18n.t('services.practical.note') }}</mark></p>
+  <dl class="practical-list">
+    <div>
+      <dt>{{ i18n.t('services.practical.method') }}</dt>
+      <dd>{{ i18n.t('services.practical.method.desc') }}</dd>
+    </div>
+    <div>
+      <dt>{{ i18n.t('services.practical.schedule') }}</dt>
+      <dd>{{ i18n.t('services.practical.schedule.desc') }}</dd>
+    </div>
+    <div>
+      <dt>{{ i18n.t('services.practical.deliverables') }}</dt>
+      <dd>{{ i18n.t('services.practical.deliverables.desc') }}</dd>
+    </div>
+  </dl>
+  <h3>{{ i18n.t('services.criteria.title') }}</h3>
+  <ul class="criteria-list">
+    <li>{{ i18n.t('services.criteria.context') }}</li>
+    <li>{{ i18n.t('services.criteria.problem') }}</li>
+    <li>{{ i18n.t('services.criteria.deadline') }}</li>
+  </ul>
+</section>
+
+<hr class="section-break" />
 
 <section class="service-contact page-section" aria-labelledby="service-contact-title">
   <h2 id="service-contact-title">{{ i18n.t('home.engage.title') }}</h2>

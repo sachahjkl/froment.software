@@ -1,8 +1,8 @@
 import { DOCUMENT, isPlatformBrowser } from '@angular/common';
-import { afterNextRender, Component, effect, ElementRef, inject, Injector, PLATFORM_ID, signal, viewChild } from '@angular/core';
+import { afterNextRender, Component, effect, inject, Injector, PLATFORM_ID } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { Meta, Title } from '@angular/platform-browser';
-import { ActivatedRoute, NavigationEnd, NavigationSkipped, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { ActivatedRoute, NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { filter } from 'rxjs';
 import { I18nService, TranslationKey } from './i18n.service';
 
@@ -20,8 +20,6 @@ export class App {
   protected readonly i18n = inject(I18nService);
   protected readonly brandName = 'froment.software';
   protected readonly currentYear = new Date().getFullYear();
-  protected readonly navOpen = signal(false);
-  private readonly navToggle = viewChild<ElementRef<HTMLButtonElement>>('navToggle');
   private readonly router = inject(Router);
   private readonly activatedRoute = inject(ActivatedRoute);
   private readonly title = inject(Title);
@@ -35,14 +33,7 @@ export class App {
     ),
     { initialValue: null },
   );
-  private readonly navigationSkipped = toSignal(
-    this.router.events.pipe(
-      filter((event): event is NavigationSkipped => event instanceof NavigationSkipped),
-    ),
-    { initialValue: null },
-  );
   private initialNavigationComplete = this.router.navigated;
-  private restoreFocusOnSkippedNavigation = false;
 
   constructor() {
     effect(() => {
@@ -56,9 +47,6 @@ export class App {
       if (!navigation) {
         return;
       }
-
-      this.restoreFocusOnSkippedNavigation = false;
-      this.navOpen.set(false);
 
       if (!this.initialNavigationComplete) {
         this.initialNavigationComplete = true;
@@ -74,29 +62,19 @@ export class App {
       this.focusMainAfterRender();
     });
 
-    effect(() => {
-      if (!this.navigationSkipped() || !this.restoreFocusOnSkippedNavigation) {
-        return;
-      }
-
-      this.restoreFocusOnSkippedNavigation = false;
-      this.focusNavToggleAfterRender();
-    });
   }
 
   protected setLanguage(language: string): void {
     this.i18n.setLanguage(language);
   }
 
-  protected toggleNav(): void {
-    this.navOpen.update((open) => !open);
-  }
+  protected closeNavOnOutsideClick(event: MouseEvent): void {
+    const target = event.target;
+    if (!(target instanceof Element) || target.closest('.nav-details')) {
+      return;
+    }
 
-  protected closeNav(): void {
-    this.restoreFocusOnSkippedNavigation = this.isBrowser
-      && this.navOpen()
-      && !!this.document.activeElement?.closest('#primary-navigation');
-    this.navOpen.set(false);
+    this.document.querySelector<HTMLDetailsElement>('.nav-details[open]')?.removeAttribute('open');
   }
 
   private updateMetadata(): void {
@@ -172,22 +150,6 @@ export class App {
         ? target
         : target.querySelector<HTMLElement>('h1, h2, h3, h4, h5, h6, [role="heading"]') ?? target;
       this.focusElement(focusTarget);
-    }, { injector: this.injector });
-  }
-
-  private focusNavToggleAfterRender(): void {
-    if (!this.isBrowser) {
-      return;
-    }
-
-    afterNextRender(() => {
-      const toggle = this.navToggle()?.nativeElement;
-      if (toggle) {
-        toggle.focus({ preventScroll: true });
-        return;
-      }
-
-      this.focusMain();
     }, { injector: this.injector });
   }
 

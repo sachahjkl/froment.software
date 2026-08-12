@@ -1,4 +1,4 @@
-<div class="app-shell">
+<div class="app-shell" (click)="closeNavOnOutsideClick($event)">
   <a class="skip-link" href="#main-content">
     {{ i18n.t('shell.skip') }}
   </a>
@@ -18,30 +18,29 @@
             }
           </select>
         </label>
-        <button
-          #navToggle
-          class="nav-toggle"
-          type="button"
-          aria-controls="primary-navigation"
-          [attr.aria-expanded]="navOpen()"
-          [attr.aria-label]="navOpen() ? i18n.t('shell.menu.close') : i18n.t('shell.menu.open')"
-          (click)="toggleNav()"
-        >
-          {{ i18n.t('shell.menu') }}
-        </button>
+        <details #navDetails class="nav-details">
+          <summary>{{ i18n.t('shell.menu') }}</summary>
+          <nav
+            id="mobile-navigation"
+            class="nav mobile-nav"
+            [attr.aria-label]="i18n.t('nav.primary')"
+          >
+            <a routerLink="/" routerLinkActive="active" ariaCurrentWhenActive="page" [routerLinkActiveOptions]="{ exact: true }" (click)="navDetails.open = false">{{ i18n.t('nav.home') }}</a>
+            <a routerLink="/services" routerLinkActive="active" ariaCurrentWhenActive="page" (click)="navDetails.open = false">{{ i18n.t('nav.services') }}</a>
+            <a routerLink="/about" routerLinkActive="active" ariaCurrentWhenActive="page" (click)="navDetails.open = false">{{ i18n.t('nav.about') }}</a>
+            <a routerLink="/tools" routerLinkActive="active" ariaCurrentWhenActive="page" (click)="navDetails.open = false">{{ i18n.t('nav.products') }}</a>
+            <a routerLink="/clients" routerLinkActive="active" ariaCurrentWhenActive="page" (click)="navDetails.open = false">{{ i18n.t('nav.clients') }}</a>
+            <a href="mailto:contact@froment.software" (click)="navDetails.open = false">Contact</a>
+          </nav>
+        </details>
       </div>
 
-      <nav
-        id="primary-navigation"
-        class="nav"
-        [class.open]="navOpen()"
-        [attr.aria-label]="i18n.t('nav.primary')"
-      >
-        <a routerLink="/" routerLinkActive="active" ariaCurrentWhenActive="page" [routerLinkActiveOptions]="{ exact: true }" (click)="closeNav()">{{ i18n.t('nav.home') }}</a>
-        <a routerLink="/services" routerLinkActive="active" ariaCurrentWhenActive="page" (click)="closeNav()">{{ i18n.t('nav.services') }}</a>
-        <a routerLink="/about" routerLinkActive="active" ariaCurrentWhenActive="page" (click)="closeNav()">{{ i18n.t('nav.about') }}</a>
-        <a routerLink="/tools" routerLinkActive="active" ariaCurrentWhenActive="page" (click)="closeNav()">{{ i18n.t('nav.products') }}</a>
-        <a routerLink="/clients" routerLinkActive="active" ariaCurrentWhenActive="page" (click)="closeNav()">{{ i18n.t('nav.clients') }}</a>
+      <nav id="primary-navigation" class="nav desktop-nav" [attr.aria-label]="i18n.t('nav.primary')">
+        <a routerLink="/" routerLinkActive="active" ariaCurrentWhenActive="page" [routerLinkActiveOptions]="{ exact: true }">{{ i18n.t('nav.home') }}</a>
+        <a routerLink="/services" routerLinkActive="active" ariaCurrentWhenActive="page">{{ i18n.t('nav.services') }}</a>
+        <a routerLink="/about" routerLinkActive="active" ariaCurrentWhenActive="page">{{ i18n.t('nav.about') }}</a>
+        <a routerLink="/tools" routerLinkActive="active" ariaCurrentWhenActive="page">{{ i18n.t('nav.products') }}</a>
+        <a routerLink="/clients" routerLinkActive="active" ariaCurrentWhenActive="page">{{ i18n.t('nav.clients') }}</a>
         <a href="mailto:contact@froment.software">Contact</a>
       </nav>
     </div>
