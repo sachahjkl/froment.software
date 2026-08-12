@@ -24,24 +24,16 @@ export class ServicesComponent {
 
   protected readonly services = computed<ContentEntry[]>(() => [
     {
-      title: this.i18n.t('services.entry.web.title'),
-      description: this.i18n.t('services.entry.web.desc'),
+      title: this.i18n.t('services.entry.applications.title'),
+      description: this.i18n.t('services.entry.applications.desc'),
     },
     {
-      title: this.i18n.t('services.entry.desktop.title'),
-      description: this.i18n.t('services.entry.desktop.desc'),
+      title: this.i18n.t('services.entry.internal.title'),
+      description: this.i18n.t('services.entry.internal.desc'),
     },
     {
-      title: this.i18n.t('services.entry.cli.title'),
-      description: this.i18n.t('services.entry.cli.desc'),
-    },
-    {
-      title: this.i18n.t('services.entry.legacy.title'),
-      description: this.i18n.t('services.entry.legacy.desc'),
-    },
-    {
-      title: this.i18n.t('services.entry.consulting.title'),
-      description: this.i18n.t('services.entry.consulting.desc'),
+      title: this.i18n.t('services.entry.renovation.title'),
+      description: this.i18n.t('services.entry.renovation.desc'),
     },
   ]);
 

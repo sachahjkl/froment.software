@@ -33,56 +33,38 @@ export class HomeComponent {
       cta: this.i18n.t('home.timeline.albumator.cta'),
     },
     {
-      title: 'htmx.sacha.house',
-      description: this.i18n.t('home.timeline.htmx.desc'),
-      href: 'https://htmx.sacha.house',
-      cta: this.i18n.t('home.timeline.htmx.cta'),
-    },
-    {
       title: 'sacha.house',
       description: this.i18n.t('home.timeline.sacha.desc'),
       href: 'https://sacha.house',
       cta: this.i18n.t('home.timeline.sacha.cta'),
     },
-  ]);
-
-  protected readonly fitEntries = computed<ContentEntry[]>(() => [
     {
-      title: this.i18n.t('home.fit.internal.title'),
-      description: this.i18n.t('home.fit.internal.desc'),
+      title: 'clockin.sacha.house',
+      description: this.i18n.t('home.timeline.clockin.desc'),
+      href: 'https://clockin.sacha.house',
+      cta: this.i18n.t('home.timeline.clockin.cta'),
     },
     {
-      title: this.i18n.t('home.fit.legacy.title'),
-      description: this.i18n.t('home.fit.legacy.desc'),
-    },
-    {
-      title: this.i18n.t('home.fit.delivery.title'),
-      description: this.i18n.t('home.fit.delivery.desc'),
+      title: 'htmx.sacha.house',
+      description: this.i18n.t('home.timeline.htmx.desc'),
+      href: 'https://htmx.sacha.house',
+      cta: this.i18n.t('home.timeline.htmx.cta'),
     },
   ]);
 
   protected readonly services = computed<ContentEntry[]>(() => [
     {
-      title: this.i18n.t('home.services.web.title'),
-      description: this.i18n.t('home.services.web.desc'),
+      title: this.i18n.t('home.services.applications.title'),
+      description: this.i18n.t('home.services.applications.desc'),
     },
     {
-      title: this.i18n.t('home.services.desktop.title'),
-      description: this.i18n.t('home.services.desktop.desc'),
+      title: this.i18n.t('home.services.internal.title'),
+      description: this.i18n.t('home.services.internal.desc'),
     },
     {
-      title: this.i18n.t('home.services.cli.title'),
-      description: this.i18n.t('home.services.cli.desc'),
-    },
-    {
-      title: this.i18n.t('home.services.legacy.title'),
-      description: this.i18n.t('home.services.legacy.desc'),
-    },
-    {
-      title: this.i18n.t('home.services.consulting.title'),
-      description: this.i18n.t('home.services.consulting.desc'),
+      title: this.i18n.t('home.services.renovation.title'),
+      description: this.i18n.t('home.services.renovation.desc'),
     },
   ]);
 
-  protected readonly references = ['Alstom', 'AG2R La Mondiale', 'OGF'];
 }

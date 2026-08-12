@@ -55,6 +55,7 @@
               }
             ],
             "styles": [
+              "src/brand.css",
               "src/styles.scss"
             ]
           },

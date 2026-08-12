@@ -1,44 +1,20 @@
-<header class="clients-hero">
-  <div class="hero-inner">
-    <p class="ds-label">{{ i18n.t('clients.kicker') }}</p>
+<article class="clients">
+  <header>
     <h1>{{ i18n.t('clients.title') }}</h1>
-    <p class="lead">{{ i18n.t('clients.lead') }}</p>
-  </div>
-</header>
+  </header>
 
-<section class="clients-context page-section" aria-labelledby="context-title">
-  <div class="section-heading">
-    <p class="ds-label">{{ i18n.t('clients.context.kicker') }}</p>
-    <h2 id="context-title">{{ i18n.t('clients.context.title') }}</h2>
-    <p>{{ i18n.t('clients.context.intro') }}</p>
-  </div>
-  <ul class="reference-list">
-    @for (reference of references; track reference.name) {
-      <li class="reference-card ds-panel">
-        <strong>{{ reference.name }}</strong>
-        <span>{{ i18n.t(reference.sectorKey) }}</span>
-      </li>
-    }
-  </ul>
-</section>
+  <section aria-labelledby="references-title">
+    <h2 id="references-title">{{ i18n.t('clients.sectors.title') }}</h2>
+    <ul class="sector-list">
+      @for (sectorKey of sectorKeys; track sectorKey) {
+        <li>{{ i18n.t(sectorKey) }}</li>
+      }
+    </ul>
+    <p><a href="https://sacha.house/cv" target="_blank" rel="noreferrer">{{ i18n.t('clients.cv') }}</a></p>
+  </section>
 
-<section class="reference-note page-section" aria-labelledby="reference-title">
-  <div>
-    <p class="ds-label">{{ i18n.t('home.clients.experience') }}</p>
-    <h2 id="reference-title">{{ i18n.t('clients.ref.title') }}</h2>
-    <p>{{ i18n.t('clients.ref.copy') }}</p>
-  </div>
-  <aside class="disclosure ds-panel" aria-labelledby="disclosure-title">
-    <h3 id="disclosure-title">{{ i18n.t('clients.disclosure.title') }}</h3>
-    <p>{{ i18n.t('clients.disclosure.copy') }}</p>
-  </aside>
-</section>
-
-<section class="client-contact page-section" aria-labelledby="client-contact-title">
-  <div>
-    <p class="ds-label">{{ i18n.t('home.engage.kicker') }}</p>
-    <h2 id="client-contact-title">{{ i18n.t('clients.ref.contact_title') }}</h2>
-    <p>{{ i18n.t('clients.ref.contact_copy') }}</p>
-  </div>
-  <a class="btn primary" href="mailto:contact@froment.software">{{ i18n.t('clients.ref.contact_cta') }}</a>
-</section>
+  <section aria-labelledby="contact-title">
+    <h2 id="contact-title">{{ i18n.t('clients.contact.title') }}</h2>
+    <p><a href="mailto:contact@froment.software">contact@froment.software</a></p>
+  </section>
+</article>

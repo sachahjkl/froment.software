@@ -1,54 +1,28 @@
 <header class="tools-hero">
   <div class="hero-inner">
-    <p class="ds-label">{{ i18n.t('products.kicker') }}</p>
     <h1>{{ i18n.t('products.title') }}</h1>
-    <p class="lead">{{ i18n.t('products.lead') }}</p>
   </div>
 </header>
 
 <section class="tools-catalog page-section" aria-labelledby="catalog-title">
   <div class="section-heading">
-    <p class="ds-label">Lab / 01</p>
     <h2 id="catalog-title">{{ i18n.t('products.catalog.title') }}</h2>
-    <p>{{ i18n.t('products.catalog.intro') }}</p>
   </div>
   <ul class="catalog-list">
     @for (entry of labEntries(); track entry.title) {
       <li>
-        <article class="lab-card ds-panel">
-          <span class="badge ok">{{ entry.status }}</span>
+        <article class="lab-entry">
           <h3>{{ entry.title }}</h3>
           <p>{{ entry.description }}</p>
-          <a [href]="entry.href" target="_blank" rel="noreferrer">{{ entry.cta }} <span aria-hidden="true">↗</span></a>
+          <p><small>{{ entry.status }}</small> · <a [href]="entry.href" target="_blank" rel="noreferrer">{{ entry.cta }}</a></p>
         </article>
       </li>
     }
   </ul>
 </section>
 
-<section class="principles page-section" aria-labelledby="principles-title">
-  <div class="section-heading">
-    <p class="ds-label">{{ i18n.t('products.principles.kicker') }}</p>
-    <h2 id="principles-title">{{ i18n.t('products.principles.title') }}</h2>
-  </div>
-  <ol class="principle-list">
-    @for (principle of principles(); track principle.title; let index = $index) {
-      <li>
-        <span aria-hidden="true">0{{ index + 1 }}</span>
-        <h3>{{ principle.title }}</h3>
-        <p>{{ principle.description }}</p>
-      </li>
-    }
-  </ol>
-</section>
-
 <section class="tools-contact page-section" aria-labelledby="tools-contact-title">
-  <div>
-    <p class="ds-label">{{ i18n.t('services.kicker') }}</p>
-    <h2 id="tools-contact-title">{{ i18n.t('products.contact.title') }}</h2>
-    <p>{{ i18n.t('products.contact.copy') }}</p>
-  </div>
-  <div class="contact-actions">
-    <a class="btn primary" routerLink="/services">{{ i18n.t('products.contact.cta') }}</a>
-  </div>
+  <h2 id="tools-contact-title">{{ i18n.t('products.contact.title') }}</h2>
+  <p>{{ i18n.t('products.contact.copy') }}</p>
+  <p><a routerLink="/services">{{ i18n.t('products.contact.cta') }}</a></p>
 </section>

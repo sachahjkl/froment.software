@@ -72,7 +72,7 @@ describe('App shell', () => {
     expect(meta('meta[name="twitter:description"]').content).toBe(meta('meta[property="og:description"]').content);
     expect(meta('meta[name="twitter:image:alt"]').content).toBe(meta('meta[property="og:image:alt"]').content);
 
-    await navigate(fixture, router, '/design?preview=true#motion');
+    await navigate(fixture, router, '/design?preview=true#profile-sample');
 
     expect(meta('meta[name="robots"]').content).toBe('noindex, follow');
     expect(meta('meta[property="og:url"]').content).toBe('https://froment.software/design');
@@ -99,10 +99,10 @@ describe('App shell', () => {
     await navigate(fixture, router, '/design');
 
     const main = element.querySelector<HTMLElement>('main#main-content')!;
-    const target = element.querySelector<HTMLElement>('#motion')!;
+    const target = element.querySelector<HTMLElement>('#profile-sample')!;
     const heading = target.querySelector<HTMLElement>('h2')!;
 
-    await navigate(fixture, router, '/design#motion');
+    await navigate(fixture, router, '/design#profile-sample');
 
     expect(document.activeElement).toBe(heading);
     expect(document.activeElement).not.toBe(main);
@@ -114,9 +114,9 @@ describe('App shell', () => {
 
   it('focuses the fragment heading when navigating to a fragment on another path', async () => {
     await navigate(fixture, router, '/about');
-    await navigate(fixture, router, '/design#motion');
+    await navigate(fixture, router, '/design#profile-sample');
 
-    const target = element.querySelector<HTMLElement>('#motion')!;
+    const target = element.querySelector<HTMLElement>('#profile-sample')!;
     expect(document.activeElement).toBe(target.querySelector('h2'));
   });
 

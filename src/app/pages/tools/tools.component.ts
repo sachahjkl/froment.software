@@ -10,11 +10,6 @@ type LabEntry = {
   cta: string;
 };
 
-type PrincipleEntry = {
-  title: string;
-  description: string;
-};
-
 @Component({
   selector: 'app-tools',
   standalone: true,
@@ -34,33 +29,25 @@ export class ToolsComponent {
       cta: this.i18n.t('home.timeline.albumator.cta'),
     },
     {
-      title: 'htmx.sacha.house',
-      description: this.i18n.t('home.timeline.htmx.desc'),
-      status: this.i18n.t('products.status.experiment'),
-      href: 'https://htmx.sacha.house',
-      cta: this.i18n.t('home.timeline.htmx.cta'),
-    },
-    {
       title: 'sacha.house',
       description: this.i18n.t('home.timeline.sacha.desc'),
       status: this.i18n.t('products.status.public'),
       href: 'https://sacha.house',
       cta: this.i18n.t('home.timeline.sacha.cta'),
     },
-  ]);
-
-  protected readonly principles = computed<PrincipleEntry[]>(() => [
     {
-      title: this.i18n.t('products.principles.focus.title'),
-      description: this.i18n.t('products.principles.focus.desc'),
+      title: 'clockin.sacha.house',
+      description: this.i18n.t('home.timeline.clockin.desc'),
+      status: this.i18n.t('products.status.prototype'),
+      href: 'https://clockin.sacha.house',
+      cta: this.i18n.t('home.timeline.clockin.cta'),
     },
     {
-      title: this.i18n.t('products.principles.real.title'),
-      description: this.i18n.t('products.principles.real.desc'),
-    },
-    {
-      title: this.i18n.t('products.principles.honest.title'),
-      description: this.i18n.t('products.principles.honest.desc'),
+      title: 'htmx.sacha.house',
+      description: this.i18n.t('home.timeline.htmx.desc'),
+      status: this.i18n.t('products.status.experiment'),
+      href: 'https://htmx.sacha.house',
+      cta: this.i18n.t('home.timeline.htmx.cta'),
     },
   ]);
 }

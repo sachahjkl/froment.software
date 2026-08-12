@@ -1,88 +1,26 @@
-<header class="about-hero">
-  <div class="hero-inner">
-    <p class="ds-label">{{ i18n.t('about.kicker') }}</p>
-    <h1>{{ i18n.t('about.title') }}</h1>
-    <p class="lead">{{ i18n.t('about.lead') }}</p>
-  </div>
-</header>
+<article class="about">
+  <header>
+    <h1>{{ i18n.t('about.faq.title') }}</h1>
+  </header>
 
-<section class="about-bio page-section" aria-labelledby="bio-title">
-  <div class="bio-copy">
-    <p class="ds-label">{{ i18n.t('about.kicker') }}</p>
-    <h2 id="bio-title">{{ i18n.t('about.bio.title') }}</h2>
-    <p>{{ i18n.t('about.bio.intro') }}</p>
-    <p>{{ i18n.t('about.bio.experience') }}</p>
-  </div>
-  <dl class="experience-stat ds-panel">
-    <div>
-      <dt>{{ i18n.t('about.bio.years') }}</dt>
-      <dd>5</dd>
+  <section aria-label="FAQ">
+    <div class="faq-list">
+      @for (item of faqKeys; track item.questionKey) {
+        <details class="faq-item">
+          <summary>
+            <span>{{ i18n.t(item.questionKey) }}</span>
+            <span aria-hidden="true">+</span>
+          </summary>
+          <div class="faq-answer">
+            <p>{{ i18n.t(item.answerKey) }}</p>
+          </div>
+        </details>
+      }
     </div>
-  </dl>
-</section>
+  </section>
 
-<section class="about-approach page-section" aria-labelledby="approach-title">
-  <div class="section-heading">
-    <p class="ds-label">{{ i18n.t('about.approach.kicker') }}</p>
-    <h2 id="approach-title">{{ i18n.t('about.approach.title') }}</h2>
-    <p>{{ i18n.t('about.approach.intro') }}</p>
-  </div>
-  <ol class="approach-list">
-    @for (item of approachKeys; track item.titleKey; let index = $index) {
-      <li>
-        <span class="item-index" aria-hidden="true">0{{ index + 1 }}</span>
-        <h3>{{ i18n.t(item.titleKey) }}</h3>
-        <p>{{ i18n.t(item.descriptionKey) }}</p>
-      </li>
-    }
-  </ol>
-</section>
-
-<section class="about-references page-section" aria-labelledby="references-title">
-  <div class="section-heading">
-    <p class="ds-label">{{ i18n.t('home.clients.experience') }}</p>
-    <h2 id="references-title">{{ i18n.t('about.references.title') }}</h2>
-    <p>{{ i18n.t('about.references.intro') }}</p>
-  </div>
-  <ul class="reference-list">
-    @for (reference of references; track reference.name) {
-      <li>
-        <strong>{{ reference.name }}</strong>
-        <span>{{ i18n.t(reference.sectorKey) }}</span>
-      </li>
-    }
-  </ul>
-</section>
-
-<section class="about-faq page-section" aria-labelledby="faq-title">
-  <div class="section-heading">
-    <p class="ds-label">FAQ</p>
-    <h2 id="faq-title">{{ i18n.t('about.faq.title') }}</h2>
-    <p>{{ i18n.t('about.faq.intro') }}</p>
-  </div>
-  <div class="faq-list">
-    @for (item of faqKeys; track item.questionKey) {
-      <details class="faq-item ds-panel">
-        <summary>
-          <span>{{ i18n.t(item.questionKey) }}</span>
-          <span class="faq-chevron" aria-hidden="true">+</span>
-        </summary>
-        <div class="faq-answer">
-          <p>{{ i18n.t(item.answerKey) }}</p>
-        </div>
-      </details>
-    }
-  </div>
-</section>
-
-<section class="about-contact page-section" aria-labelledby="contact-title">
-  <div>
-    <p class="ds-label">{{ i18n.t('home.engage.kicker') }}</p>
+  <section aria-labelledby="contact-title">
     <h2 id="contact-title">{{ i18n.t('about.contact.title') }}</h2>
-    <p>{{ i18n.t('about.contact.copy') }}</p>
-  </div>
-  <div class="actions">
-    <a class="btn primary" href="mailto:contact@froment.software">{{ i18n.t('about.contact.mail') }}</a>
-    <a class="btn dark" href="https://cal.com/sachahjkl" target="_blank" rel="noreferrer">{{ i18n.t('about.contact.book') }}</a>
-  </div>
-</section>
+    <p><a href="mailto:contact@froment.software">{{ i18n.t('about.contact.mail') }}</a> · <a href="https://cal.com/sachahjkl" target="_blank" rel="noreferrer">{{ i18n.t('about.contact.book') }}</a></p>
+  </section>
+</article>

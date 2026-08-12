@@ -9,9 +9,9 @@ import { I18nService, TranslationKey } from '../../i18n.service';
 })
 export class ClientsComponent {
   protected readonly i18n = inject(I18nService);
-  protected readonly references: { name: string; sectorKey: TranslationKey }[] = [
-    { name: 'Alstom', sectorKey: 'clients.context.alstom' },
-    { name: 'AG2R La Mondiale', sectorKey: 'clients.context.ag2r' },
-    { name: 'OGF', sectorKey: 'clients.context.ogf' },
+  protected readonly sectorKeys: TranslationKey[] = [
+    'clients.sector.industry',
+    'clients.sector.insurance',
+    'clients.sector.services',
   ];
 }

@@ -21,27 +21,4 @@ export class AboutComponent {
     { questionKey: 'about.faq.availability.q', answerKey: 'about.faq.availability.a' },
   ];
 
-  protected readonly approachKeys: {
-    titleKey: TranslationKey;
-    descriptionKey: TranslationKey;
-  }[] = [
-    {
-      titleKey: 'about.approach.context.title',
-      descriptionKey: 'about.approach.context.desc',
-    },
-    {
-      titleKey: 'about.approach.progress.title',
-      descriptionKey: 'about.approach.progress.desc',
-    },
-    {
-      titleKey: 'about.approach.handover.title',
-      descriptionKey: 'about.approach.handover.desc',
-    },
-  ];
-
-  protected readonly references: { name: string; sectorKey: TranslationKey }[] = [
-    { name: 'Alstom', sectorKey: 'about.bio.ref1' },
-    { name: 'AG2R La Mondiale', sectorKey: 'about.bio.ref2' },
-    { name: 'OGF', sectorKey: 'about.bio.ref3' },
-  ];
 }

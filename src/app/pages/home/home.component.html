@@ -1,149 +1,68 @@
-<header class="hero">
-  <div class="hero-inner">
-    <p class="ds-label">{{ i18n.t('home.hero.kicker') }}</p>
+<article class="home">
+  <header class="intro">
     <h1>{{ i18n.t('home.hero.title') }}</h1>
     <p class="lead">{{ i18n.t('home.hero.lead') }}</p>
-    <div class="actions">
+    <p class="intro-actions">
       <a class="btn primary" href="mailto:contact@froment.software">{{ i18n.t('home.hero.contact') }}</a>
-      <a class="btn" [href]="calUrl" target="_blank" rel="noreferrer">{{ i18n.t('home.hero.book') }}</a>
-    </div>
-    <div class="signal-field" aria-hidden="true">
-      <svg class="signal-map" viewBox="0 0 500 300" preserveAspectRatio="xMidYMid slice" focusable="false">
-        <defs>
-          <linearGradient id="terrain-fill" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0" stop-opacity=".18" style="stop-color: var(--color-accent)" />
-            <stop offset="1" stop-opacity=".04" style="stop-color: var(--signal-orange)" />
-          </linearGradient>
-          <pattern id="map-grid" width="20" height="20" patternUnits="userSpaceOnUse">
-            <path d="M20 0H0V20" fill="none" stroke="currentColor" stroke-opacity=".12" stroke-width="1" />
-          </pattern>
-          <filter id="map-grain" x="0" y="0" width="100%" height="100%">
-            <feTurbulence type="fractalNoise" baseFrequency=".72" numOctaves="2" stitchTiles="stitch" />
-            <feColorMatrix type="saturate" values="0" />
-            <feComponentTransfer><feFuncA type="table" tableValues="0 .09" /></feComponentTransfer>
-          </filter>
-        </defs>
+      <a [href]="calUrl" target="_blank" rel="noreferrer">{{ i18n.t('home.hero.book') }}</a>
+    </p>
+  </header>
 
-        <rect width="500" height="300" style="fill: color-mix(in srgb, var(--color-ink) 92%, var(--signal-teal))" />
-        <rect width="500" height="300" fill="url(#map-grid)" opacity=".58" />
-        <path d="M0 252C74 205 116 236 177 183s111-98 165-49 105 18 158-33v199H0Z" fill="url(#terrain-fill)" />
-        <g fill="none" stroke="var(--signal-orange)" stroke-width="1.6" opacity=".82">
-          <path d="M-20 258C61 208 111 242 180 187s117-104 174-55 104 11 165-42" />
-          <path d="M-22 276C68 231 119 259 190 211s113-92 169-53 97 18 154-15" />
-          <path d="M-18 292C75 255 127 278 199 237s107-74 163-44 91 24 146 0" />
-        </g>
-
-
-        <g fill="none" stroke="var(--signal-orange)" stroke-width="2" stroke-linecap="square" stroke-linejoin="bevel">
-          <path d="M60 88H142V74H185" />
-          <path d="M60 150H185" />
-          <path d="M60 218H148V216H185" />
-        </g>
-        <g fill="var(--color-accent)" stroke="var(--signal-teal)" stroke-width="1" opacity=".9" style="filter: drop-shadow(7px 9px 0 rgb(36 199 89 / .12))">
-          <rect x="185" y="60" width="24" height="180" />
-          <rect x="185" y="60" width="155" height="28" />
-          <rect x="185" y="132" width="118" height="24" />
-        </g>
-        <g fill="none" stroke="var(--color-accent)" stroke-width="2" stroke-linecap="square">
-          <path d="M340 74H405" />
-          <path d="M303 144H405" />
-          <path d="M209 218H405" />
-        </g>
-        <g fill="var(--color-ink)" stroke="var(--signal-orange)" stroke-width="2">
-          <circle cx="60" cy="88" r="6" />
-          <circle cx="60" cy="150" r="6" />
-          <circle cx="60" cy="218" r="6" />
-        </g>
-        <g fill="var(--color-ink)" stroke="var(--color-accent)" stroke-width="2">
-          <circle cx="405" cy="74" r="7" />
-          <circle cx="405" cy="144" r="7" />
-          <circle cx="405" cy="218" r="7" />
-        </g>
-
-        <rect width="500" height="300" fill="transparent" opacity=".42" filter="url(#map-grain)" style="mix-blend-mode: screen" />
-      </svg>
-    </div>
-  </div>
-</header>
-
-<section class="fit page-section" aria-labelledby="fit-title">
-  <div class="section-heading">
-    <p class="ds-label">{{ i18n.t('home.fit.kicker') }}</p>
-    <h2 id="fit-title">{{ i18n.t('home.fit.title') }}</h2>
-    <p>{{ i18n.t('home.fit.intro') }}</p>
-  </div>
-  <ol class="fit-grid">
-    @for (entry of fitEntries(); track entry.title; let index = $index) {
-      <li class="fit-card ds-panel">
-        <span class="card-index" aria-hidden="true">0{{ index + 1 }}</span>
-        <h3>{{ entry.title }}</h3>
-        <p>{{ entry.description }}</p>
-      </li>
-    }
-  </ol>
-</section>
-
-<section class="services page-section" aria-labelledby="services-title">
-  <div class="section-heading">
-    <p class="ds-label">{{ i18n.t('services.kicker') }}</p>
+  <section aria-labelledby="services-title">
     <h2 id="services-title">{{ i18n.t('home.services.title') }}</h2>
-    <p>{{ i18n.t('home.services.intro') }}</p>
-  </div>
-  <ul class="services-grid">
-    @for (service of services(); track service.title) {
-      <li class="service-card">
-        <h3>{{ service.title }}</h3>
-        <p>{{ service.description }}</p>
-      </li>
-    }
-  </ul>
-  <div class="section-actions">
-    <a class="btn primary" routerLink="/services">{{ i18n.t('home.services.cta') }}</a>
-  </div>
-</section>
+    <dl class="service-list">
+      @for (service of services(); track service.title) {
+        <div><dt>{{ service.title }}</dt><dd>{{ service.description }}</dd></div>
+      }
+    </dl>
+    <p><a routerLink="/services">{{ i18n.t('home.services.cta') }}</a></p>
+  </section>
 
-<section class="work page-section" aria-labelledby="work-title">
-  <div class="section-heading">
-    <p class="ds-label">{{ i18n.t('products.kicker') }}</p>
+  <section aria-labelledby="method-title">
+    <h2 id="method-title">{{ i18n.t('home.method.title') }}</h2>
+    <ol class="method-list">
+      <li><strong>{{ i18n.t('home.method.review.title') }}</strong> {{ i18n.t('home.method.review.copy') }}</li>
+      <li><strong>{{ i18n.t('home.method.scope.title') }}</strong> {{ i18n.t('home.method.scope.copy') }}</li>
+      <li><strong>{{ i18n.t('home.method.delivery.title') }}</strong> {{ i18n.t('home.method.delivery.copy') }}</li>
+    </ol>
+  </section>
+
+  <section aria-labelledby="work-title">
     <h2 id="work-title">{{ i18n.t('home.timeline.title') }}</h2>
-    <p>{{ i18n.t('home.timeline.intro') }}</p>
-  </div>
-  <ol class="work-list">
-    @for (entry of publicEntries(); track entry.title; let index = $index) {
-      <li class="work-item ds-panel">
-        <span class="card-index" aria-hidden="true">0{{ index + 1 }}</span>
-        <div>
-          <h3>{{ entry.title }}</h3>
-          <p>{{ entry.description }}</p>
-          <a [href]="entry.href" target="_blank" rel="noreferrer">{{ entry.cta }} <span class="link-icon" aria-hidden="true">↗</span></a>
-        </div>
+    <ul class="project-list">
+      @for (entry of publicEntries(); track entry.title) {
+        <li><a [href]="entry.href" target="_blank" rel="noreferrer"><strong>{{ entry.title }}</strong></a><span>{{ entry.description }}</span></li>
+      }
+    </ul>
+  </section>
+
+  <section aria-labelledby="experience-title">
+    <h2 id="experience-title">{{ i18n.t('home.clients.title') }}</h2>
+    <p>{{ i18n.t('home.clients.copy') }}</p>
+    <p><a href="https://sacha.house/cv" target="_blank" rel="noreferrer">{{ i18n.t('home.clients.cv') }}</a></p>
+  </section>
+
+  <section aria-labelledby="about-title">
+    <h2 id="about-title">{{ i18n.t('home.about.title') }}</h2>
+    <p>{{ i18n.t('home.about.copy') }}</p>
+    <ul class="team-list">
+      <li>
+        <a class="team-portrait" href="https://sacha.house" target="_blank" rel="noreferrer" [attr.aria-label]="i18n.t('home.about.sacha.website')">
+          <img src="/sacha-froment.jpg" width="506" height="482" alt="Sacha Froment" />
+        </a>
+        <h3>Sacha Froment</h3>
+        <p>{{ i18n.t('home.about.sacha.role') }}</p>
       </li>
-    }
-  </ol>
-</section>
+    </ul>
+    <p><a routerLink="/about">{{ i18n.t('home.about.cta') }}</a></p>
+  </section>
 
-<section class="references page-section" aria-labelledby="references-title">
-  <div class="reference-copy">
-    <p class="ds-label">{{ i18n.t('home.clients.experience') }}</p>
-    <h2 id="references-title">{{ i18n.t('home.clients.title') }}</h2>
-    <p>{{ i18n.t('home.clients.note') }}</p>
-    <a class="btn" routerLink="/clients">{{ i18n.t('home.clients.cta') }}</a>
-  </div>
-  <ul class="reference-list ds-panel">
-    @for (reference of references; track reference) {
-      <li>{{ reference }}</li>
-    }
-  </ul>
-</section>
-
-<section class="engage page-section" aria-labelledby="engage-title">
-  <div class="engage-card ds-panel">
-    <p class="ds-label">{{ i18n.t('home.engage.kicker') }}</p>
-    <h2 id="engage-title">{{ i18n.t('home.engage.title') }}</h2>
-    <p>{{ i18n.t('home.engage.copy') }}</p>
-    <div class="actions">
+  <section aria-labelledby="contact-title">
+    <h2 id="contact-title">{{ i18n.t('home.engage.title') }}</h2>
+    <p>{{ i18n.t('home.contact.copy') }}</p>
+    <p class="contact-links">
       <a class="btn primary" href="mailto:contact@froment.software">{{ i18n.t('home.engage.mail') }}</a>
-      <a class="btn dark" routerLink="/services">{{ i18n.t('home.engage.services') }}</a>
-    </div>
-  </div>
-</section>
+      <a [href]="calUrl" target="_blank" rel="noreferrer">{{ i18n.t('home.hero.book') }}</a>
+    </p>
+  </section>
+</article>
