@@ -151,6 +151,9 @@ const translations = {
 
     'home.timeline.title': 'Projets publics',
     'home.expertise.title': 'Notre expertise',
+    'home.expertise.development.title': 'Développement logiciel',
+    'home.expertise.development.beforeGo': 'Conception de logiciels rapides, fiables et adaptés à leur usage, avec l’IA intégrée au processus de développement.',
+    'home.expertise.development.afterGo': 'comme langage de prédilection. Chaîne complète et reproductible, du build à l’installation, pour',
     'home.expertise.upgrades': 'Montée de version des dépendances et bibliothèques, traitement des incompatibilités et validation par les tests.',
     'home.expertise.build.before': 'Builds reproductibles avec',
     'home.expertise.build.after': ': dépendances déclarées, environnements identiques et cache partagé.',
@@ -517,6 +520,9 @@ const translations = {
 
     'home.timeline.title': 'Public projects',
     'home.expertise.title': 'Our expertise',
+    'home.expertise.development.title': 'Software development',
+    'home.expertise.development.beforeGo': 'Design of fast, reliable software suited to its users, with AI integrated into the development process.',
+    'home.expertise.development.afterGo': 'as our preferred language. Complete, reproducible pipeline from build to installation for',
     'home.expertise.upgrades': 'Dependency and library upgrades, incompatibility resolution and test-based validation.',
     'home.expertise.build.before': 'Reproducible builds with',
     'home.expertise.build.after': ': declared dependencies, identical environments and shared caches.',

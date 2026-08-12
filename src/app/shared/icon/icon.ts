@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 
 // SVG paths from the Lucide set on Iconify, licensed under ISC.
-export type IconName = 'ai' | 'build' | 'calendar' | 'ci' | 'environment' | 'infrastructure' | 'mail' | 'metrics' | 'secrets' | 'tests' | 'upgrade';
+export type IconName = 'ai' | 'build' | 'calendar' | 'ci' | 'development' | 'environment' | 'infrastructure' | 'mail' | 'metrics' | 'secrets' | 'tests' | 'upgrade';
 
 @Component({
   selector: 'app-icon',
@@ -13,6 +13,9 @@ export type IconName = 'ai' | 'build' | 'calendar' | 'ci' | 'environment' | 'inf
         }
         @case ('calendar') {
           <g><path d="M8 2v4m8-4v4M3 10h18"/><rect width="18" height="18" x="3" y="4" rx="2"/></g>
+        }
+        @case ('development') {
+          <g><path d="m8 9-4 3 4 3m8-6 4 3-4 3m-2-9-4 12"/></g>
         }
         @case ('upgrade') {
           <g><path d="M12 22v-9m3.17-10.79a1.67 1.67 0 0 1 1.63 0L21 4.57a1.93 1.93 0 0 1 0 3.36L8.82 14.79a1.66 1.66 0 0 1-1.64 0L3 12.43a1.93 1.93 0 0 1 0-3.36z"/><path d="M20 13v3.87a2.06 2.06 0 0 1-1.11 1.83l-6 3.08a1.93 1.93 0 0 1-1.78 0l-6-3.08A2.06 2.06 0 0 1 4 16.87V13"/><path d="M21 12.43a1.93 1.93 0 0 0 0-3.36L8.83 2.2a1.64 1.64 0 0 0-1.63 0L3 4.57a1.93 1.93 0 0 0 0 3.36l12.18 6.86a1.64 1.64 0 0 0 1.63 0z"/></g>

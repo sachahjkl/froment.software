@@ -1,6 +1,20 @@
 <section class="examples" [attr.aria-labelledby]="anchor()">
   <h2 [id]="anchor()" class="anchored-title"><span>{{ i18n.t(context() === 'expertise' ? 'home.expertise.title' : 'services.examples.title') }}</span><app-anchor-link [fragment]="anchor()" /></h2>
   <dl class="examples-list">
+    @if (context() === 'expertise') {
+      <div>
+        <dt><app-icon name="development" />{{ i18n.t('home.expertise.development.title') }}</dt>
+        <dd>
+          {{ i18n.t('home.expertise.development.beforeGo') }}
+          <a href="https://go.dev/" target="_blank" rel="noreferrer">Go</a>
+          {{ i18n.t('home.expertise.development.afterGo') }}
+          <a href="https://www.microsoft.com/windows/" target="_blank" rel="noreferrer">Windows</a>,
+          <a href="https://www.linuxfoundation.org/" target="_blank" rel="noreferrer">Linux</a>
+          {{ i18n.t('services.examples.or') }}
+          <a href="https://www.apple.com/macos/" target="_blank" rel="noreferrer">macOS</a>.
+        </dd>
+      </div>
+    }
     <div>
       <dt><app-icon name="upgrade" />{{ i18n.t('services.examples.upgrades.title') }}</dt>
       <dd>{{ i18n.t(context() === 'expertise' ? 'home.expertise.upgrades' : 'services.examples.upgrades.desc') }}</dd>
