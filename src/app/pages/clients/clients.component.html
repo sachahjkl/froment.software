@@ -3,18 +3,13 @@
     <h1>{{ i18n.t('clients.title') }}</h1>
   </header>
 
-  <section aria-labelledby="references-title">
-    <h2 id="references-title">{{ i18n.t('clients.sectors.title') }}</h2>
+  <section aria-labelledby="secteurs">
+    <h2 id="secteurs" class="anchored-title"><span>{{ i18n.t('clients.sectors.title') }}</span><app-anchor-link fragment="secteurs" /></h2>
     <ul class="sector-list">
       @for (sectorKey of sectorKeys; track sectorKey) {
         <li>{{ i18n.t(sectorKey) }}</li>
       }
     </ul>
     <p><a href="https://sacha.house/cv" target="_blank" rel="noreferrer">{{ i18n.t('clients.cv') }}</a></p>
-  </section>
-
-  <section aria-labelledby="contact-title">
-    <h2 id="contact-title">{{ i18n.t('clients.contact.title') }}</h2>
-    <p><a href="mailto:contact@froment.software">contact@froment.software</a></p>
   </section>
 </article>

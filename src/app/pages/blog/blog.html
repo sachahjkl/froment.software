@@ -1,0 +1,21 @@
+<article class="blog-index">
+  <header>
+    <h1>{{ i18n.t('blog.title') }}</h1>
+    <p>{{ i18n.t('blog.lead') }}</p>
+  </header>
+
+  <ol class="post-list">
+    @for (post of blog.posts(); track post.slug) {
+      <li>
+        <article>
+          <time [attr.datetime]="post.published">{{ i18n.formatDate(post.published, { dateStyle: 'long' }) }}</time>
+          <h2><a [routerLink]="['/blog', post.slug]">{{ post.title }}</a></h2>
+          <p>{{ post.description }}</p>
+          <ul class="topics" [attr.aria-label]="i18n.t('blog.topics')">
+            @for (topic of post.topics; track topic) { <li>{{ topic }}</li> }
+          </ul>
+        </article>
+      </li>
+    }
+  </ol>
+</article>

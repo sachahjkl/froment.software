@@ -1,0 +1,10 @@
+:host { display: block; }
+.blog-post, .missing-post { padding: var(--page-header-y) var(--page-x); }
+.blog-post { --measure: none; }
+.back-link { margin-bottom: var(--space-5); font-size: var(--text-sm); }
+.blog-post header { margin-bottom: var(--space-6); }
+.blog-post header > time { display: block; margin-top: var(--space-3); color: var(--color-muted); font-size: var(--text-xs); }
+.blog-post header > p { margin-top: var(--space-2); color: var(--color-ink-soft); }
+.topics { display: flex; flex-wrap: wrap; gap: var(--space-2); margin: var(--space-3) 0 0; padding: 0; list-style: none; }
+.topics li { color: var(--color-muted); font-size: var(--text-xs); }
+.topics li + li::before { content: "·"; margin-right: var(--space-2); }

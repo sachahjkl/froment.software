@@ -1,10 +1,13 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, ChangeDetectionStrategy } from '@angular/core';
 import { I18nService, TranslationKey } from '../../i18n.service';
+import { AnchorLink } from '../../shared/anchor-link/anchor-link';
 
 @Component({
   selector: 'app-clients',
   standalone: true,
+  imports: [AnchorLink],
   templateUrl: './clients.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './clients.component.scss',
 })
 export class ClientsComponent {

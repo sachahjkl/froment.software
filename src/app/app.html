@@ -6,10 +6,15 @@
   <header class="site-header">
     <div class="header-inner">
       <div class="identity-row">
-        <a class="brand" routerLink="/" [attr.aria-label]="i18n.t('brand.home')">
-          <img src="/favicon.svg" alt="" width="24" height="24" />
-          <span>froment.software</span>
-        </a>
+        <div class="brand-wrap">
+          <a class="brand" routerLink="/" [attr.aria-label]="i18n.t('brand.home')">
+            <img src="/brand/favicon.png" alt="" width="24" height="24" />
+          </a>
+          <div class="brand-copy">
+            <a class="brand-name" routerLink="/">froment.software</a>
+            <app-new-label />
+          </div>
+        </div>
         <label class="header-language">
           <span>{{ i18n.t('footer.language') }}</span>
           <select class="lang-select" [value]="i18n.language()" (change)="setLanguage($any($event.target).value)">
@@ -30,6 +35,7 @@
             <a routerLink="/about" routerLinkActive="active" ariaCurrentWhenActive="page" (click)="navDetails.open = false">{{ i18n.t('nav.about') }}</a>
             <a routerLink="/tools" routerLinkActive="active" ariaCurrentWhenActive="page" (click)="navDetails.open = false">{{ i18n.t('nav.products') }}</a>
             <a routerLink="/clients" routerLinkActive="active" ariaCurrentWhenActive="page" (click)="navDetails.open = false">{{ i18n.t('nav.clients') }}</a>
+            <a routerLink="/blog" routerLinkActive="active" ariaCurrentWhenActive="page" (click)="navDetails.open = false">{{ i18n.t('nav.blog') }}</a>
             <a href="mailto:contact@froment.software" (click)="navDetails.open = false">Contact</a>
           </nav>
         </details>
@@ -41,6 +47,7 @@
         <a routerLink="/about" routerLinkActive="active" ariaCurrentWhenActive="page">{{ i18n.t('nav.about') }}</a>
         <a routerLink="/tools" routerLinkActive="active" ariaCurrentWhenActive="page">{{ i18n.t('nav.products') }}</a>
         <a routerLink="/clients" routerLinkActive="active" ariaCurrentWhenActive="page">{{ i18n.t('nav.clients') }}</a>
+        <a routerLink="/blog" routerLinkActive="active" ariaCurrentWhenActive="page">{{ i18n.t('nav.blog') }}</a>
         <a href="mailto:contact@froment.software">Contact</a>
       </nav>
     </div>
@@ -61,4 +68,8 @@
       </nav>
     </div>
   </footer>
+
+  <div class="copy-notice" [class.visible]="anchorCopy.message()" role="status" aria-live="polite">
+    {{ anchorCopy.message() }}
+  </div>
 </div>

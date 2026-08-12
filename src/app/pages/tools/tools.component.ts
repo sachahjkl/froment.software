@@ -1,6 +1,6 @@
-import { Component, computed, inject } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { Component, computed, inject, ChangeDetectionStrategy } from '@angular/core';
 import { I18nService } from '../../i18n.service';
+import { AnchorLink } from '../../shared/anchor-link/anchor-link';
 
 type LabEntry = {
   title: string;
@@ -13,8 +13,9 @@ type LabEntry = {
 @Component({
   selector: 'app-tools',
   standalone: true,
-  imports: [RouterLink],
+  imports: [AnchorLink],
   templateUrl: './tools.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './tools.component.scss',
 })
 export class ToolsComponent {

@@ -1,10 +1,27 @@
 import { DOCUMENT, isPlatformBrowser } from '@angular/common';
-import { afterNextRender, Component, effect, inject, Injector, PLATFORM_ID } from '@angular/core';
+import {
+  afterNextRender,
+  Component,
+  effect,
+  inject,
+  Injector,
+  PLATFORM_ID,
+  ChangeDetectionStrategy,
+} from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { Meta, Title } from '@angular/platform-browser';
-import { ActivatedRoute, NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import {
+  ActivatedRoute,
+  NavigationEnd,
+  Router,
+  RouterLink,
+  RouterLinkActive,
+  RouterOutlet,
+} from '@angular/router';
 import { filter } from 'rxjs';
 import { I18nService, TranslationKey } from './i18n.service';
+import { AnchorCopy } from './shared/anchor-copy';
+import { NewLabel } from './shared/new-label/new-label';
 
 const siteOrigin = 'https://froment.software';
 const socialImageUrl = `${siteOrigin}/social-card.png`;
@@ -12,14 +29,16 @@ const socialImageUrl = `${siteOrigin}/social-card.png`;
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet, RouterLink, RouterLinkActive],
+  imports: [NewLabel, RouterOutlet, RouterLink, RouterLinkActive],
   templateUrl: './app.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './app.scss',
 })
 export class App {
   protected readonly i18n = inject(I18nService);
   protected readonly brandName = 'froment.software';
   protected readonly currentYear = new Date().getFullYear();
+  protected readonly anchorCopy = inject(AnchorCopy);
   private readonly router = inject(Router);
   private readonly activatedRoute = inject(ActivatedRoute);
   private readonly title = inject(Title);
@@ -61,7 +80,6 @@ export class App {
 
       this.focusMainAfterRender();
     });
-
   }
 
   protected setLanguage(language: string): void {
@@ -87,6 +105,7 @@ export class App {
     const titleKey = route.data['titleKey'] as TranslationKey | undefined;
     const descriptionKey = route.data['descriptionKey'] as TranslationKey | undefined;
     const robots = route.data['robots'] as string | undefined;
+    const isBlogPost = route.routeConfig?.path === 'blog/:slug';
     if (titleKey) {
       const title = this.i18n.t(titleKey);
       this.title.setTitle(title);
@@ -101,9 +120,18 @@ export class App {
       this.meta.updateTag({ name: 'twitter:description', content: description });
     }
     this.meta.updateTag({ name: 'robots', content: robots ?? 'index, follow' });
+    if (!isBlogPost) {
+      this.meta.updateTag({ property: 'og:type', content: 'website' });
+      this.meta.removeTag('property="article:published_time"');
+      this.meta.removeTag('property="article:modified_time"');
+      this.document.head.querySelector('script[data-blog-post]')?.remove();
+    }
 
     const canonicalUrl = this.getCanonicalUrl();
-    this.meta.updateTag({ property: 'og:locale', content: this.i18n.language() === 'fr' ? 'fr_FR' : 'en_US' });
+    this.meta.updateTag({
+      property: 'og:locale',
+      content: this.i18n.language() === 'fr' ? 'fr_FR' : 'en_US',
+    });
     this.meta.updateTag({ property: 'og:url', content: canonicalUrl });
     this.meta.updateTag({ property: 'og:image', content: socialImageUrl });
     this.meta.updateTag({ name: 'twitter:image', content: socialImageUrl });
@@ -139,23 +167,30 @@ export class App {
       return;
     }
 
-    afterNextRender(() => {
-      const target = this.document.getElementById(fragment);
-      if (!target) {
-        this.focusMain();
-        return;
-      }
+    afterNextRender(
+      () => {
+        const target = this.document.getElementById(fragment);
+        if (!target) {
+          this.focusMain();
+          return;
+        }
 
-      const focusTarget = target.matches('h1, h2, h3, h4, h5, h6, [role="heading"]')
-        ? target
-        : target.querySelector<HTMLElement>('h1, h2, h3, h4, h5, h6, [role="heading"]') ?? target;
-      this.focusElement(focusTarget);
-    }, { injector: this.injector });
+        const focusTarget = target.matches('h1, h2, h3, h4, h5, h6, [role="heading"]')
+          ? target
+          : (target.querySelector<HTMLElement>('h1, h2, h3, h4, h5, h6, [role="heading"]') ??
+            target);
+        this.focusElement(focusTarget);
+      },
+      { injector: this.injector },
+    );
   }
 
   private focusElement(element: HTMLElement): void {
-    const needsTemporaryTabIndex = !element.hasAttribute('tabindex')
-      && !element.matches('a[href], area[href], button, input, select, textarea, iframe, [contenteditable="true"]');
+    const needsTemporaryTabIndex =
+      !element.hasAttribute('tabindex') &&
+      !element.matches(
+        'a[href], area[href], button, input, select, textarea, iframe, [contenteditable="true"]',
+      );
 
     if (needsTemporaryTabIndex) {
       element.tabIndex = -1;

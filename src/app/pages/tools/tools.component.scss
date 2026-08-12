@@ -1,9 +1,7 @@
 :host { display: block; }
-.tools-hero { padding: var(--page-header-y) var(--page-x); }
-.page-section { padding: var(--page-section-y) var(--page-x); }
-.lead, .section-heading p, .lab-entry p, .tools-contact p { margin-top: var(--space-3); color: var(--color-ink-soft); }
-.section-heading { margin-bottom: var(--space-5); }
-.catalog-list { margin: 0; padding: 0; list-style: none; }
+.page-section { padding: var(--page-header-y) var(--page-x); }
+.lead, .section-heading p, .lab-entry p { margin-top: var(--space-3); color: var(--color-ink-soft); }
+.catalog-list { margin: var(--space-5) 0 0; padding: 0; list-style: none; }
 .catalog-list li { padding-block: var(--space-4); }
 .catalog-list li + li { margin-top: var(--space-3); }
 .lab-entry p:last-child { font-size: var(--text-sm); }

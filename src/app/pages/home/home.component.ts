@@ -1,6 +1,9 @@
-import { Component, computed, inject } from '@angular/core';
+import { Component, computed, inject, ChangeDetectionStrategy } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { I18nService } from '../../i18n.service';
+import { AnchorLink } from '../../shared/anchor-link/anchor-link';
+import { ConcreteExamples } from '../../shared/concrete-examples/concrete-examples';
+import { Icon } from '../../shared/icon/icon';
 
 type PublicEntry = {
   title: string;
@@ -17,13 +20,20 @@ type ContentEntry = {
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [RouterLink],
+  imports: [AnchorLink, ConcreteExamples, Icon, RouterLink],
   templateUrl: './home.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './home.component.scss',
 })
 export class HomeComponent {
   protected readonly i18n = inject(I18nService);
   protected readonly calUrl = 'https://cal.com/sachahjkl';
+
+  protected readonly contactMailto = computed(() => {
+    const subject = encodeURIComponent(this.i18n.t('home.engage.subject'));
+    const body = encodeURIComponent(this.i18n.t('home.engage.body'));
+    return `mailto:contact@froment.software?subject=${subject}&body=${body}`;
+  });
 
   protected readonly publicEntries = computed<PublicEntry[]>(() => [
     {
@@ -66,5 +76,4 @@ export class HomeComponent {
       description: this.i18n.t('home.services.renovation.desc'),
     },
   ]);
-
 }

@@ -19,8 +19,11 @@
     </div>
   </section>
 
-  <section aria-labelledby="contact-title">
-    <h2 id="contact-title">{{ i18n.t('about.contact.title') }}</h2>
-    <p><a href="mailto:contact@froment.software">{{ i18n.t('about.contact.mail') }}</a> · <a href="https://cal.com/sachahjkl" target="_blank" rel="noreferrer">{{ i18n.t('about.contact.book') }}</a></p>
+  <section aria-labelledby="contact">
+    <h2 id="contact" class="anchored-title"><span>{{ i18n.t('about.contact.title') }}</span><app-anchor-link fragment="contact" /></h2>
+    <p class="contact-actions">
+      <a class="btn primary" [href]="contactMailto()"><app-icon name="mail" />{{ i18n.t('about.contact.mail') }}</a>
+      <a class="btn" href="https://cal.com/sachahjkl" target="_blank" rel="noreferrer"><app-icon name="calendar" />{{ i18n.t('about.contact.book') }}</a>
+    </p>
   </section>
 </article>

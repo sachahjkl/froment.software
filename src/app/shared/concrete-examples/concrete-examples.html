@@ -1,0 +1,79 @@
+<section class="examples" [attr.aria-labelledby]="anchor()">
+  <h2 [id]="anchor()" class="anchored-title"><span>{{ i18n.t(context() === 'expertise' ? 'home.expertise.title' : 'services.examples.title') }}</span><app-anchor-link [fragment]="anchor()" /></h2>
+  <dl class="examples-list">
+    <div>
+      <dt><app-icon name="upgrade" />{{ i18n.t('services.examples.upgrades.title') }}</dt>
+      <dd>{{ i18n.t(context() === 'expertise' ? 'home.expertise.upgrades' : 'services.examples.upgrades.desc') }}</dd>
+    </div>
+    <div>
+      <dt><app-icon name="build" />{{ i18n.t('services.examples.build.title') }}</dt>
+      <dd>
+        {{ i18n.t(context() === 'expertise' ? 'home.expertise.build.before' : 'services.examples.build.before') }}
+        <a href="https://nix.dev/concepts/flakes.html" target="_blank" rel="noreferrer">Nix flakes</a>
+        {{ i18n.t('services.examples.or') }}
+        <a href="https://nixos.org/" target="_blank" rel="noreferrer">NixOS</a>
+        {{ i18n.t(context() === 'expertise' ? 'home.expertise.build.after' : 'services.examples.build.after') }}
+      </dd>
+    </div>
+    <div>
+      <dt><app-icon name="ci" />{{ i18n.t('services.examples.ci.title') }}</dt>
+      <dd>{{ i18n.t(context() === 'expertise' ? 'home.expertise.ci' : 'services.examples.ci.desc') }}</dd>
+    </div>
+    <div>
+      <dt><app-icon name="tests" />{{ i18n.t('services.examples.tests.title') }}</dt>
+      <dd>{{ i18n.t(context() === 'expertise' ? 'home.expertise.tests' : 'services.examples.tests.desc') }}</dd>
+    </div>
+    <div>
+      <dt><app-icon name="environment" />{{ i18n.t('services.examples.environments.title') }}</dt>
+      <dd>
+        {{ i18n.t(context() === 'expertise' ? 'home.expertise.environments' : 'services.examples.environments.before') }}
+        <a href="https://devenv.sh/" target="_blank" rel="noreferrer">devenv</a>
+        {{ i18n.t('services.examples.or') }}
+        <a href="https://nix.dev/concepts/flakes.html" target="_blank" rel="noreferrer">Nix flakes</a>.
+      </dd>
+    </div>
+    <div>
+      <dt><app-icon name="secrets" />{{ i18n.t('services.examples.secrets.title') }}</dt>
+      <dd>
+        {{ i18n.t(context() === 'expertise' ? 'home.expertise.secrets.before' : 'services.examples.secrets.before') }}
+        <a href="https://azure.microsoft.com/products/key-vault" target="_blank" rel="noreferrer">Azure Key Vault</a>,
+        <a href="https://bitwarden.com/products/secrets-manager/" target="_blank" rel="noreferrer">Bitwarden Secrets Manager</a>
+        {{ i18n.t('services.examples.or') }}
+        <a href="https://getsops.io/" target="_blank" rel="noreferrer">SOPS</a>.
+        {{ i18n.t(context() === 'expertise' ? 'home.expertise.secrets.after' : 'services.examples.secrets.through') }}
+        <a href="https://secretspec.dev/" target="_blank" rel="noreferrer">SecretSpec</a>.
+      </dd>
+    </div>
+    <div>
+      <dt><app-icon name="ai" />{{ i18n.t('services.examples.ai.title') }}</dt>
+      <dd>
+        {{ i18n.t(context() === 'expertise' ? 'home.expertise.ai.before' : 'services.examples.ai.before') }}
+        <a href="https://opencode.ai/docs/agents/" target="_blank" rel="noreferrer">OpenCode</a>.
+        {{ i18n.t(context() === 'expertise' ? 'home.expertise.ai.after' : 'services.examples.ai.usage') }}
+        <a href="https://codeburn.app/" target="_blank" rel="noreferrer">CodeBurn</a>.
+      </dd>
+    </div>
+    <div>
+      <dt><app-icon name="metrics" />{{ i18n.t('services.examples.metrics.title') }}</dt>
+      <dd>
+        {{ i18n.t(context() === 'expertise' ? 'home.expertise.metrics.before' : 'services.examples.metrics.before') }}
+        <a href="https://www.microsoft.com/microsoft-teams/" target="_blank" rel="noreferrer">Microsoft Teams</a>,
+        <a href="https://slack.com/" target="_blank" rel="noreferrer">Slack</a>
+        {{ i18n.t('services.examples.or') }}
+        <a href="https://discord.com/" target="_blank" rel="noreferrer">Discord</a>
+        {{ i18n.t(context() === 'expertise' ? 'home.expertise.metrics.after' : 'services.examples.metrics.after') }}
+      </dd>
+    </div>
+    <div>
+      <dt><app-icon name="infrastructure" />{{ i18n.t('services.examples.infrastructure.title') }}</dt>
+      <dd>
+        {{ i18n.t(context() === 'expertise' ? 'home.expertise.infrastructure' : 'services.examples.infrastructure.before') }}
+        <a href="https://nixos.org/" target="_blank" rel="noreferrer">NixOS</a>,
+        <a href="https://sst.dev/" target="_blank" rel="noreferrer">SST</a>,
+        <a href="https://www.pulumi.com/" target="_blank" rel="noreferrer">Pulumi</a>
+        {{ i18n.t('services.examples.or') }}
+        <a href="https://developer.hashicorp.com/terraform" target="_blank" rel="noreferrer">Terraform</a>.
+      </dd>
+    </div>
+  </dl>
+</section>

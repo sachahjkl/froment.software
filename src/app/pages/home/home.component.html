@@ -3,13 +3,15 @@
     <h1>{{ i18n.t('home.hero.title') }}</h1>
     <p class="lead">{{ i18n.t('home.hero.lead') }}</p>
     <p class="intro-actions">
-      <a class="btn primary" href="mailto:contact@froment.software">{{ i18n.t('home.hero.contact') }}</a>
-      <a [href]="calUrl" target="_blank" rel="noreferrer">{{ i18n.t('home.hero.book') }}</a>
+      <a class="btn primary" [href]="contactMailto()"><app-icon name="mail" />{{ i18n.t('home.engage.mail') }}</a>
+      <a class="btn" [href]="calUrl" target="_blank" rel="noreferrer"><app-icon name="calendar" />{{ i18n.t('home.hero.book') }}</a>
     </p>
   </header>
 
-  <section aria-labelledby="services-title">
-    <h2 id="services-title">{{ i18n.t('home.services.title') }}</h2>
+  <app-concrete-examples anchor="expertise" context="expertise" />
+
+  <section aria-labelledby="perimetre">
+    <h2 id="perimetre" class="anchored-title"><span>{{ i18n.t('home.services.title') }}</span><app-anchor-link fragment="perimetre" /></h2>
     <dl class="service-list">
       @for (service of services(); track service.title) {
         <div><dt>{{ service.title }}</dt><dd>{{ service.description }}</dd></div>
@@ -18,17 +20,8 @@
     <p><a routerLink="/services">{{ i18n.t('home.services.cta') }}</a></p>
   </section>
 
-  <section aria-labelledby="method-title">
-    <h2 id="method-title">{{ i18n.t('home.method.title') }}</h2>
-    <ol class="method-list">
-      <li><strong>{{ i18n.t('home.method.review.title') }}</strong> {{ i18n.t('home.method.review.copy') }}</li>
-      <li><strong>{{ i18n.t('home.method.scope.title') }}</strong> {{ i18n.t('home.method.scope.copy') }}</li>
-      <li><strong>{{ i18n.t('home.method.delivery.title') }}</strong> {{ i18n.t('home.method.delivery.copy') }}</li>
-    </ol>
-  </section>
-
-  <section aria-labelledby="work-title">
-    <h2 id="work-title">{{ i18n.t('home.timeline.title') }}</h2>
+  <section aria-labelledby="projets">
+    <h2 id="projets" class="anchored-title"><span>{{ i18n.t('home.timeline.title') }}</span><app-anchor-link fragment="projets" /></h2>
     <ul class="project-list">
       @for (entry of publicEntries(); track entry.title) {
         <li><a [href]="entry.href" target="_blank" rel="noreferrer"><strong>{{ entry.title }}</strong></a><span>{{ entry.description }}</span></li>
@@ -36,15 +29,10 @@
     </ul>
   </section>
 
-  <section aria-labelledby="experience-title">
-    <h2 id="experience-title">{{ i18n.t('home.clients.title') }}</h2>
+  <section aria-labelledby="qui-sommes-nous">
+    <h2 id="qui-sommes-nous" class="anchored-title"><span>{{ i18n.t('home.about.title') }}</span><app-anchor-link fragment="qui-sommes-nous" /></h2>
     <p>{{ i18n.t('home.clients.copy') }}</p>
     <p><a href="https://sacha.house/cv" target="_blank" rel="noreferrer">{{ i18n.t('home.clients.cv') }}</a></p>
-  </section>
-
-  <section aria-labelledby="about-title">
-    <h2 id="about-title">{{ i18n.t('home.about.title') }}</h2>
-    <p>{{ i18n.t('home.about.copy') }}</p>
     <ul class="team-list">
       <li>
         <a class="team-portrait" href="https://sacha.house" target="_blank" rel="noreferrer" [attr.aria-label]="i18n.t('home.about.sacha.website')">
@@ -57,12 +45,11 @@
     <p><a routerLink="/about">{{ i18n.t('home.about.cta') }}</a></p>
   </section>
 
-  <section aria-labelledby="contact-title">
-    <h2 id="contact-title">{{ i18n.t('home.engage.title') }}</h2>
-    <p>{{ i18n.t('home.contact.copy') }}</p>
+  <section aria-labelledby="contact">
+    <h2 id="contact" class="anchored-title"><span>{{ i18n.t('home.engage.title') }}</span><app-anchor-link fragment="contact" /></h2>
     <p class="contact-links">
-      <a class="btn primary" href="mailto:contact@froment.software">{{ i18n.t('home.engage.mail') }}</a>
-      <a [href]="calUrl" target="_blank" rel="noreferrer">{{ i18n.t('home.hero.book') }}</a>
+      <a class="btn primary" [href]="contactMailto()"><app-icon name="mail" />{{ i18n.t('home.engage.mail') }}</a>
+      <a class="btn" [href]="calUrl" target="_blank" rel="noreferrer"><app-icon name="calendar" />{{ i18n.t('home.hero.book') }}</a>
     </p>
   </section>
 </article>

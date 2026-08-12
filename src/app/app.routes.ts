@@ -8,6 +8,8 @@ import { AboutComponent } from './pages/about/about.component';
 import { LegalComponent } from './pages/legal/legal.component';
 import { PrivacyComponent } from './pages/privacy/privacy.component';
 import { CookiesComponent } from './pages/cookies/cookies.component';
+import { Blog } from './pages/blog/blog';
+import { BlogPost } from './pages/blog-post/blog-post';
 
 import { NotFoundComponent } from './pages/not-found/not-found.component';
 
@@ -17,6 +19,8 @@ export const routes: Routes = [
   { path: 'clients', component: ClientsComponent, data: { titleKey: 'page.clients', descriptionKey: 'page.description.clients' } },
   { path: 'services', component: ServicesComponent, data: { titleKey: 'page.services', descriptionKey: 'page.description.services' } },
   { path: 'tools', component: ToolsComponent, data: { titleKey: 'page.products', descriptionKey: 'page.description.products' } },
+  { path: 'blog', component: Blog, data: { titleKey: 'page.blog', descriptionKey: 'page.description.blog' } },
+  { path: 'blog/:slug', component: BlogPost },
   { path: 'design', component: DesignComponent, data: { titleKey: 'page.design', descriptionKey: 'page.description.design', robots: 'noindex, follow' } },
   { path: 'legal', component: LegalComponent, data: { titleKey: 'page.legal', descriptionKey: 'page.description.legal' } },
   { path: 'privacy', component: PrivacyComponent, data: { titleKey: 'page.privacy', descriptionKey: 'page.description.privacy' } },

@@ -1,13 +1,5 @@
-<header class="tools-hero">
-  <div class="hero-inner">
-    <h1>{{ i18n.t('products.title') }}</h1>
-  </div>
-</header>
-
-<section class="tools-catalog page-section" aria-labelledby="catalog-title">
-  <div class="section-heading">
-    <h2 id="catalog-title">{{ i18n.t('products.catalog.title') }}</h2>
-  </div>
+<section class="tools-catalog page-section" aria-labelledby="projets">
+  <h1 id="projets" class="anchored-title"><span>{{ i18n.t('products.title') }}</span><app-anchor-link fragment="projets" /></h1>
   <ul class="catalog-list">
     @for (entry of labEntries(); track entry.title) {
       <li>
@@ -19,10 +11,4 @@
       </li>
     }
   </ul>
-</section>
-
-<section class="tools-contact page-section" aria-labelledby="tools-contact-title">
-  <h2 id="tools-contact-title">{{ i18n.t('products.contact.title') }}</h2>
-  <p>{{ i18n.t('products.contact.copy') }}</p>
-  <p><a routerLink="/services">{{ i18n.t('products.contact.cta') }}</a></p>
 </section>

@@ -3,15 +3,15 @@
     <h1>{{ i18n.t('services.title') }}</h1>
     <p class="lead">{{ i18n.t('services.lead') }}</p>
     <div class="actions">
-      <a class="btn primary" [href]="quoteMailto()">{{ i18n.t('services.quote') }}</a>
-      <a class="btn" [href]="calUrl" target="_blank" rel="noreferrer">{{ i18n.t('services.book') }}</a>
+      <a class="btn primary" [href]="quoteMailto()"><app-icon name="mail" />{{ i18n.t('services.quote') }}</a>
+      <a class="btn" [href]="calUrl" target="_blank" rel="noreferrer"><app-icon name="calendar" />{{ i18n.t('services.book') }}</a>
     </div>
   </div>
 </header>
 
-<section class="services-listing page-section" aria-labelledby="services-title">
+<section class="services-listing page-section" aria-labelledby="prestations">
   <div class="section-heading">
-    <h2 id="services-title">{{ i18n.t('services.list.title') }}</h2>
+    <h2 id="prestations" class="anchored-title"><span>{{ i18n.t('services.list.title') }}</span><app-anchor-link fragment="prestations" /></h2>
   </div>
   <ol class="services-grid">
     @for (service of services(); track service.title) {
@@ -25,10 +25,13 @@
 
 <hr class="section-break" />
 
-<section class="delivery page-section" aria-labelledby="delivery-title">
+<app-concrete-examples class="page-section" />
+
+<hr class="section-break" />
+
+<section class="delivery page-section" aria-labelledby="etapes">
   <div class="section-heading delivery-heading">
-    <h2 id="delivery-title">{{ i18n.t('services.process.title') }}</h2>
-    <p>{{ i18n.t('services.process.intro') }}</p>
+    <h2 id="etapes" class="anchored-title"><span>{{ i18n.t('services.process.title') }}</span><app-anchor-link fragment="etapes" /></h2>
   </div>
   <ol class="process-list">
     @for (step of process(); track step.title) {
@@ -40,9 +43,8 @@
   </ol>
 </section>
 
-<section class="practical page-section" aria-labelledby="practical-title">
-  <h2 id="practical-title">{{ i18n.t('services.practical.title') }}</h2>
-  <p class="practical-note"><mark>{{ i18n.t('services.practical.note') }}</mark></p>
+<section class="practical page-section" aria-labelledby="modalites">
+  <h2 id="modalites" class="anchored-title"><span>{{ i18n.t('services.practical.title') }}</span><app-anchor-link fragment="modalites" /></h2>
   <dl class="practical-list">
     <div>
       <dt>{{ i18n.t('services.practical.method') }}</dt>
@@ -63,11 +65,8 @@
     <li>{{ i18n.t('services.criteria.problem') }}</li>
     <li>{{ i18n.t('services.criteria.deadline') }}</li>
   </ul>
-</section>
-
-<hr class="section-break" />
-
-<section class="service-contact page-section" aria-labelledby="service-contact-title">
-  <h2 id="service-contact-title">{{ i18n.t('home.engage.title') }}</h2>
-  <p><a [href]="quoteMailto()">{{ i18n.t('services.quote') }}</a> · <a [href]="calUrl" target="_blank" rel="noreferrer">{{ i18n.t('services.book') }}</a></p>
+  <div class="actions practical-actions">
+    <a class="btn primary" [href]="quoteMailto()"><app-icon name="mail" />{{ i18n.t('services.quote') }}</a>
+    <a class="btn" [href]="calUrl" target="_blank" rel="noreferrer"><app-icon name="calendar" />{{ i18n.t('services.book') }}</a>
+  </div>
 </section>

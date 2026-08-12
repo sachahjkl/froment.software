@@ -141,4 +141,16 @@ describe('App shell', () => {
 
     expect(details.open).toBe(false);
   });
+
+  it('copies a section URL and shows a status message', async () => {
+    await navigate(fixture, router, '/services');
+    const writeText = vi.fn().mockResolvedValue(undefined);
+    Object.defineProperty(navigator, 'clipboard', { configurable: true, value: { writeText } });
+
+    element.querySelector<HTMLAnchorElement>('a[href="#cas-concrets"]')!.click();
+    await fixture.whenStable();
+
+    expect(writeText).toHaveBeenCalledWith(expect.stringMatching(/#cas-concrets$/));
+    expect(element.querySelector('.copy-notice')?.textContent).toContain('Lien copié');
+  });
 });
