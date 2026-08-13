@@ -85,7 +85,7 @@ main {
   .header-language { display: none; }
   .desktop-nav { display: none; }
   .nav-details { display: block; }
-  .nav-details > summary { display: grid; width: 2.5rem; height: 2.5rem; place-items: center; border: 0; background: transparent; color: var(--color-ink); cursor: pointer; }
+  .nav-details > summary { display: grid; width: 2.5rem; height: 2.5rem; place-items: center; border: 1px solid var(--color-line-strong); border-radius: var(--radius-sm); background: var(--color-surface-raised); color: var(--color-ink); cursor: pointer; }
   .nav-details > summary::marker { content: ""; }
   .nav-details[open] > summary { visibility: hidden; }
   .footer-inner { grid-template-columns: 1fr; gap: var(--space-2); }
