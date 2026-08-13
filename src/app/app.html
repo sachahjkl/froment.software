@@ -25,9 +25,7 @@
         </label>
         <details #navDetails class="nav-details">
           <summary [attr.aria-label]="i18n.t('shell.menu')">
-            <svg class="burger" viewBox="0 0 24 24" aria-hidden="true">
-              <path d="M22 18.005c0 .55-.446.995-.995.995h-8.01a.995.995 0 0 1 0-1.99h8.01c.55 0 .995.445.995.995M22 12c0 .55-.446.995-.995.995H2.995a.995.995 0 1 1 0-1.99h18.01c.55 0 .995.446.995.995m-.995-5.01a.995.995 0 0 0 0-1.99H8.995a.995.995 0 1 0 0 1.99z" />
-            </svg>
+            <span class="burger" aria-hidden="true"><span></span><span></span><span></span></span>
           </summary>
           <button class="nav-backdrop" type="button" tabindex="-1" aria-hidden="true" (click)="navDetails.open = false"></button>
           <nav

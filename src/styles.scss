@@ -260,7 +260,8 @@ code { font-size: 0.9em; }
 }
 
 @media (max-width: 46rem) {
-  .burger { display: block; width: 1.75rem; height: 1.75rem; fill: currentColor; }
+  .burger { display: grid; gap: 0.25rem; width: 1.25rem; }
+  .burger span { display: block; height: 2px; background: currentColor; }
   .nav-backdrop { position: fixed; inset: 0; z-index: var(--z-header); display: block; border: 0; background: rgb(20 20 35 / 0.45); opacity: 0; pointer-events: none; transition: opacity var(--duration-base) var(--ease-out); }
   .nav-details[open] .nav-backdrop { opacity: 1; pointer-events: auto; }
   .mobile-nav { position: fixed; top: 0; right: 0; z-index: calc(var(--z-header) + 2); width: min(22rem, 88vw); height: 100dvh; flex-wrap: nowrap; flex-direction: column; gap: 0; padding: var(--space-4); border-left: 1px solid rgba(0, 0, 0, 0.2); background: var(--color-surface-raised); box-shadow: -4px 0 18px rgb(20 20 35 / 0.2); transform: translateX(100%); visibility: hidden; transition: transform var(--duration-slow) var(--ease-out), visibility 0s var(--duration-slow); }

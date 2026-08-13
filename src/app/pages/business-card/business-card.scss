@@ -3,7 +3,7 @@
 .card-toolbar { display: flex; justify-content: space-between; align-items: end; gap: var(--space-5); }
 .card-toolbar h1 { margin-top: var(--space-2); }
 .card-sheet { display: grid; grid-template-columns: repeat(2, 85mm); gap: 12mm; margin-top: var(--space-8); overflow-x: auto; padding: var(--space-4); border: 1px dashed var(--color-line-strong); background: #d9d9d9; }
-.business-card { position: relative; display: grid; width: 85mm; height: 55mm; overflow: hidden; place-items: center; padding: 7mm; background: transparent; color: #111; font-family: Baskerville, Georgia, "Times New Roman", serif; box-shadow: 0 3px 12px rgb(0 0 0 / 0.18); text-align: center; }
+.business-card { position: relative; display: grid; width: 85mm; height: 55mm; overflow: hidden; place-items: center; padding: 7mm; background: #fff; color: #111; font-family: Baskerville, Georgia, "Times New Roman", serif; box-shadow: 0 3px 12px rgb(0 0 0 / 0.18); text-align: center; }
 .front { grid-template-rows: 1fr auto; }
 .identity { align-self: end; }
 .identity h2 { color: #111; font-size: 6mm; font-weight: 400; letter-spacing: 0.02em; }
@@ -13,8 +13,8 @@
 .contact-details p + p { margin-top: 1mm; }
 .back { place-items: center; }
 .embossed-lockup { display: grid; justify-items: center; gap: 3mm; }
-.embossed-lockup img { width: 10mm; height: 10mm; filter: grayscale(1) contrast(0) opacity(0.14); }
-.embossed-name { color: transparent; font-size: 5mm; font-weight: 400; letter-spacing: 0.12em; -webkit-text-stroke: 0.15mm rgb(0 0 0 / 0.16); text-transform: uppercase; }
+.embossed-mark { width: 10mm; height: 10mm; background: #f7f7f7; filter: drop-shadow(-0.18mm -0.18mm 0 #fff) drop-shadow(0.18mm 0.18mm 0 rgb(0 0 0 / 0.2)); mask: url("/brand/logo-mark.png") center / contain no-repeat; -webkit-mask: url("/brand/logo-mark.png") center / contain no-repeat; }
+.embossed-name { color: #f7f7f7; font-size: 5mm; font-weight: 400; letter-spacing: 0.12em; text-shadow: -0.18mm -0.18mm 0 #fff, 0.18mm 0.18mm 0 rgb(0 0 0 / 0.2); text-transform: uppercase; }
 @media (max-width: 48rem) { .card-toolbar { align-items: stretch; flex-direction: column; } }
 @media print {
   @page { size: 85mm 55mm; margin: 0; }
