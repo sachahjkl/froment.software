@@ -4,21 +4,19 @@
 .card-toolbar h1, .card-toolbar div > p:last-child { margin-top: var(--space-2); }
 .card-toolbar div > p:last-child { color: var(--color-muted); }
 .card-sheet { display: grid; grid-template-columns: repeat(2, 85mm); gap: 12mm; margin-top: var(--space-8); overflow-x: auto; padding: var(--space-4); border: 1px dashed var(--color-line-strong); background: #d9d9d9; }
-.business-card { position: relative; display: grid; width: 85mm; height: 55mm; overflow: hidden; place-items: center; padding: 7mm; border: 0.25mm solid #d7d0c1; background: #f4f0e7; color: #171614; font-family: Georgia, "Times New Roman", serif; box-shadow: 0 3px 12px rgb(0 0 0 / 0.18), inset 0 0 12mm rgb(119 105 80 / 0.04); text-align: center; }
+.business-card { position: relative; display: grid; width: 85mm; height: 55mm; overflow: hidden; place-items: center; padding: 7mm; border: 0.25mm solid #d7d0c1; background: #f4f0e7; color: #171614; font-family: Garamond, "Baskerville Old Face", Baskerville, Georgia, "Times New Roman", serif; box-shadow: 0 3px 12px rgb(0 0 0 / 0.18), inset 0 0 12mm rgb(119 105 80 / 0.04); text-align: center; }
 .business-card::before { position: absolute; inset: 2.3mm; border: 0.2mm solid rgb(72 67 58 / 0.32); content: ''; pointer-events: none; }
-.embossed-mark { position: absolute; top: 5.5mm; left: 50%; width: 8mm; height: 8mm; filter: grayscale(1) contrast(0.2) opacity(0.22); mix-blend-mode: multiply; transform: translateX(-50%); }
-.identity { margin-top: 7mm; }
+.front { grid-template-rows: 1fr auto; }
+.identity { align-self: end; }
 .company-name { font-size: 2.5mm; letter-spacing: 0.22em; text-transform: uppercase; }
-.identity h2 { margin-top: 3.2mm; color: #171614; font-size: 6.2mm; font-weight: 400; letter-spacing: 0.04em; }
-.identity h2::after { display: block; width: 13mm; margin: 2.5mm auto 0; border-top: 0.2mm solid #6c665b; content: ''; }
-.identity p:last-child { margin-top: 2.2mm; font-size: 2.6mm; font-variant: small-caps; letter-spacing: 0.14em; }
-.back { grid-template-rows: auto 1fr auto; }
-.back .embossed-mark { top: 7mm; }
-.card-kicker { align-self: end; margin-top: 10mm; font-size: 3mm; letter-spacing: 0.2em; text-transform: uppercase; }
-.contact-details { align-self: center; }
-.contact-details p { font-size: 3mm; letter-spacing: 0.04em; }
-.contact-details p + p { margin-top: 1.8mm; }
-.card-footer { align-self: end; font-size: 2.3mm; font-variant: small-caps; letter-spacing: 0.14em; }
+.identity h2 { margin-top: 2.4mm; color: #171614; font-size: 6.2mm; font-weight: 400; letter-spacing: 0.04em; }
+.identity h2::after { display: block; width: 13mm; margin: 2mm auto 0; border-top: 0.2mm solid #6c665b; content: ''; }
+.identity p:last-child { margin-top: 1.7mm; font-size: 2.6mm; font-variant: small-caps; letter-spacing: 0.14em; }
+.contact-details { align-self: end; margin-top: 3mm; }
+.contact-details p { font-size: 2.8mm; letter-spacing: 0.04em; }
+.contact-details p + p { margin-top: 1mm; }
+.back { place-items: center; }
+.embossed-name { color: #e9e4d9; font-size: 5.4mm; font-weight: 400; letter-spacing: 0.16em; text-shadow: -0.2mm -0.2mm 0 rgb(255 255 255 / 0.75), 0.2mm 0.2mm 0 rgb(109 98 79 / 0.28); text-transform: uppercase; }
 @media (max-width: 48rem) { .card-toolbar { align-items: stretch; flex-direction: column; } }
 @media print {
   @page { size: 85mm 55mm; margin: 0; }
