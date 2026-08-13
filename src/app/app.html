@@ -25,7 +25,9 @@
         </label>
         <details #navDetails class="nav-details">
           <summary [attr.aria-label]="i18n.t('shell.menu')">
-            <span class="burger" aria-hidden="true"><span></span><span></span><span></span></span>
+            <svg class="burger" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M22 18.005c0 .55-.446.995-.995.995h-8.01a.995.995 0 0 1 0-1.99h8.01c.55 0 .995.445.995.995M22 12c0 .55-.446.995-.995.995H2.995a.995.995 0 1 1 0-1.99h18.01c.55 0 .995.446.995.995m-.995-5.01a.995.995 0 0 0 0-1.99H8.995a.995.995 0 1 0 0 1.99z" />
+            </svg>
           </summary>
           <button class="nav-backdrop" type="button" tabindex="-1" aria-hidden="true" (click)="navDetails.open = false"></button>
           <nav
@@ -33,7 +35,12 @@
             class="nav mobile-nav"
             [attr.aria-label]="i18n.t('nav.primary')"
           >
-            <div class="mobile-nav-header"><strong>Navigation</strong><button type="button" [attr.aria-label]="i18n.t('shell.menu')" (click)="navDetails.open = false">×</button></div>
+            <div class="mobile-nav-header">
+              <strong>Navigation</strong>
+              <button type="button" [attr.aria-label]="i18n.t('shell.menu')" (click)="navDetails.open = false">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.225 4.811a1 1 0 0 0-1.414 1.414L10.586 12L4.81 17.775a1 1 0 1 0 1.414 1.414L12 13.414l5.775 5.775a1 1 0 0 0 1.414-1.414L13.414 12l5.775-5.775a1 1 0 0 0-1.414-1.414L12 10.586z" /></svg>
+              </button>
+            </div>
             <a routerLink="/" routerLinkActive="active" ariaCurrentWhenActive="page" [routerLinkActiveOptions]="{ exact: true }" (click)="navDetails.open = false">{{ i18n.t('nav.home') }}</a>
             <a routerLink="/services" routerLinkActive="active" ariaCurrentWhenActive="page" (click)="navDetails.open = false">{{ i18n.t('nav.services') }}</a>
             <a routerLink="/about" routerLinkActive="active" ariaCurrentWhenActive="page" (click)="navDetails.open = false">{{ i18n.t('nav.about') }}</a>
