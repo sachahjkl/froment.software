@@ -1,8 +1,7 @@
 :host { display: block; }
 .business-card-page { padding: var(--page-header-y) var(--page-x); }
 .card-toolbar { display: flex; justify-content: space-between; align-items: end; gap: var(--space-5); }
-.card-toolbar h1, .card-toolbar div > p:last-child { margin-top: var(--space-2); }
-.card-toolbar div > p:last-child { color: var(--color-muted); }
+.card-toolbar h1 { margin-top: var(--space-2); }
 .card-sheet { display: grid; grid-template-columns: repeat(2, 85mm); gap: 12mm; margin-top: var(--space-8); overflow-x: auto; padding: var(--space-4); border: 1px dashed var(--color-line-strong); background: #d9d9d9; }
 .business-card { position: relative; display: grid; width: 85mm; height: 55mm; overflow: hidden; place-items: center; padding: 7mm; background: transparent; color: #111; font-family: Baskerville, Georgia, "Times New Roman", serif; box-shadow: 0 3px 12px rgb(0 0 0 / 0.18); text-align: center; }
 .front { grid-template-rows: 1fr auto; }
