@@ -143,6 +143,18 @@ describe('App shell', () => {
     expect(router.url).toBe('/services');
   });
 
+  it('switches theme and stores the user choice', async () => {
+    const toggle = element.querySelector<HTMLButtonElement>('.theme-toggle')!;
+
+    expect(document.documentElement.dataset['theme']).toBe('light');
+    toggle.click();
+    await fixture.whenStable();
+
+    expect(document.documentElement.dataset['theme']).toBe('dark');
+    expect(localStorage.getItem('froment.software.theme')).toBe('dark');
+    expect(toggle.getAttribute('aria-label')).toBe('Activer le mode clair');
+  });
+
   it('closes the mobile navigation after an outside click', () => {
     const details = element.querySelector<HTMLDetailsElement>('.nav-details')!;
     details.open = true;

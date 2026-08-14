@@ -7,6 +7,7 @@ import {
   Injector,
   PLATFORM_ID,
   ChangeDetectionStrategy,
+  signal,
 } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { Meta, Title } from '@angular/platform-browser';
@@ -25,6 +26,8 @@ import { NewLabel } from './shared/new-label/new-label';
 
 const siteOrigin = 'https://froment.software';
 const socialImageUrl = `${siteOrigin}/social-card.png`;
+const themeStorageKey = 'froment.software.theme';
+type Theme = 'light' | 'dark';
 
 @Component({
   selector: 'app-root',
@@ -39,6 +42,7 @@ export class App {
   protected readonly brandName = 'froment.software';
   protected readonly currentYear = new Date().getFullYear();
   protected readonly anchorCopy = inject(AnchorCopy);
+  protected readonly theme = signal<Theme>('light');
   private readonly router = inject(Router);
   private readonly activatedRoute = inject(ActivatedRoute);
   private readonly title = inject(Title);
@@ -55,6 +59,8 @@ export class App {
   private initialNavigationComplete = this.router.navigated;
 
   constructor() {
+    afterNextRender(() => this.applyTheme(this.detectTheme(), false), { injector: this.injector });
+
     effect(() => {
       this.i18n.language();
       this.navigationEnd();
@@ -86,6 +92,10 @@ export class App {
     this.i18n.setLanguage(language);
   }
 
+  protected toggleTheme(): void {
+    this.applyTheme(this.theme() === 'dark' ? 'light' : 'dark');
+  }
+
   protected closeNavOnOutsideClick(event: MouseEvent): void {
     const target = event.target;
     if (!(target instanceof Element) || target.closest('.nav-details')) {
@@ -93,6 +103,25 @@ export class App {
     }
 
     this.document.querySelector<HTMLDetailsElement>('.nav-details[open]')?.removeAttribute('open');
+  }
+
+  private detectTheme(): Theme {
+    const window = this.document.defaultView;
+    const storedTheme = window?.localStorage.getItem(themeStorageKey);
+    if (storedTheme === 'light' || storedTheme === 'dark') {
+      return storedTheme;
+    }
+
+    return window?.matchMedia?.('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  }
+
+  private applyTheme(theme: Theme, store = true): void {
+    this.theme.set(theme);
+    this.document.documentElement.dataset['theme'] = theme;
+    this.meta.updateTag({ name: 'theme-color', content: theme === 'dark' ? '#17171f' : '#f3f2f6' });
+    if (store) {
+      this.document.defaultView?.localStorage.setItem(themeStorageKey, theme);
+    }
   }
 
   private updateMetadata(): void {

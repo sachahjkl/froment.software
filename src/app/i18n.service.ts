@@ -28,6 +28,8 @@ const translations = {
     'shell.legal_nav': 'Navigation juridique',
     'shell.copy_link': 'Copier le lien vers cette section',
     'shell.link_copied': 'Lien copié dans le presse-papiers',
+    'shell.theme.dark': 'Activer le mode sombre',
+    'shell.theme.light': 'Activer le mode clair',
 
     'page.home': 'Froment Software — Logiciels sur mesure',
     'page.clients': 'Références | froment.software',
@@ -489,6 +491,8 @@ const translations = {
     'shell.legal_nav': 'Legal navigation',
     'shell.copy_link': 'Copy link to this section',
     'shell.link_copied': 'Link copied to clipboard',
+    'shell.theme.dark': 'Use dark mode',
+    'shell.theme.light': 'Use light mode',
 
     'page.home': 'Froment Software — Custom software',
     'page.clients': 'References | froment.software',

@@ -13,94 +13,118 @@
             <app-new-label />
           </div>
         </div>
-        <label class="header-language">
-          <span>{{ i18n.t('footer.language') }}</span>
-          <select
-            class="lang-select"
-            [value]="i18n.language()"
-            (change)="setLanguage($any($event.target).value)"
-          >
-            @for (language of i18n.languages; track language.code) {
-            <option [value]="language.code">{{ i18n.t(language.labelKey) }}</option>
-            }
-          </select>
-        </label>
-        <details #navDetails class="nav-details">
-          <summary [attr.aria-label]="i18n.t('shell.menu')">
-            <span class="burger" aria-hidden="true"><span></span><span></span><span></span></span>
-          </summary>
+        <div class="header-controls">
+          <label class="header-language">
+            <span>{{ i18n.t('footer.language') }}</span>
+            <select
+              class="lang-select"
+              [value]="i18n.language()"
+              (change)="setLanguage($any($event.target).value)"
+            >
+              @for (language of i18n.languages; track language.code) {
+              <option [value]="language.code">{{ i18n.t(language.labelKey) }}</option>
+              }
+            </select>
+          </label>
           <button
-            class="nav-backdrop"
+            class="theme-toggle"
             type="button"
-            tabindex="-1"
-            aria-hidden="true"
-            (click)="navDetails.open = false"
-          ></button>
-          <nav
-            id="mobile-navigation"
-            class="nav mobile-nav"
-            [attr.aria-label]="i18n.t('nav.primary')"
+            [attr.aria-label]="i18n.t(theme() === 'dark' ? 'shell.theme.light' : 'shell.theme.dark')"
+            [attr.title]="i18n.t(theme() === 'dark' ? 'shell.theme.light' : 'shell.theme.dark')"
+            (click)="toggleTheme()"
           >
-            <div class="mobile-nav-header">
-              <strong>Navigation</strong>
-              <button
-                type="button"
-                [attr.aria-label]="i18n.t('shell.menu')"
+            @if (theme() === 'dark') {
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path
+                d="M12 4V2m0 20v-2m8-8h2M2 12h2m13.66-5.66 1.42-1.42M4.92 19.08l1.42-1.42m11.32 0 1.42 1.42M4.92 4.92l1.42 1.42"
+              />
+              <circle cx="12" cy="12" r="4" />
+            </svg>
+            } @else {
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M20.4 15.5A9 9 0 0 1 8.5 3.6 9 9 0 1 0 20.4 15.5Z" />
+            </svg>
+            }
+          </button>
+          <details #navDetails class="nav-details">
+            <summary [attr.aria-label]="i18n.t('shell.menu')">
+              <span class="burger" aria-hidden="true"><span></span><span></span><span></span></span>
+            </summary>
+            <button
+              class="nav-backdrop"
+              type="button"
+              tabindex="-1"
+              aria-hidden="true"
+              (click)="navDetails.open = false"
+            ></button>
+            <nav
+              id="mobile-navigation"
+              class="nav mobile-nav"
+              [attr.aria-label]="i18n.t('nav.primary')"
+            >
+              <div class="mobile-nav-header">
+                <strong>Navigation</strong>
+                <button
+                  type="button"
+                  [attr.aria-label]="i18n.t('shell.menu')"
+                  (click)="navDetails.open = false"
+                >
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path
+                      d="M6.225 4.811a1 1 0 0 0-1.414 1.414L10.586 12L4.81 17.775a1 1 0 1 0 1.414 1.414L12 13.414l5.775 5.775a1 1 0 0 0 1.414-1.414L13.414 12l5.775-5.775a1 1 0 0 0-1.414-1.414L12 10.586z"
+                    />
+                  </svg>
+                </button>
+              </div>
+              <a
+                routerLink="/"
+                routerLinkActive="active"
+                ariaCurrentWhenActive="page"
+                [routerLinkActiveOptions]="{ exact: true }"
                 (click)="navDetails.open = false"
+                >{{ i18n.t('nav.home') }}</a
               >
-                <svg viewBox="0 0 24 24" aria-hidden="true">
-                  <path
-                    d="M6.225 4.811a1 1 0 0 0-1.414 1.414L10.586 12L4.81 17.775a1 1 0 1 0 1.414 1.414L12 13.414l5.775 5.775a1 1 0 0 0 1.414-1.414L13.414 12l5.775-5.775a1 1 0 0 0-1.414-1.414L12 10.586z"
-                  />
-                </svg>
-              </button>
-            </div>
-            <a
-              routerLink="/"
-              routerLinkActive="active"
-              ariaCurrentWhenActive="page"
-              [routerLinkActiveOptions]="{ exact: true }"
-              (click)="navDetails.open = false"
-              >{{ i18n.t('nav.home') }}</a
-            >
-            <a
-              routerLink="/services"
-              routerLinkActive="active"
-              ariaCurrentWhenActive="page"
-              (click)="navDetails.open = false"
-              >{{ i18n.t('nav.services') }}</a
-            >
-            <a
-              routerLink="/about"
-              routerLinkActive="active"
-              ariaCurrentWhenActive="page"
-              (click)="navDetails.open = false"
-              >{{ i18n.t('nav.about') }}</a
-            >
-            <a
-              routerLink="/tools"
-              routerLinkActive="active"
-              ariaCurrentWhenActive="page"
-              (click)="navDetails.open = false"
-              >{{ i18n.t('nav.products') }}</a
-            >
-            <a
-              routerLink="/clients"
-              routerLinkActive="active"
-              ariaCurrentWhenActive="page"
-              (click)="navDetails.open = false"
-              >{{ i18n.t('nav.clients') }}</a
-            >
-            <a
-              routerLink="/blog"
-              routerLinkActive="active"
-              ariaCurrentWhenActive="page"
-              (click)="navDetails.open = false"
-              >{{ i18n.t('nav.blog') }}</a
-            >
-            <a href="mailto:contact@froment.software" (click)="navDetails.open = false">Contact</a>
-          </nav>
-        </details>
+              <a
+                routerLink="/services"
+                routerLinkActive="active"
+                ariaCurrentWhenActive="page"
+                (click)="navDetails.open = false"
+                >{{ i18n.t('nav.services') }}</a
+              >
+              <a
+                routerLink="/about"
+                routerLinkActive="active"
+                ariaCurrentWhenActive="page"
+                (click)="navDetails.open = false"
+                >{{ i18n.t('nav.about') }}</a
+              >
+              <a
+                routerLink="/tools"
+                routerLinkActive="active"
+                ariaCurrentWhenActive="page"
+                (click)="navDetails.open = false"
+                >{{ i18n.t('nav.products') }}</a
+              >
+              <a
+                routerLink="/clients"
+                routerLinkActive="active"
+                ariaCurrentWhenActive="page"
+                (click)="navDetails.open = false"
+                >{{ i18n.t('nav.clients') }}</a
+              >
+              <a
+                routerLink="/blog"
+                routerLinkActive="active"
+                ariaCurrentWhenActive="page"
+                (click)="navDetails.open = false"
+                >{{ i18n.t('nav.blog') }}</a
+              >
+              <a href="mailto:contact@froment.software" (click)="navDetails.open = false"
+                >Contact</a
+              >
+            </nav>
+          </details>
+        </div>
       </div>
 
       <nav
