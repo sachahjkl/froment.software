@@ -25,7 +25,7 @@ import { AnchorCopy } from './shared/anchor-copy';
 import { NewLabel } from './shared/new-label/new-label';
 
 const siteOrigin = 'https://froment.software';
-const socialImageUrl = `${siteOrigin}/social-card-v2.png`;
+const socialImageUrl = `${siteOrigin}/social-card-v3.png`;
 const themeStorageKey = 'froment.software.theme';
 type Theme = 'light' | 'dark';
 
