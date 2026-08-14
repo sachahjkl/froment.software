@@ -48,7 +48,8 @@ export class BlogPost {
     this.meta.updateTag({ name: 'twitter:title', content: pageTitle });
     this.meta.updateTag({ name: 'twitter:description', content: post.description });
 
-    let structuredData = this.document.head.querySelector<HTMLScriptElement>('script[data-blog-post]');
+    let structuredData =
+      this.document.head.querySelector<HTMLScriptElement>('script[data-blog-post]');
     if (!structuredData) {
       structuredData = this.document.createElement('script');
       structuredData.type = 'application/ld+json';
@@ -64,7 +65,11 @@ export class BlogPost {
       dateModified: post.updated,
       mainEntityOfPage: url,
       author: { '@type': 'Person', name: 'Sacha Froment', url: 'https://sacha.house' },
-      publisher: { '@type': 'Organization', name: 'Froment Software', url: 'https://froment.software' },
+      publisher: {
+        '@type': 'Organization',
+        name: 'Froment Software',
+        url: 'https://froment.software',
+      },
       keywords: post.topics,
       inLanguage: this.i18n.language(),
     });

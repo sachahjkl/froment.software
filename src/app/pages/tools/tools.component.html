@@ -1,12 +1,18 @@
 <section class="tools-catalog page-section" aria-labelledby="projets">
-  <h1 id="projets" class="anchored-title"><span>{{ i18n.t('products.title') }}</span><app-anchor-link fragment="projets" /></h1>
+  <h1 id="projets" class="anchored-title">
+    <span>{{ i18n.t("products.title") }}</span
+    ><app-anchor-link fragment="projets" />
+  </h1>
   <ul class="catalog-list">
     @for (entry of labEntries(); track entry.title) {
       <li>
         <article class="lab-entry">
           <h3>{{ entry.title }}</h3>
           <p>{{ entry.description }}</p>
-          <p><small>{{ entry.status }}</small> · <a [href]="entry.href" target="_blank" rel="noreferrer">{{ entry.cta }}</a></p>
+          <p>
+            <small>{{ entry.status }}</small> ·
+            <a [href]="entry.href" target="_blank" rel="noreferrer">{{ entry.cta }}</a>
+          </p>
         </article>
       </li>
     }

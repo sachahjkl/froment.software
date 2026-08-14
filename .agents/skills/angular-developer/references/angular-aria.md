@@ -31,13 +31,13 @@ Organizes related content into expandable/collapsible sections.
 
 ```ts
 @Component({
-  selector: 'app-cmp',
+  selector: "app-cmp",
   imports: [AccordionContent, AccordionGroup, AccordionPanel, AccordionTrigger],
   template: `...`,
   styles: [],
 })
 export class App {
-  protected readonly title = signal('angular-app');
+  protected readonly title = signal("angular-app");
 }
 ```
 
@@ -61,7 +61,7 @@ export class App {
 Target the `[aria-expanded]` attribute on the trigger to rotate icons, and style the panel visibility.
 
 ```css
-.accordion-header[aria-expanded='true'] .icon {
+.accordion-header[aria-expanded="true"] .icon {
   transform: rotate(180deg);
 }
 
@@ -86,13 +86,13 @@ A foundational directive for displaying a list of options. Used for visible sele
 
 ```ts
 @Component({
-  selector: 'app-cmp',
+  selector: "app-cmp",
   imports: [Listbox, Option],
   template: `...`,
   styles: [],
 })
 export class App {
-  protected readonly title = signal('angular-app');
+  protected readonly title = signal("angular-app");
 }
 ```
 
@@ -112,7 +112,7 @@ Target `[aria-selected="true"]` for selected state and `:focus-visible` or `[dat
   padding: 8px;
   cursor: pointer;
 }
-.option[aria-selected='true'] {
+.option[aria-selected="true"] {
   background: #e0f7fa;
   font-weight: bold;
 }
@@ -135,8 +135,8 @@ These patterns combine the `ngCombobox` directive (applied directly to the trigg
 **Imports:**
 
 ```ts
-import {Combobox, ComboboxPopup, ComboboxWidget} from '@angular/aria/combobox';
-import {Listbox, Option} from '@angular/aria/listbox';
+import { Combobox, ComboboxPopup, ComboboxWidget } from "@angular/aria/combobox";
+import { Listbox, Option } from "@angular/aria/listbox";
 ```
 
 **Directives:** `ngCombobox`, `ngComboboxPopup`, `ngComboboxWidget`, `ngListbox`, `ngOption`.
@@ -308,7 +308,7 @@ Target `[aria-selected="true"]` on the tab buttons.
   cursor: pointer;
   border-bottom: 2px solid transparent;
 }
-.tab-btn[aria-selected='true'] {
+.tab-btn[aria-selected="true"] {
   border-bottom-color: blue;
   font-weight: bold;
 }
@@ -352,8 +352,8 @@ Target `[aria-pressed="true"]` (for toggle buttons) or `[aria-checked="true"]` (
   padding: 5px 10px;
   border: 1px solid #ccc;
 }
-.tool-btn[aria-pressed='true'],
-.tool-btn[aria-checked='true'] {
+.tool-btn[aria-pressed="true"],
+.tool-btn[aria-checked="true"] {
   background: #ddd;
 }
 ```
@@ -394,11 +394,11 @@ Target `[aria-expanded]` to show/hide children or rotate chevron icons. Use `pad
   padding-left: 20px;
 }
 .tree-label::before {
-  content: '▶ ';
+  content: "▶ ";
   display: inline-block;
   transition: transform 0.2s;
 }
-li[aria-expanded='true'] > .tree-label::before {
+li[aria-expanded="true"] > .tree-label::before {
   transform: rotate(90deg);
 }
 ```
@@ -436,7 +436,7 @@ Target `[aria-selected="true"]` for selected cells and `:focus-visible` for the 
   padding: 8px;
   border: 1px solid #ddd;
 }
-[ngGridCell][aria-selected='true'] {
+[ngGridCell][aria-selected="true"] {
   background: #e3f2fd;
 }
 /* Focus state managed by roving tabindex */
@@ -453,16 +453,16 @@ Angular Aria provides standard Component Harnesses (based on `@angular/cdk/testi
 **Imports:**
 
 ```ts
-import {HarnessLoader} from '@angular/cdk/testing';
-import {TestbedHarnessEnvironment} from '@angular/cdk/testing/testbed';
-import {AccordionGroupHarness, AccordionHarness} from '@angular/aria/accordion/testing';
-import {ListboxHarness, ListboxOptionHarness} from '@angular/aria/listbox/testing';
+import { HarnessLoader } from "@angular/cdk/testing";
+import { TestbedHarnessEnvironment } from "@angular/cdk/testing/testbed";
+import { AccordionGroupHarness, AccordionHarness } from "@angular/aria/accordion/testing";
+import { ListboxHarness, ListboxOptionHarness } from "@angular/aria/listbox/testing";
 ```
 
 ### Example: Testing an Accordion with Harnesses
 
 ```ts
-describe('MyAccordionComponent', () => {
+describe("MyAccordionComponent", () => {
   let fixture: ComponentFixture<MyAccordionComponent>;
   let loader: HarnessLoader;
 
@@ -472,9 +472,9 @@ describe('MyAccordionComponent', () => {
     loader = TestbedHarnessEnvironment.loader(fixture);
   });
 
-  it('should expand accordion on toggle', async () => {
+  it("should expand accordion on toggle", async () => {
     // Get the harness by its trigger title
-    const accordion = await loader.getHarness(AccordionHarness.with({title: 'Section 1'}));
+    const accordion = await loader.getHarness(AccordionHarness.with({ title: "Section 1" }));
 
     expect(await accordion.isExpanded()).toBeFalse();
 
@@ -495,9 +495,9 @@ The `[formField]` directive automatically detects directives like `ngCombobox` o
 **Imports:**
 
 ```ts
-import {form, schema, required} from '@angular/forms/signals';
-import {Combobox, ComboboxPopup, ComboboxWidget} from '@angular/aria/combobox';
-import {Listbox, Option} from '@angular/aria/listbox';
+import { form, schema, required } from "@angular/forms/signals";
+import { Combobox, ComboboxPopup, ComboboxWidget } from "@angular/aria/combobox";
+import { Listbox, Option } from "@angular/aria/listbox";
 ```
 
 ### Example 1: Autocomplete Combobox inside a Form

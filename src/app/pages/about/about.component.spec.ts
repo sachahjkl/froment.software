@@ -39,7 +39,9 @@ describe('AboutComponent FAQ', () => {
 
     expect(englishQuestions).toHaveLength(8);
     expect(englishAnswers).toHaveLength(8);
-    expect(englishQuestions.every((question, index) => question !== frenchQuestions[index])).toBe(true);
+    expect(englishQuestions.every((question, index) => question !== frenchQuestions[index])).toBe(
+      true,
+    );
     expect(englishAnswers.every((answer, index) => answer !== frenchAnswers[index])).toBe(true);
   });
 });

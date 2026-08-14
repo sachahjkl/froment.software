@@ -7,6 +7,7 @@ After every change that is considered "done" — i.e., a self-contained unit of 
 **Amending is fine** for small corrections, typos, or tweaks to the same logical unit of work — use `git commit --amend` (and force-push if already pushed) to keep the history clean rather than making a separate "fix typo" commit.
 
 Each commit should be:
+
 - **Atomic**: one logical change, one commit.
 - **Signed**: all commits are GPG-signed with the project SSH key via `commit.gpgsign=true`.
 - **Well-described**: imperative mood, specific (e.g., "Add dark mode toggle" not "Update styles").

@@ -22,7 +22,9 @@ a {
   text-decoration: none;
   text-shadow: 0 1px rgb(255 255 255 / 0.65);
   box-shadow: inset 0 1px rgb(255 255 255 / 0.7);
-  transition: color 160ms ease, transform 160ms ease;
+  transition:
+    color 160ms ease,
+    transform 160ms ease;
 }
 
 a::after {
@@ -30,7 +32,7 @@ a::after {
   inset: -50% auto -50% -60%;
   width: 36%;
   background: linear-gradient(90deg, transparent, rgb(255 255 255 / 0.82), transparent);
-  content: '';
+  content: "";
   transform: skewX(-18deg);
   animation: new-label-shine 3.8s ease-in-out infinite;
 }
@@ -47,17 +49,32 @@ a:focus-visible {
 }
 
 @keyframes new-label-float {
-  0%, 100% { transform: translate(0, 0) rotate(-1deg); }
-  40% { transform: translate(0.04rem, -0.08rem) rotate(0.5deg); }
-  72% { transform: translate(-0.03rem, -0.03rem) rotate(-1.5deg); }
+  0%,
+  100% {
+    transform: translate(0, 0) rotate(-1deg);
+  }
+  40% {
+    transform: translate(0.04rem, -0.08rem) rotate(0.5deg);
+  }
+  72% {
+    transform: translate(-0.03rem, -0.03rem) rotate(-1.5deg);
+  }
 }
 
 @keyframes new-label-shine {
-  0%, 58% { left: -60%; }
-  78%, 100% { left: 125%; }
+  0%,
+  58% {
+    left: -60%;
+  }
+  78%,
+  100% {
+    left: 125%;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
   :host,
-  a::after { animation: none; }
+  a::after {
+    animation: none;
+  }
 }

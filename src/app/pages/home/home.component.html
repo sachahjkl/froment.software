@@ -1,55 +1,96 @@
 <article class="home">
   <header class="intro">
-    <h1>{{ i18n.t('home.hero.title') }}</h1>
-    <p class="lead">{{ i18n.t('home.hero.lead') }}</p>
+    <h1>{{ i18n.t("home.hero.title") }}</h1>
+    <p class="lead">{{ i18n.t("home.hero.lead") }}</p>
     <p class="intro-actions">
-      <a class="btn primary" [href]="contactMailto()"><app-icon name="mail" />{{ i18n.t('home.engage.mail') }}</a>
-      <a class="btn" [href]="calUrl" target="_blank" rel="noreferrer"><app-icon name="calendar" />{{ i18n.t('home.hero.book') }}</a>
+      <a class="btn primary" [href]="contactMailto()"
+        ><app-icon name="mail" />{{ i18n.t("home.engage.mail") }}</a
+      >
+      <a class="btn" [href]="calUrl" target="_blank" rel="noreferrer"
+        ><app-icon name="calendar" />{{ i18n.t("home.hero.book") }}</a
+      >
     </p>
   </header>
 
   <app-concrete-examples anchor="expertise" context="expertise" />
 
   <section aria-labelledby="perimetre">
-    <h2 id="perimetre" class="anchored-title"><span>{{ i18n.t('home.services.title') }}</span><app-anchor-link fragment="perimetre" /></h2>
+    <h2 id="perimetre" class="anchored-title">
+      <span>{{ i18n.t("home.services.title") }}</span
+      ><app-anchor-link fragment="perimetre" />
+    </h2>
     <dl class="service-list">
       @for (service of services(); track service.title) {
-        <div><dt>{{ service.title }}</dt><dd>{{ service.description }}</dd></div>
+        <div>
+          <dt>{{ service.title }}</dt>
+          <dd>{{ service.description }}</dd>
+        </div>
       }
     </dl>
-    <p><a routerLink="/services">{{ i18n.t('home.services.cta') }}</a></p>
+    <p>
+      <a routerLink="/services">{{ i18n.t("home.services.cta") }}</a>
+    </p>
   </section>
 
   <section aria-labelledby="projets">
-    <h2 id="projets" class="anchored-title"><span>{{ i18n.t('home.timeline.title') }}</span><app-anchor-link fragment="projets" /></h2>
+    <h2 id="projets" class="anchored-title">
+      <span>{{ i18n.t("home.timeline.title") }}</span
+      ><app-anchor-link fragment="projets" />
+    </h2>
     <ul class="project-list">
       @for (entry of publicEntries(); track entry.title) {
-        <li><a [href]="entry.href" target="_blank" rel="noreferrer"><strong>{{ entry.title }}</strong></a><span>{{ entry.description }}</span></li>
+        <li>
+          <a [href]="entry.href" target="_blank" rel="noreferrer"
+            ><strong>{{ entry.title }}</strong></a
+          ><span>{{ entry.description }}</span>
+        </li>
       }
     </ul>
   </section>
 
   <section aria-labelledby="qui-sommes-nous">
-    <h2 id="qui-sommes-nous" class="anchored-title"><span>{{ i18n.t('home.about.title') }}</span><app-anchor-link fragment="qui-sommes-nous" /></h2>
-    <p>{{ i18n.t('home.clients.copy') }}</p>
-    <p><a href="https://sacha.house/cv" target="_blank" rel="noreferrer">{{ i18n.t('home.clients.cv') }}</a></p>
+    <h2 id="qui-sommes-nous" class="anchored-title">
+      <span>{{ i18n.t("home.about.title") }}</span
+      ><app-anchor-link fragment="qui-sommes-nous" />
+    </h2>
+    <p>{{ i18n.t("home.clients.copy") }}</p>
+    <p>
+      <a href="https://sacha.house/cv" target="_blank" rel="noreferrer">{{
+        i18n.t("home.clients.cv")
+      }}</a>
+    </p>
     <ul class="team-list">
       <li>
-        <a class="team-portrait" href="https://sacha.house" target="_blank" rel="noreferrer" [attr.aria-label]="i18n.t('home.about.sacha.website')">
+        <a
+          class="team-portrait"
+          href="https://sacha.house"
+          target="_blank"
+          rel="noreferrer"
+          [attr.aria-label]="i18n.t('home.about.sacha.website')"
+        >
           <img src="/sacha-froment.jpg" width="506" height="482" alt="Sacha Froment" />
         </a>
         <h3>Sacha Froment</h3>
-        <p>{{ i18n.t('home.about.sacha.role') }}</p>
+        <p>{{ i18n.t("home.about.sacha.role") }}</p>
       </li>
     </ul>
-    <p><a routerLink="/about">{{ i18n.t('home.about.cta') }}</a></p>
+    <p>
+      <a routerLink="/about">{{ i18n.t("home.about.cta") }}</a>
+    </p>
   </section>
 
   <section aria-labelledby="contact">
-    <h2 id="contact" class="anchored-title"><span>{{ i18n.t('home.engage.title') }}</span><app-anchor-link fragment="contact" /></h2>
+    <h2 id="contact" class="anchored-title">
+      <span>{{ i18n.t("home.engage.title") }}</span
+      ><app-anchor-link fragment="contact" />
+    </h2>
     <p class="contact-links">
-      <a class="btn primary" [href]="contactMailto()"><app-icon name="mail" />{{ i18n.t('home.engage.mail') }}</a>
-      <a class="btn" [href]="calUrl" target="_blank" rel="noreferrer"><app-icon name="calendar" />{{ i18n.t('home.hero.book') }}</a>
+      <a class="btn primary" [href]="contactMailto()"
+        ><app-icon name="mail" />{{ i18n.t("home.engage.mail") }}</a
+      >
+      <a class="btn" [href]="calUrl" target="_blank" rel="noreferrer"
+        ><app-icon name="calendar" />{{ i18n.t("home.hero.book") }}</a
+      >
     </p>
   </section>
 </article>

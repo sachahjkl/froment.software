@@ -5,9 +5,21 @@
     <p>Entrez le mot de passe pour accéder aux documents internes.</p>
     <form (submit)="submit($event, password.value)">
       <label for="back-office-password">Mot de passe</label>
-      <input #password id="back-office-password" class="input" type="password" autocomplete="current-password" required autofocus />
-      @if (error()) { <p class="error" role="alert">Mot de passe incorrect.</p> }
-      <button class="btn primary" type="submit" [disabled]="pending()">{{ pending() ? 'Vérification…' : 'Se connecter' }}</button>
+      <input
+        #password
+        id="back-office-password"
+        class="input"
+        type="password"
+        autocomplete="current-password"
+        required
+        autofocus
+      />
+      @if (error()) {
+      <p class="error" role="alert">Mot de passe incorrect.</p>
+      }
+      <button class="btn primary" type="submit" [disabled]="pending()">
+        {{ pending() ? 'Vérification…' : 'Se connecter' }}
+      </button>
     </form>
   </div>
 </section>

@@ -1,6 +1,6 @@
 <article class="about">
   <header>
-    <h1>{{ i18n.t('about.faq.title') }}</h1>
+    <h1>{{ i18n.t("about.faq.title") }}</h1>
   </header>
 
   <section aria-label="FAQ">
@@ -20,10 +20,17 @@
   </section>
 
   <section aria-labelledby="contact">
-    <h2 id="contact" class="anchored-title"><span>{{ i18n.t('about.contact.title') }}</span><app-anchor-link fragment="contact" /></h2>
+    <h2 id="contact" class="anchored-title">
+      <span>{{ i18n.t("about.contact.title") }}</span
+      ><app-anchor-link fragment="contact" />
+    </h2>
     <p class="contact-actions">
-      <a class="btn primary" [href]="contactMailto()"><app-icon name="mail" />{{ i18n.t('about.contact.mail') }}</a>
-      <a class="btn" href="https://cal.com/sachahjkl" target="_blank" rel="noreferrer"><app-icon name="calendar" />{{ i18n.t('about.contact.book') }}</a>
+      <a class="btn primary" [href]="contactMailto()"
+        ><app-icon name="mail" />{{ i18n.t("about.contact.mail") }}</a
+      >
+      <a class="btn" href="https://cal.com/sachahjkl" target="_blank" rel="noreferrer"
+        ><app-icon name="calendar" />{{ i18n.t("about.contact.book") }}</a
+      >
     </p>
   </section>
 </article>

@@ -60,4 +60,3 @@ result-*
 Thumbs.db
 
 # Docker / generated files
-Dockerfile.generated

@@ -59,26 +59,22 @@ npm run build   # pré-rendu de production
 npm test        # tests Angular
 ```
 
-Le flake expose également le Dockerfile de référence :
+Le flake construit et vérifie le site sans accès réseau pendant la compilation :
 
 ```bash
-nix run .#dockerfile
-nix build .#dockerfile
+nix flake check          # build, tests, workflow et image
+nix build                # site pré-rendu
+nix run                  # serveur nginx local sur le port 80
+nix build .#dockerImage  # archive Docker reproductible
 ```
 
 ## Déploiement Podman
 
-Le Dockerfile multi-étapes construit le pré-rendu avec Node 22, puis copie `dist/froment-software/browser` dans nginx 1.29 avec `nginx.conf`.
+Le flake construit une archive Docker avec le site pré-rendu et nginx.
 
 ```bash
-podman build -t froment-software .
-podman run --rm -p 8080:80 froment-software
-```
-
-`docker-compose.remote-build.yml` construit la branche `main` directement depuis GitHub et publie le service sur le port local `8080` :
-
-```bash
-podman compose -f docker-compose.remote-build.yml up -d --build
+podman load < result
+podman run --rm -p 8080:80 froment-software:0.0.0
 ```
 
 GitHub Actions vérifie le flake, construit le site, puis publie l’image avec le SHA et le tag `latest` sur la branche par défaut.

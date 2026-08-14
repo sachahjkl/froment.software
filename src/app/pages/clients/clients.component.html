@@ -1,15 +1,22 @@
 <article class="clients">
   <header>
-    <h1>{{ i18n.t('clients.title') }}</h1>
+    <h1>{{ i18n.t("clients.title") }}</h1>
   </header>
 
   <section aria-labelledby="secteurs">
-    <h2 id="secteurs" class="anchored-title"><span>{{ i18n.t('clients.sectors.title') }}</span><app-anchor-link fragment="secteurs" /></h2>
+    <h2 id="secteurs" class="anchored-title">
+      <span>{{ i18n.t("clients.sectors.title") }}</span
+      ><app-anchor-link fragment="secteurs" />
+    </h2>
     <ul class="sector-list">
       @for (sectorKey of sectorKeys; track sectorKey) {
         <li>{{ i18n.t(sectorKey) }}</li>
       }
     </ul>
-    <p><a href="https://sacha.house/cv" target="_blank" rel="noreferrer">{{ i18n.t('clients.cv') }}</a></p>
+    <p>
+      <a href="https://sacha.house/cv" target="_blank" rel="noreferrer">{{
+        i18n.t("clients.cv")
+      }}</a>
+    </p>
   </section>
 </article>

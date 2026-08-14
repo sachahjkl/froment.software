@@ -78,15 +78,13 @@
       </div>
 
       @if (contentForm().invalid() && contentForm().touched()) {
-        <p class="notice danger" role="alert">
-          Renseignez tous les champs avec une adresse e-mail valide.
-        </p>
-      }
-      @if (versionForm().invalid() && versionForm().touched()) {
-        <p class="notice danger" role="alert">Renseignez le nom de la version.</p>
-      }
-      @if (storageMessage()) {
-        <p class="notice" role="status">{{ storageMessage() }}</p>
+      <p class="notice danger" role="alert">
+        Renseignez tous les champs avec une adresse e-mail valide.
+      </p>
+      } @if (versionForm().invalid() && versionForm().touched()) {
+      <p class="notice danger" role="alert">Renseignez le nom de la version.</p>
+      } @if (storageMessage()) {
+      <p class="notice" role="status">{{ storageMessage() }}</p>
       }
     </form>
 
@@ -97,26 +95,26 @@
       </header>
 
       @if (versions().length) {
-        <ul class="version-list">
-          @for (version of versions(); track version.id) {
-            <li>
-              <button class="version-select" type="button" (click)="restoreVersion(version)">
-                <strong>{{ version.name }}</strong>
-                <span>{{ formatDate(version.createdAt) }}</span>
-              </button>
-              <button
-                class="btn danger"
-                type="button"
-                (click)="deleteVersion(version)"
-                [attr.aria-label]="'Supprimer ' + version.name"
-              >
-                Supprimer
-              </button>
-            </li>
-          }
-        </ul>
+      <ul class="version-list">
+        @for (version of versions(); track version.id) {
+        <li>
+          <button class="version-select" type="button" (click)="restoreVersion(version)">
+            <strong>{{ version.name }}</strong>
+            <span>{{ formatDate(version.createdAt) }}</span>
+          </button>
+          <button
+            class="btn danger"
+            type="button"
+            (click)="deleteVersion(version)"
+            [attr.aria-label]="'Supprimer ' + version.name"
+          >
+            Supprimer
+          </button>
+        </li>
+        }
+      </ul>
       } @else {
-        <p class="empty-versions">Aucune version enregistrée.</p>
+      <p class="empty-versions">Aucune version enregistrée.</p>
       }
     </section>
   </div>

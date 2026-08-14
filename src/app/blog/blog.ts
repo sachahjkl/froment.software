@@ -23,24 +23,38 @@ export type RenderedBlogPost = Omit<BlogPost, 'title' | 'description' | 'topics'
   html: string;
 };
 
-const posts: BlogPost[] = [{
-  slug: '2026-08-froment-software-arrive',
-  published: '2026-08-12',
-  updated: '2026-08-12',
-  title: {
-    fr: 'Froment Software arrive sur le marché',
-    en: 'Froment Software enters the market',
+const posts: BlogPost[] = [
+  {
+    slug: '2026-08-froment-software-arrive',
+    published: '2026-08-12',
+    updated: '2026-08-12',
+    title: {
+      fr: 'Froment Software arrive sur le marché',
+      en: 'Froment Software enters the market',
+    },
+    description: {
+      fr: 'Présentation de Froment Software, de ses missions et de sa méthode fondée sur des changements mesurables.',
+      en: 'Introducing Froment Software, its services and its method based on measurable changes.',
+    },
+    topics: {
+      fr: [
+        'développement logiciel',
+        'reprise d’applications',
+        'CI/CD',
+        'NixOS',
+        'infrastructure as code',
+      ],
+      en: [
+        'software development',
+        'application takeover',
+        'CI/CD',
+        'NixOS',
+        'infrastructure as code',
+      ],
+    },
+    body: { fr: launchFr, en: launchEn },
   },
-  description: {
-    fr: 'Présentation de Froment Software, de ses missions et de sa méthode fondée sur des changements mesurables.',
-    en: 'Introducing Froment Software, its services and its method based on measurable changes.',
-  },
-  topics: {
-    fr: ['développement logiciel', 'reprise d’applications', 'CI/CD', 'NixOS', 'infrastructure as code'],
-    en: ['software development', 'application takeover', 'CI/CD', 'NixOS', 'infrastructure as code'],
-  },
-  body: { fr: launchFr, en: launchEn },
-}];
+];
 
 @Injectable({
   providedIn: 'root',

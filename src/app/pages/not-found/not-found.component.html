@@ -1,13 +1,19 @@
 <section class="not-found" aria-labelledby="not-found-title">
   <div class="not-found-content">
     <p class="error-code" aria-hidden="true">404</p>
-    <h1 id="not-found-title">{{ i18n.t('not_found.title') }}</h1>
-    <p class="not-found-lead">{{ i18n.t('not_found.lead') }}</p>
+    <h1 id="not-found-title">{{ i18n.t("not_found.title") }}</h1>
+    <p class="not-found-lead">{{ i18n.t("not_found.lead") }}</p>
     <nav [attr.aria-label]="i18n.t('not_found.links_label')">
       <ul>
-        <li><a class="btn primary" routerLink="/">{{ i18n.t('not_found.cta') }}</a></li>
-        <li><a class="btn" routerLink="/services">{{ i18n.t('not_found.services') }}</a></li>
-        <li><a href="mailto:contact@froment.software">{{ i18n.t('not_found.contact') }}</a></li>
+        <li>
+          <a class="btn primary" routerLink="/">{{ i18n.t("not_found.cta") }}</a>
+        </li>
+        <li>
+          <a class="btn" routerLink="/services">{{ i18n.t("not_found.services") }}</a>
+        </li>
+        <li>
+          <a href="mailto:contact@froment.software">{{ i18n.t("not_found.contact") }}</a>
+        </li>
       </ul>
     </nav>
   </div>

@@ -8,7 +8,7 @@ Use the `@Component` decorator to define a component's metadata.
 
 ```ts
 @Component({
-  selector: 'app-profile',
+  selector: "app-profile",
   template: `
     <img src="profile.jpg" alt="Profile photo" />
     <button (click)="save()">Save</button>
@@ -41,7 +41,7 @@ To use a component, add it to the `imports` array of the consuming component and
 
 ```ts
 @Component({
-  selector: 'app-root',
+  selector: "app-root",
   imports: [Profile],
   template: `<app-profile />`,
 })

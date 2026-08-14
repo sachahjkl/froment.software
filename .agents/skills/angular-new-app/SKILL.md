@@ -5,7 +5,7 @@ license: MIT
 compatibility: Requires node, npm, and access to the internet
 metadata:
   author: Angular Team @ Google
-  version: '1.0'
+  version: "1.0"
 ---
 
 # Angular New App

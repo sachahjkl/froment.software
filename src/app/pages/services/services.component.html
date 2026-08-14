@@ -1,17 +1,24 @@
 <header class="services-hero">
   <div class="hero-inner">
-    <h1>{{ i18n.t('services.title') }}</h1>
-    <p class="lead">{{ i18n.t('services.lead') }}</p>
+    <h1>{{ i18n.t("services.title") }}</h1>
+    <p class="lead">{{ i18n.t("services.lead") }}</p>
     <div class="actions">
-      <a class="btn primary" [href]="quoteMailto()"><app-icon name="mail" />{{ i18n.t('services.quote') }}</a>
-      <a class="btn" [href]="calUrl" target="_blank" rel="noreferrer"><app-icon name="calendar" />{{ i18n.t('services.book') }}</a>
+      <a class="btn primary" [href]="quoteMailto()"
+        ><app-icon name="mail" />{{ i18n.t("services.quote") }}</a
+      >
+      <a class="btn" [href]="calUrl" target="_blank" rel="noreferrer"
+        ><app-icon name="calendar" />{{ i18n.t("services.book") }}</a
+      >
     </div>
   </div>
 </header>
 
 <section class="services-listing page-section" aria-labelledby="prestations">
   <div class="section-heading">
-    <h2 id="prestations" class="anchored-title"><span>{{ i18n.t('services.list.title') }}</span><app-anchor-link fragment="prestations" /></h2>
+    <h2 id="prestations" class="anchored-title">
+      <span>{{ i18n.t("services.list.title") }}</span
+      ><app-anchor-link fragment="prestations" />
+    </h2>
   </div>
   <ol class="services-grid">
     @for (service of services(); track service.title) {
@@ -31,7 +38,10 @@
 
 <section class="delivery page-section" aria-labelledby="etapes">
   <div class="section-heading delivery-heading">
-    <h2 id="etapes" class="anchored-title"><span>{{ i18n.t('services.process.title') }}</span><app-anchor-link fragment="etapes" /></h2>
+    <h2 id="etapes" class="anchored-title">
+      <span>{{ i18n.t("services.process.title") }}</span
+      ><app-anchor-link fragment="etapes" />
+    </h2>
   </div>
   <ol class="process-list">
     @for (step of process(); track step.title) {
@@ -44,29 +54,36 @@
 </section>
 
 <section class="practical page-section" aria-labelledby="modalites">
-  <h2 id="modalites" class="anchored-title"><span>{{ i18n.t('services.practical.title') }}</span><app-anchor-link fragment="modalites" /></h2>
+  <h2 id="modalites" class="anchored-title">
+    <span>{{ i18n.t("services.practical.title") }}</span
+    ><app-anchor-link fragment="modalites" />
+  </h2>
   <dl class="practical-list">
     <div>
-      <dt>{{ i18n.t('services.practical.method') }}</dt>
-      <dd>{{ i18n.t('services.practical.method.desc') }}</dd>
+      <dt>{{ i18n.t("services.practical.method") }}</dt>
+      <dd>{{ i18n.t("services.practical.method.desc") }}</dd>
     </div>
     <div>
-      <dt>{{ i18n.t('services.practical.schedule') }}</dt>
-      <dd>{{ i18n.t('services.practical.schedule.desc') }}</dd>
+      <dt>{{ i18n.t("services.practical.schedule") }}</dt>
+      <dd>{{ i18n.t("services.practical.schedule.desc") }}</dd>
     </div>
     <div>
-      <dt>{{ i18n.t('services.practical.deliverables') }}</dt>
-      <dd>{{ i18n.t('services.practical.deliverables.desc') }}</dd>
+      <dt>{{ i18n.t("services.practical.deliverables") }}</dt>
+      <dd>{{ i18n.t("services.practical.deliverables.desc") }}</dd>
     </div>
   </dl>
-  <h3>{{ i18n.t('services.criteria.title') }}</h3>
+  <h3>{{ i18n.t("services.criteria.title") }}</h3>
   <ul class="criteria-list">
-    <li>{{ i18n.t('services.criteria.context') }}</li>
-    <li>{{ i18n.t('services.criteria.problem') }}</li>
-    <li>{{ i18n.t('services.criteria.deadline') }}</li>
+    <li>{{ i18n.t("services.criteria.context") }}</li>
+    <li>{{ i18n.t("services.criteria.problem") }}</li>
+    <li>{{ i18n.t("services.criteria.deadline") }}</li>
   </ul>
   <div class="actions practical-actions">
-    <a class="btn primary" [href]="quoteMailto()"><app-icon name="mail" />{{ i18n.t('services.quote') }}</a>
-    <a class="btn" [href]="calUrl" target="_blank" rel="noreferrer"><app-icon name="calendar" />{{ i18n.t('services.book') }}</a>
+    <a class="btn primary" [href]="quoteMailto()"
+      ><app-icon name="mail" />{{ i18n.t("services.quote") }}</a
+    >
+    <a class="btn" [href]="calUrl" target="_blank" rel="noreferrer"
+      ><app-icon name="calendar" />{{ i18n.t("services.book") }}</a
+    >
   </div>
 </section>

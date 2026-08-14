@@ -4,7 +4,11 @@ import { App } from './app';
 import { routes } from './app.routes';
 import { I18nService } from './i18n.service';
 
-async function navigate(fixture: ComponentFixture<App>, router: Router, url: string): Promise<void> {
+async function navigate(
+  fixture: ComponentFixture<App>,
+  router: Router,
+  url: string,
+): Promise<void> {
   expect(await router.navigateByUrl(url)).toBe(true);
   await fixture.whenStable();
 }
@@ -65,9 +69,15 @@ describe('App shell', () => {
     expect(meta('meta[property="og:description"]').content).not.toBe(frenchDescription);
     expect(meta('meta[property="og:image:alt"]').content).not.toBe(frenchImageAlt);
     expect(meta('meta[property="og:locale"]').content).toBe('en_US');
-    expect(meta('meta[name="twitter:title"]').content).toBe(meta('meta[property="og:title"]').content);
-    expect(meta('meta[name="twitter:description"]').content).toBe(meta('meta[property="og:description"]').content);
-    expect(meta('meta[name="twitter:image:alt"]').content).toBe(meta('meta[property="og:image:alt"]').content);
+    expect(meta('meta[name="twitter:title"]').content).toBe(
+      meta('meta[property="og:title"]').content,
+    );
+    expect(meta('meta[name="twitter:description"]').content).toBe(
+      meta('meta[property="og:description"]').content,
+    );
+    expect(meta('meta[name="twitter:image:alt"]').content).toBe(
+      meta('meta[property="og:image:alt"]').content,
+    );
 
     await navigate(fixture, router, '/design?preview=true#profile-sample');
 

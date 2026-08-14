@@ -1,32 +1,118 @@
-:host { display: block; }
+:host {
+  display: block;
+}
 
-.proposal { padding-inline: var(--page-x); }
-.proposal > header { padding-block: var(--page-header-y); }
-.proposal > section { padding-block: var(--page-section-y); }
-.lead { margin-top: var(--space-4); color: var(--color-ink-soft); font-size: var(--text-lg); }
-.actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3); margin-top: var(--space-5); }
+.proposal {
+  padding-inline: var(--page-x);
+}
+.proposal > header {
+  padding-block: var(--page-header-y);
+}
+.proposal > section {
+  padding-block: var(--page-section-y);
+}
+.lead {
+  margin-top: var(--space-4);
+  color: var(--color-ink-soft);
+  font-size: var(--text-lg);
+}
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+  margin-top: var(--space-5);
+}
 
-section > p, section > article, section > ol { margin-top: var(--space-4); }
-section > article { padding-top: var(--space-4); }
-section > article + article { margin-top: var(--space-3); }
-section > article p, section > article ul { margin-top: var(--space-2); }
-section > article ul, section > ol { padding-left: var(--space-6); }
-section > ol li + li { margin-top: var(--space-2); }
-.portrait { display: block; width: 9rem; height: auto; margin-top: var(--space-4); padding: 3px; border: 1px solid var(--color-line-strong); background: var(--color-surface-raised); }
-#components h3 { margin-top: var(--space-7); }
-.component-row { display: flex; flex-wrap: wrap; gap: var(--space-2); }
-.component-form { display: grid; gap: var(--space-3); margin-top: var(--space-3); }
-.component-form label { display: grid; gap: var(--space-1); font-size: var(--text-sm); font-weight: 700; }
-.component-form :where(.input, .select) { width: min(100%, 32rem); }
-.component-form textarea { resize: vertical; }
-.notice-list { display: grid; gap: var(--space-2); margin-top: var(--space-3); }
-.table-wrap { overflow-x: auto; margin-top: var(--space-3); }
-table { width: 100%; border-collapse: collapse; background: var(--color-table); }
-th, td { padding: var(--space-2) var(--space-3); border: 1px solid var(--color-line); text-align: left; }
-details { margin-top: var(--space-3); }
-details summary { font-weight: 700; cursor: pointer; }
-details p { margin-top: var(--space-2); }
+section > p,
+section > article,
+section > ol {
+  margin-top: var(--space-4);
+}
+section > article {
+  padding-top: var(--space-4);
+}
+section > article + article {
+  margin-top: var(--space-3);
+}
+section > article p,
+section > article ul {
+  margin-top: var(--space-2);
+}
+section > article ul,
+section > ol {
+  padding-left: var(--space-6);
+}
+section > ol li + li {
+  margin-top: var(--space-2);
+}
+.portrait {
+  display: block;
+  width: 9rem;
+  height: auto;
+  margin-top: var(--space-4);
+  padding: 3px;
+  border: 1px solid var(--color-line-strong);
+  background: var(--color-surface-raised);
+}
+#components h3 {
+  margin-top: var(--space-7);
+}
+.component-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+.component-form {
+  display: grid;
+  gap: var(--space-3);
+  margin-top: var(--space-3);
+}
+.component-form label {
+  display: grid;
+  gap: var(--space-1);
+  font-size: var(--text-sm);
+  font-weight: 700;
+}
+.component-form :where(.input, .select) {
+  width: min(100%, 32rem);
+}
+.component-form textarea {
+  resize: vertical;
+}
+.notice-list {
+  display: grid;
+  gap: var(--space-2);
+  margin-top: var(--space-3);
+}
+.table-wrap {
+  overflow-x: auto;
+  margin-top: var(--space-3);
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--color-table);
+}
+th,
+td {
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--color-line);
+  text-align: left;
+}
+details {
+  margin-top: var(--space-3);
+}
+details summary {
+  font-weight: 700;
+  cursor: pointer;
+}
+details p {
+  margin-top: var(--space-2);
+}
 
 @media (max-width: 32rem) {
-  .actions .btn { width: 100%; }
+  .actions .btn {
+    width: 100%;
+  }
 }
