@@ -31,7 +31,7 @@ const translations = {
     'shell.theme.dark': 'Activer le mode sombre',
     'shell.theme.light': 'Activer le mode clair',
 
-    'page.home': 'Froment Software — Logiciels sur mesure',
+    'page.home': 'Développement et rénovation de logiciels métier | froment.software',
     'page.clients': 'Références | froment.software',
     'page.services': 'Services | froment.software',
     'page.products': 'Projets publics | froment.software',
@@ -64,13 +64,13 @@ const translations = {
     'page.description.business_card': 'Aperçu imprimable de la carte de visite Froment Software.',
     'page.description.not_found': 'La page demandée n’existe pas ou a changé d’adresse.',
     'page.description.home':
-      'Applications web et de bureau, outils internes et reprise d’applications existantes.',
+      'Applications métier, outils internes et logiciels existants : développement, reprise, mise à niveau et automatisation.',
     'page.description.clients': 'Secteurs d’expérience de Sacha Froment.',
     'page.description.services':
       'Développement, maintenance, reprise d’applications existantes et audits techniques.',
     'page.description.products': 'Prototypes, démonstrations et sites publics de Sacha Froment.',
     'meta.socialImageAlt':
-      'Froment Software — applications métier, outils internes et reprise d’applications',
+      'Aperçu du site froment.software : développement et rénovation de logiciels métier',
 
     'footer.rights': '© {year} froment.software. Tous droits réservés.',
     'footer.language': 'Langue',
@@ -494,7 +494,7 @@ const translations = {
     'shell.theme.dark': 'Use dark mode',
     'shell.theme.light': 'Use light mode',
 
-    'page.home': 'Froment Software — Custom software',
+    'page.home': 'Business software development and renovation | froment.software',
     'page.clients': 'References | froment.software',
     'page.services': 'Services | froment.software',
     'page.products': 'Public projects | froment.software',
@@ -528,13 +528,13 @@ const translations = {
     'page.description.not_found':
       'Page not found. Return to the froment.software home page or services.',
     'page.description.home':
-      'Web and desktop applications, internal tools and existing-application takeover.',
+      'Business applications, internal tools, and existing software: development, takeover, upgrades, and automation.',
     'page.description.clients': 'Sacha Froment’s industry experience.',
     'page.description.services':
       'Development, maintenance, existing-application takeover and technical audits.',
     'page.description.products': 'Public prototypes, demonstrations and websites by Sacha Froment.',
     'meta.socialImageAlt':
-      'Froment Software — business applications, internal tools and application takeover',
+      'froment.software website preview: business software development and renovation',
 
     'footer.rights': '© {year} froment.software. All rights reserved.',
     'footer.language': 'Language',

@@ -1,6 +1,6 @@
 # froment.software
 
-Site vitrine Angular 21 de Froment Software, pré-rendu en fichiers statiques puis servi par nginx.
+Site vitrine Angular 22 de Froment Software, pré-rendu en fichiers statiques puis servi par nginx.
 
 ## Architecture
 
@@ -8,7 +8,7 @@ Site vitrine Angular 21 de Froment Software, pré-rendu en fichiers statiques pu
 - `src/app/app.routes.server.ts` applique `RenderMode.Prerender` à toutes les routes Angular.
 - `npm run build` écrit le site déployable dans `dist/froment-software/browser` : chaque route connue dispose de son `index.html`, notamment `/404`.
 - `src/app/app.routes.ts` porte les composants et les métadonnées de route. `src/app/app.ts` met à jour titre, description, URL canonique, robots, Open Graph et Twitter lors de la navigation.
-- Les ressources publiques (`robots.txt`, `sitemap.xml`, favicons et `social-card.png`) sont dans `public/`. La carte sociale déclarée dans `src/index.html` mesure 1200 × 630.
+- Les ressources publiques (`robots.txt`, `sitemap.xml`, favicons et carte sociale) sont dans `public/`. La carte sociale déclarée dans `src/index.html` mesure 1200 × 630.
 
 ### Langues
 
