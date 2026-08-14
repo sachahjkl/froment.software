@@ -1,9 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
   <rect width="1200" height="630" fill="#f3f2f6" />
-  <g transform="translate(238 235)">
-    <rect width="160" height="160" fill="#20203a" />
-    <path d="M25 25h110v34H59v24h49v32H59v30H25z" fill="#fff" />
-    <path d="M59 115h-9v30h9zm49-32h-9v32h9zm27-58h-9v34h9z" fill="#087f8c" />
-  </g>
-  <text x="438" y="343" fill="#20203a" font-family="DejaVu Sans" font-size="68" font-weight="700" letter-spacing="-2">froment.software</text>
+  <image href="brand/favicon.png" x="181" y="235" width="160" height="160" />
+  <text x="381" y="343" fill="#20203a" font-family="DejaVu Sans" font-size="68" font-weight="700" letter-spacing="-2">froment.software</text>
 </svg>

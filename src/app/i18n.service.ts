@@ -31,7 +31,7 @@ const translations = {
     'shell.theme.dark': 'Activer le mode sombre',
     'shell.theme.light': 'Activer le mode clair',
 
-    'page.home': 'Froment Software',
+    'page.home': 'Froment Software | Développement de logiciels métier',
     'page.clients': 'Références | froment.software',
     'page.services': 'Services | froment.software',
     'page.products': 'Projets publics | froment.software',
@@ -69,8 +69,7 @@ const translations = {
     'page.description.services':
       'Développement, maintenance, reprise d’applications existantes et audits techniques.',
     'page.description.products': 'Prototypes, démonstrations et sites publics de Sacha Froment.',
-    'meta.socialImageAlt':
-      'Aperçu du site froment.software : développement et rénovation de logiciels métier',
+    'meta.socialImageAlt': 'Logo Froment Software',
 
     'footer.rights': '© {year} froment.software. Tous droits réservés.',
     'footer.language': 'Langue',
@@ -494,7 +493,7 @@ const translations = {
     'shell.theme.dark': 'Use dark mode',
     'shell.theme.light': 'Use light mode',
 
-    'page.home': 'Froment Software',
+    'page.home': 'Froment Software | Business software development',
     'page.clients': 'References | froment.software',
     'page.services': 'Services | froment.software',
     'page.products': 'Public projects | froment.software',
@@ -533,8 +532,7 @@ const translations = {
     'page.description.services':
       'Development, maintenance, existing-application takeover and technical audits.',
     'page.description.products': 'Public prototypes, demonstrations and websites by Sacha Froment.',
-    'meta.socialImageAlt':
-      'froment.software website preview: business software development and renovation',
+    'meta.socialImageAlt': 'Froment Software logo',
 
     'footer.rights': '© {year} froment.software. All rights reserved.',
     'footer.language': 'Language',
