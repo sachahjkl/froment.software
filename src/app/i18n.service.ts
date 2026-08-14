@@ -31,7 +31,7 @@ const translations = {
     'shell.theme.dark': 'Activer le mode sombre',
     'shell.theme.light': 'Activer le mode clair',
 
-    'page.home': 'Développement et rénovation de logiciels métier | froment.software',
+    'page.home': 'Froment Software',
     'page.clients': 'Références | froment.software',
     'page.services': 'Services | froment.software',
     'page.products': 'Projets publics | froment.software',
@@ -494,7 +494,7 @@ const translations = {
     'shell.theme.dark': 'Use dark mode',
     'shell.theme.light': 'Use light mode',
 
-    'page.home': 'Business software development and renovation | froment.software',
+    'page.home': 'Froment Software',
     'page.clients': 'References | froment.software',
     'page.services': 'Services | froment.software',
     'page.products': 'Public projects | froment.software',
