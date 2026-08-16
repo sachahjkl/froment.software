@@ -28,6 +28,7 @@
         }}</span>
         <h3>{{ service.title }}</h3>
         <p>{{ service.description }}</p>
+        <a class="offer-link" [routerLink]="service.href">{{ service.cta }}</a>
       </li>
     }
   </ol>
@@ -36,19 +37,6 @@
 <hr class="section-break" />
 
 <app-concrete-examples class="page-section" />
-
-<hr class="section-break" />
-
-<section class="delivery page-section" aria-labelledby="etapes">
-  <div class="section-heading delivery-heading">
-    <h2 id="etapes" class="anchored-title">
-      <span>{{ i18n.t("services.process.title") }}</span
-      ><app-anchor-link fragment="etapes" />
-    </h2>
-  </div>
-  <p class="delivery-intro">{{ i18n.t("services.process.intro") }}</p>
-  <app-process-timeline [steps]="process()" />
-</section>
 
 <section class="practical page-section" aria-labelledby="modalites">
   <h2 id="modalites" class="anchored-title">

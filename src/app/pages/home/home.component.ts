@@ -4,6 +4,7 @@ import { I18nService } from '../../i18n.service';
 import { AnchorLink } from '../../shared/anchor-link/anchor-link';
 import { ConcreteExamples } from '../../shared/concrete-examples/concrete-examples';
 import { Icon } from '../../shared/icon/icon';
+import { ProcessTimeline, TimelineStep } from '../../shared/process-timeline/process-timeline';
 
 type PublicEntry = {
   title: string;
@@ -20,7 +21,7 @@ type ContentEntry = {
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [AnchorLink, ConcreteExamples, Icon, RouterLink],
+  imports: [AnchorLink, ConcreteExamples, Icon, ProcessTimeline, RouterLink],
   templateUrl: './home.component.html',
   changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './home.component.scss',
@@ -70,6 +71,29 @@ export class HomeComponent {
     {
       title: this.i18n.t('home.services.development.title'),
       description: this.i18n.t('home.services.development.desc'),
+    },
+  ]);
+
+  protected readonly process = computed<TimelineStep[]>(() => [
+    {
+      title: this.i18n.t('services.process.analysis.title'),
+      description: this.i18n.t('services.process.analysis.desc'),
+    },
+    {
+      title: this.i18n.t('services.process.quote.title'),
+      description: this.i18n.t('services.process.quote.desc'),
+    },
+    {
+      title: this.i18n.t('services.process.agreement.title'),
+      description: this.i18n.t('services.process.agreement.desc'),
+    },
+    {
+      title: this.i18n.t('services.process.delivery.title'),
+      description: this.i18n.t('services.process.delivery.desc'),
+    },
+    {
+      title: this.i18n.t('services.process.validation.title'),
+      description: this.i18n.t('services.process.validation.desc'),
     },
   ]);
 }

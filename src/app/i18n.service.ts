@@ -34,6 +34,8 @@ const translations = {
     'page.home': 'Froment Software | Audit et rénovation de logiciels',
     'page.clients': 'Références | froment.software',
     'page.services': 'Services | froment.software',
+    'page.service.renovation': 'Audit et rénovation de logiciels | froment.software',
+    'page.service.development': 'Développement logiciel tout compris | froment.software',
     'page.products': 'Projets publics | froment.software',
     'page.design': 'Proposition visuelle | froment.software',
     'page.description.design':
@@ -68,6 +70,10 @@ const translations = {
     'page.description.clients': 'Secteurs d’expérience de Sacha Froment.',
     'page.description.services':
       'Audit et rénovation d’applications existantes, ou développement complet de logiciels métier.',
+    'page.description.service.renovation':
+      'Audit technique, plan d’amélioration et rénovation progressive de logiciels métier existants.',
+    'page.description.service.development':
+      'Conception, réalisation, tests et déploiement de logiciels métier sur mesure.',
     'page.description.products': 'Prototypes, démonstrations et sites publics de Sacha Froment.',
     'meta.socialImageAlt': 'Logo Froment Software',
 
@@ -268,9 +274,68 @@ const translations = {
     'services.offer.renovation.title': 'Audit et rénovation de l’existant',
     'services.offer.renovation.desc':
       'J’analyse vos projets, leur environnement, leurs risques et leurs lacunes. Je propose ensuite des améliorations concrètes : corrections, mises à niveau, automatisation, performance et refactorisation progressive.',
+    'services.offer.renovation.cta': 'Détailler l’audit et la rénovation',
     'services.offer.development.title': 'Développement tout compris',
     'services.offer.development.desc':
       'Je prends en charge la conception, la réalisation, les tests et le déploiement d’une application métier ou d’un outil interne.',
+    'services.offer.development.cta': 'Détailler le développement',
+    'serviceDetail.back': 'Retour aux deux prestations',
+    'serviceDetail.renovation.title': 'Audit et rénovation de logiciels existants',
+    'serviceDetail.renovation.lead':
+      'Comprendre les problèmes réels avant d’investir, puis moderniser l’existant sans réécriture systématique.',
+    'serviceDetail.renovation.scope.title': 'Ce que j’analyse et améliore',
+    'serviceDetail.renovation.scope.projects.title': 'Projets et architecture',
+    'serviceDetail.renovation.scope.projects.desc':
+      'Structure du code, dépendances, flux de données, points de fragilité et capacité d’évolution.',
+    'serviceDetail.renovation.scope.delivery.title': 'Chaîne de livraison',
+    'serviceDetail.renovation.scope.delivery.desc':
+      'Builds, tests, intégration continue, déploiements et délais entre une modification et sa mise en service.',
+    'serviceDetail.renovation.scope.quality.title': 'Qualité mesurable',
+    'serviceDetail.renovation.scope.quality.desc':
+      'Erreurs, temps de réponse, durée des tests, couverture des risques et incidents récurrents.',
+    'serviceDetail.renovation.scope.environment.title': 'Environnement de travail',
+    'serviceDetail.renovation.scope.environment.desc':
+      'Installation locale, secrets, documentation, outils et difficultés rencontrées par l’équipe existante.',
+    'serviceDetail.renovation.deliverables.title': 'Ce que vous recevez',
+    'serviceDetail.renovation.deliverables.audit':
+      'Un constat documenté, factuel et classé par niveau de risque.',
+    'serviceDetail.renovation.deliverables.plan':
+      'Un plan d’amélioration priorisé avec les coûts, les dépendances et les résultats attendus.',
+    'serviceDetail.renovation.deliverables.work':
+      'Les corrections et rénovations retenues dans le devis, validées sur votre environnement.',
+    'serviceDetail.renovation.deliverables.handover':
+      'Le code, les tests, la documentation et les instructions nécessaires à la suite.',
+    'serviceDetail.renovation.fit.title': 'Cette prestation est adaptée si…',
+    'serviceDetail.renovation.fit.desc':
+      'Votre logiciel reste utile, mais il devient lent à modifier, difficile à déployer ou risqué à maintenir.',
+    'serviceDetail.development.title': 'Développement logiciel tout compris',
+    'serviceDetail.development.lead':
+      'Un interlocuteur unique pour transformer un besoin métier en logiciel testé, déployé et documenté.',
+    'serviceDetail.development.scope.title': 'Une prise en charge de bout en bout',
+    'serviceDetail.development.scope.design.title': 'Conception',
+    'serviceDetail.development.scope.design.desc':
+      'Clarification des usages, parcours, données, contraintes et critères de validation.',
+    'serviceDetail.development.scope.build.title': 'Réalisation',
+    'serviceDetail.development.scope.build.desc':
+      'Développement de l’interface, des règles métier, des intégrations et des automatisations nécessaires.',
+    'serviceDetail.development.scope.tests.title': 'Tests',
+    'serviceDetail.development.scope.tests.desc':
+      'Tests automatisés et validations fonctionnelles ciblés sur les usages et les risques du produit.',
+    'serviceDetail.development.scope.deploy.title': 'Déploiement',
+    'serviceDetail.development.scope.deploy.desc':
+      'Mise en service reproductible, configuration des environnements et préparation de l’exploitation.',
+    'serviceDetail.development.deliverables.title': 'Ce qui est inclus',
+    'serviceDetail.development.deliverables.product':
+      'Une application web, desktop ou un outil interne conforme au périmètre validé.',
+    'serviceDetail.development.deliverables.source':
+      'Le code source et les dépendances nécessaires pour construire le produit.',
+    'serviceDetail.development.deliverables.tests':
+      'Les tests automatisés et les critères utilisés pour valider la livraison.',
+    'serviceDetail.development.deliverables.operations':
+      'La documentation et les instructions de déploiement, d’utilisation et de maintenance.',
+    'serviceDetail.development.fit.title': 'Cette prestation est adaptée si…',
+    'serviceDetail.development.fit.desc':
+      'Vous avez un besoin métier précis et souhaitez confier toute la réalisation jusqu’à la mise en service.',
     'services.examples.title': 'Cas concrets',
     'services.examples.upgrades.title': 'Montées de version',
     'services.examples.upgrades.desc':
@@ -498,6 +563,8 @@ const translations = {
     'page.home': 'Froment Software | Software audit and renovation',
     'page.clients': 'References | froment.software',
     'page.services': 'Services | froment.software',
+    'page.service.renovation': 'Software audit and renovation | froment.software',
+    'page.service.development': 'All-inclusive software development | froment.software',
     'page.products': 'Public projects | froment.software',
     'page.design': 'Visual proposal | froment.software',
     'page.description.design':
@@ -533,6 +600,10 @@ const translations = {
     'page.description.clients': 'Sacha Froment’s industry experience.',
     'page.description.services':
       'Audit and renovation of existing applications, or complete business software development.',
+    'page.description.service.renovation':
+      'Technical audit, improvement plan and gradual renovation of existing business software.',
+    'page.description.service.development':
+      'Design, implementation, testing and deployment of custom business software.',
     'page.description.products': 'Public prototypes, demonstrations and websites by Sacha Froment.',
     'meta.socialImageAlt': 'Froment Software logo',
 
@@ -732,9 +803,68 @@ const translations = {
     'services.offer.renovation.title': 'Existing-software audit and renovation',
     'services.offer.renovation.desc':
       'I assess your projects, environment, risks and gaps. I then propose concrete improvements: fixes, upgrades, automation, performance work and gradual refactoring.',
+    'services.offer.renovation.cta': 'Explore audit and renovation',
     'services.offer.development.title': 'All-inclusive development',
     'services.offer.development.desc':
       'I handle the design, implementation, testing and deployment of a business application or internal tool.',
+    'services.offer.development.cta': 'Explore development',
+    'serviceDetail.back': 'Back to both services',
+    'serviceDetail.renovation.title': 'Existing-software audit and renovation',
+    'serviceDetail.renovation.lead':
+      'Understand the real problems before investing, then modernize existing software without a systematic rewrite.',
+    'serviceDetail.renovation.scope.title': 'What I assess and improve',
+    'serviceDetail.renovation.scope.projects.title': 'Projects and architecture',
+    'serviceDetail.renovation.scope.projects.desc':
+      'Code structure, dependencies, data flows, weak points and capacity for further change.',
+    'serviceDetail.renovation.scope.delivery.title': 'Delivery pipeline',
+    'serviceDetail.renovation.scope.delivery.desc':
+      'Builds, tests, continuous integration, deployments and lead time from a change to production.',
+    'serviceDetail.renovation.scope.quality.title': 'Measured quality',
+    'serviceDetail.renovation.scope.quality.desc':
+      'Errors, response times, test duration, risk coverage and recurring incidents.',
+    'serviceDetail.renovation.scope.environment.title': 'Working environment',
+    'serviceDetail.renovation.scope.environment.desc':
+      'Local setup, secrets, documentation, tools and problems faced by the existing team.',
+    'serviceDetail.renovation.deliverables.title': 'What you receive',
+    'serviceDetail.renovation.deliverables.audit':
+      'A documented, factual assessment ranked by risk level.',
+    'serviceDetail.renovation.deliverables.plan':
+      'A prioritized improvement plan with costs, dependencies and expected results.',
+    'serviceDetail.renovation.deliverables.work':
+      'The fixes and renovation agreed in the quote, validated in your environment.',
+    'serviceDetail.renovation.deliverables.handover':
+      'The code, tests, documentation and instructions required for subsequent work.',
+    'serviceDetail.renovation.fit.title': 'This service fits if…',
+    'serviceDetail.renovation.fit.desc':
+      'Your software remains useful, but it is slow to change, hard to deploy or risky to maintain.',
+    'serviceDetail.development.title': 'All-inclusive software development',
+    'serviceDetail.development.lead':
+      'One contact to turn a business need into tested, deployed and documented software.',
+    'serviceDetail.development.scope.title': 'End-to-end delivery',
+    'serviceDetail.development.scope.design.title': 'Design',
+    'serviceDetail.development.scope.design.desc':
+      'Clarification of uses, journeys, data, constraints and approval criteria.',
+    'serviceDetail.development.scope.build.title': 'Implementation',
+    'serviceDetail.development.scope.build.desc':
+      'Development of the interface, business rules, integrations and required automation.',
+    'serviceDetail.development.scope.tests.title': 'Testing',
+    'serviceDetail.development.scope.tests.desc':
+      'Automated tests and functional checks focused on product uses and risks.',
+    'serviceDetail.development.scope.deploy.title': 'Deployment',
+    'serviceDetail.development.scope.deploy.desc':
+      'Reproducible rollout, environment configuration and preparation for operations.',
+    'serviceDetail.development.deliverables.title': 'What is included',
+    'serviceDetail.development.deliverables.product':
+      'A web application, desktop application or internal tool that meets the approved scope.',
+    'serviceDetail.development.deliverables.source':
+      'The source code and dependencies required to build the product.',
+    'serviceDetail.development.deliverables.tests':
+      'Automated tests and the criteria used to approve delivery.',
+    'serviceDetail.development.deliverables.operations':
+      'Documentation and instructions for deployment, use and maintenance.',
+    'serviceDetail.development.fit.title': 'This service fits if…',
+    'serviceDetail.development.fit.desc':
+      'You have a precise business need and want to delegate delivery through production rollout.',
     'services.examples.title': 'Concrete examples',
     'services.examples.upgrades.title': 'Version upgrades',
     'services.examples.upgrades.desc':

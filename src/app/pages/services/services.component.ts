@@ -1,19 +1,21 @@
 import { Component, computed, inject, ChangeDetectionStrategy } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { I18nService } from '../../i18n.service';
 import { AnchorLink } from '../../shared/anchor-link/anchor-link';
 import { ConcreteExamples } from '../../shared/concrete-examples/concrete-examples';
 import { Icon } from '../../shared/icon/icon';
-import { ProcessTimeline, TimelineStep } from '../../shared/process-timeline/process-timeline';
 
 type ContentEntry = {
   title: string;
   description: string;
+  href: string;
+  cta: string;
 };
 
 @Component({
   selector: 'app-services',
   standalone: true,
-  imports: [AnchorLink, ConcreteExamples, Icon, ProcessTimeline],
+  imports: [AnchorLink, ConcreteExamples, Icon, RouterLink],
   templateUrl: './services.component.html',
   changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './services.component.scss',
@@ -32,33 +34,14 @@ export class ServicesComponent {
     {
       title: this.i18n.t('services.offer.renovation.title'),
       description: this.i18n.t('services.offer.renovation.desc'),
+      href: '/services/audit-renovation',
+      cta: this.i18n.t('services.offer.renovation.cta'),
     },
     {
       title: this.i18n.t('services.offer.development.title'),
       description: this.i18n.t('services.offer.development.desc'),
-    },
-  ]);
-
-  protected readonly process = computed<TimelineStep[]>(() => [
-    {
-      title: this.i18n.t('services.process.analysis.title'),
-      description: this.i18n.t('services.process.analysis.desc'),
-    },
-    {
-      title: this.i18n.t('services.process.quote.title'),
-      description: this.i18n.t('services.process.quote.desc'),
-    },
-    {
-      title: this.i18n.t('services.process.agreement.title'),
-      description: this.i18n.t('services.process.agreement.desc'),
-    },
-    {
-      title: this.i18n.t('services.process.delivery.title'),
-      description: this.i18n.t('services.process.delivery.desc'),
-    },
-    {
-      title: this.i18n.t('services.process.validation.title'),
-      description: this.i18n.t('services.process.validation.desc'),
+      href: '/services/developpement',
+      cta: this.i18n.t('services.offer.development.cta'),
     },
   ]);
 }

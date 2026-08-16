@@ -39,6 +39,26 @@ export const routes: Routes = [
     data: { titleKey: 'page.services', descriptionKey: 'page.description.services' },
   },
   {
+    path: 'services/audit-renovation',
+    loadComponent: () =>
+      import('./pages/service-detail/service-detail').then((module) => module.ServiceDetail),
+    data: {
+      offer: 'renovation',
+      titleKey: 'page.service.renovation',
+      descriptionKey: 'page.description.service.renovation',
+    },
+  },
+  {
+    path: 'services/developpement',
+    loadComponent: () =>
+      import('./pages/service-detail/service-detail').then((module) => module.ServiceDetail),
+    data: {
+      offer: 'development',
+      titleKey: 'page.service.development',
+      descriptionKey: 'page.description.service.development',
+    },
+  },
+  {
     path: 'tools',
     component: ToolsComponent,
     data: { titleKey: 'page.products', descriptionKey: 'page.description.products' },

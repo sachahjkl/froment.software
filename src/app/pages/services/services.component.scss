@@ -51,12 +51,10 @@
   margin-top: var(--space-2);
   color: var(--color-ink-soft);
 }
-.delivery-heading {
-  margin-bottom: var(--space-2);
-}
-.delivery-intro {
-  margin-bottom: var(--space-6);
-  color: var(--color-ink-soft);
+.offer-link {
+  display: inline-block;
+  margin-top: var(--space-4);
+  font-weight: 700;
 }
 .section-break {
   width: var(--space-12);

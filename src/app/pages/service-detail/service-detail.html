@@ -1,0 +1,42 @@
+<article class="service-detail">
+  <header>
+    <a class="back-link" routerLink="/services">{{ i18n.t("serviceDetail.back") }}</a>
+    <h1>{{ i18n.t(content.titleKey) }}</h1>
+    <p class="lead">{{ i18n.t(content.leadKey) }}</p>
+    <div class="actions">
+      <a class="btn primary" [href]="quoteMailto()"
+        ><app-icon name="mail" />{{ i18n.t("services.quote") }}</a
+      >
+      <a class="btn" [href]="calUrl" target="_blank" rel="noreferrer"
+        ><app-icon name="calendar" />{{ i18n.t("services.book") }}</a
+      >
+    </div>
+  </header>
+
+  <section>
+    <h2>{{ i18n.t(content.scopeTitleKey) }}</h2>
+    <dl class="scope-grid">
+      @for (scope of content.scopes; track scope.titleKey) {
+      <div>
+        <dt>{{ i18n.t(scope.titleKey) }}</dt>
+        <dd>{{ i18n.t(scope.descriptionKey) }}</dd>
+      </div>
+      }
+    </dl>
+  </section>
+
+  <section class="result-section">
+    <div>
+      <h2>{{ i18n.t(content.deliverablesTitleKey) }}</h2>
+      <ul>
+        @for (deliverableKey of content.deliverableKeys; track deliverableKey) {
+        <li>{{ i18n.t(deliverableKey) }}</li>
+        }
+      </ul>
+    </div>
+    <aside>
+      <h2>{{ i18n.t(content.fitTitleKey) }}</h2>
+      <p>{{ i18n.t(content.fitDescriptionKey) }}</p>
+    </aside>
+  </section>
+</article>
