@@ -13,30 +13,57 @@
     </div>
   </header>
 
-  <section>
-    <h2>{{ i18n.t(content.scopeTitleKey) }}</h2>
+  <section aria-labelledby="perimetre">
+    <h2 id="perimetre" class="anchored-title">
+      <span>{{ i18n.t(content.scopeTitleKey) }}</span><app-anchor-link fragment="perimetre" />
+    </h2>
     <dl class="scope-grid">
       @for (scope of content.scopes; track scope.titleKey) {
       <div>
         <dt>{{ i18n.t(scope.titleKey) }}</dt>
-        <dd>{{ i18n.t(scope.descriptionKey) }}</dd>
+        <dd>
+          {{ i18n.t(scope.descriptionKey) }} @if (scope.links) {
+          <span class="scope-links">
+            @for (link of scope.links; track link.href) {
+            <a [href]="link.href" target="_blank" rel="noreferrer">{{ i18n.t(link.labelKey) }}</a>
+            }
+          </span>
+          }
+        </dd>
       </div>
       }
     </dl>
   </section>
 
   <section class="result-section">
-    <div>
-      <h2>{{ i18n.t(content.deliverablesTitleKey) }}</h2>
+    <div aria-labelledby="livrables">
+      <h2 id="livrables" class="anchored-title">
+        <span>{{ i18n.t(content.deliverablesTitleKey) }}</span
+        ><app-anchor-link fragment="livrables" />
+      </h2>
       <ul>
         @for (deliverableKey of content.deliverableKeys; track deliverableKey) {
         <li>{{ i18n.t(deliverableKey) }}</li>
         }
       </ul>
     </div>
-    <aside>
-      <h2>{{ i18n.t(content.fitTitleKey) }}</h2>
+    <aside class="fit-note">
+      <p class="fit-title">{{ i18n.t(content.fitTitleKey) }}</p>
       <p>{{ i18n.t(content.fitDescriptionKey) }}</p>
     </aside>
+  </section>
+
+  <section aria-labelledby="contact">
+    <h2 id="contact" class="anchored-title">
+      <span>{{ i18n.t("serviceDetail.contact.title") }}</span><app-anchor-link fragment="contact" />
+    </h2>
+    <div class="actions">
+      <a class="btn primary" [href]="quoteMailto()"
+        ><app-icon name="mail" />{{ i18n.t("services.quote") }}</a
+      >
+      <a class="btn" [href]="calUrl" target="_blank" rel="noreferrer"
+        ><app-icon name="calendar" />{{ i18n.t("services.book") }}</a
+      >
+    </div>
   </section>
 </article>

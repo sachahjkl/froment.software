@@ -4,7 +4,6 @@
 
 .timeline {
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
   margin: 0;
   padding: 0;
   list-style: none;
@@ -12,22 +11,25 @@
 
 .timeline li {
   position: relative;
+  display: grid;
+  grid-template-columns: 2.25rem minmax(0, 1fr);
+  gap: var(--space-4);
   min-width: 0;
-  padding-right: var(--space-4);
+  padding-bottom: var(--space-4);
 }
 
 .timeline li::before {
   position: absolute;
-  top: calc(var(--space-5) - 1px);
-  right: 0;
-  left: var(--space-10);
-  height: 2px;
+  top: 2.25rem;
+  bottom: 0;
+  left: calc(1.125rem - 1px);
+  width: 2px;
   background: var(--color-line-strong);
   content: "";
 }
 
 .timeline li:last-child {
-  padding-right: 0;
+  padding-bottom: 0;
 }
 
 .timeline li:last-child::before {
@@ -38,56 +40,49 @@
   position: relative;
   z-index: 1;
   display: grid;
-  width: var(--space-10);
-  height: var(--space-10);
+  width: 2.25rem;
+  height: 2.25rem;
   place-items: center;
-  border: 2px solid var(--color-accent-strong);
-  border-radius: 50%;
-  background: var(--color-surface-raised);
-  color: var(--color-accent-strong);
-  font-family: var(--font-mono);
+  border: 1px solid color-mix(in oklab, var(--color-button-primary), black 30%);
+  border-radius: var(--radius-sm);
+  background-color: var(--color-button-primary);
+  background-image: linear-gradient(
+    color-mix(in oklab, var(--color-button-primary), white 25%),
+    var(--color-button-primary)
+  );
+  color: var(--color-button-on-color);
   font-size: var(--text-sm);
   font-weight: 700;
-  box-shadow: var(--shadow-xs);
+  text-shadow: 0 -1px 0 color-mix(in oklab, var(--color-button-primary), black 45%);
+  box-shadow:
+    inset 0 1px 0 var(--color-highlight),
+    var(--shadow-xs);
 }
 
 .content {
-  margin-top: var(--space-4);
-  padding-right: var(--space-2);
+  display: grid;
+  grid-template-columns: minmax(9rem, 0.45fr) minmax(0, 1.55fr);
+  gap: var(--space-5);
+  min-height: 2.25rem;
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-raised);
+  box-shadow: var(--shadow-panel);
 }
 
 .content h3 {
-  font-size: var(--text-md);
+  font-size: var(--text-base);
 }
 
 .content p {
-  margin-top: var(--space-2);
   color: var(--color-ink-soft);
   font-size: var(--text-sm);
 }
 
-@media (max-width: 48rem) {
-  .timeline {
-    grid-template-columns: 1fr;
-  }
-
-  .timeline li {
-    display: grid;
-    grid-template-columns: var(--space-10) minmax(0, 1fr);
-    gap: var(--space-4);
-    padding: 0 0 var(--space-6);
-  }
-
-  .timeline li::before {
-    top: var(--space-10);
-    bottom: 0;
-    left: calc(var(--space-5) - 1px);
-    width: 2px;
-    height: auto;
-  }
-
+@media (max-width: 38rem) {
   .content {
-    margin-top: var(--space-2);
-    padding: 0;
+    grid-template-columns: 1fr;
+    gap: var(--space-1);
   }
 }

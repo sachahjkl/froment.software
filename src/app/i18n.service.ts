@@ -13,7 +13,7 @@ const translations = {
     'nav.home': 'Accueil',
     'nav.about': 'FAQ',
     'nav.products': 'Projets',
-    'nav.services': 'Services',
+    'nav.services': 'Prestations',
     'nav.clients': 'Clients',
     'nav.legal': 'Mentions légales',
     'nav.privacy': 'Confidentialité',
@@ -33,9 +33,9 @@ const translations = {
 
     'page.home': 'Froment Software | Audit et rénovation de logiciels',
     'page.clients': 'Références | froment.software',
-    'page.services': 'Services | froment.software',
-    'page.service.renovation': 'Audit et rénovation de logiciels | froment.software',
-    'page.service.development': 'Développement logiciel tout compris | froment.software',
+    'page.services': 'Prestations | froment.software',
+    'page.service.renovation': 'Audit et rénovation | froment.software',
+    'page.service.development': 'Développement tout compris | froment.software',
     'page.products': 'Projets publics | froment.software',
     'page.design': 'Proposition visuelle | froment.software',
     'page.description.design':
@@ -84,7 +84,7 @@ const translations = {
 
     'design.hero.title': 'Nous construisons et reprenons des logiciels métier.',
     'design.hero.lead':
-      'Applications web, logiciels de bureau et outils internes. J’interviens aussi sur les bases de code qui fonctionnent encore, mais que plus personne ne veut toucher.',
+      'Applications web, logiciels de bureau et outils internes. Nous intervenons aussi sur les bases de code qui fonctionnent encore, mais que plus personne ne veut toucher.',
     'design.hero.mail': 'Nous écrire',
     'design.hero.work': 'Voir notre travail',
     'design.facts.title': 'En pratique',
@@ -116,7 +116,7 @@ const translations = {
     'design.profile.role':
       'Ingénieur logiciel. Vous parlez avec la personne qui lit le code, propose la solution et la livre.',
     'design.profile.copy':
-      'J’ai travaillé sur des applications utilisées dans le ferroviaire, l’assurance et les services. Mon terrain couvre Angular, SvelteKit, ASP.NET, WPF, Go, Linux et PostgreSQL.',
+      'Nous avons travaillé sur des applications utilisées dans le ferroviaire, l’assurance et les services. Notre terrain couvre Angular, SvelteKit, ASP.NET, WPF, Go, Linux et PostgreSQL.',
     'design.method.label': 'Fonctionnement',
     'design.method.title': 'Pas de grand cérémonial.',
     'design.method.copy':
@@ -172,7 +172,7 @@ const translations = {
     'home.hero.kicker': 'froment.software',
     'home.hero.title': 'Audit et rénovation de logiciels métier.',
     'home.hero.lead':
-      'Nous analysons les applications existantes, puis nous corrigeons leurs lacunes et modernisons leur environnement. Nous réalisons aussi des logiciels complets sur mesure.',
+      'Nous analysons vos applications, identifions leurs points faibles, puis modernisons leur code et leur environnement.',
     'home.hero.book': 'Prendre rendez-vous',
     'home.engage.title': 'Contact',
     'home.engage.mail': 'Nous écrire',
@@ -181,10 +181,9 @@ const translations = {
       'Bonjour,\n\nJe vous contacte au sujet du besoin suivant :\n\n- Contexte :\n- Problème principal :\n- Échéance connue :\n\nMerci.',
 
     'home.timeline.title': 'Projets publics',
-    'home.expertise.title': 'Leviers de rénovation',
+    'home.expertise.title': 'Expertise technique',
     'home.expertise.development.title': 'Développement logiciel',
-    'home.expertise.development.beforeGo':
-      'Conception de logiciels rapides, fiables et adaptés à leur usage, avec l’IA intégrée au processus de développement.',
+    'home.expertise.development.beforeGo': 'Utilisation de',
     'home.expertise.development.afterGo':
       'comme langage de prédilection. Chaîne complète et reproductible, du build à l’installation, pour',
     'home.expertise.upgrades':
@@ -193,9 +192,9 @@ const translations = {
     'home.expertise.build.after':
       ': dépendances déclarées, environnements identiques et cache partagé.',
     'home.expertise.ci':
-      'Optimisation de CI existantes par suppression des tâches inutiles et parallélisation. Réduction observée jusqu’à 90 %.',
+      'Optimisation de CI existantes par suppression des tâches inutiles, parallélisation et mise en cache.',
     'home.expertise.tests':
-      'Accélération des tests unitaires et d’intégration par isolation, parallélisation et cache. Réduction observée jusqu’à 90 %.',
+      'Passage de 30 à 3 minutes pour plus de 900 tests unitaires front-end, par isolation, parallélisation et mise en cache.',
     'home.expertise.environments':
       'Environnements de développement reproductibles et automatisés avec',
     'home.expertise.secrets.before':
@@ -223,8 +222,8 @@ const translations = {
     'home.timeline.empty.desc':
       'Cette sélection se limite aux travaux consultables sans contexte confidentiel.',
 
-    'home.services.title': 'Deux offres, un résultat livré',
-    'home.services.cta': 'Découvrir les offres et la démarche',
+    'home.services.title': 'Nos prestations',
+    'home.services.cta': 'Voir nos prestations',
     'home.services.book': 'Réserver un créneau',
     'home.services.renovation.title': 'Audit et rénovation',
     'home.services.renovation.desc':
@@ -237,7 +236,6 @@ const translations = {
       'Aucun logiciel standard n’est commercialisé actuellement ; les besoins sont traités sur mesure.',
     'home.products.cta': 'Consulter le catalogue',
     'home.clients.title': 'Parcours',
-    'home.clients.copy': 'Cinq ans de développement sur des applications neuves et existantes.',
     'home.clients.cv': 'Voir le CV complet',
     'home.clients.experience': 'Organisations de référence',
     'home.about.title': 'Qui sommes-nous ?',
@@ -259,40 +257,40 @@ const translations = {
     'products.status.experiment': 'Expérimentation',
     'products.status.public': 'Espace public',
 
-    'services.kicker': 'Services',
+    'services.kicker': 'Prestations',
     'services.title': 'Auditer l’existant. Rénover ce qui compte.',
     'services.lead':
-      'Une offre principale pour comprendre et améliorer vos logiciels. Une seconde offre pour livrer un nouveau produit de bout en bout.',
+      'Nous proposons deux prestations : audit et rénovation, ou développement tout compris.',
     'services.quote': 'Demander un devis',
     'services.book': 'Prendre rendez-vous',
-    'services.list.title': 'Deux types de prestations',
+    'services.list.title': 'Nos prestations',
     'services.quote.subject': 'Demande de devis',
     'services.quote.body':
       'Bonjour,\n\nNous souhaitons échanger au sujet du projet suivant :\n\n- Contexte :\n- Besoin :\n- Périmètre :\n- Contraintes techniques :\n- Échéance souhaitée :\n- Budget indicatif :\n\nMerci.',
-    'services.offer.primary': 'Offre principale',
-    'services.offer.second': 'Deuxième offre',
-    'services.offer.renovation.title': 'Audit et rénovation de l’existant',
+    'services.offer.renovation.title': 'Audit et rénovation',
     'services.offer.renovation.desc':
-      'J’analyse vos projets, leur environnement, leurs risques et leurs lacunes. Je propose ensuite des améliorations concrètes : corrections, mises à niveau, automatisation, performance et refactorisation progressive.',
-    'services.offer.renovation.cta': 'Détailler l’audit et la rénovation',
+      'Nous analysons vos projets, leur environnement, leurs risques et leurs lacunes. Nous proposons ensuite des corrections, des mises à niveau, des automatisations et une refactorisation progressive.',
+    'services.offer.renovation.cta': 'Voir le détail de l’audit et de la rénovation',
     'services.offer.development.title': 'Développement tout compris',
     'services.offer.development.desc':
-      'Je prends en charge la conception, la réalisation, les tests et le déploiement d’une application métier ou d’un outil interne.',
-    'services.offer.development.cta': 'Détailler le développement',
-    'serviceDetail.back': 'Retour aux deux prestations',
-    'serviceDetail.renovation.title': 'Audit et rénovation de logiciels existants',
+      'Nous prenons en charge la conception, la réalisation, les tests et le déploiement d’une application métier ou d’un outil interne.',
+    'services.offer.development.cta': 'Voir le détail du développement',
+    'serviceDetail.back': 'Retour aux prestations',
+    'serviceDetail.renovation.title': 'Audit et rénovation',
     'serviceDetail.renovation.lead':
       'Comprendre les problèmes réels avant d’investir, puis moderniser l’existant sans réécriture systématique.',
-    'serviceDetail.renovation.scope.title': 'Ce que j’analyse et améliore',
+    'serviceDetail.renovation.scope.title': 'Ce que nous analysons et améliorons',
     'serviceDetail.renovation.scope.projects.title': 'Projets et architecture',
     'serviceDetail.renovation.scope.projects.desc':
       'Structure du code, dépendances, flux de données, points de fragilité et capacité d’évolution.',
     'serviceDetail.renovation.scope.delivery.title': 'Chaîne de livraison',
     'serviceDetail.renovation.scope.delivery.desc':
       'Builds, tests, intégration continue, déploiements et délais entre une modification et sa mise en service.',
-    'serviceDetail.renovation.scope.quality.title': 'Qualité mesurable',
+    'serviceDetail.renovation.scope.quality.title': 'CVE, failles et secrets',
     'serviceDetail.renovation.scope.quality.desc':
-      'Erreurs, temps de réponse, durée des tests, couverture des risques et incidents récurrents.',
+      'Recherche de CVE et de failles avec des outils d’analyse statique adaptés aux langages. Détection des secrets présents dans le code et l’historique Git.',
+    'serviceDetail.renovation.scope.quality.staticAnalysis': 'Outils d’analyse statique',
+    'serviceDetail.renovation.scope.quality.trufflehog': 'TruffleHog',
     'serviceDetail.renovation.scope.environment.title': 'Environnement de travail',
     'serviceDetail.renovation.scope.environment.desc':
       'Installation locale, secrets, documentation, outils et difficultés rencontrées par l’équipe existante.',
@@ -304,14 +302,14 @@ const translations = {
     'serviceDetail.renovation.deliverables.work':
       'Les corrections et rénovations retenues dans le devis, validées sur votre environnement.',
     'serviceDetail.renovation.deliverables.handover':
-      'Le code, les tests, la documentation et les instructions nécessaires à la suite.',
+      'Le code, les tests et les instructions nécessaires pour maintenir et faire évoluer le logiciel.',
     'serviceDetail.renovation.fit.title': 'Cette prestation est adaptée si…',
     'serviceDetail.renovation.fit.desc':
       'Votre logiciel reste utile, mais il devient lent à modifier, difficile à déployer ou risqué à maintenir.',
-    'serviceDetail.development.title': 'Développement logiciel tout compris',
+    'serviceDetail.development.title': 'Développement tout compris',
     'serviceDetail.development.lead':
       'Un interlocuteur unique pour transformer un besoin métier en logiciel testé, déployé et documenté.',
-    'serviceDetail.development.scope.title': 'Une prise en charge de bout en bout',
+    'serviceDetail.development.scope.title': 'Une prestation complète',
     'serviceDetail.development.scope.design.title': 'Conception',
     'serviceDetail.development.scope.design.desc':
       'Clarification des usages, parcours, données, contraintes et critères de validation.',
@@ -326,7 +324,7 @@ const translations = {
       'Mise en service reproductible, configuration des environnements et préparation de l’exploitation.',
     'serviceDetail.development.deliverables.title': 'Ce qui est inclus',
     'serviceDetail.development.deliverables.product':
-      'Une application web, desktop ou un outil interne conforme au périmètre validé.',
+      'Une application web, une application de bureau ou un outil interne conforme au périmètre validé.',
     'serviceDetail.development.deliverables.source':
       'Le code source et les dépendances nécessaires pour construire le produit.',
     'serviceDetail.development.deliverables.tests':
@@ -346,10 +344,10 @@ const translations = {
       ': dépendances déclarées, environnements identiques et cache partagé.',
     'services.examples.ci.title': 'Intégration continue',
     'services.examples.ci.desc':
-      'Reprendre une CI existante, supprimer les tâches inutiles et paralléliser les étapes. Réduction observée jusqu’à 90 %.',
+      'Reprendre une CI existante, supprimer les tâches inutiles, paralléliser les étapes et mettre en cache les résultats réutilisables.',
     'services.examples.tests.title': 'Tests automatisés',
     'services.examples.tests.desc':
-      'Accélérer les tests unitaires et d’intégration par isolation, parallélisation et cache. Réduction observée jusqu’à 90 %.',
+      'Ramener plus de 900 tests unitaires front-end de 30 à 3 minutes par isolation, parallélisation et mise en cache.',
     'services.examples.environments.title': 'Environnements de développement',
     'services.examples.environments.before':
       'Déclarer et automatiser des environnements reproductibles avec',
@@ -371,24 +369,22 @@ const translations = {
       'Déclarer, tester et reproduire les déploiements sur site ou dans le cloud avec NixOS, cache de build et infrastructure as code via',
     'services.examples.or': 'ou',
     'services.process.kicker': 'Méthode de livraison',
-    'services.process.title': 'Notre démarche commune',
-    'services.process.intro':
-      'Chaque étape produit une décision ou un résultat vérifiable avant de poursuivre.',
-    'services.process.analysis.title': 'Analyser',
+    'services.process.title': 'Déroulement d’une mission',
+    'services.process.analysis.title': 'Qualifier le besoin',
     'services.process.analysis.desc':
-      'J’examine vos projets, leur environnement, leurs usages et leurs lacunes. Je repère les risques et les améliorations utiles.',
-    'services.process.quote.title': 'Proposer',
+      'Nous réalisons un examen initial limité pour comprendre le contexte et préparer le devis. L’audit approfondi commence après validation.',
+    'services.process.quote.title': 'Établir le devis',
     'services.process.quote.desc':
-      'Je remets un devis détaillé avec les prestations concrètes, les livrables, le calendrier et le prix.',
-    'services.process.agreement.title': 'Accorder',
+      'Nous vous remettons un devis détaillé. Il précise les prestations, les livrables, le calendrier et le prix.',
+    'services.process.agreement.title': 'Valider le cadre',
     'services.process.agreement.desc':
-      'Vous acceptez la proposition. Si nécessaire, nous précisons ensemble vos objectifs avant de figer le périmètre.',
-    'services.process.delivery.title': 'Réaliser ensemble',
+      'Vous acceptez la proposition. Si nous précisons ensuite un objectif ou le périmètre, nous vous soumettons un devis mis à jour avant de commencer.',
+    'services.process.delivery.title': 'Réaliser la mission',
     'services.process.delivery.desc':
-      'Je réalise la mission au contact de vos interlocuteurs et de votre équipe de développement existante.',
-    'services.process.validation.title': 'Valider et régler',
+      'Nous réalisons la mission au contact de vos interlocuteurs et de votre équipe de développement existante.',
+    'services.process.validation.title': 'Valider la livraison',
     'services.process.validation.desc':
-      'Je remets le résultat convenu. Le paiement final intervient après sa validation selon les critères du devis.',
+      'Vous validez les livrables selon les critères du devis, puis vous réglez le solde de la mission.',
     'services.practical.title': 'En pratique',
     'services.practical.method': 'Méthode',
     'services.practical.method.desc':
@@ -403,6 +399,7 @@ const translations = {
     'services.criteria.context': 'Le contexte et les utilisateurs concernés.',
     'services.criteria.problem': 'Le problème principal ou le résultat attendu.',
     'services.criteria.deadline': 'L’échéance connue et les contraintes techniques.',
+    'serviceDetail.contact.title': 'Échanger sur votre besoin',
 
     'clients.title': 'Expérience',
     'clients.sectors.title': 'Secteurs d’expérience',
@@ -441,7 +438,7 @@ const translations = {
     'not_found.lead': 'Vérifiez l’adresse ou revenez à l’accueil.',
     'not_found.cta': 'Retour à l’accueil',
     'not_found.links_label': 'Prochaines étapes',
-    'not_found.services': 'Voir les services',
+    'not_found.services': 'Voir les prestations',
     'not_found.contact': 'Écrire à Froment Software',
 
     'about.contact.title': 'Contact',
@@ -563,8 +560,8 @@ const translations = {
     'page.home': 'Froment Software | Software audit and renovation',
     'page.clients': 'References | froment.software',
     'page.services': 'Services | froment.software',
-    'page.service.renovation': 'Software audit and renovation | froment.software',
-    'page.service.development': 'All-inclusive software development | froment.software',
+    'page.service.renovation': 'Audit and renovation | froment.software',
+    'page.service.development': 'All-inclusive development | froment.software',
     'page.products': 'Public projects | froment.software',
     'page.design': 'Visual proposal | froment.software',
     'page.description.design':
@@ -702,7 +699,7 @@ const translations = {
     'home.hero.kicker': 'froment.software',
     'home.hero.title': 'Business software audit and renovation.',
     'home.hero.lead':
-      'We assess existing applications, then fix their gaps and modernize their environment. We also deliver complete custom software.',
+      'We assess your applications, identify their weak points, then modernize their code and environment.',
     'home.hero.book': 'Book an appointment',
     'home.engage.title': 'Contact',
     'home.engage.mail': 'Email us',
@@ -711,10 +708,9 @@ const translations = {
       'Hello,\n\nI am contacting you about the following need:\n\n- Context:\n- Main problem:\n- Known deadline:\n\nThank you.',
 
     'home.timeline.title': 'Public projects',
-    'home.expertise.title': 'Renovation levers',
+    'home.expertise.title': 'Technical expertise',
     'home.expertise.development.title': 'Software development',
-    'home.expertise.development.beforeGo':
-      'Design of fast, reliable software suited to its users, with AI integrated into the development process.',
+    'home.expertise.development.beforeGo': 'Use of',
     'home.expertise.development.afterGo':
       'as our preferred language. Complete, reproducible pipeline from build to installation for',
     'home.expertise.upgrades':
@@ -723,9 +719,9 @@ const translations = {
     'home.expertise.build.after':
       ': declared dependencies, identical environments and shared caches.',
     'home.expertise.ci':
-      'Existing CI optimization through work removal and parallel execution. Observed reduction up to 90%.',
+      'Existing CI optimization through work removal, parallel execution and caching.',
     'home.expertise.tests':
-      'Faster unit and integration tests through isolation, parallel execution and caching. Observed reduction up to 90%.',
+      'Reduction from 30 to 3 minutes for more than 900 front-end unit tests through isolation, parallel execution and caching.',
     'home.expertise.environments': 'Reproducible, automated development environments with',
     'home.expertise.secrets.before':
       'Centralized secret management on premises, in the cloud or with a lightweight solution:',
@@ -752,8 +748,8 @@ const translations = {
     'home.timeline.empty.desc':
       'This selection is limited to work that can be viewed without confidential context.',
 
-    'home.services.title': 'Two offers, one delivered result',
-    'home.services.cta': 'Explore the offers and process',
+    'home.services.title': 'Our services',
+    'home.services.cta': 'View our services',
     'home.services.book': 'Book a slot',
     'home.services.renovation.title': 'Audit and renovation',
     'home.services.renovation.desc':
@@ -766,7 +762,6 @@ const translations = {
       'No standard software is currently sold; current needs are handled as custom engagements.',
     'home.products.cta': 'View the catalogue',
     'home.clients.title': 'Background',
-    'home.clients.copy': 'Five years developing new and existing applications.',
     'home.clients.cv': 'View full CV',
     'home.clients.experience': 'Reference organisations',
     'home.about.title': 'Who are we?',
@@ -790,38 +785,37 @@ const translations = {
 
     'services.kicker': 'Services',
     'services.title': 'Audit what exists. Renovate what matters.',
-    'services.lead':
-      'One primary offer to understand and improve your software. A second offer to deliver a new product from start to finish.',
+    'services.lead': 'We provide two services: audit and renovation, or all-inclusive development.',
     'services.quote': 'Request a quote',
     'services.book': 'Book a meeting',
-    'services.list.title': 'Two types of service',
+    'services.list.title': 'Our services',
     'services.quote.subject': 'Quote request',
     'services.quote.body':
       'Hello,\n\nWe would like to discuss the following project:\n\n- Context:\n- Need:\n- Scope:\n- Technical constraints:\n- Desired deadline:\n- Approximate budget:\n\nThank you.',
-    'services.offer.primary': 'Primary offer',
-    'services.offer.second': 'Second offer',
-    'services.offer.renovation.title': 'Existing-software audit and renovation',
+    'services.offer.renovation.title': 'Audit and renovation',
     'services.offer.renovation.desc':
-      'I assess your projects, environment, risks and gaps. I then propose concrete improvements: fixes, upgrades, automation, performance work and gradual refactoring.',
-    'services.offer.renovation.cta': 'Explore audit and renovation',
+      'We assess your projects, environment, risks and gaps. We then propose fixes, upgrades, automation and gradual refactoring.',
+    'services.offer.renovation.cta': 'View audit and renovation details',
     'services.offer.development.title': 'All-inclusive development',
     'services.offer.development.desc':
-      'I handle the design, implementation, testing and deployment of a business application or internal tool.',
-    'services.offer.development.cta': 'Explore development',
-    'serviceDetail.back': 'Back to both services',
-    'serviceDetail.renovation.title': 'Existing-software audit and renovation',
+      'We handle the design, implementation, testing and deployment of a business application or internal tool.',
+    'services.offer.development.cta': 'View development details',
+    'serviceDetail.back': 'Back to services',
+    'serviceDetail.renovation.title': 'Audit and renovation',
     'serviceDetail.renovation.lead':
       'Understand the real problems before investing, then modernize existing software without a systematic rewrite.',
-    'serviceDetail.renovation.scope.title': 'What I assess and improve',
+    'serviceDetail.renovation.scope.title': 'What we assess and improve',
     'serviceDetail.renovation.scope.projects.title': 'Projects and architecture',
     'serviceDetail.renovation.scope.projects.desc':
       'Code structure, dependencies, data flows, weak points and capacity for further change.',
     'serviceDetail.renovation.scope.delivery.title': 'Delivery pipeline',
     'serviceDetail.renovation.scope.delivery.desc':
       'Builds, tests, continuous integration, deployments and lead time from a change to production.',
-    'serviceDetail.renovation.scope.quality.title': 'Measured quality',
+    'serviceDetail.renovation.scope.quality.title': 'CVEs, vulnerabilities and secrets',
     'serviceDetail.renovation.scope.quality.desc':
-      'Errors, response times, test duration, risk coverage and recurring incidents.',
+      'CVE and vulnerability detection with static analysis tools suited to each language. Detection of secrets in source code and Git history.',
+    'serviceDetail.renovation.scope.quality.staticAnalysis': 'Static analysis tools',
+    'serviceDetail.renovation.scope.quality.trufflehog': 'TruffleHog',
     'serviceDetail.renovation.scope.environment.title': 'Working environment',
     'serviceDetail.renovation.scope.environment.desc':
       'Local setup, secrets, documentation, tools and problems faced by the existing team.',
@@ -837,7 +831,7 @@ const translations = {
     'serviceDetail.renovation.fit.title': 'This service fits if…',
     'serviceDetail.renovation.fit.desc':
       'Your software remains useful, but it is slow to change, hard to deploy or risky to maintain.',
-    'serviceDetail.development.title': 'All-inclusive software development',
+    'serviceDetail.development.title': 'All-inclusive development',
     'serviceDetail.development.lead':
       'One contact to turn a business need into tested, deployed and documented software.',
     'serviceDetail.development.scope.title': 'End-to-end delivery',
@@ -875,10 +869,10 @@ const translations = {
       ': declared dependencies, identical environments and shared caches.',
     'services.examples.ci.title': 'Continuous integration',
     'services.examples.ci.desc':
-      'Take over an existing CI pipeline, remove unnecessary work and parallelize stages. Observed reduction up to 90%.',
+      'Take over an existing CI pipeline, remove unnecessary work, parallelize stages and cache reusable results.',
     'services.examples.tests.title': 'Automated tests',
     'services.examples.tests.desc':
-      'Speed up unit and integration tests through isolation, parallel execution and caching. Observed reduction up to 90%.',
+      'Reduce more than 900 front-end unit tests from 30 to 3 minutes through isolation, parallel execution and caching.',
     'services.examples.environments.title': 'Development environments',
     'services.examples.environments.before':
       'Declare and automate reproducible development environments with',
@@ -899,24 +893,22 @@ const translations = {
       'Declare, test and reproduce on-premises or cloud deployments with NixOS, build caching and infrastructure as code through',
     'services.examples.or': 'or',
     'services.process.kicker': 'Delivery method',
-    'services.process.title': 'Our shared process',
-    'services.process.intro':
-      'Each step produces a decision or verifiable result before work continues.',
-    'services.process.analysis.title': 'Assess',
+    'services.process.title': 'How an engagement works',
+    'services.process.analysis.title': 'Qualify the need',
     'services.process.analysis.desc':
-      'I review your projects, environment, uses and gaps. I identify risks and useful improvements.',
-    'services.process.quote.title': 'Propose',
+      'We perform a limited initial review to understand the context and prepare the quote. The full audit starts after approval.',
+    'services.process.quote.title': 'Prepare the quote',
     'services.process.quote.desc':
-      'I provide a detailed quote with concrete services, deliverables, schedule and price.',
-    'services.process.agreement.title': 'Agree',
+      'We provide a detailed quote. It defines the services, deliverables, schedule and price.',
+    'services.process.agreement.title': 'Approve the scope',
     'services.process.agreement.desc':
-      'You accept the proposal. If needed, we refine your objectives together before fixing the scope.',
-    'services.process.delivery.title': 'Work together',
+      'You accept the proposal. If we then refine an objective or the scope, we submit an updated quote before work starts.',
+    'services.process.delivery.title': 'Deliver the work',
     'services.process.delivery.desc':
-      'I deliver the work in close contact with your stakeholders and existing development team.',
-    'services.process.validation.title': 'Approve and pay',
+      'We deliver the work in close contact with your stakeholders and existing development team.',
+    'services.process.validation.title': 'Approve delivery',
     'services.process.validation.desc':
-      'I hand over the agreed result. Final payment follows approval against the quote criteria.',
+      'You approve the deliverables against the quote criteria, then pay the remaining balance.',
     'services.practical.title': 'In practice',
     'services.practical.method': 'Method',
     'services.practical.method.desc':
@@ -931,6 +923,7 @@ const translations = {
     'services.criteria.context': 'The context and affected users.',
     'services.criteria.problem': 'The main problem or expected result.',
     'services.criteria.deadline': 'The known deadline and technical constraints.',
+    'serviceDetail.contact.title': 'Discuss your need',
 
     'clients.title': 'Experience',
     'clients.sectors.title': 'Industry experience',

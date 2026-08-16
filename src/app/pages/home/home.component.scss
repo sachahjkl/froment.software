@@ -27,9 +27,8 @@ section {
 .contact-links {
   margin-top: var(--space-3);
 }
-.process-intro {
-  margin-block: var(--space-2) var(--space-6);
-  color: var(--color-ink-soft);
+app-process-timeline {
+  margin-top: var(--space-5);
 }
 section > p {
   margin-top: var(--space-3);

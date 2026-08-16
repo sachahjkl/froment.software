@@ -169,10 +169,10 @@ describe('App shell', () => {
     const writeText = vi.fn().mockResolvedValue(undefined);
     Object.defineProperty(navigator, 'clipboard', { configurable: true, value: { writeText } });
 
-    element.querySelector<HTMLAnchorElement>('a[href="#cas-concrets"]')!.click();
+    element.querySelector<HTMLAnchorElement>('a[href="#prestations"]')!.click();
     await fixture.whenStable();
 
-    expect(writeText).toHaveBeenCalledWith(expect.stringMatching(/#cas-concrets$/));
+    expect(writeText).toHaveBeenCalledWith(expect.stringMatching(/#prestations$/));
     expect(element.querySelector('.copy-notice')?.textContent).toContain('Lien copié');
   });
 });

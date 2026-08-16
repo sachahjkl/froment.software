@@ -2,7 +2,6 @@ import { Component, computed, inject, ChangeDetectionStrategy } from '@angular/c
 import { RouterLink } from '@angular/router';
 import { I18nService } from '../../i18n.service';
 import { AnchorLink } from '../../shared/anchor-link/anchor-link';
-import { ConcreteExamples } from '../../shared/concrete-examples/concrete-examples';
 import { Icon } from '../../shared/icon/icon';
 
 type ContentEntry = {
@@ -15,7 +14,7 @@ type ContentEntry = {
 @Component({
   selector: 'app-services',
   standalone: true,
-  imports: [AnchorLink, ConcreteExamples, Icon, RouterLink],
+  imports: [AnchorLink, Icon, RouterLink],
   templateUrl: './services.component.html',
   changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './services.component.scss',

@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { I18nService, TranslationKey } from '../../i18n.service';
+import { AnchorLink } from '../../shared/anchor-link/anchor-link';
 import { Icon } from '../../shared/icon/icon';
 
 type Offer = 'renovation' | 'development';
@@ -9,7 +10,11 @@ type DetailContent = {
   titleKey: TranslationKey;
   leadKey: TranslationKey;
   scopeTitleKey: TranslationKey;
-  scopes: readonly { titleKey: TranslationKey; descriptionKey: TranslationKey }[];
+  scopes: readonly {
+    titleKey: TranslationKey;
+    descriptionKey: TranslationKey;
+    links?: readonly { labelKey: TranslationKey; href: string }[];
+  }[];
   deliverablesTitleKey: TranslationKey;
   deliverableKeys: readonly TranslationKey[];
   fitTitleKey: TranslationKey;
@@ -33,6 +38,16 @@ const detailContent: Record<Offer, DetailContent> = {
       {
         titleKey: 'serviceDetail.renovation.scope.quality.title',
         descriptionKey: 'serviceDetail.renovation.scope.quality.desc',
+        links: [
+          {
+            labelKey: 'serviceDetail.renovation.scope.quality.staticAnalysis',
+            href: 'https://owasp.org/www-community/Source_Code_Analysis_Tools',
+          },
+          {
+            labelKey: 'serviceDetail.renovation.scope.quality.trufflehog',
+            href: 'https://trufflesecurity.com/trufflehog',
+          },
+        ],
       },
       {
         titleKey: 'serviceDetail.renovation.scope.environment.title',
@@ -85,7 +100,7 @@ const detailContent: Record<Offer, DetailContent> = {
 
 @Component({
   selector: 'app-service-detail',
-  imports: [Icon, RouterLink],
+  imports: [AnchorLink, Icon, RouterLink],
   templateUrl: './service-detail.html',
   styleUrl: './service-detail.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

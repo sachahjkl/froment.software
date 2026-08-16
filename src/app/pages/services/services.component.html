@@ -21,22 +21,17 @@
     </h2>
   </div>
   <ol class="services-grid">
-    @for (service of services(); track service.title; let first = $first) {
-      <li class="service-entry" [class.primary-offer]="first">
-        <span class="offer-label">{{
-          i18n.t(first ? "services.offer.primary" : "services.offer.second")
-        }}</span>
+    @for (service of services(); track service.title) {
+      <li class="service-entry">
         <h3>{{ service.title }}</h3>
-        <p>{{ service.description }}</p>
-        <a class="offer-link" [routerLink]="service.href">{{ service.cta }}</a>
+        <div>
+          <p>{{ service.description }}</p>
+          <a class="offer-link" [routerLink]="service.href">{{ service.cta }}</a>
+        </div>
       </li>
     }
   </ol>
 </section>
-
-<hr class="section-break" />
-
-<app-concrete-examples class="page-section" />
 
 <section class="practical page-section" aria-labelledby="modalites">
   <h2 id="modalites" class="anchored-title">

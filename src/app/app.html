@@ -122,6 +122,18 @@
               <a href="mailto:contact@froment.software" (click)="navDetails.open = false"
                 >Contact</a
               >
+              <label class="mobile-language">
+                <span>{{ i18n.t('footer.language') }}</span>
+                <select
+                  class="lang-select"
+                  [value]="i18n.language()"
+                  (change)="setLanguage($any($event.target).value)"
+                >
+                  @for (language of i18n.languages; track language.code) {
+                  <option [value]="language.code">{{ i18n.t(language.labelKey) }}</option>
+                  }
+                </select>
+              </label>
             </nav>
           </details>
         </div>
