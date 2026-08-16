@@ -64,16 +64,12 @@ export class HomeComponent {
 
   protected readonly services = computed<ContentEntry[]>(() => [
     {
-      title: this.i18n.t('home.services.applications.title'),
-      description: this.i18n.t('home.services.applications.desc'),
-    },
-    {
-      title: this.i18n.t('home.services.internal.title'),
-      description: this.i18n.t('home.services.internal.desc'),
-    },
-    {
       title: this.i18n.t('home.services.renovation.title'),
       description: this.i18n.t('home.services.renovation.desc'),
+    },
+    {
+      title: this.i18n.t('home.services.development.title'),
+      description: this.i18n.t('home.services.development.desc'),
     },
   ]);
 }

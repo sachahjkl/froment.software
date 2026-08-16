@@ -31,7 +31,7 @@ const translations = {
     'shell.theme.dark': 'Activer le mode sombre',
     'shell.theme.light': 'Activer le mode clair',
 
-    'page.home': 'Froment Software | Développement de logiciels métier',
+    'page.home': 'Froment Software | Audit et rénovation de logiciels',
     'page.clients': 'Références | froment.software',
     'page.services': 'Services | froment.software',
     'page.products': 'Projets publics | froment.software',
@@ -64,10 +64,10 @@ const translations = {
     'page.description.business_card': 'Aperçu imprimable de la carte de visite Froment Software.',
     'page.description.not_found': 'La page demandée n’existe pas ou a changé d’adresse.',
     'page.description.home':
-      'Applications métier, outils internes et logiciels existants : développement, reprise, mise à niveau et automatisation.',
+      'Audit, reprise et rénovation de logiciels existants. Développement complet d’applications métier sur mesure.',
     'page.description.clients': 'Secteurs d’expérience de Sacha Froment.',
     'page.description.services':
-      'Développement, maintenance, reprise d’applications existantes et audits techniques.',
+      'Audit et rénovation d’applications existantes, ou développement complet de logiciels métier.',
     'page.description.products': 'Prototypes, démonstrations et sites publics de Sacha Froment.',
     'meta.socialImageAlt': 'Logo Froment Software',
 
@@ -164,9 +164,9 @@ const translations = {
     'home.hero.title.part3a': 'rénovation',
     'home.hero.title.part3b': 'de legacy',
     'home.hero.kicker': 'froment.software',
-    'home.hero.title': 'Développement et rénovation de logiciels métier.',
+    'home.hero.title': 'Audit et rénovation de logiciels métier.',
     'home.hero.lead':
-      'Nous développons des applications web, des logiciels de bureau et des outils internes. Nous reprenons aussi des applications existantes.',
+      'Nous analysons les applications existantes, puis nous corrigeons leurs lacunes et modernisons leur environnement. Nous réalisons aussi des logiciels complets sur mesure.',
     'home.hero.book': 'Prendre rendez-vous',
     'home.engage.title': 'Contact',
     'home.engage.mail': 'Nous écrire',
@@ -175,7 +175,7 @@ const translations = {
       'Bonjour,\n\nJe vous contacte au sujet du besoin suivant :\n\n- Contexte :\n- Problème principal :\n- Échéance connue :\n\nMerci.',
 
     'home.timeline.title': 'Projets publics',
-    'home.expertise.title': 'Notre expertise',
+    'home.expertise.title': 'Leviers de rénovation',
     'home.expertise.development.title': 'Développement logiciel',
     'home.expertise.development.beforeGo':
       'Conception de logiciels rapides, fiables et adaptés à leur usage, avec l’IA intégrée au processus de développement.',
@@ -217,18 +217,15 @@ const translations = {
     'home.timeline.empty.desc':
       'Cette sélection se limite aux travaux consultables sans contexte confidentiel.',
 
-    'home.services.title': 'Périmètre d’intervention',
-    'home.services.cta': 'Voir les services',
+    'home.services.title': 'Deux offres, un résultat livré',
+    'home.services.cta': 'Découvrir les offres et la démarche',
     'home.services.book': 'Réserver un créneau',
-    'home.services.applications.title': 'Applications métier',
-    'home.services.applications.desc':
-      'Applications web ou de bureau conçues pour un besoin, des utilisateurs et un environnement précis.',
-    'home.services.internal.title': 'Outils internes',
-    'home.services.internal.desc':
-      'Interfaces, commandes et automatisations pour remplacer les manipulations manuelles ou dispersées.',
-    'home.services.renovation.title': 'Rénovation de l’existant',
+    'home.services.renovation.title': 'Audit et rénovation',
     'home.services.renovation.desc':
-      'Reprise, mise à niveau et remise au propre progressive d’applications déjà en service.',
+      'Analyser les projets, leur environnement et leurs lacunes, puis corriger et moderniser l’existant avec des résultats mesurables.',
+    'home.services.development.title': 'Développement tout compris',
+    'home.services.development.desc':
+      'Concevoir, réaliser, tester et déployer une application métier ou un outil interne prêt à l’emploi.',
     'home.products.title': 'Produits',
     'home.products.note':
       'Aucun logiciel standard n’est commercialisé actuellement ; les besoins sont traités sur mesure.',
@@ -257,24 +254,23 @@ const translations = {
     'products.status.public': 'Espace public',
 
     'services.kicker': 'Services',
-    'services.title': 'Développement et rénovation d’applications.',
+    'services.title': 'Auditer l’existant. Rénover ce qui compte.',
     'services.lead':
-      'Développement d’outils, maintenance d’applications existantes et audits techniques ciblés.',
+      'Une offre principale pour comprendre et améliorer vos logiciels. Une seconde offre pour livrer un nouveau produit de bout en bout.',
     'services.quote': 'Demander un devis',
     'services.book': 'Prendre rendez-vous',
-    'services.list.title': 'Périmètre d’intervention',
+    'services.list.title': 'Deux types de prestations',
     'services.quote.subject': 'Demande de devis',
     'services.quote.body':
       'Bonjour,\n\nNous souhaitons échanger au sujet du projet suivant :\n\n- Contexte :\n- Besoin :\n- Périmètre :\n- Contraintes techniques :\n- Échéance souhaitée :\n- Budget indicatif :\n\nMerci.',
-    'services.entry.applications.title': 'Applications métier',
-    'services.entry.applications.desc':
-      'Conception, développement et déploiement d’applications web ou de bureau.',
-    'services.entry.internal.title': 'Outils internes',
-    'services.entry.internal.desc':
-      'Interfaces, commandes, scripts et automatisations pour remplacer des opérations manuelles.',
-    'services.entry.renovation.title': 'Rénovation d’applications existantes',
-    'services.entry.renovation.desc':
-      'Analyse du code, corrections, mises à niveau et refactorisation progressive.',
+    'services.offer.primary': 'Offre principale',
+    'services.offer.second': 'Deuxième offre',
+    'services.offer.renovation.title': 'Audit et rénovation de l’existant',
+    'services.offer.renovation.desc':
+      'J’analyse vos projets, leur environnement, leurs risques et leurs lacunes. Je propose ensuite des améliorations concrètes : corrections, mises à niveau, automatisation, performance et refactorisation progressive.',
+    'services.offer.development.title': 'Développement tout compris',
+    'services.offer.development.desc':
+      'Je prends en charge la conception, la réalisation, les tests et le déploiement d’une application métier ou d’un outil interne.',
     'services.examples.title': 'Cas concrets',
     'services.examples.upgrades.title': 'Montées de version',
     'services.examples.upgrades.desc':
@@ -310,18 +306,24 @@ const translations = {
       'Déclarer, tester et reproduire les déploiements sur site ou dans le cloud avec NixOS, cache de build et infrastructure as code via',
     'services.examples.or': 'ou',
     'services.process.kicker': 'Méthode de livraison',
-    'services.process.title': 'Étapes de la mission',
-    'services.process.discovery.title': 'Comprendre',
-    'services.process.discovery.desc':
-      'Examiner le contexte, les utilisateurs, l’existant et les contraintes avant de proposer une direction.',
-    'services.process.scope.title': 'Cadrer',
-    'services.process.scope.desc':
-      'Définir le périmètre utile, les arbitrages, les livrables et les conditions de validation.',
-    'services.process.build.title': 'Construire',
-    'services.process.build.desc': 'Livrer des versions intermédiaires et valider chaque étape.',
-    'services.process.handover.title': 'Livrer',
-    'services.process.handover.desc':
-      'Mettre en service, documenter les choix et préparer la maintenance ou la reprise par une autre équipe.',
+    'services.process.title': 'Notre démarche commune',
+    'services.process.intro':
+      'Chaque étape produit une décision ou un résultat vérifiable avant de poursuivre.',
+    'services.process.analysis.title': 'Analyser',
+    'services.process.analysis.desc':
+      'J’examine vos projets, leur environnement, leurs usages et leurs lacunes. Je repère les risques et les améliorations utiles.',
+    'services.process.quote.title': 'Proposer',
+    'services.process.quote.desc':
+      'Je remets un devis détaillé avec les prestations concrètes, les livrables, le calendrier et le prix.',
+    'services.process.agreement.title': 'Accorder',
+    'services.process.agreement.desc':
+      'Vous acceptez la proposition. Si nécessaire, nous précisons ensemble vos objectifs avant de figer le périmètre.',
+    'services.process.delivery.title': 'Réaliser ensemble',
+    'services.process.delivery.desc':
+      'Je réalise la mission au contact de vos interlocuteurs et de votre équipe de développement existante.',
+    'services.process.validation.title': 'Valider et régler',
+    'services.process.validation.desc':
+      'Je remets le résultat convenu. Le paiement final intervient après sa validation selon les critères du devis.',
     'services.practical.title': 'En pratique',
     'services.practical.method': 'Méthode',
     'services.practical.method.desc':
@@ -493,7 +495,7 @@ const translations = {
     'shell.theme.dark': 'Use dark mode',
     'shell.theme.light': 'Use light mode',
 
-    'page.home': 'Froment Software | Business software development',
+    'page.home': 'Froment Software | Software audit and renovation',
     'page.clients': 'References | froment.software',
     'page.services': 'Services | froment.software',
     'page.products': 'Public projects | froment.software',
@@ -527,10 +529,10 @@ const translations = {
     'page.description.not_found':
       'Page not found. Return to the froment.software home page or services.',
     'page.description.home':
-      'Business applications, internal tools, and existing software: development, takeover, upgrades, and automation.',
+      'Audit, takeover and renovation of existing software. Complete custom business application development.',
     'page.description.clients': 'Sacha Froment’s industry experience.',
     'page.description.services':
-      'Development, maintenance, existing-application takeover and technical audits.',
+      'Audit and renovation of existing applications, or complete business software development.',
     'page.description.products': 'Public prototypes, demonstrations and websites by Sacha Froment.',
     'meta.socialImageAlt': 'Froment Software logo',
 
@@ -627,9 +629,9 @@ const translations = {
     'home.hero.title.part3a': 'legacy',
     'home.hero.title.part3b': 'renovation',
     'home.hero.kicker': 'froment.software',
-    'home.hero.title': 'Business software development and renovation.',
+    'home.hero.title': 'Business software audit and renovation.',
     'home.hero.lead':
-      'We develop web applications, desktop software and internal tools. We also take over existing applications.',
+      'We assess existing applications, then fix their gaps and modernize their environment. We also deliver complete custom software.',
     'home.hero.book': 'Book an appointment',
     'home.engage.title': 'Contact',
     'home.engage.mail': 'Email us',
@@ -638,7 +640,7 @@ const translations = {
       'Hello,\n\nI am contacting you about the following need:\n\n- Context:\n- Main problem:\n- Known deadline:\n\nThank you.',
 
     'home.timeline.title': 'Public projects',
-    'home.expertise.title': 'Our expertise',
+    'home.expertise.title': 'Renovation levers',
     'home.expertise.development.title': 'Software development',
     'home.expertise.development.beforeGo':
       'Design of fast, reliable software suited to its users, with AI integrated into the development process.',
@@ -679,18 +681,15 @@ const translations = {
     'home.timeline.empty.desc':
       'This selection is limited to work that can be viewed without confidential context.',
 
-    'home.services.title': 'Scope of work',
-    'home.services.cta': 'View services',
+    'home.services.title': 'Two offers, one delivered result',
+    'home.services.cta': 'Explore the offers and process',
     'home.services.book': 'Book a slot',
-    'home.services.applications.title': 'Business applications',
-    'home.services.applications.desc':
-      'Web or desktop applications designed for a specific need, set of users and working environment.',
-    'home.services.internal.title': 'Internal tools',
-    'home.services.internal.desc':
-      'Interfaces, commands and automation that replace manual or scattered operations.',
-    'home.services.renovation.title': 'Existing-software renovation',
+    'home.services.renovation.title': 'Audit and renovation',
     'home.services.renovation.desc':
-      'Takeover, upgrades and gradual cleanup of applications already in service.',
+      'Assess projects, their environment and their gaps, then fix and modernize existing software with measurable results.',
+    'home.services.development.title': 'All-inclusive development',
+    'home.services.development.desc':
+      'Design, build, test and deploy a business application or internal tool that is ready to use.',
     'home.products.title': 'Products',
     'home.products.note':
       'No standard software is currently sold; current needs are handled as custom engagements.',
@@ -719,23 +718,23 @@ const translations = {
     'products.status.public': 'Public space',
 
     'services.kicker': 'Services',
-    'services.title': 'Application development and renovation.',
+    'services.title': 'Audit what exists. Renovate what matters.',
     'services.lead':
-      'Tool development, maintenance of existing applications and focused technical audits.',
+      'One primary offer to understand and improve your software. A second offer to deliver a new product from start to finish.',
     'services.quote': 'Request a quote',
     'services.book': 'Book a meeting',
-    'services.list.title': 'Scope of work',
+    'services.list.title': 'Two types of service',
     'services.quote.subject': 'Quote request',
     'services.quote.body':
       'Hello,\n\nWe would like to discuss the following project:\n\n- Context:\n- Need:\n- Scope:\n- Technical constraints:\n- Desired deadline:\n- Approximate budget:\n\nThank you.',
-    'services.entry.applications.title': 'Business applications',
-    'services.entry.applications.desc':
-      'Design, development and deployment of web or desktop applications.',
-    'services.entry.internal.title': 'Internal tools',
-    'services.entry.internal.desc':
-      'Interfaces, commands, scripts and automation that replace manual operations.',
-    'services.entry.renovation.title': 'Existing-application renovation',
-    'services.entry.renovation.desc': 'Code analysis, fixes, upgrades and gradual refactoring.',
+    'services.offer.primary': 'Primary offer',
+    'services.offer.second': 'Second offer',
+    'services.offer.renovation.title': 'Existing-software audit and renovation',
+    'services.offer.renovation.desc':
+      'I assess your projects, environment, risks and gaps. I then propose concrete improvements: fixes, upgrades, automation, performance work and gradual refactoring.',
+    'services.offer.development.title': 'All-inclusive development',
+    'services.offer.development.desc':
+      'I handle the design, implementation, testing and deployment of a business application or internal tool.',
     'services.examples.title': 'Concrete examples',
     'services.examples.upgrades.title': 'Version upgrades',
     'services.examples.upgrades.desc':
@@ -770,18 +769,24 @@ const translations = {
       'Declare, test and reproduce on-premises or cloud deployments with NixOS, build caching and infrastructure as code through',
     'services.examples.or': 'or',
     'services.process.kicker': 'Delivery method',
-    'services.process.title': 'Engagement steps',
-    'services.process.discovery.title': 'Understand',
-    'services.process.discovery.desc':
-      'Review the context, users, existing system and constraints before proposing a direction.',
-    'services.process.scope.title': 'Scope',
-    'services.process.scope.desc':
-      'Define the useful scope, trade-offs, deliverables and validation conditions.',
-    'services.process.build.title': 'Build',
-    'services.process.build.desc': 'Deliver intermediate versions and validate each stage.',
-    'services.process.handover.title': 'Deliver',
-    'services.process.handover.desc':
-      'Go live, document decisions and prepare maintenance or takeover by another team.',
+    'services.process.title': 'Our shared process',
+    'services.process.intro':
+      'Each step produces a decision or verifiable result before work continues.',
+    'services.process.analysis.title': 'Assess',
+    'services.process.analysis.desc':
+      'I review your projects, environment, uses and gaps. I identify risks and useful improvements.',
+    'services.process.quote.title': 'Propose',
+    'services.process.quote.desc':
+      'I provide a detailed quote with concrete services, deliverables, schedule and price.',
+    'services.process.agreement.title': 'Agree',
+    'services.process.agreement.desc':
+      'You accept the proposal. If needed, we refine your objectives together before fixing the scope.',
+    'services.process.delivery.title': 'Work together',
+    'services.process.delivery.desc':
+      'I deliver the work in close contact with your stakeholders and existing development team.',
+    'services.process.validation.title': 'Approve and pay',
+    'services.process.validation.desc':
+      'I hand over the agreed result. Final payment follows approval against the quote criteria.',
     'services.practical.title': 'In practice',
     'services.practical.method': 'Method',
     'services.practical.method.desc':

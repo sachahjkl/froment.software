@@ -3,6 +3,7 @@ import { I18nService } from '../../i18n.service';
 import { AnchorLink } from '../../shared/anchor-link/anchor-link';
 import { ConcreteExamples } from '../../shared/concrete-examples/concrete-examples';
 import { Icon } from '../../shared/icon/icon';
+import { ProcessTimeline, TimelineStep } from '../../shared/process-timeline/process-timeline';
 
 type ContentEntry = {
   title: string;
@@ -12,7 +13,7 @@ type ContentEntry = {
 @Component({
   selector: 'app-services',
   standalone: true,
-  imports: [AnchorLink, ConcreteExamples, Icon],
+  imports: [AnchorLink, ConcreteExamples, Icon, ProcessTimeline],
   templateUrl: './services.component.html',
   changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './services.component.scss',
@@ -29,35 +30,35 @@ export class ServicesComponent {
 
   protected readonly services = computed<ContentEntry[]>(() => [
     {
-      title: this.i18n.t('services.entry.applications.title'),
-      description: this.i18n.t('services.entry.applications.desc'),
+      title: this.i18n.t('services.offer.renovation.title'),
+      description: this.i18n.t('services.offer.renovation.desc'),
     },
     {
-      title: this.i18n.t('services.entry.internal.title'),
-      description: this.i18n.t('services.entry.internal.desc'),
-    },
-    {
-      title: this.i18n.t('services.entry.renovation.title'),
-      description: this.i18n.t('services.entry.renovation.desc'),
+      title: this.i18n.t('services.offer.development.title'),
+      description: this.i18n.t('services.offer.development.desc'),
     },
   ]);
 
-  protected readonly process = computed<ContentEntry[]>(() => [
+  protected readonly process = computed<TimelineStep[]>(() => [
     {
-      title: this.i18n.t('services.process.discovery.title'),
-      description: this.i18n.t('services.process.discovery.desc'),
+      title: this.i18n.t('services.process.analysis.title'),
+      description: this.i18n.t('services.process.analysis.desc'),
     },
     {
-      title: this.i18n.t('services.process.scope.title'),
-      description: this.i18n.t('services.process.scope.desc'),
+      title: this.i18n.t('services.process.quote.title'),
+      description: this.i18n.t('services.process.quote.desc'),
     },
     {
-      title: this.i18n.t('services.process.build.title'),
-      description: this.i18n.t('services.process.build.desc'),
+      title: this.i18n.t('services.process.agreement.title'),
+      description: this.i18n.t('services.process.agreement.desc'),
     },
     {
-      title: this.i18n.t('services.process.handover.title'),
-      description: this.i18n.t('services.process.handover.desc'),
+      title: this.i18n.t('services.process.delivery.title'),
+      description: this.i18n.t('services.process.delivery.desc'),
+    },
+    {
+      title: this.i18n.t('services.process.validation.title'),
+      description: this.i18n.t('services.process.validation.desc'),
     },
   ]);
 }

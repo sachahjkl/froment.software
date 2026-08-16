@@ -21,8 +21,11 @@
     </h2>
   </div>
   <ol class="services-grid">
-    @for (service of services(); track service.title) {
-      <li class="service-entry">
+    @for (service of services(); track service.title; let first = $first) {
+      <li class="service-entry" [class.primary-offer]="first">
+        <span class="offer-label">{{
+          i18n.t(first ? "services.offer.primary" : "services.offer.second")
+        }}</span>
         <h3>{{ service.title }}</h3>
         <p>{{ service.description }}</p>
       </li>
@@ -43,14 +46,8 @@
       ><app-anchor-link fragment="etapes" />
     </h2>
   </div>
-  <ol class="process-list">
-    @for (step of process(); track step.title) {
-      <li>
-        <h3>{{ step.title }}</h3>
-        <p>{{ step.description }}</p>
-      </li>
-    }
-  </ol>
+  <p class="delivery-intro">{{ i18n.t("services.process.intro") }}</p>
+  <app-process-timeline [steps]="process()" />
 </section>
 
 <section class="practical page-section" aria-labelledby="modalites">
