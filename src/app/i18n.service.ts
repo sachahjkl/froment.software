@@ -194,12 +194,14 @@ const translations = {
     'home.expertise.ci':
       'Optimisation de CI existantes par suppression des tâches inutiles, parallélisation et mise en cache.',
     'home.expertise.tests':
-      'Passage de 30 à 3 minutes pour plus de 900 tests unitaires front-end, par isolation, parallélisation et mise en cache.',
+      'Mise en place de tests unitaires, d’intégration et d’architecture pour stabiliser l’existant et vérifier automatiquement le fonctionnement de l’application.',
     'home.expertise.environments':
       'Environnements de développement reproductibles et automatisés avec',
     'home.expertise.secrets.before':
       'Gestion centralisée des secrets sur site, dans le cloud ou avec une solution légère :',
     'home.expertise.secrets.after': 'Injection automatisée dans les applications avec',
+    'home.expertise.secrets.scan':
+      'Détection des secrets présents dans le code et l’historique Git avec',
     'home.expertise.ai.before':
       'Agents spécialisés pour la préparation du backlog, l’analyse en réunion et le prototypage en direct avec',
     'home.expertise.ai.after': 'Suivi des volumes, modèles et coûts avec',
@@ -347,7 +349,7 @@ const translations = {
       'Reprendre une CI existante, supprimer les tâches inutiles, paralléliser les étapes et mettre en cache les résultats réutilisables.',
     'services.examples.tests.title': 'Tests automatisés',
     'services.examples.tests.desc':
-      'Ramener plus de 900 tests unitaires front-end de 30 à 3 minutes par isolation, parallélisation et mise en cache.',
+      'Mettre en place des tests unitaires, d’intégration et d’architecture pour stabiliser l’existant et vérifier automatiquement le fonctionnement de l’application.',
     'services.examples.environments.title': 'Environnements de développement',
     'services.examples.environments.before':
       'Déclarer et automatiser des environnements reproductibles avec',
@@ -721,11 +723,12 @@ const translations = {
     'home.expertise.ci':
       'Existing CI optimization through work removal, parallel execution and caching.',
     'home.expertise.tests':
-      'Reduction from 30 to 3 minutes for more than 900 front-end unit tests through isolation, parallel execution and caching.',
+      'Unit, integration and architecture tests to stabilize existing software and automatically verify application behaviour.',
     'home.expertise.environments': 'Reproducible, automated development environments with',
     'home.expertise.secrets.before':
       'Centralized secret management on premises, in the cloud or with a lightweight solution:',
     'home.expertise.secrets.after': 'Automated injection into applications with',
+    'home.expertise.secrets.scan': 'Detection of secrets in source code and Git history with',
     'home.expertise.ai.before':
       'Specialized agents for backlog preparation, meeting analysis and live prototyping with',
     'home.expertise.ai.after': 'Usage, model and cost tracking with',
@@ -872,7 +875,7 @@ const translations = {
       'Take over an existing CI pipeline, remove unnecessary work, parallelize stages and cache reusable results.',
     'services.examples.tests.title': 'Automated tests',
     'services.examples.tests.desc':
-      'Reduce more than 900 front-end unit tests from 30 to 3 minutes through isolation, parallel execution and caching.',
+      'Add unit, integration and architecture tests to stabilize existing software and automatically verify application behaviour.',
     'services.examples.environments.title': 'Development environments',
     'services.examples.environments.before':
       'Declare and automate reproducible development environments with',
