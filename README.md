@@ -6,7 +6,7 @@ Site vitrine Angular 22 de Froment Software, pré-rendu en fichiers statiques pu
 
 - `@angular/build:application` produit le navigateur et le rendu serveur avec `outputMode: "static"`.
 - `src/app/app.routes.server.ts` applique `RenderMode.Prerender` à toutes les routes Angular.
-- `npm run build` écrit le site déployable dans `dist/froment-software/browser` : chaque route connue dispose de son `index.html`, notamment `/404`.
+- `pnpm build` écrit le site déployable dans `dist/froment-software/browser` : chaque route connue dispose de son `index.html`, notamment `/404`.
 - `src/app/app.routes.ts` porte les composants et les métadonnées de route. `src/app/app.ts` met à jour titre, description, URL canonique, robots, Open Graph et Twitter lors de la navigation.
 - Les ressources publiques (`robots.txt`, `sitemap.xml`, favicons et carte sociale) sont dans `public/`. La carte sociale déclarée dans `src/index.html` mesure 1200 × 630.
 
@@ -49,14 +49,14 @@ La route `/design` reste cachée et non indexable; ne pas l’ajouter au sitemap
 
 ## Développement local
 
-Prérequis : Node.js 22 et npm 10 (ou `nix develop`).
+Prérequis : Node.js 22 et pnpm 11.20.0, ou `nix develop`.
 
 ```bash
-npm ci
-npm start       # serveur de développement
-npm run watch   # build de développement en continu
-npm run build   # pré-rendu de production
-npm test        # tests Angular
+pnpm install --frozen-lockfile
+pnpm start       # serveur de développement
+pnpm watch       # build de développement en continu
+pnpm build       # pré-rendu de production
+pnpm test        # tests Angular
 ```
 
 Le flake construit et vérifie le site sans accès réseau pendant la compilation :

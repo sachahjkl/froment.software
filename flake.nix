@@ -28,8 +28,9 @@
               ./.editorconfig
               ./.oxfmtrc.json
               ./angular.json
-              ./package-lock.json
               ./package.json
+              ./pnpm-lock.yaml
+              ./pnpm-workspace.yaml
               ./public
               ./src
               ./tsconfig.app.json
@@ -37,20 +38,30 @@
               ./tsconfig.spec.json
             ];
           };
-          npmDeps = pkgs.fetchNpmDeps {
-            inherit src;
-            hash = "sha256-GizeMMw5zW7Uko21728QazbHTo9gU+62G14qwY7DyuA=";
+          pnpmDeps = pkgs.fetchPnpmDeps {
+            inherit pname version src;
+            pnpm = pkgs.pnpm;
+            fetcherVersion = 4;
+            hash = "sha256-g5uBqKs/VZN7+xjVOVaJKS6UBvIWae9VWRGps03vaKA=";
           };
 
-          site = pkgs.buildNpmPackage {
+          site = pkgs.stdenv.mkDerivation {
             inherit
               pname
               version
               src
-              npmDeps
+              pnpmDeps
               ;
-            nodejs = pkgs.nodejs_22;
-            npmBuildScript = "build";
+            nativeBuildInputs = [
+              pkgs.nodejs_22
+              pkgs.pnpm
+              pkgs.pnpmConfigHook
+            ];
+            buildPhase = ''
+              runHook preBuild
+              pnpm build
+              runHook postBuild
+            '';
             installPhase = ''
               runHook preInstall
               cp -r dist/froment-software/browser $out
@@ -60,16 +71,20 @@
 
           mkCheck =
             name: command:
-            pkgs.buildNpmPackage {
+            pkgs.stdenv.mkDerivation {
               inherit
                 pname
                 version
                 src
-                npmDeps
+                pnpmDeps
                 ;
               name = "${pname}-${name}";
-              nodejs = pkgs.nodejs_22;
-              dontNpmBuild = true;
+              nativeBuildInputs = [
+                pkgs.nodejs_22
+                pkgs.pnpm
+                pkgs.pnpmConfigHook
+              ];
+              dontBuild = true;
               installPhase = ''
                 runHook preInstall
                 ${command}
@@ -136,13 +151,16 @@
           checks = {
             inherit actionlint dockerImage;
             build = site;
-            format = mkCheck "format" "npm run format:check";
-            lint = mkCheck "lint" "npm run lint";
-            test = mkCheck "test" "npm test -- --watch=false";
+            format = mkCheck "format" "pnpm format:check";
+            lint = mkCheck "lint" "pnpm lint";
+            test = mkCheck "test" "pnpm test --watch=false";
           };
 
           devShells.default = pkgs.mkShell {
-            packages = [ pkgs.nodejs_22 ];
+            packages = [
+              pkgs.nodejs_22
+              pkgs.pnpm
+            ];
           };
 
           formatter = pkgs.nixfmt;

@@ -39,7 +39,7 @@ Le package racine orchestre les commandes pnpm, le formatage, les tests et les b
 
 Les versions initiales prévues sont :
 
-- pnpm `11.22.0` ;
+- pnpm `11.20.0` ;
 - Effect `4.0.0-rc.110` ;
 - `@effect/platform-node` `4.0.0-rc.110` ;
 - Drizzle ORM `0.45.2` ;
