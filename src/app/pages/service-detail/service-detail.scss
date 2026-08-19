@@ -109,7 +109,7 @@ section {
     gap: var(--space-1);
   }
 
-  .actions .btn {
+  .actions [appLinkButton] {
     width: 100%;
   }
 }

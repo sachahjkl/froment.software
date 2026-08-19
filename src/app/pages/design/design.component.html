@@ -3,7 +3,7 @@
     <h1>{{ i18n.t("design.hero.title") }}</h1>
     <p class="lead">{{ i18n.t("design.hero.lead") }}</p>
     <p class="actions">
-      <a class="btn primary" href="mailto:contact@froment.software"
+      <a appLinkButton variant="primary" href="mailto:contact@froment.software"
         ><app-icon name="mail" />{{ i18n.t("design.hero.mail") }}</a
       >
       <a href="#work">{{ i18n.t("design.hero.work") }}</a>
@@ -78,10 +78,10 @@
     <h2 id="contact-title">{{ i18n.t("design.contact.title") }}</h2>
     <p>{{ i18n.t("design.contact.copy") }}</p>
     <p class="actions">
-      <a class="btn primary" href="mailto:contact@froment.software"
+      <a appLinkButton variant="primary" href="mailto:contact@froment.software"
         ><app-icon name="mail" />contact@froment.software</a
       >
-      <a class="btn" href="https://cal.com/sachahjkl" target="_blank" rel="noreferrer"
+      <a appLinkButton href="https://cal.com/sachahjkl" target="_blank" rel="noreferrer"
         ><app-icon name="calendar" />{{ i18n.t("design.contact.book") }}</a
       >
     </p>
@@ -93,15 +93,25 @@
 
     <h3>{{ i18n.t("design.components.buttons") }}</h3>
     <p class="component-row">
-      <button class="btn" type="button">{{ i18n.t("design.components.default") }}</button>
-      <button class="btn primary" type="button">{{ i18n.t("design.components.primary") }}</button>
-      <button class="btn info" type="button">{{ i18n.t("design.components.info") }}</button>
-      <button class="btn success" type="button">{{ i18n.t("design.components.success") }}</button>
-      <button class="btn warning" type="button">{{ i18n.t("design.components.warning") }}</button>
-      <button class="btn danger" type="button">{{ i18n.t("design.components.danger") }}</button>
-      <button class="btn dark" type="button">{{ i18n.t("design.components.dark") }}</button>
-      <button class="btn link" type="button">{{ i18n.t("design.components.link_button") }}</button>
-      <button class="btn" type="button" disabled>{{ i18n.t("design.components.disabled") }}</button>
+      <button appButton type="button">{{ i18n.t("design.components.default") }}</button>
+      <button appButton variant="primary" type="button">
+        {{ i18n.t("design.components.primary") }}
+      </button>
+      <button appButton variant="info" type="button">{{ i18n.t("design.components.info") }}</button>
+      <button appButton variant="success" type="button">
+        {{ i18n.t("design.components.success") }}
+      </button>
+      <button appButton variant="warning" type="button">
+        {{ i18n.t("design.components.warning") }}
+      </button>
+      <button appButton variant="danger" type="button">
+        {{ i18n.t("design.components.danger") }}
+      </button>
+      <button appButton variant="dark" type="button">{{ i18n.t("design.components.dark") }}</button>
+      <button appButton variant="link" type="button">
+        {{ i18n.t("design.components.link_button") }}
+      </button>
+      <button appButton type="button" disabled>{{ i18n.t("design.components.disabled") }}</button>
     </p>
 
     <h3>{{ i18n.t("design.components.links") }}</h3>

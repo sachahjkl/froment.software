@@ -4,7 +4,9 @@
       <p><a routerLink="/back-office/dashboard">← Back office</a></p>
       <h1>Carte de visite</h1>
     </div>
-    <button class="btn primary" type="button" (click)="print()">Imprimer ou exporter en PDF</button>
+    <button appButton variant="primary" type="button" (click)="print()">
+      Imprimer ou exporter en PDF
+    </button>
   </header>
 
   <div class="card-sheet" aria-label="Aperçu recto-verso de la carte de visite">
@@ -74,7 +76,7 @@
           <span>Nom de la version</span>
           <input class="input" [formField]="versionForm.name" (input)="markVersionNameEdited()" />
         </label>
-        <button class="btn primary" type="submit">Enregistrer cette version</button>
+        <button appButton variant="primary" type="submit">Enregistrer cette version</button>
       </div>
 
       @if (contentForm().invalid() && contentForm().touched()) {
@@ -103,7 +105,8 @@
             <span>{{ formatDate(version.createdAt) }}</span>
           </button>
           <button
-            class="btn danger"
+            appButton
+            variant="danger"
             type="button"
             (click)="deleteVersion(version)"
             [attr.aria-label]="'Supprimer ' + version.name"

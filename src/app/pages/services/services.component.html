@@ -3,10 +3,10 @@
     <h1>{{ i18n.t("services.title") }}</h1>
     <p class="lead">{{ i18n.t("services.lead") }}</p>
     <div class="actions">
-      <a class="btn primary" [href]="quoteMailto()"
+      <a appLinkButton variant="primary" [href]="quoteMailto()"
         ><app-icon name="mail" />{{ i18n.t("services.quote") }}</a
       >
-      <a class="btn" [href]="calUrl" target="_blank" rel="noreferrer"
+      <a appLinkButton [href]="calUrl" target="_blank" rel="noreferrer"
         ><app-icon name="calendar" />{{ i18n.t("services.book") }}</a
       >
     </div>
@@ -59,10 +59,10 @@
     <li>{{ i18n.t("services.criteria.deadline") }}</li>
   </ul>
   <div class="actions practical-actions">
-    <a class="btn primary" [href]="quoteMailto()"
+    <a appLinkButton variant="primary" [href]="quoteMailto()"
       ><app-icon name="mail" />{{ i18n.t("services.quote") }}</a
     >
-    <a class="btn" [href]="calUrl" target="_blank" rel="noreferrer"
+    <a appLinkButton [href]="calUrl" target="_blank" rel="noreferrer"
       ><app-icon name="calendar" />{{ i18n.t("services.book") }}</a
     >
   </div>

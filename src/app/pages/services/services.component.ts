@@ -3,6 +3,7 @@ import { RouterLink } from '@angular/router';
 import { I18nService } from '../../i18n.service';
 import { AnchorLink } from '../../shared/anchor-link/anchor-link';
 import { Icon } from '../../shared/icon/icon';
+import { LinkButton } from '../../shared/link-button/link-button';
 
 type ContentEntry = {
   title: string;
@@ -14,7 +15,7 @@ type ContentEntry = {
 @Component({
   selector: 'app-services',
   standalone: true,
-  imports: [AnchorLink, Icon, RouterLink],
+  imports: [AnchorLink, Icon, LinkButton, RouterLink],
   templateUrl: './services.component.html',
   changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './services.component.scss',

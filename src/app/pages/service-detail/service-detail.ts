@@ -3,6 +3,7 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 import { I18nService, TranslationKey } from '../../i18n.service';
 import { AnchorLink } from '../../shared/anchor-link/anchor-link';
 import { Icon } from '../../shared/icon/icon';
+import { LinkButton } from '../../shared/link-button/link-button';
 
 type Offer = 'renovation' | 'development';
 
@@ -100,7 +101,7 @@ const detailContent: Record<Offer, DetailContent> = {
 
 @Component({
   selector: 'app-service-detail',
-  imports: [AnchorLink, Icon, RouterLink],
+  imports: [AnchorLink, Icon, LinkButton, RouterLink],
   templateUrl: './service-detail.html',
   styleUrl: './service-detail.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

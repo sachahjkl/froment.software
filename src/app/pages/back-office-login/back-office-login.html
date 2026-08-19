@@ -17,7 +17,7 @@
       @if (error()) {
       <p class="error" role="alert">Mot de passe incorrect.</p>
       }
-      <button class="btn primary" type="submit" [disabled]="pending()">
+      <button appButton variant="primary" type="submit" [disabled]="pending()">
         {{ pending() ? 'Vérification…' : 'Se connecter' }}
       </button>
     </form>

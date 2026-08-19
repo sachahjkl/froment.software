@@ -31,7 +31,7 @@ ul {
 @media (max-width: 34rem) {
   ul,
   li:not(:last-child),
-  .btn {
+  [appLinkButton] {
     width: 100%;
   }
 }

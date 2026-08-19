@@ -113,7 +113,7 @@ export type IconName =
     :host {
       display: inline-flex;
       flex: 0 0 auto;
-      color: var(--color-muted);
+      color: var(--icon-color, var(--color-muted));
     }
     svg {
       width: 1.25rem;

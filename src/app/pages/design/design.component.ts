@@ -1,11 +1,13 @@
 import { Component, inject, ChangeDetectionStrategy } from '@angular/core';
 import { I18nService } from '../../i18n.service';
+import { Button } from '../../shared/button/button';
 import { Icon } from '../../shared/icon/icon';
+import { LinkButton } from '../../shared/link-button/link-button';
 
 @Component({
   selector: 'app-design',
   standalone: true,
-  imports: [Icon],
+  imports: [Button, Icon, LinkButton],
   templateUrl: './design.component.html',
   changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './design.component.scss',

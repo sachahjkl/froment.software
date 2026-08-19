@@ -1,12 +1,12 @@
 <section class="dashboard" aria-labelledby="dashboard-title">
   <header>
     <h1 id="dashboard-title">Back office</h1>
-    <button class="btn" type="button" (click)="signOut()">Se déconnecter</button>
+    <button appButton type="button" (click)="signOut()">Se déconnecter</button>
   </header>
   <ul class="document-list">
     <li>
       <h2>Carte de visite</h2>
-      <a class="btn primary" routerLink="/back-office/business-card">Ouvrir</a>
+      <a appLinkButton variant="primary" routerLink="/back-office/business-card">Ouvrir</a>
     </li>
   </ul>
 </section>

@@ -71,7 +71,9 @@ describe('BusinessCard', () => {
     element = fixture.nativeElement as HTMLElement;
     expect(element.querySelector('.version-select')?.textContent).toContain('Version locale');
 
-    element.querySelector<HTMLButtonElement>('.version-list .btn.danger')!.click();
+    element
+      .querySelector<HTMLButtonElement>('.version-list [appButton][data-button-variant="danger"]')!
+      .click();
     fixture.detectChanges();
     expect(element.querySelector('.version-select')).toBeNull();
     expect(localStorage.getItem('froment-software.business-card.versions')).toBe('[]');

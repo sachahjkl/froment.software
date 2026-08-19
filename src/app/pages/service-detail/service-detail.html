@@ -4,10 +4,10 @@
     <h1>{{ i18n.t(content.titleKey) }}</h1>
     <p class="lead">{{ i18n.t(content.leadKey) }}</p>
     <div class="actions">
-      <a class="btn primary" [href]="quoteMailto()"
+      <a appLinkButton variant="primary" [href]="quoteMailto()"
         ><app-icon name="mail" />{{ i18n.t("services.quote") }}</a
       >
-      <a class="btn" [href]="calUrl" target="_blank" rel="noreferrer"
+      <a appLinkButton [href]="calUrl" target="_blank" rel="noreferrer"
         ><app-icon name="calendar" />{{ i18n.t("services.book") }}</a
       >
     </div>
@@ -58,10 +58,10 @@
       <span>{{ i18n.t("serviceDetail.contact.title") }}</span><app-anchor-link fragment="contact" />
     </h2>
     <div class="actions">
-      <a class="btn primary" [href]="quoteMailto()"
+      <a appLinkButton variant="primary" [href]="quoteMailto()"
         ><app-icon name="mail" />{{ i18n.t("services.quote") }}</a
       >
-      <a class="btn" [href]="calUrl" target="_blank" rel="noreferrer"
+      <a appLinkButton [href]="calUrl" target="_blank" rel="noreferrer"
         ><app-icon name="calendar" />{{ i18n.t("services.book") }}</a
       >
     </div>

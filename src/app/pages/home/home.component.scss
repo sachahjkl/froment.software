@@ -95,8 +95,8 @@ section > p {
     grid-template-columns: 1fr;
     gap: var(--space-1);
   }
-  .intro-actions .btn,
-  .contact-links .btn {
+  .intro-actions [appLinkButton],
+  .contact-links [appLinkButton] {
     width: 100%;
   }
 }

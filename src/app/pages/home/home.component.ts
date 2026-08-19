@@ -4,6 +4,7 @@ import { I18nService } from '../../i18n.service';
 import { AnchorLink } from '../../shared/anchor-link/anchor-link';
 import { ConcreteExamples } from '../../shared/concrete-examples/concrete-examples';
 import { Icon } from '../../shared/icon/icon';
+import { LinkButton } from '../../shared/link-button/link-button';
 import { ProcessTimeline, TimelineStep } from '../../shared/process-timeline/process-timeline';
 
 type PublicEntry = {
@@ -21,7 +22,7 @@ type ContentEntry = {
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [AnchorLink, ConcreteExamples, Icon, ProcessTimeline, RouterLink],
+  imports: [AnchorLink, ConcreteExamples, Icon, LinkButton, ProcessTimeline, RouterLink],
   templateUrl: './home.component.html',
   changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './home.component.scss',

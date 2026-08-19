@@ -2,11 +2,12 @@ import { Component, computed, inject, ChangeDetectionStrategy } from '@angular/c
 import { I18nService, TranslationKey } from '../../i18n.service';
 import { AnchorLink } from '../../shared/anchor-link/anchor-link';
 import { Icon } from '../../shared/icon/icon';
+import { LinkButton } from '../../shared/link-button/link-button';
 
 @Component({
   selector: 'app-about',
   standalone: true,
-  imports: [AnchorLink, Icon],
+  imports: [AnchorLink, Icon, LinkButton],
   templateUrl: './about.component.html',
   changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './about.component.scss',

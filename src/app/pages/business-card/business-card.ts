@@ -2,6 +2,7 @@ import { isPlatformBrowser } from '@angular/common';
 import { ChangeDetectionStrategy, Component, inject, PLATFORM_ID, signal } from '@angular/core';
 import { email, form, FormField, required } from '@angular/forms/signals';
 import { RouterLink } from '@angular/router';
+import { Button } from '../../shared/button/button';
 
 interface BusinessCardContent {
   name: string;
@@ -29,7 +30,7 @@ const defaultContent: BusinessCardContent = {
 
 @Component({
   selector: 'app-business-card',
-  imports: [FormField, RouterLink],
+  imports: [Button, FormField, RouterLink],
   templateUrl: './business-card.html',
   styleUrl: './business-card.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

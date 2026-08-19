@@ -232,93 +232,6 @@ code {
   letter-spacing: var(--tracking-label);
 }
 
-.btn {
-  --button-color: var(--color-button-default);
-  --button-highlight: var(--color-button-default-highlight);
-  --button-border: #ccc;
-  --button-border-bottom: #b3b3b3;
-  --button-text: var(--color-button-on-default);
-  appearance: none;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--space-2);
-  min-height: var(--control-height);
-  padding: 0.4rem 0.75rem;
-  border: 1px solid var(--button-border);
-  border-bottom-color: var(--button-border-bottom);
-  border-radius: var(--radius-md);
-  background-color: color-mix(in srgb, var(--button-color) 60%, var(--button-highlight));
-  background-image: linear-gradient(to bottom, var(--button-color), var(--button-highlight));
-  background-repeat: repeat-x;
-  color: var(--button-text);
-  font-size: var(--text-sm);
-  font-weight: 600;
-  line-height: 1.2;
-  text-decoration: none;
-  text-shadow: 0 1px 1px rgb(255 255 255 / 0.75);
-  box-shadow:
-    inset 0 1px 0 rgb(255 255 255 / 0.2),
-    0 1px 2px rgb(0 0 0 / 0.05);
-  cursor: pointer;
-}
-.btn:visited {
-  color: var(--button-text);
-}
-.btn app-icon {
-  color: currentColor;
-}
-.btn.primary {
-  --button-color: var(--color-button-primary);
-  --button-highlight: var(--color-button-primary-highlight);
-  --button-text: var(--color-button-on-color);
-}
-.btn.info {
-  --button-color: var(--color-button-info);
-  --button-highlight: var(--color-button-info-highlight);
-  --button-text: var(--color-button-on-color);
-}
-.btn.success {
-  --button-color: var(--color-button-success);
-  --button-highlight: var(--color-button-success-highlight);
-  --button-text: var(--color-button-on-color);
-}
-.btn.warning {
-  --button-color: var(--color-button-warning);
-  --button-highlight: var(--color-button-warning-highlight);
-  --button-text: var(--color-button-on-color);
-}
-.btn.danger {
-  --button-color: var(--color-button-danger);
-  --button-highlight: var(--color-button-danger-highlight);
-  --button-text: var(--color-button-on-color);
-}
-.btn.dark {
-  --button-color: var(--color-button-dark);
-  --button-highlight: var(--color-button-dark-highlight);
-  --button-text: var(--color-button-on-color);
-}
-.btn:is(.primary, .info, .success, .warning, .danger, .dark) {
-  --button-border: rgb(0 0 0 / 0.1);
-  --button-border-bottom: rgb(0 0 0 / 0.25);
-  text-shadow: 0 -1px 0 rgb(0 0 0 / 0.25);
-}
-.btn.link {
-  border-color: transparent;
-  background: transparent;
-  color: var(--color-link);
-  text-decoration: underline;
-  text-shadow: none;
-  box-shadow: none;
-}
-.btn:active:not(:disabled, [aria-disabled="true"]) {
-  background-color: var(--button-highlight);
-  background-image: none;
-  box-shadow:
-    inset 0 2px 4px rgb(0 0 0 / 0.15),
-    0 1px 2px rgb(0 0 0 / 0.05);
-}
-
 .input,
 .select {
   appearance: none;
@@ -390,19 +303,6 @@ code {
   gap: var(--space-4);
 }
 
-@media (hover: hover) and (pointer: fine) {
-  .btn:hover:not(:disabled, [aria-disabled="true"]) {
-    background-color: var(--button-highlight);
-    background-position: 0 -15px;
-    color: var(--button-text);
-  }
-  .btn.link:hover:not(:disabled, [aria-disabled="true"]) {
-    border-color: transparent;
-    background: transparent;
-    color: color-mix(in oklab, var(--color-link), black 24%);
-  }
-}
-
 @media (max-width: 40rem) {
   :root {
     --page-x: var(--space-4);
@@ -446,7 +346,6 @@ code {
   :where(a, button, input, select, textarea, summary):focus-visible {
     outline-color: Highlight;
   }
-  .btn,
   .ds-panel,
   .badge {
     box-shadow: none;

@@ -112,7 +112,7 @@ details p {
 }
 
 @media (max-width: 32rem) {
-  .actions .btn {
+  .actions :is([appButton], [appLinkButton]) {
     width: 100%;
   }
 }

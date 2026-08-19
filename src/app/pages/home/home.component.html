@@ -3,10 +3,10 @@
     <h1>{{ i18n.t("home.hero.title") }}</h1>
     <p class="lead">{{ i18n.t("home.hero.lead") }}</p>
     <p class="intro-actions">
-      <a class="btn primary" [href]="contactMailto()"
+      <a appLinkButton variant="primary" [href]="contactMailto()"
         ><app-icon name="mail" />{{ i18n.t("home.engage.mail") }}</a
       >
-      <a class="btn" [href]="calUrl" target="_blank" rel="noreferrer"
+      <a appLinkButton [href]="calUrl" target="_blank" rel="noreferrer"
         ><app-icon name="calendar" />{{ i18n.t("home.hero.book") }}</a
       >
     </p>
@@ -92,10 +92,10 @@
       ><app-anchor-link fragment="contact" />
     </h2>
     <p class="contact-links">
-      <a class="btn primary" [href]="contactMailto()"
+      <a appLinkButton variant="primary" [href]="contactMailto()"
         ><app-icon name="mail" />{{ i18n.t("home.engage.mail") }}</a
       >
-      <a class="btn" [href]="calUrl" target="_blank" rel="noreferrer"
+      <a appLinkButton [href]="calUrl" target="_blank" rel="noreferrer"
         ><app-icon name="calendar" />{{ i18n.t("home.hero.book") }}</a
       >
     </p>
