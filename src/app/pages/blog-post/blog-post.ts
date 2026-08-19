@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, effect, inject } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { Blog, RenderedBlogPost } from '../../blog/blog';
 import { I18nService } from '../../i18n.service';
@@ -15,11 +16,14 @@ import { LocalizedDatePipe } from '../../shared/localized-date/localized-date-pi
 export class BlogPost {
   private readonly blog = inject(Blog);
   private readonly route = inject(ActivatedRoute);
+  private readonly params = toSignal(this.route.paramMap, {
+    initialValue: this.route.snapshot.paramMap,
+  });
   private readonly metadata = inject(PageMetadata);
   protected readonly i18n = inject(I18nService);
   protected readonly post = computed<RenderedBlogPost | undefined>(() => {
     this.i18n.language();
-    return this.blog.find(this.route.snapshot.paramMap.get('slug') ?? '');
+    return this.blog.find(this.params().get('slug') ?? '');
   });
 
   constructor() {
