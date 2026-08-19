@@ -38,7 +38,7 @@
             inherit pname version src;
             pnpm = pkgs.pnpm;
             fetcherVersion = 4;
-            hash = "sha256-g5uBqKs/VZN7+xjVOVaJKS6UBvIWae9VWRGps03vaKA=";
+            hash = "sha256-p7+GqSv88R29ZZQldGuWFaDk4QK8gmrrwBfWI/6fTaE=";
           };
 
           site = pkgs.stdenv.mkDerivation {

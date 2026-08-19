@@ -5,6 +5,9 @@ Workspace pnpm de Froment Software. Le site Angular 22 est pré-rendu puis servi
 ## Architecture
 
 - `packages/web` contient l'application Angular.
+- `packages/api` contient le serveur Effect.
+- `packages/contracts` contient les schémas Effect partagés.
+- `packages/documents` contient les composants Angular des documents.
 - `@angular/build:application` produit le navigateur et le rendu serveur avec `outputMode: "static"`.
 - `packages/web/src/app/app.routes.server.ts` configure le rendu de chaque route Angular.
 - `pnpm build` écrit le site dans `packages/web/dist/froment-software/browser`.

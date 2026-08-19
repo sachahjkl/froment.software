@@ -1,0 +1,21 @@
+{
+  "name": "@froment/documents",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "build": "ngc --noEmit -p tsconfig.json"
+  },
+  "dependencies": {
+    "@angular/common": "catalog:",
+    "@angular/core": "catalog:",
+    "@angular/platform-server": "catalog:"
+  },
+  "devDependencies": {
+    "@angular/compiler-cli": "catalog:",
+    "typescript": "catalog:"
+  }
+}
