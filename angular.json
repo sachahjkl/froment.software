@@ -57,7 +57,7 @@
                 "input": "public"
               }
             ],
-            "styles": ["src/brand.css", "src/styles.scss"]
+            "styles": ["src/tokens.css", "src/styles.scss"]
           },
           "configurations": {
             "production": {
