@@ -8,7 +8,7 @@ import {
   type ClientSummaryValue,
   type UlidValue,
 } from '@froment/contracts';
-import { Context, Effect, Layer, Schema } from 'effect';
+import { Clock, Context, Effect, Layer, Schema } from 'effect';
 import { randomBytes } from 'node:crypto';
 import { ulid } from 'ulid';
 
@@ -53,7 +53,7 @@ export const ClientsLive = Layer.effect(
         const rows = database.sqlite
           .prepare(
             `select clients.id, users.display_name as displayName,
-                    clients.archived_at is not null as archived
+                    users.disabled_at is not null as archived
              from clients
              join users on users.id = clients.id
              order by users.display_name collate nocase, clients.id`,
@@ -66,7 +66,7 @@ export const ClientsLive = Layer.effect(
 
     const create = Effect.fn('Clients.create')(function* (request: ClientCreateRequestValue) {
       const id = ulid();
-      const now = Date.now();
+      const now = yield* Clock.currentTimeMillis;
       const displayName = request.displayName.trim();
       yield* Effect.try({
         try: () =>
@@ -88,7 +88,7 @@ export const ClientsLive = Layer.effect(
     });
 
     const archive = Effect.fn('Clients.archive')(function* (clientId: UlidValue) {
-      const now = Date.now();
+      const now = yield* Clock.currentTimeMillis;
       return yield* Effect.try({
         try: () =>
           database.sqlite
@@ -96,7 +96,7 @@ export const ClientsLive = Layer.effect(
               const row = database.sqlite
                 .prepare(
                   `select clients.id, users.display_name as displayName,
-                          clients.archived_at is not null as archived
+                          users.disabled_at is not null as archived
                    from clients join users on users.id = clients.id
                    where clients.id = ?`,
                 )
@@ -106,10 +106,8 @@ export const ClientsLive = Layer.effect(
               }
               const client = Schema.decodeUnknownSync(ClientRecord)(row);
               database.sqlite
-                .prepare(
-                  'update clients set archived_at = coalesce(archived_at, ?), updated_at = ? where id = ?',
-                )
-                .run(now, now, clientId);
+                .prepare('update clients set updated_at = ? where id = ?')
+                .run(now, clientId);
               database.sqlite
                 .prepare(
                   'update users set disabled_at = coalesce(disabled_at, ?), updated_at = ? where id = ?',
@@ -138,21 +136,25 @@ export const ClientsLive = Layer.effect(
     const createAccess = Effect.fn('Clients.createAccess')(function* (clientId: UlidValue) {
       const accessIdentifier = randomBytes(32).toString('base64url');
       const credentialId = ulid();
-      const now = Date.now();
+      const now = yield* Clock.currentTimeMillis;
       yield* Effect.try({
         try: () =>
           database.sqlite
             .transaction(() => {
               const row = database.sqlite
-                .prepare('select archived_at as archivedAt from clients where id = ?')
+                .prepare(
+                  `select users.disabled_at as disabledAt
+                   from clients join users on users.id = clients.id
+                   where clients.id = ?`,
+                )
                 .get(clientId);
               if (row === undefined) {
                 throw new ClientNotFound({ code: 'client.not_found' });
               }
               const client = Schema.decodeUnknownSync(
-                Schema.Struct({ archivedAt: Schema.NullOr(Schema.Number) }),
+                Schema.Struct({ disabledAt: Schema.NullOr(Schema.Number) }),
               )(row);
-              if (client.archivedAt !== null) {
+              if (client.disabledAt !== null) {
                 throw new ClientArchived({ code: 'client.archived' });
               }
               database.sqlite

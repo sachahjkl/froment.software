@@ -46,7 +46,6 @@ export const clients = sqliteTable(
       .references(() => users.id, { onDelete: 'cascade' }),
     createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull(),
     updatedAt: integer('updated_at', { mode: 'timestamp_ms' }).notNull(),
-    archivedAt: integer('archived_at', { mode: 'timestamp_ms' }),
   },
   (table) => [
     check(
@@ -54,10 +53,6 @@ export const clients = sqliteTable(
       sql`${table.id} is not null and length(${table.id}) = 26 and ${table.id} not glob '*[^0-9A-HJKMNP-TV-Z]*' and substr(${table.id}, 1, 1) between '0' and '7'`,
     ),
     check('clients_timestamps_check', sql`${table.updatedAt} >= ${table.createdAt}`),
-    check(
-      'clients_archived_at_check',
-      sql`${table.archivedAt} is null or ${table.archivedAt} >= ${table.createdAt}`,
-    ),
   ],
 );
 

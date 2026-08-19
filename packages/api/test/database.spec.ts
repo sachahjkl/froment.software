@@ -163,6 +163,18 @@ describe('Database', () => {
     await cp(join(sourceFolder, clientMigration), join(migrationsFolder, clientMigration), {
       recursive: true,
     });
+    await Effect.runPromise(
+      Database.use(() => Effect.void).pipe(Effect.provide(makeDatabaseLayer(options))),
+    );
+    const migratedSqlite = new Sqlite(filename);
+    migratedSqlite.prepare('update clients set archived_at = ? where id = ?').run(3, clientId);
+    migratedSqlite.close();
+    const clientStateMigration = '20260819195929_nervous_maximus';
+    await cp(
+      join(sourceFolder, clientStateMigration),
+      join(migrationsFolder, clientStateMigration),
+      { recursive: true },
+    );
     const state = await Effect.runPromise(
       Database.use(({ sqlite: connection }) =>
         Effect.sync(() => ({
@@ -175,11 +187,24 @@ describe('Database', () => {
             )
             .pluck()
             .get(roleId),
+          archivedAt: connection
+            .prepare('select disabled_at from users where id = ?')
+            .pluck()
+            .get(clientId),
+          clientColumns: connection
+            .prepare('pragma table_info(clients)')
+            .all()
+            .map(
+              (column) =>
+                Schema.decodeUnknownSync(Schema.Struct({ name: Schema.String }))(column).name,
+            ),
         })),
       ).pipe(Effect.provide(makeDatabaseLayer(options))),
     );
 
     expect(state.client).toEqual({ id: clientId, createdAt: 1, updatedAt: 2 });
     expect(state.permission).toBe('client.access.create');
+    expect(state.archivedAt).toBe(3);
+    expect(state.clientColumns).not.toContain('archived_at');
   });
 });

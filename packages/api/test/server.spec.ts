@@ -6,7 +6,7 @@ import { createServer } from 'node:net';
 
 import { Api } from '@froment/contracts';
 import Sqlite from 'better-sqlite3';
-import { Effect } from 'effect';
+import { Effect, Schema } from 'effect';
 import { FetchHttpClient, HttpClient, HttpClientRequest } from 'effect/unstable/http';
 import { HttpApiClient } from 'effect/unstable/httpapi';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
@@ -246,6 +246,15 @@ describe('HTTP server', () => {
     expect(loginRejected.status).toBe(401);
     expect(concurrentValidLogin.status).toBe(200);
 
+    const firstLimitedIdentifierAttempt = await fetch(`${baseUrl}/api/auth/login`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        accessIdentifier: 'CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC',
+        mode: 'administrator',
+      }),
+    });
+    expect([401, 429]).toContain(firstLimitedIdentifierAttempt.status);
     const rateLimited = await fetch(`${baseUrl}/api/auth/login`, {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
@@ -273,7 +282,7 @@ describe('HTTP server', () => {
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({ accessIdentifier: result.accessIdentifier, mode: 'client' }),
     });
-    expect(modeMismatch.status).toBe(429);
+    expect(modeMismatch.status).toBe(401);
 
     for (let attempt = 0; attempt < 11; attempt += 1) {
       const extraLogin = await fetch(`${baseUrl}/api/auth/login`, {
@@ -401,6 +410,30 @@ describe('HTTP server', () => {
       clientId: client.id,
       accessIdentifier: expect.stringMatching(/^[A-Za-z0-9_-]{43}$/),
     });
+
+    const orphanSqlite = new Sqlite(databaseFilename);
+    const clientDates = Schema.decodeUnknownSync(
+      Schema.Struct({ createdAt: Schema.Number, updatedAt: Schema.Number }),
+    )(
+      orphanSqlite
+        .prepare(
+          'select created_at as createdAt, updated_at as updatedAt from clients where id = ?',
+        )
+        .get(client.id),
+    );
+    orphanSqlite.prepare('delete from clients where id = ?').run(client.id);
+    orphanSqlite.close();
+    const orphanLogin = await fetch(`${baseUrl}/api/auth/login`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ accessIdentifier: access.accessIdentifier, mode: 'client' }),
+    });
+    expect(orphanLogin.status).toBe(401);
+    const restoredSqlite = new Sqlite(databaseFilename);
+    restoredSqlite
+      .prepare('insert into clients (id, created_at, updated_at) values (?, ?, ?)')
+      .run(client.id, clientDates.createdAt, clientDates.updatedAt);
+    restoredSqlite.close();
 
     const clientLogin = await fetch(`${baseUrl}/api/auth/login`, {
       method: 'POST',

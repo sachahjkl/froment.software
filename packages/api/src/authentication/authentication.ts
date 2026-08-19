@@ -116,10 +116,12 @@ export const AuthenticationLive = Layer.effect(
               `select access_credentials.id, access_credentials.user_id as userId
                    from access_credentials
                    join users on users.id = access_credentials.user_id
+                   left join clients on clients.id = users.id
                    where access_credentials.secret_hmac = ?
                       and access_credentials.revoked_at is null
                       and users.disabled_at is null
                       and users.kind = ?
+                      and (users.kind <> 'client' or clients.id is not null)
                     limit 1`,
             )
             .get(accessHmac, mode);
@@ -144,6 +146,11 @@ export const AuthenticationLive = Layer.effect(
       }
 
       const now = yield* Clock.currentTimeMillis;
+      yield* Ref.set(yield* Cache.get(addressFailures, clientAddress), initialLoginFailureState);
+      yield* Ref.set(
+        yield* Cache.get(identifierFailures, accessHmac.toString('hex')),
+        initialLoginFailureState,
+      );
       const session = generateSession(credential.userId, config.sessionHmacKey, now);
       yield* Effect.try({
         try: () =>
