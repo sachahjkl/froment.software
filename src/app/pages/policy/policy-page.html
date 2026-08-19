@@ -1,0 +1,37 @@
+<section class="policy-page" [attr.aria-labelledby]="policy.id + '-title'">
+  <header>
+    <h1 [id]="policy.id + '-title'">{{ i18n.t(policy.titleKey) }}</h1>
+    <p class="policy-lead">{{ i18n.t(policy.leadKey) }}</p>
+    <time class="policy-date" datetime="2026-07-13">{{ i18n.t(policy.updatedKey) }}</time>
+  </header>
+  <div class="policy-layout">
+    <aside class="policy-summary" [attr.aria-labelledby]="policy.id + '-summary-title'">
+      <h2 [id]="policy.id + '-summary-title'">{{ i18n.t(policy.summaryTitleKey) }}</h2>
+      <p>{{ i18n.t(policy.summaryContentKey) }}</p>
+    </aside>
+    <div class="policy-content">
+      @for (section of policy.sections; track section.id) {
+      <section
+        class="policy-section"
+        [attr.aria-labelledby]="policy.id + '-' + section.id + '-title'"
+      >
+        <h2 [id]="policy.id + '-' + section.id + '-title'">{{ i18n.t(section.titleKey) }}</h2>
+        @if (section.contentKey) {
+        <p>{{ i18n.t(section.contentKey) }}</p>
+        } @if (section.links) { @if (section.linkNavigation) {
+        <nav class="policy-links" [attr.aria-label]="i18n.t(section.titleKey)">
+          @for (link of section.links; track link.route ?? link.href) {
+          <a [routerLink]="link.route">{{ label(link) }}</a> }
+        </nav>
+        } @else {
+        <p class="policy-links">
+          @for (link of section.links; track link.route ?? link.href) { @if (link.route) {
+          <a [routerLink]="link.route">{{ label(link) }}</a> } @else {
+          <a [href]="link.href">{{ label(link) }}</a> } }
+        </p>
+        } }
+      </section>
+      }
+    </div>
+  </div>
+</section>

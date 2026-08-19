@@ -5,9 +5,7 @@ import { ServicesComponent } from './pages/services/services.component';
 import { DesignComponent } from './pages/design/design.component';
 import { ToolsComponent } from './pages/tools/tools.component';
 import { AboutComponent } from './pages/about/about.component';
-import { LegalComponent } from './pages/legal/legal.component';
-import { PrivacyComponent } from './pages/privacy/privacy.component';
-import { CookiesComponent } from './pages/cookies/cookies.component';
+import { policies, PolicyPage } from './pages/policy/policy-page';
 import { Blog } from './pages/blog/blog';
 import { BlogPost } from './pages/blog-post/blog-post';
 import { BackOfficeLogin } from './pages/back-office-login/back-office-login';
@@ -109,18 +107,30 @@ export const routes: Routes = [
   },
   {
     path: 'legal',
-    component: LegalComponent,
-    data: { titleKey: 'page.legal', descriptionKey: 'page.description.legal' },
+    component: PolicyPage,
+    data: {
+      policy: policies.legal,
+      titleKey: 'page.legal',
+      descriptionKey: 'page.description.legal',
+    },
   },
   {
     path: 'privacy',
-    component: PrivacyComponent,
-    data: { titleKey: 'page.privacy', descriptionKey: 'page.description.privacy' },
+    component: PolicyPage,
+    data: {
+      policy: policies.privacy,
+      titleKey: 'page.privacy',
+      descriptionKey: 'page.description.privacy',
+    },
   },
   {
     path: 'cookies',
-    component: CookiesComponent,
-    data: { titleKey: 'page.cookies', descriptionKey: 'page.description.cookies' },
+    component: PolicyPage,
+    data: {
+      policy: policies.cookies,
+      titleKey: 'page.cookies',
+      descriptionKey: 'page.description.cookies',
+    },
   },
   {
     path: '404',
