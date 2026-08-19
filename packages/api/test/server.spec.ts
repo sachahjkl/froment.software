@@ -11,6 +11,18 @@ import { FetchHttpClient, HttpClient, HttpClientRequest } from 'effect/unstable/
 import { HttpApiClient } from 'effect/unstable/httpapi';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
+const deploymentMetadata = {
+  commit: '6c9757782e249d4db6ffb804349b7da620494565',
+  packages: [
+    { name: '@froment/api', version: '0.0.0' },
+    { name: '@froment/contracts', version: '0.0.0' },
+    { name: '@froment/documents', version: '0.0.0' },
+    { name: '@froment/l10n', version: '0.0.0' },
+    { name: '@froment/web', version: '0.0.0' },
+    { name: 'froment-software', version: '0.0.0' },
+  ],
+};
+
 const reservePort = () =>
   new Promise<number>((resolve, reject) => {
     const server = createServer();
@@ -65,6 +77,7 @@ describe('HTTP server', () => {
         BOOTSTRAP_PASSWORD_SHA512:
           'ee509509a3a15f6a7224fdf24525275f2cfc9802d369266eb5797ad12cfcbaaba9e0a13673063908cc41de82c35db7e16871f3185ecdbf104b67402e95e5b5f9',
         DATABASE_PATH: databaseFilename,
+        DEPLOYMENT_METADATA: JSON.stringify(deploymentMetadata),
         MIGRATIONS_ROOT: join(import.meta.dirname, '..', 'drizzle'),
         PORT: String(port),
         STATIC_ROOT: staticRoot,
@@ -93,6 +106,15 @@ describe('HTTP server', () => {
       }).pipe(Effect.provide(FetchHttpClient.layer)),
     );
     expect(status).toEqual({ status: 'ok' });
+  });
+
+  it('returns exact deployment metadata without a build date', async () => {
+    const response = await fetch(`${baseUrl}/api/version`);
+    expect(response.headers.get('cache-control')).toBe('no-store');
+    const metadata = await response.json();
+    expect(metadata).toEqual(deploymentMetadata);
+    expect(metadata).not.toHaveProperty('builtAt');
+    expect(metadata).not.toHaveProperty('date');
   });
 
   it('creates the initial administrator and session once', async () => {

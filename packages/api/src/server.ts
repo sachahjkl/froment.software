@@ -15,6 +15,7 @@ import { Bootstrap } from './bootstrap/bootstrap.js';
 import { Authentication } from './authentication/authentication.js';
 import { Clients } from './clients/clients.js';
 import { Database } from './database/database.js';
+import { Deployment } from './deployment/deployment.js';
 
 const sessionCookie = HttpApiSecurity.apiKey({
   key: '__Host-froment-session',
@@ -62,6 +63,13 @@ const ApiHandlers = HttpApiBuilder.group(Api, 'system', (handlers) =>
           const database = yield* Database;
           yield* Effect.sync(() => database.sqlite.prepare('select 1').get());
           return { status: 'ok' as const };
+        }),
+      )
+      .handle(
+        'version',
+        Effect.fn('version')(function* () {
+          yield* setPrivateResponseHeaders;
+          return (yield* Deployment).metadata;
         }),
       )
       .handle(

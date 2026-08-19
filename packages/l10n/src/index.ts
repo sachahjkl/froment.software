@@ -12,6 +12,7 @@ export const translations = {
     'nav.legal': 'Mentions légales',
     'nav.privacy': 'Confidentialité',
     'nav.cookies': 'Cookies',
+    'nav.version': 'Version',
     'nav.blog': 'Blog',
     'brand.home': 'froment.software accueil',
     'nav.primary': 'Navigation principale',
@@ -48,6 +49,8 @@ export const translations = {
       'Données techniques, stockage local et contacts liés à la confidentialité sur froment.software.',
 
     'page.cookies': 'Cookies et stockage local | froment.software',
+    'page.version': 'Version | froment.software',
+    'page.description.version': 'Versions des packages et commit Git du déploiement.',
     'page.description.cookies':
       'Cookies, préférence de langue et contrôle du stockage local utilisé par froment.software.',
     'page.not_found': 'Page introuvable | froment.software',
@@ -84,6 +87,8 @@ export const translations = {
     'backOffice.clients.title': 'Clients',
     'backOffice.clients.back': 'Retour au back office',
     'backOffice.clients.displayName': 'Nom du client',
+    'backOffice.clients.displayNameError':
+      'Saisissez un nom de client de 120 caractères au maximum.',
     'backOffice.clients.create': 'Créer le client',
     'backOffice.clients.creating': 'Création…',
     'backOffice.clients.loading': 'Chargement des clients…',
@@ -123,6 +128,15 @@ export const translations = {
     'bootstrap.copy': 'Copier l’identifiant de connexion',
     'bootstrap.copied': 'Identifiant de connexion copié',
     'bootstrap.login': 'Continuer vers la connexion',
+    'clipboard.error': 'Le navigateur n’a pas pu copier le texte.',
+    'version.title': 'Version déployée',
+    'version.intro':
+      'Cette page identifie précisément le code et les packages utilisés par ce déploiement.',
+    'version.commit': 'Commit Git',
+    'version.package': 'Package',
+    'version.packageVersion': 'Version',
+    'version.loading': 'Chargement des informations de version…',
+    'version.error': 'Le serveur ne peut pas charger les informations de version.',
     'page.business_card': 'Carte de visite',
     'page.description.business_card': 'Aperçu imprimable de la carte de visite Froment Software.',
     'page.description.not_found': 'La page demandée n’existe pas ou a changé d’adresse.',
@@ -534,10 +548,10 @@ export const translations = {
     'legal.title': 'Mentions légales',
     'legal.lead':
       'Les informations essentielles sur l’édition, l’hébergement et l’utilisation des contenus de froment.software.',
-    'legal.updated': 'Mis à jour le 13 juillet 2026',
+    'legal.updated': 'Mis à jour le 19 août 2026',
     'legal.summary.title': 'En bref',
     'legal.summary.content':
-      'froment.software présente l’activité et les services de conseil en ingénierie logicielle de Sacha FROMENT. Aucun achat ni compte utilisateur n’est proposé sur ce site.',
+      'froment.software présente l’activité et les services de conseil en ingénierie logicielle de Sacha FROMENT. Son espace privé fournit des comptes aux clients et aux administrateurs.',
     'legal.publisher.title': 'Édition du site',
     'legal.publisher.content':
       'Le site froment.software est édité et maintenu par Sacha FROMENT. Les demandes administratives ou juridiques peuvent être adressées par e-mail.',
@@ -563,10 +577,10 @@ export const translations = {
     'privacy.title': 'Politique de confidentialité',
     'privacy.lead':
       'Ce que ce site traite automatiquement, ce qu’il conserve dans votre navigateur et comment poser une question.',
-    'privacy.updated': 'Mis à jour le 13 juillet 2026',
+    'privacy.updated': 'Mis à jour le 19 août 2026',
     'privacy.summary.title': 'À retenir',
     'privacy.summary.content':
-      'Le site n’intègre ni formulaire de contact, ni outil publicitaire, ni mesure d’audience. Le serveur peut toutefois journaliser les requêtes techniques, et le navigateur conserve le choix de langue dans son stockage local.',
+      'Le site n’intègre ni outil publicitaire ni mesure d’audience. Le serveur peut journaliser les requêtes techniques. Le navigateur conserve la langue et, après connexion, deux cookies strictement nécessaires.',
     'privacy.who.title': 'Responsable du site',
     'privacy.who.content':
       'Sacha FROMENT édite froment.software et répond aux demandes relatives aux données traitées par ce site.',
@@ -579,6 +593,9 @@ export const translations = {
     'privacy.storage.title': 'Préférence de langue',
     'privacy.storage.content':
       'Le site enregistre la langue choisie dans le stockage local du navigateur sous la clé « froment.software.language », avec la valeur « fr » ou « en ». Ce réglage persiste jusqu’à sa modification ou sa suppression depuis le navigateur. Il ne s’agit ni d’un cookie ni d’une session.',
+    'privacy.session.title': 'Espace privé',
+    'privacy.session.content':
+      'Après une connexion, le serveur crée un cookie de session et un cookie de protection CSRF. Ils servent uniquement à authentifier le compte et à protéger les opérations. La session expire après 30 minutes d’inactivité et au plus tard après 24 heures.',
     'privacy.external.title': 'E-mail et services externes',
     'privacy.external.content':
       'Les liens de contact ouvrent votre logiciel de messagerie ; aucun message n’est envoyé par le site lui-même. Si vous suivez un lien vers un autre domaine, ce service applique ses propres règles de traitement.',
@@ -594,14 +611,14 @@ export const translations = {
     'cookies.kicker': 'Stockage du navigateur',
     'cookies.title': 'Cookies et stockage local',
     'cookies.lead':
-      'Le site ne dépose pas de cookie. Il mémorise uniquement la langue d’affichage dans le stockage local du navigateur.',
-    'cookies.updated': 'Mis à jour le 13 juillet 2026',
+      'Le site public mémorise uniquement la langue. L’espace privé utilise deux cookies strictement nécessaires après une connexion.',
+    'cookies.updated': 'Mis à jour le 19 août 2026',
     'cookies.summary.title': 'Situation actuelle',
     'cookies.summary.content':
-      'Aucun cookie de session, de préférence, de mesure d’audience ou de publicité n’est créé par l’application froment.software.',
+      'L’application ne crée aucun cookie de mesure d’audience ou de publicité. Les cookies « __Host-froment-session » et « __Host-froment-csrf » protègent l’espace privé.',
     'cookies.what.title': 'Différence entre cookie et stockage local',
     'cookies.what.content':
-      'Un cookie peut être envoyé automatiquement au serveur avec une requête. Le stockage local reste dans le navigateur et n’est pas transmis automatiquement. froment.software utilise uniquement ce second mécanisme pour la langue.',
+      'Un cookie peut être envoyé automatiquement au serveur avec une requête. Le stockage local reste dans le navigateur. froment.software utilise le stockage local pour la langue et les cookies uniquement pour l’espace privé.',
     'cookies.why.title': 'Réglage enregistré',
     'cookies.why.content':
       'La clé « froment.software.language » contient « fr » ou « en ». En l’absence de valeur valide, le site choisit le français si la langue du navigateur commence par « fr », et l’anglais dans les autres cas, puis mémorise ce choix localement.',
@@ -624,6 +641,7 @@ export const translations = {
     'nav.legal': 'Legal notice',
     'nav.privacy': 'Privacy policy',
     'nav.cookies': 'Cookies',
+    'nav.version': 'Version',
     'nav.blog': 'Blog',
     'brand.home': 'froment.software home',
     'nav.primary': 'Primary navigation',
@@ -660,6 +678,8 @@ export const translations = {
       'Technical request data, local storage and privacy contacts for froment.software.',
 
     'page.cookies': 'Cookies and local storage | froment.software',
+    'page.version': 'Version | froment.software',
+    'page.description.version': 'Package versions and Git commit for this deployment.',
     'page.description.cookies':
       'Cookies, language preference and local-storage controls used by froment.software.',
     'page.not_found': 'Page not found | froment.software',
@@ -695,6 +715,7 @@ export const translations = {
     'backOffice.clients.title': 'Clients',
     'backOffice.clients.back': 'Back to the back office',
     'backOffice.clients.displayName': 'Client name',
+    'backOffice.clients.displayNameError': 'Enter a client name with no more than 120 characters.',
     'backOffice.clients.create': 'Create client',
     'backOffice.clients.creating': 'Creating…',
     'backOffice.clients.loading': 'Loading clients…',
@@ -733,6 +754,14 @@ export const translations = {
     'bootstrap.copy': 'Copy sign-in identifier',
     'bootstrap.copied': 'Sign-in identifier copied',
     'bootstrap.login': 'Continue to sign in',
+    'clipboard.error': 'The browser could not copy the text.',
+    'version.title': 'Deployed version',
+    'version.intro': 'This page identifies the exact code and packages used by this deployment.',
+    'version.commit': 'Git commit',
+    'version.package': 'Package',
+    'version.packageVersion': 'Version',
+    'version.loading': 'Loading version information…',
+    'version.error': 'The server cannot load version information.',
     'page.business_card': 'Business card',
     'page.description.business_card': 'Printable preview of the Froment Software business card.',
     'page.description.not_found':
@@ -1140,10 +1169,10 @@ export const translations = {
     'legal.title': 'Legal notice',
     'legal.lead':
       'Essential information about the publishing, hosting and use of froment.software content.',
-    'legal.updated': 'Updated 13 July 2026',
+    'legal.updated': 'Updated 19 August 2026',
     'legal.summary.title': 'At a glance',
     'legal.summary.content':
-      'froment.software presents Sacha FROMENT’s software-engineering consultancy work and services. This site does not offer purchases or user accounts.',
+      'froment.software presents Sacha FROMENT’s software-engineering consultancy work and services. Its private area provides accounts for clients and administrators.',
     'legal.publisher.title': 'Site publisher',
     'legal.publisher.content':
       'froment.software is published and maintained by Sacha FROMENT. Administrative or legal requests can be sent by email.',
@@ -1168,10 +1197,10 @@ export const translations = {
     'privacy.title': 'Privacy policy',
     'privacy.lead':
       'What this site processes automatically, what it keeps in your browser and how to ask a question.',
-    'privacy.updated': 'Updated 13 July 2026',
+    'privacy.updated': 'Updated 19 August 2026',
     'privacy.summary.title': 'Key points',
     'privacy.summary.content':
-      'The site has no contact form, advertising tool or audience analytics. The server may still log technical requests, and the browser stores the language choice in local storage.',
+      'The site has no advertising tool or audience analytics. The server may log technical requests. The browser stores the language and, after sign-in, two strictly necessary cookies.',
     'privacy.who.title': 'Site operator',
     'privacy.who.content':
       'Sacha FROMENT publishes froment.software and handles requests about data processed by this site.',
@@ -1184,6 +1213,9 @@ export const translations = {
     'privacy.storage.title': 'Language preference',
     'privacy.storage.content':
       'The site stores the selected language in the browser’s local storage under the key “froment.software.language”, with the value “fr” or “en”. This setting persists until it is changed or cleared in the browser. It is neither a cookie nor a session.',
+    'privacy.session.title': 'Private area',
+    'privacy.session.content':
+      'After sign-in, the server creates a session cookie and a CSRF protection cookie. They only authenticate the account and protect operations. The session expires after 30 minutes of inactivity and no later than 24 hours.',
     'privacy.external.title': 'Email and external services',
     'privacy.external.content':
       'Contact links open your email application; the site itself does not send a message. If you follow a link to another domain, that service applies its own data-handling rules.',
@@ -1199,14 +1231,14 @@ export const translations = {
     'cookies.kicker': 'Browser storage',
     'cookies.title': 'Cookies and local storage',
     'cookies.lead':
-      'The site does not set cookies. It stores only the display language in the browser’s local storage.',
-    'cookies.updated': 'Updated 13 July 2026',
+      'The public site only stores the display language. The private area uses two strictly necessary cookies after sign-in.',
+    'cookies.updated': 'Updated 19 August 2026',
     'cookies.summary.title': 'Current behaviour',
     'cookies.summary.content':
-      'The froment.software application creates no session, preference, audience analytics or advertising cookie.',
+      'The application creates no audience analytics or advertising cookie. The “__Host-froment-session” and “__Host-froment-csrf” cookies protect the private area.',
     'cookies.what.title': 'Cookies and local storage are different',
     'cookies.what.content':
-      'A cookie may be sent to the server automatically with a request. Local storage remains in the browser and is not transmitted automatically. froment.software uses only the latter for language.',
+      'A cookie may be sent to the server automatically with a request. Local storage remains in the browser. froment.software uses local storage for language and cookies only for the private area.',
     'cookies.why.title': 'Stored setting',
     'cookies.why.content':
       'The key “froment.software.language” contains “fr” or “en”. If no valid value exists, the site selects French when the browser language starts with “fr”, and English otherwise, then stores that choice locally.',
@@ -1235,10 +1267,25 @@ export function translate(language: Language, key: TranslationKey): string {
   return translations[language][key];
 }
 
-export function formatTranslation(
+type TranslationParameter<Value extends string> =
+  Value extends `${string}{${infer Parameter}}${infer Rest}`
+    ? Parameter | TranslationParameter<Rest>
+    : never;
+
+export type ParameterizedTranslationKey = {
+  [Key in TranslationKey]: TranslationParameter<(typeof translations)['fr'][Key]> extends never
+    ? never
+    : Key;
+}[TranslationKey];
+
+export type TranslationParameters<Key extends ParameterizedTranslationKey> = Readonly<
+  Record<TranslationParameter<(typeof translations)['fr'][Key]>, string | number>
+>;
+
+export function formatTranslation<Key extends ParameterizedTranslationKey>(
   language: Language,
-  key: TranslationKey,
-  params: Readonly<Record<string, string | number>>,
+  key: Key,
+  params: TranslationParameters<Key>,
 ): string {
   let value: string = translate(language, key);
   for (const [param, replacement] of Object.entries(params)) {

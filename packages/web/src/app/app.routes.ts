@@ -182,6 +182,11 @@ export const routes: Routes = [
     },
   },
   {
+    path: 'version',
+    loadComponent: () => import('./pages/version/version').then((module) => module.Version),
+    data: { titleKey: 'page.version', descriptionKey: 'page.description.version' },
+  },
+  {
     path: '404',
     loadComponent: () =>
       import('./pages/not-found/not-found.component').then((module) => module.NotFoundComponent),

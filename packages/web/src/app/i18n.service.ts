@@ -6,6 +6,8 @@ import {
   languages,
   translate,
   type Language,
+  type ParameterizedTranslationKey,
+  type TranslationParameters,
   type TranslationKey,
 } from '@froment/l10n';
 
@@ -37,7 +39,10 @@ export class I18nService {
     return translate(this.language(), key);
   }
 
-  tf(key: TranslationKey, params: Readonly<Record<string, string | number>>): string {
+  tf<Key extends ParameterizedTranslationKey>(
+    key: Key,
+    params: TranslationParameters<Key>,
+  ): string {
     return formatTranslation(this.language(), key, params);
   }
 

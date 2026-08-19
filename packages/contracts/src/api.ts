@@ -28,10 +28,14 @@ import {
   ClientSummary,
 } from './clients.js';
 import { Ulid } from './identifiers.js';
+import { DeploymentMetadata } from './version.js';
 
 export class SystemApi extends HttpApiGroup.make('system', { topLevel: true }).add(
   HttpApiEndpoint.get('health', '/api/health', {
     success: HealthStatus,
+  }),
+  HttpApiEndpoint.get('version', '/api/version', {
+    success: DeploymentMetadata,
   }),
   HttpApiEndpoint.get('bootstrapStatus', '/api/bootstrap', {
     success: BootstrapStatus,

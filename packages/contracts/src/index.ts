@@ -1,4 +1,10 @@
 export { HealthStatus, type HealthStatus as HealthStatusValue } from './status.js';
+export {
+  DeploymentMetadata,
+  type DeploymentMetadata as DeploymentMetadataValue,
+  GitCommit,
+  PackageVersion,
+} from './version.js';
 export { Ulid, type Ulid as UlidValue } from './identifiers.js';
 export { PermissionCode, type PermissionCode as PermissionCodeValue } from './permissions.js';
 export {

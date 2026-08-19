@@ -14,6 +14,13 @@ describe('localization', () => {
     );
   });
 
+  it('requires the parameters declared by the translation key', () => {
+    // @ts-expect-error The client parameter is required.
+    formatTranslation('en', 'backOffice.clients.accessReady', {});
+    // @ts-expect-error A translation without parameters cannot be formatted.
+    formatTranslation('en', 'nav.home', {});
+  });
+
   it('validates supported languages', () => {
     expect(isSupportedLanguage('fr')).toBe(true);
     expect(isSupportedLanguage('de')).toBe(false);

@@ -7,7 +7,7 @@
   };
 
   outputs =
-    { nixpkgs, flake-utils, ... }:
+    { self, nixpkgs, flake-utils, ... }:
     flake-utils.lib.eachSystem
       [
         "x86_64-linux"
@@ -19,6 +19,20 @@
           pkgs = import nixpkgs { inherit system; };
           lib = pkgs.lib;
           packageJson = builtins.fromJSON (builtins.readFile ./package.json);
+          packageDirectories = builtins.attrNames (
+            lib.filterAttrs (_name: type: type == "directory") (builtins.readDir ./packages)
+          );
+          workspacePackages = map (
+            directory: builtins.fromJSON (builtins.readFile (./packages + "/${directory}/package.json"))
+          ) packageDirectories;
+          deploymentMetadata = builtins.toJSON {
+            commit = if self ? rev then self.rev else builtins.throw "A clean Git revision is required";
+            packages = builtins.sort (left: right: left.name < right.name) (
+              map (manifest: {
+                inherit (manifest) name version;
+              }) ([ packageJson ] ++ workspacePackages)
+            );
+          };
           inherit (packageJson) version;
           pname = packageJson.name;
           runtimeNode = pkgs.nodejs-slim_22;
@@ -72,6 +86,7 @@
               makeWrapper ${runtimeNode}/bin/node $out/bin/${pname} \
                 --add-flags $out/lib/froment-software/server.cjs \
                 --set-default DATABASE_PATH data/froment.sqlite \
+                --set DEPLOYMENT_METADATA ${lib.escapeShellArg deploymentMetadata} \
                 --set MIGRATIONS_ROOT $out/share/froment-software/drizzle \
                 --set STATIC_ROOT $out/share/froment-software/web \
                 --set-default PORT 3000

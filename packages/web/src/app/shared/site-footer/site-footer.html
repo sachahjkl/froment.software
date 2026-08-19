@@ -1,6 +1,6 @@
 <footer class="footer">
   <div class="footer-inner">
-    <p><strong>froment.software</strong> © {{ currentYear }}</p>
+    <p>{{ i18n.tf('footer.rights', { year: currentYear }) }}</p>
     <p><a href="mailto:contact@froment.software">contact@froment.software</a></p>
     <nav class="footer-legal" [attr.aria-label]="i18n.t('shell.legal_nav')">
       <a
@@ -8,7 +8,7 @@
         [queryParams]="{ mode: 'admin' }"
         routerLinkActive="active"
         ariaCurrentWhenActive="page"
-        >Back office</a
+        >{{ i18n.t('backOffice.title') }}</a
       >
       <a routerLink="/legal" routerLinkActive="active" ariaCurrentWhenActive="page"
         >{{ i18n.t('nav.legal') }}</a
@@ -18,6 +18,9 @@
       >
       <a routerLink="/cookies" routerLinkActive="active" ariaCurrentWhenActive="page"
         >{{ i18n.t('nav.cookies') }}</a
+      >
+      <a routerLink="/version" routerLinkActive="active" ariaCurrentWhenActive="page"
+        >{{ i18n.t('nav.version') }}</a
       >
     </nav>
   </div>
