@@ -22,7 +22,12 @@ export class Theme {
 
   private detect(): ThemeName {
     const window = this.document.defaultView;
-    const storedTheme = window?.localStorage.getItem(storageKey);
+    let storedTheme: string | null = null;
+    try {
+      storedTheme = window?.localStorage.getItem(storageKey) ?? null;
+    } catch {
+      // Use the system preference when storage is unavailable.
+    }
     if (storedTheme === 'light' || storedTheme === 'dark') {
       return storedTheme;
     }
@@ -35,7 +40,11 @@ export class Theme {
     this.document.documentElement.dataset['theme'] = theme;
     this.meta.updateTag({ name: 'theme-color', content: theme === 'dark' ? '#17171f' : '#f3f2f6' });
     if (store) {
-      this.document.defaultView?.localStorage.setItem(storageKey, theme);
+      try {
+        this.document.defaultView?.localStorage.setItem(storageKey, theme);
+      } catch {
+        // Keep the in-memory theme when storage is unavailable.
+      }
     }
   }
 }
