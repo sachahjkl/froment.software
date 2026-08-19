@@ -7,6 +7,8 @@ export {
   type AuthenticationFailureCode,
   AuthenticationRejected,
   AuthenticationRateLimited,
+  LoginMode,
+  type LoginMode as LoginModeValue,
   LoginRequest,
   type LoginRequest as LoginRequestValue,
   SessionRejected,

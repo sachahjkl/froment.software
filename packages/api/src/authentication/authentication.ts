@@ -3,6 +3,7 @@ import {
   AuthenticationRateLimited,
   SessionRejected,
   type AccessIdentifierValue,
+  type LoginModeValue,
 } from '@froment/contracts';
 import { Context, Effect, Layer, Schema, Semaphore } from 'effect';
 
@@ -22,6 +23,7 @@ export interface SessionTokens {
 export interface AuthenticationService {
   readonly login: (
     accessIdentifier: AccessIdentifierValue,
+    mode: LoginModeValue,
   ) => Effect.Effect<
     SessionTokens,
     AuthenticationRejected | AuthenticationRateLimited | DatabaseError
@@ -49,6 +51,7 @@ export const AuthenticationLive = Layer.effect(
 
     const login = Effect.fn('Authentication.login')(function* (
       accessIdentifier: AccessIdentifierValue,
+      mode: LoginModeValue,
     ) {
       if (!(yield* loginSemaphore.takeIfAvailable(1))) {
         return yield* new AuthenticationRateLimited({ code: 'authentication.rate_limited' });
@@ -63,12 +66,14 @@ export const AuthenticationLive = Layer.effect(
                    from access_credentials
                    join users on users.id = access_credentials.user_id
                    where access_credentials.secret_hmac = ?
-                     and access_credentials.revoked_at is null
-                     and users.disabled_at is null
-                   limit 1`,
+                      and access_credentials.revoked_at is null
+                      and users.disabled_at is null
+                      and users.kind = ?
+                    limit 1`,
               )
-              .get(accessHmac);
-            return row === undefined ? undefined : Schema.decodeUnknownSync(CredentialLookup)(row);
+              .get(accessHmac, mode);
+            if (row === undefined) return undefined;
+            return Schema.decodeUnknownSync(CredentialLookup)(row);
           },
           catch: (cause) => new DatabaseError({ operation: 'find access credential', cause }),
         });

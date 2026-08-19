@@ -3,8 +3,12 @@ import { Schema } from 'effect';
 export const AccessIdentifier = Schema.String.check(Schema.isPattern(/^[A-Za-z0-9_-]{43}$/));
 export type AccessIdentifier = typeof AccessIdentifier.Type;
 
+export const LoginMode = Schema.Literals(['client', 'administrator']);
+export type LoginMode = typeof LoginMode.Type;
+
 export const LoginRequest = Schema.Struct({
   accessIdentifier: AccessIdentifier,
+  mode: LoginMode,
 });
 export type LoginRequest = typeof LoginRequest.Type;
 

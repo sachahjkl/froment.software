@@ -2,27 +2,70 @@
   <div class="login-panel">
     <p class="eyebrow">{{ i18n.t('backOffice.kicker') }}</p>
     <h1 id="back-office-title">{{ i18n.t('backOffice.title') }}</h1>
-    <p>{{ i18n.t('backOffice.intro') }}</p>
-    <form (submit)="submit($event, accessIdentifier.value)">
-      <label for="back-office-access-identifier">{{ i18n.t('backOffice.accessIdentifier') }}</label>
-      <input
-        #accessIdentifier
-        id="back-office-access-identifier"
-        class="input"
-        type="password"
-        autocomplete="off"
-        required
-        autofocus
-      />
-      @if (error(); as errorKey) {
-      <p class="error" role="alert">{{ i18n.t(errorKey) }}</p>
-      }
-      <button appButton variant="primary" type="submit" [disabled]="pending()">
-        {{ i18n.t(pending() ? 'backOffice.pending' : 'backOffice.submit') }}
+    <div class="mode-tabs" role="tablist" [attr.aria-label]="i18n.t('backOffice.mode')">
+      <button
+        #clientTab
+        type="button"
+        role="tab"
+        id="client-tab"
+        aria-controls="login-panel"
+        [attr.aria-selected]="mode() === 'client'"
+        [tabIndex]="tabIndex('client')"
+        [disabled]="pending()"
+        (click)="selectMode('client')"
+        (keydown.arrowleft)="selectMode('administrator', administratorTab); $event.preventDefault()"
+        (keydown.arrowright)="selectMode('administrator', administratorTab); $event.preventDefault()"
+      >
+        {{ i18n.t('backOffice.mode.client') }}
       </button>
-    </form>
-    <a appLinkButton variant="link" routerLink="/back-office/bootstrap">
-      {{ i18n.t('backOffice.bootstrap') }}
-    </a>
+      <button
+        #administratorTab
+        type="button"
+        role="tab"
+        id="administrator-tab"
+        aria-controls="login-panel"
+        [attr.aria-selected]="mode() === 'administrator'"
+        [tabIndex]="tabIndex('administrator')"
+        [disabled]="pending()"
+        (click)="selectMode('administrator')"
+        (keydown.arrowleft)="selectMode('client', clientTab); $event.preventDefault()"
+        (keydown.arrowright)="selectMode('client', clientTab); $event.preventDefault()"
+      >
+        {{ i18n.t('backOffice.mode.administrator') }}
+      </button>
+    </div>
+    <div
+      id="login-panel"
+      class="login-mode-panel"
+      role="tabpanel"
+      [attr.aria-labelledby]="modeView().panelLabelId"
+    >
+      <p>{{ i18n.t(modeView().intro) }}</p>
+      <form (submit)="submit($event, accessIdentifier.value)">
+        <label for="back-office-access-identifier">
+          {{ i18n.t('backOffice.accessIdentifier') }}
+        </label>
+        <input
+          #accessIdentifier
+          id="back-office-access-identifier"
+          class="input"
+          type="password"
+          autocomplete="off"
+          required
+          autofocus
+        />
+        @if (error(); as errorKey) {
+        <p class="error" role="alert">{{ i18n.t(errorKey) }}</p>
+        }
+        <button appButton variant="primary" type="submit" [disabled]="pending()">
+          {{ i18n.t(submitLabel()) }}
+        </button>
+      </form>
+      @if (mode() === 'administrator') {
+      <a class="bootstrap-link" routerLink="/back-office/bootstrap">
+        {{ i18n.t('backOffice.bootstrap') }}
+      </a>
+      }
+    </div>
   </div>
 </section>

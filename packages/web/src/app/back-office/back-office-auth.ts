@@ -6,6 +6,7 @@ import {
   AccessIdentifier,
   AuthenticationFailure,
   type AuthenticationFailureCode,
+  type LoginModeValue,
   SessionStatus,
   type AccessIdentifierValue,
 } from '@froment/contracts';
@@ -35,7 +36,10 @@ export class BackOfficeAuth {
     }
   }
 
-  async authenticate(accessIdentifier: string): Promise<AuthenticationOutcome> {
+  async authenticate(
+    accessIdentifier: string,
+    mode: LoginModeValue,
+  ): Promise<AuthenticationOutcome> {
     if (!this.isBrowser) return { success: false, code: 'authentication.error' };
     let parsedIdentifier: AccessIdentifierValue;
     try {
@@ -46,11 +50,11 @@ export class BackOfficeAuth {
 
     try {
       const response = await firstValueFrom(
-        this.http.post<unknown>('/api/auth/login', { accessIdentifier: parsedIdentifier }),
+        this.http.post<unknown>('/api/auth/login', { accessIdentifier: parsedIdentifier, mode }),
       );
-      return Schema.decodeUnknownSync(SessionStatus)(response).authenticated
-        ? { success: true }
-        : { success: false, code: 'authentication.error' };
+      const session = Schema.decodeUnknownSync(SessionStatus)(response);
+      if (session.authenticated) return { success: true };
+      return { success: false, code: 'authentication.error' };
     } catch (error) {
       if (error instanceof HttpErrorResponse && (error.status === 401 || error.status === 429)) {
         try {

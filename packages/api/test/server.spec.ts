@@ -204,13 +204,16 @@ describe('HTTP server', () => {
     const loginRejected = fetch(`${baseUrl}/api/auth/login`, {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ accessIdentifier: 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA' }),
+      body: JSON.stringify({
+        accessIdentifier: 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA',
+        mode: 'administrator',
+      }),
     });
     await new Promise((resolve) => setTimeout(resolve, 100));
     const rateLimited = await fetch(`${baseUrl}/api/auth/login`, {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ accessIdentifier: result.accessIdentifier }),
+      body: JSON.stringify({ accessIdentifier: result.accessIdentifier, mode: 'administrator' }),
     });
     expect(rateLimited.status).toBe(429);
     expect((await loginRejected).status).toBe(401);
@@ -218,17 +221,24 @@ describe('HTTP server', () => {
     const login = await fetch(`${baseUrl}/api/auth/login`, {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ accessIdentifier: result.accessIdentifier }),
+      body: JSON.stringify({ accessIdentifier: result.accessIdentifier, mode: 'administrator' }),
     });
     expect(login.status).toBe(200);
     await expect(login.json()).resolves.toEqual({ authenticated: true });
     expect(login.headers.getSetCookie()).toHaveLength(2);
 
+    const modeMismatch = await fetch(`${baseUrl}/api/auth/login`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ accessIdentifier: result.accessIdentifier, mode: 'client' }),
+    });
+    expect(modeMismatch.status).toBe(401);
+
     for (let attempt = 0; attempt < 11; attempt += 1) {
       const extraLogin = await fetch(`${baseUrl}/api/auth/login`, {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ accessIdentifier: result.accessIdentifier }),
+        body: JSON.stringify({ accessIdentifier: result.accessIdentifier, mode: 'administrator' }),
       });
       expect(extraLogin.status).toBe(200);
     }
@@ -253,7 +263,7 @@ describe('HTTP server', () => {
       fetch(`${baseUrl}/api/auth/login`, {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ accessIdentifier: 'A'.repeat(9_000) }),
+        body: JSON.stringify({ accessIdentifier: 'A'.repeat(9_000), mode: 'administrator' }),
       }),
     ).rejects.toThrow();
     const health = await fetch(`${baseUrl}/api/health`);

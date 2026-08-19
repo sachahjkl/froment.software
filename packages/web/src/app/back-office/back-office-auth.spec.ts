@@ -16,11 +16,12 @@ describe('BackOfficeAuth', () => {
     http.expectOne('/api/auth/session').flush({ authenticated: true });
     await expect(status).resolves.toBe(true);
 
-    const login = auth.authenticate('AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA');
+    const login = auth.authenticate('AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA', 'administrator');
     const request = http.expectOne('/api/auth/login');
     expect(request.request.method).toBe('POST');
     expect(request.request.body).toEqual({
       accessIdentifier: 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA',
+      mode: 'administrator',
     });
     request.flush({ authenticated: true });
     await expect(login).resolves.toEqual({ success: true });

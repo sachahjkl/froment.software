@@ -92,7 +92,7 @@ const ApiHandlers = HttpApiBuilder.group(Api, 'system', (handlers) =>
           yield* setPrivateResponseHeaders;
           const authentication = yield* Authentication;
           const session = yield* authentication
-            .login(payload.accessIdentifier)
+            .login(payload.accessIdentifier, payload.mode)
             .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
           yield* setSessionCookies(session);
           return { authenticated: true };
