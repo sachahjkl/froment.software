@@ -1,24 +1,27 @@
 # froment.software
 
-Site vitrine Angular 22 de Froment Software, pré-rendu en fichiers statiques puis servi par nginx.
+Workspace pnpm de Froment Software. Le site Angular 22 est pré-rendu puis servi par nginx.
 
 ## Architecture
 
+- `packages/web` contient l'application Angular.
 - `@angular/build:application` produit le navigateur et le rendu serveur avec `outputMode: "static"`.
-- `src/app/app.routes.server.ts` applique `RenderMode.Prerender` à toutes les routes Angular.
-- `pnpm build` écrit le site déployable dans `dist/froment-software/browser` : chaque route connue dispose de son `index.html`, notamment `/404`.
-- `src/app/app.routes.ts` porte les composants et les métadonnées de route. `src/app/app.ts` met à jour titre, description, URL canonique, robots, Open Graph et Twitter lors de la navigation.
-- Les ressources publiques (`robots.txt`, `sitemap.xml`, favicons et carte sociale) sont dans `public/`. La carte sociale déclarée dans `src/index.html` mesure 1200 × 630.
+- `packages/web/src/app/app.routes.server.ts` configure le rendu de chaque route Angular.
+- `pnpm build` écrit le site dans `packages/web/dist/froment-software/browser`.
+- `packages/web/src/app/app.routes.ts` porte les composants et les métadonnées de route.
+- `packages/web/src/app/app.ts` met à jour les métadonnées lors de la navigation.
+- Les ressources publiques sont dans `packages/web/public`.
+- La carte sociale déclarée dans `packages/web/src/index.html` mesure 1200 × 630.
 
 ### Langues
 
 Le HTML initial et tout le pré-rendu sont en français (`<html lang="fr">`). Dans le navigateur, `I18nService` permet de passer entre français et anglais sans changer d’URL. Il restaure d’abord la préférence enregistrée dans `localStorage`, sinon choisit le français pour un navigateur francophone et l’anglais pour les autres.
 
-Cette préférence n’agit qu’après le chargement côté client : elle ne produit ni HTML anglais pré-rendu, ni URL localisée, ni version anglaise distincte pour les moteurs de recherche. Toute nouvelle copie et toute métadonnée doivent être ajoutées dans les deux dictionnaires de `src/app/i18n.service.ts`.
+Cette préférence agit seulement après le chargement côté client. Ajoutez chaque texte dans `packages/web/src/app/i18n.service.ts`.
 
 ## Routes et indexation
 
-Les routes publiques indexables sont `/`, `/about`, `/clients`, `/services`, `/tools`, `/legal`, `/privacy` et `/cookies`. Elles figurent dans `public/sitemap.xml`.
+Les routes publiques indexables figurent dans `packages/web/public/sitemap.xml`.
 
 - `/design` est un atelier de QA visuelle, volontairement absent de la navigation publique et du sitemap, avec `noindex, follow`.
 - `/404` est pré-rendue, porte `noindex, nofollow` et sert de contenu d’erreur.
@@ -28,15 +31,21 @@ Les routes publiques indexables sont `/`, `/about`, `/clients`, `/services`, `/t
 
 ### Ajouter une route
 
-1. Ajouter le composant dans `src/app/pages/` et déclarer le chemin sans slash final dans `src/app/app.routes.ts`.
-2. Fournir `titleKey` et `descriptionKey`, avec les textes français et anglais correspondants dans `i18n.service.ts`. Définir explicitement `robots` pour une route non indexable.
-3. Ajouter les accès de navigation nécessaires. Ajouter l’URL canonique à `public/sitemap.xml` seulement si la route est publique et indexable.
-4. Le wildcard de `app.routes.server.ts` pré-rend automatiquement les routes statiques déclarées; conserver cette politique sauf besoin de rendu différent explicite.
-5. Vérifier le HTML produit, les métadonnées, le changement de langue et le comportement nginx de l’URL avec et sans slash.
+1. Ajoutez le composant dans `packages/web/src/app/pages/`.
+2. Déclarez le chemin sans slash final dans `packages/web/src/app/app.routes.ts`.
+3. Fournissez `titleKey` et `descriptionKey` dans les deux langues.
+4. Définissez `robots` pour une route non indexable.
+5. Ajoutez les accès de navigation nécessaires.
+6. Si la route est indexable, ajoutez son URL dans `packages/web/public/sitemap.xml`.
+7. Vérifiez le HTML, les métadonnées, les langues et le comportement nginx.
 
 ## Système de design et QA visuelle
 
-Les tokens globaux (couleurs sémantiques, typographie, espacements, rayons, ombres, mouvement et dimensions de mise en page) ainsi que les primitives partagées vivent dans `src/styles.scss`. Les styles de coque sont dans `src/app/app.scss`; les ajustements propres à une page restent avec son composant.
+Les tokens globaux sont dans `packages/web/src/tokens.css`.
+
+Les primitives globales sont dans `packages/web/src/styles.scss`.
+
+Les styles propres à un composant restent avec ce composant.
 
 Avant de modifier une valeur ou une primitive partagée, ouvrir `/design`. Cette route rassemble fondations, composants, données, états, compositions responsives et mouvement. Après une modification, maintenir ses spécimens à jour et contrôler au minimum :
 
@@ -81,4 +90,6 @@ GitHub Actions vérifie le flake, construit le site, puis publie l’image avec 
 
 ## Contenus juridiques
 
-Les pages `/legal`, `/privacy` et `/cookies` utilisent les textes bilingues de `i18n.service.ts` et leurs templates de `src/app/pages/`. Toute modification de ces textes ou de leur date doit être précédée d’une revue du déploiement réel et de sa journalisation : les mentions sur l’hébergement, les données techniques, la conservation ou les cookies doivent décrire le comportement effectivement exploité, pas seulement le code de l’application.
+Les pages juridiques utilisent les textes de `packages/web/src/app/i18n.service.ts`.
+
+Leur contenu doit décrire le comportement réellement déployé.

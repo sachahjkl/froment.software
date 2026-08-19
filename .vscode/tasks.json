@@ -25,20 +25,8 @@
       "type": "shell",
       "label": "pnpm: test",
       "command": "pnpm test",
-      "isBackground": true,
-      "problemMatcher": {
-        "owner": "typescript",
-        "pattern": "$tsc",
-        "background": {
-          "activeOnStart": true,
-          "beginsPattern": {
-            "regexp": "Changes detected"
-          },
-          "endsPattern": {
-            "regexp": "bundle generation (complete|failed)"
-          }
-        }
-      }
+      "group": "test",
+      "problemMatcher": "$tsc"
     }
   ]
 }

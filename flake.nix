@@ -27,15 +27,11 @@
             fileset = lib.fileset.unions [
               ./.editorconfig
               ./.oxfmtrc.json
-              ./angular.json
               ./package.json
+              ./packages
               ./pnpm-lock.yaml
               ./pnpm-workspace.yaml
-              ./public
-              ./src
-              ./tsconfig.app.json
-              ./tsconfig.json
-              ./tsconfig.spec.json
+              ./tsconfig.base.json
             ];
           };
           pnpmDeps = pkgs.fetchPnpmDeps {
@@ -64,7 +60,7 @@
             '';
             installPhase = ''
               runHook preInstall
-              cp -r dist/froment-software/browser $out
+              cp -r packages/web/dist/froment-software/browser $out
               runHook postInstall
             '';
           };
@@ -153,7 +149,7 @@
             build = site;
             format = mkCheck "format" "pnpm format:check";
             lint = mkCheck "lint" "pnpm lint";
-            test = mkCheck "test" "pnpm test --watch=false";
+            test = mkCheck "test" "pnpm test";
           };
 
           devShells.default = pkgs.mkShell {
