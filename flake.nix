@@ -88,6 +88,7 @@
                 --set-default DATABASE_PATH data/froment.sqlite \
                 --set DEPLOYMENT_METADATA ${lib.escapeShellArg deploymentMetadata} \
                 --set MIGRATIONS_ROOT $out/share/froment-software/drizzle \
+                --set PUBLIC_ORIGIN https://froment.software \
                 --set STATIC_ROOT $out/share/froment-software/web \
                 --set-default PORT 3000
               runHook postInstall

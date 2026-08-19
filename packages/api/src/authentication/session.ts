@@ -6,10 +6,9 @@ import { hmac } from './authentication-config.js';
 const idleDuration = 30 * 60 * 1_000;
 const absoluteDuration = 24 * 60 * 60 * 1_000;
 
-export const generateSession = (userId: string, sessionHmacKey: Buffer) => {
+export const generateSession = (userId: string, sessionHmacKey: Buffer, now: number) => {
   const sessionToken = randomBytes(32).toString('base64url');
   const csrfToken = randomBytes(32).toString('base64url');
-  const now = Date.now();
   const expiresAt = new Date(now + absoluteDuration);
 
   return {

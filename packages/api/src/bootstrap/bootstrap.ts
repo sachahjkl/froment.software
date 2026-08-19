@@ -4,7 +4,7 @@ import {
   BootstrapUnavailable,
   type BootstrapResultValue,
 } from '@froment/contracts';
-import { Context, Effect, Layer, Semaphore } from 'effect';
+import { Clock, Context, Effect, Layer, Semaphore } from 'effect';
 import { createHash, randomBytes, timingSafeEqual } from 'node:crypto';
 import { ulid } from 'ulid';
 
@@ -57,7 +57,7 @@ export const BootstrapLive = Layer.effect(
         if (!(yield* isAvailable)) {
           return yield* new BootstrapUnavailable({ code: 'bootstrap.unavailable' });
         }
-        const now = Date.now();
+        const now = yield* Clock.currentTimeMillis;
         if (now < blockedUntil) {
           return yield* new BootstrapRateLimited({ code: 'bootstrap.rate_limited' });
         }
@@ -75,7 +75,7 @@ export const BootstrapLive = Layer.effect(
         const roleId = ulid();
         const credentialId = ulid();
         const accessIdentifier = randomBytes(32).toString('base64url');
-        const session = generateSession(administratorId, config.sessionHmacKey);
+        const session = generateSession(administratorId, config.sessionHmacKey, now);
 
         yield* Effect.try({
           try: () =>

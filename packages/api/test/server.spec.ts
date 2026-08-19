@@ -80,6 +80,7 @@ describe('HTTP server', () => {
         DEPLOYMENT_METADATA: JSON.stringify(deploymentMetadata),
         MIGRATIONS_ROOT: join(import.meta.dirname, '..', 'drizzle'),
         PORT: String(port),
+        PUBLIC_ORIGIN: baseUrl,
         STATIC_ROOT: staticRoot,
         SESSION_HMAC_KEY: 'BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB',
       },
@@ -202,6 +203,7 @@ describe('HTTP server', () => {
       method: 'POST',
       headers: {
         cookie: cookieHeader,
+        origin: baseUrl,
         'x-csrf-token': 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA',
       },
     });
@@ -209,14 +211,14 @@ describe('HTTP server', () => {
 
     const logout = await fetch(`${baseUrl}/api/auth/logout`, {
       method: 'POST',
-      headers: { cookie: cookieHeader, 'x-csrf-token': csrfToken ?? '' },
+      headers: { cookie: cookieHeader, origin: baseUrl, 'x-csrf-token': csrfToken ?? '' },
     });
     expect(logout.status).toBe(200);
     await expect(logout.json()).resolves.toEqual({ authenticated: false, mode: null });
 
     const repeatedLogout = await fetch(`${baseUrl}/api/auth/logout`, {
       method: 'POST',
-      headers: { cookie: cookieHeader, 'x-csrf-token': csrfToken ?? '' },
+      headers: { cookie: cookieHeader, origin: baseUrl, 'x-csrf-token': csrfToken ?? '' },
     });
     expect(repeatedLogout.status).toBe(200);
     expect(repeatedLogout.headers.getSetCookie()).toHaveLength(2);
@@ -226,22 +228,33 @@ describe('HTTP server', () => {
     });
     await expect(loggedOutStatus.json()).resolves.toEqual({ authenticated: false, mode: null });
 
-    const loginRejected = fetch(`${baseUrl}/api/auth/login`, {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({
-        accessIdentifier: 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA',
-        mode: 'administrator',
+    const [loginRejected, concurrentValidLogin] = await Promise.all([
+      fetch(`${baseUrl}/api/auth/login`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          accessIdentifier: 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA',
+          mode: 'administrator',
+        }),
       }),
-    });
-    await new Promise((resolve) => setTimeout(resolve, 100));
+      fetch(`${baseUrl}/api/auth/login`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ accessIdentifier: result.accessIdentifier, mode: 'administrator' }),
+      }),
+    ]);
+    expect(loginRejected.status).toBe(401);
+    expect(concurrentValidLogin.status).toBe(200);
+
     const rateLimited = await fetch(`${baseUrl}/api/auth/login`, {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ accessIdentifier: result.accessIdentifier, mode: 'administrator' }),
+      body: JSON.stringify({
+        accessIdentifier: 'CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC',
+        mode: 'administrator',
+      }),
     });
     expect(rateLimited.status).toBe(429);
-    expect((await loginRejected).status).toBe(401);
 
     const login = await fetch(`${baseUrl}/api/auth/login`, {
       method: 'POST',
@@ -260,7 +273,7 @@ describe('HTTP server', () => {
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({ accessIdentifier: result.accessIdentifier, mode: 'client' }),
     });
-    expect(modeMismatch.status).toBe(401);
+    expect(modeMismatch.status).toBe(429);
 
     for (let attempt = 0; attempt < 11; attempt += 1) {
       const extraLogin = await fetch(`${baseUrl}/api/auth/login`, {
@@ -327,6 +340,7 @@ describe('HTTP server', () => {
       headers: {
         cookie: administratorCookieHeader,
         'content-type': 'application/json',
+        origin: baseUrl,
       },
       body: JSON.stringify({ displayName: 'Acme' }),
     });
@@ -336,11 +350,24 @@ describe('HTTP server', () => {
       code: 'authentication.invalid_csrf',
     });
 
+    const foreignOrigin = await fetch(`${baseUrl}/api/clients`, {
+      method: 'POST',
+      headers: {
+        cookie: administratorCookieHeader,
+        'content-type': 'application/json',
+        origin: 'https://attacker.example',
+        'x-csrf-token': administratorCsrf,
+      },
+      body: JSON.stringify({ displayName: 'Acme' }),
+    });
+    expect(foreignOrigin.status).toBe(403);
+
     const createdResponse = await fetch(`${baseUrl}/api/clients`, {
       method: 'POST',
       headers: {
         cookie: administratorCookieHeader,
         'content-type': 'application/json',
+        origin: baseUrl,
         'x-csrf-token': administratorCsrf,
       },
       body: JSON.stringify({ displayName: '  Acme  ' }),
@@ -361,6 +388,7 @@ describe('HTTP server', () => {
       method: 'POST',
       headers: {
         cookie: administratorCookieHeader,
+        origin: baseUrl,
         'x-csrf-token': administratorCsrf,
       },
     });
@@ -397,10 +425,23 @@ describe('HTTP server', () => {
       code: 'authentication.permission_denied',
     });
 
+    const roleSqlite = new Sqlite(databaseFilename);
+    roleSqlite
+      .prepare(
+        "insert into user_roles (user_id, role_id) select ?, id from roles where name = 'administrator'",
+      )
+      .run(client.id);
+    roleSqlite.close();
+    const forbiddenAdministratorRole = await fetch(`${baseUrl}/api/clients`, {
+      headers: { cookie: clientCookieHeader },
+    });
+    expect(forbiddenAdministratorRole.status).toBe(403);
+
     const archiveResponse = await fetch(`${baseUrl}/api/clients/${client.id}/archive`, {
       method: 'POST',
       headers: {
         cookie: administratorCookieHeader,
+        origin: baseUrl,
         'x-csrf-token': administratorCsrf,
       },
     });
@@ -416,6 +457,7 @@ describe('HTTP server', () => {
       method: 'POST',
       headers: {
         cookie: administratorCookieHeader,
+        origin: baseUrl,
         'x-csrf-token': administratorCsrf,
       },
     });
@@ -445,13 +487,14 @@ describe('HTTP server', () => {
   });
 
   it('rejects oversized request bodies', async () => {
-    await expect(
-      fetch(`${baseUrl}/api/auth/login`, {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ accessIdentifier: 'A'.repeat(9_000), mode: 'administrator' }),
-      }),
-    ).rejects.toThrow();
+    const response = await fetch(`${baseUrl}/api/auth/login`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ accessIdentifier: 'A'.repeat(9_000), mode: 'administrator' }),
+    });
+    expect(response.status).toBe(413);
+    expect(response.headers.get('cache-control')).toBe('no-store');
+    await expect(response.json()).resolves.toEqual({ code: 'request.too_large' });
     const health = await fetch(`${baseUrl}/api/health`);
     expect(health.status).toBe(200);
   });
@@ -460,6 +503,16 @@ describe('HTTP server', () => {
     const response = await fetch(`${baseUrl}/`);
     expect(response.status).toBe(200);
     await expect(response.text()).resolves.toContain('Froment Software');
+  });
+
+  it('serves the application shell for refreshed back-office routes', async () => {
+    for (const path of ['/backoffice/login', '/backoffice/clients']) {
+      const response = await fetch(`${baseUrl}${path}`, {
+        headers: { accept: 'text/html' },
+      });
+      expect(response.status).toBe(200);
+      await expect(response.text()).resolves.toContain('Froment Software');
+    }
   });
 
   it('serves a prerendered route', async () => {

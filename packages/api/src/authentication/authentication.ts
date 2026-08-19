@@ -9,7 +9,7 @@ import {
   type LoginModeValue,
   type PermissionCodeValue,
 } from '@froment/contracts';
-import { Context, Effect, Layer, Schema, Semaphore } from 'effect';
+import { Cache, Clock, Context, Effect, Layer, Ref, Schema } from 'effect';
 
 import { Database, DatabaseError } from '../database/database.js';
 import { AuthenticationConfig, hmac } from './authentication-config.js';
@@ -17,6 +17,12 @@ import { generateSession, renewIdleExpiry } from './session.js';
 
 const CredentialLookup = Schema.Struct({ id: Schema.String, userId: Schema.String });
 const SessionLookup = Schema.Struct({ id: Schema.String, absoluteExpiresAt: Schema.Number });
+interface LoginFailureState {
+  readonly failures: number;
+  readonly blockedUntil: number;
+}
+
+const initialLoginFailureState: LoginFailureState = { failures: 0, blockedUntil: 0 };
 
 export interface SessionTokens {
   readonly sessionToken: string;
@@ -33,6 +39,7 @@ export interface AuthenticationService {
   readonly login: (
     accessIdentifier: AccessIdentifierValue,
     mode: LoginModeValue,
+    clientAddress: string,
   ) => Effect.Effect<
     SessionTokens,
     AuthenticationRejected | AuthenticationRateLimited | DatabaseError
@@ -43,12 +50,15 @@ export interface AuthenticationService {
   readonly authorize: (
     sessionToken: string | undefined,
     permission: PermissionCodeValue,
+    requiredMode: LoginModeValue,
   ) => Effect.Effect<Principal, AuthenticationRequired | PermissionDenied | DatabaseError>;
   readonly authorizeWrite: (
     sessionToken: string | undefined,
     csrfCookie: string | undefined,
     csrfHeader: string | undefined,
+    origin: string | undefined,
     permission: PermissionCodeValue,
+    requiredMode: LoginModeValue,
   ) => Effect.Effect<
     Principal,
     AuthenticationRequired | PermissionDenied | CsrfRejected | DatabaseError
@@ -57,6 +67,7 @@ export interface AuthenticationService {
     sessionToken: string | undefined,
     csrfCookie: string | undefined,
     csrfHeader: string | undefined,
+    origin: string | undefined,
   ) => Effect.Effect<void, SessionRejected | DatabaseError>;
 }
 
@@ -69,22 +80,40 @@ export const AuthenticationLive = Layer.effect(
   Effect.gen(function* () {
     const database = yield* Database;
     const config = yield* AuthenticationConfig;
-    const loginSemaphore = yield* Semaphore.make(1);
+    const addressFailures = yield* Cache.make({
+      capacity: 10_000,
+      timeToLive: '1 hour',
+      lookup: () => Ref.make<LoginFailureState>(initialLoginFailureState),
+    });
+    const identifierFailures = yield* Cache.make({
+      capacity: 10_000,
+      timeToLive: '1 hour',
+      lookup: () => Ref.make<LoginFailureState>(initialLoginFailureState),
+    });
+
+    const registerFailure = Effect.fn('Authentication.registerFailure')(function* (
+      state: Ref.Ref<LoginFailureState>,
+      now: number,
+    ) {
+      return yield* Ref.modify(state, (current) => {
+        if (now < current.blockedUntil) return [false, current];
+        const failures = current.failures + 1;
+        const delay = Math.min(15 * 60 * 1_000, 1_000 * 2 ** Math.min(failures - 1, 10));
+        return [true, { failures, blockedUntil: now + delay }];
+      });
+    });
 
     const login = Effect.fn('Authentication.login')(function* (
       accessIdentifier: AccessIdentifierValue,
       mode: LoginModeValue,
+      clientAddress: string,
     ) {
-      if (!(yield* loginSemaphore.takeIfAvailable(1))) {
-        return yield* new AuthenticationRateLimited({ code: 'authentication.rate_limited' });
-      }
-      return yield* Effect.gen(function* () {
-        const accessHmac = hmac(config.accessHmacKey, accessIdentifier);
-        const credential = yield* Effect.try({
-          try: () => {
-            const row = database.sqlite
-              .prepare(
-                `select access_credentials.id, access_credentials.user_id as userId
+      const accessHmac = hmac(config.accessHmacKey, accessIdentifier);
+      const credential = yield* Effect.try({
+        try: () => {
+          const row = database.sqlite
+            .prepare(
+              `select access_credentials.id, access_credentials.user_id as userId
                    from access_credentials
                    join users on users.id = access_credentials.user_id
                    where access_credentials.secret_hmac = ?
@@ -92,73 +121,81 @@ export const AuthenticationLive = Layer.effect(
                       and users.disabled_at is null
                       and users.kind = ?
                     limit 1`,
-              )
-              .get(accessHmac, mode);
-            if (row === undefined) return undefined;
-            return Schema.decodeUnknownSync(CredentialLookup)(row);
-          },
-          catch: (cause) => new DatabaseError({ operation: 'find access credential', cause }),
-        });
-        if (credential === undefined) {
-          yield* Effect.sleep('1 second');
-          return yield* new AuthenticationRejected({
-            code: 'authentication.invalid_credentials',
-          });
+            )
+            .get(accessHmac, mode);
+          if (row === undefined) return undefined;
+          return Schema.decodeUnknownSync(CredentialLookup)(row);
+        },
+        catch: (cause) => new DatabaseError({ operation: 'find access credential', cause }),
+      });
+      if (credential === undefined) {
+        const now = yield* Clock.currentTimeMillis;
+        const addressState = yield* Cache.get(addressFailures, clientAddress);
+        if (!(yield* registerFailure(addressState, now))) {
+          return yield* new AuthenticationRateLimited({ code: 'authentication.rate_limited' });
         }
+        const identifierState = yield* Cache.get(identifierFailures, accessHmac.toString('hex'));
+        if (!(yield* registerFailure(identifierState, now))) {
+          return yield* new AuthenticationRateLimited({ code: 'authentication.rate_limited' });
+        }
+        return yield* new AuthenticationRejected({
+          code: 'authentication.invalid_credentials',
+        });
+      }
 
-        const session = generateSession(credential.userId, config.sessionHmacKey);
-        yield* Effect.try({
-          try: () =>
-            database.sqlite.transaction(() => {
-              database.sqlite
-                .prepare('update access_credentials set last_used_at = ? where id = ?')
-                .run(session.now, credential.id);
-              database.sqlite
-                .prepare(
-                  `delete from sessions
+      const now = yield* Clock.currentTimeMillis;
+      const session = generateSession(credential.userId, config.sessionHmacKey, now);
+      yield* Effect.try({
+        try: () =>
+          database.sqlite.transaction(() => {
+            database.sqlite
+              .prepare('update access_credentials set last_used_at = ? where id = ?')
+              .run(session.now, credential.id);
+            database.sqlite
+              .prepare(
+                `delete from sessions
                      where user_id = ?
                        and (revoked_at is not null or idle_expires_at <= ? or absolute_expires_at <= ?)`,
-                )
-                .run(session.userId, session.now, session.now);
-              database.sqlite
-                .prepare(
-                  `delete from sessions where id in (
+              )
+              .run(session.userId, session.now, session.now);
+            database.sqlite
+              .prepare(
+                `delete from sessions where id in (
                        select id from sessions where user_id = ?
                        order by created_at desc limit -1 offset 9
                      )`,
-                )
-                .run(session.userId);
-              database.sqlite
-                .prepare(
-                  'insert into sessions (id, user_id, token_hmac, csrf_hmac, created_at, last_seen_at, idle_expires_at, absolute_expires_at) values (?, ?, ?, ?, ?, ?, ?, ?)',
-                )
-                .run(
-                  session.id,
-                  session.userId,
-                  session.tokenHmac,
-                  session.csrfHmac,
-                  session.now,
-                  session.now,
-                  session.idleExpiresAt,
-                  session.expiresAt.getTime(),
-                );
-            })(),
-          catch: (cause) => new DatabaseError({ operation: 'create login session', cause }),
-        });
+              )
+              .run(session.userId);
+            database.sqlite
+              .prepare(
+                'insert into sessions (id, user_id, token_hmac, csrf_hmac, created_at, last_seen_at, idle_expires_at, absolute_expires_at) values (?, ?, ?, ?, ?, ?, ?, ?)',
+              )
+              .run(
+                session.id,
+                session.userId,
+                session.tokenHmac,
+                session.csrfHmac,
+                session.now,
+                session.now,
+                session.idleExpiresAt,
+                session.expiresAt.getTime(),
+              );
+          })(),
+        catch: (cause) => new DatabaseError({ operation: 'create login session', cause }),
+      });
 
-        return {
-          sessionToken: session.sessionToken,
-          csrfToken: session.csrfToken,
-          expiresAt: session.expiresAt,
-        };
-      }).pipe(Effect.ensuring(loginSemaphore.release(1)));
+      return {
+        sessionToken: session.sessionToken,
+        csrfToken: session.csrfToken,
+        expiresAt: session.expiresAt,
+      };
     });
 
     const findActiveSession = Effect.fn('Authentication.findActiveSession')(function* (
       sessionToken: string | undefined,
     ) {
       if (sessionToken === undefined) return undefined;
-      const now = Date.now();
+      const now = yield* Clock.currentTimeMillis;
       const tokenHmac = hmac(config.sessionHmacKey, sessionToken);
       return yield* Effect.try({
         try: () => {
@@ -203,10 +240,14 @@ export const AuthenticationLive = Layer.effect(
     const authorize = Effect.fn('Authentication.authorize')(function* (
       sessionToken: string | undefined,
       permission: PermissionCodeValue,
+      requiredMode: LoginModeValue,
     ) {
       const principal = yield* findActiveSession(sessionToken);
       if (principal === undefined) {
         return yield* new AuthenticationRequired({ code: 'authentication.required' });
+      }
+      if (principal.mode !== requiredMode) {
+        return yield* new PermissionDenied({ code: 'authentication.permission_denied' });
       }
       const allowed = yield* Effect.try({
         try: () =>
@@ -229,14 +270,17 @@ export const AuthenticationLive = Layer.effect(
       sessionToken: string | undefined,
       csrfCookie: string | undefined,
       csrfHeader: string | undefined,
+      origin: string | undefined,
       permission: PermissionCodeValue,
+      requiredMode: LoginModeValue,
     ) {
-      const principal = yield* authorize(sessionToken, permission);
+      const principal = yield* authorize(sessionToken, permission, requiredMode);
       if (
         sessionToken === undefined ||
         csrfCookie === undefined ||
         csrfHeader === undefined ||
-        csrfCookie !== csrfHeader
+        csrfCookie !== csrfHeader ||
+        origin !== config.publicOrigin
       ) {
         return yield* new CsrfRejected({ code: 'authentication.invalid_csrf' });
       }
@@ -262,16 +306,18 @@ export const AuthenticationLive = Layer.effect(
       sessionToken: string | undefined,
       csrfCookie: string | undefined,
       csrfHeader: string | undefined,
+      origin: string | undefined,
     ) {
       if (
         sessionToken === undefined ||
         csrfCookie === undefined ||
         csrfHeader === undefined ||
-        csrfCookie !== csrfHeader
+        csrfCookie !== csrfHeader ||
+        origin !== config.publicOrigin
       ) {
         return yield* new SessionRejected({ code: 'authentication.invalid_session' });
       }
-      const now = Date.now();
+      const now = yield* Clock.currentTimeMillis;
       const tokenHmac = hmac(config.sessionHmacKey, sessionToken);
       const csrfHmac = hmac(config.sessionHmacKey, csrfHeader);
       yield* Effect.try({

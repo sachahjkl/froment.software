@@ -1,6 +1,6 @@
 import { NodeHttpServer } from '@effect/platform-node';
 import { Api } from '@froment/contracts';
-import { Config, Effect, FileSystem, Layer } from 'effect';
+import { Config, Effect, FileSystem, Layer, Option, Schema } from 'effect';
 import {
   HttpEffect,
   HttpRouter,
@@ -35,6 +35,23 @@ const setPrivateResponseHeaders = HttpEffect.appendPreResponseHandler((_request,
     }),
   ),
 );
+
+const limitRequestBody = <E, R>(
+  application: Effect.Effect<HttpServerResponse.HttpServerResponse, E, R>,
+) =>
+  Effect.gen(function* () {
+    const request = yield* HttpServerRequest.HttpServerRequest;
+    const contentLength = Schema.decodeUnknownOption(Schema.NumberFromString)(
+      request.headers['content-length'],
+    );
+    if (Option.isSome(contentLength) && contentLength.value > 8 * 1024) {
+      return yield* HttpServerResponse.json(
+        { code: 'request.too_large' },
+        { status: 413, headers: { 'cache-control': 'no-store' } },
+      ).pipe(Effect.orDie);
+    }
+    return yield* application;
+  });
 
 const setSessionCookies = (session: {
   readonly sessionToken: string;
@@ -99,8 +116,10 @@ const ApiHandlers = HttpApiBuilder.group(Api, 'system', (handlers) =>
         Effect.fn('login')(function* ({ payload }) {
           yield* setPrivateResponseHeaders;
           const authentication = yield* Authentication;
+          const request = yield* HttpServerRequest.HttpServerRequest;
+          const clientAddress = Option.getOrElse(request.remoteAddress, () => 'unknown');
           const session = yield* authentication
-            .login(payload.accessIdentifier, payload.mode)
+            .login(payload.accessIdentifier, payload.mode, clientAddress)
             .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
           yield* setSessionCookies(session);
           return { authenticated: true, mode: payload.mode };
@@ -130,6 +149,7 @@ const ApiHandlers = HttpApiBuilder.group(Api, 'system', (handlers) =>
               request.cookies['__Host-froment-session'],
               request.cookies['__Host-froment-csrf'],
               request.headers['x-csrf-token'],
+              request.headers['origin'],
             )
             .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
           const expired = { expiresAt: new Date(0), sessionToken: '', csrfToken: '' };
@@ -150,7 +170,7 @@ const ClientHandlers = HttpApiBuilder.group(Api, 'clients', (handlers) =>
           const request = yield* HttpServerRequest.HttpServerRequest;
           const authentication = yield* Authentication;
           yield* authentication
-            .authorize(request.cookies['__Host-froment-session'], 'client.read')
+            .authorize(request.cookies['__Host-froment-session'], 'client.read', 'administrator')
             .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
           const clients = yield* Clients;
           return yield* clients.list.pipe(Effect.catchTag('DatabaseError', Effect.orDie));
@@ -167,7 +187,9 @@ const ClientHandlers = HttpApiBuilder.group(Api, 'clients', (handlers) =>
               request.cookies['__Host-froment-session'],
               request.cookies['__Host-froment-csrf'],
               request.headers['x-csrf-token'],
+              request.headers['origin'],
               'client.create',
+              'administrator',
             )
             .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
           const clients = yield* Clients;
@@ -187,7 +209,9 @@ const ClientHandlers = HttpApiBuilder.group(Api, 'clients', (handlers) =>
               request.cookies['__Host-froment-session'],
               request.cookies['__Host-froment-csrf'],
               request.headers['x-csrf-token'],
+              request.headers['origin'],
               'client.archive',
+              'administrator',
             )
             .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
           const clients = yield* Clients;
@@ -207,7 +231,9 @@ const ClientHandlers = HttpApiBuilder.group(Api, 'clients', (handlers) =>
               request.cookies['__Host-froment-session'],
               request.cookies['__Host-froment-csrf'],
               request.headers['x-csrf-token'],
+              request.headers['origin'],
               'client.access.create',
+              'administrator',
             )
             .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
           const clients = yield* Clients;
@@ -231,8 +257,16 @@ export const makeServerLayer = (options: {
     root: options.staticRoot,
     index: 'index.html',
   });
+  const BackOfficeStaticRoutes = HttpStaticServer.layer({
+    root: options.staticRoot,
+    index: 'index.html',
+    prefix: '/backoffice',
+    spa: true,
+  });
 
-  return HttpRouter.serve(Layer.mergeAll(ApiRoutes, StaticRoutes)).pipe(
+  return HttpRouter.serve(Layer.mergeAll(ApiRoutes, BackOfficeStaticRoutes, StaticRoutes), {
+    middleware: limitRequestBody,
+  }).pipe(
     Layer.provide(Layer.succeed(HttpServerRequest.MaxBodySize, FileSystem.Size(8 * 1024))),
     Layer.provide(NodeHttpServer.layer(createServer, { port: options.port })),
   );
