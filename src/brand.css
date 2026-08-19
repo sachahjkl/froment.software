@@ -16,14 +16,21 @@
   --color-accent: #087f8c;
   --color-accent-strong: #075c68;
 
-  --color-button-default: #e9e9ec;
-  --color-button-primary: #064fd5;
-  --color-button-info: #2f96b4;
-  --color-button-success: #51a351;
-  --color-button-warning: #f89406;
-  --color-button-danger: #bd362f;
-  --color-button-dark: #222;
-  --color-button-on-default: var(--color-ink);
+  --color-button-default: #fff;
+  --color-button-default-highlight: #e6e6e6;
+  --color-button-primary: #0088cc;
+  --color-button-primary-highlight: #0055cc;
+  --color-button-info: #5bc0de;
+  --color-button-info-highlight: #2f96b4;
+  --color-button-success: #62c462;
+  --color-button-success-highlight: #51a351;
+  --color-button-warning: #fbb450;
+  --color-button-warning-highlight: #f89406;
+  --color-button-danger: #ee5f5b;
+  --color-button-danger-highlight: #bd362f;
+  --color-button-dark: #555;
+  --color-button-dark-highlight: #222;
+  --color-button-on-default: #333;
   --color-button-on-color: #fff;
 
   --color-info: #245269;
@@ -90,14 +97,6 @@
   --color-focus: #8abfff;
   --color-accent: #45c5cb;
   --color-accent-strong: #79d8da;
-
-  --color-button-default: #3b3a47;
-  --color-button-primary: #286ed8;
-  --color-button-info: #287d99;
-  --color-button-success: #397d42;
-  --color-button-warning: #a8660b;
-  --color-button-danger: #9d403b;
-  --color-button-dark: #111117;
 
   --color-info: #9bd7ea;
   --color-info-soft: #173541;

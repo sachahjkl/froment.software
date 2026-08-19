@@ -85,6 +85,11 @@
         },
         "serve": {
           "builder": "@angular/build:dev-server",
+          "options": {
+            "allowedHosts": [
+              "homelab.panthera-python.ts.net"
+            ]
+          },
           "configurations": {
             "production": {
               "buildTarget": "froment-software:build:production"
