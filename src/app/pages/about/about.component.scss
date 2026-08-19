@@ -29,13 +29,5 @@
   margin-top: var(--space-3);
 }
 .contact-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-3);
-}
-
-@media (max-width: 38rem) {
-  .contact-actions [appLinkButton] {
-    width: 100%;
-  }
+  margin-top: var(--space-3);
 }

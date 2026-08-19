@@ -2,14 +2,13 @@
   <header class="intro">
     <h1>{{ i18n.t("home.hero.title") }}</h1>
     <p class="lead">{{ i18n.t("home.hero.lead") }}</p>
-    <p class="intro-actions">
-      <a appLinkButton variant="primary" [href]="contactMailto()"
-        ><app-icon name="mail" />{{ i18n.t("home.engage.mail") }}</a
-      >
-      <a appLinkButton [href]="calUrl" target="_blank" rel="noreferrer"
-        ><app-icon name="calendar" />{{ i18n.t("home.hero.book") }}</a
-      >
-    </p>
+    <app-contact-actions
+      class="intro-actions"
+      [mailLabel]="i18n.t('home.engage.mail')"
+      [bookLabel]="i18n.t('home.hero.book')"
+      [subject]="i18n.t('home.engage.subject')"
+      [body]="i18n.t('home.engage.body')"
+    />
   </header>
 
   <app-concrete-examples anchor="expertise" context="expertise" />
@@ -91,13 +90,12 @@
       <span>{{ i18n.t("home.engage.title") }}</span
       ><app-anchor-link fragment="contact" />
     </h2>
-    <p class="contact-links">
-      <a appLinkButton variant="primary" [href]="contactMailto()"
-        ><app-icon name="mail" />{{ i18n.t("home.engage.mail") }}</a
-      >
-      <a appLinkButton [href]="calUrl" target="_blank" rel="noreferrer"
-        ><app-icon name="calendar" />{{ i18n.t("home.hero.book") }}</a
-      >
-    </p>
+    <app-contact-actions
+      class="contact-links"
+      [mailLabel]="i18n.t('home.engage.mail')"
+      [bookLabel]="i18n.t('home.hero.book')"
+      [subject]="i18n.t('home.engage.subject')"
+      [body]="i18n.t('home.engage.body')"
+    />
   </section>
 </article>

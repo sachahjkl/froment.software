@@ -18,10 +18,6 @@ section {
 }
 .intro-actions,
 .contact-links {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--space-3);
   margin-top: var(--space-5);
 }
 .contact-links {
@@ -94,9 +90,5 @@ section > p {
   .project-list li {
     grid-template-columns: 1fr;
     gap: var(--space-1);
-  }
-  .intro-actions [appLinkButton],
-  .contact-links [appLinkButton] {
-    width: 100%;
   }
 }

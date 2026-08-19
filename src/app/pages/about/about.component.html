@@ -24,13 +24,12 @@
       <span>{{ i18n.t("about.contact.title") }}</span
       ><app-anchor-link fragment="contact" />
     </h2>
-    <p class="contact-actions">
-      <a appLinkButton variant="primary" [href]="contactMailto()"
-        ><app-icon name="mail" />{{ i18n.t("about.contact.mail") }}</a
-      >
-      <a appLinkButton href="https://cal.com/sachahjkl" target="_blank" rel="noreferrer"
-        ><app-icon name="calendar" />{{ i18n.t("about.contact.book") }}</a
-      >
-    </p>
+    <app-contact-actions
+      class="contact-actions"
+      [mailLabel]="i18n.t('about.contact.mail')"
+      [bookLabel]="i18n.t('about.contact.book')"
+      [subject]="i18n.t('home.engage.subject')"
+      [body]="i18n.t('home.engage.body')"
+    />
   </section>
 </article>

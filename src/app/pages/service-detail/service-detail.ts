@@ -1,9 +1,8 @@
-import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { I18nService, TranslationKey } from '../../i18n.service';
 import { AnchorLink } from '../../shared/anchor-link/anchor-link';
-import { Icon } from '../../shared/icon/icon';
-import { LinkButton } from '../../shared/link-button/link-button';
+import { ContactActions } from '../../shared/contact-actions/contact-actions';
 
 type Offer = 'renovation' | 'development';
 
@@ -101,20 +100,13 @@ const detailContent: Record<Offer, DetailContent> = {
 
 @Component({
   selector: 'app-service-detail',
-  imports: [AnchorLink, Icon, LinkButton, RouterLink],
+  imports: [AnchorLink, ContactActions, RouterLink],
   templateUrl: './service-detail.html',
   styleUrl: './service-detail.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ServiceDetail {
   protected readonly i18n = inject(I18nService);
-  protected readonly calUrl = 'https://cal.com/sachahjkl';
   protected readonly content =
     detailContent[inject(ActivatedRoute).snapshot.data['offer'] as Offer];
-
-  protected readonly quoteMailto = computed(() => {
-    const subject = encodeURIComponent(this.i18n.t('services.quote.subject'));
-    const body = encodeURIComponent(this.i18n.t('services.quote.body'));
-    return `mailto:contact@froment.software?subject=${subject}&body=${body}`;
-  });
 }

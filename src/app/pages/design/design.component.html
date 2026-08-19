@@ -77,14 +77,11 @@
   <section aria-labelledby="contact-title">
     <h2 id="contact-title">{{ i18n.t("design.contact.title") }}</h2>
     <p>{{ i18n.t("design.contact.copy") }}</p>
-    <p class="actions">
-      <a appLinkButton variant="primary" href="mailto:contact@froment.software"
-        ><app-icon name="mail" />contact@froment.software</a
-      >
-      <a appLinkButton href="https://cal.com/sachahjkl" target="_blank" rel="noreferrer"
-        ><app-icon name="calendar" />{{ i18n.t("design.contact.book") }}</a
-      >
-    </p>
+    <app-contact-actions
+      class="actions"
+      mailLabel="contact@froment.software"
+      [bookLabel]="i18n.t('design.contact.book')"
+    />
   </section>
 
   <section id="components" aria-labelledby="components-title">
