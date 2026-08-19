@@ -2,7 +2,7 @@
   position: fixed;
   inset-block: 0;
   right: 0;
-  z-index: calc(var(--z-header) + 2);
+  z-index: 22;
   display: flex;
   width: min(22rem, 88vw);
   flex-direction: column;

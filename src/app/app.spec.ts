@@ -136,6 +136,7 @@ describe('App shell', () => {
     await fixture.whenStable();
     expect(trigger.getAttribute('aria-expanded')).toBe('true');
     expect(navigation.classList.contains('open')).toBe(true);
+    expect(document.body.style.overflow).toBe('hidden');
 
     const servicesLink = navigation.querySelector<HTMLAnchorElement>('a[href="/services"]')!;
     servicesLink.click();
@@ -143,6 +144,7 @@ describe('App shell', () => {
 
     expect(trigger.getAttribute('aria-expanded')).toBe('false');
     expect(navigation.classList.contains('open')).toBe(false);
+    expect(document.body.style.overflow).toBe('');
     expect(router.url).toBe('/services');
   });
 
