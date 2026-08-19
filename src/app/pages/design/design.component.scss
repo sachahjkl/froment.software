@@ -65,17 +65,16 @@ section > ol li + li {
 }
 .component-form {
   display: grid;
-  gap: var(--space-3);
+  gap: var(--space-5);
   margin-top: var(--space-3);
 }
-.component-form label {
+.control-showcase {
   display: grid;
-  gap: var(--space-1);
-  font-size: var(--text-sm);
-  font-weight: 700;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr));
+  gap: var(--space-4);
 }
-.component-form :where(.input, .select) {
-  width: min(100%, 32rem);
+.component-form :where(.input, .select, .range) {
+  width: 100%;
 }
 .component-form textarea {
   resize: vertical;

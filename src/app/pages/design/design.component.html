@@ -127,25 +127,112 @@
 
     <h3>{{ i18n.t("design.components.forms") }}</h3>
     <form class="component-form" action="#" (submit)="$event.preventDefault()">
-      <label
-        ><span>{{ i18n.t("design.components.name") }}</span
-        ><input class="input" type="text" value="Sacha Froment"
-      /></label>
-      <label
-        ><span>{{ i18n.t("design.components.email") }}</span
-        ><input class="input" type="email" placeholder="nom@example.com"
-      /></label>
-      <label
-        ><span>{{ i18n.t("design.components.subject") }}</span
-        ><select class="select">
-          <option>{{ i18n.t("design.work.build.title") }}</option>
-          <option>{{ i18n.t("design.work.renovate.title") }}</option>
-        </select></label
-      >
-      <label
-        ><span>{{ i18n.t("design.components.message") }}</span
-        ><textarea class="input" rows="4"></textarea>
+      <div class="control-showcase">
+        <label class="field">
+          <span>{{ i18n.t("design.components.name") }}</span>
+          <input class="input" type="text" value="Sacha Froment" />
+        </label>
+        <label class="field">
+          <span>{{ i18n.t("design.components.email") }}</span>
+          <input class="input" type="email" placeholder="nom@example.com" />
+        </label>
+        <label class="field">
+          <span>{{ i18n.t("design.components.password") }}</span>
+          <input class="input" type="password" value="password" />
+        </label>
+        <label class="field">
+          <span>{{ i18n.t("design.components.disabled") }}</span>
+          <input class="input" type="text" value="Readonly" disabled />
+        </label>
+        <label class="field">
+          <span>{{ i18n.t("design.components.search") }}</span>
+          <input class="input" type="search" placeholder="Angular" />
+        </label>
+        <label class="field">
+          <span>{{ i18n.t("design.components.phone") }}</span>
+          <input class="input" type="tel" value="+33 6 00 00 00 00" />
+        </label>
+        <label class="field">
+          <span>{{ i18n.t("design.components.url") }}</span>
+          <input class="input" type="url" value="https://froment.software" />
+        </label>
+        <label class="field">
+          <span>{{ i18n.t("design.components.number") }}</span>
+          <input class="input" type="number" value="8" min="0" max="20" />
+        </label>
+        <label class="field">
+          <span>{{ i18n.t("design.components.date") }}</span>
+          <input class="input" type="date" value="2026-08-19" />
+        </label>
+        <label class="field">
+          <span>{{ i18n.t("design.components.time") }}</span>
+          <input class="input" type="time" value="14:30" />
+        </label>
+        <label class="field">
+          <span>{{ i18n.t("design.components.datetime") }}</span>
+          <input class="input" type="datetime-local" value="2026-08-19T14:30" />
+        </label>
+        <label class="field">
+          <span>{{ i18n.t("design.components.month") }}</span>
+          <input class="input" type="month" value="2026-08" />
+        </label>
+        <label class="field">
+          <span>{{ i18n.t("design.components.week") }}</span>
+          <input class="input" type="week" value="2026-W34" />
+        </label>
+        <label class="field">
+          <span>{{ i18n.t("design.components.color") }}</span>
+          <input class="input" type="color" value="#1d4ed8" />
+        </label>
+        <label class="field">
+          <span>{{ i18n.t("design.components.subject") }}</span>
+          <select class="select">
+            <option>{{ i18n.t("design.work.build.title") }}</option>
+            <option>{{ i18n.t("design.work.renovate.title") }}</option>
+          </select>
+        </label>
+      </div>
+
+      <label class="field">
+        <span>{{ i18n.t("design.components.message") }}</span>
+        <textarea class="input" rows="4"></textarea>
       </label>
+
+      <label class="field">
+        <span>{{ i18n.t("design.components.file") }}</span>
+        <input class="input" type="file" />
+      </label>
+
+      <label class="field">
+        <span>{{ i18n.t("design.components.range") }}</span>
+        <input class="range" type="range" min="0" max="100" value="65" />
+      </label>
+
+      <div class="control-showcase">
+        <fieldset class="choice-group">
+          <legend>{{ i18n.t("design.components.checkboxes") }}</legend>
+          <label class="choice">
+            <input type="checkbox" checked />
+            <span>{{ i18n.t("design.components.option_one") }}</span>
+          </label>
+          <label class="choice">
+            <input type="checkbox" disabled />
+            <span>{{ i18n.t("design.components.option_two") }}</span>
+          </label>
+        </fieldset>
+
+        <fieldset class="choice-group">
+          <legend>{{ i18n.t("design.components.radios") }}</legend>
+          <label class="choice">
+            <input type="radio" name="design-radio" checked />
+            <span>{{ i18n.t("design.components.option_one") }}</span>
+          </label>
+          <label class="choice">
+            <input type="radio" name="design-radio" />
+            <span>{{ i18n.t("design.components.option_two") }}</span>
+          </label>
+        </fieldset>
+      </div>
     </form>
 
     <h3>{{ i18n.t("design.components.notices") }}</h3>
