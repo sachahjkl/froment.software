@@ -35,6 +35,7 @@ import {
   QuoteDetail,
   QuoteList,
   QuoteNotFound,
+  QuoteNotEditable,
   QuoteRevisionCreateRequest,
   QuoteVersionConflict,
 } from './quotes.js';
@@ -160,6 +161,7 @@ export class QuotesApi extends HttpApiGroup.make('quotes', { topLevel: true }).a
       RequestRateLimited.pipe(HttpApiSchema.status(429)),
       QuoteNotFound.pipe(HttpApiSchema.status(404)),
       QuoteVersionConflict.pipe(HttpApiSchema.status(409)),
+      QuoteNotEditable.pipe(HttpApiSchema.status(409)),
       ClientNotFound.pipe(HttpApiSchema.status(404)),
       ClientArchived.pipe(HttpApiSchema.status(409)),
       QuoteAmountTooLarge.pipe(HttpApiSchema.status(422)),

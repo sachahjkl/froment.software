@@ -9,19 +9,26 @@
 
   @if (loading()) {
   <p aria-live="polite">{{ i18n.t('backOffice.quotes.loading') }}</p>
-  } @else {
+  } @else if (unavailable()) { @if (error(); as errorKey) {
+  <p class="notice danger" role="alert">{{ i18n.t(errorKey) }}</p>
+  } } @else {
   <form (submit)="save($event)">
     @if (isNew()) {
     <label class="field">
       {{ i18n.t('backOffice.quote.client') }}
       <select class="input" [formField]="quoteForm.clientId">
-        <option value=""></option>
+        <option value="">{{ i18n.t('backOffice.quote.clientPlaceholder') }}</option>
         @for (client of clients(); track client.id) {
         <option [value]="client.id">{{ client.displayName }}</option>
         }
       </select>
     </label>
-    }
+    @if (clients().length === 0) {
+    <p class="notice">
+      {{ i18n.t('backOffice.quote.noClient') }}
+      <a routerLink="/backoffice/clients">{{ i18n.t('backOffice.quote.manageClients') }}</a>
+    </p>
+    } }
     <label class="field">
       {{ i18n.t('backOffice.quote.title') }}
       <input class="input" type="text" [formField]="quoteForm.title" />
@@ -34,12 +41,18 @@
     <section class="lines" aria-labelledby="lines-title">
       <div class="section-heading">
         <h2 id="lines-title">{{ i18n.t('backOffice.quote.lines') }}</h2>
-        <button appButton type="button" (click)="addLine()">
+        <button
+          appButton
+          type="button"
+          [disabled]="quoteForm.lines.length >= 20"
+          (click)="addLine()"
+        >
           {{ i18n.t('backOffice.quote.addLine') }}
         </button>
       </div>
       @for (line of quoteForm.lines; track $index) {
       <fieldset>
+        <legend>{{ i18n.tf('backOffice.quote.lineNumber', { number: $index + 1 }) }}</legend>
         <label class="field description">
           {{ i18n.t('backOffice.quote.description') }}
           <input class="input" type="text" [formField]="line.description" />
@@ -56,7 +69,13 @@
           {{ i18n.t('backOffice.quote.vatRate') }}
           <input class="input" inputmode="decimal" [formField]="line.vatRate" />
         </label>
-        <button appButton variant="danger" type="button" (click)="removeLine($index)">
+        <button
+          appButton
+          variant="danger"
+          type="button"
+          [disabled]="quoteForm.lines.length === 1"
+          (click)="removeLine($index)"
+        >
           {{ i18n.t('backOffice.quote.removeLine') }}
         </button>
       </fieldset>
@@ -65,6 +84,8 @@
 
     @if (error(); as errorKey) {
     <p class="notice danger" role="alert">{{ i18n.t(errorKey) }}</p>
+    } @else if (quoteForm().invalid() && quoteForm().touched()) {
+    <p class="notice danger" role="alert">{{ i18n.t('backOffice.quote.validation') }}</p>
     }
     <button appButton variant="primary" type="submit" [disabled]="saveDisabled()">
       @if (saving()) { {{ i18n.t('backOffice.quote.saving') }} } @else { {{
@@ -76,7 +97,7 @@
   <aside class="saved-result" aria-labelledby="totals-title">
     <h2 id="totals-title">{{ i18n.t('backOffice.quote.total') }}</h2>
     @if (totalsAreStale()) {
-    <p class="notice">{{ i18n.t('backOffice.quote.dirtyTotals') }}</p>
+    <p class="notice" role="status">{{ i18n.t('backOffice.quote.dirtyTotals') }}</p>
     }
     <dl>
       <div>
@@ -95,7 +116,10 @@
     <h2>{{ i18n.t('backOffice.quote.history') }}</h2>
     <ol>
       @for (revision of quote.revisions; track revision.id) {
-      <li><strong>#{{ revision.version }}</strong> · {{ money(revision.totalCents) }}</li>
+      <li>
+        <span><strong>#{{ revision.version }}</strong> · {{ revision.title }}</span>
+        <span>{{ date(revision.createdAt) }} · {{ money(revision.totalCents) }}</span>
+      </li>
       }
     </ol>
   </aside>

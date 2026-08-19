@@ -631,6 +631,20 @@ describe('HTTP server', () => {
       currentVersion: 2,
     });
 
+    const quoteSqlite = new Sqlite(databaseFilename);
+    quoteSqlite.prepare("update quotes set status = 'sent' where id = ?").run(quote.id);
+    quoteSqlite.close();
+    const sentRevision = await fetch(`${baseUrl}/api/quotes/${quote.id}/revisions`, {
+      method: 'POST',
+      headers: writeHeaders,
+      body: JSON.stringify({ ...revisionPayload, expectedVersion: 2 }),
+    });
+    expect(sentRevision.status).toBe(409);
+    await expect(sentRevision.json()).resolves.toMatchObject({ code: 'quote.not_editable' });
+    const draftSqlite = new Sqlite(databaseFilename);
+    draftSqlite.prepare("update quotes set status = 'draft' where id = ?").run(quote.id);
+    draftSqlite.close();
+
     const list = await fetch(`${baseUrl}/api/quotes`, { headers: { cookie } });
     expect(list.status).toBe(200);
     await expect(list.json()).resolves.toMatchObject([{ id: quote.id, version: 2 }]);

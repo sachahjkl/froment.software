@@ -3,6 +3,7 @@ import {
   ClientNotFound,
   QuoteAmountTooLarge,
   QuoteNotFound,
+  QuoteNotEditable,
   QuoteStatus,
   QuoteVersionConflict,
   Ulid,
@@ -57,9 +58,21 @@ const ClientRecord = Schema.Struct({
   displayName: Schema.NonEmptyString,
   disabledAt: Schema.NullOr(Schema.Number),
 });
+const QuoteSummaryRecord = Schema.Struct({
+  id: Ulid,
+  clientId: Ulid,
+  clientDisplayName: Schema.NonEmptyString,
+  status: QuoteStatus,
+  version: Schema.Int,
+  title: Schema.String,
+  currency: Schema.Literal('EUR'),
+  totalCents: Schema.Int,
+  updatedAt: Schema.Int,
+});
 
 type QuoteError =
   | QuoteNotFound
+  | QuoteNotEditable
   | QuoteVersionConflict
   | ClientNotFound
   | ClientArchived
@@ -155,16 +168,25 @@ export const QuotesLive = Layer.effect(
     };
 
     const list = Effect.try({
-      try: () => {
-        const quotes = Schema.decodeUnknownSync(Schema.Array(QuoteRecord))(
-          database.sqlite.prepare(`${quoteSql} order by updated_at desc, id`).all(),
-        );
-        return quotes.map((quote) => {
-          const detail = readDetail(quote.id);
-          if (detail === undefined) throw new Error('Listed quote is missing.');
-          return detail;
-        });
-      },
+      try: () =>
+        Schema.decodeUnknownSync(Schema.Array(QuoteSummaryRecord))(
+          database.sqlite
+            .prepare(
+              `select quotes.id, quotes.client_id as clientId,
+                      quote_revisions.client_display_name as clientDisplayName,
+                      quotes.status, quotes.version, quote_revisions.title,
+                      quote_revisions.currency, quote_revisions.total_cents as totalCents,
+                      quotes.updated_at as updatedAt
+               from quotes
+               join quote_revisions on quote_revisions.quote_id = quotes.id
+                 and quote_revisions.version = quotes.version
+               order by quotes.updated_at desc, quotes.id`,
+            )
+            .all(),
+        ).map((quote) => ({
+          ...quote,
+          updatedAt: DateTime.formatIso(DateTime.makeUnsafe(quote.updatedAt)),
+        })),
       catch: (cause) => new DatabaseError({ operation: 'list quotes', cause }),
     });
 
@@ -308,6 +330,9 @@ export const QuotesLive = Layer.effect(
               const rawQuote = database.sqlite.prepare(`${quoteSql} where id = ?`).get(quoteId);
               if (rawQuote === undefined) throw new QuoteNotFound({ code: 'quote.not_found' });
               const quote = Schema.decodeUnknownSync(QuoteRecord)(rawQuote);
+              if (quote.status !== 'draft') {
+                throw new QuoteNotEditable({ code: 'quote.not_editable' });
+              }
               if (quote.version !== request.expectedVersion) {
                 throw new QuoteVersionConflict({
                   code: 'quote.version_conflict',
@@ -349,6 +374,7 @@ export const QuotesLive = Layer.effect(
         catch: (cause) => {
           if (
             cause instanceof QuoteNotFound ||
+            cause instanceof QuoteNotEditable ||
             cause instanceof QuoteVersionConflict ||
             cause instanceof ClientNotFound ||
             cause instanceof ClientArchived

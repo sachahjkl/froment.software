@@ -82,19 +82,27 @@ export type QuoteRevision = typeof QuoteRevision.Type;
 export const QuoteSummary = Schema.Struct({
   id: Ulid,
   clientId: Ulid,
+  clientDisplayName: Schema.NonEmptyString,
   status: QuoteStatus,
   version: PositiveSafeInteger,
-  currentRevision: QuoteRevision,
+  title: QuoteTitle,
+  currency: Schema.Literal('EUR'),
+  totalCents: SafeInteger,
+  updatedAt: IsoUtc,
 });
 export type QuoteSummary = typeof QuoteSummary.Type;
 
 export const QuoteDetail = Schema.Struct({
-  ...QuoteSummary.fields,
+  id: Ulid,
+  clientId: Ulid,
+  status: QuoteStatus,
+  version: PositiveSafeInteger,
+  currentRevision: QuoteRevision,
   revisions: Schema.Array(QuoteRevision),
 });
 export type QuoteDetail = typeof QuoteDetail.Type;
 
-export const QuoteList = Schema.Array(QuoteDetail);
+export const QuoteList = Schema.Array(QuoteSummary);
 export type QuoteList = typeof QuoteList.Type;
 
 export class QuoteNotFound extends Schema.TaggedError<QuoteNotFound>()(
@@ -118,6 +126,12 @@ export class QuoteAmountTooLarge extends Schema.TaggedError<QuoteAmountTooLarge>
   { httpApiStatus: 422 },
 ) {}
 
+export class QuoteNotEditable extends Schema.TaggedError<QuoteNotEditable>()(
+  'QuoteNotEditable',
+  { code: Schema.Literal('quote.not_editable') },
+  { httpApiStatus: 409 },
+) {}
+
 export const QuoteFailure = Schema.Union([
   AuthenticationRequired,
   PermissionDenied,
@@ -125,6 +139,7 @@ export const QuoteFailure = Schema.Union([
   QuoteNotFound,
   QuoteVersionConflict,
   QuoteAmountTooLarge,
+  QuoteNotEditable,
   ClientNotFound,
   ClientArchived,
   RequestRateLimited,

@@ -71,6 +71,7 @@ export {
   type QuoteList as QuoteListValue,
   QuoteNotFound,
   QuoteAmountTooLarge,
+  QuoteNotEditable,
   QuoteRevision,
   type QuoteRevision as QuoteRevisionValue,
   QuoteRevisionCreateRequest,

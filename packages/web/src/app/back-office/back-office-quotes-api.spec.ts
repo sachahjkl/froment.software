@@ -4,33 +4,6 @@ import { TestBed } from '@angular/core/testing';
 
 import { BackOfficeQuotesApi } from './back-office-quotes-api';
 
-const revision = {
-  id: '01ARZ3NDEKTSV4RRFFQ69G5FAV',
-  version: 1,
-  clientDisplayName: 'Acme',
-  title: 'Audit',
-  conditions: '',
-  currency: 'EUR',
-  netTotalCents: 1_000,
-  vatTotalCents: 200,
-  totalCents: 1_200,
-  createdAt: '2026-08-19T20:00:00.000Z',
-  createdByUserId: '01ARZ3NDEKTSV4RRFFQ69G5FAW',
-  lines: [
-    {
-      id: '01ARZ3NDEKTSV4RRFFQ69G5FAX',
-      position: 0,
-      description: 'Audit',
-      quantityMilli: 1_000,
-      unitPriceCents: 1_000,
-      vatRateBasisPoints: 2_000,
-      netTotalCents: 1_000,
-      vatTotalCents: 200,
-      totalCents: 1_200,
-    },
-  ],
-};
-
 describe('BackOfficeQuotesApi', () => {
   it('validates the quote list response', async () => {
     TestBed.configureTestingModule({
@@ -45,8 +18,11 @@ describe('BackOfficeQuotesApi', () => {
         clientId: '01ARZ3NDEKTSV4RRFFQ69G5FAZ',
         status: 'draft',
         version: 1,
-        currentRevision: revision,
-        revisions: [revision],
+        clientDisplayName: 'Acme',
+        title: 'Audit',
+        currency: 'EUR',
+        totalCents: 1_200,
+        updatedAt: '2026-08-19T20:00:00.000Z',
       },
     ]);
 

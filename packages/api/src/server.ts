@@ -69,15 +69,6 @@ const protectRequest =
           { status: 413, headers: { 'cache-control': 'no-store' } },
         ).pipe(Effect.orDie);
       }
-      if (mutation) {
-        const clientAddress = Option.getOrElse(request.remoteAddress, () => 'unknown');
-        if (!(yield* (yield* RequestLimiter).allowMutation(`address:${clientAddress}`, 120))) {
-          return yield* HttpServerResponse.json(
-            { code: 'request.rate_limited' },
-            { status: 429, headers: { 'cache-control': 'no-store' } },
-          ).pipe(Effect.orDie);
-        }
-      }
       return yield* application.pipe(
         Effect.catch((error) => {
           if (

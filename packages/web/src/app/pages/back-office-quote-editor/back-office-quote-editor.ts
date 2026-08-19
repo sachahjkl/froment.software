@@ -3,6 +3,7 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
+  HostListener,
   inject,
   signal,
 } from '@angular/core';
@@ -68,11 +69,13 @@ export class BackOfficeQuoteEditor {
   private readonly quotesApi = inject(BackOfficeQuotesApi);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
-  private readonly quoteId = this.decodeQuoteId(this.route.snapshot.paramMap.get('quoteId'));
-  protected readonly isNew = computed(() => this.quoteId === undefined);
+  private readonly quoteIdParameter = this.route.snapshot.paramMap.get('quoteId');
+  private readonly quoteId = this.decodeQuoteId(this.quoteIdParameter);
+  protected readonly isNew = computed(() => this.quoteIdParameter === null);
   protected readonly clients = signal<ClientListValue>([]);
   protected readonly detail = signal<QuoteDetailValue | undefined>(undefined);
   protected readonly loading = signal(true);
+  protected readonly unavailable = signal(false);
   protected readonly saving = signal(false);
   protected readonly error = signal<TranslationKey | undefined>(undefined);
   private readonly model = signal<QuoteModel>({
@@ -85,6 +88,7 @@ export class BackOfficeQuoteEditor {
     required(path.clientId);
     required(path.title);
     maxLength(path.title, 120);
+    pattern(path.title, /\S/);
     maxLength(path.conditions, 2_000);
     minLength(path.lines, 1);
     maxLength(path.lines, 20);
@@ -98,7 +102,11 @@ export class BackOfficeQuoteEditor {
     });
   });
   protected readonly saveDisabled = computed(
-    () => this.saving() || this.loading() || this.quoteForm().invalid(),
+    () =>
+      this.saving() ||
+      this.loading() ||
+      this.quoteForm().invalid() ||
+      (this.quoteId !== undefined && !this.quoteForm().dirty()),
   );
   protected readonly totalsAreStale = computed(
     () => this.detail() !== undefined && this.quoteForm().dirty(),
@@ -111,6 +119,7 @@ export class BackOfficeQuoteEditor {
   protected addLine(): void {
     if (this.model().lines.length >= 20) return;
     this.model.update((model) => ({ ...model, lines: [...model.lines, emptyLine()] }));
+    this.quoteForm().markAsDirty();
   }
 
   protected removeLine(index: number): void {
@@ -119,6 +128,19 @@ export class BackOfficeQuoteEditor {
       ...model,
       lines: model.lines.filter((_line, currentIndex) => currentIndex !== index),
     }));
+    this.quoteForm().markAsDirty();
+  }
+
+  canDeactivate(): boolean {
+    return (
+      !this.quoteForm().dirty() ||
+      globalThis.confirm(this.i18n.t('backOffice.quote.unsavedChanges'))
+    );
+  }
+
+  @HostListener('window:beforeunload', ['$event'])
+  protected preventUnsavedUnload(event: BeforeUnloadEvent): void {
+    if (this.quoteForm().dirty()) event.preventDefault();
   }
 
   protected save(event: SubmitEvent): void {
@@ -145,6 +167,7 @@ export class BackOfficeQuoteEditor {
         this.saving.set(false);
         if (!outcome.success) return this.setError(outcome.code);
         this.detail.set(outcome.result);
+        this.quoteForm().reset();
         await this.router.navigate(['/backoffice/quotes', outcome.result.id], { replaceUrl: true });
         return;
       }
@@ -163,6 +186,7 @@ export class BackOfficeQuoteEditor {
       if (!outcome.success) return this.setError(outcome.code);
       this.detail.set(outcome.result);
       this.model.set(this.modelFromDetail(outcome.result));
+      this.quoteForm().reset();
     });
   }
 
@@ -173,20 +197,37 @@ export class BackOfficeQuoteEditor {
     }).format(cents / 100);
   }
 
+  protected date(value: string): string {
+    return new Intl.DateTimeFormat(this.i18n.language(), {
+      dateStyle: 'medium',
+      timeStyle: 'short',
+    }).format(new Date(value));
+  }
+
   private async load(): Promise<void> {
+    if (this.quoteIdParameter !== null && this.quoteId === undefined) {
+      this.error.set('quote.not_found');
+      this.unavailable.set(true);
+      this.loading.set(false);
+      return;
+    }
     try {
-      this.clients.set((await this.clientsApi.list()).filter((client) => !client.archived));
-      if (this.quoteId !== undefined) {
+      if (this.quoteId === undefined) {
+        this.clients.set((await this.clientsApi.list()).filter((client) => !client.archived));
+      } else {
         const outcome = await this.quotesApi.get(this.quoteId);
         if (!outcome.success) {
           this.setError(outcome.code);
+          this.unavailable.set(true);
           return;
         }
         this.detail.set(outcome.result);
         this.model.set(this.modelFromDetail(outcome.result));
+        this.quoteForm().reset();
       }
     } catch {
       this.error.set('quote.error');
+      this.unavailable.set(true);
     } finally {
       this.loading.set(false);
     }

@@ -5,6 +5,7 @@ import {
   backOfficeAdministratorGuard,
   backOfficeClientGuard,
 } from './back-office/back-office-auth';
+import { unsavedChangesGuard } from './back-office/unsaved-changes-guard';
 
 export const routes: Routes = [
   {
@@ -164,6 +165,7 @@ export const routes: Routes = [
         (module) => module.BackOfficeQuoteEditor,
       ),
     canActivate: [backOfficeAdministratorGuard],
+    canDeactivate: [unsavedChangesGuard],
     data: {
       titleKey: 'page.back_office_quote_editor',
       descriptionKey: 'page.description.back_office_quote_editor',
@@ -177,6 +179,7 @@ export const routes: Routes = [
         (module) => module.BackOfficeQuoteEditor,
       ),
     canActivate: [backOfficeAdministratorGuard],
+    canDeactivate: [unsavedChangesGuard],
     data: {
       titleKey: 'page.back_office_quote_editor',
       descriptionKey: 'page.description.back_office_quote_editor',

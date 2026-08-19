@@ -1,6 +1,6 @@
 import { afterNextRender, ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { type QuoteListValue } from '@froment/contracts';
+import { type QuoteListValue, type QuoteStatusValue } from '@froment/contracts';
 
 import { BackOfficeQuotesApi } from '../../back-office/back-office-quotes-api';
 import { I18nService } from '../../i18n.service';
@@ -30,6 +30,10 @@ export class BackOfficeQuotes {
       style: 'currency',
       currency: 'EUR',
     }).format(cents / 100);
+  }
+
+  protected statusLabel(status: QuoteStatusValue): string {
+    return this.i18n.t(`backOffice.quote.status.${status}`);
   }
 
   private async load(): Promise<void> {

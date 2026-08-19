@@ -1,5 +1,5 @@
 import { TestBed } from '@angular/core/testing';
-import { provideRouter } from '@angular/router';
+import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
 
 import { BackOfficeClientsApi } from '../../back-office/back-office-clients-api';
 import { BackOfficeQuotesApi } from '../../back-office/back-office-quotes-api';
@@ -29,5 +29,27 @@ describe('BackOfficeQuoteEditor', () => {
     expect(before).toBe(1);
     expect(root.querySelectorAll('fieldset')).toHaveLength(2);
     expect(root.textContent).not.toContain('Total HT');
+  });
+
+  it('does not turn an invalid quote URL into a creation form', async () => {
+    TestBed.configureTestingModule({
+      providers: [
+        provideRouter([]),
+        {
+          provide: ActivatedRoute,
+          useValue: { snapshot: { paramMap: convertToParamMap({ quoteId: 'invalid' }) } },
+        },
+        { provide: BackOfficeClientsApi, useValue: { list: () => Promise.resolve([]) } },
+        { provide: BackOfficeQuotesApi, useValue: {} },
+      ],
+    });
+    const fixture = TestBed.createComponent(BackOfficeQuoteEditor);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+    const root: HTMLElement = fixture.nativeElement;
+
+    expect(root.querySelector('form')).toBeNull();
+    expect(root.querySelector('[role="alert"]')?.textContent).toMatch(/introuvable|not found/);
   });
 });
