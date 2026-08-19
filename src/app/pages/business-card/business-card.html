@@ -102,7 +102,10 @@
         <li>
           <button class="version-select" type="button" (click)="restoreVersion(version)">
             <strong>{{ version.name }}</strong>
-            <span>{{ formatDate(version.createdAt) }}</span>
+            <span
+              >{{ version.createdAt | localizedDate: "fr-FR" : { dateStyle: "medium", timeStyle:
+              "short" } }}</span
+            >
           </button>
           <button
             appButton

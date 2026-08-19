@@ -3,6 +3,10 @@ import { ChangeDetectionStrategy, Component, inject, PLATFORM_ID, signal } from 
 import { email, form, FormField, required } from '@angular/forms/signals';
 import { RouterLink } from '@angular/router';
 import { Button } from '../../shared/button/button';
+import {
+  formatLocalizedDate,
+  LocalizedDatePipe,
+} from '../../shared/localized-date/localized-date-pipe';
 
 interface BusinessCardContent {
   name: string;
@@ -30,7 +34,7 @@ const defaultContent: BusinessCardContent = {
 
 @Component({
   selector: 'app-business-card',
-  imports: [Button, FormField, RouterLink],
+  imports: [Button, FormField, LocalizedDatePipe, RouterLink],
   templateUrl: './business-card.html',
   styleUrl: './business-card.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -99,12 +103,6 @@ export class BusinessCard {
     }
   }
 
-  formatDate(value: string): string {
-    return new Intl.DateTimeFormat('fr-FR', { dateStyle: 'medium', timeStyle: 'short' }).format(
-      new Date(value),
-    );
-  }
-
   updateGeneratedVersionName(event: Event): void {
     if (!this.versionNameEdited) {
       const name = (event.target as HTMLInputElement).value.trim() || defaultContent.name;
@@ -117,13 +115,13 @@ export class BusinessCard {
   }
 
   private createVersionName(name = this.content?.().name.trim() || defaultContent.name): string {
-    const date = new Intl.DateTimeFormat('fr-FR', {
+    const date = formatLocalizedDate(new Date(), 'fr-FR', {
       day: '2-digit',
       month: '2-digit',
       year: 'numeric',
       hour: '2-digit',
       minute: '2-digit',
-    }).format(new Date());
+    });
     return `${name} - ${date}`;
   }
 

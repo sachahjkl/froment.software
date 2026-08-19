@@ -32,31 +32,4 @@ describe('I18nService', () => {
     expect(document.documentElement.dataset['language']).toBe('fr');
     expect(localStorage.getItem(languageStorageKey)).toBe('fr');
   });
-
-  it('keeps an ISO date-only value on its calendar day in America/Los_Angeles', () => {
-    const service = TestBed.inject(I18nService);
-    service.setLanguage('en');
-
-    const parts = Object.fromEntries(
-      new Intl.DateTimeFormat('en', {
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit',
-        timeZone: 'America/Los_Angeles',
-      })
-        .formatToParts(new Date('2026-05-28T12:00:00-07:00'))
-        .filter((part) => part.type !== 'literal')
-        .map((part) => [part.type, part.value]),
-    );
-    const formatted = service.formatDate('2026-05-28', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      timeZone: 'America/Los_Angeles',
-    });
-
-    expect(formatted).toContain(parts['year']);
-    expect(formatted).toContain(parts['month']);
-    expect(formatted).toContain(parts['day']);
-  });
 });

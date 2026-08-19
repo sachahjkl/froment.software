@@ -4,7 +4,7 @@
   <header>
     <h1>{{ article.title }}</h1>
     <time [attr.datetime]="article.published"
-      >{{ i18n.formatDate(article.published, { dateStyle: 'long' }) }}</time
+      >{{ article.published | localizedDate: i18n.language() : { dateStyle: "long" } }}</time
     >
     <p>{{ article.description }}</p>
     <ul class="topics" [attr.aria-label]="i18n.t('blog.topics')">

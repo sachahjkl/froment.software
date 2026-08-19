@@ -6,7 +6,6 @@ export type Language = 'fr' | 'en';
 export type TranslationKey = keyof typeof translations.fr;
 
 const storageKey = 'froment.software.language';
-const isoDateOnlyPattern = /^(\d{4})-(\d{2})-(\d{2})$/;
 
 const translations = {
   fr: {
@@ -1140,38 +1139,6 @@ export class I18nService {
       this.language.set(language);
       this.writeStoredLanguage(language);
     }
-  }
-
-  formatDate(date: string | Date, options?: Intl.DateTimeFormatOptions): string {
-    const formatOptions: Intl.DateTimeFormatOptions = options ?? { dateStyle: 'short' };
-
-    if (typeof date === 'string') {
-      const match = isoDateOnlyPattern.exec(date);
-
-      if (match) {
-        const year = Number(match[1]);
-        const month = Number(match[2]);
-        const day = Number(match[3]);
-        const calendarDate = new Date(0);
-        calendarDate.setUTCHours(0, 0, 0, 0);
-        calendarDate.setUTCFullYear(year, month - 1, day);
-
-        if (
-          calendarDate.getUTCFullYear() !== year ||
-          calendarDate.getUTCMonth() !== month - 1 ||
-          calendarDate.getUTCDate() !== day
-        ) {
-          throw new RangeError(`Invalid ISO date: ${date}`);
-        }
-
-        return new Intl.DateTimeFormat(this.language(), {
-          ...formatOptions,
-          timeZone: 'UTC',
-        }).format(calendarDate);
-      }
-    }
-
-    return new Intl.DateTimeFormat(this.language(), formatOptions).format(new Date(date));
   }
 
   private detectLanguage(): Language {

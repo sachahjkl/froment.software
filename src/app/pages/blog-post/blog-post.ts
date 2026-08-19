@@ -4,10 +4,11 @@ import { Meta, Title } from '@angular/platform-browser';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { Blog, RenderedBlogPost } from '../../blog/blog';
 import { I18nService } from '../../i18n.service';
+import { LocalizedDatePipe } from '../../shared/localized-date/localized-date-pipe';
 
 @Component({
   selector: 'app-blog-post',
-  imports: [RouterLink],
+  imports: [LocalizedDatePipe, RouterLink],
   templateUrl: './blog-post.html',
   styleUrl: './blog-post.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

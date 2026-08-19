@@ -2,10 +2,11 @@ import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { Blog as BlogService } from '../../blog/blog';
 import { I18nService } from '../../i18n.service';
+import { LocalizedDatePipe } from '../../shared/localized-date/localized-date-pipe';
 
 @Component({
   selector: 'app-blog',
-  imports: [RouterLink],
+  imports: [LocalizedDatePipe, RouterLink],
   templateUrl: './blog.html',
   styleUrl: './blog.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

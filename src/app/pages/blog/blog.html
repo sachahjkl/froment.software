@@ -9,7 +9,7 @@
     <li>
       <article>
         <time [attr.datetime]="post.published"
-          >{{ i18n.formatDate(post.published, { dateStyle: 'long' }) }}</time
+          >{{ post.published | localizedDate: i18n.language() : { dateStyle: "long" } }}</time
         >
         <h2><a [routerLink]="['/blog', post.slug]">{{ post.title }}</a></h2>
         <p>{{ post.description }}</p>
