@@ -4,6 +4,7 @@ import { Config, Effect, FileSystem, Layer, Option, Schema } from 'effect';
 import {
   HttpEffect,
   HttpRouter,
+  HttpServerError,
   HttpServerRequest,
   HttpServerResponse,
   HttpStaticServer,
@@ -16,6 +17,7 @@ import { Authentication } from './authentication/authentication.js';
 import { Clients } from './clients/clients.js';
 import { Database } from './database/database.js';
 import { Deployment } from './deployment/deployment.js';
+import { RequestLimiter, RequestLimiterLive } from './server/request-limiter.js';
 
 const sessionCookie = HttpApiSecurity.apiKey({
   key: '__Host-froment-session',
@@ -36,22 +38,64 @@ const setPrivateResponseHeaders = HttpEffect.appendPreResponseHandler((_request,
   ),
 );
 
-const limitRequestBody = <E, R>(
-  application: Effect.Effect<HttpServerResponse.HttpServerResponse, E, R>,
-) =>
-  Effect.gen(function* () {
-    const request = yield* HttpServerRequest.HttpServerRequest;
-    const contentLength = Schema.decodeUnknownOption(Schema.NumberFromString)(
-      request.headers['content-length'],
-    );
-    if (Option.isSome(contentLength) && contentLength.value > 8 * 1024) {
-      return yield* HttpServerResponse.json(
-        { code: 'request.too_large' },
-        { status: 413, headers: { 'cache-control': 'no-store' } },
-      ).pipe(Effect.orDie);
-    }
-    return yield* application;
-  });
+const protectRequest =
+  (publicOrigin: string) =>
+  <E, R>(application: Effect.Effect<HttpServerResponse.HttpServerResponse, E, R>) =>
+    Effect.gen(function* () {
+      const request = yield* HttpServerRequest.HttpServerRequest;
+      const mutation =
+        request.method !== 'GET' && request.method !== 'HEAD' && request.method !== 'OPTIONS';
+      if (mutation && request.url.startsWith('/api/')) {
+        if (request.headers['origin'] !== publicOrigin) {
+          return yield* HttpServerResponse.json(
+            { code: 'request.invalid_origin' },
+            { status: 403, headers: { 'cache-control': 'no-store' } },
+          ).pipe(Effect.orDie);
+        }
+        if (request.headers['transfer-encoding'] !== undefined) {
+          return yield* HttpServerResponse.json(
+            { code: 'request.too_large' },
+            { status: 413, headers: { 'cache-control': 'no-store' } },
+          ).pipe(Effect.orDie);
+        }
+      }
+      const contentLength = Schema.decodeUnknownOption(Schema.NumberFromString)(
+        request.headers['content-length'],
+      );
+      if (Option.isSome(contentLength) && contentLength.value > 8 * 1024) {
+        return yield* HttpServerResponse.json(
+          { code: 'request.too_large' },
+          { status: 413, headers: { 'cache-control': 'no-store' } },
+        ).pipe(Effect.orDie);
+      }
+      if (mutation) {
+        const clientAddress = Option.getOrElse(request.remoteAddress, () => 'unknown');
+        if (!(yield* (yield* RequestLimiter).allowMutation(clientAddress))) {
+          return yield* HttpServerResponse.json(
+            { code: 'request.rate_limited' },
+            { status: 429, headers: { 'cache-control': 'no-store' } },
+          ).pipe(Effect.orDie);
+        }
+      }
+      return yield* application.pipe(
+        Effect.catch((error) => {
+          if (
+            !(error instanceof HttpServerError.HttpServerError) ||
+            error.reason._tag !== 'RequestParseError' ||
+            !(error.reason.cause instanceof Error) ||
+            error.reason.cause.message !== 'maxBytes exceeded'
+          ) {
+            return Effect.fail(error);
+          }
+          return Effect.succeed(
+            HttpServerResponse.jsonUnsafe(
+              { code: 'request.too_large' },
+              { status: 413, headers: { 'cache-control': 'no-store' } },
+            ),
+          );
+        }),
+      );
+    });
 
 const setSessionCookies = (session: {
   readonly sessionToken: string;
@@ -251,6 +295,7 @@ const ApiRoutes = HttpApiBuilder.layer(Api).pipe(
 
 export const makeServerLayer = (options: {
   readonly port: number;
+  readonly publicOrigin: string;
   readonly staticRoot: string;
 }) => {
   const StaticRoutes = HttpStaticServer.layer({
@@ -265,8 +310,9 @@ export const makeServerLayer = (options: {
   });
 
   return HttpRouter.serve(Layer.mergeAll(ApiRoutes, BackOfficeStaticRoutes, StaticRoutes), {
-    middleware: limitRequestBody,
+    middleware: protectRequest(options.publicOrigin),
   }).pipe(
+    Layer.provide(RequestLimiterLive),
     Layer.provide(Layer.succeed(HttpServerRequest.MaxBodySize, FileSystem.Size(8 * 1024))),
     Layer.provide(NodeHttpServer.layer(createServer, { port: options.port })),
   );
@@ -275,7 +321,8 @@ export const makeServerLayer = (options: {
 export const ServerLive = Layer.unwrap(
   Effect.gen(function* () {
     const port = yield* Config.int('PORT').pipe(Config.withDefault(3000));
+    const publicUrl = yield* Config.schema(Schema.URL, 'PUBLIC_ORIGIN');
     const staticRoot = yield* Config.string('STATIC_ROOT');
-    return makeServerLayer({ port, staticRoot });
+    return makeServerLayer({ port, publicOrigin: publicUrl.origin, staticRoot });
   }),
 );

@@ -82,6 +82,38 @@ describe('Database', () => {
         .run(null, 'Invalid', 'administrator', 1, 1),
     ).toThrow();
     expect(() => sqlite.prepare('insert into permissions (code) values (?)').run(null)).toThrow();
+    expect(() =>
+      sqlite
+        .prepare('insert into clients (id, created_at, updated_at) values (?, ?, ?)')
+        .run(userId, 1, 1),
+    ).toThrow('client user required');
+    const deletedClientId = '01ARZ3NDEKTSV4RRFFQ69G5FAW';
+    sqlite
+      .prepare(
+        "insert into users (id, display_name, kind, created_at, updated_at) values (?, 'Client', 'client', 1, 1)",
+      )
+      .run(deletedClientId);
+    sqlite
+      .prepare('insert into clients (id, created_at, updated_at) values (?, 1, 1)')
+      .run(deletedClientId);
+    sqlite
+      .prepare(
+        'insert into access_credentials (id, user_id, secret_hmac, created_at) values (?, ?, ?, 1)',
+      )
+      .run('01ARZ3NDEKTSV4RRFFQ69G5FAX', deletedClientId, Buffer.alloc(32, 4));
+    sqlite.prepare('delete from clients where id = ?').run(deletedClientId);
+    expect(
+      sqlite
+        .prepare('select disabled_at is not null from users where id = ?')
+        .pluck()
+        .get(deletedClientId),
+    ).toBe(1);
+    expect(
+      sqlite
+        .prepare('select revoked_at is not null from access_credentials where user_id = ?')
+        .pluck()
+        .get(deletedClientId),
+    ).toBe(1);
 
     const user = Schema.decodeUnknownSync(UserRow)({
       id: userId,
@@ -168,6 +200,25 @@ describe('Database', () => {
     );
     const migratedSqlite = new Sqlite(filename);
     migratedSqlite.prepare('update clients set archived_at = ? where id = ?').run(3, clientId);
+    migratedSqlite
+      .prepare(
+        'insert into access_credentials (id, user_id, secret_hmac, created_at) values (?, ?, ?, ?)',
+      )
+      .run('01ARZ3NDEKTSV4RRFFQ69G5FAY', clientId, Buffer.alloc(32, 1), 1);
+    migratedSqlite
+      .prepare(
+        'insert into sessions (id, user_id, token_hmac, csrf_hmac, created_at, last_seen_at, idle_expires_at, absolute_expires_at) values (?, ?, ?, ?, ?, ?, ?, ?)',
+      )
+      .run(
+        '01ARZ3NDEKTSV4RRFFQ69G5FAZ',
+        clientId,
+        Buffer.alloc(32, 2),
+        Buffer.alloc(32, 3),
+        1,
+        1,
+        10,
+        20,
+      );
     migratedSqlite.close();
     const clientStateMigration = '20260819195929_nervous_maximus';
     await cp(
@@ -198,6 +249,15 @@ describe('Database', () => {
               (column) =>
                 Schema.decodeUnknownSync(Schema.Struct({ name: Schema.String }))(column).name,
             ),
+          credentialRevokedAt: connection
+            .prepare('select revoked_at from access_credentials where user_id = ?')
+            .pluck()
+            .get(clientId),
+          sessionRevokedAt: connection
+            .prepare('select revoked_at from sessions where user_id = ?')
+            .pluck()
+            .get(clientId),
+          foreignKeyViolations: connection.pragma('foreign_key_check'),
         })),
       ).pipe(Effect.provide(makeDatabaseLayer(options))),
     );
@@ -206,5 +266,8 @@ describe('Database', () => {
     expect(state.permission).toBe('client.access.create');
     expect(state.archivedAt).toBe(3);
     expect(state.clientColumns).not.toContain('archived_at');
+    expect(state.credentialRevokedAt).toBe(3);
+    expect(state.sessionRevokedAt).toBe(3);
+    expect(state.foreignKeyViolations).toEqual([]);
   });
 });

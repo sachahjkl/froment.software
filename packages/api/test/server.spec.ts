@@ -2,11 +2,12 @@ import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { spawn, type ChildProcess } from 'node:child_process';
+import { request as httpRequest } from 'node:http';
 import { createServer } from 'node:net';
 
 import { Api } from '@froment/contracts';
 import Sqlite from 'better-sqlite3';
-import { Effect, Schema } from 'effect';
+import { Effect } from 'effect';
 import { FetchHttpClient, HttpClient, HttpClientRequest } from 'effect/unstable/http';
 import { HttpApiClient } from 'effect/unstable/httpapi';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
@@ -122,9 +123,21 @@ describe('HTTP server', () => {
     const initialStatus = await fetch(`${baseUrl}/api/bootstrap`);
     await expect(initialStatus.json()).resolves.toEqual({ available: true });
 
+    for (const origin of [undefined, 'null', 'https://attacker.example', `${baseUrl}:444`]) {
+      const headers = new Headers({ 'content-type': 'application/json' });
+      if (origin !== undefined) headers.set('origin', origin);
+      const invalidOrigin = await fetch(`${baseUrl}/api/bootstrap`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({ password: 'bootstrap-password' }),
+      });
+      expect(invalidOrigin.status).toBe(403);
+      await expect(invalidOrigin.json()).resolves.toEqual({ code: 'request.invalid_origin' });
+    }
+
     const rejected = await fetch(`${baseUrl}/api/bootstrap`, {
       method: 'POST',
-      headers: { 'content-type': 'application/json' },
+      headers: { 'content-type': 'application/json', origin: baseUrl },
       body: JSON.stringify({ password: 'wrong' }),
     });
     const rejectedBody = await rejected.json();
@@ -138,7 +151,7 @@ describe('HTTP server', () => {
 
     const rateLimitedBootstrap = await fetch(`${baseUrl}/api/bootstrap`, {
       method: 'POST',
-      headers: { 'content-type': 'application/json' },
+      headers: { 'content-type': 'application/json', origin: baseUrl },
       body: JSON.stringify({ password: 'bootstrap-password' }),
     });
     expect(rateLimitedBootstrap.status).toBe(429);
@@ -146,7 +159,7 @@ describe('HTTP server', () => {
 
     const created = await fetch(`${baseUrl}/api/bootstrap`, {
       method: 'POST',
-      headers: { 'content-type': 'application/json' },
+      headers: { 'content-type': 'application/json', origin: baseUrl },
       body: JSON.stringify({ password: 'bootstrap-password' }),
     });
     expect(created.status).toBe(200);
@@ -231,7 +244,7 @@ describe('HTTP server', () => {
     const [loginRejected, concurrentValidLogin] = await Promise.all([
       fetch(`${baseUrl}/api/auth/login`, {
         method: 'POST',
-        headers: { 'content-type': 'application/json' },
+        headers: { 'content-type': 'application/json', origin: baseUrl },
         body: JSON.stringify({
           accessIdentifier: 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA',
           mode: 'administrator',
@@ -239,7 +252,7 @@ describe('HTTP server', () => {
       }),
       fetch(`${baseUrl}/api/auth/login`, {
         method: 'POST',
-        headers: { 'content-type': 'application/json' },
+        headers: { 'content-type': 'application/json', origin: baseUrl },
         body: JSON.stringify({ accessIdentifier: result.accessIdentifier, mode: 'administrator' }),
       }),
     ]);
@@ -248,16 +261,16 @@ describe('HTTP server', () => {
 
     const firstLimitedIdentifierAttempt = await fetch(`${baseUrl}/api/auth/login`, {
       method: 'POST',
-      headers: { 'content-type': 'application/json' },
+      headers: { 'content-type': 'application/json', origin: baseUrl },
       body: JSON.stringify({
         accessIdentifier: 'CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC',
         mode: 'administrator',
       }),
     });
-    expect([401, 429]).toContain(firstLimitedIdentifierAttempt.status);
+    expect(firstLimitedIdentifierAttempt.status).toBe(429);
     const rateLimited = await fetch(`${baseUrl}/api/auth/login`, {
       method: 'POST',
-      headers: { 'content-type': 'application/json' },
+      headers: { 'content-type': 'application/json', origin: baseUrl },
       body: JSON.stringify({
         accessIdentifier: 'CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC',
         mode: 'administrator',
@@ -267,7 +280,7 @@ describe('HTTP server', () => {
 
     const login = await fetch(`${baseUrl}/api/auth/login`, {
       method: 'POST',
-      headers: { 'content-type': 'application/json' },
+      headers: { 'content-type': 'application/json', origin: baseUrl },
       body: JSON.stringify({ accessIdentifier: result.accessIdentifier, mode: 'administrator' }),
     });
     expect(login.status).toBe(200);
@@ -279,15 +292,15 @@ describe('HTTP server', () => {
 
     const modeMismatch = await fetch(`${baseUrl}/api/auth/login`, {
       method: 'POST',
-      headers: { 'content-type': 'application/json' },
+      headers: { 'content-type': 'application/json', origin: baseUrl },
       body: JSON.stringify({ accessIdentifier: result.accessIdentifier, mode: 'client' }),
     });
-    expect(modeMismatch.status).toBe(401);
+    expect(modeMismatch.status).toBe(429);
 
     for (let attempt = 0; attempt < 11; attempt += 1) {
       const extraLogin = await fetch(`${baseUrl}/api/auth/login`, {
         method: 'POST',
-        headers: { 'content-type': 'application/json' },
+        headers: { 'content-type': 'application/json', origin: baseUrl },
         body: JSON.stringify({ accessIdentifier: result.accessIdentifier, mode: 'administrator' }),
       });
       expect(extraLogin.status).toBe(200);
@@ -302,7 +315,7 @@ describe('HTTP server', () => {
     await expect(finalStatus.json()).resolves.toEqual({ available: false });
     const conflict = await fetch(`${baseUrl}/api/bootstrap`, {
       method: 'POST',
-      headers: { 'content-type': 'application/json' },
+      headers: { 'content-type': 'application/json', origin: baseUrl },
       body: JSON.stringify({ password: 'bootstrap-password' }),
     });
     expect(conflict.status).toBe(409);
@@ -319,7 +332,7 @@ describe('HTTP server', () => {
 
     const administratorLogin = await fetch(`${baseUrl}/api/auth/login`, {
       method: 'POST',
-      headers: { 'content-type': 'application/json' },
+      headers: { 'content-type': 'application/json', origin: baseUrl },
       body: JSON.stringify({
         accessIdentifier: administratorAccessIdentifier,
         mode: 'administrator',
@@ -411,33 +424,9 @@ describe('HTTP server', () => {
       accessIdentifier: expect.stringMatching(/^[A-Za-z0-9_-]{43}$/),
     });
 
-    const orphanSqlite = new Sqlite(databaseFilename);
-    const clientDates = Schema.decodeUnknownSync(
-      Schema.Struct({ createdAt: Schema.Number, updatedAt: Schema.Number }),
-    )(
-      orphanSqlite
-        .prepare(
-          'select created_at as createdAt, updated_at as updatedAt from clients where id = ?',
-        )
-        .get(client.id),
-    );
-    orphanSqlite.prepare('delete from clients where id = ?').run(client.id);
-    orphanSqlite.close();
-    const orphanLogin = await fetch(`${baseUrl}/api/auth/login`, {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ accessIdentifier: access.accessIdentifier, mode: 'client' }),
-    });
-    expect(orphanLogin.status).toBe(401);
-    const restoredSqlite = new Sqlite(databaseFilename);
-    restoredSqlite
-      .prepare('insert into clients (id, created_at, updated_at) values (?, ?, ?)')
-      .run(client.id, clientDates.createdAt, clientDates.updatedAt);
-    restoredSqlite.close();
-
     const clientLogin = await fetch(`${baseUrl}/api/auth/login`, {
       method: 'POST',
-      headers: { 'content-type': 'application/json' },
+      headers: { 'content-type': 'application/json', origin: baseUrl },
       body: JSON.stringify({ accessIdentifier: access.accessIdentifier, mode: 'client' }),
     });
     expect(clientLogin.status).toBe(200);
@@ -522,7 +511,7 @@ describe('HTTP server', () => {
   it('rejects oversized request bodies', async () => {
     const response = await fetch(`${baseUrl}/api/auth/login`, {
       method: 'POST',
-      headers: { 'content-type': 'application/json' },
+      headers: { 'content-type': 'application/json', origin: baseUrl },
       body: JSON.stringify({ accessIdentifier: 'A'.repeat(9_000), mode: 'administrator' }),
     });
     expect(response.status).toBe(413);
@@ -530,6 +519,37 @@ describe('HTTP server', () => {
     await expect(response.json()).resolves.toEqual({ code: 'request.too_large' });
     const health = await fetch(`${baseUrl}/api/health`);
     expect(health.status).toBe(200);
+  });
+
+  it('returns 413 for an oversized chunked body', async () => {
+    const response = await new Promise<{ readonly body: string; readonly status: number }>(
+      (resolve, reject) => {
+        const request = httpRequest(
+          `${baseUrl}/api/auth/login`,
+          {
+            method: 'POST',
+            headers: { 'content-type': 'application/json', origin: baseUrl },
+          },
+          (incoming) => {
+            const chunks: Array<Buffer> = [];
+            incoming.on('data', (chunk) => chunks.push(Buffer.from(chunk)));
+            incoming.on('end', () =>
+              resolve({
+                body: Buffer.concat(chunks).toString('utf8'),
+                status: incoming.statusCode ?? 0,
+              }),
+            );
+          },
+        );
+        request.on('error', reject);
+        request.write('A'.repeat(5_000));
+        request.end('B'.repeat(5_000));
+      },
+    );
+
+    expect(response.status).toBe(413);
+    expect(JSON.parse(response.body)).toEqual({ code: 'request.too_large' });
+    expect((await fetch(`${baseUrl}/api/health`)).status).toBe(200);
   });
 
   it('serves a static file', async () => {

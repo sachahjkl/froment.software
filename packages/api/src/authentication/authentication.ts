@@ -146,7 +146,6 @@ export const AuthenticationLive = Layer.effect(
       }
 
       const now = yield* Clock.currentTimeMillis;
-      yield* Ref.set(yield* Cache.get(addressFailures, clientAddress), initialLoginFailureState);
       yield* Ref.set(
         yield* Cache.get(identifierFailures, accessHmac.toString('hex')),
         initialLoginFailureState,
@@ -281,7 +280,6 @@ export const AuthenticationLive = Layer.effect(
       permission: PermissionCodeValue,
       requiredMode: LoginModeValue,
     ) {
-      const principal = yield* authorize(sessionToken, permission, requiredMode);
       if (
         sessionToken === undefined ||
         csrfCookie === undefined ||
@@ -291,6 +289,7 @@ export const AuthenticationLive = Layer.effect(
       ) {
         return yield* new CsrfRejected({ code: 'authentication.invalid_csrf' });
       }
+      const principal = yield* authorize(sessionToken, permission, requiredMode);
       const validCsrf = yield* Effect.try({
         try: () =>
           database.sqlite
