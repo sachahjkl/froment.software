@@ -36,7 +36,7 @@ describe('App shell', () => {
     i18n.setLanguage('fr');
     fixture = TestBed.createComponent(App);
     await fixture.whenStable();
-    element = fixture.nativeElement as HTMLElement;
+    element = fixture.nativeElement;
   });
 
   it('exposes the skip target and current route without publishing the design route in navigation', async () => {

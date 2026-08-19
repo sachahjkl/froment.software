@@ -1103,9 +1103,9 @@ export class I18nService {
   readonly language = signal<Language>('fr');
 
   readonly languages = [
-    { code: 'fr' as Language, labelKey: 'lang.fr' as TranslationKey },
-    { code: 'en' as Language, labelKey: 'lang.en' as TranslationKey },
-  ];
+    { code: 'fr', labelKey: 'lang.fr' },
+    { code: 'en', labelKey: 'lang.en' },
+  ] satisfies readonly { code: Language; labelKey: TranslationKey }[];
 
   constructor() {
     afterNextRender(() => {

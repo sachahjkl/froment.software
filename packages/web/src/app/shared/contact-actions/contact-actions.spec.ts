@@ -13,7 +13,7 @@ describe('ContactActions', () => {
     fixture.componentRef.setInput('subject', 'Besoin logiciel');
     fixture.componentRef.setInput('body', 'Bonjour, échangeons.');
     fixture.detectChanges();
-    element = fixture.nativeElement as HTMLElement;
+    element = fixture.nativeElement;
   });
 
   it('builds the mail link and owns the calendar link attributes', () => {

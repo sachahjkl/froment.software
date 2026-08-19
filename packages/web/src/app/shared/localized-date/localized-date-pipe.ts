@@ -7,7 +7,7 @@ export function formatLocalizedDate(
   locale: string,
   options: Intl.DateTimeFormatOptions = { dateStyle: 'short' },
 ): string {
-  if (typeof value === 'string') {
+  if (!(value instanceof Date)) {
     const match = isoDatePattern.exec(value);
     if (match) {
       const year = Number(match[1]);

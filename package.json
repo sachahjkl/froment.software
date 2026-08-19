@@ -13,6 +13,7 @@
     "format:check": "oxfmt --check ."
   },
   "devDependencies": {
+    "@oxlint/plugins": "catalog:",
     "oxfmt": "catalog:",
     "oxlint": "catalog:"
   },

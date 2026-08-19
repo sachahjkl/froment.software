@@ -1,5 +1,5 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { I18nService, TranslationKey } from '../../i18n.service';
 import { AnchorLink } from '../../shared/anchor-link/anchor-link';
 import { ContactActions } from '../../shared/contact-actions/contact-actions';
@@ -21,7 +21,7 @@ type DetailContent = {
   fitDescriptionKey: TranslationKey;
 };
 
-const detailContent: Record<Offer, DetailContent> = {
+const detailContent = {
   renovation: {
     titleKey: 'serviceDetail.renovation.title',
     leadKey: 'serviceDetail.renovation.lead',
@@ -96,7 +96,7 @@ const detailContent: Record<Offer, DetailContent> = {
     fitTitleKey: 'serviceDetail.development.fit.title',
     fitDescriptionKey: 'serviceDetail.development.fit.desc',
   },
-};
+} satisfies Record<Offer, DetailContent>;
 
 @Component({
   selector: 'app-service-detail',
@@ -107,6 +107,6 @@ const detailContent: Record<Offer, DetailContent> = {
 })
 export class ServiceDetail {
   protected readonly i18n = inject(I18nService);
-  protected readonly content =
-    detailContent[inject(ActivatedRoute).snapshot.data['offer'] as Offer];
+  readonly offer = input.required<Offer>();
+  protected readonly content = computed<DetailContent>(() => detailContent[this.offer()]);
 }

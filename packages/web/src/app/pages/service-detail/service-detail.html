@@ -1,8 +1,8 @@
 <article class="service-detail">
   <header>
     <a class="back-link" routerLink="/services">{{ i18n.t("serviceDetail.back") }}</a>
-    <h1>{{ i18n.t(content.titleKey) }}</h1>
-    <p class="lead">{{ i18n.t(content.leadKey) }}</p>
+    <h1>{{ i18n.t(content().titleKey) }}</h1>
+    <p class="lead">{{ i18n.t(content().leadKey) }}</p>
     <app-contact-actions
       class="actions"
       [mailLabel]="i18n.t('services.quote')"
@@ -14,10 +14,10 @@
 
   <section aria-labelledby="perimetre">
     <h2 id="perimetre" class="anchored-title">
-      <span>{{ i18n.t(content.scopeTitleKey) }}</span><app-anchor-link fragment="perimetre" />
+      <span>{{ i18n.t(content().scopeTitleKey) }}</span><app-anchor-link fragment="perimetre" />
     </h2>
     <dl class="scope-grid">
-      @for (scope of content.scopes; track scope.titleKey) {
+      @for (scope of content().scopes; track scope.titleKey) {
       <div>
         <dt>{{ i18n.t(scope.titleKey) }}</dt>
         <dd>
@@ -37,18 +37,18 @@
   <section class="result-section">
     <div aria-labelledby="livrables">
       <h2 id="livrables" class="anchored-title">
-        <span>{{ i18n.t(content.deliverablesTitleKey) }}</span
+        <span>{{ i18n.t(content().deliverablesTitleKey) }}</span
         ><app-anchor-link fragment="livrables" />
       </h2>
       <ul>
-        @for (deliverableKey of content.deliverableKeys; track deliverableKey) {
+        @for (deliverableKey of content().deliverableKeys; track deliverableKey) {
         <li>{{ i18n.t(deliverableKey) }}</li>
         }
       </ul>
     </div>
     <aside class="fit-note">
-      <p class="fit-title">{{ i18n.t(content.fitTitleKey) }}</p>
-      <p>{{ i18n.t(content.fitDescriptionKey) }}</p>
+      <p class="fit-title">{{ i18n.t(content().fitTitleKey) }}</p>
+      <p>{{ i18n.t(content().fitDescriptionKey) }}</p>
     </aside>
   </section>
 

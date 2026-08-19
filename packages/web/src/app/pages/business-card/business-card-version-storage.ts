@@ -1,20 +1,23 @@
 import { isPlatformBrowser } from '@angular/common';
 import { inject, Injectable, PLATFORM_ID, signal } from '@angular/core';
+import { Option, Schema } from 'effect';
 
-export interface BusinessCardContent {
-  name: string;
-  role: string;
-  email: string;
-  website: string;
-  brandName: string;
-}
+export const BusinessCardContent = Schema.Struct({
+  name: Schema.String,
+  role: Schema.String,
+  email: Schema.String,
+  website: Schema.String,
+  brandName: Schema.String,
+});
+export interface BusinessCardContent extends Schema.Schema.Type<typeof BusinessCardContent> {}
 
-export interface BusinessCardVersion {
-  id: string;
-  name: string;
-  createdAt: string;
-  content: BusinessCardContent;
-}
+export const BusinessCardVersion = Schema.Struct({
+  id: Schema.String,
+  name: Schema.String,
+  createdAt: Schema.String,
+  content: BusinessCardContent,
+});
+export interface BusinessCardVersion extends Schema.Schema.Type<typeof BusinessCardVersion> {}
 
 const storageKey = 'froment-software.business-card.versions';
 
@@ -37,8 +40,18 @@ export class BusinessCardVersionStorage {
       return [];
     }
     try {
-      const value: unknown = JSON.parse(localStorage.getItem(storageKey) ?? '[]');
-      return Array.isArray(value) ? value.filter((item) => this.isVersion(item)) : [];
+      const value = Schema.decodeUnknownSync(Schema.fromJsonString(Schema.Unknown))(
+        localStorage.getItem(storageKey) ?? '[]',
+      );
+      if (!Array.isArray(value)) {
+        return [];
+      }
+      return value.flatMap((item) =>
+        Option.match(Schema.decodeUnknownOption(BusinessCardVersion)(item), {
+          onNone: () => [],
+          onSome: (version) => [version],
+        }),
+      );
     } catch {
       return [];
     }
@@ -55,23 +68,5 @@ export class BusinessCardVersionStorage {
     } catch {
       return false;
     }
-  }
-
-  private isVersion(value: unknown): value is BusinessCardVersion {
-    if (!value || typeof value !== 'object') {
-      return false;
-    }
-    const version = value as Record<string, unknown>;
-    const content = version['content'];
-    return (
-      typeof version['id'] === 'string' &&
-      typeof version['name'] === 'string' &&
-      typeof version['createdAt'] === 'string' &&
-      !!content &&
-      typeof content === 'object' &&
-      ['name', 'role', 'email', 'website', 'brandName'].every(
-        (key) => typeof (content as Record<string, unknown>)[key] === 'string',
-      )
-    );
   }
 }

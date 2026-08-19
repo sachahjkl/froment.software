@@ -25,7 +25,7 @@ export interface PolicyDocument {
   sections: readonly PolicySection[];
 }
 
-export const policies: Record<'legal' | 'privacy' | 'cookies', PolicyDocument> = {
+export const policies = {
   legal: {
     id: 'legal',
     titleKey: 'legal.title',
@@ -125,4 +125,4 @@ export const policies: Record<'legal' | 'privacy' | 'cookies', PolicyDocument> =
       },
     ],
   },
-};
+} satisfies Record<'legal' | 'privacy' | 'cookies', PolicyDocument>;

@@ -1,5 +1,5 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ChangeDetectionStrategy, Component, inject, input } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { I18nService } from '../../i18n.service';
 import { PolicyDocument, PolicyLink } from './policy-documents';
 
@@ -12,7 +12,7 @@ import { PolicyDocument, PolicyLink } from './policy-documents';
 })
 export class PolicyPage {
   protected readonly i18n = inject(I18nService);
-  protected readonly policy = inject(ActivatedRoute).snapshot.data['policy'] as PolicyDocument;
+  readonly policy = input.required<PolicyDocument>();
 
   protected label(link: PolicyLink): string {
     return link.labelKey ? this.i18n.t(link.labelKey) : (link.label ?? '');

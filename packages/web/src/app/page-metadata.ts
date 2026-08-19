@@ -72,8 +72,8 @@ export class PageMetadata {
   private updateRoute(): void {
     let route = this.route.snapshot;
     while (route.firstChild) route = route.firstChild;
-    const titleKey = route.data['titleKey'] as TranslationKey | undefined;
-    const descriptionKey = route.data['descriptionKey'] as TranslationKey | undefined;
+    const titleKey: TranslationKey | undefined = route.data['titleKey'];
+    const descriptionKey: TranslationKey | undefined = route.data['descriptionKey'];
     if (titleKey) {
       const title = this.i18n.t(titleKey);
       this.title.setTitle(title);

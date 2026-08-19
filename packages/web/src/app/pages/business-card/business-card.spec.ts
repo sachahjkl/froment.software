@@ -14,7 +14,7 @@ describe('BusinessCard', () => {
     }).compileComponents();
     fixture = TestBed.createComponent(BusinessCard);
     fixture.detectChanges();
-    element = fixture.nativeElement as HTMLElement;
+    element = fixture.nativeElement;
   });
 
   it('updates the preview from the form', () => {
@@ -68,7 +68,7 @@ describe('BusinessCard', () => {
 
     fixture = TestBed.createComponent(BusinessCard);
     fixture.detectChanges();
-    element = fixture.nativeElement as HTMLElement;
+    element = fixture.nativeElement;
     expect(element.querySelector('.version-select')?.textContent).toContain('Version locale');
 
     element

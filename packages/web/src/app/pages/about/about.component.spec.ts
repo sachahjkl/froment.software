@@ -19,7 +19,7 @@ describe('AboutComponent FAQ', () => {
     i18n.setLanguage('fr');
     fixture = TestBed.createComponent(AboutComponent);
     fixture.detectChanges();
-    element = fixture.nativeElement as HTMLElement;
+    element = fixture.nativeElement;
   });
 
   it('renders eight translated question and answer pairs and updates both live', () => {

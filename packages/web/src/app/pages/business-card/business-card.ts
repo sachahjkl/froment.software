@@ -92,8 +92,8 @@ export class BusinessCard {
   }
 
   updateGeneratedVersionName(event: Event): void {
-    if (!this.versionNameEdited) {
-      const name = (event.target as HTMLInputElement).value.trim() || defaultContent.name;
+    if (!this.versionNameEdited && event.target instanceof HTMLInputElement) {
+      const name = event.target.value.trim() || defaultContent.name;
       this.versionModel.set({ name: this.createVersionName(name) });
     }
   }
