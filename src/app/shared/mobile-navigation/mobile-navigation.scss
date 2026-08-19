@@ -1,0 +1,88 @@
+:host {
+  position: fixed;
+  inset-block: 0;
+  right: 0;
+  z-index: calc(var(--z-header) + 2);
+  display: flex;
+  width: min(22rem, 88vw);
+  flex-direction: column;
+  padding: var(--space-4);
+  overflow: hidden;
+  border-left: 1px solid var(--color-line);
+  background: var(--color-surface-raised);
+  box-shadow: -4px 0 18px rgb(20 20 35 / 0.2);
+  transform: translateX(100%);
+  visibility: hidden;
+  transition:
+    transform var(--duration-slow) var(--ease-out),
+    visibility 0s var(--duration-slow);
+}
+
+:host.open {
+  transform: translateX(0);
+  visibility: visible;
+  transition-delay: 0s;
+}
+
+.mobile-nav-header {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-4);
+  padding: var(--space-2) var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--color-line);
+}
+
+.mobile-nav-header button {
+  display: grid;
+  width: 2rem;
+  height: 2rem;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--color-ink);
+  cursor: pointer;
+}
+
+.mobile-nav-header svg {
+  width: 1.75rem;
+  height: 1.75rem;
+  fill: currentColor;
+}
+
+.mobile-nav {
+  display: flex;
+  min-height: 0;
+  flex: 1 1 auto;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  touch-action: pan-y;
+}
+
+.mobile-nav > * {
+  flex: 0 0 auto;
+}
+
+.mobile-nav a {
+  display: block;
+  width: 100%;
+  padding: var(--space-3);
+  border-bottom: 1px solid var(--color-line);
+}
+
+.mobile-nav a.active,
+.mobile-nav a[aria-current="page"] {
+  color: var(--color-ink);
+  font-weight: 700;
+  text-decoration-thickness: 2px;
+}
+
+app-language-selector {
+  margin-bottom: var(--space-3);
+}

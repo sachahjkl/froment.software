@@ -127,19 +127,22 @@ describe('App shell', () => {
     expect(document.activeElement).toBe(target.querySelector('h2'));
   });
 
-  it('uses native details disclosure and closes it after navigation', async () => {
+  it('opens the mobile navigation and closes it after navigation', async () => {
     await navigate(fixture, router, '/about');
 
-    const details = element.querySelector<HTMLDetailsElement>('.nav-details')!;
-    const summary = details.querySelector<HTMLElement>('summary')!;
-    summary.click();
-    expect(details.open).toBe(true);
+    const trigger = element.querySelector<HTMLButtonElement>('.menu-trigger')!;
+    const navigation = element.querySelector<HTMLElement>('app-mobile-navigation')!;
+    trigger.click();
+    await fixture.whenStable();
+    expect(trigger.getAttribute('aria-expanded')).toBe('true');
+    expect(navigation.classList.contains('open')).toBe(true);
 
-    const servicesLink = details.querySelector<HTMLAnchorElement>('a[href="/services"]')!;
+    const servicesLink = navigation.querySelector<HTMLAnchorElement>('a[href="/services"]')!;
     servicesLink.click();
     await fixture.whenStable();
 
-    expect(details.open).toBe(false);
+    expect(trigger.getAttribute('aria-expanded')).toBe('false');
+    expect(navigation.classList.contains('open')).toBe(false);
     expect(router.url).toBe('/services');
   });
 
@@ -155,13 +158,15 @@ describe('App shell', () => {
     expect(toggle.getAttribute('aria-label')).toBe('Activer le mode clair');
   });
 
-  it('closes the mobile navigation after an outside click', () => {
-    const details = element.querySelector<HTMLDetailsElement>('.nav-details')!;
-    details.open = true;
+  it('closes the mobile navigation after an outside click', async () => {
+    const trigger = element.querySelector<HTMLButtonElement>('.menu-trigger')!;
+    trigger.click();
+    await fixture.whenStable();
 
     element.querySelector<HTMLElement>('main')!.click();
+    await fixture.whenStable();
 
-    expect(details.open).toBe(false);
+    expect(trigger.getAttribute('aria-expanded')).toBe('false');
   });
 
   it('copies a section URL and shows a status message', async () => {

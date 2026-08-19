@@ -1,0 +1,58 @@
+<div class="mobile-nav-header">
+  <strong>Navigation</strong>
+  <button type="button" [attr.aria-label]="i18n.t('shell.menu.close')" (click)="navigation.close()">
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path
+        d="M6.225 4.811a1 1 0 0 0-1.414 1.414L10.586 12L4.81 17.775a1 1 0 1 0 1.414 1.414L12 13.414l5.775 5.775a1 1 0 0 0 1.414-1.414L13.414 12l5.775-5.775a1 1 0 0 0-1.414-1.414L12 10.586z"
+      />
+    </svg>
+  </button>
+</div>
+
+<nav class="mobile-nav" [attr.aria-label]="i18n.t('nav.primary')">
+  <a
+    routerLink="/"
+    routerLinkActive="active"
+    ariaCurrentWhenActive="page"
+    [routerLinkActiveOptions]="{ exact: true }"
+    (click)="navigation.close()"
+    >{{ i18n.t('nav.home') }}</a
+  >
+  <a
+    routerLink="/services"
+    routerLinkActive="active"
+    ariaCurrentWhenActive="page"
+    (click)="navigation.close()"
+    >{{ i18n.t('nav.services') }}</a
+  >
+  <a
+    routerLink="/about"
+    routerLinkActive="active"
+    ariaCurrentWhenActive="page"
+    (click)="navigation.close()"
+    >{{ i18n.t('nav.about') }}</a
+  >
+  <a
+    routerLink="/tools"
+    routerLinkActive="active"
+    ariaCurrentWhenActive="page"
+    (click)="navigation.close()"
+    >{{ i18n.t('nav.products') }}</a
+  >
+  <a
+    routerLink="/clients"
+    routerLinkActive="active"
+    ariaCurrentWhenActive="page"
+    (click)="navigation.close()"
+    >{{ i18n.t('nav.clients') }}</a
+  >
+  <a
+    routerLink="/blog"
+    routerLinkActive="active"
+    ariaCurrentWhenActive="page"
+    (click)="navigation.close()"
+    >{{ i18n.t('nav.blog') }}</a
+  >
+  <a href="mailto:contact@froment.software" (click)="navigation.close()">Contact</a>
+  <app-language-selector />
+</nav>
