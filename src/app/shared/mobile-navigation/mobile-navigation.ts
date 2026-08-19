@@ -19,7 +19,6 @@ import { LanguageSelector } from '../language-selector/language-selector';
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: {
     id: 'mobile-navigation',
-    '[class.open]': 'navigation.open()',
     '(keydown)': 'trapFocus($event)',
   },
 })

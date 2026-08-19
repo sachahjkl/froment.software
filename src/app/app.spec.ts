@@ -131,11 +131,10 @@ describe('App shell', () => {
     await navigate(fixture, router, '/about');
 
     const trigger = element.querySelector<HTMLButtonElement>('.menu-trigger')!;
-    const navigation = element.querySelector<HTMLElement>('app-mobile-navigation')!;
     trigger.click();
     await fixture.whenStable();
+    const navigation = element.querySelector<HTMLElement>('app-mobile-navigation')!;
     expect(trigger.getAttribute('aria-expanded')).toBe('true');
-    expect(navigation.classList.contains('open')).toBe(true);
     expect(document.body.style.overflow).toBe('hidden');
     const closeButton = navigation.querySelector<HTMLButtonElement>('.mobile-nav-header button')!;
     const languageSelect = navigation.querySelector<HTMLSelectElement>('select')!;
@@ -151,7 +150,7 @@ describe('App shell', () => {
     await fixture.whenStable();
 
     expect(trigger.getAttribute('aria-expanded')).toBe('false');
-    expect(navigation.classList.contains('open')).toBe(false);
+    expect(element.querySelector('app-mobile-navigation')).toBeNull();
     expect(document.body.style.overflow).toBe('');
     expect(router.url).toBe('/services');
   });

@@ -127,14 +127,47 @@
   display: block;
   border: 0;
   background: rgb(20 20 35 / 0.45);
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity var(--duration-base) var(--ease-out);
+  opacity: 1;
 }
 
-.nav-backdrop.visible {
-  opacity: 1;
-  pointer-events: auto;
+.backdrop-enter {
+  animation: backdrop-in var(--duration-base) var(--ease-out);
+}
+
+.backdrop-leave {
+  animation: backdrop-out var(--duration-base) var(--ease-out);
+}
+
+.mobile-navigation-enter {
+  animation: mobile-navigation-in var(--duration-slow) var(--ease-out);
+}
+
+.mobile-navigation-leave {
+  animation: mobile-navigation-out var(--duration-slow) var(--ease-out);
+}
+
+@keyframes backdrop-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes backdrop-out {
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes mobile-navigation-in {
+  from {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes mobile-navigation-out {
+  to {
+    transform: translateX(100%);
+  }
 }
 
 .burger {

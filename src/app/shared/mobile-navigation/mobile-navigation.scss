@@ -11,17 +11,7 @@
   border-left: 1px solid var(--color-line);
   background: var(--color-surface-raised);
   box-shadow: -4px 0 18px rgb(20 20 35 / 0.2);
-  transform: translateX(100%);
-  visibility: hidden;
-  transition:
-    transform var(--duration-slow) var(--ease-out),
-    visibility 0s var(--duration-slow);
-}
-
-:host.open {
   transform: translateX(0);
-  visibility: visible;
-  transition-delay: 0s;
 }
 
 .mobile-nav-header {

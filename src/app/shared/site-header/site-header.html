@@ -44,15 +44,21 @@
           >
             <span class="burger" aria-hidden="true"><span></span><span></span><span></span></span>
           </button>
+          @if (mobileNavigation.open()) {
           <button
             class="nav-backdrop"
             type="button"
             tabindex="-1"
             aria-hidden="true"
-            [class.visible]="mobileNavigation.open()"
+            animate.enter="backdrop-enter"
+            animate.leave="backdrop-leave"
             (click)="mobileNavigation.close()"
           ></button>
-          <app-mobile-navigation />
+          <app-mobile-navigation
+            animate.enter="mobile-navigation-enter"
+            animate.leave="mobile-navigation-leave"
+          />
+          }
         </div>
       </div>
     </div>
