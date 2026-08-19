@@ -20,6 +20,7 @@
     "@angular/router": "catalog:",
     "@angular/ssr": "catalog:",
     "@froment/contracts": "workspace:*",
+    "@froment/l10n": "workspace:*",
     "effect": "catalog:",
     "marked": "catalog:",
     "rxjs": "catalog:",

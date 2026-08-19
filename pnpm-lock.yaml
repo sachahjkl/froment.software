@@ -180,6 +180,15 @@ importers:
         specifier: 'catalog:'
         version: 6.0.3
 
+  packages/l10n:
+    devDependencies:
+      typescript:
+        specifier: 'catalog:'
+        version: 6.0.3
+      vitest:
+        specifier: 'catalog:'
+        version: 4.1.10(@types/node@26.2.0)(jsdom@27.4.0)(vite@8.1.5(@types/node@26.2.0)(esbuild@0.28.1)(jiti@2.7.0)(sass@1.101.0)(tsx@4.23.12))
+
   packages/web:
     dependencies:
       '@angular/common':
@@ -209,6 +218,9 @@ importers:
       '@froment/contracts':
         specifier: workspace:*
         version: link:../contracts
+      '@froment/l10n':
+        specifier: workspace:*
+        version: link:../l10n
       effect:
         specifier: 'catalog:'
         version: 4.0.0-rc.110
