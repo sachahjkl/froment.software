@@ -4,18 +4,25 @@
   "private": true,
   "type": "module",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./dist/index.js"
   },
   "scripts": {
-    "build": "ngc --noEmit -p tsconfig.json"
+    "build": "ngc -p tsconfig.json",
+    "test": "pnpm build && vitest run test"
   },
   "dependencies": {
     "@angular/common": "catalog:",
+    "@angular/compiler": "catalog:",
     "@angular/core": "catalog:",
-    "@angular/platform-server": "catalog:"
+    "@angular/platform-browser": "catalog:",
+    "@angular/platform-server": "catalog:",
+    "@froment/contracts": "workspace:*",
+    "rxjs": "catalog:",
+    "tslib": "catalog:"
   },
   "devDependencies": {
     "@angular/compiler-cli": "catalog:",
-    "typescript": "catalog:"
+    "typescript": "catalog:",
+    "vitest": "catalog:"
   }
 }

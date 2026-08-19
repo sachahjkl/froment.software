@@ -38,11 +38,25 @@ export class BackOfficeClients {
   protected readonly i18n = inject(I18nService);
   private readonly api = inject(BackOfficeClientsApi);
   private readonly textCopy = inject(TextCopy);
-  private readonly createModel = signal({ displayName: '' });
+  private readonly createModel = signal({
+    displayName: '',
+    addressLine1: '',
+    addressLine2: '',
+    postalCode: '',
+    city: '',
+    country: '',
+    email: '',
+  });
   protected readonly createForm = form(this.createModel, (path) => {
     required(path.displayName);
     maxLength(path.displayName, 120);
     pattern(path.displayName, /\S/);
+    maxLength(path.addressLine1, 160);
+    maxLength(path.addressLine2, 160);
+    maxLength(path.postalCode, 32);
+    maxLength(path.city, 120);
+    maxLength(path.country, 120);
+    maxLength(path.email, 254);
   });
   protected readonly clients = signal<ReadonlyArray<ClientSummaryValue>>([]);
   protected readonly state = signal<PageState>('loading');
@@ -67,7 +81,7 @@ export class BackOfficeClients {
     void submit(this.createForm, async () => {
       this.createPending.set(true);
       this.error.set(undefined);
-      const outcome = await this.api.create(this.createModel().displayName);
+      const outcome = await this.api.create(this.createModel());
       this.createPending.set(false);
       if (!outcome.success) {
         this.setError(outcome.code);
@@ -78,7 +92,16 @@ export class BackOfficeClients {
           left.displayName.localeCompare(right.displayName),
         ),
       );
-      this.createModel.set({ displayName: '' });
+      this.createModel.set({
+        displayName: '',
+        addressLine1: '',
+        addressLine2: '',
+        postalCode: '',
+        city: '',
+        country: '',
+        email: '',
+      });
+      this.createForm().reset();
     });
   }
 

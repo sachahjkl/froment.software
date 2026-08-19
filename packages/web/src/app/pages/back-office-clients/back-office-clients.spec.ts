@@ -2,6 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 
 import { BackOfficeClientsApi } from '../../back-office/back-office-clients-api';
+import { type ClientCreateRequestValue } from '@froment/contracts';
 import { BackOfficeClients } from './back-office-clients';
 
 class ClientsApiStub {
@@ -11,13 +12,13 @@ class ClientsApiStub {
     return Promise.resolve([]);
   }
 
-  create(displayName: string) {
-    this.createdNames.push(displayName);
+  create(request: ClientCreateRequestValue) {
+    this.createdNames.push(request.displayName);
     return Promise.resolve({
       success: true as const,
       result: {
         id: '01ARZ3NDEKTSV4RRFFQ69G5FAV' as const,
-        displayName,
+        ...request,
         archived: false,
       },
     });

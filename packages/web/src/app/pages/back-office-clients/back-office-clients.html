@@ -22,6 +22,55 @@
       </span>
       }
     </label>
+    <label class="field">
+      {{ i18n.t('backOffice.clients.addressLine1') }}
+      <input
+        class="input"
+        type="text"
+        autocomplete="address-line1"
+        [formField]="createForm.addressLine1"
+      />
+    </label>
+    <label class="field">
+      {{ i18n.t('backOffice.clients.addressLine2') }}
+      <input
+        class="input"
+        type="text"
+        autocomplete="address-line2"
+        [formField]="createForm.addressLine2"
+      />
+    </label>
+    <label class="field">
+      {{ i18n.t('backOffice.clients.postalCode') }}
+      <input
+        class="input"
+        type="text"
+        autocomplete="postal-code"
+        [formField]="createForm.postalCode"
+      />
+    </label>
+    <label class="field">
+      {{ i18n.t('backOffice.clients.city') }}
+      <input
+        class="input"
+        type="text"
+        autocomplete="address-level2"
+        [formField]="createForm.city"
+      />
+    </label>
+    <label class="field">
+      {{ i18n.t('backOffice.clients.country') }}
+      <input
+        class="input"
+        type="text"
+        autocomplete="country-name"
+        [formField]="createForm.country"
+      />
+    </label>
+    <label class="field">
+      {{ i18n.t('backOffice.clients.email') }}
+      <input class="input" type="email" autocomplete="email" [formField]="createForm.email" />
+    </label>
     <button appButton variant="primary" type="submit" [disabled]="createDisabled()">
       @if (createPending()) { {{ i18n.t('backOffice.clients.creating') }} } @else { {{
       i18n.t('backOffice.clients.create') }} }

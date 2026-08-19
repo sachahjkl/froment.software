@@ -75,6 +75,7 @@ export class BackOfficeQuoteEditor {
   protected readonly isNew = computed(() => this.quoteIdParameter === null);
   protected readonly clients = signal<ClientListValue>([]);
   protected readonly detail = signal<QuoteDetailValue | undefined>(undefined);
+  protected readonly previewVersion = signal<number | undefined>(undefined);
   protected readonly loading = signal(true);
   protected readonly unavailable = signal(false);
   protected readonly saving = signal(false);
@@ -129,6 +130,11 @@ export class BackOfficeQuoteEditor {
   protected readonly totalsAreStale = computed(
     () => this.detail() !== undefined && this.quoteForm().dirty(),
   );
+  protected readonly previewUrl = computed(() => {
+    const version = this.previewVersion();
+    if (this.quoteId === undefined || version === undefined) return undefined;
+    return `/api/quotes/${this.quoteId}/revisions/${version}/preview`;
+  });
 
   constructor() {
     afterNextRender(() => void this.load());
@@ -185,6 +191,7 @@ export class BackOfficeQuoteEditor {
         this.saving.set(false);
         if (!outcome.success) return this.setError(outcome.code);
         this.detail.set(outcome.result);
+        this.previewVersion.set(outcome.result.version);
         this.quoteForm().reset();
         await this.router.navigate(['/backoffice/quotes', outcome.result.id], { replaceUrl: true });
         return;
@@ -203,6 +210,7 @@ export class BackOfficeQuoteEditor {
       this.saving.set(false);
       if (!outcome.success) return this.setError(outcome.code);
       this.detail.set(outcome.result);
+      this.previewVersion.set(outcome.result.version);
       this.model.set(this.modelFromDetail(outcome.result));
       this.quoteForm().reset();
     });
@@ -220,6 +228,10 @@ export class BackOfficeQuoteEditor {
       dateStyle: 'medium',
       timeStyle: 'short',
     }).format(new Date(value));
+  }
+
+  protected showPreview(version: number): void {
+    this.previewVersion.set(version);
   }
 
   private async load(): Promise<void> {
@@ -240,6 +252,7 @@ export class BackOfficeQuoteEditor {
           return;
         }
         this.detail.set(outcome.result);
+        this.previewVersion.set(outcome.result.version);
         this.model.set(this.modelFromDetail(outcome.result));
         this.quoteForm().reset();
       }

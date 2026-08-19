@@ -1,3 +1,4 @@
+import { Schema } from 'effect';
 import { HttpApi, HttpApiEndpoint, HttpApiGroup, HttpApiSchema } from 'effect/unstable/httpapi';
 
 import { HealthStatus } from './status.js';
@@ -36,10 +37,18 @@ import {
   QuoteList,
   QuoteNotFound,
   QuoteNotEditable,
+  QuotePreviewUnavailable,
   QuoteRevisionCreateRequest,
   QuoteVersionConflict,
+  IssuerSettings,
+  IssuerSettingsUpdateRequest,
 } from './quotes.js';
 import { DeploymentMetadata } from './version.js';
+
+const RevisionVersionParameter = Schema.NumberFromString.check(
+  Schema.isInt(),
+  Schema.isGreaterThan(0),
+);
 
 export class SystemApi extends HttpApiGroup.make('system', { topLevel: true }).add(
   HttpApiEndpoint.get('health', '/api/health', {
@@ -121,6 +130,23 @@ export class ClientsApi extends HttpApiGroup.make('clients', { topLevel: true })
 ) {}
 
 export class QuotesApi extends HttpApiGroup.make('quotes', { topLevel: true }).add(
+  HttpApiEndpoint.get('issuerSettingsGet', '/api/issuer-settings', {
+    success: IssuerSettings,
+    error: [
+      AuthenticationRequired.pipe(HttpApiSchema.status(401)),
+      PermissionDenied.pipe(HttpApiSchema.status(403)),
+    ],
+  }),
+  HttpApiEndpoint.put('issuerSettingsUpdate', '/api/issuer-settings', {
+    payload: IssuerSettingsUpdateRequest,
+    success: IssuerSettings,
+    error: [
+      AuthenticationRequired.pipe(HttpApiSchema.status(401)),
+      PermissionDenied.pipe(HttpApiSchema.status(403)),
+      CsrfRejected.pipe(HttpApiSchema.status(403)),
+      RequestRateLimited.pipe(HttpApiSchema.status(429)),
+    ],
+  }),
   HttpApiEndpoint.get('quoteList', '/api/quotes', {
     success: QuoteList,
     error: [
@@ -135,6 +161,16 @@ export class QuotesApi extends HttpApiGroup.make('quotes', { topLevel: true }).a
       AuthenticationRequired.pipe(HttpApiSchema.status(401)),
       PermissionDenied.pipe(HttpApiSchema.status(403)),
       QuoteNotFound.pipe(HttpApiSchema.status(404)),
+    ],
+  }),
+  HttpApiEndpoint.get('quotePreview', '/api/quotes/:quoteId/revisions/:version/preview', {
+    params: { quoteId: Ulid, version: RevisionVersionParameter },
+    success: Schema.String.pipe(HttpApiSchema.asText({ contentType: 'text/html; charset=utf-8' })),
+    error: [
+      AuthenticationRequired.pipe(HttpApiSchema.status(401)),
+      PermissionDenied.pipe(HttpApiSchema.status(403)),
+      QuoteNotFound.pipe(HttpApiSchema.status(404)),
+      QuotePreviewUnavailable.pipe(HttpApiSchema.status(409)),
     ],
   }),
   HttpApiEndpoint.post('quoteCreate', '/api/quotes', {

@@ -4,6 +4,8 @@ import {
   QuoteAmountTooLarge,
   QuoteNotFound,
   QuoteNotEditable,
+  QuotePreviewUnavailable,
+  QuoteRenderSnapshot,
   QuoteStatus,
   QuoteVersionConflict,
   Ulid,
@@ -14,12 +16,15 @@ import {
   type QuoteListValue,
   type QuoteRevisionCreateRequestValue,
   type QuoteRevisionValue,
+  type QuoteRenderSnapshotValue,
+  type IssuerSettingsValue,
   type UlidValue,
 } from '@froment/contracts';
 import { Clock, Context, DateTime, Effect, Layer, Schema } from 'effect';
 import { ulid } from 'ulid';
 
 import { Database, DatabaseError } from '../database/database.js';
+import { IssuerSettings } from '../documents/issuer-settings.js';
 import { calculateQuoteLine, calculateQuoteTotals } from './quote-calculation.js';
 
 const QuoteRecord = Schema.Struct({
@@ -56,8 +61,15 @@ const LineRecord = Schema.Struct({
 });
 const ClientRecord = Schema.Struct({
   displayName: Schema.NonEmptyString,
+  addressLine1: Schema.String,
+  addressLine2: Schema.String,
+  postalCode: Schema.String,
+  city: Schema.String,
+  country: Schema.String,
+  email: Schema.String,
   disabledAt: Schema.NullOr(Schema.Number),
 });
+const SnapshotRecord = Schema.Struct({ renderSnapshot: Schema.NullOr(Schema.String) });
 const QuoteSummaryRecord = Schema.Struct({
   id: Ulid,
   clientId: Ulid,
@@ -84,6 +96,13 @@ export interface QuotesService {
   readonly get: (
     quoteId: UlidValue,
   ) => Effect.Effect<QuoteDetailValue, QuoteNotFound | DatabaseError>;
+  readonly getSnapshot: (
+    quoteId: UlidValue,
+    version: number,
+  ) => Effect.Effect<
+    QuoteRenderSnapshotValue,
+    QuoteNotFound | QuotePreviewUnavailable | DatabaseError
+  >;
   readonly create: (
     request: QuoteCreateRequestValue,
     createdByUserId: string,
@@ -115,6 +134,7 @@ export const QuotesLive = Layer.effect(
   Quotes,
   Effect.gen(function* () {
     const database = yield* Database;
+    const issuerSettings = yield* IssuerSettings;
 
     const readDetail = (quoteId: string): QuoteDetailValue | undefined => {
       const rawQuote = database.sqlite.prepare(`${quoteSql} where id = ?`).get(quoteId);
@@ -204,10 +224,41 @@ export const QuotesLive = Layer.effect(
       });
     });
 
+    const getSnapshot = Effect.fn('Quotes.getSnapshot')(function* (
+      quoteId: UlidValue,
+      version: number,
+    ) {
+      return yield* Effect.try({
+        try: () => {
+          const row = database.sqlite
+            .prepare(
+              `select render_snapshot as renderSnapshot from quote_revisions
+               where quote_id = ? and version = ?`,
+            )
+            .get(quoteId, version);
+          if (row === undefined) throw new QuoteNotFound({ code: 'quote.not_found' });
+          const { renderSnapshot } = Schema.decodeUnknownSync(SnapshotRecord)(row);
+          if (renderSnapshot === null) {
+            throw new QuotePreviewUnavailable({ code: 'quote.preview_unavailable' });
+          }
+          return Schema.decodeUnknownSync(QuoteRenderSnapshot)(JSON.parse(renderSnapshot));
+        },
+        catch: (cause) => {
+          if (cause instanceof QuoteNotFound || cause instanceof QuotePreviewUnavailable)
+            return cause;
+          return new DatabaseError({ operation: 'get quote render snapshot', cause });
+        },
+      });
+    });
+
     const findClient = (clientId: string) => {
       const rawClient = database.sqlite
         .prepare(
-          `select users.display_name as displayName, users.disabled_at as disabledAt
+          `select users.display_name as displayName, users.disabled_at as disabledAt,
+                  clients.address_line_1 as addressLine1,
+                  clients.address_line_2 as addressLine2,
+                  clients.postal_code as postalCode, clients.city,
+                  clients.country, clients.email
            from clients join users on users.id = clients.id where clients.id = ?`,
         )
         .get(clientId);
@@ -221,6 +272,8 @@ export const QuotesLive = Layer.effect(
       quoteId: string,
       version: number,
       clientDisplayName: string,
+      client: typeof ClientRecord.Type,
+      issuer: IssuerSettingsValue,
       title: string,
       conditions: string,
       lines: ReadonlyArray<QuoteLineInputValue>,
@@ -228,18 +281,45 @@ export const QuotesLive = Layer.effect(
       now: number,
     ) => {
       const revisionId = ulid(now);
-      const calculatedLines = lines.map((line) => ({
+      const calculatedLines = lines.map((line, position) => ({
+        id: ulid(now),
+        position,
         ...line,
         description: line.description.trim(),
         ...calculateQuoteLine(line),
       }));
       const totals = calculateQuoteTotals(calculatedLines);
+      const createdAt = DateTime.formatIso(DateTime.makeUnsafe(now));
+      const snapshot = Schema.decodeUnknownSync(QuoteRenderSnapshot)({
+        templateId: 'quote-default',
+        templateVersion: 1,
+        quoteId,
+        revisionId,
+        version,
+        createdAt,
+        issuer,
+        client: {
+          displayName: client.displayName,
+          addressLine1: client.addressLine1,
+          addressLine2: client.addressLine2,
+          postalCode: client.postalCode,
+          city: client.city,
+          country: client.country,
+          email: client.email,
+        },
+        title: title.trim(),
+        conditions,
+        currency: 'EUR',
+        ...totals,
+        lines: calculatedLines,
+      });
       database.sqlite
         .prepare(
           `insert into quote_revisions
            (id, quote_id, version, client_display_name, title, conditions, currency,
-            net_total_cents, vat_total_cents, total_cents, created_at, created_by_user_id)
-           values (?, ?, ?, ?, ?, ?, 'EUR', ?, ?, ?, ?, ?)`,
+             net_total_cents, vat_total_cents, total_cents, created_at, created_by_user_id,
+             template_id, template_version, render_snapshot)
+            values (?, ?, ?, ?, ?, ?, 'EUR', ?, ?, ?, ?, ?, 'quote-default', 1, ?)`,
         )
         .run(
           revisionId,
@@ -253,6 +333,7 @@ export const QuotesLive = Layer.effect(
           totals.totalCents,
           now,
           createdByUserId,
+          JSON.stringify(snapshot),
         );
       const insertLine = database.sqlite.prepare(
         `insert into quote_lines
@@ -260,11 +341,11 @@ export const QuotesLive = Layer.effect(
           vat_rate_basis_points, net_total_cents, vat_total_cents, total_cents)
          values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       );
-      calculatedLines.forEach((line, position) =>
+      calculatedLines.forEach((line) =>
         insertLine.run(
-          ulid(now),
+          line.id,
           revisionId,
-          position,
+          line.position,
           line.description,
           line.quantityMilli,
           line.unitPriceCents,
@@ -281,6 +362,7 @@ export const QuotesLive = Layer.effect(
       createdByUserId: string,
     ) {
       const now = yield* Clock.currentTimeMillis;
+      const issuer = yield* issuerSettings.get;
       const quoteId = ulid(now);
       return yield* Effect.try({
         try: () =>
@@ -296,6 +378,8 @@ export const QuotesLive = Layer.effect(
                 quoteId,
                 1,
                 client.displayName,
+                client,
+                issuer,
                 request.title,
                 request.conditions,
                 request.lines,
@@ -323,6 +407,7 @@ export const QuotesLive = Layer.effect(
       createdByUserId: string,
     ) {
       const now = yield* Clock.currentTimeMillis;
+      const issuer = yield* issuerSettings.get;
       return yield* Effect.try({
         try: () =>
           database.sqlite
@@ -360,6 +445,8 @@ export const QuotesLive = Layer.effect(
                 quoteId,
                 nextVersion,
                 client.displayName,
+                client,
+                issuer,
                 request.title,
                 request.conditions,
                 request.lines,
@@ -389,6 +476,6 @@ export const QuotesLive = Layer.effect(
       });
     });
 
-    return Quotes.of({ list, get, create, createRevision });
+    return Quotes.of({ list, get, getSnapshot, create, createRevision });
   }),
 );

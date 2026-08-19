@@ -146,6 +146,20 @@ export const routes: Routes = [
     },
   },
   {
+    path: 'backoffice/issuer-settings',
+    loadComponent: () =>
+      import('./pages/back-office-issuer-settings/back-office-issuer-settings').then(
+        (module) => module.BackOfficeIssuerSettings,
+      ),
+    canActivate: [backOfficeAdministratorGuard],
+    canDeactivate: [unsavedChangesGuard],
+    data: {
+      titleKey: 'page.back_office_issuer_settings',
+      descriptionKey: 'page.description.back_office_issuer_settings',
+      robots: 'noindex, nofollow',
+    },
+  },
+  {
     path: 'backoffice/quotes',
     loadComponent: () =>
       import('./pages/back-office-quotes/back-office-quotes').then(

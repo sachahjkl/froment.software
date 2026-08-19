@@ -37,6 +37,28 @@ const QuoteLinesInput = Schema.Array(QuoteLineInput).check(
 const QuoteTitle = Schema.String.check(Schema.isPattern(/\S/), Schema.isMaxLength(120));
 const QuoteConditions = Schema.String.check(Schema.isMaxLength(2_000));
 
+export const DocumentParty = Schema.Struct({
+  displayName: Schema.String.check(Schema.isPattern(/\S/), Schema.isMaxLength(160)),
+  addressLine1: Schema.String.check(Schema.isMaxLength(160)),
+  addressLine2: Schema.String.check(Schema.isMaxLength(160)),
+  postalCode: Schema.String.check(Schema.isMaxLength(32)),
+  city: Schema.String.check(Schema.isMaxLength(120)),
+  country: Schema.String.check(Schema.isMaxLength(120)),
+  email: Schema.String.check(Schema.isMaxLength(254)),
+});
+export type DocumentParty = typeof DocumentParty.Type;
+
+export const IssuerSettings = Schema.Struct({
+  ...DocumentParty.fields,
+  phone: Schema.String.check(Schema.isMaxLength(64)),
+  registrationNumber: Schema.String.check(Schema.isMaxLength(64)),
+  vatNumber: Schema.String.check(Schema.isMaxLength(64)),
+});
+export type IssuerSettings = typeof IssuerSettings.Type;
+
+export const IssuerSettingsUpdateRequest = IssuerSettings;
+export type IssuerSettingsUpdateRequest = typeof IssuerSettingsUpdateRequest.Type;
+
 export const QuoteCreateRequest = Schema.Struct({
   clientId: Ulid,
   title: QuoteTitle,
@@ -62,6 +84,25 @@ export const QuoteLine = Schema.Struct({
   totalCents: SafeInteger,
 });
 export type QuoteLine = typeof QuoteLine.Type;
+
+export const QuoteRenderSnapshot = Schema.Struct({
+  templateId: Schema.Literal('quote-default'),
+  templateVersion: Schema.Literal(1),
+  quoteId: Ulid,
+  revisionId: Ulid,
+  version: PositiveSafeInteger,
+  createdAt: IsoUtc,
+  issuer: IssuerSettings,
+  client: DocumentParty,
+  title: QuoteTitle,
+  conditions: QuoteConditions,
+  currency: Schema.Literal('EUR'),
+  netTotalCents: SafeInteger,
+  vatTotalCents: SafeInteger,
+  totalCents: SafeInteger,
+  lines: Schema.Array(QuoteLine),
+});
+export type QuoteRenderSnapshot = typeof QuoteRenderSnapshot.Type;
 
 export const QuoteRevision = Schema.Struct({
   id: Ulid,
@@ -132,6 +173,12 @@ export class QuoteNotEditable extends Schema.TaggedError<QuoteNotEditable>()(
   { httpApiStatus: 409 },
 ) {}
 
+export class QuotePreviewUnavailable extends Schema.TaggedError<QuotePreviewUnavailable>()(
+  'QuotePreviewUnavailable',
+  { code: Schema.Literal('quote.preview_unavailable') },
+  { httpApiStatus: 409 },
+) {}
+
 export const QuoteFailure = Schema.Union([
   AuthenticationRequired,
   PermissionDenied,
@@ -140,6 +187,7 @@ export const QuoteFailure = Schema.Union([
   QuoteVersionConflict,
   QuoteAmountTooLarge,
   QuoteNotEditable,
+  QuotePreviewUnavailable,
   ClientNotFound,
   ClientArchived,
   RequestRateLimited,

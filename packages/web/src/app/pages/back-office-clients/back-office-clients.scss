@@ -18,15 +18,22 @@ h1 {
 }
 
 .create-client {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   align-items: end;
   gap: var(--space-3);
-  max-width: 36rem;
+  max-width: 52rem;
   margin-top: var(--space-6);
 }
 
-.create-client .field {
-  flex: 1;
+.create-client .field:first-child,
+.create-client .field:nth-child(2),
+.create-client .field:nth-child(3) {
+  grid-column: 1 / -1;
+}
+
+.create-client button {
+  justify-self: start;
 }
 
 .field-error {
@@ -100,7 +107,10 @@ th {
 @media (max-width: 38rem) {
   .clients-page > header,
   .create-client {
-    align-items: stretch;
-    flex-direction: column;
+    grid-template-columns: 1fr;
+  }
+
+  .create-client .field {
+    grid-column: 1;
   }
 }

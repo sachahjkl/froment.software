@@ -23,6 +23,14 @@ const deploymentMetadata = {
     { name: 'froment-software', version: '0.0.0' },
   ],
 };
+const emptyClientDetails = {
+  addressLine1: '',
+  addressLine2: '',
+  postalCode: '',
+  city: '',
+  country: '',
+  email: '',
+};
 
 const reservePort = () =>
   new Promise<number>((resolve, reject) => {
@@ -364,7 +372,7 @@ describe('HTTP server', () => {
         'content-type': 'application/json',
         origin: baseUrl,
       },
-      body: JSON.stringify({ displayName: 'Acme' }),
+      body: JSON.stringify({ ...emptyClientDetails, displayName: 'Acme' }),
     });
     expect(missingCsrf.status).toBe(403);
     await expect(missingCsrf.json()).resolves.toMatchObject({
@@ -380,7 +388,7 @@ describe('HTTP server', () => {
         origin: 'https://attacker.example',
         'x-csrf-token': administratorCsrf,
       },
-      body: JSON.stringify({ displayName: 'Acme' }),
+      body: JSON.stringify({ ...emptyClientDetails, displayName: 'Acme' }),
     });
     expect(foreignOrigin.status).toBe(403);
 
@@ -392,7 +400,7 @@ describe('HTTP server', () => {
         origin: baseUrl,
         'x-csrf-token': administratorCsrf,
       },
-      body: JSON.stringify({ displayName: '  Acme  ' }),
+      body: JSON.stringify({ ...emptyClientDetails, displayName: '  Acme  ' }),
     });
     expect(createdResponse.status).toBe(200);
     const client = (await createdResponse.json()) as {
@@ -403,6 +411,7 @@ describe('HTTP server', () => {
     expect(client).toEqual({
       id: expect.stringMatching(/^[0-7][0-9A-Z]{25}$/),
       displayName: 'Acme',
+      ...emptyClientDetails,
       archived: false,
     });
 
@@ -534,11 +543,38 @@ describe('HTTP server', () => {
       origin: baseUrl,
       'x-csrf-token': csrf,
     };
+    const issuerA = {
+      displayName: 'Froment Software A',
+      addressLine1: '10 rue du Code',
+      addressLine2: '',
+      postalCode: '75001',
+      city: 'Paris',
+      country: 'France',
+      email: 'hello@example.test',
+      phone: '+33 1 23 45 67 89',
+      registrationNumber: '123 456 789 00012',
+      vatNumber: 'FR00123456789',
+    };
+    const issuerResponse = await fetch(`${baseUrl}/api/issuer-settings`, {
+      method: 'PUT',
+      headers: writeHeaders,
+      body: JSON.stringify(issuerA),
+    });
+    expect(issuerResponse.status).toBe(200);
+    await expect(issuerResponse.json()).resolves.toEqual(issuerA);
 
     const clientResponse = await fetch(`${baseUrl}/api/clients`, {
       method: 'POST',
       headers: writeHeaders,
-      body: JSON.stringify({ displayName: 'Quote client' }),
+      body: JSON.stringify({
+        ...emptyClientDetails,
+        displayName: 'Quote client',
+        addressLine1: '1 rue du Test',
+        postalCode: '75001',
+        city: 'Paris',
+        country: 'France',
+        email: 'client@example.test',
+      }),
     });
     expect(clientResponse.status).toBe(200);
     const client = Schema.decodeUnknownSync(ClientSummary)(await clientResponse.json());
@@ -573,6 +609,25 @@ describe('HTTP server', () => {
     });
     expect(quote.currentRevision.createdAt).toMatch(/^\d{4}-\d{2}-\d{2}T.*\.\d{3}Z$/);
     expect(quote.revisions).toHaveLength(1);
+    const firstPreview = await fetch(`${baseUrl}/api/quotes/${quote.id}/revisions/1/preview`, {
+      headers: { cookie },
+    });
+    expect(firstPreview.status).toBe(200);
+    expect(firstPreview.headers.get('content-type')).toContain('text/html');
+    expect(firstPreview.headers.get('cache-control')).toBe('no-store');
+    expect(firstPreview.headers.get('content-security-policy')).toContain("default-src 'none'");
+    expect(firstPreview.headers.get('x-content-type-options')).toBe('nosniff');
+    const firstPreviewHtml = await firstPreview.text();
+    expect(firstPreviewHtml).toContain('Froment Software A');
+    expect(firstPreviewHtml).toContain('1 rue du Test');
+
+    const issuerB = { ...issuerA, displayName: 'Froment Software B' };
+    const issuerUpdate = await fetch(`${baseUrl}/api/issuer-settings`, {
+      method: 'PUT',
+      headers: writeHeaders,
+      body: JSON.stringify(issuerB),
+    });
+    expect(issuerUpdate.status).toBe(200);
 
     const oversizedAmount = await fetch(`${baseUrl}/api/quotes`, {
       method: 'POST',
@@ -619,6 +674,15 @@ describe('HTTP server', () => {
     expect(revised.version).toBe(2);
     expect(revised.currentRevision).toMatchObject({ title: 'Revised quote', totalCents: 2 });
     expect(revised.revisions).toHaveLength(2);
+    const unchangedFirstPreview = await fetch(
+      `${baseUrl}/api/quotes/${quote.id}/revisions/1/preview`,
+      { headers: { cookie } },
+    );
+    expect(await unchangedFirstPreview.text()).toContain('Froment Software A');
+    const secondPreview = await fetch(`${baseUrl}/api/quotes/${quote.id}/revisions/2/preview`, {
+      headers: { cookie },
+    });
+    expect(await secondPreview.text()).toContain('Froment Software B');
 
     const conflict = await fetch(`${baseUrl}/api/quotes/${quote.id}/revisions`, {
       method: 'POST',

@@ -4,7 +4,9 @@
     "experimentalDecorators": true,
     "lib": ["ES2022", "DOM"],
     "types": [],
-    "noEmit": true
+    "outDir": "dist",
+    "rootDir": "src",
+    "declaration": true
   },
   "angularCompilerOptions": {
     "strictInjectionParameters": true,

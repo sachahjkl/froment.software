@@ -15,6 +15,7 @@
   "dependencies": {
     "@effect/platform-node": "catalog:",
     "@froment/contracts": "workspace:*",
+    "@froment/documents": "workspace:*",
     "better-sqlite3": "catalog:",
     "drizzle-orm": "catalog:",
     "effect": "catalog:",

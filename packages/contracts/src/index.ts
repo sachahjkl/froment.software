@@ -57,6 +57,12 @@ export {
   BootstrapUnavailable,
 } from './bootstrap.js';
 export {
+  DocumentParty,
+  type DocumentParty as DocumentPartyValue,
+  IssuerSettings,
+  type IssuerSettings as IssuerSettingsValue,
+  IssuerSettingsUpdateRequest,
+  type IssuerSettingsUpdateRequest as IssuerSettingsUpdateRequestValue,
   QuoteCreateRequest,
   type QuoteCreateRequest as QuoteCreateRequestValue,
   QuoteDetail,
@@ -72,6 +78,9 @@ export {
   QuoteNotFound,
   QuoteAmountTooLarge,
   QuoteNotEditable,
+  QuotePreviewUnavailable,
+  QuoteRenderSnapshot,
+  type QuoteRenderSnapshot as QuoteRenderSnapshotValue,
   QuoteRevision,
   type QuoteRevision as QuoteRevisionValue,
   QuoteRevisionCreateRequest,

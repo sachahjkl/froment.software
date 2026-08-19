@@ -6,6 +6,7 @@ import {
   ClientList,
   ClientSummary,
   type ClientAccessValue,
+  type ClientCreateRequestValue,
   type ClientFailureCode,
   type ClientListValue,
   type ClientSummaryValue,
@@ -29,11 +30,9 @@ export class BackOfficeClientsApi {
     return Schema.decodeUnknownSync(ClientList)(response);
   }
 
-  async create(displayName: string): Promise<ClientOutcome<ClientSummaryValue>> {
+  async create(request: ClientCreateRequestValue): Promise<ClientOutcome<ClientSummaryValue>> {
     try {
-      const response = await firstValueFrom(
-        this.http.post<unknown>('/api/clients', { displayName }),
-      );
+      const response = await firstValueFrom(this.http.post<unknown>('/api/clients', request));
       return { success: true, result: Schema.decodeUnknownSync(ClientSummary)(response) };
     } catch (error) {
       if (error instanceof HttpErrorResponse) return this.failure(error);

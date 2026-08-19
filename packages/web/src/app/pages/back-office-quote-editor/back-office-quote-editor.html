@@ -193,9 +193,24 @@
       <li>
         <span><strong>#{{ revision.version }}</strong> · {{ revision.title }}</span>
         <span>{{ date(revision.createdAt) }} · {{ money(revision.totalCents) }}</span>
+        <button appButton type="button" (click)="showPreview(revision.version)">
+          {{ i18n.t('backOffice.quote.preview.show') }}
+        </button>
       </li>
       }
     </ol>
   </aside>
-  } }
+  @if (previewUrl(); as url) {
+  <section class="preview" aria-labelledby="preview-title">
+    <div class="section-heading">
+      <h2 id="preview-title">
+        {{ i18n.tf('backOffice.quote.preview.title', { version: previewVersion() ?? '' }) }}
+      </h2>
+      <a [href]="url" target="_blank" rel="noopener"
+        >{{ i18n.t('backOffice.quote.preview.open') }}</a
+      >
+    </div>
+    <iframe [src]="url" [title]="i18n.t('backOffice.quote.preview.frameTitle')" sandbox></iframe>
+  </section>
+  } } }
 </section>

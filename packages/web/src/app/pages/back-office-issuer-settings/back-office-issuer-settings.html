@@ -1,0 +1,94 @@
+<section class="issuer-page" aria-labelledby="issuer-title">
+  <header>
+    <h1 id="issuer-title">{{ i18n.t('backOffice.issuer.title') }}</h1>
+    <a routerLink="/backoffice/dashboard">{{ i18n.t('backOffice.issuer.back') }}</a>
+  </header>
+
+  <p class="intro">{{ i18n.t('backOffice.issuer.intro') }}</p>
+
+  @if (loading()) {
+  <p aria-live="polite">{{ i18n.t('backOffice.issuer.loading') }}</p>
+  } @else {
+  <form (submit)="save($event)">
+    <label class="field wide">
+      {{ i18n.t('backOffice.issuer.displayName') }}
+      <input
+        class="input"
+        type="text"
+        autocomplete="organization"
+        [formField]="settingsForm.displayName"
+      />
+    </label>
+    <label class="field wide">
+      {{ i18n.t('backOffice.clients.addressLine1') }}
+      <input
+        class="input"
+        type="text"
+        autocomplete="address-line1"
+        [formField]="settingsForm.addressLine1"
+      />
+    </label>
+    <label class="field wide">
+      {{ i18n.t('backOffice.clients.addressLine2') }}
+      <input
+        class="input"
+        type="text"
+        autocomplete="address-line2"
+        [formField]="settingsForm.addressLine2"
+      />
+    </label>
+    <label class="field">
+      {{ i18n.t('backOffice.clients.postalCode') }}
+      <input
+        class="input"
+        type="text"
+        autocomplete="postal-code"
+        [formField]="settingsForm.postalCode"
+      />
+    </label>
+    <label class="field">
+      {{ i18n.t('backOffice.clients.city') }}
+      <input
+        class="input"
+        type="text"
+        autocomplete="address-level2"
+        [formField]="settingsForm.city"
+      />
+    </label>
+    <label class="field">
+      {{ i18n.t('backOffice.clients.country') }}
+      <input
+        class="input"
+        type="text"
+        autocomplete="country-name"
+        [formField]="settingsForm.country"
+      />
+    </label>
+    <label class="field">
+      {{ i18n.t('backOffice.clients.email') }}
+      <input class="input" type="email" autocomplete="email" [formField]="settingsForm.email" />
+    </label>
+    <label class="field">
+      {{ i18n.t('backOffice.issuer.phone') }}
+      <input class="input" type="tel" autocomplete="tel" [formField]="settingsForm.phone" />
+    </label>
+    <label class="field">
+      {{ i18n.t('backOffice.issuer.registrationNumber') }}
+      <input class="input" type="text" [formField]="settingsForm.registrationNumber" />
+    </label>
+    <label class="field">
+      {{ i18n.t('backOffice.issuer.vatNumber') }}
+      <input class="input" type="text" [formField]="settingsForm.vatNumber" />
+    </label>
+    <div class="actions">
+      <button appButton variant="primary" type="submit" [disabled]="saveDisabled()">
+        @if (saving()) { {{ i18n.t('backOffice.issuer.saving') }} } @else { {{
+        i18n.t('backOffice.issuer.save') }} }
+      </button>
+      @if (saved()) { <span role="status">{{ i18n.t('backOffice.issuer.saved') }}</span> }
+    </div>
+  </form>
+  } @if (error(); as errorKey) {
+  <p class="notice danger" role="alert">{{ i18n.t(errorKey) }}</p>
+  }
+</section>

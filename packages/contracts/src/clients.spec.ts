@@ -5,6 +5,14 @@ import { LoginRequest } from './authentication.js';
 import { ClientCreateRequest } from './clients.js';
 
 describe('client contracts', () => {
+  const client = {
+    addressLine1: '',
+    addressLine2: '',
+    postalCode: '',
+    city: '',
+    country: '',
+    email: '',
+  };
   it('accepts both account modes', () => {
     const accessIdentifier = 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA';
     expect(
@@ -16,9 +24,11 @@ describe('client contracts', () => {
   });
 
   it('rejects blank client names', () => {
-    expect(() => Schema.decodeUnknownSync(ClientCreateRequest)({ displayName: '   ' })).toThrow();
-    expect(Schema.decodeUnknownSync(ClientCreateRequest)({ displayName: 'Acme' }).displayName).toBe(
-      'Acme',
-    );
+    expect(() =>
+      Schema.decodeUnknownSync(ClientCreateRequest)({ ...client, displayName: '   ' }),
+    ).toThrow();
+    expect(
+      Schema.decodeUnknownSync(ClientCreateRequest)({ ...client, displayName: 'Acme' }).displayName,
+    ).toBe('Acme');
   });
 });

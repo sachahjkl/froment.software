@@ -46,6 +46,12 @@ export const clients = sqliteTable(
       .references(() => users.id, { onDelete: 'cascade' }),
     createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull(),
     updatedAt: integer('updated_at', { mode: 'timestamp_ms' }).notNull(),
+    addressLine1: text('address_line_1').notNull().default(''),
+    addressLine2: text('address_line_2').notNull().default(''),
+    postalCode: text('postal_code').notNull().default(''),
+    city: text().notNull().default(''),
+    country: text().notNull().default(''),
+    email: text().notNull().default(''),
   },
   (table) => [
     check(
@@ -53,6 +59,35 @@ export const clients = sqliteTable(
       sql`${table.id} is not null and length(${table.id}) = 26 and ${table.id} not glob '*[^0-9A-HJKMNP-TV-Z]*' and substr(${table.id}, 1, 1) between '0' and '7'`,
     ),
     check('clients_timestamps_check', sql`${table.updatedAt} >= ${table.createdAt}`),
+    check(
+      'clients_document_fields_check',
+      sql`length(${table.addressLine1}) <= 160 and length(${table.addressLine2}) <= 160 and length(${table.postalCode}) <= 32 and length(${table.city}) <= 120 and length(${table.country}) <= 120 and length(${table.email}) <= 254`,
+    ),
+  ],
+);
+
+export const issuerSettings = sqliteTable(
+  'issuer_settings',
+  {
+    id: integer().notNull().primaryKey(),
+    displayName: text('display_name').notNull(),
+    addressLine1: text('address_line_1').notNull(),
+    addressLine2: text('address_line_2').notNull(),
+    postalCode: text('postal_code').notNull(),
+    city: text().notNull(),
+    country: text().notNull(),
+    email: text().notNull(),
+    phone: text().notNull(),
+    registrationNumber: text('registration_number').notNull(),
+    vatNumber: text('vat_number').notNull(),
+    updatedAt: integer('updated_at', { mode: 'timestamp_ms' }).notNull(),
+  },
+  (table) => [
+    check('issuer_settings_singleton_check', sql`${table.id} = 1`),
+    check(
+      'issuer_settings_fields_check',
+      sql`length(trim(${table.displayName})) between 1 and 160 and length(${table.addressLine1}) <= 160 and length(${table.addressLine2}) <= 160 and length(${table.postalCode}) <= 32 and length(${table.city}) <= 120 and length(${table.country}) <= 120 and length(${table.email}) <= 254 and length(${table.phone}) <= 64 and length(${table.registrationNumber}) <= 64 and length(${table.vatNumber}) <= 64`,
+    ),
   ],
 );
 
@@ -234,6 +269,9 @@ export const quoteRevisions = sqliteTable(
     createdByUserId: text('created_by_user_id')
       .notNull()
       .references(() => users.id, { onDelete: 'no action' }),
+    templateId: text('template_id'),
+    templateVersion: integer('template_version'),
+    renderSnapshot: text('render_snapshot'),
   },
   (table) => [
     uniqueIndex('quote_revisions_quote_id_version_unique').on(table.quoteId, table.version),
@@ -253,6 +291,10 @@ export const quoteRevisions = sqliteTable(
     check(
       'quote_revisions_totals_check',
       sql`${table.netTotalCents} between 0 and 9007199254740991 and ${table.vatTotalCents} between 0 and 9007199254740991 and ${table.totalCents} between 0 and 9007199254740991 and ${table.totalCents} = ${table.netTotalCents} + ${table.vatTotalCents}`,
+    ),
+    check(
+      'quote_revisions_render_check',
+      sql`(${table.renderSnapshot} is null and ${table.templateId} is null and ${table.templateVersion} is null) or (${table.renderSnapshot} is not null and ${table.templateId} = 'quote-default' and ${table.templateVersion} = 1 and json_valid(${table.renderSnapshot}))`,
     ),
   ],
 );

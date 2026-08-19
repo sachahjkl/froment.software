@@ -1,0 +1,168 @@
+:host {
+  display: block;
+  color: #17201d;
+  font-family: Inter, Arial, sans-serif;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+main {
+  width: min(100%, 190mm);
+  min-height: 267mm;
+  margin: 0 auto;
+  padding: 12mm;
+  background: #fff;
+}
+
+.document-header {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 18mm;
+  padding-bottom: 12mm;
+  border-bottom: 2px solid #17201d;
+}
+
+h1,
+h2,
+p {
+  margin: 0;
+}
+
+h1 {
+  font-size: 28px;
+  letter-spacing: -0.04em;
+}
+
+h2 {
+  font-size: 18px;
+}
+
+.eyebrow {
+  margin-bottom: 2mm;
+  color: #557066;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+address {
+  display: grid;
+  margin-top: 3mm;
+  color: #40534c;
+  font-style: normal;
+}
+
+.quote-meta {
+  min-width: 58mm;
+  padding: 6mm;
+  background: #edf2ef;
+}
+
+.quote-number {
+  margin-bottom: 2mm;
+  font-family: monospace;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.recipient,
+.subject,
+.conditions {
+  margin-top: 11mm;
+}
+
+.recipient {
+  width: 75mm;
+  margin-left: auto;
+  padding-left: 6mm;
+  border-left: 2px solid #b8643d;
+}
+
+table {
+  width: 100%;
+  margin-top: 10mm;
+  border-collapse: collapse;
+}
+
+th,
+td {
+  padding: 3.5mm 2mm;
+  border-bottom: 1px solid #d7dfda;
+  text-align: left;
+  vertical-align: top;
+}
+
+th {
+  color: #557066;
+  font-size: 8px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.number {
+  white-space: nowrap;
+  text-align: right;
+}
+
+.strong {
+  font-weight: 700;
+}
+
+.totals {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 7mm;
+}
+
+dl {
+  width: 72mm;
+  margin: 0;
+}
+
+dl div {
+  display: flex;
+  justify-content: space-between;
+  gap: 8mm;
+  padding: 2mm 0;
+}
+
+dd {
+  margin: 0;
+  font-weight: 700;
+}
+
+.grand-total {
+  margin-top: 2mm;
+  padding: 4mm !important;
+  background: #17201d;
+  color: #fff;
+  font-size: 15px;
+}
+
+.conditions p:last-child {
+  max-width: 130mm;
+  white-space: pre-wrap;
+}
+
+footer {
+  display: flex;
+  gap: 7mm;
+  margin-top: 14mm;
+  padding-top: 4mm;
+  border-top: 1px solid #d7dfda;
+  color: #557066;
+  font-size: 9px;
+}
+
+@page {
+  size: A4;
+  margin: 0;
+}
+
+@media print {
+  main {
+    width: auto;
+    min-height: 0;
+  }
+}

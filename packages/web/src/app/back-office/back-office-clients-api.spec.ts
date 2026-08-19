@@ -31,16 +31,31 @@ describe('BackOfficeClientsApi', () => {
     http.expectOne('/api/clients').flush([]);
     await expect(list).resolves.toEqual([]);
 
-    const create = api.create('Acme');
+    const client = {
+      displayName: 'Acme',
+      addressLine1: '',
+      addressLine2: '',
+      postalCode: '',
+      city: '',
+      country: '',
+      email: '',
+    };
+    const create = api.create(client);
     const request = http.expectOne('/api/clients');
     expect(request.request.method).toBe('POST');
     expect(request.request.headers.get('x-csrf-token')).toBe(
       'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA',
     );
-    expect(request.request.body).toEqual({ displayName: 'Acme' });
+    expect(request.request.body).toEqual(client);
     request.flush({
       id: '01ARZ3NDEKTSV4RRFFQ69G5FAV',
       displayName: 'Acme',
+      addressLine1: '',
+      addressLine2: '',
+      postalCode: '',
+      city: '',
+      country: '',
+      email: '',
       archived: false,
     });
     await expect(create).resolves.toMatchObject({ success: true });

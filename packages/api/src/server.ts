@@ -17,6 +17,8 @@ import { Authentication } from './authentication/authentication.js';
 import { Clients } from './clients/clients.js';
 import { Database } from './database/database.js';
 import { Deployment } from './deployment/deployment.js';
+import { IssuerSettings } from './documents/issuer-settings.js';
+import { QuoteRenderer } from './documents/quote-renderer.js';
 import { Quotes } from './quotes/quotes.js';
 import { RequestLimiter, RequestLimiterLive } from './server/request-limiter.js';
 
@@ -35,6 +37,15 @@ const setPrivateResponseHeaders = HttpEffect.appendPreResponseHandler((_request,
       'cache-control': 'no-store',
       pragma: 'no-cache',
       vary: 'Cookie',
+    }),
+  ),
+);
+
+const setDocumentResponseHeaders = HttpEffect.appendPreResponseHandler((_request, response) =>
+  Effect.succeed(
+    HttpServerResponse.setHeaders(response, {
+      'content-security-policy': "default-src 'none'; style-src 'unsafe-inline'; img-src data:",
+      'x-content-type-options': 'nosniff',
     }),
   ),
 );
@@ -298,6 +309,40 @@ const QuoteHandlers = HttpApiBuilder.group(Api, 'quotes', (handlers) =>
   Effect.succeed(
     handlers
       .handle(
+        'issuerSettingsGet',
+        Effect.fn('issuerSettingsGet')(function* () {
+          yield* setPrivateResponseHeaders;
+          const request = yield* HttpServerRequest.HttpServerRequest;
+          yield* (yield* Authentication)
+            .authorize(request.cookies['__Host-froment-session'], 'template.read', 'administrator')
+            .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
+          return yield* (yield* IssuerSettings).get.pipe(
+            Effect.catchTag('DatabaseError', Effect.orDie),
+          );
+        }),
+      )
+      .handle(
+        'issuerSettingsUpdate',
+        Effect.fn('issuerSettingsUpdate')(function* ({ payload }) {
+          yield* setPrivateResponseHeaders;
+          const request = yield* HttpServerRequest.HttpServerRequest;
+          const principal = yield* (yield* Authentication)
+            .authorizeWrite(
+              request.cookies['__Host-froment-session'],
+              request.cookies['__Host-froment-csrf'],
+              request.headers['x-csrf-token'],
+              request.headers['origin'],
+              'template.select',
+              'administrator',
+            )
+            .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
+          yield* limitPrincipalMutation(principal.userId, 'template.select');
+          return yield* (yield* IssuerSettings)
+            .update(payload)
+            .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
+        }),
+      )
+      .handle(
         'quoteList',
         Effect.fn('quoteList')(function* () {
           yield* setPrivateResponseHeaders;
@@ -321,6 +366,25 @@ const QuoteHandlers = HttpApiBuilder.group(Api, 'quotes', (handlers) =>
           return yield* (yield* Quotes)
             .get(params.quoteId)
             .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
+        }),
+      )
+      .handle(
+        'quotePreview',
+        Effect.fn('quotePreview')(function* ({ params }) {
+          yield* setPrivateResponseHeaders;
+          yield* setDocumentResponseHeaders;
+          const request = yield* HttpServerRequest.HttpServerRequest;
+          yield* (yield* Authentication)
+            .authorize(
+              request.cookies['__Host-froment-session'],
+              'document.render',
+              'administrator',
+            )
+            .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
+          const snapshot = yield* (yield* Quotes)
+            .getSnapshot(params.quoteId, params.version)
+            .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
+          return yield* (yield* QuoteRenderer).render(snapshot).pipe(Effect.orDie);
         }),
       )
       .handle(

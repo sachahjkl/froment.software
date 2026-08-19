@@ -18,12 +18,24 @@ import { Database, DatabaseError } from '../database/database.js';
 const ClientRecord = Schema.Struct({
   id: Ulid,
   displayName: Schema.NonEmptyString,
+  addressLine1: Schema.String,
+  addressLine2: Schema.String,
+  postalCode: Schema.String,
+  city: Schema.String,
+  country: Schema.String,
+  email: Schema.String,
   archived: Schema.Number,
 });
 
 const toSummary = (client: typeof ClientRecord.Type): ClientSummaryValue => ({
   id: client.id,
   displayName: client.displayName,
+  addressLine1: client.addressLine1,
+  addressLine2: client.addressLine2,
+  postalCode: client.postalCode,
+  city: client.city,
+  country: client.country,
+  email: client.email,
   archived: client.archived === 1,
 });
 
@@ -53,6 +65,10 @@ export const ClientsLive = Layer.effect(
         const rows = database.sqlite
           .prepare(
             `select clients.id, users.display_name as displayName,
+                     clients.address_line_1 as addressLine1,
+                     clients.address_line_2 as addressLine2,
+                     clients.postal_code as postalCode, clients.city,
+                     clients.country, clients.email,
                     users.disabled_at is not null as archived
              from clients
              join users on users.id = clients.id
@@ -68,6 +84,14 @@ export const ClientsLive = Layer.effect(
       const id = ulid();
       const now = yield* Clock.currentTimeMillis;
       const displayName = request.displayName.trim();
+      const fields = {
+        addressLine1: request.addressLine1.trim(),
+        addressLine2: request.addressLine2.trim(),
+        postalCode: request.postalCode.trim(),
+        city: request.city.trim(),
+        country: request.country.trim(),
+        email: request.email.trim(),
+      };
       yield* Effect.try({
         try: () =>
           database.sqlite
@@ -78,13 +102,28 @@ export const ClientsLive = Layer.effect(
                 )
                 .run(id, displayName, now, now);
               database.sqlite
-                .prepare('insert into clients (id, created_at, updated_at) values (?, ?, ?)')
-                .run(id, now, now);
+                .prepare(
+                  `insert into clients
+                   (id, created_at, updated_at, address_line_1, address_line_2,
+                    postal_code, city, country, email)
+                   values (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                )
+                .run(
+                  id,
+                  now,
+                  now,
+                  fields.addressLine1,
+                  fields.addressLine2,
+                  fields.postalCode,
+                  fields.city,
+                  fields.country,
+                  fields.email,
+                );
             })
             .immediate(),
         catch: (cause) => new DatabaseError({ operation: 'create client', cause }),
       });
-      return { id, displayName, archived: false };
+      return { id, displayName, ...fields, archived: false };
     });
 
     const archive = Effect.fn('Clients.archive')(function* (clientId: UlidValue) {
@@ -96,6 +135,10 @@ export const ClientsLive = Layer.effect(
               const row = database.sqlite
                 .prepare(
                   `select clients.id, users.display_name as displayName,
+                           clients.address_line_1 as addressLine1,
+                           clients.address_line_2 as addressLine2,
+                           clients.postal_code as postalCode, clients.city,
+                           clients.country, clients.email,
                           users.disabled_at is not null as archived
                    from clients join users on users.id = clients.id
                    where clients.id = ?`,

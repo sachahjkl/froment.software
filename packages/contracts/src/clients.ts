@@ -12,6 +12,12 @@ import { Ulid } from './identifiers.js';
 export const ClientSummary = Schema.Struct({
   id: Ulid,
   displayName: Schema.NonEmptyString,
+  addressLine1: Schema.String,
+  addressLine2: Schema.String,
+  postalCode: Schema.String,
+  city: Schema.String,
+  country: Schema.String,
+  email: Schema.String,
   archived: Schema.Boolean,
 });
 export type ClientSummary = typeof ClientSummary.Type;
@@ -21,6 +27,12 @@ export type ClientList = typeof ClientList.Type;
 
 export const ClientCreateRequest = Schema.Struct({
   displayName: Schema.String.check(Schema.isPattern(/\S/), Schema.isMaxLength(120)),
+  addressLine1: Schema.String.check(Schema.isMaxLength(160)),
+  addressLine2: Schema.String.check(Schema.isMaxLength(160)),
+  postalCode: Schema.String.check(Schema.isMaxLength(32)),
+  city: Schema.String.check(Schema.isMaxLength(120)),
+  country: Schema.String.check(Schema.isMaxLength(120)),
+  email: Schema.String.check(Schema.isMaxLength(254)),
 });
 export type ClientCreateRequest = typeof ClientCreateRequest.Type;
 
