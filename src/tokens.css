@@ -125,31 +125,6 @@
   --color-contrast-line: #777;
   --color-contrast-line-strong: #555;
   --color-contrast-muted: #444;
-
-  /* Aliases used by page styles. */
-  --color-navy: var(--color-accent);
-  --color-navy-dark: var(--color-accent-strong);
-  --color-forest: var(--color-accent-strong);
-  --color-forest-hover: color-mix(in oklab, var(--color-accent-strong), black 18%);
-  --color-mineral: #7569a9;
-  --color-accent-hover: color-mix(in oklab, var(--color-accent), white 16%);
-  --color-clay: var(--color-accent);
-  --color-clay-deep: var(--color-accent-strong);
-  --color-chrome: var(--color-surface);
-  --color-on-dark: #fff;
-  --color-dark-muted: #d9fff9;
-  --ink: var(--color-ink);
-  --ink-2: var(--color-ink-soft);
-  --muted: var(--color-muted);
-  --line: var(--color-line);
-  --surface: var(--color-canvas);
-  --surface-2: var(--color-surface-sunken);
-  --surface-3: #d8d7dd;
-  --accent: var(--color-accent);
-  --accent-2: #17bebb;
-  --accent-dark: var(--color-accent-strong);
-  --warn: var(--color-warning);
-  --danger: var(--color-danger);
 }
 
 :root[data-theme="dark"] {
@@ -190,10 +165,4 @@
   --color-contrast-line: #aaa6b8;
   --color-contrast-line-strong: #d3cfdd;
   --color-contrast-muted: #d3cfdd;
-
-  --color-mineral: #a99ce4;
-  --color-on-dark: #fff;
-  --color-dark-muted: #c8f4ef;
-  --surface-3: #363541;
-  --accent-2: #4fd8d4;
 }
