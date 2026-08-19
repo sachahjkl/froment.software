@@ -253,6 +253,12 @@ code {
   border-color: var(--color-danger);
 }
 
+textarea.input {
+  min-height: calc(3 * var(--control-height));
+  max-height: 70dvh;
+  field-sizing: content;
+}
+
 .field {
   display: grid;
   align-content: start;

@@ -52,11 +52,14 @@
   overflow-x: hidden;
   overflow-y: auto;
   overscroll-behavior: contain;
+  scroll-padding-block: var(--space-2);
+  scroll-snap-type: y proximity;
   touch-action: pan-y;
 }
 
 .mobile-nav > * {
   flex: 0 0 auto;
+  scroll-snap-align: start;
 }
 
 .mobile-nav a {
