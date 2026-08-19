@@ -4,6 +4,7 @@ import { RouterLink } from '@angular/router';
 import { BackOfficeBootstrapApi } from '../../back-office/back-office-bootstrap-api';
 import { I18nService, TranslationKey } from '../../i18n.service';
 import { Button } from '../../shared/button/button';
+import { TextCopy } from '../../shared/text-copy';
 
 type PageState = 'loading' | 'available' | 'unavailable' | 'error';
 
@@ -17,6 +18,7 @@ type PageState = 'loading' | 'available' | 'unavailable' | 'error';
 export class BackOfficeBootstrap {
   protected readonly i18n = inject(I18nService);
   private readonly api = inject(BackOfficeBootstrapApi);
+  private readonly textCopy = inject(TextCopy);
   private readonly model = signal({ password: '' });
   protected readonly bootstrapForm = form(this.model, (path) => required(path.password));
   protected readonly state = signal<PageState>('loading');
@@ -54,8 +56,11 @@ export class BackOfficeBootstrap {
   }
 
   protected async copyIdentifier(value: string): Promise<void> {
-    await navigator.clipboard.writeText(value);
-    this.copied.set(true);
+    if (await this.textCopy.copy(value)) {
+      this.copied.set(true);
+      return;
+    }
+    this.error.set('clipboard.error');
   }
 
   protected copyLabel(): TranslationKey {

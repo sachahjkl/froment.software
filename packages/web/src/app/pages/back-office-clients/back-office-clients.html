@@ -12,10 +12,17 @@
         class="input"
         type="text"
         autocomplete="organization"
+        aria-describedby="client-display-name-error"
+        [attr.aria-invalid]="displayNameInvalid()"
         [formField]="createForm.displayName"
       />
+      @if (displayNameInvalid()) {
+      <span id="client-display-name-error" class="field-error">
+        {{ i18n.t('backOffice.clients.displayNameError') }}
+      </span>
+      }
     </label>
-    <button appButton variant="primary" type="submit" [disabled]="createPending()">
+    <button appButton variant="primary" type="submit" [disabled]="createDisabled()">
       @if (createPending()) { {{ i18n.t('backOffice.clients.creating') }} } @else { {{
       i18n.t('backOffice.clients.create') }} }
     </button>

@@ -1,8 +1,6 @@
-import { DOCUMENT } from '@angular/common';
-import { HttpClient, HttpErrorResponse, HttpHeaders } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import {
-  AccessIdentifier,
   ClientAccess,
   ClientFailure,
   ClientList,
@@ -24,7 +22,6 @@ export type ClientOutcome<T> =
 
 @Injectable({ providedIn: 'root' })
 export class BackOfficeClientsApi {
-  private readonly document = inject(DOCUMENT);
   private readonly http = inject(HttpClient);
 
   async list(): Promise<ClientListValue> {
@@ -35,7 +32,7 @@ export class BackOfficeClientsApi {
   async create(displayName: string): Promise<ClientOutcome<ClientSummaryValue>> {
     try {
       const response = await firstValueFrom(
-        this.http.post<unknown>('/api/clients', { displayName }, { headers: this.writeHeaders() }),
+        this.http.post<unknown>('/api/clients', { displayName }),
       );
       return { success: true, result: Schema.decodeUnknownSync(ClientSummary)(response) };
     } catch (error) {
@@ -47,9 +44,7 @@ export class BackOfficeClientsApi {
   async archive(clientId: UlidValue): Promise<ClientOutcome<ClientSummaryValue>> {
     try {
       const response = await firstValueFrom(
-        this.http.post<unknown>(`/api/clients/${clientId}/archive`, undefined, {
-          headers: this.writeHeaders(),
-        }),
+        this.http.post<unknown>(`/api/clients/${clientId}/archive`, undefined),
       );
       return { success: true, result: Schema.decodeUnknownSync(ClientSummary)(response) };
     } catch (error) {
@@ -61,9 +56,7 @@ export class BackOfficeClientsApi {
   async createAccess(clientId: UlidValue): Promise<ClientOutcome<ClientAccessValue>> {
     try {
       const response = await firstValueFrom(
-        this.http.post<unknown>(`/api/clients/${clientId}/access`, undefined, {
-          headers: this.writeHeaders(),
-        }),
+        this.http.post<unknown>(`/api/clients/${clientId}/access`, undefined),
       );
       return { success: true, result: Schema.decodeUnknownSync(ClientAccess)(response) };
     } catch (error) {
@@ -79,21 +72,5 @@ export class BackOfficeClientsApi {
     } catch {
       return { success: false, code: 'client.error' };
     }
-  }
-
-  private writeHeaders(): HttpHeaders {
-    const csrfToken = Schema.decodeUnknownSync(AccessIdentifier)(
-      this.readCookie('__Host-froment-csrf'),
-    );
-    return new HttpHeaders({ 'x-csrf-token': csrfToken });
-  }
-
-  private readCookie(name: string): string | undefined {
-    const prefix = `${name}=`;
-    return this.document.cookie
-      .split(';')
-      .map((cookie) => cookie.trim())
-      .find((cookie) => cookie.startsWith(prefix))
-      ?.slice(prefix.length);
   }
 }

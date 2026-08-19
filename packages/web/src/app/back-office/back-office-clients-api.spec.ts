@@ -1,5 +1,5 @@
 import { DOCUMENT } from '@angular/common';
-import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClient, withXsrfConfiguration } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 
@@ -9,7 +9,12 @@ describe('BackOfficeClientsApi', () => {
   it('validates lists and sends the CSRF token on writes', async () => {
     TestBed.configureTestingModule({
       providers: [
-        provideHttpClient(),
+        provideHttpClient(
+          withXsrfConfiguration({
+            cookieName: '__Host-froment-csrf',
+            headerName: 'X-CSRF-Token',
+          }),
+        ),
         provideHttpClientTesting(),
         {
           provide: DOCUMENT,

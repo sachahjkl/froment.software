@@ -1,4 +1,11 @@
-import { afterNextRender, ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import {
+  afterNextRender,
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  inject,
+  signal,
+} from '@angular/core';
 import { FormField, form, maxLength, pattern, required, submit } from '@angular/forms/signals';
 import { RouterLink } from '@angular/router';
 import {
@@ -13,6 +20,7 @@ import {
 } from '../../back-office/back-office-clients-api';
 import { I18nService, TranslationKey } from '../../i18n.service';
 import { Button } from '../../shared/button/button';
+import { TextCopy } from '../../shared/text-copy';
 
 type PageState = 'loading' | 'ready' | 'error';
 interface AccessResult extends ClientAccessValue {
@@ -29,6 +37,7 @@ interface AccessResult extends ClientAccessValue {
 export class BackOfficeClients {
   protected readonly i18n = inject(I18nService);
   private readonly api = inject(BackOfficeClientsApi);
+  private readonly textCopy = inject(TextCopy);
   private readonly createModel = signal({ displayName: '' });
   protected readonly createForm = form(this.createModel, (path) => {
     required(path.displayName);
@@ -39,6 +48,12 @@ export class BackOfficeClients {
   protected readonly state = signal<PageState>('loading');
   protected readonly error = signal<TranslationKey | undefined>(undefined);
   protected readonly createPending = signal(false);
+  protected readonly createDisabled = computed(
+    () => this.createPending() || this.createForm().invalid(),
+  );
+  protected readonly displayNameInvalid = computed(
+    () => this.createForm.displayName().touched() && this.createForm.displayName().invalid(),
+  );
   protected readonly pendingClientId = signal<UlidValue | undefined>(undefined);
   protected readonly access = signal<AccessResult | undefined>(undefined);
   protected readonly copied = signal(false);
@@ -100,8 +115,11 @@ export class BackOfficeClients {
   }
 
   protected async copyAccess(accessIdentifier: string): Promise<void> {
-    await navigator.clipboard.writeText(accessIdentifier);
-    this.copied.set(true);
+    if (await this.textCopy.copy(accessIdentifier)) {
+      this.copied.set(true);
+      return;
+    }
+    this.error.set('clipboard.error');
   }
 
   private async load(): Promise<void> {

@@ -1,5 +1,5 @@
 import { ApplicationConfig, provideBrowserGlobalErrorListeners } from '@angular/core';
-import { provideHttpClient, withFetch } from '@angular/common/http';
+import { provideHttpClient, withFetch, withXsrfConfiguration } from '@angular/common/http';
 import {
   provideClientHydration,
   withEventReplay,
@@ -12,7 +12,13 @@ import { routes } from './app.routes';
 export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
-    provideHttpClient(withFetch()),
+    provideHttpClient(
+      withFetch(),
+      withXsrfConfiguration({
+        cookieName: '__Host-froment-csrf',
+        headerName: 'X-CSRF-Token',
+      }),
+    ),
     provideClientHydration(withEventReplay(), withNoIncrementalHydration()),
     provideRouter(
       routes,

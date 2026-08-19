@@ -1,5 +1,5 @@
-import { DOCUMENT, isPlatformBrowser } from '@angular/common';
-import { HttpClient, HttpErrorResponse, HttpHeaders } from '@angular/common/http';
+import { isPlatformBrowser } from '@angular/common';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { inject, Injectable, PLATFORM_ID } from '@angular/core';
 import { Router } from '@angular/router';
 import {
@@ -22,7 +22,6 @@ export type AuthenticationOutcome =
 
 @Injectable({ providedIn: 'root' })
 export class BackOfficeAuth {
-  private readonly document = inject(DOCUMENT);
   private readonly http = inject(HttpClient);
   private readonly isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
 
@@ -73,27 +72,11 @@ export class BackOfficeAuth {
   async signOut(): Promise<boolean> {
     if (!this.isBrowser) return false;
     try {
-      const csrfToken = Schema.decodeUnknownSync(AccessIdentifier)(
-        this.readCookie('__Host-froment-csrf'),
-      );
-      const response = await firstValueFrom(
-        this.http.post<unknown>('/api/auth/logout', undefined, {
-          headers: new HttpHeaders({ 'x-csrf-token': csrfToken }),
-        }),
-      );
+      const response = await firstValueFrom(this.http.post<unknown>('/api/auth/logout', undefined));
       return !Schema.decodeUnknownSync(SessionStatus)(response).authenticated;
     } catch {
       return false;
     }
-  }
-
-  private readCookie(name: string): string | undefined {
-    const prefix = `${name}=`;
-    return this.document.cookie
-      .split(';')
-      .map((cookie) => cookie.trim())
-      .find((cookie) => cookie.startsWith(prefix))
-      ?.slice(prefix.length);
   }
 }
 

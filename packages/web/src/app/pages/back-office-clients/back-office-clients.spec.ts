@@ -44,4 +44,25 @@ describe('BackOfficeClients', () => {
     expect(api.createdNames).toEqual(['Acme']);
     expect(root.textContent).toContain('Acme');
   });
+
+  it('shows validation feedback without sending an invalid client', async () => {
+    const api = new ClientsApiStub();
+    TestBed.configureTestingModule({
+      providers: [provideRouter([]), { provide: BackOfficeClientsApi, useValue: api }],
+    });
+    const fixture = TestBed.createComponent(BackOfficeClients);
+    await fixture.whenStable();
+    const root: HTMLElement = fixture.nativeElement;
+    const form = root.querySelector<HTMLFormElement>('form');
+    if (form === null) throw new Error('The client form is unavailable.');
+
+    form.dispatchEvent(new SubmitEvent('submit'));
+    await fixture.whenStable();
+
+    expect(api.createdNames).toEqual([]);
+    expect(root.querySelector<HTMLInputElement>('input')?.getAttribute('aria-invalid')).toBe(
+      'true',
+    );
+    expect(root.querySelector('#client-display-name-error')?.textContent).toContain('120');
+  });
 });
