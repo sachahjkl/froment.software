@@ -5,9 +5,9 @@ import { spawn, type ChildProcess } from 'node:child_process';
 import { request as httpRequest } from 'node:http';
 import { createServer } from 'node:net';
 
-import { Api } from '@froment/contracts';
+import { Api, ClientSummary, QuoteDetail } from '@froment/contracts';
 import Sqlite from 'better-sqlite3';
-import { Effect } from 'effect';
+import { Effect, Schema } from 'effect';
 import { FetchHttpClient, HttpClient, HttpClientRequest } from 'effect/unstable/http';
 import { HttpApiClient } from 'effect/unstable/httpapi';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
@@ -508,11 +508,158 @@ describe('HTTP server', () => {
     sqlite.close();
   });
 
+  it('creates and revises draft quotes with complete history', async () => {
+    if (administratorAccessIdentifier === undefined) {
+      throw new Error('The administrator access identifier is unavailable.');
+    }
+    const login = await fetch(`${baseUrl}/api/auth/login`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', origin: baseUrl },
+      body: JSON.stringify({
+        accessIdentifier: administratorAccessIdentifier,
+        mode: 'administrator',
+      }),
+    });
+    expect(login.status).toBe(200);
+    const cookies = login.headers.getSetCookie();
+    const cookie = cookies.map((value) => value.split(';', 1)[0]).join('; ');
+    const csrf = cookies
+      .find((value) => value.startsWith('__Host-froment-csrf='))
+      ?.split(';', 1)[0]
+      .split('=', 2)[1];
+    if (csrf === undefined) throw new Error('The administrator CSRF token is unavailable.');
+    const writeHeaders = {
+      cookie,
+      'content-type': 'application/json',
+      origin: baseUrl,
+      'x-csrf-token': csrf,
+    };
+
+    const clientResponse = await fetch(`${baseUrl}/api/clients`, {
+      method: 'POST',
+      headers: writeHeaders,
+      body: JSON.stringify({ displayName: 'Quote client' }),
+    });
+    expect(clientResponse.status).toBe(200);
+    const client = Schema.decodeUnknownSync(ClientSummary)(await clientResponse.json());
+    const createResponse = await fetch(`${baseUrl}/api/quotes`, {
+      method: 'POST',
+      headers: writeHeaders,
+      body: JSON.stringify({
+        clientId: client.id,
+        title: 'Initial quote',
+        conditions: 'Payable in 30 days',
+        lines: [
+          {
+            description: 'Consulting',
+            quantityMilli: 1_500,
+            unitPriceCents: 10_001,
+            vatRateBasisPoints: 2_000,
+          },
+        ],
+      }),
+    });
+    expect(createResponse.status).toBe(200);
+    expect(createResponse.headers.get('cache-control')).toBe('no-store');
+    const quote = Schema.decodeUnknownSync(QuoteDetail)(await createResponse.json());
+    expect(quote).toMatchObject({
+      version: 1,
+      status: 'draft',
+      currentRevision: {
+        netTotalCents: 15_002,
+        vatTotalCents: 3_000,
+        totalCents: 18_002,
+      },
+    });
+    expect(quote.currentRevision.createdAt).toMatch(/^\d{4}-\d{2}-\d{2}T.*\.\d{3}Z$/);
+    expect(quote.revisions).toHaveLength(1);
+
+    const oversizedAmount = await fetch(`${baseUrl}/api/quotes`, {
+      method: 'POST',
+      headers: writeHeaders,
+      body: JSON.stringify({
+        clientId: client.id,
+        title: 'Oversized quote',
+        conditions: '',
+        lines: [
+          {
+            description: 'Oversized line',
+            quantityMilli: Number.MAX_SAFE_INTEGER,
+            unitPriceCents: Number.MAX_SAFE_INTEGER,
+            vatRateBasisPoints: 0,
+          },
+        ],
+      }),
+    });
+    expect(oversizedAmount.status).toBe(422);
+    await expect(oversizedAmount.json()).resolves.toMatchObject({
+      code: 'quote.amount_too_large',
+    });
+
+    const revisionPayload = {
+      expectedVersion: 1,
+      title: 'Revised quote',
+      conditions: '',
+      lines: [
+        {
+          description: 'Delivery',
+          quantityMilli: 1,
+          unitPriceCents: 500,
+          vatRateBasisPoints: 5_000,
+        },
+      ],
+    };
+    const revisionResponse = await fetch(`${baseUrl}/api/quotes/${quote.id}/revisions`, {
+      method: 'POST',
+      headers: writeHeaders,
+      body: JSON.stringify(revisionPayload),
+    });
+    expect(revisionResponse.status).toBe(200);
+    const revised = Schema.decodeUnknownSync(QuoteDetail)(await revisionResponse.json());
+    expect(revised.version).toBe(2);
+    expect(revised.currentRevision).toMatchObject({ title: 'Revised quote', totalCents: 2 });
+    expect(revised.revisions).toHaveLength(2);
+
+    const conflict = await fetch(`${baseUrl}/api/quotes/${quote.id}/revisions`, {
+      method: 'POST',
+      headers: writeHeaders,
+      body: JSON.stringify(revisionPayload),
+    });
+    expect(conflict.status).toBe(409);
+    await expect(conflict.json()).resolves.toMatchObject({
+      code: 'quote.version_conflict',
+      currentVersion: 2,
+    });
+
+    const list = await fetch(`${baseUrl}/api/quotes`, { headers: { cookie } });
+    expect(list.status).toBe(200);
+    await expect(list.json()).resolves.toMatchObject([{ id: quote.id, version: 2 }]);
+    const get = await fetch(`${baseUrl}/api/quotes/${quote.id}`, { headers: { cookie } });
+    expect(get.status).toBe(200);
+    await expect(get.json()).resolves.toMatchObject({
+      id: quote.id,
+      revisions: [{ version: 1 }, { version: 2 }],
+    });
+
+    const archive = await fetch(`${baseUrl}/api/clients/${client.id}/archive`, {
+      method: 'POST',
+      headers: writeHeaders,
+    });
+    expect(archive.status).toBe(200);
+    const archivedRevision = await fetch(`${baseUrl}/api/quotes/${quote.id}/revisions`, {
+      method: 'POST',
+      headers: writeHeaders,
+      body: JSON.stringify({ ...revisionPayload, expectedVersion: 2 }),
+    });
+    expect(archivedRevision.status).toBe(409);
+    await expect(archivedRevision.json()).resolves.toMatchObject({ code: 'client.archived' });
+  });
+
   it('rejects oversized request bodies', async () => {
     const response = await fetch(`${baseUrl}/api/auth/login`, {
       method: 'POST',
       headers: { 'content-type': 'application/json', origin: baseUrl },
-      body: JSON.stringify({ accessIdentifier: 'A'.repeat(9_000), mode: 'administrator' }),
+      body: JSON.stringify({ accessIdentifier: 'A'.repeat(33_000), mode: 'administrator' }),
     });
     expect(response.status).toBe(413);
     expect(response.headers.get('cache-control')).toBe('no-store');
@@ -542,8 +689,8 @@ describe('HTTP server', () => {
           },
         );
         request.on('error', reject);
-        request.write('A'.repeat(5_000));
-        request.end('B'.repeat(5_000));
+        request.write('A'.repeat(17_000));
+        request.end('B'.repeat(17_000));
       },
     );
 

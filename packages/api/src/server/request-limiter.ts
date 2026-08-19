@@ -6,7 +6,7 @@ interface MutationWindow {
 }
 
 export interface RequestLimiterService {
-  readonly allowMutation: (clientAddress: string) => Effect.Effect<boolean>;
+  readonly allowMutation: (key: string, limit: number) => Effect.Effect<boolean>;
 }
 
 export class RequestLimiter extends Context.Service<RequestLimiter, RequestLimiterService>()(
@@ -26,15 +26,16 @@ export const RequestLimiterLive = Layer.effect(
     });
 
     const allowMutation = Effect.fn('RequestLimiter.allowMutation')(function* (
-      clientAddress: string,
+      key: string,
+      limit: number,
     ) {
       const now = yield* Clock.currentTimeMillis;
-      const window = yield* Cache.get(windows, clientAddress);
+      const window = yield* Cache.get(windows, key);
       return yield* Ref.modify(window, (current): readonly [boolean, MutationWindow] => {
         if (now - current.startedAt >= 60_000) {
           return [true, { count: 1, startedAt: now }];
         }
-        if (current.count >= 120) return [false, current];
+        if (current.count >= limit) return [false, current];
         return [true, { ...current, count: current.count + 1 }];
       });
     });

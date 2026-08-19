@@ -5,6 +5,7 @@ import {
   AuthenticationRequired,
   CsrfRejected,
   PermissionDenied,
+  RequestRateLimited,
 } from './authentication.js';
 import { Ulid } from './identifiers.js';
 
@@ -47,6 +48,7 @@ export const ClientFailure = Schema.Union([
   CsrfRejected,
   ClientNotFound,
   ClientArchived,
+  RequestRateLimited,
 ]);
 export type ClientFailure = typeof ClientFailure.Type;
 export type ClientFailureCode = ClientFailure['code'];

@@ -1,5 +1,5 @@
 import { NodeHttpServer } from '@effect/platform-node';
-import { Api } from '@froment/contracts';
+import { Api, RequestRateLimited } from '@froment/contracts';
 import { Config, Effect, FileSystem, Layer, Option, Schema } from 'effect';
 import {
   HttpEffect,
@@ -17,6 +17,7 @@ import { Authentication } from './authentication/authentication.js';
 import { Clients } from './clients/clients.js';
 import { Database } from './database/database.js';
 import { Deployment } from './deployment/deployment.js';
+import { Quotes } from './quotes/quotes.js';
 import { RequestLimiter, RequestLimiterLive } from './server/request-limiter.js';
 
 const sessionCookie = HttpApiSecurity.apiKey({
@@ -62,7 +63,7 @@ const protectRequest =
       const contentLength = Schema.decodeUnknownOption(Schema.NumberFromString)(
         request.headers['content-length'],
       );
-      if (Option.isSome(contentLength) && contentLength.value > 8 * 1024) {
+      if (Option.isSome(contentLength) && contentLength.value > 32 * 1024) {
         return yield* HttpServerResponse.json(
           { code: 'request.too_large' },
           { status: 413, headers: { 'cache-control': 'no-store' } },
@@ -70,7 +71,7 @@ const protectRequest =
       }
       if (mutation) {
         const clientAddress = Option.getOrElse(request.remoteAddress, () => 'unknown');
-        if (!(yield* (yield* RequestLimiter).allowMutation(clientAddress))) {
+        if (!(yield* (yield* RequestLimiter).allowMutation(`address:${clientAddress}`, 120))) {
           return yield* HttpServerResponse.json(
             { code: 'request.rate_limited' },
             { status: 429, headers: { 'cache-control': 'no-store' } },
@@ -114,6 +115,16 @@ const setSessionCookies = (session: {
       httpOnly: false,
     });
   });
+
+const limitPrincipalMutation = Effect.fn('limitPrincipalMutation')(function* (
+  userId: string,
+  route: string,
+  limit = 60,
+) {
+  if (!(yield* (yield* RequestLimiter).allowMutation(`principal:${userId}:${route}`, limit))) {
+    return yield* new RequestRateLimited({ code: 'request.rate_limited' });
+  }
+});
 
 const ApiHandlers = HttpApiBuilder.group(Api, 'system', (handlers) =>
   Effect.succeed(
@@ -226,7 +237,7 @@ const ClientHandlers = HttpApiBuilder.group(Api, 'clients', (handlers) =>
           yield* setPrivateResponseHeaders;
           const request = yield* HttpServerRequest.HttpServerRequest;
           const authentication = yield* Authentication;
-          yield* authentication
+          const principal = yield* authentication
             .authorizeWrite(
               request.cookies['__Host-froment-session'],
               request.cookies['__Host-froment-csrf'],
@@ -236,6 +247,7 @@ const ClientHandlers = HttpApiBuilder.group(Api, 'clients', (handlers) =>
               'administrator',
             )
             .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
+          yield* limitPrincipalMutation(principal.userId, 'client.create');
           const clients = yield* Clients;
           return yield* clients
             .create(payload)
@@ -248,7 +260,7 @@ const ClientHandlers = HttpApiBuilder.group(Api, 'clients', (handlers) =>
           yield* setPrivateResponseHeaders;
           const request = yield* HttpServerRequest.HttpServerRequest;
           const authentication = yield* Authentication;
-          yield* authentication
+          const principal = yield* authentication
             .authorizeWrite(
               request.cookies['__Host-froment-session'],
               request.cookies['__Host-froment-csrf'],
@@ -258,6 +270,7 @@ const ClientHandlers = HttpApiBuilder.group(Api, 'clients', (handlers) =>
               'administrator',
             )
             .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
+          yield* limitPrincipalMutation(principal.userId, 'client.archive');
           const clients = yield* Clients;
           return yield* clients
             .archive(params.clientId)
@@ -270,7 +283,7 @@ const ClientHandlers = HttpApiBuilder.group(Api, 'clients', (handlers) =>
           yield* setPrivateResponseHeaders;
           const request = yield* HttpServerRequest.HttpServerRequest;
           const authentication = yield* Authentication;
-          yield* authentication
+          const principal = yield* authentication
             .authorizeWrite(
               request.cookies['__Host-froment-session'],
               request.cookies['__Host-froment-csrf'],
@@ -280,6 +293,7 @@ const ClientHandlers = HttpApiBuilder.group(Api, 'clients', (handlers) =>
               'administrator',
             )
             .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
+          yield* limitPrincipalMutation(principal.userId, 'client.access.create', 10);
           const clients = yield* Clients;
           return yield* clients
             .createAccess(params.clientId)
@@ -289,8 +303,84 @@ const ClientHandlers = HttpApiBuilder.group(Api, 'clients', (handlers) =>
   ),
 );
 
+const QuoteHandlers = HttpApiBuilder.group(Api, 'quotes', (handlers) =>
+  Effect.succeed(
+    handlers
+      .handle(
+        'quoteList',
+        Effect.fn('quoteList')(function* () {
+          yield* setPrivateResponseHeaders;
+          const request = yield* HttpServerRequest.HttpServerRequest;
+          const authentication = yield* Authentication;
+          yield* authentication
+            .authorize(request.cookies['__Host-froment-session'], 'quote.read', 'administrator')
+            .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
+          return yield* (yield* Quotes).list.pipe(Effect.catchTag('DatabaseError', Effect.orDie));
+        }),
+      )
+      .handle(
+        'quoteGet',
+        Effect.fn('quoteGet')(function* ({ params }) {
+          yield* setPrivateResponseHeaders;
+          const request = yield* HttpServerRequest.HttpServerRequest;
+          const authentication = yield* Authentication;
+          yield* authentication
+            .authorize(request.cookies['__Host-froment-session'], 'quote.read', 'administrator')
+            .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
+          return yield* (yield* Quotes)
+            .get(params.quoteId)
+            .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
+        }),
+      )
+      .handle(
+        'quoteCreate',
+        Effect.fn('quoteCreate')(function* ({ payload }) {
+          yield* setPrivateResponseHeaders;
+          const request = yield* HttpServerRequest.HttpServerRequest;
+          const authentication = yield* Authentication;
+          const principal = yield* authentication
+            .authorizeWrite(
+              request.cookies['__Host-froment-session'],
+              request.cookies['__Host-froment-csrf'],
+              request.headers['x-csrf-token'],
+              request.headers['origin'],
+              'quote.create',
+              'administrator',
+            )
+            .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
+          yield* limitPrincipalMutation(principal.userId, 'quote.create');
+          return yield* (yield* Quotes)
+            .create(payload, principal.userId)
+            .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
+        }),
+      )
+      .handle(
+        'quoteRevisionCreate',
+        Effect.fn('quoteRevisionCreate')(function* ({ params, payload }) {
+          yield* setPrivateResponseHeaders;
+          const request = yield* HttpServerRequest.HttpServerRequest;
+          const authentication = yield* Authentication;
+          const principal = yield* authentication
+            .authorizeWrite(
+              request.cookies['__Host-froment-session'],
+              request.cookies['__Host-froment-csrf'],
+              request.headers['x-csrf-token'],
+              request.headers['origin'],
+              'quote.update',
+              'administrator',
+            )
+            .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
+          yield* limitPrincipalMutation(principal.userId, 'quote.update');
+          return yield* (yield* Quotes)
+            .createRevision(params.quoteId, payload, principal.userId)
+            .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
+        }),
+      ),
+  ),
+);
+
 const ApiRoutes = HttpApiBuilder.layer(Api).pipe(
-  Layer.provide(Layer.mergeAll(ApiHandlers, ClientHandlers)),
+  Layer.provide(Layer.mergeAll(ApiHandlers, ClientHandlers, QuoteHandlers)),
 );
 
 export const makeServerLayer = (options: {
@@ -313,7 +403,7 @@ export const makeServerLayer = (options: {
     middleware: protectRequest(options.publicOrigin),
   }).pipe(
     Layer.provide(RequestLimiterLive),
-    Layer.provide(Layer.succeed(HttpServerRequest.MaxBodySize, FileSystem.Size(8 * 1024))),
+    Layer.provide(Layer.succeed(HttpServerRequest.MaxBodySize, FileSystem.Size(32 * 1024))),
     Layer.provide(NodeHttpServer.layer(createServer, { port: options.port })),
   );
 };

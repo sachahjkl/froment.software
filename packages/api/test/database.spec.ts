@@ -47,11 +47,21 @@ describe('Database', () => {
         'access_credentials',
         'clients',
         'permissions',
+        'quote_lines',
+        'quote_revisions',
+        'quotes',
         'roles',
         'sessions',
         'users',
       ]),
     );
+
+    const schemaSqlite = new Sqlite(filename, { readonly: true });
+    const quoteForeignKeys = schemaSqlite
+      .prepare('select "table", on_delete as onDelete from pragma_foreign_key_list(\'quotes\')')
+      .all();
+    expect(quoteForeignKeys).toContainEqual({ table: 'clients', onDelete: 'NO ACTION' });
+    schemaSqlite.close();
 
     const sqlite = new Sqlite(filename);
     const userId = '01ARZ3NDEKTSV4RRFFQ69G5FAV';

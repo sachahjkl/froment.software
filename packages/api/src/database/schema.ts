@@ -186,6 +186,115 @@ export const rolePermissions = sqliteTable(
   ],
 );
 
+export const quotes = sqliteTable(
+  'quotes',
+  {
+    id: text().notNull().primaryKey(),
+    clientId: text('client_id')
+      .notNull()
+      .references(() => clients.id, { onDelete: 'no action' }),
+    status: text({
+      enum: ['draft', 'sent', 'accepted', 'rejected', 'expired'],
+    }).notNull(),
+    version: integer().notNull(),
+    createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull(),
+    updatedAt: integer('updated_at', { mode: 'timestamp_ms' }).notNull(),
+  },
+  (table) => [
+    index('quotes_client_id_index').on(table.clientId),
+    check(
+      'quotes_id_ulid_check',
+      sql`${table.id} is not null and length(${table.id}) = 26 and ${table.id} not glob '*[^0-9A-HJKMNP-TV-Z]*' and substr(${table.id}, 1, 1) between '0' and '7'`,
+    ),
+    check(
+      'quotes_status_check',
+      sql`${table.status} in ('draft', 'sent', 'accepted', 'rejected', 'expired')`,
+    ),
+    check('quotes_version_check', sql`${table.version} >= 1`),
+    check('quotes_timestamps_check', sql`${table.updatedAt} >= ${table.createdAt}`),
+  ],
+);
+
+export const quoteRevisions = sqliteTable(
+  'quote_revisions',
+  {
+    id: text().notNull().primaryKey(),
+    quoteId: text('quote_id')
+      .notNull()
+      .references(() => quotes.id, { onDelete: 'cascade' }),
+    version: integer().notNull(),
+    clientDisplayName: text('client_display_name').notNull(),
+    title: text().notNull(),
+    conditions: text().notNull(),
+    currency: text({ enum: ['EUR'] }).notNull(),
+    netTotalCents: integer('net_total_cents').notNull(),
+    vatTotalCents: integer('vat_total_cents').notNull(),
+    totalCents: integer('total_cents').notNull(),
+    createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull(),
+    createdByUserId: text('created_by_user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'no action' }),
+  },
+  (table) => [
+    uniqueIndex('quote_revisions_quote_id_version_unique').on(table.quoteId, table.version),
+    index('quote_revisions_created_by_user_id_index').on(table.createdByUserId),
+    check(
+      'quote_revisions_id_ulid_check',
+      sql`${table.id} is not null and length(${table.id}) = 26 and ${table.id} not glob '*[^0-9A-HJKMNP-TV-Z]*' and substr(${table.id}, 1, 1) between '0' and '7'`,
+    ),
+    check('quote_revisions_version_check', sql`${table.version} >= 1`),
+    check(
+      'quote_revisions_client_display_name_check',
+      sql`length(trim(${table.clientDisplayName})) > 0`,
+    ),
+    check('quote_revisions_title_check', sql`length(trim(${table.title})) between 1 and 120`),
+    check('quote_revisions_conditions_check', sql`length(${table.conditions}) <= 2000`),
+    check('quote_revisions_currency_check', sql`${table.currency} = 'EUR'`),
+    check(
+      'quote_revisions_totals_check',
+      sql`${table.netTotalCents} between 0 and 9007199254740991 and ${table.vatTotalCents} between 0 and 9007199254740991 and ${table.totalCents} between 0 and 9007199254740991 and ${table.totalCents} = ${table.netTotalCents} + ${table.vatTotalCents}`,
+    ),
+  ],
+);
+
+export const quoteLines = sqliteTable(
+  'quote_lines',
+  {
+    id: text().notNull().primaryKey(),
+    revisionId: text('revision_id')
+      .notNull()
+      .references(() => quoteRevisions.id, { onDelete: 'cascade' }),
+    position: integer().notNull(),
+    description: text().notNull(),
+    quantityMilli: integer('quantity_milli').notNull(),
+    unitPriceCents: integer('unit_price_cents').notNull(),
+    vatRateBasisPoints: integer('vat_rate_basis_points').notNull(),
+    netTotalCents: integer('net_total_cents').notNull(),
+    vatTotalCents: integer('vat_total_cents').notNull(),
+    totalCents: integer('total_cents').notNull(),
+  },
+  (table) => [
+    uniqueIndex('quote_lines_revision_id_position_unique').on(table.revisionId, table.position),
+    check(
+      'quote_lines_id_ulid_check',
+      sql`${table.id} is not null and length(${table.id}) = 26 and ${table.id} not glob '*[^0-9A-HJKMNP-TV-Z]*' and substr(${table.id}, 1, 1) between '0' and '7'`,
+    ),
+    check('quote_lines_position_check', sql`${table.position} between 0 and 19`),
+    check(
+      'quote_lines_description_check',
+      sql`length(trim(${table.description})) between 1 and 160`,
+    ),
+    check(
+      'quote_lines_input_check',
+      sql`${table.quantityMilli} between 1 and 9007199254740991 and ${table.unitPriceCents} between 0 and 9007199254740991 and ${table.vatRateBasisPoints} between 0 and 10000`,
+    ),
+    check(
+      'quote_lines_totals_check',
+      sql`${table.netTotalCents} between 0 and 9007199254740991 and ${table.vatTotalCents} between 0 and 9007199254740991 and ${table.totalCents} between 0 and 9007199254740991 and ${table.totalCents} = ${table.netTotalCents} + ${table.vatTotalCents}`,
+    ),
+  ],
+);
+
 const ulid = (schema: typeof Schema.String) =>
   schema.check(Schema.isPattern(/^[0-7][0-9A-HJKMNP-TV-Z]{25}$/));
 

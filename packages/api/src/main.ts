@@ -7,12 +7,14 @@ import { AuthenticationConfigLive } from './authentication/authentication-config
 import { ClientsLive } from './clients/clients.js';
 import { DatabaseLive } from './database/database.js';
 import { DeploymentLive } from './deployment/deployment.js';
+import { QuotesLive } from './quotes/quotes.js';
 import { ServerLive } from './server.js';
 
 const ServicesLive = Layer.mergeAll(
   BootstrapLive,
   AuthenticationLive,
   ClientsLive,
+  QuotesLive,
   DeploymentLive,
 ).pipe(Layer.provide(AuthenticationConfigLive), Layer.provideMerge(DatabaseLive));
 

@@ -36,6 +36,12 @@ export class AuthenticationRateLimited extends Schema.TaggedError<Authentication
   { httpApiStatus: 429 },
 ) {}
 
+export class RequestRateLimited extends Schema.TaggedError<RequestRateLimited>()(
+  'RequestRateLimited',
+  { code: Schema.Literal('request.rate_limited') },
+  { httpApiStatus: 429 },
+) {}
+
 export class AuthenticationRequired extends Schema.TaggedError<AuthenticationRequired>()(
   'AuthenticationRequired',
   { code: Schema.Literal('authentication.required') },

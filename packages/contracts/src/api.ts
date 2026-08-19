@@ -6,6 +6,7 @@ import {
   AuthenticationRateLimited,
   LoginRequest,
   PermissionDenied,
+  RequestRateLimited,
   AuthenticationRequired,
   CsrfRejected,
   SessionRejected,
@@ -28,6 +29,15 @@ import {
   ClientSummary,
 } from './clients.js';
 import { Ulid } from './identifiers.js';
+import {
+  QuoteCreateRequest,
+  QuoteAmountTooLarge,
+  QuoteDetail,
+  QuoteList,
+  QuoteNotFound,
+  QuoteRevisionCreateRequest,
+  QuoteVersionConflict,
+} from './quotes.js';
 import { DeploymentMetadata } from './version.js';
 
 export class SystemApi extends HttpApiGroup.make('system', { topLevel: true }).add(
@@ -81,6 +91,7 @@ export class ClientsApi extends HttpApiGroup.make('clients', { topLevel: true })
       AuthenticationRequired.pipe(HttpApiSchema.status(401)),
       PermissionDenied.pipe(HttpApiSchema.status(403)),
       CsrfRejected.pipe(HttpApiSchema.status(403)),
+      RequestRateLimited.pipe(HttpApiSchema.status(429)),
     ],
   }),
   HttpApiEndpoint.post('clientArchive', '/api/clients/:clientId/archive', {
@@ -90,6 +101,7 @@ export class ClientsApi extends HttpApiGroup.make('clients', { topLevel: true })
       AuthenticationRequired.pipe(HttpApiSchema.status(401)),
       PermissionDenied.pipe(HttpApiSchema.status(403)),
       CsrfRejected.pipe(HttpApiSchema.status(403)),
+      RequestRateLimited.pipe(HttpApiSchema.status(429)),
       ClientNotFound.pipe(HttpApiSchema.status(404)),
     ],
   }),
@@ -100,10 +112,62 @@ export class ClientsApi extends HttpApiGroup.make('clients', { topLevel: true })
       AuthenticationRequired.pipe(HttpApiSchema.status(401)),
       PermissionDenied.pipe(HttpApiSchema.status(403)),
       CsrfRejected.pipe(HttpApiSchema.status(403)),
+      RequestRateLimited.pipe(HttpApiSchema.status(429)),
       ClientNotFound.pipe(HttpApiSchema.status(404)),
       ClientArchived.pipe(HttpApiSchema.status(409)),
     ],
   }),
 ) {}
 
-export class Api extends HttpApi.make('froment-api').add(SystemApi).add(ClientsApi) {}
+export class QuotesApi extends HttpApiGroup.make('quotes', { topLevel: true }).add(
+  HttpApiEndpoint.get('quoteList', '/api/quotes', {
+    success: QuoteList,
+    error: [
+      AuthenticationRequired.pipe(HttpApiSchema.status(401)),
+      PermissionDenied.pipe(HttpApiSchema.status(403)),
+    ],
+  }),
+  HttpApiEndpoint.get('quoteGet', '/api/quotes/:quoteId', {
+    params: { quoteId: Ulid },
+    success: QuoteDetail,
+    error: [
+      AuthenticationRequired.pipe(HttpApiSchema.status(401)),
+      PermissionDenied.pipe(HttpApiSchema.status(403)),
+      QuoteNotFound.pipe(HttpApiSchema.status(404)),
+    ],
+  }),
+  HttpApiEndpoint.post('quoteCreate', '/api/quotes', {
+    payload: QuoteCreateRequest,
+    success: QuoteDetail,
+    error: [
+      AuthenticationRequired.pipe(HttpApiSchema.status(401)),
+      PermissionDenied.pipe(HttpApiSchema.status(403)),
+      CsrfRejected.pipe(HttpApiSchema.status(403)),
+      RequestRateLimited.pipe(HttpApiSchema.status(429)),
+      ClientNotFound.pipe(HttpApiSchema.status(404)),
+      ClientArchived.pipe(HttpApiSchema.status(409)),
+      QuoteAmountTooLarge.pipe(HttpApiSchema.status(422)),
+    ],
+  }),
+  HttpApiEndpoint.post('quoteRevisionCreate', '/api/quotes/:quoteId/revisions', {
+    params: { quoteId: Ulid },
+    payload: QuoteRevisionCreateRequest,
+    success: QuoteDetail,
+    error: [
+      AuthenticationRequired.pipe(HttpApiSchema.status(401)),
+      PermissionDenied.pipe(HttpApiSchema.status(403)),
+      CsrfRejected.pipe(HttpApiSchema.status(403)),
+      RequestRateLimited.pipe(HttpApiSchema.status(429)),
+      QuoteNotFound.pipe(HttpApiSchema.status(404)),
+      QuoteVersionConflict.pipe(HttpApiSchema.status(409)),
+      ClientNotFound.pipe(HttpApiSchema.status(404)),
+      ClientArchived.pipe(HttpApiSchema.status(409)),
+      QuoteAmountTooLarge.pipe(HttpApiSchema.status(422)),
+    ],
+  }),
+) {}
+
+export class Api extends HttpApi.make('froment-api')
+  .add(SystemApi)
+  .add(ClientsApi)
+  .add(QuotesApi) {}

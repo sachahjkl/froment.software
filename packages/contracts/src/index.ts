@@ -21,6 +21,7 @@ export {
   type LoginMode as LoginModeValue,
   LoginRequest,
   PermissionDenied,
+  RequestRateLimited,
   type LoginRequest as LoginRequestValue,
   SessionRejected,
   SessionStatus,
@@ -55,4 +56,29 @@ export {
   type BootstrapStatus as BootstrapStatusValue,
   BootstrapUnavailable,
 } from './bootstrap.js';
-export { Api, ClientsApi, SystemApi } from './api.js';
+export {
+  QuoteCreateRequest,
+  type QuoteCreateRequest as QuoteCreateRequestValue,
+  QuoteDetail,
+  type QuoteDetail as QuoteDetailValue,
+  QuoteFailure,
+  type QuoteFailure as QuoteFailureValue,
+  QuoteLine,
+  type QuoteLine as QuoteLineValue,
+  QuoteLineInput,
+  type QuoteLineInput as QuoteLineInputValue,
+  QuoteList,
+  type QuoteList as QuoteListValue,
+  QuoteNotFound,
+  QuoteAmountTooLarge,
+  QuoteRevision,
+  type QuoteRevision as QuoteRevisionValue,
+  QuoteRevisionCreateRequest,
+  type QuoteRevisionCreateRequest as QuoteRevisionCreateRequestValue,
+  QuoteStatus,
+  type QuoteStatus as QuoteStatusValue,
+  QuoteSummary,
+  type QuoteSummary as QuoteSummaryValue,
+  QuoteVersionConflict,
+} from './quotes.js';
+export { Api, ClientsApi, QuotesApi, SystemApi } from './api.js';

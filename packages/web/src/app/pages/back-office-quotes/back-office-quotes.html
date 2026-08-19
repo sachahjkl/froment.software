@@ -1,0 +1,50 @@
+<section class="quotes-page" aria-labelledby="quotes-title">
+  <header>
+    <div>
+      <h1 id="quotes-title">{{ i18n.t('backOffice.quotes.title') }}</h1>
+      <a routerLink="/backoffice/dashboard">{{ i18n.t('backOffice.quotes.back') }}</a>
+    </div>
+    <a appLinkButton variant="primary" routerLink="/backoffice/quotes/new">
+      {{ i18n.t('backOffice.quotes.new') }}
+    </a>
+  </header>
+
+  @switch (state()) { @case ('loading') {
+  <p aria-live="polite">{{ i18n.t('backOffice.quotes.loading') }}</p>
+  } @case ('error') {
+  <p class="notice danger" role="alert">{{ i18n.t('quote.error') }}</p>
+  } @case ('ready') { @if (quotes().length === 0) {
+  <p class="empty">{{ i18n.t('backOffice.quotes.empty') }}</p>
+  } @else {
+  <div class="quote-table">
+    <table>
+      <thead>
+        <tr>
+          <th>{{ i18n.t('backOffice.quote.title') }}</th>
+          <th>{{ i18n.t('backOffice.quotes.client') }}</th>
+          <th>{{ i18n.t('backOffice.quotes.status') }}</th>
+          <th>{{ i18n.t('backOffice.quotes.version') }}</th>
+          <th>{{ i18n.t('backOffice.quotes.total') }}</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (quote of quotes(); track quote.id) {
+        <tr>
+          <td><strong>{{ quote.currentRevision.title }}</strong></td>
+          <td>{{ quote.currentRevision.clientDisplayName }}</td>
+          <td><span class="badge">{{ i18n.t('backOffice.quote.draft') }}</span></td>
+          <td>{{ quote.version }}</td>
+          <td>{{ money(quote.currentRevision.totalCents) }}</td>
+          <td>
+            <a [routerLink]="['/backoffice/quotes', quote.id]">
+              {{ i18n.t('backOffice.quotes.open') }}
+            </a>
+          </td>
+        </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+  } } }
+</section>

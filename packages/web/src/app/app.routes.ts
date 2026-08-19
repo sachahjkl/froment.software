@@ -145,6 +145,45 @@ export const routes: Routes = [
     },
   },
   {
+    path: 'backoffice/quotes',
+    loadComponent: () =>
+      import('./pages/back-office-quotes/back-office-quotes').then(
+        (module) => module.BackOfficeQuotes,
+      ),
+    canActivate: [backOfficeAdministratorGuard],
+    data: {
+      titleKey: 'page.back_office_quotes',
+      descriptionKey: 'page.description.back_office_quotes',
+      robots: 'noindex, nofollow',
+    },
+  },
+  {
+    path: 'backoffice/quotes/new',
+    loadComponent: () =>
+      import('./pages/back-office-quote-editor/back-office-quote-editor').then(
+        (module) => module.BackOfficeQuoteEditor,
+      ),
+    canActivate: [backOfficeAdministratorGuard],
+    data: {
+      titleKey: 'page.back_office_quote_editor',
+      descriptionKey: 'page.description.back_office_quote_editor',
+      robots: 'noindex, nofollow',
+    },
+  },
+  {
+    path: 'backoffice/quotes/:quoteId',
+    loadComponent: () =>
+      import('./pages/back-office-quote-editor/back-office-quote-editor').then(
+        (module) => module.BackOfficeQuoteEditor,
+      ),
+    canActivate: [backOfficeAdministratorGuard],
+    data: {
+      titleKey: 'page.back_office_quote_editor',
+      descriptionKey: 'page.description.back_office_quote_editor',
+      robots: 'noindex, nofollow',
+    },
+  },
+  {
     path: 'design',
     loadComponent: () =>
       import('./pages/design/design.component').then((module) => module.DesignComponent),
