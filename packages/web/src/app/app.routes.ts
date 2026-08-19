@@ -1,7 +1,10 @@
 import { Routes } from '@angular/router';
 import { HomeComponent } from './pages/home/home.component';
 import { policies } from './pages/policy/policy-documents';
-import { backOfficeGuard } from './back-office/back-office-auth';
+import {
+  backOfficeAdministratorGuard,
+  backOfficeClientGuard,
+} from './back-office/back-office-auth';
 
 export const routes: Routes = [
   {
@@ -63,7 +66,12 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/blog-post/blog-post').then((module) => module.BlogPost),
   },
   {
-    path: 'back-office',
+    path: 'backoffice',
+    redirectTo: 'backoffice/login',
+    pathMatch: 'full',
+  },
+  {
+    path: 'backoffice/login',
     loadComponent: () =>
       import('./pages/back-office-login/back-office-login').then(
         (module) => module.BackOfficeLogin,
@@ -75,7 +83,7 @@ export const routes: Routes = [
     },
   },
   {
-    path: 'back-office/bootstrap',
+    path: 'backoffice/bootstrap',
     loadComponent: () =>
       import('./pages/back-office-bootstrap/back-office-bootstrap').then(
         (module) => module.BackOfficeBootstrap,
@@ -87,12 +95,12 @@ export const routes: Routes = [
     },
   },
   {
-    path: 'back-office/dashboard',
+    path: 'backoffice/dashboard',
     loadComponent: () =>
       import('./pages/back-office-dashboard/back-office-dashboard').then(
         (module) => module.BackOfficeDashboard,
       ),
-    canActivate: [backOfficeGuard],
+    canActivate: [backOfficeAdministratorGuard],
     data: {
       titleKey: 'page.back_office',
       descriptionKey: 'page.description.back_office',
@@ -100,13 +108,39 @@ export const routes: Routes = [
     },
   },
   {
-    path: 'back-office/business-card',
+    path: 'backoffice/client',
+    loadComponent: () =>
+      import('./pages/back-office-client/back-office-client').then(
+        (module) => module.BackOfficeClient,
+      ),
+    canActivate: [backOfficeClientGuard],
+    data: {
+      titleKey: 'page.back_office_client',
+      descriptionKey: 'page.description.back_office_client',
+      robots: 'noindex, nofollow',
+    },
+  },
+  {
+    path: 'backoffice/business-card',
     loadComponent: () =>
       import('./pages/business-card/business-card').then((module) => module.BusinessCard),
-    canActivate: [backOfficeGuard],
+    canActivate: [backOfficeAdministratorGuard],
     data: {
       titleKey: 'page.business_card',
       descriptionKey: 'page.description.business_card',
+      robots: 'noindex, nofollow',
+    },
+  },
+  {
+    path: 'backoffice/clients',
+    loadComponent: () =>
+      import('./pages/back-office-clients/back-office-clients').then(
+        (module) => module.BackOfficeClients,
+      ),
+    canActivate: [backOfficeAdministratorGuard],
+    data: {
+      titleKey: 'page.back_office_clients',
+      descriptionKey: 'page.description.back_office_clients',
       robots: 'noindex, nofollow',
     },
   },

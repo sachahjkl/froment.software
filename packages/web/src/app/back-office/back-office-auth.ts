@@ -1,7 +1,7 @@
 import { DOCUMENT, isPlatformBrowser } from '@angular/common';
 import { HttpClient, HttpErrorResponse, HttpHeaders } from '@angular/common/http';
 import { inject, Injectable, PLATFORM_ID } from '@angular/core';
-import { CanActivateFn, Router } from '@angular/router';
+import { Router } from '@angular/router';
 import {
   AccessIdentifier,
   AuthenticationFailure,
@@ -26,13 +26,15 @@ export class BackOfficeAuth {
   private readonly http = inject(HttpClient);
   private readonly isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
 
-  async isAuthenticated(): Promise<boolean> {
-    if (!this.isBrowser) return false;
+  async sessionMode(): Promise<LoginModeValue | undefined> {
+    if (!this.isBrowser) return undefined;
     try {
       const response = await firstValueFrom(this.http.get<unknown>('/api/auth/session'));
-      return Schema.decodeUnknownSync(SessionStatus)(response).authenticated;
+      const session = Schema.decodeUnknownSync(SessionStatus)(response);
+      if (!session.authenticated) return undefined;
+      return session.mode;
     } catch {
-      return false;
+      return undefined;
     }
   }
 
@@ -53,7 +55,7 @@ export class BackOfficeAuth {
         this.http.post<unknown>('/api/auth/login', { accessIdentifier: parsedIdentifier, mode }),
       );
       const session = Schema.decodeUnknownSync(SessionStatus)(response);
-      if (session.authenticated) return { success: true };
+      if (session.authenticated && session.mode === mode) return { success: true };
       return { success: false, code: 'authentication.error' };
     } catch (error) {
       if (error instanceof HttpErrorResponse && (error.status === 401 || error.status === 429)) {
@@ -95,8 +97,16 @@ export class BackOfficeAuth {
   }
 }
 
-export const backOfficeGuard: CanActivateFn = async () => {
+export const backOfficeAdministratorGuard = async () => {
   const auth = inject(BackOfficeAuth);
   const router = inject(Router);
-  return (await auth.isAuthenticated()) || router.createUrlTree(['/back-office']);
+  if ((await auth.sessionMode()) === 'administrator') return true;
+  return router.createUrlTree(['/backoffice/login'], { queryParams: { mode: 'admin' } });
+};
+
+export const backOfficeClientGuard = async () => {
+  const auth = inject(BackOfficeAuth);
+  const router = inject(Router);
+  if ((await auth.sessionMode()) === 'client') return true;
+  return router.createUrlTree(['/backoffice/login'], { queryParams: { mode: 'client' } });
 };

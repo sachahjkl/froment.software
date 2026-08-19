@@ -13,6 +13,7 @@ import { createServer } from 'node:http';
 
 import { Bootstrap } from './bootstrap/bootstrap.js';
 import { Authentication } from './authentication/authentication.js';
+import { Clients } from './clients/clients.js';
 import { Database } from './database/database.js';
 
 const sessionCookie = HttpApiSecurity.apiKey({
@@ -81,7 +82,6 @@ const ApiHandlers = HttpApiBuilder.group(Api, 'system', (handlers) =>
             .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
           yield* setSessionCookies(session);
           return {
-            administratorId: session.administratorId,
             accessIdentifier: session.accessIdentifier,
           };
         }),
@@ -95,7 +95,7 @@ const ApiHandlers = HttpApiBuilder.group(Api, 'system', (handlers) =>
             .login(payload.accessIdentifier, payload.mode)
             .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
           yield* setSessionCookies(session);
-          return { authenticated: true };
+          return { authenticated: true, mode: payload.mode };
         }),
       )
       .handle(
@@ -104,10 +104,11 @@ const ApiHandlers = HttpApiBuilder.group(Api, 'system', (handlers) =>
           yield* setPrivateResponseHeaders;
           const authentication = yield* Authentication;
           const request = yield* HttpServerRequest.HttpServerRequest;
-          const authenticated = yield* authentication
+          const principal = yield* authentication
             .sessionStatus(request.cookies['__Host-froment-session'])
             .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
-          return { authenticated };
+          if (principal === undefined) return { authenticated: false, mode: null };
+          return { authenticated: true, mode: principal.mode };
         }),
       )
       .handle(
@@ -125,13 +126,94 @@ const ApiHandlers = HttpApiBuilder.group(Api, 'system', (handlers) =>
             .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
           const expired = { expiresAt: new Date(0), sessionToken: '', csrfToken: '' };
           yield* setSessionCookies(expired);
-          return { authenticated: false };
+          return { authenticated: false, mode: null };
         }),
       ),
   ),
 );
 
-const ApiRoutes = HttpApiBuilder.layer(Api).pipe(Layer.provide(ApiHandlers));
+const ClientHandlers = HttpApiBuilder.group(Api, 'clients', (handlers) =>
+  Effect.succeed(
+    handlers
+      .handle(
+        'clientList',
+        Effect.fn('clientList')(function* () {
+          yield* setPrivateResponseHeaders;
+          const request = yield* HttpServerRequest.HttpServerRequest;
+          const authentication = yield* Authentication;
+          yield* authentication
+            .authorize(request.cookies['__Host-froment-session'], 'client.read')
+            .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
+          const clients = yield* Clients;
+          return yield* clients.list.pipe(Effect.catchTag('DatabaseError', Effect.orDie));
+        }),
+      )
+      .handle(
+        'clientCreate',
+        Effect.fn('clientCreate')(function* ({ payload }) {
+          yield* setPrivateResponseHeaders;
+          const request = yield* HttpServerRequest.HttpServerRequest;
+          const authentication = yield* Authentication;
+          yield* authentication
+            .authorizeWrite(
+              request.cookies['__Host-froment-session'],
+              request.cookies['__Host-froment-csrf'],
+              request.headers['x-csrf-token'],
+              'client.create',
+            )
+            .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
+          const clients = yield* Clients;
+          return yield* clients
+            .create(payload)
+            .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
+        }),
+      )
+      .handle(
+        'clientArchive',
+        Effect.fn('clientArchive')(function* ({ params }) {
+          yield* setPrivateResponseHeaders;
+          const request = yield* HttpServerRequest.HttpServerRequest;
+          const authentication = yield* Authentication;
+          yield* authentication
+            .authorizeWrite(
+              request.cookies['__Host-froment-session'],
+              request.cookies['__Host-froment-csrf'],
+              request.headers['x-csrf-token'],
+              'client.archive',
+            )
+            .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
+          const clients = yield* Clients;
+          return yield* clients
+            .archive(params.clientId)
+            .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
+        }),
+      )
+      .handle(
+        'clientAccessCreate',
+        Effect.fn('clientAccessCreate')(function* ({ params }) {
+          yield* setPrivateResponseHeaders;
+          const request = yield* HttpServerRequest.HttpServerRequest;
+          const authentication = yield* Authentication;
+          yield* authentication
+            .authorizeWrite(
+              request.cookies['__Host-froment-session'],
+              request.cookies['__Host-froment-csrf'],
+              request.headers['x-csrf-token'],
+              'client.access.create',
+            )
+            .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
+          const clients = yield* Clients;
+          return yield* clients
+            .createAccess(params.clientId)
+            .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
+        }),
+      ),
+  ),
+);
+
+const ApiRoutes = HttpApiBuilder.layer(Api).pipe(
+  Layer.provide(Layer.mergeAll(ApiHandlers, ClientHandlers)),
+);
 
 export const makeServerLayer = (options: {
   readonly port: number;

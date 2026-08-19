@@ -22,9 +22,8 @@ export class BackOfficeBootstrap {
   protected readonly state = signal<PageState>('loading');
   protected readonly pending = signal(false);
   protected readonly error = signal<TranslationKey | undefined>(undefined);
-  protected readonly administratorId = signal<string | undefined>(undefined);
   protected readonly accessIdentifier = signal<string | undefined>(undefined);
-  protected readonly copied = signal<'administrator' | 'access' | undefined>(undefined);
+  protected readonly copied = signal(false);
 
   constructor() {
     afterNextRender(() => void this.load());
@@ -38,7 +37,6 @@ export class BackOfficeBootstrap {
       try {
         const outcome = await this.api.create(this.model().password);
         if (outcome.success) {
-          this.administratorId.set(outcome.result.administratorId);
           this.accessIdentifier.set(outcome.result.accessIdentifier);
           this.state.set('unavailable');
           return;
@@ -55,14 +53,28 @@ export class BackOfficeBootstrap {
     });
   }
 
-  protected async copyIdentifier(kind: 'administrator' | 'access', value: string): Promise<void> {
+  protected async copyIdentifier(value: string): Promise<void> {
     await navigator.clipboard.writeText(value);
-    this.copied.set(kind);
+    this.copied.set(true);
+  }
+
+  protected copyLabel(): TranslationKey {
+    if (this.copied()) return 'bootstrap.copied';
+    return 'bootstrap.copy';
+  }
+
+  protected submitLabel(): TranslationKey {
+    if (this.pending()) return 'bootstrap.pending';
+    return 'bootstrap.submit';
   }
 
   private async load(): Promise<void> {
     try {
-      this.state.set((await this.api.status()) ? 'available' : 'unavailable');
+      if (await this.api.status()) {
+        this.state.set('available');
+        return;
+      }
+      this.state.set('unavailable');
     } catch {
       this.state.set('error');
     }

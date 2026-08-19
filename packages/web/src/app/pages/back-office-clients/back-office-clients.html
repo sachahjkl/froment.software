@@ -1,0 +1,97 @@
+<section class="clients-page" aria-labelledby="clients-title">
+  <header>
+    <h1 id="clients-title">{{ i18n.t('backOffice.clients.title') }}</h1>
+    <a routerLink="/backoffice/dashboard">{{ i18n.t('backOffice.clients.back') }}</a>
+  </header>
+
+  <form class="create-client" (submit)="create($event)">
+    <label class="field" for="client-display-name">
+      {{ i18n.t('backOffice.clients.displayName') }}
+      <input
+        id="client-display-name"
+        class="input"
+        type="text"
+        autocomplete="organization"
+        [formField]="createForm.displayName"
+      />
+    </label>
+    <button appButton variant="primary" type="submit" [disabled]="createPending()">
+      @if (createPending()) { {{ i18n.t('backOffice.clients.creating') }} } @else { {{
+      i18n.t('backOffice.clients.create') }} }
+    </button>
+  </form>
+
+  @if (error(); as errorKey) {
+  <p class="notice danger" role="alert">{{ i18n.t(errorKey) }}</p>
+  } @if (access(); as createdAccess) {
+  <section class="access-result" aria-labelledby="access-title">
+    <p id="access-title" class="access-title">
+      <strong
+        >{{ i18n.tf('backOffice.clients.accessReady', { client: createdAccess.displayName })
+        }}</strong
+      >
+    </p>
+    <p>{{ i18n.t('backOffice.clients.accessWarning') }}</p>
+    <div>
+      <code>{{ createdAccess.accessIdentifier }}</code>
+      <button appButton type="button" (click)="copyAccess(createdAccess.accessIdentifier)">
+        @if (copied()) { {{ i18n.t('backOffice.clients.copied') }} } @else { {{
+        i18n.t('backOffice.clients.copy') }} }
+      </button>
+    </div>
+  </section>
+  } @switch (state()) { @case ('loading') {
+  <p aria-live="polite">{{ i18n.t('backOffice.clients.loading') }}</p>
+  } @case ('ready') { @if (clients().length === 0) {
+  <p class="empty">{{ i18n.t('backOffice.clients.empty') }}</p>
+  } @else {
+  <div class="client-table">
+    <table>
+      <thead>
+        <tr>
+          <th>{{ i18n.t('backOffice.clients.displayName') }}</th>
+          <th>{{ i18n.t('backOffice.clients.status') }}</th>
+          <th>{{ i18n.t('backOffice.clients.actions') }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (client of clients(); track client.id) {
+        <tr>
+          <td>
+            <strong>{{ client.displayName }}</strong>
+          </td>
+          <td>
+            @if (client.archived) {
+            <span class="badge warn">{{ i18n.t('backOffice.clients.archived') }}</span>
+            } @else {
+            <span class="badge ok">{{ i18n.t('backOffice.clients.active') }}</span>
+            }
+          </td>
+          <td class="actions">
+            @if (!client.archived) {
+            <button
+              appButton
+              type="button"
+              [disabled]="pendingClientId() !== undefined"
+              (click)="createAccess(client)"
+            >
+              {{ i18n.t('backOffice.clients.createAccess') }}
+            </button>
+            <button
+              appButton
+              variant="danger"
+              type="button"
+              [disabled]="pendingClientId() !== undefined"
+              (click)="archive(client)"
+            >
+              {{ i18n.t('backOffice.clients.archive') }}
+            </button>
+            }
+          </td>
+        </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+  } } }
+</section>

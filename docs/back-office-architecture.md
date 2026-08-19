@@ -191,6 +191,7 @@ client.read
 client.create
 client.update
 client.archive
+client.access.create
 
 quote.read
 quote.create

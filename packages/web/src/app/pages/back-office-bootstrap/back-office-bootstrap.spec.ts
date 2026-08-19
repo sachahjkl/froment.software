@@ -15,7 +15,6 @@ class BootstrapApiStub {
     return Promise.resolve({
       success: true,
       result: {
-        administratorId: '01ARZ3NDEKTSV4RRFFQ69G5FAV',
         accessIdentifier: 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA',
       },
     });
@@ -42,6 +41,6 @@ describe('BackOfficeBootstrap', () => {
     root.querySelector<HTMLFormElement>('form')?.dispatchEvent(new SubmitEvent('submit'));
     await fixture.whenStable();
 
-    expect(root.textContent).toContain('01ARZ3NDEKTSV4RRFFQ69G5FAV');
+    expect(root.textContent).toContain('AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA');
   });
 });

@@ -1,6 +1,6 @@
 import Sqlite from 'better-sqlite3';
 import { Effect, Schema } from 'effect';
-import { mkdtemp, rm } from 'node:fs/promises';
+import { cp, mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
@@ -40,10 +40,17 @@ describe('Database', () => {
 
     expect(state.foreignKeys).toBe(1);
     expect(state.journalMode).toBe('wal');
-    expect(state.permissions).toBe(29);
+    expect(state.permissions).toBe(30);
     expect(state.synchronous).toBe(2);
     expect(state.tables).toEqual(
-      expect.arrayContaining(['access_credentials', 'permissions', 'roles', 'sessions', 'users']),
+      expect.arrayContaining([
+        'access_credentials',
+        'clients',
+        'permissions',
+        'roles',
+        'sessions',
+        'users',
+      ]),
     );
 
     const sqlite = new Sqlite(filename);
@@ -114,5 +121,65 @@ describe('Database', () => {
     await Effect.runPromise(
       Database.use(() => Effect.void).pipe(Effect.provide(makeDatabaseLayer(options))),
     );
+  });
+
+  it('backfills client users and administrator permissions during an upgrade', async () => {
+    const directory = await mkdtemp(join(tmpdir(), 'froment-database-upgrade-'));
+    directories.push(directory);
+    const migrationsFolder = join(directory, 'drizzle');
+    const sourceFolder = join(import.meta.dirname, '..', 'drizzle');
+    const initialMigrations = ['20260819152049_familiar_rictor', '20260819152052_seed_permissions'];
+    await Promise.all(
+      initialMigrations.map((migration) =>
+        cp(join(sourceFolder, migration), join(migrationsFolder, migration), { recursive: true }),
+      ),
+    );
+    const filename = join(directory, 'database.sqlite');
+    const options = { filename, migrationsFolder };
+    await Effect.runPromise(
+      Database.use(() => Effect.void).pipe(Effect.provide(makeDatabaseLayer(options))),
+    );
+
+    const sqlite = new Sqlite(filename);
+    const clientId = '01ARZ3NDEKTSV4RRFFQ69G5FAV';
+    const administratorId = '01ARZ3NDEKTSV4RRFFQ69G5FAW';
+    const roleId = '01ARZ3NDEKTSV4RRFFQ69G5FAX';
+    sqlite
+      .prepare(
+        'insert into users (id, display_name, kind, created_at, updated_at) values (?, ?, ?, ?, ?)',
+      )
+      .run(clientId, 'Existing client', 'client', 1, 2);
+    sqlite
+      .prepare(
+        'insert into users (id, display_name, kind, created_at, updated_at) values (?, ?, ?, ?, ?)',
+      )
+      .run(administratorId, 'Administrator', 'administrator', 1, 1);
+    sqlite
+      .prepare('insert into roles (id, name, created_at) values (?, ?, ?)')
+      .run(roleId, 'administrator', 1);
+    sqlite.close();
+
+    const clientMigration = '20260819163618_striped_krista_starr';
+    await cp(join(sourceFolder, clientMigration), join(migrationsFolder, clientMigration), {
+      recursive: true,
+    });
+    const state = await Effect.runPromise(
+      Database.use(({ sqlite: connection }) =>
+        Effect.sync(() => ({
+          client: connection
+            .prepare('select id, created_at as createdAt, updated_at as updatedAt from clients')
+            .get(),
+          permission: connection
+            .prepare(
+              "select permission_code from role_permissions where role_id = ? and permission_code = 'client.access.create'",
+            )
+            .pluck()
+            .get(roleId),
+        })),
+      ).pipe(Effect.provide(makeDatabaseLayer(options))),
+    );
+
+    expect(state.client).toEqual({ id: clientId, createdAt: 1, updatedAt: 2 });
+    expect(state.permission).toBe('client.access.create');
   });
 });

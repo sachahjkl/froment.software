@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
-import { Router, RouterLink } from '@angular/router';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { type LoginModeValue } from '@froment/contracts';
 import { BackOfficeAuth } from '../../back-office/back-office-auth';
 import { I18nService, TranslationKey } from '../../i18n.service';
@@ -9,16 +10,23 @@ const loginModeView = {
   client: {
     intro: 'backOffice.intro.client',
     panelLabelId: 'client-tab',
-    route: '/back-office/business-card',
+    queryMode: 'client',
+    route: '/backoffice/client',
   },
   administrator: {
     intro: 'backOffice.intro.administrator',
     panelLabelId: 'administrator-tab',
-    route: '/back-office/dashboard',
+    queryMode: 'admin',
+    route: '/backoffice/dashboard',
   },
 } as const satisfies Record<
   LoginModeValue,
-  { readonly intro: TranslationKey; readonly panelLabelId: string; readonly route: string }
+  {
+    readonly intro: TranslationKey;
+    readonly panelLabelId: string;
+    readonly queryMode: 'admin' | 'client';
+    readonly route: string;
+  }
 >;
 
 @Component({
@@ -31,6 +39,7 @@ const loginModeView = {
 export class BackOfficeLogin {
   protected readonly i18n = inject(I18nService);
   private readonly auth = inject(BackOfficeAuth);
+  private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   protected readonly error = signal<TranslationKey | undefined>(undefined);
   protected readonly mode = signal<LoginModeValue>('client');
@@ -41,10 +50,21 @@ export class BackOfficeLogin {
     return 'backOffice.submit';
   });
 
+  constructor() {
+    this.route.queryParamMap.pipe(takeUntilDestroyed()).subscribe((parameters) => {
+      this.applyQueryMode(parameters.get('mode'));
+    });
+  }
+
   selectMode(mode: LoginModeValue, tab?: HTMLButtonElement): void {
     this.mode.set(mode);
     this.error.set(undefined);
     tab?.focus();
+    void this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { mode: loginModeView[mode].queryMode },
+      replaceUrl: true,
+    });
   }
 
   async submit(event: SubmitEvent, accessIdentifier: string): Promise<void> {
@@ -67,5 +87,17 @@ export class BackOfficeLogin {
   tabIndex(mode: LoginModeValue): 0 | -1 {
     if (this.mode() === mode) return 0;
     return -1;
+  }
+
+  private applyQueryMode(mode: string | null): void {
+    if (mode === 'admin') {
+      this.mode.set('administrator');
+      return;
+    }
+    if (mode === 'client') {
+      this.mode.set('client');
+      return;
+    }
+    this.selectMode('client');
   }
 }

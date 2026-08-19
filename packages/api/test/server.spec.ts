@@ -44,6 +44,7 @@ const waitForServer = async (url: string, process: ChildProcess) => {
 
 describe('HTTP server', () => {
   let baseUrl: string;
+  let administratorAccessIdentifier: string | undefined;
   let databaseFilename: string;
   let server: ChildProcess;
   let staticRoot: string;
@@ -129,13 +130,12 @@ describe('HTTP server', () => {
     expect(created.headers.get('cache-control')).toBe('no-store');
     expect(created.headers.get('vary')).toBe('Cookie');
     const result = (await created.json()) as {
-      administratorId: string;
       accessIdentifier: string;
     };
     expect(result).toEqual({
-      administratorId: expect.stringMatching(/^[0-7][0-9A-Z]{25}$/),
       accessIdentifier: expect.stringMatching(/^[A-Za-z0-9_-]{43}$/),
     });
+    administratorAccessIdentifier = result.accessIdentifier;
     const cookies = created.headers.getSetCookie();
     expect(cookies).toHaveLength(2);
     expect(cookies.join('\n')).toContain('__Host-froment-session=');
@@ -157,7 +157,7 @@ describe('HTTP server', () => {
       sqlite.prepare("select count(*) from roles where name = 'administrator'").pluck().get(),
     ).toBe(1);
     expect(sqlite.prepare('select count(*) from user_roles').pluck().get()).toBe(1);
-    expect(sqlite.prepare('select count(*) from role_permissions').pluck().get()).toBe(29);
+    expect(sqlite.prepare('select count(*) from role_permissions').pluck().get()).toBe(30);
     expect(sqlite.prepare('select count(*) from access_credentials').pluck().get()).toBe(1);
     expect(sqlite.prepare('select count(*) from sessions').pluck().get()).toBe(1);
     sqlite.close();
@@ -167,7 +167,10 @@ describe('HTTP server', () => {
       headers: { cookie: cookieHeader },
     });
     expect(sessionStatus.headers.get('cache-control')).toBe('no-store');
-    await expect(sessionStatus.json()).resolves.toEqual({ authenticated: true });
+    await expect(sessionStatus.json()).resolves.toEqual({
+      authenticated: true,
+      mode: 'administrator',
+    });
 
     const csrfToken = cookies
       .find((cookie) => cookie.startsWith('__Host-froment-csrf='))
@@ -187,7 +190,7 @@ describe('HTTP server', () => {
       headers: { cookie: cookieHeader, 'x-csrf-token': csrfToken ?? '' },
     });
     expect(logout.status).toBe(200);
-    await expect(logout.json()).resolves.toEqual({ authenticated: false });
+    await expect(logout.json()).resolves.toEqual({ authenticated: false, mode: null });
 
     const repeatedLogout = await fetch(`${baseUrl}/api/auth/logout`, {
       method: 'POST',
@@ -199,7 +202,7 @@ describe('HTTP server', () => {
     const loggedOutStatus = await fetch(`${baseUrl}/api/auth/session`, {
       headers: { cookie: cookieHeader },
     });
-    await expect(loggedOutStatus.json()).resolves.toEqual({ authenticated: false });
+    await expect(loggedOutStatus.json()).resolves.toEqual({ authenticated: false, mode: null });
 
     const loginRejected = fetch(`${baseUrl}/api/auth/login`, {
       method: 'POST',
@@ -224,7 +227,10 @@ describe('HTTP server', () => {
       body: JSON.stringify({ accessIdentifier: result.accessIdentifier, mode: 'administrator' }),
     });
     expect(login.status).toBe(200);
-    await expect(login.json()).resolves.toEqual({ authenticated: true });
+    await expect(login.json()).resolves.toEqual({
+      authenticated: true,
+      mode: 'administrator',
+    });
     expect(login.headers.getSetCookie()).toHaveLength(2);
 
     const modeMismatch = await fetch(`${baseUrl}/api/auth/login`, {
@@ -256,6 +262,164 @@ describe('HTTP server', () => {
       body: JSON.stringify({ password: 'bootstrap-password' }),
     });
     expect(conflict.status).toBe(409);
+  });
+
+  it('manages clients through permission and CSRF protected routes', async () => {
+    if (administratorAccessIdentifier === undefined) {
+      throw new Error('The administrator access identifier is unavailable.');
+    }
+
+    const anonymousList = await fetch(`${baseUrl}/api/clients`);
+    expect(anonymousList.status).toBe(401);
+    expect(anonymousList.headers.get('cache-control')).toBe('no-store');
+
+    const administratorLogin = await fetch(`${baseUrl}/api/auth/login`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        accessIdentifier: administratorAccessIdentifier,
+        mode: 'administrator',
+      }),
+    });
+    expect(administratorLogin.status).toBe(200);
+    const administratorCookies = administratorLogin.headers.getSetCookie();
+    const administratorCookieHeader = administratorCookies
+      .map((cookie) => cookie.split(';', 1)[0])
+      .join('; ');
+    const administratorCsrf = administratorCookies
+      .find((cookie) => cookie.startsWith('__Host-froment-csrf='))
+      ?.split(';', 1)[0]
+      .split('=', 2)[1];
+    if (administratorCsrf === undefined) {
+      throw new Error('The administrator CSRF token is unavailable.');
+    }
+
+    const initialList = await fetch(`${baseUrl}/api/clients`, {
+      headers: { cookie: administratorCookieHeader },
+    });
+    expect(initialList.status).toBe(200);
+    await expect(initialList.json()).resolves.toEqual([]);
+
+    const missingCsrf = await fetch(`${baseUrl}/api/clients`, {
+      method: 'POST',
+      headers: {
+        cookie: administratorCookieHeader,
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify({ displayName: 'Acme' }),
+    });
+    expect(missingCsrf.status).toBe(403);
+    await expect(missingCsrf.json()).resolves.toMatchObject({
+      _tag: 'CsrfRejected',
+      code: 'authentication.invalid_csrf',
+    });
+
+    const createdResponse = await fetch(`${baseUrl}/api/clients`, {
+      method: 'POST',
+      headers: {
+        cookie: administratorCookieHeader,
+        'content-type': 'application/json',
+        'x-csrf-token': administratorCsrf,
+      },
+      body: JSON.stringify({ displayName: '  Acme  ' }),
+    });
+    expect(createdResponse.status).toBe(200);
+    const client = (await createdResponse.json()) as {
+      id: string;
+      displayName: string;
+      archived: boolean;
+    };
+    expect(client).toEqual({
+      id: expect.stringMatching(/^[0-7][0-9A-Z]{25}$/),
+      displayName: 'Acme',
+      archived: false,
+    });
+
+    const accessResponse = await fetch(`${baseUrl}/api/clients/${client.id}/access`, {
+      method: 'POST',
+      headers: {
+        cookie: administratorCookieHeader,
+        'x-csrf-token': administratorCsrf,
+      },
+    });
+    expect(accessResponse.status).toBe(200);
+    const access = (await accessResponse.json()) as {
+      clientId: string;
+      accessIdentifier: string;
+    };
+    expect(access).toEqual({
+      clientId: client.id,
+      accessIdentifier: expect.stringMatching(/^[A-Za-z0-9_-]{43}$/),
+    });
+
+    const clientLogin = await fetch(`${baseUrl}/api/auth/login`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ accessIdentifier: access.accessIdentifier, mode: 'client' }),
+    });
+    expect(clientLogin.status).toBe(200);
+    const clientCookieHeader = clientLogin.headers
+      .getSetCookie()
+      .map((cookie) => cookie.split(';', 1)[0])
+      .join('; ');
+    const clientSession = await fetch(`${baseUrl}/api/auth/session`, {
+      headers: { cookie: clientCookieHeader },
+    });
+    await expect(clientSession.json()).resolves.toEqual({ authenticated: true, mode: 'client' });
+    const forbiddenList = await fetch(`${baseUrl}/api/clients`, {
+      headers: { cookie: clientCookieHeader },
+    });
+    expect(forbiddenList.status).toBe(403);
+    await expect(forbiddenList.json()).resolves.toMatchObject({
+      _tag: 'PermissionDenied',
+      code: 'authentication.permission_denied',
+    });
+
+    const archiveResponse = await fetch(`${baseUrl}/api/clients/${client.id}/archive`, {
+      method: 'POST',
+      headers: {
+        cookie: administratorCookieHeader,
+        'x-csrf-token': administratorCsrf,
+      },
+    });
+    expect(archiveResponse.status).toBe(200);
+    await expect(archiveResponse.json()).resolves.toEqual({ ...client, archived: true });
+
+    const revokedSession = await fetch(`${baseUrl}/api/auth/session`, {
+      headers: { cookie: clientCookieHeader },
+    });
+    await expect(revokedSession.json()).resolves.toEqual({ authenticated: false, mode: null });
+
+    const archivedAccess = await fetch(`${baseUrl}/api/clients/${client.id}/access`, {
+      method: 'POST',
+      headers: {
+        cookie: administratorCookieHeader,
+        'x-csrf-token': administratorCsrf,
+      },
+    });
+    expect(archivedAccess.status).toBe(409);
+
+    const finalList = await fetch(`${baseUrl}/api/clients`, {
+      headers: { cookie: administratorCookieHeader },
+    });
+    await expect(finalList.json()).resolves.toEqual([{ ...client, archived: true }]);
+
+    const sqlite = new Sqlite(databaseFilename, { readonly: true });
+    expect(
+      sqlite
+        .prepare('select typeof(secret_hmac) from access_credentials where user_id = ?')
+        .pluck()
+        .get(client.id),
+    ).toBe('blob');
+    expect(
+      sqlite
+        .prepare(
+          'select count(*) from access_credentials where user_id = ? and revoked_at is not null',
+        )
+        .pluck()
+        .get(client.id),
+    ).toBe(1);
+    sqlite.close();
   });
 
   it('rejects oversized request bodies', async () => {

@@ -5,6 +5,9 @@ import {
   AuthenticationRejected,
   AuthenticationRateLimited,
   LoginRequest,
+  PermissionDenied,
+  AuthenticationRequired,
+  CsrfRejected,
   SessionRejected,
   SessionStatus,
 } from './authentication.js';
@@ -16,6 +19,15 @@ import {
   BootstrapStatus,
   BootstrapUnavailable,
 } from './bootstrap.js';
+import {
+  ClientAccess,
+  ClientArchived,
+  ClientCreateRequest,
+  ClientList,
+  ClientNotFound,
+  ClientSummary,
+} from './clients.js';
+import { Ulid } from './identifiers.js';
 
 export class SystemApi extends HttpApiGroup.make('system', { topLevel: true }).add(
   HttpApiEndpoint.get('health', '/api/health', {
@@ -50,4 +62,44 @@ export class SystemApi extends HttpApiGroup.make('system', { topLevel: true }).a
   }),
 ) {}
 
-export class Api extends HttpApi.make('froment-api').add(SystemApi) {}
+export class ClientsApi extends HttpApiGroup.make('clients', { topLevel: true }).add(
+  HttpApiEndpoint.get('clientList', '/api/clients', {
+    success: ClientList,
+    error: [
+      AuthenticationRequired.pipe(HttpApiSchema.status(401)),
+      PermissionDenied.pipe(HttpApiSchema.status(403)),
+    ],
+  }),
+  HttpApiEndpoint.post('clientCreate', '/api/clients', {
+    payload: ClientCreateRequest,
+    success: ClientSummary,
+    error: [
+      AuthenticationRequired.pipe(HttpApiSchema.status(401)),
+      PermissionDenied.pipe(HttpApiSchema.status(403)),
+      CsrfRejected.pipe(HttpApiSchema.status(403)),
+    ],
+  }),
+  HttpApiEndpoint.post('clientArchive', '/api/clients/:clientId/archive', {
+    params: { clientId: Ulid },
+    success: ClientSummary,
+    error: [
+      AuthenticationRequired.pipe(HttpApiSchema.status(401)),
+      PermissionDenied.pipe(HttpApiSchema.status(403)),
+      CsrfRejected.pipe(HttpApiSchema.status(403)),
+      ClientNotFound.pipe(HttpApiSchema.status(404)),
+    ],
+  }),
+  HttpApiEndpoint.post('clientAccessCreate', '/api/clients/:clientId/access', {
+    params: { clientId: Ulid },
+    success: ClientAccess,
+    error: [
+      AuthenticationRequired.pipe(HttpApiSchema.status(401)),
+      PermissionDenied.pipe(HttpApiSchema.status(403)),
+      CsrfRejected.pipe(HttpApiSchema.status(403)),
+      ClientNotFound.pipe(HttpApiSchema.status(404)),
+      ClientArchived.pipe(HttpApiSchema.status(409)),
+    ],
+  }),
+) {}
+
+export class Api extends HttpApi.make('froment-api').add(SystemApi).add(ClientsApi) {}

@@ -137,7 +137,6 @@ export const BootstrapLive = Layer.effect(
         });
 
         return {
-          administratorId,
           accessIdentifier,
           sessionToken: session.sessionToken,
           csrfToken: session.csrfToken,

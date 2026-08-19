@@ -20,10 +20,13 @@ describe('BackOfficeLogin', () => {
       providers: [provideRouter([]), { provide: BackOfficeAuth, useValue: auth }],
     });
     const router = TestBed.inject(Router);
+    const modeNavigation = vi.spyOn(router, 'navigate').mockResolvedValue(true);
     const navigate = vi.spyOn(router, 'navigateByUrl').mockResolvedValue(true);
     const fixture = TestBed.createComponent(BackOfficeLogin);
     await fixture.whenStable();
     const root: HTMLElement = fixture.nativeElement;
+    expect(root.querySelector('.eyebrow')).toBeNull();
+    expect(root.querySelector('h1')?.textContent).toContain('Back office');
 
     const bootstrapLink = () => root.querySelector<HTMLAnchorElement>('.bootstrap-link');
     expect(bootstrapLink()).toBeNull();
@@ -31,8 +34,12 @@ describe('BackOfficeLogin', () => {
     root.querySelector<HTMLButtonElement>('#administrator-tab')?.click();
     await fixture.whenStable();
 
+    expect(modeNavigation).toHaveBeenLastCalledWith(
+      [],
+      expect.objectContaining({ queryParams: { mode: 'admin' }, replaceUrl: true }),
+    );
     expect(bootstrapLink()?.hasAttribute('appLinkButton')).toBe(false);
-    expect(bootstrapLink()?.getAttribute('href')).toBe('/back-office/bootstrap');
+    expect(bootstrapLink()?.getAttribute('href')).toBe('/backoffice/bootstrap');
 
     const input = root.querySelector<HTMLInputElement>('input');
     if (input === null) return;
@@ -46,6 +53,6 @@ describe('BackOfficeLogin', () => {
         mode: 'administrator',
       },
     ]);
-    expect(navigate).toHaveBeenCalledWith('/back-office/dashboard');
+    expect(navigate).toHaveBeenCalledWith('/backoffice/dashboard');
   });
 });

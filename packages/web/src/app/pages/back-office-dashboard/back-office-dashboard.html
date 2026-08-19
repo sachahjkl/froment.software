@@ -5,8 +5,14 @@
   </header>
   <ul class="document-list">
     <li>
+      <h2>{{ i18n.t('backOffice.clients.title') }}</h2>
+      <a appLinkButton variant="primary" routerLink="/backoffice/clients">
+        {{ i18n.t('backOffice.open') }}
+      </a>
+    </li>
+    <li>
       <h2>{{ i18n.t('backOffice.businessCard') }}</h2>
-      <a appLinkButton variant="primary" routerLink="/back-office/business-card">
+      <a appLinkButton variant="primary" routerLink="/backoffice/business-card">
         {{ i18n.t('backOffice.open') }}
       </a>
     </li>

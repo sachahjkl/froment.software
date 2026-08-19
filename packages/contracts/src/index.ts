@@ -1,4 +1,6 @@
 export { HealthStatus, type HealthStatus as HealthStatusValue } from './status.js';
+export { Ulid, type Ulid as UlidValue } from './identifiers.js';
+export { PermissionCode, type PermissionCode as PermissionCodeValue } from './permissions.js';
 export {
   AccessIdentifier,
   type AccessIdentifier as AccessIdentifierValue,
@@ -7,14 +9,32 @@ export {
   type AuthenticationFailureCode,
   AuthenticationRejected,
   AuthenticationRateLimited,
+  AuthenticationRequired,
+  CsrfRejected,
   LoginMode,
   type LoginMode as LoginModeValue,
   LoginRequest,
+  PermissionDenied,
   type LoginRequest as LoginRequestValue,
   SessionRejected,
   SessionStatus,
   type SessionStatus as SessionStatusValue,
 } from './authentication.js';
+export {
+  ClientAccess,
+  type ClientAccess as ClientAccessValue,
+  ClientArchived,
+  ClientCreateRequest,
+  type ClientCreateRequest as ClientCreateRequestValue,
+  ClientFailure,
+  type ClientFailure as ClientFailureValue,
+  type ClientFailureCode,
+  ClientList,
+  type ClientList as ClientListValue,
+  ClientNotFound,
+  ClientSummary,
+  type ClientSummary as ClientSummaryValue,
+} from './clients.js';
 export {
   BootstrapFailure,
   type BootstrapFailure as BootstrapFailureValue,
@@ -29,4 +49,4 @@ export {
   type BootstrapStatus as BootstrapStatusValue,
   BootstrapUnavailable,
 } from './bootstrap.js';
-export { Api, SystemApi } from './api.js';
+export { Api, ClientsApi, SystemApi } from './api.js';

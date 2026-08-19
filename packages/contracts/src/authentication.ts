@@ -12,9 +12,10 @@ export const LoginRequest = Schema.Struct({
 });
 export type LoginRequest = typeof LoginRequest.Type;
 
-export const SessionStatus = Schema.Struct({
-  authenticated: Schema.Boolean,
-});
+export const SessionStatus = Schema.Union([
+  Schema.Struct({ authenticated: Schema.Literal(true), mode: LoginMode }),
+  Schema.Struct({ authenticated: Schema.Literal(false), mode: Schema.Null }),
+]);
 export type SessionStatus = typeof SessionStatus.Type;
 
 export class AuthenticationRejected extends Schema.TaggedError<AuthenticationRejected>()(
@@ -33,6 +34,24 @@ export class AuthenticationRateLimited extends Schema.TaggedError<Authentication
   'AuthenticationRateLimited',
   { code: Schema.Literal('authentication.rate_limited') },
   { httpApiStatus: 429 },
+) {}
+
+export class AuthenticationRequired extends Schema.TaggedError<AuthenticationRequired>()(
+  'AuthenticationRequired',
+  { code: Schema.Literal('authentication.required') },
+  { httpApiStatus: 401 },
+) {}
+
+export class PermissionDenied extends Schema.TaggedError<PermissionDenied>()(
+  'PermissionDenied',
+  { code: Schema.Literal('authentication.permission_denied') },
+  { httpApiStatus: 403 },
+) {}
+
+export class CsrfRejected extends Schema.TaggedError<CsrfRejected>()(
+  'CsrfRejected',
+  { code: Schema.Literal('authentication.invalid_csrf') },
+  { httpApiStatus: 403 },
 ) {}
 
 export const AuthenticationFailure = Schema.Union([

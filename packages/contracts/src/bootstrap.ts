@@ -12,10 +12,7 @@ export const BootstrapRequest = Schema.Struct({
 });
 export interface BootstrapRequest extends Schema.Schema.Type<typeof BootstrapRequest> {}
 
-const AdministratorId = Schema.String.check(Schema.isPattern(/^[0-7][0-9A-HJKMNP-TV-Z]{25}$/));
-
 export const BootstrapResult = Schema.Struct({
-  administratorId: AdministratorId,
   accessIdentifier: AccessIdentifier,
 });
 export interface BootstrapResult extends Schema.Schema.Type<typeof BootstrapResult> {}

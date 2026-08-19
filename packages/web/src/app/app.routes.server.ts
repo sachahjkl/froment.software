@@ -2,11 +2,11 @@ import { RenderMode, ServerRoute } from '@angular/ssr';
 
 export const serverRoutes: ServerRoute[] = [
   {
-    path: 'back-office',
+    path: 'backoffice/login',
     renderMode: RenderMode.Prerender,
   },
   {
-    path: 'back-office/**',
+    path: 'backoffice/**',
     renderMode: RenderMode.Client,
   },
   {

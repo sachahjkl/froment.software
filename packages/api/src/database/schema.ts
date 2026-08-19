@@ -37,6 +37,30 @@ export const users = sqliteTable(
   ],
 );
 
+export const clients = sqliteTable(
+  'clients',
+  {
+    id: text()
+      .notNull()
+      .primaryKey()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull(),
+    updatedAt: integer('updated_at', { mode: 'timestamp_ms' }).notNull(),
+    archivedAt: integer('archived_at', { mode: 'timestamp_ms' }),
+  },
+  (table) => [
+    check(
+      'clients_id_ulid_check',
+      sql`${table.id} is not null and length(${table.id}) = 26 and ${table.id} not glob '*[^0-9A-HJKMNP-TV-Z]*' and substr(${table.id}, 1, 1) between '0' and '7'`,
+    ),
+    check('clients_timestamps_check', sql`${table.updatedAt} >= ${table.createdAt}`),
+    check(
+      'clients_archived_at_check',
+      sql`${table.archivedAt} is null or ${table.archivedAt} >= ${table.createdAt}`,
+    ),
+  ],
+);
+
 export const accessCredentials = sqliteTable(
   'access_credentials',
   {
@@ -175,6 +199,9 @@ export const UserRow = createSelectSchema(users, {
   displayName: Schema.NonEmptyString,
 });
 export interface UserRow extends Schema.Schema.Type<typeof UserRow> {}
+
+export const ClientRow = createSelectSchema(clients, { id: ulid });
+export interface ClientRow extends Schema.Schema.Type<typeof ClientRow> {}
 
 export const AccessCredentialRow = createSelectSchema(accessCredentials, {
   id: ulid,

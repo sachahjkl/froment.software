@@ -1,9 +1,13 @@
 import {
   AuthenticationRejected,
   AuthenticationRateLimited,
+  AuthenticationRequired,
+  CsrfRejected,
+  PermissionDenied,
   SessionRejected,
   type AccessIdentifierValue,
   type LoginModeValue,
+  type PermissionCodeValue,
 } from '@froment/contracts';
 import { Context, Effect, Layer, Schema, Semaphore } from 'effect';
 
@@ -20,6 +24,11 @@ export interface SessionTokens {
   readonly expiresAt: Date;
 }
 
+export interface Principal {
+  readonly userId: string;
+  readonly mode: LoginModeValue;
+}
+
 export interface AuthenticationService {
   readonly login: (
     accessIdentifier: AccessIdentifierValue,
@@ -30,7 +39,20 @@ export interface AuthenticationService {
   >;
   readonly sessionStatus: (
     sessionToken: string | undefined,
-  ) => Effect.Effect<boolean, DatabaseError>;
+  ) => Effect.Effect<Principal | undefined, DatabaseError>;
+  readonly authorize: (
+    sessionToken: string | undefined,
+    permission: PermissionCodeValue,
+  ) => Effect.Effect<Principal, AuthenticationRequired | PermissionDenied | DatabaseError>;
+  readonly authorizeWrite: (
+    sessionToken: string | undefined,
+    csrfCookie: string | undefined,
+    csrfHeader: string | undefined,
+    permission: PermissionCodeValue,
+  ) => Effect.Effect<
+    Principal,
+    AuthenticationRequired | PermissionDenied | CsrfRejected | DatabaseError
+  >;
   readonly logout: (
     sessionToken: string | undefined,
     csrfCookie: string | undefined,
@@ -132,17 +154,19 @@ export const AuthenticationLive = Layer.effect(
       }).pipe(Effect.ensuring(loginSemaphore.release(1)));
     });
 
-    const sessionStatus = Effect.fn('Authentication.sessionStatus')(function* (
+    const findActiveSession = Effect.fn('Authentication.findActiveSession')(function* (
       sessionToken: string | undefined,
     ) {
-      if (sessionToken === undefined) return false;
+      if (sessionToken === undefined) return undefined;
       const now = Date.now();
       const tokenHmac = hmac(config.sessionHmacKey, sessionToken);
       return yield* Effect.try({
         try: () => {
           const row = database.sqlite
             .prepare(
-              `select sessions.id, sessions.absolute_expires_at as absoluteExpiresAt
+              `select sessions.id, sessions.user_id as userId,
+                      sessions.absolute_expires_at as absoluteExpiresAt,
+                      users.kind as mode
                from sessions
                join users on users.id = sessions.user_id
                where sessions.token_hmac = ?
@@ -153,16 +177,85 @@ export const AuthenticationLive = Layer.effect(
                limit 1`,
             )
             .get(tokenHmac, now, now);
-          const session =
-            row === undefined ? undefined : Schema.decodeUnknownSync(SessionLookup)(row);
-          if (session === undefined) return false;
+          if (row === undefined) return undefined;
+          const session = Schema.decodeUnknownSync(
+            Schema.Struct({
+              ...SessionLookup.fields,
+              userId: Schema.String,
+              mode: Schema.Literals(['client', 'administrator']),
+            }),
+          )(row);
           database.sqlite
             .prepare('update sessions set last_seen_at = ?, idle_expires_at = ? where id = ?')
             .run(now, renewIdleExpiry(now, session.absoluteExpiresAt), session.id);
-          return true;
+          return { userId: session.userId, mode: session.mode } satisfies Principal;
         },
         catch: (cause) => new DatabaseError({ operation: 'validate session', cause }),
       });
+    });
+
+    const sessionStatus = Effect.fn('Authentication.sessionStatus')(function* (
+      sessionToken: string | undefined,
+    ) {
+      return yield* findActiveSession(sessionToken);
+    });
+
+    const authorize = Effect.fn('Authentication.authorize')(function* (
+      sessionToken: string | undefined,
+      permission: PermissionCodeValue,
+    ) {
+      const principal = yield* findActiveSession(sessionToken);
+      if (principal === undefined) {
+        return yield* new AuthenticationRequired({ code: 'authentication.required' });
+      }
+      const allowed = yield* Effect.try({
+        try: () =>
+          database.sqlite
+            .prepare(
+              `select 1 from user_roles
+               join role_permissions on role_permissions.role_id = user_roles.role_id
+               where user_roles.user_id = ? and role_permissions.permission_code = ? limit 1`,
+            )
+            .get(principal.userId, permission) !== undefined,
+        catch: (cause) => new DatabaseError({ operation: 'authorize permission', cause }),
+      });
+      if (!allowed) {
+        return yield* new PermissionDenied({ code: 'authentication.permission_denied' });
+      }
+      return principal;
+    });
+
+    const authorizeWrite = Effect.fn('Authentication.authorizeWrite')(function* (
+      sessionToken: string | undefined,
+      csrfCookie: string | undefined,
+      csrfHeader: string | undefined,
+      permission: PermissionCodeValue,
+    ) {
+      const principal = yield* authorize(sessionToken, permission);
+      if (
+        sessionToken === undefined ||
+        csrfCookie === undefined ||
+        csrfHeader === undefined ||
+        csrfCookie !== csrfHeader
+      ) {
+        return yield* new CsrfRejected({ code: 'authentication.invalid_csrf' });
+      }
+      const validCsrf = yield* Effect.try({
+        try: () =>
+          database.sqlite
+            .prepare(
+              'select 1 from sessions where token_hmac = ? and csrf_hmac = ? and revoked_at is null limit 1',
+            )
+            .get(
+              hmac(config.sessionHmacKey, sessionToken),
+              hmac(config.sessionHmacKey, csrfHeader),
+            ) !== undefined,
+        catch: (cause) => new DatabaseError({ operation: 'authorize csrf token', cause }),
+      });
+      if (!validCsrf) {
+        return yield* new CsrfRejected({ code: 'authentication.invalid_csrf' });
+      }
+      return principal;
     });
 
     const logout = Effect.fn('Authentication.logout')(function* (
@@ -194,6 +287,6 @@ export const AuthenticationLive = Layer.effect(
       });
     });
 
-    return Authentication.of({ login, sessionStatus, logout });
+    return Authentication.of({ login, sessionStatus, authorize, authorizeWrite, logout });
   }),
 );

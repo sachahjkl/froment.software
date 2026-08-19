@@ -1,6 +1,5 @@
 <section class="login-page" aria-labelledby="back-office-title">
   <div class="login-panel">
-    <p class="eyebrow">{{ i18n.t('backOffice.kicker') }}</p>
     <h1 id="back-office-title">{{ i18n.t('backOffice.title') }}</h1>
     <div class="mode-tabs" role="tablist" [attr.aria-label]="i18n.t('backOffice.mode')">
       <button
@@ -62,7 +61,7 @@
         </button>
       </form>
       @if (mode() === 'administrator') {
-      <a class="bootstrap-link" routerLink="/back-office/bootstrap">
+      <a class="bootstrap-link" routerLink="/backoffice/bootstrap">
         {{ i18n.t('backOffice.bootstrap') }}
       </a>
       }

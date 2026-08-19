@@ -4,18 +4,16 @@ import { describe, expect, it } from 'vitest';
 import { BootstrapFailure, BootstrapResult } from './bootstrap.js';
 
 describe('bootstrap contracts', () => {
-  it('validates administrator identifiers', () => {
+  it('validates the sign-in identifier', () => {
     expect(
       Schema.decodeUnknownSync(BootstrapResult)({
-        administratorId: '01ARZ3NDEKTSV4RRFFQ69G5FAV',
         accessIdentifier: 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA',
       }),
     ).toEqual({
-      administratorId: '01ARZ3NDEKTSV4RRFFQ69G5FAV',
       accessIdentifier: 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA',
     });
     expect(() =>
-      Schema.decodeUnknownSync(BootstrapResult)({ administratorId: 'invalid' }),
+      Schema.decodeUnknownSync(BootstrapResult)({ accessIdentifier: 'invalid' }),
     ).toThrow();
   });
 

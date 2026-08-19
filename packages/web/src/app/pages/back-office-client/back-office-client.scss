@@ -1,0 +1,32 @@
+:host {
+  display: block;
+}
+
+.client-page {
+  padding: var(--page-header-y) var(--page-x);
+}
+
+.client-page > header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+h1 {
+  font-size: var(--text-2xl);
+}
+
+.empty {
+  margin-top: var(--space-6);
+  padding: var(--space-5);
+  border: 1px solid var(--color-line-strong);
+  background: var(--color-surface-raised);
+}
+
+@media (max-width: 38rem) {
+  .client-page > header {
+    align-items: stretch;
+    flex-direction: column;
+  }
+}
