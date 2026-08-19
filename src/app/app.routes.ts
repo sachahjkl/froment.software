@@ -1,19 +1,7 @@
 import { Routes } from '@angular/router';
 import { HomeComponent } from './pages/home/home.component';
-import { ClientsComponent } from './pages/clients/clients.component';
-import { ServicesComponent } from './pages/services/services.component';
-import { DesignComponent } from './pages/design/design.component';
-import { ToolsComponent } from './pages/tools/tools.component';
-import { AboutComponent } from './pages/about/about.component';
-import { policies, PolicyPage } from './pages/policy/policy-page';
-import { Blog } from './pages/blog/blog';
-import { BlogPost } from './pages/blog-post/blog-post';
-import { BackOfficeLogin } from './pages/back-office-login/back-office-login';
-import { BackOfficeDashboard } from './pages/back-office-dashboard/back-office-dashboard';
-import { BusinessCard } from './pages/business-card/business-card';
+import { policies } from './pages/policy/policy-documents';
 import { backOfficeGuard } from './back-office/back-office-auth';
-
-import { NotFoundComponent } from './pages/not-found/not-found.component';
 
 export const routes: Routes = [
   {
@@ -23,17 +11,20 @@ export const routes: Routes = [
   },
   {
     path: 'about',
-    component: AboutComponent,
+    loadComponent: () =>
+      import('./pages/about/about.component').then((module) => module.AboutComponent),
     data: { titleKey: 'page.about', descriptionKey: 'page.description.about' },
   },
   {
     path: 'clients',
-    component: ClientsComponent,
+    loadComponent: () =>
+      import('./pages/clients/clients.component').then((module) => module.ClientsComponent),
     data: { titleKey: 'page.clients', descriptionKey: 'page.description.clients' },
   },
   {
     path: 'services',
-    component: ServicesComponent,
+    loadComponent: () =>
+      import('./pages/services/services.component').then((module) => module.ServicesComponent),
     data: { titleKey: 'page.services', descriptionKey: 'page.description.services' },
   },
   {
@@ -58,18 +49,25 @@ export const routes: Routes = [
   },
   {
     path: 'tools',
-    component: ToolsComponent,
+    loadComponent: () =>
+      import('./pages/tools/tools.component').then((module) => module.ToolsComponent),
     data: { titleKey: 'page.products', descriptionKey: 'page.description.products' },
   },
   {
     path: 'blog',
-    component: Blog,
+    loadComponent: () => import('./pages/blog/blog').then((module) => module.Blog),
     data: { titleKey: 'page.blog', descriptionKey: 'page.description.blog' },
   },
-  { path: 'blog/:slug', component: BlogPost },
+  {
+    path: 'blog/:slug',
+    loadComponent: () => import('./pages/blog-post/blog-post').then((module) => module.BlogPost),
+  },
   {
     path: 'back-office',
-    component: BackOfficeLogin,
+    loadComponent: () =>
+      import('./pages/back-office-login/back-office-login').then(
+        (module) => module.BackOfficeLogin,
+      ),
     data: {
       titleKey: 'page.back_office',
       descriptionKey: 'page.description.back_office',
@@ -78,7 +76,10 @@ export const routes: Routes = [
   },
   {
     path: 'back-office/dashboard',
-    component: BackOfficeDashboard,
+    loadComponent: () =>
+      import('./pages/back-office-dashboard/back-office-dashboard').then(
+        (module) => module.BackOfficeDashboard,
+      ),
     canActivate: [backOfficeGuard],
     data: {
       titleKey: 'page.back_office',
@@ -88,7 +89,8 @@ export const routes: Routes = [
   },
   {
     path: 'back-office/business-card',
-    component: BusinessCard,
+    loadComponent: () =>
+      import('./pages/business-card/business-card').then((module) => module.BusinessCard),
     canActivate: [backOfficeGuard],
     data: {
       titleKey: 'page.business_card',
@@ -98,7 +100,8 @@ export const routes: Routes = [
   },
   {
     path: 'design',
-    component: DesignComponent,
+    loadComponent: () =>
+      import('./pages/design/design.component').then((module) => module.DesignComponent),
     data: {
       titleKey: 'page.design',
       descriptionKey: 'page.description.design',
@@ -107,7 +110,7 @@ export const routes: Routes = [
   },
   {
     path: 'legal',
-    component: PolicyPage,
+    loadComponent: () => import('./pages/policy/policy-page').then((module) => module.PolicyPage),
     data: {
       policy: policies.legal,
       titleKey: 'page.legal',
@@ -116,7 +119,7 @@ export const routes: Routes = [
   },
   {
     path: 'privacy',
-    component: PolicyPage,
+    loadComponent: () => import('./pages/policy/policy-page').then((module) => module.PolicyPage),
     data: {
       policy: policies.privacy,
       titleKey: 'page.privacy',
@@ -125,7 +128,7 @@ export const routes: Routes = [
   },
   {
     path: 'cookies',
-    component: PolicyPage,
+    loadComponent: () => import('./pages/policy/policy-page').then((module) => module.PolicyPage),
     data: {
       policy: policies.cookies,
       titleKey: 'page.cookies',
@@ -134,7 +137,8 @@ export const routes: Routes = [
   },
   {
     path: '404',
-    component: NotFoundComponent,
+    loadComponent: () =>
+      import('./pages/not-found/not-found.component').then((module) => module.NotFoundComponent),
     data: {
       titleKey: 'page.not_found',
       descriptionKey: 'page.description.not_found',
@@ -143,7 +147,8 @@ export const routes: Routes = [
   },
   {
     path: '**',
-    component: NotFoundComponent,
+    loadComponent: () =>
+      import('./pages/not-found/not-found.component').then((module) => module.NotFoundComponent),
     data: {
       titleKey: 'page.not_found',
       descriptionKey: 'page.description.not_found',
