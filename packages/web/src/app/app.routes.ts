@@ -75,6 +75,18 @@ export const routes: Routes = [
     },
   },
   {
+    path: 'back-office/bootstrap',
+    loadComponent: () =>
+      import('./pages/back-office-bootstrap/back-office-bootstrap').then(
+        (module) => module.BackOfficeBootstrap,
+      ),
+    data: {
+      titleKey: 'page.back_office',
+      descriptionKey: 'page.description.back_office',
+      robots: 'noindex, nofollow',
+    },
+  },
+  {
     path: 'back-office/dashboard',
     loadComponent: () =>
       import('./pages/back-office-dashboard/back-office-dashboard').then(

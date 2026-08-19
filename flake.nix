@@ -41,7 +41,7 @@
             inherit pname version src;
             pnpm = pkgs.pnpm;
             fetcherVersion = 4;
-            hash = "sha256-cVbdQYhmq5sU+QZV9sWt9K0C0QIAkSjJvjCJOsHhCqg=";
+            hash = "sha256-vq62Mq0PaqLPR4pKPCvioEVAAR8Xpm8+hRIAy9qXXG4=";
           };
 
           application = pkgs.stdenv.mkDerivation {

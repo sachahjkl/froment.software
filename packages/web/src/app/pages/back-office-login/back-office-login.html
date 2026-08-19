@@ -1,25 +1,28 @@
 <section class="login-page" aria-labelledby="back-office-title">
   <div class="login-panel">
-    <p class="eyebrow">Accès privé</p>
-    <h1 id="back-office-title">Back office</h1>
-    <p>Entrez le mot de passe pour accéder aux documents internes.</p>
-    <form (submit)="submit($event, password.value)">
-      <label for="back-office-password">Mot de passe</label>
+    <p class="eyebrow">{{ i18n.t('backOffice.kicker') }}</p>
+    <h1 id="back-office-title">{{ i18n.t('backOffice.title') }}</h1>
+    <p>{{ i18n.t('backOffice.intro') }}</p>
+    <form (submit)="submit($event, accessIdentifier.value)">
+      <label for="back-office-access-identifier">{{ i18n.t('backOffice.accessIdentifier') }}</label>
       <input
-        #password
-        id="back-office-password"
+        #accessIdentifier
+        id="back-office-access-identifier"
         class="input"
         type="password"
-        autocomplete="current-password"
+        autocomplete="off"
         required
         autofocus
       />
-      @if (error()) {
-      <p class="error" role="alert">Mot de passe incorrect.</p>
+      @if (error(); as errorKey) {
+      <p class="error" role="alert">{{ i18n.t(errorKey) }}</p>
       }
       <button appButton variant="primary" type="submit" [disabled]="pending()">
-        {{ pending() ? 'Vérification…' : 'Se connecter' }}
+        {{ i18n.t(pending() ? 'backOffice.pending' : 'backOffice.submit') }}
       </button>
     </form>
+    <a appLinkButton variant="link" routerLink="/back-office/bootstrap">
+      {{ i18n.t('backOffice.bootstrap') }}
+    </a>
   </div>
 </section>

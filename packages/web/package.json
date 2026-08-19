@@ -19,6 +19,7 @@
     "@angular/platform-server": "catalog:",
     "@angular/router": "catalog:",
     "@angular/ssr": "catalog:",
+    "@froment/contracts": "workspace:*",
     "effect": "catalog:",
     "marked": "catalog:",
     "rxjs": "catalog:",

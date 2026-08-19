@@ -1,0 +1,55 @@
+<section class="bootstrap-page" aria-labelledby="bootstrap-title">
+  <div class="bootstrap-panel">
+    <p class="eyebrow">{{ i18n.t('bootstrap.kicker') }}</p>
+    <h1 id="bootstrap-title">{{ i18n.t('bootstrap.title') }}</h1>
+
+    @if (administratorId(); as identifier) {
+    <p>{{ i18n.t('bootstrap.success') }}</p>
+    <h2>{{ i18n.t('bootstrap.accessIdentifier') }}</h2>
+    <div class="identifier">
+      <code>{{ accessIdentifier() }}</code>
+      <button appButton type="button" (click)="copyIdentifier('access', accessIdentifier()!)">
+        {{ i18n.t(copied() === 'access' ? 'bootstrap.copied' : 'bootstrap.copy') }}
+      </button>
+    </div>
+    <h2>{{ i18n.t('bootstrap.administratorId') }}</h2>
+    <div class="identifier">
+      <code>{{ identifier }}</code>
+      <button appButton type="button" (click)="copyIdentifier('administrator', identifier)">
+        {{ i18n.t(copied() === 'administrator' ? 'bootstrap.copied' : 'bootstrap.copy') }}
+      </button>
+    </div>
+    <a appLinkButton variant="primary" routerLink="/back-office/dashboard">
+      {{ i18n.t('bootstrap.login') }}
+    </a>
+    } @else { @switch (state()) { @case ('loading') {
+    <p aria-live="polite">{{ i18n.t('bootstrap.loading') }}</p>
+    } @case ('available') {
+    <p>{{ i18n.t('bootstrap.intro') }}</p>
+    <form (submit)="create($event)">
+      <label for="bootstrap-password">{{ i18n.t('bootstrap.password') }}</label>
+      <input
+        id="bootstrap-password"
+        class="input"
+        type="password"
+        autocomplete="new-password"
+        [formField]="bootstrapForm.password"
+        autofocus
+      />
+      @if (error(); as errorKey) {
+      <p class="error" role="alert">{{ i18n.t(errorKey) }}</p>
+      }
+      <button appButton variant="primary" type="submit" [disabled]="pending()">
+        {{ i18n.t(pending() ? 'bootstrap.pending' : 'bootstrap.submit') }}
+      </button>
+    </form>
+    } @case ('unavailable') {
+    <p>{{ i18n.t('bootstrap.unavailable') }}</p>
+    <a appLinkButton variant="primary" routerLink="/back-office">
+      {{ i18n.t('bootstrap.login') }}
+    </a>
+    } @case ('error') {
+    <p class="error" role="alert">{{ i18n.t('bootstrap.error') }}</p>
+    } } }
+  </div>
+</section>

@@ -1,7 +1,15 @@
 import { NodeRuntime } from '@effect/platform-node';
 import { Layer } from 'effect';
 
+import { BootstrapLive } from './bootstrap/bootstrap.js';
+import { AuthenticationLive } from './authentication/authentication.js';
+import { AuthenticationConfigLive } from './authentication/authentication-config.js';
 import { DatabaseLive } from './database/database.js';
 import { ServerLive } from './server.js';
 
-Layer.launch(ServerLive.pipe(Layer.provide(DatabaseLive))).pipe(NodeRuntime.runMain);
+const ServicesLive = Layer.mergeAll(BootstrapLive, AuthenticationLive).pipe(
+  Layer.provide(AuthenticationConfigLive),
+  Layer.provideMerge(DatabaseLive),
+);
+
+Layer.launch(ServerLive.pipe(Layer.provide(ServicesLive))).pipe(NodeRuntime.runMain);

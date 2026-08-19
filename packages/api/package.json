@@ -17,7 +17,8 @@
     "@froment/contracts": "workspace:*",
     "better-sqlite3": "catalog:",
     "drizzle-orm": "catalog:",
-    "effect": "catalog:"
+    "effect": "catalog:",
+    "ulid": "catalog:"
   },
   "devDependencies": {
     "@types/better-sqlite3": "catalog:",

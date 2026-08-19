@@ -1,12 +1,14 @@
 <section class="dashboard" aria-labelledby="dashboard-title">
   <header>
-    <h1 id="dashboard-title">Back office</h1>
-    <button appButton type="button" (click)="signOut()">Se déconnecter</button>
+    <h1 id="dashboard-title">{{ i18n.t('backOffice.title') }}</h1>
+    <button appButton type="button" (click)="signOut()">{{ i18n.t('backOffice.signOut') }}</button>
   </header>
   <ul class="document-list">
     <li>
-      <h2>Carte de visite</h2>
-      <a appLinkButton variant="primary" routerLink="/back-office/business-card">Ouvrir</a>
+      <h2>{{ i18n.t('backOffice.businessCard') }}</h2>
+      <a appLinkButton variant="primary" routerLink="/back-office/business-card">
+        {{ i18n.t('backOffice.open') }}
+      </a>
     </li>
   </ul>
 </section>

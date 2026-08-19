@@ -107,9 +107,11 @@ Le formulaire d'amorçage accepte un mot de passe simple.
 
 Le serveur calcule le SHA-512 du mot de passe et compare le condensat en temps constant.
 
-Le condensat par défaut réside uniquement dans le serveur.
+La variable obligatoire `BOOTSTRAP_PASSWORD_SHA512` contient ce condensat hexadécimal.
 
-Un secret de déploiement peut remplacer ce condensat sans reconstruire l'image.
+La variable obligatoire `ACCESS_HMAC_KEY` contient une clé aléatoire de 32 octets en base64url.
+
+La variable obligatoire `SESSION_HMAC_KEY` contient une autre clé aléatoire de 32 octets en base64url.
 
 Le bundle Angular ne contient ni mot de passe, ni condensat de mot de passe.
 
@@ -119,7 +121,9 @@ La même transaction rend les amorçages concurrents impossibles.
 
 Le serveur ouvre ensuite une session sécurisée pour le nouvel administrateur.
 
-La page de résultat affiche l'ULID du compte et propose une action de copie.
+La page de résultat affiche l'ULID du compte et l'identifiant secret.
+
+La page propose une action de copie pour chaque valeur.
 
 Le composant de copie reprend l'objectif ergonomique de Clockin sans reprendre son implémentation ni son apparence.
 
