@@ -1,6 +1,6 @@
 # froment.software
 
-Workspace pnpm de Froment Software. Le site Angular 22 est pré-rendu puis servi par nginx.
+Workspace pnpm de Froment Software. Un serveur Effect sert l'API et le site Angular pré-rendu.
 
 ## Architecture
 
@@ -28,9 +28,10 @@ Les routes publiques indexables figurent dans `packages/web/public/sitemap.xml`.
 
 - `/design` est un atelier de QA visuelle, volontairement absent de la navigation publique et du sitemap, avec `noindex, follow`.
 - `/404` est pré-rendue, porte `noindex, nofollow` et sert de contenu d’erreur.
-- La route Angular générique affiche le même composant pour une navigation cliente inconnue, mais nginx ne transforme pas les URL inconnues en réponses `200`.
+- La route Angular générique affiche le même composant pendant une navigation cliente inconnue.
+- Le serveur Effect renvoie un statut `404` pour une URL absente.
 
-`nginx.conf` impose les URL sans slash final par redirection `308`. Il résout une route avec `$uri/index.html`; un fichier ou une route absente renvoie un vrai statut `404` avec le document `/404/index.html`. Ne pas remplacer cette règle par un fallback général vers `/index.html`, qui rendrait les erreurs indexables comme des succès.
+Le serveur résout les fichiers et les répertoires pré-rendus. Il n'utilise pas de fallback général vers `/index.html`.
 
 ### Ajouter une route
 
@@ -40,7 +41,7 @@ Les routes publiques indexables figurent dans `packages/web/public/sitemap.xml`.
 4. Définissez `robots` pour une route non indexable.
 5. Ajoutez les accès de navigation nécessaires.
 6. Si la route est indexable, ajoutez son URL dans `packages/web/public/sitemap.xml`.
-7. Vérifiez le HTML, les métadonnées, les langues et le comportement nginx.
+7. Vérifiez le HTML, les métadonnées, les langues et les statuts HTTP.
 
 ## Système de design et QA visuelle
 
@@ -76,13 +77,13 @@ Le flake construit et vérifie le site sans accès réseau pendant la compilatio
 ```bash
 nix flake check          # build, tests, workflow et image
 nix build                # site pré-rendu
-nix run                  # serveur nginx local sur le port 80
+nix run                  # serveur Effect local sur le port 3000
 nix build .#dockerImage  # archive Docker reproductible
 ```
 
 ## Déploiement Podman
 
-Le flake construit une archive Docker avec le site pré-rendu et nginx.
+Le flake construit une archive Docker avec Node.js, le serveur Effect et le site pré-rendu.
 
 ```bash
 podman load < result

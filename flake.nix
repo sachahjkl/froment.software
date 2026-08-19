@@ -21,6 +21,7 @@
           packageJson = builtins.fromJSON (builtins.readFile ./package.json);
           inherit (packageJson) version;
           pname = packageJson.name;
+          runtimeNode = pkgs.nodejs-slim_22;
           projectSource = lib.cleanSource ./.;
           src = lib.fileset.toSource {
             root = ./.;
@@ -38,10 +39,10 @@
             inherit pname version src;
             pnpm = pkgs.pnpm;
             fetcherVersion = 4;
-            hash = "sha256-p7+GqSv88R29ZZQldGuWFaDk4QK8gmrrwBfWI/6fTaE=";
+            hash = "sha256-Xu+xFM12lYGatbUnvuwWQe0rdsNqwT/yA5XT2R0qQSM=";
           };
 
-          site = pkgs.stdenv.mkDerivation {
+          application = pkgs.stdenv.mkDerivation {
             inherit
               pname
               version
@@ -52,6 +53,7 @@
               pkgs.nodejs_22
               pkgs.pnpm
               pkgs.pnpmConfigHook
+              pkgs.makeWrapper
             ];
             buildPhase = ''
               runHook preBuild
@@ -60,7 +62,13 @@
             '';
             installPhase = ''
               runHook preInstall
-              cp -r packages/web/dist/froment-software/browser $out
+              mkdir -p $out/bin $out/lib/froment-software $out/share/froment-software
+              cp packages/api/dist/main.cjs $out/lib/froment-software/server.cjs
+              cp -r packages/web/dist/froment-software/browser $out/share/froment-software/web
+              makeWrapper ${runtimeNode}/bin/node $out/bin/${pname} \
+                --add-flags $out/lib/froment-software/server.cjs \
+                --set STATIC_ROOT $out/share/froment-software/web \
+                --set-default PORT 3000
               runHook postInstall
             '';
           };
@@ -89,28 +97,11 @@
               '';
             };
 
-          nginxConfig = pkgs.runCommand "${pname}-nginx.conf" { } ''
-            substitute ${./nginx.conf} $out \
-              --replace-fail "user nginx;" "user nobody nobody;" \
-              --replace-fail "error_log /var/log/nginx/error.log notice;" "error_log /dev/stderr notice;" \
-              --replace-fail "pid /var/run/nginx.pid;" "pid /tmp/nginx.pid;" \
-              --replace-fail "include /etc/nginx/mime.types;" "include ${pkgs.nginx}/conf/mime.types;" \
-              --replace-fail "root /usr/share/nginx/html;" "root ${site};"
-          '';
-
-          server = pkgs.writeShellApplication {
-            name = pname;
-            runtimeInputs = [ pkgs.nginx ];
-            text = ''
-              exec nginx -e /dev/stderr -c ${nginxConfig} -g 'daemon off;'
-            '';
-          };
-
           dockerImage = pkgs.dockerTools.buildLayeredImage {
             name = pname;
             tag = version;
             contents = [
-              server
+              application
               pkgs.dockerTools.fakeNss
             ];
             fakeRootCommands = ''
@@ -118,8 +109,8 @@
               chmod 1777 ./tmp
             '';
             config = {
-              Cmd = [ "${server}/bin/${pname}" ];
-              ExposedPorts."80/tcp" = { };
+              Cmd = [ "${application}/bin/${pname}" ];
+              ExposedPorts."3000/tcp" = { };
             };
           };
 
@@ -135,18 +126,18 @@
         in
         {
           packages = {
-            default = site;
+            default = application;
             inherit dockerImage;
           };
 
           apps.default = {
             type = "app";
-            program = "${server}/bin/${pname}";
+            program = "${application}/bin/${pname}";
           };
 
           checks = {
             inherit actionlint dockerImage;
-            build = site;
+            build = application;
             format = mkCheck "format" "pnpm format:check";
             lint = mkCheck "lint" "pnpm lint";
             test = mkCheck "test" "pnpm test";
