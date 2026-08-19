@@ -1,9 +1,11 @@
 import { DOCUMENT } from '@angular/common';
 import {
+  afterNextRender,
   effect,
   inject,
   Injectable,
   InjectionToken,
+  Injector,
   Provider,
   signal,
   WritableSignal,
@@ -12,7 +14,7 @@ import {
 export interface MobileNavigationState {
   readonly open: WritableSignal<boolean>;
   close(): void;
-  toggle(): void;
+  toggle(trigger: HTMLElement): void;
 }
 
 export const MOBILE_NAVIGATION = new InjectionToken<MobileNavigationState>('MOBILE_NAVIGATION');
@@ -20,6 +22,8 @@ export const MOBILE_NAVIGATION = new InjectionToken<MobileNavigationState>('MOBI
 @Injectable()
 export class MobileNavigationController implements MobileNavigationState {
   private readonly document = inject(DOCUMENT);
+  private readonly injector = inject(Injector);
+  private trigger: HTMLElement | null = null;
   readonly open = signal(false);
 
   constructor() {
@@ -40,11 +44,23 @@ export class MobileNavigationController implements MobileNavigationState {
   }
 
   close(): void {
+    if (!this.open()) {
+      return;
+    }
+
     this.open.set(false);
+    const trigger = this.trigger;
+    afterNextRender(() => trigger?.focus(), { injector: this.injector });
   }
 
-  toggle(): void {
-    this.open.update((open) => !open);
+  toggle(trigger: HTMLElement): void {
+    if (this.open()) {
+      this.close();
+      return;
+    }
+
+    this.trigger = trigger;
+    this.open.set(true);
   }
 }
 

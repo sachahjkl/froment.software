@@ -34,12 +34,13 @@
         </button>
         <div class="mobile-navigation-control">
           <button
+            #menuTrigger
             class="menu-trigger"
             type="button"
             [attr.aria-label]="i18n.t('shell.menu')"
             [attr.aria-expanded]="mobileNavigation.open()"
             aria-controls="mobile-navigation"
-            (click)="mobileNavigation.toggle()"
+            (click)="mobileNavigation.toggle(menuTrigger)"
           >
             <span class="burger" aria-hidden="true"><span></span><span></span><span></span></span>
           </button>

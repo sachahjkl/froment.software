@@ -137,6 +137,14 @@ describe('App shell', () => {
     expect(trigger.getAttribute('aria-expanded')).toBe('true');
     expect(navigation.classList.contains('open')).toBe(true);
     expect(document.body.style.overflow).toBe('hidden');
+    const closeButton = navigation.querySelector<HTMLButtonElement>('.mobile-nav-header button')!;
+    const languageSelect = navigation.querySelector<HTMLSelectElement>('select')!;
+    expect(document.activeElement).toBe(closeButton);
+
+    languageSelect.focus();
+    expect(document.activeElement).toBe(languageSelect);
+    languageSelect.dispatchEvent(new KeyboardEvent('keydown', { key: 'Tab', bubbles: true }));
+    expect(document.activeElement).toBe(closeButton);
 
     const servicesLink = navigation.querySelector<HTMLAnchorElement>('a[href="/services"]')!;
     servicesLink.click();
@@ -169,6 +177,19 @@ describe('App shell', () => {
     await fixture.whenStable();
 
     expect(trigger.getAttribute('aria-expanded')).toBe('false');
+    expect(document.activeElement).toBe(trigger);
+  });
+
+  it('closes the mobile navigation with Escape', async () => {
+    const trigger = element.querySelector<HTMLButtonElement>('.menu-trigger')!;
+    trigger.click();
+    await fixture.whenStable();
+
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+    await fixture.whenStable();
+
+    expect(trigger.getAttribute('aria-expanded')).toBe('false');
+    expect(document.activeElement).toBe(trigger);
   });
 
   it('copies a section URL and shows a status message', async () => {

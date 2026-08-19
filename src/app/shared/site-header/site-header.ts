@@ -19,6 +19,7 @@ import { LanguageSelector } from '../language-selector/language-selector';
   providers: [provideMobileNavigation()],
   host: {
     '(document:click)': 'closeNavOnOutsideClick($event)',
+    '(document:keydown.escape)': 'mobileNavigation.close()',
     '[class.mobile-nav-open]': 'mobileNavigation.open()',
   },
 })
