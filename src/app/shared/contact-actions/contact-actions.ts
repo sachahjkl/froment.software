@@ -1,10 +1,10 @@
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
+import { Button } from '../button/button';
 import { Icon } from '../icon/icon';
-import { LinkButton } from '../link-button/link-button';
 
 @Component({
   selector: 'app-contact-actions',
-  imports: [Icon, LinkButton],
+  imports: [Button, Icon],
   templateUrl: './contact-actions.html',
   styleUrl: './contact-actions.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

@@ -11,7 +11,7 @@ export type ButtonVariant =
   | 'link';
 
 @Component({
-  selector: 'button[appButton]',
+  selector: 'button[appButton], a[appLinkButton]',
   imports: [],
   template: '<ng-content />',
   styleUrl: './button.scss',

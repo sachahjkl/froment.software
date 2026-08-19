@@ -3,12 +3,11 @@ import { I18nService } from '../../i18n.service';
 import { Button } from '../../shared/button/button';
 import { ContactActions } from '../../shared/contact-actions/contact-actions';
 import { Icon } from '../../shared/icon/icon';
-import { LinkButton } from '../../shared/link-button/link-button';
 
 @Component({
   selector: 'app-design',
   standalone: true,
-  imports: [Button, ContactActions, Icon, LinkButton],
+  imports: [Button, ContactActions, Icon],
   templateUrl: './design.component.html',
   changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './design.component.scss',
