@@ -1,5 +1,5 @@
 :host {
-  --icon-color: inherit;
+  --icon-color: var(--button-text);
   --button-color: var(--color-button-default);
   --button-highlight: var(--color-button-default-highlight);
   --button-border: #ccc;
@@ -86,6 +86,7 @@
 }
 
 :host([data-button-variant="link"]) {
+  --icon-color: var(--color-link);
   border-color: transparent;
   background: transparent;
   color: var(--color-link);
@@ -110,6 +111,7 @@
   }
 
   :host([data-button-variant="link"]:hover:not(:disabled, [aria-disabled="true"])) {
+    --icon-color: color-mix(in oklab, var(--color-link), black 24%);
     border-color: transparent;
     background: transparent;
     color: color-mix(in oklab, var(--color-link), black 24%);
