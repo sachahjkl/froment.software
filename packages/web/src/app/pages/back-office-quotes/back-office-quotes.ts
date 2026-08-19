@@ -36,7 +36,8 @@ export class BackOfficeQuotes {
     return this.i18n.t(`backOffice.quote.status.${status}`);
   }
 
-  private async load(): Promise<void> {
+  protected async load(): Promise<void> {
+    this.state.set('loading');
     try {
       this.quotes.set(await this.api.list());
       this.state.set('ready');

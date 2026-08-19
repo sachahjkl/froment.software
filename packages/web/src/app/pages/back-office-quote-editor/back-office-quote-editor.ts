@@ -16,6 +16,7 @@ import {
   pattern,
   required,
   submit,
+  validate,
 } from '@angular/forms/signals';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import {
@@ -99,6 +100,23 @@ export class BackOfficeQuoteEditor {
       pattern(line.quantity, /^\d+(?:[.,]\d{1,3})?$/);
       pattern(line.unitPrice, /^\d+(?:[.,]\d{1,2})?$/);
       pattern(line.vatRate, /^\d+(?:[.,]\d{1,2})?$/);
+      validate(line.quantity, ({ value }) => {
+        const parsed = parseFixedDecimal(value(), 3);
+        return parsed === undefined || parsed === 0
+          ? { kind: 'quantity', message: 'Invalid quantity' }
+          : undefined;
+      });
+      validate(line.unitPrice, ({ value }) =>
+        parseFixedDecimal(value(), 2) === undefined
+          ? { kind: 'unitPrice', message: 'Invalid unit price' }
+          : undefined,
+      );
+      validate(line.vatRate, ({ value }) => {
+        const parsed = parseFixedDecimal(value(), 2);
+        return parsed === undefined || parsed > 10_000
+          ? { kind: 'vatRate', message: 'Invalid VAT rate' }
+          : undefined;
+      });
     });
   });
   protected readonly saveDisabled = computed(
@@ -259,15 +277,16 @@ export class BackOfficeQuoteEditor {
   }
 
   private modelFromDetail(detail: QuoteDetailValue): QuoteModel {
+    const decimalSeparator = this.i18n.language() === 'fr' ? ',' : '.';
     return {
       clientId: detail.clientId,
       conditions: detail.currentRevision.conditions,
       title: detail.currentRevision.title,
       lines: detail.currentRevision.lines.map((line) => ({
         description: line.description,
-        quantity: formatFixedDecimal(line.quantityMilli, 3),
-        unitPrice: formatFixedDecimal(line.unitPriceCents, 2),
-        vatRate: formatFixedDecimal(line.vatRateBasisPoints, 2),
+        quantity: formatFixedDecimal(line.quantityMilli, 3, decimalSeparator),
+        unitPrice: formatFixedDecimal(line.unitPriceCents, 2, decimalSeparator),
+        vatRate: formatFixedDecimal(line.vatRateBasisPoints, 2, decimalSeparator),
       })),
     };
   }

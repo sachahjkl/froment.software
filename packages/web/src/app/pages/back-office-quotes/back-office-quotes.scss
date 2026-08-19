@@ -29,6 +29,10 @@ header a:not([appLinkButton]) {
   margin-top: var(--space-7);
 }
 
+[role="alert"] + button {
+  margin-top: var(--space-3);
+}
+
 .quote-table {
   max-width: 100%;
   overflow-x: auto;

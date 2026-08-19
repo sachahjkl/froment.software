@@ -11,9 +11,13 @@ export const parseFixedDecimal = (value: string, decimalPlaces: number): number 
   return result;
 };
 
-export const formatFixedDecimal = (value: number, decimalPlaces: number): string => {
+export const formatFixedDecimal = (
+  value: number,
+  decimalPlaces: number,
+  decimalSeparator: '.' | ',' = '.',
+): string => {
   const factor = 10 ** decimalPlaces;
   const integerPart = Math.floor(value / factor);
   const fractionPart = String(value % factor).padStart(decimalPlaces, '0');
-  return `${integerPart}.${fractionPart}`;
+  return `${integerPart}${decimalSeparator}${fractionPart}`;
 };

@@ -16,12 +16,23 @@
     @if (isNew()) {
     <label class="field">
       {{ i18n.t('backOffice.quote.client') }}
-      <select class="input" [formField]="quoteForm.clientId">
+      <select
+        id="quote-client"
+        class="input"
+        aria-describedby="quote-client-error"
+        [attr.aria-invalid]="quoteForm.clientId().invalid()"
+        [formField]="quoteForm.clientId"
+      >
         <option value="">{{ i18n.t('backOffice.quote.clientPlaceholder') }}</option>
         @for (client of clients(); track client.id) {
         <option [value]="client.id">{{ client.displayName }}</option>
         }
       </select>
+      @if (quoteForm.clientId().invalid() && quoteForm.clientId().touched()) {
+      <span id="quote-client-error" class="field-error"
+        >{{ i18n.t('backOffice.quote.fieldRequired') }}</span
+      >
+      }
     </label>
     @if (clients().length === 0) {
     <p class="notice">
@@ -31,7 +42,19 @@
     } }
     <label class="field">
       {{ i18n.t('backOffice.quote.title') }}
-      <input class="input" type="text" [formField]="quoteForm.title" />
+      <input
+        id="quote-name"
+        class="input"
+        type="text"
+        aria-describedby="quote-name-error"
+        [attr.aria-invalid]="quoteForm.title().invalid()"
+        [formField]="quoteForm.title"
+      />
+      @if (quoteForm.title().invalid() && quoteForm.title().touched()) {
+      <span id="quote-name-error" class="field-error"
+        >{{ i18n.t('backOffice.quote.fieldInvalid') }}</span
+      >
+      }
     </label>
     <label class="field">
       {{ i18n.t('backOffice.quote.conditions') }}
@@ -55,19 +78,63 @@
         <legend>{{ i18n.tf('backOffice.quote.lineNumber', { number: $index + 1 }) }}</legend>
         <label class="field description">
           {{ i18n.t('backOffice.quote.description') }}
-          <input class="input" type="text" [formField]="line.description" />
+          <input
+            class="input"
+            type="text"
+            [attr.aria-describedby]="'line-description-error-' + $index"
+            [attr.aria-invalid]="line.description().invalid()"
+            [formField]="line.description"
+          />
+          @if (line.description().invalid() && line.description().touched()) {
+          <span [id]="'line-description-error-' + $index" class="field-error"
+            >{{ i18n.t('backOffice.quote.fieldInvalid') }}</span
+          >
+          }
         </label>
         <label class="field">
           {{ i18n.t('backOffice.quote.quantity') }}
-          <input class="input" inputmode="decimal" [formField]="line.quantity" />
+          <input
+            class="input"
+            inputmode="decimal"
+            [attr.aria-describedby]="'line-quantity-error-' + $index"
+            [attr.aria-invalid]="line.quantity().invalid()"
+            [formField]="line.quantity"
+          />
+          @if (line.quantity().invalid() && line.quantity().touched()) {
+          <span [id]="'line-quantity-error-' + $index" class="field-error"
+            >{{ i18n.t('backOffice.quote.quantityInvalid') }}</span
+          >
+          }
         </label>
         <label class="field">
           {{ i18n.t('backOffice.quote.unitPrice') }}
-          <input class="input" inputmode="decimal" [formField]="line.unitPrice" />
+          <input
+            class="input"
+            inputmode="decimal"
+            [attr.aria-describedby]="'line-price-error-' + $index"
+            [attr.aria-invalid]="line.unitPrice().invalid()"
+            [formField]="line.unitPrice"
+          />
+          @if (line.unitPrice().invalid() && line.unitPrice().touched()) {
+          <span [id]="'line-price-error-' + $index" class="field-error"
+            >{{ i18n.t('backOffice.quote.priceInvalid') }}</span
+          >
+          }
         </label>
         <label class="field">
           {{ i18n.t('backOffice.quote.vatRate') }}
-          <input class="input" inputmode="decimal" [formField]="line.vatRate" />
+          <input
+            class="input"
+            inputmode="decimal"
+            [attr.aria-describedby]="'line-vat-error-' + $index"
+            [attr.aria-invalid]="line.vatRate().invalid()"
+            [formField]="line.vatRate"
+          />
+          @if (line.vatRate().invalid() && line.vatRate().touched()) {
+          <span [id]="'line-vat-error-' + $index" class="field-error"
+            >{{ i18n.t('backOffice.quote.vatInvalid') }}</span
+          >
+          }
         </label>
         <button
           appButton
@@ -78,6 +145,13 @@
         >
           {{ i18n.t('backOffice.quote.removeLine') }}
         </button>
+        @if (!totalsAreStale() && detail(); as quote) { @if (quote.currentRevision.lines[$index]; as
+        savedLine) {
+        <p class="line-total">
+          {{ i18n.t('backOffice.quote.lineTotal') }}
+          <strong>{{ money(savedLine.totalCents) }}</strong>
+        </p>
+        } }
       </fieldset>
       }
     </section>

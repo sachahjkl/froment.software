@@ -52,4 +52,28 @@ describe('BackOfficeQuoteEditor', () => {
     expect(root.querySelector('form')).toBeNull();
     expect(root.querySelector('[role="alert"]')?.textContent).toMatch(/introuvable|not found/);
   });
+
+  it('explains an invalid quantity on its line', async () => {
+    TestBed.configureTestingModule({
+      providers: [
+        provideRouter([]),
+        { provide: BackOfficeClientsApi, useValue: { list: () => Promise.resolve([]) } },
+        { provide: BackOfficeQuotesApi, useValue: {} },
+      ],
+    });
+    const fixture = TestBed.createComponent(BackOfficeQuoteEditor);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+    const root: HTMLElement = fixture.nativeElement;
+    const quantity = root.querySelector<HTMLInputElement>('input[inputmode="decimal"]');
+    if (quantity === null) throw new Error('The quantity input is unavailable.');
+
+    quantity.value = '0';
+    quantity.dispatchEvent(new Event('input'));
+    quantity.dispatchEvent(new Event('blur'));
+    fixture.detectChanges();
+
+    expect(root.textContent).toMatch(/quantité positive|positive quantity/);
+  });
 });

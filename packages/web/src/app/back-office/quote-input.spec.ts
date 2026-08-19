@@ -19,5 +19,6 @@ describe('quote input conversion', () => {
   it('formats stored units for editing', () => {
     expect(formatFixedDecimal(1_500, 3)).toBe('1.500');
     expect(formatFixedDecimal(1_999, 2)).toBe('19.99');
+    expect(formatFixedDecimal(1_999, 2, ',')).toBe('19,99');
   });
 });
