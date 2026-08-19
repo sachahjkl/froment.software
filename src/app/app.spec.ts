@@ -156,7 +156,7 @@ describe('App shell', () => {
   });
 
   it('switches theme and stores the user choice', async () => {
-    const toggle = element.querySelector<HTMLButtonElement>('.theme-toggle')!;
+    const toggle = element.querySelector<HTMLButtonElement>('app-theme-toggle button')!;
 
     expect(document.documentElement.dataset['theme']).toBe('light');
     toggle.click();
