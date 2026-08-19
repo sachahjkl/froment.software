@@ -28,18 +28,20 @@
             fileset = lib.fileset.unions [
               ./.editorconfig
               ./.oxfmtrc.json
+              ./.oxlintrc.json
               ./package.json
               ./packages
               ./pnpm-lock.yaml
               ./pnpm-workspace.yaml
               ./tsconfig.base.json
+              ./tools
             ];
           };
           pnpmDeps = pkgs.fetchPnpmDeps {
             inherit pname version src;
             pnpm = pkgs.pnpm;
             fetcherVersion = 4;
-            hash = "sha256-Xu+xFM12lYGatbUnvuwWQe0rdsNqwT/yA5XT2R0qQSM=";
+            hash = "sha256-cVbdQYhmq5sU+QZV9sWt9K0C0QIAkSjJvjCJOsHhCqg=";
           };
 
           application = pkgs.stdenv.mkDerivation {
@@ -62,11 +64,15 @@
             '';
             installPhase = ''
               runHook preInstall
-              mkdir -p $out/bin $out/lib/froment-software $out/share/froment-software
+              mkdir -p $out/bin $out/lib/froment-software/node_modules $out/share/froment-software
               cp packages/api/dist/main.cjs $out/lib/froment-software/server.cjs
+              cp -r packages/api/drizzle $out/share/froment-software/drizzle
+              cp -rL packages/api/node_modules/better-sqlite3 $out/lib/froment-software/node_modules/
               cp -r packages/web/dist/froment-software/browser $out/share/froment-software/web
               makeWrapper ${runtimeNode}/bin/node $out/bin/${pname} \
                 --add-flags $out/lib/froment-software/server.cjs \
+                --set-default DATABASE_PATH data/froment.sqlite \
+                --set MIGRATIONS_ROOT $out/share/froment-software/drizzle \
                 --set STATIC_ROOT $out/share/froment-software/web \
                 --set-default PORT 3000
               runHook postInstall
@@ -107,10 +113,13 @@
             fakeRootCommands = ''
               mkdir -p ./tmp
               chmod 1777 ./tmp
+              mkdir -p ./var/lib/froment-software
             '';
             config = {
               Cmd = [ "${application}/bin/${pname}" ];
+              Env = [ "DATABASE_PATH=/var/lib/froment-software/froment.sqlite" ];
               ExposedPorts."3000/tcp" = { };
+              Volumes."/var/lib/froment-software" = { };
             };
           };
 

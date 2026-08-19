@@ -42,8 +42,8 @@ Les versions initiales prévues sont :
 - pnpm `11.20.0` ;
 - Effect `4.0.0-rc.110` ;
 - `@effect/platform-node` `4.0.0-rc.110` ;
-- Drizzle ORM `0.45.2` ;
-- Drizzle Kit `0.31.10` ;
+- Drizzle ORM `1.0.0-rc.5-169397b` ;
+- Drizzle Kit `1.0.0-rc.5-ab785fc` ;
 - `better-sqlite3` `13.0.3` ;
 - Angular `22.1.1`.
 
@@ -99,9 +99,31 @@ Une sauvegarde SQLite cohérente contient donc toutes les données et tous les d
 
 L'identifiant de connexion est un secret opaque d'au moins 256 bits.
 
-L'identifiant administrateur initial vient d'un secret de déploiement.
+Une route dédiée permet l'amorçage du premier administrateur.
 
-Le serveur refuse un identifiant initial trop court.
+Cette route reste disponible seulement tant qu'aucun administrateur n'existe.
+
+Le formulaire d'amorçage accepte un mot de passe simple.
+
+Le serveur calcule le SHA-512 du mot de passe et compare le condensat en temps constant.
+
+Le condensat par défaut réside uniquement dans le serveur.
+
+Un secret de déploiement peut remplacer ce condensat sans reconstruire l'image.
+
+Le bundle Angular ne contient ni mot de passe, ni condensat de mot de passe.
+
+Une transaction unique crée le compte, le rôle administrateur et toutes ses permissions.
+
+La même transaction rend les amorçages concurrents impossibles.
+
+Le serveur ouvre ensuite une session sécurisée pour le nouvel administrateur.
+
+La page de résultat affiche l'ULID du compte et propose une action de copie.
+
+Le composant de copie reprend l'objectif ergonomique de Clockin sans reprendre son implémentation ni son apparence.
+
+L'ULID identifie le compte. Il ne constitue pas un justificatif secret.
 
 Le flux de connexion est le suivant :
 
@@ -231,7 +253,9 @@ Le premier schéma contient ces tables :
 - `audit_events` ;
 - `idempotency_keys`.
 
-Les clés internes utilisent des UUID aléatoires.
+Les clés internes utilisent des ULID.
+
+Les ULID sont validés par SQLite et par les schémas Effect générés depuis Drizzle.
 
 Les identifiants publics et les jetons ne révèlent aucune clé interne séquentielle.
 
@@ -359,7 +383,18 @@ Le premier programme comprend ces écrans :
 - consultation des signatures ;
 - téléchargement HTML et PDF ;
 - journal d'audit ;
-- gestion des sessions.
+- gestion des sessions ;
+- informations de version du déploiement.
+
+La page de version affiche chaque package du workspace avec sa version publiée.
+
+Elle affiche aussi le commit Git exact.
+
+Le serveur fournit ces informations depuis des métadonnées injectées pendant la construction.
+
+Ces métadonnées proviennent uniquement d'entrées versionnées afin de préserver la reproductibilité Nix.
+
+L'interface ne déduit aucune version depuis ses propres fichiers statiques.
 
 Les éditeurs utilisent les Signals Forms.
 
@@ -384,8 +419,8 @@ Les endpoints de santé distinguent la disponibilité du processus et celle de l
 3. Créer `contracts`, `api` et `documents`.
 4. Ajouter le serveur Effect et le service des fichiers statiques.
 5. Ajouter Drizzle, SQLite et les migrations.
-6. Remplacer l'authentification actuelle.
-7. Ajouter les sessions, CSRF, rôles et permissions.
+6. Ajouter l'amorçage administrateur à usage unique et l'affichage copiable de son ULID.
+7. Remplacer l'authentification actuelle, puis ajouter les sessions, CSRF, rôles et permissions.
 8. Ajouter la gestion des clients et des accès.
 9. Ajouter l'éditeur et le cycle des devis.
 10. Ajouter les templates Angular et le rendu HTML.
@@ -393,7 +428,7 @@ Les endpoints de santé distinguent la disponibilité du processus et celle de l
 12. Ajouter les permaliens et la signature.
 13. Créer les commandes après acceptation.
 14. Ajouter les factures et leur numérotation.
-15. Ajouter l'audit, les sauvegardes et l'observabilité.
+15. Ajouter l'audit, les sauvegardes, l'observabilité et la page de version du déploiement.
 16. Ajouter les tests de bout en bout.
 17. Construire et publier l'image OCI finale.
 
@@ -404,7 +439,7 @@ Chaque étape produit un système exécutable et un commit atomique.
 Le parcours final est :
 
 ```text
-connexion administrateur
+amorçage administrateur ou connexion administrateur
 → création d'un client
 → création d'un devis
 → génération du PDF

@@ -1,6 +1,7 @@
 # Node / Angular
 node_modules/
 dist/
+.deploy/
 .angular/
 out-tsc/
 coverage/

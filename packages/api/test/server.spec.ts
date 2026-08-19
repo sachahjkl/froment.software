@@ -55,7 +55,13 @@ describe('HTTP server', () => {
     baseUrl = `http://127.0.0.1:${port}`;
     server = spawn(process.execPath, ['dist/main.cjs'], {
       cwd: join(import.meta.dirname, '..'),
-      env: { ...process.env, PORT: String(port), STATIC_ROOT: staticRoot },
+      env: {
+        ...process.env,
+        DATABASE_PATH: join(staticRoot, 'database.sqlite'),
+        MIGRATIONS_ROOT: join(import.meta.dirname, '..', 'drizzle'),
+        PORT: String(port),
+        STATIC_ROOT: staticRoot,
+      },
       stdio: 'pipe',
     });
     await waitForServer(`${baseUrl}/api/health`, server);

@@ -1,0 +1,651 @@
+{
+  "version": "7",
+  "dialect": "sqlite",
+  "id": "d4dc0647-4cc1-4b59-8150-11f12180e508",
+  "prevIds": ["00000000-0000-0000-0000-000000000000"],
+  "ddl": [
+    {
+      "name": "access_credentials",
+      "entityType": "tables"
+    },
+    {
+      "name": "permissions",
+      "entityType": "tables"
+    },
+    {
+      "name": "role_permissions",
+      "entityType": "tables"
+    },
+    {
+      "name": "roles",
+      "entityType": "tables"
+    },
+    {
+      "name": "sessions",
+      "entityType": "tables"
+    },
+    {
+      "name": "user_roles",
+      "entityType": "tables"
+    },
+    {
+      "name": "users",
+      "entityType": "tables"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "id",
+      "entityType": "columns",
+      "table": "access_credentials"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "user_id",
+      "entityType": "columns",
+      "table": "access_credentials"
+    },
+    {
+      "type": "blob",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "secret_hmac",
+      "entityType": "columns",
+      "table": "access_credentials"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "created_at",
+      "entityType": "columns",
+      "table": "access_credentials"
+    },
+    {
+      "type": "integer",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "last_used_at",
+      "entityType": "columns",
+      "table": "access_credentials"
+    },
+    {
+      "type": "integer",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "revoked_at",
+      "entityType": "columns",
+      "table": "access_credentials"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "code",
+      "entityType": "columns",
+      "table": "permissions"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "role_id",
+      "entityType": "columns",
+      "table": "role_permissions"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "permission_code",
+      "entityType": "columns",
+      "table": "role_permissions"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "id",
+      "entityType": "columns",
+      "table": "roles"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "name",
+      "entityType": "columns",
+      "table": "roles"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "created_at",
+      "entityType": "columns",
+      "table": "roles"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "id",
+      "entityType": "columns",
+      "table": "sessions"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "user_id",
+      "entityType": "columns",
+      "table": "sessions"
+    },
+    {
+      "type": "blob",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "token_hmac",
+      "entityType": "columns",
+      "table": "sessions"
+    },
+    {
+      "type": "blob",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "csrf_hmac",
+      "entityType": "columns",
+      "table": "sessions"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "created_at",
+      "entityType": "columns",
+      "table": "sessions"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "last_seen_at",
+      "entityType": "columns",
+      "table": "sessions"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "idle_expires_at",
+      "entityType": "columns",
+      "table": "sessions"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "absolute_expires_at",
+      "entityType": "columns",
+      "table": "sessions"
+    },
+    {
+      "type": "integer",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "revoked_at",
+      "entityType": "columns",
+      "table": "sessions"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "user_id",
+      "entityType": "columns",
+      "table": "user_roles"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "role_id",
+      "entityType": "columns",
+      "table": "user_roles"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "id",
+      "entityType": "columns",
+      "table": "users"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "display_name",
+      "entityType": "columns",
+      "table": "users"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "kind",
+      "entityType": "columns",
+      "table": "users"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "created_at",
+      "entityType": "columns",
+      "table": "users"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "updated_at",
+      "entityType": "columns",
+      "table": "users"
+    },
+    {
+      "type": "integer",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "disabled_at",
+      "entityType": "columns",
+      "table": "users"
+    },
+    {
+      "columns": ["user_id"],
+      "tableTo": "users",
+      "columnsTo": ["id"],
+      "onUpdate": "NO ACTION",
+      "onDelete": "CASCADE",
+      "nameExplicit": false,
+      "name": "fk_access_credentials_user_id_users_id_fk",
+      "entityType": "fks",
+      "table": "access_credentials"
+    },
+    {
+      "columns": ["role_id"],
+      "tableTo": "roles",
+      "columnsTo": ["id"],
+      "onUpdate": "NO ACTION",
+      "onDelete": "CASCADE",
+      "nameExplicit": false,
+      "name": "fk_role_permissions_role_id_roles_id_fk",
+      "entityType": "fks",
+      "table": "role_permissions"
+    },
+    {
+      "columns": ["permission_code"],
+      "tableTo": "permissions",
+      "columnsTo": ["code"],
+      "onUpdate": "NO ACTION",
+      "onDelete": "CASCADE",
+      "nameExplicit": false,
+      "name": "fk_role_permissions_permission_code_permissions_code_fk",
+      "entityType": "fks",
+      "table": "role_permissions"
+    },
+    {
+      "columns": ["user_id"],
+      "tableTo": "users",
+      "columnsTo": ["id"],
+      "onUpdate": "NO ACTION",
+      "onDelete": "CASCADE",
+      "nameExplicit": false,
+      "name": "fk_sessions_user_id_users_id_fk",
+      "entityType": "fks",
+      "table": "sessions"
+    },
+    {
+      "columns": ["user_id"],
+      "tableTo": "users",
+      "columnsTo": ["id"],
+      "onUpdate": "NO ACTION",
+      "onDelete": "CASCADE",
+      "nameExplicit": false,
+      "name": "fk_user_roles_user_id_users_id_fk",
+      "entityType": "fks",
+      "table": "user_roles"
+    },
+    {
+      "columns": ["role_id"],
+      "tableTo": "roles",
+      "columnsTo": ["id"],
+      "onUpdate": "NO ACTION",
+      "onDelete": "CASCADE",
+      "nameExplicit": false,
+      "name": "fk_user_roles_role_id_roles_id_fk",
+      "entityType": "fks",
+      "table": "user_roles"
+    },
+    {
+      "columns": ["role_id", "permission_code"],
+      "nameExplicit": false,
+      "name": "role_permissions_pk",
+      "entityType": "pks",
+      "table": "role_permissions"
+    },
+    {
+      "columns": ["user_id", "role_id"],
+      "nameExplicit": false,
+      "name": "user_roles_pk",
+      "entityType": "pks",
+      "table": "user_roles"
+    },
+    {
+      "columns": ["id"],
+      "nameExplicit": false,
+      "name": "access_credentials_pk",
+      "table": "access_credentials",
+      "entityType": "pks"
+    },
+    {
+      "columns": ["code"],
+      "nameExplicit": false,
+      "name": "permissions_pk",
+      "table": "permissions",
+      "entityType": "pks"
+    },
+    {
+      "columns": ["id"],
+      "nameExplicit": false,
+      "name": "roles_pk",
+      "table": "roles",
+      "entityType": "pks"
+    },
+    {
+      "columns": ["id"],
+      "nameExplicit": false,
+      "name": "sessions_pk",
+      "table": "sessions",
+      "entityType": "pks"
+    },
+    {
+      "columns": ["id"],
+      "nameExplicit": false,
+      "name": "users_pk",
+      "table": "users",
+      "entityType": "pks"
+    },
+    {
+      "columns": [
+        {
+          "value": "secret_hmac",
+          "isExpression": false
+        }
+      ],
+      "isUnique": true,
+      "where": null,
+      "origin": "manual",
+      "name": "access_credentials_secret_hmac_unique",
+      "entityType": "indexes",
+      "table": "access_credentials"
+    },
+    {
+      "columns": [
+        {
+          "value": "user_id",
+          "isExpression": false
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "origin": "manual",
+      "name": "access_credentials_user_id_index",
+      "entityType": "indexes",
+      "table": "access_credentials"
+    },
+    {
+      "columns": [
+        {
+          "value": "permission_code",
+          "isExpression": false
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "origin": "manual",
+      "name": "role_permissions_permission_code_index",
+      "entityType": "indexes",
+      "table": "role_permissions"
+    },
+    {
+      "columns": [
+        {
+          "value": "token_hmac",
+          "isExpression": false
+        }
+      ],
+      "isUnique": true,
+      "where": null,
+      "origin": "manual",
+      "name": "sessions_token_hmac_unique",
+      "entityType": "indexes",
+      "table": "sessions"
+    },
+    {
+      "columns": [
+        {
+          "value": "user_id",
+          "isExpression": false
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "origin": "manual",
+      "name": "sessions_user_id_index",
+      "entityType": "indexes",
+      "table": "sessions"
+    },
+    {
+      "columns": [
+        {
+          "value": "idle_expires_at",
+          "isExpression": false
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "origin": "manual",
+      "name": "sessions_idle_expiry_index",
+      "entityType": "indexes",
+      "table": "sessions"
+    },
+    {
+      "columns": [
+        {
+          "value": "absolute_expires_at",
+          "isExpression": false
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "origin": "manual",
+      "name": "sessions_absolute_expiry_index",
+      "entityType": "indexes",
+      "table": "sessions"
+    },
+    {
+      "columns": [
+        {
+          "value": "role_id",
+          "isExpression": false
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "origin": "manual",
+      "name": "user_roles_role_id_index",
+      "entityType": "indexes",
+      "table": "user_roles"
+    },
+    {
+      "columns": ["name"],
+      "nameExplicit": false,
+      "name": "roles_name_unique",
+      "entityType": "uniques",
+      "table": "roles"
+    },
+    {
+      "value": "typeof(\"secret_hmac\") = 'blob' and length(\"secret_hmac\") = 32",
+      "name": "access_credentials_secret_hmac_check",
+      "entityType": "checks",
+      "table": "access_credentials"
+    },
+    {
+      "value": "\"id\" is not null and length(\"id\") = 26 and \"id\" not glob '*[^0-9A-HJKMNP-TV-Z]*' and substr(\"id\", 1, 1) between '0' and '7'",
+      "name": "access_credentials_id_ulid_check",
+      "entityType": "checks",
+      "table": "access_credentials"
+    },
+    {
+      "value": "(\"last_used_at\" is null or \"last_used_at\" >= \"created_at\") and (\"revoked_at\" is null or \"revoked_at\" >= \"created_at\")",
+      "name": "access_credentials_timestamps_check",
+      "entityType": "checks",
+      "table": "access_credentials"
+    },
+    {
+      "value": "\"code\" is not null and length(trim(\"code\")) > 0",
+      "name": "permissions_code_check",
+      "entityType": "checks",
+      "table": "permissions"
+    },
+    {
+      "value": "\"id\" is not null and length(\"id\") = 26 and \"id\" not glob '*[^0-9A-HJKMNP-TV-Z]*' and substr(\"id\", 1, 1) between '0' and '7'",
+      "name": "roles_id_ulid_check",
+      "entityType": "checks",
+      "table": "roles"
+    },
+    {
+      "value": "length(trim(\"name\")) > 0",
+      "name": "roles_name_check",
+      "entityType": "checks",
+      "table": "roles"
+    },
+    {
+      "value": "\"id\" is not null and length(\"id\") = 26 and \"id\" not glob '*[^0-9A-HJKMNP-TV-Z]*' and substr(\"id\", 1, 1) between '0' and '7'",
+      "name": "sessions_id_ulid_check",
+      "entityType": "checks",
+      "table": "sessions"
+    },
+    {
+      "value": "typeof(\"token_hmac\") = 'blob' and length(\"token_hmac\") = 32",
+      "name": "sessions_token_hmac_check",
+      "entityType": "checks",
+      "table": "sessions"
+    },
+    {
+      "value": "typeof(\"csrf_hmac\") = 'blob' and length(\"csrf_hmac\") = 32",
+      "name": "sessions_csrf_hmac_check",
+      "entityType": "checks",
+      "table": "sessions"
+    },
+    {
+      "value": "\"last_seen_at\" >= \"created_at\" and \"idle_expires_at\" > \"created_at\" and \"absolute_expires_at\" >= \"idle_expires_at\" and (\"revoked_at\" is null or \"revoked_at\" >= \"created_at\")",
+      "name": "sessions_timestamps_check",
+      "entityType": "checks",
+      "table": "sessions"
+    },
+    {
+      "value": "\"id\" is not null and length(\"id\") = 26 and \"id\" not glob '*[^0-9A-HJKMNP-TV-Z]*' and substr(\"id\", 1, 1) between '0' and '7'",
+      "name": "users_id_ulid_check",
+      "entityType": "checks",
+      "table": "users"
+    },
+    {
+      "value": "\"kind\" in ('administrator', 'client')",
+      "name": "users_kind_check",
+      "entityType": "checks",
+      "table": "users"
+    },
+    {
+      "value": "length(trim(\"display_name\")) > 0",
+      "name": "users_display_name_check",
+      "entityType": "checks",
+      "table": "users"
+    },
+    {
+      "value": "\"updated_at\" >= \"created_at\"",
+      "name": "users_timestamps_check",
+      "entityType": "checks",
+      "table": "users"
+    },
+    {
+      "value": "\"disabled_at\" is null or \"disabled_at\" >= \"created_at\"",
+      "name": "users_disabled_at_check",
+      "entityType": "checks",
+      "table": "users"
+    }
+  ],
+  "renames": []
+}
