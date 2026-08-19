@@ -7,23 +7,11 @@ import {
   formatLocalizedDate,
   LocalizedDatePipe,
 } from '../../shared/localized-date/localized-date-pipe';
-
-interface BusinessCardContent {
-  name: string;
-  role: string;
-  email: string;
-  website: string;
-  brandName: string;
-}
-
-interface BusinessCardVersion {
-  id: string;
-  name: string;
-  createdAt: string;
-  content: BusinessCardContent;
-}
-
-const storageKey = 'froment-software.business-card.versions';
+import {
+  BusinessCardContent,
+  BusinessCardVersion,
+  BusinessCardVersionStorage,
+} from './business-card-version-storage';
 const defaultContent: BusinessCardContent = {
   name: 'Sacha Froment',
   role: 'Ingénieur logiciel',
@@ -38,9 +26,11 @@ const defaultContent: BusinessCardContent = {
   templateUrl: './business-card.html',
   styleUrl: './business-card.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
+  providers: [BusinessCardVersionStorage],
 })
 export class BusinessCard {
   private readonly isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
+  private readonly versionStorage = inject(BusinessCardVersionStorage);
   private versionNameEdited = false;
   protected readonly content = signal<BusinessCardContent>({ ...defaultContent });
   protected readonly contentForm = form(this.content, (fields) => {
@@ -55,7 +45,7 @@ export class BusinessCard {
   protected readonly versionForm = form(this.versionModel, (fields) => {
     required(fields.name, { message: 'Le nom de la version est requis.' });
   });
-  protected readonly versions = signal<BusinessCardVersion[]>(this.readVersions());
+  protected readonly versions = this.versionStorage.versions;
   protected readonly storageMessage = signal('');
 
   print(): void {
@@ -77,13 +67,12 @@ export class BusinessCard {
       createdAt: new Date().toISOString(),
       content: { ...this.content() },
     };
-    const versions = [version, ...this.versions()];
-
-    if (this.writeVersions(versions)) {
-      this.versions.set(versions);
+    if (this.versionStorage.save(version)) {
       this.versionNameEdited = false;
       this.versionModel.set({ name: this.createVersionName() });
       this.storageMessage.set(`Version « ${version.name} » enregistrée dans ce navigateur.`);
+    } else {
+      this.storageMessage.set('L’enregistrement local a échoué.');
     }
   }
 
@@ -95,11 +84,10 @@ export class BusinessCard {
   }
 
   deleteVersion(version: BusinessCardVersion): void {
-    const versions = this.versions().filter(({ id }) => id !== version.id);
-
-    if (this.writeVersions(versions)) {
-      this.versions.set(versions);
+    if (this.versionStorage.delete(version.id)) {
       this.storageMessage.set(`Version « ${version.name} » supprimée.`);
+    } else {
+      this.storageMessage.set('L’enregistrement local a échoué.');
     }
   }
 
@@ -123,53 +111,5 @@ export class BusinessCard {
       minute: '2-digit',
     });
     return `${name} - ${date}`;
-  }
-
-  private readVersions(): BusinessCardVersion[] {
-    if (!this.isBrowser) {
-      return [];
-    }
-
-    try {
-      const value: unknown = JSON.parse(localStorage.getItem(storageKey) ?? '[]');
-      return Array.isArray(value)
-        ? value.filter((item): item is BusinessCardVersion => this.isVersion(item))
-        : [];
-    } catch {
-      return [];
-    }
-  }
-
-  private writeVersions(versions: BusinessCardVersion[]): boolean {
-    if (!this.isBrowser) {
-      return false;
-    }
-
-    try {
-      localStorage.setItem(storageKey, JSON.stringify(versions));
-      return true;
-    } catch {
-      this.storageMessage.set('L’enregistrement local a échoué.');
-      return false;
-    }
-  }
-
-  private isVersion(value: unknown): value is BusinessCardVersion {
-    if (!value || typeof value !== 'object') {
-      return false;
-    }
-
-    const version = value as Record<string, unknown>;
-    const content = version['content'];
-    return (
-      typeof version['id'] === 'string' &&
-      typeof version['name'] === 'string' &&
-      typeof version['createdAt'] === 'string' &&
-      !!content &&
-      typeof content === 'object' &&
-      ['name', 'role', 'email', 'website', 'brandName'].every(
-        (key) => typeof (content as Record<string, unknown>)[key] === 'string',
-      )
-    );
   }
 }
