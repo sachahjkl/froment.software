@@ -13,3 +13,11 @@ Each commit should be:
 - **Well-described**: imperative mood, specific (e.g., "Add dark mode toggle" not "Update styles").
 
 Push after a meaningful batch of commits, or when the work is ready for CI/review.
+
+## Learning More About Effect
+
+This repository uses the Effect TypeScript library.
+
+Before writing Effect code, read `node_modules/effect/AGENTS.md` completely.
+
+If the guide does not cover an API, search `node_modules/effect/src`.
