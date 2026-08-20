@@ -21,13 +21,16 @@ const QuoteCoreLive = Layer.mergeAll(QuotesLive, QuoteRendererLive).pipe(
 const QuoteServicesLive = DocumentArtifactsLive.pipe(Layer.provideMerge(QuoteCoreLive));
 
 const ServicesLive = Layer.mergeAll(
-  AuditLive,
   BootstrapLive,
   AuthenticationLive,
   ClientsLive,
   QuoteServicesLive,
   DeploymentLive,
-).pipe(Layer.provide(AuthenticationConfigLive), Layer.provideMerge(DatabaseLive));
+).pipe(
+  Layer.provide(AuditLive),
+  Layer.provide(AuthenticationConfigLive),
+  Layer.provideMerge(DatabaseLive),
+);
 
 Layer.launch(ServerLive.pipe(Layer.provide(ServicesLive), Layer.provide(ObservabilityLive))).pipe(
   NodeRuntime.runMain,

@@ -269,7 +269,7 @@ const ClientHandlers = HttpApiBuilder.group(Api, 'clients', (handlers) =>
           yield* limitPrincipalMutation(principal.userId, 'client.create');
           const clients = yield* Clients;
           return yield* clients
-            .create(payload)
+            .create(payload, principal.userId)
             .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
         }),
       )
@@ -292,7 +292,7 @@ const ClientHandlers = HttpApiBuilder.group(Api, 'clients', (handlers) =>
           yield* limitPrincipalMutation(principal.userId, 'client.archive');
           const clients = yield* Clients;
           return yield* clients
-            .archive(params.clientId)
+            .archive(params.clientId, principal.userId)
             .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
         }),
       )
@@ -315,7 +315,7 @@ const ClientHandlers = HttpApiBuilder.group(Api, 'clients', (handlers) =>
           yield* limitPrincipalMutation(principal.userId, 'client.access.create', 10);
           const clients = yield* Clients;
           return yield* clients
-            .createAccess(params.clientId)
+            .createAccess(params.clientId, principal.userId)
             .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
         }),
       ),
@@ -355,7 +355,7 @@ const QuoteHandlers = HttpApiBuilder.group(Api, 'quotes', (handlers) =>
             .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
           yield* limitPrincipalMutation(principal.userId, 'template.select');
           return yield* (yield* IssuerSettings)
-            .update(payload)
+            .update(payload, principal.userId)
             .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
         }),
       )
@@ -421,7 +421,7 @@ const QuoteHandlers = HttpApiBuilder.group(Api, 'quotes', (handlers) =>
             .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
           yield* limitPrincipalMutation(principal.userId, 'document.render', 10);
           return yield* (yield* DocumentArtifacts)
-            .renderQuotePdf(params.quoteId, params.version)
+            .renderQuotePdf(params.quoteId, params.version, principal.userId)
             .pipe(
               Effect.catchTag('DatabaseError', Effect.orDie),
               Effect.catchTag('DocumentRenderError', Effect.orDie),

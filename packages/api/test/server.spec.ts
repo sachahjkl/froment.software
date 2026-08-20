@@ -222,6 +222,14 @@ describe('HTTP server', () => {
     expect(sqlite.prepare('select count(*) from role_permissions').pluck().get()).toBe(30);
     expect(sqlite.prepare('select count(*) from access_credentials').pluck().get()).toBe(1);
     expect(sqlite.prepare('select count(*) from sessions').pluck().get()).toBe(1);
+    expect(
+      sqlite
+        .prepare(
+          "select count(*) from audit_events where action = 'administrator.bootstrapped' and actor_user_id is null",
+        )
+        .pluck()
+        .get(),
+    ).toBe(1);
     sqlite.close();
 
     const cookieHeader = cookies.map((cookie) => cookie.split(';', 1)[0]).join('; ');
@@ -261,6 +269,15 @@ describe('HTTP server', () => {
     });
     expect(repeatedLogout.status).toBe(200);
     expect(repeatedLogout.headers.getSetCookie()).toHaveLength(2);
+
+    const logoutSqlite = new Sqlite(databaseFilename, { readonly: true });
+    expect(
+      logoutSqlite
+        .prepare("select count(*) from audit_events where action = 'authentication.logout'")
+        .pluck()
+        .get(),
+    ).toBe(1);
+    logoutSqlite.close();
 
     const loggedOutStatus = await fetch(`${baseUrl}/api/auth/session`, {
       headers: { cookie: cookieHeader },
@@ -335,6 +352,14 @@ describe('HTTP server', () => {
     expect(
       boundedSqlite.prepare('select count(*) from sessions').pluck().get(),
     ).toBeLessThanOrEqual(10);
+    expect(
+      boundedSqlite
+        .prepare(
+          "select count(*) from audit_events where action = 'authentication.login-succeeded'",
+        )
+        .pluck()
+        .get(),
+    ).toBe(13);
     boundedSqlite.close();
 
     const finalStatus = await fetch(`${baseUrl}/api/bootstrap`);
@@ -532,6 +557,21 @@ describe('HTTP server', () => {
         .pluck()
         .get(client.id),
     ).toBe(1);
+    expect(
+      sqlite
+        .prepare(
+          `select action from audit_events
+           where resource_type = 'client' and resource_id = ? order by occurred_at, id`,
+        )
+        .pluck()
+        .all(client.id),
+    ).toEqual(['client.created', 'client.access-created', 'client.archived']);
+    expect(
+      sqlite
+        .prepare('select count(*) from audit_events where metadata like ?')
+        .pluck()
+        .get(`%${access.accessIdentifier}%`),
+    ).toBe(0);
     sqlite.close();
   });
 
@@ -777,6 +817,33 @@ describe('HTTP server', () => {
     });
     expect(archivedRevision.status).toBe(409);
     await expect(archivedRevision.json()).resolves.toMatchObject({ code: 'client.archived' });
+
+    const auditSqlite = new Sqlite(databaseFilename, { readonly: true });
+    expect(
+      auditSqlite
+        .prepare(
+          `select action from audit_events
+           where resource_type = 'quote' and resource_id = ? order by occurred_at, id`,
+        )
+        .pluck()
+        .all(quote.id),
+    ).toEqual(['quote.created', 'quote.revised']);
+    expect(
+      auditSqlite
+        .prepare(
+          `select count(*) from audit_events
+           where action = 'document.rendered' and json_extract(metadata, '$.quoteId') = ?`,
+        )
+        .pluck()
+        .get(quote.id),
+    ).toBe(1);
+    expect(
+      auditSqlite
+        .prepare("select count(*) from audit_events where action = 'issuer.updated'")
+        .pluck()
+        .get(),
+    ).toBe(2);
+    auditSqlite.close();
   });
 
   it('rejects oversized request bodies', async () => {

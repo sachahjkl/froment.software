@@ -10,6 +10,7 @@ import { ulid } from 'ulid';
 
 import { AuthenticationConfig, hmac } from '../authentication/authentication-config.js';
 import { generateSession } from '../authentication/session.js';
+import { Audit } from '../audit/audit.js';
 import { Database, DatabaseError } from '../database/database.js';
 
 export interface BootstrapSession extends BootstrapResultValue {
@@ -37,6 +38,7 @@ export const BootstrapLive = Layer.effect(
   Effect.gen(function* () {
     const database = yield* Database;
     const config = yield* AuthenticationConfig;
+    const audit = yield* Audit;
     const attemptSemaphore = yield* Semaphore.make(1);
     let failedAttempts = 0;
     let blockedUntil = 0;
@@ -128,6 +130,14 @@ export const BootstrapLive = Layer.effect(
                     session.idleExpiresAt,
                     session.expiresAt.getTime(),
                   );
+                audit.insert({
+                  action: 'administrator.bootstrapped',
+                  actorUserId: null,
+                  resourceType: 'user',
+                  resourceId: administratorId,
+                  metadata: { roleId, sessionId: session.id },
+                  occurredAt: session.now,
+                });
               })
               .immediate(),
           catch: (cause) => {

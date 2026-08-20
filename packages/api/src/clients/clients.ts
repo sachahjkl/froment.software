@@ -13,6 +13,7 @@ import { randomBytes } from 'node:crypto';
 import { ulid } from 'ulid';
 
 import { AuthenticationConfig, hmac } from '../authentication/authentication-config.js';
+import { Audit } from '../audit/audit.js';
 import { Database, DatabaseError } from '../database/database.js';
 
 const ClientRecord = Schema.Struct({
@@ -43,12 +44,15 @@ export interface ClientsService {
   readonly list: Effect.Effect<ClientListValue, DatabaseError>;
   readonly create: (
     request: ClientCreateRequestValue,
+    actorUserId: UlidValue,
   ) => Effect.Effect<ClientSummaryValue, DatabaseError>;
   readonly archive: (
     clientId: UlidValue,
+    actorUserId: UlidValue,
   ) => Effect.Effect<ClientSummaryValue, ClientNotFound | DatabaseError>;
   readonly createAccess: (
     clientId: UlidValue,
+    actorUserId: UlidValue,
   ) => Effect.Effect<ClientAccessValue, ClientNotFound | ClientArchived | DatabaseError>;
 }
 
@@ -59,6 +63,7 @@ export const ClientsLive = Layer.effect(
   Effect.gen(function* () {
     const database = yield* Database;
     const config = yield* AuthenticationConfig;
+    const audit = yield* Audit;
 
     const list = Effect.try({
       try: () => {
@@ -80,7 +85,10 @@ export const ClientsLive = Layer.effect(
       catch: (cause) => new DatabaseError({ operation: 'list clients', cause }),
     });
 
-    const create = Effect.fn('Clients.create')(function* (request: ClientCreateRequestValue) {
+    const create = Effect.fn('Clients.create')(function* (
+      request: ClientCreateRequestValue,
+      actorUserId: UlidValue,
+    ) {
       const id = ulid();
       const now = yield* Clock.currentTimeMillis;
       const displayName = request.displayName.trim();
@@ -119,6 +127,13 @@ export const ClientsLive = Layer.effect(
                   fields.country,
                   fields.email,
                 );
+              audit.insert({
+                action: 'client.created',
+                actorUserId,
+                resourceType: 'client',
+                resourceId: id,
+                occurredAt: now,
+              });
             })
             .immediate(),
         catch: (cause) => new DatabaseError({ operation: 'create client', cause }),
@@ -126,7 +141,10 @@ export const ClientsLive = Layer.effect(
       return { id, displayName, ...fields, archived: false };
     });
 
-    const archive = Effect.fn('Clients.archive')(function* (clientId: UlidValue) {
+    const archive = Effect.fn('Clients.archive')(function* (
+      clientId: UlidValue,
+      actorUserId: UlidValue,
+    ) {
       const now = yield* Clock.currentTimeMillis;
       return yield* Effect.try({
         try: () =>
@@ -166,6 +184,13 @@ export const ClientsLive = Layer.effect(
                   'update sessions set revoked_at = coalesce(revoked_at, ?) where user_id = ?',
                 )
                 .run(now, clientId);
+              audit.insert({
+                action: 'client.archived',
+                actorUserId,
+                resourceType: 'client',
+                resourceId: clientId,
+                occurredAt: now,
+              });
               return { ...toSummary(client), archived: true };
             })
             .immediate(),
@@ -176,7 +201,10 @@ export const ClientsLive = Layer.effect(
       });
     });
 
-    const createAccess = Effect.fn('Clients.createAccess')(function* (clientId: UlidValue) {
+    const createAccess = Effect.fn('Clients.createAccess')(function* (
+      clientId: UlidValue,
+      actorUserId: UlidValue,
+    ) {
       const accessIdentifier = randomBytes(32).toString('base64url');
       const credentialId = ulid();
       const now = yield* Clock.currentTimeMillis;
@@ -205,6 +233,14 @@ export const ClientsLive = Layer.effect(
                   'insert into access_credentials (id, user_id, secret_hmac, created_at) values (?, ?, ?, ?)',
                 )
                 .run(credentialId, clientId, hmac(config.accessHmacKey, accessIdentifier), now);
+              audit.insert({
+                action: 'client.access-created',
+                actorUserId,
+                resourceType: 'client',
+                resourceId: clientId,
+                metadata: { credentialId },
+                occurredAt: now,
+              });
             })
             .immediate(),
         catch: (cause) => {

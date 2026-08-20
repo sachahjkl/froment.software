@@ -9,6 +9,7 @@ import { Clock, Context, DateTime, Effect, Layer, Schema } from 'effect';
 import { createHash } from 'node:crypto';
 import { ulid } from 'ulid';
 
+import { Audit } from '../audit/audit.js';
 import { Database, DatabaseError } from '../database/database.js';
 import { QuotePreviewUnavailable, QuoteNotFound } from '@froment/contracts';
 import { Quotes } from '../quotes/quotes.js';
@@ -31,6 +32,7 @@ export interface DocumentArtifactsService {
   readonly renderQuotePdf: (
     quoteId: UlidValue,
     version: number,
+    actorUserId: UlidValue,
   ) => Effect.Effect<DocumentArtifactValue, ArtifactError>;
   readonly getQuotePdf: (
     quoteId: UlidValue,
@@ -49,6 +51,7 @@ export const DocumentArtifactsLive = Layer.effect(
     const database = yield* Database;
     const quotes = yield* Quotes;
     const renderer = yield* QuoteRenderer;
+    const audit = yield* Audit;
 
     const readMetadata = (quoteId: string, version: number): DocumentArtifactValue | undefined => {
       const row = database.sqlite
@@ -74,6 +77,7 @@ export const DocumentArtifactsLive = Layer.effect(
     const renderQuotePdf = Effect.fn('DocumentArtifacts.renderQuotePdf')(function* (
       quoteId: UlidValue,
       version: number,
+      actorUserId: UlidValue,
     ) {
       const existing = yield* Effect.try({
         try: () => readMetadata(quoteId, version),
@@ -87,18 +91,38 @@ export const DocumentArtifactsLive = Layer.effect(
       const artifactId = ulid(now);
       const sha256 = createHash('sha256').update(pdf).digest('hex');
       return yield* Effect.try({
-        try: () => {
+        try: () =>
           database.sqlite
-            .prepare(
-              `insert or ignore into document_artifacts
-               (id, revision_id, kind, content_type, byte_size, sha256, content, created_at)
-               values (?, ?, 'quote-pdf', 'application/pdf', ?, ?, ?, ?)`,
-            )
-            .run(artifactId, snapshot.revisionId, pdf.byteLength, sha256, Buffer.from(pdf), now);
-          const artifact = readMetadata(quoteId, version);
-          if (artifact === undefined) throw new Error('Rendered quote PDF is missing.');
-          return artifact;
-        },
+            .transaction(() => {
+              const inserted = database.sqlite
+                .prepare(
+                  `insert or ignore into document_artifacts
+                   (id, revision_id, kind, content_type, byte_size, sha256, content, created_at)
+                   values (?, ?, 'quote-pdf', 'application/pdf', ?, ?, ?, ?)`,
+                )
+                .run(
+                  artifactId,
+                  snapshot.revisionId,
+                  pdf.byteLength,
+                  sha256,
+                  Buffer.from(pdf),
+                  now,
+                ).changes;
+              if (inserted === 1) {
+                audit.insert({
+                  action: 'document.rendered',
+                  actorUserId,
+                  resourceType: 'document',
+                  resourceId: artifactId,
+                  metadata: { kind: 'quote-pdf', quoteId, version: String(version) },
+                  occurredAt: now,
+                });
+              }
+              const artifact = readMetadata(quoteId, version);
+              if (artifact === undefined) throw new Error('Rendered quote PDF is missing.');
+              return artifact;
+            })
+            .immediate(),
         catch: (cause) => new DatabaseError({ operation: 'store quote PDF', cause }),
       });
     });

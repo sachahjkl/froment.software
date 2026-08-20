@@ -12,6 +12,7 @@ import {
 import { Cache, Clock, Context, Effect, Layer, Ref, Schema } from 'effect';
 
 import { Database, DatabaseError } from '../database/database.js';
+import { Audit } from '../audit/audit.js';
 import { AuthenticationConfig, hmac } from './authentication-config.js';
 import { generateSession, renewIdleExpiry } from './session.js';
 
@@ -80,6 +81,7 @@ export const AuthenticationLive = Layer.effect(
   Effect.gen(function* () {
     const database = yield* Database;
     const config = yield* AuthenticationConfig;
+    const audit = yield* Audit;
     const addressFailures = yield* Cache.make({
       capacity: 10_000,
       timeToLive: '1 hour',
@@ -153,40 +155,50 @@ export const AuthenticationLive = Layer.effect(
       const session = generateSession(credential.userId, config.sessionHmacKey, now);
       yield* Effect.try({
         try: () =>
-          database.sqlite.transaction(() => {
-            database.sqlite
-              .prepare('update access_credentials set last_used_at = ? where id = ?')
-              .run(session.now, credential.id);
-            database.sqlite
-              .prepare(
-                `delete from sessions
+          database.sqlite
+            .transaction(() => {
+              database.sqlite
+                .prepare('update access_credentials set last_used_at = ? where id = ?')
+                .run(session.now, credential.id);
+              database.sqlite
+                .prepare(
+                  `delete from sessions
                      where user_id = ?
                        and (revoked_at is not null or idle_expires_at <= ? or absolute_expires_at <= ?)`,
-              )
-              .run(session.userId, session.now, session.now);
-            database.sqlite
-              .prepare(
-                `delete from sessions where id in (
+                )
+                .run(session.userId, session.now, session.now);
+              database.sqlite
+                .prepare(
+                  `delete from sessions where id in (
                        select id from sessions where user_id = ?
                        order by created_at desc limit -1 offset 9
                      )`,
-              )
-              .run(session.userId);
-            database.sqlite
-              .prepare(
-                'insert into sessions (id, user_id, token_hmac, csrf_hmac, created_at, last_seen_at, idle_expires_at, absolute_expires_at) values (?, ?, ?, ?, ?, ?, ?, ?)',
-              )
-              .run(
-                session.id,
-                session.userId,
-                session.tokenHmac,
-                session.csrfHmac,
-                session.now,
-                session.now,
-                session.idleExpiresAt,
-                session.expiresAt.getTime(),
-              );
-          })(),
+                )
+                .run(session.userId);
+              database.sqlite
+                .prepare(
+                  'insert into sessions (id, user_id, token_hmac, csrf_hmac, created_at, last_seen_at, idle_expires_at, absolute_expires_at) values (?, ?, ?, ?, ?, ?, ?, ?)',
+                )
+                .run(
+                  session.id,
+                  session.userId,
+                  session.tokenHmac,
+                  session.csrfHmac,
+                  session.now,
+                  session.now,
+                  session.idleExpiresAt,
+                  session.expiresAt.getTime(),
+                );
+              audit.insert({
+                action: 'authentication.login-succeeded',
+                actorUserId: credential.userId,
+                resourceType: 'session',
+                resourceId: session.id,
+                metadata: { mode },
+                occurredAt: now,
+              });
+            })
+            .immediate(),
         catch: (cause) => new DatabaseError({ operation: 'create login session', cause }),
       });
 
@@ -329,12 +341,30 @@ export const AuthenticationLive = Layer.effect(
       yield* Effect.try({
         try: () =>
           database.sqlite
-            .prepare(
-              `update sessions set revoked_at = ?
-               where token_hmac = ? and csrf_hmac = ? and revoked_at is null
-                 and idle_expires_at > ? and absolute_expires_at > ?`,
-            )
-            .run(now, tokenHmac, csrfHmac, now, now).changes,
+            .transaction(() => {
+              const row = database.sqlite
+                .prepare(
+                  `select id, user_id as userId from sessions
+                   where token_hmac = ? and csrf_hmac = ? and revoked_at is null
+                     and idle_expires_at > ? and absolute_expires_at > ?`,
+                )
+                .get(tokenHmac, csrfHmac, now, now);
+              if (row === undefined) return;
+              const session = Schema.decodeUnknownSync(
+                Schema.Struct({ id: Schema.String, userId: Schema.String }),
+              )(row);
+              database.sqlite
+                .prepare('update sessions set revoked_at = ? where id = ? and revoked_at is null')
+                .run(now, session.id);
+              audit.insert({
+                action: 'authentication.logout',
+                actorUserId: session.userId,
+                resourceType: 'session',
+                resourceId: session.id,
+                occurredAt: now,
+              });
+            })
+            .immediate(),
         catch: (cause) => new DatabaseError({ operation: 'revoke session', cause }),
       });
     });

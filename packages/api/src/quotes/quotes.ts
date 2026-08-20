@@ -23,6 +23,7 @@ import {
 import { Clock, Context, DateTime, Effect, Layer, Schema } from 'effect';
 import { ulid } from 'ulid';
 
+import { Audit } from '../audit/audit.js';
 import { Database, DatabaseError } from '../database/database.js';
 import { IssuerSettings } from '../documents/issuer-settings.js';
 import { calculateQuoteLine, calculateQuoteTotals } from './quote-calculation.js';
@@ -135,6 +136,7 @@ export const QuotesLive = Layer.effect(
   Effect.gen(function* () {
     const database = yield* Database;
     const issuerSettings = yield* IssuerSettings;
+    const audit = yield* Audit;
 
     const readDetail = (quoteId: string): QuoteDetailValue | undefined => {
       const rawQuote = database.sqlite.prepare(`${quoteSql} where id = ?`).get(quoteId);
@@ -386,6 +388,14 @@ export const QuotesLive = Layer.effect(
                 createdByUserId,
                 now,
               );
+              audit.insert({
+                action: 'quote.created',
+                actorUserId: createdByUserId,
+                resourceType: 'quote',
+                resourceId: quoteId,
+                metadata: { clientId: request.clientId, version: '1' },
+                occurredAt: now,
+              });
               const detail = readDetail(quoteId);
               if (detail === undefined) throw new Error('Created quote is missing.');
               return detail;
@@ -453,6 +463,14 @@ export const QuotesLive = Layer.effect(
                 createdByUserId,
                 now,
               );
+              audit.insert({
+                action: 'quote.revised',
+                actorUserId: createdByUserId,
+                resourceType: 'quote',
+                resourceId: quoteId,
+                metadata: { version: String(nextVersion) },
+                occurredAt: now,
+              });
               const detail = readDetail(quoteId);
               if (detail === undefined) throw new Error('Updated quote is missing.');
               return detail;
