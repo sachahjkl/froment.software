@@ -15,6 +15,7 @@ describe('QuotesApi', () => {
     http.expectOne('/api/quotes').flush([
       {
         id: '01ARZ3NDEKTSV4RRFFQ69G5FAY',
+        reference: 'DE-2026-000001',
         clientId: '01ARZ3NDEKTSV4RRFFQ69G5FAZ',
         status: 'draft',
         version: 1,

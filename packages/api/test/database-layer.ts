@@ -1,4 +1,4 @@
-import { Effect, Layer } from 'effect';
+import { DateTime, Effect, Layer } from 'effect';
 import { randomUUID } from 'node:crypto';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -14,6 +14,10 @@ export const makeMigratedDatabaseLayer = (options: {
       ? join(tmpdir(), `froment-test-${randomUUID()}.sqlite`)
       : options.filename;
   return Layer.unwrap(
-    migrateDatabase({ ...options, filename }).pipe(Effect.as(makeDatabaseLayer({ filename }))),
+    migrateDatabase({
+      ...options,
+      filename,
+      businessTimeZone: DateTime.zoneMakeNamedUnsafe('Europe/Paris'),
+    }).pipe(Effect.as(makeDatabaseLayer({ filename }))),
   );
 };

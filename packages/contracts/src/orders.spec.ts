@@ -7,7 +7,9 @@ describe('order contracts', () => {
   it('validates confirmed order summaries with optional invoices', () => {
     const order = {
       id: '01ARZ3NDEKTSV4RRFFQ69G5FAV',
+      reference: 'CO-2026-000001',
       quoteId: '01ARZ3NDEKTSV4RRFFQ69G5FAW',
+      quoteReference: 'DE-2026-000001',
       revisionId: '01ARZ3NDEKTSV4RRFFQ69G5FAX',
       clientId: '01ARZ3NDEKTSV4RRFFQ69G5FAY',
       clientDisplayName: 'Acme',

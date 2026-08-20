@@ -4,8 +4,9 @@ import { describe, expect, it } from 'vitest';
 
 const snapshot: QuoteRenderSnapshotValue = {
   templateId: 'quote-default',
-  templateVersion: 1,
+  templateVersion: 2,
   quoteId: '01ARZ3NDEKTSV4RRFFQ69G5FAV',
+  quoteReference: 'DE-2026-000001',
   revisionId: '01ARZ3NDEKTSV4RRFFQ69G5FAW',
   version: 1,
   createdAt: '2026-08-19T20:00:00.000Z',
@@ -85,6 +86,7 @@ describe('QuoteDefaultTemplate', () => {
     expect(html.toLowerCase()).toContain('<!doctype html>');
     expect(html).toContain('Froment Software');
     expect(html).toContain('Audit métier');
+    expect(html).toContain('DE-2026-000001');
     expect(html).toContain('120,00&nbsp;€');
     expect(html).toContain('&lt;script&gt;alert(1)&lt;/script&gt; Acme');
     expect(html).not.toContain('<script>alert(1)</script>');

@@ -976,7 +976,7 @@ describe('HTTP server', () => {
     });
     expect(pdfDownload.status).toBe(200);
     expect(pdfDownload.headers.get('content-type')).toContain('application/pdf');
-    expect(pdfDownload.headers.get('content-disposition')).toContain(`quote-${quote.id}-v1.pdf`);
+    expect(pdfDownload.headers.get('content-disposition')).toContain(`${quote.reference}-v1.pdf`);
     const pdf = new Uint8Array(await pdfDownload.arrayBuffer());
     expect(new TextDecoder().decode(pdf.slice(0, 5))).toBe('%PDF-');
     expect(pdf.byteLength).toBe(artifact.byteSize);
@@ -1168,7 +1168,7 @@ describe('HTTP server', () => {
     expect(publicPdf.headers.get('cache-control')).toBe('no-store');
     expect(publicPdf.headers.get('referrer-policy')).toBe('no-referrer');
     expect(publicPdf.headers.get('x-content-type-options')).toBe('nosniff');
-    expect(publicPdf.headers.get('content-disposition')).toContain(`quote-${quote.id}-v2.pdf`);
+    expect(publicPdf.headers.get('content-disposition')).toContain(`${quote.reference}-v2.pdf`);
     const publicPdfContent = new Uint8Array(await publicPdf.arrayBuffer());
     expect(new TextDecoder().decode(publicPdfContent.slice(0, 5))).toBe('%PDF-');
     expect(publicPdfContent.byteLength).toBe(secondArtifact.byteSize);
@@ -1220,6 +1220,8 @@ describe('HTTP server', () => {
       revisionId: string;
       signatureId: string;
       orderId: string;
+      orderReference: string;
+      quoteReference: string;
       status: string;
       acceptedAt: string;
       evidenceSha256: string;
@@ -1229,6 +1231,8 @@ describe('HTTP server', () => {
       revisionId: revised.currentRevision.id,
       signatureId: expect.stringMatching(/^[0-7][0-9A-Z]{25}$/),
       orderId: expect.stringMatching(/^[0-7][0-9A-Z]{25}$/),
+      orderReference: 'CO-2026-000001',
+      quoteReference: quote.reference,
       status: 'accepted',
       acceptedAt: expect.stringMatching(/^\d{4}-\d{2}-\d{2}T.*\.\d{3}Z$/),
       evidenceSha256: expect.stringMatching(/^[a-f0-9]{64}$/),
@@ -1242,6 +1246,7 @@ describe('HTTP server', () => {
     expect(acceptedClientQuotes).toEqual([
       {
         id: quote.id,
+        reference: quote.reference,
         status: 'accepted',
         title: 'Revised quote',
         currency: 'EUR',
@@ -1259,7 +1264,9 @@ describe('HTTP server', () => {
     expect(acceptedClientOrders).toEqual([
       {
         id: accepted.orderId,
+        reference: accepted.orderReference,
         quoteId: quote.id,
+        quoteReference: quote.reference,
         status: 'confirmed',
         title: 'Revised quote',
         currency: 'EUR',
@@ -1292,7 +1299,9 @@ describe('HTTP server', () => {
     expect(orderList).toEqual([
       {
         id: accepted.orderId,
+        reference: accepted.orderReference,
         quoteId: quote.id,
+        quoteReference: quote.reference,
         revisionId: revised.currentRevision.id,
         clientId: client.id,
         clientDisplayName: 'Quote client',
@@ -1462,7 +1471,7 @@ describe('HTTP server', () => {
       revisionId: expect.stringMatching(/^[0-7][0-9A-Z]{25}$/),
       version: 3,
       status: 'issued',
-      invoiceNumber: 'F-000001',
+      invoiceNumber: 'FA-2026-000001',
       issuedAt: expect.stringMatching(/^\d{4}-\d{2}-\d{2}T.*\.\d{3}Z$/),
     });
     const invalidIssueRetry = await fetch(`${baseUrl}/api/invoices/${invoice.id}/issue`, {
@@ -1505,7 +1514,7 @@ describe('HTTP server', () => {
     expect(invoicePreview.headers.get('content-security-policy')).toBe(
       "default-src 'none'; style-src 'unsafe-inline'; img-src data:",
     );
-    await expect(invoicePreview.text()).resolves.toEqual(expect.stringContaining('F-000001'));
+    await expect(invoicePreview.text()).resolves.toEqual(expect.stringContaining('FA-2026-000001'));
 
     const invoicePdfResponses = await Promise.all([
       fetch(`${baseUrl}/api/invoices/${invoice.id}/revisions/3/pdf`, {
@@ -1544,7 +1553,7 @@ describe('HTTP server', () => {
     expect(invoicePdfDownload.status).toBe(200);
     expect(invoicePdfDownload.headers.get('content-type')).toContain('application/pdf');
     expect(invoicePdfDownload.headers.get('content-disposition')).toContain(
-      `invoice-${invoice.id}-v3.pdf`,
+      `FA-2026-000001-v3.pdf`,
     );
     const invoicePdf = Buffer.from(await invoicePdfDownload.arrayBuffer());
     expect(invoicePdf).toEqual(issuedInvoicePdf);
@@ -1563,7 +1572,7 @@ describe('HTTP server', () => {
         id: invoice.id,
         orderId: accepted.orderId,
         status: 'issued',
-        invoiceNumber: 'F-000001',
+        invoiceNumber: 'FA-2026-000001',
         title: 'Final invoice',
         pdfAvailable: true,
       }),
@@ -1579,7 +1588,9 @@ describe('HTTP server', () => {
     });
     expect(clientQuotePdf.status).toBe(200);
     expect(clientQuotePdf.headers.get('cache-control')).toBe('no-store');
-    expect(clientQuotePdf.headers.get('content-disposition')).toContain(`quote-${quote.id}-v2.pdf`);
+    expect(clientQuotePdf.headers.get('content-disposition')).toContain(
+      `${quote.reference}-v2.pdf`,
+    );
     expect(Buffer.from(await clientQuotePdf.arrayBuffer())).toEqual(Buffer.from(publicPdfContent));
     const clientInvoicePdf = await fetch(`${baseUrl}/api/client/invoices/${invoice.id}/pdf`, {
       headers: { cookie: clientCookie },
@@ -1633,7 +1644,7 @@ describe('HTTP server', () => {
         orderId: accepted.orderId,
         status: 'issued',
         version: 3,
-        invoiceNumber: 'F-000001',
+        invoiceNumber: 'FA-2026-000001',
         title: 'Final invoice',
       },
     ]);
@@ -1641,7 +1652,9 @@ describe('HTTP server', () => {
     const invoiceSqlite = new Sqlite(databaseFilename);
     expect(
       invoiceSqlite
-        .prepare('select next_value from invoice_number_counter where id = 1')
+        .prepare(
+          "select next_value from business_reference_counters where kind = 'invoice' and year = 2026",
+        )
         .pluck()
         .get(),
     ).toBe(2);

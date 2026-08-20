@@ -84,7 +84,7 @@ describe('Database', () => {
         'audit_events',
         'clients',
         'invoice_lines',
-        'invoice_number_counter',
+        'business_reference_counters',
         'invoice_revisions',
         'invoices',
         'orders',
@@ -117,11 +117,8 @@ describe('Database', () => {
       ]),
     );
     expect(
-      schemaSqlite
-        .prepare('select next_value from invoice_number_counter where id = 1')
-        .pluck()
-        .get(),
-    ).toBe(1);
+      schemaSqlite.prepare('select count(*) from business_reference_counters').pluck().get(),
+    ).toBe(0);
     schemaSqlite.close();
 
     const sqlite = new Sqlite(filename);
@@ -564,8 +561,8 @@ describe('Database', () => {
             insert into clients (id, created_at, updated_at) values
               ('01ARZ3NDEKTSV4RRFFQ69G5FAB', 1, 1),
               ('01ARZ3NDEKTSV4RRFFQ69G5FAC', 1, 1);
-            insert into quotes (id, client_id, status, version, created_at, updated_at)
-              values ('01ARZ3NDEKTSV4RRFFQ69G5FAD', '01ARZ3NDEKTSV4RRFFQ69G5FAB', 'accepted', 1, 1, 1);
+            insert into quotes (id, reference, client_id, status, version, created_at, updated_at)
+              values ('01ARZ3NDEKTSV4RRFFQ69G5FAD', 'DE-1970-000001', '01ARZ3NDEKTSV4RRFFQ69G5FAB', 'accepted', 1, 1, 1);
             insert into quote_revisions
               (id, quote_id, version, client_display_name, title, conditions, currency,
                net_total_cents, vat_total_cents, total_cents, created_at, created_by_user_id)
@@ -597,8 +594,8 @@ describe('Database', () => {
                       '01ARZ3NDEKTSV4RRFFQ69G5FAE', '01ARZ3NDEKTSV4RRFFQ69G5FAH', 'Client A',
                       1, 'typed', 'Client A', 1, '127.0.0.1', '', '${'a'.repeat(64)}',
                       '${'b'.repeat(64)}', '01ARZ3NDEKTSV4RRFFQ69G5FAJ', x'61', '${'c'.repeat(64)}');
-            insert into orders (id, quote_id, revision_id, client_id, signature_id, status, created_at)
-              values ('01ARZ3NDEKTSV4RRFFQ69G5FAM', '01ARZ3NDEKTSV4RRFFQ69G5FAD',
+            insert into orders (id, reference, quote_id, revision_id, client_id, signature_id, status, created_at)
+              values ('01ARZ3NDEKTSV4RRFFQ69G5FAM', 'CO-1970-000001', '01ARZ3NDEKTSV4RRFFQ69G5FAD',
                       '01ARZ3NDEKTSV4RRFFQ69G5FAE', '01ARZ3NDEKTSV4RRFFQ69G5FAB',
                       '01ARZ3NDEKTSV4RRFFQ69G5FAK', 'confirmed', 1);
             insert into invoices (id, order_id, client_id, status, version, created_at, updated_at)
@@ -681,7 +678,8 @@ describe('Database', () => {
     const sourceFolder = join(import.meta.dirname, '..', 'drizzle');
     const correctiveMigration = '20260820125023_perfect_meggan';
     const previousMigrations = (await readdir(sourceFolder)).filter(
-      (migration) => migration !== correctiveMigration,
+      (migration) =>
+        migration !== correctiveMigration && !migration.endsWith('annual_business_references'),
     );
     await Promise.all(
       previousMigrations.map((migration) =>

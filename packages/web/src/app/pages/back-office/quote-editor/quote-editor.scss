@@ -122,6 +122,7 @@ textarea {
   margin-top: var(--space-6);
 }
 
+.quote-reference,
 .quote-status {
   display: flex;
   justify-content: space-between;
@@ -130,6 +131,7 @@ textarea {
   border-bottom: 1px solid var(--color-line-strong);
 }
 
+.quote-reference span,
 .quote-status span,
 .hint,
 .sent-link p {

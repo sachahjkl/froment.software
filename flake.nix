@@ -50,8 +50,12 @@
           inherit (packageJson) version;
           pname = packageJson.name;
           runtimeNode = pkgs.nodejs-slim_22;
+          cousineFonts = pkgs.google-fonts.override { fonts = [ "Cousine" ]; };
           documentFontConfig = pkgs.makeFontsConf {
-            fontDirectories = [ pkgs.liberation_ttf ];
+            fontDirectories = [
+              cousineFonts
+              pkgs.liberation_ttf
+            ];
           };
           workflowSource = lib.fileset.toSource {
             root = ./.;
@@ -111,12 +115,14 @@
                   --add-flags $out/lib/froment-software/server.cjs \
                   --set BUSINESS_TIME_ZONE Europe/Paris \
                   --set CHROMIUM_PATH ${pkgs.chromium}/bin/chromium \
+                  --set FONTCONFIG_FILE ${documentFontConfig} \
                   --set-default DATABASE_PATH data/froment.sqlite \
                   --set DEPLOYMENT_METADATA ${lib.escapeShellArg (deploymentMetadata commit)} \
                   --set STATIC_ROOT $out/share/froment-software/web \
                   --set-default PORT 3000
                 makeWrapper ${runtimeNode}/bin/node $out/bin/${pname}-migrate \
                   --add-flags $out/lib/froment-software/migrate.cjs \
+                  --set BUSINESS_TIME_ZONE Europe/Paris \
                   --set-default DATABASE_PATH data/froment.sqlite \
                   --set MIGRATIONS_ROOT $out/share/froment-software/drizzle
                 cp tools/deploy.sh $out/bin/${pname}-deploy
@@ -144,6 +150,7 @@
               ]
               ++ lib.optionals (name == "test") [
                 pkgs.chromium
+                cousineFonts
                 pkgs.liberation_ttf
                 pkgs.poppler-utils
               ];
@@ -166,6 +173,7 @@
               tag = version;
               contents = [
                 imageApplication
+                cousineFonts
                 pkgs.dockerTools.fakeNss
                 pkgs.liberation_ttf
               ];
@@ -239,8 +247,10 @@
 
           devShells.default = pkgs.mkShell {
             CHROMIUM_PATH = "${pkgs.chromium}/bin/chromium";
+            FONTCONFIG_FILE = documentFontConfig;
             packages = [
               pkgs.chromium
+              cousineFonts
               pkgs.liberation_ttf
               pkgs.nodejs_22
               pkgs.poppler-utils

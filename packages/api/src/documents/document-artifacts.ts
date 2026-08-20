@@ -22,6 +22,7 @@ import { DocumentRenderer, DocumentRenderError } from './document-renderer.js';
 
 const ArtifactRecord = Schema.Struct({
   id: Ulid,
+  quoteReference: Schema.String,
   revisionId: Ulid,
   kind: Schema.Literal('quote-pdf'),
   contentType: Schema.Literal('application/pdf'),
@@ -32,6 +33,7 @@ const ArtifactRecord = Schema.Struct({
 const ArtifactContentRecord = Schema.Struct({ content: Schema.Uint8Array, sha256: Schema.String });
 const InvoiceArtifactRecord = Schema.Struct({
   id: Ulid,
+  invoiceNumber: Schema.String,
   invoiceRevisionId: Ulid,
   kind: Schema.Literal('invoice-pdf'),
   contentType: Schema.Literal('application/pdf'),
@@ -85,12 +87,14 @@ export const DocumentArtifactsLive = Layer.effect(
     const readMetadata = (quoteId: string, version: number): DocumentArtifactValue | undefined => {
       const row = database.sqlite
         .prepare(
-          `select document_artifacts.id, document_artifacts.revision_id as revisionId,
+          `select document_artifacts.id, quotes.reference as quoteReference,
+                   document_artifacts.revision_id as revisionId,
                   document_artifacts.kind, document_artifacts.content_type as contentType,
                   document_artifacts.byte_size as byteSize, document_artifacts.sha256,
                   document_artifacts.created_at as createdAt
            from document_artifacts
-           join quote_revisions on quote_revisions.id = document_artifacts.revision_id
+            join quote_revisions on quote_revisions.id = document_artifacts.revision_id
+            join quotes on quotes.id = quote_revisions.quote_id
            where quote_revisions.quote_id = ? and quote_revisions.version = ?
              and document_artifacts.kind = 'quote-pdf'`,
         )
@@ -162,7 +166,7 @@ export const DocumentArtifactsLive = Layer.effect(
     ): InvoiceDocumentArtifactValue | undefined => {
       const row = database.sqlite
         .prepare(
-          `select document_artifacts.id,
+          `select document_artifacts.id, invoice_revisions.invoice_number as invoiceNumber,
                   document_artifacts.invoice_revision_id as invoiceRevisionId,
                   document_artifacts.kind, document_artifacts.content_type as contentType,
                   document_artifacts.byte_size as byteSize, document_artifacts.sha256,

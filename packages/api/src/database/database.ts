@@ -1,5 +1,5 @@
 import Sqlite from 'better-sqlite3';
-import { Config, Context, Effect, Layer, Schema } from 'effect';
+import { Config, Context, DateTime, Effect, Layer, Schema } from 'effect';
 import { drizzle, type BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
 import { readMigrationFiles } from 'drizzle-orm/migrator';
 import { createHash } from 'node:crypto';
@@ -26,7 +26,16 @@ const MigrationArtifactRecord = Schema.Struct({
   sha256: Schema.String,
 });
 
-const migrate = (sqlite: Sqlite.Database, migrationsFolder: string) => {
+const migrate = (
+  sqlite: Sqlite.Database,
+  migrationsFolder: string,
+  businessTimeZone: DateTime.TimeZone.Named,
+) => {
+  sqlite.function('business_year', { deterministic: true }, (milliseconds: number) =>
+    DateTime.toParts(
+      DateTime.makeUnsafe(milliseconds).pipe(DateTime.setZone(businessTimeZone)),
+    ).year.toString(),
+  );
   const migrations = readMigrationFiles({ migrationsFolder });
   const artifactTableExists = sqlite
     .prepare("select 1 from sqlite_master where type = 'table' and name = 'document_artifacts'")
@@ -92,6 +101,7 @@ const migrate = (sqlite: Sqlite.Database, migrationsFolder: string) => {
 export const migrateDatabase = (options: {
   readonly filename: string;
   readonly migrationsFolder: string;
+  readonly businessTimeZone: DateTime.TimeZone.Named;
 }) =>
   Effect.try({
     try: () => {
@@ -99,7 +109,7 @@ export const migrateDatabase = (options: {
       const sqlite = new Sqlite(options.filename);
       try {
         sqlite.pragma('busy_timeout = 5000');
-        migrate(sqlite, options.migrationsFolder);
+        migrate(sqlite, options.migrationsFolder, options.businessTimeZone);
       } finally {
         sqlite.close();
       }

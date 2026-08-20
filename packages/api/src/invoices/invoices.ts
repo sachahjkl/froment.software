@@ -34,6 +34,7 @@ import { ulid } from 'ulid';
 
 import { Audit } from '../audit/audit.js';
 import { BusinessConfig } from '../business/business-config.js';
+import { allocateBusinessReference, businessYear } from '../business/business-references.js';
 import { Database, DatabaseError } from '../database/database.js';
 import { IssuerSettings } from '../documents/issuer-settings.js';
 import { calculateQuoteLine, calculateQuoteTotals } from '../quotes/quote-calculation.js';
@@ -41,6 +42,8 @@ import { calculateQuoteLine, calculateQuoteTotals } from '../quotes/quote-calcul
 const InvoiceRecord = Schema.Struct({
   id: Ulid,
   orderId: Ulid,
+  orderReference: Schema.String,
+  quoteReference: Schema.String,
   clientId: Ulid,
   status: InvoiceStatus,
   version: Schema.Int,
@@ -82,6 +85,8 @@ const LineRecord = Schema.Struct({
 });
 const OrderRecord = Schema.Struct({
   orderId: Ulid,
+  orderReference: Schema.String,
+  quoteReference: Schema.String,
   clientId: Ulid,
   quoteSnapshot: Schema.String,
 });
@@ -89,6 +94,7 @@ const SnapshotRecord = Schema.Struct({ renderSnapshot: Schema.String });
 const InvoiceSummaryRecord = Schema.Struct({
   id: Ulid,
   orderId: Ulid,
+  orderReference: Schema.String,
   clientId: Ulid,
   clientDisplayName: Schema.NonEmptyString,
   status: InvoiceStatus,
@@ -173,7 +179,10 @@ export class Invoices extends Context.Service<Invoices, InvoicesService>()(
 export const invoiceIssueDate = (issuedAt: number, timeZone: DateTime.TimeZone.Named) =>
   DateTime.makeUnsafe(issuedAt).pipe(DateTime.setZone(timeZone), DateTime.formatIsoDate);
 
-const invoiceSql = `select id, order_id as orderId, client_id as clientId, status, version,
+const invoiceSql = `select id, order_id as orderId,
+  (select reference from orders where orders.id = invoices.order_id) as orderReference,
+  (select quotes.reference from orders join quotes on quotes.id = orders.quote_id where orders.id = invoices.order_id) as quoteReference,
+  client_id as clientId, status, version,
   invoice_number as invoiceNumber, issued_at as issuedAt, paid_at as paidAt,
   voided_at as voidedAt from invoices`;
 const revisionSql = `select id, invoice_id as invoiceId, version,
@@ -282,7 +291,8 @@ export const InvoicesLive = Layer.effect(
         Schema.decodeUnknownSync(Schema.Array(InvoiceSummaryRecord))(
           database.sqlite
             .prepare(
-              `select invoices.id, invoices.order_id as orderId, invoices.client_id as clientId,
+              `select invoices.id, invoices.order_id as orderId, orders.reference as orderReference,
+                       invoices.client_id as clientId,
                       invoice_revisions.client_display_name as clientDisplayName,
                       invoices.status, invoices.version, invoices.invoice_number as invoiceNumber,
                       invoice_revisions.title, invoice_revisions.currency,
@@ -290,7 +300,8 @@ export const InvoicesLive = Layer.effect(
                        , invoice_pdf_jobs.status as pdfStatus
                        , invoice_pdf_jobs.attempts as pdfAttempts
                        , invoice_pdf_jobs.error as pdfError
-                from invoices join invoice_revisions
+                from invoices join orders on orders.id = invoices.order_id
+                join invoice_revisions
                  on invoice_revisions.invoice_id = invoices.id
                  and invoice_revisions.version = invoices.version
                left join invoice_pdf_jobs
@@ -301,6 +312,7 @@ export const InvoicesLive = Layer.effect(
         ).map((invoice) => ({
           id: invoice.id,
           orderId: invoice.orderId,
+          orderReference: invoice.orderReference,
           clientId: invoice.clientId,
           clientDisplayName: invoice.clientDisplayName,
           status: invoice.status,
@@ -373,6 +385,8 @@ export const InvoicesLive = Layer.effect(
     const insertRevision = (input: {
       readonly invoiceId: string;
       readonly orderId: string;
+      readonly orderReference: string;
+      readonly quoteReference: string;
       readonly version: number;
       readonly invoiceNumber: string | null;
       readonly issuedAt: number | null;
@@ -397,9 +411,11 @@ export const InvoicesLive = Layer.effect(
       const totals = calculateQuoteTotals(calculatedLines);
       const snapshot = Schema.decodeUnknownSync(InvoiceRenderSnapshot)({
         templateId: 'invoice-default',
-        templateVersion: 1,
+        templateVersion: 2,
         invoiceId: input.invoiceId,
         orderId: input.orderId,
+        orderReference: input.orderReference,
+        quoteReference: input.quoteReference,
         revisionId,
         version: input.version,
         createdAt: DateTime.formatIso(DateTime.makeUnsafe(input.now)),
@@ -422,8 +438,8 @@ export const InvoicesLive = Layer.effect(
            (id, invoice_id, version, invoice_number, issued_at, client_display_name, title,
             service_date, due_date, payment_terms, currency, net_total_cents, vat_total_cents,
             total_cents, created_at, created_by_user_id, template_id, template_version,
-            render_snapshot)
-           values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'EUR', ?, ?, ?, ?, ?, 'invoice-default', 1, ?)`,
+             render_snapshot)
+            values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'EUR', ?, ?, ?, ?, ?, 'invoice-default', 2, ?)`,
         )
         .run(
           revisionId,
@@ -490,9 +506,11 @@ export const InvoicesLive = Layer.effect(
               }
               const rawOrder = database.sqlite
                 .prepare(
-                  `select orders.id as orderId, orders.client_id as clientId,
-                          quote_revisions.render_snapshot as quoteSnapshot
-                   from orders join quote_revisions on quote_revisions.id = orders.revision_id
+                  `select orders.id as orderId, orders.reference as orderReference,
+                           quotes.reference as quoteReference, orders.client_id as clientId,
+                           quote_revisions.render_snapshot as quoteSnapshot
+                    from orders join quotes on quotes.id = orders.quote_id
+                    join quote_revisions on quote_revisions.id = orders.revision_id
                    where orders.id = ? and orders.status = 'confirmed'`,
                 )
                 .get(request.orderId);
@@ -513,6 +531,8 @@ export const InvoicesLive = Layer.effect(
               insertRevision({
                 invoiceId,
                 orderId: order.orderId,
+                orderReference: order.orderReference,
+                quoteReference: order.quoteReference,
                 version: 1,
                 invoiceNumber: null,
                 issuedAt: null,
@@ -531,7 +551,12 @@ export const InvoicesLive = Layer.effect(
                 actorUserId,
                 resourceType: 'invoice',
                 resourceId: invoiceId,
-                metadata: { orderId: order.orderId, version: '1' },
+                metadata: {
+                  orderId: order.orderId,
+                  orderReference: order.orderReference,
+                  quoteReference: order.quoteReference,
+                  version: '1',
+                },
                 occurredAt: now,
               });
               const detail = readDetail(invoiceId);
@@ -610,6 +635,10 @@ export const InvoicesLive = Layer.effect(
               insertRevision({
                 invoiceId,
                 orderId: invoice.orderId,
+                orderReference:
+                  current.templateVersion === 2 ? current.orderReference : invoice.orderReference,
+                quoteReference:
+                  current.templateVersion === 2 ? current.quoteReference : invoice.quoteReference,
                 version: nextVersion,
                 invoiceNumber: null,
                 issuedAt: null,
@@ -724,20 +753,19 @@ export const InvoicesLive = Layer.effect(
               );
               const issueDate = invoiceIssueDate(now, businessConfig.timeZone);
               validateDates(current.serviceDate, current.dueDate, issueDate);
-              const nextNumber = Schema.decodeUnknownSync(Schema.Int)(
-                database.sqlite
-                  .prepare('select next_value from invoice_number_counter where id = 1')
-                  .pluck()
-                  .get(),
+              const invoiceNumber = allocateBusinessReference(
+                database.sqlite,
+                'invoice',
+                businessYear(now, businessConfig.timeZone),
               );
-              database.sqlite
-                .prepare('update invoice_number_counter set next_value = ? where id = 1')
-                .run(nextNumber + 1);
-              const invoiceNumber = `F-${String(nextNumber).padStart(6, '0')}`;
               const nextVersion = invoice.version + 1;
               const finalSnapshot = insertRevision({
                 invoiceId,
                 orderId: invoice.orderId,
+                orderReference:
+                  current.templateVersion === 2 ? current.orderReference : invoice.orderReference,
+                quoteReference:
+                  current.templateVersion === 2 ? current.quoteReference : invoice.quoteReference,
                 version: nextVersion,
                 invoiceNumber,
                 issuedAt: now,

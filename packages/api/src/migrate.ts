@@ -1,5 +1,5 @@
 import { NodeRuntime } from '@effect/platform-node';
-import { Config, Effect } from 'effect';
+import { Config, DateTime, Effect, Option, Schema } from 'effect';
 
 import { migrateDatabase } from './database/database.js';
 
@@ -8,5 +8,17 @@ Effect.gen(function* () {
     Config.withDefault('data/froment.sqlite'),
   );
   const migrationsFolder = yield* Config.string('MIGRATIONS_ROOT');
-  yield* migrateDatabase({ filename, migrationsFolder });
+  const timeZoneName = yield* Config.schema(
+    Schema.String.check(
+      Schema.makeFilter((value) => Option.isSome(DateTime.zoneMakeNamed(value)), {
+        message: 'Expected an IANA time zone name.',
+      }),
+    ),
+    'BUSINESS_TIME_ZONE',
+  );
+  yield* migrateDatabase({
+    filename,
+    migrationsFolder,
+    businessTimeZone: DateTime.zoneMakeNamedUnsafe(timeZoneName),
+  });
 }).pipe(NodeRuntime.runMain);

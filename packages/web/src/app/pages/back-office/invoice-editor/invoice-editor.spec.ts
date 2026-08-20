@@ -46,16 +46,17 @@ const revision = {
 const detail = (status: InvoiceDetailValue['status'] = 'draft'): InvoiceDetailValue => ({
   id: invoiceId,
   orderId,
+  orderReference: 'CO-2026-000001',
   clientId: '01ARZ3NDEKTSV4RRFFQ69G5FAV',
   status,
   version: 1,
-  invoiceNumber: status === 'draft' ? null : 'F-000001',
+  invoiceNumber: status === 'draft' ? null : 'FA-2026-000001',
   issuedAt: status === 'draft' ? null : '2026-08-20T06:00:00.000Z',
   paidAt: status === 'paid' ? '2026-08-21T06:00:00.000Z' : null,
   voidedAt: status === 'void' ? '2026-08-21T06:00:00.000Z' : null,
   currentRevision: {
     ...revision,
-    invoiceNumber: status === 'draft' ? null : 'F-000001',
+    invoiceNumber: status === 'draft' ? null : 'FA-2026-000001',
     issuedAt: status === 'draft' ? null : '2026-08-20T06:00:00.000Z',
   },
   revisions: [revision],
@@ -64,7 +65,9 @@ const detail = (status: InvoiceDetailValue['status'] = 'draft'): InvoiceDetailVa
 
 const order = {
   id: orderId,
+  reference: 'CO-2026-000001' as const,
   quoteId: '01ARZ3NDEKTSV4RRFFQ69G5FAS',
+  quoteReference: 'DE-2026-000001' as const,
   revisionId: '01ARZ3NDEKTSV4RRFFQ69G5FAR',
   clientId: '01ARZ3NDEKTSV4RRFFQ69G5FAV',
   clientDisplayName: 'Acme',
@@ -189,6 +192,8 @@ describe('InvoiceEditor', () => {
     const { api, fixture, root } = await setup();
     api.create.mockResolvedValue({ success: true, result: detail() });
     const navigate = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
+
+    expect(root.querySelector('select')?.textContent).toContain('CO-2026-000001');
 
     input(root.querySelector('select')!, orderId);
     const dates = root.querySelectorAll<HTMLInputElement>('input[type="date"]');

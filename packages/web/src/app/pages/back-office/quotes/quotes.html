@@ -23,6 +23,7 @@
     <table>
       <thead>
         <tr>
+          <th>{{ i18n.t('backOffice.quotes.reference') }}</th>
           <th>{{ i18n.t('backOffice.quote.title') }}</th>
           <th>{{ i18n.t('backOffice.quotes.client') }}</th>
           <th>{{ i18n.t('backOffice.quotes.status') }}</th>
@@ -34,6 +35,7 @@
       <tbody>
         @for (quote of quotes(); track quote.id) {
         <tr>
+          <td><strong>{{ quote.reference }}</strong></td>
           <td><strong>{{ quote.title }}</strong></td>
           <td>{{ quote.clientDisplayName }}</td>
           <td>

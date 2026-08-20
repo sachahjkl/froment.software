@@ -12,6 +12,7 @@ import { ClientPortal } from './client-portal';
 
 const quoteId = '01ARZ3NDEKTSV4RRFFQ69G5FAV';
 const invoiceId = '01ARZ3NDEKTSV4RRFFQ69G5FAW';
+const orderId = '01ARZ3NDEKTSV4RRFFQ69G5FAX';
 
 class ClientPortalApiStub {
   calls = 0;
@@ -19,6 +20,7 @@ class ClientPortalApiStub {
   quotes: ClientQuoteListValue = [
     {
       id: quoteId,
+      reference: 'DE-2026-000001',
       status: 'accepted',
       title: 'Security audit',
       currency: 'EUR',
@@ -27,13 +29,27 @@ class ClientPortalApiStub {
       pdfAvailable: true,
     },
   ];
-  orders: ClientOrderListValue = [];
+  orders: ClientOrderListValue = [
+    {
+      id: orderId,
+      reference: 'CO-2026-000001',
+      quoteId,
+      quoteReference: 'DE-2026-000001',
+      status: 'confirmed',
+      title: 'Security audit',
+      currency: 'EUR',
+      totalCents: 12_000,
+      createdAt: '2026-08-20T08:00:00.000Z',
+      invoiceId,
+    },
+  ];
   invoices: ClientInvoiceListValue = [
     {
       id: invoiceId,
-      orderId: '01ARZ3NDEKTSV4RRFFQ69G5FAX',
+      orderId,
+      orderReference: 'CO-2026-000001',
       status: 'issued',
-      invoiceNumber: 'F-000001',
+      invoiceNumber: 'FA-2026-000001',
       title: 'Security audit',
       dueDate: '2026-09-20',
       currency: 'EUR',
@@ -82,7 +98,9 @@ describe('ClientPortal', () => {
     const root: HTMLElement = fixture.nativeElement;
 
     expect(root.textContent).toContain('Security audit');
-    expect(root.textContent).toContain('F-000001');
+    expect(root.textContent).toContain('DE-2026-000001');
+    expect(root.textContent).toContain('CO-2026-000001');
+    expect(root.textContent).toContain('FA-2026-000001');
     expect(root.querySelector(`a[href="/api/client/quotes/${quoteId}/pdf"]`)).not.toBeNull();
     expect(root.querySelector(`a[href="/api/client/invoices/${invoiceId}/pdf"]`)).toBeNull();
   });

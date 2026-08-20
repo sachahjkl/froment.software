@@ -531,12 +531,18 @@ const QuoteHandlers = HttpApiBuilder.group(Api, 'quotes', (handlers) =>
         'quotePdfDownload',
         Effect.fn('quotePdfDownload')(function* ({ params }) {
           yield* setPrivateResponseHeaders;
+          const quote = yield* (yield* Quotes)
+            .get(params.quoteId)
+            .pipe(
+              Effect.catchTag('DatabaseError', Effect.orDie),
+              Effect.catchTag('QuoteNotFound', Effect.orDie),
+            );
           yield* HttpEffect.appendPreResponseHandler((_request, response) =>
             Effect.succeed(
               HttpServerResponse.setHeader(
                 response,
                 'content-disposition',
-                `attachment; filename="quote-${params.quoteId}-v${params.version}.pdf"`,
+                `attachment; filename="${quote.reference}-v${params.version}.pdf"`,
               ),
             ),
           );
@@ -599,7 +605,7 @@ const QuoteHandlers = HttpApiBuilder.group(Api, 'quotes', (handlers) =>
               HttpServerResponse.setHeader(
                 response,
                 'content-disposition',
-                `inline; filename="quote-${pdf.quoteId}-v${pdf.version}.pdf"`,
+                `inline; filename="${pdf.reference}-v${pdf.version}.pdf"`,
               ),
             ),
           );
@@ -674,12 +680,18 @@ const InvoiceHandlers = HttpApiBuilder.group(Api, 'invoices', (handlers) =>
         'invoicePdfDownload',
         Effect.fn('invoicePdfDownload')(function* ({ params }) {
           yield* setPrivateResponseHeaders;
+          const invoice = yield* (yield* Invoices)
+            .get(params.invoiceId)
+            .pipe(
+              Effect.catchTag('DatabaseError', Effect.orDie),
+              Effect.catchTag('InvoiceNotFound', Effect.orDie),
+            );
           yield* HttpEffect.appendPreResponseHandler((_request, response) =>
             Effect.succeed(
               HttpServerResponse.setHeader(
                 response,
                 'content-disposition',
-                `attachment; filename="invoice-${params.invoiceId}-v${params.version}.pdf"`,
+                `attachment; filename="${invoice.invoiceNumber ?? params.invoiceId}-v${params.version}.pdf"`,
               ),
             ),
           );
@@ -787,7 +799,7 @@ const ClientPortalHandlers = HttpApiBuilder.group(Api, 'clientPortal', (handlers
               HttpServerResponse.setHeader(
                 response,
                 'content-disposition',
-                `attachment; filename="quote-${params.quoteId}-v${pdf.version}.pdf"`,
+                `attachment; filename="${pdf.reference}-v${pdf.version}.pdf"`,
               ),
             ),
           );
@@ -808,7 +820,7 @@ const ClientPortalHandlers = HttpApiBuilder.group(Api, 'clientPortal', (handlers
               HttpServerResponse.setHeader(
                 response,
                 'content-disposition',
-                `attachment; filename="invoice-${params.invoiceId}-v${pdf.version}.pdf"`,
+                `attachment; filename="${pdf.reference}-v${pdf.version}.pdf"`,
               ),
             ),
           );

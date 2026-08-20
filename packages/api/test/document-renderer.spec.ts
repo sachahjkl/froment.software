@@ -62,14 +62,28 @@ const quote = Schema.decodeUnknownSync(QuoteRenderSnapshot)({
 const invoice = Schema.decodeUnknownSync(InvoiceRenderSnapshot)({
   ...common,
   templateId: 'invoice-default',
+  templateVersion: 2,
   invoiceId: ids[2],
   orderId: ids[3],
+  orderReference: 'CO-2026-000001',
+  quoteReference: 'DE-2026-000001',
   revisionId: ids[1],
-  invoiceNumber: 'F-000001',
+  invoiceNumber: 'FA-2026-000001',
   issuedAt: '2026-08-20T12:00:00.000Z',
   serviceDate: '2026-08-20',
   dueDate: '2026-09-20',
   paymentTerms: longText,
+});
+const compactInvoice = Schema.decodeUnknownSync(InvoiceRenderSnapshot)({
+  ...invoice,
+  issuer: { ...issuer, displayName: 'Froment Software' },
+  client: { ...party, displayName: 'Client Exemple' },
+  title: 'Développement logiciel',
+  paymentTerms: 'Paiement à 30 jours',
+  netTotalCents: 60_000,
+  vatTotalCents: 12_000,
+  totalCents: 72_000,
+  lines: lines.slice(0, 6).map((line) => ({ ...line, description: 'Prestation logicielle' })),
 });
 
 const expectNoHorizontalOverflow = async (page: Page) => {
@@ -131,11 +145,13 @@ describe('DocumentRenderer', () => {
         const renderer = yield* DocumentRenderer;
         return [
           {
+            kind: 'quote' as const,
             html: yield* renderer.renderQuote(quote),
             pdf: yield* renderer.renderQuotePdf(quote),
             expectedText: quote.quoteId,
           },
           {
+            kind: 'invoice' as const,
             html: yield* renderer.renderInvoice(invoice),
             pdf: yield* renderer.renderInvoicePdf(invoice),
             expectedText: invoice.invoiceNumber,
@@ -155,9 +171,13 @@ describe('DocumentRenderer', () => {
       for (const document of rendered) {
         await page.setContent(document.html, { waitUntil: 'load' });
         await expectNoHorizontalOverflow(page);
-        await expectBusinessLayout(page);
-        expect(await page.locator('tbody tr').count()).toBe(20);
-        expect(await page.locator('.conditions').textContent()).toContain(longText);
+        if (document.kind === 'quote') await expectBusinessLayout(page);
+        const rows = page.locator(
+          document.kind === 'quote' ? 'main > table tbody tr' : '.items tbody tr',
+        );
+        expect(await rows.count()).toBe(20);
+        const terms = page.locator(document.kind === 'quote' ? '.conditions' : '.payment-info');
+        expect(await terms.textContent()).toContain(longText);
         const pdfText = Buffer.from(document.pdf).toString('latin1');
         expect(pdfText.startsWith('%PDF-')).toBe(true);
         expect(pdfText.match(/\/Type \/Page\b/g)?.length ?? 0).toBeGreaterThan(1);
@@ -169,6 +189,19 @@ describe('DocumentRenderer', () => {
         expect(extracted.status).toBe(0);
         expect(extracted.stdout.replaceAll(/\s/g, '')).toContain(document.expectedText);
       }
+
+      const renderer = await Effect.runPromise(
+        DocumentRenderer.use((service) => service.renderInvoicePdf(compactInvoice)).pipe(
+          Effect.provide(DocumentRendererLive),
+          Effect.scoped,
+        ),
+      );
+      const compactPdf = Buffer.from(renderer);
+      expect(compactPdf.toString('latin1').match(/\/Type \/Page\b/g)?.length ?? 0).toBe(1);
+      const fonts = spawnSync('pdffonts', ['-'], { input: compactPdf, encoding: 'utf8' });
+      expect(fonts.error).toBeUndefined();
+      expect(fonts.status).toBe(0);
+      expect(fonts.stdout).toContain('Cousine');
     } finally {
       await browser.close();
     }

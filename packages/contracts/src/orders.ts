@@ -2,6 +2,7 @@ import { Schema } from 'effect';
 
 import { DisplayName, Ulid } from './identifiers.js';
 import { IsoUtc } from './temporal.js';
+import { OrderReference, QuoteReference } from './business-references.js';
 
 const SafeInteger = Schema.Number.check(
   Schema.isInt(),
@@ -10,7 +11,9 @@ const SafeInteger = Schema.Number.check(
 );
 export const OrderSummary = Schema.Struct({
   id: Ulid,
+  reference: OrderReference,
   quoteId: Ulid,
+  quoteReference: QuoteReference,
   revisionId: Ulid,
   clientId: Ulid,
   clientDisplayName: DisplayName,

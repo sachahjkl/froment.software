@@ -39,7 +39,7 @@ const ServicesLive = Layer.mergeAll(
   ClientsLive,
   OrdersLive,
   InvoicePdfRuntimeLive,
-  QuoteLinksLive,
+  QuoteLinksLive.pipe(Layer.provide(BusinessConfigLive)),
   QuoteConditionPresetsLive,
   DeploymentLive,
   ClientPortalLive,

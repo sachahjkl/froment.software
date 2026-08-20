@@ -15,6 +15,12 @@ import {
 } from './document-lines.js';
 import { DocumentNotFound, DocumentParty, IssuerSettings, QuoteLineInput } from './quotes.js';
 import { CalendarDate, IsoUtc } from './temporal.js';
+import {
+  InvoiceNumber,
+  OrderReference,
+  QuoteReference,
+  StoredInvoiceNumber,
+} from './business-references.js';
 
 export { CalendarDate, CalendarDateText } from './temporal.js';
 const InvoiceTitle = Schema.String.check(Schema.isPattern(/\S/), Schema.isMaxLength(120));
@@ -27,8 +33,8 @@ const InvoiceLinesInput = Schema.Array(QuoteLineInput).check(
 export const InvoiceStatus = Schema.Literals(['draft', 'issued', 'paid', 'void']);
 export type InvoiceStatus = typeof InvoiceStatus.Type;
 
-export const InvoiceNumber = Schema.String.check(Schema.isPattern(/^F-[0-9]{6,}$/));
-export type InvoiceNumber = typeof InvoiceNumber.Type;
+export { InvoiceNumber } from './business-references.js';
+export type { InvoiceNumber as InvoiceNumberType } from './business-references.js';
 
 export const InvoicePdfStatus = Schema.Literals(['pending', 'processing', 'ready', 'failed']);
 export type InvoicePdfStatus = typeof InvoicePdfStatus.Type;
@@ -64,7 +70,7 @@ export type InvoiceIssueRequest = typeof InvoiceIssueRequest.Type;
 export const InvoiceTransitionRequest = Schema.Struct({ expectedVersion: PositiveSafeInteger });
 export type InvoiceTransitionRequest = typeof InvoiceTransitionRequest.Type;
 
-export const InvoiceRenderSnapshot = Schema.Struct({
+const InvoiceRenderSnapshotV1 = Schema.Struct({
   templateId: Schema.Literal('invoice-default'),
   templateVersion: Schema.Literal(1),
   invoiceId: Ulid,
@@ -72,7 +78,7 @@ export const InvoiceRenderSnapshot = Schema.Struct({
   revisionId: Ulid,
   version: PositiveSafeInteger,
   createdAt: IsoUtc,
-  invoiceNumber: Schema.NullOr(InvoiceNumber),
+  invoiceNumber: Schema.NullOr(StoredInvoiceNumber),
   issuedAt: Schema.NullOr(IsoUtc),
   serviceDate: CalendarDate,
   dueDate: CalendarDate,
@@ -86,13 +92,23 @@ export const InvoiceRenderSnapshot = Schema.Struct({
   totalCents: SafeInteger,
   lines: DocumentLines,
 }).check(documentTotalsFilter);
+const InvoiceRenderSnapshotV2 = Schema.Struct({
+  ...InvoiceRenderSnapshotV1.fields,
+  templateVersion: Schema.Literal(2),
+  quoteReference: QuoteReference,
+  orderReference: OrderReference,
+}).check(documentTotalsFilter);
+export const InvoiceRenderSnapshot = Schema.Union([
+  InvoiceRenderSnapshotV1,
+  InvoiceRenderSnapshotV2,
+]);
 export type InvoiceRenderSnapshot = typeof InvoiceRenderSnapshot.Type;
 
 export const InvoiceRevision = Schema.Struct({
   id: Ulid,
   version: PositiveSafeInteger,
   clientDisplayName: DisplayName,
-  invoiceNumber: Schema.NullOr(InvoiceNumber),
+  invoiceNumber: Schema.NullOr(StoredInvoiceNumber),
   issuedAt: Schema.NullOr(IsoUtc),
   title: InvoiceTitle,
   serviceDate: CalendarDate,
@@ -111,11 +127,12 @@ export type InvoiceRevision = typeof InvoiceRevision.Type;
 export const InvoiceSummary = Schema.Struct({
   id: Ulid,
   orderId: Ulid,
+  orderReference: OrderReference,
   clientId: Ulid,
   clientDisplayName: DisplayName,
   status: InvoiceStatus,
   version: PositiveSafeInteger,
-  invoiceNumber: Schema.NullOr(InvoiceNumber),
+  invoiceNumber: Schema.NullOr(StoredInvoiceNumber),
   title: InvoiceTitle,
   currency: Schema.Literal('EUR'),
   totalCents: SafeInteger,
@@ -127,10 +144,11 @@ export type InvoiceSummary = typeof InvoiceSummary.Type;
 export const InvoiceDetail = Schema.Struct({
   id: Ulid,
   orderId: Ulid,
+  orderReference: OrderReference,
   clientId: Ulid,
   status: InvoiceStatus,
   version: PositiveSafeInteger,
-  invoiceNumber: Schema.NullOr(InvoiceNumber),
+  invoiceNumber: Schema.NullOr(StoredInvoiceNumber),
   issuedAt: Schema.NullOr(IsoUtc),
   paidAt: Schema.NullOr(IsoUtc),
   voidedAt: Schema.NullOr(IsoUtc),
@@ -152,6 +170,7 @@ export type InvoiceIssueResult = typeof InvoiceIssueResult.Type;
 
 export const InvoiceDocumentArtifact = Schema.Struct({
   id: Ulid,
+  invoiceNumber: StoredInvoiceNumber,
   invoiceRevisionId: Ulid,
   kind: Schema.Literal('invoice-pdf'),
   contentType: Schema.Literal('application/pdf'),

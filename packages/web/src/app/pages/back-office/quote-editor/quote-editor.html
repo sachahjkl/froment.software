@@ -201,6 +201,10 @@
 
   @if (detail(); as quote) {
   <aside class="saved-result" aria-labelledby="totals-title">
+    <p class="quote-reference">
+      <span>{{ i18n.t('backOffice.quote.reference') }}</span>
+      <strong>{{ quote.reference }}</strong>
+    </p>
     <p class="quote-status">
       <span>{{ i18n.t('backOffice.quote.status') }}</span>
       <strong>{{ i18n.t(statusKey(quote.status)) }}</strong>

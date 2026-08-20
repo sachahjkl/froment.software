@@ -20,7 +20,7 @@ describe('invoice contracts', () => {
     for (const status of ['draft', 'issued', 'paid', 'void']) {
       expect(Schema.decodeUnknownSync(InvoiceStatus)(status)).toBe(status);
     }
-    expect(Schema.decodeUnknownSync(InvoiceNumber)('F-000001')).toBe('F-000001');
+    expect(Schema.decodeUnknownSync(InvoiceNumber)('FA-2026-000001')).toBe('FA-2026-000001');
     expect(() => Schema.decodeUnknownSync(InvoiceNumber)('2026-1')).toThrow();
   });
 
@@ -141,6 +141,7 @@ describe('invoice contracts', () => {
   it('validates invoice PDF metadata', () => {
     const artifact = {
       id: '01ARZ3NDEKTSV4RRFFQ69G5FAV',
+      invoiceNumber: 'FA-2026-000001',
       invoiceRevisionId: '01ARZ3NDEKTSV4RRFFQ69G5FAW',
       kind: 'invoice-pdf',
       contentType: 'application/pdf',
@@ -150,6 +151,10 @@ describe('invoice contracts', () => {
     };
 
     expect(Schema.decodeUnknownSync(InvoiceDocumentArtifact)(artifact)).toEqual(artifact);
+    expect(
+      Schema.decodeUnknownSync(InvoiceDocumentArtifact)({ ...artifact, invoiceNumber: 'F-000001' })
+        .invoiceNumber,
+    ).toBe('F-000001');
     expect(() =>
       Schema.decodeUnknownSync(InvoiceDocumentArtifact)({ ...artifact, kind: 'quote-pdf' }),
     ).toThrow();

@@ -17,6 +17,7 @@ import {
 } from './document-lines.js';
 import { DisplayName, Ulid } from './identifiers.js';
 import { IsoUtc } from './temporal.js';
+import { OrderReference, QuoteReference } from './business-references.js';
 export const QuoteLinkToken = Schema.String.check(Schema.isPattern(/^[A-Za-z0-9_-]{43}$/));
 export type QuoteLinkToken = typeof QuoteLinkToken.Type;
 const decodeUrl = Schema.decodeOption(Schema.URLFromString);
@@ -95,7 +96,7 @@ export type PublicQuoteSignatureRequest = typeof PublicQuoteSignatureRequest.Typ
 export const QuoteLine = DocumentLine;
 export type QuoteLine = typeof QuoteLine.Type;
 
-export const QuoteRenderSnapshot = Schema.Struct({
+const QuoteRenderSnapshotV1 = Schema.Struct({
   templateId: Schema.Literal('quote-default'),
   templateVersion: Schema.Literal(1),
   quoteId: Ulid,
@@ -112,6 +113,12 @@ export const QuoteRenderSnapshot = Schema.Struct({
   totalCents: SafeInteger,
   lines: DocumentLines,
 }).check(documentTotalsFilter);
+const QuoteRenderSnapshotV2 = Schema.Struct({
+  ...QuoteRenderSnapshotV1.fields,
+  templateVersion: Schema.Literal(2),
+  quoteReference: QuoteReference,
+}).check(documentTotalsFilter);
+export const QuoteRenderSnapshot = Schema.Union([QuoteRenderSnapshotV1, QuoteRenderSnapshotV2]);
 export type QuoteRenderSnapshot = typeof QuoteRenderSnapshot.Type;
 
 export const PublicQuoteConsultation = Schema.Struct({
@@ -127,6 +134,8 @@ export const QuoteAcceptanceResult = Schema.Struct({
   revisionId: Ulid,
   signatureId: Ulid,
   orderId: Ulid,
+  quoteReference: QuoteReference,
+  orderReference: OrderReference,
   status: Schema.Literal('accepted'),
   acceptedAt: IsoUtc,
   evidenceSha256: Schema.String.check(Schema.isPattern(/^[a-f0-9]{64}$/)),
@@ -152,6 +161,7 @@ export type QuoteRevision = typeof QuoteRevision.Type;
 
 export const QuoteSummary = Schema.Struct({
   id: Ulid,
+  reference: QuoteReference,
   clientId: Ulid,
   clientDisplayName: DisplayName,
   status: QuoteStatus,
@@ -165,6 +175,7 @@ export type QuoteSummary = typeof QuoteSummary.Type;
 
 export const QuoteDetail = Schema.Struct({
   id: Ulid,
+  reference: QuoteReference,
   clientId: Ulid,
   status: QuoteStatus,
   version: PositiveSafeInteger,
@@ -249,6 +260,7 @@ export class QuoteLinkNotSignable extends Schema.TaggedError<QuoteLinkNotSignabl
 
 export const DocumentArtifact = Schema.Struct({
   id: Ulid,
+  quoteReference: QuoteReference,
   revisionId: Ulid,
   kind: Schema.Literal('quote-pdf'),
   contentType: Schema.Literal('application/pdf'),

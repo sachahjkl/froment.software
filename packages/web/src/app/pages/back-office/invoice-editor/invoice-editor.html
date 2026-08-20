@@ -25,7 +25,8 @@
         <option value="">{{ i18n.t('backOffice.invoice.orderPlaceholder') }}</option>
         @for (order of orders(); track order.id) {
         <option [value]="order.id">
-          {{ order.clientDisplayName }} · {{ order.title }} · {{ money(order.totalCents) }}
+          {{ order.reference }} · {{ order.clientDisplayName }} · {{ order.title }} · {{
+          money(order.totalCents) }}
         </option>
         }
       </select>

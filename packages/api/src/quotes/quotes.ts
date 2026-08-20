@@ -24,6 +24,8 @@ import { Clock, Context, DateTime, Effect, Layer, Schema } from 'effect';
 import { ulid } from 'ulid';
 
 import { Audit } from '../audit/audit.js';
+import { BusinessConfig } from '../business/business-config.js';
+import { allocateBusinessReference, businessYear } from '../business/business-references.js';
 import { Database, DatabaseError } from '../database/database.js';
 import { IssuerSettings } from '../documents/issuer-settings.js';
 import { calculateQuoteLine, calculateQuoteTotals } from './quote-calculation.js';
@@ -31,6 +33,7 @@ import { expireSentQuotes } from './quote-expiration.js';
 
 const QuoteRecord = Schema.Struct({
   id: Ulid,
+  reference: Schema.String,
   clientId: Ulid,
   status: QuoteStatus,
   version: Schema.Int,
@@ -75,6 +78,7 @@ const ClientRecord = Schema.Struct({
 const SnapshotRecord = Schema.Struct({ renderSnapshot: Schema.NullOr(Schema.String) });
 const QuoteSummaryRecord = Schema.Struct({
   id: Ulid,
+  reference: Schema.String,
   clientId: Ulid,
   clientDisplayName: Schema.NonEmptyString,
   status: QuoteStatus,
@@ -122,7 +126,7 @@ export interface QuotesService {
 
 export class Quotes extends Context.Service<Quotes, QuotesService>()('@froment/api/Quotes') {}
 
-const quoteSql = `select id, client_id as clientId, status, version from quotes`;
+const quoteSql = `select id, reference, client_id as clientId, status, version from quotes`;
 const revisionSql = `select id, quote_id as quoteId, version,
   client_display_name as clientDisplayName, title, conditions, currency,
   net_total_cents as netTotalCents, vat_total_cents as vatTotalCents,
@@ -140,6 +144,7 @@ export const QuotesLive = Layer.effect(
     const database = yield* Database;
     const issuerSettings = yield* IssuerSettings;
     const audit = yield* Audit;
+    const businessConfig = yield* BusinessConfig;
 
     const readDetail = (quoteId: string): QuoteDetailValue | undefined => {
       const rawQuote = database.sqlite.prepare(`${quoteSql} where id = ?`).get(quoteId);
@@ -203,7 +208,7 @@ export const QuotesLive = Layer.effect(
               return Schema.decodeUnknownSync(Schema.Array(QuoteSummaryRecord))(
                 database.sqlite
                   .prepare(
-                    `select quotes.id, quotes.client_id as clientId,
+                    `select quotes.id, quotes.reference, quotes.client_id as clientId,
                       quote_revisions.client_display_name as clientDisplayName,
                       quotes.status, quotes.version, quote_revisions.title,
                       quote_revisions.currency, quote_revisions.total_cents as totalCents,
@@ -289,6 +294,7 @@ export const QuotesLive = Layer.effect(
 
     const insertRevision = (
       quoteId: string,
+      quoteReference: string,
       version: number,
       clientDisplayName: string,
       client: typeof ClientRecord.Type,
@@ -311,8 +317,9 @@ export const QuotesLive = Layer.effect(
       const createdAt = DateTime.formatIso(DateTime.makeUnsafe(now));
       const snapshot = Schema.decodeUnknownSync(QuoteRenderSnapshot)({
         templateId: 'quote-default',
-        templateVersion: 1,
+        templateVersion: 2,
         quoteId,
+        quoteReference,
         revisionId,
         version,
         createdAt,
@@ -337,8 +344,8 @@ export const QuotesLive = Layer.effect(
           `insert into quote_revisions
            (id, quote_id, version, client_display_name, title, conditions, currency,
              net_total_cents, vat_total_cents, total_cents, created_at, created_by_user_id,
-             template_id, template_version, render_snapshot)
-            values (?, ?, ?, ?, ?, ?, 'EUR', ?, ?, ?, ?, ?, 'quote-default', 1, ?)`,
+              template_id, template_version, render_snapshot)
+             values (?, ?, ?, ?, ?, ?, 'EUR', ?, ?, ?, ?, ?, 'quote-default', 2, ?)`,
         )
         .run(
           revisionId,
@@ -388,13 +395,19 @@ export const QuotesLive = Layer.effect(
           database.sqlite
             .transaction(() => {
               const client = findClient(request.clientId);
+              const reference = allocateBusinessReference(
+                database.sqlite,
+                'quote',
+                businessYear(now, businessConfig.timeZone),
+              );
               database.sqlite
                 .prepare(
-                  "insert into quotes (id, client_id, status, version, created_at, updated_at) values (?, ?, 'draft', 1, ?, ?)",
+                  "insert into quotes (id, reference, client_id, status, version, created_at, updated_at) values (?, ?, ?, 'draft', 1, ?, ?)",
                 )
-                .run(quoteId, request.clientId, now, now);
+                .run(quoteId, reference, request.clientId, now, now);
               insertRevision(
                 quoteId,
+                reference,
                 1,
                 client.displayName,
                 client,
@@ -410,7 +423,7 @@ export const QuotesLive = Layer.effect(
                 actorUserId: createdByUserId,
                 resourceType: 'quote',
                 resourceId: quoteId,
-                metadata: { clientId: request.clientId, version: '1' },
+                metadata: { clientId: request.clientId, reference, version: '1' },
                 occurredAt: now,
               });
               const detail = readDetail(quoteId);
@@ -472,6 +485,7 @@ export const QuotesLive = Layer.effect(
               }
               insertRevision(
                 quoteId,
+                quote.reference,
                 nextVersion,
                 client.displayName,
                 client,

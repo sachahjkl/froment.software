@@ -15,7 +15,9 @@ describe('OrdersApi', () => {
     http.expectOne('/api/orders').flush([
       {
         id: '01ARZ3NDEKTSV4RRFFQ69G5FAY',
+        reference: 'CO-2026-000001',
         quoteId: '01ARZ3NDEKTSV4RRFFQ69G5FAZ',
+        quoteReference: 'DE-2026-000001',
         revisionId: '01ARZ3NDEKTSV4RRFFQ69G5FAV',
         clientId: '01ARZ3NDEKTSV4RRFFQ69G5FAW',
         clientDisplayName: 'Acme',

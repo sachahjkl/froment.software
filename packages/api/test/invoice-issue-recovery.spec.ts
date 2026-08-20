@@ -48,9 +48,11 @@ const issuer: IssuerSettingsValue = {
 };
 const snapshot = Schema.decodeUnknownSync(InvoiceRenderSnapshot)({
   templateId: 'invoice-default',
-  templateVersion: 1,
+  templateVersion: 2,
   invoiceId,
   orderId,
+  orderReference: 'CO-2026-000001',
+  quoteReference: 'DE-2026-000001',
   revisionId,
   version: 1,
   createdAt: '2026-08-20T10:00:00.000Z',
@@ -151,8 +153,8 @@ const seedInvoice = (database: DatabaseService, dueDate = '2099-09-19') => {
     .run(clientId);
   database.sqlite
     .prepare(
-      `insert into quotes (id, client_id, status, version, created_at, updated_at)
-       values (?, ?, 'accepted', 1, 1, 1)`,
+      `insert into quotes (id, reference, client_id, status, version, created_at, updated_at)
+       values (?, 'DE-2026-000001', ?, 'accepted', 1, 1, 1)`,
     )
     .run(quoteId, clientId);
   database.sqlite
@@ -199,8 +201,8 @@ const seedInvoice = (database: DatabaseService, dueDate = '2099-09-19') => {
   database.sqlite
     .prepare(
       `insert into orders
-       (id, quote_id, revision_id, client_id, signature_id, status, created_at)
-       values (?, ?, ?, ?, ?, 'confirmed', 1)`,
+       (id, reference, quote_id, revision_id, client_id, signature_id, status, created_at)
+        values (?, 'CO-2026-000001', ?, ?, ?, ?, 'confirmed', 1)`,
     )
     .run(orderId, quoteId, quoteRevisionId, clientId, signatureId);
   database.sqlite
@@ -219,7 +221,7 @@ const seedInvoice = (database: DatabaseService, dueDate = '2099-09-19') => {
         render_snapshot)
         values (?, ?, 1, null, null, 'Client', 'Invoice', '2026-08-20', ?,
                 'Payment due within 30 days.', 'EUR', 10000, 2000, 12000, 1, ?,
-                'invoice-default', 1, ?)`,
+                 'invoice-default', 2, ?)`,
     )
     .run(revisionId, invoiceId, dueDate, actorId, JSON.stringify({ ...snapshot, dueDate }));
   database.sqlite
@@ -359,7 +361,9 @@ describe('invoice issue recovery', () => {
             .pluck()
             .get(invoiceId),
           nextNumber: database.sqlite
-            .prepare('select next_value from invoice_number_counter where id = 1')
+            .prepare(
+              "select next_value from business_reference_counters where kind = 'invoice' and year = 2026",
+            )
             .pluck()
             .get(),
         };
@@ -373,7 +377,11 @@ describe('invoice issue recovery', () => {
     });
     expect(state.secondIssue).toEqual(state.firstIssue);
     expect(state.finalVersionRetry).toEqual(state.firstIssue);
-    expect(state.invoice).toEqual({ status: 'issued', version: 2, invoiceNumber: 'F-000001' });
+    expect(state.invoice).toEqual({
+      status: 'issued',
+      version: 2,
+      invoiceNumber: 'FA-2026-000001',
+    });
     expect(state.revisionCount).toBe(2);
     expect(state.nextNumber).toBe(2);
     expect(state.artifact).toMatchObject({ invoiceRevisionId: state.firstIssue.revisionId });
@@ -405,7 +413,7 @@ describe('invoice issue recovery', () => {
       }).pipe(Effect.provide(testLayer), Effect.scoped),
     );
 
-    expect(result.issued).toMatchObject({ status: 'issued', invoiceNumber: 'F-000001' });
+    expect(result.issued).toMatchObject({ status: 'issued', invoiceNumber: 'FA-2026-000001' });
     expect(result.job).toEqual({
       status: 'failed',
       attempts: 1,

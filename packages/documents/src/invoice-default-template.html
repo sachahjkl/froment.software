@@ -1,112 +1,127 @@
-<main>
-  <header class="document-header">
-    <section class="brand" aria-label="Émetteur">
-      <p class="eyebrow">Émetteur</p>
-      <h1>{{ invoice.issuer.displayName }}</h1>
-      <address>
-        @if (invoice.issuer.addressLine1) { <span>{{ invoice.issuer.addressLine1 }}</span> } @if
-        (invoice.issuer.addressLine2) { <span>{{ invoice.issuer.addressLine2 }}</span> } @if
-        (invoice.issuer.postalCode || invoice.issuer.city) {
-        <span>{{ invoice.issuer.postalCode }} {{ invoice.issuer.city }}</span>
-        } @if (invoice.issuer.country) { <span>{{ invoice.issuer.country }}</span> } @if
-        (invoice.issuer.email) { <span>{{ invoice.issuer.email }}</span> } @if
-        (invoice.issuer.phone) { <span>{{ invoice.issuer.phone }}</span> }
-      </address>
+<main class="invoice">
+  <header class="header">
+    <section class="company" aria-label="Émetteur">
+      <strong>{{ invoice.issuer.displayName }}</strong>
+      @if (invoice.issuer.addressLine1) { <span>{{ invoice.issuer.addressLine1 }}</span> } @if
+      (invoice.issuer.addressLine2) { <span>{{ invoice.issuer.addressLine2 }}</span> } @if
+      (invoice.issuer.postalCode || invoice.issuer.city) {
+      <span>{{ invoice.issuer.postalCode }} {{ invoice.issuer.city }}</span>
+      } @if (invoice.issuer.country) { <span>{{ invoice.issuer.country }}</span> } @if
+      (invoice.issuer.email) { <span>{{ invoice.issuer.email }}</span> } @if (invoice.issuer.phone)
+      { <span>{{ invoice.issuer.phone }}</span> }
+
+      <span class="company-spacer" aria-hidden="true"></span>
+
+      @if (invoice.issuer.registrationNumber) {
+      <span>SIRET : {{ invoice.issuer.registrationNumber }}</span>
+      } @if (invoice.issuer.vatNumber) {
+      <span>TVA intracom. : {{ invoice.issuer.vatNumber }}</span>
+      }
     </section>
-    <section class="quote-meta">
-      <p class="eyebrow">Facture</p>
-      <dl>
-        <div>
-          <dt>Numéro</dt>
-          <dd>{{ invoice.invoiceNumber || 'Brouillon' }}</dd>
-        </div>
-        <div>
-          <dt>Révision</dt>
-          <dd>{{ invoice.version }}</dd>
-        </div>
-        @if (invoice.issuedAt) {
-        <div>
-          <dt>Date d’émission</dt>
-          <dd>{{ date(invoice.issuedAt) }}</dd>
-        </div>
-        }
-        <div>
-          <dt>Échéance</dt>
-          <dd>{{ date(invoice.dueDate) }}</dd>
-        </div>
-      </dl>
+
+    <section class="invoice-meta" aria-label="Informations de la facture">
+      <div class="meta-row">
+        <span>Facture n° :</span>
+        <strong>{{ invoice.invoiceNumber || 'Brouillon' }}</strong>
+      </div>
+      @if (invoice.issuedAt) {
+      <div class="meta-row">
+        <span>Date d’émission :</span>
+        <span>{{ date(invoice.issuedAt) }}</span>
+      </div>
+      }
+      <div class="meta-row">
+        <span>Date d’échéance :</span>
+        <span>{{ date(invoice.dueDate) }}</span>
+      </div>
+      <div class="meta-row">
+        <span>Devise :</span>
+        <span>{{ invoice.currency }}</span>
+      </div>
     </section>
   </header>
 
-  <section class="recipient" aria-label="Client">
-    <p class="eyebrow">Destinataire</p>
-    <h2>{{ invoice.client.displayName }}</h2>
-    <address>
-      @if (invoice.client.addressLine1) { <span>{{ invoice.client.addressLine1 }}</span> } @if
-      (invoice.client.addressLine2) { <span>{{ invoice.client.addressLine2 }}</span> } @if
-      (invoice.client.postalCode || invoice.client.city) {
-      <span>{{ invoice.client.postalCode }} {{ invoice.client.city }}</span>
-      } @if (invoice.client.country) { <span>{{ invoice.client.country }}</span> } @if
-      (invoice.client.email) { <span>{{ invoice.client.email }}</span> }
-    </address>
+  <section class="customer" aria-label="Client">
+    <strong>Facturé à :</strong>
+    <span>{{ invoice.client.displayName }}</span>
+    @if (invoice.client.addressLine1) { <span>{{ invoice.client.addressLine1 }}</span> } @if
+    (invoice.client.addressLine2) { <span>{{ invoice.client.addressLine2 }}</span> } @if
+    (invoice.client.postalCode || invoice.client.city) {
+    <span>{{ invoice.client.postalCode }} {{ invoice.client.city }}</span>
+    } @if (invoice.client.country) { <span>{{ invoice.client.country }}</span> } @if
+    (invoice.client.email) { <span>{{ invoice.client.email }}</span> }
   </section>
 
-  <section class="subject">
-    <p class="eyebrow">Objet</p>
-    <h2>{{ invoice.title }}</h2>
-    <p>Prestation réalisée le {{ date(invoice.serviceDate) }}</p>
+  <section class="order-info" aria-label="Commande">
+    @if (invoice.templateVersion === 2) {
+    <span>Commande n° : {{ invoice.orderReference }}</span>
+    <span>Devis n° : {{ invoice.quoteReference }}</span>
+    }
+    <span>Date de prestation : {{ date(invoice.serviceDate) }}</span>
   </section>
 
-  <table>
+  <h1>{{ invoice.title }}</h1>
+
+  <table class="items">
     <thead>
       <tr>
-        <th>Prestation</th>
-        <th class="number">Quantité</th>
-        <th class="number">Prix unitaire HT</th>
-        <th class="number">TVA</th>
-        <th class="number">Total TTC</th>
+        <th class="position">#</th>
+        <th class="description">Désignation</th>
+        <th class="unit-price">PU HT</th>
+        <th class="quantity">Qté</th>
+        <th class="vat">TVA</th>
+        <th class="amount">Total HT</th>
       </tr>
     </thead>
     <tbody>
-      @for (line of invoice.lines; track line.id) {
+      @for (line of invoice.lines; track line.id; let position = $index) {
       <tr>
-        <td>{{ line.description }}</td>
-        <td class="number">{{ quantity(line.quantityMilli) }}</td>
-        <td class="number">{{ money(line.unitPriceCents) }}</td>
-        <td class="number">{{ percent(line.vatRateBasisPoints) }} %</td>
-        <td class="number strong">{{ money(line.totalCents) }}</td>
+        <td class="position">{{ position + 1 }}</td>
+        <td class="description">{{ line.description }}</td>
+        <td class="unit-price">{{ money(line.unitPriceCents) }}</td>
+        <td class="quantity">{{ quantity(line.quantityMilli) }}</td>
+        <td class="vat">{{ percent(line.vatRateBasisPoints) }} %</td>
+        <td class="amount">{{ money(line.netTotalCents) }}</td>
       </tr>
       }
     </tbody>
   </table>
 
-  <section class="totals" aria-label="Totaux">
-    <dl>
-      <div>
-        <dt>Total HT</dt>
-        <dd>{{ money(invoice.netTotalCents) }}</dd>
-      </div>
-      <div>
-        <dt>TVA</dt>
-        <dd>{{ money(invoice.vatTotalCents) }}</dd>
-      </div>
-      <div class="grand-total">
-        <dt>Total TTC</dt>
-        <dd>{{ money(invoice.totalCents) }}</dd>
-      </div>
-    </dl>
-  </section>
+  <table class="totals" aria-label="Totaux">
+    <tbody>
+      <tr>
+        <td class="label">Total HT</td>
+        <td class="value">{{ money(invoice.netTotalCents) }}</td>
+      </tr>
+      <tr>
+        <td class="label">TVA</td>
+        <td class="value">{{ money(invoice.vatTotalCents) }}</td>
+      </tr>
+      <tr class="grand-total">
+        <td class="label">Total TTC</td>
+        <td class="value">{{ money(invoice.totalCents) }}</td>
+      </tr>
+    </tbody>
+  </table>
 
   @if (invoice.paymentTerms) {
-  <section class="conditions">
-    <p class="eyebrow">Conditions de paiement</p>
-    <p>{{ invoice.paymentTerms }}</p>
+  <section class="payment-info">
+    <strong>Conditions de règlement :</strong>
+    <span>{{ invoice.paymentTerms }}</span>
   </section>
   }
 
+  <section class="legal">
+    <span>
+      En cas de retard de paiement, des pénalités sont exigibles au taux prévu par l’article L441-10
+      du Code de commerce.
+    </span>
+    <span>Indemnité forfaitaire pour frais de recouvrement : 40 €.</span>
+  </section>
+
   <footer>
-    @if (invoice.issuer.registrationNumber) {
-    <span>SIRET : {{ invoice.issuer.registrationNumber }}</span> } @if (invoice.issuer.vatNumber) {
-    <span>TVA : {{ invoice.issuer.vatNumber }}</span> }
+    <span>***</span>
+    <span>Merci pour votre confiance.</span>
+    <strong>{{ invoice.issuer.displayName }}</strong>
   </footer>
 </main>

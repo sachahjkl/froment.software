@@ -1,11 +1,12 @@
 import { createHash } from 'node:crypto';
 import { join } from 'node:path';
 
-import { Effect, Layer } from 'effect';
+import { DateTime, Effect, Layer } from 'effect';
 import { TestClock } from 'effect/testing';
 import { describe, expect, it } from 'vitest';
 
 import { AuditLive } from '../src/audit/audit.js';
+import { BusinessConfig } from '../src/business/business-config.js';
 import { AuthenticationConfig, hmac } from '../src/authentication/authentication-config.js';
 import { Clients, ClientsLive } from '../src/clients/clients.js';
 import { Database } from '../src/database/database.js';
@@ -44,6 +45,10 @@ const configLayer = Layer.succeed(
     publicOrigin: 'https://example.test',
   }),
 );
+const businessConfigLayer = Layer.succeed(
+  BusinessConfig,
+  BusinessConfig.of({ timeZone: DateTime.zoneMakeNamedUnsafe('Europe/Paris') }),
+);
 
 const databaseLayer = () =>
   makeMigratedDatabaseLayer({
@@ -56,6 +61,7 @@ const lifecycleLayer = () => {
   return Layer.mergeAll(quoteCore, QuoteLinksLive, ClientsLive).pipe(
     Layer.provide(AuditLive),
     Layer.provide(configLayer),
+    Layer.provide(businessConfigLayer),
     Layer.provideMerge(databaseLayer()),
   );
 };
@@ -128,8 +134,8 @@ const seedSentQuote = Effect.fn('seedSentQuote')(function* () {
       .run(clientId, createdAt, createdAt);
     database.sqlite
       .prepare(
-        `insert into quotes (id, client_id, status, version, created_at, updated_at)
-         values (?, ?, 'sent', 1, ?, ?)`,
+        `insert into quotes (id, reference, client_id, status, version, created_at, updated_at)
+         values (?, 'DE-1970-000001', ?, 'sent', 1, ?, ?)`,
       )
       .run(quoteId, clientId, createdAt, createdAt);
     database.sqlite

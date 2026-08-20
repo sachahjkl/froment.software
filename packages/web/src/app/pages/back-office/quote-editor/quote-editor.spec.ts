@@ -13,6 +13,7 @@ const quoteId = '01ARZ3NDEKTSV4RRFFQ69G5FAY';
 const revisionId = '01ARZ3NDEKTSV4RRFFQ69G5FAZ';
 const quoteDetail = {
   id: quoteId,
+  reference: 'DE-2026-000001' as const,
   clientId: '01ARZ3NDEKTSV4RRFFQ69G5FAV',
   status: 'draft' as const,
   version: 2,
@@ -266,6 +267,7 @@ describe('QuoteEditor', () => {
     expect(send).toHaveBeenCalledWith(quoteId, { expectedVersion: 2 });
     expect(root.querySelector<HTMLAnchorElement>('.sent-link a')?.href).toContain('/quote#');
     expect(root.textContent).toMatch(/Envoyé|Sent/);
+    expect(root.textContent).toContain('DE-2026-000001');
     expect(root.querySelector<HTMLInputElement>('#quote-name')?.disabled).toBe(true);
     expect(root.querySelector('.send-quote')).toBeNull();
 

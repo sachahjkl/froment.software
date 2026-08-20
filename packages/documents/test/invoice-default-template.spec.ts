@@ -14,13 +14,15 @@ const party = {
 
 const snapshot: InvoiceRenderSnapshotValue = {
   templateId: 'invoice-default',
-  templateVersion: 1,
+  templateVersion: 2,
   invoiceId: '01ARZ3NDEKTSV4RRFFQ69G5FAV',
   orderId: '01ARZ3NDEKTSV4RRFFQ69G5FAW',
+  orderReference: 'CO-2026-000001',
+  quoteReference: 'DE-2026-000001',
   revisionId: '01ARZ3NDEKTSV4RRFFQ69G5FAX',
   version: 2,
   createdAt: '2026-08-20T20:00:00.000Z',
-  invoiceNumber: 'F-000001',
+  invoiceNumber: 'FA-2026-000001',
   issuedAt: '2026-08-20T20:00:00.000Z',
   serviceDate: '2026-08-20',
   dueDate: '2026-09-19',
@@ -48,25 +50,39 @@ const snapshot: InvoiceRenderSnapshotValue = {
 };
 
 describe('InvoiceDefaultTemplate', () => {
+  it('keeps the historical template for version 1 snapshots', async () => {
+    const html = await renderInvoiceDefaultTemplate({
+      ...snapshot,
+      templateVersion: 1,
+      invoiceNumber: 'F-000001',
+    });
+
+    expect(html).toContain('F-000001');
+    expect(html).toContain('class="document-header"');
+    expect(html).toContain('"Trebuchet MS", Arial, "Liberation Sans", sans-serif');
+    expect(html).not.toContain('font-family: Cousine');
+  });
+
   it('renders the immutable invoice number and escaped client name', async () => {
     const html = await renderInvoiceDefaultTemplate(snapshot);
 
     expect(html.toLowerCase()).toContain('<!doctype html>');
-    expect(html).toContain('F-000001');
+    expect(html).toContain('FA-2026-000001');
+    expect(html).toContain('CO-2026-000001');
     expect(html).toContain('120,00&nbsp;€');
     expect(html).toContain('&lt;script&gt;alert(1)&lt;/script&gt; Acme');
     expect(html).not.toContain('<script>alert(1)</script>');
-    expect(html).toContain('"Trebuchet MS", Arial, "Liberation Sans", sans-serif');
-    expect(html).not.toContain('Courier');
+    expect(html).toContain('font-family: Cousine, "Liberation Mono", monospace');
+    expect(html).not.toContain('@import');
+    expect(html).not.toContain('font-toolbar');
+    expect(html).not.toContain('fontPicker');
     expect(html).not.toContain('gradient');
     expect(html).not.toContain('dashed');
     expect(html).toMatch(/@page\s*{[^}]*size:\s*A4/);
-    expect(html).toMatch(/\.document-header[^{]*{[^}]*display:\s*grid/);
-    expect(html).toMatch(/\.quote-meta[^{]*{[^}]*border:\s*1px solid/);
-    expect(html).toMatch(/table[^{]*{[^}]*border:\s*1px solid/);
-    expect(html).toMatch(/th[^{]*,\s*td[^{]*{[^}]*border:\s*1px solid/);
-    expect(html).toMatch(/tbody[^{]*tr[^{]*:nth-child\(even\)[^{]*{[^}]*background:/);
-    expect(html).toMatch(/\.grand-total[^{]*{[^}]*border-top:\s*3px double/);
+    expect(html).toMatch(/\.header[^{]*{[^}]*display:\s*grid/);
+    expect(html).toMatch(/\.invoice-meta[^{]*{[^}]*border:\s*0\.25mm solid/);
+    expect(html).toMatch(/\.items[^{]*thead[^{]*{[^}]*border-bottom:\s*0\.25mm solid/);
+    expect(html).toMatch(/\.grand-total[^{]*{[^}]*border-top:\s*1mm double/);
   });
 
   it('renders and protects the supported content limits', async () => {
@@ -99,7 +115,7 @@ describe('InvoiceDefaultTemplate', () => {
     const html = await renderInvoiceDefaultTemplate(boundarySnapshot);
 
     expect(paymentTerms).toHaveLength(2_000);
-    expect(html.match(/<tr/g)).toHaveLength(21);
+    expect(html.match(/<td[^>]*class="position"/g)).toHaveLength(20);
     expect(html).toContain(`0-&lt;script&gt;alert('line')&lt;/script&gt;${'X'.repeat(300)}`);
     expect(html).toContain("Paiement &lt;script&gt;alert('terms')&lt;/script&gt; &amp;");
     expect(html).not.toContain("<script>alert('line')</script>");

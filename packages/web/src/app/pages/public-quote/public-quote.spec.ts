@@ -12,7 +12,8 @@ const quote = {
   expiresAt: '2026-09-19T06:00:00.000Z',
   snapshot: {
     templateId: 'quote-default' as const,
-    templateVersion: 1 as const,
+    templateVersion: 2 as const,
+    quoteReference: 'DE-2026-000001' as const,
     quoteId: '01ARZ3NDEKTSV4RRFFQ69G5FAV',
     revisionId: '01ARZ3NDEKTSV4RRFFQ69G5FAW',
     version: 1,
@@ -58,6 +59,8 @@ describe('PublicQuote', () => {
       revisionId: quote.snapshot.revisionId,
       signatureId: '01ARZ3NDEKTSV4RRFFQ69G5FAX',
       orderId: '01ARZ3NDEKTSV4RRFFQ69G5FAY',
+      quoteReference: 'DE-2026-000001',
+      orderReference: 'CO-2026-000001',
       status: 'accepted',
       acceptedAt: '2026-08-20T06:30:00.000Z',
       evidenceSha256: 'a'.repeat(64),
@@ -95,6 +98,8 @@ describe('PublicQuote', () => {
     expect(getPdf).toHaveBeenCalledWith(token);
     expect(globalThis.location.hash).toBe('');
     expect(root.textContent).toContain('Software audit');
+    expect(root.textContent).toContain('DE-2026-000001');
+    expect(root.querySelector('a[download]')?.getAttribute('download')).toBe('DE-2026-000001.pdf');
     expect(root.innerHTML).not.toContain(token);
     expect(root.querySelector('iframe')?.getAttribute('src')).toBe('blob:quote-pdf');
   });

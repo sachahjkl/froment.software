@@ -225,6 +225,7 @@ export const quotes = sqliteTable(
   'quotes',
   {
     id: text().notNull().primaryKey(),
+    reference: text().notNull(),
     clientId: text('client_id')
       .notNull()
       .references(() => clients.id, { onDelete: 'no action' }),
@@ -237,6 +238,11 @@ export const quotes = sqliteTable(
   },
   (table) => [
     index('quotes_client_id_index').on(table.clientId),
+    uniqueIndex('quotes_reference_unique').on(table.reference),
+    check(
+      'quotes_reference_check',
+      sql`${table.reference} glob 'DE-[0-9][0-9][0-9][0-9]-[0-9][0-9][0-9][0-9][0-9][0-9]'`,
+    ),
     check(
       'quotes_id_ulid_check',
       sql`${table.id} is not null and length(${table.id}) = 26 and ${table.id} not glob '*[^0-9A-HJKMNP-TV-Z]*' and substr(${table.id}, 1, 1) between '0' and '7'`,
@@ -294,7 +300,7 @@ export const quoteRevisions = sqliteTable(
     ),
     check(
       'quote_revisions_render_check',
-      sql`(${table.renderSnapshot} is null and ${table.templateId} is null and ${table.templateVersion} is null) or (${table.renderSnapshot} is not null and ${table.templateId} = 'quote-default' and ${table.templateVersion} = 1 and json_valid(${table.renderSnapshot}))`,
+      sql`(${table.renderSnapshot} is null and ${table.templateId} is null and ${table.templateVersion} is null) or (${table.renderSnapshot} is not null and ${table.templateId} = 'quote-default' and ${table.templateVersion} in (1, 2) and json_valid(${table.renderSnapshot}))`,
     ),
   ],
 );
@@ -541,6 +547,7 @@ export const orders = sqliteTable(
   'orders',
   {
     id: text().notNull().primaryKey(),
+    reference: text().notNull(),
     quoteId: text('quote_id')
       .notNull()
       .references(() => quotes.id, { onDelete: 'no action' }),
@@ -558,6 +565,11 @@ export const orders = sqliteTable(
   },
   (table) => [
     uniqueIndex('orders_quote_id_unique').on(table.quoteId),
+    uniqueIndex('orders_reference_unique').on(table.reference),
+    check(
+      'orders_reference_check',
+      sql`${table.reference} glob 'CO-[0-9][0-9][0-9][0-9]-[0-9][0-9][0-9][0-9][0-9][0-9]'`,
+    ),
     uniqueIndex('orders_revision_id_unique').on(table.revisionId),
     uniqueIndex('orders_signature_id_unique').on(table.signatureId),
     index('orders_client_id_index').on(table.clientId),
@@ -600,7 +612,7 @@ export const invoices = sqliteTable(
     check('invoices_version_check', sql`${table.version} >= 1`),
     check(
       'invoices_number_state_check',
-      sql`(${table.status} = 'draft' and ${table.invoiceNumber} is null and ${table.issuedAt} is null) or (${table.status} in ('issued', 'paid', 'void') and length(${table.invoiceNumber}) >= 8 and substr(${table.invoiceNumber}, 1, 2) = 'F-' and substr(${table.invoiceNumber}, 3) not glob '*[^0-9]*' and ${table.issuedAt} is not null)`,
+      sql`(${table.status} = 'draft' and ${table.invoiceNumber} is null and ${table.issuedAt} is null) or (${table.status} in ('issued', 'paid', 'void') and ((length(${table.invoiceNumber}) >= 8 and substr(${table.invoiceNumber}, 1, 2) = 'F-' and substr(${table.invoiceNumber}, 3) not glob '*[^0-9]*') or ${table.invoiceNumber} glob 'FA-[0-9][0-9][0-9][0-9]-[0-9][0-9][0-9][0-9][0-9][0-9]') and ${table.issuedAt} is not null)`,
     ),
     check(
       'invoices_terminal_state_check',
@@ -647,7 +659,7 @@ export const invoiceRevisions = sqliteTable(
     check('invoice_revisions_version_check', sql`${table.version} >= 1`),
     check(
       'invoice_revisions_number_check',
-      sql`(${table.invoiceNumber} is null and ${table.issuedAt} is null) or (length(${table.invoiceNumber}) >= 8 and substr(${table.invoiceNumber}, 1, 2) = 'F-' and substr(${table.invoiceNumber}, 3) not glob '*[^0-9]*' and ${table.issuedAt} is not null)`,
+      sql`(${table.invoiceNumber} is null and ${table.issuedAt} is null) or (((length(${table.invoiceNumber}) >= 8 and substr(${table.invoiceNumber}, 1, 2) = 'F-' and substr(${table.invoiceNumber}, 3) not glob '*[^0-9]*') or ${table.invoiceNumber} glob 'FA-[0-9][0-9][0-9][0-9]-[0-9][0-9][0-9][0-9][0-9][0-9]') and ${table.issuedAt} is not null)`,
     ),
     check(
       'invoice_revisions_client_display_name_check',
@@ -666,7 +678,7 @@ export const invoiceRevisions = sqliteTable(
     ),
     check(
       'invoice_revisions_render_check',
-      sql`${table.templateId} = 'invoice-default' and ${table.templateVersion} = 1 and json_valid(${table.renderSnapshot})`,
+      sql`${table.templateId} = 'invoice-default' and ${table.templateVersion} in (1, 2) and json_valid(${table.renderSnapshot})`,
     ),
   ],
 );
@@ -709,12 +721,24 @@ export const invoiceLines = sqliteTable(
   ],
 );
 
-export const invoiceNumberCounter = sqliteTable(
-  'invoice_number_counter',
-  { id: integer().notNull().primaryKey(), nextValue: integer('next_value').notNull() },
+export const businessReferenceCounters = sqliteTable(
+  'business_reference_counters',
+  {
+    kind: text({ enum: ['quote', 'order', 'invoice'] }).notNull(),
+    year: integer().notNull(),
+    nextValue: integer('next_value').notNull(),
+  },
   (table) => [
-    check('invoice_number_counter_id_check', sql`${table.id} = 1`),
-    check('invoice_number_counter_next_value_check', sql`${table.nextValue} >= 1`),
+    primaryKey({ columns: [table.kind, table.year] }),
+    check(
+      'business_reference_counters_kind_check',
+      sql`${table.kind} in ('quote', 'order', 'invoice')`,
+    ),
+    check('business_reference_counters_year_check', sql`${table.year} between 1 and 9999`),
+    check(
+      'business_reference_counters_next_value_check',
+      sql`${table.nextValue} between 1 and 1000000`,
+    ),
   ],
 );
 
@@ -756,7 +780,7 @@ export const invoicePdfJobs = sqliteTable(
     ),
     check(
       'invoice_pdf_jobs_number_check',
-      sql`length(${table.invoiceNumber}) >= 8 and substr(${table.invoiceNumber}, 1, 2) = 'F-' and substr(${table.invoiceNumber}, 3) not glob '*[^0-9]*'`,
+      sql`(length(${table.invoiceNumber}) >= 8 and substr(${table.invoiceNumber}, 1, 2) = 'F-' and substr(${table.invoiceNumber}, 3) not glob '*[^0-9]*') or ${table.invoiceNumber} glob 'FA-[0-9][0-9][0-9][0-9]-[0-9][0-9][0-9][0-9][0-9][0-9]'`,
     ),
     check('invoice_pdf_jobs_version_check', sql`${table.version} >= 1`),
     check(

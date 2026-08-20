@@ -24,12 +24,15 @@ import { ulid } from 'ulid';
 import { Audit } from '../audit/audit.js';
 import { AuthenticationConfig, hmac } from '../authentication/authentication-config.js';
 import { Database, DatabaseError } from '../database/database.js';
+import { BusinessConfig } from '../business/business-config.js';
+import { allocateBusinessReference, businessYear } from '../business/business-references.js';
 import { verifyArtifactContent } from '../documents/artifact-integrity.js';
 import { expireSentQuotes } from './quote-expiration.js';
 
 const linkLifetimeMillis = 30 * 24 * 60 * 60 * 1_000;
 
 const QuoteSendRecord = Schema.Struct({
+  reference: Schema.String,
   status: Schema.Literals(['draft', 'sent', 'accepted', 'rejected', 'expired']),
   version: Schema.Int,
   revisionId: Ulid,
@@ -38,6 +41,7 @@ const QuoteSendRecord = Schema.Struct({
 
 const PublicQuoteRecord = Schema.Struct({
   quoteId: Ulid,
+  quoteReference: Schema.String,
   status: Schema.Literals(['sent', 'accepted']),
   version: Schema.Int,
   expiresAt: Schema.Int,
@@ -51,6 +55,7 @@ const AcceptanceRecord = Schema.Struct({
   linkId: Ulid,
   revisionId: Ulid,
   quoteId: Ulid,
+  quoteReference: Schema.String,
   clientId: Ulid,
   status: Schema.Literals(['draft', 'sent', 'accepted', 'rejected', 'expired']),
   currentVersion: Schema.Int,
@@ -66,6 +71,7 @@ const AcceptanceRecord = Schema.Struct({
 
 export interface PublicQuotePdf {
   readonly quoteId: UlidValue;
+  readonly reference: string;
   readonly version: number;
   readonly content: Uint8Array;
 }
@@ -113,6 +119,7 @@ export const QuoteLinksLive = Layer.effect(
     const audit = yield* Audit;
     const config = yield* AuthenticationConfig;
     const database = yield* Database;
+    const businessConfig = yield* BusinessConfig;
 
     const send = Effect.fn('QuoteLinks.send')(function* (
       quoteId: UlidValue,
@@ -131,7 +138,8 @@ export const QuoteLinksLive = Layer.effect(
               expireSentQuotes(database.sqlite, audit, now, quoteId);
               const raw = database.sqlite
                 .prepare(
-                  `select quotes.status, quotes.version, quote_revisions.id as revisionId,
+                  `select quotes.reference, quotes.status, quotes.version,
+                          quote_revisions.id as revisionId,
                           document_artifacts.id as artifactId
                    from quotes
                    join quote_revisions
@@ -187,6 +195,7 @@ export const QuoteLinksLive = Layer.effect(
                 resourceId: quoteId,
                 metadata: {
                   artifactId: quote.artifactId,
+                  reference: quote.reference,
                   linkId,
                   revisionId: quote.revisionId,
                   version: String(quote.version),
@@ -224,7 +233,8 @@ export const QuoteLinksLive = Layer.effect(
     const findPublicQuote = (token: QuoteLinkTokenValue, now: number) => {
       const raw = database.sqlite
         .prepare(
-          `select quotes.id as quoteId, quotes.status, quote_revisions.version,
+          `select quotes.id as quoteId, quotes.reference as quoteReference,
+                   quotes.status, quote_revisions.version,
                   quote_links.expires_at as expiresAt, quote_links.consumed_at as consumedAt,
                   quote_revisions.render_snapshot as renderSnapshot,
                   document_artifacts.content, document_artifacts.sha256 as pdfSha256
@@ -280,7 +290,12 @@ export const QuoteLinksLive = Layer.effect(
               expireSentQuotes(database.sqlite, audit, now);
               const quote = findPublicQuote(token, now);
               verifyArtifactContent({ content: quote.content, sha256: quote.pdfSha256 });
-              return { quoteId: quote.quoteId, version: quote.version, content: quote.content };
+              return {
+                quoteId: quote.quoteId,
+                reference: quote.quoteReference,
+                version: quote.version,
+                content: quote.content,
+              };
             })
             .immediate(),
         catch: (cause) =>
@@ -306,7 +321,8 @@ export const QuoteLinksLive = Layer.effect(
                           quote_links.created_at as createdAt, quote_links.expires_at as expiresAt,
                           quote_links.revoked_at as revokedAt,
                           quote_links.consumed_at as consumedAt,
-                          quotes.id as quoteId, quotes.client_id as clientId, quotes.status,
+                           quotes.id as quoteId, quotes.reference as quoteReference,
+                           quotes.client_id as clientId, quotes.status,
                           quotes.version as currentVersion, quote_revisions.version as revisionVersion,
                           quote_revisions.render_snapshot as renderSnapshot,
                           document_artifacts.content, document_artifacts.sha256 as pdfSha256
@@ -346,6 +362,11 @@ export const QuoteLinksLive = Layer.effect(
 
               const signatureId = ulid(now);
               const orderId = ulid(now + 1);
+              const orderReference = allocateBusinessReference(
+                database.sqlite,
+                'order',
+                businessYear(now, businessConfig.timeZone),
+              );
               const auditEventId = audit.insert({
                 action: 'quote.accepted',
                 actorUserId: null,
@@ -354,6 +375,8 @@ export const QuoteLinksLive = Layer.effect(
                 metadata: {
                   linkId: quote.linkId,
                   orderId,
+                  orderReference,
+                  quoteReference: quote.quoteReference,
                   revisionId: quote.revisionId,
                   signatureId,
                 },
@@ -368,6 +391,8 @@ export const QuoteLinksLive = Layer.effect(
                   linkId: quote.linkId,
                   signatureId,
                   orderId,
+                  orderReference,
+                  quoteReference: quote.quoteReference,
                   auditEventId,
                   snapshot,
                   snapshotSha256,
@@ -427,16 +452,26 @@ export const QuoteLinksLive = Layer.effect(
               database.sqlite
                 .prepare(
                   `insert into orders
-                   (id, quote_id, revision_id, client_id, signature_id, status, created_at)
-                   values (?, ?, ?, ?, ?, 'confirmed', ?)`,
+                   (id, reference, quote_id, revision_id, client_id, signature_id, status, created_at)
+                    values (?, ?, ?, ?, ?, ?, 'confirmed', ?)`,
                 )
-                .run(orderId, quote.quoteId, quote.revisionId, quote.clientId, signatureId, now);
+                .run(
+                  orderId,
+                  orderReference,
+                  quote.quoteId,
+                  quote.revisionId,
+                  quote.clientId,
+                  signatureId,
+                  now,
+                );
 
               return QuoteAcceptanceResult.make({
                 quoteId: quote.quoteId,
                 revisionId: quote.revisionId,
                 signatureId,
                 orderId,
+                orderReference,
+                quoteReference: quote.quoteReference,
                 status: 'accepted',
                 acceptedAt,
                 evidenceSha256,

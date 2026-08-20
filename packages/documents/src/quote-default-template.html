@@ -18,7 +18,7 @@
       <dl>
         <div>
           <dt>Numéro</dt>
-          <dd>{{ quote.quoteId }}</dd>
+          <dd>{{ quote.templateVersion === 2 ? quote.quoteReference : quote.quoteId }}</dd>
         </div>
         <div>
           <dt>Révision</dt>

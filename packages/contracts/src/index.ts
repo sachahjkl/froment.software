@@ -1,5 +1,13 @@
 export { HealthStatus, type HealthStatus as HealthStatusValue } from './status.js';
 export {
+  InvoiceNumber,
+  type InvoiceNumber as InvoiceNumberValue,
+  OrderReference,
+  type OrderReference as OrderReferenceValue,
+  QuoteReference,
+  type QuoteReference as QuoteReferenceValue,
+} from './business-references.js';
+export {
   DeploymentMetadata,
   type DeploymentMetadata as DeploymentMetadataValue,
   GitCommit,
@@ -196,8 +204,6 @@ export {
   type InvoiceList as InvoiceListValue,
   InvoiceNotEditable,
   InvoiceNotFound,
-  InvoiceNumber,
-  type InvoiceNumber as InvoiceNumberValue,
   InvoicePdfState,
   type InvoicePdfState as InvoicePdfStateValue,
   InvoicePdfStatus,

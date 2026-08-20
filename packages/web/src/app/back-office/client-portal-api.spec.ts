@@ -18,6 +18,7 @@ describe('ClientPortalApi', () => {
     http.expectOne('/api/client/quotes').flush([
       {
         id,
+        reference: 'DE-2026-000001',
         status: 'sent',
         title: 'Quote',
         currency: 'EUR',

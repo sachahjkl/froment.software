@@ -16,6 +16,7 @@ describe('InvoicesApi', () => {
       {
         id: '01ARZ3NDEKTSV4RRFFQ69G5FAY',
         orderId: '01ARZ3NDEKTSV4RRFFQ69G5FAZ',
+        orderReference: 'CO-2026-000001',
         clientId: '01ARZ3NDEKTSV4RRFFQ69G5FAV',
         clientDisplayName: 'Acme',
         status: 'draft',
@@ -76,7 +77,7 @@ describe('InvoicesApi', () => {
       revisionId: '01ARZ3NDEKTSV4RRFFQ69G5FAZ',
       version: 3,
       status: 'issued',
-      invoiceNumber: 'F-000001',
+      invoiceNumber: 'FA-2026-000001',
       issuedAt: '2026-08-20T06:00:00.000Z',
     });
     await expect(result).resolves.toMatchObject({ success: true, result: { version: 3 } });

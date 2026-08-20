@@ -8,7 +8,7 @@ import { type QuoteRenderSnapshotValue } from '@froment/contracts';
 import { formatMoney } from './format-money.js';
 
 export const QUOTE_DEFAULT_TEMPLATE_ID = 'quote-default';
-export const QUOTE_DEFAULT_TEMPLATE_VERSION = 1;
+export const QUOTE_DEFAULT_TEMPLATE_VERSION = 2;
 
 const QUOTE_SNAPSHOT = new InjectionToken<QuoteRenderSnapshotValue>('QUOTE_SNAPSHOT');
 

@@ -5,7 +5,9 @@ import { Database, DatabaseError } from '../database/database.js';
 
 const OrderSummaryRecord = Schema.Struct({
   id: Ulid,
+  reference: Schema.String,
   quoteId: Ulid,
+  quoteReference: Schema.String,
   revisionId: Ulid,
   clientId: Ulid,
   clientDisplayName: Schema.NonEmptyString,
@@ -32,7 +34,8 @@ export const OrdersLive = Layer.effect(
         Schema.decodeUnknownSync(Schema.Array(OrderSummaryRecord))(
           database.sqlite
             .prepare(
-              `select orders.id, orders.quote_id as quoteId, orders.revision_id as revisionId,
+              `select orders.id, orders.reference, orders.quote_id as quoteId,
+                       quotes.reference as quoteReference, orders.revision_id as revisionId,
                       clients.id as clientId,
                       quote_revisions.client_display_name as clientDisplayName,
                       quote_revisions.title, quote_revisions.currency,

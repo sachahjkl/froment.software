@@ -11,6 +11,7 @@ describe('client portal contracts', () => {
       Schema.decodeUnknownSync(ClientQuoteList)([
         {
           id,
+          reference: 'DE-2026-000001',
           status: 'sent',
           title: 'Audit',
           currency: 'EUR',
@@ -24,7 +25,9 @@ describe('client portal contracts', () => {
       Schema.decodeUnknownSync(ClientOrderList)([
         {
           id,
+          reference: 'CO-2026-000001',
           quoteId: '01ARZ3NDEKTSV4RRFFQ69G5FAW',
+          quoteReference: 'DE-2026-000001',
           status: 'confirmed',
           title: 'Audit',
           currency: 'EUR',
@@ -39,8 +42,9 @@ describe('client portal contracts', () => {
         {
           id,
           orderId: '01ARZ3NDEKTSV4RRFFQ69G5FAX',
+          orderReference: 'CO-2026-000001',
           status: 'issued',
-          invoiceNumber: 'F-000001',
+          invoiceNumber: 'FA-2026-000001',
           title: 'Audit',
           dueDate: '2026-09-20',
           currency: 'EUR',
@@ -56,6 +60,7 @@ describe('client portal contracts', () => {
     const [quote] = Schema.decodeUnknownSync(ClientQuoteList)([
       {
         id,
+        reference: 'DE-2026-000001',
         clientId: '01ARZ3NDEKTSV4RRFFQ69G5FAW',
         revisionId: '01ARZ3NDEKTSV4RRFFQ69G5FAX',
         status: 'sent',
@@ -75,8 +80,9 @@ describe('client portal contracts', () => {
     const invoice = {
       id,
       orderId: '01ARZ3NDEKTSV4RRFFQ69G5FAX',
+      orderReference: 'CO-2026-000001',
       status: 'issued',
-      invoiceNumber: 'F-000001',
+      invoiceNumber: 'FA-2026-000001',
       title: 'Audit',
       dueDate: '2026-02-31',
       currency: 'EUR',

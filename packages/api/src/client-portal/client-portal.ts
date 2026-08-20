@@ -16,6 +16,7 @@ import { verifyArtifactContent } from '../documents/artifact-integrity.js';
 
 const ClientQuoteRecord = Schema.Struct({
   id: Ulid,
+  reference: Schema.String,
   status: Schema.Literals(['sent', 'accepted', 'rejected', 'expired']),
   title: Schema.String,
   currency: Schema.Literal('EUR'),
@@ -25,7 +26,9 @@ const ClientQuoteRecord = Schema.Struct({
 });
 const ClientOrderRecord = Schema.Struct({
   id: Ulid,
+  reference: Schema.String,
   quoteId: Ulid,
+  quoteReference: Schema.String,
   status: Schema.Literal('confirmed'),
   title: Schema.String,
   currency: Schema.Literal('EUR'),
@@ -36,6 +39,7 @@ const ClientOrderRecord = Schema.Struct({
 const ClientInvoiceRecord = Schema.Struct({
   id: Ulid,
   orderId: Ulid,
+  orderReference: Schema.String,
   status: Schema.Literals(['issued', 'paid', 'void']),
   invoiceNumber: Schema.String,
   title: Schema.String,
@@ -48,11 +52,13 @@ const ClientInvoiceRecord = Schema.Struct({
 const PdfRecord = Schema.Struct({
   content: Schema.Uint8Array,
   sha256: Schema.String,
+  reference: Schema.String,
   version: Schema.Int,
 });
 
 export interface ClientPdf {
   readonly content: Uint8Array;
+  readonly reference: string;
   readonly version: number;
 }
 
@@ -86,7 +92,7 @@ export const ClientPortalLive = Layer.effect(
             Schema.decodeUnknownSync(Schema.Array(ClientQuoteRecord))(
               database.sqlite
                 .prepare(
-                  `select quotes.id, quotes.status, quote_revisions.title,
+                  `select quotes.id, quotes.reference, quotes.status, quote_revisions.title,
                         quote_revisions.currency, quote_revisions.total_cents as totalCents,
                         quotes.updated_at as updatedAt,
                         document_artifacts.id is not null as pdfAvailable
@@ -126,7 +132,8 @@ export const ClientPortalLive = Layer.effect(
             Schema.decodeUnknownSync(Schema.Array(ClientOrderRecord))(
               database.sqlite
                 .prepare(
-                  `select orders.id, orders.quote_id as quoteId, orders.status,
+                  `select orders.id, orders.reference, orders.quote_id as quoteId,
+                         quotes.reference as quoteReference, orders.status,
                         quote_revisions.title, quote_revisions.currency,
                         quote_revisions.total_cents as totalCents,
                         orders.created_at as createdAt, invoices.id as invoiceId
@@ -162,7 +169,8 @@ export const ClientPortalLive = Layer.effect(
             Schema.decodeUnknownSync(Schema.Array(ClientInvoiceRecord))(
               database.sqlite
                 .prepare(
-                  `select invoices.id, invoices.order_id as orderId, invoices.status,
+                  `select invoices.id, invoices.order_id as orderId,
+                         orders.reference as orderReference, invoices.status,
                         invoices.invoice_number as invoiceNumber, invoice_revisions.title,
                         invoice_revisions.due_date as dueDate, invoice_revisions.currency,
                         invoice_revisions.total_cents as totalCents,
@@ -204,6 +212,7 @@ export const ClientPortalLive = Layer.effect(
           const row = database.sqlite
             .prepare(
               `select document_artifacts.content, document_artifacts.sha256,
+                        quotes.reference,
                        quote_revisions.version
                from quotes
                left join orders
@@ -243,6 +252,7 @@ export const ClientPortalLive = Layer.effect(
           const row = database.sqlite
             .prepare(
               `select document_artifacts.content, document_artifacts.sha256,
+                        invoices.invoice_number as reference,
                        invoice_revisions.version
                from invoices
                join orders
