@@ -1,4 +1,4 @@
-import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import {
   QuoteDetail,
@@ -14,12 +14,12 @@ import {
   type UlidValue,
 } from '@froment/contracts';
 import { Schema } from 'effect';
-import { firstValueFrom, type Observable } from 'rxjs';
+import { firstValueFrom } from 'rxjs';
+
+import { requestOutcome, type ApiOutcome } from '../shared/api-outcome';
 
 export type QuoteErrorCode = QuoteFailureValue['code'] | 'quote.error';
-export type QuoteOutcome<T> =
-  | { readonly success: true; readonly result: T }
-  | { readonly success: false; readonly code: QuoteErrorCode };
+export type QuoteOutcome<T> = ApiOutcome<T, QuoteFailureValue, 'quote.error'>;
 
 @Injectable({ providedIn: 'root' })
 export class BackOfficeQuotesApi {
@@ -32,66 +32,44 @@ export class BackOfficeQuotesApi {
   }
 
   async get(quoteId: UlidValue): Promise<QuoteOutcome<QuoteDetailValue>> {
-    return this.request(this.http.get<unknown>(`/api/quotes/${quoteId}`));
+    return requestOutcome(
+      this.http.get<unknown>(`/api/quotes/${quoteId}`),
+      QuoteDetail,
+      QuoteFailure,
+      'quote.error',
+    );
   }
 
   async create(request: QuoteCreateRequestValue): Promise<QuoteOutcome<QuoteDetailValue>> {
-    return this.request(this.http.post<unknown>('/api/quotes', request));
+    return requestOutcome(
+      this.http.post<unknown>('/api/quotes', request),
+      QuoteDetail,
+      QuoteFailure,
+      'quote.error',
+    );
   }
 
   async createRevision(
     quoteId: UlidValue,
     request: QuoteRevisionCreateRequestValue,
   ): Promise<QuoteOutcome<QuoteDetailValue>> {
-    return this.request(this.http.post<unknown>(`/api/quotes/${quoteId}/revisions`, request));
+    return requestOutcome(
+      this.http.post<unknown>(`/api/quotes/${quoteId}/revisions`, request),
+      QuoteDetail,
+      QuoteFailure,
+      'quote.error',
+    );
   }
 
   async renderPdf(
     quoteId: UlidValue,
     version: number,
   ): Promise<QuoteOutcome<DocumentArtifactValue>> {
-    try {
-      return {
-        success: true,
-        result: Schema.decodeUnknownSync(DocumentArtifact)(
-          await firstValueFrom(
-            this.http.post<unknown>(`/api/quotes/${quoteId}/revisions/${version}/pdf`, undefined),
-          ),
-        ),
-      };
-    } catch (error) {
-      if (error instanceof HttpErrorResponse) {
-        try {
-          return {
-            success: false,
-            code: Schema.decodeUnknownSync(QuoteFailure)(error.error).code,
-          };
-        } catch {
-          return { success: false, code: 'quote.error' };
-        }
-      }
-      return { success: false, code: 'quote.error' };
-    }
-  }
-
-  private async request(source: Observable<unknown>): Promise<QuoteOutcome<QuoteDetailValue>> {
-    try {
-      return {
-        success: true,
-        result: Schema.decodeUnknownSync(QuoteDetail)(await firstValueFrom(source)),
-      };
-    } catch (error) {
-      if (error instanceof HttpErrorResponse) {
-        try {
-          return {
-            success: false,
-            code: Schema.decodeUnknownSync(QuoteFailure)(error.error).code,
-          };
-        } catch {
-          return { success: false, code: 'quote.error' };
-        }
-      }
-      return { success: false, code: 'quote.error' };
-    }
+    return requestOutcome(
+      this.http.post<unknown>(`/api/quotes/${quoteId}/revisions/${version}/pdf`, undefined),
+      DocumentArtifact,
+      QuoteFailure,
+      'quote.error',
+    );
   }
 }

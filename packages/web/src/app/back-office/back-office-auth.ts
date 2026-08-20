@@ -1,11 +1,11 @@
 import { isPlatformBrowser } from '@angular/common';
-import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 import { inject, Injectable, PLATFORM_ID } from '@angular/core';
 import { Router } from '@angular/router';
 import {
   AccessIdentifier,
   AuthenticationFailure,
-  type AuthenticationFailureCode,
+  type AuthenticationFailureValue,
   type LoginModeValue,
   SessionStatus,
   type AccessIdentifierValue,
@@ -13,12 +13,11 @@ import {
 import { Schema } from 'effect';
 import { firstValueFrom } from 'rxjs';
 
+import { decodeApiFailure, type ApiFailure } from '../shared/api-outcome';
+
 export type AuthenticationOutcome =
   | { readonly success: true }
-  | {
-      readonly success: false;
-      readonly code: AuthenticationFailureCode | 'authentication.error';
-    };
+  | ApiFailure<AuthenticationFailureValue, 'authentication.error'>;
 
 @Injectable({ providedIn: 'root' })
 export class BackOfficeAuth {
@@ -57,15 +56,7 @@ export class BackOfficeAuth {
       if (session.authenticated && session.mode === mode) return { success: true };
       return { success: false, code: 'authentication.error' };
     } catch (error) {
-      if (error instanceof HttpErrorResponse && (error.status === 401 || error.status === 429)) {
-        try {
-          const failure = Schema.decodeUnknownSync(AuthenticationFailure)(error.error);
-          return { success: false, code: failure.code };
-        } catch {
-          return { success: false, code: 'authentication.error' };
-        }
-      }
-      return { success: false, code: 'authentication.error' };
+      return decodeApiFailure({ cause: error }, AuthenticationFailure, 'authentication.error');
     }
   }
 

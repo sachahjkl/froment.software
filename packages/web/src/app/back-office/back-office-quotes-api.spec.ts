@@ -1,4 +1,4 @@
-import { provideHttpClient } from '@angular/common/http';
+import { HttpErrorResponse, provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 
@@ -56,7 +56,41 @@ describe('BackOfficeQuotesApi', () => {
         { status: 409, statusText: 'Conflict' },
       );
 
-    await expect(result).resolves.toEqual({ success: false, code: 'quote.version_conflict' });
+    const outcome = await result;
+    expect(outcome).toMatchObject({
+      success: false,
+      code: 'quote.version_conflict',
+      status: 409,
+      failure: {
+        _tag: 'QuoteVersionConflict',
+        code: 'quote.version_conflict',
+        currentVersion: 2,
+      },
+    });
+    expect(outcome.success || outcome.cause).toBeInstanceOf(HttpErrorResponse);
+    http.verify();
+  });
+
+  it('preserves an undeclared server error for diagnostics', async () => {
+    TestBed.configureTestingModule({
+      providers: [provideHttpClient(), provideHttpClientTesting()],
+    });
+    const api = TestBed.inject(BackOfficeQuotesApi);
+    const http = TestBed.inject(HttpTestingController);
+    const result = api.get('01ARZ3NDEKTSV4RRFFQ69G5FAY');
+    const serverError = { code: 'server.failure', requestId: 'request-1' };
+    http
+      .expectOne('/api/quotes/01ARZ3NDEKTSV4RRFFQ69G5FAY')
+      .flush(serverError, { status: 500, statusText: 'Internal Server Error' });
+
+    const outcome = await result;
+    expect(outcome).toMatchObject({
+      success: false,
+      code: 'quote.error',
+      status: 500,
+      serverError,
+    });
+    expect(outcome.success || outcome.cause).toBeInstanceOf(HttpErrorResponse);
     http.verify();
   });
 });
