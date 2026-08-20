@@ -23,6 +23,7 @@ import { IssuerSettings } from './documents/issuer-settings.js';
 import { DocumentArtifacts } from './documents/document-artifacts.js';
 import { QuoteRenderer } from './documents/quote-renderer.js';
 import { Quotes } from './quotes/quotes.js';
+import { QuoteLinks } from './quotes/quote-links.js';
 import { RequestLimiter, RequestLimiterLive } from './server/request-limiter.js';
 
 const sessionCookie = HttpApiSecurity.apiKey({
@@ -52,6 +53,20 @@ const setDocumentResponseHeaders = HttpEffect.appendPreResponseHandler((_request
     }),
   ),
 );
+
+const setPublicDocumentResponseHeaders = HttpEffect.appendPreResponseHandler((_request, response) =>
+  Effect.succeed(
+    HttpServerResponse.setHeaders(response, {
+      'cache-control': 'no-store',
+      pragma: 'no-cache',
+      'referrer-policy': 'no-referrer',
+      'x-content-type-options': 'nosniff',
+    }),
+  ),
+);
+
+const containsQuoteLinkToken = (url: string) =>
+  /^\/api\/public\/quote-links\/[^/?]+\/pdf(?:[?#]|$)/.test(url);
 
 const identifyRequest = <E, R>(
   application: Effect.Effect<HttpServerResponse.HttpServerResponse, E, R>,
@@ -497,6 +512,46 @@ const QuoteHandlers = HttpApiBuilder.group(Api, 'quotes', (handlers) =>
             .createRevision(params.quoteId, payload, principal.userId)
             .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
         }),
+      )
+      .handle(
+        'quoteSend',
+        Effect.fn('quoteSend')(function* ({ params, payload }) {
+          yield* setPrivateResponseHeaders;
+          const request = yield* HttpServerRequest.HttpServerRequest;
+          const principal = yield* (yield* Authentication)
+            .authorizeWrite(
+              request.cookies['__Host-froment-session'],
+              request.cookies['__Host-froment-csrf'],
+              request.headers['x-csrf-token'],
+              request.headers['origin'],
+              'quote.send',
+              'administrator',
+            )
+            .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
+          yield* limitPrincipalMutation(principal.userId, 'quote.send', 10);
+          return yield* (yield* QuoteLinks)
+            .send(params.quoteId, payload, principal.userId)
+            .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
+        }),
+      )
+      .handle(
+        'quoteLinkPdfDownload',
+        Effect.fn('quoteLinkPdfDownload')(function* ({ params }) {
+          yield* setPublicDocumentResponseHeaders;
+          const pdf = yield* (yield* QuoteLinks)
+            .getPdf(params.token)
+            .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
+          yield* HttpEffect.appendPreResponseHandler((_request, response) =>
+            Effect.succeed(
+              HttpServerResponse.setHeader(
+                response,
+                'content-disposition',
+                `inline; filename="quote-${pdf.quoteId}-v${pdf.version}.pdf"`,
+              ),
+            ),
+          );
+          return pdf.content;
+        }),
       ),
   ),
 );
@@ -523,9 +578,16 @@ export const makeServerLayer = (options: {
 
   return HttpRouter.serve(Layer.mergeAll(ApiRoutes, BackOfficeStaticRoutes, StaticRoutes), {
     middleware: (application) =>
-      HttpMiddleware.tracer(
-        identifyRequest(HttpMiddleware.logger(protectRequest(options.publicOrigin)(application))),
-      ),
+      Effect.gen(function* () {
+        const request = yield* HttpServerRequest.HttpServerRequest;
+        const observed = identifyRequest(
+          HttpMiddleware.logger(protectRequest(options.publicOrigin)(application)),
+        );
+        if (containsQuoteLinkToken(request.url)) {
+          return yield* HttpMiddleware.withLoggerDisabled(observed);
+        }
+        return yield* HttpMiddleware.tracer(observed);
+      }),
     disableLogger: true,
   }).pipe(
     Layer.provide(RequestLimiterLive),

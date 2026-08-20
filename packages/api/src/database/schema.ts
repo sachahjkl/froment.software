@@ -367,6 +367,37 @@ export const documentArtifacts = sqliteTable(
   ],
 );
 
+export const quoteLinks = sqliteTable(
+  'quote_links',
+  {
+    id: text().notNull().primaryKey(),
+    revisionId: text('revision_id')
+      .notNull()
+      .references(() => quoteRevisions.id, { onDelete: 'cascade' }),
+    tokenHmac: blob('token_hmac', { mode: 'buffer' }).notNull(),
+    createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull(),
+    expiresAt: integer('expires_at', { mode: 'timestamp_ms' }).notNull(),
+    revokedAt: integer('revoked_at', { mode: 'timestamp_ms' }),
+  },
+  (table) => [
+    uniqueIndex('quote_links_token_hmac_unique').on(table.tokenHmac),
+    index('quote_links_revision_id_index').on(table.revisionId),
+    check(
+      'quote_links_id_ulid_check',
+      sql`${table.id} is not null and length(${table.id}) = 26 and ${table.id} not glob '*[^0-9A-HJKMNP-TV-Z]*' and substr(${table.id}, 1, 1) between '0' and '7'`,
+    ),
+    check(
+      'quote_links_token_hmac_check',
+      sql`typeof(${table.tokenHmac}) = 'blob' and length(${table.tokenHmac}) = 32`,
+    ),
+    check('quote_links_expiry_check', sql`${table.expiresAt} > ${table.createdAt}`),
+    check(
+      'quote_links_revoked_at_check',
+      sql`${table.revokedAt} is null or ${table.revokedAt} >= ${table.createdAt}`,
+    ),
+  ],
+);
+
 export const auditEvents = sqliteTable(
   'audit_events',
   {

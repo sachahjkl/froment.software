@@ -49,6 +49,7 @@ describe('Database', () => {
         'clients',
         'permissions',
         'quote_lines',
+        'quote_links',
         'quote_revisions',
         'quotes',
         'roles',

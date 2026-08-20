@@ -113,6 +113,8 @@ La variable obligatoire `ACCESS_HMAC_KEY` contient une clé aléatoire de 32 oct
 
 La variable obligatoire `SESSION_HMAC_KEY` contient une autre clé aléatoire de 32 octets en base64url.
 
+La variable obligatoire `QUOTE_LINK_HMAC_KEY` contient une troisième clé aléatoire de 32 octets en base64url.
+
 Le bundle Angular ne contient ni mot de passe, ni condensat de mot de passe.
 
 Une transaction unique crée le compte, le rôle administrateur et toutes ses permissions.

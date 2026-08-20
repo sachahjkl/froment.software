@@ -44,6 +44,11 @@ import {
   IssuerSettingsUpdateRequest,
   DocumentArtifact,
   DocumentNotFound,
+  QuoteLinkNotFound,
+  QuoteLinkToken,
+  QuotePdfRequired,
+  QuoteSendRequest,
+  QuoteSendResult,
 } from './quotes.js';
 import { DeploymentMetadata } from './version.js';
 
@@ -208,6 +213,26 @@ export class QuotesApi extends HttpApiGroup.make('quotes', { topLevel: true }).a
       ClientArchived.pipe(HttpApiSchema.status(409)),
       QuoteAmountTooLarge.pipe(HttpApiSchema.status(422)),
     ],
+  }),
+  HttpApiEndpoint.post('quoteSend', '/api/quotes/:quoteId/send', {
+    params: { quoteId: Ulid },
+    payload: QuoteSendRequest,
+    success: QuoteSendResult,
+    error: [
+      AuthenticationRequired.pipe(HttpApiSchema.status(401)),
+      PermissionDenied.pipe(HttpApiSchema.status(403)),
+      CsrfRejected.pipe(HttpApiSchema.status(403)),
+      RequestRateLimited.pipe(HttpApiSchema.status(429)),
+      QuoteNotFound.pipe(HttpApiSchema.status(404)),
+      QuoteVersionConflict.pipe(HttpApiSchema.status(409)),
+      QuoteNotEditable.pipe(HttpApiSchema.status(409)),
+      QuotePdfRequired.pipe(HttpApiSchema.status(409)),
+    ],
+  }),
+  HttpApiEndpoint.get('quoteLinkPdfDownload', '/api/public/quote-links/:token/pdf', {
+    params: { token: QuoteLinkToken },
+    success: Schema.Uint8Array.pipe(HttpApiSchema.asUint8Array({ contentType: 'application/pdf' })),
+    error: QuoteLinkNotFound.pipe(HttpApiSchema.status(404)),
   }),
   HttpApiEndpoint.post('quoteRevisionCreate', '/api/quotes/:quoteId/revisions', {
     params: { quoteId: Ulid },

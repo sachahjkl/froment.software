@@ -69,6 +69,7 @@ describe('HTTP server', () => {
   let administratorAccessIdentifier: string | undefined;
   let databaseFilename: string;
   let server: ChildProcess;
+  let serverOutput = '';
   let staticRoot: string;
 
   beforeAll(async () => {
@@ -91,11 +92,18 @@ describe('HTTP server', () => {
         MIGRATIONS_ROOT: join(import.meta.dirname, '..', 'drizzle'),
         PORT: String(port),
         PUBLIC_ORIGIN: baseUrl,
+        QUOTE_LINK_HMAC_KEY: 'CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC',
         STATIC_ROOT: staticRoot,
         SESSION_HMAC_KEY: 'BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB',
         OTEL_SDK_DISABLED: 'true',
       },
       stdio: 'pipe',
+    });
+    server.stdout?.on('data', (chunk: Buffer) => {
+      serverOutput += chunk.toString();
+    });
+    server.stderr?.on('data', (chunk: Buffer) => {
+      serverOutput += chunk.toString();
     });
     await waitForServer(`${baseUrl}/api/health`, server);
   });
@@ -781,9 +789,104 @@ describe('HTTP server', () => {
       currentVersion: 2,
     });
 
-    const quoteSqlite = new Sqlite(databaseFilename);
-    quoteSqlite.prepare("update quotes set status = 'sent' where id = ?").run(quote.id);
-    quoteSqlite.close();
+    const anonymousSend = await fetch(`${baseUrl}/api/quotes/${quote.id}/send`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', origin: baseUrl },
+      body: JSON.stringify({ expectedVersion: 2 }),
+    });
+    expect(anonymousSend.status).toBe(403);
+
+    const missingSendCsrf = await fetch(`${baseUrl}/api/quotes/${quote.id}/send`, {
+      method: 'POST',
+      headers: { cookie, 'content-type': 'application/json', origin: baseUrl },
+      body: JSON.stringify({ expectedVersion: 2 }),
+    });
+    expect(missingSendCsrf.status).toBe(403);
+
+    const missingCurrentPdf = await fetch(`${baseUrl}/api/quotes/${quote.id}/send`, {
+      method: 'POST',
+      headers: writeHeaders,
+      body: JSON.stringify({ expectedVersion: 2 }),
+    });
+    expect(missingCurrentPdf.status).toBe(409);
+    await expect(missingCurrentPdf.json()).resolves.toMatchObject({ code: 'quote.pdf_required' });
+
+    const staleSend = await fetch(`${baseUrl}/api/quotes/${quote.id}/send`, {
+      method: 'POST',
+      headers: writeHeaders,
+      body: JSON.stringify({ expectedVersion: 1 }),
+    });
+    expect(staleSend.status).toBe(409);
+    await expect(staleSend.json()).resolves.toMatchObject({
+      code: 'quote.version_conflict',
+      currentVersion: 2,
+    });
+
+    const secondPdfRender = await fetch(`${baseUrl}/api/quotes/${quote.id}/revisions/2/pdf`, {
+      method: 'POST',
+      headers: writeHeaders,
+    });
+    expect(secondPdfRender.status).toBe(200);
+    const secondArtifact = (await secondPdfRender.json()) as {
+      readonly byteSize: number;
+      readonly sha256: string;
+    };
+
+    const sendRequests = await Promise.all([
+      fetch(`${baseUrl}/api/quotes/${quote.id}/send`, {
+        method: 'POST',
+        headers: writeHeaders,
+        body: JSON.stringify({ expectedVersion: 2 }),
+      }),
+      fetch(`${baseUrl}/api/quotes/${quote.id}/send`, {
+        method: 'POST',
+        headers: writeHeaders,
+        body: JSON.stringify({ expectedVersion: 2 }),
+      }),
+    ]);
+    expect(sendRequests.map((response) => response.status).sort()).toEqual([200, 409]);
+    const sentResponse = sendRequests.find((response) => response.status === 200);
+    if (sentResponse === undefined) throw new Error('The successful quote send is unavailable.');
+    const sent = (await sentResponse.json()) as {
+      quoteId: string;
+      revisionId: string;
+      status: string;
+      version: number;
+      link: { id: string; url: string; expiresAt: string };
+    };
+    expect(sent).toMatchObject({
+      quoteId: quote.id,
+      revisionId: revised.currentRevision.id,
+      status: 'sent',
+      version: 2,
+      link: {
+        id: expect.stringMatching(/^[0-7][0-9A-Z]{25}$/),
+        url: expect.stringMatching(
+          new RegExp(
+            `^${baseUrl.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}/api/public/quote-links/[A-Za-z0-9_-]{43}/pdf$`,
+          ),
+        ),
+        expiresAt: expect.stringMatching(/^\d{4}-\d{2}-\d{2}T.*\.\d{3}Z$/),
+      },
+    });
+
+    const publicPdf = await fetch(sent.link.url);
+    expect(publicPdf.status).toBe(200);
+    expect(publicPdf.headers.get('cache-control')).toBe('no-store');
+    expect(publicPdf.headers.get('referrer-policy')).toBe('no-referrer');
+    expect(publicPdf.headers.get('x-content-type-options')).toBe('nosniff');
+    expect(publicPdf.headers.get('content-disposition')).toContain(`quote-${quote.id}-v2.pdf`);
+    const publicPdfContent = new Uint8Array(await publicPdf.arrayBuffer());
+    expect(new TextDecoder().decode(publicPdfContent.slice(0, 5))).toBe('%PDF-');
+    expect(publicPdfContent.byteLength).toBe(secondArtifact.byteSize);
+    expect(createHash('sha256').update(publicPdfContent).digest('hex')).toBe(secondArtifact.sha256);
+
+    const unknownPublicPdf = await fetch(
+      `${baseUrl}/api/public/quote-links/DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD/pdf`,
+    );
+    expect(unknownPublicPdf.status).toBe(404);
+    await expect(unknownPublicPdf.json()).resolves.toMatchObject({ code: 'quote_link.not_found' });
+
     const sentRevision = await fetch(`${baseUrl}/api/quotes/${quote.id}/revisions`, {
       method: 'POST',
       headers: writeHeaders,
@@ -791,32 +894,52 @@ describe('HTTP server', () => {
     });
     expect(sentRevision.status).toBe(409);
     await expect(sentRevision.json()).resolves.toMatchObject({ code: 'quote.not_editable' });
-    const draftSqlite = new Sqlite(databaseFilename);
-    draftSqlite.prepare("update quotes set status = 'draft' where id = ?").run(quote.id);
-    draftSqlite.close();
 
     const list = await fetch(`${baseUrl}/api/quotes`, { headers: { cookie } });
     expect(list.status).toBe(200);
-    await expect(list.json()).resolves.toMatchObject([{ id: quote.id, version: 2 }]);
+    await expect(list.json()).resolves.toMatchObject([
+      { id: quote.id, status: 'sent', version: 2 },
+    ]);
     const get = await fetch(`${baseUrl}/api/quotes/${quote.id}`, { headers: { cookie } });
     expect(get.status).toBe(200);
     await expect(get.json()).resolves.toMatchObject({
       id: quote.id,
+      status: 'sent',
       revisions: [{ version: 1 }, { version: 2 }],
     });
+
+    const linkToken = sent.link.url.split('/').at(-2);
+    if (linkToken === undefined) throw new Error('The quote link token is unavailable.');
+    expect(serverOutput).not.toContain(linkToken);
+    expect(serverOutput).not.toContain('DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD');
+    const linkSqlite = new Sqlite(databaseFilename);
+    const storedLink = linkSqlite
+      .prepare(
+        'select typeof(token_hmac) as storageType, length(token_hmac) as byteSize from quote_links where id = ?',
+      )
+      .get(sent.link.id);
+    expect(storedLink).toEqual({ storageType: 'blob', byteSize: 32 });
+    expect(
+      linkSqlite
+        .prepare('select count(*) from quote_links where token_hmac = ?')
+        .pluck()
+        .get(linkToken),
+    ).toBe(0);
+    linkSqlite
+      .prepare('update quote_links set revoked_at = ? where id = ?')
+      .run(Date.now(), sent.link.id);
+    expect((await fetch(sent.link.url)).status).toBe(404);
+    linkSqlite
+      .prepare('update quote_links set revoked_at = null, expires_at = created_at + 1 where id = ?')
+      .run(sent.link.id);
+    linkSqlite.close();
+    expect((await fetch(sent.link.url)).status).toBe(404);
 
     const archive = await fetch(`${baseUrl}/api/clients/${client.id}/archive`, {
       method: 'POST',
       headers: writeHeaders,
     });
     expect(archive.status).toBe(200);
-    const archivedRevision = await fetch(`${baseUrl}/api/quotes/${quote.id}/revisions`, {
-      method: 'POST',
-      headers: writeHeaders,
-      body: JSON.stringify({ ...revisionPayload, expectedVersion: 2 }),
-    });
-    expect(archivedRevision.status).toBe(409);
-    await expect(archivedRevision.json()).resolves.toMatchObject({ code: 'client.archived' });
 
     const auditSqlite = new Sqlite(databaseFilename, { readonly: true });
     expect(
@@ -827,7 +950,7 @@ describe('HTTP server', () => {
         )
         .pluck()
         .all(quote.id),
-    ).toEqual(['quote.created', 'quote.revised']);
+    ).toEqual(['quote.created', 'quote.revised', 'quote.sent']);
     expect(
       auditSqlite
         .prepare(
@@ -836,7 +959,13 @@ describe('HTTP server', () => {
         )
         .pluck()
         .get(quote.id),
-    ).toBe(1);
+    ).toBe(2);
+    expect(
+      auditSqlite
+        .prepare('select count(*) from audit_events where metadata like ?')
+        .pluck()
+        .get(`%${linkToken}%`),
+    ).toBe(0);
     expect(
       auditSqlite
         .prepare("select count(*) from audit_events where action = 'issuer.updated'")

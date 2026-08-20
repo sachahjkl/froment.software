@@ -8,6 +8,7 @@ export interface AuthenticationConfigService {
   readonly bootstrapPasswordHash: Buffer;
   readonly accessHmacKey: Buffer;
   readonly sessionHmacKey: Buffer;
+  readonly quoteLinkHmacKey: Buffer;
   readonly publicOrigin: string;
 }
 
@@ -28,12 +29,16 @@ export const AuthenticationConfigLive = Layer.effect(
     const sessionHmacKey = yield* Schema.decodeUnknownEffect(HmacKey)(
       Redacted.value(yield* Config.redacted('SESSION_HMAC_KEY')),
     );
+    const quoteLinkHmacKey = yield* Schema.decodeUnknownEffect(HmacKey)(
+      Redacted.value(yield* Config.redacted('QUOTE_LINK_HMAC_KEY')),
+    );
     const publicUrl = yield* Config.schema(Schema.URL, 'PUBLIC_ORIGIN');
 
     return AuthenticationConfig.of({
       bootstrapPasswordHash: Buffer.from(bootstrapPasswordHash, 'hex'),
       accessHmacKey: Buffer.from(accessHmacKey, 'base64url'),
       sessionHmacKey: Buffer.from(sessionHmacKey, 'base64url'),
+      quoteLinkHmacKey: Buffer.from(quoteLinkHmacKey, 'base64url'),
       publicOrigin: publicUrl.origin,
     });
   }),

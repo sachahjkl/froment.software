@@ -1,7 +1,7 @@
 import { Schema } from 'effect';
 import { describe, expect, it } from 'vitest';
 
-import { QuoteCreateRequest, QuoteStatus } from './quotes.js';
+import { QuoteCreateRequest, QuoteLinkToken, QuoteSendRequest, QuoteStatus } from './quotes.js';
 
 const line = {
   description: 'Development',
@@ -41,5 +41,16 @@ describe('quote contracts', () => {
         lines: [{ ...line, vatRateBasisPoints: 10_001 }],
       }),
     ).toThrow();
+  });
+
+  it('validates quote sending inputs', () => {
+    expect(Schema.decodeUnknownSync(QuoteSendRequest)({ expectedVersion: 2 })).toEqual({
+      expectedVersion: 2,
+    });
+    expect(() => Schema.decodeUnknownSync(QuoteSendRequest)({ expectedVersion: 0 })).toThrow();
+    expect(
+      Schema.decodeUnknownSync(QuoteLinkToken)('AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA'),
+    ).toHaveLength(43);
+    expect(() => Schema.decodeUnknownSync(QuoteLinkToken)('not-a-token')).toThrow();
   });
 });

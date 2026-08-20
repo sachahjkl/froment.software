@@ -12,6 +12,7 @@ import { IssuerSettingsLive } from './documents/issuer-settings.js';
 import { DocumentArtifactsLive } from './documents/document-artifacts.js';
 import { QuoteRendererLive } from './documents/quote-renderer.js';
 import { QuotesLive } from './quotes/quotes.js';
+import { QuoteLinksLive } from './quotes/quote-links.js';
 import { ServerLive } from './server.js';
 import { ObservabilityLive } from './observability/observability.js';
 
@@ -25,6 +26,7 @@ const ServicesLive = Layer.mergeAll(
   AuthenticationLive,
   ClientsLive,
   QuoteServicesLive,
+  QuoteLinksLive,
   DeploymentLive,
 ).pipe(
   Layer.provide(AuditLive),

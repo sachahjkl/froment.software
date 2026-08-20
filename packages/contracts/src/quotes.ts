@@ -18,6 +18,8 @@ const PositiveSafeInteger = SafeInteger.check(Schema.isGreaterThan(0));
 const IsoUtc = Schema.String.check(
   Schema.isPattern(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/),
 );
+export const QuoteLinkToken = Schema.String.check(Schema.isPattern(/^[A-Za-z0-9_-]{43}$/));
+export type QuoteLinkToken = typeof QuoteLinkToken.Type;
 
 export const QuoteStatus = Schema.Literals(['draft', 'sent', 'accepted', 'rejected', 'expired']);
 export type QuoteStatus = typeof QuoteStatus.Type;
@@ -74,6 +76,9 @@ export const QuoteRevisionCreateRequest = Schema.Struct({
   lines: QuoteLinesInput,
 });
 export type QuoteRevisionCreateRequest = typeof QuoteRevisionCreateRequest.Type;
+
+export const QuoteSendRequest = Schema.Struct({ expectedVersion: PositiveSafeInteger });
+export type QuoteSendRequest = typeof QuoteSendRequest.Type;
 
 export const QuoteLine = Schema.Struct({
   id: Ulid,
@@ -143,6 +148,19 @@ export const QuoteDetail = Schema.Struct({
 });
 export type QuoteDetail = typeof QuoteDetail.Type;
 
+export const QuoteSendResult = Schema.Struct({
+  quoteId: Ulid,
+  revisionId: Ulid,
+  status: Schema.Literal('sent'),
+  version: PositiveSafeInteger,
+  link: Schema.Struct({
+    id: Ulid,
+    url: Schema.String.check(Schema.isPattern(/^https?:\/\/\S+$/), Schema.isMaxLength(2_048)),
+    expiresAt: IsoUtc,
+  }),
+});
+export type QuoteSendResult = typeof QuoteSendResult.Type;
+
 export const QuoteList = Schema.Array(QuoteSummary);
 export type QuoteList = typeof QuoteList.Type;
 
@@ -179,6 +197,18 @@ export class QuotePreviewUnavailable extends Schema.TaggedError<QuotePreviewUnav
   { httpApiStatus: 409 },
 ) {}
 
+export class QuotePdfRequired extends Schema.TaggedError<QuotePdfRequired>()(
+  'QuotePdfRequired',
+  { code: Schema.Literal('quote.pdf_required') },
+  { httpApiStatus: 409 },
+) {}
+
+export class QuoteLinkNotFound extends Schema.TaggedError<QuoteLinkNotFound>()(
+  'QuoteLinkNotFound',
+  { code: Schema.Literal('quote_link.not_found') },
+  { httpApiStatus: 404 },
+) {}
+
 export const DocumentArtifact = Schema.Struct({
   id: Ulid,
   revisionId: Ulid,
@@ -205,6 +235,8 @@ export const QuoteFailure = Schema.Union([
   QuoteAmountTooLarge,
   QuoteNotEditable,
   QuotePreviewUnavailable,
+  QuotePdfRequired,
+  QuoteLinkNotFound,
   DocumentNotFound,
   ClientNotFound,
   ClientArchived,
