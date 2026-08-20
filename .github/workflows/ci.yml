@@ -48,8 +48,13 @@ jobs:
         run: |
           umask 077
           authfile="$RUNNER_TEMP/skopeo-auth-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}.json"
-          trap 'rm -f "$authfile"' EXIT
+          export TMPDIR="$RUNNER_TEMP/skopeo-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          mkdir -p "$TMPDIR"
+          trap 'rm -rf "$TMPDIR"; rm -f "$authfile"' EXIT
           printf '%s' "$GHCR_TOKEN" | nix run nixpkgs#skopeo -- login --authfile "$authfile" ghcr.io --username "$GITHUB_ACTOR" --password-stdin
-          while IFS= read -r tag; do
-            [[ -n "$tag" ]] && nix run nixpkgs#skopeo -- copy --authfile "$authfile" --insecure-policy docker-archive:result "docker://$tag"
-          done <<< "$IMAGE_TAGS"
+          mapfile -t tags < <(printf '%s\n' "$IMAGE_TAGS" | sed '/^$/d')
+          (( ${#tags[@]} > 0 )) || exit 0
+          nix run nixpkgs#skopeo -- copy --authfile "$authfile" --insecure-policy docker-archive:result "docker://${tags[0]}"
+          for tag in "${tags[@]:1}"; do
+            nix run nixpkgs#skopeo -- copy --all --authfile "$authfile" "docker://${tags[0]}" "docker://$tag"
+          done
