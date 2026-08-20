@@ -33,6 +33,7 @@ import { Clock, Context, DateTime, Effect, Layer, Option, Schema } from 'effect'
 import { ulid } from 'ulid';
 
 import { Audit } from '../audit/audit.js';
+import { BusinessConfig } from '../business/business-config.js';
 import { Database, DatabaseError } from '../database/database.js';
 import { IssuerSettings } from '../documents/issuer-settings.js';
 import { calculateQuoteLine, calculateQuoteTotals } from '../quotes/quote-calculation.js';
@@ -169,6 +170,9 @@ export class Invoices extends Context.Service<Invoices, InvoicesService>()(
   '@froment/api/Invoices',
 ) {}
 
+export const invoiceIssueDate = (issuedAt: number, timeZone: DateTime.TimeZone.Named) =>
+  DateTime.makeUnsafe(issuedAt).pipe(DateTime.setZone(timeZone), DateTime.formatIsoDate);
+
 const invoiceSql = `select id, order_id as orderId, client_id as clientId, status, version,
   invoice_number as invoiceNumber, issued_at as issuedAt, paid_at as paidAt,
   voided_at as voidedAt from invoices`;
@@ -190,6 +194,7 @@ export const InvoicesLive = Layer.effect(
     const database = yield* Database;
     const issuerSettings = yield* IssuerSettings;
     const audit = yield* Audit;
+    const businessConfig = yield* BusinessConfig;
 
     const readDetail = (invoiceId: string): InvoiceDetailValue | undefined => {
       const rawInvoice = database.sqlite.prepare(`${invoiceSql} where id = ?`).get(invoiceId);
@@ -717,7 +722,7 @@ export const InvoicesLive = Layer.effect(
               const current = Schema.decodeUnknownSync(InvoiceRenderSnapshot)(
                 JSON.parse(currentRecord.renderSnapshot),
               );
-              const issueDate = DateTime.formatIso(DateTime.makeUnsafe(now)).slice(0, 10);
+              const issueDate = invoiceIssueDate(now, businessConfig.timeZone);
               validateDates(current.serviceDate, current.dueDate, issueDate);
               const nextNumber = Schema.decodeUnknownSync(Schema.Int)(
                 database.sqlite

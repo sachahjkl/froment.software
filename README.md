@@ -92,6 +92,10 @@ podman run --rm -p 8080:3000 froment-software:0.0.0
 
 GitHub Actions vérifie le flake, construit le site, puis publie l’image avec le SHA et le tag `latest` sur la branche par défaut.
 
+Le serveur exige `BUSINESS_TIME_ZONE`, avec un nom de fuseau IANA valide. La production utilise explicitement `Europe/Paris`.
+
+Ce fuseau définit la date métier des émissions de facture. Les horodatages techniques restent en UTC.
+
 ## Contenus juridiques
 
 Les pages juridiques utilisent les textes de `packages/web/src/app/i18n.service.ts`.

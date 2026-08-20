@@ -91,6 +91,7 @@
               cp -r packages/web/dist/froment-software/browser $out/share/froment-software/web
               makeWrapper ${runtimeNode}/bin/node $out/bin/${pname} \
                 --add-flags $out/lib/froment-software/server.cjs \
+                --set BUSINESS_TIME_ZONE Europe/Paris \
                 --set CHROMIUM_PATH ${pkgs.chromium}/bin/chromium \
                 --set-default DATABASE_PATH data/froment.sqlite \
                 --set DEPLOYMENT_METADATA ${lib.escapeShellArg deploymentMetadata} \

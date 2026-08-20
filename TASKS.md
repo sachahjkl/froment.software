@@ -55,7 +55,7 @@
 - [x] REV-015 Roll back migrations that violate foreign keys.
 - [x] REV-016 Validate canonical UTC timestamps.
 - [x] REV-017 Render quote dates in UTC.
-- [ ] REV-018 Store invoice issue dates in the business time zone.
+- [x] REV-018 Store invoice issue dates in the business time zone.
 - [x] REV-019 Validate invoice issue retry versions.
 - [x] REV-020 React to document route parameter changes.
 - [x] REV-021 Disable invoice issuance for dirty drafts.

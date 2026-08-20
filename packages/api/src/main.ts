@@ -3,6 +3,7 @@ import { Layer } from 'effect';
 
 import { BootstrapLive } from './bootstrap/bootstrap.js';
 import { AuditLive } from './audit/audit.js';
+import { BusinessConfigLive } from './business/business-config.js';
 import { AuthenticationLive } from './authentication/authentication.js';
 import { AuthenticationConfigLive } from './authentication/authentication-config.js';
 import { ClientsLive } from './clients/clients.js';
@@ -23,6 +24,7 @@ import { ClientPortalLive } from './client-portal/client-portal.js';
 
 const QuoteCoreLive = Layer.mergeAll(QuotesLive, DocumentRendererLive, InvoicesLive).pipe(
   Layer.provideMerge(IssuerSettingsLive),
+  Layer.provideMerge(BusinessConfigLive),
 );
 const QuoteServicesLive = DocumentArtifactsLive.pipe(Layer.provideMerge(QuoteCoreLive));
 const InvoicePdfServicesLive = InvoicePdfJobsLive.pipe(Layer.provideMerge(QuoteServicesLive));

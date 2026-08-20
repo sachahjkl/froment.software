@@ -98,6 +98,7 @@ describe('HTTP server', () => {
         ACCESS_HMAC_KEY: 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA',
         BOOTSTRAP_PASSWORD_SCRYPT:
           'scrypt$16384$8$1$ABEiM0RVZneImaq7zN3u_w$bDQwYDYiQ_8HCiJ3-qXFtXFeV9FhIOa7E8VSgT__uegLrk4vqD6U920ImYTwk5RABOZsIk96bUNH1G9wbCXf1Q',
+        BUSINESS_TIME_ZONE: 'Europe/Paris',
         DATABASE_PATH: databaseFilename,
         DEPLOYMENT_METADATA: JSON.stringify(deploymentMetadata),
         MIGRATIONS_ROOT: join(import.meta.dirname, '..', 'drizzle'),

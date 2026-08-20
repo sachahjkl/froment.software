@@ -1,11 +1,13 @@
 import { InvoiceRenderSnapshot, type IssuerSettingsValue } from '@froment/contracts';
-import { Deferred, Effect, Fiber, Layer, Schema } from 'effect';
+import { DateTime, Deferred, Effect, Fiber, Layer, Schema } from 'effect';
 import { mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
+import { TestClock } from 'effect/testing';
 
 import { AuditLive } from '../src/audit/audit.js';
+import { BusinessConfig } from '../src/business/business-config.js';
 import { ClientPortal, ClientPortalLive } from '../src/client-portal/client-portal.js';
 import { Database, makeDatabaseLayer, type DatabaseService } from '../src/database/database.js';
 import { DocumentArtifacts, DocumentArtifactsLive } from '../src/documents/document-artifacts.js';
@@ -109,8 +111,15 @@ const makeTestLayer = (filename: string, renderer: DocumentRendererService) => {
     Layer.succeed(DocumentRenderer, renderer),
     Layer.succeed(Quotes, quotes),
   ).pipe(Layer.provideMerge(Layer.succeed(IssuerSettings, issuerSettings)));
+  const configuredCoreLayer = coreLayer.pipe(
+    Layer.provideMerge(
+      Layer.succeed(BusinessConfig, {
+        timeZone: DateTime.zoneMakeNamedUnsafe('Europe/Paris'),
+      }),
+    ),
+  );
   const artifactLayer = DocumentArtifactsLive.pipe(
-    Layer.provideMerge(coreLayer),
+    Layer.provideMerge(configuredCoreLayer),
     Layer.provide(AuditLive),
     Layer.provideMerge(databaseLayer),
   );
@@ -118,7 +127,7 @@ const makeTestLayer = (filename: string, renderer: DocumentRendererService) => {
   return Layer.merge(jobLayer, ClientPortalLive.pipe(Layer.provide(jobLayer)));
 };
 
-const seedInvoice = (database: DatabaseService) => {
+const seedInvoice = (database: DatabaseService, dueDate = '2099-09-19') => {
   database.sqlite.pragma('foreign_keys = OFF');
   database.sqlite
     .prepare(
@@ -207,11 +216,11 @@ const seedInvoice = (database: DatabaseService) => {
         service_date, due_date, payment_terms, currency, net_total_cents, vat_total_cents,
         total_cents, created_at, created_by_user_id, template_id, template_version,
         render_snapshot)
-       values (?, ?, 1, null, null, 'Client', 'Invoice', '2026-08-20', '2099-09-19',
-               'Payment due within 30 days.', 'EUR', 10000, 2000, 12000, 1, ?,
-               'invoice-default', 1, ?)`,
+        values (?, ?, 1, null, null, 'Client', 'Invoice', '2026-08-20', ?,
+                'Payment due within 30 days.', 'EUR', 10000, 2000, 12000, 1, ?,
+                'invoice-default', 1, ?)`,
     )
-    .run(revisionId, invoiceId, actorId, JSON.stringify(snapshot));
+    .run(revisionId, invoiceId, dueDate, actorId, JSON.stringify({ ...snapshot, dueDate }));
   database.sqlite
     .prepare(
       `insert into invoice_lines
@@ -224,6 +233,36 @@ const seedInvoice = (database: DatabaseService) => {
 };
 
 describe('invoice issue recovery', () => {
+  it('validates the due date against the Paris issue date after UTC midnight', async () => {
+    const result = await Effect.runPromise(
+      Effect.gen(function* () {
+        const database = yield* Database;
+        const invoices = yield* Invoices;
+        seedInvoice(database, '2026-08-20');
+        const localMidnight = DateTime.toEpochMillis(
+          DateTime.makeUnsafe('2026-08-20T22:00:00.000Z'),
+        );
+        yield* TestClock.setTime(localMidnight);
+        return yield* Effect.result(invoices.issue(invoiceId, { expectedVersion: 1 }, actorId));
+      }).pipe(
+        Effect.provide(
+          makeTestLayer(':memory:', {
+            renderQuote: () => Effect.die('unused'),
+            renderQuotePdf: () => Effect.die('unused'),
+            renderInvoice: () => Effect.die('unused'),
+            renderInvoicePdf: () => Effect.die('unused'),
+          }),
+        ),
+        Effect.provide(TestClock.layer()),
+      ),
+    );
+
+    expect(result).toMatchObject({
+      _tag: 'Failure',
+      failure: { _tag: 'InvoiceInvalidDates' },
+    });
+  });
+
   it('rejects corrupted invoice PDFs for administrator and client downloads', async () => {
     const pdf = Buffer.from('%PDF-corrupted');
     const renderer: DocumentRendererService = {
