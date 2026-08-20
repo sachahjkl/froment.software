@@ -46,7 +46,7 @@
 - [ ] REV-006 Format all safe monetary integers without precision loss.
 - [ ] REV-007 Isolate pull-request CI from persistent runners.
 - [ ] REV-008 Run Chromium as a sandboxed non-root user.
-- [ ] REV-009 Expose API test failures in Nix and make the test derivation pass twice.
+- [x] REV-009 Expose API test failures in Nix and make the test derivation pass twice.
 - [ ] REV-010 Revoke old client access during rotation.
 - [ ] REV-011 Rate-limit successful authentication.
 - [ ] REV-012 Rate-limit public quote reads and downloads.

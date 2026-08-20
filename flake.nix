@@ -7,7 +7,12 @@
   };
 
   outputs =
-    { self, nixpkgs, flake-utils, ... }:
+    {
+      self,
+      nixpkgs,
+      flake-utils,
+      ...
+    }:
     flake-utils.lib.eachSystem
       [
         "x86_64-linux"
@@ -107,6 +112,8 @@
                 pnpmDeps
                 ;
               name = "${pname}-${name}";
+              CI = "true";
+              PNPM_CONFIG_REPORTER = "append-only";
               nativeBuildInputs = [
                 pkgs.nodejs_22
                 pkgs.pnpm
