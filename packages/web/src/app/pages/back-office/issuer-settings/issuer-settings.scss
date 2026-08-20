@@ -19,9 +19,6 @@ form,
 }
 
 form {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: var(--space-4);
   max-width: 52rem;
   padding: var(--space-6);
   border: 1px solid var(--color-line);
@@ -30,9 +27,8 @@ form {
   box-shadow: var(--shadow-panel);
 }
 
-.wide,
-.actions {
-  grid-column: 1 / -1;
+form > * + * {
+  margin-top: var(--space-4);
 }
 
 .actions {
@@ -43,12 +39,6 @@ form {
 
 @media (max-width: 38rem) {
   form {
-    grid-template-columns: 1fr;
     padding: var(--space-4);
-  }
-
-  .wide,
-  .actions {
-    grid-column: 1;
   }
 }

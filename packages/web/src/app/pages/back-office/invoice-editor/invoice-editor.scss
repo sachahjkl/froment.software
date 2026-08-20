@@ -2,19 +2,14 @@
   display: block;
 }
 .invoice-page {
-  display: grid;
-  gap: var(--space-8);
   padding: var(--page-header-y) var(--page-x);
+}
+.invoice-page > * + * {
+  margin-top: var(--space-8);
 }
 h1 {
   margin-top: var(--space-2);
   font-size: var(--text-2xl);
-}
-form,
-.lines,
-.actions {
-  display: grid;
-  gap: var(--space-5);
 }
 form {
   min-width: 0;
@@ -23,6 +18,10 @@ form {
   border-radius: var(--radius-sm);
   background: var(--color-surface-raised);
   box-shadow: var(--shadow-panel);
+}
+form > * + *,
+.lines > * + * {
+  margin-top: var(--space-5);
 }
 .field {
   display: grid;
@@ -33,9 +32,10 @@ form {
   min-width: 0;
 }
 .date-fields {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: var(--space-4);
+  display: block;
+}
+.date-fields > * + * {
+  margin-top: var(--space-4);
 }
 textarea {
   resize: vertical;
@@ -49,21 +49,16 @@ textarea {
 fieldset {
   min-width: 0;
   margin: 0;
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  align-items: end;
-  gap: var(--space-3);
   padding: var(--space-4);
   border: 1px solid var(--color-line);
   border-radius: var(--radius-sm);
   background: var(--color-surface-sunken);
 }
-fieldset > .description,
-fieldset > button {
-  grid-column: 1 / -1;
+fieldset > * + * {
+  margin-top: var(--space-3);
 }
 fieldset > button {
-  justify-self: start;
+  display: flex;
 }
 legend {
   padding-inline: var(--space-2);
@@ -74,7 +69,6 @@ legend {
   text-transform: uppercase;
 }
 .line-total {
-  grid-column: 1 / -1;
   color: var(--color-muted);
   font-size: var(--text-sm);
   text-align: right;
@@ -96,6 +90,9 @@ dl div {
   border-bottom: 1px solid var(--color-line-strong);
 }
 .actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
   margin-top: var(--space-4);
 }
 .hint {
@@ -144,15 +141,6 @@ ol li button + a {
 @media (max-width: 52rem) {
   form {
     padding: var(--space-4);
-  }
-  .date-fields,
-  fieldset {
-    grid-template-columns: 1fr;
-  }
-  fieldset > .description,
-  fieldset > button,
-  .line-total {
-    grid-column: auto;
   }
   .section-heading {
     align-items: stretch;
