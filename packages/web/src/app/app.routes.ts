@@ -67,6 +67,16 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/blog-post/blog-post').then((module) => module.BlogPost),
   },
   {
+    path: 'quote',
+    loadComponent: () =>
+      import('./pages/public-quote/public-quote').then((module) => module.PublicQuote),
+    data: {
+      titleKey: 'page.public_quote',
+      descriptionKey: 'page.description.public_quote',
+      robots: 'noindex, nofollow',
+    },
+  },
+  {
     path: 'backoffice',
     redirectTo: 'backoffice/login',
     pathMatch: 'full',

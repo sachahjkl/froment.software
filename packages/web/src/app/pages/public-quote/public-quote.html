@@ -1,0 +1,136 @@
+<main class="public-quote" aria-labelledby="public-quote-title">
+  @if (loading()) {
+  <section class="state-card" aria-live="polite">
+    <p class="eyebrow">{{ i18n.t('publicQuote.eyebrow') }}</p>
+    <h1 id="public-quote-title">{{ i18n.t('publicQuote.loading') }}</h1>
+  </section>
+  } @else if (quote(); as currentQuote) {
+  <header class="quote-heading">
+    <div>
+      <p class="eyebrow">{{ i18n.t('publicQuote.eyebrow') }}</p>
+      <h1 id="public-quote-title">{{ currentQuote.snapshot.title }}</h1>
+      <p class="recipient">
+        {{ currentQuote.snapshot.issuer.displayName }} → {{ currentQuote.snapshot.client.displayName
+        }}
+      </p>
+    </div>
+    <div class="total-card">
+      <span>{{ i18n.t('publicQuote.total') }}</span>
+      <strong>{{ formatMoney(currentQuote.snapshot.totalCents) }}</strong>
+      <small
+        >{{ i18n.tf('publicQuote.version', { version: currentQuote.snapshot.version }) }}</small
+      >
+    </div>
+  </header>
+
+  <section class="quote-facts" aria-label="Résumé du devis">
+    <div>
+      <span>{{ i18n.t('publicQuote.netTotal') }}</span>
+      <strong>{{ formatMoney(currentQuote.snapshot.netTotalCents) }}</strong>
+    </div>
+    <div>
+      <span>{{ i18n.t('publicQuote.vatTotal') }}</span>
+      <strong>{{ formatMoney(currentQuote.snapshot.vatTotalCents) }}</strong>
+    </div>
+    <div>
+      <span>{{ i18n.t('publicQuote.expires') }}</span>
+      <strong>{{ currentQuote.expiresAt.slice(0, 10) }}</strong>
+    </div>
+  </section>
+
+  <section class="line-summary" aria-labelledby="line-summary-title">
+    <h2 id="line-summary-title">{{ i18n.t('publicQuote.details') }}</h2>
+    <ol>
+      @for (line of currentQuote.snapshot.lines; track line.id) {
+      <li>
+        <div>
+          <strong>{{ line.description }}</strong>
+          <span
+            >{{ formatQuantity(line.quantityMilli) }} × {{ formatMoney(line.unitPriceCents) }}</span
+          >
+        </div>
+        <strong>{{ formatMoney(line.totalCents) }}</strong>
+      </li>
+      }
+    </ol>
+    @if (currentQuote.snapshot.conditions) {
+    <div class="conditions">
+      <h3>{{ i18n.t('publicQuote.conditions') }}</h3>
+      <p>{{ currentQuote.snapshot.conditions }}</p>
+    </div>
+    }
+  </section>
+
+  <section class="document-panel" aria-labelledby="document-title">
+    <div class="section-heading">
+      <div>
+        <p class="eyebrow">PDF</p>
+        <h2 id="document-title">{{ i18n.t('publicQuote.document') }}</h2>
+      </div>
+      @if (pdfUrl(); as documentUrl) {
+      <a [href]="documentUrl" [download]="'quote-' + currentQuote.snapshot.quoteId + '.pdf'">
+        {{ i18n.t('publicQuote.download') }}
+      </a>
+      }
+    </div>
+    @if (pdfFrameUrl(); as frameUrl) {
+    <iframe [src]="frameUrl" [title]="i18n.t('publicQuote.frameTitle')"></iframe>
+    }
+  </section>
+
+  <section class="signature-panel" aria-labelledby="signature-title">
+    @if (acceptance()) {
+    <div class="accepted" role="status">
+      <p class="eyebrow">{{ i18n.t('publicQuote.acceptedEyebrow') }}</p>
+      <h2 id="signature-title">{{ i18n.t('publicQuote.accepted') }}</h2>
+      <p>{{ i18n.t('publicQuote.acceptedDetail') }}</p>
+    </div>
+    } @else if (currentQuote.canSign) {
+    <div class="signature-copy">
+      <p class="eyebrow">{{ i18n.t('publicQuote.signatureEyebrow') }}</p>
+      <h2 id="signature-title">{{ i18n.t('publicQuote.signatureTitle') }}</h2>
+      <p>{{ i18n.t('publicQuote.signatureIntro') }}</p>
+    </div>
+    <form (submit)="sign($event)">
+      <label class="field">
+        {{ i18n.t('publicQuote.signerName') }}
+        <input
+          class="input"
+          type="text"
+          autocomplete="name"
+          [formField]="signatureForm.signerName"
+        />
+      </label>
+      <label class="field">
+        {{ i18n.t('publicQuote.typedSignature') }}
+        <input class="input signature-input" type="text" [formField]="signatureForm.signature" />
+        <span class="field-hint">{{ i18n.t('publicQuote.typedSignatureHint') }}</span>
+      </label>
+      <label class="choice consent">
+        <input type="checkbox" [formField]="signatureForm.consent" />
+        <span>{{ i18n.t('publicQuote.consent') }}</span>
+      </label>
+      <button appButton variant="primary" type="submit" [disabled]="signDisabled()">
+        @if (signing()) { {{ i18n.t('publicQuote.signing') }} } @else { {{
+        i18n.t('publicQuote.sign') }} }
+      </button>
+      <p class="legal-note">{{ i18n.t('publicQuote.legal') }}</p>
+    </form>
+    } @else {
+    <div class="accepted" role="status">
+      <h2 id="signature-title">{{ i18n.t('publicQuote.alreadyAccepted') }}</h2>
+    </div>
+    }
+  </section>
+  } @else {
+  <section class="state-card danger" role="alert">
+    <p class="eyebrow">{{ i18n.t('publicQuote.eyebrow') }}</p>
+    <h1 id="public-quote-title">{{ i18n.t('publicQuote.unavailable') }}</h1>
+    @if (error(); as errorKey) {
+    <p>{{ i18n.t(errorKey) }}</p>
+    }
+  </section>
+  } @if (quote() && error(); as errorKey) {
+  <p class="notice danger" role="alert">{{ i18n.t(errorKey) }}</p>
+  }
+</main>

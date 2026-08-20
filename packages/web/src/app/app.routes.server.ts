@@ -15,6 +15,10 @@ export const serverRoutes: ServerRoute[] = [
     getPrerenderParams: async () => [{ slug: '2026-08-froment-software-arrive' }],
   },
   {
+    path: 'quote',
+    renderMode: RenderMode.Client,
+  },
+  {
     path: '**',
     renderMode: RenderMode.Prerender,
   },
