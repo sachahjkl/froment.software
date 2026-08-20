@@ -145,7 +145,9 @@ export class QuoteEditor {
       });
     });
   });
-  protected readonly editable = computed(() => this.isNew() || this.detail()?.status === 'draft');
+  protected readonly editable = computed(
+    () => this.isNew() || ['draft', 'expired'].includes(this.detail()?.status ?? ''),
+  );
   protected readonly saveDisabled = computed(
     () =>
       this.saving() ||

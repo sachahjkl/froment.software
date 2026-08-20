@@ -40,8 +40,8 @@
 
 - [x] REV-001 Preserve published migrations and add a corrective migration.
 - [x] REV-002 Make invoice PDF rendering durable after issuance.
-- [ ] REV-003 Expire sent quotes and allow revision after expiration.
-- [ ] REV-004 Revoke public quote links when a client is archived.
+- [x] REV-003 Expire sent quotes and allow revision after expiration.
+- [x] REV-004 Revoke public quote links when a client is archived.
 - [x] REV-005 Validate document line calculations and aggregates.
 - [x] REV-006 Format all safe monetary integers without precision loss.
 - [ ] REV-007 Isolate pull-request CI from persistent runners.

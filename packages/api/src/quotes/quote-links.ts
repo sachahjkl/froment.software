@@ -24,6 +24,7 @@ import { ulid } from 'ulid';
 import { Audit } from '../audit/audit.js';
 import { AuthenticationConfig, hmac } from '../authentication/authentication-config.js';
 import { Database, DatabaseError } from '../database/database.js';
+import { expireSentQuotes } from './quote-expiration.js';
 
 const linkLifetimeMillis = 30 * 24 * 60 * 60 * 1_000;
 
@@ -126,6 +127,7 @@ export const QuoteLinksLive = Layer.effect(
         try: () =>
           database.sqlite
             .transaction(() => {
+              expireSentQuotes(database.sqlite, audit, now, quoteId);
               const raw = database.sqlite
                 .prepare(
                   `select quotes.status, quotes.version, quote_revisions.id as revisionId,
@@ -227,14 +229,16 @@ export const QuoteLinksLive = Layer.effect(
                   document_artifacts.content, document_artifacts.sha256 as pdfSha256
            from quote_links
            join quote_revisions on quote_revisions.id = quote_links.revision_id
-           join quotes on quotes.id = quote_revisions.quote_id
+            join quotes on quotes.id = quote_revisions.quote_id
+            join users on users.id = quotes.client_id
            join document_artifacts
              on document_artifacts.revision_id = quote_revisions.id
             and document_artifacts.kind = 'quote-pdf'
            where quote_links.token_hmac = ?
              and quote_links.revoked_at is null
-             and quote_links.expires_at > ?
-             and quotes.status in ('sent', 'accepted')`,
+              and quote_links.expires_at > ?
+              and users.disabled_at is null
+              and quotes.status in ('sent', 'accepted')`,
         )
         .get(hmac(config.quoteLinkHmacKey, token), now);
       if (raw === undefined) throw new QuoteLinkNotFound({ code: 'quote_link.not_found' });
@@ -244,17 +248,21 @@ export const QuoteLinksLive = Layer.effect(
     const get = Effect.fn('QuoteLinks.get')(function* (token: QuoteLinkTokenValue) {
       const now = yield* Clock.currentTimeMillis;
       return yield* Effect.try({
-        try: () => {
-          const quote = findPublicQuote(token, now);
-          return PublicQuoteConsultation.make({
-            status: quote.status,
-            canSign: quote.status === 'sent' && quote.consumedAt === null,
-            expiresAt: DateTime.formatIso(DateTime.makeUnsafe(quote.expiresAt)),
-            snapshot: Schema.decodeUnknownSync(QuoteRenderSnapshot)(
-              JSON.parse(quote.renderSnapshot),
-            ),
-          });
-        },
+        try: () =>
+          database.sqlite
+            .transaction(() => {
+              expireSentQuotes(database.sqlite, audit, now);
+              const quote = findPublicQuote(token, now);
+              return PublicQuoteConsultation.make({
+                status: quote.status,
+                canSign: quote.status === 'sent' && quote.consumedAt === null,
+                expiresAt: DateTime.formatIso(DateTime.makeUnsafe(quote.expiresAt)),
+                snapshot: Schema.decodeUnknownSync(QuoteRenderSnapshot)(
+                  JSON.parse(quote.renderSnapshot),
+                ),
+              });
+            })
+            .immediate(),
         catch: (cause) =>
           cause instanceof QuoteLinkNotFound
             ? cause
@@ -265,10 +273,14 @@ export const QuoteLinksLive = Layer.effect(
     const getPdf = Effect.fn('QuoteLinks.getPdf')(function* (token: QuoteLinkTokenValue) {
       const now = yield* Clock.currentTimeMillis;
       return yield* Effect.try({
-        try: () => {
-          const quote = findPublicQuote(token, now);
-          return { quoteId: quote.quoteId, version: quote.version, content: quote.content };
-        },
+        try: () =>
+          database.sqlite
+            .transaction(() => {
+              expireSentQuotes(database.sqlite, audit, now);
+              const quote = findPublicQuote(token, now);
+              return { quoteId: quote.quoteId, version: quote.version, content: quote.content };
+            })
+            .immediate(),
         catch: (cause) =>
           cause instanceof QuoteLinkNotFound
             ? cause
@@ -285,6 +297,7 @@ export const QuoteLinksLive = Layer.effect(
         try: () =>
           database.sqlite
             .transaction(() => {
+              expireSentQuotes(database.sqlite, audit, now);
               const raw = database.sqlite
                 .prepare(
                   `select quote_links.id as linkId, quote_links.revision_id as revisionId,
@@ -297,11 +310,12 @@ export const QuoteLinksLive = Layer.effect(
                           document_artifacts.content, document_artifacts.sha256 as pdfSha256
                    from quote_links
                    join quote_revisions on quote_revisions.id = quote_links.revision_id
-                   join quotes on quotes.id = quote_revisions.quote_id
+                    join quotes on quotes.id = quote_revisions.quote_id
+                    join users on users.id = quotes.client_id
                    join document_artifacts
                      on document_artifacts.revision_id = quote_revisions.id
                     and document_artifacts.kind = 'quote-pdf'
-                   where quote_links.token_hmac = ?`,
+                    where quote_links.token_hmac = ? and users.disabled_at is null`,
                 )
                 .get(hmac(config.quoteLinkHmacKey, request.token));
               if (raw === undefined) {

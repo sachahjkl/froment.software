@@ -27,6 +27,7 @@ import { Audit } from '../audit/audit.js';
 import { Database, DatabaseError } from '../database/database.js';
 import { IssuerSettings } from '../documents/issuer-settings.js';
 import { calculateQuoteLine, calculateQuoteTotals } from './quote-calculation.js';
+import { expireSentQuotes } from './quote-expiration.js';
 
 const QuoteRecord = Schema.Struct({
   id: Ulid,
@@ -192,12 +193,17 @@ export const QuotesLive = Layer.effect(
       return { ...quote, currentRevision, revisions: mappedRevisions };
     };
 
-    const list = Effect.try({
-      try: () =>
-        Schema.decodeUnknownSync(Schema.Array(QuoteSummaryRecord))(
+    const list = Effect.gen(function* () {
+      const now = yield* Clock.currentTimeMillis;
+      return yield* Effect.try({
+        try: () =>
           database.sqlite
-            .prepare(
-              `select quotes.id, quotes.client_id as clientId,
+            .transaction(() => {
+              expireSentQuotes(database.sqlite, audit, now);
+              return Schema.decodeUnknownSync(Schema.Array(QuoteSummaryRecord))(
+                database.sqlite
+                  .prepare(
+                    `select quotes.id, quotes.client_id as clientId,
                       quote_revisions.client_display_name as clientDisplayName,
                       quotes.status, quotes.version, quote_revisions.title,
                       quote_revisions.currency, quote_revisions.total_cents as totalCents,
@@ -206,22 +212,30 @@ export const QuotesLive = Layer.effect(
                join quote_revisions on quote_revisions.quote_id = quotes.id
                  and quote_revisions.version = quotes.version
                order by quotes.updated_at desc, quotes.id`,
-            )
-            .all(),
-        ).map((quote) => ({
-          ...quote,
-          updatedAt: DateTime.formatIso(DateTime.makeUnsafe(quote.updatedAt)),
-        })),
-      catch: (cause) => new DatabaseError({ operation: 'list quotes', cause }),
+                  )
+                  .all(),
+              ).map((quote) => ({
+                ...quote,
+                updatedAt: DateTime.formatIso(DateTime.makeUnsafe(quote.updatedAt)),
+              }));
+            })
+            .immediate(),
+        catch: (cause) => new DatabaseError({ operation: 'list quotes', cause }),
+      });
     });
 
     const get = Effect.fn('Quotes.get')(function* (quoteId: UlidValue) {
+      const now = yield* Clock.currentTimeMillis;
       return yield* Effect.try({
-        try: () => {
-          const detail = readDetail(quoteId);
-          if (detail === undefined) throw new QuoteNotFound({ code: 'quote.not_found' });
-          return detail;
-        },
+        try: () =>
+          database.sqlite
+            .transaction(() => {
+              expireSentQuotes(database.sqlite, audit, now, quoteId);
+              const detail = readDetail(quoteId);
+              if (detail === undefined) throw new QuoteNotFound({ code: 'quote.not_found' });
+              return detail;
+            })
+            .immediate(),
         catch: (cause) =>
           cause instanceof QuoteNotFound
             ? cause
@@ -425,10 +439,11 @@ export const QuotesLive = Layer.effect(
         try: () =>
           database.sqlite
             .transaction(() => {
+              expireSentQuotes(database.sqlite, audit, now, quoteId);
               const rawQuote = database.sqlite.prepare(`${quoteSql} where id = ?`).get(quoteId);
               if (rawQuote === undefined) throw new QuoteNotFound({ code: 'quote.not_found' });
               const quote = Schema.decodeUnknownSync(QuoteRecord)(rawQuote);
-              if (quote.status !== 'draft') {
+              if (quote.status !== 'draft' && quote.status !== 'expired') {
                 throw new QuoteNotEditable({ code: 'quote.not_editable' });
               }
               if (quote.version !== request.expectedVersion) {
@@ -441,7 +456,8 @@ export const QuotesLive = Layer.effect(
               const nextVersion = quote.version + 1;
               const updated = database.sqlite
                 .prepare(
-                  'update quotes set version = ?, updated_at = ? where id = ? and version = ?',
+                  `update quotes set status = 'draft', version = ?, updated_at = ?
+                   where id = ? and version = ? and status in ('draft', 'expired')`,
                 )
                 .run(nextVersion, now, quoteId, request.expectedVersion).changes;
               if (updated !== 1) {

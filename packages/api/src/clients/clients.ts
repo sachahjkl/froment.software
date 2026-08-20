@@ -325,6 +325,17 @@ export const ClientsLive = Layer.effect(
                   'update sessions set revoked_at = coalesce(revoked_at, ?) where user_id = ?',
                 )
                 .run(now, clientId);
+              database.sqlite
+                .prepare(
+                  `update quote_links set revoked_at = ?
+                   where revoked_at is null and consumed_at is null and expires_at > ?
+                     and revision_id in (
+                       select quote_revisions.id from quote_revisions
+                       join quotes on quotes.id = quote_revisions.quote_id
+                       where quotes.client_id = ?
+                     )`,
+                )
+                .run(now, now, clientId);
               audit.insert({
                 action: 'client.archived',
                 actorUserId,
