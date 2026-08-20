@@ -24,3 +24,14 @@
 - [x] Add tenant-scoped PDF download endpoints.
 - [x] Replace the empty portal with document tables.
 - [x] Add tenant-isolation and portal tests.
+
+## Review Hardening
+
+- [x] Reject impossible invoice calendar dates at every boundary.
+- [x] Generate the final invoice PDF during invoice issuance.
+- [x] Protect PDF layouts against long content and page breaks.
+- [x] Make invoice form validation accessible.
+- [x] Make the client-role migration fail on identifier collisions.
+- [x] Cover invoice creation, revisions, transitions, failures, and PDFs in Angular tests.
+- [x] Add browser coverage for direct private-route rendering.
+- [x] Validate all packages, lint, formatting, and migrations.

@@ -1,4 +1,4 @@
-import { Schema } from 'effect';
+import { DateTime, Option, Schema } from 'effect';
 
 import {
   AuthenticationRequired,
@@ -24,7 +24,14 @@ const PositiveSafeInteger = SafeInteger.check(Schema.isGreaterThan(0));
 const IsoUtc = Schema.String.check(
   Schema.isPattern(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/),
 );
-const LocalDate = Schema.String.check(Schema.isPattern(/^\d{4}-\d{2}-\d{2}$/));
+export const CalendarDateText = Schema.String.check(Schema.isPattern(/^\d{4}-\d{2}-\d{2}$/));
+export const CalendarDate = CalendarDateText.check(
+  Schema.makeFilter(
+    (value) =>
+      Option.exists(DateTime.make(value), (date) => DateTime.formatIsoDateUtc(date) === value),
+    { message: 'invoice.invalid_dates' },
+  ),
+);
 const InvoiceTitle = Schema.String.check(Schema.isPattern(/\S/), Schema.isMaxLength(120));
 const PaymentTerms = Schema.String.check(Schema.isMaxLength(2_000));
 const InvoiceLinesInput = Schema.Array(QuoteLineInput).check(
@@ -40,8 +47,8 @@ export type InvoiceNumber = typeof InvoiceNumber.Type;
 
 export const InvoiceCreateRequest = Schema.Struct({
   orderId: Ulid,
-  serviceDate: LocalDate,
-  dueDate: LocalDate,
+  serviceDate: CalendarDate,
+  dueDate: CalendarDate,
   paymentTerms: PaymentTerms,
 });
 export type InvoiceCreateRequest = typeof InvoiceCreateRequest.Type;
@@ -49,8 +56,8 @@ export type InvoiceCreateRequest = typeof InvoiceCreateRequest.Type;
 export const InvoiceRevisionCreateRequest = Schema.Struct({
   expectedVersion: PositiveSafeInteger,
   title: InvoiceTitle,
-  serviceDate: LocalDate,
-  dueDate: LocalDate,
+  serviceDate: CalendarDate,
+  dueDate: CalendarDate,
   paymentTerms: PaymentTerms,
   lines: InvoiceLinesInput,
 });
@@ -72,8 +79,8 @@ export const InvoiceRenderSnapshot = Schema.Struct({
   createdAt: IsoUtc,
   invoiceNumber: Schema.NullOr(InvoiceNumber),
   issuedAt: Schema.NullOr(IsoUtc),
-  serviceDate: LocalDate,
-  dueDate: LocalDate,
+  serviceDate: CalendarDate,
+  dueDate: CalendarDate,
   issuer: IssuerSettings,
   client: DocumentParty,
   title: InvoiceTitle,
@@ -93,8 +100,8 @@ export const InvoiceRevision = Schema.Struct({
   invoiceNumber: Schema.NullOr(InvoiceNumber),
   issuedAt: Schema.NullOr(IsoUtc),
   title: InvoiceTitle,
-  serviceDate: LocalDate,
-  dueDate: LocalDate,
+  serviceDate: CalendarDate,
+  dueDate: CalendarDate,
   paymentTerms: PaymentTerms,
   currency: Schema.Literal('EUR'),
   netTotalCents: SafeInteger,

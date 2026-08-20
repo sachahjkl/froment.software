@@ -232,9 +232,12 @@ describe('Database', () => {
     directories.push(directory);
     const migrationsFolder = join(directory, 'drizzle');
     const sourceFolder = join(import.meta.dirname, '..', 'drizzle');
-    const clientRoleMigration = '20260820090553_client_role';
+    const clientRoleMigrations = [
+      '20260820090553_client_role',
+      '20260820102552_client_role_integrity',
+    ];
     const migrations = (await readdir(sourceFolder)).filter(
-      (migration) => migration !== clientRoleMigration,
+      (migration) => !clientRoleMigrations.includes(migration),
     );
     await Promise.all(
       migrations.map((migration) =>
@@ -260,9 +263,11 @@ describe('Database', () => {
       .run(clientId);
     sqlite.close();
 
-    await cp(join(sourceFolder, clientRoleMigration), join(migrationsFolder, clientRoleMigration), {
-      recursive: true,
-    });
+    await Promise.all(
+      clientRoleMigrations.map((migration) =>
+        cp(join(sourceFolder, migration), join(migrationsFolder, migration), { recursive: true }),
+      ),
+    );
     const role = await Effect.runPromise(
       Database.use(({ sqlite: connection }) =>
         Effect.sync(() => ({
@@ -290,6 +295,47 @@ describe('Database', () => {
       name: 'client',
       permissions: ['document.download', 'invoice.read', 'order.read', 'quote.read'],
     });
+  });
+
+  it('rejects a client role identifier collision during an upgrade', async () => {
+    const directory = await mkdtemp(join(tmpdir(), 'froment-database-client-role-collision-'));
+    directories.push(directory);
+    const migrationsFolder = join(directory, 'drizzle');
+    const sourceFolder = join(import.meta.dirname, '..', 'drizzle');
+    const clientRoleMigrations = [
+      '20260820090553_client_role',
+      '20260820102552_client_role_integrity',
+    ];
+    const migrations = (await readdir(sourceFolder)).filter(
+      (migration) => !clientRoleMigrations.includes(migration),
+    );
+    await Promise.all(
+      migrations.map((migration) =>
+        cp(join(sourceFolder, migration), join(migrationsFolder, migration), { recursive: true }),
+      ),
+    );
+    const filename = join(directory, 'database.sqlite');
+    const options = { filename, migrationsFolder };
+    await Effect.runPromise(
+      Database.use(() => Effect.void).pipe(Effect.provide(makeDatabaseLayer(options))),
+    );
+
+    const sqlite = new Sqlite(filename);
+    sqlite
+      .prepare('insert into roles (id, name, created_at) values (?, ?, ?)')
+      .run('00000000000000000000000001', 'identifier-collision', 1);
+    sqlite.close();
+    await Promise.all(
+      clientRoleMigrations.map((migration) =>
+        cp(join(sourceFolder, migration), join(migrationsFolder, migration), { recursive: true }),
+      ),
+    );
+
+    await expect(
+      Effect.runPromise(
+        Database.use(() => Effect.void).pipe(Effect.provide(makeDatabaseLayer(options))),
+      ),
+    ).rejects.toThrow();
   });
 
   it('backfills client users and administrator permissions during an upgrade', async () => {

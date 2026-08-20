@@ -1,4 +1,5 @@
 import {
+  CalendarDate,
   InvoiceAlreadyExists,
   InvoiceAmountTooLarge,
   InvoiceDetail,
@@ -27,7 +28,7 @@ import {
   type QuoteLineValue,
   type UlidValue,
 } from '@froment/contracts';
-import { Clock, Context, DateTime, Effect, Layer, Schema } from 'effect';
+import { Clock, Context, DateTime, Effect, Layer, Option, Schema } from 'effect';
 import { ulid } from 'ulid';
 
 import { Audit } from '../audit/audit.js';
@@ -320,7 +321,12 @@ export const InvoicesLive = Layer.effect(
     });
 
     const validateDates = (serviceDate: string, dueDate: string, minimumDueDate?: string) => {
-      if (dueDate < serviceDate || (minimumDueDate !== undefined && dueDate < minimumDueDate)) {
+      if (
+        Option.isNone(Schema.decodeUnknownOption(CalendarDate)(serviceDate)) ||
+        Option.isNone(Schema.decodeUnknownOption(CalendarDate)(dueDate)) ||
+        dueDate < serviceDate ||
+        (minimumDueDate !== undefined && dueDate < minimumDueDate)
+      ) {
         throw new InvoiceInvalidDates({ code: 'invoice.invalid_dates' });
       }
     };
@@ -425,7 +431,6 @@ export const InvoicesLive = Layer.effect(
       request: InvoiceCreateRequestValue,
       actorUserId: UlidValue,
     ) {
-      validateDates(request.serviceDate, request.dueDate);
       const now = yield* Clock.currentTimeMillis;
       const issuer = yield* issuerSettings.get;
       const invoiceId = ulid(now);
@@ -433,6 +438,7 @@ export const InvoicesLive = Layer.effect(
         try: () =>
           database.sqlite
             .transaction(() => {
+              validateDates(request.serviceDate, request.dueDate);
               const existingInvoiceId = database.sqlite
                 .prepare('select id from invoices where order_id = ?')
                 .pluck()
@@ -515,13 +521,13 @@ export const InvoicesLive = Layer.effect(
       request: InvoiceRevisionCreateRequestValue,
       actorUserId: UlidValue,
     ) {
-      validateDates(request.serviceDate, request.dueDate);
       const now = yield* Clock.currentTimeMillis;
       const issuer = yield* issuerSettings.get;
       return yield* Effect.try({
         try: () =>
           database.sqlite
             .transaction(() => {
+              validateDates(request.serviceDate, request.dueDate);
               const rawInvoice = database.sqlite
                 .prepare(`${invoiceSql} where id = ?`)
                 .get(invoiceId);
@@ -634,6 +640,15 @@ export const InvoicesLive = Layer.effect(
                 }
                 if (invoice.invoiceNumber === null || invoice.issuedAt === null) {
                   throw new Error('Issued invoice metadata is missing.');
+                }
+                if (
+                  request.expectedVersion !== invoice.version - 1 &&
+                  request.expectedVersion !== invoice.version
+                ) {
+                  throw new InvoiceVersionConflict({
+                    code: 'invoice.version_conflict',
+                    currentVersion: invoice.version,
+                  });
                 }
                 const finalRevision = database.sqlite
                   .prepare(

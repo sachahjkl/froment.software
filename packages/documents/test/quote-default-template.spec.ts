@@ -64,4 +64,44 @@ describe('QuoteDefaultTemplate', () => {
     expect(html).toContain('"Courier New"');
     expect(html).toContain('repeating-linear-gradient');
   });
+
+  it('renders and protects the supported content limits', async () => {
+    const unsafeDescription = `<script>alert('line')</script>${'X'.repeat(300)}`;
+    const conditions =
+      `Conditions <script>alert('conditions')</script> & ${'Y'.repeat(2_000)}`.slice(0, 2_000);
+    const boundarySnapshot: QuoteRenderSnapshotValue = {
+      ...snapshot,
+      issuer: {
+        ...snapshot.issuer,
+        displayName: 'SOCIETE'.repeat(30),
+        addressLine1: '10 '.concat('RUE-SANS-ESPACE'.repeat(30)),
+      },
+      client: {
+        ...snapshot.client,
+        displayName: 'CLIENT'.repeat(35),
+        addressLine1: '1 '.concat('ADRESSE-SANS-ESPACE'.repeat(30)),
+      },
+      conditions,
+      lines: Array.from({ length: 20 }, (_, position) => ({
+        ...snapshot.lines[0]!,
+        id: `line-${position}`,
+        position,
+        description: `${position}-${unsafeDescription}`,
+      })),
+    };
+
+    const html = await renderQuoteDefaultTemplate(boundarySnapshot);
+
+    expect(conditions).toHaveLength(2_000);
+    expect(html.match(/<tr/g)).toHaveLength(21);
+    expect(html).toContain(`0-&lt;script&gt;alert('line')&lt;/script&gt;${'X'.repeat(300)}`);
+    expect(html).toContain("Conditions &lt;script&gt;alert('conditions')&lt;/script&gt; &amp;");
+    expect(html).not.toContain("<script>alert('line')</script>");
+    expect(html).toMatch(/table-layout:\s*fixed/);
+    expect(html).toMatch(/overflow-wrap:\s*anywhere/);
+    expect(html).toMatch(/word-break:\s*break-word/);
+    expect(html).toMatch(/break-inside:\s*avoid/);
+    expect(html).toMatch(/page-break-inside:\s*avoid/);
+    expect(html).toMatch(/thead[^}]*display:\s*table-header-group/);
+  });
 });

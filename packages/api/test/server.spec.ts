@@ -1,4 +1,4 @@
-import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { cp, mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { spawn, type ChildProcess } from 'node:child_process';
@@ -19,6 +19,7 @@ import Sqlite from 'better-sqlite3';
 import { Effect, Schema } from 'effect';
 import { FetchHttpClient, HttpClient, HttpClientRequest } from 'effect/unstable/http';
 import { HttpApiClient } from 'effect/unstable/httpapi';
+import { chromium } from 'playwright-core';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 const deploymentMetadata = {
@@ -82,10 +83,9 @@ describe('HTTP server', () => {
 
   beforeAll(async () => {
     staticRoot = await mkdtemp(join(tmpdir(), 'froment-api-'));
-    await writeFile(join(staticRoot, 'index.html'), '<h1>Froment Software</h1>');
-    await writeFile(join(staticRoot, 'index.csr.html'), '<app-root>Client shell</app-root>');
-    await mkdir(join(staticRoot, 'about'));
-    await writeFile(join(staticRoot, 'about', 'index.html'), '<h1>About</h1>');
+    await cp(join(import.meta.dirname, '../../web/dist/froment-software/browser'), staticRoot, {
+      recursive: true,
+    });
     const port = await reservePort();
     baseUrl = `http://127.0.0.1:${port}`;
     databaseFilename = join(staticRoot, 'database.sqlite');
@@ -1170,6 +1170,30 @@ describe('HTTP server', () => {
       dueDate: '2026-09-19',
       paymentTerms: 'Payment due within 30 days.',
     };
+    for (const invalidDate of ['2026-02-30', '2026-13-01', '2026-01-00']) {
+      const invalidInvoiceCreate = await fetch(`${baseUrl}/api/invoices`, {
+        method: 'POST',
+        headers: writeHeaders,
+        body: JSON.stringify({ ...invoiceCreatePayload, serviceDate: invalidDate }),
+      });
+      expect(invalidInvoiceCreate.status).toBe(422);
+      await expect(invalidInvoiceCreate.json()).resolves.toMatchObject({
+        code: 'invoice.invalid_dates',
+      });
+    }
+    const reversedInvoiceDates = await fetch(`${baseUrl}/api/invoices`, {
+      method: 'POST',
+      headers: writeHeaders,
+      body: JSON.stringify({
+        ...invoiceCreatePayload,
+        serviceDate: '2026-09-20',
+        dueDate: '2026-09-19',
+      }),
+    });
+    expect(reversedInvoiceDates.status).toBe(422);
+    await expect(reversedInvoiceDates.json()).resolves.toMatchObject({
+      code: 'invoice.invalid_dates',
+    });
     const invoiceCreate = await fetch(`${baseUrl}/api/invoices`, {
       method: 'POST',
       headers: writeHeaders,
@@ -1301,12 +1325,36 @@ describe('HTTP server', () => {
       invoiceNumber: 'F-000001',
       issuedAt: expect.stringMatching(/^\d{4}-\d{2}-\d{2}T.*\.\d{3}Z$/),
     });
-
-    const missingInvoicePdf = await fetch(`${baseUrl}/api/invoices/${invoice.id}/revisions/3/pdf`, {
-      headers: { cookie },
+    const invalidIssueRetry = await fetch(`${baseUrl}/api/invoices/${invoice.id}/issue`, {
+      method: 'POST',
+      headers: writeHeaders,
+      body: JSON.stringify({ expectedVersion: 99 }),
     });
-    expect(missingInvoicePdf.status).toBe(404);
-    await expect(missingInvoicePdf.json()).resolves.toMatchObject({ code: 'document.not_found' });
+    expect(invalidIssueRetry.status).toBe(409);
+    await expect(invalidIssueRetry.json()).resolves.toMatchObject({
+      code: 'invoice.version_conflict',
+      currentVersion: 3,
+    });
+
+    const issuedInvoicePdfDownload = await fetch(
+      `${baseUrl}/api/invoices/${invoice.id}/revisions/3/pdf`,
+      { headers: { cookie } },
+    );
+    expect(issuedInvoicePdfDownload.status).toBe(200);
+    const issuedInvoicePdf = Buffer.from(await issuedInvoicePdfDownload.arrayBuffer());
+    expect(issuedInvoicePdf.subarray(0, 5).toString()).toBe('%PDF-');
+
+    const issuedClientInvoices = await fetch(`${baseUrl}/api/client/invoices`, {
+      headers: { cookie: clientCookie },
+    });
+    await expect(issuedClientInvoices.json()).resolves.toEqual([
+      expect.objectContaining({ id: invoice.id, pdfAvailable: true }),
+    ]);
+    const issuedClientInvoicePdf = await fetch(`${baseUrl}/api/client/invoices/${invoice.id}/pdf`, {
+      headers: { cookie: clientCookie },
+    });
+    expect(issuedClientInvoicePdf.status).toBe(200);
+    expect(Buffer.from(await issuedClientInvoicePdf.arrayBuffer())).toEqual(issuedInvoicePdf);
 
     const invoicePreview = await fetch(
       `${baseUrl}/api/invoices/${invoice.id}/revisions/3/preview`,
@@ -1359,6 +1407,7 @@ describe('HTTP server', () => {
       `invoice-${invoice.id}-v3.pdf`,
     );
     const invoicePdf = Buffer.from(await invoicePdfDownload.arrayBuffer());
+    expect(invoicePdf).toEqual(issuedInvoicePdf);
     expect(invoicePdf.subarray(0, 5).toString()).toBe('%PDF-');
     expect(invoicePdf.byteLength).toBe(invoiceArtifacts[0]?.byteSize);
     expect(createHash('sha256').update(invoicePdf).digest('hex')).toBe(invoiceArtifacts[0]?.sha256);
@@ -1717,7 +1766,7 @@ describe('HTTP server', () => {
         .get(),
     ).toBe(2);
     auditSqlite.close();
-  });
+  }, 15_000);
 
   it('rejects oversized request bodies', async () => {
     const response = await fetch(`${baseUrl}/api/auth/login`, {
@@ -1770,21 +1819,38 @@ describe('HTTP server', () => {
   });
 
   it('serves the application shell for refreshed back-office routes', async () => {
-    for (const path of ['/backoffice/login', '/backoffice/clients']) {
-      const response = await fetch(`${baseUrl}${path}`, {
-        headers: { accept: 'text/html' },
-      });
-      expect(response.status).toBe(200);
-      const html = await response.text();
-      expect(html).toContain('Client shell');
-      expect(html).not.toContain('Froment Software');
+    const response = await fetch(`${baseUrl}/backoffice/login?mode=client`, {
+      headers: { accept: 'text/html' },
+    });
+    expect(response.status).toBe(200);
+    const html = await response.text();
+    expect(html).toContain('<app-root></app-root>');
+    expect(html).not.toContain('ng-server-context="ssg"');
+    expect(html).not.toContain('Audit et rénovation de logiciels métier.');
+  });
+
+  it('bootstraps the client login route from the application shell', async () => {
+    const browser = await chromium.launch({ executablePath: process.env['CHROMIUM_PATH'] });
+    try {
+      const page = await browser.newPage();
+      await page.goto(`${baseUrl}/backoffice/login?mode=client`);
+      await page.locator('#back-office-title').waitFor();
+
+      expect(await page.locator('#back-office-title').textContent()).toBeTruthy();
+      expect(await page.locator('#client-tab').getAttribute('aria-selected')).toBe('true');
+      await page.locator('#back-office-access-identifier').waitFor();
+      expect(await page.locator('main app-home').count()).toBe(0);
+    } finally {
+      await browser.close();
     }
   });
 
   it('serves a prerendered route', async () => {
     const response = await fetch(`${baseUrl}/about`);
     expect(response.status).toBe(200);
-    await expect(response.text()).resolves.toContain('About');
+    const html = await response.text();
+    expect(html).toContain('ng-server-context="ssg"');
+    expect(html).toContain('<app-about');
   });
 
   it('returns 404 for an unknown path', async () => {

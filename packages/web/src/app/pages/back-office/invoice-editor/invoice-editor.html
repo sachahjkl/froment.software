@@ -16,7 +16,12 @@
     @if (isNew()) {
     <label class="field">
       {{ i18n.t('backOffice.invoice.order') }}
-      <select class="input" [formField]="invoiceForm.orderId">
+      <select
+        class="input"
+        aria-describedby="invoice-order-error"
+        [attr.aria-invalid]="invoiceForm.orderId().invalid()"
+        [formField]="invoiceForm.orderId"
+      >
         <option value="">{{ i18n.t('backOffice.invoice.orderPlaceholder') }}</option>
         @for (order of orders(); track order.id) {
         <option [value]="order.id">
@@ -24,23 +29,61 @@
         </option>
         }
       </select>
+      @if (invoiceForm.orderId().invalid() && invoiceForm.orderId().touched()) {
+      <span id="invoice-order-error" class="field-error"
+        >{{ i18n.t('backOffice.invoice.fieldRequired') }}</span
+      >
+      }
     </label>
     @if (orders().length === 0) {
     <p class="notice">{{ i18n.t('backOffice.invoice.noOrder') }}</p>
     } } @else {
     <label class="field">
       {{ i18n.t('backOffice.invoice.title') }}
-      <input class="input" type="text" [formField]="invoiceForm.title" />
+      <input
+        class="input"
+        type="text"
+        aria-describedby="invoice-title-error"
+        [attr.aria-invalid]="invoiceForm.title().invalid()"
+        [formField]="invoiceForm.title"
+      />
+      @if (invoiceForm.title().invalid() && invoiceForm.title().touched()) {
+      <span id="invoice-title-error" class="field-error"
+        >{{ i18n.t('backOffice.invoice.fieldInvalid') }}</span
+      >
+      }
     </label>
     }
     <div class="date-fields">
       <label class="field">
         {{ i18n.t('backOffice.invoice.serviceDate') }}
-        <input class="input" type="date" [formField]="invoiceForm.serviceDate" />
+        <input
+          class="input"
+          type="date"
+          aria-describedby="invoice-service-date-error"
+          [attr.aria-invalid]="invoiceForm.serviceDate().invalid()"
+          [formField]="invoiceForm.serviceDate"
+        />
+        @if (invoiceForm.serviceDate().invalid() && invoiceForm.serviceDate().touched()) {
+        <span id="invoice-service-date-error" class="field-error"
+          >{{ i18n.t('backOffice.invoice.dateInvalid') }}</span
+        >
+        }
       </label>
       <label class="field">
         {{ i18n.t('backOffice.invoice.dueDate') }}
-        <input class="input" type="date" [formField]="invoiceForm.dueDate" />
+        <input
+          class="input"
+          type="date"
+          aria-describedby="invoice-due-date-error"
+          [attr.aria-invalid]="invoiceForm.dueDate().invalid()"
+          [formField]="invoiceForm.dueDate"
+        />
+        @if (invoiceForm.dueDate().invalid() && invoiceForm.dueDate().touched()) {
+        <span id="invoice-due-date-error" class="field-error"
+          >{{ i18n.t('backOffice.invoice.dueDateInvalid') }}</span
+        >
+        }
       </label>
     </div>
     <label class="field">
@@ -66,19 +109,63 @@
         <legend>{{ i18n.tf('backOffice.invoice.lineNumber', { number: $index + 1 }) }}</legend>
         <label class="field description">
           {{ i18n.t('backOffice.invoice.description') }}
-          <input class="input" type="text" [formField]="line.description" />
+          <input
+            class="input"
+            type="text"
+            [attr.aria-describedby]="'invoice-line-description-error-' + $index"
+            [attr.aria-invalid]="line.description().invalid()"
+            [formField]="line.description"
+          />
+          @if (line.description().invalid() && line.description().touched()) {
+          <span [id]="'invoice-line-description-error-' + $index" class="field-error"
+            >{{ i18n.t('backOffice.invoice.fieldInvalid') }}</span
+          >
+          }
         </label>
         <label class="field">
           {{ i18n.t('backOffice.invoice.quantity') }}
-          <input class="input" inputmode="decimal" [formField]="line.quantity" />
+          <input
+            class="input"
+            inputmode="decimal"
+            [attr.aria-describedby]="'invoice-line-quantity-error-' + $index"
+            [attr.aria-invalid]="line.quantity().invalid()"
+            [formField]="line.quantity"
+          />
+          @if (line.quantity().invalid() && line.quantity().touched()) {
+          <span [id]="'invoice-line-quantity-error-' + $index" class="field-error"
+            >{{ i18n.t('backOffice.invoice.quantityInvalid') }}</span
+          >
+          }
         </label>
         <label class="field">
           {{ i18n.t('backOffice.invoice.unitPrice') }}
-          <input class="input" inputmode="decimal" [formField]="line.unitPrice" />
+          <input
+            class="input"
+            inputmode="decimal"
+            [attr.aria-describedby]="'invoice-line-price-error-' + $index"
+            [attr.aria-invalid]="line.unitPrice().invalid()"
+            [formField]="line.unitPrice"
+          />
+          @if (line.unitPrice().invalid() && line.unitPrice().touched()) {
+          <span [id]="'invoice-line-price-error-' + $index" class="field-error"
+            >{{ i18n.t('backOffice.invoice.priceInvalid') }}</span
+          >
+          }
         </label>
         <label class="field">
           {{ i18n.t('backOffice.invoice.vatRate') }}
-          <input class="input" inputmode="decimal" [formField]="line.vatRate" />
+          <input
+            class="input"
+            inputmode="decimal"
+            [attr.aria-describedby]="'invoice-line-vat-error-' + $index"
+            [attr.aria-invalid]="line.vatRate().invalid()"
+            [formField]="line.vatRate"
+          />
+          @if (line.vatRate().invalid() && line.vatRate().touched()) {
+          <span [id]="'invoice-line-vat-error-' + $index" class="field-error"
+            >{{ i18n.t('backOffice.invoice.vatInvalid') }}</span
+          >
+          }
         </label>
         <button
           appButton

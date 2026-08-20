@@ -3,6 +3,7 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
+  ElementRef,
   HostListener,
   inject,
   signal,
@@ -101,6 +102,7 @@ export class InvoiceEditor {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly sanitizer = inject(DomSanitizer);
+  private readonly element = inject<ElementRef<HTMLElement>>(ElementRef);
   private readonly invoiceIdParameter = this.route.snapshot.paramMap.get('invoiceId');
   private readonly invoiceId = this.decodeId(this.invoiceIdParameter);
   protected readonly isNew = computed(() => this.invoiceIdParameter === null);
@@ -174,23 +176,11 @@ export class InvoiceEditor {
   });
   protected readonly editable = computed(() => this.isNew() || this.detail()?.status === 'draft');
   protected readonly saveDisabled = computed(
-    () =>
-      this.loading() ||
-      this.saving() ||
-      !this.editable() ||
-      this.invoiceForm().invalid() ||
-      (!this.isNew() && !this.invoiceForm().dirty()),
+    () => !this.editable() || this.saving() || this.actionPending(),
   );
-  protected readonly issueDisabled = computed(() => {
-    const invoice = this.detail();
-    return (
-      invoice === undefined ||
-      invoice.status !== 'draft' ||
-      this.invoiceForm().dirty() ||
-      this.saving() ||
-      this.actionPending()
-    );
-  });
+  protected readonly issueDisabled = computed(
+    () => this.saving() || this.actionPending() || this.invoiceForm().dirty(),
+  );
   protected readonly totalsAreStale = computed(
     () => this.detail() !== undefined && this.invoiceForm().dirty(),
   );
@@ -238,71 +228,84 @@ export class InvoiceEditor {
 
   protected save(event: SubmitEvent): void {
     event.preventDefault();
-    void submit(this.invoiceForm, async () => {
-      this.saving.set(true);
-      this.error.set(undefined);
-      const model = this.model();
-      if (this.invoiceId === undefined) {
-        const orderId = this.decodeId(model.orderId);
-        if (orderId === undefined) {
-          this.saving.set(false);
-          return this.setError('invoice.order_not_found');
-        }
-        const request: InvoiceCreateRequestValue = {
-          orderId,
-          serviceDate: model.serviceDate,
-          dueDate: model.dueDate,
-          paymentTerms: model.paymentTerms,
-        };
-        const outcome = await this.invoicesApi.create(request);
-        this.saving.set(false);
-        if (!outcome.success) {
-          if (outcome.failure?._tag === 'InvoiceAlreadyExists') {
+    void submit(this.invoiceForm, {
+      action: async () => {
+        this.saving.set(true);
+        this.error.set(undefined);
+        try {
+          const model = this.model();
+          if (this.invoiceId === undefined) {
+            const orderId = this.decodeId(model.orderId);
+            if (orderId === undefined) return this.setError('invoice.order_not_found');
+            const request: InvoiceCreateRequestValue = {
+              orderId,
+              serviceDate: model.serviceDate,
+              dueDate: model.dueDate,
+              paymentTerms: model.paymentTerms,
+            };
+            const outcome = await this.invoicesApi.create(request);
+            if (!outcome.success) {
+              if (outcome.failure?._tag === 'InvoiceAlreadyExists') {
+                this.invoiceForm().reset();
+                await this.router.navigate(['/backoffice/invoices', outcome.failure.invoiceId], {
+                  replaceUrl: true,
+                });
+                return;
+              }
+              return this.setError(outcome.code);
+            }
             this.invoiceForm().reset();
-            await this.router.navigate(['/backoffice/invoices', outcome.failure.invoiceId], {
+            await this.router.navigate(['/backoffice/invoices', outcome.result.id], {
               replaceUrl: true,
             });
             return;
           }
-          return this.setError(outcome.code);
+          const current = this.detail();
+          const lines = this.parseLines();
+          if (current === undefined || lines === undefined) return this.setError('invoice.error');
+          const request: InvoiceRevisionCreateRequestValue = {
+            expectedVersion: current.version,
+            title: model.title.trim(),
+            serviceDate: model.serviceDate,
+            dueDate: model.dueDate,
+            paymentTerms: model.paymentTerms,
+            lines,
+          };
+          const outcome = await this.invoicesApi.createRevision(this.invoiceId, request);
+          if (!outcome.success) return this.setError(outcome.code);
+          this.applyDetail(outcome.result);
+        } catch {
+          this.setError('invoice.error');
+        } finally {
+          this.saving.set(false);
         }
-        this.invoiceForm().reset();
-        await this.router.navigate(['/backoffice/invoices', outcome.result.id], {
-          replaceUrl: true,
-        });
-        return;
-      }
-      const current = this.detail();
-      const lines = this.parseLines();
-      if (current === undefined || lines === undefined) {
-        this.saving.set(false);
-        return this.setError('invoice.error');
-      }
-      const request: InvoiceRevisionCreateRequestValue = {
-        expectedVersion: current.version,
-        title: model.title.trim(),
-        serviceDate: model.serviceDate,
-        dueDate: model.dueDate,
-        paymentTerms: model.paymentTerms,
-        lines,
-      };
-      const outcome = await this.invoicesApi.createRevision(this.invoiceId, request);
-      this.saving.set(false);
-      if (!outcome.success) return this.setError(outcome.code);
-      this.applyDetail(outcome.result);
+      },
+      onInvalid: () => this.focusFirstInvalid(),
     });
   }
 
   protected async issue(): Promise<void> {
     const invoice = this.detail();
-    if (this.invoiceId === undefined || invoice === undefined || this.issueDisabled()) return;
+    if (
+      this.invoiceId === undefined ||
+      invoice === undefined ||
+      invoice.status !== 'draft' ||
+      this.invoiceForm().dirty() ||
+      this.issueDisabled()
+    )
+      return;
     if (!globalThis.confirm(this.i18n.t('backOffice.invoice.issueConfirm'))) return;
     this.actionPending.set(true);
     this.error.set(undefined);
-    const outcome = await this.invoicesApi.issue(this.invoiceId, invoice.version);
-    this.actionPending.set(false);
-    if (!outcome.success) return this.setError(outcome.code);
-    await this.reload();
+    try {
+      const outcome = await this.invoicesApi.issue(this.invoiceId, invoice.version);
+      if (!outcome.success) return this.setError(outcome.code);
+      await this.reload();
+    } catch {
+      this.setError('invoice.error');
+    } finally {
+      this.actionPending.set(false);
+    }
   }
 
   protected async markPaid(): Promise<void> {
@@ -321,10 +324,15 @@ export class InvoiceEditor {
     if (this.invoiceId === undefined) return;
     this.pdfPendingVersion.set(version);
     this.error.set(undefined);
-    const outcome = await this.invoicesApi.renderPdf(this.invoiceId, version);
-    this.pdfPendingVersion.set(undefined);
-    if (!outcome.success) return this.setError(outcome.code);
-    this.generatedPdfVersions.update((versions) => new Set([...versions, version]));
+    try {
+      const outcome = await this.invoicesApi.renderPdf(this.invoiceId, version);
+      if (!outcome.success) return this.setError(outcome.code);
+      this.generatedPdfVersions.update((versions) => new Set([...versions, version]));
+    } catch {
+      this.setError('invoice.error');
+    } finally {
+      this.pdfPendingVersion.set(undefined);
+    }
   }
 
   protected pdfUrl(version: number): string | undefined {
@@ -399,13 +407,18 @@ export class InvoiceEditor {
     if (!globalThis.confirm(this.i18n.t(confirmation))) return;
     this.actionPending.set(true);
     this.error.set(undefined);
-    const outcome =
-      target === 'paid'
-        ? await this.invoicesApi.markPaid(this.invoiceId, { expectedVersion: invoice.version })
-        : await this.invoicesApi.void(this.invoiceId, { expectedVersion: invoice.version });
-    this.actionPending.set(false);
-    if (!outcome.success) return this.setError(outcome.code);
-    this.applyDetail(outcome.result);
+    try {
+      const outcome =
+        target === 'paid'
+          ? await this.invoicesApi.markPaid(this.invoiceId, { expectedVersion: invoice.version })
+          : await this.invoicesApi.void(this.invoiceId, { expectedVersion: invoice.version });
+      if (!outcome.success) return this.setError(outcome.code);
+      this.applyDetail(outcome.result);
+    } catch {
+      this.setError('invoice.error');
+    } finally {
+      this.actionPending.set(false);
+    }
   }
 
   private applyDetail(detail: InvoiceDetailValue): void {
@@ -461,6 +474,28 @@ export class InvoiceEditor {
     return value === null
       ? undefined
       : Option.getOrUndefined(Schema.decodeUnknownOption(Ulid)(value));
+  }
+
+  private focusFirstInvalid(): void {
+    let errorId: string | undefined;
+    if (this.invoiceForm.orderId().invalid()) errorId = 'invoice-order-error';
+    else if (this.invoiceForm.title().invalid()) errorId = 'invoice-title-error';
+    else if (this.invoiceForm.serviceDate().invalid()) errorId = 'invoice-service-date-error';
+    else if (this.invoiceForm.dueDate().invalid()) errorId = 'invoice-due-date-error';
+    else {
+      for (let index = 0; index < this.invoiceForm.lines.length; index++) {
+        const line = this.invoiceForm.lines[index]!;
+        if (line.description().invalid()) errorId = `invoice-line-description-error-${index}`;
+        else if (line.quantity().invalid()) errorId = `invoice-line-quantity-error-${index}`;
+        else if (line.unitPrice().invalid()) errorId = `invoice-line-price-error-${index}`;
+        else if (line.vatRate().invalid()) errorId = `invoice-line-vat-error-${index}`;
+        if (errorId !== undefined) break;
+      }
+    }
+    if (errorId === undefined) return;
+    this.element.nativeElement
+      .querySelector<HTMLElement>(`[aria-describedby="${errorId}"]`)
+      ?.focus();
   }
 
   private setError(code: InvoiceErrorCode): void {

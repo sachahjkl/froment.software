@@ -6,6 +6,12 @@
   line-height: 1.35;
 }
 
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
 main {
   box-sizing: border-box;
   width: min(100%, 190mm);
@@ -21,10 +27,13 @@ main {
   grid-template-columns: minmax(0, 1fr) 62mm;
   gap: 0;
   border-bottom: 2px solid #111;
+  break-inside: avoid;
+  page-break-inside: avoid;
 }
 
 .brand,
 .quote-meta {
+  min-width: 0;
   padding: 5mm;
   border: 1px solid #111;
 }
@@ -64,8 +73,18 @@ address {
   font-style: normal;
 }
 
+h1,
+h2,
+address span,
+.quote-number,
+.subject,
+.conditions,
+footer span {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
 .quote-meta {
-  min-width: 58mm;
   border-left: 0;
   background: repeating-linear-gradient(135deg, #fff 0, #fff 3px, #e5e5e5 3px, #e5e5e5 4px);
 }
@@ -84,10 +103,16 @@ address {
 }
 
 .recipient {
-  width: 75mm;
+  width: min(75mm, 100%);
   margin-left: auto;
   padding: 4mm;
   border: 1px dashed #111;
+}
+
+.recipient,
+.subject {
+  break-inside: avoid;
+  page-break-inside: avoid;
 }
 
 .subject {
@@ -101,6 +126,16 @@ table {
   margin-top: 7mm;
   border: 1px solid #111;
   border-collapse: collapse;
+  table-layout: fixed;
+}
+
+thead {
+  display: table-header-group;
+}
+
+tr {
+  break-inside: avoid;
+  page-break-inside: avoid;
 }
 
 th,
@@ -119,6 +154,33 @@ th {
   text-transform: uppercase;
 }
 
+th:nth-child(1),
+td:nth-child(1) {
+  width: 42%;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+th:nth-child(2),
+td:nth-child(2) {
+  width: 11%;
+}
+
+th:nth-child(3),
+td:nth-child(3) {
+  width: 18%;
+}
+
+th:nth-child(4),
+td:nth-child(4) {
+  width: 10%;
+}
+
+th:nth-child(5),
+td:nth-child(5) {
+  width: 19%;
+}
+
 .number {
   white-space: nowrap;
   text-align: right;
@@ -132,10 +194,13 @@ th {
   display: flex;
   justify-content: flex-end;
   margin-top: 7mm;
+  break-inside: avoid;
+  page-break-inside: avoid;
 }
 
 dl {
   width: 72mm;
+  max-width: 100%;
   margin: 0;
   border: 3px double #111;
 }
@@ -146,6 +211,8 @@ dl div {
   gap: 8mm;
   padding: 2mm;
   border-bottom: 1px dashed #111;
+  break-inside: avoid;
+  page-break-inside: avoid;
 }
 
 dd {
@@ -163,6 +230,8 @@ dd {
 .conditions {
   padding: 4mm;
   border: 1px dashed #111;
+  break-inside: avoid;
+  page-break-inside: avoid;
 }
 
 .conditions p:last-child {
@@ -178,6 +247,8 @@ footer {
   border-top: 1px dashed #111;
   color: #111;
   font-size: 9px;
+  break-inside: avoid;
+  page-break-inside: avoid;
 }
 
 @page {

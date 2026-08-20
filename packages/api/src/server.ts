@@ -656,9 +656,16 @@ const InvoiceHandlers = HttpApiBuilder.group(Api, 'invoices', (handlers) =>
         Effect.fn('invoiceIssue')(function* ({ params, payload }) {
           yield* setPrivateResponseHeaders;
           const principal = yield* authorizeAdministratorWrite('invoice.issue', 10);
-          return yield* (yield* Invoices)
+          const result = yield* (yield* Invoices)
             .issue(params.invoiceId, payload, principal.userId)
             .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
+          yield* (yield* DocumentArtifacts)
+            .renderInvoicePdf(params.invoiceId, result.version, principal.userId)
+            .pipe(
+              Effect.catchTag('DatabaseError', Effect.orDie),
+              Effect.catchTag('DocumentRenderError', Effect.orDie),
+            );
+          return result;
         }),
       )
       .handle(

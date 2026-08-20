@@ -2,6 +2,7 @@ import { Schema } from 'effect';
 import { describe, expect, it } from 'vitest';
 
 import {
+  CalendarDate,
   InvoiceCreateRequest,
   InvoiceDocumentArtifact,
   InvoiceIssueRequest,
@@ -31,6 +32,13 @@ describe('invoice contracts', () => {
     expect(() =>
       Schema.decodeUnknownSync(InvoiceCreateRequest)({ ...create, dueDate: '19/09/2026' }),
     ).toThrow();
+    for (const invalidDate of ['2026-02-30', '2026-13-01', '2026-01-00']) {
+      expect(() => Schema.decodeUnknownSync(CalendarDate)(invalidDate)).toThrow();
+      expect(() =>
+        Schema.decodeUnknownSync(InvoiceCreateRequest)({ ...create, serviceDate: invalidDate }),
+      ).toThrow();
+    }
+    expect(Schema.decodeUnknownSync(CalendarDate)('2024-02-29')).toBe('2024-02-29');
     expect(Schema.decodeUnknownSync(InvoiceIssueRequest)({ expectedVersion: 2 })).toEqual({
       expectedVersion: 2,
     });

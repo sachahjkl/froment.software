@@ -6,7 +6,7 @@
     "start": "pnpm --filter @froment/web start",
     "build": "pnpm --recursive --if-present build",
     "watch": "pnpm --filter @froment/web watch",
-    "test": "pnpm --recursive --if-present test",
+    "test": "pnpm --filter @froment/web build && pnpm --recursive --if-present test",
     "test:watch": "pnpm --filter @froment/web test:watch",
     "lint": "oxlint packages/*/src",
     "format": "oxfmt --write .",

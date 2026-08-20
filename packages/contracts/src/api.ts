@@ -64,6 +64,7 @@ import {
   QuoteConditionPresetWriteRequest,
 } from './quote-condition-presets.js';
 import {
+  CalendarDateText,
   InvoiceAlreadyExists,
   InvoiceAmountTooLarge,
   InvoiceCreateRequest,
@@ -359,6 +360,16 @@ const invoiceWriteErrors = [
   CsrfRejected.pipe(HttpApiSchema.status(403)),
   RequestRateLimited.pipe(HttpApiSchema.status(429)),
 ];
+const InvoiceCreatePayload = Schema.Struct({
+  ...InvoiceCreateRequest.fields,
+  serviceDate: CalendarDateText,
+  dueDate: CalendarDateText,
+});
+const InvoiceRevisionCreatePayload = Schema.Struct({
+  ...InvoiceRevisionCreateRequest.fields,
+  serviceDate: CalendarDateText,
+  dueDate: CalendarDateText,
+});
 
 export class InvoicesApi extends HttpApiGroup.make('invoices', { topLevel: true }).add(
   HttpApiEndpoint.get('invoiceList', '/api/invoices', {
@@ -386,7 +397,7 @@ export class InvoicesApi extends HttpApiGroup.make('invoices', { topLevel: true 
     error: [...invoiceReadErrors, DocumentNotFound.pipe(HttpApiSchema.status(404))],
   }),
   HttpApiEndpoint.post('invoiceCreate', '/api/invoices', {
-    payload: InvoiceCreateRequest,
+    payload: InvoiceCreatePayload,
     success: InvoiceDetail,
     error: [
       ...invoiceWriteErrors,
@@ -398,7 +409,7 @@ export class InvoicesApi extends HttpApiGroup.make('invoices', { topLevel: true 
   }),
   HttpApiEndpoint.post('invoiceRevisionCreate', '/api/invoices/:invoiceId/revisions', {
     params: { invoiceId: Ulid },
-    payload: InvoiceRevisionCreateRequest,
+    payload: InvoiceRevisionCreatePayload,
     success: InvoiceDetail,
     error: [
       ...invoiceWriteErrors,
