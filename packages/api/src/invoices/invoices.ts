@@ -1,0 +1,691 @@
+import {
+  InvoiceAlreadyExists,
+  InvoiceAmountTooLarge,
+  InvoiceDetail,
+  InvoiceInvalidDates,
+  InvoiceIssueResult,
+  InvoiceNotEditable,
+  InvoiceNotFound,
+  InvoiceOrderNotFound,
+  InvoiceRenderSnapshot,
+  InvoiceStatus,
+  InvoiceVersionConflict,
+  QuoteRenderSnapshot,
+  Ulid,
+  type InvoiceCreateRequestValue,
+  type InvoiceDetailValue,
+  type InvoiceIssueRequestValue,
+  type InvoiceIssueResultValue,
+  type InvoiceListValue,
+  type InvoiceRevisionCreateRequestValue,
+  type InvoiceRevisionValue,
+  type IssuerSettingsValue,
+  type QuoteLineInputValue,
+  type QuoteLineValue,
+  type UlidValue,
+} from '@froment/contracts';
+import { Clock, Context, DateTime, Effect, Layer, Schema } from 'effect';
+import { ulid } from 'ulid';
+
+import { Audit } from '../audit/audit.js';
+import { Database, DatabaseError } from '../database/database.js';
+import { IssuerSettings } from '../documents/issuer-settings.js';
+import { calculateQuoteLine, calculateQuoteTotals } from '../quotes/quote-calculation.js';
+
+const InvoiceRecord = Schema.Struct({
+  id: Ulid,
+  orderId: Ulid,
+  clientId: Ulid,
+  status: InvoiceStatus,
+  version: Schema.Int,
+  invoiceNumber: Schema.NullOr(Schema.String),
+  issuedAt: Schema.NullOr(Schema.Int),
+});
+const RevisionRecord = Schema.Struct({
+  id: Ulid,
+  invoiceId: Ulid,
+  version: Schema.Int,
+  invoiceNumber: Schema.NullOr(Schema.String),
+  issuedAt: Schema.NullOr(Schema.Int),
+  clientDisplayName: Schema.NonEmptyString,
+  title: Schema.String,
+  serviceDate: Schema.String,
+  dueDate: Schema.String,
+  paymentTerms: Schema.String,
+  currency: Schema.Literal('EUR'),
+  netTotalCents: Schema.Int,
+  vatTotalCents: Schema.Int,
+  totalCents: Schema.Int,
+  createdAt: Schema.Int,
+  createdByUserId: Ulid,
+  renderSnapshot: Schema.String,
+});
+const LineRecord = Schema.Struct({
+  id: Ulid,
+  revisionId: Ulid,
+  position: Schema.Int,
+  description: Schema.String,
+  quantityMilli: Schema.Int,
+  unitPriceCents: Schema.Int,
+  vatRateBasisPoints: Schema.Int,
+  netTotalCents: Schema.Int,
+  vatTotalCents: Schema.Int,
+  totalCents: Schema.Int,
+});
+const OrderRecord = Schema.Struct({
+  orderId: Ulid,
+  clientId: Ulid,
+  quoteSnapshot: Schema.String,
+});
+const SnapshotRecord = Schema.Struct({ renderSnapshot: Schema.String });
+const InvoiceSummaryRecord = Schema.Struct({
+  id: Ulid,
+  orderId: Ulid,
+  clientId: Ulid,
+  clientDisplayName: Schema.NonEmptyString,
+  status: InvoiceStatus,
+  version: Schema.Int,
+  invoiceNumber: Schema.NullOr(Schema.String),
+  title: Schema.String,
+  currency: Schema.Literal('EUR'),
+  totalCents: Schema.Int,
+  updatedAt: Schema.Int,
+});
+
+type InvoiceError =
+  | InvoiceNotFound
+  | InvoiceNotEditable
+  | InvoiceVersionConflict
+  | InvoiceInvalidDates
+  | InvoiceAmountTooLarge
+  | DatabaseError;
+
+export interface InvoicesService {
+  readonly list: Effect.Effect<InvoiceListValue, DatabaseError>;
+  readonly get: (
+    invoiceId: UlidValue,
+  ) => Effect.Effect<InvoiceDetailValue, InvoiceNotFound | DatabaseError>;
+  readonly create: (
+    request: InvoiceCreateRequestValue,
+    actorUserId: UlidValue,
+  ) => Effect.Effect<
+    InvoiceDetailValue,
+    | InvoiceOrderNotFound
+    | InvoiceAlreadyExists
+    | InvoiceInvalidDates
+    | InvoiceAmountTooLarge
+    | DatabaseError
+  >;
+  readonly createRevision: (
+    invoiceId: UlidValue,
+    request: InvoiceRevisionCreateRequestValue,
+    actorUserId: UlidValue,
+  ) => Effect.Effect<InvoiceDetailValue, InvoiceError>;
+  readonly issue: (
+    invoiceId: UlidValue,
+    request: InvoiceIssueRequestValue,
+    actorUserId: UlidValue,
+  ) => Effect.Effect<
+    InvoiceIssueResultValue,
+    InvoiceNotFound | InvoiceVersionConflict | InvoiceInvalidDates | DatabaseError
+  >;
+}
+
+export class Invoices extends Context.Service<Invoices, InvoicesService>()(
+  '@froment/api/Invoices',
+) {}
+
+const invoiceSql = `select id, order_id as orderId, client_id as clientId, status, version,
+  invoice_number as invoiceNumber, issued_at as issuedAt from invoices`;
+const revisionSql = `select id, invoice_id as invoiceId, version,
+  invoice_number as invoiceNumber, issued_at as issuedAt,
+  client_display_name as clientDisplayName, title, service_date as serviceDate,
+  due_date as dueDate, payment_terms as paymentTerms, currency,
+  net_total_cents as netTotalCents, vat_total_cents as vatTotalCents,
+  total_cents as totalCents, created_at as createdAt, created_by_user_id as createdByUserId,
+  render_snapshot as renderSnapshot from invoice_revisions`;
+const lineSql = `select id, revision_id as revisionId, position, description,
+  quantity_milli as quantityMilli, unit_price_cents as unitPriceCents,
+  vat_rate_basis_points as vatRateBasisPoints, net_total_cents as netTotalCents,
+  vat_total_cents as vatTotalCents, total_cents as totalCents from invoice_lines`;
+
+export const InvoicesLive = Layer.effect(
+  Invoices,
+  Effect.gen(function* () {
+    const database = yield* Database;
+    const issuerSettings = yield* IssuerSettings;
+    const audit = yield* Audit;
+
+    const readDetail = (invoiceId: string): InvoiceDetailValue | undefined => {
+      const rawInvoice = database.sqlite.prepare(`${invoiceSql} where id = ?`).get(invoiceId);
+      if (rawInvoice === undefined) return undefined;
+      const invoice = Schema.decodeUnknownSync(InvoiceRecord)(rawInvoice);
+      const revisions = Schema.decodeUnknownSync(Schema.Array(RevisionRecord))(
+        database.sqlite
+          .prepare(`${revisionSql} where invoice_id = ? order by version`)
+          .all(invoiceId),
+      );
+      const revisionIds = revisions.map((revision) => revision.id);
+      const lines = Schema.decodeUnknownSync(Schema.Array(LineRecord))(
+        revisionIds.length === 0
+          ? []
+          : database.sqlite
+              .prepare(
+                `${lineSql} where revision_id in (${revisionIds.map(() => '?').join(', ')}) order by revision_id, position`,
+              )
+              .all(...revisionIds),
+      );
+      const mappedRevisions = revisions.map((revision): InvoiceRevisionValue => ({
+        id: revision.id,
+        version: revision.version,
+        invoiceNumber: revision.invoiceNumber,
+        issuedAt:
+          revision.issuedAt === null
+            ? null
+            : DateTime.formatIso(DateTime.makeUnsafe(revision.issuedAt)),
+        title: revision.title,
+        serviceDate: revision.serviceDate,
+        dueDate: revision.dueDate,
+        paymentTerms: revision.paymentTerms,
+        currency: revision.currency,
+        netTotalCents: revision.netTotalCents,
+        vatTotalCents: revision.vatTotalCents,
+        totalCents: revision.totalCents,
+        createdAt: DateTime.formatIso(DateTime.makeUnsafe(revision.createdAt)),
+        createdByUserId: revision.createdByUserId,
+        lines: lines
+          .filter((line) => line.revisionId === revision.id)
+          .map((line): QuoteLineValue => ({
+            id: line.id,
+            position: line.position,
+            description: line.description,
+            quantityMilli: line.quantityMilli,
+            unitPriceCents: line.unitPriceCents,
+            vatRateBasisPoints: line.vatRateBasisPoints,
+            netTotalCents: line.netTotalCents,
+            vatTotalCents: line.vatTotalCents,
+            totalCents: line.totalCents,
+          })),
+      }));
+      const currentRevision = mappedRevisions.find(
+        (revision) => revision.version === invoice.version,
+      );
+      if (currentRevision === undefined) throw new Error('Current invoice revision is missing.');
+      return InvoiceDetail.make({
+        ...invoice,
+        issuedAt:
+          invoice.issuedAt === null
+            ? null
+            : DateTime.formatIso(DateTime.makeUnsafe(invoice.issuedAt)),
+        currentRevision,
+        revisions: mappedRevisions,
+      });
+    };
+
+    const list = Effect.try({
+      try: () =>
+        Schema.decodeUnknownSync(Schema.Array(InvoiceSummaryRecord))(
+          database.sqlite
+            .prepare(
+              `select invoices.id, invoices.order_id as orderId, invoices.client_id as clientId,
+                      invoice_revisions.client_display_name as clientDisplayName,
+                      invoices.status, invoices.version, invoices.invoice_number as invoiceNumber,
+                      invoice_revisions.title, invoice_revisions.currency,
+                      invoice_revisions.total_cents as totalCents, invoices.updated_at as updatedAt
+               from invoices join invoice_revisions
+                 on invoice_revisions.invoice_id = invoices.id
+                and invoice_revisions.version = invoices.version
+               order by invoices.updated_at desc, invoices.id`,
+            )
+            .all(),
+        ).map((invoice) => ({
+          ...invoice,
+          updatedAt: DateTime.formatIso(DateTime.makeUnsafe(invoice.updatedAt)),
+        })),
+      catch: (cause) => new DatabaseError({ operation: 'list invoices', cause }),
+    });
+
+    const get = Effect.fn('Invoices.get')(function* (invoiceId: UlidValue) {
+      return yield* Effect.try({
+        try: () => {
+          const detail = readDetail(invoiceId);
+          if (detail === undefined) throw new InvoiceNotFound({ code: 'invoice.not_found' });
+          return detail;
+        },
+        catch: (cause) =>
+          cause instanceof InvoiceNotFound
+            ? cause
+            : new DatabaseError({ operation: 'get invoice', cause }),
+      });
+    });
+
+    const validateDates = (serviceDate: string, dueDate: string, minimumDueDate?: string) => {
+      if (dueDate < serviceDate || (minimumDueDate !== undefined && dueDate < minimumDueDate)) {
+        throw new InvoiceInvalidDates({ code: 'invoice.invalid_dates' });
+      }
+    };
+
+    const insertRevision = (input: {
+      readonly invoiceId: string;
+      readonly orderId: string;
+      readonly version: number;
+      readonly invoiceNumber: string | null;
+      readonly issuedAt: number | null;
+      readonly issuer: IssuerSettingsValue;
+      readonly client: (typeof InvoiceRenderSnapshot.Type)['client'];
+      readonly title: string;
+      readonly serviceDate: string;
+      readonly dueDate: string;
+      readonly paymentTerms: string;
+      readonly lines: ReadonlyArray<QuoteLineInputValue>;
+      readonly actorUserId: string;
+      readonly now: number;
+    }) => {
+      const revisionId = ulid(input.now);
+      const calculatedLines = input.lines.map((line, position) => ({
+        ...line,
+        id: ulid(input.now),
+        position,
+        description: line.description.trim(),
+        ...calculateQuoteLine(line),
+      }));
+      const totals = calculateQuoteTotals(calculatedLines);
+      const snapshot = Schema.decodeUnknownSync(InvoiceRenderSnapshot)({
+        templateId: 'invoice-default',
+        templateVersion: 1,
+        invoiceId: input.invoiceId,
+        orderId: input.orderId,
+        revisionId,
+        version: input.version,
+        createdAt: DateTime.formatIso(DateTime.makeUnsafe(input.now)),
+        invoiceNumber: input.invoiceNumber,
+        issuedAt:
+          input.issuedAt === null ? null : DateTime.formatIso(DateTime.makeUnsafe(input.issuedAt)),
+        serviceDate: input.serviceDate,
+        dueDate: input.dueDate,
+        issuer: input.issuer,
+        client: input.client,
+        title: input.title.trim(),
+        paymentTerms: input.paymentTerms,
+        currency: 'EUR',
+        ...totals,
+        lines: calculatedLines,
+      });
+      database.sqlite
+        .prepare(
+          `insert into invoice_revisions
+           (id, invoice_id, version, invoice_number, issued_at, client_display_name, title,
+            service_date, due_date, payment_terms, currency, net_total_cents, vat_total_cents,
+            total_cents, created_at, created_by_user_id, template_id, template_version,
+            render_snapshot)
+           values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'EUR', ?, ?, ?, ?, ?, 'invoice-default', 1, ?)`,
+        )
+        .run(
+          revisionId,
+          input.invoiceId,
+          input.version,
+          input.invoiceNumber,
+          input.issuedAt,
+          input.client.displayName,
+          input.title.trim(),
+          input.serviceDate,
+          input.dueDate,
+          input.paymentTerms,
+          totals.netTotalCents,
+          totals.vatTotalCents,
+          totals.totalCents,
+          input.now,
+          input.actorUserId,
+          JSON.stringify(snapshot),
+        );
+      const insertLine = database.sqlite.prepare(
+        `insert into invoice_lines
+         (id, revision_id, position, description, quantity_milli, unit_price_cents,
+          vat_rate_basis_points, net_total_cents, vat_total_cents, total_cents)
+         values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      );
+      for (const line of calculatedLines) {
+        insertLine.run(
+          line.id,
+          revisionId,
+          line.position,
+          line.description,
+          line.quantityMilli,
+          line.unitPriceCents,
+          line.vatRateBasisPoints,
+          line.netTotalCents,
+          line.vatTotalCents,
+          line.totalCents,
+        );
+      }
+      return snapshot;
+    };
+
+    const create = Effect.fn('Invoices.create')(function* (
+      request: InvoiceCreateRequestValue,
+      actorUserId: UlidValue,
+    ) {
+      validateDates(request.serviceDate, request.dueDate);
+      const now = yield* Clock.currentTimeMillis;
+      const issuer = yield* issuerSettings.get;
+      const invoiceId = ulid(now);
+      return yield* Effect.try({
+        try: () =>
+          database.sqlite
+            .transaction(() => {
+              const existingInvoiceId = database.sqlite
+                .prepare('select id from invoices where order_id = ?')
+                .pluck()
+                .get(request.orderId);
+              if (existingInvoiceId !== undefined) {
+                throw new InvoiceAlreadyExists({
+                  code: 'invoice.already_exists',
+                  invoiceId: Schema.decodeUnknownSync(Ulid)(existingInvoiceId),
+                });
+              }
+              const rawOrder = database.sqlite
+                .prepare(
+                  `select orders.id as orderId, orders.client_id as clientId,
+                          quote_revisions.render_snapshot as quoteSnapshot
+                   from orders join quote_revisions on quote_revisions.id = orders.revision_id
+                   where orders.id = ? and orders.status = 'confirmed'`,
+                )
+                .get(request.orderId);
+              if (rawOrder === undefined) {
+                throw new InvoiceOrderNotFound({ code: 'invoice.order_not_found' });
+              }
+              const order = Schema.decodeUnknownSync(OrderRecord)(rawOrder);
+              const quoteSnapshot = Schema.decodeUnknownSync(QuoteRenderSnapshot)(
+                JSON.parse(order.quoteSnapshot),
+              );
+              database.sqlite
+                .prepare(
+                  `insert into invoices
+                   (id, order_id, client_id, status, version, created_at, updated_at)
+                   values (?, ?, ?, 'draft', 1, ?, ?)`,
+                )
+                .run(invoiceId, order.orderId, order.clientId, now, now);
+              insertRevision({
+                invoiceId,
+                orderId: order.orderId,
+                version: 1,
+                invoiceNumber: null,
+                issuedAt: null,
+                issuer,
+                client: quoteSnapshot.client,
+                title: quoteSnapshot.title,
+                serviceDate: request.serviceDate,
+                dueDate: request.dueDate,
+                paymentTerms: request.paymentTerms,
+                lines: quoteSnapshot.lines,
+                actorUserId,
+                now,
+              });
+              audit.insert({
+                action: 'invoice.created',
+                actorUserId,
+                resourceType: 'invoice',
+                resourceId: invoiceId,
+                metadata: { orderId: order.orderId, version: '1' },
+                occurredAt: now,
+              });
+              const detail = readDetail(invoiceId);
+              if (detail === undefined) throw new Error('Created invoice is missing.');
+              return detail;
+            })
+            .immediate(),
+        catch: (cause) => {
+          if (
+            cause instanceof InvoiceOrderNotFound ||
+            cause instanceof InvoiceAlreadyExists ||
+            cause instanceof InvoiceInvalidDates
+          ) {
+            return cause;
+          }
+          if (cause instanceof RangeError) {
+            return new InvoiceAmountTooLarge({ code: 'invoice.amount_too_large' });
+          }
+          return new DatabaseError({ operation: 'create invoice', cause });
+        },
+      });
+    });
+
+    const createRevision = Effect.fn('Invoices.createRevision')(function* (
+      invoiceId: UlidValue,
+      request: InvoiceRevisionCreateRequestValue,
+      actorUserId: UlidValue,
+    ) {
+      validateDates(request.serviceDate, request.dueDate);
+      const now = yield* Clock.currentTimeMillis;
+      const issuer = yield* issuerSettings.get;
+      return yield* Effect.try({
+        try: () =>
+          database.sqlite
+            .transaction(() => {
+              const rawInvoice = database.sqlite
+                .prepare(`${invoiceSql} where id = ?`)
+                .get(invoiceId);
+              if (rawInvoice === undefined) {
+                throw new InvoiceNotFound({ code: 'invoice.not_found' });
+              }
+              const invoice = Schema.decodeUnknownSync(InvoiceRecord)(rawInvoice);
+              if (invoice.status !== 'draft') {
+                throw new InvoiceNotEditable({ code: 'invoice.not_editable' });
+              }
+              if (invoice.version !== request.expectedVersion) {
+                throw new InvoiceVersionConflict({
+                  code: 'invoice.version_conflict',
+                  currentVersion: invoice.version,
+                });
+              }
+              const currentRaw = database.sqlite
+                .prepare(
+                  `select render_snapshot as renderSnapshot from invoice_revisions
+                   where invoice_id = ? and version = ?`,
+                )
+                .get(invoiceId, invoice.version);
+              if (currentRaw === undefined) throw new Error('Current invoice snapshot is missing.');
+              const currentRecord = Schema.decodeUnknownSync(SnapshotRecord)(currentRaw);
+              const current = Schema.decodeUnknownSync(InvoiceRenderSnapshot)(
+                JSON.parse(currentRecord.renderSnapshot),
+              );
+              const nextVersion = invoice.version + 1;
+              const updated = database.sqlite
+                .prepare(
+                  `update invoices set version = ?, updated_at = ?
+                   where id = ? and status = 'draft' and version = ?`,
+                )
+                .run(nextVersion, now, invoiceId, request.expectedVersion).changes;
+              if (updated !== 1) {
+                throw new InvoiceVersionConflict({
+                  code: 'invoice.version_conflict',
+                  currentVersion: invoice.version,
+                });
+              }
+              insertRevision({
+                invoiceId,
+                orderId: invoice.orderId,
+                version: nextVersion,
+                invoiceNumber: null,
+                issuedAt: null,
+                issuer,
+                client: current.client,
+                title: request.title,
+                serviceDate: request.serviceDate,
+                dueDate: request.dueDate,
+                paymentTerms: request.paymentTerms,
+                lines: request.lines,
+                actorUserId,
+                now,
+              });
+              audit.insert({
+                action: 'invoice.revised',
+                actorUserId,
+                resourceType: 'invoice',
+                resourceId: invoiceId,
+                metadata: { version: String(nextVersion) },
+                occurredAt: now,
+              });
+              const detail = readDetail(invoiceId);
+              if (detail === undefined) throw new Error('Revised invoice is missing.');
+              return detail;
+            })
+            .immediate(),
+        catch: (cause) => {
+          if (
+            cause instanceof InvoiceNotFound ||
+            cause instanceof InvoiceNotEditable ||
+            cause instanceof InvoiceVersionConflict ||
+            cause instanceof InvoiceInvalidDates
+          ) {
+            return cause;
+          }
+          if (cause instanceof RangeError) {
+            return new InvoiceAmountTooLarge({ code: 'invoice.amount_too_large' });
+          }
+          return new DatabaseError({ operation: 'create invoice revision', cause });
+        },
+      });
+    });
+
+    const issue = Effect.fn('Invoices.issue')(function* (
+      invoiceId: UlidValue,
+      request: InvoiceIssueRequestValue,
+      actorUserId: UlidValue,
+    ) {
+      const now = yield* Clock.currentTimeMillis;
+      return yield* Effect.try({
+        try: () =>
+          database.sqlite
+            .transaction(() => {
+              const rawInvoice = database.sqlite
+                .prepare(`${invoiceSql} where id = ?`)
+                .get(invoiceId);
+              if (rawInvoice === undefined) {
+                throw new InvoiceNotFound({ code: 'invoice.not_found' });
+              }
+              const invoice = Schema.decodeUnknownSync(InvoiceRecord)(rawInvoice);
+              if (invoice.status !== 'draft') {
+                if (invoice.invoiceNumber === null || invoice.issuedAt === null) {
+                  throw new Error('Issued invoice metadata is missing.');
+                }
+                const finalRevision = database.sqlite
+                  .prepare(
+                    `select id from invoice_revisions
+                     where invoice_id = ? and version = ?`,
+                  )
+                  .pluck()
+                  .get(invoiceId, invoice.version);
+                return InvoiceIssueResult.make({
+                  invoiceId,
+                  revisionId: Schema.decodeUnknownSync(Ulid)(finalRevision),
+                  version: invoice.version,
+                  status: 'issued',
+                  invoiceNumber: invoice.invoiceNumber,
+                  issuedAt: DateTime.formatIso(DateTime.makeUnsafe(invoice.issuedAt)),
+                });
+              }
+              if (invoice.version !== request.expectedVersion) {
+                throw new InvoiceVersionConflict({
+                  code: 'invoice.version_conflict',
+                  currentVersion: invoice.version,
+                });
+              }
+              const currentRaw = database.sqlite
+                .prepare(
+                  `select render_snapshot as renderSnapshot from invoice_revisions
+                   where invoice_id = ? and version = ?`,
+                )
+                .get(invoiceId, invoice.version);
+              if (currentRaw === undefined) throw new Error('Current invoice snapshot is missing.');
+              const currentRecord = Schema.decodeUnknownSync(SnapshotRecord)(currentRaw);
+              const current = Schema.decodeUnknownSync(InvoiceRenderSnapshot)(
+                JSON.parse(currentRecord.renderSnapshot),
+              );
+              const issueDate = DateTime.formatIso(DateTime.makeUnsafe(now)).slice(0, 10);
+              validateDates(current.serviceDate, current.dueDate, issueDate);
+              const nextNumber = Schema.decodeUnknownSync(Schema.Int)(
+                database.sqlite
+                  .prepare('select next_value from invoice_number_counter where id = 1')
+                  .pluck()
+                  .get(),
+              );
+              database.sqlite
+                .prepare('update invoice_number_counter set next_value = ? where id = 1')
+                .run(nextNumber + 1);
+              const invoiceNumber = `F-${String(nextNumber).padStart(6, '0')}`;
+              const nextVersion = invoice.version + 1;
+              const finalSnapshot = insertRevision({
+                invoiceId,
+                orderId: invoice.orderId,
+                version: nextVersion,
+                invoiceNumber,
+                issuedAt: now,
+                issuer: current.issuer,
+                client: current.client,
+                title: current.title,
+                serviceDate: current.serviceDate,
+                dueDate: current.dueDate,
+                paymentTerms: current.paymentTerms,
+                lines: current.lines,
+                actorUserId,
+                now,
+              });
+              const updated = database.sqlite
+                .prepare(
+                  `update invoices
+                   set status = 'issued', version = ?, invoice_number = ?, issued_at = ?, updated_at = ?
+                   where id = ? and status = 'draft' and version = ?`,
+                )
+                .run(
+                  nextVersion,
+                  invoiceNumber,
+                  now,
+                  now,
+                  invoiceId,
+                  request.expectedVersion,
+                ).changes;
+              if (updated !== 1) {
+                throw new InvoiceVersionConflict({
+                  code: 'invoice.version_conflict',
+                  currentVersion: invoice.version,
+                });
+              }
+              audit.insert({
+                action: 'invoice.issued',
+                actorUserId,
+                resourceType: 'invoice',
+                resourceId: invoiceId,
+                metadata: {
+                  invoiceNumber,
+                  revisionId: finalSnapshot.revisionId,
+                  version: String(nextVersion),
+                },
+                occurredAt: now,
+              });
+              return InvoiceIssueResult.make({
+                invoiceId,
+                revisionId: finalSnapshot.revisionId,
+                version: nextVersion,
+                status: 'issued',
+                invoiceNumber,
+                issuedAt: DateTime.formatIso(DateTime.makeUnsafe(now)),
+              });
+            })
+            .immediate(),
+        catch: (cause) => {
+          if (
+            cause instanceof InvoiceNotFound ||
+            cause instanceof InvoiceVersionConflict ||
+            cause instanceof InvoiceInvalidDates
+          ) {
+            return cause;
+          }
+          return new DatabaseError({ operation: 'issue invoice', cause });
+        },
+      });
+    });
+
+    return Invoices.of({ list, get, create, createRevision, issue });
+  }),
+);

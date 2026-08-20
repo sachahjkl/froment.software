@@ -981,6 +981,168 @@ describe('HTTP server', () => {
       canSign: false,
     });
 
+    const invoiceCreatePayload = {
+      orderId: accepted.orderId,
+      serviceDate: '2026-08-20',
+      dueDate: '2026-09-19',
+      paymentTerms: 'Payment due within 30 days.',
+    };
+    const invoiceCreate = await fetch(`${baseUrl}/api/invoices`, {
+      method: 'POST',
+      headers: writeHeaders,
+      body: JSON.stringify(invoiceCreatePayload),
+    });
+    expect(invoiceCreate.status).toBe(200);
+    const invoice = (await invoiceCreate.json()) as {
+      id: string;
+      orderId: string;
+      status: string;
+      version: number;
+      invoiceNumber: string | null;
+      currentRevision: {
+        title: string;
+        serviceDate: string;
+        dueDate: string;
+        totalCents: number;
+        lines: Array<{
+          description: string;
+          quantityMilli: number;
+          unitPriceCents: number;
+          vatRateBasisPoints: number;
+        }>;
+      };
+    };
+    expect(invoice).toMatchObject({
+      id: expect.stringMatching(/^[0-7][0-9A-Z]{25}$/),
+      orderId: accepted.orderId,
+      status: 'draft',
+      version: 1,
+      invoiceNumber: null,
+      currentRevision: {
+        title: 'Revised quote',
+        serviceDate: '2026-08-20',
+        dueDate: '2026-09-19',
+        totalCents: 2,
+      },
+    });
+    const duplicateInvoice = await fetch(`${baseUrl}/api/invoices`, {
+      method: 'POST',
+      headers: writeHeaders,
+      body: JSON.stringify(invoiceCreatePayload),
+    });
+    expect(duplicateInvoice.status).toBe(409);
+    await expect(duplicateInvoice.json()).resolves.toMatchObject({
+      code: 'invoice.already_exists',
+      invoiceId: invoice.id,
+    });
+
+    const revisedInvoiceResponse = await fetch(`${baseUrl}/api/invoices/${invoice.id}/revisions`, {
+      method: 'POST',
+      headers: writeHeaders,
+      body: JSON.stringify({
+        expectedVersion: 1,
+        title: 'Final invoice',
+        serviceDate: '2026-08-20',
+        dueDate: '2026-09-19',
+        paymentTerms: 'Payment due within 30 days.',
+        lines: invoice.currentRevision.lines.map((line) => ({
+          description: line.description,
+          quantityMilli: line.quantityMilli,
+          unitPriceCents: line.unitPriceCents,
+          vatRateBasisPoints: line.vatRateBasisPoints,
+        })),
+      }),
+    });
+    expect(revisedInvoiceResponse.status).toBe(200);
+    const revisedInvoice = (await revisedInvoiceResponse.json()) as {
+      version: number;
+      currentRevision: { title: string };
+    };
+    expect(revisedInvoice).toMatchObject({
+      version: 2,
+      currentRevision: { title: 'Final invoice' },
+    });
+
+    const issueRequests = await Promise.all([
+      fetch(`${baseUrl}/api/invoices/${invoice.id}/issue`, {
+        method: 'POST',
+        headers: writeHeaders,
+        body: JSON.stringify({ expectedVersion: 2 }),
+      }),
+      fetch(`${baseUrl}/api/invoices/${invoice.id}/issue`, {
+        method: 'POST',
+        headers: writeHeaders,
+        body: JSON.stringify({ expectedVersion: 2 }),
+      }),
+    ]);
+    const issueStatuses = issueRequests.map((response) => response.status);
+    if (issueStatuses.some((status) => status !== 200)) {
+      throw new Error(
+        `Invoice issue failed: ${JSON.stringify(await Promise.all(issueRequests.map((response) => response.clone().text())))}\n${serverOutput.slice(-5_000)}`,
+      );
+    }
+    const issueResults = (await Promise.all(
+      issueRequests.map((response) => response.json()),
+    )) as Array<{
+      invoiceId: string;
+      revisionId: string;
+      version: number;
+      status: string;
+      invoiceNumber: string;
+      issuedAt: string;
+    }>;
+    expect(issueResults[0]).toEqual(issueResults[1]);
+    expect(issueResults[0]).toMatchObject({
+      invoiceId: invoice.id,
+      revisionId: expect.stringMatching(/^[0-7][0-9A-Z]{25}$/),
+      version: 3,
+      status: 'issued',
+      invoiceNumber: 'F-000001',
+      issuedAt: expect.stringMatching(/^\d{4}-\d{2}-\d{2}T.*\.\d{3}Z$/),
+    });
+    const invoiceList = await fetch(`${baseUrl}/api/invoices`, { headers: { cookie } });
+    expect(invoiceList.status).toBe(200);
+    await expect(invoiceList.json()).resolves.toMatchObject([
+      {
+        id: invoice.id,
+        orderId: accepted.orderId,
+        status: 'issued',
+        version: 3,
+        invoiceNumber: 'F-000001',
+        title: 'Final invoice',
+      },
+    ]);
+
+    const invoiceSqlite = new Sqlite(databaseFilename);
+    expect(
+      invoiceSqlite
+        .prepare('select next_value from invoice_number_counter where id = 1')
+        .pluck()
+        .get(),
+    ).toBe(2);
+    expect(
+      invoiceSqlite
+        .prepare(
+          "select count(*) from audit_events where action = 'invoice.issued' and resource_id = ?",
+        )
+        .pluck()
+        .get(invoice.id),
+    ).toBe(1);
+    expect(() =>
+      invoiceSqlite
+        .prepare('update invoice_revisions set title = title where invoice_id = ?')
+        .run(invoice.id),
+    ).toThrow('invoice revisions are append-only');
+    expect(() =>
+      invoiceSqlite
+        .prepare(
+          `delete from invoice_lines where revision_id in
+           (select id from invoice_revisions where invoice_id = ?)`,
+        )
+        .run(invoice.id),
+    ).toThrow('invoice lines are append-only');
+    invoiceSqlite.close();
+
     const list = await fetch(`${baseUrl}/api/quotes`, { headers: { cookie } });
     expect(list.status).toBe(200);
     await expect(list.json()).resolves.toMatchObject([

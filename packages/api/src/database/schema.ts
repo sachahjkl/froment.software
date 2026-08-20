@@ -533,6 +533,155 @@ export const orders = sqliteTable(
   ],
 );
 
+export const invoices = sqliteTable(
+  'invoices',
+  {
+    id: text().notNull().primaryKey(),
+    orderId: text('order_id')
+      .notNull()
+      .references(() => orders.id, { onDelete: 'no action' }),
+    clientId: text('client_id')
+      .notNull()
+      .references(() => clients.id, { onDelete: 'no action' }),
+    status: text({ enum: ['draft', 'issued', 'paid', 'void'] }).notNull(),
+    version: integer().notNull(),
+    invoiceNumber: text('invoice_number'),
+    issuedAt: integer('issued_at', { mode: 'timestamp_ms' }),
+    paidAt: integer('paid_at', { mode: 'timestamp_ms' }),
+    voidedAt: integer('voided_at', { mode: 'timestamp_ms' }),
+    createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull(),
+    updatedAt: integer('updated_at', { mode: 'timestamp_ms' }).notNull(),
+  },
+  (table) => [
+    uniqueIndex('invoices_order_id_unique').on(table.orderId),
+    uniqueIndex('invoices_invoice_number_unique').on(table.invoiceNumber),
+    index('invoices_client_id_index').on(table.clientId),
+    check(
+      'invoices_id_ulid_check',
+      sql`${table.id} is not null and length(${table.id}) = 26 and ${table.id} not glob '*[^0-9A-HJKMNP-TV-Z]*' and substr(${table.id}, 1, 1) between '0' and '7'`,
+    ),
+    check('invoices_status_check', sql`${table.status} in ('draft', 'issued', 'paid', 'void')`),
+    check('invoices_version_check', sql`${table.version} >= 1`),
+    check(
+      'invoices_number_state_check',
+      sql`(${table.status} = 'draft' and ${table.invoiceNumber} is null and ${table.issuedAt} is null) or (${table.status} in ('issued', 'paid', 'void') and ${table.invoiceNumber} glob 'F-[0-9]*' and length(${table.invoiceNumber}) >= 8 and ${table.issuedAt} is not null)`,
+    ),
+    check(
+      'invoices_terminal_state_check',
+      sql`(${table.status} = 'paid' and ${table.paidAt} is not null and ${table.voidedAt} is null) or (${table.status} = 'void' and ${table.voidedAt} is not null and ${table.paidAt} is null) or (${table.status} in ('draft', 'issued') and ${table.paidAt} is null and ${table.voidedAt} is null)`,
+    ),
+    check('invoices_timestamps_check', sql`${table.updatedAt} >= ${table.createdAt}`),
+  ],
+);
+
+export const invoiceRevisions = sqliteTable(
+  'invoice_revisions',
+  {
+    id: text().notNull().primaryKey(),
+    invoiceId: text('invoice_id')
+      .notNull()
+      .references(() => invoices.id, { onDelete: 'no action' }),
+    version: integer().notNull(),
+    invoiceNumber: text('invoice_number'),
+    issuedAt: integer('issued_at', { mode: 'timestamp_ms' }),
+    clientDisplayName: text('client_display_name').notNull(),
+    title: text().notNull(),
+    serviceDate: text('service_date').notNull(),
+    dueDate: text('due_date').notNull(),
+    paymentTerms: text('payment_terms').notNull(),
+    currency: text({ enum: ['EUR'] }).notNull(),
+    netTotalCents: integer('net_total_cents').notNull(),
+    vatTotalCents: integer('vat_total_cents').notNull(),
+    totalCents: integer('total_cents').notNull(),
+    createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull(),
+    createdByUserId: text('created_by_user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'no action' }),
+    templateId: text('template_id').notNull(),
+    templateVersion: integer('template_version').notNull(),
+    renderSnapshot: text('render_snapshot').notNull(),
+  },
+  (table) => [
+    uniqueIndex('invoice_revisions_invoice_id_version_unique').on(table.invoiceId, table.version),
+    index('invoice_revisions_created_by_user_id_index').on(table.createdByUserId),
+    check(
+      'invoice_revisions_id_ulid_check',
+      sql`${table.id} is not null and length(${table.id}) = 26 and ${table.id} not glob '*[^0-9A-HJKMNP-TV-Z]*' and substr(${table.id}, 1, 1) between '0' and '7'`,
+    ),
+    check('invoice_revisions_version_check', sql`${table.version} >= 1`),
+    check(
+      'invoice_revisions_number_check',
+      sql`(${table.invoiceNumber} is null and ${table.issuedAt} is null) or (${table.invoiceNumber} glob 'F-[0-9]*' and length(${table.invoiceNumber}) >= 8 and ${table.issuedAt} is not null)`,
+    ),
+    check(
+      'invoice_revisions_client_display_name_check',
+      sql`length(trim(${table.clientDisplayName})) > 0`,
+    ),
+    check('invoice_revisions_title_check', sql`length(trim(${table.title})) between 1 and 120`),
+    check(
+      'invoice_revisions_dates_check',
+      sql`${table.serviceDate} glob '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]' and ${table.dueDate} glob '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]' and ${table.dueDate} >= ${table.serviceDate}`,
+    ),
+    check('invoice_revisions_payment_terms_check', sql`length(${table.paymentTerms}) <= 2000`),
+    check('invoice_revisions_currency_check', sql`${table.currency} = 'EUR'`),
+    check(
+      'invoice_revisions_totals_check',
+      sql`${table.netTotalCents} between 0 and 9007199254740991 and ${table.vatTotalCents} between 0 and 9007199254740991 and ${table.totalCents} between 0 and 9007199254740991 and ${table.totalCents} = ${table.netTotalCents} + ${table.vatTotalCents}`,
+    ),
+    check(
+      'invoice_revisions_render_check',
+      sql`${table.templateId} = 'invoice-default' and ${table.templateVersion} = 1 and json_valid(${table.renderSnapshot})`,
+    ),
+  ],
+);
+
+export const invoiceLines = sqliteTable(
+  'invoice_lines',
+  {
+    id: text().notNull().primaryKey(),
+    revisionId: text('revision_id')
+      .notNull()
+      .references(() => invoiceRevisions.id, { onDelete: 'no action' }),
+    position: integer().notNull(),
+    description: text().notNull(),
+    quantityMilli: integer('quantity_milli').notNull(),
+    unitPriceCents: integer('unit_price_cents').notNull(),
+    vatRateBasisPoints: integer('vat_rate_basis_points').notNull(),
+    netTotalCents: integer('net_total_cents').notNull(),
+    vatTotalCents: integer('vat_total_cents').notNull(),
+    totalCents: integer('total_cents').notNull(),
+  },
+  (table) => [
+    uniqueIndex('invoice_lines_revision_id_position_unique').on(table.revisionId, table.position),
+    check(
+      'invoice_lines_id_ulid_check',
+      sql`${table.id} is not null and length(${table.id}) = 26 and ${table.id} not glob '*[^0-9A-HJKMNP-TV-Z]*' and substr(${table.id}, 1, 1) between '0' and '7'`,
+    ),
+    check('invoice_lines_position_check', sql`${table.position} between 0 and 19`),
+    check(
+      'invoice_lines_description_check',
+      sql`length(trim(${table.description})) between 1 and 160`,
+    ),
+    check(
+      'invoice_lines_input_check',
+      sql`${table.quantityMilli} between 1 and 9007199254740991 and ${table.unitPriceCents} between 0 and 9007199254740991 and ${table.vatRateBasisPoints} between 0 and 10000`,
+    ),
+    check(
+      'invoice_lines_totals_check',
+      sql`${table.netTotalCents} between 0 and 9007199254740991 and ${table.vatTotalCents} between 0 and 9007199254740991 and ${table.totalCents} between 0 and 9007199254740991 and ${table.totalCents} = ${table.netTotalCents} + ${table.vatTotalCents}`,
+    ),
+  ],
+);
+
+export const invoiceNumberCounter = sqliteTable(
+  'invoice_number_counter',
+  { id: integer().notNull().primaryKey(), nextValue: integer('next_value').notNull() },
+  (table) => [
+    check('invoice_number_counter_id_check', sql`${table.id} = 1`),
+    check('invoice_number_counter_next_value_check', sql`${table.nextValue} >= 1`),
+  ],
+);
+
 const ulid = (schema: typeof Schema.String) =>
   schema.check(Schema.isPattern(/^[0-7][0-9A-HJKMNP-TV-Z]{25}$/));
 

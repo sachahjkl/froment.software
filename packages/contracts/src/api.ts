@@ -55,6 +55,21 @@ import {
   QuoteSendResult,
 } from './quotes.js';
 import { DeploymentMetadata } from './version.js';
+import {
+  InvoiceAlreadyExists,
+  InvoiceAmountTooLarge,
+  InvoiceCreateRequest,
+  InvoiceDetail,
+  InvoiceInvalidDates,
+  InvoiceIssueRequest,
+  InvoiceIssueResult,
+  InvoiceList,
+  InvoiceNotEditable,
+  InvoiceNotFound,
+  InvoiceOrderNotFound,
+  InvoiceRevisionCreateRequest,
+  InvoiceVersionConflict,
+} from './invoices.js';
 
 const RevisionVersionParameter = Schema.NumberFromString.check(
   Schema.isInt(),
@@ -271,7 +286,65 @@ export class QuotesApi extends HttpApiGroup.make('quotes', { topLevel: true }).a
   }),
 ) {}
 
+const invoiceReadErrors = [
+  AuthenticationRequired.pipe(HttpApiSchema.status(401)),
+  PermissionDenied.pipe(HttpApiSchema.status(403)),
+];
+const invoiceWriteErrors = [
+  ...invoiceReadErrors,
+  CsrfRejected.pipe(HttpApiSchema.status(403)),
+  RequestRateLimited.pipe(HttpApiSchema.status(429)),
+];
+
+export class InvoicesApi extends HttpApiGroup.make('invoices', { topLevel: true }).add(
+  HttpApiEndpoint.get('invoiceList', '/api/invoices', {
+    success: InvoiceList,
+    error: invoiceReadErrors,
+  }),
+  HttpApiEndpoint.get('invoiceGet', '/api/invoices/:invoiceId', {
+    params: { invoiceId: Ulid },
+    success: InvoiceDetail,
+    error: [...invoiceReadErrors, InvoiceNotFound.pipe(HttpApiSchema.status(404))],
+  }),
+  HttpApiEndpoint.post('invoiceCreate', '/api/invoices', {
+    payload: InvoiceCreateRequest,
+    success: InvoiceDetail,
+    error: [
+      ...invoiceWriteErrors,
+      InvoiceOrderNotFound.pipe(HttpApiSchema.status(404)),
+      InvoiceAlreadyExists.pipe(HttpApiSchema.status(409)),
+      InvoiceInvalidDates.pipe(HttpApiSchema.status(422)),
+      InvoiceAmountTooLarge.pipe(HttpApiSchema.status(422)),
+    ],
+  }),
+  HttpApiEndpoint.post('invoiceRevisionCreate', '/api/invoices/:invoiceId/revisions', {
+    params: { invoiceId: Ulid },
+    payload: InvoiceRevisionCreateRequest,
+    success: InvoiceDetail,
+    error: [
+      ...invoiceWriteErrors,
+      InvoiceNotFound.pipe(HttpApiSchema.status(404)),
+      InvoiceNotEditable.pipe(HttpApiSchema.status(409)),
+      InvoiceVersionConflict.pipe(HttpApiSchema.status(409)),
+      InvoiceInvalidDates.pipe(HttpApiSchema.status(422)),
+      InvoiceAmountTooLarge.pipe(HttpApiSchema.status(422)),
+    ],
+  }),
+  HttpApiEndpoint.post('invoiceIssue', '/api/invoices/:invoiceId/issue', {
+    params: { invoiceId: Ulid },
+    payload: InvoiceIssueRequest,
+    success: InvoiceIssueResult,
+    error: [
+      ...invoiceWriteErrors,
+      InvoiceNotFound.pipe(HttpApiSchema.status(404)),
+      InvoiceVersionConflict.pipe(HttpApiSchema.status(409)),
+      InvoiceInvalidDates.pipe(HttpApiSchema.status(422)),
+    ],
+  }),
+) {}
+
 export class Api extends HttpApi.make('froment-api')
   .add(SystemApi)
   .add(ClientsApi)
-  .add(QuotesApi) {}
+  .add(QuotesApi)
+  .add(InvoicesApi) {}

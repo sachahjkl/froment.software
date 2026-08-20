@@ -24,6 +24,7 @@ import { DocumentArtifacts } from './documents/document-artifacts.js';
 import { QuoteRenderer } from './documents/quote-renderer.js';
 import { Quotes } from './quotes/quotes.js';
 import { QuoteLinks } from './quotes/quote-links.js';
+import { Invoices } from './invoices/invoices.js';
 import { RequestLimiter, RequestLimiterLive } from './server/request-limiter.js';
 
 const sessionCookieName = '__Host-froment-session';
@@ -502,8 +503,62 @@ const QuoteHandlers = HttpApiBuilder.group(Api, 'quotes', (handlers) =>
   ),
 );
 
+const InvoiceHandlers = HttpApiBuilder.group(Api, 'invoices', (handlers) =>
+  Effect.succeed(
+    handlers
+      .handle(
+        'invoiceList',
+        Effect.fn('invoiceList')(function* () {
+          yield* setPrivateResponseHeaders;
+          yield* authorizeAdministrator('invoice.read');
+          return yield* (yield* Invoices).list.pipe(Effect.catchTag('DatabaseError', Effect.orDie));
+        }),
+      )
+      .handle(
+        'invoiceGet',
+        Effect.fn('invoiceGet')(function* ({ params }) {
+          yield* setPrivateResponseHeaders;
+          yield* authorizeAdministrator('invoice.read');
+          return yield* (yield* Invoices)
+            .get(params.invoiceId)
+            .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
+        }),
+      )
+      .handle(
+        'invoiceCreate',
+        Effect.fn('invoiceCreate')(function* ({ payload }) {
+          yield* setPrivateResponseHeaders;
+          const principal = yield* authorizeAdministratorWrite('invoice.create');
+          return yield* (yield* Invoices)
+            .create(payload, principal.userId)
+            .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
+        }),
+      )
+      .handle(
+        'invoiceRevisionCreate',
+        Effect.fn('invoiceRevisionCreate')(function* ({ params, payload }) {
+          yield* setPrivateResponseHeaders;
+          const principal = yield* authorizeAdministratorWrite('invoice.update');
+          return yield* (yield* Invoices)
+            .createRevision(params.invoiceId, payload, principal.userId)
+            .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
+        }),
+      )
+      .handle(
+        'invoiceIssue',
+        Effect.fn('invoiceIssue')(function* ({ params, payload }) {
+          yield* setPrivateResponseHeaders;
+          const principal = yield* authorizeAdministratorWrite('invoice.issue', 10);
+          return yield* (yield* Invoices)
+            .issue(params.invoiceId, payload, principal.userId)
+            .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
+        }),
+      ),
+  ),
+);
+
 const ApiRoutes = HttpApiBuilder.layer(Api).pipe(
-  Layer.provide(Layer.mergeAll(ApiHandlers, ClientHandlers, QuoteHandlers)),
+  Layer.provide(Layer.mergeAll(ApiHandlers, ClientHandlers, QuoteHandlers, InvoiceHandlers)),
 );
 
 export const makeServerLayer = (options: {

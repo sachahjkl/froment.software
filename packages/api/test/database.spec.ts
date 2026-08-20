@@ -47,6 +47,10 @@ describe('Database', () => {
         'access_credentials',
         'audit_events',
         'clients',
+        'invoice_lines',
+        'invoice_number_counter',
+        'invoice_revisions',
+        'invoices',
         'orders',
         'permissions',
         'quote_lines',
@@ -76,6 +80,12 @@ describe('Database', () => {
         { table: 'quotes', onDelete: 'NO ACTION' },
       ]),
     );
+    expect(
+      schemaSqlite
+        .prepare('select next_value from invoice_number_counter where id = 1')
+        .pluck()
+        .get(),
+    ).toBe(1);
     schemaSqlite.close();
 
     const sqlite = new Sqlite(filename);

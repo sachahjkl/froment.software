@@ -13,10 +13,11 @@ import { DocumentArtifactsLive } from './documents/document-artifacts.js';
 import { QuoteRendererLive } from './documents/quote-renderer.js';
 import { QuotesLive } from './quotes/quotes.js';
 import { QuoteLinksLive } from './quotes/quote-links.js';
+import { InvoicesLive } from './invoices/invoices.js';
 import { ServerLive } from './server.js';
 import { ObservabilityLive } from './observability/observability.js';
 
-const QuoteCoreLive = Layer.mergeAll(QuotesLive, QuoteRendererLive).pipe(
+const QuoteCoreLive = Layer.mergeAll(QuotesLive, QuoteRendererLive, InvoicesLive).pipe(
   Layer.provideMerge(IssuerSettingsLive),
 );
 const QuoteServicesLive = DocumentArtifactsLive.pipe(Layer.provideMerge(QuoteCoreLive));
