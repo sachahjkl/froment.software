@@ -328,4 +328,75 @@ describe('Database', () => {
     expect(state.sessionRevokedAt).toBe(3);
     expect(state.foreignKeyViolations).toEqual([]);
   });
+
+  it('rebuilds referenced tables during an upgrade', async () => {
+    const directory = await mkdtemp(join(tmpdir(), 'froment-database-upgrade-'));
+    directories.push(directory);
+    const migrationsFolder = join(directory, 'drizzle');
+    const sourceFolder = join(import.meta.dirname, '..', 'drizzle');
+    const previousMigrations = [
+      '20260819152049_familiar_rictor',
+      '20260819152052_seed_permissions',
+      '20260819163618_striped_krista_starr',
+      '20260819195929_nervous_maximus',
+      '20260819201456_gray_quasar',
+    ];
+    await Promise.all(
+      previousMigrations.map((migration) =>
+        cp(join(sourceFolder, migration), join(migrationsFolder, migration), { recursive: true }),
+      ),
+    );
+    const filename = join(directory, 'database.sqlite');
+    const options = { filename, migrationsFolder };
+    await Effect.runPromise(
+      Database.use(() => Effect.void).pipe(Effect.provide(makeDatabaseLayer(options))),
+    );
+
+    const sqlite = new Sqlite(filename);
+    const administratorId = '01ARZ3NDEKTSV4RRFFQ69G5FAV';
+    const clientId = '01ARZ3NDEKTSV4RRFFQ69G5FAW';
+    const quoteId = '01ARZ3NDEKTSV4RRFFQ69G5FAX';
+    const revisionId = '01ARZ3NDEKTSV4RRFFQ69G5FAY';
+    sqlite
+      .prepare(
+        "insert into users (id, display_name, kind, created_at, updated_at) values (?, 'Administrator', 'administrator', 1, 1), (?, 'Client', 'client', 1, 1)",
+      )
+      .run(administratorId, clientId);
+    sqlite
+      .prepare('insert into clients (id, created_at, updated_at) values (?, 1, 1)')
+      .run(clientId);
+    sqlite
+      .prepare(
+        "insert into quotes (id, client_id, status, version, created_at, updated_at) values (?, ?, 'draft', 1, 1, 1)",
+      )
+      .run(quoteId, clientId);
+    sqlite
+      .prepare(
+        "insert into quote_revisions (id, quote_id, version, client_display_name, title, conditions, currency, net_total_cents, vat_total_cents, total_cents, created_at, created_by_user_id) values (?, ?, 1, 'Client', 'Quote', '', 'EUR', 0, 0, 0, 1, ?)",
+      )
+      .run(revisionId, quoteId, administratorId);
+    sqlite.close();
+
+    const migration = '20260819205351_curved_thena';
+    await cp(join(sourceFolder, migration), join(migrationsFolder, migration), { recursive: true });
+    const state = await Effect.runPromise(
+      Database.use(({ sqlite: connection }) =>
+        Effect.sync(() => ({
+          clientId: connection
+            .prepare('select client_id from quotes where id = ?')
+            .pluck()
+            .get(quoteId),
+          foreignKeyViolations: connection.pragma('foreign_key_check'),
+          revisionId: connection
+            .prepare('select id from quote_revisions where quote_id = ?')
+            .pluck()
+            .get(quoteId),
+        })),
+      ).pipe(Effect.provide(makeDatabaseLayer(options))),
+    );
+
+    expect(state.clientId).toBe(clientId);
+    expect(state.revisionId).toBe(revisionId);
+    expect(state.foreignKeyViolations).toEqual([]);
+  });
 });

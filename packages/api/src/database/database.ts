@@ -43,7 +43,16 @@ export const makeDatabaseLayer = (options: {
           sqlite.pragma('busy_timeout = 5000');
           sqlite.pragma('synchronous = FULL');
           const orm = drizzle({ client: sqlite });
-          migrate(orm, { migrationsFolder: options.migrationsFolder });
+          sqlite.pragma('foreign_keys = OFF');
+          try {
+            migrate(orm, { migrationsFolder: options.migrationsFolder });
+            const violations = sqlite.prepare('PRAGMA foreign_key_check').all();
+            if (violations.length > 0) {
+              throw new Error('Database migrations introduced foreign key violations');
+            }
+          } finally {
+            sqlite.pragma('foreign_keys = ON');
+          }
           return Database.of({ orm, sqlite });
         },
         catch: (cause) => new DatabaseError({ operation: 'configure and migrate database', cause }),
