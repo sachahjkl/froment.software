@@ -8,6 +8,16 @@ export {
 export { Ulid, type Ulid as UlidValue } from './identifiers.js';
 export { PermissionCode, type PermissionCode as PermissionCodeValue } from './permissions.js';
 export {
+  AuditAction,
+  type AuditAction as AuditActionValue,
+  AuditEvent,
+  type AuditEvent as AuditEventValue,
+  AuditMetadata,
+  type AuditMetadata as AuditMetadataValue,
+  AuditResourceType,
+  type AuditResourceType as AuditResourceTypeValue,
+} from './audit.js';
+export {
   AccessIdentifier,
   type AccessIdentifier as AccessIdentifierValue,
   AuthenticationFailure,

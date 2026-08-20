@@ -2,6 +2,7 @@ import { NodeRuntime } from '@effect/platform-node';
 import { Layer } from 'effect';
 
 import { BootstrapLive } from './bootstrap/bootstrap.js';
+import { AuditLive } from './audit/audit.js';
 import { AuthenticationLive } from './authentication/authentication.js';
 import { AuthenticationConfigLive } from './authentication/authentication-config.js';
 import { ClientsLive } from './clients/clients.js';
@@ -20,6 +21,7 @@ const QuoteCoreLive = Layer.mergeAll(QuotesLive, QuoteRendererLive).pipe(
 const QuoteServicesLive = DocumentArtifactsLive.pipe(Layer.provideMerge(QuoteCoreLive));
 
 const ServicesLive = Layer.mergeAll(
+  AuditLive,
   BootstrapLive,
   AuthenticationLive,
   ClientsLive,

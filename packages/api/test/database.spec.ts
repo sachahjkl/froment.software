@@ -45,6 +45,7 @@ describe('Database', () => {
     expect(state.tables).toEqual(
       expect.arrayContaining([
         'access_credentials',
+        'audit_events',
         'clients',
         'permissions',
         'quote_lines',
@@ -64,6 +65,29 @@ describe('Database', () => {
     schemaSqlite.close();
 
     const sqlite = new Sqlite(filename);
+    const auditEventId = '01ARZ3NDEKTSV4RRFFQ69G5FAT';
+    sqlite
+      .prepare(
+        `insert into audit_events
+         (id, action, actor_user_id, resource_type, resource_id, occurred_at, metadata)
+         values (?, 'system.started', null, 'system', 'application', 1, '{}')`,
+      )
+      .run(auditEventId);
+    expect(() =>
+      sqlite.prepare('update audit_events set metadata = ? where id = ?').run('{}', auditEventId),
+    ).toThrow('audit events are append-only');
+    expect(() => sqlite.prepare('delete from audit_events where id = ?').run(auditEventId)).toThrow(
+      'audit events are append-only',
+    );
+    expect(() =>
+      sqlite
+        .prepare(
+          `insert into audit_events
+           (id, action, actor_user_id, resource_type, resource_id, occurred_at, metadata)
+           values (?, 'invalid action', null, 'system', 'application', 1, '{}')`,
+        )
+        .run('01ARZ3NDEKTSV4RRFFQ69G5FAS'),
+    ).toThrow();
     const userId = '01ARZ3NDEKTSV4RRFFQ69G5FAV';
     sqlite
       .prepare(

@@ -367,6 +367,48 @@ export const documentArtifacts = sqliteTable(
   ],
 );
 
+export const auditEvents = sqliteTable(
+  'audit_events',
+  {
+    id: text().notNull().primaryKey(),
+    action: text().notNull(),
+    actorUserId: text('actor_user_id'),
+    resourceType: text('resource_type').notNull(),
+    resourceId: text('resource_id').notNull(),
+    occurredAt: integer('occurred_at', { mode: 'timestamp_ms' }).notNull(),
+    metadata: text().notNull(),
+  },
+  (table) => [
+    index('audit_events_occurred_at_id_index').on(table.occurredAt, table.id),
+    index('audit_events_actor_user_id_index').on(table.actorUserId),
+    index('audit_events_resource_index').on(table.resourceType, table.resourceId),
+    check(
+      'audit_events_id_ulid_check',
+      sql`${table.id} is not null and length(${table.id}) = 26 and ${table.id} not glob '*[^0-9A-HJKMNP-TV-Z]*' and substr(${table.id}, 1, 1) between '0' and '7'`,
+    ),
+    check(
+      'audit_events_actor_user_id_check',
+      sql`${table.actorUserId} is null or (length(${table.actorUserId}) = 26 and ${table.actorUserId} not glob '*[^0-9A-HJKMNP-TV-Z]*' and substr(${table.actorUserId}, 1, 1) between '0' and '7')`,
+    ),
+    check(
+      'audit_events_action_check',
+      sql`length(${table.action}) between 3 and 80 and ${table.action} glob '[a-z]*.[a-z]*' and ${table.action} not glob '*[^a-z.-]*'`,
+    ),
+    check(
+      'audit_events_resource_type_check',
+      sql`length(${table.resourceType}) between 1 and 40 and ${table.resourceType} not glob '*[^a-z-]*'`,
+    ),
+    check(
+      'audit_events_resource_id_check',
+      sql`length(trim(${table.resourceId})) between 1 and 160`,
+    ),
+    check(
+      'audit_events_metadata_check',
+      sql`json_valid(${table.metadata}) and json_type(${table.metadata}) = 'object' and length(${table.metadata}) <= 4096`,
+    ),
+  ],
+);
+
 const ulid = (schema: typeof Schema.String) =>
   schema.check(Schema.isPattern(/^[0-7][0-9A-HJKMNP-TV-Z]{25}$/));
 
