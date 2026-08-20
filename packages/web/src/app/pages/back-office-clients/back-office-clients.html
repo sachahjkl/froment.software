@@ -123,26 +123,28 @@
             <span class="badge ok">{{ i18n.t('backOffice.clients.active') }}</span>
             }
           </td>
-          <td class="actions">
-            @if (!client.archived) {
-            <button
-              appButton
-              type="button"
-              [disabled]="pendingClientId() !== undefined"
-              (click)="createAccess(client)"
-            >
-              {{ i18n.t('backOffice.clients.createAccess') }}
-            </button>
-            <button
-              appButton
-              variant="danger"
-              type="button"
-              [disabled]="pendingClientId() !== undefined"
-              (click)="archive(client)"
-            >
-              {{ i18n.t('backOffice.clients.archive') }}
-            </button>
-            }
+          <td>
+            <div class="actions">
+              @if (!client.archived) {
+              <button
+                appButton
+                type="button"
+                [disabled]="pendingClientId() !== undefined"
+                (click)="createAccess(client)"
+              >
+                {{ i18n.t('backOffice.clients.createAccess') }}
+              </button>
+              <button
+                appButton
+                variant="danger"
+                type="button"
+                [disabled]="pendingClientId() !== undefined"
+                (click)="archive(client)"
+              >
+                {{ i18n.t('backOffice.clients.archive') }}
+              </button>
+              }
+            </div>
           </td>
         </tr>
         }

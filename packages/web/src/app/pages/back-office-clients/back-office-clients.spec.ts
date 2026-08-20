@@ -2,14 +2,15 @@ import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 
 import { BackOfficeClientsApi } from '../../back-office/back-office-clients-api';
-import { type ClientCreateRequestValue } from '@froment/contracts';
+import { type ClientCreateRequestValue, type ClientListValue } from '@froment/contracts';
 import { BackOfficeClients } from './back-office-clients';
 
 class ClientsApiStub {
   readonly createdNames: Array<string> = [];
+  constructor(private readonly initialClients: ClientListValue = []) {}
 
-  list(): Promise<[]> {
-    return Promise.resolve([]);
+  list(): Promise<ClientListValue> {
+    return Promise.resolve(this.initialClients);
   }
 
   create(request: ClientCreateRequestValue) {
@@ -65,5 +66,31 @@ describe('BackOfficeClients', () => {
       'true',
     );
     expect(root.querySelector('#client-display-name-error')?.textContent).toContain('120');
+  });
+
+  it('keeps an archived client action cell in the table layout', async () => {
+    const api = new ClientsApiStub([
+      {
+        id: '01ARZ3NDEKTSV4RRFFQ69G5FAV',
+        displayName: 'Acme',
+        addressLine1: '',
+        addressLine2: '',
+        postalCode: '',
+        city: '',
+        country: '',
+        email: '',
+        archived: true,
+      },
+    ]);
+    TestBed.configureTestingModule({
+      providers: [provideRouter([]), { provide: BackOfficeClientsApi, useValue: api }],
+    });
+    const fixture = TestBed.createComponent(BackOfficeClients);
+    await fixture.whenStable();
+    const root: HTMLElement = fixture.nativeElement;
+    const actionCell = root.querySelector<HTMLTableCellElement>('tbody td:last-child');
+
+    expect(actionCell?.classList.contains('actions')).toBe(false);
+    expect(actionCell?.querySelector('.actions')).not.toBeNull();
   });
 });
