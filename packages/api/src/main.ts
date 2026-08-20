@@ -8,13 +8,15 @@ import { ClientsLive } from './clients/clients.js';
 import { DatabaseLive } from './database/database.js';
 import { DeploymentLive } from './deployment/deployment.js';
 import { IssuerSettingsLive } from './documents/issuer-settings.js';
+import { DocumentArtifactsLive } from './documents/document-artifacts.js';
 import { QuoteRendererLive } from './documents/quote-renderer.js';
 import { QuotesLive } from './quotes/quotes.js';
 import { ServerLive } from './server.js';
 
-const QuoteServicesLive = Layer.mergeAll(QuotesLive, QuoteRendererLive).pipe(
+const QuoteCoreLive = Layer.mergeAll(QuotesLive, QuoteRendererLive).pipe(
   Layer.provideMerge(IssuerSettingsLive),
 );
+const QuoteServicesLive = DocumentArtifactsLive.pipe(Layer.provideMerge(QuoteCoreLive));
 
 const ServicesLive = Layer.mergeAll(
   BootstrapLive,

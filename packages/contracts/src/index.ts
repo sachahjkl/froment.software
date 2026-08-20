@@ -59,6 +59,9 @@ export {
 export {
   DocumentParty,
   type DocumentParty as DocumentPartyValue,
+  DocumentArtifact,
+  type DocumentArtifact as DocumentArtifactValue,
+  DocumentNotFound,
   IssuerSettings,
   type IssuerSettings as IssuerSettingsValue,
   IssuerSettingsUpdateRequest,

@@ -78,6 +78,9 @@ catalogs:
     oxlint:
       specifier: 1.79.0
       version: 1.79.0
+    playwright-core:
+      specifier: 1.62.1
+      version: 1.62.1
     rxjs:
       specifier: ~7.8.0
       version: 7.8.2
@@ -128,6 +131,9 @@ importers:
       effect:
         specifier: 'catalog:'
         version: 4.0.0-rc.110
+      playwright-core:
+        specifier: 'catalog:'
+        version: 1.62.1
       ulid:
         specifier: 'catalog:'
         version: 3.0.2
@@ -3017,6 +3023,11 @@ packages:
     resolution: {integrity: sha512-wQ0b/W4Fr01qtpHlqSqspcj3EhBvimsdh0KlHhH8HRZnMsEa0ea2fTULOXOS9ccQr3om+GcGRk4e+isrZWV8qQ==}
     engines: {node: '>=16.20.0'}
 
+  playwright-core@1.62.1:
+    resolution: {integrity: sha512-wPYSwEBJY9GHraISXqyqtx0na0LpO3XEX7jNDhntbex7tzUS7kLnZsOlFruFJB4Hi/rhDMjXGqHewDZ68nYZVw==}
+    engines: {node: '>=20'}
+    hasBin: true
+
   postcss-media-query-parser@0.2.3:
     resolution: {integrity: sha512-3sOlxmbKcSHMjlUXQZKQ06jOswE7oVkXPxmZdoB1r5l0q6gTFTQSHxNxOrCccElbW7dxNytifNEo8qidX2Vsig==}
 
@@ -5681,6 +5692,8 @@ snapshots:
       '@napi-rs/nice': 1.1.1
 
   pkce-challenge@5.0.1: {}
+
+  playwright-core@1.62.1: {}
 
   postcss-media-query-parser@0.2.3: {}
 

@@ -196,6 +196,19 @@
         <button appButton type="button" (click)="showPreview(revision.version)">
           {{ i18n.t('backOffice.quote.preview.show') }}
         </button>
+        <button
+          appButton
+          type="button"
+          [disabled]="pdfPendingVersion() !== undefined"
+          (click)="generatePdf(revision.version)"
+        >
+          @if (pdfPendingVersion() === revision.version) { {{
+          i18n.t('backOffice.quote.pdf.generating') }} } @else { {{
+          i18n.t('backOffice.quote.pdf.generate') }} }
+        </button>
+        @if (pdfUrl(revision.version); as pdf) {
+        <a [href]="pdf">{{ i18n.t('backOffice.quote.pdf.download') }}</a>
+        }
       </li>
       }
     </ol>

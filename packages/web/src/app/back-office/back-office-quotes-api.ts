@@ -2,9 +2,11 @@ import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import {
   QuoteDetail,
+  DocumentArtifact,
   QuoteFailure,
   QuoteList,
   type QuoteCreateRequestValue,
+  type DocumentArtifactValue,
   type QuoteDetailValue,
   type QuoteFailureValue,
   type QuoteListValue,
@@ -42,6 +44,34 @@ export class BackOfficeQuotesApi {
     request: QuoteRevisionCreateRequestValue,
   ): Promise<QuoteOutcome<QuoteDetailValue>> {
     return this.request(this.http.post<unknown>(`/api/quotes/${quoteId}/revisions`, request));
+  }
+
+  async renderPdf(
+    quoteId: UlidValue,
+    version: number,
+  ): Promise<QuoteOutcome<DocumentArtifactValue>> {
+    try {
+      return {
+        success: true,
+        result: Schema.decodeUnknownSync(DocumentArtifact)(
+          await firstValueFrom(
+            this.http.post<unknown>(`/api/quotes/${quoteId}/revisions/${version}/pdf`, undefined),
+          ),
+        ),
+      };
+    } catch (error) {
+      if (error instanceof HttpErrorResponse) {
+        try {
+          return {
+            success: false,
+            code: Schema.decodeUnknownSync(QuoteFailure)(error.error).code,
+          };
+        } catch {
+          return { success: false, code: 'quote.error' };
+        }
+      }
+      return { success: false, code: 'quote.error' };
+    }
   }
 
   private async request(source: Observable<unknown>): Promise<QuoteOutcome<QuoteDetailValue>> {

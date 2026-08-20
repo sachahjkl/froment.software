@@ -2,6 +2,7 @@ import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { spawn, type ChildProcess } from 'node:child_process';
+import { createHash } from 'node:crypto';
 import { request as httpRequest } from 'node:http';
 import { createServer } from 'node:net';
 
@@ -620,6 +621,34 @@ describe('HTTP server', () => {
     const firstPreviewHtml = await firstPreview.text();
     expect(firstPreviewHtml).toContain('Froment Software A');
     expect(firstPreviewHtml).toContain('1 rue du Test');
+
+    const pdfRender = await fetch(`${baseUrl}/api/quotes/${quote.id}/revisions/1/pdf`, {
+      method: 'POST',
+      headers: writeHeaders,
+    });
+    expect(pdfRender.status).toBe(200);
+    const artifact = (await pdfRender.json()) as {
+      readonly id: string;
+      readonly byteSize: number;
+      readonly sha256: string;
+    };
+    expect(artifact.byteSize).toBeGreaterThan(1_000);
+    expect(artifact.sha256).toMatch(/^[a-f0-9]{64}$/);
+    const repeatedPdfRender = await fetch(`${baseUrl}/api/quotes/${quote.id}/revisions/1/pdf`, {
+      method: 'POST',
+      headers: writeHeaders,
+    });
+    await expect(repeatedPdfRender.json()).resolves.toMatchObject({ id: artifact.id });
+    const pdfDownload = await fetch(`${baseUrl}/api/quotes/${quote.id}/revisions/1/pdf`, {
+      headers: { cookie },
+    });
+    expect(pdfDownload.status).toBe(200);
+    expect(pdfDownload.headers.get('content-type')).toContain('application/pdf');
+    expect(pdfDownload.headers.get('content-disposition')).toContain(`quote-${quote.id}-v1.pdf`);
+    const pdf = new Uint8Array(await pdfDownload.arrayBuffer());
+    expect(new TextDecoder().decode(pdf.slice(0, 5))).toBe('%PDF-');
+    expect(pdf.byteLength).toBe(artifact.byteSize);
+    expect(createHash('sha256').update(pdf).digest('hex')).toBe(artifact.sha256);
 
     const issuerB = { ...issuerA, displayName: 'Froment Software B' };
     const issuerUpdate = await fetch(`${baseUrl}/api/issuer-settings`, {

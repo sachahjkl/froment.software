@@ -42,6 +42,8 @@ import {
   QuoteVersionConflict,
   IssuerSettings,
   IssuerSettingsUpdateRequest,
+  DocumentArtifact,
+  DocumentNotFound,
 } from './quotes.js';
 import { DeploymentMetadata } from './version.js';
 
@@ -171,6 +173,27 @@ export class QuotesApi extends HttpApiGroup.make('quotes', { topLevel: true }).a
       PermissionDenied.pipe(HttpApiSchema.status(403)),
       QuoteNotFound.pipe(HttpApiSchema.status(404)),
       QuotePreviewUnavailable.pipe(HttpApiSchema.status(409)),
+    ],
+  }),
+  HttpApiEndpoint.post('quotePdfRender', '/api/quotes/:quoteId/revisions/:version/pdf', {
+    params: { quoteId: Ulid, version: RevisionVersionParameter },
+    success: DocumentArtifact,
+    error: [
+      AuthenticationRequired.pipe(HttpApiSchema.status(401)),
+      PermissionDenied.pipe(HttpApiSchema.status(403)),
+      CsrfRejected.pipe(HttpApiSchema.status(403)),
+      RequestRateLimited.pipe(HttpApiSchema.status(429)),
+      QuoteNotFound.pipe(HttpApiSchema.status(404)),
+      QuotePreviewUnavailable.pipe(HttpApiSchema.status(409)),
+    ],
+  }),
+  HttpApiEndpoint.get('quotePdfDownload', '/api/quotes/:quoteId/revisions/:version/pdf', {
+    params: { quoteId: Ulid, version: RevisionVersionParameter },
+    success: Schema.Uint8Array.pipe(HttpApiSchema.asUint8Array({ contentType: 'application/pdf' })),
+    error: [
+      AuthenticationRequired.pipe(HttpApiSchema.status(401)),
+      PermissionDenied.pipe(HttpApiSchema.status(403)),
+      DocumentNotFound.pipe(HttpApiSchema.status(404)),
     ],
   }),
   HttpApiEndpoint.post('quoteCreate', '/api/quotes', {

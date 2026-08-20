@@ -76,6 +76,8 @@ export class BackOfficeQuoteEditor {
   protected readonly clients = signal<ClientListValue>([]);
   protected readonly detail = signal<QuoteDetailValue | undefined>(undefined);
   protected readonly previewVersion = signal<number | undefined>(undefined);
+  protected readonly pdfPendingVersion = signal<number | undefined>(undefined);
+  protected readonly generatedPdfVersions = signal<ReadonlySet<number>>(new Set());
   protected readonly loading = signal(true);
   protected readonly unavailable = signal(false);
   protected readonly saving = signal(false);
@@ -232,6 +234,21 @@ export class BackOfficeQuoteEditor {
 
   protected showPreview(version: number): void {
     this.previewVersion.set(version);
+  }
+
+  protected async generatePdf(version: number): Promise<void> {
+    if (this.quoteId === undefined) return;
+    this.pdfPendingVersion.set(version);
+    this.error.set(undefined);
+    const outcome = await this.quotesApi.renderPdf(this.quoteId, version);
+    this.pdfPendingVersion.set(undefined);
+    if (!outcome.success) return this.setError(outcome.code);
+    this.generatedPdfVersions.update((versions) => new Set([...versions, version]));
+  }
+
+  protected pdfUrl(version: number): string | undefined {
+    if (this.quoteId === undefined || !this.generatedPdfVersions().has(version)) return undefined;
+    return `/api/quotes/${this.quoteId}/revisions/${version}/pdf`;
   }
 
   private async load(): Promise<void> {

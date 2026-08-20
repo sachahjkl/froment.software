@@ -179,6 +179,23 @@ export class QuotePreviewUnavailable extends Schema.TaggedError<QuotePreviewUnav
   { httpApiStatus: 409 },
 ) {}
 
+export const DocumentArtifact = Schema.Struct({
+  id: Ulid,
+  revisionId: Ulid,
+  kind: Schema.Literal('quote-pdf'),
+  contentType: Schema.Literal('application/pdf'),
+  byteSize: PositiveSafeInteger,
+  sha256: Schema.String.check(Schema.isPattern(/^[a-f0-9]{64}$/)),
+  createdAt: IsoUtc,
+});
+export type DocumentArtifact = typeof DocumentArtifact.Type;
+
+export class DocumentNotFound extends Schema.TaggedError<DocumentNotFound>()(
+  'DocumentNotFound',
+  { code: Schema.Literal('document.not_found') },
+  { httpApiStatus: 404 },
+) {}
+
 export const QuoteFailure = Schema.Union([
   AuthenticationRequired,
   PermissionDenied,
@@ -188,6 +205,7 @@ export const QuoteFailure = Schema.Union([
   QuoteAmountTooLarge,
   QuoteNotEditable,
   QuotePreviewUnavailable,
+  DocumentNotFound,
   ClientNotFound,
   ClientArchived,
   RequestRateLimited,

@@ -18,6 +18,7 @@ import { Clients } from './clients/clients.js';
 import { Database } from './database/database.js';
 import { Deployment } from './deployment/deployment.js';
 import { IssuerSettings } from './documents/issuer-settings.js';
+import { DocumentArtifacts } from './documents/document-artifacts.js';
 import { QuoteRenderer } from './documents/quote-renderer.js';
 import { Quotes } from './quotes/quotes.js';
 import { RequestLimiter, RequestLimiterLive } from './server/request-limiter.js';
@@ -385,6 +386,56 @@ const QuoteHandlers = HttpApiBuilder.group(Api, 'quotes', (handlers) =>
             .getSnapshot(params.quoteId, params.version)
             .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
           return yield* (yield* QuoteRenderer).render(snapshot).pipe(Effect.orDie);
+        }),
+      )
+      .handle(
+        'quotePdfRender',
+        Effect.fn('quotePdfRender')(function* ({ params }) {
+          yield* setPrivateResponseHeaders;
+          const request = yield* HttpServerRequest.HttpServerRequest;
+          const principal = yield* (yield* Authentication)
+            .authorizeWrite(
+              request.cookies['__Host-froment-session'],
+              request.cookies['__Host-froment-csrf'],
+              request.headers['x-csrf-token'],
+              request.headers['origin'],
+              'document.render',
+              'administrator',
+            )
+            .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
+          yield* limitPrincipalMutation(principal.userId, 'document.render', 10);
+          return yield* (yield* DocumentArtifacts)
+            .renderQuotePdf(params.quoteId, params.version)
+            .pipe(
+              Effect.catchTag('DatabaseError', Effect.orDie),
+              Effect.catchTag('DocumentRenderError', Effect.orDie),
+            );
+        }),
+      )
+      .handle(
+        'quotePdfDownload',
+        Effect.fn('quotePdfDownload')(function* ({ params }) {
+          yield* setPrivateResponseHeaders;
+          yield* HttpEffect.appendPreResponseHandler((_request, response) =>
+            Effect.succeed(
+              HttpServerResponse.setHeader(
+                response,
+                'content-disposition',
+                `attachment; filename="quote-${params.quoteId}-v${params.version}.pdf"`,
+              ),
+            ),
+          );
+          const request = yield* HttpServerRequest.HttpServerRequest;
+          yield* (yield* Authentication)
+            .authorize(
+              request.cookies['__Host-froment-session'],
+              'document.download',
+              'administrator',
+            )
+            .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
+          return yield* (yield* DocumentArtifacts)
+            .getQuotePdf(params.quoteId, params.version)
+            .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
         }),
       )
       .handle(

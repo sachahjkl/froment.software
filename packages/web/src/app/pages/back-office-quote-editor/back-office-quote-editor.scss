@@ -137,6 +137,11 @@ ol li button {
   margin-top: var(--space-2);
 }
 
+ol li button + button,
+ol li button + a {
+  margin-left: var(--space-2);
+}
+
 .preview {
   grid-column: 1 / -1;
   min-width: 0;

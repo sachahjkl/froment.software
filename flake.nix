@@ -82,9 +82,11 @@
               cp packages/api/dist/main.cjs $out/lib/froment-software/server.cjs
               cp -r packages/api/drizzle $out/share/froment-software/drizzle
               cp -rL packages/api/node_modules/better-sqlite3 $out/lib/froment-software/node_modules/
+              cp -rL packages/api/node_modules/playwright-core $out/lib/froment-software/node_modules/
               cp -r packages/web/dist/froment-software/browser $out/share/froment-software/web
               makeWrapper ${runtimeNode}/bin/node $out/bin/${pname} \
                 --add-flags $out/lib/froment-software/server.cjs \
+                --set CHROMIUM_PATH ${pkgs.chromium}/bin/chromium \
                 --set-default DATABASE_PATH data/froment.sqlite \
                 --set DEPLOYMENT_METADATA ${lib.escapeShellArg deploymentMetadata} \
                 --set MIGRATIONS_ROOT $out/share/froment-software/drizzle \
@@ -109,7 +111,8 @@
                 pkgs.nodejs_22
                 pkgs.pnpm
                 pkgs.pnpmConfigHook
-              ];
+              ] ++ lib.optionals (name == "test") [ pkgs.chromium ];
+              CHROMIUM_PATH = lib.optionalString (name == "test") "${pkgs.chromium}/bin/chromium";
               dontBuild = true;
               installPhase = ''
                 runHook preInstall
@@ -169,7 +172,9 @@
           };
 
           devShells.default = pkgs.mkShell {
+            CHROMIUM_PATH = "${pkgs.chromium}/bin/chromium";
             packages = [
+              pkgs.chromium
               pkgs.nodejs_22
               pkgs.pnpm
             ];
