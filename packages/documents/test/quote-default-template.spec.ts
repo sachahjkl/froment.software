@@ -61,8 +61,11 @@ describe('QuoteDefaultTemplate', () => {
     expect(html).toContain('120,00&nbsp;€');
     expect(html).toContain('&lt;script&gt;alert(1)&lt;/script&gt; Acme');
     expect(html).not.toContain('<script>alert(1)</script>');
-    expect(html).toContain('"Courier New"');
-    expect(html).toContain('repeating-linear-gradient');
+    expect(html).toContain('"Trebuchet MS", Arial, "Liberation Sans", sans-serif');
+    expect(html).not.toContain('Courier');
+    expect(html).not.toContain('gradient');
+    expect(html).not.toContain('dashed');
+    expect(html).toMatch(/@page\s*{[^}]*size:\s*A4/);
   });
 
   it('renders and protects the supported content limits', async () => {

@@ -111,7 +111,12 @@
                 pkgs.nodejs_22
                 pkgs.pnpm
                 pkgs.pnpmConfigHook
-              ] ++ lib.optionals (name == "test") [ pkgs.chromium ];
+              ]
+              ++ lib.optionals (name == "test") [
+                pkgs.chromium
+                pkgs.liberation_ttf
+                pkgs.poppler-utils
+              ];
               CHROMIUM_PATH = lib.optionalString (name == "test") "${pkgs.chromium}/bin/chromium";
               dontBuild = true;
               installPhase = ''
@@ -128,6 +133,7 @@
             contents = [
               application
               pkgs.dockerTools.fakeNss
+              pkgs.liberation_ttf
             ];
             fakeRootCommands = ''
               mkdir -p ./tmp
@@ -175,7 +181,9 @@
             CHROMIUM_PATH = "${pkgs.chromium}/bin/chromium";
             packages = [
               pkgs.chromium
+              pkgs.liberation_ttf
               pkgs.nodejs_22
+              pkgs.poppler-utils
               pkgs.pnpm
             ];
           };

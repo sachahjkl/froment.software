@@ -1,4 +1,5 @@
 import { InvoiceRenderSnapshot, QuoteRenderSnapshot } from '@froment/contracts';
+import { spawnSync } from 'node:child_process';
 import { Effect, Schema } from 'effect';
 import { chromium, type Page } from 'playwright-core';
 import { describe, expect, it } from 'vitest';
@@ -104,10 +105,12 @@ describe('DocumentRenderer', () => {
           {
             html: yield* renderer.renderQuote(quote),
             pdf: yield* renderer.renderQuotePdf(quote),
+            expectedText: quote.quoteId,
           },
           {
             html: yield* renderer.renderInvoice(invoice),
             pdf: yield* renderer.renderInvoicePdf(invoice),
+            expectedText: invoice.invoiceNumber,
           },
         ];
       }).pipe(Effect.provide(DocumentRendererLive), Effect.scoped),
@@ -129,6 +132,13 @@ describe('DocumentRenderer', () => {
         const pdfText = Buffer.from(document.pdf).toString('latin1');
         expect(pdfText.startsWith('%PDF-')).toBe(true);
         expect(pdfText.match(/\/Type \/Page\b/g)?.length ?? 0).toBeGreaterThan(1);
+        const extracted = spawnSync('pdftotext', ['-', '-'], {
+          input: document.pdf,
+          encoding: 'utf8',
+        });
+        expect(extracted.error).toBeUndefined();
+        expect(extracted.status).toBe(0);
+        expect(extracted.stdout).toContain(document.expectedText);
       }
     } finally {
       await browser.close();
