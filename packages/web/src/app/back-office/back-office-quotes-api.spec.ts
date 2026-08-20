@@ -1,4 +1,4 @@
-import { HttpErrorResponse, provideHttpClient } from '@angular/common/http';
+import { HttpErrorResponse, HttpHeaders, provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 
@@ -49,18 +49,21 @@ describe('BackOfficeQuotesApi', () => {
         },
       ],
     });
-    http
-      .expectOne('/api/quotes/01ARZ3NDEKTSV4RRFFQ69G5FAY/revisions')
-      .flush(
-        { _tag: 'QuoteVersionConflict', code: 'quote.version_conflict', currentVersion: 2 },
-        { status: 409, statusText: 'Conflict' },
-      );
+    http.expectOne('/api/quotes/01ARZ3NDEKTSV4RRFFQ69G5FAY/revisions').flush(
+      { _tag: 'QuoteVersionConflict', code: 'quote.version_conflict', currentVersion: 2 },
+      {
+        status: 409,
+        statusText: 'Conflict',
+        headers: new HttpHeaders({ 'x-request-id': '0198c423-f7a0-7000-8000-000000000001' }),
+      },
+    );
 
     const outcome = await result;
     expect(outcome).toMatchObject({
       success: false,
       code: 'quote.version_conflict',
       status: 409,
+      requestId: '0198c423-f7a0-7000-8000-000000000001',
       failure: {
         _tag: 'QuoteVersionConflict',
         code: 'quote.version_conflict',

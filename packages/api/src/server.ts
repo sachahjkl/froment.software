@@ -3,6 +3,7 @@ import { Api, RequestRateLimited } from '@froment/contracts';
 import { Config, Effect, FileSystem, Layer, Option, Schema } from 'effect';
 import {
   HttpEffect,
+  HttpMiddleware,
   HttpRouter,
   HttpServerError,
   HttpServerRequest,
@@ -11,6 +12,7 @@ import {
 } from 'effect/unstable/http';
 import { HttpApiBuilder, HttpApiSecurity } from 'effect/unstable/httpapi';
 import { createServer } from 'node:http';
+import { randomUUID } from 'node:crypto';
 
 import { Bootstrap } from './bootstrap/bootstrap.js';
 import { Authentication } from './authentication/authentication.js';
@@ -50,6 +52,20 @@ const setDocumentResponseHeaders = HttpEffect.appendPreResponseHandler((_request
     }),
   ),
 );
+
+const identifyRequest = <E, R>(
+  application: Effect.Effect<HttpServerResponse.HttpServerResponse, E, R>,
+) =>
+  Effect.gen(function* () {
+    const requestId = randomUUID();
+    yield* HttpEffect.appendPreResponseHandler((_request, response) =>
+      Effect.succeed(HttpServerResponse.setHeader(response, 'x-request-id', requestId)),
+    );
+    return yield* application.pipe(
+      Effect.annotateLogs({ 'request.id': requestId }),
+      Effect.annotateSpans({ 'request.id': requestId }),
+    );
+  });
 
 const protectRequest =
   (publicOrigin: string) =>
@@ -506,7 +522,11 @@ export const makeServerLayer = (options: {
   });
 
   return HttpRouter.serve(Layer.mergeAll(ApiRoutes, BackOfficeStaticRoutes, StaticRoutes), {
-    middleware: protectRequest(options.publicOrigin),
+    middleware: (application) =>
+      HttpMiddleware.tracer(
+        identifyRequest(HttpMiddleware.logger(protectRequest(options.publicOrigin)(application))),
+      ),
+    disableLogger: true,
   }).pipe(
     Layer.provide(RequestLimiterLive),
     Layer.provide(Layer.succeed(HttpServerRequest.MaxBodySize, FileSystem.Size(32 * 1024))),

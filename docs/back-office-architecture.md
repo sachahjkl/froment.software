@@ -417,6 +417,31 @@ Le volume persistant contient la base SQLite.
 
 Les endpoints de santé distinguent la disponibilité du processus et celle de la base.
 
+## Observabilité
+
+Le serveur génère un identifiant UUID pour chaque requête.
+
+Il retourne cet identifiant dans `X-Request-ID` et l'ajoute aux journaux structurés.
+
+Le client conserve cet identifiant avec toute erreur HTTP décodée.
+
+Le middleware HTTP Effect accepte les contextes W3C `traceparent` entrants.
+
+L'export OTLP reste désactivé par défaut.
+
+Pour activer l'export des traces, configurez ces variables :
+
+```text
+OTEL_TRACES_EXPORTER=otlp
+OTEL_EXPORTER_OTLP_ENDPOINT=https://collector.example
+```
+
+Le serveur ajoute automatiquement `/v1/traces` à l'endpoint OTLP général.
+
+Utilisez `OTEL_EXPORTER_OTLP_TRACES_ENDPOINT` pour fournir l'URL complète du signal.
+
+Utilisez `OTEL_SDK_DISABLED=true` pour interdire explicitement tout export.
+
 ## Ordre de livraison
 
 1. Migrer le dépôt vers pnpm et déplacer Angular dans `packages/web`.

@@ -93,6 +93,7 @@ describe('HTTP server', () => {
         PUBLIC_ORIGIN: baseUrl,
         STATIC_ROOT: staticRoot,
         SESSION_HMAC_KEY: 'BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB',
+        OTEL_SDK_DISABLED: 'true',
       },
       stdio: 'pipe',
     });
@@ -117,6 +118,22 @@ describe('HTTP server', () => {
       }).pipe(Effect.provide(FetchHttpClient.layer)),
     );
     expect(status).toEqual({ status: 'ok' });
+  });
+
+  it('returns a unique server request identifier', async () => {
+    const suppliedRequestId = 'client-controlled';
+    const first = await fetch(`${baseUrl}/api/health`, {
+      headers: { 'x-request-id': suppliedRequestId },
+    });
+    const second = await fetch(`${baseUrl}/api/health`);
+    const firstRequestId = first.headers.get('x-request-id');
+    const secondRequestId = second.headers.get('x-request-id');
+
+    expect(firstRequestId).toMatch(
+      /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/,
+    );
+    expect(firstRequestId).not.toBe(suppliedRequestId);
+    expect(secondRequestId).not.toBe(firstRequestId);
   });
 
   it('returns exact deployment metadata without a build date', async () => {

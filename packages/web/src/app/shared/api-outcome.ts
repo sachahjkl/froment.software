@@ -15,6 +15,7 @@ export type ApiFailure<Failure extends CodedFailure, Fallback extends string> = 
   readonly code: Failure['code'] | Fallback;
   readonly failure?: Failure;
   readonly status?: number;
+  readonly requestId?: string;
   readonly serverError?: unknown;
   readonly cause?: unknown;
 };
@@ -30,6 +31,10 @@ export const decodeApiFailure = <Failure extends CodedFailure, Fallback extends 
 ): ApiFailure<Failure, Fallback> => {
   const error = requestFailure.cause;
   const status = error instanceof HttpErrorResponse ? error.status : undefined;
+  const requestId =
+    error instanceof HttpErrorResponse
+      ? (error.headers.get('x-request-id') ?? undefined)
+      : undefined;
   const serverError = error instanceof HttpErrorResponse ? error.error : undefined;
 
   if (error instanceof HttpErrorResponse) {
@@ -40,13 +45,14 @@ export const decodeApiFailure = <Failure extends CodedFailure, Fallback extends 
         code: decoded.value.code,
         failure: decoded.value,
         status,
+        requestId,
         serverError,
         cause: error,
       };
     }
   }
 
-  return { success: false, code: fallback, status, serverError, cause: error };
+  return { success: false, code: fallback, status, requestId, serverError, cause: error };
 };
 
 export const requestOutcome = async <

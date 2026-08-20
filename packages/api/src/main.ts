@@ -12,6 +12,7 @@ import { DocumentArtifactsLive } from './documents/document-artifacts.js';
 import { QuoteRendererLive } from './documents/quote-renderer.js';
 import { QuotesLive } from './quotes/quotes.js';
 import { ServerLive } from './server.js';
+import { ObservabilityLive } from './observability/observability.js';
 
 const QuoteCoreLive = Layer.mergeAll(QuotesLive, QuoteRendererLive).pipe(
   Layer.provideMerge(IssuerSettingsLive),
@@ -26,4 +27,6 @@ const ServicesLive = Layer.mergeAll(
   DeploymentLive,
 ).pipe(Layer.provide(AuthenticationConfigLive), Layer.provideMerge(DatabaseLive));
 
-Layer.launch(ServerLive.pipe(Layer.provide(ServicesLive))).pipe(NodeRuntime.runMain);
+Layer.launch(ServerLive.pipe(Layer.provide(ServicesLive), Layer.provide(ObservabilityLive))).pipe(
+  NodeRuntime.runMain,
+);
