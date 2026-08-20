@@ -1,5 +1,5 @@
 import { NodeHttpServer } from '@effect/platform-node';
-import { Api, RequestRateLimited } from '@froment/contracts';
+import { Api, RequestRateLimited, type PermissionCodeValue } from '@froment/contracts';
 import { Config, Effect, FileSystem, Layer, Option, Schema } from 'effect';
 import {
   HttpEffect,
@@ -26,12 +26,16 @@ import { Quotes } from './quotes/quotes.js';
 import { QuoteLinks } from './quotes/quote-links.js';
 import { RequestLimiter, RequestLimiterLive } from './server/request-limiter.js';
 
+const sessionCookieName = '__Host-froment-session';
+const csrfCookieName = '__Host-froment-csrf';
+const csrfHeaderName = 'x-csrf-token';
+
 const sessionCookie = HttpApiSecurity.apiKey({
-  key: '__Host-froment-session',
+  key: sessionCookieName,
   in: 'cookie',
 });
 const csrfCookie = HttpApiSecurity.apiKey({
-  key: '__Host-froment-csrf',
+  key: csrfCookieName,
   in: 'cookie',
 });
 
@@ -160,6 +164,34 @@ const limitPrincipalMutation = Effect.fn('limitPrincipalMutation')(function* (
   }
 });
 
+const authorizeAdministrator = Effect.fn('authorizeAdministrator')(function* (
+  permission: PermissionCodeValue,
+) {
+  const request = yield* HttpServerRequest.HttpServerRequest;
+  return yield* (yield* Authentication)
+    .authorize(request.cookies[sessionCookieName], permission, 'administrator')
+    .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
+});
+
+const authorizeAdministratorWrite = Effect.fn('authorizeAdministratorWrite')(function* (
+  permission: PermissionCodeValue,
+  limit = 60,
+) {
+  const request = yield* HttpServerRequest.HttpServerRequest;
+  const principal = yield* (yield* Authentication)
+    .authorizeWrite(
+      request.cookies[sessionCookieName],
+      request.cookies[csrfCookieName],
+      request.headers[csrfHeaderName],
+      request.headers['origin'],
+      permission,
+      'administrator',
+    )
+    .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
+  yield* limitPrincipalMutation(principal.userId, permission, limit);
+  return principal;
+});
+
 const ApiHandlers = HttpApiBuilder.group(Api, 'system', (handlers) =>
   Effect.succeed(
     handlers
@@ -221,7 +253,7 @@ const ApiHandlers = HttpApiBuilder.group(Api, 'system', (handlers) =>
           const authentication = yield* Authentication;
           const request = yield* HttpServerRequest.HttpServerRequest;
           const principal = yield* authentication
-            .sessionStatus(request.cookies['__Host-froment-session'])
+            .sessionStatus(request.cookies[sessionCookieName])
             .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
           if (principal === undefined) return { authenticated: false, mode: null };
           return { authenticated: true, mode: principal.mode };
@@ -235,9 +267,9 @@ const ApiHandlers = HttpApiBuilder.group(Api, 'system', (handlers) =>
           const request = yield* HttpServerRequest.HttpServerRequest;
           yield* authentication
             .logout(
-              request.cookies['__Host-froment-session'],
-              request.cookies['__Host-froment-csrf'],
-              request.headers['x-csrf-token'],
+              request.cookies[sessionCookieName],
+              request.cookies[csrfCookieName],
+              request.headers[csrfHeaderName],
               request.headers['origin'],
             )
             .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
@@ -256,11 +288,7 @@ const ClientHandlers = HttpApiBuilder.group(Api, 'clients', (handlers) =>
         'clientList',
         Effect.fn('clientList')(function* () {
           yield* setPrivateResponseHeaders;
-          const request = yield* HttpServerRequest.HttpServerRequest;
-          const authentication = yield* Authentication;
-          yield* authentication
-            .authorize(request.cookies['__Host-froment-session'], 'client.read', 'administrator')
-            .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
+          yield* authorizeAdministrator('client.read');
           const clients = yield* Clients;
           return yield* clients.list.pipe(Effect.catchTag('DatabaseError', Effect.orDie));
         }),
@@ -269,19 +297,7 @@ const ClientHandlers = HttpApiBuilder.group(Api, 'clients', (handlers) =>
         'clientCreate',
         Effect.fn('clientCreate')(function* ({ payload }) {
           yield* setPrivateResponseHeaders;
-          const request = yield* HttpServerRequest.HttpServerRequest;
-          const authentication = yield* Authentication;
-          const principal = yield* authentication
-            .authorizeWrite(
-              request.cookies['__Host-froment-session'],
-              request.cookies['__Host-froment-csrf'],
-              request.headers['x-csrf-token'],
-              request.headers['origin'],
-              'client.create',
-              'administrator',
-            )
-            .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
-          yield* limitPrincipalMutation(principal.userId, 'client.create');
+          const principal = yield* authorizeAdministratorWrite('client.create');
           const clients = yield* Clients;
           return yield* clients
             .create(payload, principal.userId)
@@ -292,19 +308,7 @@ const ClientHandlers = HttpApiBuilder.group(Api, 'clients', (handlers) =>
         'clientArchive',
         Effect.fn('clientArchive')(function* ({ params }) {
           yield* setPrivateResponseHeaders;
-          const request = yield* HttpServerRequest.HttpServerRequest;
-          const authentication = yield* Authentication;
-          const principal = yield* authentication
-            .authorizeWrite(
-              request.cookies['__Host-froment-session'],
-              request.cookies['__Host-froment-csrf'],
-              request.headers['x-csrf-token'],
-              request.headers['origin'],
-              'client.archive',
-              'administrator',
-            )
-            .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
-          yield* limitPrincipalMutation(principal.userId, 'client.archive');
+          const principal = yield* authorizeAdministratorWrite('client.archive');
           const clients = yield* Clients;
           return yield* clients
             .archive(params.clientId, principal.userId)
@@ -315,19 +319,7 @@ const ClientHandlers = HttpApiBuilder.group(Api, 'clients', (handlers) =>
         'clientAccessCreate',
         Effect.fn('clientAccessCreate')(function* ({ params }) {
           yield* setPrivateResponseHeaders;
-          const request = yield* HttpServerRequest.HttpServerRequest;
-          const authentication = yield* Authentication;
-          const principal = yield* authentication
-            .authorizeWrite(
-              request.cookies['__Host-froment-session'],
-              request.cookies['__Host-froment-csrf'],
-              request.headers['x-csrf-token'],
-              request.headers['origin'],
-              'client.access.create',
-              'administrator',
-            )
-            .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
-          yield* limitPrincipalMutation(principal.userId, 'client.access.create', 10);
+          const principal = yield* authorizeAdministratorWrite('client.access.create', 10);
           const clients = yield* Clients;
           return yield* clients
             .createAccess(params.clientId, principal.userId)
@@ -344,10 +336,7 @@ const QuoteHandlers = HttpApiBuilder.group(Api, 'quotes', (handlers) =>
         'issuerSettingsGet',
         Effect.fn('issuerSettingsGet')(function* () {
           yield* setPrivateResponseHeaders;
-          const request = yield* HttpServerRequest.HttpServerRequest;
-          yield* (yield* Authentication)
-            .authorize(request.cookies['__Host-froment-session'], 'template.read', 'administrator')
-            .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
+          yield* authorizeAdministrator('template.read');
           return yield* (yield* IssuerSettings).get.pipe(
             Effect.catchTag('DatabaseError', Effect.orDie),
           );
@@ -357,18 +346,7 @@ const QuoteHandlers = HttpApiBuilder.group(Api, 'quotes', (handlers) =>
         'issuerSettingsUpdate',
         Effect.fn('issuerSettingsUpdate')(function* ({ payload }) {
           yield* setPrivateResponseHeaders;
-          const request = yield* HttpServerRequest.HttpServerRequest;
-          const principal = yield* (yield* Authentication)
-            .authorizeWrite(
-              request.cookies['__Host-froment-session'],
-              request.cookies['__Host-froment-csrf'],
-              request.headers['x-csrf-token'],
-              request.headers['origin'],
-              'template.select',
-              'administrator',
-            )
-            .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
-          yield* limitPrincipalMutation(principal.userId, 'template.select');
+          const principal = yield* authorizeAdministratorWrite('template.select');
           return yield* (yield* IssuerSettings)
             .update(payload, principal.userId)
             .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
@@ -378,11 +356,7 @@ const QuoteHandlers = HttpApiBuilder.group(Api, 'quotes', (handlers) =>
         'quoteList',
         Effect.fn('quoteList')(function* () {
           yield* setPrivateResponseHeaders;
-          const request = yield* HttpServerRequest.HttpServerRequest;
-          const authentication = yield* Authentication;
-          yield* authentication
-            .authorize(request.cookies['__Host-froment-session'], 'quote.read', 'administrator')
-            .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
+          yield* authorizeAdministrator('quote.read');
           return yield* (yield* Quotes).list.pipe(Effect.catchTag('DatabaseError', Effect.orDie));
         }),
       )
@@ -390,11 +364,7 @@ const QuoteHandlers = HttpApiBuilder.group(Api, 'quotes', (handlers) =>
         'quoteGet',
         Effect.fn('quoteGet')(function* ({ params }) {
           yield* setPrivateResponseHeaders;
-          const request = yield* HttpServerRequest.HttpServerRequest;
-          const authentication = yield* Authentication;
-          yield* authentication
-            .authorize(request.cookies['__Host-froment-session'], 'quote.read', 'administrator')
-            .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
+          yield* authorizeAdministrator('quote.read');
           return yield* (yield* Quotes)
             .get(params.quoteId)
             .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
@@ -405,14 +375,7 @@ const QuoteHandlers = HttpApiBuilder.group(Api, 'quotes', (handlers) =>
         Effect.fn('quotePreview')(function* ({ params }) {
           yield* setPrivateResponseHeaders;
           yield* setDocumentResponseHeaders;
-          const request = yield* HttpServerRequest.HttpServerRequest;
-          yield* (yield* Authentication)
-            .authorize(
-              request.cookies['__Host-froment-session'],
-              'document.render',
-              'administrator',
-            )
-            .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
+          yield* authorizeAdministrator('document.render');
           const snapshot = yield* (yield* Quotes)
             .getSnapshot(params.quoteId, params.version)
             .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
@@ -423,18 +386,7 @@ const QuoteHandlers = HttpApiBuilder.group(Api, 'quotes', (handlers) =>
         'quotePdfRender',
         Effect.fn('quotePdfRender')(function* ({ params }) {
           yield* setPrivateResponseHeaders;
-          const request = yield* HttpServerRequest.HttpServerRequest;
-          const principal = yield* (yield* Authentication)
-            .authorizeWrite(
-              request.cookies['__Host-froment-session'],
-              request.cookies['__Host-froment-csrf'],
-              request.headers['x-csrf-token'],
-              request.headers['origin'],
-              'document.render',
-              'administrator',
-            )
-            .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
-          yield* limitPrincipalMutation(principal.userId, 'document.render', 10);
+          const principal = yield* authorizeAdministratorWrite('document.render', 10);
           return yield* (yield* DocumentArtifacts)
             .renderQuotePdf(params.quoteId, params.version, principal.userId)
             .pipe(
@@ -456,14 +408,7 @@ const QuoteHandlers = HttpApiBuilder.group(Api, 'quotes', (handlers) =>
               ),
             ),
           );
-          const request = yield* HttpServerRequest.HttpServerRequest;
-          yield* (yield* Authentication)
-            .authorize(
-              request.cookies['__Host-froment-session'],
-              'document.download',
-              'administrator',
-            )
-            .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
+          yield* authorizeAdministrator('document.download');
           return yield* (yield* DocumentArtifacts)
             .getQuotePdf(params.quoteId, params.version)
             .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
@@ -473,19 +418,7 @@ const QuoteHandlers = HttpApiBuilder.group(Api, 'quotes', (handlers) =>
         'quoteCreate',
         Effect.fn('quoteCreate')(function* ({ payload }) {
           yield* setPrivateResponseHeaders;
-          const request = yield* HttpServerRequest.HttpServerRequest;
-          const authentication = yield* Authentication;
-          const principal = yield* authentication
-            .authorizeWrite(
-              request.cookies['__Host-froment-session'],
-              request.cookies['__Host-froment-csrf'],
-              request.headers['x-csrf-token'],
-              request.headers['origin'],
-              'quote.create',
-              'administrator',
-            )
-            .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
-          yield* limitPrincipalMutation(principal.userId, 'quote.create');
+          const principal = yield* authorizeAdministratorWrite('quote.create');
           return yield* (yield* Quotes)
             .create(payload, principal.userId)
             .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
@@ -495,19 +428,7 @@ const QuoteHandlers = HttpApiBuilder.group(Api, 'quotes', (handlers) =>
         'quoteRevisionCreate',
         Effect.fn('quoteRevisionCreate')(function* ({ params, payload }) {
           yield* setPrivateResponseHeaders;
-          const request = yield* HttpServerRequest.HttpServerRequest;
-          const authentication = yield* Authentication;
-          const principal = yield* authentication
-            .authorizeWrite(
-              request.cookies['__Host-froment-session'],
-              request.cookies['__Host-froment-csrf'],
-              request.headers['x-csrf-token'],
-              request.headers['origin'],
-              'quote.update',
-              'administrator',
-            )
-            .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
-          yield* limitPrincipalMutation(principal.userId, 'quote.update');
+          const principal = yield* authorizeAdministratorWrite('quote.update');
           return yield* (yield* Quotes)
             .createRevision(params.quoteId, payload, principal.userId)
             .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
@@ -517,18 +438,7 @@ const QuoteHandlers = HttpApiBuilder.group(Api, 'quotes', (handlers) =>
         'quoteSend',
         Effect.fn('quoteSend')(function* ({ params, payload }) {
           yield* setPrivateResponseHeaders;
-          const request = yield* HttpServerRequest.HttpServerRequest;
-          const principal = yield* (yield* Authentication)
-            .authorizeWrite(
-              request.cookies['__Host-froment-session'],
-              request.cookies['__Host-froment-csrf'],
-              request.headers['x-csrf-token'],
-              request.headers['origin'],
-              'quote.send',
-              'administrator',
-            )
-            .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
-          yield* limitPrincipalMutation(principal.userId, 'quote.send', 10);
+          const principal = yield* authorizeAdministratorWrite('quote.send', 10);
           return yield* (yield* QuoteLinks)
             .send(params.quoteId, payload, principal.userId)
             .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
