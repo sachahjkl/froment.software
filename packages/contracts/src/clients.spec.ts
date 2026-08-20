@@ -2,7 +2,7 @@ import { Schema } from 'effect';
 import { describe, expect, it } from 'vitest';
 
 import { LoginRequest } from './authentication.js';
-import { ClientCreateRequest, ClientUpdateRequest } from './clients.js';
+import { ClientCreateRequest, ClientSummary, ClientUpdateRequest } from './clients.js';
 
 describe('client contracts', () => {
   const client = {
@@ -30,6 +30,7 @@ describe('client contracts', () => {
     expect(
       Schema.decodeUnknownSync(ClientCreateRequest)({ ...client, displayName: 'Acme' }).displayName,
     ).toBe('Acme');
+    expect(() => Schema.decodeUnknownSync(ClientSummary.fields.displayName)('   ')).toThrow();
   });
 
   it('requires an explicit update version', () => {

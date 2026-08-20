@@ -6,7 +6,7 @@ import {
   PermissionDenied,
   RequestRateLimited,
 } from './authentication.js';
-import { Ulid } from './identifiers.js';
+import { DisplayName, Ulid } from './identifiers.js';
 import {
   DocumentNotFound,
   DocumentParty,
@@ -106,7 +106,7 @@ export type InvoiceRenderSnapshot = typeof InvoiceRenderSnapshot.Type;
 export const InvoiceRevision = Schema.Struct({
   id: Ulid,
   version: PositiveSafeInteger,
-  clientDisplayName: Schema.NonEmptyString,
+  clientDisplayName: DisplayName,
   invoiceNumber: Schema.NullOr(InvoiceNumber),
   issuedAt: Schema.NullOr(IsoUtc),
   title: InvoiceTitle,
@@ -127,7 +127,7 @@ export const InvoiceSummary = Schema.Struct({
   id: Ulid,
   orderId: Ulid,
   clientId: Ulid,
-  clientDisplayName: Schema.NonEmptyString,
+  clientDisplayName: DisplayName,
   status: InvoiceStatus,
   version: PositiveSafeInteger,
   invoiceNumber: Schema.NullOr(InvoiceNumber),

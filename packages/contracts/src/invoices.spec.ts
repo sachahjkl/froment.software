@@ -8,7 +8,9 @@ import {
   InvoiceIssueRequest,
   InvoiceNumber,
   InvoiceRevisionCreateRequest,
+  InvoiceRevision,
   InvoiceStatus,
+  InvoiceSummary,
   InvoiceTransitionRequest,
 } from './invoices.js';
 
@@ -75,6 +77,15 @@ describe('invoice contracts', () => {
     ).toThrow();
     expect(() =>
       Schema.decodeUnknownSync(InvoiceDocumentArtifact)({ ...artifact, sha256: 'invalid' }),
+    ).toThrow();
+  });
+
+  it('rejects blank client names in invoice responses', () => {
+    expect(() =>
+      Schema.decodeUnknownSync(InvoiceRevision.fields.clientDisplayName)('   '),
+    ).toThrow();
+    expect(() =>
+      Schema.decodeUnknownSync(InvoiceSummary.fields.clientDisplayName)('   '),
     ).toThrow();
   });
 });

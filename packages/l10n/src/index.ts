@@ -1838,7 +1838,7 @@ export function formatTranslation<Key extends ParameterizedTranslationKey>(
 ): string {
   let value: string = translate(language, key);
   for (const [param, replacement] of Object.entries(params)) {
-    value = value.replaceAll(`{${param}}`, String(replacement));
+    value = value.replaceAll(`{${param}}`, () => String(replacement));
   }
   return value;
 }

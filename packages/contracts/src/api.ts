@@ -86,9 +86,10 @@ import {
 } from './invoices.js';
 import { ClientInvoiceList, ClientOrderList, ClientQuoteList } from './client-portal.js';
 
-const RevisionVersionParameter = Schema.NumberFromString.check(
+export const RevisionVersionParameter = Schema.NumberFromString.check(
   Schema.isInt(),
   Schema.isGreaterThan(0),
+  Schema.isLessThanOrEqualTo(Number.MAX_SAFE_INTEGER),
 );
 
 export class SystemApi extends HttpApiGroup.make('system', { topLevel: true }).add(

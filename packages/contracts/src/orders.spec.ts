@@ -1,7 +1,7 @@
 import { Schema } from 'effect';
 import { describe, expect, it } from 'vitest';
 
-import { OrderList } from './orders.js';
+import { OrderList, OrderSummary } from './orders.js';
 
 describe('order contracts', () => {
   it('validates confirmed order summaries with optional invoices', () => {
@@ -23,6 +23,7 @@ describe('order contracts', () => {
       Schema.decodeUnknownSync(OrderList)([{ ...order, invoiceId: '01ARZ3NDEKTSV4RRFFQ69G5FAZ' }]),
     ).toHaveLength(1);
     expect(() => Schema.decodeUnknownSync(OrderList)([{ ...order, totalCents: -1 }])).toThrow();
+    expect(() => Schema.decodeUnknownSync(OrderSummary.fields.clientDisplayName)('   ')).toThrow();
     expect(() =>
       Schema.decodeUnknownSync(OrderList)([{ ...order, createdAt: '2026-08-20' }]),
     ).toThrow();

@@ -72,21 +72,21 @@
 - [ ] REV-032 Lint all tracked TypeScript files.
 - [ ] REV-033 Separate database migrations from application startup.
 - [ ] REV-034 Redact CSRF headers from traces.
-- [ ] REV-035 Preserve literal translation replacements.
+- [x] REV-035 Preserve literal translation replacements.
 - [ ] REV-036 Validate client invoice dates.
 - [ ] REV-037 Limit document snapshots to 20 lines.
 - [ ] REV-038 Verify PDF hashes on every download.
 - [ ] REV-039 Make client archival idempotent.
 - [ ] REV-040 Use a memory-hard bootstrap password hash.
-- [ ] REV-041 Limit route versions to safe integers.
-- [ ] REV-042 Validate generated quote URLs.
-- [ ] REV-043 Reject whitespace-only display names.
+- [x] REV-041 Limit route versions to safe integers.
+- [x] REV-042 Validate generated quote URLs.
+- [x] REV-043 Reject whitespace-only display names.
 - [ ] REV-044 Keep one main landmark on public quotes.
 - [ ] REV-045 Prevent public quote mobile overflow.
 - [ ] REV-046 Clear stale blog metadata.
 - [ ] REV-047 Translate public quote accessible names.
 - [ ] REV-048 Enforce invoice dates and numbers in SQLite.
-- [ ] REV-049 Correct the documented container port.
+- [x] REV-049 Correct the documented container port.
 - [ ] REV-050 Enforce coverage thresholds for sensitive code.
 
 ## Back-Office Usability

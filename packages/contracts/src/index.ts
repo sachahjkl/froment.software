@@ -5,7 +5,12 @@ export {
   GitCommit,
   PackageVersion,
 } from './version.js';
-export { Ulid, type Ulid as UlidValue } from './identifiers.js';
+export {
+  DisplayName,
+  type DisplayName as DisplayNameValue,
+  Ulid,
+  type Ulid as UlidValue,
+} from './identifiers.js';
 export { PermissionCode, type PermissionCode as PermissionCodeValue } from './permissions.js';
 export {
   OrderList,
@@ -137,6 +142,7 @@ export {
   InvoicesApi,
   OrdersApi,
   QuotesApi,
+  RevisionVersionParameter,
   SystemApi,
 } from './api.js';
 export {

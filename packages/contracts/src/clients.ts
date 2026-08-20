@@ -7,11 +7,11 @@ import {
   PermissionDenied,
   RequestRateLimited,
 } from './authentication.js';
-import { Ulid } from './identifiers.js';
+import { DisplayName, Ulid } from './identifiers.js';
 
 export const ClientSummary = Schema.Struct({
   id: Ulid,
-  displayName: Schema.NonEmptyString,
+  displayName: DisplayName,
   addressLine1: Schema.String,
   addressLine2: Schema.String,
   postalCode: Schema.String,
@@ -27,7 +27,7 @@ export const ClientList = Schema.Array(ClientSummary);
 export type ClientList = typeof ClientList.Type;
 
 export const ClientCreateRequest = Schema.Struct({
-  displayName: Schema.String.check(Schema.isPattern(/\S/), Schema.isMaxLength(120)),
+  displayName: DisplayName.check(Schema.isMaxLength(120)),
   addressLine1: Schema.String.check(Schema.isMaxLength(160)),
   addressLine2: Schema.String.check(Schema.isMaxLength(160)),
   postalCode: Schema.String.check(Schema.isMaxLength(32)),

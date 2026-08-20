@@ -14,6 +14,12 @@ describe('localization', () => {
     );
   });
 
+  it.each(['$&', '$`', "$'", '$$'])('preserves the literal replacement %s', (client) => {
+    expect(formatTranslation('en', 'backOffice.clients.accessReady', { client })).toBe(
+      `Sign-in identifier created for ${client}`,
+    );
+  });
+
   it('requires the parameters declared by the translation key', () => {
     // @ts-expect-error The client parameter is required.
     formatTranslation('en', 'backOffice.clients.accessReady', {});

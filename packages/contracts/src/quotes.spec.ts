@@ -5,7 +5,10 @@ import {
   PublicQuoteSignatureRequest,
   QuoteCreateRequest,
   QuoteLinkToken,
+  QuoteRevision,
   QuoteSendRequest,
+  QuoteSendResult,
+  QuoteSummary,
   QuoteStatus,
 } from './quotes.js';
 
@@ -58,6 +61,26 @@ describe('quote contracts', () => {
       Schema.decodeUnknownSync(QuoteLinkToken)('AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA'),
     ).toHaveLength(43);
     expect(() => Schema.decodeUnknownSync(QuoteLinkToken)('not-a-token')).toThrow();
+  });
+
+  it('validates generated quote links as HTTP URLs', () => {
+    const link = {
+      id: '01ARZ3NDEKTSV4RRFFQ69G5FAV',
+      url: 'https://example.com/quotes/token',
+      expiresAt: '2026-08-20T20:00:00.000Z',
+    };
+
+    expect(Schema.decodeUnknownSync(QuoteSendResult.fields.link)(link)).toEqual(link);
+    for (const url of ['https://?', 'ftp://example.com/quotes/token']) {
+      expect(() =>
+        Schema.decodeUnknownSync(QuoteSendResult.fields.link)({ ...link, url }),
+      ).toThrow();
+    }
+  });
+
+  it('rejects blank client names in quote responses', () => {
+    expect(() => Schema.decodeUnknownSync(QuoteRevision.fields.clientDisplayName)('   ')).toThrow();
+    expect(() => Schema.decodeUnknownSync(QuoteSummary.fields.clientDisplayName)('   ')).toThrow();
   });
 
   it('requires bounded signature data and explicit consent', () => {

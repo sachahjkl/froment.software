@@ -87,7 +87,7 @@ Le flake construit une archive Docker avec Node.js, le serveur Effect et le site
 
 ```bash
 podman load < result
-podman run --rm -p 8080:80 froment-software:0.0.0
+podman run --rm -p 8080:3000 froment-software:0.0.0
 ```
 
 GitHub Actions vérifie le flake, construit le site, puis publie l’image avec le SHA et le tag `latest` sur la branche par défaut.

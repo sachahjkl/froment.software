@@ -1,4 +1,4 @@
-import { Schema } from 'effect';
+import { Option, Schema } from 'effect';
 
 import {
   AuthenticationRequired,
@@ -7,7 +7,7 @@ import {
   RequestRateLimited,
 } from './authentication.js';
 import { ClientArchived, ClientNotFound } from './clients.js';
-import { Ulid } from './identifiers.js';
+import { DisplayName, Ulid } from './identifiers.js';
 
 const SafeInteger = Schema.Number.check(
   Schema.isInt(),
@@ -20,6 +20,7 @@ const IsoUtc = Schema.String.check(
 );
 export const QuoteLinkToken = Schema.String.check(Schema.isPattern(/^[A-Za-z0-9_-]{43}$/));
 export type QuoteLinkToken = typeof QuoteLinkToken.Type;
+const decodeUrl = Schema.decodeOption(Schema.URLFromString);
 
 export const QuoteStatus = Schema.Literals(['draft', 'sent', 'accepted', 'rejected', 'expired']);
 export type QuoteStatus = typeof QuoteStatus.Type;
@@ -40,7 +41,7 @@ const QuoteTitle = Schema.String.check(Schema.isPattern(/\S/), Schema.isMaxLengt
 const QuoteConditions = Schema.String.check(Schema.isMaxLength(2_000));
 
 export const DocumentParty = Schema.Struct({
-  displayName: Schema.String.check(Schema.isPattern(/\S/), Schema.isMaxLength(160)),
+  displayName: DisplayName.check(Schema.isMaxLength(160)),
   addressLine1: Schema.String.check(Schema.isMaxLength(160)),
   addressLine2: Schema.String.check(Schema.isMaxLength(160)),
   postalCode: Schema.String.check(Schema.isMaxLength(32)),
@@ -149,7 +150,7 @@ export const QuoteRevision = Schema.Struct({
   id: Ulid,
   version: PositiveSafeInteger,
   previewAvailable: Schema.Boolean,
-  clientDisplayName: Schema.NonEmptyString,
+  clientDisplayName: DisplayName,
   title: QuoteTitle,
   conditions: QuoteConditions,
   currency: Schema.Literal('EUR'),
@@ -165,7 +166,7 @@ export type QuoteRevision = typeof QuoteRevision.Type;
 export const QuoteSummary = Schema.Struct({
   id: Ulid,
   clientId: Ulid,
-  clientDisplayName: Schema.NonEmptyString,
+  clientDisplayName: DisplayName,
   status: QuoteStatus,
   version: PositiveSafeInteger,
   title: QuoteTitle,
@@ -192,7 +193,14 @@ export const QuoteSendResult = Schema.Struct({
   version: PositiveSafeInteger,
   link: Schema.Struct({
     id: Ulid,
-    url: Schema.String.check(Schema.isPattern(/^https?:\/\/\S+$/), Schema.isMaxLength(2_048)),
+    url: Schema.String.check(
+      Schema.makeFilter(
+        (value) =>
+          Option.exists(decodeUrl(value), (url) => ['http:', 'https:'].includes(url.protocol)),
+        { message: 'a valid HTTP URL' },
+      ),
+      Schema.isMaxLength(2_048),
+    ),
     expiresAt: IsoUtc,
   }),
 });

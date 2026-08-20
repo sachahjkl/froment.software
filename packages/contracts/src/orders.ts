@@ -1,6 +1,6 @@
 import { Schema } from 'effect';
 
-import { Ulid } from './identifiers.js';
+import { DisplayName, Ulid } from './identifiers.js';
 
 const SafeInteger = Schema.Number.check(
   Schema.isInt(),
@@ -16,7 +16,7 @@ export const OrderSummary = Schema.Struct({
   quoteId: Ulid,
   revisionId: Ulid,
   clientId: Ulid,
-  clientDisplayName: Schema.NonEmptyString,
+  clientDisplayName: DisplayName,
   title: Schema.String.check(Schema.isPattern(/\S/), Schema.isMaxLength(120)),
   currency: Schema.Literal('EUR'),
   totalCents: SafeInteger,
