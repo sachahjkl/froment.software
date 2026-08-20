@@ -9,7 +9,8 @@ import { TestClock } from 'effect/testing';
 import { AuditLive } from '../src/audit/audit.js';
 import { BusinessConfig } from '../src/business/business-config.js';
 import { ClientPortal, ClientPortalLive } from '../src/client-portal/client-portal.js';
-import { Database, makeDatabaseLayer, type DatabaseService } from '../src/database/database.js';
+import { Database, type DatabaseService } from '../src/database/database.js';
+import { makeMigratedDatabaseLayer } from './database-layer.js';
 import { DocumentArtifacts, DocumentArtifactsLive } from '../src/documents/document-artifacts.js';
 import {
   DocumentRenderer,
@@ -102,7 +103,7 @@ const quotes: QuotesService = {
 };
 
 const makeTestLayer = (filename: string, renderer: DocumentRendererService) => {
-  const databaseLayer = makeDatabaseLayer({
+  const databaseLayer = makeMigratedDatabaseLayer({
     filename,
     migrationsFolder: join(import.meta.dirname, '..', 'drizzle'),
   });

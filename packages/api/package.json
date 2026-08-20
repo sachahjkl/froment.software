@@ -7,10 +7,12 @@
     ".": "./src/index.ts"
   },
   "scripts": {
-    "build": "tsc --noEmit && esbuild src/main.ts --bundle --platform=node --format=cjs --external:better-sqlite3 --external:playwright-core --outfile=dist/main.cjs",
+    "build": "tsc --noEmit && esbuild src/main.ts src/migrate.ts --bundle --platform=node --format=cjs --external:better-sqlite3 --external:playwright-core --out-extension:.js=.cjs --outdir=dist",
     "db:generate": "drizzle-kit generate",
+    "db:migrate": "node dist/migrate.cjs",
     "start": "node dist/main.cjs",
-    "test": "pnpm --filter @froment/documents build && pnpm --filter @froment/web build && pnpm build && vitest run"
+    "test": "pnpm --filter @froment/documents build && pnpm --filter @froment/web build && pnpm build && vitest run --coverage",
+    "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
     "@effect/platform-node": "catalog:",
@@ -25,6 +27,7 @@
   "devDependencies": {
     "@types/better-sqlite3": "catalog:",
     "@types/node": "catalog:",
+    "@vitest/coverage-v8": "catalog:",
     "drizzle-kit": "catalog:",
     "esbuild": "catalog:",
     "typescript": "catalog:",

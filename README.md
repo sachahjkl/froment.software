@@ -69,6 +69,7 @@ pnpm install --frozen-lockfile
 pnpm start       # serveur de développement
 pnpm watch       # build de développement en continu
 pnpm build       # pré-rendu de production
+pnpm --filter @froment/api db:migrate # migration explicite de la base
 pnpm test        # tests Angular
 ```
 
@@ -84,6 +85,10 @@ nix build .#dockerImage  # archive Docker reproductible
 ## Déploiement Podman
 
 Le flake construit une archive Docker avec Node.js, le serveur Effect et le site pré-rendu.
+
+L'image exécute `froment-software-migrate`, puis démarre `froment-software` seulement après sa réussite. Le démarrage direct du serveur n'exécute aucune migration.
+
+Lors d'un déploiement, arrêtez l'ancien conteneur avant de démarrer le nouveau. Sauvegardez le volume, puis lancez le nouveau conteneur avec la commande ci-dessous.
 
 ```bash
 podman load < result

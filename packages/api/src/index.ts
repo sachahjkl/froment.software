@@ -4,6 +4,7 @@ export {
   DatabaseError,
   DatabaseLive,
   makeDatabaseLayer,
+  migrateDatabase,
   type DatabaseService,
 } from './database/database.js';
 export { calculateQuoteLine, calculateQuoteTotals } from './quotes/quote-calculation.js';

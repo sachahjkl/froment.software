@@ -69,9 +69,9 @@
 - [x] REV-029 Serialize image publication.
 - [x] REV-030 Pin Skopeo through the flake.
 - [x] REV-031 Support dirty local image checks.
-- [ ] REV-032 Lint all tracked TypeScript files.
-- [ ] REV-033 Separate database migrations from application startup.
-- [ ] REV-034 Redact CSRF headers from traces.
+- [x] REV-032 Lint all tracked TypeScript files.
+- [x] REV-033 Separate database migrations from application startup.
+- [x] REV-034 Redact CSRF headers from traces.
 - [x] REV-035 Preserve literal translation replacements.
 - [x] REV-036 Validate client invoice dates.
 - [x] REV-037 Limit document snapshots to 20 lines.
@@ -87,7 +87,7 @@
 - [x] REV-047 Translate public quote accessible names.
 - [x] REV-048 Enforce invoice dates and numbers in SQLite.
 - [x] REV-049 Correct the documented container port.
-- [ ] REV-050 Enforce coverage thresholds for sensitive code.
+- [x] REV-050 Enforce coverage thresholds for sensitive code.
 
 ## Back-Office Usability
 

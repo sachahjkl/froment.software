@@ -8,14 +8,16 @@
     "watch": "pnpm --filter @froment/web watch",
     "test": "pnpm --filter @froment/web build && pnpm --recursive --if-present test",
     "test:watch": "pnpm --filter @froment/web test:watch",
-    "lint": "oxlint packages/*/src",
+    "lint": "tsc -p tools/oxlint/tsconfig.json --noEmit && oxlint .",
     "format": "oxfmt --write .",
     "format:check": "oxfmt --check ."
   },
   "devDependencies": {
     "@oxlint/plugins": "catalog:",
+    "@types/node": "catalog:",
     "oxfmt": "catalog:",
-    "oxlint": "catalog:"
+    "oxlint": "catalog:",
+    "typescript": "catalog:"
   },
   "packageManager": "pnpm@11.20.0"
 }

@@ -89,10 +89,25 @@ const migrate = (sqlite: Sqlite.Database, migrationsFolder: string) => {
   }
 };
 
-export const makeDatabaseLayer = (options: {
+export const migrateDatabase = (options: {
   readonly filename: string;
   readonly migrationsFolder: string;
 }) =>
+  Effect.try({
+    try: () => {
+      mkdirSync(dirname(options.filename), { recursive: true });
+      const sqlite = new Sqlite(options.filename);
+      try {
+        sqlite.pragma('busy_timeout = 5000');
+        migrate(sqlite, options.migrationsFolder);
+      } finally {
+        sqlite.close();
+      }
+    },
+    catch: (cause) => new DatabaseError({ operation: 'migrate database', cause }),
+  });
+
+export const makeDatabaseLayer = (options: { readonly filename: string }) =>
   Layer.effect(
     Database,
     Effect.gen(function* () {
@@ -113,10 +128,9 @@ export const makeDatabaseLayer = (options: {
           sqlite.pragma('busy_timeout = 5000');
           sqlite.pragma('synchronous = FULL');
           const orm = drizzle({ client: sqlite });
-          migrate(sqlite, options.migrationsFolder);
           return Database.of({ orm, sqlite });
         },
-        catch: (cause) => new DatabaseError({ operation: 'configure and migrate database', cause }),
+        catch: (cause) => new DatabaseError({ operation: 'configure database', cause }),
       });
     }),
   );
@@ -126,7 +140,6 @@ export const DatabaseLive = Layer.unwrap(
     const filename = yield* Config.string('DATABASE_PATH').pipe(
       Config.withDefault('data/froment.sqlite'),
     );
-    const migrationsFolder = yield* Config.string('MIGRATIONS_ROOT');
-    return makeDatabaseLayer({ filename, migrationsFolder });
+    return makeDatabaseLayer({ filename });
   }),
 );

@@ -8,7 +8,8 @@ import { describe, expect, it } from 'vitest';
 import { AuditLive } from '../src/audit/audit.js';
 import { AuthenticationConfig, hmac } from '../src/authentication/authentication-config.js';
 import { Clients, ClientsLive } from '../src/clients/clients.js';
-import { Database, makeDatabaseLayer } from '../src/database/database.js';
+import { Database } from '../src/database/database.js';
+import { makeMigratedDatabaseLayer } from './database-layer.js';
 import { IssuerSettingsLive } from '../src/documents/issuer-settings.js';
 import { QuoteLinks, QuoteLinksLive } from '../src/quotes/quote-links.js';
 import { Quotes, QuotesLive } from '../src/quotes/quotes.js';
@@ -45,7 +46,7 @@ const configLayer = Layer.succeed(
 );
 
 const databaseLayer = () =>
-  makeDatabaseLayer({
+  makeMigratedDatabaseLayer({
     filename: ':memory:',
     migrationsFolder: join(import.meta.dirname, '..', 'drizzle'),
   });

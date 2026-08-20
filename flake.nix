@@ -72,7 +72,7 @@
             inherit pname version src;
             pnpm = pkgs.pnpm;
             fetcherVersion = 4;
-            hash = "sha256-A5OvWF1w06Zh33EFaJCnEYkLTGBleQPZ8Hf8wOnRJ2M=";
+            hash = "sha256-1mSY/iBABvpQhBI11CQ/f7Cwr+2vNL2srUY0NujAErs=";
           };
 
           mkApplication =
@@ -99,6 +99,7 @@
                 runHook preInstall
                 mkdir -p $out/bin $out/lib/froment-software/node_modules $out/share/froment-software
                 cp packages/api/dist/main.cjs $out/lib/froment-software/server.cjs
+                cp packages/api/dist/migrate.cjs $out/lib/froment-software/migrate.cjs
                 cp -r packages/api/drizzle $out/share/froment-software/drizzle
                 cp -rL packages/api/node_modules/better-sqlite3 $out/lib/froment-software/node_modules/
                 cp -rL packages/api/node_modules/playwright-core $out/lib/froment-software/node_modules/
@@ -109,9 +110,14 @@
                   --set CHROMIUM_PATH ${pkgs.chromium}/bin/chromium \
                   --set-default DATABASE_PATH data/froment.sqlite \
                   --set DEPLOYMENT_METADATA ${lib.escapeShellArg (deploymentMetadata commit)} \
-                  --set MIGRATIONS_ROOT $out/share/froment-software/drizzle \
                   --set STATIC_ROOT $out/share/froment-software/web \
                   --set-default PORT 3000
+                makeWrapper ${runtimeNode}/bin/node $out/bin/${pname}-migrate \
+                  --add-flags $out/lib/froment-software/migrate.cjs \
+                  --set-default DATABASE_PATH data/froment.sqlite \
+                  --set MIGRATIONS_ROOT $out/share/froment-software/drizzle
+                cp tools/deploy.sh $out/bin/${pname}-deploy
+                chmod +x $out/bin/${pname}-deploy
                 runHook postInstall
               '';
             };
@@ -176,7 +182,7 @@
                 chmod 4755 ./run/wrappers/bin/__chromium-suid-sandbox
               '';
               config = {
-                Cmd = [ "${imageApplication}/bin/${pname}" ];
+                Cmd = [ "${imageApplication}/bin/${pname}-deploy" ];
                 Env = [
                   "DATABASE_PATH=/var/lib/froment-software/froment.sqlite"
                   "HOME=/home/froment"
@@ -213,7 +219,7 @@
 
           apps.default = {
             type = "app";
-            program = "${application}/bin/${pname}";
+            program = "${application}/bin/${pname}-deploy";
           };
 
           checks = {

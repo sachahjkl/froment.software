@@ -7,6 +7,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 
 import { Database, makeDatabaseLayer } from '../src/database/database.js';
 import { UserRow } from '../src/database/schema.js';
+import { makeMigratedDatabaseLayer } from './database-layer.js';
 
 describe('Database', () => {
   const directories: Array<string> = [];
@@ -15,6 +16,27 @@ describe('Database', () => {
     await Promise.all(
       directories.splice(0).map((directory) => rm(directory, { recursive: true, force: true })),
     );
+  });
+
+  it('opens the application database without running migrations', async () => {
+    const directory = await mkdtemp(join(tmpdir(), 'froment-database-'));
+    directories.push(directory);
+    const filename = join(directory, 'database.sqlite');
+
+    const tables = await Effect.runPromise(
+      Database.use(({ sqlite }) =>
+        Effect.sync(() =>
+          sqlite
+            .prepare(
+              "select name from sqlite_master where type = 'table' and name not like 'sqlite_%'",
+            )
+            .pluck()
+            .all(),
+        ),
+      ).pipe(Effect.provide(makeDatabaseLayer({ filename }))),
+    );
+
+    expect(tables).toEqual([]);
   });
 
   it('migrates and configures a new SQLite database', async () => {
@@ -43,7 +65,7 @@ describe('Database', () => {
             .pluck()
             .all(),
         })),
-      ).pipe(Effect.provide(makeDatabaseLayer({ filename, migrationsFolder }))),
+      ).pipe(Effect.provide(makeMigratedDatabaseLayer({ filename, migrationsFolder }))),
     );
 
     expect(state.foreignKeys).toBe(1);
@@ -220,10 +242,10 @@ describe('Database', () => {
     };
 
     await Effect.runPromise(
-      Database.use(() => Effect.void).pipe(Effect.provide(makeDatabaseLayer(options))),
+      Database.use(() => Effect.void).pipe(Effect.provide(makeMigratedDatabaseLayer(options))),
     );
     await Effect.runPromise(
-      Database.use(() => Effect.void).pipe(Effect.provide(makeDatabaseLayer(options))),
+      Database.use(() => Effect.void).pipe(Effect.provide(makeMigratedDatabaseLayer(options))),
     );
   });
 
@@ -247,7 +269,7 @@ describe('Database', () => {
     const filename = join(directory, 'database.sqlite');
     const options = { filename, migrationsFolder };
     await Effect.runPromise(
-      Database.use(() => Effect.void).pipe(Effect.provide(makeDatabaseLayer(options))),
+      Database.use(() => Effect.void).pipe(Effect.provide(makeMigratedDatabaseLayer(options))),
     );
 
     const clientId = '01ARZ3NDEKTSV4RRFFQ69G5FAV';
@@ -288,7 +310,7 @@ describe('Database', () => {
             .pluck()
             .all(clientId),
         })),
-      ).pipe(Effect.provide(makeDatabaseLayer(options))),
+      ).pipe(Effect.provide(makeMigratedDatabaseLayer(options))),
     );
 
     expect(role).toEqual({
@@ -317,7 +339,7 @@ describe('Database', () => {
     const filename = join(directory, 'database.sqlite');
     const options = { filename, migrationsFolder };
     await Effect.runPromise(
-      Database.use(() => Effect.void).pipe(Effect.provide(makeDatabaseLayer(options))),
+      Database.use(() => Effect.void).pipe(Effect.provide(makeMigratedDatabaseLayer(options))),
     );
 
     const sqlite = new Sqlite(filename);
@@ -333,7 +355,7 @@ describe('Database', () => {
 
     await expect(
       Effect.runPromise(
-        Database.use(() => Effect.void).pipe(Effect.provide(makeDatabaseLayer(options))),
+        Database.use(() => Effect.void).pipe(Effect.provide(makeMigratedDatabaseLayer(options))),
       ),
     ).rejects.toThrow();
   });
@@ -352,7 +374,7 @@ describe('Database', () => {
     const filename = join(directory, 'database.sqlite');
     const options = { filename, migrationsFolder };
     await Effect.runPromise(
-      Database.use(() => Effect.void).pipe(Effect.provide(makeDatabaseLayer(options))),
+      Database.use(() => Effect.void).pipe(Effect.provide(makeMigratedDatabaseLayer(options))),
     );
 
     const sqlite = new Sqlite(filename);
@@ -379,7 +401,7 @@ describe('Database', () => {
       recursive: true,
     });
     await Effect.runPromise(
-      Database.use(() => Effect.void).pipe(Effect.provide(makeDatabaseLayer(options))),
+      Database.use(() => Effect.void).pipe(Effect.provide(makeMigratedDatabaseLayer(options))),
     );
     const migratedSqlite = new Sqlite(filename);
     migratedSqlite.prepare('update clients set archived_at = ? where id = ?').run(3, clientId);
@@ -442,7 +464,7 @@ describe('Database', () => {
             .get(clientId),
           foreignKeyViolations: connection.pragma('foreign_key_check'),
         })),
-      ).pipe(Effect.provide(makeDatabaseLayer(options))),
+      ).pipe(Effect.provide(makeMigratedDatabaseLayer(options))),
     );
 
     expect(state.client).toEqual({ id: clientId, createdAt: 1, updatedAt: 2 });
@@ -474,7 +496,7 @@ describe('Database', () => {
     const filename = join(directory, 'database.sqlite');
     const options = { filename, migrationsFolder };
     await Effect.runPromise(
-      Database.use(() => Effect.void).pipe(Effect.provide(makeDatabaseLayer(options))),
+      Database.use(() => Effect.void).pipe(Effect.provide(makeMigratedDatabaseLayer(options))),
     );
 
     const sqlite = new Sqlite(filename);
@@ -517,7 +539,7 @@ describe('Database', () => {
             .pluck()
             .get(quoteId),
         })),
-      ).pipe(Effect.provide(makeDatabaseLayer(options))),
+      ).pipe(Effect.provide(makeMigratedDatabaseLayer(options))),
     );
 
     expect(state.clientId).toBe(clientId);
@@ -648,7 +670,7 @@ describe('Database', () => {
               ),
           ).toThrow();
         }),
-      ).pipe(Effect.provide(makeDatabaseLayer({ filename, migrationsFolder }))),
+      ).pipe(Effect.provide(makeMigratedDatabaseLayer({ filename, migrationsFolder }))),
     );
   });
 
@@ -669,7 +691,7 @@ describe('Database', () => {
     const filename = join(directory, 'database.sqlite');
     const options = { filename, migrationsFolder };
     await Effect.runPromise(
-      Database.use(() => Effect.void).pipe(Effect.provide(makeDatabaseLayer(options))),
+      Database.use(() => Effect.void).pipe(Effect.provide(makeMigratedDatabaseLayer(options))),
     );
 
     const sqlite = new Sqlite(filename);
@@ -692,7 +714,7 @@ describe('Database', () => {
 
     await expect(
       Effect.runPromise(
-        Database.use(() => Effect.void).pipe(Effect.provide(makeDatabaseLayer(options))),
+        Database.use(() => Effect.void).pipe(Effect.provide(makeMigratedDatabaseLayer(options))),
       ),
     ).rejects.toThrow();
 
@@ -726,7 +748,7 @@ describe('Database', () => {
     const filename = join(directory, 'database.sqlite');
     const options = { filename, migrationsFolder };
     await Effect.runPromise(
-      Database.use(() => Effect.void).pipe(Effect.provide(makeDatabaseLayer(options))),
+      Database.use(() => Effect.void).pipe(Effect.provide(makeMigratedDatabaseLayer(options))),
     );
 
     const sqlite = new Sqlite(filename);
@@ -745,7 +767,7 @@ describe('Database', () => {
 
     await expect(
       Effect.runPromise(
-        Database.use(() => Effect.void).pipe(Effect.provide(makeDatabaseLayer(options))),
+        Database.use(() => Effect.void).pipe(Effect.provide(makeMigratedDatabaseLayer(options))),
       ),
     ).rejects.toThrow();
 
@@ -775,7 +797,7 @@ describe('Database', () => {
     await expect(
       Effect.runPromise(
         Database.use(() => Effect.void).pipe(
-          Effect.provide(makeDatabaseLayer({ filename, migrationsFolder })),
+          Effect.provide(makeMigratedDatabaseLayer({ filename, migrationsFolder })),
         ),
       ),
     ).rejects.toThrow();

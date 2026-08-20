@@ -5,12 +5,14 @@ import { TestClock } from 'effect/testing';
 import { describe, expect, it } from 'vitest';
 
 import { AuditLive } from '../audit/audit.js';
-import { Database, makeDatabaseLayer } from '../database/database.js';
+import { Database } from '../database/database.js';
+import { makeMigratedDatabaseLayer } from '../../test/database-layer.js';
 import { Authentication, AuthenticationLive } from './authentication.js';
 import { AuthenticationConfig, hmac } from './authentication-config.js';
 
 const userId = '01ARZ3NDEKTSV4RRFFQ69G5FAA';
 const credentialId = '01ARZ3NDEKTSV4RRFFQ69G5FAB';
+const roleId = '01ARZ3NDEKTSV4RRFFQ69G5FAC';
 const accessIdentifier = 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA';
 const accessHmacKey = Buffer.alloc(32, 1);
 
@@ -36,28 +38,43 @@ const authenticationLayer = () =>
     Layer.provide(AuditLive),
     Layer.provide(configLayer),
     Layer.provideMerge(
-      makeDatabaseLayer({
+      makeMigratedDatabaseLayer({
         filename: ':memory:',
         migrationsFolder: join(import.meta.dirname, '..', '..', 'drizzle'),
       }),
     ),
   );
 
+const seedAdministrator = (database: Database['Service']) => {
+  database.sqlite
+    .prepare(
+      "insert into users (id, display_name, kind, created_at, updated_at) values (?, 'Administrator', 'administrator', 0, 0)",
+    )
+    .run(userId);
+  database.sqlite
+    .prepare(
+      'insert into access_credentials (id, user_id, secret_hmac, created_at) values (?, ?, ?, 0)',
+    )
+    .run(credentialId, userId, hmac(accessHmacKey, accessIdentifier));
+  database.sqlite
+    .prepare("insert into roles (id, name, created_at) values (?, 'administrator', 0)")
+    .run(roleId);
+  database.sqlite
+    .prepare('insert into user_roles (user_id, role_id) values (?, ?)')
+    .run(userId, roleId);
+  database.sqlite
+    .prepare(
+      "insert into role_permissions (role_id, permission_code) values (?, 'client.read'), (?, 'client.create')",
+    )
+    .run(roleId, roleId);
+};
+
 describe('Authentication', () => {
   it('limits successful logins by credential across client addresses', async () => {
     const result = await Effect.runPromise(
       Effect.gen(function* () {
         const database = yield* Database;
-        database.sqlite
-          .prepare(
-            "insert into users (id, display_name, kind, created_at, updated_at) values (?, 'Administrator', 'administrator', 0, 0)",
-          )
-          .run(userId);
-        database.sqlite
-          .prepare(
-            'insert into access_credentials (id, user_id, secret_hmac, created_at) values (?, ?, ?, 0)',
-          )
-          .run(credentialId, userId, hmac(accessHmacKey, accessIdentifier));
+        seedAdministrator(database);
 
         const authentication = yield* Authentication;
         yield* Effect.forEach(
@@ -84,5 +101,90 @@ describe('Authentication', () => {
     expect(result.blocked).toMatchObject({ _tag: 'Failure' });
     expect(result.audits).toBe(60);
     expect(result.sessions).toBe(10);
+  });
+
+  it('enforces permissions, mode, CSRF, origin, and logout revocation', async () => {
+    const result = await Effect.runPromise(
+      Effect.gen(function* () {
+        const database = yield* Database;
+        seedAdministrator(database);
+        const authentication = yield* Authentication;
+        const session = yield* authentication.login(accessIdentifier, 'administrator', '192.0.2.1');
+        const authorized = yield* authentication.authorize(
+          session.sessionToken,
+          'client.read',
+          'administrator',
+        );
+        const wrongMode = yield* Effect.result(
+          authentication.authorize(session.sessionToken, 'client.read', 'client'),
+        );
+        const missingSession = yield* Effect.result(
+          authentication.authorize(undefined, 'client.read', 'administrator'),
+        );
+        const invalidCsrf = yield* Effect.result(
+          authentication.authorizeWrite(
+            session.sessionToken,
+            session.csrfToken,
+            'different-token',
+            'https://example.test',
+            'client.create',
+            'administrator',
+          ),
+        );
+        const invalidOrigin = yield* Effect.result(
+          authentication.authorizeWrite(
+            session.sessionToken,
+            session.csrfToken,
+            session.csrfToken,
+            'https://attacker.test',
+            'client.create',
+            'administrator',
+          ),
+        );
+        const writeAuthorized = yield* authentication.authorizeWrite(
+          session.sessionToken,
+          session.csrfToken,
+          session.csrfToken,
+          'https://example.test',
+          'client.create',
+          'administrator',
+        );
+        yield* authentication.logout(
+          session.sessionToken,
+          session.csrfToken,
+          session.csrfToken,
+          'https://example.test',
+        );
+        return {
+          authorized,
+          invalidCsrf,
+          invalidOrigin,
+          missingSession,
+          revokedSession: yield* authentication.sessionStatus(session.sessionToken),
+          writeAuthorized,
+          wrongMode,
+        };
+      }).pipe(Effect.provide(authenticationLayer()), Effect.provide(TestClock.layer())),
+    );
+
+    expect(result.authorized).toEqual({ userId, mode: 'administrator' });
+    expect(result.writeAuthorized).toEqual(result.authorized);
+    expect(result.wrongMode).toMatchObject({
+      _tag: 'Failure',
+      failure: { _tag: 'PermissionDenied' },
+    });
+    expect(result.missingSession).toMatchObject({
+      _tag: 'Failure',
+      failure: { _tag: 'AuthenticationRequired' },
+    });
+    expect(result.invalidCsrf).toMatchObject({
+      _tag: 'Failure',
+      failure: { _tag: 'CsrfRejected' },
+    });
+    expect(result.invalidOrigin).toMatchObject({
+      _tag: 'Failure',
+      failure: { _tag: 'CsrfRejected' },
+    });
+    expect(result.revokedSession).toBeUndefined();
   });
 });

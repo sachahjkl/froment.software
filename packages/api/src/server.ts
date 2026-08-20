@@ -37,11 +37,11 @@ import { Invoices } from './invoices/invoices.js';
 import { Orders } from './orders/orders.js';
 import { RequestLimiter, RequestLimiterLive } from './server/request-limiter.js';
 import { ClientPortal } from './client-portal/client-portal.js';
+import { HttpTracingLive, traceRequest } from './observability/http-tracing.js';
 
 const sessionCookieName = '__Host-froment-session';
 const csrfCookieName = '__Host-froment-csrf';
 const csrfHeaderName = 'x-csrf-token';
-
 export const issueInvoice = Effect.fn('issueInvoice')(function* (
   invoiceId: UlidValue,
   payload: InvoiceIssueRequestValue,
@@ -858,7 +858,7 @@ export const makeServerLayer = (options: {
     {
       middleware: (application) =>
         Effect.gen(function* () {
-          return yield* HttpMiddleware.tracer(
+          return yield* traceRequest(
             identifyRequest(
               HttpMiddleware.logger(protectRequest(options.publicOrigin)(application)),
             ),
@@ -868,6 +868,7 @@ export const makeServerLayer = (options: {
     },
   ).pipe(
     Layer.provide(RequestLimiterLive),
+    Layer.provide(HttpTracingLive),
     Layer.provide(Layer.succeed(HttpServerRequest.MaxBodySize, FileSystem.Size(32 * 1024))),
     Layer.provide(NodeHttpServer.layer(createServer, { port: options.port })),
   );

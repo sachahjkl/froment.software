@@ -1,10 +1,11 @@
 import { cp, mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { spawn, type ChildProcess } from 'node:child_process';
+import { execFile, spawn, type ChildProcess } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { request as httpRequest } from 'node:http';
 import { createServer } from 'node:net';
+import { promisify } from 'node:util';
 
 import {
   Api,
@@ -41,6 +42,7 @@ const emptyClientDetails = {
   country: '',
   email: '',
 };
+const execFileAsync = promisify(execFile);
 
 const reservePort = () =>
   new Promise<number>((resolve, reject) => {
@@ -91,24 +93,27 @@ describe('HTTP server', () => {
     const port = await reservePort();
     baseUrl = `http://127.0.0.1:${port}`;
     databaseFilename = join(staticRoot, 'database.sqlite');
+    const env = {
+      ...process.env,
+      ACCESS_HMAC_KEY: 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA',
+      BOOTSTRAP_PASSWORD_SCRYPT:
+        'scrypt$16384$8$1$ABEiM0RVZneImaq7zN3u_w$bDQwYDYiQ_8HCiJ3-qXFtXFeV9FhIOa7E8VSgT__uegLrk4vqD6U920ImYTwk5RABOZsIk96bUNH1G9wbCXf1Q',
+      BUSINESS_TIME_ZONE: 'Europe/Paris',
+      DATABASE_PATH: databaseFilename,
+      DEPLOYMENT_METADATA: JSON.stringify(deploymentMetadata),
+      MIGRATIONS_ROOT: join(import.meta.dirname, '..', 'drizzle'),
+      PORT: String(port),
+      PUBLIC_ORIGIN: baseUrl,
+      QUOTE_LINK_HMAC_KEY: 'CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC',
+      STATIC_ROOT: staticRoot,
+      SESSION_HMAC_KEY: 'BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB',
+      OTEL_SDK_DISABLED: 'true',
+    };
+    const cwd = join(import.meta.dirname, '..');
+    await execFileAsync(process.execPath, ['dist/migrate.cjs'], { cwd, env });
     server = spawn(process.execPath, ['dist/main.cjs'], {
-      cwd: join(import.meta.dirname, '..'),
-      env: {
-        ...process.env,
-        ACCESS_HMAC_KEY: 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA',
-        BOOTSTRAP_PASSWORD_SCRYPT:
-          'scrypt$16384$8$1$ABEiM0RVZneImaq7zN3u_w$bDQwYDYiQ_8HCiJ3-qXFtXFeV9FhIOa7E8VSgT__uegLrk4vqD6U920ImYTwk5RABOZsIk96bUNH1G9wbCXf1Q',
-        BUSINESS_TIME_ZONE: 'Europe/Paris',
-        DATABASE_PATH: databaseFilename,
-        DEPLOYMENT_METADATA: JSON.stringify(deploymentMetadata),
-        MIGRATIONS_ROOT: join(import.meta.dirname, '..', 'drizzle'),
-        PORT: String(port),
-        PUBLIC_ORIGIN: baseUrl,
-        QUOTE_LINK_HMAC_KEY: 'CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC',
-        STATIC_ROOT: staticRoot,
-        SESSION_HMAC_KEY: 'BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB',
-        OTEL_SDK_DISABLED: 'true',
-      },
+      cwd,
+      env,
       stdio: 'pipe',
     });
     server.stdout?.on('data', (chunk: Buffer) => {
