@@ -1,0 +1,63 @@
+<section class="invoices-page" aria-labelledby="invoices-title">
+  <header>
+    <div>
+      <p><a routerLink="/backoffice/dashboard">← {{ i18n.t('backOffice.invoices.back') }}</a></p>
+      <h1 id="invoices-title">{{ i18n.t('backOffice.invoices.title') }}</h1>
+    </div>
+    <a appLinkButton variant="primary" routerLink="/backoffice/invoices/new">
+      {{ i18n.t('backOffice.invoices.new') }}
+    </a>
+  </header>
+
+  @switch (state()) { @case ('loading') {
+  <p aria-live="polite">{{ i18n.t('backOffice.invoices.loading') }}</p>
+  } @case ('error') {
+  <p class="notice danger" role="alert">{{ i18n.t('invoice.error') }}</p>
+  <button appButton type="button" (click)="load()">
+    {{ i18n.t('backOffice.invoices.retry') }}
+  </button>
+  } @case ('ready') { @if (invoices().length === 0) {
+  <p class="empty">{{ i18n.t('backOffice.invoices.empty') }}</p>
+  } @else {
+  <div appDataTable>
+    <table>
+      <thead>
+        <tr>
+          <th>{{ i18n.t('backOffice.invoices.number') }}</th>
+          <th>{{ i18n.t('backOffice.invoice.title') }}</th>
+          <th>{{ i18n.t('backOffice.invoices.client') }}</th>
+          <th>{{ i18n.t('backOffice.invoices.status') }}</th>
+          <th>{{ i18n.t('backOffice.invoices.version') }}</th>
+          <th>{{ i18n.t('backOffice.invoices.total') }}</th>
+          <th>{{ i18n.t('backOffice.invoices.updated') }}</th>
+          <th>{{ i18n.t('backOffice.invoices.actions') }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (invoice of invoices(); track invoice.id) {
+        <tr>
+          <td>
+            <strong>{{ invoice.invoiceNumber ?? i18n.t('backOffice.invoice.draft') }}</strong>
+          </td>
+          <td>{{ invoice.title }}</td>
+          <td>{{ invoice.clientDisplayName }}</td>
+          <td>
+            <span class="badge" [class.ok]="invoice.status === 'paid'"
+              >{{ statusLabel(invoice.status) }}</span
+            >
+          </td>
+          <td>{{ invoice.version }}</td>
+          <td>{{ money(invoice.totalCents) }}</td>
+          <td>{{ date(invoice.updatedAt) }}</td>
+          <td>
+            <a [routerLink]="['/backoffice/invoices', invoice.id]"
+              >{{ i18n.t('backOffice.invoices.open') }}</a
+            >
+          </td>
+        </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+  } } }
+</section>

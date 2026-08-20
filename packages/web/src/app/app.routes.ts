@@ -207,6 +207,45 @@ export const routes: Routes = [
     },
   },
   {
+    path: 'backoffice/invoices',
+    loadComponent: () =>
+      import('./pages/back-office/invoices/invoices').then((module) => module.Invoices),
+    canActivate: [administratorGuard],
+    data: {
+      titleKey: 'page.back_office_invoices',
+      descriptionKey: 'page.description.back_office_invoices',
+      robots: 'noindex, nofollow',
+    },
+  },
+  {
+    path: 'backoffice/invoices/new',
+    loadComponent: () =>
+      import('./pages/back-office/invoice-editor/invoice-editor').then(
+        (module) => module.InvoiceEditor,
+      ),
+    canActivate: [administratorGuard],
+    canDeactivate: [unsavedChangesGuard],
+    data: {
+      titleKey: 'page.back_office_invoice_editor',
+      descriptionKey: 'page.description.back_office_invoice_editor',
+      robots: 'noindex, nofollow',
+    },
+  },
+  {
+    path: 'backoffice/invoices/:invoiceId',
+    loadComponent: () =>
+      import('./pages/back-office/invoice-editor/invoice-editor').then(
+        (module) => module.InvoiceEditor,
+      ),
+    canActivate: [administratorGuard],
+    canDeactivate: [unsavedChangesGuard],
+    data: {
+      titleKey: 'page.back_office_invoice_editor',
+      descriptionKey: 'page.description.back_office_invoice_editor',
+      robots: 'noindex, nofollow',
+    },
+  },
+  {
     path: 'design',
     loadComponent: () =>
       import('./pages/design/design.component').then((module) => module.DesignComponent),

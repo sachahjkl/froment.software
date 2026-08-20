@@ -1,0 +1,219 @@
+<section class="invoice-page" aria-labelledby="invoice-title">
+  <header>
+    <p><a routerLink="/backoffice/invoices">← {{ i18n.t('backOffice.invoice.back') }}</a></p>
+    <h1 id="invoice-title">
+      @if (isNew()) { {{ i18n.t('backOffice.invoice.title.new') }} } @else { {{
+      i18n.t('backOffice.invoice.title.edit') }} }
+    </h1>
+  </header>
+
+  @if (loading()) {
+  <p aria-live="polite">{{ i18n.t('backOffice.invoices.loading') }}</p>
+  } @else if (unavailable()) { @if (error(); as errorKey) {
+  <p class="notice danger" role="alert">{{ i18n.t(errorKey) }}</p>
+  } } @else {
+  <form (submit)="save($event)">
+    @if (isNew()) {
+    <label class="field">
+      {{ i18n.t('backOffice.invoice.order') }}
+      <select class="input" [formField]="invoiceForm.orderId">
+        <option value="">{{ i18n.t('backOffice.invoice.orderPlaceholder') }}</option>
+        @for (order of orders(); track order.id) {
+        <option [value]="order.id">
+          {{ order.clientDisplayName }} · {{ order.title }} · {{ money(order.totalCents) }}
+        </option>
+        }
+      </select>
+    </label>
+    @if (orders().length === 0) {
+    <p class="notice">{{ i18n.t('backOffice.invoice.noOrder') }}</p>
+    } } @else {
+    <label class="field">
+      {{ i18n.t('backOffice.invoice.title') }}
+      <input class="input" type="text" [formField]="invoiceForm.title" />
+    </label>
+    }
+    <div class="date-fields">
+      <label class="field">
+        {{ i18n.t('backOffice.invoice.serviceDate') }}
+        <input class="input" type="date" [formField]="invoiceForm.serviceDate" />
+      </label>
+      <label class="field">
+        {{ i18n.t('backOffice.invoice.dueDate') }}
+        <input class="input" type="date" [formField]="invoiceForm.dueDate" />
+      </label>
+    </div>
+    <label class="field">
+      {{ i18n.t('backOffice.invoice.paymentTerms') }}
+      <textarea class="input" rows="5" [formField]="invoiceForm.paymentTerms"></textarea>
+    </label>
+
+    @if (!isNew()) {
+    <section class="lines" aria-labelledby="lines-title">
+      <div class="section-heading">
+        <h2 id="lines-title">{{ i18n.t('backOffice.invoice.lines') }}</h2>
+        <button
+          appButton
+          type="button"
+          [disabled]="!editable() || invoiceForm.lines.length >= 20"
+          (click)="addLine()"
+        >
+          {{ i18n.t('backOffice.invoice.addLine') }}
+        </button>
+      </div>
+      @for (line of invoiceForm.lines; track $index) {
+      <fieldset>
+        <legend>{{ i18n.tf('backOffice.invoice.lineNumber', { number: $index + 1 }) }}</legend>
+        <label class="field description">
+          {{ i18n.t('backOffice.invoice.description') }}
+          <input class="input" type="text" [formField]="line.description" />
+        </label>
+        <label class="field">
+          {{ i18n.t('backOffice.invoice.quantity') }}
+          <input class="input" inputmode="decimal" [formField]="line.quantity" />
+        </label>
+        <label class="field">
+          {{ i18n.t('backOffice.invoice.unitPrice') }}
+          <input class="input" inputmode="decimal" [formField]="line.unitPrice" />
+        </label>
+        <label class="field">
+          {{ i18n.t('backOffice.invoice.vatRate') }}
+          <input class="input" inputmode="decimal" [formField]="line.vatRate" />
+        </label>
+        <button
+          appButton
+          variant="danger"
+          type="button"
+          [disabled]="!editable() || invoiceForm.lines.length === 1"
+          (click)="removeLine($index)"
+        >
+          {{ i18n.t('backOffice.invoice.removeLine') }}
+        </button>
+        @if (!totalsAreStale() && detail()?.currentRevision?.lines?.[$index]; as savedLine) {
+        <p class="line-total">
+          {{ i18n.t('backOffice.invoice.lineTotal') }}
+          <strong>{{ money(savedLine.totalCents) }}</strong>
+        </p>
+        }
+      </fieldset>
+      }
+    </section>
+    } @if (error(); as errorKey) {
+    <p class="notice danger" role="alert">{{ i18n.t(errorKey) }}</p>
+    } @else if (invoiceForm().invalid() && invoiceForm().touched()) {
+    <p class="notice danger" role="alert">{{ i18n.t('backOffice.invoice.validation') }}</p>
+    }
+    <button appButton variant="primary" type="submit" [disabled]="saveDisabled()">
+      @if (saving()) { {{ i18n.t('backOffice.invoice.saving') }} } @else { {{
+      i18n.t('backOffice.invoice.save') }} }
+    </button>
+  </form>
+
+  @if (detail(); as invoice) {
+  <aside class="saved-result">
+    <p class="invoice-number">
+      <span>{{ i18n.t('backOffice.invoices.number') }}</span
+      ><strong>{{ invoice.invoiceNumber ?? i18n.t('backOffice.invoice.draft') }}</strong>
+    </p>
+    <p class="invoice-status">
+      <span>{{ i18n.t('backOffice.invoices.status') }}</span
+      ><strong>{{ i18n.t(statusKey(invoice.status)) }}</strong>
+    </p>
+    <div class="actions">
+      @if (invoice.status === 'draft') {
+      <button
+        appButton
+        variant="primary"
+        type="button"
+        [disabled]="issueDisabled()"
+        (click)="issue()"
+      >
+        {{ i18n.t('backOffice.invoice.issue') }}
+      </button>
+      @if (invoiceForm().dirty()) {
+      <p class="hint">{{ i18n.t('backOffice.invoice.issueUnsaved') }}</p>
+      } } @else if (invoice.status === 'issued') {
+      <button
+        appButton
+        variant="primary"
+        type="button"
+        [disabled]="actionPending()"
+        (click)="markPaid()"
+      >
+        {{ i18n.t('backOffice.invoice.markPaid') }}
+      </button>
+      <button
+        appButton
+        variant="danger"
+        type="button"
+        [disabled]="actionPending()"
+        (click)="voidInvoice()"
+      >
+        {{ i18n.t('backOffice.invoice.void') }}
+      </button>
+      }
+    </div>
+    <h2>{{ i18n.t('backOffice.invoice.total') }}</h2>
+    @if (totalsAreStale()) {
+    <p class="notice">{{ i18n.t('backOffice.invoice.dirtyTotals') }}</p>
+    }
+    <dl>
+      <div>
+        <dt>{{ i18n.t('backOffice.invoice.subtotal') }}</dt>
+        <dd>{{ money(invoice.currentRevision.netTotalCents) }}</dd>
+      </div>
+      <div>
+        <dt>{{ i18n.t('backOffice.invoice.tax') }}</dt>
+        <dd>{{ money(invoice.currentRevision.vatTotalCents) }}</dd>
+      </div>
+      <div>
+        <dt>{{ i18n.t('backOffice.invoice.total') }}</dt>
+        <dd>{{ money(invoice.currentRevision.totalCents) }}</dd>
+      </div>
+    </dl>
+    <h2>{{ i18n.t('backOffice.invoice.history') }}</h2>
+    <ol>
+      @for (revision of invoice.revisions; track revision.id) {
+      <li>
+        <span
+          ><strong>#{{ revision.version }}</strong> · {{ revision.invoiceNumber ??
+          i18n.t('backOffice.invoice.draft') }}</span
+        >
+        <span>{{ date(revision.createdAt) }} · {{ money(revision.totalCents) }}</span>
+        <button appButton type="button" (click)="showPreview(revision.version)">
+          {{ i18n.t('backOffice.invoice.preview.show') }}
+        </button>
+        <button
+          appButton
+          type="button"
+          [disabled]="pdfPendingVersion() !== undefined"
+          (click)="generatePdf(revision.version)"
+        >
+          @if (pdfPendingVersion() === revision.version) { {{
+          i18n.t('backOffice.invoice.pdf.generating') }} } @else { {{
+          i18n.t('backOffice.invoice.pdf.generate') }} }
+        </button>
+        @if (pdfUrl(revision.version); as pdf) {
+        <a [href]="pdf">{{ i18n.t('backOffice.invoice.pdf.download') }}</a> }
+      </li>
+      }
+    </ol>
+  </aside>
+  @if (previewUrl(); as url) {
+  <section class="preview">
+    <div class="section-heading">
+      <h2>
+        {{ i18n.tf('backOffice.invoice.preview.title', { version: previewVersion() ?? '' }) }}
+      </h2>
+      <a [href]="url" target="_blank" rel="noopener"
+        >{{ i18n.t('backOffice.invoice.preview.open') }}</a
+      >
+    </div>
+    <iframe
+      [src]="previewFrameUrl()"
+      [title]="i18n.t('backOffice.invoice.preview.frameTitle')"
+      sandbox
+    ></iframe>
+  </section>
+  } } }
+</section>

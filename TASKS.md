@@ -9,12 +9,12 @@
 ## Invoices
 
 - [x] Expose confirmed orders for invoice creation.
-- [ ] Add the Angular invoice API client.
-- [ ] Add the invoice list and dashboard entry.
-- [ ] Add invoice creation and draft revision forms.
-- [ ] Add issue, paid, and void actions.
-- [ ] Add invoice preview and PDF actions.
-- [ ] Add invoice translations and tests.
+- [x] Add the Angular invoice API client.
+- [x] Add the invoice list and dashboard entry.
+- [x] Add invoice creation and draft revision forms.
+- [x] Add issue, paid, and void actions.
+- [x] Add invoice preview and PDF actions.
+- [x] Add invoice translations and tests.
 
 ## Client Portal
 
