@@ -65,6 +65,10 @@ export class IssuerSettings {
       !this.settingsForm().dirty(),
   );
 
+  protected invalid(field: keyof IssuerSettingsValue): boolean {
+    return this.settingsForm[field]().touched() && this.settingsForm[field]().invalid();
+  }
+
   constructor() {
     afterNextRender(() => void this.load());
   }

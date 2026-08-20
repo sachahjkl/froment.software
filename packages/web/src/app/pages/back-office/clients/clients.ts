@@ -70,6 +70,7 @@ export class Clients {
   protected readonly pendingClientId = signal<UlidValue | undefined>(undefined);
   protected readonly access = signal<AccessResult | undefined>(undefined);
   protected readonly copied = signal(false);
+  private clientsRevision = 0;
 
   protected invalid(
     field: 'addressLine1' | 'addressLine2' | 'postalCode' | 'city' | 'country' | 'email',
@@ -92,6 +93,7 @@ export class Clients {
         this.setError(outcome.code);
         return;
       }
+      this.clientsRevision++;
       this.clients.update((clients) =>
         [...clients, outcome.result].sort((left, right) =>
           left.displayName.localeCompare(right.displayName),
@@ -120,6 +122,7 @@ export class Clients {
       this.setError(outcome.code);
       return;
     }
+    this.clientsRevision++;
     this.clients.update((clients) =>
       clients.map((current) => {
         if (current.id === outcome.result.id) return outcome.result;
@@ -151,8 +154,14 @@ export class Clients {
   }
 
   private async load(): Promise<void> {
+    const revision = this.clientsRevision;
     try {
-      this.clients.set(await this.api.list());
+      const clients = await this.api.list();
+      if (revision !== this.clientsRevision) {
+        this.state.set('ready');
+        return;
+      }
+      this.clients.set(clients);
       this.state.set('ready');
     } catch {
       this.state.set('error');

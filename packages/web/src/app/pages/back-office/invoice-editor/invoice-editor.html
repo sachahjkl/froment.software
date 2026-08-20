@@ -88,7 +88,18 @@
     </div>
     <label class="field">
       {{ i18n.t('backOffice.invoice.paymentTerms') }}
-      <textarea class="input" rows="5" [formField]="invoiceForm.paymentTerms"></textarea>
+      <textarea
+        class="input"
+        rows="5"
+        aria-describedby="invoice-payment-terms-error"
+        [attr.aria-invalid]="invoiceForm.paymentTerms().invalid() && invoiceForm.paymentTerms().touched()"
+        [formField]="invoiceForm.paymentTerms"
+      ></textarea>
+      @if (invoiceForm.paymentTerms().invalid() && invoiceForm.paymentTerms().touched()) {
+      <span id="invoice-payment-terms-error" class="field-error"
+        >{{ i18n.t('backOffice.invoice.fieldInvalid') }}</span
+      >
+      }
     </label>
 
     @if (!isNew()) {

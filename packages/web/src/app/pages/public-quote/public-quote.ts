@@ -72,6 +72,10 @@ export class PublicQuote {
     () => this.signing() || this.signatureForm().invalid(),
   );
 
+  protected invalid(field: 'signerName' | 'signature' | 'consent'): boolean {
+    return this.signatureForm[field]().touched() && this.signatureForm[field]().invalid();
+  }
+
   constructor() {
     this.destroyRef.onDestroy(() => this.releasePdf());
     afterNextRender(() => void this.load());

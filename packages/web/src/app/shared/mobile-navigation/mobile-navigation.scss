@@ -1,6 +1,11 @@
 :host {
+  display: contents;
+}
+
+dialog {
   position: fixed;
   inset-block: 0;
+  left: auto;
   right: 0;
   z-index: 22;
   display: flex;
@@ -12,6 +17,13 @@
   background: var(--color-surface-raised);
   box-shadow: -4px 0 18px rgb(20 20 35 / 0.2);
   transform: translateX(0);
+  height: 100dvh;
+  max-height: none;
+  margin: 0;
+}
+
+dialog::backdrop {
+  background: rgb(20 20 35 / 0.42);
 }
 
 .mobile-nav-header {

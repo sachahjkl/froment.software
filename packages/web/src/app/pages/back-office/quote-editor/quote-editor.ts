@@ -3,10 +3,12 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
+  DestroyRef,
   HostListener,
   inject,
   signal,
 } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import {
   applyEach,
   disabled,
@@ -88,9 +90,10 @@ export class QuoteEditor {
   private readonly router = inject(Router);
   private readonly textCopy = inject(TextCopy);
   private readonly sanitizer = inject(DomSanitizer);
-  private readonly quoteIdParameter = this.route.snapshot.paramMap.get('quoteId');
-  private readonly quoteId = this.decodeQuoteId(this.quoteIdParameter);
-  protected readonly isNew = computed(() => this.quoteIdParameter === null);
+  private readonly destroyRef = inject(DestroyRef);
+  private readonly quoteId = signal<UlidValue | undefined>(undefined);
+  private routeRequest = 0;
+  protected readonly isNew = signal(false);
   protected readonly clients = signal<ClientListValue>([]);
   protected readonly conditionPresets = signal<QuoteConditionPresetListValue>([]);
   protected readonly detail = signal<QuoteDetailValue | undefined>(undefined);
@@ -154,7 +157,7 @@ export class QuoteEditor {
       this.loading() ||
       !this.editable() ||
       this.quoteForm().invalid() ||
-      (this.quoteId !== undefined && !this.quoteForm().dirty()),
+      (this.quoteId() !== undefined && !this.quoteForm().dirty()),
   );
   protected readonly sendDisabled = computed(() => {
     const quote = this.detail();
@@ -171,8 +174,9 @@ export class QuoteEditor {
   );
   protected readonly previewUrl = computed(() => {
     const version = this.previewVersion();
-    if (this.quoteId === undefined || version === undefined) return undefined;
-    return `/api/quotes/${this.quoteId}/revisions/${version}/preview`;
+    const quoteId = this.quoteId();
+    if (quoteId === undefined || version === undefined) return undefined;
+    return `/api/quotes/${quoteId}/revisions/${version}/preview`;
   });
   protected readonly previewFrameUrl = computed<SafeResourceUrl | undefined>(() => {
     const url = this.previewUrl();
@@ -180,7 +184,11 @@ export class QuoteEditor {
   });
 
   constructor() {
-    afterNextRender(() => void this.load());
+    afterNextRender(() => {
+      this.route.paramMap.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((params) => {
+        void this.load(params.get('quoteId'));
+      });
+    });
   }
 
   protected addLine(): void {
@@ -231,7 +239,8 @@ export class QuoteEditor {
       this.error.set(undefined);
       const model = this.model();
       const common = { conditions: model.conditions, lines, title: model.title.trim() };
-      if (this.quoteId === undefined) {
+      const quoteId = this.quoteId();
+      if (quoteId === undefined) {
         const clientId = this.decodeQuoteId(model.clientId);
         if (clientId === undefined) {
           this.error.set('backOffice.quote.validation');
@@ -258,7 +267,7 @@ export class QuoteEditor {
         ...common,
         expectedVersion: current.version,
       };
-      const outcome = await this.quotesApi.createRevision(this.quoteId, request);
+      const outcome = await this.quotesApi.createRevision(quoteId, request);
       this.saving.set(false);
       if (!outcome.success) return this.setError(outcome.code);
       this.detail.set(outcome.result);
@@ -287,23 +296,25 @@ export class QuoteEditor {
   }
 
   protected async generatePdf(version: number): Promise<void> {
-    if (this.quoteId === undefined) return;
+    const quoteId = this.quoteId();
+    if (quoteId === undefined) return;
     this.pdfPendingVersion.set(version);
     this.error.set(undefined);
-    const outcome = await this.quotesApi.renderPdf(this.quoteId, version);
+    const outcome = await this.quotesApi.renderPdf(quoteId, version);
     this.pdfPendingVersion.set(undefined);
     if (!outcome.success) return this.setError(outcome.code);
     this.generatedPdfVersions.update((versions) => new Set([...versions, version]));
   }
 
   protected async sendQuote(): Promise<void> {
-    if (this.quoteId === undefined || this.sendDisabled()) return;
+    const quoteId = this.quoteId();
+    if (quoteId === undefined || this.sendDisabled()) return;
     const quote = this.detail();
     if (quote === undefined) return;
     this.sending.set(true);
     this.error.set(undefined);
     this.linkCopied.set(false);
-    const outcome = await this.quotesApi.send(this.quoteId, { expectedVersion: quote.version });
+    const outcome = await this.quotesApi.send(quoteId, { expectedVersion: quote.version });
     this.sending.set(false);
     if (!outcome.success) return this.setError(outcome.code);
     this.detail.set({ ...quote, status: outcome.result.status });
@@ -321,30 +332,48 @@ export class QuoteEditor {
   }
 
   protected pdfUrl(version: number): string | undefined {
-    if (this.quoteId === undefined || !this.generatedPdfVersions().has(version)) return undefined;
-    return `/api/quotes/${this.quoteId}/revisions/${version}/pdf`;
+    const quoteId = this.quoteId();
+    if (quoteId === undefined || !this.generatedPdfVersions().has(version)) return undefined;
+    return `/api/quotes/${quoteId}/revisions/${version}/pdf`;
   }
 
-  private async load(): Promise<void> {
-    if (this.quoteIdParameter !== null && this.quoteId === undefined) {
+  private async load(parameter: string | null): Promise<void> {
+    const request = ++this.routeRequest;
+    const quoteId = this.decodeQuoteId(parameter);
+    this.quoteId.set(quoteId);
+    this.isNew.set(parameter === null);
+    this.detail.set(undefined);
+    this.previewVersion.set(undefined);
+    this.pdfPendingVersion.set(undefined);
+    this.generatedPdfVersions.set(new Set());
+    this.sentLink.set(undefined);
+    this.linkCopied.set(false);
+    this.error.set(undefined);
+    this.unavailable.set(false);
+    this.loading.set(true);
+    this.model.set({ clientId: '', conditions: '', lines: [emptyLine()], title: '' });
+    this.quoteForm().reset();
+    if (parameter !== null && quoteId === undefined) {
       this.error.set('quote.not_found');
       this.unavailable.set(true);
       this.loading.set(false);
       return;
     }
     try {
-      if (this.quoteId === undefined) {
+      if (quoteId === undefined) {
         const [conditionPresets, clients] = await Promise.all([
           this.conditionPresetsApi.list(),
           this.clientsApi.list(),
         ]);
+        if (request !== this.routeRequest) return;
         this.conditionPresets.set(conditionPresets);
         this.clients.set(clients.filter((client) => !client.archived));
       } else {
         const [conditionPresets, outcome] = await Promise.all([
           this.conditionPresetsApi.list(),
-          this.quotesApi.get(this.quoteId),
+          this.quotesApi.get(quoteId),
         ]);
+        if (request !== this.routeRequest) return;
         this.conditionPresets.set(conditionPresets);
         if (!outcome.success) {
           this.setError(outcome.code);
@@ -357,10 +386,11 @@ export class QuoteEditor {
         this.quoteForm().reset();
       }
     } catch {
+      if (request !== this.routeRequest) return;
       this.error.set('quote.error');
       this.unavailable.set(true);
     } finally {
-      this.loading.set(false);
+      if (request === this.routeRequest) this.loading.set(false);
     }
   }
 

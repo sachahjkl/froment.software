@@ -23,4 +23,26 @@ describe('PageMetadata', () => {
     );
     expect(document.head.querySelectorAll('script[data-blog-post]')).toHaveLength(1);
   });
+
+  it('clears article metadata when a blog post is absent', () => {
+    TestBed.configureTestingModule({ providers: [provideRouter([])] });
+    const metadata = TestBed.inject(PageMetadata);
+    metadata.setBlogPost({
+      slug: 'post',
+      published: '2026-08-01',
+      updated: '2026-08-02',
+      title: 'Post',
+      description: 'Description',
+      topics: ['Angular'],
+      html: '<p>Post</p>',
+    });
+
+    metadata.clearBlogPost();
+
+    expect(document.head.querySelector('meta[property="og:type"]')?.getAttribute('content')).toBe(
+      'website',
+    );
+    expect(document.head.querySelector('meta[property="article:published_time"]')).toBeNull();
+    expect(document.head.querySelector('script[data-blog-post]')).toBeNull();
+  });
 });

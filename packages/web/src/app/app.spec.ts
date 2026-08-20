@@ -128,14 +128,29 @@ describe('App shell', () => {
   });
 
   it('opens the mobile navigation and closes it after navigation', async () => {
+    Object.defineProperty(HTMLDialogElement.prototype, 'showModal', {
+      configurable: true,
+      value(this: HTMLDialogElement) {
+        this.setAttribute('open', '');
+      },
+    });
+    Object.defineProperty(HTMLDialogElement.prototype, 'close', {
+      configurable: true,
+      value(this: HTMLDialogElement) {
+        this.removeAttribute('open');
+      },
+    });
     await navigate(fixture, router, '/about');
 
     const trigger = element.querySelector<HTMLButtonElement>('.menu-trigger')!;
     trigger.click();
     await fixture.whenStable();
     const navigation = element.querySelector<HTMLElement>('app-mobile-navigation')!;
+    const dialog = navigation.querySelector<HTMLDialogElement>('dialog')!;
     expect(trigger.getAttribute('aria-expanded')).toBe('true');
     expect(document.body.style.overflow).toBe('hidden');
+    expect(dialog.getAttribute('aria-modal')).toBe('true');
+    expect(dialog.getAttribute('aria-labelledby')).toBe('mobile-navigation-title');
     const closeButton = navigation.querySelector<HTMLButtonElement>('.mobile-nav-header button')!;
     const languageSelect = navigation.querySelector<HTMLSelectElement>('select')!;
     expect(document.activeElement).toBe(closeButton);

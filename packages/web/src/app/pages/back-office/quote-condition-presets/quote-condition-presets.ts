@@ -79,8 +79,7 @@ export class QuoteConditionPresets {
         this.error.set(outcome.code);
         return;
       }
-      await this.load();
-      this.cancel();
+      if (await this.load()) this.cancel();
     });
   }
 
@@ -108,13 +107,19 @@ export class QuoteConditionPresets {
     await this.load();
   }
 
-  private async load(): Promise<void> {
+  private async load(): Promise<boolean> {
     try {
       this.presets.set(await this.api.list());
+      return true;
     } catch {
       this.error.set('quote.error');
+      return false;
     } finally {
       this.loading.set(false);
     }
+  }
+
+  protected invalid(field: keyof PresetModel): boolean {
+    return this.presetForm[field]().touched() && this.presetForm[field]().invalid();
   }
 }

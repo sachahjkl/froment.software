@@ -2,6 +2,7 @@ import { Component } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap, provideRouter, Router } from '@angular/router';
 import type { InvoiceDetailValue } from '@froment/contracts';
+import { of, Subject } from 'rxjs';
 import { vi } from 'vitest';
 
 import { InvoicesApi } from '@backoffice/invoices-api';
@@ -118,6 +119,7 @@ const setup = async (status?: InvoiceDetailValue['status']) => {
         provide: ActivatedRoute,
         useValue: {
           snapshot: { paramMap: convertToParamMap(status === undefined ? {} : { invoiceId }) },
+          paramMap: of(convertToParamMap(status === undefined ? {} : { invoiceId })),
         },
       },
       { provide: OrdersApi, useValue: { list: vi.fn().mockResolvedValue([order]) } },
@@ -132,6 +134,56 @@ const setup = async (status?: InvoiceDetailValue['status']) => {
 
 describe('InvoiceEditor', () => {
   afterEach(() => vi.restoreAllMocks());
+
+  it('keeps the newest invoice when route responses finish out of order', async () => {
+    type InvoiceOutcome = { readonly success: true; readonly result: InvoiceDetailValue };
+    const secondInvoiceId = '01ARZ3NDEKTSV4RRFFQ69G5FB0';
+    const params = new Subject<ReturnType<typeof convertToParamMap>>();
+    let resolveFirst!: (value: InvoiceOutcome) => void;
+    let resolveSecond!: (value: InvoiceOutcome) => void;
+    const first = new Promise<InvoiceOutcome>((resolve) => (resolveFirst = resolve));
+    const second = new Promise<InvoiceOutcome>((resolve) => (resolveSecond = resolve));
+    const get = vi.fn((id: string) => (id === invoiceId ? first : second));
+    TestBed.configureTestingModule({
+      providers: [
+        provideRouter([]),
+        {
+          provide: ActivatedRoute,
+          useValue: {
+            snapshot: { paramMap: convertToParamMap({ invoiceId }) },
+            paramMap: params,
+          },
+        },
+        { provide: OrdersApi, useValue: { list: () => Promise.resolve([]) } },
+        { provide: InvoicesApi, useValue: { get } },
+      ],
+    });
+    const fixture = TestBed.createComponent(InvoiceEditor);
+    const root: HTMLElement = fixture.nativeElement;
+    await fixture.whenStable();
+
+    params.next(convertToParamMap({ invoiceId }));
+    params.next(convertToParamMap({ invoiceId: secondInvoiceId }));
+    resolveSecond({
+      success: true,
+      result: {
+        ...detail(),
+        id: secondInvoiceId,
+        currentRevision: { ...detail().currentRevision, title: 'Newest invoice' },
+      },
+    });
+    await vi.waitFor(() =>
+      expect(root.querySelector<HTMLInputElement>('input[type="text"]')?.value).toBe(
+        'Newest invoice',
+      ),
+    );
+    resolveFirst({ success: true, result: detail() });
+    await fixture.whenStable();
+
+    expect(root.querySelector<HTMLInputElement>('input[type="text"]')?.value).toBe(
+      'Newest invoice',
+    );
+  });
 
   it('creates an invoice from an order and replaces the current navigation', async () => {
     const { api, fixture, root } = await setup();
@@ -317,7 +369,10 @@ describe('InvoiceEditor', () => {
         provideRouter([]),
         {
           provide: ActivatedRoute,
-          useValue: { snapshot: { paramMap: convertToParamMap({ invoiceId: 'invalid' }) } },
+          useValue: {
+            snapshot: { paramMap: convertToParamMap({ invoiceId: 'invalid' }) },
+            paramMap: of(convertToParamMap({ invoiceId: 'invalid' })),
+          },
         },
         { provide: OrdersApi, useValue: {} },
         { provide: InvoicesApi, useValue: {} },

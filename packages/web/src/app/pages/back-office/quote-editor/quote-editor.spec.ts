@@ -1,6 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
 import { vi } from 'vitest';
+import { of, Subject } from 'rxjs';
 
 import { ClientsApi } from '@backoffice/clients-api';
 import { QuotesApi } from '@backoffice/quotes-api';
@@ -45,6 +46,53 @@ const quoteDetail = {
 };
 
 describe('QuoteEditor', () => {
+  it('keeps the newest quote when route responses finish out of order', async () => {
+    type QuoteOutcome = { readonly success: true; readonly result: typeof quoteDetail };
+    const secondQuoteId = '01ARZ3NDEKTSV4RRFFQ69G5FB0';
+    const params = new Subject<ReturnType<typeof convertToParamMap>>();
+    let resolveFirst!: (value: QuoteOutcome) => void;
+    let resolveSecond!: (value: QuoteOutcome) => void;
+    const first = new Promise<QuoteOutcome>((resolve) => (resolveFirst = resolve));
+    const second = new Promise<QuoteOutcome>((resolve) => (resolveSecond = resolve));
+    const get = vi.fn((id: string) => (id === quoteId ? first : second));
+    TestBed.configureTestingModule({
+      providers: [
+        provideRouter([]),
+        {
+          provide: ActivatedRoute,
+          useValue: {
+            snapshot: { paramMap: convertToParamMap({ quoteId }) },
+            paramMap: params,
+          },
+        },
+        { provide: ClientsApi, useValue: { list: () => Promise.resolve([]) } },
+        { provide: QuoteConditionPresetsApi, useValue: { list: () => Promise.resolve([]) } },
+        { provide: QuotesApi, useValue: { get } },
+      ],
+    });
+    const fixture = TestBed.createComponent(QuoteEditor);
+    const root: HTMLElement = fixture.nativeElement;
+    await fixture.whenStable();
+
+    params.next(convertToParamMap({ quoteId }));
+    params.next(convertToParamMap({ quoteId: secondQuoteId }));
+    resolveSecond({
+      success: true,
+      result: {
+        ...quoteDetail,
+        id: secondQuoteId,
+        currentRevision: { ...quoteDetail.currentRevision, title: 'Newest quote' },
+      },
+    });
+    await vi.waitFor(() =>
+      expect(root.querySelector<HTMLInputElement>('#quote-name')?.value).toBe('Newest quote'),
+    );
+    resolveFirst({ success: true, result: quoteDetail });
+    await fixture.whenStable();
+
+    expect(root.querySelector<HTMLInputElement>('#quote-name')?.value).toBe('Newest quote');
+  });
+
   it('adds a quote line without calculating totals in the browser', async () => {
     TestBed.configureTestingModule({
       providers: [
@@ -106,7 +154,10 @@ describe('QuoteEditor', () => {
         provideRouter([]),
         {
           provide: ActivatedRoute,
-          useValue: { snapshot: { paramMap: convertToParamMap({ quoteId: 'invalid' }) } },
+          useValue: {
+            snapshot: { paramMap: convertToParamMap({ quoteId: 'invalid' }) },
+            paramMap: of(convertToParamMap({ quoteId: 'invalid' })),
+          },
         },
         { provide: ClientsApi, useValue: { list: () => Promise.resolve([]) } },
         {
@@ -180,7 +231,10 @@ describe('QuoteEditor', () => {
         provideRouter([]),
         {
           provide: ActivatedRoute,
-          useValue: { snapshot: { paramMap: convertToParamMap({ quoteId }) } },
+          useValue: {
+            snapshot: { paramMap: convertToParamMap({ quoteId }) },
+            paramMap: of(convertToParamMap({ quoteId })),
+          },
         },
         { provide: ClientsApi, useValue: { list: () => Promise.resolve([]) } },
         {

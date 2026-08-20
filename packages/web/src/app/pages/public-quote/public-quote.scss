@@ -3,6 +3,7 @@
 }
 
 .public-quote {
+  min-width: 0;
   width: min(100%, 82rem);
   margin-inline: auto;
   padding: clamp(2rem, 6vw, 5rem) var(--page-x);
@@ -110,7 +111,15 @@
 
 .line-summary li div {
   display: grid;
+  min-width: 0;
   gap: var(--space-1);
+}
+
+.line-summary li strong,
+.conditions p,
+.recipient,
+.quote-heading h1 {
+  overflow-wrap: anywhere;
 }
 
 .conditions {
@@ -207,6 +216,11 @@ form {
   .quote-heading,
   .signature-panel {
     grid-template-columns: 1fr;
+  }
+
+  .line-summary li {
+    min-width: 0;
+    flex-wrap: wrap;
   }
 
   .total-card {

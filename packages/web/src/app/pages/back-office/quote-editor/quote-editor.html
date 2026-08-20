@@ -79,7 +79,18 @@
     </div>
     <label class="field">
       {{ i18n.t('backOffice.quote.conditions') }}
-      <textarea class="input" rows="5" [formField]="quoteForm.conditions"></textarea>
+      <textarea
+        class="input"
+        rows="5"
+        aria-describedby="quote-conditions-error"
+        [attr.aria-invalid]="quoteForm.conditions().invalid() && quoteForm.conditions().touched()"
+        [formField]="quoteForm.conditions"
+      ></textarea>
+      @if (quoteForm.conditions().invalid() && quoteForm.conditions().touched()) {
+      <span id="quote-conditions-error" class="field-error"
+        >{{ i18n.t('backOffice.quote.fieldInvalid') }}</span
+      >
+      }
     </label>
 
     <section class="lines" aria-labelledby="lines-title">

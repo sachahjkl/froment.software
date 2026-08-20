@@ -17,5 +17,8 @@ describe('DataTable', () => {
 
     const table: HTMLElement | null = fixture.nativeElement.querySelector('[appDataTable]');
     expect(table?.classList.contains('data-table')).toBe(true);
+    expect(table?.tabIndex).toBe(0);
+    expect(table?.getAttribute('role')).toBe('region');
+    expect(table?.getAttribute('aria-label')).toMatch(/Tableau|table/i);
   });
 });

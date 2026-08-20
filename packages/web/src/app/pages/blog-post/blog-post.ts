@@ -31,6 +31,8 @@ export class BlogPost {
       const post = this.post();
       if (post) {
         this.metadata.setBlogPost(post);
+      } else {
+        this.metadata.clearBlogPost();
       }
     });
   }

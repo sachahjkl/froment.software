@@ -57,14 +57,14 @@
 - [x] REV-017 Render quote dates in UTC.
 - [ ] REV-018 Store invoice issue dates in the business time zone.
 - [x] REV-019 Validate invoice issue retry versions.
-- [ ] REV-020 React to document route parameter changes.
+- [x] REV-020 React to document route parameter changes.
 - [x] REV-021 Disable invoice issuance for dirty drafts.
-- [ ] REV-022 Expose public quote form validation errors.
-- [ ] REV-023 Expose private form validation errors.
-- [ ] REV-024 Prevent stale client-list responses.
-- [ ] REV-025 Preserve preset reload errors.
-- [ ] REV-026 Make mobile navigation modal.
-- [ ] REV-027 Make overflowing tables keyboard accessible.
+- [x] REV-022 Expose public quote form validation errors.
+- [x] REV-023 Expose private form validation errors.
+- [x] REV-024 Prevent stale client-list responses.
+- [x] REV-025 Preserve preset reload errors.
+- [x] REV-026 Make mobile navigation modal.
+- [x] REV-027 Make overflowing tables keyboard accessible.
 - [ ] REV-028 Configure the production origin at runtime.
 - [ ] REV-029 Serialize image publication.
 - [ ] REV-030 Pin Skopeo through the flake.
@@ -81,10 +81,10 @@
 - [x] REV-041 Limit route versions to safe integers.
 - [x] REV-042 Validate generated quote URLs.
 - [x] REV-043 Reject whitespace-only display names.
-- [ ] REV-044 Keep one main landmark on public quotes.
-- [ ] REV-045 Prevent public quote mobile overflow.
-- [ ] REV-046 Clear stale blog metadata.
-- [ ] REV-047 Translate public quote accessible names.
+- [x] REV-044 Keep one main landmark on public quotes.
+- [x] REV-045 Prevent public quote mobile overflow.
+- [x] REV-046 Clear stale blog metadata.
+- [x] REV-047 Translate public quote accessible names.
 - [x] REV-048 Enforce invoice dates and numbers in SQLite.
 - [x] REV-049 Correct the documented container port.
 - [ ] REV-050 Enforce coverage thresholds for sensitive code.

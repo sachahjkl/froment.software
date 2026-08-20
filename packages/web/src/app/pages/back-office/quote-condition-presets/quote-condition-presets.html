@@ -7,13 +7,36 @@
   <p class="intro">{{ i18n.t('backOffice.conditionPresets.intro') }}</p>
 
   <form (submit)="save($event)">
-    <label class="field">
+    <label class="field" for="preset-name">
       {{ i18n.t('backOffice.conditionPresets.name') }}
-      <input class="input" [formField]="presetForm.name" />
+      <input
+        id="preset-name"
+        class="input"
+        aria-describedby="preset-name-error"
+        [attr.aria-invalid]="invalid('name')"
+        [formField]="presetForm.name"
+      />
+      @if (invalid('name')) {
+      <span id="preset-name-error" class="field-error">
+        {{ i18n.t('backOffice.conditionPresets.nameInvalid') }}
+      </span>
+      }
     </label>
-    <label class="field conditions-field">
+    <label class="field conditions-field" for="preset-conditions">
       {{ i18n.t('backOffice.quote.conditions') }}
-      <textarea class="input" rows="6" [formField]="presetForm.conditions"></textarea>
+      <textarea
+        id="preset-conditions"
+        class="input"
+        rows="6"
+        aria-describedby="preset-conditions-error"
+        [attr.aria-invalid]="invalid('conditions')"
+        [formField]="presetForm.conditions"
+      ></textarea>
+      @if (invalid('conditions')) {
+      <span id="preset-conditions-error" class="field-error">
+        {{ i18n.t('backOffice.conditionPresets.conditionsInvalid') }}
+      </span>
+      }
     </label>
     @if (error(); as errorKey) {
     <p class="notice danger" role="alert">{{ i18n.t(errorKey) }}</p>

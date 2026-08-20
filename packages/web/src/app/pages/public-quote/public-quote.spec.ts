@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { PublicQuoteApi } from '../../public-quote/public-quote-api';
 import { PublicQuote } from './public-quote';
+import { I18nService } from '@app/i18n.service';
 
 const token = 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA';
 const quote = {
@@ -122,5 +123,22 @@ describe('PublicQuote', () => {
       signature: { kind: 'typed', value: 'Ada Lovelace' },
     });
     expect(root.textContent).toMatch(/accepté|accepted/i);
+  });
+
+  it('uses one main landmark, translates its summary, and describes invalid fields', async () => {
+    TestBed.inject(I18nService).setLanguage('en');
+    const fixture = TestBed.createComponent(PublicQuote);
+    await fixture.whenStable();
+    const root: HTMLElement = fixture.nativeElement;
+    const name = root.querySelector<HTMLInputElement>('#public-quote-signer-name')!;
+
+    name.dispatchEvent(new Event('blur'));
+    await fixture.whenStable();
+
+    expect(root.querySelector('main')).toBeNull();
+    expect(root.querySelector('.quote-facts')?.getAttribute('aria-label')).toBe('Quote summary');
+    expect(name.getAttribute('aria-invalid')).toBe('true');
+    expect(name.getAttribute('aria-describedby')).toBe('public-quote-signer-name-error');
+    expect(root.querySelector('#public-quote-signer-name-error')).not.toBeNull();
   });
 });

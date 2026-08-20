@@ -12,75 +12,173 @@
   <p aria-live="polite">{{ i18n.t('backOffice.issuer.loading') }}</p>
   } @else {
   <form (submit)="save($event)">
-    <label class="field wide">
+    <label class="field wide" for="issuer-display-name">
       {{ i18n.t('backOffice.issuer.displayName') }}
       <input
+        id="issuer-display-name"
         class="input"
         type="text"
         autocomplete="organization"
+        aria-describedby="issuer-display-name-error"
+        [attr.aria-invalid]="invalid('displayName')"
         [formField]="settingsForm.displayName"
       />
+      @if (invalid('displayName')) {
+      <span id="issuer-display-name-error" class="field-error"
+        >{{ i18n.t('backOffice.issuer.displayNameInvalid') }}</span
+      >
+      }
     </label>
-    <label class="field wide">
+    <label class="field wide" for="issuer-address-line-1">
       {{ i18n.t('backOffice.clients.addressLine1') }}
       <input
+        id="issuer-address-line-1"
         class="input"
         type="text"
         autocomplete="address-line1"
+        aria-describedby="issuer-address-line-1-error"
+        [attr.aria-invalid]="invalid('addressLine1')"
         [formField]="settingsForm.addressLine1"
       />
+      @if (invalid('addressLine1')) {
+      <span id="issuer-address-line-1-error" class="field-error"
+        >{{ i18n.t('backOffice.issuer.fieldInvalid') }}</span
+      >
+      }
     </label>
-    <label class="field wide">
+    <label class="field wide" for="issuer-address-line-2">
       {{ i18n.t('backOffice.clients.addressLine2') }}
       <input
+        id="issuer-address-line-2"
         class="input"
         type="text"
         autocomplete="address-line2"
+        aria-describedby="issuer-address-line-2-error"
+        [attr.aria-invalid]="invalid('addressLine2')"
         [formField]="settingsForm.addressLine2"
       />
+      @if (invalid('addressLine2')) {
+      <span id="issuer-address-line-2-error" class="field-error"
+        >{{ i18n.t('backOffice.issuer.fieldInvalid') }}</span
+      >
+      }
     </label>
-    <label class="field">
+    <label class="field" for="issuer-postal-code">
       {{ i18n.t('backOffice.clients.postalCode') }}
       <input
+        id="issuer-postal-code"
         class="input"
         type="text"
         autocomplete="postal-code"
+        aria-describedby="issuer-postal-code-error"
+        [attr.aria-invalid]="invalid('postalCode')"
         [formField]="settingsForm.postalCode"
       />
+      @if (invalid('postalCode')) {
+      <span id="issuer-postal-code-error" class="field-error"
+        >{{ i18n.t('backOffice.issuer.fieldInvalid') }}</span
+      >
+      }
     </label>
-    <label class="field">
+    <label class="field" for="issuer-city">
       {{ i18n.t('backOffice.clients.city') }}
       <input
+        id="issuer-city"
         class="input"
         type="text"
         autocomplete="address-level2"
+        aria-describedby="issuer-city-error"
+        [attr.aria-invalid]="invalid('city')"
         [formField]="settingsForm.city"
       />
+      @if (invalid('city')) {
+      <span id="issuer-city-error" class="field-error"
+        >{{ i18n.t('backOffice.issuer.fieldInvalid') }}</span
+      >
+      }
     </label>
-    <label class="field">
+    <label class="field" for="issuer-country">
       {{ i18n.t('backOffice.clients.country') }}
       <input
+        id="issuer-country"
         class="input"
         type="text"
         autocomplete="country-name"
+        aria-describedby="issuer-country-error"
+        [attr.aria-invalid]="invalid('country')"
         [formField]="settingsForm.country"
       />
+      @if (invalid('country')) {
+      <span id="issuer-country-error" class="field-error"
+        >{{ i18n.t('backOffice.issuer.fieldInvalid') }}</span
+      >
+      }
     </label>
-    <label class="field">
+    <label class="field" for="issuer-email">
       {{ i18n.t('backOffice.clients.email') }}
-      <input class="input" type="email" autocomplete="email" [formField]="settingsForm.email" />
+      <input
+        id="issuer-email"
+        class="input"
+        type="email"
+        autocomplete="email"
+        aria-describedby="issuer-email-error"
+        [attr.aria-invalid]="invalid('email')"
+        [formField]="settingsForm.email"
+      />
+      @if (invalid('email')) {
+      <span id="issuer-email-error" class="field-error"
+        >{{ i18n.t('backOffice.issuer.fieldInvalid') }}</span
+      >
+      }
     </label>
-    <label class="field">
+    <label class="field" for="issuer-phone">
       {{ i18n.t('backOffice.issuer.phone') }}
-      <input class="input" type="tel" autocomplete="tel" [formField]="settingsForm.phone" />
+      <input
+        id="issuer-phone"
+        class="input"
+        type="tel"
+        autocomplete="tel"
+        aria-describedby="issuer-phone-error"
+        [attr.aria-invalid]="invalid('phone')"
+        [formField]="settingsForm.phone"
+      />
+      @if (invalid('phone')) {
+      <span id="issuer-phone-error" class="field-error"
+        >{{ i18n.t('backOffice.issuer.fieldInvalid') }}</span
+      >
+      }
     </label>
-    <label class="field">
+    <label class="field" for="issuer-registration-number">
       {{ i18n.t('backOffice.issuer.registrationNumber') }}
-      <input class="input" type="text" [formField]="settingsForm.registrationNumber" />
+      <input
+        id="issuer-registration-number"
+        class="input"
+        type="text"
+        aria-describedby="issuer-registration-number-error"
+        [attr.aria-invalid]="invalid('registrationNumber')"
+        [formField]="settingsForm.registrationNumber"
+      />
+      @if (invalid('registrationNumber')) {
+      <span id="issuer-registration-number-error" class="field-error"
+        >{{ i18n.t('backOffice.issuer.fieldInvalid') }}</span
+      >
+      }
     </label>
-    <label class="field">
+    <label class="field" for="issuer-vat-number">
       {{ i18n.t('backOffice.issuer.vatNumber') }}
-      <input class="input" type="text" [formField]="settingsForm.vatNumber" />
+      <input
+        id="issuer-vat-number"
+        class="input"
+        type="text"
+        aria-describedby="issuer-vat-number-error"
+        [attr.aria-invalid]="invalid('vatNumber')"
+        [formField]="settingsForm.vatNumber"
+      />
+      @if (invalid('vatNumber')) {
+      <span id="issuer-vat-number-error" class="field-error"
+        >{{ i18n.t('backOffice.issuer.fieldInvalid') }}</span
+      >
+      }
     </label>
     <div class="actions">
       <button appButton variant="primary" type="submit" [disabled]="saveDisabled()">

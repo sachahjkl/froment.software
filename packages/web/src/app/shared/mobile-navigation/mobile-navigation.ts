@@ -18,7 +18,6 @@ import { LanguageSelector } from '../language-selector/language-selector';
   styleUrl: './mobile-navigation.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: {
-    id: 'mobile-navigation',
     '(keydown)': 'trapFocus($event)',
   },
 })
@@ -27,6 +26,7 @@ export class MobileNavigation {
   protected readonly navigation = inject(MOBILE_NAVIGATION);
   private readonly element = inject<ElementRef<HTMLElement>>(ElementRef);
   private readonly closeButton = viewChild.required<ElementRef<HTMLButtonElement>>('closeButton');
+  private readonly dialog = viewChild.required<ElementRef<HTMLDialogElement>>('dialog');
   private wasOpen = false;
 
   constructor() {
@@ -34,7 +34,12 @@ export class MobileNavigation {
       write: () => {
         const open = this.navigation.open();
         if (open && !this.wasOpen) {
+          const dialog = this.dialog().nativeElement;
+          if (!dialog.open) dialog.showModal();
           this.closeButton().nativeElement.focus();
+        } else if (!open && this.wasOpen) {
+          const dialog = this.dialog().nativeElement;
+          dialog.close();
         }
         this.wasOpen = open;
       },
@@ -47,7 +52,7 @@ export class MobileNavigation {
     }
 
     const focusable = Array.from(
-      this.element.nativeElement.querySelectorAll<HTMLElement>('a[href], button, select'),
+      this.dialog().nativeElement.querySelectorAll<HTMLElement>('a[href], button, select'),
     ).filter(
       (element) =>
         !(element instanceof HTMLButtonElement || element instanceof HTMLSelectElement) ||
@@ -67,5 +72,9 @@ export class MobileNavigation {
       event.preventDefault();
       first.focus();
     }
+  }
+
+  protected close(): void {
+    this.navigation.close();
   }
 }

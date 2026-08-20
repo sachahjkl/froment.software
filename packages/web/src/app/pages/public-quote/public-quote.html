@@ -1,4 +1,4 @@
-<main class="public-quote" aria-labelledby="public-quote-title">
+<section class="public-quote" aria-labelledby="public-quote-title">
   @if (loading()) {
   <section class="state-card" aria-live="polite">
     <p class="eyebrow">{{ i18n.t('publicQuote.eyebrow') }}</p>
@@ -23,7 +23,7 @@
     </div>
   </header>
 
-  <section class="quote-facts" aria-label="Résumé du devis">
+  <section class="quote-facts" [attr.aria-label]="i18n.t('publicQuote.summary')">
     <div>
       <span>{{ i18n.t('publicQuote.netTotal') }}</span>
       <strong>{{ formatMoney(currentQuote.snapshot.netTotalCents) }}</strong>
@@ -92,24 +92,56 @@
       <p>{{ i18n.t('publicQuote.signatureIntro') }}</p>
     </div>
     <form (submit)="sign($event)">
-      <label class="field">
+      <label class="field" for="public-quote-signer-name">
         {{ i18n.t('publicQuote.signerName') }}
         <input
+          id="public-quote-signer-name"
           class="input"
           type="text"
           autocomplete="name"
+          aria-describedby="public-quote-signer-name-error"
+          [attr.aria-invalid]="invalid('signerName')"
           [formField]="signatureForm.signerName"
         />
+        @if (invalid('signerName')) {
+        <span id="public-quote-signer-name-error" class="field-error"
+          >{{ i18n.t('publicQuote.nameInvalid') }}</span
+        >
+        }
       </label>
-      <label class="field">
+      <label class="field" for="public-quote-signature">
         {{ i18n.t('publicQuote.typedSignature') }}
-        <input class="input signature-input" type="text" [formField]="signatureForm.signature" />
-        <span class="field-hint">{{ i18n.t('publicQuote.typedSignatureHint') }}</span>
+        <input
+          id="public-quote-signature"
+          class="input signature-input"
+          type="text"
+          aria-describedby="public-quote-signature-hint public-quote-signature-error"
+          [attr.aria-invalid]="invalid('signature')"
+          [formField]="signatureForm.signature"
+        />
+        <span id="public-quote-signature-hint" class="field-hint"
+          >{{ i18n.t('publicQuote.typedSignatureHint') }}</span
+        >
+        @if (invalid('signature')) {
+        <span id="public-quote-signature-error" class="field-error"
+          >{{ i18n.t('publicQuote.signatureInvalid') }}</span
+        >
+        }
       </label>
       <label class="choice consent">
-        <input type="checkbox" [formField]="signatureForm.consent" />
+        <input
+          type="checkbox"
+          aria-describedby="public-quote-consent-error"
+          [attr.aria-invalid]="invalid('consent')"
+          [formField]="signatureForm.consent"
+        />
         <span>{{ i18n.t('publicQuote.consent') }}</span>
       </label>
+      @if (invalid('consent')) {
+      <span id="public-quote-consent-error" class="field-error"
+        >{{ i18n.t('publicQuote.consentInvalid') }}</span
+      >
+      }
       <button appButton variant="primary" type="submit" [disabled]="signDisabled()">
         @if (signing()) { {{ i18n.t('publicQuote.signing') }} } @else { {{
         i18n.t('publicQuote.sign') }} }
@@ -133,4 +165,4 @@
   } @if (quote() && error(); as errorKey) {
   <p class="notice danger" role="alert">{{ i18n.t(errorKey) }}</p>
   }
-</main>
+</section>

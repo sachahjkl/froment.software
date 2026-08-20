@@ -102,7 +102,7 @@ export class PageMetadata {
     this.updateCanonicalLink(url);
   }
 
-  private clearBlogPost(): void {
+  clearBlogPost(): void {
     this.meta.updateTag({ property: 'og:type', content: 'website' });
     this.meta.removeTag('property="article:published_time"');
     this.meta.removeTag('property="article:modified_time"');

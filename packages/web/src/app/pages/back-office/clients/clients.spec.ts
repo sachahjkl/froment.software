@@ -1,5 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
+import { vi } from 'vitest';
 
 import { ClientsApi } from '@backoffice/clients-api';
 import { type ClientCreateRequestValue, type ClientListValue } from '@froment/contracts';
@@ -28,6 +29,32 @@ class ClientsApiStub {
 }
 
 describe('Clients', () => {
+  it('does not replace a created client with an older list response', async () => {
+    let resolveList!: (clients: ClientListValue) => void;
+    const api = new ClientsApiStub();
+    vi.spyOn(api, 'list').mockReturnValue(new Promise((resolve) => (resolveList = resolve)));
+    TestBed.configureTestingModule({
+      providers: [provideRouter([]), { provide: ClientsApi, useValue: api }],
+    });
+    const fixture = TestBed.createComponent(Clients);
+    await fixture.whenStable();
+    const root: HTMLElement = fixture.nativeElement;
+    const input = root.querySelector<HTMLInputElement>('input')!;
+
+    input.value = 'Created while loading';
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    await fixture.whenStable();
+    root
+      .querySelector<HTMLFormElement>('form')!
+      .dispatchEvent(new SubmitEvent('submit', { bubbles: true }));
+    await fixture.whenStable();
+    expect(api.createdNames).toEqual(['Created while loading']);
+    resolveList([]);
+    await vi.waitFor(() => expect(root.textContent).not.toMatch(/Loading clients|Chargement/));
+
+    expect(root.textContent).toContain('Created while loading');
+  });
+
   it('creates and displays a client', async () => {
     const api = new ClientsApiStub();
     TestBed.configureTestingModule({
