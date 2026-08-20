@@ -6,7 +6,7 @@ import { createHash } from 'node:crypto';
 import { request as httpRequest } from 'node:http';
 import { createServer } from 'node:net';
 
-import { Api, ClientSummary, QuoteDetail } from '@froment/contracts';
+import { Api, ClientSummary, OrderList, QuoteDetail } from '@froment/contracts';
 import Sqlite from 'better-sqlite3';
 import { Effect, Schema } from 'effect';
 import { FetchHttpClient, HttpClient, HttpClientRequest } from 'effect/unstable/http';
@@ -1074,6 +1074,27 @@ describe('HTTP server', () => {
       canSign: false,
     });
 
+    const anonymousOrderList = await fetch(`${baseUrl}/api/orders`);
+    expect(anonymousOrderList.status).toBe(401);
+    const orderListResponse = await fetch(`${baseUrl}/api/orders`, { headers: { cookie } });
+    expect(orderListResponse.status).toBe(200);
+    expect(orderListResponse.headers.get('cache-control')).toBe('no-store');
+    const orderList = Schema.decodeUnknownSync(OrderList)(await orderListResponse.json());
+    expect(orderList).toEqual([
+      {
+        id: accepted.orderId,
+        quoteId: quote.id,
+        revisionId: revised.currentRevision.id,
+        clientId: client.id,
+        clientDisplayName: 'Quote client',
+        title: 'Revised quote',
+        currency: 'EUR',
+        totalCents: 2,
+        createdAt: accepted.acceptedAt,
+        invoiceId: null,
+      },
+    ]);
+
     const invoiceCreatePayload = {
       orderId: accepted.orderId,
       serviceDate: '2026-08-20',
@@ -1118,6 +1139,13 @@ describe('HTTP server', () => {
         totalCents: 2,
       },
     });
+    const invoicedOrderListResponse = await fetch(`${baseUrl}/api/orders`, {
+      headers: { cookie },
+    });
+    const invoicedOrderList = Schema.decodeUnknownSync(OrderList)(
+      await invoicedOrderListResponse.json(),
+    );
+    expect(invoicedOrderList).toEqual([{ ...orderList[0], invoiceId: invoice.id }]);
     const duplicateInvoice = await fetch(`${baseUrl}/api/invoices`, {
       method: 'POST',
       headers: writeHeaders,

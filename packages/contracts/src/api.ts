@@ -30,6 +30,7 @@ import {
   ClientSummary,
 } from './clients.js';
 import { Ulid } from './identifiers.js';
+import { OrderList } from './orders.js';
 import {
   QuoteCreateRequest,
   QuoteAmountTooLarge,
@@ -161,6 +162,16 @@ export class ClientsApi extends HttpApiGroup.make('clients', { topLevel: true })
       RequestRateLimited.pipe(HttpApiSchema.status(429)),
       ClientNotFound.pipe(HttpApiSchema.status(404)),
       ClientArchived.pipe(HttpApiSchema.status(409)),
+    ],
+  }),
+) {}
+
+export class OrdersApi extends HttpApiGroup.make('orders', { topLevel: true }).add(
+  HttpApiEndpoint.get('orderList', '/api/orders', {
+    success: OrderList,
+    error: [
+      AuthenticationRequired.pipe(HttpApiSchema.status(401)),
+      PermissionDenied.pipe(HttpApiSchema.status(403)),
     ],
   }),
 ) {}
@@ -436,5 +447,6 @@ export class InvoicesApi extends HttpApiGroup.make('invoices', { topLevel: true 
 export class Api extends HttpApi.make('froment-api')
   .add(SystemApi)
   .add(ClientsApi)
+  .add(OrdersApi)
   .add(QuotesApi)
   .add(InvoicesApi) {}

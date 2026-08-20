@@ -8,7 +8,7 @@
 
 ## Invoices
 
-- [ ] Expose confirmed orders for invoice creation.
+- [x] Expose confirmed orders for invoice creation.
 - [ ] Add the Angular invoice API client.
 - [ ] Add the invoice list and dashboard entry.
 - [ ] Add invoice creation and draft revision forms.

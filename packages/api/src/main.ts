@@ -15,6 +15,7 @@ import { QuotesLive } from './quotes/quotes.js';
 import { QuoteLinksLive } from './quotes/quote-links.js';
 import { QuoteConditionPresetsLive } from './quotes/quote-condition-presets.js';
 import { InvoicesLive } from './invoices/invoices.js';
+import { OrdersLive } from './orders/orders.js';
 import { ServerLive } from './server.js';
 import { ObservabilityLive } from './observability/observability.js';
 
@@ -27,6 +28,7 @@ const ServicesLive = Layer.mergeAll(
   BootstrapLive,
   AuthenticationLive,
   ClientsLive,
+  OrdersLive,
   QuoteServicesLive,
   QuoteLinksLive,
   QuoteConditionPresetsLive,

@@ -26,6 +26,7 @@ import { Quotes } from './quotes/quotes.js';
 import { QuoteLinks } from './quotes/quote-links.js';
 import { QuoteConditionPresets } from './quotes/quote-condition-presets.js';
 import { Invoices } from './invoices/invoices.js';
+import { Orders } from './orders/orders.js';
 import { RequestLimiter, RequestLimiterLive } from './server/request-limiter.js';
 
 const sessionCookieName = '__Host-froment-session';
@@ -337,6 +338,19 @@ const ClientHandlers = HttpApiBuilder.group(Api, 'clients', (handlers) =>
             .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
         }),
       ),
+  ),
+);
+
+const OrderHandlers = HttpApiBuilder.group(Api, 'orders', (handlers) =>
+  Effect.succeed(
+    handlers.handle(
+      'orderList',
+      Effect.fn('orderList')(function* () {
+        yield* setPrivateResponseHeaders;
+        yield* authorizeAdministrator('order.read');
+        return yield* (yield* Orders).list.pipe(Effect.catchTag('DatabaseError', Effect.orDie));
+      }),
+    ),
   ),
 );
 
@@ -663,7 +677,9 @@ const InvoiceHandlers = HttpApiBuilder.group(Api, 'invoices', (handlers) =>
 );
 
 const ApiRoutes = HttpApiBuilder.layer(Api).pipe(
-  Layer.provide(Layer.mergeAll(ApiHandlers, ClientHandlers, QuoteHandlers, InvoiceHandlers)),
+  Layer.provide(
+    Layer.mergeAll(ApiHandlers, ClientHandlers, OrderHandlers, QuoteHandlers, InvoiceHandlers),
+  ),
 );
 
 export const makeServerLayer = (options: {

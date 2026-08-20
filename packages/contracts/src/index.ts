@@ -8,6 +8,12 @@ export {
 export { Ulid, type Ulid as UlidValue } from './identifiers.js';
 export { PermissionCode, type PermissionCode as PermissionCodeValue } from './permissions.js';
 export {
+  OrderList,
+  type OrderList as OrderListValue,
+  OrderSummary,
+  type OrderSummary as OrderSummaryValue,
+} from './orders.js';
+export {
   AuditAction,
   type AuditAction as AuditActionValue,
   AuditEvent,
@@ -121,7 +127,7 @@ export {
   type QuoteSummary as QuoteSummaryValue,
   QuoteVersionConflict,
 } from './quotes.js';
-export { Api, ClientsApi, InvoicesApi, QuotesApi, SystemApi } from './api.js';
+export { Api, ClientsApi, InvoicesApi, OrdersApi, QuotesApi, SystemApi } from './api.js';
 export {
   QuoteConditionPreset,
   type QuoteConditionPreset as QuoteConditionPresetValue,
