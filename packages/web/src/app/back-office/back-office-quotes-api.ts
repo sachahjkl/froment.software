@@ -5,12 +5,15 @@ import {
   DocumentArtifact,
   QuoteFailure,
   QuoteList,
+  QuoteSendResult,
   type QuoteCreateRequestValue,
   type DocumentArtifactValue,
   type QuoteDetailValue,
   type QuoteFailureValue,
   type QuoteListValue,
   type QuoteRevisionCreateRequestValue,
+  type QuoteSendRequestValue,
+  type QuoteSendResultValue,
   type UlidValue,
 } from '@froment/contracts';
 import { Schema } from 'effect';
@@ -68,6 +71,18 @@ export class BackOfficeQuotesApi {
     return requestOutcome(
       this.http.post<unknown>(`/api/quotes/${quoteId}/revisions/${version}/pdf`, undefined),
       DocumentArtifact,
+      QuoteFailure,
+      'quote.error',
+    );
+  }
+
+  async send(
+    quoteId: UlidValue,
+    request: QuoteSendRequestValue,
+  ): Promise<QuoteOutcome<QuoteSendResultValue>> {
+    return requestOutcome(
+      this.http.post<unknown>(`/api/quotes/${quoteId}/send`, request),
+      QuoteSendResult,
       QuoteFailure,
       'quote.error',
     );

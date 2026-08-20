@@ -1,9 +1,47 @@
 import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
+import { vi } from 'vitest';
 
 import { BackOfficeClientsApi } from '../../back-office/back-office-clients-api';
 import { BackOfficeQuotesApi } from '../../back-office/back-office-quotes-api';
+import { TextCopy } from '../../shared/text-copy';
 import { BackOfficeQuoteEditor } from './back-office-quote-editor';
+
+const quoteId = '01ARZ3NDEKTSV4RRFFQ69G5FAY';
+const revisionId = '01ARZ3NDEKTSV4RRFFQ69G5FAZ';
+const quoteDetail = {
+  id: quoteId,
+  clientId: '01ARZ3NDEKTSV4RRFFQ69G5FAV',
+  status: 'draft' as const,
+  version: 2,
+  currentRevision: {
+    id: revisionId,
+    version: 2,
+    clientDisplayName: 'Acme',
+    title: 'Audit',
+    conditions: '',
+    currency: 'EUR' as const,
+    netTotalCents: 1_000,
+    vatTotalCents: 200,
+    totalCents: 1_200,
+    createdAt: '2026-08-20T06:00:00.000Z',
+    createdByUserId: '01ARZ3NDEKTSV4RRFFQ69G5FAW',
+    lines: [
+      {
+        id: '01ARZ3NDEKTSV4RRFFQ69G5FAX',
+        position: 0,
+        description: 'Audit',
+        quantityMilli: 1_000,
+        unitPriceCents: 1_000,
+        vatRateBasisPoints: 2_000,
+        netTotalCents: 1_000,
+        vatTotalCents: 200,
+        totalCents: 1_200,
+      },
+    ],
+  },
+  revisions: [],
+};
 
 describe('BackOfficeQuoteEditor', () => {
   it('adds a quote line without calculating totals in the browser', async () => {
@@ -75,5 +113,63 @@ describe('BackOfficeQuoteEditor', () => {
     fixture.detectChanges();
 
     expect(root.textContent).toMatch(/quantité positive|positive quantity/);
+  });
+
+  it('sends a saved draft, displays its permalink, and disables editing', async () => {
+    const linkUrl =
+      'https://froment.software/api/public/quote-links/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA/pdf';
+    const copy = vi.fn().mockResolvedValue(true);
+    const send = vi.fn().mockResolvedValue({
+      success: true,
+      result: {
+        quoteId,
+        revisionId,
+        status: 'sent',
+        version: 2,
+        link: {
+          id: '01ARZ3NDEKTSV4RRFFQ69G5FAT',
+          url: linkUrl,
+          expiresAt: '2026-09-19T06:00:00.000Z',
+        },
+      },
+    });
+    TestBed.configureTestingModule({
+      providers: [
+        provideRouter([]),
+        {
+          provide: ActivatedRoute,
+          useValue: { snapshot: { paramMap: convertToParamMap({ quoteId }) } },
+        },
+        { provide: BackOfficeClientsApi, useValue: { list: () => Promise.resolve([]) } },
+        { provide: TextCopy, useValue: { copy } },
+        {
+          provide: BackOfficeQuotesApi,
+          useValue: { get: () => Promise.resolve({ success: true, result: quoteDetail }), send },
+        },
+      ],
+    });
+    const fixture = TestBed.createComponent(BackOfficeQuoteEditor);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+    const root: HTMLElement = fixture.nativeElement;
+    const sendButton = root.querySelector<HTMLButtonElement>('.send-quote');
+    if (sendButton === null) throw new Error('The send button is unavailable.');
+
+    sendButton.click();
+    await fixture.whenStable();
+
+    expect(send).toHaveBeenCalledWith(quoteId, { expectedVersion: 2 });
+    expect(root.querySelector<HTMLAnchorElement>('.sent-link a')?.href).toContain(
+      '/api/public/quote-links/',
+    );
+    expect(root.textContent).toMatch(/Envoyé|Sent/);
+    expect(root.querySelector<HTMLInputElement>('#quote-name')?.disabled).toBe(true);
+    expect(root.querySelector('.send-quote')).toBeNull();
+
+    root.querySelector<HTMLButtonElement>('.sent-link button')?.click();
+    await fixture.whenStable();
+    expect(copy).toHaveBeenCalledWith(linkUrl);
+    expect(root.querySelector('.copy-status')?.textContent).toMatch(/copié|copied/i);
   });
 });

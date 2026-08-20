@@ -96,4 +96,57 @@ describe('BackOfficeQuotesApi', () => {
     expect(outcome.success || outcome.cause).toBeInstanceOf(HttpErrorResponse);
     http.verify();
   });
+
+  it('sends the expected quote version and validates the permalink', async () => {
+    TestBed.configureTestingModule({
+      providers: [provideHttpClient(), provideHttpClientTesting()],
+    });
+    const api = TestBed.inject(BackOfficeQuotesApi);
+    const http = TestBed.inject(HttpTestingController);
+    const quoteId = '01ARZ3NDEKTSV4RRFFQ69G5FAY';
+    const result = api.send(quoteId, { expectedVersion: 2 });
+    const request = http.expectOne(`/api/quotes/${quoteId}/send`);
+    expect(request.request.method).toBe('POST');
+    expect(request.request.body).toEqual({ expectedVersion: 2 });
+    request.flush({
+      quoteId,
+      revisionId: '01ARZ3NDEKTSV4RRFFQ69G5FAZ',
+      status: 'sent',
+      version: 2,
+      link: {
+        id: '01ARZ3NDEKTSV4RRFFQ69G5FAV',
+        url: 'https://froment.software/api/public/quote-links/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA/pdf',
+        expiresAt: '2026-09-19T20:00:00.000Z',
+      },
+    });
+
+    await expect(result).resolves.toMatchObject({
+      success: true,
+      result: { quoteId, status: 'sent', version: 2 },
+    });
+    http.verify();
+  });
+
+  it('decodes the required PDF error when sending', async () => {
+    TestBed.configureTestingModule({
+      providers: [provideHttpClient(), provideHttpClientTesting()],
+    });
+    const api = TestBed.inject(BackOfficeQuotesApi);
+    const http = TestBed.inject(HttpTestingController);
+    const quoteId = '01ARZ3NDEKTSV4RRFFQ69G5FAY';
+    const result = api.send(quoteId, { expectedVersion: 2 });
+    http
+      .expectOne(`/api/quotes/${quoteId}/send`)
+      .flush(
+        { _tag: 'QuotePdfRequired', code: 'quote.pdf_required' },
+        { status: 409, statusText: 'Conflict' },
+      );
+
+    await expect(result).resolves.toMatchObject({
+      success: false,
+      code: 'quote.pdf_required',
+      failure: { _tag: 'QuotePdfRequired' },
+    });
+    http.verify();
+  });
 });

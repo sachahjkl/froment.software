@@ -9,6 +9,7 @@ import {
 } from '@angular/core';
 import {
   applyEach,
+  disabled,
   FormField,
   form,
   maxLength,
@@ -19,6 +20,7 @@ import {
   validate,
 } from '@angular/forms/signals';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { DomSanitizer, type SafeResourceUrl } from '@angular/platform-browser';
 import {
   Ulid,
   type ClientListValue,
@@ -26,6 +28,8 @@ import {
   type QuoteDetailValue,
   type QuoteLineInputValue,
   type QuoteRevisionCreateRequestValue,
+  type QuoteSendResultValue,
+  type QuoteStatusValue,
   type UlidValue,
 } from '@froment/contracts';
 import { Option, Schema } from 'effect';
@@ -35,6 +39,7 @@ import { BackOfficeQuotesApi, type QuoteErrorCode } from '../../back-office/back
 import { formatFixedDecimal, parseFixedDecimal } from '../../back-office/quote-input';
 import { I18nService, type TranslationKey } from '../../i18n.service';
 import { Button } from '../../shared/button/button';
+import { TextCopy } from '../../shared/text-copy';
 
 interface QuoteLineModel {
   readonly description: string;
@@ -57,6 +62,14 @@ const emptyLine = (): QuoteLineModel => ({
   vatRate: '20.00',
 });
 
+const statusKeys = {
+  draft: 'backOffice.quote.status.draft',
+  sent: 'backOffice.quote.status.sent',
+  accepted: 'backOffice.quote.status.accepted',
+  rejected: 'backOffice.quote.status.rejected',
+  expired: 'backOffice.quote.status.expired',
+} as const satisfies Record<QuoteStatusValue, TranslationKey>;
+
 @Component({
   selector: 'app-back-office-quote-editor',
   imports: [Button, FormField, RouterLink],
@@ -70,6 +83,8 @@ export class BackOfficeQuoteEditor {
   private readonly quotesApi = inject(BackOfficeQuotesApi);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
+  private readonly textCopy = inject(TextCopy);
+  private readonly sanitizer = inject(DomSanitizer);
   private readonly quoteIdParameter = this.route.snapshot.paramMap.get('quoteId');
   private readonly quoteId = this.decodeQuoteId(this.quoteIdParameter);
   protected readonly isNew = computed(() => this.quoteIdParameter === null);
@@ -81,6 +96,9 @@ export class BackOfficeQuoteEditor {
   protected readonly loading = signal(true);
   protected readonly unavailable = signal(false);
   protected readonly saving = signal(false);
+  protected readonly sending = signal(false);
+  protected readonly sentLink = signal<QuoteSendResultValue['link'] | undefined>(undefined);
+  protected readonly linkCopied = signal(false);
   protected readonly error = signal<TranslationKey | undefined>(undefined);
   private readonly model = signal<QuoteModel>({
     clientId: '',
@@ -89,6 +107,7 @@ export class BackOfficeQuoteEditor {
     title: '',
   });
   protected readonly quoteForm = form(this.model, (path) => {
+    disabled(path, { when: () => !this.editable() });
     required(path.clientId);
     required(path.title);
     maxLength(path.title, 120);
@@ -122,13 +141,25 @@ export class BackOfficeQuoteEditor {
       });
     });
   });
+  protected readonly editable = computed(() => this.isNew() || this.detail()?.status === 'draft');
   protected readonly saveDisabled = computed(
     () =>
       this.saving() ||
       this.loading() ||
+      !this.editable() ||
       this.quoteForm().invalid() ||
       (this.quoteId !== undefined && !this.quoteForm().dirty()),
   );
+  protected readonly sendDisabled = computed(() => {
+    const quote = this.detail();
+    return (
+      quote === undefined ||
+      quote.status !== 'draft' ||
+      this.quoteForm().dirty() ||
+      this.saving() ||
+      this.sending()
+    );
+  });
   protected readonly totalsAreStale = computed(
     () => this.detail() !== undefined && this.quoteForm().dirty(),
   );
@@ -137,19 +168,23 @@ export class BackOfficeQuoteEditor {
     if (this.quoteId === undefined || version === undefined) return undefined;
     return `/api/quotes/${this.quoteId}/revisions/${version}/preview`;
   });
+  protected readonly previewFrameUrl = computed<SafeResourceUrl | undefined>(() => {
+    const url = this.previewUrl();
+    return url === undefined ? undefined : this.sanitizer.bypassSecurityTrustResourceUrl(url);
+  });
 
   constructor() {
     afterNextRender(() => void this.load());
   }
 
   protected addLine(): void {
-    if (this.model().lines.length >= 20) return;
+    if (!this.editable() || this.model().lines.length >= 20) return;
     this.model.update((model) => ({ ...model, lines: [...model.lines, emptyLine()] }));
     this.quoteForm().markAsDirty();
   }
 
   protected removeLine(index: number): void {
-    if (this.model().lines.length === 1) return;
+    if (!this.editable() || this.model().lines.length === 1) return;
     this.model.update((model) => ({
       ...model,
       lines: model.lines.filter((_line, currentIndex) => currentIndex !== index),
@@ -244,6 +279,30 @@ export class BackOfficeQuoteEditor {
     this.pdfPendingVersion.set(undefined);
     if (!outcome.success) return this.setError(outcome.code);
     this.generatedPdfVersions.update((versions) => new Set([...versions, version]));
+  }
+
+  protected async sendQuote(): Promise<void> {
+    if (this.quoteId === undefined || this.sendDisabled()) return;
+    const quote = this.detail();
+    if (quote === undefined) return;
+    this.sending.set(true);
+    this.error.set(undefined);
+    this.linkCopied.set(false);
+    const outcome = await this.quotesApi.send(this.quoteId, { expectedVersion: quote.version });
+    this.sending.set(false);
+    if (!outcome.success) return this.setError(outcome.code);
+    this.detail.set({ ...quote, status: outcome.result.status });
+    this.sentLink.set(outcome.result.link);
+  }
+
+  protected async copySentLink(): Promise<void> {
+    const link = this.sentLink();
+    if (link === undefined) return;
+    this.linkCopied.set(await this.textCopy.copy(link.url));
+  }
+
+  protected statusKey(status: QuoteStatusValue): TranslationKey {
+    return statusKeys[status];
   }
 
   protected pdfUrl(version: number): string | undefined {

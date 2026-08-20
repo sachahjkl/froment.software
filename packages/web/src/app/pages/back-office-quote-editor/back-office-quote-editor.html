@@ -67,7 +67,7 @@
         <button
           appButton
           type="button"
-          [disabled]="quoteForm.lines.length >= 20"
+          [disabled]="!editable() || quoteForm.lines.length >= 20"
           (click)="addLine()"
         >
           {{ i18n.t('backOffice.quote.addLine') }}
@@ -140,7 +140,7 @@
           appButton
           variant="danger"
           type="button"
-          [disabled]="quoteForm.lines.length === 1"
+          [disabled]="!editable() || quoteForm.lines.length === 1"
           (click)="removeLine($index)"
         >
           {{ i18n.t('backOffice.quote.removeLine') }}
@@ -169,6 +169,37 @@
 
   @if (detail(); as quote) {
   <aside class="saved-result" aria-labelledby="totals-title">
+    <p class="quote-status">
+      <span>{{ i18n.t('backOffice.quote.status') }}</span>
+      <strong>{{ i18n.t(statusKey(quote.status)) }}</strong>
+    </p>
+    @if (quote.status === 'draft') {
+    <button
+      class="send-quote"
+      appButton
+      variant="primary"
+      type="button"
+      [disabled]="sendDisabled()"
+      (click)="sendQuote()"
+    >
+      @if (sending()) { {{ i18n.t('backOffice.quote.sending') }} } @else { {{
+      i18n.t('backOffice.quote.send') }} }
+    </button>
+    @if (quoteForm().dirty()) {
+    <p class="hint">{{ i18n.t('backOffice.quote.sendUnsaved') }}</p>
+    } } @if (sentLink(); as link) {
+    <section class="sent-link" aria-labelledby="sent-link-title">
+      <h2 id="sent-link-title">{{ i18n.t('backOffice.quote.link.title') }}</h2>
+      <a [href]="link.url" target="_blank" rel="noopener noreferrer">{{ link.url }}</a>
+      <p>{{ i18n.tf('backOffice.quote.link.expires', { date: date(link.expiresAt) }) }}</p>
+      <button appButton type="button" (click)="copySentLink()">
+        {{ i18n.t('backOffice.quote.link.copy') }}
+      </button>
+      @if (linkCopied()) {
+      <span class="copy-status" role="status">{{ i18n.t('backOffice.quote.link.copied') }}</span>
+      }
+    </section>
+    }
     <h2 id="totals-title">{{ i18n.t('backOffice.quote.total') }}</h2>
     @if (totalsAreStale()) {
     <p class="notice" role="status">{{ i18n.t('backOffice.quote.dirtyTotals') }}</p>
@@ -223,7 +254,11 @@
         >{{ i18n.t('backOffice.quote.preview.open') }}</a
       >
     </div>
-    <iframe [src]="url" [title]="i18n.t('backOffice.quote.preview.frameTitle')" sandbox></iframe>
+    <iframe
+      [src]="previewFrameUrl()"
+      [title]="i18n.t('backOffice.quote.preview.frameTitle')"
+      sandbox
+    ></iframe>
   </section>
   } } }
 </section>

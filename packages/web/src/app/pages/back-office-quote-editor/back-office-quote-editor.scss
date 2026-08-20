@@ -106,6 +106,55 @@ textarea {
   margin-top: var(--space-6);
 }
 
+.quote-status {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding-bottom: var(--space-3);
+  border-bottom: 1px solid var(--color-line-strong);
+}
+
+.quote-status span,
+.hint,
+.sent-link p {
+  color: var(--color-muted);
+}
+
+.send-quote {
+  width: 100%;
+  margin-top: var(--space-4);
+}
+
+.hint {
+  margin-top: var(--space-2);
+  font-size: var(--text-xs);
+}
+
+.sent-link {
+  margin-top: var(--space-5);
+  padding: var(--space-4);
+  border: 1px solid var(--color-line-strong);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-sunken);
+}
+
+.sent-link a {
+  display: block;
+  margin-top: var(--space-3);
+  overflow-wrap: anywhere;
+}
+
+.sent-link p,
+.sent-link button {
+  margin-top: var(--space-3);
+}
+
+.copy-status {
+  margin-left: var(--space-3);
+  color: var(--color-success);
+  font-size: var(--text-sm);
+}
+
 dl div {
   display: flex;
   justify-content: space-between;
