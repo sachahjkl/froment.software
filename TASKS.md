@@ -18,9 +18,9 @@
 
 ## Client Portal
 
-- [ ] Add the client role and assign it to existing and new clients.
-- [ ] Add tenant-scoped quote, order, and invoice contracts.
-- [ ] Add tenant-scoped list endpoints.
-- [ ] Add tenant-scoped PDF download endpoints.
-- [ ] Replace the empty portal with document tables.
-- [ ] Add tenant-isolation and portal tests.
+- [x] Add the client role and assign it to existing and new clients.
+- [x] Add tenant-scoped quote, order, and invoice contracts.
+- [x] Add tenant-scoped list endpoints.
+- [x] Add tenant-scoped PDF download endpoints.
+- [x] Replace the empty portal with document tables.
+- [x] Add tenant-isolation and portal tests.

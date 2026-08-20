@@ -18,6 +18,7 @@ import { InvoicesLive } from './invoices/invoices.js';
 import { OrdersLive } from './orders/orders.js';
 import { ServerLive } from './server.js';
 import { ObservabilityLive } from './observability/observability.js';
+import { ClientPortalLive } from './client-portal/client-portal.js';
 
 const QuoteCoreLive = Layer.mergeAll(QuotesLive, DocumentRendererLive, InvoicesLive).pipe(
   Layer.provideMerge(IssuerSettingsLive),
@@ -33,6 +34,7 @@ const ServicesLive = Layer.mergeAll(
   QuoteLinksLive,
   QuoteConditionPresetsLive,
   DeploymentLive,
+  ClientPortalLive,
 ).pipe(
   Layer.provide(AuditLive),
   Layer.provide(AuthenticationConfigLive),

@@ -28,6 +28,7 @@ import { QuoteConditionPresets } from './quotes/quote-condition-presets.js';
 import { Invoices } from './invoices/invoices.js';
 import { Orders } from './orders/orders.js';
 import { RequestLimiter, RequestLimiterLive } from './server/request-limiter.js';
+import { ClientPortal } from './client-portal/client-portal.js';
 
 const sessionCookieName = '__Host-froment-session';
 const csrfCookieName = '__Host-froment-csrf';
@@ -190,6 +191,13 @@ const authorizeAdministratorWrite = Effect.fn('authorizeAdministratorWrite')(fun
     .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
   yield* limitPrincipalMutation(principal.userId, permission, limit);
   return principal;
+});
+
+const authorizeClient = Effect.fn('authorizeClient')(function* (permission: PermissionCodeValue) {
+  const request = yield* HttpServerRequest.HttpServerRequest;
+  return yield* (yield* Authentication)
+    .authorize(request.cookies[sessionCookieName], permission, 'client')
+    .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
 });
 
 const limitPublicQuoteSignature = Effect.fn('limitPublicQuoteSignature')(function* (
@@ -676,9 +684,94 @@ const InvoiceHandlers = HttpApiBuilder.group(Api, 'invoices', (handlers) =>
   ),
 );
 
+const ClientPortalHandlers = HttpApiBuilder.group(Api, 'clientPortal', (handlers) =>
+  Effect.succeed(
+    handlers
+      .handle(
+        'clientQuoteList',
+        Effect.fn('clientQuoteList')(function* () {
+          yield* setPrivateResponseHeaders;
+          const principal = yield* authorizeClient('quote.read');
+          return yield* (yield* ClientPortal)
+            .listQuotes(principal.userId)
+            .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
+        }),
+      )
+      .handle(
+        'clientOrderList',
+        Effect.fn('clientOrderList')(function* () {
+          yield* setPrivateResponseHeaders;
+          const principal = yield* authorizeClient('order.read');
+          return yield* (yield* ClientPortal)
+            .listOrders(principal.userId)
+            .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
+        }),
+      )
+      .handle(
+        'clientInvoiceList',
+        Effect.fn('clientInvoiceList')(function* () {
+          yield* setPrivateResponseHeaders;
+          const principal = yield* authorizeClient('invoice.read');
+          return yield* (yield* ClientPortal)
+            .listInvoices(principal.userId)
+            .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
+        }),
+      )
+      .handle(
+        'clientQuotePdf',
+        Effect.fn('clientQuotePdf')(function* ({ params }) {
+          yield* setPrivateResponseHeaders;
+          yield* setDocumentResponseHeaders;
+          const principal = yield* authorizeClient('document.download');
+          const pdf = yield* (yield* ClientPortal)
+            .getQuotePdf(principal.userId, params.quoteId)
+            .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
+          yield* HttpEffect.appendPreResponseHandler((_request, response) =>
+            Effect.succeed(
+              HttpServerResponse.setHeader(
+                response,
+                'content-disposition',
+                `attachment; filename="quote-${params.quoteId}-v${pdf.version}.pdf"`,
+              ),
+            ),
+          );
+          return pdf.content;
+        }),
+      )
+      .handle(
+        'clientInvoicePdf',
+        Effect.fn('clientInvoicePdf')(function* ({ params }) {
+          yield* setPrivateResponseHeaders;
+          yield* setDocumentResponseHeaders;
+          const principal = yield* authorizeClient('document.download');
+          const pdf = yield* (yield* ClientPortal)
+            .getInvoicePdf(principal.userId, params.invoiceId)
+            .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
+          yield* HttpEffect.appendPreResponseHandler((_request, response) =>
+            Effect.succeed(
+              HttpServerResponse.setHeader(
+                response,
+                'content-disposition',
+                `attachment; filename="invoice-${params.invoiceId}-v${pdf.version}.pdf"`,
+              ),
+            ),
+          );
+          return pdf.content;
+        }),
+      ),
+  ),
+);
+
 const ApiRoutes = HttpApiBuilder.layer(Api).pipe(
   Layer.provide(
-    Layer.mergeAll(ApiHandlers, ClientHandlers, OrderHandlers, QuoteHandlers, InvoiceHandlers),
+    Layer.mergeAll(
+      ApiHandlers,
+      ClientHandlers,
+      OrderHandlers,
+      QuoteHandlers,
+      InvoiceHandlers,
+      ClientPortalHandlers,
+    ),
   ),
 );
 

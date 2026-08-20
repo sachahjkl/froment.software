@@ -1,6 +1,6 @@
 import Sqlite from 'better-sqlite3';
 import { Effect, Schema } from 'effect';
-import { cp, mkdtemp, rm } from 'node:fs/promises';
+import { cp, mkdtemp, readdir, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
@@ -29,6 +29,14 @@ describe('Database', () => {
           foreignKeys: sqlite.pragma('foreign_keys', { simple: true }),
           journalMode: sqlite.pragma('journal_mode', { simple: true }),
           permissions: sqlite.prepare('select count(*) from permissions').pluck().get(),
+          clientRolePermissions: sqlite
+            .prepare(
+              `select permission_code from role_permissions
+               join roles on roles.id = role_permissions.role_id
+               where roles.name = 'client' order by permission_code`,
+            )
+            .pluck()
+            .all(),
           synchronous: sqlite.pragma('synchronous', { simple: true }),
           tables: sqlite
             .prepare("select name from sqlite_master where type = 'table' order by name")
@@ -41,6 +49,12 @@ describe('Database', () => {
     expect(state.foreignKeys).toBe(1);
     expect(state.journalMode).toBe('wal');
     expect(state.permissions).toBe(30);
+    expect(state.clientRolePermissions).toEqual([
+      'document.download',
+      'invoice.read',
+      'order.read',
+      'quote.read',
+    ]);
     expect(state.synchronous).toBe(2);
     expect(state.tables).toEqual(
       expect.arrayContaining([
@@ -211,6 +225,71 @@ describe('Database', () => {
     await Effect.runPromise(
       Database.use(() => Effect.void).pipe(Effect.provide(makeDatabaseLayer(options))),
     );
+  });
+
+  it('assigns the fixed client role to existing clients during an upgrade', async () => {
+    const directory = await mkdtemp(join(tmpdir(), 'froment-database-client-role-'));
+    directories.push(directory);
+    const migrationsFolder = join(directory, 'drizzle');
+    const sourceFolder = join(import.meta.dirname, '..', 'drizzle');
+    const clientRoleMigration = '20260820090553_client_role';
+    const migrations = (await readdir(sourceFolder)).filter(
+      (migration) => migration !== clientRoleMigration,
+    );
+    await Promise.all(
+      migrations.map((migration) =>
+        cp(join(sourceFolder, migration), join(migrationsFolder, migration), { recursive: true }),
+      ),
+    );
+    const filename = join(directory, 'database.sqlite');
+    const options = { filename, migrationsFolder };
+    await Effect.runPromise(
+      Database.use(() => Effect.void).pipe(Effect.provide(makeDatabaseLayer(options))),
+    );
+
+    const clientId = '01ARZ3NDEKTSV4RRFFQ69G5FAV';
+    const sqlite = new Sqlite(filename);
+    sqlite
+      .prepare(
+        `insert into users (id, display_name, kind, created_at, updated_at)
+         values (?, 'Existing client', 'client', 1, 1)`,
+      )
+      .run(clientId);
+    sqlite
+      .prepare('insert into clients (id, created_at, updated_at) values (?, 1, 1)')
+      .run(clientId);
+    sqlite.close();
+
+    await cp(join(sourceFolder, clientRoleMigration), join(migrationsFolder, clientRoleMigration), {
+      recursive: true,
+    });
+    const role = await Effect.runPromise(
+      Database.use(({ sqlite: connection }) =>
+        Effect.sync(() => ({
+          name: connection
+            .prepare(
+              `select roles.name from user_roles
+               join roles on roles.id = user_roles.role_id
+               where user_roles.user_id = ?`,
+            )
+            .pluck()
+            .get(clientId),
+          permissions: connection
+            .prepare(
+              `select permission_code from user_roles
+               join role_permissions on role_permissions.role_id = user_roles.role_id
+               where user_roles.user_id = ? order by permission_code`,
+            )
+            .pluck()
+            .all(clientId),
+        })),
+      ).pipe(Effect.provide(makeDatabaseLayer(options))),
+    );
+
+    expect(role).toEqual({
+      name: 'client',
+      permissions: ['document.download', 'invoice.read', 'order.read', 'quote.read'],
+    });
   });
 
   it('backfills client users and administrator permissions during an upgrade', async () => {

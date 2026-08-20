@@ -127,7 +127,29 @@ export {
   type QuoteSummary as QuoteSummaryValue,
   QuoteVersionConflict,
 } from './quotes.js';
-export { Api, ClientsApi, InvoicesApi, OrdersApi, QuotesApi, SystemApi } from './api.js';
+export {
+  Api,
+  ClientPortalApi,
+  ClientsApi,
+  InvoicesApi,
+  OrdersApi,
+  QuotesApi,
+  SystemApi,
+} from './api.js';
+export {
+  ClientInvoiceList,
+  type ClientInvoiceList as ClientInvoiceListValue,
+  ClientInvoiceSummary,
+  type ClientInvoiceSummary as ClientInvoiceSummaryValue,
+  ClientOrderList,
+  type ClientOrderList as ClientOrderListValue,
+  ClientOrderSummary,
+  type ClientOrderSummary as ClientOrderSummaryValue,
+  ClientQuoteList,
+  type ClientQuoteList as ClientQuoteListValue,
+  ClientQuoteSummary,
+  type ClientQuoteSummary as ClientQuoteSummaryValue,
+} from './client-portal.js';
 export {
   QuoteConditionPreset,
   type QuoteConditionPreset as QuoteConditionPresetValue,

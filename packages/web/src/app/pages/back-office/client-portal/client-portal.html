@@ -1,7 +1,135 @@
 <section class="client-page" aria-labelledby="client-title">
   <header>
-    <h1 id="client-title">{{ i18n.t('backOffice.client.title') }}</h1>
+    <div>
+      <p class="eyebrow">{{ i18n.t('backOffice.client.eyebrow') }}</p>
+      <h1 id="client-title">{{ i18n.t('backOffice.client.title') }}</h1>
+    </div>
     <button appButton type="button" (click)="signOut()">{{ i18n.t('backOffice.signOut') }}</button>
   </header>
-  <p class="empty">{{ i18n.t('backOffice.client.empty') }}</p>
+
+  @switch (state()) { @case ('loading') {
+  <p class="state" aria-live="polite">{{ i18n.t('backOffice.client.loading') }}</p>
+  } @case ('error') {
+  <div class="state">
+    <p class="notice danger" role="alert">{{ i18n.t('backOffice.client.error') }}</p>
+    <button appButton type="button" (click)="load()">
+      {{ i18n.t('backOffice.client.retry') }}
+    </button>
+  </div>
+  } @case ('ready') {
+  <div class="document-groups">
+    <section aria-labelledby="client-quotes-title">
+      <h2 id="client-quotes-title">{{ i18n.t('backOffice.client.quotes') }}</h2>
+      @if (quotes().length === 0) {
+      <p class="empty">{{ i18n.t('backOffice.client.quotes.empty') }}</p>
+      } @else {
+      <div appDataTable>
+        <table>
+          <thead>
+            <tr>
+              <th>{{ i18n.t('backOffice.client.document') }}</th>
+              <th>{{ i18n.t('backOffice.client.status') }}</th>
+              <th>{{ i18n.t('backOffice.client.date') }}</th>
+              <th>{{ i18n.t('backOffice.client.amount') }}</th>
+              <th>{{ i18n.t('backOffice.client.download') }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (quote of quotes(); track quote.id) {
+            <tr>
+              <td><strong>{{ quote.title }}</strong></td>
+              <td><span class="badge">{{ quoteStatus(quote.status) }}</span></td>
+              <td>{{ date(quote.updatedAt) }}</td>
+              <td>{{ money(quote.totalCents, quote.currency) }}</td>
+              <td>
+                @if (quote.pdfAvailable) {
+                <a [href]="quotePdfUrl(quote.id)">{{ i18n.t('backOffice.client.pdf') }}</a>
+                } @else {
+                <span class="unavailable">{{ i18n.t('backOffice.client.unavailable') }}</span>
+                }
+              </td>
+            </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      }
+    </section>
+
+    <section aria-labelledby="client-orders-title">
+      <h2 id="client-orders-title">{{ i18n.t('backOffice.client.orders') }}</h2>
+      @if (orders().length === 0) {
+      <p class="empty">{{ i18n.t('backOffice.client.orders.empty') }}</p>
+      } @else {
+      <div appDataTable>
+        <table>
+          <thead>
+            <tr>
+              <th>{{ i18n.t('backOffice.client.document') }}</th>
+              <th>{{ i18n.t('backOffice.client.status') }}</th>
+              <th>{{ i18n.t('backOffice.client.date') }}</th>
+              <th>{{ i18n.t('backOffice.client.amount') }}</th>
+              <th>{{ i18n.t('backOffice.client.invoice') }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (order of orders(); track order.id) {
+            <tr>
+              <td><strong>{{ order.title }}</strong></td>
+              <td><span class="badge ok">{{ i18n.t('backOffice.client.confirmed') }}</span></td>
+              <td>{{ date(order.createdAt) }}</td>
+              <td>{{ money(order.totalCents, order.currency) }}</td>
+              <td>
+                {{ order.invoiceId === null ? i18n.t('backOffice.client.invoice.pending') :
+                i18n.t('backOffice.client.invoice.available') }}
+              </td>
+            </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      }
+    </section>
+
+    <section aria-labelledby="client-invoices-title">
+      <h2 id="client-invoices-title">{{ i18n.t('backOffice.client.invoices') }}</h2>
+      @if (invoices().length === 0) {
+      <p class="empty">{{ i18n.t('backOffice.client.invoices.empty') }}</p>
+      } @else {
+      <div appDataTable>
+        <table>
+          <thead>
+            <tr>
+              <th>{{ i18n.t('backOffice.client.number') }}</th>
+              <th>{{ i18n.t('backOffice.client.document') }}</th>
+              <th>{{ i18n.t('backOffice.client.status') }}</th>
+              <th>{{ i18n.t('backOffice.client.dueDate') }}</th>
+              <th>{{ i18n.t('backOffice.client.amount') }}</th>
+              <th>{{ i18n.t('backOffice.client.download') }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (invoice of invoices(); track invoice.id) {
+            <tr>
+              <td>{{ invoice.invoiceNumber }}</td>
+              <td><strong>{{ invoice.title }}</strong></td>
+              <td><span class="badge">{{ invoiceStatus(invoice.status) }}</span></td>
+              <td>{{ date(invoice.dueDate) }}</td>
+              <td>{{ money(invoice.totalCents, invoice.currency) }}</td>
+              <td>
+                @if (invoice.pdfAvailable) {
+                <a [href]="invoicePdfUrl(invoice.id)">{{ i18n.t('backOffice.client.pdf') }}</a>
+                } @else {
+                <span class="unavailable">{{ i18n.t('backOffice.client.unavailable') }}</span>
+                }
+              </td>
+            </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      }
+    </section>
+  </div>
+  } }
 </section>

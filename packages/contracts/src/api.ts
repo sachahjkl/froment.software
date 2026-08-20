@@ -81,6 +81,7 @@ import {
   InvoiceTransitionRequest,
   InvoiceVersionConflict,
 } from './invoices.js';
+import { ClientInvoiceList, ClientOrderList, ClientQuoteList } from './client-portal.js';
 
 const RevisionVersionParameter = Schema.NumberFromString.check(
   Schema.isInt(),
@@ -444,9 +445,40 @@ export class InvoicesApi extends HttpApiGroup.make('invoices', { topLevel: true 
   }),
 ) {}
 
+const clientReadErrors = [
+  AuthenticationRequired.pipe(HttpApiSchema.status(401)),
+  PermissionDenied.pipe(HttpApiSchema.status(403)),
+];
+
+export class ClientPortalApi extends HttpApiGroup.make('clientPortal', { topLevel: true }).add(
+  HttpApiEndpoint.get('clientQuoteList', '/api/client/quotes', {
+    success: ClientQuoteList,
+    error: clientReadErrors,
+  }),
+  HttpApiEndpoint.get('clientOrderList', '/api/client/orders', {
+    success: ClientOrderList,
+    error: clientReadErrors,
+  }),
+  HttpApiEndpoint.get('clientInvoiceList', '/api/client/invoices', {
+    success: ClientInvoiceList,
+    error: clientReadErrors,
+  }),
+  HttpApiEndpoint.get('clientQuotePdf', '/api/client/quotes/:quoteId/pdf', {
+    params: { quoteId: Ulid },
+    success: Schema.Uint8Array.pipe(HttpApiSchema.asUint8Array({ contentType: 'application/pdf' })),
+    error: [...clientReadErrors, DocumentNotFound.pipe(HttpApiSchema.status(404))],
+  }),
+  HttpApiEndpoint.get('clientInvoicePdf', '/api/client/invoices/:invoiceId/pdf', {
+    params: { invoiceId: Ulid },
+    success: Schema.Uint8Array.pipe(HttpApiSchema.asUint8Array({ contentType: 'application/pdf' })),
+    error: [...clientReadErrors, DocumentNotFound.pipe(HttpApiSchema.status(404))],
+  }),
+) {}
+
 export class Api extends HttpApi.make('froment-api')
   .add(SystemApi)
   .add(ClientsApi)
   .add(OrdersApi)
   .add(QuotesApi)
-  .add(InvoicesApi) {}
+  .add(InvoicesApi)
+  .add(ClientPortalApi) {}

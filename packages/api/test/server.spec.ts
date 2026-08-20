@@ -6,7 +6,15 @@ import { createHash } from 'node:crypto';
 import { request as httpRequest } from 'node:http';
 import { createServer } from 'node:net';
 
-import { Api, ClientSummary, OrderList, QuoteDetail } from '@froment/contracts';
+import {
+  Api,
+  ClientInvoiceList,
+  ClientOrderList,
+  ClientQuoteList,
+  ClientSummary,
+  OrderList,
+  QuoteDetail,
+} from '@froment/contracts';
 import Sqlite from 'better-sqlite3';
 import { Effect, Schema } from 'effect';
 import { FetchHttpClient, HttpClient, HttpClientRequest } from 'effect/unstable/http';
@@ -228,7 +236,7 @@ describe('HTTP server', () => {
       sqlite.prepare("select count(*) from roles where name = 'administrator'").pluck().get(),
     ).toBe(1);
     expect(sqlite.prepare('select count(*) from user_roles').pluck().get()).toBe(1);
-    expect(sqlite.prepare('select count(*) from role_permissions').pluck().get()).toBe(30);
+    expect(sqlite.prepare('select count(*) from role_permissions').pluck().get()).toBe(34);
     expect(sqlite.prepare('select count(*) from access_credentials').pluck().get()).toBe(1);
     expect(sqlite.prepare('select count(*) from sessions').pluck().get()).toBe(1);
     expect(
@@ -695,6 +703,22 @@ describe('HTTP server', () => {
     });
     expect(clientResponse.status).toBe(200);
     const client = Schema.decodeUnknownSync(ClientSummary)(await clientResponse.json());
+    const clientAccessResponse = await fetch(`${baseUrl}/api/clients/${client.id}/access`, {
+      method: 'POST',
+      headers: writeHeaders,
+    });
+    expect(clientAccessResponse.status).toBe(200);
+    const clientAccess = (await clientAccessResponse.json()) as { accessIdentifier: string };
+    const clientLogin = await fetch(`${baseUrl}/api/auth/login`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', origin: baseUrl },
+      body: JSON.stringify({ accessIdentifier: clientAccess.accessIdentifier, mode: 'client' }),
+    });
+    expect(clientLogin.status).toBe(200);
+    const clientCookie = clientLogin.headers
+      .getSetCookie()
+      .map((value) => value.split(';', 1)[0])
+      .join('; ');
     const createResponse = await fetch(`${baseUrl}/api/quotes`, {
       method: 'POST',
       headers: writeHeaders,
@@ -726,6 +750,16 @@ describe('HTTP server', () => {
     });
     expect(quote.currentRevision.createdAt).toMatch(/^\d{4}-\d{2}-\d{2}T.*\.\d{3}Z$/);
     expect(quote.revisions).toHaveLength(1);
+    const hiddenDraftQuotes = await fetch(`${baseUrl}/api/client/quotes`, {
+      headers: { cookie: clientCookie },
+    });
+    expect(hiddenDraftQuotes.status).toBe(200);
+    expect(hiddenDraftQuotes.headers.get('cache-control')).toBe('no-store');
+    await expect(hiddenDraftQuotes.json()).resolves.toEqual([]);
+    const administratorClientEndpoint = await fetch(`${baseUrl}/api/client/quotes`, {
+      headers: { cookie },
+    });
+    expect(administratorClientEndpoint.status).toBe(403);
     const presetDelete = await fetch(
       `${baseUrl}/api/quote-condition-presets/${conditionPreset.id}`,
       {
@@ -1059,6 +1093,41 @@ describe('HTTP server', () => {
       acceptedAt: expect.stringMatching(/^\d{4}-\d{2}-\d{2}T.*\.\d{3}Z$/),
       evidenceSha256: expect.stringMatching(/^[a-f0-9]{64}$/),
     });
+    const acceptedClientQuotesResponse = await fetch(`${baseUrl}/api/client/quotes`, {
+      headers: { cookie: clientCookie },
+    });
+    const acceptedClientQuotes = Schema.decodeUnknownSync(ClientQuoteList)(
+      await acceptedClientQuotesResponse.json(),
+    );
+    expect(acceptedClientQuotes).toEqual([
+      {
+        id: quote.id,
+        status: 'accepted',
+        title: 'Revised quote',
+        currency: 'EUR',
+        totalCents: 2,
+        updatedAt: accepted.acceptedAt,
+        pdfAvailable: true,
+      },
+    ]);
+    const acceptedClientOrdersResponse = await fetch(`${baseUrl}/api/client/orders`, {
+      headers: { cookie: clientCookie },
+    });
+    const acceptedClientOrders = Schema.decodeUnknownSync(ClientOrderList)(
+      await acceptedClientOrdersResponse.json(),
+    );
+    expect(acceptedClientOrders).toEqual([
+      {
+        id: accepted.orderId,
+        quoteId: quote.id,
+        status: 'confirmed',
+        title: 'Revised quote',
+        currency: 'EUR',
+        totalCents: 2,
+        createdAt: accepted.acceptedAt,
+        invoiceId: null,
+      },
+    ]);
     const rejectedSignature = signatureResponses.find((response) => response.status === 409);
     await expect(rejectedSignature?.json()).resolves.toMatchObject({
       code: 'quote_link.not_signable',
@@ -1139,6 +1208,17 @@ describe('HTTP server', () => {
         totalCents: 2,
       },
     });
+    const hiddenDraftInvoices = await fetch(`${baseUrl}/api/client/invoices`, {
+      headers: { cookie: clientCookie },
+    });
+    expect(hiddenDraftInvoices.status).toBe(200);
+    await expect(hiddenDraftInvoices.json()).resolves.toEqual([]);
+    const orderWithDraftInvoice = await fetch(`${baseUrl}/api/client/orders`, {
+      headers: { cookie: clientCookie },
+    });
+    await expect(orderWithDraftInvoice.json()).resolves.toEqual([
+      { ...acceptedClientOrders[0], invoiceId: null },
+    ]);
     const invoicedOrderListResponse = await fetch(`${baseUrl}/api/orders`, {
       headers: { cookie },
     });
@@ -1282,6 +1362,79 @@ describe('HTTP server', () => {
     expect(invoicePdf.subarray(0, 5).toString()).toBe('%PDF-');
     expect(invoicePdf.byteLength).toBe(invoiceArtifacts[0]?.byteSize);
     expect(createHash('sha256').update(invoicePdf).digest('hex')).toBe(invoiceArtifacts[0]?.sha256);
+
+    const clientInvoiceListResponse = await fetch(`${baseUrl}/api/client/invoices`, {
+      headers: { cookie: clientCookie },
+    });
+    const clientInvoices = Schema.decodeUnknownSync(ClientInvoiceList)(
+      await clientInvoiceListResponse.json(),
+    );
+    expect(clientInvoices).toEqual([
+      expect.objectContaining({
+        id: invoice.id,
+        orderId: accepted.orderId,
+        status: 'issued',
+        invoiceNumber: 'F-000001',
+        title: 'Final invoice',
+        pdfAvailable: true,
+      }),
+    ]);
+    const orderWithIssuedInvoice = await fetch(`${baseUrl}/api/client/orders`, {
+      headers: { cookie: clientCookie },
+    });
+    await expect(orderWithIssuedInvoice.json()).resolves.toEqual([
+      { ...acceptedClientOrders[0], invoiceId: invoice.id },
+    ]);
+    const clientQuotePdf = await fetch(`${baseUrl}/api/client/quotes/${quote.id}/pdf`, {
+      headers: { cookie: clientCookie },
+    });
+    expect(clientQuotePdf.status).toBe(200);
+    expect(clientQuotePdf.headers.get('cache-control')).toBe('no-store');
+    expect(clientQuotePdf.headers.get('content-disposition')).toContain(`quote-${quote.id}-v2.pdf`);
+    expect(Buffer.from(await clientQuotePdf.arrayBuffer())).toEqual(Buffer.from(publicPdfContent));
+    const clientInvoicePdf = await fetch(`${baseUrl}/api/client/invoices/${invoice.id}/pdf`, {
+      headers: { cookie: clientCookie },
+    });
+    expect(clientInvoicePdf.status).toBe(200);
+    expect(clientInvoicePdf.headers.get('cache-control')).toBe('no-store');
+    expect(Buffer.from(await clientInvoicePdf.arrayBuffer())).toEqual(invoicePdf);
+
+    const foreignClientResponse = await fetch(`${baseUrl}/api/clients`, {
+      method: 'POST',
+      headers: writeHeaders,
+      body: JSON.stringify({ ...emptyClientDetails, displayName: 'Foreign tenant' }),
+    });
+    const foreignClient = Schema.decodeUnknownSync(ClientSummary)(
+      await foreignClientResponse.json(),
+    );
+    const foreignAccessResponse = await fetch(`${baseUrl}/api/clients/${foreignClient.id}/access`, {
+      method: 'POST',
+      headers: writeHeaders,
+    });
+    const foreignAccess = (await foreignAccessResponse.json()) as { accessIdentifier: string };
+    const foreignLogin = await fetch(`${baseUrl}/api/auth/login`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', origin: baseUrl },
+      body: JSON.stringify({ accessIdentifier: foreignAccess.accessIdentifier, mode: 'client' }),
+    });
+    const foreignCookie = foreignLogin.headers
+      .getSetCookie()
+      .map((value) => value.split(';', 1)[0])
+      .join('; ');
+    for (const path of ['quotes', 'orders', 'invoices']) {
+      const foreignList = await fetch(`${baseUrl}/api/client/${path}`, {
+        headers: { cookie: foreignCookie },
+      });
+      expect(foreignList.status).toBe(200);
+      await expect(foreignList.json()).resolves.toEqual([]);
+    }
+    for (const path of [`quotes/${quote.id}/pdf`, `invoices/${invoice.id}/pdf`]) {
+      const foreignPdf = await fetch(`${baseUrl}/api/client/${path}`, {
+        headers: { cookie: foreignCookie },
+      });
+      expect(foreignPdf.status).toBe(404);
+      await expect(foreignPdf.json()).resolves.toMatchObject({ code: 'document.not_found' });
+    }
 
     const invoiceList = await fetch(`${baseUrl}/api/invoices`, { headers: { cookie } });
     expect(invoiceList.status).toBe(200);

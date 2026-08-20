@@ -127,6 +127,15 @@ export const ClientsLive = Layer.effect(
                   fields.country,
                   fields.email,
                 );
+              const assignedRole = database.sqlite
+                .prepare(
+                  `insert into user_roles (user_id, role_id)
+                   select ?, id from roles where name = 'client'`,
+                )
+                .run(id).changes;
+              if (assignedRole !== 1) {
+                throw new Error('The client role is unavailable.');
+              }
               audit.insert({
                 action: 'client.created',
                 actorUserId,
