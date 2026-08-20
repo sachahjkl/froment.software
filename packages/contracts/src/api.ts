@@ -62,6 +62,7 @@ import {
   InvoiceDetail,
   InvoiceDocumentArtifact,
   InvoiceInvalidDates,
+  InvoiceInvalidTransition,
   InvoiceIssueRequest,
   InvoiceIssueResult,
   InvoiceList,
@@ -69,6 +70,7 @@ import {
   InvoiceNotFound,
   InvoiceOrderNotFound,
   InvoiceRevisionCreateRequest,
+  InvoiceTransitionRequest,
   InvoiceVersionConflict,
 } from './invoices.js';
 
@@ -355,6 +357,29 @@ export class InvoicesApi extends HttpApiGroup.make('invoices', { topLevel: true 
       InvoiceNotFound.pipe(HttpApiSchema.status(404)),
       InvoiceVersionConflict.pipe(HttpApiSchema.status(409)),
       InvoiceInvalidDates.pipe(HttpApiSchema.status(422)),
+      InvoiceInvalidTransition.pipe(HttpApiSchema.status(409)),
+    ],
+  }),
+  HttpApiEndpoint.post('invoiceMarkPaid', '/api/invoices/:invoiceId/mark-paid', {
+    params: { invoiceId: Ulid },
+    payload: InvoiceTransitionRequest,
+    success: InvoiceDetail,
+    error: [
+      ...invoiceWriteErrors,
+      InvoiceNotFound.pipe(HttpApiSchema.status(404)),
+      InvoiceVersionConflict.pipe(HttpApiSchema.status(409)),
+      InvoiceInvalidTransition.pipe(HttpApiSchema.status(409)),
+    ],
+  }),
+  HttpApiEndpoint.post('invoiceVoid', '/api/invoices/:invoiceId/void', {
+    params: { invoiceId: Ulid },
+    payload: InvoiceTransitionRequest,
+    success: InvoiceDetail,
+    error: [
+      ...invoiceWriteErrors,
+      InvoiceNotFound.pipe(HttpApiSchema.status(404)),
+      InvoiceVersionConflict.pipe(HttpApiSchema.status(409)),
+      InvoiceInvalidTransition.pipe(HttpApiSchema.status(409)),
     ],
   }),
 ) {}

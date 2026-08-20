@@ -1212,6 +1212,71 @@ describe('HTTP server', () => {
         )
         .run(invoice.id),
     ).toThrow('invoice lines are append-only');
+
+    const terminalResponses = await Promise.all([
+      fetch(`${baseUrl}/api/invoices/${invoice.id}/mark-paid`, {
+        method: 'POST',
+        headers: writeHeaders,
+        body: JSON.stringify({ expectedVersion: 3 }),
+      }),
+      fetch(`${baseUrl}/api/invoices/${invoice.id}/void`, {
+        method: 'POST',
+        headers: writeHeaders,
+        body: JSON.stringify({ expectedVersion: 3 }),
+      }),
+    ]);
+    expect(terminalResponses.map((response) => response.status).sort()).toEqual([200, 409]);
+    const terminalBodies = (await Promise.all(
+      terminalResponses.map((response) => response.json()),
+    )) as Array<{
+      code?: string;
+      currentStatus?: 'paid' | 'void';
+      status?: 'paid' | 'void';
+      paidAt?: string | null;
+      voidedAt?: string | null;
+    }>;
+    const terminalInvoice = terminalBodies.find((body) => body.status !== undefined);
+    const rejectedTransition = terminalBodies.find((body) => body.code !== undefined);
+    expect(terminalInvoice?.status).toMatch(/^(paid|void)$/);
+    expect(rejectedTransition).toMatchObject({
+      code: 'invoice.invalid_transition',
+      currentStatus: terminalInvoice?.status,
+    });
+    expect(
+      terminalInvoice?.status === 'paid' ? terminalInvoice.paidAt : terminalInvoice?.voidedAt,
+    ).toEqual(expect.stringMatching(/^\d{4}-\d{2}-\d{2}T.*\.\d{3}Z$/));
+
+    const repeatedTerminal = await fetch(
+      `${baseUrl}/api/invoices/${invoice.id}/${terminalInvoice?.status === 'paid' ? 'mark-paid' : 'void'}`,
+      {
+        method: 'POST',
+        headers: writeHeaders,
+        body: JSON.stringify({ expectedVersion: 3 }),
+      },
+    );
+    expect(repeatedTerminal.status).toBe(200);
+    await expect(repeatedTerminal.json()).resolves.toMatchObject({
+      status: terminalInvoice?.status,
+    });
+    expect(
+      invoiceSqlite
+        .prepare(
+          "select count(*) from audit_events where action in ('invoice.marked-paid', 'invoice.voided') and resource_id = ?",
+        )
+        .pluck()
+        .get(invoice.id),
+    ).toBe(1);
+
+    const issueTerminal = await fetch(`${baseUrl}/api/invoices/${invoice.id}/issue`, {
+      method: 'POST',
+      headers: writeHeaders,
+      body: JSON.stringify({ expectedVersion: 3 }),
+    });
+    expect(issueTerminal.status).toBe(409);
+    await expect(issueTerminal.json()).resolves.toMatchObject({
+      code: 'invoice.invalid_transition',
+      currentStatus: terminalInvoice?.status,
+    });
     invoiceSqlite.close();
 
     const list = await fetch(`${baseUrl}/api/quotes`, { headers: { cookie } });

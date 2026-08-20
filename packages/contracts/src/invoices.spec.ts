@@ -8,6 +8,7 @@ import {
   InvoiceNumber,
   InvoiceRevisionCreateRequest,
   InvoiceStatus,
+  InvoiceTransitionRequest,
 } from './invoices.js';
 
 describe('invoice contracts', () => {
@@ -34,6 +35,9 @@ describe('invoice contracts', () => {
       expectedVersion: 2,
     });
     expect(() => Schema.decodeUnknownSync(InvoiceIssueRequest)({ expectedVersion: 0 })).toThrow();
+    expect(Schema.decodeUnknownSync(InvoiceTransitionRequest)({ expectedVersion: 2 })).toEqual({
+      expectedVersion: 2,
+    });
     expect(() =>
       Schema.decodeUnknownSync(InvoiceRevisionCreateRequest)({
         expectedVersion: 1,

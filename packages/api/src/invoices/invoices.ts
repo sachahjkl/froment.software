@@ -3,6 +3,7 @@ import {
   InvoiceAmountTooLarge,
   InvoiceDetail,
   InvoiceInvalidDates,
+  InvoiceInvalidTransition,
   InvoiceIssueResult,
   InvoiceNotEditable,
   InvoiceNotFound,
@@ -20,6 +21,7 @@ import {
   type InvoiceRenderSnapshotValue,
   type InvoiceRevisionCreateRequestValue,
   type InvoiceRevisionValue,
+  type InvoiceTransitionRequestValue,
   type IssuerSettingsValue,
   type QuoteLineInputValue,
   type QuoteLineValue,
@@ -41,6 +43,8 @@ const InvoiceRecord = Schema.Struct({
   version: Schema.Int,
   invoiceNumber: Schema.NullOr(Schema.String),
   issuedAt: Schema.NullOr(Schema.Int),
+  paidAt: Schema.NullOr(Schema.Int),
+  voidedAt: Schema.NullOr(Schema.Int),
 });
 const RevisionRecord = Schema.Struct({
   id: Ulid,
@@ -132,7 +136,27 @@ export interface InvoicesService {
     actorUserId: UlidValue,
   ) => Effect.Effect<
     InvoiceIssueResultValue,
-    InvoiceNotFound | InvoiceVersionConflict | InvoiceInvalidDates | DatabaseError
+    | InvoiceNotFound
+    | InvoiceVersionConflict
+    | InvoiceInvalidDates
+    | InvoiceInvalidTransition
+    | DatabaseError
+  >;
+  readonly markPaid: (
+    invoiceId: UlidValue,
+    request: InvoiceTransitionRequestValue,
+    actorUserId: UlidValue,
+  ) => Effect.Effect<
+    InvoiceDetailValue,
+    InvoiceNotFound | InvoiceVersionConflict | InvoiceInvalidTransition | DatabaseError
+  >;
+  readonly voidInvoice: (
+    invoiceId: UlidValue,
+    request: InvoiceTransitionRequestValue,
+    actorUserId: UlidValue,
+  ) => Effect.Effect<
+    InvoiceDetailValue,
+    InvoiceNotFound | InvoiceVersionConflict | InvoiceInvalidTransition | DatabaseError
   >;
 }
 
@@ -141,7 +165,8 @@ export class Invoices extends Context.Service<Invoices, InvoicesService>()(
 ) {}
 
 const invoiceSql = `select id, order_id as orderId, client_id as clientId, status, version,
-  invoice_number as invoiceNumber, issued_at as issuedAt from invoices`;
+  invoice_number as invoiceNumber, issued_at as issuedAt, paid_at as paidAt,
+  voided_at as voidedAt from invoices`;
 const revisionSql = `select id, invoice_id as invoiceId, version,
   invoice_number as invoiceNumber, issued_at as issuedAt,
   client_display_name as clientDisplayName, title, service_date as serviceDate,
@@ -183,6 +208,7 @@ export const InvoicesLive = Layer.effect(
       const mappedRevisions = revisions.map((revision): InvoiceRevisionValue => ({
         id: revision.id,
         version: revision.version,
+        clientDisplayName: revision.clientDisplayName,
         invoiceNumber: revision.invoiceNumber,
         issuedAt:
           revision.issuedAt === null
@@ -222,6 +248,12 @@ export const InvoicesLive = Layer.effect(
           invoice.issuedAt === null
             ? null
             : DateTime.formatIso(DateTime.makeUnsafe(invoice.issuedAt)),
+        paidAt:
+          invoice.paidAt === null ? null : DateTime.formatIso(DateTime.makeUnsafe(invoice.paidAt)),
+        voidedAt:
+          invoice.voidedAt === null
+            ? null
+            : DateTime.formatIso(DateTime.makeUnsafe(invoice.voidedAt)),
         currentRevision,
         revisions: mappedRevisions,
       });
@@ -594,6 +626,12 @@ export const InvoicesLive = Layer.effect(
               }
               const invoice = Schema.decodeUnknownSync(InvoiceRecord)(rawInvoice);
               if (invoice.status !== 'draft') {
+                if (invoice.status !== 'issued') {
+                  throw new InvoiceInvalidTransition({
+                    code: 'invoice.invalid_transition',
+                    currentStatus: invoice.status,
+                  });
+                }
                 if (invoice.invoiceNumber === null || invoice.issuedAt === null) {
                   throw new Error('Issued invoice metadata is missing.');
                 }
@@ -705,7 +743,8 @@ export const InvoicesLive = Layer.effect(
           if (
             cause instanceof InvoiceNotFound ||
             cause instanceof InvoiceVersionConflict ||
-            cause instanceof InvoiceInvalidDates
+            cause instanceof InvoiceInvalidDates ||
+            cause instanceof InvoiceInvalidTransition
           ) {
             return cause;
           }
@@ -714,6 +753,106 @@ export const InvoicesLive = Layer.effect(
       });
     });
 
-    return Invoices.of({ list, get, getSnapshot, create, createRevision, issue });
+    const transition = Effect.fn('Invoices.transition')(function* (
+      invoiceId: UlidValue,
+      request: InvoiceTransitionRequestValue,
+      actorUserId: UlidValue,
+      targetStatus: 'paid' | 'void',
+    ) {
+      const now = yield* Clock.currentTimeMillis;
+      return yield* Effect.try({
+        try: () =>
+          database.sqlite
+            .transaction(() => {
+              const rawInvoice = database.sqlite
+                .prepare(`${invoiceSql} where id = ?`)
+                .get(invoiceId);
+              if (rawInvoice === undefined) {
+                throw new InvoiceNotFound({ code: 'invoice.not_found' });
+              }
+              const invoice = Schema.decodeUnknownSync(InvoiceRecord)(rawInvoice);
+              if (invoice.version !== request.expectedVersion) {
+                throw new InvoiceVersionConflict({
+                  code: 'invoice.version_conflict',
+                  currentVersion: invoice.version,
+                });
+              }
+              if (invoice.status === targetStatus) {
+                const detail = readDetail(invoiceId);
+                if (detail === undefined) throw new Error('Transitioned invoice is missing.');
+                return detail;
+              }
+              if (invoice.status !== 'issued') {
+                throw new InvoiceInvalidTransition({
+                  code: 'invoice.invalid_transition',
+                  currentStatus: invoice.status,
+                });
+              }
+              const paidAt = targetStatus === 'paid' ? now : null;
+              const voidedAt = targetStatus === 'void' ? now : null;
+              const updated = database.sqlite
+                .prepare(
+                  `update invoices set status = ?, paid_at = ?, voided_at = ?, updated_at = ?
+                   where id = ? and status = 'issued' and version = ?`,
+                )
+                .run(
+                  targetStatus,
+                  paidAt,
+                  voidedAt,
+                  now,
+                  invoiceId,
+                  request.expectedVersion,
+                ).changes;
+              if (updated !== 1) {
+                throw new InvoiceVersionConflict({
+                  code: 'invoice.version_conflict',
+                  currentVersion: invoice.version,
+                });
+              }
+              audit.insert({
+                action: targetStatus === 'paid' ? 'invoice.marked-paid' : 'invoice.voided',
+                actorUserId,
+                resourceType: 'invoice',
+                resourceId: invoiceId,
+                metadata: { status: targetStatus, version: String(invoice.version) },
+                occurredAt: now,
+              });
+              const detail = readDetail(invoiceId);
+              if (detail === undefined) throw new Error('Transitioned invoice is missing.');
+              return detail;
+            })
+            .immediate(),
+        catch: (cause) => {
+          if (
+            cause instanceof InvoiceNotFound ||
+            cause instanceof InvoiceVersionConflict ||
+            cause instanceof InvoiceInvalidTransition
+          ) {
+            return cause;
+          }
+          return new DatabaseError({ operation: `mark invoice ${targetStatus}`, cause });
+        },
+      });
+    });
+
+    const markPaid = Effect.fn('Invoices.markPaid')(
+      (invoiceId: UlidValue, request: InvoiceTransitionRequestValue, actorUserId: UlidValue) =>
+        transition(invoiceId, request, actorUserId, 'paid'),
+    );
+    const voidInvoice = Effect.fn('Invoices.void')(
+      (invoiceId: UlidValue, request: InvoiceTransitionRequestValue, actorUserId: UlidValue) =>
+        transition(invoiceId, request, actorUserId, 'void'),
+    );
+
+    return Invoices.of({
+      list,
+      get,
+      getSnapshot,
+      create,
+      createRevision,
+      issue,
+      markPaid,
+      voidInvoice,
+    });
   }),
 );

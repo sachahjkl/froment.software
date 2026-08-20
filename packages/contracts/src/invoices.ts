@@ -59,6 +59,9 @@ export type InvoiceRevisionCreateRequest = typeof InvoiceRevisionCreateRequest.T
 export const InvoiceIssueRequest = Schema.Struct({ expectedVersion: PositiveSafeInteger });
 export type InvoiceIssueRequest = typeof InvoiceIssueRequest.Type;
 
+export const InvoiceTransitionRequest = Schema.Struct({ expectedVersion: PositiveSafeInteger });
+export type InvoiceTransitionRequest = typeof InvoiceTransitionRequest.Type;
+
 export const InvoiceRenderSnapshot = Schema.Struct({
   templateId: Schema.Literal('invoice-default'),
   templateVersion: Schema.Literal(1),
@@ -86,6 +89,7 @@ export type InvoiceRenderSnapshot = typeof InvoiceRenderSnapshot.Type;
 export const InvoiceRevision = Schema.Struct({
   id: Ulid,
   version: PositiveSafeInteger,
+  clientDisplayName: Schema.NonEmptyString,
   invoiceNumber: Schema.NullOr(InvoiceNumber),
   issuedAt: Schema.NullOr(IsoUtc),
   title: InvoiceTitle,
@@ -125,6 +129,8 @@ export const InvoiceDetail = Schema.Struct({
   version: PositiveSafeInteger,
   invoiceNumber: Schema.NullOr(InvoiceNumber),
   issuedAt: Schema.NullOr(IsoUtc),
+  paidAt: Schema.NullOr(IsoUtc),
+  voidedAt: Schema.NullOr(IsoUtc),
   currentRevision: InvoiceRevision,
   revisions: Schema.Array(InvoiceRevision),
 });
@@ -196,6 +202,12 @@ export class InvoiceInvalidDates extends Schema.TaggedError<InvoiceInvalidDates>
   { httpApiStatus: 422 },
 ) {}
 
+export class InvoiceInvalidTransition extends Schema.TaggedError<InvoiceInvalidTransition>()(
+  'InvoiceInvalidTransition',
+  { code: Schema.Literal('invoice.invalid_transition'), currentStatus: InvoiceStatus },
+  { httpApiStatus: 409 },
+) {}
+
 export const InvoiceFailure = Schema.Union([
   AuthenticationRequired,
   PermissionDenied,
@@ -208,6 +220,7 @@ export const InvoiceFailure = Schema.Union([
   InvoiceVersionConflict,
   InvoiceAmountTooLarge,
   InvoiceInvalidDates,
+  InvoiceInvalidTransition,
   DocumentNotFound,
 ]);
 export type InvoiceFailure = typeof InvoiceFailure.Type;

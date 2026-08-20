@@ -597,6 +597,26 @@ const InvoiceHandlers = HttpApiBuilder.group(Api, 'invoices', (handlers) =>
             .issue(params.invoiceId, payload, principal.userId)
             .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
         }),
+      )
+      .handle(
+        'invoiceMarkPaid',
+        Effect.fn('invoiceMarkPaid')(function* ({ params, payload }) {
+          yield* setPrivateResponseHeaders;
+          const principal = yield* authorizeAdministratorWrite('invoice.mark-paid', 10);
+          return yield* (yield* Invoices)
+            .markPaid(params.invoiceId, payload, principal.userId)
+            .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
+        }),
+      )
+      .handle(
+        'invoiceVoid',
+        Effect.fn('invoiceVoid')(function* ({ params, payload }) {
+          yield* setPrivateResponseHeaders;
+          const principal = yield* authorizeAdministratorWrite('invoice.void', 10);
+          return yield* (yield* Invoices)
+            .voidInvoice(params.invoiceId, payload, principal.userId)
+            .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
+        }),
       ),
   ),
 );
