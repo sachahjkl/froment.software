@@ -677,13 +677,13 @@ export const makeServerLayer = (options: {
   });
   const BackOfficeStaticRoutes = HttpStaticServer.layer({
     root: options.staticRoot,
-    index: 'index.html',
+    index: 'index.csr.html',
     prefix: '/backoffice',
     spa: true,
   });
   const PublicQuoteStaticRoutes = HttpStaticServer.layer({
     root: options.staticRoot,
-    index: 'index.html',
+    index: 'index.csr.html',
     prefix: '/quote',
     spa: true,
   });

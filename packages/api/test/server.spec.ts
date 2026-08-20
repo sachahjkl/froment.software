@@ -75,6 +75,7 @@ describe('HTTP server', () => {
   beforeAll(async () => {
     staticRoot = await mkdtemp(join(tmpdir(), 'froment-api-'));
     await writeFile(join(staticRoot, 'index.html'), '<h1>Froment Software</h1>');
+    await writeFile(join(staticRoot, 'index.csr.html'), '<app-root>Client shell</app-root>');
     await mkdir(join(staticRoot, 'about'));
     await writeFile(join(staticRoot, 'about', 'index.html'), '<h1>About</h1>');
     const port = await reservePort();
@@ -1593,7 +1594,9 @@ describe('HTTP server', () => {
         headers: { accept: 'text/html' },
       });
       expect(response.status).toBe(200);
-      await expect(response.text()).resolves.toContain('Froment Software');
+      const html = await response.text();
+      expect(html).toContain('Client shell');
+      expect(html).not.toContain('Froment Software');
     }
   });
 
