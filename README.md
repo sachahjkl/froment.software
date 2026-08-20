@@ -87,10 +87,18 @@ Le flake construit une archive Docker avec Node.js, le serveur Effect et le site
 
 ```bash
 podman load < result
-podman run --rm -p 8080:3000 froment-software:0.0.0
+podman run --rm \
+  -e PUBLIC_ORIGIN=https://froment.software \
+  -p 8080:3000 \
+  -v froment-data:/var/lib/froment-software \
+  froment-software:0.0.0
 ```
 
 GitHub Actions vérifie le flake, construit le site, puis publie l’image avec le SHA et le tag `latest` sur la branche par défaut.
+
+Le serveur exige `PUBLIC_ORIGIN` au démarrage. Fournissez l'origine publique complète de chaque environnement, sans chemin.
+
+L'image utilise l'utilisateur non-root `froment` avec l'UID 1000. Donnez cet UID comme propriétaire aux volumes montés depuis l'hôte.
 
 Le serveur exige `BUSINESS_TIME_ZONE`, avec un nom de fuseau IANA valide. La production utilise explicitement `Europe/Paris`.
 

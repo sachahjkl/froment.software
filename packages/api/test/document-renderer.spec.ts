@@ -146,7 +146,7 @@ describe('DocumentRenderer', () => {
     const browser = await chromium.launch({
       executablePath: process.env['CHROMIUM_PATH'],
       headless: true,
-      args: ['--disable-dev-shm-usage', '--no-sandbox'],
+      args: ['--disable-dev-shm-usage'],
     });
     try {
       const page = await browser.newPage();

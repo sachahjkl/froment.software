@@ -37,7 +37,7 @@ export const DocumentRendererLive = Layer.effect(
           chromium.launch({
             executablePath,
             headless: true,
-            args: ['--disable-dev-shm-usage', '--no-sandbox'],
+            args: ['--disable-dev-shm-usage'],
           }),
         catch: (cause) => new DocumentRenderError({ cause }),
       }),

@@ -44,8 +44,8 @@
 - [x] REV-004 Revoke public quote links when a client is archived.
 - [x] REV-005 Validate document line calculations and aggregates.
 - [x] REV-006 Format all safe monetary integers without precision loss.
-- [ ] REV-007 Isolate pull-request CI from persistent runners.
-- [ ] REV-008 Run Chromium as a sandboxed non-root user.
+- [x] REV-007 Isolate pull-request CI from persistent runners.
+- [x] REV-008 Run Chromium as a sandboxed non-root user.
 - [x] REV-009 Expose API test failures in Nix and make the test derivation pass twice.
 - [x] REV-010 Revoke old client access during rotation.
 - [x] REV-011 Rate-limit successful authentication.
@@ -65,10 +65,10 @@
 - [x] REV-025 Preserve preset reload errors.
 - [x] REV-026 Make mobile navigation modal.
 - [x] REV-027 Make overflowing tables keyboard accessible.
-- [ ] REV-028 Configure the production origin at runtime.
-- [ ] REV-029 Serialize image publication.
-- [ ] REV-030 Pin Skopeo through the flake.
-- [ ] REV-031 Support dirty local image checks.
+- [x] REV-028 Configure the production origin at runtime.
+- [x] REV-029 Serialize image publication.
+- [x] REV-030 Pin Skopeo through the flake.
+- [x] REV-031 Support dirty local image checks.
 - [ ] REV-032 Lint all tracked TypeScript files.
 - [ ] REV-033 Separate database migrations from application startup.
 - [ ] REV-034 Redact CSRF headers from traces.

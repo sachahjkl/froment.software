@@ -13,6 +13,18 @@ env:
 
 jobs:
   check:
+    if: github.event_name != 'push' || github.ref != format('refs/heads/{0}', github.event.repository.default_branch)
+    runs-on: ubuntu-latest
+    permissions: {}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: cachix/install-nix-action@13d8dd58da0234aa297dedd986986ccb8e7f3e24 # v31
+      - run: nix flake check --print-build-logs
+
+  protected-check:
+    if: github.event_name == 'push' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
     runs-on: [self-hosted, nixos]
     permissions:
       contents: read
@@ -23,9 +35,12 @@ jobs:
       - run: nix flake check --print-build-logs
 
   publish:
-    if: github.event_name == 'push'
-    needs: check
+    if: github.event_name == 'push' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
+    needs: protected-check
     runs-on: [self-hosted, nixos]
+    concurrency:
+      group: publish-image-${{ github.repository }}-${{ github.ref }}
+      cancel-in-progress: true
     permissions:
       contents: read
       packages: write
@@ -40,7 +55,7 @@ jobs:
           tags: |
             type=sha,format=long
             type=raw,value=latest,enable=${{ github.ref_name == github.event.repository.default_branch }}
-      - run: nix build .#dockerImage --print-build-logs
+      - run: nix build .#releaseDockerImage --print-build-logs
       - name: Push OCI image
         env:
           GHCR_TOKEN: ${{ github.token }}
@@ -51,10 +66,10 @@ jobs:
           export TMPDIR="$RUNNER_TEMP/skopeo-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
           mkdir -p "$TMPDIR"
           trap 'rm -rf "$TMPDIR"; rm -f "$authfile"' EXIT
-          printf '%s' "$GHCR_TOKEN" | nix run nixpkgs#skopeo -- login --authfile "$authfile" ghcr.io --username "$GITHUB_ACTOR" --password-stdin
+          printf '%s' "$GHCR_TOKEN" | nix run .#skopeo -- login --authfile "$authfile" ghcr.io --username "$GITHUB_ACTOR" --password-stdin
           mapfile -t tags < <(printf '%s\n' "$IMAGE_TAGS" | sed '/^$/d')
           (( ${#tags[@]} > 0 )) || exit 0
-          nix run nixpkgs#skopeo -- copy --authfile "$authfile" --insecure-policy docker-archive:result "docker://${tags[0]}"
+          nix run .#skopeo -- copy --authfile "$authfile" --insecure-policy docker-archive:result "docker://${tags[0]}"
           for tag in "${tags[@]:1}"; do
-            nix run nixpkgs#skopeo -- copy --all --authfile "$authfile" "docker://${tags[0]}" "docker://$tag"
+            nix run .#skopeo -- copy --all --authfile "$authfile" "docker://${tags[0]}" "docker://$tag"
           done

@@ -30,18 +30,30 @@
           workspacePackages = map (
             directory: builtins.fromJSON (builtins.readFile (./packages + "/${directory}/package.json"))
           ) packageDirectories;
-          deploymentMetadata = builtins.toJSON {
-            commit = if self ? rev then self.rev else builtins.throw "A clean Git revision is required";
-            packages = builtins.sort (left: right: left.name < right.name) (
-              map (manifest: {
-                inherit (manifest) name version;
-              }) ([ packageJson ] ++ workspacePackages)
-            );
-          };
+          deploymentMetadata =
+            commit:
+            builtins.toJSON {
+              inherit commit;
+              packages = builtins.sort (left: right: left.name < right.name) (
+                map (manifest: {
+                  inherit (manifest) name version;
+                }) ([ packageJson ] ++ workspacePackages)
+              );
+            };
+          localCommit =
+            if self ? rev then
+              self.rev
+            else if self ? dirtyRev then
+              self.dirtyRev
+            else
+              "unversioned";
           inherit (packageJson) version;
           pname = packageJson.name;
           runtimeNode = pkgs.nodejs-slim_22;
-          projectSource = lib.cleanSource ./.;
+          workflowSource = lib.fileset.toSource {
+            root = ./.;
+            fileset = ./.github;
+          };
           src = lib.fileset.toSource {
             root = ./.;
             fileset = lib.fileset.unions [
@@ -63,45 +75,46 @@
             hash = "sha256-A5OvWF1w06Zh33EFaJCnEYkLTGBleQPZ8Hf8wOnRJ2M=";
           };
 
-          application = pkgs.stdenv.mkDerivation {
-            inherit
-              pname
-              version
-              src
-              pnpmDeps
-              ;
-            nativeBuildInputs = [
-              pkgs.nodejs_22
-              pkgs.pnpm
-              pkgs.pnpmConfigHook
-              pkgs.makeWrapper
-            ];
-            buildPhase = ''
-              runHook preBuild
-              pnpm build
-              runHook postBuild
-            '';
-            installPhase = ''
-              runHook preInstall
-              mkdir -p $out/bin $out/lib/froment-software/node_modules $out/share/froment-software
-              cp packages/api/dist/main.cjs $out/lib/froment-software/server.cjs
-              cp -r packages/api/drizzle $out/share/froment-software/drizzle
-              cp -rL packages/api/node_modules/better-sqlite3 $out/lib/froment-software/node_modules/
-              cp -rL packages/api/node_modules/playwright-core $out/lib/froment-software/node_modules/
-              cp -r packages/web/dist/froment-software/browser $out/share/froment-software/web
-              makeWrapper ${runtimeNode}/bin/node $out/bin/${pname} \
-                --add-flags $out/lib/froment-software/server.cjs \
-                --set BUSINESS_TIME_ZONE Europe/Paris \
-                --set CHROMIUM_PATH ${pkgs.chromium}/bin/chromium \
-                --set-default DATABASE_PATH data/froment.sqlite \
-                --set DEPLOYMENT_METADATA ${lib.escapeShellArg deploymentMetadata} \
-                --set MIGRATIONS_ROOT $out/share/froment-software/drizzle \
-                --set PUBLIC_ORIGIN https://froment.software \
-                --set STATIC_ROOT $out/share/froment-software/web \
-                --set-default PORT 3000
-              runHook postInstall
-            '';
-          };
+          mkApplication =
+            commit:
+            pkgs.stdenv.mkDerivation {
+              inherit
+                pname
+                version
+                src
+                pnpmDeps
+                ;
+              nativeBuildInputs = [
+                pkgs.nodejs_22
+                pkgs.pnpm
+                pkgs.pnpmConfigHook
+                pkgs.makeWrapper
+              ];
+              buildPhase = ''
+                runHook preBuild
+                pnpm build
+                runHook postBuild
+              '';
+              installPhase = ''
+                runHook preInstall
+                mkdir -p $out/bin $out/lib/froment-software/node_modules $out/share/froment-software
+                cp packages/api/dist/main.cjs $out/lib/froment-software/server.cjs
+                cp -r packages/api/drizzle $out/share/froment-software/drizzle
+                cp -rL packages/api/node_modules/better-sqlite3 $out/lib/froment-software/node_modules/
+                cp -rL packages/api/node_modules/playwright-core $out/lib/froment-software/node_modules/
+                cp -r packages/web/dist/froment-software/browser $out/share/froment-software/web
+                makeWrapper ${runtimeNode}/bin/node $out/bin/${pname} \
+                  --add-flags $out/lib/froment-software/server.cjs \
+                  --set BUSINESS_TIME_ZONE Europe/Paris \
+                  --set CHROMIUM_PATH ${pkgs.chromium}/bin/chromium \
+                  --set-default DATABASE_PATH data/froment.sqlite \
+                  --set DEPLOYMENT_METADATA ${lib.escapeShellArg (deploymentMetadata commit)} \
+                  --set MIGRATIONS_ROOT $out/share/froment-software/drizzle \
+                  --set STATIC_ROOT $out/share/froment-software/web \
+                  --set-default PORT 3000
+                runHook postInstall
+              '';
+            };
 
           mkCheck =
             name: command:
@@ -135,26 +148,51 @@
               '';
             };
 
-          dockerImage = pkgs.dockerTools.buildLayeredImage {
-            name = pname;
-            tag = version;
-            contents = [
-              application
-              pkgs.dockerTools.fakeNss
-              pkgs.liberation_ttf
-            ];
-            fakeRootCommands = ''
-              mkdir -p ./tmp
-              chmod 1777 ./tmp
-              mkdir -p ./var/lib/froment-software
-            '';
-            config = {
-              Cmd = [ "${application}/bin/${pname}" ];
-              Env = [ "DATABASE_PATH=/var/lib/froment-software/froment.sqlite" ];
-              ExposedPorts."3000/tcp" = { };
-              Volumes."/var/lib/froment-software" = { };
+          application = mkApplication localCommit;
+          mkDockerImage =
+            imageApplication:
+            pkgs.dockerTools.buildLayeredImage {
+              name = pname;
+              tag = version;
+              contents = [
+                imageApplication
+                pkgs.dockerTools.fakeNss
+                pkgs.liberation_ttf
+              ];
+              fakeRootCommands = ''
+                cp --remove-destination ./etc/passwd ./etc/passwd.writable
+                cp --remove-destination ./etc/group ./etc/group.writable
+                mv ./etc/passwd.writable ./etc/passwd
+                mv ./etc/group.writable ./etc/group
+                chmod u+w ./etc/passwd ./etc/group
+                echo 'froment:x:1000:1000:Froment Software:/home/froment:/bin/sh' >> ./etc/passwd
+                echo 'froment:x:1000:' >> ./etc/group
+                mkdir -p ./home/froment/.cache ./home/froment/.config ./tmp
+                chmod 1777 ./tmp
+                mkdir -p ./var/lib/froment-software
+                chown -R 1000:1000 ./home/froment ./var/lib/froment-software
+                mkdir -p ./run/wrappers/bin
+                cp ${pkgs.chromium.sandbox}/bin/__chromium-suid-sandbox ./run/wrappers/bin/
+                chmod 4755 ./run/wrappers/bin/__chromium-suid-sandbox
+              '';
+              config = {
+                Cmd = [ "${imageApplication}/bin/${pname}" ];
+                Env = [
+                  "DATABASE_PATH=/var/lib/froment-software/froment.sqlite"
+                  "HOME=/home/froment"
+                  "TMPDIR=/tmp"
+                ];
+                ExposedPorts."3000/tcp" = { };
+                User = "froment";
+                Volumes."/var/lib/froment-software" = { };
+              };
             };
-          };
+          dockerImage = mkDockerImage application;
+          releaseDockerImage = mkDockerImage (
+            mkApplication (
+              if self ? rev then self.rev else builtins.throw "Image publication requires a clean Git revision"
+            )
+          );
 
           actionlint =
             pkgs.runCommand "${pname}-actionlint"
@@ -162,14 +200,15 @@
                 nativeBuildInputs = [ pkgs.actionlint ];
               }
               ''
-                actionlint -config-file ${projectSource}/.github/actionlint.yaml ${projectSource}/.github/workflows/*.yml
+                actionlint -config-file ${workflowSource}/.github/actionlint.yaml ${workflowSource}/.github/workflows/*.yml
                 touch $out
               '';
         in
         {
           packages = {
             default = application;
-            inherit dockerImage;
+            inherit dockerImage releaseDockerImage;
+            skopeo = pkgs.skopeo;
           };
 
           apps.default = {
