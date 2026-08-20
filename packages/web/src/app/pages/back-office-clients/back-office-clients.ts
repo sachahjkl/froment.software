@@ -20,6 +20,7 @@ import {
 } from '../../back-office/back-office-clients-api';
 import { I18nService, TranslationKey } from '../../i18n.service';
 import { Button } from '../../shared/button/button';
+import { BackOfficeTable } from '../../shared/back-office-table/back-office-table';
 import { TextCopy } from '../../shared/text-copy';
 
 type PageState = 'loading' | 'ready' | 'error';
@@ -29,7 +30,7 @@ interface AccessResult extends ClientAccessValue {
 
 @Component({
   selector: 'app-back-office-clients',
-  imports: [Button, FormField, RouterLink],
+  imports: [BackOfficeTable, Button, FormField, RouterLink],
   templateUrl: './back-office-clients.html',
   styleUrl: './back-office-clients.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

@@ -101,7 +101,7 @@
   } @case ('ready') { @if (clients().length === 0) {
   <p class="empty">{{ i18n.t('backOffice.clients.empty') }}</p>
   } @else {
-  <div class="client-table">
+  <div appBackOfficeTable>
     <table>
       <thead>
         <tr>

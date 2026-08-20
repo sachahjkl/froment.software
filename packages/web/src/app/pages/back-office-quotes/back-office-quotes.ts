@@ -5,12 +5,13 @@ import { type QuoteListValue, type QuoteStatusValue } from '@froment/contracts';
 import { BackOfficeQuotesApi } from '../../back-office/back-office-quotes-api';
 import { I18nService } from '../../i18n.service';
 import { Button } from '../../shared/button/button';
+import { BackOfficeTable } from '../../shared/back-office-table/back-office-table';
 
 type PageState = 'loading' | 'ready' | 'error';
 
 @Component({
   selector: 'app-back-office-quotes',
-  imports: [Button, RouterLink],
+  imports: [BackOfficeTable, Button, RouterLink],
   templateUrl: './back-office-quotes.html',
   styleUrl: './back-office-quotes.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

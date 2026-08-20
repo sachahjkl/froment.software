@@ -22,7 +22,6 @@ header a:not([appLinkButton]) {
   margin-top: var(--space-2);
 }
 
-.quote-table,
 .empty,
 [aria-live],
 [role="alert"] {
@@ -31,49 +30,6 @@ header a:not([appLinkButton]) {
 
 [role="alert"] + button {
   margin-top: var(--space-3);
-}
-
-.quote-table {
-  max-width: 100%;
-  overflow-x: auto;
-  overscroll-behavior-inline: contain;
-  border: 1px solid var(--color-line);
-  border-radius: var(--radius-sm);
-  background: var(--color-surface-raised);
-  box-shadow: var(--shadow-panel);
-}
-
-table {
-  width: max-content;
-  min-width: 100%;
-  border-collapse: collapse;
-}
-
-th,
-td {
-  padding: var(--space-3);
-  border-bottom: 1px solid var(--color-line-strong);
-  text-align: left;
-  white-space: nowrap;
-}
-
-th {
-  background: var(--color-surface-sunken);
-  color: var(--color-muted);
-  font-size: var(--text-xs);
-  text-transform: uppercase;
-}
-
-tbody tr {
-  transition: background-color 120ms ease-out;
-}
-
-tbody tr:hover {
-  background: color-mix(in oklab, var(--color-surface-sunken), transparent 35%);
-}
-
-tbody tr:last-child td {
-  border-bottom: 0;
 }
 
 @media (max-width: 38rem) {

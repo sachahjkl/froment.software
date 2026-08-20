@@ -17,7 +17,7 @@
   } @case ('ready') { @if (quotes().length === 0) {
   <p class="empty">{{ i18n.t('backOffice.quotes.empty') }}</p>
   } @else {
-  <div class="quote-table">
+  <div appBackOfficeTable>
     <table>
       <thead>
         <tr>
