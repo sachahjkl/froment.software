@@ -5,6 +5,8 @@ import { bootstrapApplication } from '@angular/platform-browser';
 import { provideServerRendering, renderApplication } from '@angular/platform-server';
 import { type InvoiceRenderSnapshotValue } from '@froment/contracts';
 
+import { formatMoney } from './format-money.js';
+
 export const INVOICE_DEFAULT_TEMPLATE_ID = 'invoice-default';
 export const INVOICE_DEFAULT_TEMPLATE_VERSION = 1;
 
@@ -20,9 +22,7 @@ export class InvoiceDefaultTemplate {
   protected readonly invoice = inject(INVOICE_SNAPSHOT);
 
   protected money(cents: number): string {
-    return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(
-      cents / 100,
-    );
+    return formatMoney(cents, 'fr-FR', 'EUR');
   }
 
   protected quantity(value: number): string {

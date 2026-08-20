@@ -70,4 +70,21 @@ describe('client portal contracts', () => {
     expect(quote).not.toHaveProperty('clientId');
     expect(quote).not.toHaveProperty('revisionId');
   });
+
+  it('rejects impossible client invoice dates', () => {
+    const invoice = {
+      id,
+      orderId: '01ARZ3NDEKTSV4RRFFQ69G5FAX',
+      status: 'issued',
+      invoiceNumber: 'F-000001',
+      title: 'Audit',
+      dueDate: '2026-02-31',
+      currency: 'EUR',
+      totalCents: 1_200,
+      updatedAt: '2026-08-20T08:00:00.000Z',
+      pdfAvailable: false,
+    };
+
+    expect(() => Schema.decodeUnknownSync(ClientInvoiceList)([invoice])).toThrow();
+  });
 });

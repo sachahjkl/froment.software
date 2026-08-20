@@ -42,8 +42,8 @@
 - [x] REV-002 Make invoice PDF rendering durable after issuance.
 - [ ] REV-003 Expire sent quotes and allow revision after expiration.
 - [ ] REV-004 Revoke public quote links when a client is archived.
-- [ ] REV-005 Validate document line calculations and aggregates.
-- [ ] REV-006 Format all safe monetary integers without precision loss.
+- [x] REV-005 Validate document line calculations and aggregates.
+- [x] REV-006 Format all safe monetary integers without precision loss.
 - [ ] REV-007 Isolate pull-request CI from persistent runners.
 - [ ] REV-008 Run Chromium as a sandboxed non-root user.
 - [x] REV-009 Expose API test failures in Nix and make the test derivation pass twice.
@@ -53,8 +53,8 @@
 - [ ] REV-013 Make published documents immutable and verify artifact hashes.
 - [ ] REV-014 Enforce cross-table business relationships.
 - [ ] REV-015 Roll back migrations that violate foreign keys.
-- [ ] REV-016 Validate canonical UTC timestamps.
-- [ ] REV-017 Render quote dates in UTC.
+- [x] REV-016 Validate canonical UTC timestamps.
+- [x] REV-017 Render quote dates in UTC.
 - [ ] REV-018 Store invoice issue dates in the business time zone.
 - [x] REV-019 Validate invoice issue retry versions.
 - [ ] REV-020 React to document route parameter changes.
@@ -73,8 +73,8 @@
 - [ ] REV-033 Separate database migrations from application startup.
 - [ ] REV-034 Redact CSRF headers from traces.
 - [x] REV-035 Preserve literal translation replacements.
-- [ ] REV-036 Validate client invoice dates.
-- [ ] REV-037 Limit document snapshots to 20 lines.
+- [x] REV-036 Validate client invoice dates.
+- [x] REV-037 Limit document snapshots to 20 lines.
 - [ ] REV-038 Verify PDF hashes on every download.
 - [ ] REV-039 Make client archival idempotent.
 - [ ] REV-040 Use a memory-hard bootstrap password hash.

@@ -1,4 +1,4 @@
-import { renderQuoteDefaultTemplate } from '@froment/documents';
+import { formatMoney, renderQuoteDefaultTemplate } from '@froment/documents';
 import { type QuoteRenderSnapshotValue } from '@froment/contracts';
 import { describe, expect, it } from 'vitest';
 
@@ -52,6 +52,33 @@ const snapshot: QuoteRenderSnapshotValue = {
 };
 
 describe('QuoteDefaultTemplate', () => {
+  it('formats every safe cent integer without precision loss', () => {
+    expect(formatMoney(Number.MAX_SAFE_INTEGER - 2, 'fr-FR', 'EUR')).toBe(
+      '90\u202f071\u202f992\u202f547\u202f409,89\u00a0€',
+    );
+    expect(formatMoney(Number.MAX_SAFE_INTEGER - 1, 'fr-FR', 'EUR')).toBe(
+      '90\u202f071\u202f992\u202f547\u202f409,90\u00a0€',
+    );
+    expect(formatMoney(Number.MAX_SAFE_INTEGER, 'fr-FR', 'EUR')).toBe(
+      '90\u202f071\u202f992\u202f547\u202f409,91\u00a0€',
+    );
+  });
+
+  it('renders quote dates in UTC', async () => {
+    const previousTimeZone = process.env['TZ'];
+    process.env['TZ'] = 'Pacific/Auckland';
+    try {
+      const html = await renderQuoteDefaultTemplate({
+        ...snapshot,
+        createdAt: '2026-08-19T23:30:00.000Z',
+      });
+      expect(html).toContain('19 août 2026');
+      expect(html).not.toContain('20 août 2026');
+    } finally {
+      process.env['TZ'] = previousTimeZone;
+    }
+  });
+
   it('renders a complete escaped HTML document', async () => {
     const html = await renderQuoteDefaultTemplate(snapshot);
 

@@ -5,6 +5,8 @@ import { bootstrapApplication } from '@angular/platform-browser';
 import { provideServerRendering, renderApplication } from '@angular/platform-server';
 import { type QuoteRenderSnapshotValue } from '@froment/contracts';
 
+import { formatMoney } from './format-money.js';
+
 export const QUOTE_DEFAULT_TEMPLATE_ID = 'quote-default';
 export const QUOTE_DEFAULT_TEMPLATE_VERSION = 1;
 
@@ -20,9 +22,7 @@ export class QuoteDefaultTemplate {
   protected readonly quote = inject(QUOTE_SNAPSHOT);
 
   protected money(cents: number): string {
-    return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(
-      cents / 100,
-    );
+    return formatMoney(cents, 'fr-FR', 'EUR');
   }
 
   protected quantity(value: number): string {
@@ -34,7 +34,9 @@ export class QuoteDefaultTemplate {
   }
 
   protected date(value: string): string {
-    return new Intl.DateTimeFormat('fr-FR', { dateStyle: 'long' }).format(new Date(value));
+    return new Intl.DateTimeFormat('fr-FR', { dateStyle: 'long', timeZone: 'UTC' }).format(
+      new Date(value),
+    );
   }
 }
 

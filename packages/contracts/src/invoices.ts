@@ -1,4 +1,4 @@
-import { DateTime, Option, Schema } from 'effect';
+import { Schema } from 'effect';
 
 import {
   AuthenticationRequired,
@@ -8,30 +8,15 @@ import {
 } from './authentication.js';
 import { DisplayName, Ulid } from './identifiers.js';
 import {
-  DocumentNotFound,
-  DocumentParty,
-  IssuerSettings,
-  QuoteLine,
-  QuoteLineInput,
-} from './quotes.js';
+  DocumentLines,
+  PositiveSafeInteger,
+  SafeInteger,
+  documentTotalsFilter,
+} from './document-lines.js';
+import { DocumentNotFound, DocumentParty, IssuerSettings, QuoteLineInput } from './quotes.js';
+import { CalendarDate, IsoUtc } from './temporal.js';
 
-const SafeInteger = Schema.Number.check(
-  Schema.isInt(),
-  Schema.isGreaterThanOrEqualTo(0),
-  Schema.isLessThanOrEqualTo(Number.MAX_SAFE_INTEGER),
-);
-const PositiveSafeInteger = SafeInteger.check(Schema.isGreaterThan(0));
-const IsoUtc = Schema.String.check(
-  Schema.isPattern(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/),
-);
-export const CalendarDateText = Schema.String.check(Schema.isPattern(/^\d{4}-\d{2}-\d{2}$/));
-export const CalendarDate = CalendarDateText.check(
-  Schema.makeFilter(
-    (value) =>
-      Option.exists(DateTime.make(value), (date) => DateTime.formatIsoDateUtc(date) === value),
-    { message: 'invoice.invalid_dates' },
-  ),
-);
+export { CalendarDate, CalendarDateText } from './temporal.js';
 const InvoiceTitle = Schema.String.check(Schema.isPattern(/\S/), Schema.isMaxLength(120));
 const PaymentTerms = Schema.String.check(Schema.isMaxLength(2_000));
 const InvoiceLinesInput = Schema.Array(QuoteLineInput).check(
@@ -99,8 +84,8 @@ export const InvoiceRenderSnapshot = Schema.Struct({
   netTotalCents: SafeInteger,
   vatTotalCents: SafeInteger,
   totalCents: SafeInteger,
-  lines: Schema.Array(QuoteLine),
-});
+  lines: DocumentLines,
+}).check(documentTotalsFilter);
 export type InvoiceRenderSnapshot = typeof InvoiceRenderSnapshot.Type;
 
 export const InvoiceRevision = Schema.Struct({
@@ -119,8 +104,8 @@ export const InvoiceRevision = Schema.Struct({
   totalCents: SafeInteger,
   createdAt: IsoUtc,
   createdByUserId: Ulid,
-  lines: Schema.Array(QuoteLine),
-});
+  lines: DocumentLines,
+}).check(documentTotalsFilter);
 export type InvoiceRevision = typeof InvoiceRevision.Type;
 
 export const InvoiceSummary = Schema.Struct({

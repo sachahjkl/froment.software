@@ -10,3 +10,4 @@ export {
   InvoiceDefaultTemplate,
   renderInvoiceDefaultTemplate,
 } from './invoice-default-template.js';
+export { formatMoney } from './format-money.js';

@@ -1,16 +1,13 @@
 import { Schema } from 'effect';
 
 import { DisplayName, Ulid } from './identifiers.js';
+import { IsoUtc } from './temporal.js';
 
 const SafeInteger = Schema.Number.check(
   Schema.isInt(),
   Schema.isGreaterThanOrEqualTo(0),
   Schema.isLessThanOrEqualTo(Number.MAX_SAFE_INTEGER),
 );
-const IsoUtc = Schema.String.check(
-  Schema.isPattern(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/),
-);
-
 export const OrderSummary = Schema.Struct({
   id: Ulid,
   quoteId: Ulid,

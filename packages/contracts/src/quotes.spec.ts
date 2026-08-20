@@ -5,6 +5,8 @@ import {
   PublicQuoteSignatureRequest,
   QuoteCreateRequest,
   QuoteLinkToken,
+  QuoteLine,
+  QuoteRenderSnapshot,
   QuoteRevision,
   QuoteSendRequest,
   QuoteSendResult,
@@ -17,6 +19,43 @@ const line = {
   quantityMilli: 1_000,
   unitPriceCents: 10_000,
   vatRateBasisPoints: 2_000,
+};
+
+const calculatedLine = {
+  id: '01ARZ3NDEKTSV4RRFFQ69G5FAX',
+  position: 0,
+  ...line,
+  netTotalCents: 10_000,
+  vatTotalCents: 2_000,
+  totalCents: 12_000,
+};
+
+const party = {
+  displayName: 'Froment Software',
+  addressLine1: '',
+  addressLine2: '',
+  postalCode: '',
+  city: '',
+  country: '',
+  email: '',
+};
+
+const snapshot = {
+  templateId: 'quote-default',
+  templateVersion: 1,
+  quoteId: '01ARZ3NDEKTSV4RRFFQ69G5FAV',
+  revisionId: '01ARZ3NDEKTSV4RRFFQ69G5FAW',
+  version: 1,
+  createdAt: '2026-08-20T08:00:00.000Z',
+  issuer: { ...party, phone: '', registrationNumber: '', vatNumber: '' },
+  client: party,
+  title: 'Website',
+  conditions: '',
+  currency: 'EUR',
+  netTotalCents: 10_000,
+  vatTotalCents: 2_000,
+  totalCents: 12_000,
+  lines: [calculatedLine],
 };
 
 describe('quote contracts', () => {
@@ -50,6 +89,95 @@ describe('quote contracts', () => {
         lines: [{ ...line, vatRateBasisPoints: 10_001 }],
       }),
     ).toThrow();
+    expect(
+      Schema.decodeUnknownSync(QuoteCreateRequest)({
+        ...valid,
+        lines: Array.from({ length: 20 }, () => line),
+      }).lines,
+    ).toHaveLength(20);
+    expect(() =>
+      Schema.decodeUnknownSync(QuoteCreateRequest)({
+        ...valid,
+        lines: Array.from({ length: 21 }, () => line),
+      }),
+    ).toThrow();
+  });
+
+  it('validates line calculations with BigInt arithmetic', () => {
+    expect(Schema.decodeUnknownSync(QuoteLine)(calculatedLine)).toEqual(calculatedLine);
+    for (const field of ['netTotalCents', 'vatTotalCents', 'totalCents'] as const) {
+      expect(() =>
+        Schema.decodeUnknownSync(QuoteLine)({ ...calculatedLine, [field]: 1 }),
+      ).toThrow();
+    }
+
+    const largeLine = {
+      ...calculatedLine,
+      quantityMilli: 1,
+      unitPriceCents: Number.MAX_SAFE_INTEGER,
+      vatRateBasisPoints: 0,
+      netTotalCents: 9_007_199_254_741,
+      vatTotalCents: 0,
+      totalCents: 9_007_199_254_741,
+    };
+    expect(Schema.decodeUnknownSync(QuoteLine)(largeLine)).toEqual(largeLine);
+  });
+
+  it('validates snapshot aggregates, positions, identifiers, and line count', () => {
+    expect(Schema.decodeUnknownSync(QuoteRenderSnapshot)(snapshot)).toEqual(snapshot);
+    for (const field of ['netTotalCents', 'vatTotalCents', 'totalCents'] as const) {
+      expect(() =>
+        Schema.decodeUnknownSync(QuoteRenderSnapshot)({ ...snapshot, [field]: 1 }),
+      ).toThrow();
+    }
+
+    const lineIds = '0123456789ABCDEFGHJK';
+    const lines = Array.from({ length: 20 }, (_, position) => ({
+      ...calculatedLine,
+      id: `01ARZ3NDEKTSV4RRFFQ69G5F${lineIds[position]}0`,
+      position,
+    }));
+    const boundary = {
+      ...snapshot,
+      netTotalCents: 200_000,
+      vatTotalCents: 40_000,
+      totalCents: 240_000,
+      lines,
+    };
+    expect(Schema.decodeUnknownSync(QuoteRenderSnapshot)(boundary).lines).toHaveLength(20);
+    expect(() =>
+      Schema.decodeUnknownSync(QuoteRenderSnapshot)({
+        ...boundary,
+        netTotalCents: 210_000,
+        vatTotalCents: 42_000,
+        totalCents: 252_000,
+        lines: [...lines, { ...lines[0], position: 20 }],
+      }),
+    ).toThrow();
+    expect(() =>
+      Schema.decodeUnknownSync(QuoteRenderSnapshot)({
+        ...snapshot,
+        lines: [{ ...calculatedLine, position: 1 }],
+      }),
+    ).toThrow();
+    expect(() =>
+      Schema.decodeUnknownSync(QuoteRenderSnapshot)({
+        ...boundary,
+        lines: [lines[0], { ...lines[1], id: lines[0]!.id }, ...lines.slice(2)],
+      }),
+    ).toThrow();
+  });
+
+  it('accepts only real canonical UTC timestamps', () => {
+    for (const createdAt of [
+      '2026-99-99T99:99:99.999Z',
+      '2026-08-20T10:00:00.000+02:00',
+      '2026-08-20T08:00:00Z',
+    ]) {
+      expect(() =>
+        Schema.decodeUnknownSync(QuoteRenderSnapshot)({ ...snapshot, createdAt }),
+      ).toThrow();
+    }
   });
 
   it('validates quote sending inputs', () => {

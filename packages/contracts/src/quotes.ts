@@ -7,17 +7,16 @@ import {
   RequestRateLimited,
 } from './authentication.js';
 import { ClientArchived, ClientNotFound } from './clients.js';
+import {
+  DocumentLine,
+  DocumentLineInput,
+  DocumentLines,
+  PositiveSafeInteger,
+  SafeInteger,
+  documentTotalsFilter,
+} from './document-lines.js';
 import { DisplayName, Ulid } from './identifiers.js';
-
-const SafeInteger = Schema.Number.check(
-  Schema.isInt(),
-  Schema.isGreaterThanOrEqualTo(0),
-  Schema.isLessThanOrEqualTo(Number.MAX_SAFE_INTEGER),
-);
-const PositiveSafeInteger = SafeInteger.check(Schema.isGreaterThan(0));
-const IsoUtc = Schema.String.check(
-  Schema.isPattern(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/),
-);
+import { IsoUtc } from './temporal.js';
 export const QuoteLinkToken = Schema.String.check(Schema.isPattern(/^[A-Za-z0-9_-]{43}$/));
 export type QuoteLinkToken = typeof QuoteLinkToken.Type;
 const decodeUrl = Schema.decodeOption(Schema.URLFromString);
@@ -25,12 +24,7 @@ const decodeUrl = Schema.decodeOption(Schema.URLFromString);
 export const QuoteStatus = Schema.Literals(['draft', 'sent', 'accepted', 'rejected', 'expired']);
 export type QuoteStatus = typeof QuoteStatus.Type;
 
-export const QuoteLineInput = Schema.Struct({
-  description: Schema.String.check(Schema.isPattern(/\S/), Schema.isMaxLength(160)),
-  quantityMilli: PositiveSafeInteger,
-  unitPriceCents: SafeInteger,
-  vatRateBasisPoints: SafeInteger.check(Schema.isLessThanOrEqualTo(10_000)),
-});
+export const QuoteLineInput = DocumentLineInput;
 export type QuoteLineInput = typeof QuoteLineInput.Type;
 
 const QuoteLinesInput = Schema.Array(QuoteLineInput).check(
@@ -98,14 +92,7 @@ export const PublicQuoteSignatureRequest = Schema.Struct({
 });
 export type PublicQuoteSignatureRequest = typeof PublicQuoteSignatureRequest.Type;
 
-export const QuoteLine = Schema.Struct({
-  id: Ulid,
-  position: SafeInteger,
-  ...QuoteLineInput.fields,
-  netTotalCents: SafeInteger,
-  vatTotalCents: SafeInteger,
-  totalCents: SafeInteger,
-});
+export const QuoteLine = DocumentLine;
 export type QuoteLine = typeof QuoteLine.Type;
 
 export const QuoteRenderSnapshot = Schema.Struct({
@@ -123,8 +110,8 @@ export const QuoteRenderSnapshot = Schema.Struct({
   netTotalCents: SafeInteger,
   vatTotalCents: SafeInteger,
   totalCents: SafeInteger,
-  lines: Schema.Array(QuoteLine),
-});
+  lines: DocumentLines,
+}).check(documentTotalsFilter);
 export type QuoteRenderSnapshot = typeof QuoteRenderSnapshot.Type;
 
 export const PublicQuoteConsultation = Schema.Struct({
@@ -159,8 +146,8 @@ export const QuoteRevision = Schema.Struct({
   totalCents: SafeInteger,
   createdAt: IsoUtc,
   createdByUserId: Ulid,
-  lines: Schema.Array(QuoteLine),
-});
+  lines: DocumentLines,
+}).check(documentTotalsFilter);
 export type QuoteRevision = typeof QuoteRevision.Type;
 
 export const QuoteSummary = Schema.Struct({

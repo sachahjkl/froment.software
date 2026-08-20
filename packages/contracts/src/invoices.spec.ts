@@ -9,6 +9,7 @@ import {
   InvoiceNumber,
   InvoiceRevisionCreateRequest,
   InvoiceRevision,
+  InvoiceRenderSnapshot,
   InvoiceStatus,
   InvoiceSummary,
   InvoiceTransitionRequest,
@@ -57,6 +58,83 @@ describe('invoice contracts', () => {
         paymentTerms: '',
         lines: [],
       }),
+    ).toThrow();
+    const revisionLine = {
+      description: 'Audit',
+      quantityMilli: 1_000,
+      unitPriceCents: 100,
+      vatRateBasisPoints: 2_000,
+    };
+    expect(
+      Schema.decodeUnknownSync(InvoiceRevisionCreateRequest)({
+        expectedVersion: 1,
+        title: 'Invoice',
+        serviceDate: '2026-08-20',
+        dueDate: '2026-09-19',
+        paymentTerms: '',
+        lines: Array.from({ length: 20 }, () => revisionLine),
+      }).lines,
+    ).toHaveLength(20);
+    expect(() =>
+      Schema.decodeUnknownSync(InvoiceRevisionCreateRequest)({
+        expectedVersion: 1,
+        title: 'Invoice',
+        serviceDate: '2026-08-20',
+        dueDate: '2026-09-19',
+        paymentTerms: '',
+        lines: Array.from({ length: 21 }, () => revisionLine),
+      }),
+    ).toThrow();
+  });
+
+  it('validates invoice snapshot line and aggregate invariants', () => {
+    const party = {
+      displayName: 'Client',
+      addressLine1: '',
+      addressLine2: '',
+      postalCode: '',
+      city: '',
+      country: '',
+      email: '',
+    };
+    const snapshot = {
+      templateId: 'invoice-default',
+      templateVersion: 1,
+      invoiceId: '01ARZ3NDEKTSV4RRFFQ69G5FAV',
+      orderId: '01ARZ3NDEKTSV4RRFFQ69G5FAW',
+      revisionId: '01ARZ3NDEKTSV4RRFFQ69G5FAX',
+      version: 1,
+      createdAt: '2026-08-20T08:00:00.000Z',
+      invoiceNumber: null,
+      issuedAt: null,
+      serviceDate: '2026-08-20',
+      dueDate: '2026-09-19',
+      issuer: { ...party, phone: '', registrationNumber: '', vatNumber: '' },
+      client: party,
+      title: 'Invoice',
+      paymentTerms: '',
+      currency: 'EUR',
+      netTotalCents: 100,
+      vatTotalCents: 20,
+      totalCents: 120,
+      lines: [
+        {
+          id: '01ARZ3NDEKTSV4RRFFQ69G5FAY',
+          position: 0,
+          description: 'Audit',
+          quantityMilli: 1_000,
+          unitPriceCents: 100,
+          vatRateBasisPoints: 2_000,
+          netTotalCents: 100,
+          vatTotalCents: 20,
+          totalCents: 120,
+        },
+      ],
+    };
+
+    expect(Schema.decodeUnknownSync(InvoiceRenderSnapshot)(snapshot)).toEqual(snapshot);
+    expect(() =>
+      Schema.decodeUnknownSync(InvoiceRenderSnapshot)({ ...snapshot, totalCents: 119 }),
     ).toThrow();
   });
 
