@@ -19,6 +19,7 @@ export const ClientSummary = Schema.Struct({
   country: Schema.String,
   email: Schema.String,
   archived: Schema.Boolean,
+  updatedAt: Schema.Int,
 });
 export type ClientSummary = typeof ClientSummary.Type;
 
@@ -32,9 +33,18 @@ export const ClientCreateRequest = Schema.Struct({
   postalCode: Schema.String.check(Schema.isMaxLength(32)),
   city: Schema.String.check(Schema.isMaxLength(120)),
   country: Schema.String.check(Schema.isMaxLength(120)),
-  email: Schema.String.check(Schema.isMaxLength(254)),
+  email: Schema.String.check(
+    Schema.isMaxLength(254),
+    Schema.isPattern(/^$|^[^\s@]+@[^\s@]+\.[^\s@]+$/),
+  ),
 });
 export type ClientCreateRequest = typeof ClientCreateRequest.Type;
+
+export const ClientUpdateRequest = Schema.Struct({
+  ...ClientCreateRequest.fields,
+  expectedUpdatedAt: Schema.Int,
+});
+export type ClientUpdateRequest = typeof ClientUpdateRequest.Type;
 
 export const ClientAccess = Schema.Struct({
   clientId: Ulid,
@@ -54,12 +64,19 @@ export class ClientArchived extends Schema.TaggedError<ClientArchived>()(
   { httpApiStatus: 409 },
 ) {}
 
+export class ClientVersionConflict extends Schema.TaggedError<ClientVersionConflict>()(
+  'ClientVersionConflict',
+  { code: Schema.Literal('client.version_conflict') },
+  { httpApiStatus: 409 },
+) {}
+
 export const ClientFailure = Schema.Union([
   AuthenticationRequired,
   PermissionDenied,
   CsrfRejected,
   ClientNotFound,
   ClientArchived,
+  ClientVersionConflict,
   RequestRateLimited,
 ]);
 export type ClientFailure = typeof ClientFailure.Type;

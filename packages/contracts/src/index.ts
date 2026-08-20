@@ -57,6 +57,9 @@ export {
   ClientNotFound,
   ClientSummary,
   type ClientSummary as ClientSummaryValue,
+  ClientUpdateRequest,
+  type ClientUpdateRequest as ClientUpdateRequestValue,
+  ClientVersionConflict,
 } from './clients.js';
 export {
   BootstrapFailure,

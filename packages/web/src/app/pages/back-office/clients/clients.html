@@ -6,7 +6,7 @@
     <h1 id="clients-title">{{ i18n.t('backOffice.clients.title') }}</h1>
   </header>
 
-  <form class="create-client" (submit)="create($event)">
+  <form class="create-client panel" (submit)="create($event)">
     <label class="field" for="client-display-name">
       {{ i18n.t('backOffice.clients.displayName') }}
       <input
@@ -24,54 +24,107 @@
       </span>
       }
     </label>
-    <label class="field">
+    <label class="field" for="client-address-line-1">
       {{ i18n.t('backOffice.clients.addressLine1') }}
       <input
+        id="client-address-line-1"
         class="input"
         type="text"
         autocomplete="address-line1"
+        aria-describedby="client-address-line-1-error"
+        [attr.aria-invalid]="invalid('addressLine1')"
         [formField]="createForm.addressLine1"
       />
+      @if (invalid('addressLine1')) {
+      <span id="client-address-line-1-error" class="field-error"
+        >{{ i18n.t('backOffice.clientDetail.fieldInvalid') }}</span
+      >
+      }
     </label>
-    <label class="field">
+    <label class="field" for="client-address-line-2">
       {{ i18n.t('backOffice.clients.addressLine2') }}
       <input
+        id="client-address-line-2"
         class="input"
         type="text"
         autocomplete="address-line2"
+        aria-describedby="client-address-line-2-error"
+        [attr.aria-invalid]="invalid('addressLine2')"
         [formField]="createForm.addressLine2"
       />
+      @if (invalid('addressLine2')) {
+      <span id="client-address-line-2-error" class="field-error"
+        >{{ i18n.t('backOffice.clientDetail.fieldInvalid') }}</span
+      >
+      }
     </label>
-    <label class="field">
+    <label class="field" for="client-postal-code">
       {{ i18n.t('backOffice.clients.postalCode') }}
       <input
+        id="client-postal-code"
         class="input"
         type="text"
         autocomplete="postal-code"
+        aria-describedby="client-postal-code-error"
+        [attr.aria-invalid]="invalid('postalCode')"
         [formField]="createForm.postalCode"
       />
+      @if (invalid('postalCode')) {
+      <span id="client-postal-code-error" class="field-error"
+        >{{ i18n.t('backOffice.clientDetail.fieldInvalid') }}</span
+      >
+      }
     </label>
-    <label class="field">
+    <label class="field" for="client-city">
       {{ i18n.t('backOffice.clients.city') }}
       <input
+        id="client-city"
         class="input"
         type="text"
         autocomplete="address-level2"
+        aria-describedby="client-city-error"
+        [attr.aria-invalid]="invalid('city')"
         [formField]="createForm.city"
       />
+      @if (invalid('city')) {
+      <span id="client-city-error" class="field-error"
+        >{{ i18n.t('backOffice.clientDetail.fieldInvalid') }}</span
+      >
+      }
     </label>
-    <label class="field">
+    <label class="field" for="client-country">
       {{ i18n.t('backOffice.clients.country') }}
       <input
+        id="client-country"
         class="input"
         type="text"
         autocomplete="country-name"
+        aria-describedby="client-country-error"
+        [attr.aria-invalid]="invalid('country')"
         [formField]="createForm.country"
       />
+      @if (invalid('country')) {
+      <span id="client-country-error" class="field-error"
+        >{{ i18n.t('backOffice.clientDetail.fieldInvalid') }}</span
+      >
+      }
     </label>
-    <label class="field">
+    <label class="field" for="client-email">
       {{ i18n.t('backOffice.clients.email') }}
-      <input class="input" type="email" autocomplete="email" [formField]="createForm.email" />
+      <input
+        id="client-email"
+        class="input"
+        type="email"
+        autocomplete="email"
+        aria-describedby="client-email-error"
+        [attr.aria-invalid]="invalid('email')"
+        [formField]="createForm.email"
+      />
+      @if (invalid('email')) {
+      <span id="client-email-error" class="field-error"
+        >{{ i18n.t('backOffice.clientDetail.emailInvalid') }}</span
+      >
+      }
     </label>
     <button appButton variant="primary" type="submit" [disabled]="createDisabled()">
       @if (createPending()) { {{ i18n.t('backOffice.clients.creating') }} } @else { {{
@@ -116,7 +169,9 @@
         @for (client of clients(); track client.id) {
         <tr>
           <td>
-            <strong>{{ client.displayName }}</strong>
+            <a [routerLink]="['/backoffice/clients', client.id]">
+              <strong>{{ client.displayName }}</strong>
+            </a>
           </td>
           <td>
             @if (client.archived) {
@@ -127,6 +182,9 @@
           </td>
           <td>
             <div class="actions">
+              <a appButton [routerLink]="['/backoffice/clients', client.id]">
+                {{ i18n.t('backOffice.clients.open') }}
+              </a>
               @if (!client.archived) {
               <button
                 appButton

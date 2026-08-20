@@ -55,6 +55,7 @@ export class Clients {
     maxLength(path.city, 120);
     maxLength(path.country, 120);
     maxLength(path.email, 254);
+    pattern(path.email, /^$|^[^\s@]+@[^\s@]+\.[^\s@]+$/);
   });
   protected readonly clients = signal<ReadonlyArray<ClientSummaryValue>>([]);
   protected readonly state = signal<PageState>('loading');
@@ -69,6 +70,12 @@ export class Clients {
   protected readonly pendingClientId = signal<UlidValue | undefined>(undefined);
   protected readonly access = signal<AccessResult | undefined>(undefined);
   protected readonly copied = signal(false);
+
+  protected invalid(
+    field: 'addressLine1' | 'addressLine2' | 'postalCode' | 'city' | 'country' | 'email',
+  ): boolean {
+    return this.createForm[field]().touched() && this.createForm[field]().invalid();
+  }
 
   constructor() {
     afterNextRender(() => void this.load());

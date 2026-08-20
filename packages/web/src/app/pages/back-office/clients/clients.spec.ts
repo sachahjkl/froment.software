@@ -21,6 +21,7 @@ class ClientsApiStub {
         id: '01ARZ3NDEKTSV4RRFFQ69G5FAV' as const,
         ...request,
         archived: false,
+        updatedAt: 1,
       },
     });
   }
@@ -80,6 +81,7 @@ describe('Clients', () => {
         country: '',
         email: '',
         archived: true,
+        updatedAt: 1,
       },
     ]);
     TestBed.configureTestingModule({
@@ -92,5 +94,32 @@ describe('Clients', () => {
 
     expect(actionCell?.classList.contains('actions')).toBe(false);
     expect(actionCell?.querySelector('.actions')).not.toBeNull();
+  });
+
+  it('links each client to its detail page', async () => {
+    const api = new ClientsApiStub([
+      {
+        id: '01ARZ3NDEKTSV4RRFFQ69G5FAV',
+        displayName: 'Acme',
+        addressLine1: '',
+        addressLine2: '',
+        postalCode: '',
+        city: '',
+        country: '',
+        email: '',
+        archived: false,
+        updatedAt: 1,
+      },
+    ]);
+    TestBed.configureTestingModule({
+      providers: [provideRouter([]), { provide: ClientsApi, useValue: api }],
+    });
+    const fixture = TestBed.createComponent(Clients);
+    await fixture.whenStable();
+
+    const root: HTMLElement = fixture.nativeElement;
+    expect(root.querySelector<HTMLAnchorElement>('tbody a')?.getAttribute('href')).toBe(
+      '/backoffice/clients/01ARZ3NDEKTSV4RRFFQ69G5FAV',
+    );
   });
 });

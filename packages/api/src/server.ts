@@ -337,6 +337,16 @@ const ClientHandlers = HttpApiBuilder.group(Api, 'clients', (handlers) =>
         }),
       )
       .handle(
+        'clientGet',
+        Effect.fn('clientGet')(function* ({ params }) {
+          yield* setPrivateResponseHeaders;
+          yield* authorizeAdministrator('client.read');
+          return yield* (yield* Clients)
+            .get(params.clientId)
+            .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
+        }),
+      )
+      .handle(
         'clientCreate',
         Effect.fn('clientCreate')(function* ({ payload }) {
           yield* setPrivateResponseHeaders;
@@ -344,6 +354,16 @@ const ClientHandlers = HttpApiBuilder.group(Api, 'clients', (handlers) =>
           const clients = yield* Clients;
           return yield* clients
             .create(payload, principal.userId)
+            .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
+        }),
+      )
+      .handle(
+        'clientUpdate',
+        Effect.fn('clientUpdate')(function* ({ params, payload }) {
+          yield* setPrivateResponseHeaders;
+          const principal = yield* authorizeAdministratorWrite('client.update');
+          return yield* (yield* Clients)
+            .update(params.clientId, payload, principal.userId)
             .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
         }),
       )

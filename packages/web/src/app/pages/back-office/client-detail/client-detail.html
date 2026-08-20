@@ -1,0 +1,141 @@
+<section class="client-page" aria-labelledby="client-title">
+  <header>
+    <p><a routerLink="/backoffice/clients">← {{ i18n.t('backOffice.clientDetail.back') }}</a></p>
+    <h1 id="client-title">{{ i18n.t('backOffice.clientDetail.title') }}</h1>
+  </header>
+
+  @if (loading()) {
+  <p class="status" aria-live="polite">{{ i18n.t('backOffice.clientDetail.loading') }}</p>
+  } @else if (error() === 'client.not_found') {
+  <p class="notice danger" role="alert">{{ i18n.t('client.not_found') }}</p>
+  } @else { @if (archived()) {
+  <p class="notice" role="status">{{ i18n.t('backOffice.clientDetail.archived') }}</p>
+  }
+  <form (submit)="save($event)">
+    <label class="field" for="detail-display-name">
+      {{ i18n.t('backOffice.clients.displayName') }}
+      <input
+        id="detail-display-name"
+        class="input"
+        autocomplete="organization"
+        [formField]="clientForm.displayName"
+        [attr.aria-invalid]="invalid('displayName')"
+        aria-describedby="detail-display-name-error"
+      />
+      @if (invalid('displayName')) {
+      <span id="detail-display-name-error" class="field-error"
+        >{{ i18n.t('backOffice.clients.displayNameError') }}</span
+      >
+      }
+    </label>
+    <label class="field" for="detail-address-line-1">
+      {{ i18n.t('backOffice.clients.addressLine1') }}
+      <input
+        id="detail-address-line-1"
+        class="input"
+        autocomplete="address-line1"
+        [formField]="clientForm.addressLine1"
+        [attr.aria-invalid]="invalid('addressLine1')"
+        aria-describedby="detail-address-line-1-error"
+      />
+      @if (invalid('addressLine1')) {
+      <span id="detail-address-line-1-error" class="field-error"
+        >{{ i18n.t('backOffice.clientDetail.fieldInvalid') }}</span
+      >
+      }
+    </label>
+    <label class="field" for="detail-address-line-2">
+      {{ i18n.t('backOffice.clients.addressLine2') }}
+      <input
+        id="detail-address-line-2"
+        class="input"
+        autocomplete="address-line2"
+        [formField]="clientForm.addressLine2"
+        [attr.aria-invalid]="invalid('addressLine2')"
+        aria-describedby="detail-address-line-2-error"
+      />
+      @if (invalid('addressLine2')) {
+      <span id="detail-address-line-2-error" class="field-error"
+        >{{ i18n.t('backOffice.clientDetail.fieldInvalid') }}</span
+      >
+      }
+    </label>
+    <label class="field" for="detail-postal-code">
+      {{ i18n.t('backOffice.clients.postalCode') }}
+      <input
+        id="detail-postal-code"
+        class="input"
+        autocomplete="postal-code"
+        [formField]="clientForm.postalCode"
+        [attr.aria-invalid]="invalid('postalCode')"
+        aria-describedby="detail-postal-code-error"
+      />
+      @if (invalid('postalCode')) {
+      <span id="detail-postal-code-error" class="field-error"
+        >{{ i18n.t('backOffice.clientDetail.fieldInvalid') }}</span
+      >
+      }
+    </label>
+    <label class="field" for="detail-city">
+      {{ i18n.t('backOffice.clients.city') }}
+      <input
+        id="detail-city"
+        class="input"
+        autocomplete="address-level2"
+        [formField]="clientForm.city"
+        [attr.aria-invalid]="invalid('city')"
+        aria-describedby="detail-city-error"
+      />
+      @if (invalid('city')) {
+      <span id="detail-city-error" class="field-error"
+        >{{ i18n.t('backOffice.clientDetail.fieldInvalid') }}</span
+      >
+      }
+    </label>
+    <label class="field" for="detail-country">
+      {{ i18n.t('backOffice.clients.country') }}
+      <input
+        id="detail-country"
+        class="input"
+        autocomplete="country-name"
+        [formField]="clientForm.country"
+        [attr.aria-invalid]="invalid('country')"
+        aria-describedby="detail-country-error"
+      />
+      @if (invalid('country')) {
+      <span id="detail-country-error" class="field-error"
+        >{{ i18n.t('backOffice.clientDetail.fieldInvalid') }}</span
+      >
+      }
+    </label>
+    <label class="field" for="detail-email">
+      {{ i18n.t('backOffice.clients.email') }}
+      <input
+        id="detail-email"
+        class="input"
+        type="email"
+        autocomplete="email"
+        [formField]="clientForm.email"
+        [attr.aria-invalid]="invalid('email')"
+        aria-describedby="detail-email-error"
+      />
+      @if (invalid('email')) {
+      <span id="detail-email-error" class="field-error"
+        >{{ i18n.t('backOffice.clientDetail.emailInvalid') }}</span
+      >
+      }
+    </label>
+    @if (!archived()) {
+    <div class="actions">
+      <button appButton variant="primary" type="submit" [disabled]="saveDisabled()">
+        @if (saving()) { {{ i18n.t('backOffice.clientDetail.saving') }} } @else { {{
+        i18n.t('backOffice.clientDetail.save') }} }
+      </button>
+      @if (saved()) { <span role="status">{{ i18n.t('backOffice.clientDetail.saved') }}</span> }
+    </div>
+    }
+  </form>
+  @if (error(); as errorKey) {
+  <p class="notice danger" role="alert">{{ i18n.t(errorKey) }}</p>
+  } }
+</section>

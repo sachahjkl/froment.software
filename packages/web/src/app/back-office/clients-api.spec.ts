@@ -40,6 +40,12 @@ describe('ClientsApi', () => {
       country: '',
       email: '',
     };
+    const storedClient = {
+      id: '01ARZ3NDEKTSV4RRFFQ69G5FAV',
+      ...client,
+      archived: false,
+      updatedAt: 42,
+    };
     const create = api.create(client);
     const request = http.expectOne('/api/clients');
     expect(request.request.method).toBe('POST');
@@ -47,18 +53,22 @@ describe('ClientsApi', () => {
       'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA',
     );
     expect(request.request.body).toEqual(client);
-    request.flush({
-      id: '01ARZ3NDEKTSV4RRFFQ69G5FAV',
-      displayName: 'Acme',
-      addressLine1: '',
-      addressLine2: '',
-      postalCode: '',
-      city: '',
-      country: '',
-      email: '',
-      archived: false,
-    });
+    request.flush(storedClient);
     await expect(create).resolves.toMatchObject({ success: true });
+
+    const detail = api.get(storedClient.id);
+    http.expectOne(`/api/clients/${storedClient.id}`).flush(storedClient);
+    await expect(detail).resolves.toEqual({ success: true, result: storedClient });
+
+    const update = api.update(storedClient.id, { ...client, expectedUpdatedAt: 42 });
+    const updateRequest = http.expectOne(`/api/clients/${storedClient.id}`);
+    expect(updateRequest.request.method).toBe('PUT');
+    expect(updateRequest.request.headers.get('x-csrf-token')).toBe(
+      'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA',
+    );
+    expect(updateRequest.request.body).toEqual({ ...client, expectedUpdatedAt: 42 });
+    updateRequest.flush({ ...storedClient, displayName: 'Acme updated', updatedAt: 43 });
+    await expect(update).resolves.toMatchObject({ success: true });
 
     http.verify();
   });

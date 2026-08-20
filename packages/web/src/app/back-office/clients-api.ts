@@ -11,6 +11,7 @@ import {
   type ClientFailureValue,
   type ClientListValue,
   type ClientSummaryValue,
+  type ClientUpdateRequestValue,
   type UlidValue,
 } from '@froment/contracts';
 import { Schema } from 'effect';
@@ -34,6 +35,27 @@ export class ClientsApi {
   async create(request: ClientCreateRequestValue): Promise<ClientOutcome<ClientSummaryValue>> {
     return requestOutcome(
       this.http.post<unknown>('/api/clients', request),
+      ClientSummary,
+      ClientFailure,
+      'client.error',
+    );
+  }
+
+  async get(clientId: UlidValue): Promise<ClientOutcome<ClientSummaryValue>> {
+    return requestOutcome(
+      this.http.get<unknown>(`/api/clients/${clientId}`),
+      ClientSummary,
+      ClientFailure,
+      'client.error',
+    );
+  }
+
+  async update(
+    clientId: UlidValue,
+    request: ClientUpdateRequestValue,
+  ): Promise<ClientOutcome<ClientSummaryValue>> {
+    return requestOutcome(
+      this.http.put<unknown>(`/api/clients/${clientId}`, request),
       ClientSummary,
       ClientFailure,
       'client.error',

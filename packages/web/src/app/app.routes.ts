@@ -144,6 +144,20 @@ export const routes: Routes = [
     },
   },
   {
+    path: 'backoffice/clients/:clientId',
+    loadComponent: () =>
+      import('./pages/back-office/client-detail/client-detail').then(
+        (module) => module.ClientDetail,
+      ),
+    canActivate: [administratorGuard],
+    canDeactivate: [unsavedChangesGuard],
+    data: {
+      titleKey: 'page.back_office_client_detail',
+      descriptionKey: 'page.description.back_office_client_detail',
+      robots: 'noindex, nofollow',
+    },
+  },
+  {
     path: 'backoffice/issuer-settings',
     loadComponent: () =>
       import('./pages/back-office/issuer-settings/issuer-settings').then(

@@ -1,11 +1,13 @@
 import {
   ClientArchived,
   ClientNotFound,
+  ClientVersionConflict,
   Ulid,
   type ClientAccessValue,
   type ClientCreateRequestValue,
   type ClientListValue,
   type ClientSummaryValue,
+  type ClientUpdateRequestValue,
   type UlidValue,
 } from '@froment/contracts';
 import { Clock, Context, Effect, Layer, Schema } from 'effect';
@@ -26,6 +28,7 @@ const ClientRecord = Schema.Struct({
   country: Schema.String,
   email: Schema.String,
   archived: Schema.Number,
+  updatedAt: Schema.Int,
 });
 
 const toSummary = (client: typeof ClientRecord.Type): ClientSummaryValue => ({
@@ -38,10 +41,14 @@ const toSummary = (client: typeof ClientRecord.Type): ClientSummaryValue => ({
   country: client.country,
   email: client.email,
   archived: client.archived === 1,
+  updatedAt: client.updatedAt,
 });
 
 export interface ClientsService {
   readonly list: Effect.Effect<ClientListValue, DatabaseError>;
+  readonly get: (
+    clientId: UlidValue,
+  ) => Effect.Effect<ClientSummaryValue, ClientNotFound | DatabaseError>;
   readonly create: (
     request: ClientCreateRequestValue,
     actorUserId: UlidValue,
@@ -50,6 +57,14 @@ export interface ClientsService {
     clientId: UlidValue,
     actorUserId: UlidValue,
   ) => Effect.Effect<ClientSummaryValue, ClientNotFound | DatabaseError>;
+  readonly update: (
+    clientId: UlidValue,
+    request: ClientUpdateRequestValue,
+    actorUserId: UlidValue,
+  ) => Effect.Effect<
+    ClientSummaryValue,
+    ClientNotFound | ClientArchived | ClientVersionConflict | DatabaseError
+  >;
   readonly createAccess: (
     clientId: UlidValue,
     actorUserId: UlidValue,
@@ -74,7 +89,8 @@ export const ClientsLive = Layer.effect(
                      clients.address_line_2 as addressLine2,
                      clients.postal_code as postalCode, clients.city,
                      clients.country, clients.email,
-                    users.disabled_at is not null as archived
+                     users.disabled_at is not null as archived,
+                     clients.updated_at as updatedAt
              from clients
              join users on users.id = clients.id
              order by users.display_name collate nocase, clients.id`,
@@ -83,6 +99,32 @@ export const ClientsLive = Layer.effect(
         return Schema.decodeUnknownSync(Schema.Array(ClientRecord))(rows).map(toSummary);
       },
       catch: (cause) => new DatabaseError({ operation: 'list clients', cause }),
+    });
+
+    const get = Effect.fn('Clients.get')(function* (clientId: UlidValue) {
+      return yield* Effect.try({
+        try: () => {
+          const row = database.sqlite
+            .prepare(
+              `select clients.id, users.display_name as displayName,
+                      clients.address_line_1 as addressLine1,
+                      clients.address_line_2 as addressLine2,
+                      clients.postal_code as postalCode, clients.city,
+                      clients.country, clients.email,
+                      users.disabled_at is not null as archived,
+                      clients.updated_at as updatedAt
+               from clients join users on users.id = clients.id
+               where clients.id = ?`,
+            )
+            .get(clientId);
+          if (row === undefined) throw new ClientNotFound({ code: 'client.not_found' });
+          return toSummary(Schema.decodeUnknownSync(ClientRecord)(row));
+        },
+        catch: (cause) => {
+          if (cause instanceof ClientNotFound) return cause;
+          return new DatabaseError({ operation: 'get client', cause });
+        },
+      });
     });
 
     const create = Effect.fn('Clients.create')(function* (
@@ -147,7 +189,95 @@ export const ClientsLive = Layer.effect(
             .immediate(),
         catch: (cause) => new DatabaseError({ operation: 'create client', cause }),
       });
-      return { id, displayName, ...fields, archived: false };
+      return { id, displayName, ...fields, archived: false, updatedAt: now };
+    });
+
+    const update = Effect.fn('Clients.update')(function* (
+      clientId: UlidValue,
+      request: ClientUpdateRequestValue,
+      actorUserId: UlidValue,
+    ) {
+      const clockNow = yield* Clock.currentTimeMillis;
+      const displayName = request.displayName.trim();
+      const fields = {
+        addressLine1: request.addressLine1.trim(),
+        addressLine2: request.addressLine2.trim(),
+        postalCode: request.postalCode.trim(),
+        city: request.city.trim(),
+        country: request.country.trim(),
+        email: request.email.trim(),
+      };
+      return yield* Effect.try({
+        try: () =>
+          database.sqlite
+            .transaction(() => {
+              const row = database.sqlite
+                .prepare(
+                  `select clients.id, users.disabled_at as disabledAt,
+                          clients.updated_at as updatedAt
+                   from clients join users on users.id = clients.id
+                   where clients.id = ?`,
+                )
+                .get(clientId);
+              if (row === undefined) throw new ClientNotFound({ code: 'client.not_found' });
+              const current = Schema.decodeUnknownSync(
+                Schema.Struct({
+                  id: Ulid,
+                  disabledAt: Schema.NullOr(Schema.Int),
+                  updatedAt: Schema.Int,
+                }),
+              )(row);
+              if (current.disabledAt !== null) {
+                throw new ClientArchived({ code: 'client.archived' });
+              }
+              if (current.updatedAt !== request.expectedUpdatedAt) {
+                throw new ClientVersionConflict({ code: 'client.version_conflict' });
+              }
+              const updatedAt = Math.max(clockNow, current.updatedAt + 1);
+              const changed = database.sqlite
+                .prepare(
+                  `update clients set address_line_1 = ?, address_line_2 = ?,
+                          postal_code = ?, city = ?, country = ?, email = ?, updated_at = ?
+                   where id = ? and updated_at = ?`,
+                )
+                .run(
+                  fields.addressLine1,
+                  fields.addressLine2,
+                  fields.postalCode,
+                  fields.city,
+                  fields.country,
+                  fields.email,
+                  updatedAt,
+                  clientId,
+                  request.expectedUpdatedAt,
+                ).changes;
+              if (changed !== 1) {
+                throw new ClientVersionConflict({ code: 'client.version_conflict' });
+              }
+              database.sqlite
+                .prepare('update users set display_name = ?, updated_at = ? where id = ?')
+                .run(displayName, updatedAt, clientId);
+              audit.insert({
+                action: 'client.updated',
+                actorUserId,
+                resourceType: 'client',
+                resourceId: clientId,
+                occurredAt: updatedAt,
+              });
+              return { id: clientId, displayName, ...fields, archived: false, updatedAt };
+            })
+            .immediate(),
+        catch: (cause) => {
+          if (
+            cause instanceof ClientNotFound ||
+            cause instanceof ClientArchived ||
+            cause instanceof ClientVersionConflict
+          ) {
+            return cause;
+          }
+          return new DatabaseError({ operation: 'update client', cause });
+        },
+      });
     });
 
     const archive = Effect.fn('Clients.archive')(function* (
@@ -166,7 +296,8 @@ export const ClientsLive = Layer.effect(
                            clients.address_line_2 as addressLine2,
                            clients.postal_code as postalCode, clients.city,
                            clients.country, clients.email,
-                          users.disabled_at is not null as archived
+                           users.disabled_at is not null as archived,
+                           clients.updated_at as updatedAt
                    from clients join users on users.id = clients.id
                    where clients.id = ?`,
                 )
@@ -175,14 +306,15 @@ export const ClientsLive = Layer.effect(
                 throw new ClientNotFound({ code: 'client.not_found' });
               }
               const client = Schema.decodeUnknownSync(ClientRecord)(row);
+              const updatedAt = Math.max(now, client.updatedAt + 1);
               database.sqlite
                 .prepare('update clients set updated_at = ? where id = ?')
-                .run(now, clientId);
+                .run(updatedAt, clientId);
               database.sqlite
                 .prepare(
                   'update users set disabled_at = coalesce(disabled_at, ?), updated_at = ? where id = ?',
                 )
-                .run(now, now, clientId);
+                .run(updatedAt, updatedAt, clientId);
               database.sqlite
                 .prepare(
                   'update access_credentials set revoked_at = coalesce(revoked_at, ?) where user_id = ?',
@@ -198,9 +330,9 @@ export const ClientsLive = Layer.effect(
                 actorUserId,
                 resourceType: 'client',
                 resourceId: clientId,
-                occurredAt: now,
+                occurredAt: updatedAt,
               });
-              return { ...toSummary(client), archived: true };
+              return { ...toSummary(client), archived: true, updatedAt };
             })
             .immediate(),
         catch: (cause) => {
@@ -260,6 +392,6 @@ export const ClientsLive = Layer.effect(
       return { clientId, accessIdentifier };
     });
 
-    return Clients.of({ list, create, archive, createAccess });
+    return Clients.of({ list, get, create, update, archive, createAccess });
   }),
 );

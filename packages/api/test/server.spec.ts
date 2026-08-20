@@ -57,10 +57,12 @@ const reservePort = () =>
     });
   });
 
-const waitForServer = async (url: string, process: ChildProcess) => {
+const waitForServer = async (url: string, process: ChildProcess, readOutput: () => string) => {
   for (let attempt = 0; attempt < 50; attempt += 1) {
     if (process.exitCode !== null) {
-      throw new Error(`The server stopped with exit code ${process.exitCode}.`);
+      throw new Error(
+        `The server stopped with exit code ${process.exitCode}.\n${readOutput().slice(-5_000)}`,
+      );
     }
     try {
       const response = await fetch(url);
@@ -114,7 +116,7 @@ describe('HTTP server', () => {
     server.stderr?.on('data', (chunk: Buffer) => {
       serverOutput += chunk.toString();
     });
-    await waitForServer(`${baseUrl}/api/health`, server);
+    await waitForServer(`${baseUrl}/api/health`, server, () => serverOutput);
   });
 
   afterAll(async () => {
@@ -467,12 +469,71 @@ describe('HTTP server', () => {
       id: string;
       displayName: string;
       archived: boolean;
+      updatedAt: number;
     };
     expect(client).toEqual({
       id: expect.stringMatching(/^[0-7][0-9A-Z]{25}$/),
       displayName: 'Acme',
       ...emptyClientDetails,
       archived: false,
+      updatedAt: expect.any(Number),
+    });
+
+    const detailResponse = await fetch(`${baseUrl}/api/clients/${client.id}`, {
+      headers: { cookie: administratorCookieHeader },
+    });
+    expect(detailResponse.status).toBe(200);
+    await expect(detailResponse.json()).resolves.toEqual(client);
+
+    const updateBody = {
+      ...emptyClientDetails,
+      displayName: 'Acme Conseil',
+      city: 'Lyon',
+      expectedUpdatedAt: client.updatedAt,
+    };
+    const updateWithoutCsrf = await fetch(`${baseUrl}/api/clients/${client.id}`, {
+      method: 'PUT',
+      headers: {
+        cookie: administratorCookieHeader,
+        'content-type': 'application/json',
+        origin: baseUrl,
+      },
+      body: JSON.stringify(updateBody),
+    });
+    expect(updateWithoutCsrf.status).toBe(403);
+    const updateResponse = await fetch(`${baseUrl}/api/clients/${client.id}`, {
+      method: 'PUT',
+      headers: {
+        cookie: administratorCookieHeader,
+        'content-type': 'application/json',
+        origin: baseUrl,
+        'x-csrf-token': administratorCsrf,
+      },
+      body: JSON.stringify(updateBody),
+    });
+    expect(updateResponse.status).toBe(200);
+    const updatedClient = (await updateResponse.json()) as typeof client;
+    expect(updatedClient).toEqual({
+      ...client,
+      displayName: 'Acme Conseil',
+      city: 'Lyon',
+      updatedAt: expect.any(Number),
+    });
+    expect(updatedClient.updatedAt).toBeGreaterThan(client.updatedAt);
+
+    const staleUpdate = await fetch(`${baseUrl}/api/clients/${client.id}`, {
+      method: 'PUT',
+      headers: {
+        cookie: administratorCookieHeader,
+        'content-type': 'application/json',
+        origin: baseUrl,
+        'x-csrf-token': administratorCsrf,
+      },
+      body: JSON.stringify(updateBody),
+    });
+    expect(staleUpdate.status).toBe(409);
+    await expect(staleUpdate.json()).resolves.toMatchObject({
+      code: 'client.version_conflict',
     });
 
     const accessResponse = await fetch(`${baseUrl}/api/clients/${client.id}/access`, {
@@ -515,6 +576,10 @@ describe('HTTP server', () => {
       _tag: 'PermissionDenied',
       code: 'authentication.permission_denied',
     });
+    const forbiddenDetail = await fetch(`${baseUrl}/api/clients/${client.id}`, {
+      headers: { cookie: clientCookieHeader },
+    });
+    expect(forbiddenDetail.status).toBe(403);
 
     const roleSqlite = new Sqlite(databaseFilename);
     roleSqlite
@@ -537,7 +602,50 @@ describe('HTTP server', () => {
       },
     });
     expect(archiveResponse.status).toBe(200);
-    await expect(archiveResponse.json()).resolves.toEqual({ ...client, archived: true });
+    const archivedClient = (await archiveResponse.json()) as typeof client;
+    expect(archivedClient).toEqual({
+      ...updatedClient,
+      archived: true,
+      updatedAt: expect.any(Number),
+    });
+
+    const archivedUpdate = await fetch(`${baseUrl}/api/clients/${client.id}`, {
+      method: 'PUT',
+      headers: {
+        cookie: administratorCookieHeader,
+        'content-type': 'application/json',
+        origin: baseUrl,
+        'x-csrf-token': administratorCsrf,
+      },
+      body: JSON.stringify({ ...updateBody, expectedUpdatedAt: archivedClient.updatedAt }),
+    });
+    expect(archivedUpdate.status).toBe(409);
+    await expect(archivedUpdate.json()).resolves.toMatchObject({ code: 'client.archived' });
+
+    for (let attempt = 0; attempt < 57; attempt += 1) {
+      const boundedUpdate = await fetch(`${baseUrl}/api/clients/${client.id}`, {
+        method: 'PUT',
+        headers: {
+          cookie: administratorCookieHeader,
+          'content-type': 'application/json',
+          origin: baseUrl,
+          'x-csrf-token': administratorCsrf,
+        },
+        body: JSON.stringify({ ...updateBody, expectedUpdatedAt: archivedClient.updatedAt }),
+      });
+      expect(boundedUpdate.status).toBe(409);
+    }
+    const rateLimitedUpdate = await fetch(`${baseUrl}/api/clients/${client.id}`, {
+      method: 'PUT',
+      headers: {
+        cookie: administratorCookieHeader,
+        'content-type': 'application/json',
+        origin: baseUrl,
+        'x-csrf-token': administratorCsrf,
+      },
+      body: JSON.stringify({ ...updateBody, expectedUpdatedAt: archivedClient.updatedAt }),
+    });
+    expect(rateLimitedUpdate.status).toBe(429);
 
     const revokedSession = await fetch(`${baseUrl}/api/auth/session`, {
       headers: { cookie: clientCookieHeader },
@@ -557,7 +665,7 @@ describe('HTTP server', () => {
     const finalList = await fetch(`${baseUrl}/api/clients`, {
       headers: { cookie: administratorCookieHeader },
     });
-    await expect(finalList.json()).resolves.toEqual([{ ...client, archived: true }]);
+    await expect(finalList.json()).resolves.toEqual([archivedClient]);
 
     const sqlite = new Sqlite(databaseFilename, { readonly: true });
     expect(
@@ -582,7 +690,7 @@ describe('HTTP server', () => {
         )
         .pluck()
         .all(client.id),
-    ).toEqual(['client.created', 'client.access-created', 'client.archived']);
+    ).toEqual(['client.created', 'client.updated', 'client.access-created', 'client.archived']);
     expect(
       sqlite
         .prepare('select count(*) from audit_events where metadata like ?')
