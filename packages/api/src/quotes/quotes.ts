@@ -47,6 +47,7 @@ const RevisionRecord = Schema.Struct({
   totalCents: Schema.Int,
   createdAt: Schema.Int,
   createdByUserId: Ulid,
+  previewAvailable: Schema.Int,
 });
 const LineRecord = Schema.Struct({
   id: Ulid,
@@ -124,7 +125,8 @@ const quoteSql = `select id, client_id as clientId, status, version from quotes`
 const revisionSql = `select id, quote_id as quoteId, version,
   client_display_name as clientDisplayName, title, conditions, currency,
   net_total_cents as netTotalCents, vat_total_cents as vatTotalCents,
-  total_cents as totalCents, created_at as createdAt, created_by_user_id as createdByUserId
+  total_cents as totalCents, created_at as createdAt, created_by_user_id as createdByUserId,
+  render_snapshot is not null as previewAvailable
   from quote_revisions`;
 const lineSql = `select id, revision_id as revisionId, position, description,
   quantity_milli as quantityMilli, unit_price_cents as unitPriceCents,
@@ -159,6 +161,7 @@ export const QuotesLive = Layer.effect(
       const mappedRevisions: Array<QuoteRevisionValue> = revisions.map((revision) => ({
         id: revision.id,
         version: revision.version,
+        previewAvailable: revision.previewAvailable === 1,
         clientDisplayName: revision.clientDisplayName,
         title: revision.title,
         conditions: revision.conditions,

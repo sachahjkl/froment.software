@@ -1,10 +1,12 @@
 <section class="quote-page" aria-labelledby="quote-title">
   <header>
+    <p>
+      <a routerLink="/backoffice/quotes">← {{ i18n.t('backOffice.quote.back') }}</a>
+    </p>
     <h1 id="quote-title">
       @if (isNew()) { {{ i18n.t('backOffice.quote.title.new') }} } @else { {{
       i18n.t('backOffice.quote.title.edit') }} }
     </h1>
-    <a routerLink="/backoffice/quotes">{{ i18n.t('backOffice.quote.back') }}</a>
   </header>
 
   @if (loading()) {
@@ -56,6 +58,25 @@
       >
       }
     </label>
+    <div class="condition-preset">
+      <label class="field">
+        {{ i18n.t('backOffice.quote.conditionPreset') }}
+        <select
+          #conditionPreset
+          class="input"
+          [disabled]="!editable()"
+          (change)="selectConditionPreset(conditionPreset)"
+        >
+          <option value="">{{ i18n.t('backOffice.quote.conditionPresetPlaceholder') }}</option>
+          @for (preset of conditionPresets(); track preset.id) {
+          <option [value]="preset.id">{{ preset.name }}</option>
+          }
+        </select>
+      </label>
+      <a routerLink="/backoffice/quote-condition-presets">
+        {{ i18n.t('backOffice.quote.manageConditionPresets') }}
+      </a>
+    </div>
     <label class="field">
       {{ i18n.t('backOffice.quote.conditions') }}
       <textarea class="input" rows="5" [formField]="quoteForm.conditions"></textarea>
@@ -224,6 +245,7 @@
       <li>
         <span><strong>#{{ revision.version }}</strong> · {{ revision.title }}</span>
         <span>{{ date(revision.createdAt) }} · {{ money(revision.totalCents) }}</span>
+        @if (revision.previewAvailable) {
         <button appButton type="button" (click)="showPreview(revision.version)">
           {{ i18n.t('backOffice.quote.preview.show') }}
         </button>
@@ -239,7 +261,7 @@
         </button>
         @if (pdfUrl(revision.version); as pdf) {
         <a [href]="pdf">{{ i18n.t('backOffice.quote.pdf.download') }}</a>
-        }
+        } }
       </li>
       }
     </ol>

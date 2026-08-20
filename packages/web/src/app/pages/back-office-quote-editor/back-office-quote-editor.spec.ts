@@ -4,6 +4,7 @@ import { vi } from 'vitest';
 
 import { BackOfficeClientsApi } from '@backoffice/back-office-clients-api';
 import { BackOfficeQuotesApi } from '@backoffice/back-office-quotes-api';
+import { QuoteConditionPresetsApi } from '@backoffice/quote-condition-presets-api';
 import { TextCopy } from '@shared/text-copy';
 import { BackOfficeQuoteEditor } from './back-office-quote-editor';
 
@@ -49,17 +50,35 @@ describe('BackOfficeQuoteEditor', () => {
       providers: [
         provideRouter([]),
         { provide: BackOfficeClientsApi, useValue: { list: () => Promise.resolve([]) } },
+        {
+          provide: QuoteConditionPresetsApi,
+          useValue: {
+            list: () =>
+              Promise.resolve([
+                {
+                  id: '01ARZ3NDEKTSV4RRFFQ69G5FAS',
+                  name: 'Standard payment',
+                  conditions: 'Payment is due within 30 days.',
+                },
+              ]),
+          },
+        },
         { provide: BackOfficeQuotesApi, useValue: {} },
       ],
     });
     const fixture = TestBed.createComponent(BackOfficeQuoteEditor);
     fixture.detectChanges();
     await fixture.whenStable();
+    await vi.waitFor(() => {
+      fixture.detectChanges();
+      expect(fixture.nativeElement.querySelector('form')).not.toBeNull();
+    });
     fixture.detectChanges();
     const root: HTMLElement = fixture.nativeElement;
     const before = root.querySelectorAll('fieldset').length;
     const addButton = root.querySelector<HTMLButtonElement>('.section-heading button');
-    if (addButton === null) throw new Error('The add line button is unavailable.');
+    if (addButton === null)
+      throw new Error(`The add line button is unavailable: ${root.textContent}`);
 
     addButton.click();
     fixture.detectChanges();
@@ -67,6 +86,18 @@ describe('BackOfficeQuoteEditor', () => {
     expect(before).toBe(1);
     expect(root.querySelectorAll('fieldset')).toHaveLength(2);
     expect(root.textContent).not.toContain('Total HT');
+
+    const presetSelect = root.querySelector<HTMLSelectElement>('.condition-preset select');
+    const conditions = root.querySelector<HTMLTextAreaElement>('textarea');
+    if (presetSelect === null || conditions === null) {
+      throw new Error('The preset conditions controls are unavailable.');
+    }
+    presetSelect.value = '01ARZ3NDEKTSV4RRFFQ69G5FAS';
+    presetSelect.dispatchEvent(new Event('change'));
+    fixture.detectChanges();
+
+    expect(conditions.value).toBe('Payment is due within 30 days.');
+    expect(presetSelect.value).toBe('');
   });
 
   it('does not turn an invalid quote URL into a creation form', async () => {
@@ -78,6 +109,10 @@ describe('BackOfficeQuoteEditor', () => {
           useValue: { snapshot: { paramMap: convertToParamMap({ quoteId: 'invalid' }) } },
         },
         { provide: BackOfficeClientsApi, useValue: { list: () => Promise.resolve([]) } },
+        {
+          provide: QuoteConditionPresetsApi,
+          useValue: { list: () => Promise.resolve([]) },
+        },
         { provide: BackOfficeQuotesApi, useValue: {} },
       ],
     });
@@ -96,12 +131,20 @@ describe('BackOfficeQuoteEditor', () => {
       providers: [
         provideRouter([]),
         { provide: BackOfficeClientsApi, useValue: { list: () => Promise.resolve([]) } },
+        {
+          provide: QuoteConditionPresetsApi,
+          useValue: { list: () => Promise.resolve([]) },
+        },
         { provide: BackOfficeQuotesApi, useValue: {} },
       ],
     });
     const fixture = TestBed.createComponent(BackOfficeQuoteEditor);
     fixture.detectChanges();
     await fixture.whenStable();
+    await vi.waitFor(() => {
+      fixture.detectChanges();
+      expect(fixture.nativeElement.querySelector('form')).not.toBeNull();
+    });
     fixture.detectChanges();
     const root: HTMLElement = fixture.nativeElement;
     const quantity = root.querySelector<HTMLInputElement>('input[inputmode="decimal"]');
@@ -140,6 +183,10 @@ describe('BackOfficeQuoteEditor', () => {
           useValue: { snapshot: { paramMap: convertToParamMap({ quoteId }) } },
         },
         { provide: BackOfficeClientsApi, useValue: { list: () => Promise.resolve([]) } },
+        {
+          provide: QuoteConditionPresetsApi,
+          useValue: { list: () => Promise.resolve([]) },
+        },
         { provide: TextCopy, useValue: { copy } },
         {
           provide: BackOfficeQuotesApi,
@@ -150,6 +197,10 @@ describe('BackOfficeQuoteEditor', () => {
     const fixture = TestBed.createComponent(BackOfficeQuoteEditor);
     fixture.detectChanges();
     await fixture.whenStable();
+    await vi.waitFor(() => {
+      fixture.detectChanges();
+      expect(fixture.nativeElement.querySelector('form')).not.toBeNull();
+    });
     fixture.detectChanges();
     const root: HTMLElement = fixture.nativeElement;
     const sendButton = root.querySelector<HTMLButtonElement>('.send-quote');

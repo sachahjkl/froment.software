@@ -183,6 +183,20 @@ export const routes: Routes = [
     },
   },
   {
+    path: 'backoffice/quote-condition-presets',
+    loadComponent: () =>
+      import('./pages/quote-condition-presets/quote-condition-presets').then(
+        (module) => module.QuoteConditionPresets,
+      ),
+    canActivate: [backOfficeAdministratorGuard],
+    canDeactivate: [unsavedChangesGuard],
+    data: {
+      titleKey: 'page.back_office_condition_presets',
+      descriptionKey: 'page.description.back_office_condition_presets',
+      robots: 'noindex, nofollow',
+    },
+  },
+  {
     path: 'backoffice/quotes/new',
     loadComponent: () =>
       import('./pages/back-office-quote-editor/back-office-quote-editor').then(

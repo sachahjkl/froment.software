@@ -27,6 +27,7 @@ import {
   type QuoteCreateRequestValue,
   type QuoteDetailValue,
   type QuoteLineInputValue,
+  type QuoteConditionPresetListValue,
   type QuoteRevisionCreateRequestValue,
   type QuoteSendResultValue,
   type QuoteStatusValue,
@@ -36,6 +37,7 @@ import { Option, Schema } from 'effect';
 
 import { BackOfficeClientsApi } from '@backoffice/back-office-clients-api';
 import { BackOfficeQuotesApi, type QuoteErrorCode } from '@backoffice/back-office-quotes-api';
+import { QuoteConditionPresetsApi } from '@backoffice/quote-condition-presets-api';
 import { formatFixedDecimal, parseFixedDecimal } from '@backoffice/quote-input';
 import { I18nService, type TranslationKey } from '@app/i18n.service';
 import { Button } from '@shared/button/button';
@@ -81,6 +83,7 @@ export class BackOfficeQuoteEditor {
   protected readonly i18n = inject(I18nService);
   private readonly clientsApi = inject(BackOfficeClientsApi);
   private readonly quotesApi = inject(BackOfficeQuotesApi);
+  private readonly conditionPresetsApi = inject(QuoteConditionPresetsApi);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly textCopy = inject(TextCopy);
@@ -89,6 +92,7 @@ export class BackOfficeQuoteEditor {
   private readonly quoteId = this.decodeQuoteId(this.quoteIdParameter);
   protected readonly isNew = computed(() => this.quoteIdParameter === null);
   protected readonly clients = signal<ClientListValue>([]);
+  protected readonly conditionPresets = signal<QuoteConditionPresetListValue>([]);
   protected readonly detail = signal<QuoteDetailValue | undefined>(undefined);
   protected readonly previewVersion = signal<number | undefined>(undefined);
   protected readonly pdfPendingVersion = signal<number | undefined>(undefined);
@@ -190,6 +194,15 @@ export class BackOfficeQuoteEditor {
       lines: model.lines.filter((_line, currentIndex) => currentIndex !== index),
     }));
     this.quoteForm().markAsDirty();
+  }
+
+  protected selectConditionPreset(select: HTMLSelectElement): void {
+    const presetId = select.value;
+    const preset = this.conditionPresets().find((candidate) => candidate.id === presetId);
+    if (preset === undefined || !this.editable()) return;
+    this.model.update((model) => ({ ...model, conditions: preset.conditions }));
+    this.quoteForm().markAsDirty();
+    select.value = '';
   }
 
   canDeactivate(): boolean {
@@ -319,9 +332,18 @@ export class BackOfficeQuoteEditor {
     }
     try {
       if (this.quoteId === undefined) {
-        this.clients.set((await this.clientsApi.list()).filter((client) => !client.archived));
+        const [conditionPresets, clients] = await Promise.all([
+          this.conditionPresetsApi.list(),
+          this.clientsApi.list(),
+        ]);
+        this.conditionPresets.set(conditionPresets);
+        this.clients.set(clients.filter((client) => !client.archived));
       } else {
-        const outcome = await this.quotesApi.get(this.quoteId);
+        const [conditionPresets, outcome] = await Promise.all([
+          this.conditionPresetsApi.list(),
+          this.quotesApi.get(this.quoteId),
+        ]);
+        this.conditionPresets.set(conditionPresets);
         if (!outcome.success) {
           this.setError(outcome.code);
           this.unavailable.set(true);

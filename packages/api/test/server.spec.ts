@@ -609,6 +609,56 @@ describe('HTTP server', () => {
       origin: baseUrl,
       'x-csrf-token': csrf,
     };
+    const presetCreate = await fetch(`${baseUrl}/api/quote-condition-presets`, {
+      method: 'POST',
+      headers: writeHeaders,
+      body: JSON.stringify({
+        name: 'Standard payment',
+        conditions: 'Payment is due within 30 days.',
+      }),
+    });
+    expect(presetCreate.status).toBe(200);
+    const conditionPreset = (await presetCreate.json()) as {
+      id: string;
+      name: string;
+      conditions: string;
+    };
+    expect(conditionPreset).toMatchObject({
+      id: expect.stringMatching(/^[0-7][0-9A-Z]{25}$/),
+      name: 'Standard payment',
+      conditions: 'Payment is due within 30 days.',
+    });
+    const duplicatePreset = await fetch(`${baseUrl}/api/quote-condition-presets`, {
+      method: 'POST',
+      headers: writeHeaders,
+      body: JSON.stringify({
+        name: 'Standard payment',
+        conditions: 'Different text.',
+      }),
+    });
+    expect(duplicatePreset.status).toBe(409);
+    await expect(duplicatePreset.json()).resolves.toMatchObject({
+      code: 'quote_condition_preset.name_conflict',
+    });
+    const presetUpdate = await fetch(
+      `${baseUrl}/api/quote-condition-presets/${conditionPreset.id}`,
+      {
+        method: 'PUT',
+        headers: writeHeaders,
+        body: JSON.stringify({
+          name: 'Standard payment',
+          conditions: 'Payment is due within 45 days.',
+        }),
+      },
+    );
+    expect(presetUpdate.status).toBe(200);
+    conditionPreset.conditions = 'Payment is due within 45 days.';
+    const presetList = await fetch(`${baseUrl}/api/quote-condition-presets`, {
+      headers: { cookie },
+    });
+    expect(presetList.status).toBe(200);
+    await expect(presetList.json()).resolves.toEqual([conditionPreset]);
+
     const issuerA = {
       displayName: 'Froment Software A',
       addressLine1: '10 rue du Code',
@@ -650,7 +700,7 @@ describe('HTTP server', () => {
       body: JSON.stringify({
         clientId: client.id,
         title: 'Initial quote',
-        conditions: 'Payable in 30 days',
+        conditions: conditionPreset.conditions,
         lines: [
           {
             description: 'Consulting',
@@ -675,6 +725,21 @@ describe('HTTP server', () => {
     });
     expect(quote.currentRevision.createdAt).toMatch(/^\d{4}-\d{2}-\d{2}T.*\.\d{3}Z$/);
     expect(quote.revisions).toHaveLength(1);
+    const presetDelete = await fetch(
+      `${baseUrl}/api/quote-condition-presets/${conditionPreset.id}`,
+      {
+        method: 'DELETE',
+        headers: writeHeaders,
+      },
+    );
+    expect(presetDelete.status).toBe(200);
+    await expect(presetDelete.json()).resolves.toEqual(conditionPreset);
+    const quoteAfterPresetDelete = await fetch(`${baseUrl}/api/quotes/${quote.id}`, {
+      headers: { cookie },
+    });
+    await expect(quoteAfterPresetDelete.json()).resolves.toMatchObject({
+      currentRevision: { conditions: conditionPreset.conditions },
+    });
     const firstPreview = await fetch(`${baseUrl}/api/quotes/${quote.id}/revisions/1/preview`, {
       headers: { cookie },
     });
@@ -777,6 +842,33 @@ describe('HTTP server', () => {
       headers: { cookie },
     });
     expect(await secondPreview.text()).toContain('Froment Software B');
+
+    const sqlite = new Sqlite(databaseFilename);
+    sqlite
+      .prepare(
+        `update quote_revisions
+         set render_snapshot = null, template_id = null, template_version = null
+         where id = ?`,
+      )
+      .run(quote.currentRevision.id);
+    sqlite.close();
+    const quoteWithLegacyRevision = await fetch(`${baseUrl}/api/quotes/${quote.id}`, {
+      headers: { cookie },
+    });
+    await expect(quoteWithLegacyRevision.json()).resolves.toMatchObject({
+      revisions: [
+        { version: 1, previewAvailable: false },
+        { version: 2, previewAvailable: true },
+      ],
+    });
+    const unavailablePreview = await fetch(
+      `${baseUrl}/api/quotes/${quote.id}/revisions/1/preview`,
+      { headers: { cookie } },
+    );
+    expect(unavailablePreview.status).toBe(409);
+    await expect(unavailablePreview.json()).resolves.toMatchObject({
+      code: 'quote.preview_unavailable',
+    });
 
     const conflict = await fetch(`${baseUrl}/api/quotes/${quote.id}/revisions`, {
       method: 'POST',

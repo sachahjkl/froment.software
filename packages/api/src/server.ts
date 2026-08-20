@@ -24,6 +24,7 @@ import { DocumentArtifacts } from './documents/document-artifacts.js';
 import { DocumentRenderer } from './documents/document-renderer.js';
 import { Quotes } from './quotes/quotes.js';
 import { QuoteLinks } from './quotes/quote-links.js';
+import { QuoteConditionPresets } from './quotes/quote-condition-presets.js';
 import { Invoices } from './invoices/invoices.js';
 import { RequestLimiter, RequestLimiterLive } from './server/request-limiter.js';
 
@@ -342,6 +343,46 @@ const ClientHandlers = HttpApiBuilder.group(Api, 'clients', (handlers) =>
 const QuoteHandlers = HttpApiBuilder.group(Api, 'quotes', (handlers) =>
   Effect.succeed(
     handlers
+      .handle(
+        'quoteConditionPresetList',
+        Effect.fn('quoteConditionPresetList')(function* () {
+          yield* setPrivateResponseHeaders;
+          yield* authorizeAdministrator('quote.read');
+          return yield* (yield* QuoteConditionPresets).list.pipe(
+            Effect.catchTag('DatabaseError', Effect.orDie),
+          );
+        }),
+      )
+      .handle(
+        'quoteConditionPresetCreate',
+        Effect.fn('quoteConditionPresetCreate')(function* ({ payload }) {
+          yield* setPrivateResponseHeaders;
+          const principal = yield* authorizeAdministratorWrite('quote.update');
+          return yield* (yield* QuoteConditionPresets)
+            .create(payload, principal.userId)
+            .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
+        }),
+      )
+      .handle(
+        'quoteConditionPresetUpdate',
+        Effect.fn('quoteConditionPresetUpdate')(function* ({ params, payload }) {
+          yield* setPrivateResponseHeaders;
+          const principal = yield* authorizeAdministratorWrite('quote.update');
+          return yield* (yield* QuoteConditionPresets)
+            .update(params.presetId, payload, principal.userId)
+            .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
+        }),
+      )
+      .handle(
+        'quoteConditionPresetDelete',
+        Effect.fn('quoteConditionPresetDelete')(function* ({ params }) {
+          yield* setPrivateResponseHeaders;
+          const principal = yield* authorizeAdministratorWrite('quote.update');
+          return yield* (yield* QuoteConditionPresets)
+            .remove(params.presetId, principal.userId)
+            .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
+        }),
+      )
       .handle(
         'issuerSettingsGet',
         Effect.fn('issuerSettingsGet')(function* () {

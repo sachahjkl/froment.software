@@ -123,6 +123,18 @@ export {
 } from './quotes.js';
 export { Api, ClientsApi, InvoicesApi, QuotesApi, SystemApi } from './api.js';
 export {
+  QuoteConditionPreset,
+  type QuoteConditionPreset as QuoteConditionPresetValue,
+  QuoteConditionPresetFailure,
+  type QuoteConditionPresetFailure as QuoteConditionPresetFailureValue,
+  QuoteConditionPresetList,
+  type QuoteConditionPresetList as QuoteConditionPresetListValue,
+  QuoteConditionPresetNameConflict,
+  QuoteConditionPresetNotFound,
+  QuoteConditionPresetWriteRequest,
+  type QuoteConditionPresetWriteRequest as QuoteConditionPresetWriteRequestValue,
+} from './quote-condition-presets.js';
+export {
   InvoiceAlreadyExists,
   InvoiceAmountTooLarge,
   InvoiceCreateRequest,

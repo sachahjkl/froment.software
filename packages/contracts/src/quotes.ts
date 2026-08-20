@@ -148,6 +148,7 @@ export type QuoteAcceptanceResult = typeof QuoteAcceptanceResult.Type;
 export const QuoteRevision = Schema.Struct({
   id: Ulid,
   version: PositiveSafeInteger,
+  previewAvailable: Schema.Boolean,
   clientDisplayName: Schema.NonEmptyString,
   title: QuoteTitle,
   conditions: QuoteConditions,

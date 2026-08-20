@@ -56,6 +56,13 @@ import {
 } from './quotes.js';
 import { DeploymentMetadata } from './version.js';
 import {
+  QuoteConditionPreset,
+  QuoteConditionPresetList,
+  QuoteConditionPresetNameConflict,
+  QuoteConditionPresetNotFound,
+  QuoteConditionPresetWriteRequest,
+} from './quote-condition-presets.js';
+import {
   InvoiceAlreadyExists,
   InvoiceAmountTooLarge,
   InvoiceCreateRequest,
@@ -159,6 +166,48 @@ export class ClientsApi extends HttpApiGroup.make('clients', { topLevel: true })
 ) {}
 
 export class QuotesApi extends HttpApiGroup.make('quotes', { topLevel: true }).add(
+  HttpApiEndpoint.get('quoteConditionPresetList', '/api/quote-condition-presets', {
+    success: QuoteConditionPresetList,
+    error: [
+      AuthenticationRequired.pipe(HttpApiSchema.status(401)),
+      PermissionDenied.pipe(HttpApiSchema.status(403)),
+    ],
+  }),
+  HttpApiEndpoint.post('quoteConditionPresetCreate', '/api/quote-condition-presets', {
+    payload: QuoteConditionPresetWriteRequest,
+    success: QuoteConditionPreset,
+    error: [
+      AuthenticationRequired.pipe(HttpApiSchema.status(401)),
+      PermissionDenied.pipe(HttpApiSchema.status(403)),
+      CsrfRejected.pipe(HttpApiSchema.status(403)),
+      RequestRateLimited.pipe(HttpApiSchema.status(429)),
+      QuoteConditionPresetNameConflict.pipe(HttpApiSchema.status(409)),
+    ],
+  }),
+  HttpApiEndpoint.put('quoteConditionPresetUpdate', '/api/quote-condition-presets/:presetId', {
+    params: { presetId: Ulid },
+    payload: QuoteConditionPresetWriteRequest,
+    success: QuoteConditionPreset,
+    error: [
+      AuthenticationRequired.pipe(HttpApiSchema.status(401)),
+      PermissionDenied.pipe(HttpApiSchema.status(403)),
+      CsrfRejected.pipe(HttpApiSchema.status(403)),
+      RequestRateLimited.pipe(HttpApiSchema.status(429)),
+      QuoteConditionPresetNotFound.pipe(HttpApiSchema.status(404)),
+      QuoteConditionPresetNameConflict.pipe(HttpApiSchema.status(409)),
+    ],
+  }),
+  HttpApiEndpoint.delete('quoteConditionPresetDelete', '/api/quote-condition-presets/:presetId', {
+    params: { presetId: Ulid },
+    success: QuoteConditionPreset,
+    error: [
+      AuthenticationRequired.pipe(HttpApiSchema.status(401)),
+      PermissionDenied.pipe(HttpApiSchema.status(403)),
+      CsrfRejected.pipe(HttpApiSchema.status(403)),
+      RequestRateLimited.pipe(HttpApiSchema.status(429)),
+      QuoteConditionPresetNotFound.pipe(HttpApiSchema.status(404)),
+    ],
+  }),
   HttpApiEndpoint.get('issuerSettingsGet', '/api/issuer-settings', {
     success: IssuerSettings,
     error: [

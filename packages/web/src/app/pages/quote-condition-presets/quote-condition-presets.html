@@ -1,0 +1,72 @@
+<section class="presets-page" aria-labelledby="presets-title">
+  <header>
+    <p><a routerLink="/backoffice/quotes">← {{ i18n.t('backOffice.quote.back') }}</a></p>
+    <h1 id="presets-title">{{ i18n.t('backOffice.conditionPresets.title') }}</h1>
+  </header>
+
+  <p class="intro">{{ i18n.t('backOffice.conditionPresets.intro') }}</p>
+
+  <form (submit)="save($event)">
+    <label class="field">
+      {{ i18n.t('backOffice.conditionPresets.name') }}
+      <input class="input" [formField]="presetForm.name" />
+    </label>
+    <label class="field conditions-field">
+      {{ i18n.t('backOffice.quote.conditions') }}
+      <textarea class="input" rows="6" [formField]="presetForm.conditions"></textarea>
+    </label>
+    @if (error(); as errorKey) {
+    <p class="notice danger" role="alert">{{ i18n.t(errorKey) }}</p>
+    }
+    <div class="form-actions">
+      <button
+        appButton
+        variant="primary"
+        type="submit"
+        [disabled]="saving() || presetForm().invalid()"
+      >
+        {{ i18n.t(editing() ? 'backOffice.conditionPresets.update' :
+        'backOffice.conditionPresets.create') }}
+      </button>
+      @if (editing()) {
+      <button appButton type="button" (click)="cancel()">
+        {{ i18n.t('backOffice.conditionPresets.cancel') }}
+      </button>
+      }
+    </div>
+  </form>
+
+  @if (loading()) {
+  <p aria-live="polite">{{ i18n.t('backOffice.conditionPresets.loading') }}</p>
+  } @else if (presets().length === 0) {
+  <p class="empty">{{ i18n.t('backOffice.conditionPresets.empty') }}</p>
+  } @else {
+  <div appBackOfficeTable>
+    <table>
+      <thead>
+        <tr>
+          <th>{{ i18n.t('backOffice.conditionPresets.name') }}</th>
+          <th>{{ i18n.t('backOffice.quote.conditions') }}</th>
+          <th>{{ i18n.t('backOffice.quotes.actions') }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (preset of presets(); track preset.id) {
+        <tr>
+          <td><strong>{{ preset.name }}</strong></td>
+          <td class="preset-conditions">{{ preset.conditions }}</td>
+          <td class="row-actions">
+            <button appButton type="button" (click)="edit(preset)">
+              {{ i18n.t('backOffice.conditionPresets.edit') }}
+            </button>
+            <button appButton variant="danger" type="button" (click)="remove(preset)">
+              {{ i18n.t('backOffice.conditionPresets.delete') }}
+            </button>
+          </td>
+        </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+  }
+</section>

@@ -1,6 +1,8 @@
 export type Language = 'fr' | 'en';
 
-export type TranslationKey = keyof typeof translations.fr;
+export type Translations = (typeof translations)[Language];
+export type TranslationKey = keyof Translations;
+export type TranslationDictionary = Record<TranslationKey, string>;
 
 export const translations = {
   fr: {
@@ -61,6 +63,9 @@ export const translations = {
     'page.description.back_office': 'Accès privé aux documents de Froment Software.',
     'page.back_office_clients': 'Clients | Back office',
     'page.description.back_office_clients': 'Gestion des clients de Froment Software.',
+    'page.back_office_condition_presets': 'Conditions de devis | Back office',
+    'page.description.back_office_condition_presets':
+      'Gestion des conditions réutilisables dans les devis.',
     'page.back_office_client': 'Documents | Froment Software',
     'page.description.back_office_client': 'Documents partagés avec le client.',
     'page.public_quote': 'Consultation du devis | Froment Software',
@@ -110,6 +115,9 @@ export const translations = {
     'backOffice.quote.lineNumber': 'Ligne {number}',
     'backOffice.quote.title': 'Titre',
     'backOffice.quote.conditions': 'Conditions',
+    'backOffice.quote.conditionPreset': 'Conditions prédéfinies',
+    'backOffice.quote.conditionPresetPlaceholder': 'Sélectionnez des conditions',
+    'backOffice.quote.manageConditionPresets': 'Gérer les conditions prédéfinies',
     'backOffice.quote.lines': 'Lignes',
     'backOffice.quote.description': 'Description',
     'backOffice.quote.quantity': 'Quantité',
@@ -161,6 +169,8 @@ export const translations = {
     'quote.not_editable': 'Ce devis ne peut plus être modifié.',
     'quote.pdf_required': 'Générez le PDF de la révision actuelle avant l’envoi.',
     'quote.preview_unavailable': 'Aucun aperçu n’est disponible pour cette ancienne révision.',
+    'quote_condition_preset.not_found': 'Ces conditions prédéfinies sont introuvables.',
+    'quote_condition_preset.name_conflict': 'Ce nom de conditions est déjà utilisé.',
     'quote_link.not_found': 'Ce lien de devis est indisponible.',
     'quote_link.not_signable': 'Ce devis ne peut plus être signé.',
     'publicQuote.error': 'Le serveur ne peut pas charger ou accepter ce devis.',
@@ -203,6 +213,18 @@ export const translations = {
     'page.description.back_office_quotes': 'Gestion des devis.',
     'page.back_office_quote_editor': 'Éditeur de devis | froment.software',
     'page.description.back_office_quote_editor': 'Création et révision d’un devis.',
+    'backOffice.conditionPresets.title': 'Conditions prédéfinies',
+    'backOffice.conditionPresets.intro':
+      'Créez des textes réutilisables, puis adaptez-les dans chaque devis.',
+    'backOffice.conditionPresets.name': 'Nom',
+    'backOffice.conditionPresets.create': 'Créer les conditions',
+    'backOffice.conditionPresets.update': 'Enregistrer les modifications',
+    'backOffice.conditionPresets.cancel': 'Annuler',
+    'backOffice.conditionPresets.edit': 'Modifier',
+    'backOffice.conditionPresets.delete': 'Supprimer',
+    'backOffice.conditionPresets.deleteConfirmation': 'Supprimer ces conditions prédéfinies ?',
+    'backOffice.conditionPresets.loading': 'Chargement des conditions…',
+    'backOffice.conditionPresets.empty': 'Aucune condition prédéfinie.',
     'backOffice.clients.back': 'Retour au back office',
     'backOffice.clients.displayName': 'Nom du client',
     'backOffice.clients.addressLine1': 'Adresse',
@@ -829,6 +851,8 @@ export const translations = {
     'page.description.back_office': 'Private access to Froment Software documents.',
     'page.back_office_clients': 'Clients | Back office',
     'page.description.back_office_clients': 'Froment Software client management.',
+    'page.back_office_condition_presets': 'Quote terms | Back office',
+    'page.description.back_office_condition_presets': 'Manage reusable quote terms.',
     'page.back_office_client': 'Documents | Froment Software',
     'page.description.back_office_client': 'Documents shared with the client.',
     'page.public_quote': 'Quote review | Froment Software',
@@ -877,6 +901,9 @@ export const translations = {
     'backOffice.quote.lineNumber': 'Line {number}',
     'backOffice.quote.title': 'Title',
     'backOffice.quote.conditions': 'Terms',
+    'backOffice.quote.conditionPreset': 'Preset terms',
+    'backOffice.quote.conditionPresetPlaceholder': 'Select preset terms',
+    'backOffice.quote.manageConditionPresets': 'Manage preset terms',
     'backOffice.quote.lines': 'Lines',
     'backOffice.quote.description': 'Description',
     'backOffice.quote.quantity': 'Quantity',
@@ -927,6 +954,8 @@ export const translations = {
     'quote.not_editable': 'This quote can no longer be edited.',
     'quote.pdf_required': 'Generate the current revision PDF before sending the quote.',
     'quote.preview_unavailable': 'No preview is available for this older revision.',
+    'quote_condition_preset.not_found': 'These preset terms were not found.',
+    'quote_condition_preset.name_conflict': 'This preset name is already in use.',
     'quote_link.not_found': 'This quote link is unavailable.',
     'quote_link.not_signable': 'This quote can no longer be signed.',
     'publicQuote.error': 'The server cannot load or accept this quote.',
@@ -966,6 +995,17 @@ export const translations = {
     'page.description.back_office_quotes': 'Quote management.',
     'page.back_office_quote_editor': 'Quote editor | froment.software',
     'page.description.back_office_quote_editor': 'Create and revise a quote.',
+    'backOffice.conditionPresets.title': 'Preset terms',
+    'backOffice.conditionPresets.intro': 'Create reusable text, then adapt it for each quote.',
+    'backOffice.conditionPresets.name': 'Name',
+    'backOffice.conditionPresets.create': 'Create terms',
+    'backOffice.conditionPresets.update': 'Save changes',
+    'backOffice.conditionPresets.cancel': 'Cancel',
+    'backOffice.conditionPresets.edit': 'Edit',
+    'backOffice.conditionPresets.delete': 'Delete',
+    'backOffice.conditionPresets.deleteConfirmation': 'Delete these preset terms?',
+    'backOffice.conditionPresets.loading': 'Loading terms…',
+    'backOffice.conditionPresets.empty': 'No preset terms.',
     'backOffice.clients.back': 'Back to the back office',
     'backOffice.clients.displayName': 'Client name',
     'backOffice.clients.addressLine1': 'Address',
@@ -1546,9 +1586,7 @@ type TranslationParameter<Value extends string> =
     : never;
 
 export type ParameterizedTranslationKey = {
-  [Key in TranslationKey]: TranslationParameter<(typeof translations)['fr'][Key]> extends never
-    ? never
-    : Key;
+  [Key in TranslationKey]: TranslationParameter<Translations[Key]> extends never ? never : Key;
 }[TranslationKey];
 
 export type TranslationParameters<Key extends ParameterizedTranslationKey> = Readonly<

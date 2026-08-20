@@ -13,6 +13,7 @@ import { DocumentArtifactsLive } from './documents/document-artifacts.js';
 import { DocumentRendererLive } from './documents/document-renderer.js';
 import { QuotesLive } from './quotes/quotes.js';
 import { QuoteLinksLive } from './quotes/quote-links.js';
+import { QuoteConditionPresetsLive } from './quotes/quote-condition-presets.js';
 import { InvoicesLive } from './invoices/invoices.js';
 import { ServerLive } from './server.js';
 import { ObservabilityLive } from './observability/observability.js';
@@ -28,6 +29,7 @@ const ServicesLive = Layer.mergeAll(
   ClientsLive,
   QuoteServicesLive,
   QuoteLinksLive,
+  QuoteConditionPresetsLive,
   DeploymentLive,
 ).pipe(
   Layer.provide(AuditLive),

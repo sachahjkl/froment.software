@@ -337,6 +337,33 @@ export const quoteLines = sqliteTable(
   ],
 );
 
+export const quoteConditionPresets = sqliteTable(
+  'quote_condition_presets',
+  {
+    id: text().notNull().primaryKey(),
+    name: text().notNull(),
+    conditions: text().notNull(),
+    createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull(),
+    updatedAt: integer('updated_at', { mode: 'timestamp_ms' }).notNull(),
+  },
+  (table) => [
+    uniqueIndex('quote_condition_presets_name_unique').on(table.name),
+    check(
+      'quote_condition_presets_id_ulid_check',
+      sql`${table.id} is not null and length(${table.id}) = 26 and ${table.id} not glob '*[^0-9A-HJKMNP-TV-Z]*' and substr(${table.id}, 1, 1) between '0' and '7'`,
+    ),
+    check('quote_condition_presets_name_check', sql`length(trim(${table.name})) between 1 and 120`),
+    check(
+      'quote_condition_presets_conditions_check',
+      sql`length(trim(${table.conditions})) > 0 and length(${table.conditions}) <= 2000`,
+    ),
+    check(
+      'quote_condition_presets_timestamps_check',
+      sql`${table.updatedAt} >= ${table.createdAt}`,
+    ),
+  ],
+);
+
 export const documentArtifacts = sqliteTable(
   'document_artifacts',
   {
