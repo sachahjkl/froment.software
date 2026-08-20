@@ -341,10 +341,11 @@ export const documentArtifacts = sqliteTable(
   'document_artifacts',
   {
     id: text().notNull().primaryKey(),
-    revisionId: text('revision_id')
-      .notNull()
-      .references(() => quoteRevisions.id, { onDelete: 'cascade' }),
-    kind: text({ enum: ['quote-pdf'] }).notNull(),
+    revisionId: text('revision_id').references(() => quoteRevisions.id, { onDelete: 'cascade' }),
+    invoiceRevisionId: text('invoice_revision_id').references(() => invoiceRevisions.id, {
+      onDelete: 'no action',
+    }),
+    kind: text({ enum: ['quote-pdf', 'invoice-pdf'] }).notNull(),
     contentType: text('content_type').notNull(),
     byteSize: integer('byte_size').notNull(),
     sha256: text().notNull(),
@@ -352,18 +353,26 @@ export const documentArtifacts = sqliteTable(
     createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull(),
   },
   (table) => [
-    uniqueIndex('document_artifacts_revision_kind_unique').on(table.revisionId, table.kind),
+    uniqueIndex('document_artifacts_quote_revision_kind_unique').on(table.revisionId, table.kind),
+    uniqueIndex('document_artifacts_invoice_revision_kind_unique').on(
+      table.invoiceRevisionId,
+      table.kind,
+    ),
     check(
       'document_artifacts_id_ulid_check',
       sql`${table.id} is not null and length(${table.id}) = 26 and ${table.id} not glob '*[^0-9A-HJKMNP-TV-Z]*' and substr(${table.id}, 1, 1) between '0' and '7'`,
     ),
-    check('document_artifacts_kind_check', sql`${table.kind} = 'quote-pdf'`),
+    check(
+      'document_artifacts_kind_check',
+      sql`(${table.kind} = 'quote-pdf' and ${table.revisionId} is not null and ${table.invoiceRevisionId} is null) or (${table.kind} = 'invoice-pdf' and ${table.revisionId} is null and ${table.invoiceRevisionId} is not null)`,
+    ),
     check('document_artifacts_content_type_check', sql`${table.contentType} = 'application/pdf'`),
     check(
       'document_artifacts_content_check',
       sql`${table.byteSize} > 0 and ${table.byteSize} = length(${table.content}) and typeof(${table.content}) = 'blob' and length(${table.sha256}) = 64 and ${table.sha256} not glob '*[^a-f0-9]*'`,
     ),
     index('document_artifacts_revision_id_index').on(table.revisionId),
+    index('document_artifacts_invoice_revision_id_index').on(table.invoiceRevisionId),
   ],
 );
 

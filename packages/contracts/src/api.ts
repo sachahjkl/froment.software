@@ -60,6 +60,7 @@ import {
   InvoiceAmountTooLarge,
   InvoiceCreateRequest,
   InvoiceDetail,
+  InvoiceDocumentArtifact,
   InvoiceInvalidDates,
   InvoiceIssueRequest,
   InvoiceIssueResult,
@@ -305,6 +306,21 @@ export class InvoicesApi extends HttpApiGroup.make('invoices', { topLevel: true 
     params: { invoiceId: Ulid },
     success: InvoiceDetail,
     error: [...invoiceReadErrors, InvoiceNotFound.pipe(HttpApiSchema.status(404))],
+  }),
+  HttpApiEndpoint.get('invoicePreview', '/api/invoices/:invoiceId/revisions/:version/preview', {
+    params: { invoiceId: Ulid, version: RevisionVersionParameter },
+    success: Schema.String.pipe(HttpApiSchema.asText({ contentType: 'text/html; charset=utf-8' })),
+    error: [...invoiceReadErrors, InvoiceNotFound.pipe(HttpApiSchema.status(404))],
+  }),
+  HttpApiEndpoint.post('invoicePdfRender', '/api/invoices/:invoiceId/revisions/:version/pdf', {
+    params: { invoiceId: Ulid, version: RevisionVersionParameter },
+    success: InvoiceDocumentArtifact,
+    error: [...invoiceWriteErrors, InvoiceNotFound.pipe(HttpApiSchema.status(404))],
+  }),
+  HttpApiEndpoint.get('invoicePdfDownload', '/api/invoices/:invoiceId/revisions/:version/pdf', {
+    params: { invoiceId: Ulid, version: RevisionVersionParameter },
+    success: Schema.Uint8Array.pipe(HttpApiSchema.asUint8Array({ contentType: 'application/pdf' })),
+    error: [...invoiceReadErrors, DocumentNotFound.pipe(HttpApiSchema.status(404))],
   }),
   HttpApiEndpoint.post('invoiceCreate', '/api/invoices', {
     payload: InvoiceCreateRequest,

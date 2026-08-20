@@ -1100,6 +1100,68 @@ describe('HTTP server', () => {
       invoiceNumber: 'F-000001',
       issuedAt: expect.stringMatching(/^\d{4}-\d{2}-\d{2}T.*\.\d{3}Z$/),
     });
+
+    const missingInvoicePdf = await fetch(`${baseUrl}/api/invoices/${invoice.id}/revisions/3/pdf`, {
+      headers: { cookie },
+    });
+    expect(missingInvoicePdf.status).toBe(404);
+    await expect(missingInvoicePdf.json()).resolves.toMatchObject({ code: 'document.not_found' });
+
+    const invoicePreview = await fetch(
+      `${baseUrl}/api/invoices/${invoice.id}/revisions/3/preview`,
+      { headers: { cookie } },
+    );
+    expect(invoicePreview.status).toBe(200);
+    expect(invoicePreview.headers.get('content-type')).toContain('text/html');
+    expect(invoicePreview.headers.get('content-security-policy')).toBe(
+      "default-src 'none'; style-src 'unsafe-inline'; img-src data:",
+    );
+    await expect(invoicePreview.text()).resolves.toEqual(expect.stringContaining('F-000001'));
+
+    const invoicePdfResponses = await Promise.all([
+      fetch(`${baseUrl}/api/invoices/${invoice.id}/revisions/3/pdf`, {
+        method: 'POST',
+        headers: writeHeaders,
+      }),
+      fetch(`${baseUrl}/api/invoices/${invoice.id}/revisions/3/pdf`, {
+        method: 'POST',
+        headers: writeHeaders,
+      }),
+    ]);
+    expect(invoicePdfResponses.map((response) => response.status)).toEqual([200, 200]);
+    const invoiceArtifacts = (await Promise.all(
+      invoicePdfResponses.map((response) => response.json()),
+    )) as Array<{
+      id: string;
+      invoiceRevisionId: string;
+      kind: string;
+      contentType: string;
+      byteSize: number;
+      sha256: string;
+    }>;
+    expect(invoiceArtifacts[0]).toEqual(invoiceArtifacts[1]);
+    expect(invoiceArtifacts[0]).toMatchObject({
+      invoiceRevisionId: issueResults[0]?.revisionId,
+      kind: 'invoice-pdf',
+      contentType: 'application/pdf',
+      byteSize: expect.any(Number),
+      sha256: expect.stringMatching(/^[a-f0-9]{64}$/),
+    });
+
+    const invoicePdfDownload = await fetch(
+      `${baseUrl}/api/invoices/${invoice.id}/revisions/3/pdf`,
+      { headers: { cookie } },
+    );
+    expect(invoicePdfDownload.status).toBe(200);
+    expect(invoicePdfDownload.headers.get('content-type')).toContain('application/pdf');
+    expect(invoicePdfDownload.headers.get('content-disposition')).toContain(
+      `invoice-${invoice.id}-v3.pdf`,
+    );
+    const invoicePdf = Buffer.from(await invoicePdfDownload.arrayBuffer());
+    expect(invoicePdf.subarray(0, 5).toString()).toBe('%PDF-');
+    expect(invoicePdf.byteLength).toBe(invoiceArtifacts[0]?.byteSize);
+    expect(createHash('sha256').update(invoicePdf).digest('hex')).toBe(invoiceArtifacts[0]?.sha256);
+
     const invoiceList = await fetch(`${baseUrl}/api/invoices`, { headers: { cookie } });
     expect(invoiceList.status).toBe(200);
     await expect(invoiceList.json()).resolves.toMatchObject([
@@ -1124,6 +1186,15 @@ describe('HTTP server', () => {
       invoiceSqlite
         .prepare(
           "select count(*) from audit_events where action = 'invoice.issued' and resource_id = ?",
+        )
+        .pluck()
+        .get(invoice.id),
+    ).toBe(1);
+    expect(
+      invoiceSqlite
+        .prepare(
+          `select count(*) from audit_events
+           where action = 'document.rendered' and json_extract(metadata, '$.invoiceId') = ?`,
         )
         .pluck()
         .get(invoice.id),

@@ -21,7 +21,7 @@ import { Database } from './database/database.js';
 import { Deployment } from './deployment/deployment.js';
 import { IssuerSettings } from './documents/issuer-settings.js';
 import { DocumentArtifacts } from './documents/document-artifacts.js';
-import { QuoteRenderer } from './documents/quote-renderer.js';
+import { DocumentRenderer } from './documents/document-renderer.js';
 import { Quotes } from './quotes/quotes.js';
 import { QuoteLinks } from './quotes/quote-links.js';
 import { Invoices } from './invoices/invoices.js';
@@ -389,7 +389,7 @@ const QuoteHandlers = HttpApiBuilder.group(Api, 'quotes', (handlers) =>
           const snapshot = yield* (yield* Quotes)
             .getSnapshot(params.quoteId, params.version)
             .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
-          return yield* (yield* QuoteRenderer).render(snapshot).pipe(Effect.orDie);
+          return yield* (yield* DocumentRenderer).renderQuote(snapshot).pipe(Effect.orDie);
         }),
       )
       .handle(
@@ -521,6 +521,50 @@ const InvoiceHandlers = HttpApiBuilder.group(Api, 'invoices', (handlers) =>
           yield* authorizeAdministrator('invoice.read');
           return yield* (yield* Invoices)
             .get(params.invoiceId)
+            .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
+        }),
+      )
+      .handle(
+        'invoicePreview',
+        Effect.fn('invoicePreview')(function* ({ params }) {
+          yield* setPrivateResponseHeaders;
+          yield* setDocumentResponseHeaders;
+          yield* authorizeAdministrator('document.render');
+          const snapshot = yield* (yield* Invoices)
+            .getSnapshot(params.invoiceId, params.version)
+            .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
+          return yield* (yield* DocumentRenderer).renderInvoice(snapshot).pipe(Effect.orDie);
+        }),
+      )
+      .handle(
+        'invoicePdfRender',
+        Effect.fn('invoicePdfRender')(function* ({ params }) {
+          yield* setPrivateResponseHeaders;
+          const principal = yield* authorizeAdministratorWrite('document.render', 10);
+          return yield* (yield* DocumentArtifacts)
+            .renderInvoicePdf(params.invoiceId, params.version, principal.userId)
+            .pipe(
+              Effect.catchTag('DatabaseError', Effect.orDie),
+              Effect.catchTag('DocumentRenderError', Effect.orDie),
+            );
+        }),
+      )
+      .handle(
+        'invoicePdfDownload',
+        Effect.fn('invoicePdfDownload')(function* ({ params }) {
+          yield* setPrivateResponseHeaders;
+          yield* HttpEffect.appendPreResponseHandler((_request, response) =>
+            Effect.succeed(
+              HttpServerResponse.setHeader(
+                response,
+                'content-disposition',
+                `attachment; filename="invoice-${params.invoiceId}-v${params.version}.pdf"`,
+              ),
+            ),
+          );
+          yield* authorizeAdministrator('document.download');
+          return yield* (yield* DocumentArtifacts)
+            .getInvoicePdf(params.invoiceId, params.version)
             .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
         }),
       )

@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 
 import {
   InvoiceCreateRequest,
+  InvoiceDocumentArtifact,
   InvoiceIssueRequest,
   InvoiceNumber,
   InvoiceRevisionCreateRequest,
@@ -42,6 +43,26 @@ describe('invoice contracts', () => {
         paymentTerms: '',
         lines: [],
       }),
+    ).toThrow();
+  });
+
+  it('validates invoice PDF metadata', () => {
+    const artifact = {
+      id: '01ARZ3NDEKTSV4RRFFQ69G5FAV',
+      invoiceRevisionId: '01ARZ3NDEKTSV4RRFFQ69G5FAW',
+      kind: 'invoice-pdf',
+      contentType: 'application/pdf',
+      byteSize: 42,
+      sha256: 'a'.repeat(64),
+      createdAt: '2026-08-20T20:00:00.000Z',
+    };
+
+    expect(Schema.decodeUnknownSync(InvoiceDocumentArtifact)(artifact)).toEqual(artifact);
+    expect(() =>
+      Schema.decodeUnknownSync(InvoiceDocumentArtifact)({ ...artifact, kind: 'quote-pdf' }),
+    ).toThrow();
+    expect(() =>
+      Schema.decodeUnknownSync(InvoiceDocumentArtifact)({ ...artifact, sha256: 'invalid' }),
     ).toThrow();
   });
 });

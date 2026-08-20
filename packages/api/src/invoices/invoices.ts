@@ -17,6 +17,7 @@ import {
   type InvoiceIssueRequestValue,
   type InvoiceIssueResultValue,
   type InvoiceListValue,
+  type InvoiceRenderSnapshotValue,
   type InvoiceRevisionCreateRequestValue,
   type InvoiceRevisionValue,
   type IssuerSettingsValue,
@@ -105,6 +106,10 @@ export interface InvoicesService {
   readonly get: (
     invoiceId: UlidValue,
   ) => Effect.Effect<InvoiceDetailValue, InvoiceNotFound | DatabaseError>;
+  readonly getSnapshot: (
+    invoiceId: UlidValue,
+    version: number,
+  ) => Effect.Effect<InvoiceRenderSnapshotValue, InvoiceNotFound | DatabaseError>;
   readonly create: (
     request: InvoiceCreateRequestValue,
     actorUserId: UlidValue,
@@ -256,6 +261,29 @@ export const InvoicesLive = Layer.effect(
           cause instanceof InvoiceNotFound
             ? cause
             : new DatabaseError({ operation: 'get invoice', cause }),
+      });
+    });
+
+    const getSnapshot = Effect.fn('Invoices.getSnapshot')(function* (
+      invoiceId: UlidValue,
+      version: number,
+    ) {
+      return yield* Effect.try({
+        try: () => {
+          const raw = database.sqlite
+            .prepare(
+              `select render_snapshot as renderSnapshot from invoice_revisions
+               where invoice_id = ? and version = ?`,
+            )
+            .get(invoiceId, version);
+          if (raw === undefined) throw new InvoiceNotFound({ code: 'invoice.not_found' });
+          const record = Schema.decodeUnknownSync(SnapshotRecord)(raw);
+          return Schema.decodeUnknownSync(InvoiceRenderSnapshot)(JSON.parse(record.renderSnapshot));
+        },
+        catch: (cause) =>
+          cause instanceof InvoiceNotFound
+            ? cause
+            : new DatabaseError({ operation: 'get invoice snapshot', cause }),
       });
     });
 
@@ -686,6 +714,6 @@ export const InvoicesLive = Layer.effect(
       });
     });
 
-    return Invoices.of({ list, get, create, createRevision, issue });
+    return Invoices.of({ list, get, getSnapshot, create, createRevision, issue });
   }),
 );

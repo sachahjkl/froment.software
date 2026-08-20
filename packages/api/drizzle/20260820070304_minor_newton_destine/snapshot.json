@@ -1,0 +1,3258 @@
+{
+  "version": "7",
+  "dialect": "sqlite",
+  "id": "44ec16b5-66e4-4546-ad2b-96a956021c62",
+  "prevIds": ["1f53449b-ba84-4ef7-98c0-403467f9ac82"],
+  "ddl": [
+    {
+      "name": "access_credentials",
+      "entityType": "tables"
+    },
+    {
+      "name": "audit_events",
+      "entityType": "tables"
+    },
+    {
+      "name": "clients",
+      "entityType": "tables"
+    },
+    {
+      "name": "document_artifacts",
+      "entityType": "tables"
+    },
+    {
+      "name": "invoice_lines",
+      "entityType": "tables"
+    },
+    {
+      "name": "invoice_number_counter",
+      "entityType": "tables"
+    },
+    {
+      "name": "invoice_revisions",
+      "entityType": "tables"
+    },
+    {
+      "name": "invoices",
+      "entityType": "tables"
+    },
+    {
+      "name": "issuer_settings",
+      "entityType": "tables"
+    },
+    {
+      "name": "orders",
+      "entityType": "tables"
+    },
+    {
+      "name": "permissions",
+      "entityType": "tables"
+    },
+    {
+      "name": "quote_lines",
+      "entityType": "tables"
+    },
+    {
+      "name": "quote_links",
+      "entityType": "tables"
+    },
+    {
+      "name": "quote_revisions",
+      "entityType": "tables"
+    },
+    {
+      "name": "quote_signatures",
+      "entityType": "tables"
+    },
+    {
+      "name": "quotes",
+      "entityType": "tables"
+    },
+    {
+      "name": "role_permissions",
+      "entityType": "tables"
+    },
+    {
+      "name": "roles",
+      "entityType": "tables"
+    },
+    {
+      "name": "sessions",
+      "entityType": "tables"
+    },
+    {
+      "name": "user_roles",
+      "entityType": "tables"
+    },
+    {
+      "name": "users",
+      "entityType": "tables"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "id",
+      "entityType": "columns",
+      "table": "access_credentials"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "user_id",
+      "entityType": "columns",
+      "table": "access_credentials"
+    },
+    {
+      "type": "blob",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "secret_hmac",
+      "entityType": "columns",
+      "table": "access_credentials"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "created_at",
+      "entityType": "columns",
+      "table": "access_credentials"
+    },
+    {
+      "type": "integer",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "last_used_at",
+      "entityType": "columns",
+      "table": "access_credentials"
+    },
+    {
+      "type": "integer",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "revoked_at",
+      "entityType": "columns",
+      "table": "access_credentials"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "id",
+      "entityType": "columns",
+      "table": "audit_events"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "action",
+      "entityType": "columns",
+      "table": "audit_events"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "actor_user_id",
+      "entityType": "columns",
+      "table": "audit_events"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "resource_type",
+      "entityType": "columns",
+      "table": "audit_events"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "resource_id",
+      "entityType": "columns",
+      "table": "audit_events"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "occurred_at",
+      "entityType": "columns",
+      "table": "audit_events"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "metadata",
+      "entityType": "columns",
+      "table": "audit_events"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "id",
+      "entityType": "columns",
+      "table": "clients"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "created_at",
+      "entityType": "columns",
+      "table": "clients"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "updated_at",
+      "entityType": "columns",
+      "table": "clients"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": "''",
+      "generated": null,
+      "name": "address_line_1",
+      "entityType": "columns",
+      "table": "clients"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": "''",
+      "generated": null,
+      "name": "address_line_2",
+      "entityType": "columns",
+      "table": "clients"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": "''",
+      "generated": null,
+      "name": "postal_code",
+      "entityType": "columns",
+      "table": "clients"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": "''",
+      "generated": null,
+      "name": "city",
+      "entityType": "columns",
+      "table": "clients"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": "''",
+      "generated": null,
+      "name": "country",
+      "entityType": "columns",
+      "table": "clients"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": "''",
+      "generated": null,
+      "name": "email",
+      "entityType": "columns",
+      "table": "clients"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "id",
+      "entityType": "columns",
+      "table": "document_artifacts"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "revision_id",
+      "entityType": "columns",
+      "table": "document_artifacts"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "invoice_revision_id",
+      "entityType": "columns",
+      "table": "document_artifacts"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "kind",
+      "entityType": "columns",
+      "table": "document_artifacts"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "content_type",
+      "entityType": "columns",
+      "table": "document_artifacts"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "byte_size",
+      "entityType": "columns",
+      "table": "document_artifacts"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "sha256",
+      "entityType": "columns",
+      "table": "document_artifacts"
+    },
+    {
+      "type": "blob",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "content",
+      "entityType": "columns",
+      "table": "document_artifacts"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "created_at",
+      "entityType": "columns",
+      "table": "document_artifacts"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "id",
+      "entityType": "columns",
+      "table": "invoice_lines"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "revision_id",
+      "entityType": "columns",
+      "table": "invoice_lines"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "position",
+      "entityType": "columns",
+      "table": "invoice_lines"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "description",
+      "entityType": "columns",
+      "table": "invoice_lines"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "quantity_milli",
+      "entityType": "columns",
+      "table": "invoice_lines"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "unit_price_cents",
+      "entityType": "columns",
+      "table": "invoice_lines"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "vat_rate_basis_points",
+      "entityType": "columns",
+      "table": "invoice_lines"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "net_total_cents",
+      "entityType": "columns",
+      "table": "invoice_lines"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "vat_total_cents",
+      "entityType": "columns",
+      "table": "invoice_lines"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "total_cents",
+      "entityType": "columns",
+      "table": "invoice_lines"
+    },
+    {
+      "type": "integer",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "id",
+      "entityType": "columns",
+      "table": "invoice_number_counter"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "next_value",
+      "entityType": "columns",
+      "table": "invoice_number_counter"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "id",
+      "entityType": "columns",
+      "table": "invoice_revisions"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "invoice_id",
+      "entityType": "columns",
+      "table": "invoice_revisions"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "version",
+      "entityType": "columns",
+      "table": "invoice_revisions"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "invoice_number",
+      "entityType": "columns",
+      "table": "invoice_revisions"
+    },
+    {
+      "type": "integer",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "issued_at",
+      "entityType": "columns",
+      "table": "invoice_revisions"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "client_display_name",
+      "entityType": "columns",
+      "table": "invoice_revisions"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "title",
+      "entityType": "columns",
+      "table": "invoice_revisions"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "service_date",
+      "entityType": "columns",
+      "table": "invoice_revisions"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "due_date",
+      "entityType": "columns",
+      "table": "invoice_revisions"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "payment_terms",
+      "entityType": "columns",
+      "table": "invoice_revisions"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "currency",
+      "entityType": "columns",
+      "table": "invoice_revisions"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "net_total_cents",
+      "entityType": "columns",
+      "table": "invoice_revisions"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "vat_total_cents",
+      "entityType": "columns",
+      "table": "invoice_revisions"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "total_cents",
+      "entityType": "columns",
+      "table": "invoice_revisions"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "created_at",
+      "entityType": "columns",
+      "table": "invoice_revisions"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "created_by_user_id",
+      "entityType": "columns",
+      "table": "invoice_revisions"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "template_id",
+      "entityType": "columns",
+      "table": "invoice_revisions"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "template_version",
+      "entityType": "columns",
+      "table": "invoice_revisions"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "render_snapshot",
+      "entityType": "columns",
+      "table": "invoice_revisions"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "id",
+      "entityType": "columns",
+      "table": "invoices"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "order_id",
+      "entityType": "columns",
+      "table": "invoices"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "client_id",
+      "entityType": "columns",
+      "table": "invoices"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "status",
+      "entityType": "columns",
+      "table": "invoices"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "version",
+      "entityType": "columns",
+      "table": "invoices"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "invoice_number",
+      "entityType": "columns",
+      "table": "invoices"
+    },
+    {
+      "type": "integer",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "issued_at",
+      "entityType": "columns",
+      "table": "invoices"
+    },
+    {
+      "type": "integer",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "paid_at",
+      "entityType": "columns",
+      "table": "invoices"
+    },
+    {
+      "type": "integer",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "voided_at",
+      "entityType": "columns",
+      "table": "invoices"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "created_at",
+      "entityType": "columns",
+      "table": "invoices"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "updated_at",
+      "entityType": "columns",
+      "table": "invoices"
+    },
+    {
+      "type": "integer",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "id",
+      "entityType": "columns",
+      "table": "issuer_settings"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "display_name",
+      "entityType": "columns",
+      "table": "issuer_settings"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "address_line_1",
+      "entityType": "columns",
+      "table": "issuer_settings"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "address_line_2",
+      "entityType": "columns",
+      "table": "issuer_settings"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "postal_code",
+      "entityType": "columns",
+      "table": "issuer_settings"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "city",
+      "entityType": "columns",
+      "table": "issuer_settings"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "country",
+      "entityType": "columns",
+      "table": "issuer_settings"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "email",
+      "entityType": "columns",
+      "table": "issuer_settings"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "phone",
+      "entityType": "columns",
+      "table": "issuer_settings"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "registration_number",
+      "entityType": "columns",
+      "table": "issuer_settings"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "vat_number",
+      "entityType": "columns",
+      "table": "issuer_settings"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "updated_at",
+      "entityType": "columns",
+      "table": "issuer_settings"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "id",
+      "entityType": "columns",
+      "table": "orders"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "quote_id",
+      "entityType": "columns",
+      "table": "orders"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "revision_id",
+      "entityType": "columns",
+      "table": "orders"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "client_id",
+      "entityType": "columns",
+      "table": "orders"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "signature_id",
+      "entityType": "columns",
+      "table": "orders"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "status",
+      "entityType": "columns",
+      "table": "orders"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "created_at",
+      "entityType": "columns",
+      "table": "orders"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "code",
+      "entityType": "columns",
+      "table": "permissions"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "id",
+      "entityType": "columns",
+      "table": "quote_lines"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "revision_id",
+      "entityType": "columns",
+      "table": "quote_lines"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "position",
+      "entityType": "columns",
+      "table": "quote_lines"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "description",
+      "entityType": "columns",
+      "table": "quote_lines"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "quantity_milli",
+      "entityType": "columns",
+      "table": "quote_lines"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "unit_price_cents",
+      "entityType": "columns",
+      "table": "quote_lines"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "vat_rate_basis_points",
+      "entityType": "columns",
+      "table": "quote_lines"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "net_total_cents",
+      "entityType": "columns",
+      "table": "quote_lines"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "vat_total_cents",
+      "entityType": "columns",
+      "table": "quote_lines"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "total_cents",
+      "entityType": "columns",
+      "table": "quote_lines"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "id",
+      "entityType": "columns",
+      "table": "quote_links"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "revision_id",
+      "entityType": "columns",
+      "table": "quote_links"
+    },
+    {
+      "type": "blob",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "token_hmac",
+      "entityType": "columns",
+      "table": "quote_links"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": "'single-use'",
+      "generated": null,
+      "name": "usage_policy",
+      "entityType": "columns",
+      "table": "quote_links"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "created_at",
+      "entityType": "columns",
+      "table": "quote_links"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "expires_at",
+      "entityType": "columns",
+      "table": "quote_links"
+    },
+    {
+      "type": "integer",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "revoked_at",
+      "entityType": "columns",
+      "table": "quote_links"
+    },
+    {
+      "type": "integer",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "consumed_at",
+      "entityType": "columns",
+      "table": "quote_links"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "id",
+      "entityType": "columns",
+      "table": "quote_revisions"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "quote_id",
+      "entityType": "columns",
+      "table": "quote_revisions"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "version",
+      "entityType": "columns",
+      "table": "quote_revisions"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "client_display_name",
+      "entityType": "columns",
+      "table": "quote_revisions"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "title",
+      "entityType": "columns",
+      "table": "quote_revisions"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "conditions",
+      "entityType": "columns",
+      "table": "quote_revisions"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "currency",
+      "entityType": "columns",
+      "table": "quote_revisions"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "net_total_cents",
+      "entityType": "columns",
+      "table": "quote_revisions"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "vat_total_cents",
+      "entityType": "columns",
+      "table": "quote_revisions"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "total_cents",
+      "entityType": "columns",
+      "table": "quote_revisions"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "created_at",
+      "entityType": "columns",
+      "table": "quote_revisions"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "created_by_user_id",
+      "entityType": "columns",
+      "table": "quote_revisions"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "template_id",
+      "entityType": "columns",
+      "table": "quote_revisions"
+    },
+    {
+      "type": "integer",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "template_version",
+      "entityType": "columns",
+      "table": "quote_revisions"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "render_snapshot",
+      "entityType": "columns",
+      "table": "quote_revisions"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "id",
+      "entityType": "columns",
+      "table": "quote_signatures"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "quote_id",
+      "entityType": "columns",
+      "table": "quote_signatures"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "revision_id",
+      "entityType": "columns",
+      "table": "quote_signatures"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "link_id",
+      "entityType": "columns",
+      "table": "quote_signatures"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "signer_name",
+      "entityType": "columns",
+      "table": "quote_signatures"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "consent",
+      "entityType": "columns",
+      "table": "quote_signatures"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "signature_kind",
+      "entityType": "columns",
+      "table": "quote_signatures"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "signature_value",
+      "entityType": "columns",
+      "table": "quote_signatures"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "signed_at",
+      "entityType": "columns",
+      "table": "quote_signatures"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "ip_address",
+      "entityType": "columns",
+      "table": "quote_signatures"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "user_agent",
+      "entityType": "columns",
+      "table": "quote_signatures"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "snapshot_sha256",
+      "entityType": "columns",
+      "table": "quote_signatures"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "pdf_sha256",
+      "entityType": "columns",
+      "table": "quote_signatures"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "audit_event_id",
+      "entityType": "columns",
+      "table": "quote_signatures"
+    },
+    {
+      "type": "blob",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "evidence_content",
+      "entityType": "columns",
+      "table": "quote_signatures"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "evidence_sha256",
+      "entityType": "columns",
+      "table": "quote_signatures"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "id",
+      "entityType": "columns",
+      "table": "quotes"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "client_id",
+      "entityType": "columns",
+      "table": "quotes"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "status",
+      "entityType": "columns",
+      "table": "quotes"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "version",
+      "entityType": "columns",
+      "table": "quotes"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "created_at",
+      "entityType": "columns",
+      "table": "quotes"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "updated_at",
+      "entityType": "columns",
+      "table": "quotes"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "role_id",
+      "entityType": "columns",
+      "table": "role_permissions"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "permission_code",
+      "entityType": "columns",
+      "table": "role_permissions"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "id",
+      "entityType": "columns",
+      "table": "roles"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "name",
+      "entityType": "columns",
+      "table": "roles"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "created_at",
+      "entityType": "columns",
+      "table": "roles"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "id",
+      "entityType": "columns",
+      "table": "sessions"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "user_id",
+      "entityType": "columns",
+      "table": "sessions"
+    },
+    {
+      "type": "blob",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "token_hmac",
+      "entityType": "columns",
+      "table": "sessions"
+    },
+    {
+      "type": "blob",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "csrf_hmac",
+      "entityType": "columns",
+      "table": "sessions"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "created_at",
+      "entityType": "columns",
+      "table": "sessions"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "last_seen_at",
+      "entityType": "columns",
+      "table": "sessions"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "idle_expires_at",
+      "entityType": "columns",
+      "table": "sessions"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "absolute_expires_at",
+      "entityType": "columns",
+      "table": "sessions"
+    },
+    {
+      "type": "integer",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "revoked_at",
+      "entityType": "columns",
+      "table": "sessions"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "user_id",
+      "entityType": "columns",
+      "table": "user_roles"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "role_id",
+      "entityType": "columns",
+      "table": "user_roles"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "id",
+      "entityType": "columns",
+      "table": "users"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "display_name",
+      "entityType": "columns",
+      "table": "users"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "kind",
+      "entityType": "columns",
+      "table": "users"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "created_at",
+      "entityType": "columns",
+      "table": "users"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "updated_at",
+      "entityType": "columns",
+      "table": "users"
+    },
+    {
+      "type": "integer",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "disabled_at",
+      "entityType": "columns",
+      "table": "users"
+    },
+    {
+      "columns": ["user_id"],
+      "tableTo": "users",
+      "columnsTo": ["id"],
+      "onUpdate": "NO ACTION",
+      "onDelete": "CASCADE",
+      "nameExplicit": false,
+      "name": "fk_access_credentials_user_id_users_id_fk",
+      "entityType": "fks",
+      "table": "access_credentials"
+    },
+    {
+      "columns": ["id"],
+      "tableTo": "users",
+      "columnsTo": ["id"],
+      "onUpdate": "NO ACTION",
+      "onDelete": "CASCADE",
+      "nameExplicit": false,
+      "name": "fk_clients_id_users_id_fk",
+      "entityType": "fks",
+      "table": "clients"
+    },
+    {
+      "columns": ["revision_id"],
+      "tableTo": "quote_revisions",
+      "columnsTo": ["id"],
+      "onUpdate": "NO ACTION",
+      "onDelete": "CASCADE",
+      "nameExplicit": false,
+      "name": "fk_document_artifacts_revision_id_quote_revisions_id_fk",
+      "entityType": "fks",
+      "table": "document_artifacts"
+    },
+    {
+      "columns": ["invoice_revision_id"],
+      "tableTo": "invoice_revisions",
+      "columnsTo": ["id"],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "nameExplicit": false,
+      "name": "fk_document_artifacts_invoice_revision_id_invoice_revisions_id_fk",
+      "entityType": "fks",
+      "table": "document_artifacts"
+    },
+    {
+      "columns": ["revision_id"],
+      "tableTo": "invoice_revisions",
+      "columnsTo": ["id"],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "nameExplicit": false,
+      "name": "fk_invoice_lines_revision_id_invoice_revisions_id_fk",
+      "entityType": "fks",
+      "table": "invoice_lines"
+    },
+    {
+      "columns": ["invoice_id"],
+      "tableTo": "invoices",
+      "columnsTo": ["id"],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "nameExplicit": false,
+      "name": "fk_invoice_revisions_invoice_id_invoices_id_fk",
+      "entityType": "fks",
+      "table": "invoice_revisions"
+    },
+    {
+      "columns": ["created_by_user_id"],
+      "tableTo": "users",
+      "columnsTo": ["id"],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "nameExplicit": false,
+      "name": "fk_invoice_revisions_created_by_user_id_users_id_fk",
+      "entityType": "fks",
+      "table": "invoice_revisions"
+    },
+    {
+      "columns": ["order_id"],
+      "tableTo": "orders",
+      "columnsTo": ["id"],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "nameExplicit": false,
+      "name": "fk_invoices_order_id_orders_id_fk",
+      "entityType": "fks",
+      "table": "invoices"
+    },
+    {
+      "columns": ["client_id"],
+      "tableTo": "clients",
+      "columnsTo": ["id"],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "nameExplicit": false,
+      "name": "fk_invoices_client_id_clients_id_fk",
+      "entityType": "fks",
+      "table": "invoices"
+    },
+    {
+      "columns": ["quote_id"],
+      "tableTo": "quotes",
+      "columnsTo": ["id"],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "nameExplicit": false,
+      "name": "fk_orders_quote_id_quotes_id_fk",
+      "entityType": "fks",
+      "table": "orders"
+    },
+    {
+      "columns": ["revision_id"],
+      "tableTo": "quote_revisions",
+      "columnsTo": ["id"],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "nameExplicit": false,
+      "name": "fk_orders_revision_id_quote_revisions_id_fk",
+      "entityType": "fks",
+      "table": "orders"
+    },
+    {
+      "columns": ["client_id"],
+      "tableTo": "clients",
+      "columnsTo": ["id"],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "nameExplicit": false,
+      "name": "fk_orders_client_id_clients_id_fk",
+      "entityType": "fks",
+      "table": "orders"
+    },
+    {
+      "columns": ["signature_id"],
+      "tableTo": "quote_signatures",
+      "columnsTo": ["id"],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "nameExplicit": false,
+      "name": "fk_orders_signature_id_quote_signatures_id_fk",
+      "entityType": "fks",
+      "table": "orders"
+    },
+    {
+      "columns": ["revision_id"],
+      "tableTo": "quote_revisions",
+      "columnsTo": ["id"],
+      "onUpdate": "NO ACTION",
+      "onDelete": "CASCADE",
+      "nameExplicit": false,
+      "name": "fk_quote_lines_revision_id_quote_revisions_id_fk",
+      "entityType": "fks",
+      "table": "quote_lines"
+    },
+    {
+      "columns": ["revision_id"],
+      "tableTo": "quote_revisions",
+      "columnsTo": ["id"],
+      "onUpdate": "NO ACTION",
+      "onDelete": "CASCADE",
+      "nameExplicit": false,
+      "name": "fk_quote_links_revision_id_quote_revisions_id_fk",
+      "entityType": "fks",
+      "table": "quote_links"
+    },
+    {
+      "columns": ["quote_id"],
+      "tableTo": "quotes",
+      "columnsTo": ["id"],
+      "onUpdate": "NO ACTION",
+      "onDelete": "CASCADE",
+      "nameExplicit": false,
+      "name": "fk_quote_revisions_quote_id_quotes_id_fk",
+      "entityType": "fks",
+      "table": "quote_revisions"
+    },
+    {
+      "columns": ["created_by_user_id"],
+      "tableTo": "users",
+      "columnsTo": ["id"],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "nameExplicit": false,
+      "name": "fk_quote_revisions_created_by_user_id_users_id_fk",
+      "entityType": "fks",
+      "table": "quote_revisions"
+    },
+    {
+      "columns": ["quote_id"],
+      "tableTo": "quotes",
+      "columnsTo": ["id"],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "nameExplicit": false,
+      "name": "fk_quote_signatures_quote_id_quotes_id_fk",
+      "entityType": "fks",
+      "table": "quote_signatures"
+    },
+    {
+      "columns": ["revision_id"],
+      "tableTo": "quote_revisions",
+      "columnsTo": ["id"],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "nameExplicit": false,
+      "name": "fk_quote_signatures_revision_id_quote_revisions_id_fk",
+      "entityType": "fks",
+      "table": "quote_signatures"
+    },
+    {
+      "columns": ["link_id"],
+      "tableTo": "quote_links",
+      "columnsTo": ["id"],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "nameExplicit": false,
+      "name": "fk_quote_signatures_link_id_quote_links_id_fk",
+      "entityType": "fks",
+      "table": "quote_signatures"
+    },
+    {
+      "columns": ["audit_event_id"],
+      "tableTo": "audit_events",
+      "columnsTo": ["id"],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "nameExplicit": false,
+      "name": "fk_quote_signatures_audit_event_id_audit_events_id_fk",
+      "entityType": "fks",
+      "table": "quote_signatures"
+    },
+    {
+      "columns": ["client_id"],
+      "tableTo": "clients",
+      "columnsTo": ["id"],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "nameExplicit": false,
+      "name": "fk_quotes_client_id_clients_id_fk",
+      "entityType": "fks",
+      "table": "quotes"
+    },
+    {
+      "columns": ["role_id"],
+      "tableTo": "roles",
+      "columnsTo": ["id"],
+      "onUpdate": "NO ACTION",
+      "onDelete": "CASCADE",
+      "nameExplicit": false,
+      "name": "fk_role_permissions_role_id_roles_id_fk",
+      "entityType": "fks",
+      "table": "role_permissions"
+    },
+    {
+      "columns": ["permission_code"],
+      "tableTo": "permissions",
+      "columnsTo": ["code"],
+      "onUpdate": "NO ACTION",
+      "onDelete": "CASCADE",
+      "nameExplicit": false,
+      "name": "fk_role_permissions_permission_code_permissions_code_fk",
+      "entityType": "fks",
+      "table": "role_permissions"
+    },
+    {
+      "columns": ["user_id"],
+      "tableTo": "users",
+      "columnsTo": ["id"],
+      "onUpdate": "NO ACTION",
+      "onDelete": "CASCADE",
+      "nameExplicit": false,
+      "name": "fk_sessions_user_id_users_id_fk",
+      "entityType": "fks",
+      "table": "sessions"
+    },
+    {
+      "columns": ["user_id"],
+      "tableTo": "users",
+      "columnsTo": ["id"],
+      "onUpdate": "NO ACTION",
+      "onDelete": "CASCADE",
+      "nameExplicit": false,
+      "name": "fk_user_roles_user_id_users_id_fk",
+      "entityType": "fks",
+      "table": "user_roles"
+    },
+    {
+      "columns": ["role_id"],
+      "tableTo": "roles",
+      "columnsTo": ["id"],
+      "onUpdate": "NO ACTION",
+      "onDelete": "CASCADE",
+      "nameExplicit": false,
+      "name": "fk_user_roles_role_id_roles_id_fk",
+      "entityType": "fks",
+      "table": "user_roles"
+    },
+    {
+      "columns": ["role_id", "permission_code"],
+      "nameExplicit": false,
+      "name": "role_permissions_pk",
+      "entityType": "pks",
+      "table": "role_permissions"
+    },
+    {
+      "columns": ["user_id", "role_id"],
+      "nameExplicit": false,
+      "name": "user_roles_pk",
+      "entityType": "pks",
+      "table": "user_roles"
+    },
+    {
+      "columns": ["id"],
+      "nameExplicit": false,
+      "name": "access_credentials_pk",
+      "table": "access_credentials",
+      "entityType": "pks"
+    },
+    {
+      "columns": ["id"],
+      "nameExplicit": false,
+      "name": "audit_events_pk",
+      "table": "audit_events",
+      "entityType": "pks"
+    },
+    {
+      "columns": ["id"],
+      "nameExplicit": false,
+      "name": "clients_pk",
+      "table": "clients",
+      "entityType": "pks"
+    },
+    {
+      "columns": ["id"],
+      "nameExplicit": false,
+      "name": "document_artifacts_pk",
+      "table": "document_artifacts",
+      "entityType": "pks"
+    },
+    {
+      "columns": ["id"],
+      "nameExplicit": false,
+      "name": "invoice_lines_pk",
+      "table": "invoice_lines",
+      "entityType": "pks"
+    },
+    {
+      "columns": ["id"],
+      "nameExplicit": false,
+      "name": "invoice_number_counter_pk",
+      "table": "invoice_number_counter",
+      "entityType": "pks"
+    },
+    {
+      "columns": ["id"],
+      "nameExplicit": false,
+      "name": "invoice_revisions_pk",
+      "table": "invoice_revisions",
+      "entityType": "pks"
+    },
+    {
+      "columns": ["id"],
+      "nameExplicit": false,
+      "name": "invoices_pk",
+      "table": "invoices",
+      "entityType": "pks"
+    },
+    {
+      "columns": ["id"],
+      "nameExplicit": false,
+      "name": "issuer_settings_pk",
+      "table": "issuer_settings",
+      "entityType": "pks"
+    },
+    {
+      "columns": ["id"],
+      "nameExplicit": false,
+      "name": "orders_pk",
+      "table": "orders",
+      "entityType": "pks"
+    },
+    {
+      "columns": ["code"],
+      "nameExplicit": false,
+      "name": "permissions_pk",
+      "table": "permissions",
+      "entityType": "pks"
+    },
+    {
+      "columns": ["id"],
+      "nameExplicit": false,
+      "name": "quote_lines_pk",
+      "table": "quote_lines",
+      "entityType": "pks"
+    },
+    {
+      "columns": ["id"],
+      "nameExplicit": false,
+      "name": "quote_links_pk",
+      "table": "quote_links",
+      "entityType": "pks"
+    },
+    {
+      "columns": ["id"],
+      "nameExplicit": false,
+      "name": "quote_revisions_pk",
+      "table": "quote_revisions",
+      "entityType": "pks"
+    },
+    {
+      "columns": ["id"],
+      "nameExplicit": false,
+      "name": "quote_signatures_pk",
+      "table": "quote_signatures",
+      "entityType": "pks"
+    },
+    {
+      "columns": ["id"],
+      "nameExplicit": false,
+      "name": "quotes_pk",
+      "table": "quotes",
+      "entityType": "pks"
+    },
+    {
+      "columns": ["id"],
+      "nameExplicit": false,
+      "name": "roles_pk",
+      "table": "roles",
+      "entityType": "pks"
+    },
+    {
+      "columns": ["id"],
+      "nameExplicit": false,
+      "name": "sessions_pk",
+      "table": "sessions",
+      "entityType": "pks"
+    },
+    {
+      "columns": ["id"],
+      "nameExplicit": false,
+      "name": "users_pk",
+      "table": "users",
+      "entityType": "pks"
+    },
+    {
+      "columns": [
+        {
+          "value": "secret_hmac",
+          "isExpression": false
+        }
+      ],
+      "isUnique": true,
+      "where": null,
+      "origin": "manual",
+      "name": "access_credentials_secret_hmac_unique",
+      "entityType": "indexes",
+      "table": "access_credentials"
+    },
+    {
+      "columns": [
+        {
+          "value": "user_id",
+          "isExpression": false
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "origin": "manual",
+      "name": "access_credentials_user_id_index",
+      "entityType": "indexes",
+      "table": "access_credentials"
+    },
+    {
+      "columns": [
+        {
+          "value": "occurred_at",
+          "isExpression": false
+        },
+        {
+          "value": "id",
+          "isExpression": false
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "origin": "manual",
+      "name": "audit_events_occurred_at_id_index",
+      "entityType": "indexes",
+      "table": "audit_events"
+    },
+    {
+      "columns": [
+        {
+          "value": "actor_user_id",
+          "isExpression": false
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "origin": "manual",
+      "name": "audit_events_actor_user_id_index",
+      "entityType": "indexes",
+      "table": "audit_events"
+    },
+    {
+      "columns": [
+        {
+          "value": "resource_type",
+          "isExpression": false
+        },
+        {
+          "value": "resource_id",
+          "isExpression": false
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "origin": "manual",
+      "name": "audit_events_resource_index",
+      "entityType": "indexes",
+      "table": "audit_events"
+    },
+    {
+      "columns": [
+        {
+          "value": "revision_id",
+          "isExpression": false
+        },
+        {
+          "value": "kind",
+          "isExpression": false
+        }
+      ],
+      "isUnique": true,
+      "where": null,
+      "origin": "manual",
+      "name": "document_artifacts_quote_revision_kind_unique",
+      "entityType": "indexes",
+      "table": "document_artifacts"
+    },
+    {
+      "columns": [
+        {
+          "value": "invoice_revision_id",
+          "isExpression": false
+        },
+        {
+          "value": "kind",
+          "isExpression": false
+        }
+      ],
+      "isUnique": true,
+      "where": null,
+      "origin": "manual",
+      "name": "document_artifacts_invoice_revision_kind_unique",
+      "entityType": "indexes",
+      "table": "document_artifacts"
+    },
+    {
+      "columns": [
+        {
+          "value": "revision_id",
+          "isExpression": false
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "origin": "manual",
+      "name": "document_artifacts_revision_id_index",
+      "entityType": "indexes",
+      "table": "document_artifacts"
+    },
+    {
+      "columns": [
+        {
+          "value": "invoice_revision_id",
+          "isExpression": false
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "origin": "manual",
+      "name": "document_artifacts_invoice_revision_id_index",
+      "entityType": "indexes",
+      "table": "document_artifacts"
+    },
+    {
+      "columns": [
+        {
+          "value": "revision_id",
+          "isExpression": false
+        },
+        {
+          "value": "position",
+          "isExpression": false
+        }
+      ],
+      "isUnique": true,
+      "where": null,
+      "origin": "manual",
+      "name": "invoice_lines_revision_id_position_unique",
+      "entityType": "indexes",
+      "table": "invoice_lines"
+    },
+    {
+      "columns": [
+        {
+          "value": "invoice_id",
+          "isExpression": false
+        },
+        {
+          "value": "version",
+          "isExpression": false
+        }
+      ],
+      "isUnique": true,
+      "where": null,
+      "origin": "manual",
+      "name": "invoice_revisions_invoice_id_version_unique",
+      "entityType": "indexes",
+      "table": "invoice_revisions"
+    },
+    {
+      "columns": [
+        {
+          "value": "created_by_user_id",
+          "isExpression": false
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "origin": "manual",
+      "name": "invoice_revisions_created_by_user_id_index",
+      "entityType": "indexes",
+      "table": "invoice_revisions"
+    },
+    {
+      "columns": [
+        {
+          "value": "order_id",
+          "isExpression": false
+        }
+      ],
+      "isUnique": true,
+      "where": null,
+      "origin": "manual",
+      "name": "invoices_order_id_unique",
+      "entityType": "indexes",
+      "table": "invoices"
+    },
+    {
+      "columns": [
+        {
+          "value": "invoice_number",
+          "isExpression": false
+        }
+      ],
+      "isUnique": true,
+      "where": null,
+      "origin": "manual",
+      "name": "invoices_invoice_number_unique",
+      "entityType": "indexes",
+      "table": "invoices"
+    },
+    {
+      "columns": [
+        {
+          "value": "client_id",
+          "isExpression": false
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "origin": "manual",
+      "name": "invoices_client_id_index",
+      "entityType": "indexes",
+      "table": "invoices"
+    },
+    {
+      "columns": [
+        {
+          "value": "quote_id",
+          "isExpression": false
+        }
+      ],
+      "isUnique": true,
+      "where": null,
+      "origin": "manual",
+      "name": "orders_quote_id_unique",
+      "entityType": "indexes",
+      "table": "orders"
+    },
+    {
+      "columns": [
+        {
+          "value": "revision_id",
+          "isExpression": false
+        }
+      ],
+      "isUnique": true,
+      "where": null,
+      "origin": "manual",
+      "name": "orders_revision_id_unique",
+      "entityType": "indexes",
+      "table": "orders"
+    },
+    {
+      "columns": [
+        {
+          "value": "signature_id",
+          "isExpression": false
+        }
+      ],
+      "isUnique": true,
+      "where": null,
+      "origin": "manual",
+      "name": "orders_signature_id_unique",
+      "entityType": "indexes",
+      "table": "orders"
+    },
+    {
+      "columns": [
+        {
+          "value": "client_id",
+          "isExpression": false
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "origin": "manual",
+      "name": "orders_client_id_index",
+      "entityType": "indexes",
+      "table": "orders"
+    },
+    {
+      "columns": [
+        {
+          "value": "revision_id",
+          "isExpression": false
+        },
+        {
+          "value": "position",
+          "isExpression": false
+        }
+      ],
+      "isUnique": true,
+      "where": null,
+      "origin": "manual",
+      "name": "quote_lines_revision_id_position_unique",
+      "entityType": "indexes",
+      "table": "quote_lines"
+    },
+    {
+      "columns": [
+        {
+          "value": "token_hmac",
+          "isExpression": false
+        }
+      ],
+      "isUnique": true,
+      "where": null,
+      "origin": "manual",
+      "name": "quote_links_token_hmac_unique",
+      "entityType": "indexes",
+      "table": "quote_links"
+    },
+    {
+      "columns": [
+        {
+          "value": "revision_id",
+          "isExpression": false
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "origin": "manual",
+      "name": "quote_links_revision_id_index",
+      "entityType": "indexes",
+      "table": "quote_links"
+    },
+    {
+      "columns": [
+        {
+          "value": "quote_id",
+          "isExpression": false
+        },
+        {
+          "value": "version",
+          "isExpression": false
+        }
+      ],
+      "isUnique": true,
+      "where": null,
+      "origin": "manual",
+      "name": "quote_revisions_quote_id_version_unique",
+      "entityType": "indexes",
+      "table": "quote_revisions"
+    },
+    {
+      "columns": [
+        {
+          "value": "created_by_user_id",
+          "isExpression": false
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "origin": "manual",
+      "name": "quote_revisions_created_by_user_id_index",
+      "entityType": "indexes",
+      "table": "quote_revisions"
+    },
+    {
+      "columns": [
+        {
+          "value": "quote_id",
+          "isExpression": false
+        }
+      ],
+      "isUnique": true,
+      "where": null,
+      "origin": "manual",
+      "name": "quote_signatures_quote_id_unique",
+      "entityType": "indexes",
+      "table": "quote_signatures"
+    },
+    {
+      "columns": [
+        {
+          "value": "revision_id",
+          "isExpression": false
+        }
+      ],
+      "isUnique": true,
+      "where": null,
+      "origin": "manual",
+      "name": "quote_signatures_revision_id_unique",
+      "entityType": "indexes",
+      "table": "quote_signatures"
+    },
+    {
+      "columns": [
+        {
+          "value": "link_id",
+          "isExpression": false
+        }
+      ],
+      "isUnique": true,
+      "where": null,
+      "origin": "manual",
+      "name": "quote_signatures_link_id_unique",
+      "entityType": "indexes",
+      "table": "quote_signatures"
+    },
+    {
+      "columns": [
+        {
+          "value": "audit_event_id",
+          "isExpression": false
+        }
+      ],
+      "isUnique": true,
+      "where": null,
+      "origin": "manual",
+      "name": "quote_signatures_audit_event_id_unique",
+      "entityType": "indexes",
+      "table": "quote_signatures"
+    },
+    {
+      "columns": [
+        {
+          "value": "client_id",
+          "isExpression": false
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "origin": "manual",
+      "name": "quotes_client_id_index",
+      "entityType": "indexes",
+      "table": "quotes"
+    },
+    {
+      "columns": [
+        {
+          "value": "permission_code",
+          "isExpression": false
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "origin": "manual",
+      "name": "role_permissions_permission_code_index",
+      "entityType": "indexes",
+      "table": "role_permissions"
+    },
+    {
+      "columns": [
+        {
+          "value": "token_hmac",
+          "isExpression": false
+        }
+      ],
+      "isUnique": true,
+      "where": null,
+      "origin": "manual",
+      "name": "sessions_token_hmac_unique",
+      "entityType": "indexes",
+      "table": "sessions"
+    },
+    {
+      "columns": [
+        {
+          "value": "user_id",
+          "isExpression": false
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "origin": "manual",
+      "name": "sessions_user_id_index",
+      "entityType": "indexes",
+      "table": "sessions"
+    },
+    {
+      "columns": [
+        {
+          "value": "idle_expires_at",
+          "isExpression": false
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "origin": "manual",
+      "name": "sessions_idle_expiry_index",
+      "entityType": "indexes",
+      "table": "sessions"
+    },
+    {
+      "columns": [
+        {
+          "value": "absolute_expires_at",
+          "isExpression": false
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "origin": "manual",
+      "name": "sessions_absolute_expiry_index",
+      "entityType": "indexes",
+      "table": "sessions"
+    },
+    {
+      "columns": [
+        {
+          "value": "role_id",
+          "isExpression": false
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "origin": "manual",
+      "name": "user_roles_role_id_index",
+      "entityType": "indexes",
+      "table": "user_roles"
+    },
+    {
+      "columns": ["name"],
+      "nameExplicit": false,
+      "name": "roles_name_unique",
+      "entityType": "uniques",
+      "table": "roles"
+    },
+    {
+      "value": "typeof(\"secret_hmac\") = 'blob' and length(\"secret_hmac\") = 32",
+      "name": "access_credentials_secret_hmac_check",
+      "entityType": "checks",
+      "table": "access_credentials"
+    },
+    {
+      "value": "\"id\" is not null and length(\"id\") = 26 and \"id\" not glob '*[^0-9A-HJKMNP-TV-Z]*' and substr(\"id\", 1, 1) between '0' and '7'",
+      "name": "access_credentials_id_ulid_check",
+      "entityType": "checks",
+      "table": "access_credentials"
+    },
+    {
+      "value": "(\"last_used_at\" is null or \"last_used_at\" >= \"created_at\") and (\"revoked_at\" is null or \"revoked_at\" >= \"created_at\")",
+      "name": "access_credentials_timestamps_check",
+      "entityType": "checks",
+      "table": "access_credentials"
+    },
+    {
+      "value": "\"id\" is not null and length(\"id\") = 26 and \"id\" not glob '*[^0-9A-HJKMNP-TV-Z]*' and substr(\"id\", 1, 1) between '0' and '7'",
+      "name": "audit_events_id_ulid_check",
+      "entityType": "checks",
+      "table": "audit_events"
+    },
+    {
+      "value": "\"actor_user_id\" is null or (length(\"actor_user_id\") = 26 and \"actor_user_id\" not glob '*[^0-9A-HJKMNP-TV-Z]*' and substr(\"actor_user_id\", 1, 1) between '0' and '7')",
+      "name": "audit_events_actor_user_id_check",
+      "entityType": "checks",
+      "table": "audit_events"
+    },
+    {
+      "value": "length(\"action\") between 3 and 80 and \"action\" glob '[a-z]*.[a-z]*' and \"action\" not glob '*[^a-z.-]*'",
+      "name": "audit_events_action_check",
+      "entityType": "checks",
+      "table": "audit_events"
+    },
+    {
+      "value": "length(\"resource_type\") between 1 and 40 and \"resource_type\" not glob '*[^a-z-]*'",
+      "name": "audit_events_resource_type_check",
+      "entityType": "checks",
+      "table": "audit_events"
+    },
+    {
+      "value": "length(trim(\"resource_id\")) between 1 and 160",
+      "name": "audit_events_resource_id_check",
+      "entityType": "checks",
+      "table": "audit_events"
+    },
+    {
+      "value": "json_valid(\"metadata\") and json_type(\"metadata\") = 'object' and length(\"metadata\") <= 4096",
+      "name": "audit_events_metadata_check",
+      "entityType": "checks",
+      "table": "audit_events"
+    },
+    {
+      "value": "\"id\" is not null and length(\"id\") = 26 and \"id\" not glob '*[^0-9A-HJKMNP-TV-Z]*' and substr(\"id\", 1, 1) between '0' and '7'",
+      "name": "clients_id_ulid_check",
+      "entityType": "checks",
+      "table": "clients"
+    },
+    {
+      "value": "\"updated_at\" >= \"created_at\"",
+      "name": "clients_timestamps_check",
+      "entityType": "checks",
+      "table": "clients"
+    },
+    {
+      "value": "length(\"address_line_1\") <= 160 and length(\"address_line_2\") <= 160 and length(\"postal_code\") <= 32 and length(\"city\") <= 120 and length(\"country\") <= 120 and length(\"email\") <= 254",
+      "name": "clients_document_fields_check",
+      "entityType": "checks",
+      "table": "clients"
+    },
+    {
+      "value": "\"id\" is not null and length(\"id\") = 26 and \"id\" not glob '*[^0-9A-HJKMNP-TV-Z]*' and substr(\"id\", 1, 1) between '0' and '7'",
+      "name": "document_artifacts_id_ulid_check",
+      "entityType": "checks",
+      "table": "document_artifacts"
+    },
+    {
+      "value": "(\"kind\" = 'quote-pdf' and \"revision_id\" is not null and \"invoice_revision_id\" is null) or (\"kind\" = 'invoice-pdf' and \"revision_id\" is null and \"invoice_revision_id\" is not null)",
+      "name": "document_artifacts_kind_check",
+      "entityType": "checks",
+      "table": "document_artifacts"
+    },
+    {
+      "value": "\"content_type\" = 'application/pdf'",
+      "name": "document_artifacts_content_type_check",
+      "entityType": "checks",
+      "table": "document_artifacts"
+    },
+    {
+      "value": "\"byte_size\" > 0 and \"byte_size\" = length(\"content\") and typeof(\"content\") = 'blob' and length(\"sha256\") = 64 and \"sha256\" not glob '*[^a-f0-9]*'",
+      "name": "document_artifacts_content_check",
+      "entityType": "checks",
+      "table": "document_artifacts"
+    },
+    {
+      "value": "\"id\" is not null and length(\"id\") = 26 and \"id\" not glob '*[^0-9A-HJKMNP-TV-Z]*' and substr(\"id\", 1, 1) between '0' and '7'",
+      "name": "invoice_lines_id_ulid_check",
+      "entityType": "checks",
+      "table": "invoice_lines"
+    },
+    {
+      "value": "\"position\" between 0 and 19",
+      "name": "invoice_lines_position_check",
+      "entityType": "checks",
+      "table": "invoice_lines"
+    },
+    {
+      "value": "length(trim(\"description\")) between 1 and 160",
+      "name": "invoice_lines_description_check",
+      "entityType": "checks",
+      "table": "invoice_lines"
+    },
+    {
+      "value": "\"quantity_milli\" between 1 and 9007199254740991 and \"unit_price_cents\" between 0 and 9007199254740991 and \"vat_rate_basis_points\" between 0 and 10000",
+      "name": "invoice_lines_input_check",
+      "entityType": "checks",
+      "table": "invoice_lines"
+    },
+    {
+      "value": "\"net_total_cents\" between 0 and 9007199254740991 and \"vat_total_cents\" between 0 and 9007199254740991 and \"total_cents\" between 0 and 9007199254740991 and \"total_cents\" = \"net_total_cents\" + \"vat_total_cents\"",
+      "name": "invoice_lines_totals_check",
+      "entityType": "checks",
+      "table": "invoice_lines"
+    },
+    {
+      "value": "\"id\" = 1",
+      "name": "invoice_number_counter_id_check",
+      "entityType": "checks",
+      "table": "invoice_number_counter"
+    },
+    {
+      "value": "\"next_value\" >= 1",
+      "name": "invoice_number_counter_next_value_check",
+      "entityType": "checks",
+      "table": "invoice_number_counter"
+    },
+    {
+      "value": "\"id\" is not null and length(\"id\") = 26 and \"id\" not glob '*[^0-9A-HJKMNP-TV-Z]*' and substr(\"id\", 1, 1) between '0' and '7'",
+      "name": "invoice_revisions_id_ulid_check",
+      "entityType": "checks",
+      "table": "invoice_revisions"
+    },
+    {
+      "value": "\"version\" >= 1",
+      "name": "invoice_revisions_version_check",
+      "entityType": "checks",
+      "table": "invoice_revisions"
+    },
+    {
+      "value": "(\"invoice_number\" is null and \"issued_at\" is null) or (\"invoice_number\" glob 'F-[0-9]*' and length(\"invoice_number\") >= 8 and \"issued_at\" is not null)",
+      "name": "invoice_revisions_number_check",
+      "entityType": "checks",
+      "table": "invoice_revisions"
+    },
+    {
+      "value": "length(trim(\"client_display_name\")) > 0",
+      "name": "invoice_revisions_client_display_name_check",
+      "entityType": "checks",
+      "table": "invoice_revisions"
+    },
+    {
+      "value": "length(trim(\"title\")) between 1 and 120",
+      "name": "invoice_revisions_title_check",
+      "entityType": "checks",
+      "table": "invoice_revisions"
+    },
+    {
+      "value": "\"service_date\" glob '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]' and \"due_date\" glob '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]' and \"due_date\" >= \"service_date\"",
+      "name": "invoice_revisions_dates_check",
+      "entityType": "checks",
+      "table": "invoice_revisions"
+    },
+    {
+      "value": "length(\"payment_terms\") <= 2000",
+      "name": "invoice_revisions_payment_terms_check",
+      "entityType": "checks",
+      "table": "invoice_revisions"
+    },
+    {
+      "value": "\"currency\" = 'EUR'",
+      "name": "invoice_revisions_currency_check",
+      "entityType": "checks",
+      "table": "invoice_revisions"
+    },
+    {
+      "value": "\"net_total_cents\" between 0 and 9007199254740991 and \"vat_total_cents\" between 0 and 9007199254740991 and \"total_cents\" between 0 and 9007199254740991 and \"total_cents\" = \"net_total_cents\" + \"vat_total_cents\"",
+      "name": "invoice_revisions_totals_check",
+      "entityType": "checks",
+      "table": "invoice_revisions"
+    },
+    {
+      "value": "\"template_id\" = 'invoice-default' and \"template_version\" = 1 and json_valid(\"render_snapshot\")",
+      "name": "invoice_revisions_render_check",
+      "entityType": "checks",
+      "table": "invoice_revisions"
+    },
+    {
+      "value": "\"id\" is not null and length(\"id\") = 26 and \"id\" not glob '*[^0-9A-HJKMNP-TV-Z]*' and substr(\"id\", 1, 1) between '0' and '7'",
+      "name": "invoices_id_ulid_check",
+      "entityType": "checks",
+      "table": "invoices"
+    },
+    {
+      "value": "\"status\" in ('draft', 'issued', 'paid', 'void')",
+      "name": "invoices_status_check",
+      "entityType": "checks",
+      "table": "invoices"
+    },
+    {
+      "value": "\"version\" >= 1",
+      "name": "invoices_version_check",
+      "entityType": "checks",
+      "table": "invoices"
+    },
+    {
+      "value": "(\"status\" = 'draft' and \"invoice_number\" is null and \"issued_at\" is null) or (\"status\" in ('issued', 'paid', 'void') and \"invoice_number\" glob 'F-[0-9]*' and length(\"invoice_number\") >= 8 and \"issued_at\" is not null)",
+      "name": "invoices_number_state_check",
+      "entityType": "checks",
+      "table": "invoices"
+    },
+    {
+      "value": "(\"status\" = 'paid' and \"paid_at\" is not null and \"voided_at\" is null) or (\"status\" = 'void' and \"voided_at\" is not null and \"paid_at\" is null) or (\"status\" in ('draft', 'issued') and \"paid_at\" is null and \"voided_at\" is null)",
+      "name": "invoices_terminal_state_check",
+      "entityType": "checks",
+      "table": "invoices"
+    },
+    {
+      "value": "\"updated_at\" >= \"created_at\"",
+      "name": "invoices_timestamps_check",
+      "entityType": "checks",
+      "table": "invoices"
+    },
+    {
+      "value": "\"id\" = 1",
+      "name": "issuer_settings_singleton_check",
+      "entityType": "checks",
+      "table": "issuer_settings"
+    },
+    {
+      "value": "length(trim(\"display_name\")) between 1 and 160 and length(\"address_line_1\") <= 160 and length(\"address_line_2\") <= 160 and length(\"postal_code\") <= 32 and length(\"city\") <= 120 and length(\"country\") <= 120 and length(\"email\") <= 254 and length(\"phone\") <= 64 and length(\"registration_number\") <= 64 and length(\"vat_number\") <= 64",
+      "name": "issuer_settings_fields_check",
+      "entityType": "checks",
+      "table": "issuer_settings"
+    },
+    {
+      "value": "\"id\" is not null and length(\"id\") = 26 and \"id\" not glob '*[^0-9A-HJKMNP-TV-Z]*' and substr(\"id\", 1, 1) between '0' and '7'",
+      "name": "orders_id_ulid_check",
+      "entityType": "checks",
+      "table": "orders"
+    },
+    {
+      "value": "\"status\" = 'confirmed'",
+      "name": "orders_status_check",
+      "entityType": "checks",
+      "table": "orders"
+    },
+    {
+      "value": "\"code\" is not null and length(trim(\"code\")) > 0",
+      "name": "permissions_code_check",
+      "entityType": "checks",
+      "table": "permissions"
+    },
+    {
+      "value": "\"id\" is not null and length(\"id\") = 26 and \"id\" not glob '*[^0-9A-HJKMNP-TV-Z]*' and substr(\"id\", 1, 1) between '0' and '7'",
+      "name": "quote_lines_id_ulid_check",
+      "entityType": "checks",
+      "table": "quote_lines"
+    },
+    {
+      "value": "\"position\" between 0 and 19",
+      "name": "quote_lines_position_check",
+      "entityType": "checks",
+      "table": "quote_lines"
+    },
+    {
+      "value": "length(trim(\"description\")) between 1 and 160",
+      "name": "quote_lines_description_check",
+      "entityType": "checks",
+      "table": "quote_lines"
+    },
+    {
+      "value": "\"quantity_milli\" between 1 and 9007199254740991 and \"unit_price_cents\" between 0 and 9007199254740991 and \"vat_rate_basis_points\" between 0 and 10000",
+      "name": "quote_lines_input_check",
+      "entityType": "checks",
+      "table": "quote_lines"
+    },
+    {
+      "value": "\"net_total_cents\" between 0 and 9007199254740991 and \"vat_total_cents\" between 0 and 9007199254740991 and \"total_cents\" between 0 and 9007199254740991 and \"total_cents\" = \"net_total_cents\" + \"vat_total_cents\"",
+      "name": "quote_lines_totals_check",
+      "entityType": "checks",
+      "table": "quote_lines"
+    },
+    {
+      "value": "\"id\" is not null and length(\"id\") = 26 and \"id\" not glob '*[^0-9A-HJKMNP-TV-Z]*' and substr(\"id\", 1, 1) between '0' and '7'",
+      "name": "quote_links_id_ulid_check",
+      "entityType": "checks",
+      "table": "quote_links"
+    },
+    {
+      "value": "typeof(\"token_hmac\") = 'blob' and length(\"token_hmac\") = 32",
+      "name": "quote_links_token_hmac_check",
+      "entityType": "checks",
+      "table": "quote_links"
+    },
+    {
+      "value": "\"expires_at\" > \"created_at\"",
+      "name": "quote_links_expiry_check",
+      "entityType": "checks",
+      "table": "quote_links"
+    },
+    {
+      "value": "\"usage_policy\" = 'single-use'",
+      "name": "quote_links_usage_policy_check",
+      "entityType": "checks",
+      "table": "quote_links"
+    },
+    {
+      "value": "(\"revoked_at\" is null or \"revoked_at\" >= \"created_at\") and (\"consumed_at\" is null or \"consumed_at\" >= \"created_at\")",
+      "name": "quote_links_terminal_timestamps_check",
+      "entityType": "checks",
+      "table": "quote_links"
+    },
+    {
+      "value": "\"id\" is not null and length(\"id\") = 26 and \"id\" not glob '*[^0-9A-HJKMNP-TV-Z]*' and substr(\"id\", 1, 1) between '0' and '7'",
+      "name": "quote_revisions_id_ulid_check",
+      "entityType": "checks",
+      "table": "quote_revisions"
+    },
+    {
+      "value": "\"version\" >= 1",
+      "name": "quote_revisions_version_check",
+      "entityType": "checks",
+      "table": "quote_revisions"
+    },
+    {
+      "value": "length(trim(\"client_display_name\")) > 0",
+      "name": "quote_revisions_client_display_name_check",
+      "entityType": "checks",
+      "table": "quote_revisions"
+    },
+    {
+      "value": "length(trim(\"title\")) between 1 and 120",
+      "name": "quote_revisions_title_check",
+      "entityType": "checks",
+      "table": "quote_revisions"
+    },
+    {
+      "value": "length(\"conditions\") <= 2000",
+      "name": "quote_revisions_conditions_check",
+      "entityType": "checks",
+      "table": "quote_revisions"
+    },
+    {
+      "value": "\"currency\" = 'EUR'",
+      "name": "quote_revisions_currency_check",
+      "entityType": "checks",
+      "table": "quote_revisions"
+    },
+    {
+      "value": "\"net_total_cents\" between 0 and 9007199254740991 and \"vat_total_cents\" between 0 and 9007199254740991 and \"total_cents\" between 0 and 9007199254740991 and \"total_cents\" = \"net_total_cents\" + \"vat_total_cents\"",
+      "name": "quote_revisions_totals_check",
+      "entityType": "checks",
+      "table": "quote_revisions"
+    },
+    {
+      "value": "(\"render_snapshot\" is null and \"template_id\" is null and \"template_version\" is null) or (\"render_snapshot\" is not null and \"template_id\" = 'quote-default' and \"template_version\" = 1 and json_valid(\"render_snapshot\"))",
+      "name": "quote_revisions_render_check",
+      "entityType": "checks",
+      "table": "quote_revisions"
+    },
+    {
+      "value": "\"id\" is not null and length(\"id\") = 26 and \"id\" not glob '*[^0-9A-HJKMNP-TV-Z]*' and substr(\"id\", 1, 1) between '0' and '7'",
+      "name": "quote_signatures_id_ulid_check",
+      "entityType": "checks",
+      "table": "quote_signatures"
+    },
+    {
+      "value": "length(trim(\"signer_name\")) between 1 and 160 and length(trim(\"signature_value\")) between 1 and 160 and \"signature_kind\" = 'typed' and \"consent\" = 1",
+      "name": "quote_signatures_signer_check",
+      "entityType": "checks",
+      "table": "quote_signatures"
+    },
+    {
+      "value": "length(\"ip_address\") between 1 and 64 and length(\"user_agent\") <= 512",
+      "name": "quote_signatures_context_check",
+      "entityType": "checks",
+      "table": "quote_signatures"
+    },
+    {
+      "value": "length(\"snapshot_sha256\") = 64 and \"snapshot_sha256\" not glob '*[^a-f0-9]*' and length(\"pdf_sha256\") = 64 and \"pdf_sha256\" not glob '*[^a-f0-9]*' and length(\"evidence_sha256\") = 64 and \"evidence_sha256\" not glob '*[^a-f0-9]*'",
+      "name": "quote_signatures_hashes_check",
+      "entityType": "checks",
+      "table": "quote_signatures"
+    },
+    {
+      "value": "typeof(\"evidence_content\") = 'blob' and length(\"evidence_content\") between 1 and 65536",
+      "name": "quote_signatures_evidence_check",
+      "entityType": "checks",
+      "table": "quote_signatures"
+    },
+    {
+      "value": "\"id\" is not null and length(\"id\") = 26 and \"id\" not glob '*[^0-9A-HJKMNP-TV-Z]*' and substr(\"id\", 1, 1) between '0' and '7'",
+      "name": "quotes_id_ulid_check",
+      "entityType": "checks",
+      "table": "quotes"
+    },
+    {
+      "value": "\"status\" in ('draft', 'sent', 'accepted', 'rejected', 'expired')",
+      "name": "quotes_status_check",
+      "entityType": "checks",
+      "table": "quotes"
+    },
+    {
+      "value": "\"version\" >= 1",
+      "name": "quotes_version_check",
+      "entityType": "checks",
+      "table": "quotes"
+    },
+    {
+      "value": "\"updated_at\" >= \"created_at\"",
+      "name": "quotes_timestamps_check",
+      "entityType": "checks",
+      "table": "quotes"
+    },
+    {
+      "value": "\"id\" is not null and length(\"id\") = 26 and \"id\" not glob '*[^0-9A-HJKMNP-TV-Z]*' and substr(\"id\", 1, 1) between '0' and '7'",
+      "name": "roles_id_ulid_check",
+      "entityType": "checks",
+      "table": "roles"
+    },
+    {
+      "value": "length(trim(\"name\")) > 0",
+      "name": "roles_name_check",
+      "entityType": "checks",
+      "table": "roles"
+    },
+    {
+      "value": "\"id\" is not null and length(\"id\") = 26 and \"id\" not glob '*[^0-9A-HJKMNP-TV-Z]*' and substr(\"id\", 1, 1) between '0' and '7'",
+      "name": "sessions_id_ulid_check",
+      "entityType": "checks",
+      "table": "sessions"
+    },
+    {
+      "value": "typeof(\"token_hmac\") = 'blob' and length(\"token_hmac\") = 32",
+      "name": "sessions_token_hmac_check",
+      "entityType": "checks",
+      "table": "sessions"
+    },
+    {
+      "value": "typeof(\"csrf_hmac\") = 'blob' and length(\"csrf_hmac\") = 32",
+      "name": "sessions_csrf_hmac_check",
+      "entityType": "checks",
+      "table": "sessions"
+    },
+    {
+      "value": "\"last_seen_at\" >= \"created_at\" and \"idle_expires_at\" > \"created_at\" and \"absolute_expires_at\" >= \"idle_expires_at\" and (\"revoked_at\" is null or \"revoked_at\" >= \"created_at\")",
+      "name": "sessions_timestamps_check",
+      "entityType": "checks",
+      "table": "sessions"
+    },
+    {
+      "value": "\"id\" is not null and length(\"id\") = 26 and \"id\" not glob '*[^0-9A-HJKMNP-TV-Z]*' and substr(\"id\", 1, 1) between '0' and '7'",
+      "name": "users_id_ulid_check",
+      "entityType": "checks",
+      "table": "users"
+    },
+    {
+      "value": "\"kind\" in ('administrator', 'client')",
+      "name": "users_kind_check",
+      "entityType": "checks",
+      "table": "users"
+    },
+    {
+      "value": "length(trim(\"display_name\")) > 0",
+      "name": "users_display_name_check",
+      "entityType": "checks",
+      "table": "users"
+    },
+    {
+      "value": "\"updated_at\" >= \"created_at\"",
+      "name": "users_timestamps_check",
+      "entityType": "checks",
+      "table": "users"
+    },
+    {
+      "value": "\"disabled_at\" is null or \"disabled_at\" >= \"created_at\"",
+      "name": "users_disabled_at_check",
+      "entityType": "checks",
+      "table": "users"
+    }
+  ],
+  "renames": []
+}

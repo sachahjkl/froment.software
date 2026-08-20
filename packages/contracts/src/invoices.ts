@@ -7,7 +7,13 @@ import {
   RequestRateLimited,
 } from './authentication.js';
 import { Ulid } from './identifiers.js';
-import { DocumentParty, IssuerSettings, QuoteLine, QuoteLineInput } from './quotes.js';
+import {
+  DocumentNotFound,
+  DocumentParty,
+  IssuerSettings,
+  QuoteLine,
+  QuoteLineInput,
+} from './quotes.js';
 
 const SafeInteger = Schema.Number.check(
   Schema.isInt(),
@@ -134,6 +140,17 @@ export const InvoiceIssueResult = Schema.Struct({
 });
 export type InvoiceIssueResult = typeof InvoiceIssueResult.Type;
 
+export const InvoiceDocumentArtifact = Schema.Struct({
+  id: Ulid,
+  invoiceRevisionId: Ulid,
+  kind: Schema.Literal('invoice-pdf'),
+  contentType: Schema.Literal('application/pdf'),
+  byteSize: PositiveSafeInteger,
+  sha256: Schema.String.check(Schema.isPattern(/^[a-f0-9]{64}$/)),
+  createdAt: IsoUtc,
+});
+export type InvoiceDocumentArtifact = typeof InvoiceDocumentArtifact.Type;
+
 export const InvoiceList = Schema.Array(InvoiceSummary);
 export type InvoiceList = typeof InvoiceList.Type;
 
@@ -191,5 +208,6 @@ export const InvoiceFailure = Schema.Union([
   InvoiceVersionConflict,
   InvoiceAmountTooLarge,
   InvoiceInvalidDates,
+  DocumentNotFound,
 ]);
 export type InvoiceFailure = typeof InvoiceFailure.Type;

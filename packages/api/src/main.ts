@@ -10,14 +10,14 @@ import { DatabaseLive } from './database/database.js';
 import { DeploymentLive } from './deployment/deployment.js';
 import { IssuerSettingsLive } from './documents/issuer-settings.js';
 import { DocumentArtifactsLive } from './documents/document-artifacts.js';
-import { QuoteRendererLive } from './documents/quote-renderer.js';
+import { DocumentRendererLive } from './documents/document-renderer.js';
 import { QuotesLive } from './quotes/quotes.js';
 import { QuoteLinksLive } from './quotes/quote-links.js';
 import { InvoicesLive } from './invoices/invoices.js';
 import { ServerLive } from './server.js';
 import { ObservabilityLive } from './observability/observability.js';
 
-const QuoteCoreLive = Layer.mergeAll(QuotesLive, QuoteRendererLive, InvoicesLive).pipe(
+const QuoteCoreLive = Layer.mergeAll(QuotesLive, DocumentRendererLive, InvoicesLive).pipe(
   Layer.provideMerge(IssuerSettingsLive),
 );
 const QuoteServicesLive = DocumentArtifactsLive.pipe(Layer.provideMerge(QuoteCoreLive));

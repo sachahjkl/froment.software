@@ -129,6 +129,8 @@ export {
   type InvoiceCreateRequest as InvoiceCreateRequestValue,
   InvoiceDetail,
   type InvoiceDetail as InvoiceDetailValue,
+  InvoiceDocumentArtifact,
+  type InvoiceDocumentArtifact as InvoiceDocumentArtifactValue,
   InvoiceFailure,
   type InvoiceFailure as InvoiceFailureValue,
   InvoiceInvalidDates,
