@@ -1,7 +1,9 @@
 <section class="clients-page" aria-labelledby="clients-title">
   <header>
+    <p>
+      <a routerLink="/backoffice/dashboard">← {{ i18n.t('backOffice.clients.back') }}</a>
+    </p>
     <h1 id="clients-title">{{ i18n.t('backOffice.clients.title') }}</h1>
-    <a routerLink="/backoffice/dashboard">{{ i18n.t('backOffice.clients.back') }}</a>
   </header>
 
   <form class="create-client" (submit)="create($event)">

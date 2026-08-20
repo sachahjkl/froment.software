@@ -6,14 +6,8 @@
   padding: var(--page-header-y) var(--page-x);
 }
 
-header {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: var(--space-4);
-}
-
 h1 {
+  margin-top: var(--space-2);
   font-size: var(--text-2xl);
 }
 
@@ -48,11 +42,6 @@ form {
 }
 
 @media (max-width: 38rem) {
-  header {
-    align-items: stretch;
-    flex-direction: column;
-  }
-
   form {
     grid-template-columns: 1fr;
     padding: var(--space-4);

@@ -14,12 +14,8 @@ header {
 }
 
 h1 {
-  font-size: var(--text-2xl);
-}
-
-header a:not([appLinkButton]) {
-  display: inline-block;
   margin-top: var(--space-2);
+  font-size: var(--text-2xl);
 }
 
 .empty,

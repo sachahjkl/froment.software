@@ -28,7 +28,9 @@ describe('BackOfficeLogin', () => {
     expect(root.querySelector('.eyebrow')).toBeNull();
     expect(root.querySelector('h1')?.textContent).toContain('Back office');
 
+    const bootstrapSlot = root.querySelector<HTMLElement>('.bootstrap-slot');
     const bootstrapLink = () => root.querySelector<HTMLAnchorElement>('.bootstrap-link');
+    expect(bootstrapSlot).not.toBeNull();
     expect(bootstrapLink()).toBeNull();
 
     root.querySelector<HTMLButtonElement>('#administrator-tab')?.click();
@@ -38,6 +40,7 @@ describe('BackOfficeLogin', () => {
       [],
       expect.objectContaining({ queryParams: { mode: 'admin' }, replaceUrl: true }),
     );
+    expect(root.querySelector('.bootstrap-slot')).toBe(bootstrapSlot);
     expect(bootstrapLink()?.hasAttribute('appLinkButton')).toBe(false);
     expect(bootstrapLink()?.getAttribute('href')).toBe('/backoffice/bootstrap');
 

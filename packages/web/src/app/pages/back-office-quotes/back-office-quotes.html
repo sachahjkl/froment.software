@@ -1,8 +1,10 @@
 <section class="quotes-page" aria-labelledby="quotes-title">
   <header>
     <div>
+      <p>
+        <a routerLink="/backoffice/dashboard">← {{ i18n.t('backOffice.quotes.back') }}</a>
+      </p>
       <h1 id="quotes-title">{{ i18n.t('backOffice.quotes.title') }}</h1>
-      <a routerLink="/backoffice/dashboard">{{ i18n.t('backOffice.quotes.back') }}</a>
     </div>
     <a appLinkButton variant="primary" routerLink="/backoffice/quotes/new">
       {{ i18n.t('backOffice.quotes.new') }}

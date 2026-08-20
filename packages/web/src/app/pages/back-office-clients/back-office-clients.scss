@@ -6,14 +6,8 @@
   padding: var(--page-header-y) var(--page-x);
 }
 
-.clients-page > header {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: var(--space-4);
-}
-
 h1 {
+  margin-top: var(--space-2);
   font-size: var(--text-2xl);
 }
 
@@ -75,7 +69,6 @@ h1 {
 }
 
 @media (max-width: 38rem) {
-  .clients-page > header,
   .create-client {
     grid-template-columns: 1fr;
   }

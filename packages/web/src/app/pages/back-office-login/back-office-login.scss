@@ -42,7 +42,7 @@ h1,
 }
 .login-mode-panel > p,
 form,
-.bootstrap-link {
+.bootstrap-slot {
   margin-top: var(--space-3);
 }
 form {
@@ -60,8 +60,10 @@ label {
 [appButton] {
   justify-self: start;
 }
-.bootstrap-link {
-  display: inline-block;
+.bootstrap-slot {
+  min-height: 2lh;
   font-size: var(--text-sm);
+}
+.bootstrap-link {
   font-weight: 600;
 }

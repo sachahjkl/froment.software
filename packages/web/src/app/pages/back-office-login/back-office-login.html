@@ -60,11 +60,13 @@
           {{ i18n.t(submitLabel()) }}
         </button>
       </form>
-      @if (mode() === 'administrator') {
-      <a class="bootstrap-link" routerLink="/backoffice/bootstrap">
-        {{ i18n.t('backOffice.bootstrap') }}
-      </a>
-      }
+      <div class="bootstrap-slot">
+        @if (mode() === 'administrator') {
+        <a class="bootstrap-link" routerLink="/backoffice/bootstrap">
+          {{ i18n.t('backOffice.bootstrap') }}
+        </a>
+        }
+      </div>
     </div>
   </div>
 </section>
