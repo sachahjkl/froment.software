@@ -117,8 +117,10 @@ p {
   text-transform: uppercase;
 }
 
-.data-table tbody tr {
-  transition: background-color 120ms ease-out;
+.data-table tbody tr,
+.data-table tbody tr * {
+  transition: none;
+  animation: none;
 }
 
 .data-table tbody tr:hover {

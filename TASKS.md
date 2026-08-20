@@ -92,8 +92,8 @@
 ## Back-Office Usability
 
 - [x] Replace decorative document styling with a compact utility layout.
-- [ ] Give line fieldset legends an explicit background.
+- [x] Give line fieldset legends an explicit background.
 - [x] Add client detail and editing workflows.
 - [x] Use consistent form panels on client pages.
-- [ ] Remove table-row hover transitions.
+- [x] Remove table-row hover transitions.
 - [x] Verify generated PDFs contain extractable text.
