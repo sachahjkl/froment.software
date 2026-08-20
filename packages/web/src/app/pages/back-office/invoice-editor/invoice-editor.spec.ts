@@ -58,6 +58,7 @@ const detail = (status: InvoiceDetailValue['status'] = 'draft'): InvoiceDetailVa
     issuedAt: status === 'draft' ? null : '2026-08-20T06:00:00.000Z',
   },
   revisions: [revision],
+  pdf: status === 'draft' ? null : { status: 'ready', attempts: 1, error: null },
 });
 
 const order = {

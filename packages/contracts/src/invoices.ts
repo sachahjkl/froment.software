@@ -45,6 +45,16 @@ export type InvoiceStatus = typeof InvoiceStatus.Type;
 export const InvoiceNumber = Schema.String.check(Schema.isPattern(/^F-[0-9]{6,}$/));
 export type InvoiceNumber = typeof InvoiceNumber.Type;
 
+export const InvoicePdfStatus = Schema.Literals(['pending', 'processing', 'ready', 'failed']);
+export type InvoicePdfStatus = typeof InvoicePdfStatus.Type;
+
+export const InvoicePdfState = Schema.Struct({
+  status: InvoicePdfStatus,
+  attempts: SafeInteger,
+  error: Schema.NullOr(Schema.Literal('pdf.render_failed')),
+});
+export type InvoicePdfState = typeof InvoicePdfState.Type;
+
 export const InvoiceCreateRequest = Schema.Struct({
   orderId: Ulid,
   serviceDate: CalendarDate,
@@ -125,6 +135,7 @@ export const InvoiceSummary = Schema.Struct({
   currency: Schema.Literal('EUR'),
   totalCents: SafeInteger,
   updatedAt: IsoUtc,
+  pdf: Schema.NullOr(InvoicePdfState),
 });
 export type InvoiceSummary = typeof InvoiceSummary.Type;
 
@@ -140,6 +151,7 @@ export const InvoiceDetail = Schema.Struct({
   voidedAt: Schema.NullOr(IsoUtc),
   currentRevision: InvoiceRevision,
   revisions: Schema.Array(InvoiceRevision),
+  pdf: Schema.NullOr(InvoicePdfState),
 });
 export type InvoiceDetail = typeof InvoiceDetail.Type;
 

@@ -718,6 +718,57 @@ export const invoiceNumberCounter = sqliteTable(
   ],
 );
 
+export const invoicePdfJobs = sqliteTable(
+  'invoice_pdf_jobs',
+  {
+    invoiceRevisionId: text('invoice_revision_id')
+      .notNull()
+      .primaryKey()
+      .references(() => invoiceRevisions.id, { onDelete: 'no action' }),
+    invoiceId: text('invoice_id')
+      .notNull()
+      .references(() => invoices.id, { onDelete: 'no action' }),
+    invoiceNumber: text('invoice_number').notNull(),
+    version: integer().notNull(),
+    actorUserId: text('actor_user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'no action' }),
+    status: text({ enum: ['pending', 'processing', 'ready', 'failed'] }).notNull(),
+    attempts: integer().notNull(),
+    error: text(),
+    createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull(),
+    updatedAt: integer('updated_at', { mode: 'timestamp_ms' }).notNull(),
+  },
+  (table) => [
+    uniqueIndex('invoice_pdf_jobs_invoice_id_unique').on(table.invoiceId),
+    index('invoice_pdf_jobs_status_updated_at_index').on(table.status, table.updatedAt),
+    check(
+      'invoice_pdf_jobs_revision_id_ulid_check',
+      sql`${table.invoiceRevisionId} is not null and length(${table.invoiceRevisionId}) = 26 and ${table.invoiceRevisionId} not glob '*[^0-9A-HJKMNP-TV-Z]*' and substr(${table.invoiceRevisionId}, 1, 1) between '0' and '7'`,
+    ),
+    check(
+      'invoice_pdf_jobs_invoice_id_ulid_check',
+      sql`${table.invoiceId} is not null and length(${table.invoiceId}) = 26 and ${table.invoiceId} not glob '*[^0-9A-HJKMNP-TV-Z]*' and substr(${table.invoiceId}, 1, 1) between '0' and '7'`,
+    ),
+    check(
+      'invoice_pdf_jobs_actor_id_ulid_check',
+      sql`${table.actorUserId} is not null and length(${table.actorUserId}) = 26 and ${table.actorUserId} not glob '*[^0-9A-HJKMNP-TV-Z]*' and substr(${table.actorUserId}, 1, 1) between '0' and '7'`,
+    ),
+    check('invoice_pdf_jobs_number_check', sql`${table.invoiceNumber} glob 'F-[0-9]*'`),
+    check('invoice_pdf_jobs_version_check', sql`${table.version} >= 1`),
+    check(
+      'invoice_pdf_jobs_status_check',
+      sql`${table.status} in ('pending', 'processing', 'ready', 'failed')`,
+    ),
+    check('invoice_pdf_jobs_attempts_check', sql`${table.attempts} >= 0`),
+    check(
+      'invoice_pdf_jobs_error_check',
+      sql`(${table.status} = 'failed' and ${table.error} = 'pdf.render_failed') or (${table.status} <> 'failed' and ${table.error} is null)`,
+    ),
+    check('invoice_pdf_jobs_timestamps_check', sql`${table.updatedAt} >= ${table.createdAt}`),
+  ],
+);
+
 const ulid = (schema: typeof Schema.String) =>
   schema.check(Schema.isPattern(/^[0-7][0-9A-HJKMNP-TV-Z]{25}$/));
 

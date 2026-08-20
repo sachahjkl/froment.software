@@ -11,6 +11,7 @@ import { DeploymentLive } from './deployment/deployment.js';
 import { IssuerSettingsLive } from './documents/issuer-settings.js';
 import { DocumentArtifactsLive } from './documents/document-artifacts.js';
 import { DocumentRendererLive } from './documents/document-renderer.js';
+import { InvoicePdfJobsLive, InvoicePdfWorkerLive } from './documents/invoice-pdf-jobs.js';
 import { QuotesLive } from './quotes/quotes.js';
 import { QuoteLinksLive } from './quotes/quote-links.js';
 import { QuoteConditionPresetsLive } from './quotes/quote-condition-presets.js';
@@ -24,13 +25,18 @@ const QuoteCoreLive = Layer.mergeAll(QuotesLive, DocumentRendererLive, InvoicesL
   Layer.provideMerge(IssuerSettingsLive),
 );
 const QuoteServicesLive = DocumentArtifactsLive.pipe(Layer.provideMerge(QuoteCoreLive));
+const InvoicePdfServicesLive = InvoicePdfJobsLive.pipe(Layer.provideMerge(QuoteServicesLive));
+const InvoicePdfRuntimeLive = Layer.merge(
+  InvoicePdfServicesLive,
+  InvoicePdfWorkerLive.pipe(Layer.provide(InvoicePdfServicesLive)),
+);
 
 const ServicesLive = Layer.mergeAll(
   BootstrapLive,
   AuthenticationLive,
   ClientsLive,
   OrdersLive,
-  QuoteServicesLive,
+  InvoicePdfRuntimeLive,
   QuoteLinksLive,
   QuoteConditionPresetsLive,
   DeploymentLive,

@@ -10,6 +10,7 @@ import {
   InvoiceNotFound,
   InvoiceOrderNotFound,
   InvoiceRenderSnapshot,
+  InvoicePdfState,
   InvoiceStatus,
   InvoiceVersionConflict,
   QuoteRenderSnapshot,
@@ -96,6 +97,9 @@ const InvoiceSummaryRecord = Schema.Struct({
   currency: Schema.Literal('EUR'),
   totalCents: Schema.Int,
   updatedAt: Schema.Int,
+  pdfStatus: Schema.NullOr(Schema.Literals(['pending', 'processing', 'ready', 'failed'])),
+  pdfAttempts: Schema.NullOr(Schema.Int),
+  pdfError: Schema.NullOr(Schema.Literal('pdf.render_failed')),
 });
 
 type InvoiceError =
@@ -243,6 +247,13 @@ export const InvoicesLive = Layer.effect(
         (revision) => revision.version === invoice.version,
       );
       if (currentRevision === undefined) throw new Error('Current invoice revision is missing.');
+      const rawPdf = database.sqlite
+        .prepare(
+          `select status, attempts, error from invoice_pdf_jobs
+           where invoice_revision_id = ?`,
+        )
+        .get(currentRevision.id);
+      const pdf = rawPdf === undefined ? null : Schema.decodeUnknownSync(InvoicePdfState)(rawPdf);
       return InvoiceDetail.make({
         ...invoice,
         issuedAt:
@@ -257,6 +268,7 @@ export const InvoicesLive = Layer.effect(
             : DateTime.formatIso(DateTime.makeUnsafe(invoice.voidedAt)),
         currentRevision,
         revisions: mappedRevisions,
+        pdf,
       });
     };
 
@@ -269,16 +281,38 @@ export const InvoicesLive = Layer.effect(
                       invoice_revisions.client_display_name as clientDisplayName,
                       invoices.status, invoices.version, invoices.invoice_number as invoiceNumber,
                       invoice_revisions.title, invoice_revisions.currency,
-                      invoice_revisions.total_cents as totalCents, invoices.updated_at as updatedAt
-               from invoices join invoice_revisions
+                       invoice_revisions.total_cents as totalCents, invoices.updated_at as updatedAt
+                       , invoice_pdf_jobs.status as pdfStatus
+                       , invoice_pdf_jobs.attempts as pdfAttempts
+                       , invoice_pdf_jobs.error as pdfError
+                from invoices join invoice_revisions
                  on invoice_revisions.invoice_id = invoices.id
-                and invoice_revisions.version = invoices.version
+                 and invoice_revisions.version = invoices.version
+               left join invoice_pdf_jobs
+                 on invoice_pdf_jobs.invoice_revision_id = invoice_revisions.id
                order by invoices.updated_at desc, invoices.id`,
             )
             .all(),
         ).map((invoice) => ({
-          ...invoice,
+          id: invoice.id,
+          orderId: invoice.orderId,
+          clientId: invoice.clientId,
+          clientDisplayName: invoice.clientDisplayName,
+          status: invoice.status,
+          version: invoice.version,
+          invoiceNumber: invoice.invoiceNumber,
+          title: invoice.title,
+          currency: invoice.currency,
+          totalCents: invoice.totalCents,
           updatedAt: DateTime.formatIso(DateTime.makeUnsafe(invoice.updatedAt)),
+          pdf:
+            invoice.pdfStatus === null || invoice.pdfAttempts === null
+              ? null
+              : InvoicePdfState.make({
+                  status: invoice.pdfStatus,
+                  attempts: invoice.pdfAttempts,
+                  error: invoice.pdfError,
+                }),
         })),
       catch: (cause) => new DatabaseError({ operation: 'list invoices', cause }),
     });
@@ -744,6 +778,22 @@ export const InvoicesLive = Layer.effect(
                 },
                 occurredAt: now,
               });
+              database.sqlite
+                .prepare(
+                  `insert into invoice_pdf_jobs
+                   (invoice_revision_id, invoice_id, invoice_number, version, actor_user_id,
+                    status, attempts, error, created_at, updated_at)
+                   values (?, ?, ?, ?, ?, 'pending', 0, null, ?, ?)`,
+                )
+                .run(
+                  finalSnapshot.revisionId,
+                  invoiceId,
+                  invoiceNumber,
+                  nextVersion,
+                  actorUserId,
+                  now,
+                  now,
+                );
               return InvoiceIssueResult.make({
                 invoiceId,
                 revisionId: finalSnapshot.revisionId,

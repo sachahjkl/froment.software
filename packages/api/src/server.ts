@@ -1,5 +1,11 @@
 import { NodeHttpServer } from '@effect/platform-node';
-import { Api, RequestRateLimited, type PermissionCodeValue } from '@froment/contracts';
+import {
+  Api,
+  RequestRateLimited,
+  type InvoiceIssueRequestValue,
+  type PermissionCodeValue,
+  type UlidValue,
+} from '@froment/contracts';
 import { Config, Effect, FileSystem, Layer, Option, Schema } from 'effect';
 import {
   HttpEffect,
@@ -22,6 +28,7 @@ import { Deployment } from './deployment/deployment.js';
 import { IssuerSettings } from './documents/issuer-settings.js';
 import { DocumentArtifacts } from './documents/document-artifacts.js';
 import { DocumentRenderer } from './documents/document-renderer.js';
+import { InvoicePdfJobs } from './documents/invoice-pdf-jobs.js';
 import { Quotes } from './quotes/quotes.js';
 import { QuoteLinks } from './quotes/quote-links.js';
 import { QuoteConditionPresets } from './quotes/quote-condition-presets.js';
@@ -33,6 +40,22 @@ import { ClientPortal } from './client-portal/client-portal.js';
 const sessionCookieName = '__Host-froment-session';
 const csrfCookieName = '__Host-froment-csrf';
 const csrfHeaderName = 'x-csrf-token';
+
+export const issueInvoice = Effect.fn('issueInvoice')(function* (
+  invoiceId: UlidValue,
+  payload: InvoiceIssueRequestValue,
+  actorUserId: UlidValue,
+) {
+  const result = yield* (yield* Invoices)
+    .issue(invoiceId, payload, actorUserId)
+    .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
+  yield* (yield* InvoicePdfJobs)
+    .runPending()
+    .pipe(
+      Effect.catch((error) => Effect.logError('Immediate invoice PDF rendering failed', error)),
+    );
+  return result;
+});
 
 const sessionCookie = HttpApiSecurity.apiKey({
   key: sessionCookieName,
@@ -656,16 +679,7 @@ const InvoiceHandlers = HttpApiBuilder.group(Api, 'invoices', (handlers) =>
         Effect.fn('invoiceIssue')(function* ({ params, payload }) {
           yield* setPrivateResponseHeaders;
           const principal = yield* authorizeAdministratorWrite('invoice.issue', 10);
-          const result = yield* (yield* Invoices)
-            .issue(params.invoiceId, payload, principal.userId)
-            .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
-          yield* (yield* DocumentArtifacts)
-            .renderInvoicePdf(params.invoiceId, result.version, principal.userId)
-            .pipe(
-              Effect.catchTag('DatabaseError', Effect.orDie),
-              Effect.catchTag('DocumentRenderError', Effect.orDie),
-            );
-          return result;
+          return yield* issueInvoice(params.invoiceId, payload, principal.userId);
         }),
       )
       .handle(

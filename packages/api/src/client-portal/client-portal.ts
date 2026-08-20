@@ -162,7 +162,8 @@ export const ClientPortalLive = Layer.effect(
                         invoice_revisions.due_date as dueDate, invoice_revisions.currency,
                         invoice_revisions.total_cents as totalCents,
                         invoices.updated_at as updatedAt,
-                        document_artifacts.id is not null as pdfAvailable
+                        (invoice_pdf_jobs.status = 'ready'
+                         and document_artifacts.id is not null) as pdfAvailable
                  from invoices
                  join orders
                    on orders.id = invoices.order_id
@@ -170,9 +171,11 @@ export const ClientPortalLive = Layer.effect(
                  join invoice_revisions
                    on invoice_revisions.invoice_id = invoices.id
                   and invoice_revisions.version = invoices.version
-                 left join document_artifacts
-                   on document_artifacts.invoice_revision_id = invoice_revisions.id
-                  and document_artifacts.kind = 'invoice-pdf'
+                  left join document_artifacts
+                    on document_artifacts.invoice_revision_id = invoice_revisions.id
+                   and document_artifacts.kind = 'invoice-pdf'
+                  left join invoice_pdf_jobs
+                    on invoice_pdf_jobs.invoice_revision_id = invoice_revisions.id
                  where invoices.client_id = ? and invoices.status <> 'draft'
                  order by invoices.updated_at desc, invoices.id`,
                 )
@@ -241,9 +244,12 @@ export const ClientPortalLive = Layer.effect(
                join invoice_revisions
                  on invoice_revisions.invoice_id = invoices.id
                 and invoice_revisions.version = invoices.version
-               join document_artifacts
-                 on document_artifacts.invoice_revision_id = invoice_revisions.id
-                and document_artifacts.kind = 'invoice-pdf'
+                join document_artifacts
+                  on document_artifacts.invoice_revision_id = invoice_revisions.id
+                 and document_artifacts.kind = 'invoice-pdf'
+                join invoice_pdf_jobs
+                  on invoice_pdf_jobs.invoice_revision_id = invoice_revisions.id
+                 and invoice_pdf_jobs.status = 'ready'
                where invoices.id = ? and invoices.client_id = ? and invoices.status <> 'draft'
                limit 1`,
             )
