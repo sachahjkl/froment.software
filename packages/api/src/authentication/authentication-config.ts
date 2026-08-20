@@ -1,11 +1,21 @@
 import { Config, Context, Effect, Layer, Redacted, Schema } from 'effect';
 import { createHmac } from 'node:crypto';
 
-const Sha512Hash = Schema.String.check(Schema.isPattern(/^[0-9a-fA-F]{128}$/));
+const ScryptHash = Schema.String.check(
+  Schema.isPattern(/^scrypt\$16384\$8\$1\$[A-Za-z0-9_-]{22}\$[A-Za-z0-9_-]{86}$/),
+);
 const HmacKey = Schema.String.check(Schema.isPattern(/^[A-Za-z0-9_-]{43}$/));
 
+export interface BootstrapPasswordHash {
+  readonly cost: 16_384;
+  readonly blockSize: 8;
+  readonly parallelization: 1;
+  readonly salt: Buffer;
+  readonly hash: Buffer;
+}
+
 export interface AuthenticationConfigService {
-  readonly bootstrapPasswordHash: Buffer;
+  readonly bootstrapPasswordHash: BootstrapPasswordHash;
   readonly accessHmacKey: Buffer;
   readonly sessionHmacKey: Buffer;
   readonly quoteLinkHmacKey: Buffer;
@@ -20,8 +30,8 @@ export class AuthenticationConfig extends Context.Service<
 export const AuthenticationConfigLive = Layer.effect(
   AuthenticationConfig,
   Effect.gen(function* () {
-    const bootstrapPasswordHash = yield* Schema.decodeUnknownEffect(Sha512Hash)(
-      Redacted.value(yield* Config.redacted('BOOTSTRAP_PASSWORD_SHA512')),
+    const encodedBootstrapPasswordHash = yield* Schema.decodeUnknownEffect(ScryptHash)(
+      Redacted.value(yield* Config.redacted('BOOTSTRAP_PASSWORD_SCRYPT')),
     );
     const accessHmacKey = yield* Schema.decodeUnknownEffect(HmacKey)(
       Redacted.value(yield* Config.redacted('ACCESS_HMAC_KEY')),
@@ -34,8 +44,15 @@ export const AuthenticationConfigLive = Layer.effect(
     );
     const publicUrl = yield* Config.schema(Schema.URL, 'PUBLIC_ORIGIN');
 
+    const [, , , , salt, hash] = encodedBootstrapPasswordHash.split('$');
     return AuthenticationConfig.of({
-      bootstrapPasswordHash: Buffer.from(bootstrapPasswordHash, 'hex'),
+      bootstrapPasswordHash: {
+        cost: 16_384,
+        blockSize: 8,
+        parallelization: 1,
+        salt: Buffer.from(salt, 'base64url'),
+        hash: Buffer.from(hash, 'base64url'),
+      },
       accessHmacKey: Buffer.from(accessHmacKey, 'base64url'),
       sessionHmacKey: Buffer.from(sessionHmacKey, 'base64url'),
       quoteLinkHmacKey: Buffer.from(quoteLinkHmacKey, 'base64url'),

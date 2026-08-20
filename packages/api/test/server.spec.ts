@@ -96,8 +96,8 @@ describe('HTTP server', () => {
       env: {
         ...process.env,
         ACCESS_HMAC_KEY: 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA',
-        BOOTSTRAP_PASSWORD_SHA512:
-          'ee509509a3a15f6a7224fdf24525275f2cfc9802d369266eb5797ad12cfcbaaba9e0a13673063908cc41de82c35db7e16871f3185ecdbf104b67402e95e5b5f9',
+        BOOTSTRAP_PASSWORD_SCRYPT:
+          'scrypt$16384$8$1$ABEiM0RVZneImaq7zN3u_w$bDQwYDYiQ_8HCiJ3-qXFtXFeV9FhIOa7E8VSgT__uegLrk4vqD6U920ImYTwk5RABOZsIk96bUNH1G9wbCXf1Q',
         DATABASE_PATH: databaseFilename,
         DEPLOYMENT_METADATA: JSON.stringify(deploymentMetadata),
         MIGRATIONS_ROOT: join(import.meta.dirname, '..', 'drizzle'),
@@ -593,6 +593,43 @@ describe('HTTP server', () => {
     });
     expect(forbiddenAdministratorRole.status).toBe(403);
 
+    const rotatedAccessResponse = await fetch(`${baseUrl}/api/clients/${client.id}/access`, {
+      method: 'POST',
+      headers: {
+        cookie: administratorCookieHeader,
+        origin: baseUrl,
+        'x-csrf-token': administratorCsrf,
+      },
+    });
+    expect(rotatedAccessResponse.status).toBe(200);
+    const rotatedAccess = (await rotatedAccessResponse.json()) as typeof access;
+    const rotatedLogin = await fetch(`${baseUrl}/api/auth/login`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', origin: baseUrl },
+      body: JSON.stringify({ accessIdentifier: rotatedAccess.accessIdentifier, mode: 'client' }),
+    });
+    expect(rotatedLogin.status).toBe(200);
+    const rotatedSession = await fetch(`${baseUrl}/api/auth/session`, {
+      headers: { cookie: clientCookieHeader },
+    });
+    await expect(rotatedSession.json()).resolves.toEqual({ authenticated: false, mode: null });
+    const rotatedSqlite = new Sqlite(databaseFilename, { readonly: true });
+    expect(
+      rotatedSqlite
+        .prepare(
+          'select count(*) from access_credentials where user_id = ? and revoked_at is not null',
+        )
+        .pluck()
+        .get(client.id),
+    ).toBe(1);
+    expect(
+      rotatedSqlite
+        .prepare('select count(*) from access_credentials where user_id = ? and revoked_at is null')
+        .pluck()
+        .get(client.id),
+    ).toBe(1);
+    rotatedSqlite.close();
+
     const archiveResponse = await fetch(`${baseUrl}/api/clients/${client.id}/archive`, {
       method: 'POST',
       headers: {
@@ -608,6 +645,16 @@ describe('HTTP server', () => {
       archived: true,
       updatedAt: expect.any(Number),
     });
+    const repeatedArchive = await fetch(`${baseUrl}/api/clients/${client.id}/archive`, {
+      method: 'POST',
+      headers: {
+        cookie: administratorCookieHeader,
+        origin: baseUrl,
+        'x-csrf-token': administratorCsrf,
+      },
+    });
+    expect(repeatedArchive.status).toBe(200);
+    await expect(repeatedArchive.json()).resolves.toEqual(archivedClient);
 
     const archivedUpdate = await fetch(`${baseUrl}/api/clients/${client.id}`, {
       method: 'PUT',
@@ -681,7 +728,7 @@ describe('HTTP server', () => {
         )
         .pluck()
         .get(client.id),
-    ).toBe(1);
+    ).toBe(2);
     expect(
       sqlite
         .prepare(
@@ -690,7 +737,13 @@ describe('HTTP server', () => {
         )
         .pluck()
         .all(client.id),
-    ).toEqual(['client.created', 'client.updated', 'client.access-created', 'client.archived']);
+    ).toEqual([
+      'client.created',
+      'client.updated',
+      'client.access-created',
+      'client.access-created',
+      'client.archived',
+    ]);
     expect(
       sqlite
         .prepare('select count(*) from audit_events where metadata like ?')

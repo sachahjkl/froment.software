@@ -56,7 +56,19 @@ describe('PublicQuoteApi', () => {
         netTotalCents: 100,
         vatTotalCents: 20,
         totalCents: 120,
-        lines: [],
+        lines: [
+          {
+            id: '01ARZ3NDEKTSV4RRFFQ69G5FAX',
+            position: 0,
+            description: 'Audit',
+            quantityMilli: 1_000,
+            unitPriceCents: 100,
+            vatRateBasisPoints: 2_000,
+            netTotalCents: 100,
+            vatTotalCents: 20,
+            totalCents: 120,
+          },
+        ],
       },
     });
 

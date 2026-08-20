@@ -105,9 +105,9 @@ Cette route reste disponible seulement tant qu'aucun administrateur n'existe.
 
 Le formulaire d'amorçage accepte un mot de passe simple.
 
-Le serveur calcule le SHA-512 du mot de passe et compare le condensat en temps constant.
+Le serveur dérive le mot de passe avec scrypt et compare le condensat en temps constant.
 
-La variable obligatoire `BOOTSTRAP_PASSWORD_SHA512` contient ce condensat hexadécimal.
+La variable obligatoire `BOOTSTRAP_PASSWORD_SCRYPT` contient les paramètres, le sel et le condensat en base64url.
 
 La variable obligatoire `ACCESS_HMAC_KEY` contient une clé aléatoire de 32 octets en base64url.
 

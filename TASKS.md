@@ -47,9 +47,9 @@
 - [ ] REV-007 Isolate pull-request CI from persistent runners.
 - [ ] REV-008 Run Chromium as a sandboxed non-root user.
 - [x] REV-009 Expose API test failures in Nix and make the test derivation pass twice.
-- [ ] REV-010 Revoke old client access during rotation.
-- [ ] REV-011 Rate-limit successful authentication.
-- [ ] REV-012 Rate-limit public quote reads and downloads.
+- [x] REV-010 Revoke old client access during rotation.
+- [x] REV-011 Rate-limit successful authentication.
+- [x] REV-012 Rate-limit public quote reads and downloads.
 - [ ] REV-013 Make published documents immutable and verify artifact hashes.
 - [ ] REV-014 Enforce cross-table business relationships.
 - [ ] REV-015 Roll back migrations that violate foreign keys.
@@ -76,8 +76,8 @@
 - [x] REV-036 Validate client invoice dates.
 - [x] REV-037 Limit document snapshots to 20 lines.
 - [ ] REV-038 Verify PDF hashes on every download.
-- [ ] REV-039 Make client archival idempotent.
-- [ ] REV-040 Use a memory-hard bootstrap password hash.
+- [x] REV-039 Make client archival idempotent.
+- [x] REV-040 Use a memory-hard bootstrap password hash.
 - [x] REV-041 Limit route versions to safe integers.
 - [x] REV-042 Validate generated quote URLs.
 - [x] REV-043 Reject whitespace-only display names.

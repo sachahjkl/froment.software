@@ -5,13 +5,35 @@ import {
   type BootstrapResultValue,
 } from '@froment/contracts';
 import { Clock, Context, Effect, Layer, Semaphore } from 'effect';
-import { createHash, randomBytes, timingSafeEqual } from 'node:crypto';
+import { randomBytes, scrypt, timingSafeEqual } from 'node:crypto';
 import { ulid } from 'ulid';
 
 import { AuthenticationConfig, hmac } from '../authentication/authentication-config.js';
 import { generateSession } from '../authentication/session.js';
 import { Audit } from '../audit/audit.js';
 import { Database, DatabaseError } from '../database/database.js';
+
+export const verifyBootstrapPassword = Effect.fn('verifyBootstrapPassword')(function* (
+  password: string,
+  expected: AuthenticationConfig['Service']['bootstrapPasswordHash'],
+) {
+  const actual = yield* Effect.callback<Buffer>((resume) => {
+    scrypt(
+      password,
+      expected.salt,
+      expected.hash.byteLength,
+      {
+        N: expected.cost,
+        r: expected.blockSize,
+        p: expected.parallelization,
+        maxmem: 32 * 1024 * 1024,
+      },
+      (error, derivedKey) =>
+        resume(error === null ? Effect.succeed(derivedKey) : Effect.die(error)),
+    );
+  });
+  return timingSafeEqual(actual, expected.hash);
+});
 
 export interface BootstrapSession extends BootstrapResultValue {
   readonly sessionToken: string;
@@ -63,8 +85,7 @@ export const BootstrapLive = Layer.effect(
         if (now < blockedUntil) {
           return yield* new BootstrapRateLimited({ code: 'bootstrap.rate_limited' });
         }
-        const actualHash = createHash('sha512').update(password, 'utf8').digest();
-        if (!timingSafeEqual(actualHash, config.bootstrapPasswordHash)) {
+        if (!(yield* verifyBootstrapPassword(password, config.bootstrapPasswordHash))) {
           failedAttempts += 1;
           const delay = Math.min(15 * 60 * 1_000, 1_000 * 2 ** Math.min(failedAttempts - 1, 10));
           blockedUntil = now + delay;

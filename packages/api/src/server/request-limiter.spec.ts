@@ -1,8 +1,27 @@
-import { Effect } from 'effect';
+import { Effect, Layer } from 'effect';
 import { TestClock } from 'effect/testing';
 import { describe, expect, it } from 'vitest';
 
 import { RequestLimiter, RequestLimiterLive } from './request-limiter.js';
+import { AuthenticationConfig } from '../authentication/authentication-config.js';
+import { limitPublicQuoteRequest } from '../server.js';
+
+const authenticationConfigLayer = Layer.succeed(
+  AuthenticationConfig,
+  AuthenticationConfig.of({
+    bootstrapPasswordHash: {
+      cost: 16_384,
+      blockSize: 8,
+      parallelization: 1,
+      salt: Buffer.alloc(16),
+      hash: Buffer.alloc(64),
+    },
+    accessHmacKey: Buffer.alloc(32, 1),
+    sessionHmacKey: Buffer.alloc(32, 2),
+    quoteLinkHmacKey: Buffer.alloc(32, 3),
+    publicOrigin: 'https://example.test',
+  }),
+);
 
 describe('RequestLimiter', () => {
   it('renews the mutation allowance after one minute', async () => {
@@ -38,5 +57,30 @@ describe('RequestLimiter', () => {
     );
 
     expect(result).toEqual({ sameRoute: false, otherRoute: true, otherUser: true });
+  });
+
+  it('limits public quote routes independently by address and token HMAC', async () => {
+    const tokenA = 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA';
+    const tokenB = 'BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB';
+    const result = await Effect.runPromise(
+      Effect.gen(function* () {
+        yield* limitPublicQuoteRequest('read', tokenA, '192.0.2.1', 1);
+        return {
+          distributed: yield* Effect.result(
+            limitPublicQuoteRequest('read', tokenA, '192.0.2.2', 1),
+          ),
+          changedToken: yield* Effect.result(
+            limitPublicQuoteRequest('read', tokenB, '192.0.2.1', 1),
+          ),
+          separateDownload: yield* Effect.result(
+            limitPublicQuoteRequest('download', tokenA, '192.0.2.1', 1),
+          ),
+        };
+      }).pipe(Effect.provide(RequestLimiterLive), Effect.provide(authenticationConfigLayer)),
+    );
+
+    expect(result.distributed).toMatchObject({ _tag: 'Failure' });
+    expect(result.changedToken).toMatchObject({ _tag: 'Failure' });
+    expect(result.separateDownload).toMatchObject({ _tag: 'Success' });
   });
 });

@@ -18,10 +18,11 @@ import {
 } from 'effect/unstable/http';
 import { HttpApiBuilder, HttpApiSecurity } from 'effect/unstable/httpapi';
 import { createServer } from 'node:http';
-import { createHash, randomUUID } from 'node:crypto';
+import { randomUUID } from 'node:crypto';
 
 import { Bootstrap } from './bootstrap/bootstrap.js';
 import { Authentication } from './authentication/authentication.js';
+import { AuthenticationConfig, hmac } from './authentication/authentication-config.js';
 import { Clients } from './clients/clients.js';
 import { Database } from './database/database.js';
 import { Deployment } from './deployment/deployment.js';
@@ -223,16 +224,31 @@ const authorizeClient = Effect.fn('authorizeClient')(function* (permission: Perm
     .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
 });
 
-const limitPublicQuoteSignature = Effect.fn('limitPublicQuoteSignature')(function* (
+export const limitPublicQuoteRequest = Effect.fn('limitPublicQuoteRequest')(function* (
+  route: 'read' | 'download' | 'signature',
   token: string,
   clientAddress: string,
+  limit: number,
 ) {
-  const tokenDigest = createHash('sha256').update(token).digest('hex');
-  const allowed = yield* (yield* RequestLimiter).allowMutation(
-    `public-quote-signature:${clientAddress}:${tokenDigest}`,
-    10,
+  const limiter = yield* RequestLimiter;
+  const config = yield* AuthenticationConfig;
+  const tokenDigest = hmac(config.quoteLinkHmacKey, token).toString('hex');
+  const addressAllowed = yield* limiter.allowMutation(
+    `public-quote-${route}:address:${clientAddress}`,
+    limit,
   );
-  if (!allowed) return yield* new RequestRateLimited({ code: 'request.rate_limited' });
+  const tokenAllowed = yield* limiter.allowMutation(
+    `public-quote-${route}:token:${tokenDigest}`,
+    limit,
+  );
+  if (!addressAllowed || !tokenAllowed) {
+    return yield* new RequestRateLimited({ code: 'request.rate_limited' });
+  }
+});
+
+const getClientAddress = Effect.fn('getClientAddress')(function* () {
+  const request = yield* HttpServerRequest.HttpServerRequest;
+  return Option.getOrElse(request.remoteAddress, () => 'unknown').slice(0, 64);
 });
 
 const ApiHandlers = HttpApiBuilder.group(Api, 'system', (handlers) =>
@@ -564,6 +580,7 @@ const QuoteHandlers = HttpApiBuilder.group(Api, 'quotes', (handlers) =>
         'publicQuoteGet',
         Effect.fn('publicQuoteGet')(function* ({ payload }) {
           yield* setPublicDocumentResponseHeaders;
+          yield* limitPublicQuoteRequest('read', payload.token, yield* getClientAddress(), 60);
           return yield* (yield* QuoteLinks)
             .get(payload.token)
             .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
@@ -573,6 +590,7 @@ const QuoteHandlers = HttpApiBuilder.group(Api, 'quotes', (handlers) =>
         'publicQuotePdfDownload',
         Effect.fn('publicQuotePdfDownload')(function* ({ payload }) {
           yield* setPublicDocumentResponseHeaders;
+          yield* limitPublicQuoteRequest('download', payload.token, yield* getClientAddress(), 20);
           const pdf = yield* (yield* QuoteLinks)
             .getPdf(payload.token)
             .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
@@ -593,11 +611,8 @@ const QuoteHandlers = HttpApiBuilder.group(Api, 'quotes', (handlers) =>
         Effect.fn('publicQuoteSign')(function* ({ payload }) {
           yield* setPublicDocumentResponseHeaders;
           const request = yield* HttpServerRequest.HttpServerRequest;
-          const clientAddress = Option.getOrElse(request.remoteAddress, () => 'unknown').slice(
-            0,
-            64,
-          );
-          yield* limitPublicQuoteSignature(payload.token, clientAddress);
+          const clientAddress = yield* getClientAddress();
+          yield* limitPublicQuoteRequest('signature', payload.token, clientAddress, 10);
           return yield* (yield* QuoteLinks)
             .accept(payload, {
               ipAddress: clientAddress,

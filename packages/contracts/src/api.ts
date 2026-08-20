@@ -342,12 +342,18 @@ export class QuotesApi extends HttpApiGroup.make('quotes', { topLevel: true }).a
   HttpApiEndpoint.post('publicQuoteGet', '/api/public/quote-link', {
     payload: PublicQuoteAccessRequest,
     success: PublicQuoteConsultation,
-    error: QuoteLinkNotFound.pipe(HttpApiSchema.status(404)),
+    error: [
+      QuoteLinkNotFound.pipe(HttpApiSchema.status(404)),
+      RequestRateLimited.pipe(HttpApiSchema.status(429)),
+    ],
   }),
   HttpApiEndpoint.post('publicQuotePdfDownload', '/api/public/quote-link/pdf', {
     payload: PublicQuoteAccessRequest,
     success: Schema.Uint8Array.pipe(HttpApiSchema.asUint8Array({ contentType: 'application/pdf' })),
-    error: QuoteLinkNotFound.pipe(HttpApiSchema.status(404)),
+    error: [
+      QuoteLinkNotFound.pipe(HttpApiSchema.status(404)),
+      RequestRateLimited.pipe(HttpApiSchema.status(429)),
+    ],
   }),
   HttpApiEndpoint.post('publicQuoteSign', '/api/public/quote-link/signature', {
     payload: PublicQuoteSignatureRequest,

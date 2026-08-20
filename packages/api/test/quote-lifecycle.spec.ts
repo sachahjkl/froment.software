@@ -30,7 +30,13 @@ const expiresAt = 2_000;
 const configLayer = Layer.succeed(
   AuthenticationConfig,
   AuthenticationConfig.of({
-    bootstrapPasswordHash: Buffer.alloc(64),
+    bootstrapPasswordHash: {
+      cost: 16_384,
+      blockSize: 8,
+      parallelization: 1,
+      salt: Buffer.alloc(16),
+      hash: Buffer.alloc(64),
+    },
     accessHmacKey: Buffer.alloc(32, 1),
     sessionHmacKey: Buffer.alloc(32, 2),
     quoteLinkHmacKey,

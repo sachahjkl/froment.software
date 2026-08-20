@@ -306,6 +306,7 @@ export const ClientsLive = Layer.effect(
                 throw new ClientNotFound({ code: 'client.not_found' });
               }
               const client = Schema.decodeUnknownSync(ClientRecord)(row);
+              if (client.archived === 1) return toSummary(client);
               const updatedAt = Math.max(now, client.updatedAt + 1);
               database.sqlite
                 .prepare('update clients set updated_at = ? where id = ?')
@@ -380,6 +381,16 @@ export const ClientsLive = Layer.effect(
               if (client.disabledAt !== null) {
                 throw new ClientArchived({ code: 'client.archived' });
               }
+              database.sqlite
+                .prepare(
+                  'update access_credentials set revoked_at = ? where user_id = ? and revoked_at is null',
+                )
+                .run(now, clientId);
+              database.sqlite
+                .prepare(
+                  'update sessions set revoked_at = ? where user_id = ? and revoked_at is null',
+                )
+                .run(now, clientId);
               database.sqlite
                 .prepare(
                   'insert into access_credentials (id, user_id, secret_hmac, created_at) values (?, ?, ?, ?)',

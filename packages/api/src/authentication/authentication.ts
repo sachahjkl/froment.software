@@ -23,6 +23,11 @@ interface LoginFailureState {
   readonly blockedUntil: number;
 }
 
+interface LoginQuotaState {
+  readonly count: number;
+  readonly startedAt: number;
+}
+
 const initialLoginFailureState: LoginFailureState = { failures: 0, blockedUntil: 0 };
 
 export interface SessionTokens {
@@ -92,6 +97,26 @@ export const AuthenticationLive = Layer.effect(
       timeToLive: '1 hour',
       lookup: () => Ref.make<LoginFailureState>(initialLoginFailureState),
     });
+    const successfulLogins = yield* Cache.make({
+      capacity: 20_000,
+      timeToLive: '2 minutes',
+      lookup: () =>
+        Clock.currentTimeMillis.pipe(
+          Effect.flatMap((startedAt) => Ref.make<LoginQuotaState>({ count: 0, startedAt })),
+        ),
+    });
+
+    const consumeLoginQuota = Effect.fn('Authentication.consumeLoginQuota')(function* (
+      key: string,
+      now: number,
+    ) {
+      const state = yield* Cache.get(successfulLogins, key);
+      return yield* Ref.modify(state, (current): readonly [boolean, LoginQuotaState] => {
+        if (now - current.startedAt >= 60_000) return [true, { count: 1, startedAt: now }];
+        if (current.count >= 60) return [false, current];
+        return [true, { ...current, count: current.count + 1 }];
+      });
+    });
 
     const registerFailure = Effect.fn('Authentication.registerFailure')(function* (
       state: Ref.Ref<LoginFailureState>,
@@ -148,18 +173,31 @@ export const AuthenticationLive = Layer.effect(
       }
 
       const now = yield* Clock.currentTimeMillis;
-      yield* Ref.set(
-        yield* Cache.get(identifierFailures, accessHmac.toString('hex')),
-        initialLoginFailureState,
-      );
+      const credentialKey = accessHmac.toString('hex');
+      const addressAllowed = yield* consumeLoginQuota(`address:${clientAddress}`, now);
+      const credentialAllowed = yield* consumeLoginQuota(`credential:${credentialKey}`, now);
+      if (!addressAllowed || !credentialAllowed) {
+        return yield* new AuthenticationRateLimited({ code: 'authentication.rate_limited' });
+      }
+      yield* Ref.set(yield* Cache.get(identifierFailures, credentialKey), initialLoginFailureState);
       const session = generateSession(credential.userId, config.sessionHmacKey, now);
       yield* Effect.try({
         try: () =>
           database.sqlite
             .transaction(() => {
-              database.sqlite
-                .prepare('update access_credentials set last_used_at = ? where id = ?')
-                .run(session.now, credential.id);
+              const credentialUpdated = database.sqlite
+                .prepare(
+                  `update access_credentials set last_used_at = ?
+                   where id = ? and revoked_at is null
+                     and exists (
+                       select 1 from users
+                       where users.id = access_credentials.user_id and users.disabled_at is null
+                     )`,
+                )
+                .run(session.now, credential.id).changes;
+              if (credentialUpdated !== 1) {
+                throw new AuthenticationRejected({ code: 'authentication.invalid_credentials' });
+              }
               database.sqlite
                 .prepare(
                   `delete from sessions
@@ -199,7 +237,10 @@ export const AuthenticationLive = Layer.effect(
               });
             })
             .immediate(),
-        catch: (cause) => new DatabaseError({ operation: 'create login session', cause }),
+        catch: (cause) =>
+          cause instanceof AuthenticationRejected
+            ? cause
+            : new DatabaseError({ operation: 'create login session', cause }),
       });
 
       return {
