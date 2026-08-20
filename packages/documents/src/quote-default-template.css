@@ -16,7 +16,7 @@ main {
   width: min(100%, 210mm);
   min-height: 297mm;
   margin: 0 auto;
-  padding: 6mm 8mm;
+  padding: 10mm 12mm;
   background: #fff;
 }
 
@@ -36,8 +36,12 @@ h2 {
 }
 
 .document-header {
-  padding-bottom: 3mm;
-  border-bottom: 1px solid #52606d;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(62mm, 0.72fr);
+  gap: 10mm;
+  align-items: start;
+  padding-bottom: 4mm;
+  border-bottom: 2px solid #52606d;
   break-inside: avoid;
   page-break-inside: avoid;
 }
@@ -48,7 +52,8 @@ h2 {
 }
 
 .quote-meta {
-  margin-top: 3mm;
+  border: 1px solid #7b8794;
+  background: #f5f7f9;
 }
 
 .eyebrow {
@@ -56,6 +61,37 @@ h2 {
   color: #52606d;
   font-size: 8px;
   font-weight: 700;
+  text-transform: uppercase;
+}
+
+.quote-meta .eyebrow {
+  margin: 0;
+  padding: 1.5mm 2mm;
+  border-bottom: 1px solid #7b8794;
+  color: #1f2933;
+  font-size: 11px;
+}
+
+.quote-meta dl {
+  width: auto;
+  padding: 1mm 2mm;
+}
+
+.quote-meta dl div {
+  display: grid;
+  grid-template-columns: minmax(22mm, 0.8fr) minmax(0, 1fr);
+  gap: 2mm;
+  padding: 0.8mm 0;
+}
+
+.quote-meta dt {
+  color: #52606d;
+}
+
+.quote-meta dd {
+  overflow-wrap: anywhere;
+  text-align: right;
+  word-break: break-word;
 }
 
 address {
@@ -68,18 +104,11 @@ address {
 h1,
 h2,
 address span,
-.quote-number,
 .subject,
 .conditions,
 footer span {
   overflow-wrap: anywhere;
   word-break: break-word;
-}
-
-.quote-number {
-  margin-bottom: 1mm;
-  font-size: 11px;
-  font-weight: 700;
 }
 
 .recipient,
@@ -89,7 +118,10 @@ footer span {
 }
 
 .recipient {
-  width: 100%;
+  width: 58%;
+  min-width: 78mm;
+  padding-left: 3mm;
+  border-left: 2px solid #7b8794;
 }
 
 .recipient,
@@ -99,13 +131,28 @@ footer span {
 }
 
 .subject {
-  padding-bottom: 2mm;
+  padding: 2mm 0;
+  border-top: 1px solid #cbd2d9;
   border-bottom: 1px solid #cbd2d9;
+}
+
+.subject .eyebrow {
+  display: inline;
+  margin-right: 2mm;
+}
+
+.subject h2 {
+  display: inline;
+}
+
+.subject h2 + p {
+  margin-top: 1mm;
 }
 
 table {
   width: 100%;
   margin-top: 4mm;
+  border: 1px solid #7b8794;
   border-collapse: collapse;
   table-layout: fixed;
 }
@@ -122,16 +169,21 @@ tr {
 th,
 td {
   padding: 1.5mm 1mm;
-  border-bottom: 1px solid #d9e2ec;
+  border: 1px solid #b8c0c8;
   text-align: left;
   vertical-align: top;
 }
 
 th {
-  border-bottom-color: #7b8794;
-  color: #52606d;
+  border-color: #7b8794;
+  background: #e9edf1;
+  color: #1f2933;
   font-size: 8px;
   font-weight: 700;
+}
+
+tbody tr:nth-child(even) {
+  background: #f6f8fa;
 }
 
 th:nth-child(1),
@@ -173,13 +225,13 @@ td:nth-child(5) {
 .totals {
   display: flex;
   justify-content: flex-end;
-  margin-top: 4mm;
+  margin-top: 3mm;
   break-inside: avoid;
   page-break-inside: avoid;
 }
 
 dl {
-  width: 68mm;
+  width: 76mm;
   max-width: 100%;
   margin: 0;
 }
@@ -188,9 +240,13 @@ dl div {
   display: flex;
   justify-content: space-between;
   gap: 8mm;
-  padding: 1.5mm 0;
+  padding: 1.3mm 2mm;
   break-inside: avoid;
   page-break-inside: avoid;
+}
+
+.totals dl {
+  border-bottom: 1px solid #7b8794;
 }
 
 dd {
@@ -199,7 +255,8 @@ dd {
 }
 
 .grand-total {
-  border-top: 1px solid #52606d;
+  border-top: 3px double #52606d;
+  background: #f5f7f9;
   font-size: 11px;
 }
 
@@ -226,7 +283,11 @@ footer {
 }
 
 footer span {
-  display: block;
+  display: inline;
+}
+
+footer span + span::before {
+  content: " · ";
 }
 
 @page {
@@ -238,5 +299,21 @@ footer span {
   main {
     width: auto;
     min-height: 0;
+  }
+}
+
+@media (max-width: 560px) {
+  main {
+    padding: 6mm;
+  }
+
+  .document-header {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 4mm;
+  }
+
+  .recipient {
+    width: 100%;
+    min-width: 0;
   }
 }

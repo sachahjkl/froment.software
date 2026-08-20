@@ -96,6 +96,34 @@ const expectNoHorizontalOverflow = async (page: Page) => {
   expect(overflows).toEqual([]);
 };
 
+const expectBusinessLayout = async (page: Page) => {
+  const layout = await page.locator('body').evaluate((body) => {
+    const style = (selector: string) =>
+      body.ownerDocument.defaultView!.getComputedStyle(body.querySelector(selector)!);
+    const firstRow = style('tbody tr:nth-child(1)');
+    const secondRow = style('tbody tr:nth-child(2)');
+    return {
+      headerDisplay: style('.document-header').display,
+      metadataBorder: style('.quote-meta').borderTopStyle,
+      tableBorder: style('table').borderTopStyle,
+      cellBorders: ['Top', 'Right', 'Bottom', 'Left'].map((side) =>
+        style('tbody td').getPropertyValue(`border-${side.toLowerCase()}-style`),
+      ),
+      rowColors: [firstRow.backgroundColor, secondRow.backgroundColor],
+      totalBorder: style('.grand-total').borderTopStyle,
+    };
+  });
+
+  expect(layout).toEqual({
+    headerDisplay: 'grid',
+    metadataBorder: 'solid',
+    tableBorder: 'solid',
+    cellBorders: ['solid', 'solid', 'solid', 'solid'],
+    rowColors: ['rgba(0, 0, 0, 0)', 'rgb(246, 248, 250)'],
+    totalBorder: 'double',
+  });
+};
+
 describe('DocumentRenderer', () => {
   it('prints maximal quote and invoice templates without horizontal overflow', async () => {
     const rendered = await Effect.runPromise(
@@ -127,6 +155,7 @@ describe('DocumentRenderer', () => {
       for (const document of rendered) {
         await page.setContent(document.html, { waitUntil: 'load' });
         await expectNoHorizontalOverflow(page);
+        await expectBusinessLayout(page);
         expect(await page.locator('tbody tr').count()).toBe(20);
         expect(await page.locator('.conditions').textContent()).toContain(longText);
         const pdfText = Buffer.from(document.pdf).toString('latin1');
@@ -138,7 +167,7 @@ describe('DocumentRenderer', () => {
         });
         expect(extracted.error).toBeUndefined();
         expect(extracted.status).toBe(0);
-        expect(extracted.stdout).toContain(document.expectedText);
+        expect(extracted.stdout.replaceAll(/\s/g, '')).toContain(document.expectedText);
       }
     } finally {
       await browser.close();

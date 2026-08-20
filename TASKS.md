@@ -97,3 +97,4 @@
 - [x] Use consistent form panels on client pages.
 - [x] Remove table-row hover transitions.
 - [x] Verify generated PDFs contain extractable text.
+- [x] Match quote and invoice documents to the USGC business layout.

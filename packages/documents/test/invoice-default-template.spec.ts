@@ -61,6 +61,12 @@ describe('InvoiceDefaultTemplate', () => {
     expect(html).not.toContain('gradient');
     expect(html).not.toContain('dashed');
     expect(html).toMatch(/@page\s*{[^}]*size:\s*A4/);
+    expect(html).toMatch(/\.document-header[^{]*{[^}]*display:\s*grid/);
+    expect(html).toMatch(/\.quote-meta[^{]*{[^}]*border:\s*1px solid/);
+    expect(html).toMatch(/table[^{]*{[^}]*border:\s*1px solid/);
+    expect(html).toMatch(/th[^{]*,\s*td[^{]*{[^}]*border:\s*1px solid/);
+    expect(html).toMatch(/tbody[^{]*tr[^{]*:nth-child\(even\)[^{]*{[^}]*background:/);
+    expect(html).toMatch(/\.grand-total[^{]*{[^}]*border-top:\s*3px double/);
   });
 
   it('renders and protects the supported content limits', async () => {

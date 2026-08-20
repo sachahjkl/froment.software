@@ -15,12 +15,26 @@
     </section>
     <section class="quote-meta">
       <p class="eyebrow">Facture</p>
-      <p class="quote-number">{{ invoice.invoiceNumber || 'Brouillon' }}</p>
-      <p>Révision {{ invoice.version }}</p>
-      @if (invoice.issuedAt) {
-      <p>Émise le {{ date(invoice.issuedAt) }}</p>
-      }
-      <p>Échéance : {{ date(invoice.dueDate) }}</p>
+      <dl>
+        <div>
+          <dt>Numéro</dt>
+          <dd>{{ invoice.invoiceNumber || 'Brouillon' }}</dd>
+        </div>
+        <div>
+          <dt>Révision</dt>
+          <dd>{{ invoice.version }}</dd>
+        </div>
+        @if (invoice.issuedAt) {
+        <div>
+          <dt>Date d’émission</dt>
+          <dd>{{ date(invoice.issuedAt) }}</dd>
+        </div>
+        }
+        <div>
+          <dt>Échéance</dt>
+          <dd>{{ date(invoice.dueDate) }}</dd>
+        </div>
+      </dl>
     </section>
   </header>
 

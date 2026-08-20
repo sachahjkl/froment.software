@@ -15,9 +15,20 @@
     </section>
     <section class="quote-meta">
       <p class="eyebrow">Devis</p>
-      <p class="quote-number">{{ quote.quoteId }}</p>
-      <p>Révision {{ quote.version }}</p>
-      <p>{{ date(quote.createdAt) }}</p>
+      <dl>
+        <div>
+          <dt>Numéro</dt>
+          <dd>{{ quote.quoteId }}</dd>
+        </div>
+        <div>
+          <dt>Révision</dt>
+          <dd>{{ quote.version }}</dd>
+        </div>
+        <div>
+          <dt>Date</dt>
+          <dd>{{ date(quote.createdAt) }}</dd>
+        </div>
+      </dl>
     </section>
   </header>
 
