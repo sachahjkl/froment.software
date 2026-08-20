@@ -56,5 +56,7 @@ describe('InvoiceDefaultTemplate', () => {
     expect(html).toContain('120,00&nbsp;€');
     expect(html).toContain('&lt;script&gt;alert(1)&lt;/script&gt; Acme');
     expect(html).not.toContain('<script>alert(1)</script>');
+    expect(html).toContain('"Courier New"');
+    expect(html).toContain('repeating-linear-gradient');
   });
 });

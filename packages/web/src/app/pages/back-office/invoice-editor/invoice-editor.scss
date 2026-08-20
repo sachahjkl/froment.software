@@ -3,13 +3,8 @@
 }
 .invoice-page {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(16rem, 24rem);
   gap: var(--space-8);
   padding: var(--page-header-y) var(--page-x);
-}
-header,
-.preview {
-  grid-column: 1 / -1;
 }
 h1 {
   margin-top: var(--space-2);
@@ -55,13 +50,20 @@ fieldset {
   min-width: 0;
   margin: 0;
   display: grid;
-  grid-template-columns: minmax(0, 2fr) repeat(3, minmax(0, 1fr)) auto;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   align-items: end;
   gap: var(--space-3);
   padding: var(--space-4);
   border: 1px solid var(--color-line);
   border-radius: var(--radius-sm);
   background: var(--color-surface-sunken);
+}
+fieldset > .description,
+fieldset > button {
+  grid-column: 1 / -1;
+}
+fieldset > button {
+  justify-self: start;
 }
 legend {
   padding-inline: var(--space-2);
@@ -78,9 +80,6 @@ legend {
   text-align: right;
 }
 .saved-result {
-  position: sticky;
-  top: var(--space-5);
-  align-self: start;
   padding: var(--space-5);
   border: 1px solid var(--color-line);
   border-radius: var(--radius-sm);
@@ -138,23 +137,11 @@ ol li button + a {
   box-shadow: var(--shadow-panel);
 }
 @media (max-width: 64rem) {
-  .invoice-page {
-    grid-template-columns: 1fr;
-  }
-  .saved-result {
-    position: static;
-  }
-  fieldset {
-    grid-template-columns: repeat(3, 1fr);
-  }
-  .description {
-    grid-column: 1 / -1;
-  }
   .preview iframe {
     min-height: 52rem;
   }
 }
-@media (max-width: 38rem) {
+@media (max-width: 52rem) {
   form {
     padding: var(--space-4);
   }
@@ -162,7 +149,9 @@ ol li button + a {
   fieldset {
     grid-template-columns: 1fr;
   }
-  .description {
+  fieldset > .description,
+  fieldset > button,
+  .line-total {
     grid-column: auto;
   }
   .section-heading {

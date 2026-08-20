@@ -4,13 +4,12 @@
 
 .quote-page {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(16rem, 24rem);
   gap: var(--space-8);
   padding: var(--page-header-y) var(--page-x);
 }
 
 header {
-  grid-column: 1 / -1;
+  min-width: 0;
 }
 
 h1 {
@@ -44,13 +43,22 @@ fieldset {
   min-width: 0;
   margin: 0;
   display: grid;
-  grid-template-columns: minmax(0, 2fr) repeat(3, minmax(0, 1fr)) auto;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   align-items: end;
   gap: var(--space-3);
   padding: var(--space-4);
   border: 1px solid var(--color-line);
   border-radius: var(--radius-sm);
   background: var(--color-surface-sunken);
+}
+
+fieldset > .description,
+fieldset > button {
+  grid-column: 1 / -1;
+}
+
+fieldset > button {
+  justify-self: start;
 }
 
 legend {
@@ -88,13 +96,11 @@ legend {
 
 .condition-preset {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  align-items: end;
-  gap: var(--space-3);
+  gap: var(--space-2);
 }
 
 .condition-preset > a {
-  padding-block: var(--space-3);
+  justify-self: start;
 }
 
 textarea {
@@ -102,9 +108,6 @@ textarea {
 }
 
 .saved-result {
-  position: sticky;
-  top: var(--space-5);
-  align-self: start;
   padding: var(--space-5);
   border: 1px solid var(--color-line);
   border-radius: var(--radius-sm);
@@ -206,7 +209,6 @@ ol li button + a {
 }
 
 .preview {
-  grid-column: 1 / -1;
   min-width: 0;
   margin-top: var(--space-3);
 }
@@ -222,28 +224,12 @@ ol li button + a {
 }
 
 @media (max-width: 64rem) {
-  .quote-page {
-    grid-template-columns: 1fr;
-  }
-
-  .saved-result {
-    position: static;
-  }
-
   .preview iframe {
     min-height: 52rem;
   }
-
-  fieldset {
-    grid-template-columns: repeat(3, 1fr);
-  }
-
-  .description {
-    grid-column: 1 / -1;
-  }
 }
 
-@media (max-width: 38rem) {
+@media (max-width: 52rem) {
   .section-heading {
     align-items: stretch;
     flex-direction: column;
@@ -257,11 +243,9 @@ ol li button + a {
     padding: var(--space-4);
   }
 
-  .description {
+  fieldset > .description,
+  fieldset > button,
+  .line-total {
     grid-column: auto;
-  }
-
-  .condition-preset {
-    grid-template-columns: 1fr;
   }
 }

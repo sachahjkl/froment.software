@@ -1,25 +1,32 @@
 :host {
   display: block;
-  color: #17201d;
-  font-family: Inter, Arial, sans-serif;
-  font-size: 12px;
-  line-height: 1.45;
+  color: #111;
+  font-family: "Courier New", Courier, monospace;
+  font-size: 10px;
+  line-height: 1.35;
 }
 
 main {
+  box-sizing: border-box;
   width: min(100%, 190mm);
   min-height: 267mm;
   margin: 0 auto;
-  padding: 12mm;
+  padding: 9mm;
+  border: 1px solid #111;
   background: #fff;
 }
 
 .document-header {
   display: grid;
-  grid-template-columns: 1fr auto;
-  gap: 18mm;
-  padding-bottom: 12mm;
-  border-bottom: 2px solid #17201d;
+  grid-template-columns: minmax(0, 1fr) 62mm;
+  gap: 0;
+  border-bottom: 2px solid #111;
+}
+
+.brand,
+.quote-meta {
+  padding: 5mm;
+  border: 1px solid #111;
 }
 
 h1,
@@ -29,18 +36,22 @@ p {
 }
 
 h1 {
-  font-size: 28px;
-  letter-spacing: -0.04em;
+  font-size: 20px;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
 }
 
 h2 {
-  font-size: 18px;
+  font-size: 13px;
+  text-transform: uppercase;
 }
 
 .eyebrow {
   margin-bottom: 2mm;
-  color: #557066;
-  font-size: 9px;
+  padding-bottom: 1mm;
+  border-bottom: 1px dashed #111;
+  color: #111;
+  font-size: 8px;
   font-weight: 700;
   letter-spacing: 0.14em;
   text-transform: uppercase;
@@ -49,14 +60,14 @@ h2 {
 address {
   display: grid;
   margin-top: 3mm;
-  color: #40534c;
+  color: #111;
   font-style: normal;
 }
 
 .quote-meta {
   min-width: 58mm;
-  padding: 6mm;
-  background: #edf2ef;
+  border-left: 0;
+  background: repeating-linear-gradient(135deg, #fff 0, #fff 3px, #e5e5e5 3px, #e5e5e5 4px);
 }
 
 .quote-number {
@@ -69,32 +80,40 @@ address {
 .recipient,
 .subject,
 .conditions {
-  margin-top: 11mm;
+  margin-top: 7mm;
 }
 
 .recipient {
   width: 75mm;
   margin-left: auto;
-  padding-left: 6mm;
-  border-left: 2px solid #b8643d;
+  padding: 4mm;
+  border: 1px dashed #111;
+}
+
+.subject {
+  padding: 3mm 0;
+  border-top: 1px dashed #111;
+  border-bottom: 1px dashed #111;
 }
 
 table {
   width: 100%;
-  margin-top: 10mm;
+  margin-top: 7mm;
+  border: 1px solid #111;
   border-collapse: collapse;
 }
 
 th,
 td {
-  padding: 3.5mm 2mm;
-  border-bottom: 1px solid #d7dfda;
+  padding: 2.5mm 2mm;
+  border: 1px solid #111;
   text-align: left;
   vertical-align: top;
 }
 
 th {
-  color: #557066;
+  background: repeating-linear-gradient(135deg, #fff 0, #fff 3px, #e5e5e5 3px, #e5e5e5 4px);
+  color: #111;
   font-size: 8px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -118,13 +137,15 @@ th {
 dl {
   width: 72mm;
   margin: 0;
+  border: 3px double #111;
 }
 
 dl div {
   display: flex;
   justify-content: space-between;
   gap: 8mm;
-  padding: 2mm 0;
+  padding: 2mm;
+  border-bottom: 1px dashed #111;
 }
 
 dd {
@@ -133,11 +154,15 @@ dd {
 }
 
 .grand-total {
-  margin-top: 2mm;
-  padding: 4mm !important;
-  background: #17201d;
-  color: #fff;
-  font-size: 15px;
+  padding: 3mm 2mm !important;
+  border-top: 3px double #111;
+  border-bottom: 0;
+  font-size: 13px;
+}
+
+.conditions {
+  padding: 4mm;
+  border: 1px dashed #111;
 }
 
 .conditions p:last-child {
@@ -150,8 +175,8 @@ footer {
   gap: 7mm;
   margin-top: 14mm;
   padding-top: 4mm;
-  border-top: 1px solid #d7dfda;
-  color: #557066;
+  border-top: 1px dashed #111;
+  color: #111;
   font-size: 9px;
 }
 
