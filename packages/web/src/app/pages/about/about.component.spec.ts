@@ -1,5 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { I18nService } from '../../i18n.service';
+import { I18nService } from '@app/i18n.service';
 import { AboutComponent } from './about.component';
 
 function textFrom(root: HTMLElement, selector: string): string[] {

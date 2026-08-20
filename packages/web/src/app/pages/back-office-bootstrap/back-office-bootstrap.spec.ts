@@ -3,7 +3,7 @@ import { provideRouter } from '@angular/router';
 import {
   BackOfficeBootstrapApi,
   type BootstrapOutcome,
-} from '../../back-office/back-office-bootstrap-api';
+} from '@backoffice/back-office-bootstrap-api';
 import { BackOfficeBootstrap } from './back-office-bootstrap';
 
 class BootstrapApiStub {

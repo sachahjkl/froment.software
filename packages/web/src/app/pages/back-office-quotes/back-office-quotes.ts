@@ -2,10 +2,10 @@ import { afterNextRender, ChangeDetectionStrategy, Component, inject, signal } f
 import { RouterLink } from '@angular/router';
 import { type QuoteListValue, type QuoteStatusValue } from '@froment/contracts';
 
-import { BackOfficeQuotesApi } from '../../back-office/back-office-quotes-api';
-import { I18nService } from '../../i18n.service';
-import { Button } from '../../shared/button/button';
-import { BackOfficeTable } from '../../shared/back-office-table/back-office-table';
+import { BackOfficeQuotesApi } from '@backoffice/back-office-quotes-api';
+import { I18nService } from '@app/i18n.service';
+import { Button } from '@shared/button/button';
+import { BackOfficeTable } from '@shared/back-office-table/back-office-table';
 
 type PageState = 'loading' | 'ready' | 'error';
 

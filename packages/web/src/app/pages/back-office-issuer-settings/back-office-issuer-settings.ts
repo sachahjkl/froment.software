@@ -11,9 +11,9 @@ import { FormField, form, maxLength, pattern, required, submit } from '@angular/
 import { RouterLink } from '@angular/router';
 import { type IssuerSettingsValue } from '@froment/contracts';
 
-import { BackOfficeIssuerSettingsApi } from '../../back-office/back-office-issuer-settings-api';
-import { I18nService, type TranslationKey } from '../../i18n.service';
-import { Button } from '../../shared/button/button';
+import { BackOfficeIssuerSettingsApi } from '@backoffice/back-office-issuer-settings-api';
+import { I18nService, type TranslationKey } from '@app/i18n.service';
+import { Button } from '@shared/button/button';
 
 const emptySettings = (): IssuerSettingsValue => ({
   displayName: '',

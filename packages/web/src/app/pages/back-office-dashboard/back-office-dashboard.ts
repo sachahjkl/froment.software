@@ -1,8 +1,8 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
-import { BackOfficeAuth } from '../../back-office/back-office-auth';
-import { I18nService } from '../../i18n.service';
-import { Button } from '../../shared/button/button';
+import { BackOfficeAuth } from '@backoffice/back-office-auth';
+import { I18nService } from '@app/i18n.service';
+import { Button } from '@shared/button/button';
 
 @Component({
   selector: 'app-back-office-dashboard',

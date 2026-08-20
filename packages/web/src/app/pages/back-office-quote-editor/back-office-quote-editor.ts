@@ -34,12 +34,12 @@ import {
 } from '@froment/contracts';
 import { Option, Schema } from 'effect';
 
-import { BackOfficeClientsApi } from '../../back-office/back-office-clients-api';
-import { BackOfficeQuotesApi, type QuoteErrorCode } from '../../back-office/back-office-quotes-api';
-import { formatFixedDecimal, parseFixedDecimal } from '../../back-office/quote-input';
-import { I18nService, type TranslationKey } from '../../i18n.service';
-import { Button } from '../../shared/button/button';
-import { TextCopy } from '../../shared/text-copy';
+import { BackOfficeClientsApi } from '@backoffice/back-office-clients-api';
+import { BackOfficeQuotesApi, type QuoteErrorCode } from '@backoffice/back-office-quotes-api';
+import { formatFixedDecimal, parseFixedDecimal } from '@backoffice/quote-input';
+import { I18nService, type TranslationKey } from '@app/i18n.service';
+import { Button } from '@shared/button/button';
+import { TextCopy } from '@shared/text-copy';
 
 interface QuoteLineModel {
   readonly description: string;

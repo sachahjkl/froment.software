@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
-import { I18nService } from '../../i18n.service';
+import { I18nService } from '@app/i18n.service';
 
 @Component({
   selector: 'app-site-footer',

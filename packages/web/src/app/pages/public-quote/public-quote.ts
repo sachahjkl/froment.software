@@ -26,9 +26,9 @@ import {
 } from '@froment/contracts';
 import { Option, Schema } from 'effect';
 
-import { I18nService, type TranslationKey } from '../../i18n.service';
+import { I18nService, type TranslationKey } from '@app/i18n.service';
 import { PublicQuoteApi } from '../../public-quote/public-quote-api';
-import { Button } from '../../shared/button/button';
+import { Button } from '@shared/button/button';
 
 @Component({
   selector: 'app-public-quote',

@@ -2,9 +2,9 @@ import { ChangeDetectionStrategy, Component, computed, effect, inject } from '@a
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { Blog, RenderedBlogPost } from '../../blog/blog';
-import { I18nService } from '../../i18n.service';
+import { I18nService } from '@app/i18n.service';
 import { PageMetadata } from '../../page-metadata';
-import { LocalizedDatePipe } from '../../shared/localized-date/localized-date-pipe';
+import { LocalizedDatePipe } from '@shared/localized-date/localized-date-pipe';
 
 @Component({
   selector: 'app-blog-post',

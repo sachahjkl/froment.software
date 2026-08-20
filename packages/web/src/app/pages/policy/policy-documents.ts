@@ -1,4 +1,4 @@
-import { TranslationKey } from '../../i18n.service';
+import { TranslationKey } from '@app/i18n.service';
 
 export interface PolicyLink {
   href?: string;

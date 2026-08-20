@@ -1,7 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 
-import { BackOfficeClientsApi } from '../../back-office/back-office-clients-api';
+import { BackOfficeClientsApi } from '@backoffice/back-office-clients-api';
 import { type ClientCreateRequestValue, type ClientListValue } from '@froment/contracts';
 import { BackOfficeClients } from './back-office-clients';
 

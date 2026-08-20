@@ -1,7 +1,7 @@
 import { afterNextRender, ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { type DeploymentMetadataValue } from '@froment/contracts';
 
-import { I18nService } from '../../i18n.service';
+import { I18nService } from '@app/i18n.service';
 import { VersionApi } from './version-api';
 
 type VersionState = 'loading' | 'ready' | 'error';

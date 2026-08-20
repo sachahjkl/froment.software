@@ -2,9 +2,9 @@ import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@a
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { type LoginModeValue } from '@froment/contracts';
-import { BackOfficeAuth } from '../../back-office/back-office-auth';
-import { I18nService, TranslationKey } from '../../i18n.service';
-import { Button } from '../../shared/button/button';
+import { BackOfficeAuth } from '@backoffice/back-office-auth';
+import { I18nService, TranslationKey } from '@app/i18n.service';
+import { Button } from '@shared/button/button';
 
 const loginModeView = {
   client: {

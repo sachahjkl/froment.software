@@ -2,7 +2,7 @@ import { computed, inject, Injectable } from '@angular/core';
 import { SecurityContext } from '@angular/core';
 import { DomSanitizer } from '@angular/platform-browser';
 import { marked } from 'marked';
-import { I18nService, Language } from '../i18n.service';
+import { I18nService, Language } from '@app/i18n.service';
 import launchEn from './posts/2026-08-froment-software-arrive.en.md';
 import launchFr from './posts/2026-08-froment-software-arrive.fr.md';
 

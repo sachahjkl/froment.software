@@ -1,10 +1,10 @@
 import { Component, computed, inject, ChangeDetectionStrategy } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { I18nService } from '../../i18n.service';
-import { AnchorLink } from '../../shared/anchor-link/anchor-link';
-import { ConcreteExamples } from '../../shared/concrete-examples/concrete-examples';
-import { ContactActions } from '../../shared/contact-actions/contact-actions';
-import { ProcessTimeline, TimelineStep } from '../../shared/process-timeline/process-timeline';
+import { I18nService } from '@app/i18n.service';
+import { AnchorLink } from '@shared/anchor-link/anchor-link';
+import { ConcreteExamples } from '@shared/concrete-examples/concrete-examples';
+import { ContactActions } from '@shared/contact-actions/contact-actions';
+import { ProcessTimeline, TimelineStep } from '@shared/process-timeline/process-timeline';
 
 type PublicEntry = {
   title: string;

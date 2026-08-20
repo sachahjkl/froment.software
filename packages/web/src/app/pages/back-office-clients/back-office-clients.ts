@@ -14,14 +14,11 @@ import {
   type UlidValue,
 } from '@froment/contracts';
 
-import {
-  BackOfficeClientsApi,
-  type ClientErrorCode,
-} from '../../back-office/back-office-clients-api';
-import { I18nService, TranslationKey } from '../../i18n.service';
-import { Button } from '../../shared/button/button';
-import { BackOfficeTable } from '../../shared/back-office-table/back-office-table';
-import { TextCopy } from '../../shared/text-copy';
+import { BackOfficeClientsApi, type ClientErrorCode } from '@backoffice/back-office-clients-api';
+import { I18nService, TranslationKey } from '@app/i18n.service';
+import { Button } from '@shared/button/button';
+import { BackOfficeTable } from '@shared/back-office-table/back-office-table';
+import { TextCopy } from '@shared/text-copy';
 
 type PageState = 'loading' | 'ready' | 'error';
 interface AccessResult extends ClientAccessValue {

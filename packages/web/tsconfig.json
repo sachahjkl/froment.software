@@ -5,6 +5,11 @@
   "compileOnSave": false,
   "compilerOptions": {
     "experimentalDecorators": true,
+    "paths": {
+      "@app/*": ["./src/app/*"],
+      "@backoffice/*": ["./src/app/back-office/*"],
+      "@shared/*": ["./src/app/shared/*"]
+    },
     "types": []
   },
   "angularCompilerOptions": {

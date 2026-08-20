@@ -2,9 +2,9 @@ import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
 import { vi } from 'vitest';
 
-import { BackOfficeClientsApi } from '../../back-office/back-office-clients-api';
-import { BackOfficeQuotesApi } from '../../back-office/back-office-quotes-api';
-import { TextCopy } from '../../shared/text-copy';
+import { BackOfficeClientsApi } from '@backoffice/back-office-clients-api';
+import { BackOfficeQuotesApi } from '@backoffice/back-office-quotes-api';
+import { TextCopy } from '@shared/text-copy';
 import { BackOfficeQuoteEditor } from './back-office-quote-editor';
 
 const quoteId = '01ARZ3NDEKTSV4RRFFQ69G5FAY';

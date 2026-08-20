@@ -14,7 +14,7 @@ import {
 import { Schema } from 'effect';
 import { firstValueFrom } from 'rxjs';
 
-import { requestOutcome, type ApiOutcome } from '../shared/api-outcome';
+import { requestOutcome, type ApiOutcome } from '@shared/api-outcome';
 
 const PublicQuoteFailure = Schema.Union([
   QuoteLinkNotFound,

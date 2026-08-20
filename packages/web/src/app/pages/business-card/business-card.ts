@@ -2,11 +2,8 @@ import { isPlatformBrowser } from '@angular/common';
 import { ChangeDetectionStrategy, Component, inject, PLATFORM_ID, signal } from '@angular/core';
 import { email, form, FormField, required } from '@angular/forms/signals';
 import { RouterLink } from '@angular/router';
-import { Button } from '../../shared/button/button';
-import {
-  formatLocalizedDate,
-  LocalizedDatePipe,
-} from '../../shared/localized-date/localized-date-pipe';
+import { Button } from '@shared/button/button';
+import { formatLocalizedDate, LocalizedDatePipe } from '@shared/localized-date/localized-date-pipe';
 import {
   BusinessCardContent,
   BusinessCardVersion,

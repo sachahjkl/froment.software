@@ -13,7 +13,7 @@ import {
 import { Schema } from 'effect';
 import { firstValueFrom } from 'rxjs';
 
-import { decodeApiFailure, type ApiFailure } from '../shared/api-outcome';
+import { decodeApiFailure, type ApiFailure } from '@shared/api-outcome';
 
 export type AuthenticationOutcome =
   | { readonly success: true }

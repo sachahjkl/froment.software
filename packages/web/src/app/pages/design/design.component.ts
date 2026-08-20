@@ -1,8 +1,8 @@
 import { Component, inject, ChangeDetectionStrategy } from '@angular/core';
-import { I18nService } from '../../i18n.service';
-import { Button } from '../../shared/button/button';
-import { ContactActions } from '../../shared/contact-actions/contact-actions';
-import { Icon } from '../../shared/icon/icon';
+import { I18nService } from '@app/i18n.service';
+import { Button } from '@shared/button/button';
+import { ContactActions } from '@shared/contact-actions/contact-actions';
+import { Icon } from '@shared/icon/icon';
 
 @Component({
   selector: 'app-design',

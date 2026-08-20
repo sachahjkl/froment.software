@@ -19,7 +19,7 @@ import {
 import { Schema } from 'effect';
 import { firstValueFrom } from 'rxjs';
 
-import { requestOutcome, type ApiOutcome } from '../shared/api-outcome';
+import { requestOutcome, type ApiOutcome } from '@shared/api-outcome';
 
 export type QuoteErrorCode = QuoteFailureValue['code'] | 'quote.error';
 export type QuoteOutcome<T> = ApiOutcome<T, QuoteFailureValue, 'quote.error'>;

@@ -7,7 +7,7 @@ import {
   viewChild,
 } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
-import { I18nService } from '../../i18n.service';
+import { I18nService } from '@app/i18n.service';
 import { MOBILE_NAVIGATION } from './mobile-navigation-state';
 import { LanguageSelector } from '../language-selector/language-selector';
 

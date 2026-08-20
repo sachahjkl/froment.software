@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
-import { I18nService } from '../../i18n.service';
+import { I18nService } from '@app/i18n.service';
 import { Theme } from '../../theme';
 
 @Component({

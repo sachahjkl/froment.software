@@ -1,10 +1,10 @@
 import { afterNextRender, ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { FormField, form, required, submit } from '@angular/forms/signals';
 import { RouterLink } from '@angular/router';
-import { BackOfficeBootstrapApi } from '../../back-office/back-office-bootstrap-api';
-import { I18nService, TranslationKey } from '../../i18n.service';
-import { Button } from '../../shared/button/button';
-import { TextCopy } from '../../shared/text-copy';
+import { BackOfficeBootstrapApi } from '@backoffice/back-office-bootstrap-api';
+import { I18nService, TranslationKey } from '@app/i18n.service';
+import { Button } from '@shared/button/button';
+import { TextCopy } from '@shared/text-copy';
 
 type PageState = 'loading' | 'available' | 'unavailable' | 'error';
 
