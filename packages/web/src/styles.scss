@@ -83,7 +83,7 @@ p {
   text-wrap: pretty;
 }
 
-.back-office-table {
+.data-table {
   max-width: 100%;
   margin-top: var(--space-7);
   overflow-x: auto;
@@ -94,14 +94,14 @@ p {
   box-shadow: var(--shadow-panel);
 }
 
-.back-office-table table {
+.data-table table {
   width: max-content;
   min-width: 100%;
   border-collapse: collapse;
 }
 
-.back-office-table th,
-.back-office-table td {
+.data-table th,
+.data-table td {
   padding: var(--space-3);
   border-bottom: 1px solid var(--color-line-strong);
   text-align: left;
@@ -109,7 +109,7 @@ p {
   white-space: nowrap;
 }
 
-.back-office-table th {
+.data-table th {
   background: var(--color-surface-sunken);
   color: var(--color-muted);
   font-size: var(--text-xs);
@@ -117,15 +117,15 @@ p {
   text-transform: uppercase;
 }
 
-.back-office-table tbody tr {
+.data-table tbody tr {
   transition: background-color 120ms ease-out;
 }
 
-.back-office-table tbody tr:hover {
+.data-table tbody tr:hover {
   background: color-mix(in oklab, var(--color-surface-sunken), transparent 35%);
 }
 
-.back-office-table tbody tr:last-child td {
+.data-table tbody tr:last-child td {
   border-bottom: 0;
 }
 .anchored-title {

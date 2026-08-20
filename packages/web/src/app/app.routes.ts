@@ -1,10 +1,7 @@
 import { Routes } from '@angular/router';
 import { HomeComponent } from './pages/home/home.component';
 import { policies } from './pages/policy/policy-documents';
-import {
-  backOfficeAdministratorGuard,
-  backOfficeClientGuard,
-} from './back-office/back-office-auth';
+import { administratorGuard, clientGuard } from './back-office/authentication';
 import { unsavedChangesGuard } from './back-office/unsaved-changes-guard';
 
 export const routes: Routes = [
@@ -83,10 +80,7 @@ export const routes: Routes = [
   },
   {
     path: 'backoffice/login',
-    loadComponent: () =>
-      import('./pages/back-office-login/back-office-login').then(
-        (module) => module.BackOfficeLogin,
-      ),
+    loadComponent: () => import('./pages/back-office/login/login').then((module) => module.Login),
     data: {
       titleKey: 'page.back_office',
       descriptionKey: 'page.description.back_office',
@@ -96,9 +90,7 @@ export const routes: Routes = [
   {
     path: 'backoffice/bootstrap',
     loadComponent: () =>
-      import('./pages/back-office-bootstrap/back-office-bootstrap').then(
-        (module) => module.BackOfficeBootstrap,
-      ),
+      import('./pages/back-office/bootstrap/bootstrap').then((module) => module.Bootstrap),
     data: {
       titleKey: 'page.back_office',
       descriptionKey: 'page.description.back_office',
@@ -108,10 +100,8 @@ export const routes: Routes = [
   {
     path: 'backoffice/dashboard',
     loadComponent: () =>
-      import('./pages/back-office-dashboard/back-office-dashboard').then(
-        (module) => module.BackOfficeDashboard,
-      ),
-    canActivate: [backOfficeAdministratorGuard],
+      import('./pages/back-office/dashboard/dashboard').then((module) => module.Dashboard),
+    canActivate: [administratorGuard],
     data: {
       titleKey: 'page.back_office',
       descriptionKey: 'page.description.back_office',
@@ -121,10 +111,10 @@ export const routes: Routes = [
   {
     path: 'backoffice/client',
     loadComponent: () =>
-      import('./pages/back-office-client/back-office-client').then(
-        (module) => module.BackOfficeClient,
+      import('./pages/back-office/client-portal/client-portal').then(
+        (module) => module.ClientPortal,
       ),
-    canActivate: [backOfficeClientGuard],
+    canActivate: [clientGuard],
     data: {
       titleKey: 'page.back_office_client',
       descriptionKey: 'page.description.back_office_client',
@@ -135,7 +125,7 @@ export const routes: Routes = [
     path: 'backoffice/business-card',
     loadComponent: () =>
       import('./pages/business-card/business-card').then((module) => module.BusinessCard),
-    canActivate: [backOfficeAdministratorGuard],
+    canActivate: [administratorGuard],
     data: {
       titleKey: 'page.business_card',
       descriptionKey: 'page.description.business_card',
@@ -145,10 +135,8 @@ export const routes: Routes = [
   {
     path: 'backoffice/clients',
     loadComponent: () =>
-      import('./pages/back-office-clients/back-office-clients').then(
-        (module) => module.BackOfficeClients,
-      ),
-    canActivate: [backOfficeAdministratorGuard],
+      import('./pages/back-office/clients/clients').then((module) => module.Clients),
+    canActivate: [administratorGuard],
     data: {
       titleKey: 'page.back_office_clients',
       descriptionKey: 'page.description.back_office_clients',
@@ -158,10 +146,10 @@ export const routes: Routes = [
   {
     path: 'backoffice/issuer-settings',
     loadComponent: () =>
-      import('./pages/back-office-issuer-settings/back-office-issuer-settings').then(
-        (module) => module.BackOfficeIssuerSettings,
+      import('./pages/back-office/issuer-settings/issuer-settings').then(
+        (module) => module.IssuerSettings,
       ),
-    canActivate: [backOfficeAdministratorGuard],
+    canActivate: [administratorGuard],
     canDeactivate: [unsavedChangesGuard],
     data: {
       titleKey: 'page.back_office_issuer_settings',
@@ -172,10 +160,8 @@ export const routes: Routes = [
   {
     path: 'backoffice/quotes',
     loadComponent: () =>
-      import('./pages/back-office-quotes/back-office-quotes').then(
-        (module) => module.BackOfficeQuotes,
-      ),
-    canActivate: [backOfficeAdministratorGuard],
+      import('./pages/back-office/quotes/quotes').then((module) => module.Quotes),
+    canActivate: [administratorGuard],
     data: {
       titleKey: 'page.back_office_quotes',
       descriptionKey: 'page.description.back_office_quotes',
@@ -185,10 +171,10 @@ export const routes: Routes = [
   {
     path: 'backoffice/quote-condition-presets',
     loadComponent: () =>
-      import('./pages/quote-condition-presets/quote-condition-presets').then(
+      import('./pages/back-office/quote-condition-presets/quote-condition-presets').then(
         (module) => module.QuoteConditionPresets,
       ),
-    canActivate: [backOfficeAdministratorGuard],
+    canActivate: [administratorGuard],
     canDeactivate: [unsavedChangesGuard],
     data: {
       titleKey: 'page.back_office_condition_presets',
@@ -199,10 +185,8 @@ export const routes: Routes = [
   {
     path: 'backoffice/quotes/new',
     loadComponent: () =>
-      import('./pages/back-office-quote-editor/back-office-quote-editor').then(
-        (module) => module.BackOfficeQuoteEditor,
-      ),
-    canActivate: [backOfficeAdministratorGuard],
+      import('./pages/back-office/quote-editor/quote-editor').then((module) => module.QuoteEditor),
+    canActivate: [administratorGuard],
     canDeactivate: [unsavedChangesGuard],
     data: {
       titleKey: 'page.back_office_quote_editor',
@@ -213,10 +197,8 @@ export const routes: Routes = [
   {
     path: 'backoffice/quotes/:quoteId',
     loadComponent: () =>
-      import('./pages/back-office-quote-editor/back-office-quote-editor').then(
-        (module) => module.BackOfficeQuoteEditor,
-      ),
-    canActivate: [backOfficeAdministratorGuard],
+      import('./pages/back-office/quote-editor/quote-editor').then((module) => module.QuoteEditor),
+    canActivate: [administratorGuard],
     canDeactivate: [unsavedChangesGuard],
     data: {
       titleKey: 'page.back_office_quote_editor',
