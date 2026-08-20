@@ -1,7 +1,13 @@
 import { Schema } from 'effect';
 import { describe, expect, it } from 'vitest';
 
-import { QuoteCreateRequest, QuoteLinkToken, QuoteSendRequest, QuoteStatus } from './quotes.js';
+import {
+  PublicQuoteSignatureRequest,
+  QuoteCreateRequest,
+  QuoteLinkToken,
+  QuoteSendRequest,
+  QuoteStatus,
+} from './quotes.js';
 
 const line = {
   description: 'Development',
@@ -52,5 +58,28 @@ describe('quote contracts', () => {
       Schema.decodeUnknownSync(QuoteLinkToken)('AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA'),
     ).toHaveLength(43);
     expect(() => Schema.decodeUnknownSync(QuoteLinkToken)('not-a-token')).toThrow();
+  });
+
+  it('requires bounded signature data and explicit consent', () => {
+    const request = {
+      token: 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA',
+      signerName: 'Ada Lovelace',
+      consent: true,
+      signature: { kind: 'typed', value: 'Ada Lovelace' },
+    };
+
+    expect(Schema.decodeUnknownSync(PublicQuoteSignatureRequest)(request)).toEqual(request);
+    expect(() =>
+      Schema.decodeUnknownSync(PublicQuoteSignatureRequest)({ ...request, consent: false }),
+    ).toThrow();
+    expect(() =>
+      Schema.decodeUnknownSync(PublicQuoteSignatureRequest)({ ...request, signerName: ' ' }),
+    ).toThrow();
+    expect(() =>
+      Schema.decodeUnknownSync(PublicQuoteSignatureRequest)({
+        ...request,
+        signature: { kind: 'typed', value: 'x'.repeat(161) },
+      }),
+    ).toThrow();
   });
 });

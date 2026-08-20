@@ -116,8 +116,7 @@ describe('BackOfficeQuoteEditor', () => {
   });
 
   it('sends a saved draft, displays its permalink, and disables editing', async () => {
-    const linkUrl =
-      'https://froment.software/api/public/quote-links/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA/pdf';
+    const linkUrl = 'https://froment.software/quote#AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA';
     const copy = vi.fn().mockResolvedValue(true);
     const send = vi.fn().mockResolvedValue({
       success: true,
@@ -160,9 +159,7 @@ describe('BackOfficeQuoteEditor', () => {
     await fixture.whenStable();
 
     expect(send).toHaveBeenCalledWith(quoteId, { expectedVersion: 2 });
-    expect(root.querySelector<HTMLAnchorElement>('.sent-link a')?.href).toContain(
-      '/api/public/quote-links/',
-    );
+    expect(root.querySelector<HTMLAnchorElement>('.sent-link a')?.href).toContain('/quote#');
     expect(root.textContent).toMatch(/Envoyé|Sent/);
     expect(root.querySelector<HTMLInputElement>('#quote-name')?.disabled).toBe(true);
     expect(root.querySelector('.send-quote')).toBeNull();

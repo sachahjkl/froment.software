@@ -47,10 +47,12 @@ describe('Database', () => {
         'access_credentials',
         'audit_events',
         'clients',
+        'orders',
         'permissions',
         'quote_lines',
         'quote_links',
         'quote_revisions',
+        'quote_signatures',
         'quotes',
         'roles',
         'sessions',
@@ -63,6 +65,17 @@ describe('Database', () => {
       .prepare('select "table", on_delete as onDelete from pragma_foreign_key_list(\'quotes\')')
       .all();
     expect(quoteForeignKeys).toContainEqual({ table: 'clients', onDelete: 'NO ACTION' });
+    const orderForeignKeys = schemaSqlite
+      .prepare('select "table", on_delete as onDelete from pragma_foreign_key_list(\'orders\')')
+      .all();
+    expect(orderForeignKeys).toEqual(
+      expect.arrayContaining([
+        { table: 'clients', onDelete: 'NO ACTION' },
+        { table: 'quote_revisions', onDelete: 'NO ACTION' },
+        { table: 'quote_signatures', onDelete: 'NO ACTION' },
+        { table: 'quotes', onDelete: 'NO ACTION' },
+      ]),
+    );
     schemaSqlite.close();
 
     const sqlite = new Sqlite(filename);

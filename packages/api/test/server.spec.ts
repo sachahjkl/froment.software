@@ -862,15 +862,41 @@ describe('HTTP server', () => {
       link: {
         id: expect.stringMatching(/^[0-7][0-9A-Z]{25}$/),
         url: expect.stringMatching(
-          new RegExp(
-            `^${baseUrl.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}/api/public/quote-links/[A-Za-z0-9_-]{43}/pdf$`,
-          ),
+          new RegExp(`^${baseUrl.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}/quote#[A-Za-z0-9_-]{43}$`),
         ),
         expiresAt: expect.stringMatching(/^\d{4}-\d{2}-\d{2}T.*\.\d{3}Z$/),
       },
     });
 
-    const publicPdf = await fetch(sent.link.url);
+    const linkToken = new URL(sent.link.url).hash.slice(1);
+    if (linkToken.length === 0) throw new Error('The quote link token is unavailable.');
+    const publicHeaders = { 'content-type': 'application/json', origin: baseUrl };
+    const consultation = await fetch(`${baseUrl}/api/public/quote-link`, {
+      method: 'POST',
+      headers: publicHeaders,
+      body: JSON.stringify({ token: linkToken }),
+    });
+    expect(consultation.status).toBe(200);
+    expect(consultation.headers.get('cache-control')).toBe('no-store');
+    expect(consultation.headers.get('referrer-policy')).toBe('no-referrer');
+    await expect(consultation.json()).resolves.toMatchObject({
+      status: 'sent',
+      canSign: true,
+      snapshot: {
+        quoteId: quote.id,
+        revisionId: revised.currentRevision.id,
+        title: 'Revised quote',
+        issuer: { displayName: 'Froment Software B' },
+        client: { displayName: 'Quote client' },
+        totalCents: 2,
+      },
+    });
+
+    const publicPdf = await fetch(`${baseUrl}/api/public/quote-link/pdf`, {
+      method: 'POST',
+      headers: publicHeaders,
+      body: JSON.stringify({ token: linkToken }),
+    });
     expect(publicPdf.status).toBe(200);
     expect(publicPdf.headers.get('cache-control')).toBe('no-store');
     expect(publicPdf.headers.get('referrer-policy')).toBe('no-referrer');
@@ -881,11 +907,16 @@ describe('HTTP server', () => {
     expect(publicPdfContent.byteLength).toBe(secondArtifact.byteSize);
     expect(createHash('sha256').update(publicPdfContent).digest('hex')).toBe(secondArtifact.sha256);
 
-    const unknownPublicPdf = await fetch(
-      `${baseUrl}/api/public/quote-links/DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD/pdf`,
-    );
-    expect(unknownPublicPdf.status).toBe(404);
-    await expect(unknownPublicPdf.json()).resolves.toMatchObject({ code: 'quote_link.not_found' });
+    const unknownToken = 'DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD';
+    const unknownConsultation = await fetch(`${baseUrl}/api/public/quote-link`, {
+      method: 'POST',
+      headers: publicHeaders,
+      body: JSON.stringify({ token: unknownToken }),
+    });
+    expect(unknownConsultation.status).toBe(404);
+    await expect(unknownConsultation.json()).resolves.toMatchObject({
+      code: 'quote_link.not_found',
+    });
 
     const sentRevision = await fetch(`${baseUrl}/api/quotes/${quote.id}/revisions`, {
       method: 'POST',
@@ -895,23 +926,76 @@ describe('HTTP server', () => {
     expect(sentRevision.status).toBe(409);
     await expect(sentRevision.json()).resolves.toMatchObject({ code: 'quote.not_editable' });
 
+    const signaturePayload = {
+      token: linkToken,
+      signerName: 'Ada Lovelace',
+      consent: true,
+      signature: { kind: 'typed', value: 'Ada Lovelace' },
+    };
+    const signatureResponses = await Promise.all([
+      fetch(`${baseUrl}/api/public/quote-link/signature`, {
+        method: 'POST',
+        headers: { ...publicHeaders, 'user-agent': 'Froment acceptance test' },
+        body: JSON.stringify(signaturePayload),
+      }),
+      fetch(`${baseUrl}/api/public/quote-link/signature`, {
+        method: 'POST',
+        headers: { ...publicHeaders, 'user-agent': 'Froment acceptance test' },
+        body: JSON.stringify(signaturePayload),
+      }),
+    ]);
+    expect(signatureResponses.map((response) => response.status).sort()).toEqual([200, 409]);
+    const acceptedResponse = signatureResponses.find((response) => response.status === 200);
+    if (acceptedResponse === undefined)
+      throw new Error('The quote acceptance result is unavailable.');
+    const accepted = (await acceptedResponse.json()) as {
+      quoteId: string;
+      revisionId: string;
+      signatureId: string;
+      orderId: string;
+      status: string;
+      acceptedAt: string;
+      evidenceSha256: string;
+    };
+    expect(accepted).toMatchObject({
+      quoteId: quote.id,
+      revisionId: revised.currentRevision.id,
+      signatureId: expect.stringMatching(/^[0-7][0-9A-Z]{25}$/),
+      orderId: expect.stringMatching(/^[0-7][0-9A-Z]{25}$/),
+      status: 'accepted',
+      acceptedAt: expect.stringMatching(/^\d{4}-\d{2}-\d{2}T.*\.\d{3}Z$/),
+      evidenceSha256: expect.stringMatching(/^[a-f0-9]{64}$/),
+    });
+    const rejectedSignature = signatureResponses.find((response) => response.status === 409);
+    await expect(rejectedSignature?.json()).resolves.toMatchObject({
+      code: 'quote_link.not_signable',
+    });
+
+    const acceptedConsultation = await fetch(`${baseUrl}/api/public/quote-link`, {
+      method: 'POST',
+      headers: publicHeaders,
+      body: JSON.stringify({ token: linkToken }),
+    });
+    await expect(acceptedConsultation.json()).resolves.toMatchObject({
+      status: 'accepted',
+      canSign: false,
+    });
+
     const list = await fetch(`${baseUrl}/api/quotes`, { headers: { cookie } });
     expect(list.status).toBe(200);
     await expect(list.json()).resolves.toMatchObject([
-      { id: quote.id, status: 'sent', version: 2 },
+      { id: quote.id, status: 'accepted', version: 2 },
     ]);
     const get = await fetch(`${baseUrl}/api/quotes/${quote.id}`, { headers: { cookie } });
     expect(get.status).toBe(200);
     await expect(get.json()).resolves.toMatchObject({
       id: quote.id,
-      status: 'sent',
+      status: 'accepted',
       revisions: [{ version: 1 }, { version: 2 }],
     });
 
-    const linkToken = sent.link.url.split('/').at(-2);
-    if (linkToken === undefined) throw new Error('The quote link token is unavailable.');
     expect(serverOutput).not.toContain(linkToken);
-    expect(serverOutput).not.toContain('DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD');
+    expect(serverOutput).not.toContain(unknownToken);
     const linkSqlite = new Sqlite(databaseFilename);
     const storedLink = linkSqlite
       .prepare(
@@ -925,15 +1009,103 @@ describe('HTTP server', () => {
         .pluck()
         .get(linkToken),
     ).toBe(0);
+    const storedSignature = linkSqlite
+      .prepare(
+        `select signer_name as signerName, consent, signature_kind as signatureKind,
+                signature_value as signatureValue, ip_address as ipAddress,
+                user_agent as userAgent, snapshot_sha256 as snapshotSha256,
+                pdf_sha256 as pdfSha256, audit_event_id as auditEventId,
+                evidence_content as evidenceContent, evidence_sha256 as evidenceSha256
+         from quote_signatures where id = ?`,
+      )
+      .get(accepted.signatureId) as {
+      signerName: string;
+      consent: number;
+      signatureKind: string;
+      signatureValue: string;
+      ipAddress: string;
+      userAgent: string;
+      snapshotSha256: string;
+      pdfSha256: string;
+      auditEventId: string;
+      evidenceContent: Buffer;
+      evidenceSha256: string;
+    };
+    expect(storedSignature).toMatchObject({
+      signerName: 'Ada Lovelace',
+      consent: 1,
+      signatureKind: 'typed',
+      signatureValue: 'Ada Lovelace',
+      ipAddress: expect.stringMatching(/127\.0\.0\.1$/),
+      userAgent: 'Froment acceptance test',
+      pdfSha256: secondArtifact.sha256,
+      evidenceSha256: accepted.evidenceSha256,
+    });
+    expect(createHash('sha256').update(storedSignature.evidenceContent).digest('hex')).toBe(
+      storedSignature.evidenceSha256,
+    );
+    const evidence = JSON.parse(storedSignature.evidenceContent.toString()) as {
+      quoteId: string;
+      revisionId: string;
+      linkId: string;
+      signatureId: string;
+      orderId: string;
+      auditEventId: string;
+      snapshotSha256: string;
+      pdfSha256: string;
+      snapshot: { title: string };
+    };
+    expect(evidence).toMatchObject({
+      quoteId: quote.id,
+      revisionId: revised.currentRevision.id,
+      linkId: sent.link.id,
+      signatureId: accepted.signatureId,
+      orderId: accepted.orderId,
+      auditEventId: storedSignature.auditEventId,
+      snapshotSha256: storedSignature.snapshotSha256,
+      pdfSha256: secondArtifact.sha256,
+      snapshot: { title: 'Revised quote' },
+    });
+    expect(
+      linkSqlite
+        .prepare('select count(*) from quote_signatures where quote_id = ?')
+        .pluck()
+        .get(quote.id),
+    ).toBe(1);
+    expect(
+      linkSqlite.prepare('select count(*) from orders where quote_id = ?').pluck().get(quote.id),
+    ).toBe(1);
+    expect(
+      linkSqlite
+        .prepare('select consumed_at is not null from quote_links where id = ?')
+        .pluck()
+        .get(sent.link.id),
+    ).toBe(1);
     linkSqlite
       .prepare('update quote_links set revoked_at = ? where id = ?')
       .run(Date.now(), sent.link.id);
-    expect((await fetch(sent.link.url)).status).toBe(404);
+    expect(
+      (
+        await fetch(`${baseUrl}/api/public/quote-link`, {
+          method: 'POST',
+          headers: publicHeaders,
+          body: JSON.stringify({ token: linkToken }),
+        })
+      ).status,
+    ).toBe(404);
     linkSqlite
       .prepare('update quote_links set revoked_at = null, expires_at = created_at + 1 where id = ?')
       .run(sent.link.id);
     linkSqlite.close();
-    expect((await fetch(sent.link.url)).status).toBe(404);
+    expect(
+      (
+        await fetch(`${baseUrl}/api/public/quote-link`, {
+          method: 'POST',
+          headers: publicHeaders,
+          body: JSON.stringify({ token: linkToken }),
+        })
+      ).status,
+    ).toBe(404);
 
     const archive = await fetch(`${baseUrl}/api/clients/${client.id}/archive`, {
       method: 'POST',
@@ -950,7 +1122,7 @@ describe('HTTP server', () => {
         )
         .pluck()
         .all(quote.id),
-    ).toEqual(['quote.created', 'quote.revised', 'quote.sent']);
+    ).toEqual(['quote.created', 'quote.revised', 'quote.sent', 'quote.accepted']);
     expect(
       auditSqlite
         .prepare(

@@ -12,7 +12,7 @@ import {
 } from 'effect/unstable/http';
 import { HttpApiBuilder, HttpApiSecurity } from 'effect/unstable/httpapi';
 import { createServer } from 'node:http';
-import { randomUUID } from 'node:crypto';
+import { createHash, randomUUID } from 'node:crypto';
 
 import { Bootstrap } from './bootstrap/bootstrap.js';
 import { Authentication } from './authentication/authentication.js';
@@ -68,9 +68,6 @@ const setPublicDocumentResponseHeaders = HttpEffect.appendPreResponseHandler((_r
     }),
   ),
 );
-
-const containsQuoteLinkToken = (url: string) =>
-  /^\/api\/public\/quote-links\/[^/?]+\/pdf(?:[?#]|$)/.test(url);
 
 const identifyRequest = <E, R>(
   application: Effect.Effect<HttpServerResponse.HttpServerResponse, E, R>,
@@ -190,6 +187,18 @@ const authorizeAdministratorWrite = Effect.fn('authorizeAdministratorWrite')(fun
     .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
   yield* limitPrincipalMutation(principal.userId, permission, limit);
   return principal;
+});
+
+const limitPublicQuoteSignature = Effect.fn('limitPublicQuoteSignature')(function* (
+  token: string,
+  clientAddress: string,
+) {
+  const tokenDigest = createHash('sha256').update(token).digest('hex');
+  const allowed = yield* (yield* RequestLimiter).allowMutation(
+    `public-quote-signature:${clientAddress}:${tokenDigest}`,
+    10,
+  );
+  if (!allowed) return yield* new RequestRateLimited({ code: 'request.rate_limited' });
 });
 
 const ApiHandlers = HttpApiBuilder.group(Api, 'system', (handlers) =>
@@ -445,11 +454,20 @@ const QuoteHandlers = HttpApiBuilder.group(Api, 'quotes', (handlers) =>
         }),
       )
       .handle(
-        'quoteLinkPdfDownload',
-        Effect.fn('quoteLinkPdfDownload')(function* ({ params }) {
+        'publicQuoteGet',
+        Effect.fn('publicQuoteGet')(function* ({ payload }) {
+          yield* setPublicDocumentResponseHeaders;
+          return yield* (yield* QuoteLinks)
+            .get(payload.token)
+            .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
+        }),
+      )
+      .handle(
+        'publicQuotePdfDownload',
+        Effect.fn('publicQuotePdfDownload')(function* ({ payload }) {
           yield* setPublicDocumentResponseHeaders;
           const pdf = yield* (yield* QuoteLinks)
-            .getPdf(params.token)
+            .getPdf(payload.token)
             .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
           yield* HttpEffect.appendPreResponseHandler((_request, response) =>
             Effect.succeed(
@@ -461,6 +479,24 @@ const QuoteHandlers = HttpApiBuilder.group(Api, 'quotes', (handlers) =>
             ),
           );
           return pdf.content;
+        }),
+      )
+      .handle(
+        'publicQuoteSign',
+        Effect.fn('publicQuoteSign')(function* ({ payload }) {
+          yield* setPublicDocumentResponseHeaders;
+          const request = yield* HttpServerRequest.HttpServerRequest;
+          const clientAddress = Option.getOrElse(request.remoteAddress, () => 'unknown').slice(
+            0,
+            64,
+          );
+          yield* limitPublicQuoteSignature(payload.token, clientAddress);
+          return yield* (yield* QuoteLinks)
+            .accept(payload, {
+              ipAddress: clientAddress,
+              userAgent: (request.headers['user-agent'] ?? '').slice(0, 512),
+            })
+            .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
         }),
       ),
   ),
@@ -485,21 +521,27 @@ export const makeServerLayer = (options: {
     prefix: '/backoffice',
     spa: true,
   });
+  const PublicQuoteStaticRoutes = HttpStaticServer.layer({
+    root: options.staticRoot,
+    index: 'index.html',
+    prefix: '/quote',
+    spa: true,
+  });
 
-  return HttpRouter.serve(Layer.mergeAll(ApiRoutes, BackOfficeStaticRoutes, StaticRoutes), {
-    middleware: (application) =>
-      Effect.gen(function* () {
-        const request = yield* HttpServerRequest.HttpServerRequest;
-        const observed = identifyRequest(
-          HttpMiddleware.logger(protectRequest(options.publicOrigin)(application)),
-        );
-        if (containsQuoteLinkToken(request.url)) {
-          return yield* HttpMiddleware.withLoggerDisabled(observed);
-        }
-        return yield* HttpMiddleware.tracer(observed);
-      }),
-    disableLogger: true,
-  }).pipe(
+  return HttpRouter.serve(
+    Layer.mergeAll(ApiRoutes, BackOfficeStaticRoutes, PublicQuoteStaticRoutes, StaticRoutes),
+    {
+      middleware: (application) =>
+        Effect.gen(function* () {
+          return yield* HttpMiddleware.tracer(
+            identifyRequest(
+              HttpMiddleware.logger(protectRequest(options.publicOrigin)(application)),
+            ),
+          );
+        }),
+      disableLogger: true,
+    },
+  ).pipe(
     Layer.provide(RequestLimiterLive),
     Layer.provide(Layer.succeed(HttpServerRequest.MaxBodySize, FileSystem.Size(32 * 1024))),
     Layer.provide(NodeHttpServer.layer(createServer, { port: options.port })),

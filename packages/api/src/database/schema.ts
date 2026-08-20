@@ -375,9 +375,13 @@ export const quoteLinks = sqliteTable(
       .notNull()
       .references(() => quoteRevisions.id, { onDelete: 'cascade' }),
     tokenHmac: blob('token_hmac', { mode: 'buffer' }).notNull(),
+    usagePolicy: text('usage_policy', { enum: ['single-use'] })
+      .notNull()
+      .default('single-use'),
     createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull(),
     expiresAt: integer('expires_at', { mode: 'timestamp_ms' }).notNull(),
     revokedAt: integer('revoked_at', { mode: 'timestamp_ms' }),
+    consumedAt: integer('consumed_at', { mode: 'timestamp_ms' }),
   },
   (table) => [
     uniqueIndex('quote_links_token_hmac_unique').on(table.tokenHmac),
@@ -391,9 +395,10 @@ export const quoteLinks = sqliteTable(
       sql`typeof(${table.tokenHmac}) = 'blob' and length(${table.tokenHmac}) = 32`,
     ),
     check('quote_links_expiry_check', sql`${table.expiresAt} > ${table.createdAt}`),
+    check('quote_links_usage_policy_check', sql`${table.usagePolicy} = 'single-use'`),
     check(
-      'quote_links_revoked_at_check',
-      sql`${table.revokedAt} is null or ${table.revokedAt} >= ${table.createdAt}`,
+      'quote_links_terminal_timestamps_check',
+      sql`(${table.revokedAt} is null or ${table.revokedAt} >= ${table.createdAt}) and (${table.consumedAt} is null or ${table.consumedAt} >= ${table.createdAt})`,
     ),
   ],
 );
@@ -437,6 +442,94 @@ export const auditEvents = sqliteTable(
       'audit_events_metadata_check',
       sql`json_valid(${table.metadata}) and json_type(${table.metadata}) = 'object' and length(${table.metadata}) <= 4096`,
     ),
+  ],
+);
+
+export const quoteSignatures = sqliteTable(
+  'quote_signatures',
+  {
+    id: text().notNull().primaryKey(),
+    quoteId: text('quote_id')
+      .notNull()
+      .references(() => quotes.id, { onDelete: 'no action' }),
+    revisionId: text('revision_id')
+      .notNull()
+      .references(() => quoteRevisions.id, { onDelete: 'no action' }),
+    linkId: text('link_id')
+      .notNull()
+      .references(() => quoteLinks.id, { onDelete: 'no action' }),
+    signerName: text('signer_name').notNull(),
+    consent: integer({ mode: 'boolean' }).notNull(),
+    signatureKind: text('signature_kind', { enum: ['typed'] }).notNull(),
+    signatureValue: text('signature_value').notNull(),
+    signedAt: integer('signed_at', { mode: 'timestamp_ms' }).notNull(),
+    ipAddress: text('ip_address').notNull(),
+    userAgent: text('user_agent').notNull(),
+    snapshotSha256: text('snapshot_sha256').notNull(),
+    pdfSha256: text('pdf_sha256').notNull(),
+    auditEventId: text('audit_event_id')
+      .notNull()
+      .references(() => auditEvents.id, { onDelete: 'no action' }),
+    evidenceContent: blob('evidence_content', { mode: 'buffer' }).notNull(),
+    evidenceSha256: text('evidence_sha256').notNull(),
+  },
+  (table) => [
+    uniqueIndex('quote_signatures_quote_id_unique').on(table.quoteId),
+    uniqueIndex('quote_signatures_revision_id_unique').on(table.revisionId),
+    uniqueIndex('quote_signatures_link_id_unique').on(table.linkId),
+    uniqueIndex('quote_signatures_audit_event_id_unique').on(table.auditEventId),
+    check(
+      'quote_signatures_id_ulid_check',
+      sql`${table.id} is not null and length(${table.id}) = 26 and ${table.id} not glob '*[^0-9A-HJKMNP-TV-Z]*' and substr(${table.id}, 1, 1) between '0' and '7'`,
+    ),
+    check(
+      'quote_signatures_signer_check',
+      sql`length(trim(${table.signerName})) between 1 and 160 and length(trim(${table.signatureValue})) between 1 and 160 and ${table.signatureKind} = 'typed' and ${table.consent} = 1`,
+    ),
+    check(
+      'quote_signatures_context_check',
+      sql`length(${table.ipAddress}) between 1 and 64 and length(${table.userAgent}) <= 512`,
+    ),
+    check(
+      'quote_signatures_hashes_check',
+      sql`length(${table.snapshotSha256}) = 64 and ${table.snapshotSha256} not glob '*[^a-f0-9]*' and length(${table.pdfSha256}) = 64 and ${table.pdfSha256} not glob '*[^a-f0-9]*' and length(${table.evidenceSha256}) = 64 and ${table.evidenceSha256} not glob '*[^a-f0-9]*'`,
+    ),
+    check(
+      'quote_signatures_evidence_check',
+      sql`typeof(${table.evidenceContent}) = 'blob' and length(${table.evidenceContent}) between 1 and 65536`,
+    ),
+  ],
+);
+
+export const orders = sqliteTable(
+  'orders',
+  {
+    id: text().notNull().primaryKey(),
+    quoteId: text('quote_id')
+      .notNull()
+      .references(() => quotes.id, { onDelete: 'no action' }),
+    revisionId: text('revision_id')
+      .notNull()
+      .references(() => quoteRevisions.id, { onDelete: 'no action' }),
+    clientId: text('client_id')
+      .notNull()
+      .references(() => clients.id, { onDelete: 'no action' }),
+    signatureId: text('signature_id')
+      .notNull()
+      .references(() => quoteSignatures.id, { onDelete: 'no action' }),
+    status: text({ enum: ['confirmed'] }).notNull(),
+    createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull(),
+  },
+  (table) => [
+    uniqueIndex('orders_quote_id_unique').on(table.quoteId),
+    uniqueIndex('orders_revision_id_unique').on(table.revisionId),
+    uniqueIndex('orders_signature_id_unique').on(table.signatureId),
+    index('orders_client_id_index').on(table.clientId),
+    check(
+      'orders_id_ulid_check',
+      sql`${table.id} is not null and length(${table.id}) = 26 and ${table.id} not glob '*[^0-9A-HJKMNP-TV-Z]*' and substr(${table.id}, 1, 1) between '0' and '7'`,
+    ),
+    check('orders_status_check', sql`${table.status} = 'confirmed'`),
   ],
 );
 

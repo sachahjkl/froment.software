@@ -115,7 +115,7 @@ describe('BackOfficeQuotesApi', () => {
       version: 2,
       link: {
         id: '01ARZ3NDEKTSV4RRFFQ69G5FAV',
-        url: 'https://froment.software/api/public/quote-links/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA/pdf',
+        url: 'https://froment.software/quote#AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA',
         expiresAt: '2026-09-19T20:00:00.000Z',
       },
     });

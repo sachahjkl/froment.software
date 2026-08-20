@@ -44,8 +44,12 @@ import {
   IssuerSettingsUpdateRequest,
   DocumentArtifact,
   DocumentNotFound,
+  PublicQuoteAccessRequest,
+  PublicQuoteConsultation,
+  PublicQuoteSignatureRequest,
+  QuoteAcceptanceResult,
   QuoteLinkNotFound,
-  QuoteLinkToken,
+  QuoteLinkNotSignable,
   QuotePdfRequired,
   QuoteSendRequest,
   QuoteSendResult,
@@ -229,10 +233,24 @@ export class QuotesApi extends HttpApiGroup.make('quotes', { topLevel: true }).a
       QuotePdfRequired.pipe(HttpApiSchema.status(409)),
     ],
   }),
-  HttpApiEndpoint.get('quoteLinkPdfDownload', '/api/public/quote-links/:token/pdf', {
-    params: { token: QuoteLinkToken },
+  HttpApiEndpoint.post('publicQuoteGet', '/api/public/quote-link', {
+    payload: PublicQuoteAccessRequest,
+    success: PublicQuoteConsultation,
+    error: QuoteLinkNotFound.pipe(HttpApiSchema.status(404)),
+  }),
+  HttpApiEndpoint.post('publicQuotePdfDownload', '/api/public/quote-link/pdf', {
+    payload: PublicQuoteAccessRequest,
     success: Schema.Uint8Array.pipe(HttpApiSchema.asUint8Array({ contentType: 'application/pdf' })),
     error: QuoteLinkNotFound.pipe(HttpApiSchema.status(404)),
+  }),
+  HttpApiEndpoint.post('publicQuoteSign', '/api/public/quote-link/signature', {
+    payload: PublicQuoteSignatureRequest,
+    success: QuoteAcceptanceResult,
+    error: [
+      QuoteLinkNotFound.pipe(HttpApiSchema.status(404)),
+      QuoteLinkNotSignable.pipe(HttpApiSchema.status(409)),
+      RequestRateLimited.pipe(HttpApiSchema.status(429)),
+    ],
   }),
   HttpApiEndpoint.post('quoteRevisionCreate', '/api/quotes/:quoteId/revisions', {
     params: { quoteId: Ulid },

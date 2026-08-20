@@ -80,6 +80,23 @@ export type QuoteRevisionCreateRequest = typeof QuoteRevisionCreateRequest.Type;
 export const QuoteSendRequest = Schema.Struct({ expectedVersion: PositiveSafeInteger });
 export type QuoteSendRequest = typeof QuoteSendRequest.Type;
 
+export const PublicQuoteAccessRequest = Schema.Struct({ token: QuoteLinkToken });
+export type PublicQuoteAccessRequest = typeof PublicQuoteAccessRequest.Type;
+
+const SignerName = Schema.String.check(Schema.isPattern(/\S/), Schema.isMaxLength(160));
+const TypedSignature = Schema.String.check(Schema.isPattern(/\S/), Schema.isMaxLength(160));
+
+export const PublicQuoteSignatureRequest = Schema.Struct({
+  token: QuoteLinkToken,
+  signerName: SignerName,
+  consent: Schema.Literal(true),
+  signature: Schema.Struct({
+    kind: Schema.Literal('typed'),
+    value: TypedSignature,
+  }),
+});
+export type PublicQuoteSignatureRequest = typeof PublicQuoteSignatureRequest.Type;
+
 export const QuoteLine = Schema.Struct({
   id: Ulid,
   position: SafeInteger,
@@ -108,6 +125,25 @@ export const QuoteRenderSnapshot = Schema.Struct({
   lines: Schema.Array(QuoteLine),
 });
 export type QuoteRenderSnapshot = typeof QuoteRenderSnapshot.Type;
+
+export const PublicQuoteConsultation = Schema.Struct({
+  status: Schema.Literals(['sent', 'accepted']),
+  canSign: Schema.Boolean,
+  expiresAt: IsoUtc,
+  snapshot: QuoteRenderSnapshot,
+});
+export type PublicQuoteConsultation = typeof PublicQuoteConsultation.Type;
+
+export const QuoteAcceptanceResult = Schema.Struct({
+  quoteId: Ulid,
+  revisionId: Ulid,
+  signatureId: Ulid,
+  orderId: Ulid,
+  status: Schema.Literal('accepted'),
+  acceptedAt: IsoUtc,
+  evidenceSha256: Schema.String.check(Schema.isPattern(/^[a-f0-9]{64}$/)),
+});
+export type QuoteAcceptanceResult = typeof QuoteAcceptanceResult.Type;
 
 export const QuoteRevision = Schema.Struct({
   id: Ulid,
@@ -209,6 +245,12 @@ export class QuoteLinkNotFound extends Schema.TaggedError<QuoteLinkNotFound>()(
   { httpApiStatus: 404 },
 ) {}
 
+export class QuoteLinkNotSignable extends Schema.TaggedError<QuoteLinkNotSignable>()(
+  'QuoteLinkNotSignable',
+  { code: Schema.Literal('quote_link.not_signable') },
+  { httpApiStatus: 409 },
+) {}
+
 export const DocumentArtifact = Schema.Struct({
   id: Ulid,
   revisionId: Ulid,
@@ -237,6 +279,7 @@ export const QuoteFailure = Schema.Union([
   QuotePreviewUnavailable,
   QuotePdfRequired,
   QuoteLinkNotFound,
+  QuoteLinkNotSignable,
   DocumentNotFound,
   ClientNotFound,
   ClientArchived,
