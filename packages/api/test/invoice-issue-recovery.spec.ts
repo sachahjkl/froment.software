@@ -224,6 +224,50 @@ const seedInvoice = (database: DatabaseService) => {
 };
 
 describe('invoice issue recovery', () => {
+  it('rejects corrupted invoice PDFs for administrator and client downloads', async () => {
+    const pdf = Buffer.from('%PDF-corrupted');
+    const renderer: DocumentRendererService = {
+      renderQuote: () => Effect.succeed(''),
+      renderQuotePdf: () => Effect.succeed(pdf),
+      renderInvoice: () => Effect.succeed(''),
+      renderInvoicePdf: () => Effect.succeed(pdf),
+    };
+
+    const result = await Effect.runPromise(
+      Effect.gen(function* () {
+        const database = yield* Database;
+        const invoices = yield* Invoices;
+        const artifacts = yield* DocumentArtifacts;
+        const portal = yield* ClientPortal;
+        seedInvoice(database);
+        const issued = yield* invoices.issue(invoiceId, { expectedVersion: 1 }, actorId);
+        const issuedRevisionId = database.sqlite
+          .prepare('select id from invoice_revisions where invoice_id = ? and version = ?')
+          .pluck()
+          .get(invoiceId, issued.version);
+        database.sqlite
+          .prepare(
+            `insert into document_artifacts
+             (id, invoice_revision_id, kind, content_type, byte_size, sha256, content, created_at)
+             values (?, ?, 'invoice-pdf', 'application/pdf', ?, ?, ?, 2)`,
+          )
+          .run('01ARZ3NDEKTSV4RRFFQ69G5FAW', issuedRevisionId, pdf.byteLength, '0'.repeat(64), pdf);
+        database.sqlite
+          .prepare(
+            "update invoice_pdf_jobs set status = 'ready', attempts = 1 where invoice_id = ?",
+          )
+          .run(invoiceId);
+        return {
+          administrator: yield* Effect.result(artifacts.getInvoicePdf(invoiceId, issued.version)),
+          client: yield* Effect.result(portal.getInvoicePdf(clientId, invoiceId)),
+        };
+      }).pipe(Effect.provide(makeTestLayer(':memory:', renderer))),
+    );
+
+    expect(result.administrator._tag).toBe('Failure');
+    expect(result.client._tag).toBe('Failure');
+  });
+
   it('reuses the issued revision and number after PDF rendering fails', async () => {
     let renderAttempts = 0;
     const pdf = new TextEncoder().encode('%PDF-1.7\nrecovered');

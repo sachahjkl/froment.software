@@ -24,6 +24,7 @@ import { ulid } from 'ulid';
 import { Audit } from '../audit/audit.js';
 import { AuthenticationConfig, hmac } from '../authentication/authentication-config.js';
 import { Database, DatabaseError } from '../database/database.js';
+import { verifyArtifactContent } from '../documents/artifact-integrity.js';
 import { expireSentQuotes } from './quote-expiration.js';
 
 const linkLifetimeMillis = 30 * 24 * 60 * 60 * 1_000;
@@ -278,6 +279,7 @@ export const QuoteLinksLive = Layer.effect(
             .transaction(() => {
               expireSentQuotes(database.sqlite, audit, now);
               const quote = findPublicQuote(token, now);
+              verifyArtifactContent({ content: quote.content, sha256: quote.pdfSha256 });
               return { quoteId: quote.quoteId, version: quote.version, content: quote.content };
             })
             .immediate(),
@@ -340,9 +342,7 @@ export const QuoteLinksLive = Layer.effect(
                 .update(quote.renderSnapshot)
                 .digest('hex');
               const pdfSha256 = createHash('sha256').update(quote.content).digest('hex');
-              if (pdfSha256 !== quote.pdfSha256) {
-                throw new Error('The stored quote PDF digest does not match its content.');
-              }
+              verifyArtifactContent({ content: quote.content, sha256: quote.pdfSha256 });
 
               const signatureId = ulid(now);
               const orderId = ulid(now + 1);

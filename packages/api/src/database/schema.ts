@@ -600,7 +600,7 @@ export const invoices = sqliteTable(
     check('invoices_version_check', sql`${table.version} >= 1`),
     check(
       'invoices_number_state_check',
-      sql`(${table.status} = 'draft' and ${table.invoiceNumber} is null and ${table.issuedAt} is null) or (${table.status} in ('issued', 'paid', 'void') and ${table.invoiceNumber} glob 'F-[0-9]*' and length(${table.invoiceNumber}) >= 8 and ${table.issuedAt} is not null)`,
+      sql`(${table.status} = 'draft' and ${table.invoiceNumber} is null and ${table.issuedAt} is null) or (${table.status} in ('issued', 'paid', 'void') and length(${table.invoiceNumber}) >= 8 and substr(${table.invoiceNumber}, 1, 2) = 'F-' and substr(${table.invoiceNumber}, 3) not glob '*[^0-9]*' and ${table.issuedAt} is not null)`,
     ),
     check(
       'invoices_terminal_state_check',
@@ -647,7 +647,7 @@ export const invoiceRevisions = sqliteTable(
     check('invoice_revisions_version_check', sql`${table.version} >= 1`),
     check(
       'invoice_revisions_number_check',
-      sql`(${table.invoiceNumber} is null and ${table.issuedAt} is null) or (${table.invoiceNumber} glob 'F-[0-9]*' and length(${table.invoiceNumber}) >= 8 and ${table.issuedAt} is not null)`,
+      sql`(${table.invoiceNumber} is null and ${table.issuedAt} is null) or (length(${table.invoiceNumber}) >= 8 and substr(${table.invoiceNumber}, 1, 2) = 'F-' and substr(${table.invoiceNumber}, 3) not glob '*[^0-9]*' and ${table.issuedAt} is not null)`,
     ),
     check(
       'invoice_revisions_client_display_name_check',
@@ -656,7 +656,7 @@ export const invoiceRevisions = sqliteTable(
     check('invoice_revisions_title_check', sql`length(trim(${table.title})) between 1 and 120`),
     check(
       'invoice_revisions_dates_check',
-      sql`${table.serviceDate} glob '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]' and ${table.dueDate} glob '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]' and ${table.dueDate} >= ${table.serviceDate}`,
+      sql`strftime('%Y-%m-%d', ${table.serviceDate}, '+0 days') = ${table.serviceDate} and strftime('%Y-%m-%d', ${table.dueDate}, '+0 days') = ${table.dueDate} and ${table.dueDate} >= ${table.serviceDate}`,
     ),
     check('invoice_revisions_payment_terms_check', sql`length(${table.paymentTerms}) <= 2000`),
     check('invoice_revisions_currency_check', sql`${table.currency} = 'EUR'`),
@@ -754,7 +754,10 @@ export const invoicePdfJobs = sqliteTable(
       'invoice_pdf_jobs_actor_id_ulid_check',
       sql`${table.actorUserId} is not null and length(${table.actorUserId}) = 26 and ${table.actorUserId} not glob '*[^0-9A-HJKMNP-TV-Z]*' and substr(${table.actorUserId}, 1, 1) between '0' and '7'`,
     ),
-    check('invoice_pdf_jobs_number_check', sql`${table.invoiceNumber} glob 'F-[0-9]*'`),
+    check(
+      'invoice_pdf_jobs_number_check',
+      sql`length(${table.invoiceNumber}) >= 8 and substr(${table.invoiceNumber}, 1, 2) = 'F-' and substr(${table.invoiceNumber}, 3) not glob '*[^0-9]*'`,
+    ),
     check('invoice_pdf_jobs_version_check', sql`${table.version} >= 1`),
     check(
       'invoice_pdf_jobs_status_check',

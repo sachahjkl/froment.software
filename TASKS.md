@@ -50,9 +50,9 @@
 - [x] REV-010 Revoke old client access during rotation.
 - [x] REV-011 Rate-limit successful authentication.
 - [x] REV-012 Rate-limit public quote reads and downloads.
-- [ ] REV-013 Make published documents immutable and verify artifact hashes.
-- [ ] REV-014 Enforce cross-table business relationships.
-- [ ] REV-015 Roll back migrations that violate foreign keys.
+- [x] REV-013 Make published documents immutable and verify artifact hashes.
+- [x] REV-014 Enforce cross-table business relationships.
+- [x] REV-015 Roll back migrations that violate foreign keys.
 - [x] REV-016 Validate canonical UTC timestamps.
 - [x] REV-017 Render quote dates in UTC.
 - [ ] REV-018 Store invoice issue dates in the business time zone.
@@ -75,7 +75,7 @@
 - [x] REV-035 Preserve literal translation replacements.
 - [x] REV-036 Validate client invoice dates.
 - [x] REV-037 Limit document snapshots to 20 lines.
-- [ ] REV-038 Verify PDF hashes on every download.
+- [x] REV-038 Verify PDF hashes on every download.
 - [x] REV-039 Make client archival idempotent.
 - [x] REV-040 Use a memory-hard bootstrap password hash.
 - [x] REV-041 Limit route versions to safe integers.
@@ -85,7 +85,7 @@
 - [ ] REV-045 Prevent public quote mobile overflow.
 - [ ] REV-046 Clear stale blog metadata.
 - [ ] REV-047 Translate public quote accessible names.
-- [ ] REV-048 Enforce invoice dates and numbers in SQLite.
+- [x] REV-048 Enforce invoice dates and numbers in SQLite.
 - [x] REV-049 Correct the documented container port.
 - [ ] REV-050 Enforce coverage thresholds for sensitive code.
 

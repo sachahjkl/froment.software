@@ -12,6 +12,7 @@ import {
 import { Context, DateTime, Effect, Layer, Schema } from 'effect';
 
 import { Database, DatabaseError } from '../database/database.js';
+import { verifyArtifactContent } from '../documents/artifact-integrity.js';
 
 const ClientQuoteRecord = Schema.Struct({
   id: Ulid,
@@ -44,7 +45,11 @@ const ClientInvoiceRecord = Schema.Struct({
   updatedAt: Schema.Int,
   pdfAvailable: Schema.Int,
 });
-const PdfRecord = Schema.Struct({ content: Schema.Uint8Array, version: Schema.Int });
+const PdfRecord = Schema.Struct({
+  content: Schema.Uint8Array,
+  sha256: Schema.String,
+  version: Schema.Int,
+});
 
 export interface ClientPdf {
   readonly content: Uint8Array;
@@ -198,7 +203,8 @@ export const ClientPortalLive = Layer.effect(
         try: () => {
           const row = database.sqlite
             .prepare(
-              `select document_artifacts.content, quote_revisions.version
+              `select document_artifacts.content, document_artifacts.sha256,
+                       quote_revisions.version
                from quotes
                left join orders
                  on orders.quote_id = quotes.id
@@ -219,7 +225,7 @@ export const ClientPortalLive = Layer.effect(
             )
             .get(userId, quoteId, userId);
           if (row === undefined) throw new DocumentNotFound({ code: 'document.not_found' });
-          return Schema.decodeUnknownSync(PdfRecord)(row);
+          return verifyArtifactContent(Schema.decodeUnknownSync(PdfRecord)(row));
         },
         catch: (cause) =>
           cause instanceof DocumentNotFound
@@ -236,7 +242,8 @@ export const ClientPortalLive = Layer.effect(
         try: () => {
           const row = database.sqlite
             .prepare(
-              `select document_artifacts.content, invoice_revisions.version
+              `select document_artifacts.content, document_artifacts.sha256,
+                       invoice_revisions.version
                from invoices
                join orders
                  on orders.id = invoices.order_id
@@ -255,7 +262,7 @@ export const ClientPortalLive = Layer.effect(
             )
             .get(userId, invoiceId, userId);
           if (row === undefined) throw new DocumentNotFound({ code: 'document.not_found' });
-          return Schema.decodeUnknownSync(PdfRecord)(row);
+          return verifyArtifactContent(Schema.decodeUnknownSync(PdfRecord)(row));
         },
         catch: (cause) =>
           cause instanceof DocumentNotFound

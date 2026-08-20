@@ -524,4 +524,269 @@ describe('Database', () => {
     expect(state.revisionId).toBe(revisionId);
     expect(state.foreignKeyViolations).toEqual([]);
   });
+
+  it('enforces immutable publications, business relationships, and invoice values', async () => {
+    const directory = await mkdtemp(join(tmpdir(), 'froment-database-integrity-'));
+    directories.push(directory);
+    const filename = join(directory, 'database.sqlite');
+    const migrationsFolder = join(import.meta.dirname, '..', 'drizzle');
+
+    await Effect.runPromise(
+      Database.use(({ sqlite }) =>
+        Effect.sync(() => {
+          sqlite.exec(`
+            insert into users (id, display_name, kind, created_at, updated_at) values
+              ('01ARZ3NDEKTSV4RRFFQ69G5FAA', 'Administrator', 'administrator', 1, 1),
+              ('01ARZ3NDEKTSV4RRFFQ69G5FAB', 'Client A', 'client', 1, 1),
+              ('01ARZ3NDEKTSV4RRFFQ69G5FAC', 'Client B', 'client', 1, 1);
+            insert into clients (id, created_at, updated_at) values
+              ('01ARZ3NDEKTSV4RRFFQ69G5FAB', 1, 1),
+              ('01ARZ3NDEKTSV4RRFFQ69G5FAC', 1, 1);
+            insert into quotes (id, client_id, status, version, created_at, updated_at)
+              values ('01ARZ3NDEKTSV4RRFFQ69G5FAD', '01ARZ3NDEKTSV4RRFFQ69G5FAB', 'accepted', 1, 1, 1);
+            insert into quote_revisions
+              (id, quote_id, version, client_display_name, title, conditions, currency,
+               net_total_cents, vat_total_cents, total_cents, created_at, created_by_user_id)
+              values ('01ARZ3NDEKTSV4RRFFQ69G5FAE', '01ARZ3NDEKTSV4RRFFQ69G5FAD', 1,
+                      'Client A', 'Quote', '', 'EUR', 0, 0, 0, 1,
+                      '01ARZ3NDEKTSV4RRFFQ69G5FAA');
+            insert into quote_lines
+              (id, revision_id, position, description, quantity_milli, unit_price_cents,
+               vat_rate_basis_points, net_total_cents, vat_total_cents, total_cents)
+              values ('01ARZ3NDEKTSV4RRFFQ69G5FAF', '01ARZ3NDEKTSV4RRFFQ69G5FAE', 0,
+                      'Service', 1000, 0, 0, 0, 0, 0);
+            insert into document_artifacts
+              (id, revision_id, kind, content_type, byte_size, sha256, content, created_at)
+              values ('01ARZ3NDEKTSV4RRFFQ69G5FAG', '01ARZ3NDEKTSV4RRFFQ69G5FAE',
+                      'quote-pdf', 'application/pdf', 1,
+                      'ca978112ca1bbdcafac231b39a23dc4da786eff8147c4e72b9807785afee48bb',
+                      x'61', 1);
+            insert into quote_links (id, revision_id, token_hmac, created_at, expires_at)
+              values ('01ARZ3NDEKTSV4RRFFQ69G5FAH', '01ARZ3NDEKTSV4RRFFQ69G5FAE', zeroblob(32), 1, 2);
+            insert into audit_events
+              (id, action, actor_user_id, resource_type, resource_id, occurred_at, metadata)
+              values ('01ARZ3NDEKTSV4RRFFQ69G5FAJ', 'quote.accepted', null, 'quote',
+                      '01ARZ3NDEKTSV4RRFFQ69G5FAD', 1, '{}');
+            insert into quote_signatures
+              (id, quote_id, revision_id, link_id, signer_name, consent, signature_kind,
+               signature_value, signed_at, ip_address, user_agent, snapshot_sha256, pdf_sha256,
+               audit_event_id, evidence_content, evidence_sha256)
+              values ('01ARZ3NDEKTSV4RRFFQ69G5FAK', '01ARZ3NDEKTSV4RRFFQ69G5FAD',
+                      '01ARZ3NDEKTSV4RRFFQ69G5FAE', '01ARZ3NDEKTSV4RRFFQ69G5FAH', 'Client A',
+                      1, 'typed', 'Client A', 1, '127.0.0.1', '', '${'a'.repeat(64)}',
+                      '${'b'.repeat(64)}', '01ARZ3NDEKTSV4RRFFQ69G5FAJ', x'61', '${'c'.repeat(64)}');
+            insert into orders (id, quote_id, revision_id, client_id, signature_id, status, created_at)
+              values ('01ARZ3NDEKTSV4RRFFQ69G5FAM', '01ARZ3NDEKTSV4RRFFQ69G5FAD',
+                      '01ARZ3NDEKTSV4RRFFQ69G5FAE', '01ARZ3NDEKTSV4RRFFQ69G5FAB',
+                      '01ARZ3NDEKTSV4RRFFQ69G5FAK', 'confirmed', 1);
+            insert into invoices (id, order_id, client_id, status, version, created_at, updated_at)
+              values ('01ARZ3NDEKTSV4RRFFQ69G5FAP', '01ARZ3NDEKTSV4RRFFQ69G5FAM',
+                      '01ARZ3NDEKTSV4RRFFQ69G5FAB', 'draft', 1, 1, 1);
+          `);
+
+          expect(() =>
+            sqlite.prepare("update document_artifacts set content = x'62'").run(),
+          ).toThrow('document artifacts are immutable');
+          expect(() => sqlite.prepare('delete from document_artifacts').run()).toThrow(
+            'document artifacts are immutable',
+          );
+          expect(() =>
+            sqlite.prepare("update quote_revisions set title = 'Changed'").run(),
+          ).toThrow('published quote revisions are immutable');
+          expect(() =>
+            sqlite.prepare("update quote_lines set description = 'Changed'").run(),
+          ).toThrow('published quote lines are immutable');
+          expect(() =>
+            sqlite
+              .prepare(
+                `insert into orders (id, quote_id, revision_id, client_id, signature_id, status, created_at)
+                 values (?, ?, ?, ?, ?, 'confirmed', 1)`,
+              )
+              .run(
+                '01ARZ3NDEKTSV4RRFFQ69G5FAM',
+                '01ARZ3NDEKTSV4RRFFQ69G5FAD',
+                '01ARZ3NDEKTSV4RRFFQ69G5FAE',
+                '01ARZ3NDEKTSV4RRFFQ69G5FAC',
+                '01ARZ3NDEKTSV4RRFFQ69G5FAK',
+              ),
+          ).toThrow('order business relationship violation');
+          expect(() =>
+            sqlite
+              .prepare(
+                `insert into invoices
+                 (id, order_id, client_id, status, version, created_at, updated_at)
+                 values (?, ?, ?, 'draft', 1, 1, 1)`,
+              )
+              .run(
+                '01ARZ3NDEKTSV4RRFFQ69G5FAQ',
+                '01ARZ3NDEKTSV4RRFFQ69G5FAM',
+                '01ARZ3NDEKTSV4RRFFQ69G5FAC',
+              ),
+          ).toThrow('invoice business relationship violation');
+          expect(() =>
+            sqlite
+              .prepare(
+                `update invoices set status = 'issued', invoice_number = 'F-123456oops',
+                                     issued_at = 2 where id = ?`,
+              )
+              .run('01ARZ3NDEKTSV4RRFFQ69G5FAP'),
+          ).toThrow();
+          expect(() =>
+            sqlite
+              .prepare(
+                `insert into invoice_revisions
+                 (id, invoice_id, version, client_display_name, title, service_date, due_date,
+                  payment_terms, currency, net_total_cents, vat_total_cents, total_cents,
+                  created_at, created_by_user_id, template_id, template_version, render_snapshot)
+                 values (?, ?, 1, 'Client A', 'Invoice', '2026-02-31', '2026-03-31', '',
+                         'EUR', 0, 0, 0, 1, ?, 'invoice-default', 1, '{}')`,
+              )
+              .run(
+                '01ARZ3NDEKTSV4RRFFQ69G5FAN',
+                '01ARZ3NDEKTSV4RRFFQ69G5FAP',
+                '01ARZ3NDEKTSV4RRFFQ69G5FAA',
+              ),
+          ).toThrow();
+        }),
+      ).pipe(Effect.provide(makeDatabaseLayer({ filename, migrationsFolder }))),
+    );
+  });
+
+  it('rejects invalid existing invoice data during the corrective migration', async () => {
+    const directory = await mkdtemp(join(tmpdir(), 'froment-database-corrective-'));
+    directories.push(directory);
+    const migrationsFolder = join(directory, 'drizzle');
+    const sourceFolder = join(import.meta.dirname, '..', 'drizzle');
+    const correctiveMigration = '20260820125023_perfect_meggan';
+    const previousMigrations = (await readdir(sourceFolder)).filter(
+      (migration) => migration !== correctiveMigration,
+    );
+    await Promise.all(
+      previousMigrations.map((migration) =>
+        cp(join(sourceFolder, migration), join(migrationsFolder, migration), { recursive: true }),
+      ),
+    );
+    const filename = join(directory, 'database.sqlite');
+    const options = { filename, migrationsFolder };
+    await Effect.runPromise(
+      Database.use(() => Effect.void).pipe(Effect.provide(makeDatabaseLayer(options))),
+    );
+
+    const sqlite = new Sqlite(filename);
+    sqlite.pragma('foreign_keys = OFF');
+    sqlite
+      .prepare(
+        `insert into invoices
+         (id, order_id, client_id, status, version, invoice_number, issued_at, created_at, updated_at)
+         values (?, ?, ?, 'issued', 1, 'F-123456oops', 2, 1, 2)`,
+      )
+      .run(
+        '01ARZ3NDEKTSV4RRFFQ69G5FAA',
+        '01ARZ3NDEKTSV4RRFFQ69G5FAB',
+        '01ARZ3NDEKTSV4RRFFQ69G5FAC',
+      );
+    sqlite.close();
+    await cp(join(sourceFolder, correctiveMigration), join(migrationsFolder, correctiveMigration), {
+      recursive: true,
+    });
+
+    await expect(
+      Effect.runPromise(
+        Database.use(() => Effect.void).pipe(Effect.provide(makeDatabaseLayer(options))),
+      ),
+    ).rejects.toThrow();
+
+    const failedSqlite = new Sqlite(filename);
+    expect(
+      failedSqlite
+        .prepare('select count(*) from __drizzle_migrations where name = ?')
+        .pluck()
+        .get(correctiveMigration),
+    ).toBe(0);
+    expect(failedSqlite.prepare('select invoice_number from invoices').pluck().get()).toBe(
+      'F-123456oops',
+    );
+    failedSqlite.close();
+  });
+
+  it('rejects a corrupt existing artifact before applying migrations', async () => {
+    const directory = await mkdtemp(join(tmpdir(), 'froment-database-artifact-audit-'));
+    directories.push(directory);
+    const migrationsFolder = join(directory, 'drizzle');
+    const sourceFolder = join(import.meta.dirname, '..', 'drizzle');
+    const correctiveMigration = '20260820125023_perfect_meggan';
+    const previousMigrations = (await readdir(sourceFolder)).filter(
+      (migration) => migration !== correctiveMigration,
+    );
+    await Promise.all(
+      previousMigrations.map((migration) =>
+        cp(join(sourceFolder, migration), join(migrationsFolder, migration), { recursive: true }),
+      ),
+    );
+    const filename = join(directory, 'database.sqlite');
+    const options = { filename, migrationsFolder };
+    await Effect.runPromise(
+      Database.use(() => Effect.void).pipe(Effect.provide(makeDatabaseLayer(options))),
+    );
+
+    const sqlite = new Sqlite(filename);
+    sqlite.pragma('foreign_keys = OFF');
+    sqlite
+      .prepare(
+        `insert into document_artifacts
+         (id, revision_id, kind, content_type, byte_size, sha256, content, created_at)
+         values (?, ?, 'quote-pdf', 'application/pdf', 1, ?, x'61', 1)`,
+      )
+      .run('01ARZ3NDEKTSV4RRFFQ69G5FAA', '01ARZ3NDEKTSV4RRFFQ69G5FAB', '0'.repeat(64));
+    sqlite.close();
+    await cp(join(sourceFolder, correctiveMigration), join(migrationsFolder, correctiveMigration), {
+      recursive: true,
+    });
+
+    await expect(
+      Effect.runPromise(
+        Database.use(() => Effect.void).pipe(Effect.provide(makeDatabaseLayer(options))),
+      ),
+    ).rejects.toThrow();
+
+    const failedSqlite = new Sqlite(filename);
+    expect(
+      failedSqlite
+        .prepare('select count(*) from __drizzle_migrations where name = ?')
+        .pluck()
+        .get(correctiveMigration),
+    ).toBe(0);
+    expect(failedSqlite.prepare('select sha256 from document_artifacts').pluck().get()).toBe(
+      '0'.repeat(64),
+    );
+    failedSqlite.close();
+  });
+
+  it('rolls back migration data and journal rows after a foreign key violation', async () => {
+    const directory = await mkdtemp(join(tmpdir(), 'froment-database-rollback-'));
+    directories.push(directory);
+    const filename = join(directory, 'database.sqlite');
+    const migrationsFolder = join(
+      import.meta.dirname,
+      'fixtures',
+      'invalid-foreign-key-migrations',
+    );
+
+    await expect(
+      Effect.runPromise(
+        Database.use(() => Effect.void).pipe(
+          Effect.provide(makeDatabaseLayer({ filename, migrationsFolder })),
+        ),
+      ),
+    ).rejects.toThrow();
+
+    const sqlite = new Sqlite(filename);
+    expect(
+      sqlite
+        .prepare("select name from sqlite_master where type = 'table' order by name")
+        .pluck()
+        .all(),
+    ).toEqual([]);
+    sqlite.close();
+  });
 });

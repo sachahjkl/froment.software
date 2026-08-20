@@ -17,6 +17,7 @@ import { Database, DatabaseError } from '../database/database.js';
 import { QuotePreviewUnavailable, QuoteNotFound } from '@froment/contracts';
 import { Quotes } from '../quotes/quotes.js';
 import { Invoices } from '../invoices/invoices.js';
+import { verifyArtifactContent } from './artifact-integrity.js';
 import { DocumentRenderer, DocumentRenderError } from './document-renderer.js';
 
 const ArtifactRecord = Schema.Struct({
@@ -28,7 +29,7 @@ const ArtifactRecord = Schema.Struct({
   sha256: Schema.String,
   createdAt: Schema.Int,
 });
-const ArtifactContentRecord = Schema.Struct({ content: Schema.Uint8Array });
+const ArtifactContentRecord = Schema.Struct({ content: Schema.Uint8Array, sha256: Schema.String });
 const InvoiceArtifactRecord = Schema.Struct({
   id: Ulid,
   invoiceRevisionId: Ulid,
@@ -243,7 +244,7 @@ export const DocumentArtifactsLive = Layer.effect(
         try: () => {
           const row = database.sqlite
             .prepare(
-              `select document_artifacts.content
+              `select document_artifacts.content, document_artifacts.sha256
                from document_artifacts
                join quote_revisions on quote_revisions.id = document_artifacts.revision_id
                where quote_revisions.quote_id = ? and quote_revisions.version = ?
@@ -251,7 +252,8 @@ export const DocumentArtifactsLive = Layer.effect(
             )
             .get(quoteId, version);
           if (row === undefined) throw new DocumentNotFound({ code: 'document.not_found' });
-          return Schema.decodeUnknownSync(ArtifactContentRecord)(row).content;
+          return verifyArtifactContent(Schema.decodeUnknownSync(ArtifactContentRecord)(row))
+            .content;
         },
         catch: (cause) =>
           cause instanceof DocumentNotFound
@@ -268,7 +270,7 @@ export const DocumentArtifactsLive = Layer.effect(
         try: () => {
           const row = database.sqlite
             .prepare(
-              `select document_artifacts.content
+              `select document_artifacts.content, document_artifacts.sha256
                from document_artifacts
                join invoice_revisions
                  on invoice_revisions.id = document_artifacts.invoice_revision_id
@@ -277,7 +279,8 @@ export const DocumentArtifactsLive = Layer.effect(
             )
             .get(invoiceId, version);
           if (row === undefined) throw new DocumentNotFound({ code: 'document.not_found' });
-          return Schema.decodeUnknownSync(ArtifactContentRecord)(row).content;
+          return verifyArtifactContent(Schema.decodeUnknownSync(ArtifactContentRecord)(row))
+            .content;
         },
         catch: (cause) =>
           cause instanceof DocumentNotFound

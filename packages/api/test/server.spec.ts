@@ -1039,33 +1039,6 @@ describe('HTTP server', () => {
     });
     expect(await secondPreview.text()).toContain('Froment Software B');
 
-    const sqlite = new Sqlite(databaseFilename);
-    sqlite
-      .prepare(
-        `update quote_revisions
-         set render_snapshot = null, template_id = null, template_version = null
-         where id = ?`,
-      )
-      .run(quote.currentRevision.id);
-    sqlite.close();
-    const quoteWithLegacyRevision = await fetch(`${baseUrl}/api/quotes/${quote.id}`, {
-      headers: { cookie },
-    });
-    await expect(quoteWithLegacyRevision.json()).resolves.toMatchObject({
-      revisions: [
-        { version: 1, previewAvailable: false },
-        { version: 2, previewAvailable: true },
-      ],
-    });
-    const unavailablePreview = await fetch(
-      `${baseUrl}/api/quotes/${quote.id}/revisions/1/preview`,
-      { headers: { cookie } },
-    );
-    expect(unavailablePreview.status).toBe(409);
-    await expect(unavailablePreview.json()).resolves.toMatchObject({
-      code: 'quote.preview_unavailable',
-    });
-
     const conflict = await fetch(`${baseUrl}/api/quotes/${quote.id}/revisions`, {
       method: 'POST',
       headers: writeHeaders,

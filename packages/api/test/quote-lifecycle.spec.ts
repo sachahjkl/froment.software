@@ -298,4 +298,20 @@ describe('quote lifecycle', () => {
     expect(result.revokedLinks).toBe(2);
     expect(result.orders).toBe(0);
   });
+
+  it('rejects a public PDF whose SHA-256 digest does not match', async () => {
+    const result = await Effect.runPromise(
+      Effect.gen(function* () {
+        yield* seedSentQuote();
+        const database = yield* Database;
+        database.sqlite.exec('drop trigger document_artifacts_immutable_update');
+        database.sqlite
+          .prepare('update document_artifacts set sha256 = ? where id = ?')
+          .run('0'.repeat(64), artifactId);
+        return yield* Effect.result((yield* QuoteLinks).getPdf(token));
+      }).pipe(Effect.provide(lifecycleLayer()), Effect.provide(TestClock.layer())),
+    );
+
+    expect(result._tag).toBe('Failure');
+  });
 });
