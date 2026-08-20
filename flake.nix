@@ -50,6 +50,9 @@
           inherit (packageJson) version;
           pname = packageJson.name;
           runtimeNode = pkgs.nodejs-slim_22;
+          documentFontConfig = pkgs.makeFontsConf {
+            fontDirectories = [ pkgs.liberation_ttf ];
+          };
           workflowSource = lib.fileset.toSource {
             root = ./.;
             fileset = ./.github;
@@ -145,6 +148,7 @@
                 pkgs.poppler-utils
               ];
               CHROMIUM_PATH = lib.optionalString (name == "test") "${pkgs.chromium}/bin/chromium";
+              FONTCONFIG_FILE = lib.optionalString (name == "test") documentFontConfig;
               dontBuild = true;
               installPhase = ''
                 runHook preInstall
@@ -175,6 +179,8 @@
                 echo 'froment:x:1000:' >> ./etc/group
                 mkdir -p ./home/froment/.cache ./home/froment/.config ./tmp
                 chmod 1777 ./tmp
+                mkdir -p ./etc/fonts
+                cp ${documentFontConfig} ./etc/fonts/fonts.conf
                 mkdir -p ./var/lib/froment-software
                 chown -R 1000:1000 ./home/froment ./var/lib/froment-software
                 mkdir -p ./run/wrappers/bin
@@ -185,6 +191,7 @@
                 Cmd = [ "${imageApplication}/bin/${pname}-deploy" ];
                 Env = [
                   "DATABASE_PATH=/var/lib/froment-software/froment.sqlite"
+                  "FONTCONFIG_FILE=/etc/fonts/fonts.conf"
                   "HOME=/home/froment"
                   "TMPDIR=/tmp"
                 ];
