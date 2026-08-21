@@ -81,6 +81,20 @@ export class Billing {
     return 'default';
   }
 
+  protected dueLabel(status: InvoiceStatusValue, dueDate: string): string {
+    if (status !== 'issued') return this.i18n.t('backOffice.billing.due.closed');
+    const today = new Date().toISOString().slice(0, 10);
+    if (dueDate < today) return this.i18n.t('backOffice.billing.due.overdue');
+    if (dueDate === today) return this.i18n.t('backOffice.billing.due.today');
+    return this.i18n.tf('backOffice.billing.due.upcoming', { date: dueDate });
+  }
+
+  protected dueVariant(status: InvoiceStatusValue, dueDate: string): BadgeVariant {
+    return status === 'issued' && dueDate < new Date().toISOString().slice(0, 10)
+      ? 'danger'
+      : 'default';
+  }
+
   protected async load(): Promise<void> {
     this.state.set('loading');
     try {

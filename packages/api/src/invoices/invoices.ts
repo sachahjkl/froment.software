@@ -101,6 +101,7 @@ const InvoiceSummaryRecord = Schema.Struct({
   version: Schema.Int,
   invoiceNumber: Schema.NullOr(Schema.String),
   title: Schema.String,
+  dueDate: Schema.String,
   currency: Schema.Literal('EUR'),
   totalCents: Schema.Int,
   updatedAt: Schema.Int,
@@ -295,7 +296,8 @@ export const InvoicesLive = Layer.effect(
                        invoices.client_id as clientId,
                       invoice_revisions.client_display_name as clientDisplayName,
                       invoices.status, invoices.version, invoices.invoice_number as invoiceNumber,
-                      invoice_revisions.title, invoice_revisions.currency,
+                       invoice_revisions.title, invoice_revisions.due_date as dueDate,
+                       invoice_revisions.currency,
                        invoice_revisions.total_cents as totalCents, invoices.updated_at as updatedAt
                        , invoice_pdf_jobs.status as pdfStatus
                        , invoice_pdf_jobs.attempts as pdfAttempts
@@ -319,6 +321,7 @@ export const InvoicesLive = Layer.effect(
           version: invoice.version,
           invoiceNumber: invoice.invoiceNumber,
           title: invoice.title,
+          dueDate: invoice.dueDate,
           currency: invoice.currency,
           totalCents: invoice.totalCents,
           updatedAt: DateTime.formatIso(DateTime.makeUnsafe(invoice.updatedAt)),

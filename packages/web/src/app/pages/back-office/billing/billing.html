@@ -45,6 +45,7 @@
             <th>{{ i18n.t('backOffice.invoices.client') }}</th>
             <th>{{ i18n.t('backOffice.invoices.status') }}</th>
             <th>{{ i18n.t('backOffice.invoices.total') }}</th>
+            <th>{{ i18n.t('backOffice.billing.dueDate') }}</th>
             <th>{{ i18n.t('backOffice.invoices.updated') }}</th>
             <th>{{ i18n.t('backOffice.invoices.actions') }}</th>
           </tr>
@@ -63,6 +64,11 @@
               </span>
             </td>
             <td>{{ money(invoice.totalCents) }}</td>
+            <td>
+              <span appBadge [variant]="dueVariant(invoice.status, invoice.dueDate)">
+                {{ dueLabel(invoice.status, invoice.dueDate) }}
+              </span>
+            </td>
             <td>{{ date(invoice.updatedAt) }}</td>
             <td>
               <a appButton [routerLink]="['/backoffice/invoices', invoice.id]">

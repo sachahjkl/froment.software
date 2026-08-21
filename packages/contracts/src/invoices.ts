@@ -134,6 +134,7 @@ export const InvoiceSummary = Schema.Struct({
   version: PositiveSafeInteger,
   invoiceNumber: Schema.NullOr(StoredInvoiceNumber),
   title: InvoiceTitle,
+  dueDate: CalendarDate,
   currency: Schema.Literal('EUR'),
   totalCents: SafeInteger,
   updatedAt: IsoUtc,

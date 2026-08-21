@@ -104,7 +104,7 @@
 - [x] Add a unified affair detail with documents and chronological history.
 - [x] Add contextual next actions to each affair.
 - [x] Add manual quote and overdue invoice reminders.
-- [ ] Add due dates, overdue states, and upcoming deadlines.
+- [x] Add due dates, overdue states, and upcoming deadlines.
 - [ ] Record a structured reason when a quote is cancelled.
 - [ ] Offer client access creation after client reactivation.
 - [ ] Add a business event journal to each affair.
