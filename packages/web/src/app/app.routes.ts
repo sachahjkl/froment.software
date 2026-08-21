@@ -122,17 +122,6 @@ export const routes: Routes = [
     },
   },
   {
-    path: 'backoffice/business-card',
-    loadComponent: () =>
-      import('./pages/business-card/business-card').then((module) => module.BusinessCard),
-    canActivate: [administratorGuard],
-    data: {
-      titleKey: 'page.business_card',
-      descriptionKey: 'page.description.business_card',
-      robots: 'noindex, nofollow',
-    },
-  },
-  {
     path: 'backoffice/clients',
     loadComponent: () =>
       import('./pages/back-office/clients/clients').then((module) => module.Clients),
@@ -158,41 +147,13 @@ export const routes: Routes = [
     },
   },
   {
-    path: 'backoffice/issuer-settings',
+    path: 'backoffice/affaires',
     loadComponent: () =>
-      import('./pages/back-office/issuer-settings/issuer-settings').then(
-        (module) => module.IssuerSettings,
-      ),
-    canActivate: [administratorGuard],
-    canDeactivate: [unsavedChangesGuard],
-    data: {
-      titleKey: 'page.back_office_issuer_settings',
-      descriptionKey: 'page.description.back_office_issuer_settings',
-      robots: 'noindex, nofollow',
-    },
-  },
-  {
-    path: 'backoffice/quotes',
-    loadComponent: () =>
-      import('./pages/back-office/quotes/quotes').then((module) => module.Quotes),
+      import('./pages/back-office/affairs/affairs').then((module) => module.Affairs),
     canActivate: [administratorGuard],
     data: {
       titleKey: 'page.back_office_quotes',
       descriptionKey: 'page.description.back_office_quotes',
-      robots: 'noindex, nofollow',
-    },
-  },
-  {
-    path: 'backoffice/quote-condition-presets',
-    loadComponent: () =>
-      import('./pages/back-office/quote-condition-presets/quote-condition-presets').then(
-        (module) => module.QuoteConditionPresets,
-      ),
-    canActivate: [administratorGuard],
-    canDeactivate: [unsavedChangesGuard],
-    data: {
-      titleKey: 'page.back_office_condition_presets',
-      descriptionKey: 'page.description.back_office_condition_presets',
       robots: 'noindex, nofollow',
     },
   },
@@ -221,15 +182,52 @@ export const routes: Routes = [
     },
   },
   {
-    path: 'backoffice/invoices',
+    path: 'backoffice/facturation',
     loadComponent: () =>
-      import('./pages/back-office/invoices/invoices').then((module) => module.Invoices),
+      import('./pages/back-office/billing/billing').then((module) => module.Billing),
     canActivate: [administratorGuard],
     data: {
       titleKey: 'page.back_office_invoices',
       descriptionKey: 'page.description.back_office_invoices',
       robots: 'noindex, nofollow',
     },
+  },
+  {
+    path: 'backoffice/configuration',
+    loadComponent: () =>
+      import('./pages/back-office/configuration/configuration').then(
+        (module) => module.Configuration,
+      ),
+    canActivate: [administratorGuard],
+    data: {
+      titleKey: 'page.back_office_issuer_settings',
+      descriptionKey: 'page.description.back_office_issuer_settings',
+      robots: 'noindex, nofollow',
+    },
+    children: [
+      { path: '', redirectTo: 'entreprise', pathMatch: 'full' },
+      {
+        path: 'entreprise',
+        loadComponent: () =>
+          import('./pages/back-office/issuer-settings/issuer-settings').then(
+            (module) => module.IssuerSettings,
+          ),
+        canDeactivate: [unsavedChangesGuard],
+      },
+      {
+        path: 'conditions',
+        loadComponent: () =>
+          import('./pages/back-office/quote-condition-presets/quote-condition-presets').then(
+            (module) => module.QuoteConditionPresets,
+          ),
+        canDeactivate: [unsavedChangesGuard],
+      },
+      {
+        path: 'identite',
+        loadComponent: () =>
+          import('./pages/business-card/business-card').then((module) => module.BusinessCard),
+      },
+    ],
   },
   {
     path: 'backoffice/invoices/new',

@@ -1,0 +1,38 @@
+:host {
+  display: block;
+}
+
+.configuration {
+  padding: var(--page-header-y) var(--page-x) 0;
+}
+
+header {
+  margin-top: var(--space-7);
+}
+
+h1 {
+  margin-top: var(--space-1);
+  font-size: var(--text-2xl);
+}
+
+.configuration-tabs {
+  display: flex;
+  max-width: 100%;
+  margin-top: var(--space-6);
+  overflow-x: auto;
+  border-bottom: 1px solid var(--color-line-strong);
+}
+
+.configuration-tabs a {
+  min-width: max-content;
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 3px solid transparent;
+  color: var(--color-muted);
+  text-decoration: none;
+}
+
+.configuration-tabs a.active {
+  border-bottom-color: var(--color-button-primary);
+  color: var(--color-ink);
+  font-weight: 700;
+}

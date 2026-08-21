@@ -1,38 +1,83 @@
 <section class="dashboard" aria-labelledby="dashboard-title">
+  <app-back-office-nav />
   <header>
-    <h1 id="dashboard-title">{{ i18n.t('backOffice.title') }}</h1>
+    <div>
+      <p class="eyebrow">{{ i18n.t('backOffice.dashboard.eyebrow') }}</p>
+      <h1 id="dashboard-title">{{ i18n.t('backOffice.dashboard.title') }}</h1>
+      <p class="intro">{{ i18n.t('backOffice.dashboard.intro') }}</p>
+    </div>
     <button appButton type="button" (click)="signOut()">{{ i18n.t('backOffice.signOut') }}</button>
   </header>
-  <ul class="document-list">
-    <li>
-      <h2>{{ i18n.t('backOffice.clients.title') }}</h2>
-      <a appLinkButton variant="primary" routerLink="/backoffice/clients">
-        {{ i18n.t('backOffice.open') }}
-      </a>
-    </li>
-    <li>
-      <h2>{{ i18n.t('backOffice.quotes.title') }}</h2>
-      <a appLinkButton variant="primary" routerLink="/backoffice/quotes">
-        {{ i18n.t('backOffice.open') }}
-      </a>
-    </li>
-    <li>
-      <h2>{{ i18n.t('backOffice.invoices.title') }}</h2>
-      <a appLinkButton variant="primary" routerLink="/backoffice/invoices">
-        {{ i18n.t('backOffice.open') }}
-      </a>
-    </li>
-    <li>
-      <h2>{{ i18n.t('backOffice.issuer.title') }}</h2>
-      <a appLinkButton variant="primary" routerLink="/backoffice/issuer-settings">
-        {{ i18n.t('backOffice.open') }}
-      </a>
-    </li>
-    <li>
-      <h2>{{ i18n.t('backOffice.businessCard') }}</h2>
-      <a appLinkButton variant="primary" routerLink="/backoffice/business-card">
-        {{ i18n.t('backOffice.open') }}
-      </a>
-    </li>
-  </ul>
+
+  @switch (state()) { @case ('loading') {
+  <p class="state" aria-live="polite">{{ i18n.t('backOffice.dashboard.loading') }}</p>
+  } @case ('error') {
+  <p appNotice variant="danger" role="alert">{{ i18n.t('backOffice.dashboard.error') }}</p>
+  <button appButton type="button" (click)="load()">
+    {{ i18n.t('backOffice.dashboard.retry') }}
+  </button>
+  } @case ('ready') {
+  <section class="metrics" [attr.aria-label]="i18n.t('backOffice.dashboard.summary')">
+    <article>
+      <span>{{ i18n.t('backOffice.dashboard.draftQuotes') }}</span
+      ><strong>{{ draftQuotes() }}</strong>
+    </article>
+    <article>
+      <span>{{ i18n.t('backOffice.dashboard.awaitingSignature') }}</span
+      ><strong>{{ sentQuotes() }}</strong>
+    </article>
+    <article>
+      <span>{{ i18n.t('backOffice.dashboard.toInvoice') }}</span
+      ><strong>{{ ordersToInvoice() }}</strong>
+    </article>
+    <article>
+      <span>{{ i18n.t('backOffice.dashboard.outstanding') }}</span
+      ><strong>{{ money(outstandingCents()) }}</strong>
+    </article>
+  </section>
+
+  <div class="dashboard-grid">
+    <section aria-labelledby="actions-title">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">{{ i18n.t('backOffice.dashboard.priority') }}</p>
+          <h2 id="actions-title">{{ i18n.t('backOffice.dashboard.actions') }}</h2>
+        </div>
+        <a routerLink="/backoffice/affaires">{{ i18n.t('backOffice.dashboard.openAffairs') }}</a>
+      </div>
+      @if (actions().length === 0) {
+      <p class="empty">{{ i18n.t('backOffice.dashboard.noActions') }}</p>
+      } @else {
+      <ol class="work-list">
+        @for (action of actions(); track action.id) {
+        <li>
+          <div>
+            <span appBadge [variant]="action.variant">{{ action.label }}</span
+            ><strong>{{ action.title }}</strong><small>{{ action.client }}</small>
+          </div>
+          <a appButton [routerLink]="action.link">{{ i18n.t('backOffice.open') }}</a>
+        </li>
+        }
+      </ol>
+      }
+    </section>
+
+    <section aria-labelledby="activity-title">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">{{ i18n.t('backOffice.dashboard.latest') }}</p>
+          <h2 id="activity-title">{{ i18n.t('backOffice.dashboard.activity') }}</h2>
+        </div>
+      </div>
+      <ol class="activity-list">
+        @for (item of activity(); track item.id) {
+        <li>
+          <span><strong>{{ item.title }}</strong><small>{{ item.client }}</small></span
+          ><time [dateTime]="item.date">{{ date(item.date) }}</time>
+        </li>
+        }
+      </ol>
+    </section>
+  </div>
+  } }
 </section>

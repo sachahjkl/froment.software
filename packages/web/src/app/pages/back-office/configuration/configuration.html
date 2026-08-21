@@ -1,0 +1,19 @@
+<section class="configuration" aria-labelledby="configuration-title">
+  <app-back-office-nav />
+  <header>
+    <p class="eyebrow">{{ i18n.t('backOffice.configuration.eyebrow') }}</p>
+    <h1 id="configuration-title">{{ i18n.t('backOffice.configuration.title') }}</h1>
+  </header>
+  <nav class="configuration-tabs" [attr.aria-label]="i18n.t('backOffice.configuration.tabs')">
+    <a routerLink="entreprise" routerLinkActive="active">
+      {{ i18n.t('backOffice.configuration.company') }}
+    </a>
+    <a routerLink="conditions" routerLinkActive="active">
+      {{ i18n.t('backOffice.configuration.conditions') }}
+    </a>
+    <a routerLink="identite" routerLinkActive="active">
+      {{ i18n.t('backOffice.configuration.identity') }}
+    </a>
+  </nav>
+</section>
+<router-outlet />

@@ -1,4 +1,4 @@
-import { TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { vi } from 'vitest';
 
@@ -28,6 +28,18 @@ class ClientsApiStub {
   }
 }
 
+const openCreateModal = async (fixture: ComponentFixture<Clients>) => {
+  const root: HTMLElement = fixture.nativeElement;
+  const dialog = root.querySelector<HTMLDialogElement>('dialog');
+  if (dialog) {
+    dialog.showModal = () => dialog.setAttribute('open', '');
+    dialog.close = () => dialog.removeAttribute('open');
+  }
+  root.querySelector<HTMLButtonElement>('.clients-page > header button')?.click();
+  await fixture.whenStable();
+  return root;
+};
+
 describe('Clients', () => {
   it('does not replace a created client with an older list response', async () => {
     let resolveList!: (clients: ClientListValue) => void;
@@ -38,7 +50,7 @@ describe('Clients', () => {
     });
     const fixture = TestBed.createComponent(Clients);
     await fixture.whenStable();
-    const root: HTMLElement = fixture.nativeElement;
+    const root = await openCreateModal(fixture);
     const input = root.querySelector<HTMLInputElement>('input')!;
 
     input.value = 'Created while loading';
@@ -62,7 +74,7 @@ describe('Clients', () => {
     });
     const fixture = TestBed.createComponent(Clients);
     await fixture.whenStable();
-    const root: HTMLElement = fixture.nativeElement;
+    const root = await openCreateModal(fixture);
     const input = root.querySelector<HTMLInputElement>('input');
     if (input === null) throw new Error('The client name input is unavailable.');
 
@@ -73,6 +85,8 @@ describe('Clients', () => {
 
     expect(api.createdNames).toEqual(['Acme']);
     expect(root.textContent).toContain('Acme');
+    expect(root.querySelector('dialog')?.hasAttribute('open')).toBe(false);
+    expect(document.activeElement).toBe(root.querySelector('.clients-page > header button'));
   });
 
   it('shows validation feedback without sending an invalid client', async () => {
@@ -82,7 +96,7 @@ describe('Clients', () => {
     });
     const fixture = TestBed.createComponent(Clients);
     await fixture.whenStable();
-    const root: HTMLElement = fixture.nativeElement;
+    const root = await openCreateModal(fixture);
     const form = root.querySelector<HTMLFormElement>('form');
     if (form === null) throw new Error('The client form is unavailable.');
 
@@ -117,6 +131,8 @@ describe('Clients', () => {
     const fixture = TestBed.createComponent(Clients);
     await fixture.whenStable();
     const root: HTMLElement = fixture.nativeElement;
+    root.querySelector<HTMLButtonElement>('#clients-archived-tab')?.click();
+    await fixture.whenStable();
     const actionCell = root.querySelector<HTMLTableCellElement>('tbody td:last-child');
 
     expect(actionCell?.classList.contains('actions')).toBe(false);

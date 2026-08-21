@@ -3,6 +3,9 @@ import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/route
 import { vi } from 'vitest';
 
 import { ClientsApi } from '@backoffice/clients-api';
+import { InvoicesApi } from '@backoffice/invoices-api';
+import { OrdersApi } from '@backoffice/orders-api';
+import { QuotesApi } from '@backoffice/quotes-api';
 import { ClientDetail } from './client-detail';
 
 const client = {
@@ -27,6 +30,9 @@ const configure = (api: Pick<ClientsApi, 'get' | 'update'>) => {
         useValue: { snapshot: { paramMap: convertToParamMap({ clientId: client.id }) } },
       },
       { provide: ClientsApi, useValue: api },
+      { provide: QuotesApi, useValue: { list: () => Promise.resolve([]) } },
+      { provide: OrdersApi, useValue: { list: () => Promise.resolve([]) } },
+      { provide: InvoicesApi, useValue: { list: () => Promise.resolve([]) } },
     ],
   });
   return TestBed.createComponent(ClientDetail);

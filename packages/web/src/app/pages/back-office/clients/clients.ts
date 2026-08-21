@@ -1,10 +1,13 @@
 import {
   afterNextRender,
+  afterRenderEffect,
   ChangeDetectionStrategy,
   Component,
   computed,
+  ElementRef,
   inject,
   signal,
+  viewChild,
 } from '@angular/core';
 import { FormField, form, maxLength, pattern, required, submit } from '@angular/forms/signals';
 import { RouterLink } from '@angular/router';
@@ -17,19 +20,22 @@ import {
 import { ClientsApi, type ClientErrorCode } from '@backoffice/clients-api';
 import { I18nService, TranslationKey } from '@app/i18n.service';
 import { Button } from '@shared/button/button';
+import { BackOfficeNav } from '@shared/back-office-nav/back-office-nav';
 import { DataTable } from '@shared/data-table/data-table';
 import { Badge } from '@shared/badge/badge';
 import { Notice } from '@shared/notice/notice';
 import { TextCopy } from '@shared/text-copy';
+import { Tabs, type TabItem } from '@shared/tabs/tabs';
 
 type PageState = 'loading' | 'ready' | 'error';
+type ClientTab = 'active' | 'archived' | 'all';
 interface AccessResult extends ClientAccessValue {
   readonly displayName: string;
 }
 
 @Component({
   selector: 'app-clients',
-  imports: [Badge, Button, DataTable, FormField, Notice, RouterLink],
+  imports: [BackOfficeNav, Badge, Button, DataTable, FormField, Notice, RouterLink, Tabs],
   templateUrl: './clients.html',
   styleUrl: './clients.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -60,6 +66,21 @@ export class Clients {
     pattern(path.email, /^$|^[^\s@]+@[^\s@]+\.[^\s@]+$/);
   });
   protected readonly clients = signal<ReadonlyArray<ClientSummaryValue>>([]);
+  protected readonly selectedTab = signal<ClientTab>('active');
+  protected readonly createOpen = signal(false);
+  protected readonly tabs = computed<readonly TabItem[]>(() =>
+    (['active', 'archived', 'all'] as const).map((value) => ({
+      value,
+      id: `clients-${value}-tab`,
+      label: this.i18n.t(`backOffice.clients.tab.${value}`),
+      panelId: 'clients-panel',
+    })),
+  );
+  protected readonly visibleClients = computed(() => {
+    const selected = this.selectedTab();
+    if (selected === 'all') return this.clients();
+    return this.clients().filter(({ archived }) => archived === (selected === 'archived'));
+  });
   protected readonly state = signal<PageState>('loading');
   protected readonly error = signal<TranslationKey | undefined>(undefined);
   protected readonly createPending = signal(false);
@@ -72,6 +93,9 @@ export class Clients {
   protected readonly pendingClientId = signal<UlidValue | undefined>(undefined);
   protected readonly access = signal<AccessResult | undefined>(undefined);
   protected readonly copied = signal(false);
+  private readonly createButton = viewChild.required('createButton', { read: ElementRef });
+  private readonly createDialog = viewChild.required<ElementRef<HTMLDialogElement>>('createDialog');
+  private createWasOpen = false;
   private clientsRevision = 0;
 
   protected invalid(
@@ -82,6 +106,24 @@ export class Clients {
 
   constructor() {
     afterNextRender(() => void this.load());
+    afterRenderEffect({
+      write: () => {
+        const open = this.createOpen();
+        const dialog = this.createDialog().nativeElement;
+        if (open && !this.createWasOpen) {
+          if (!dialog.open) dialog.showModal();
+          dialog.querySelector<HTMLInputElement>('input')?.focus();
+        } else if (!open && this.createWasOpen) {
+          if (dialog.open) dialog.close();
+          this.createButton().nativeElement.focus();
+        }
+        this.createWasOpen = open;
+      },
+    });
+  }
+
+  protected closeCreate(): void {
+    this.createOpen.set(false);
   }
 
   protected create(event: SubmitEvent): void {
@@ -111,6 +153,7 @@ export class Clients {
         email: '',
       });
       this.createForm().reset();
+      this.createOpen.set(false);
     });
   }
 

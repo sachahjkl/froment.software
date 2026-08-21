@@ -1,0 +1,86 @@
+<section class="affairs-page" aria-labelledby="affairs-title">
+  <app-back-office-nav />
+  <header>
+    <div>
+      <p class="eyebrow">{{ i18n.t('backOffice.affairs.eyebrow') }}</p>
+      <h1 id="affairs-title">{{ i18n.t('backOffice.affairs.title') }}</h1>
+      <p class="intro">{{ i18n.t('backOffice.affairs.intro') }}</p>
+    </div>
+    <a appLinkButton variant="primary" routerLink="/backoffice/quotes/new">
+      {{ i18n.t('backOffice.quotes.new') }}
+    </a>
+  </header>
+
+  <app-tabs
+    [label]="i18n.t('backOffice.affairs.tabs')"
+    [tabs]="tabs()"
+    [(selected)]="selectedTab"
+  />
+
+  <section
+    id="affairs-panel"
+    role="tabpanel"
+    [attr.aria-labelledby]="'affairs-' + selectedTab() + '-tab'"
+    tabindex="0"
+  >
+    @switch (state()) { @case ('loading') {
+    <p class="state" aria-live="polite">{{ i18n.t('backOffice.affairs.loading') }}</p>
+    } @case ('error') {
+    <p appNotice variant="danger" role="alert">{{ i18n.t('backOffice.affairs.error') }}</p>
+    <button appButton type="button" (click)="load()">
+      {{ i18n.t('backOffice.affairs.retry') }}
+    </button>
+    } @case ('ready') { @if (visibleAffairs().length === 0) {
+    <p class="empty">{{ i18n.t('backOffice.affairs.empty') }}</p>
+    } @else {
+    <div appDataTable>
+      <table>
+        <thead>
+          <tr>
+            <th>{{ i18n.t('backOffice.affairs.reference') }}</th>
+            <th>{{ i18n.t('backOffice.affairs.client') }}</th>
+            <th>{{ i18n.t('backOffice.affairs.progress') }}</th>
+            <th>{{ i18n.t('backOffice.affairs.amount') }}</th>
+            <th>{{ i18n.t('backOffice.affairs.action') }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (affair of visibleAffairs(); track affair.quote.id) {
+          <tr>
+            <td>
+              <strong>{{ affair.quote.reference }}</strong><small>{{ affair.quote.title }}</small>
+            </td>
+            <td>{{ affair.quote.clientDisplayName }}</td>
+            <td>
+              <span appBadge [variant]="stageVariant(affair.stage)">
+                {{ stageLabel(affair.stage) }}
+              </span>
+            </td>
+            <td>{{ money(affair.quote.totalCents) }}</td>
+            <td>
+              @if (affair.invoice) {
+              <a appButton [routerLink]="['/backoffice/invoices', affair.invoice.id]">
+                {{ actionLabel(affair) }}
+              </a>
+              } @else if (affair.order) {
+              <a
+                appButton
+                routerLink="/backoffice/invoices/new"
+                [queryParams]="{ orderId: affair.order.id }"
+              >
+                {{ actionLabel(affair) }}
+              </a>
+              } @else {
+              <a appButton [routerLink]="['/backoffice/quotes', affair.quote.id]">
+                {{ actionLabel(affair) }}
+              </a>
+              }
+            </td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    } } }
+  </section>
+</section>

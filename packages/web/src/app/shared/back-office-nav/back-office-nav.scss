@@ -1,0 +1,31 @@
+:host {
+  display: block;
+  max-width: 100%;
+  overflow-x: auto;
+  border-bottom: 1px solid var(--color-line-strong);
+  scrollbar-width: thin;
+}
+
+nav {
+  display: flex;
+  min-width: max-content;
+}
+
+a {
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 3px solid transparent;
+  color: var(--color-muted);
+  font-size: var(--text-sm);
+  text-decoration: none;
+}
+
+a:hover {
+  background: var(--color-surface-sunken);
+  color: var(--color-ink);
+}
+
+a.active {
+  border-bottom-color: var(--color-button-primary);
+  color: var(--color-ink);
+  font-weight: 700;
+}
