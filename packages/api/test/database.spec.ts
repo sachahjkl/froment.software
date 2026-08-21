@@ -246,6 +246,124 @@ describe('Database', () => {
     );
   });
 
+  it('normalizes persisted document snapshots during an upgrade', async () => {
+    const directory = await mkdtemp(join(tmpdir(), 'froment-database-documents-'));
+    directories.push(directory);
+    const migrationsFolder = join(directory, 'drizzle');
+    const sourceFolder = join(import.meta.dirname, '..', 'drizzle');
+    const snapshotMigration = '20260821193319_certain_nighthawk';
+    const migrations = (await readdir(sourceFolder)).filter(
+      (migration) => migration !== snapshotMigration,
+    );
+    await Promise.all(
+      migrations.map((migration) =>
+        cp(join(sourceFolder, migration), join(migrationsFolder, migration), { recursive: true }),
+      ),
+    );
+    const filename = join(directory, 'database.sqlite');
+    const options = { filename, migrationsFolder };
+    await Effect.runPromise(
+      Database.use(() => Effect.void).pipe(Effect.provide(makeMigratedDatabaseLayer(options))),
+    );
+
+    const sqlite = new Sqlite(filename);
+    sqlite.exec(`
+      insert into users (id, display_name, kind, created_at, updated_at) values
+        ('01ARZ3NDEKTSV4RRFFQ69G5FAA', 'Administrator', 'administrator', 1, 1),
+        ('01ARZ3NDEKTSV4RRFFQ69G5FAB', 'Client', 'client', 1, 1);
+      insert into clients (id, created_at, updated_at)
+        values ('01ARZ3NDEKTSV4RRFFQ69G5FAB', 1, 1);
+      insert into quotes
+        (id, reference, client_id, status, version, created_at, updated_at)
+        values ('01ARZ3NDEKTSV4RRFFQ69G5FAC', 'DE-2026-000001',
+                '01ARZ3NDEKTSV4RRFFQ69G5FAB', 'accepted', 1, 1, 1);
+      insert into quote_revisions
+        (id, quote_id, version, client_display_name, title, conditions, currency,
+         net_total_cents, vat_total_cents, total_cents, created_at, created_by_user_id,
+         template_id, template_version, render_snapshot)
+        values ('01ARZ3NDEKTSV4RRFFQ69G5FAD', '01ARZ3NDEKTSV4RRFFQ69G5FAC', 1,
+                'Client', 'Quote', '', 'EUR', 10000, 2000, 12000, 1,
+                '01ARZ3NDEKTSV4RRFFQ69G5FAA', 'quote-default', 2,
+                '{"templateVersion":2}');
+      insert into quote_links
+        (id, revision_id, token_hmac, usage_policy, created_at, expires_at, consumed_at)
+        values ('01ARZ3NDEKTSV4RRFFQ69G5FAE', '01ARZ3NDEKTSV4RRFFQ69G5FAD',
+                zeroblob(32), 'single-use', 1, 2, 1);
+      insert into audit_events
+        (id, action, actor_user_id, resource_type, resource_id, occurred_at, metadata)
+        values ('01ARZ3NDEKTSV4RRFFQ69G5FAF', 'quote.accepted', null, 'quote',
+                '01ARZ3NDEKTSV4RRFFQ69G5FAC', 1, '{}');
+      insert into quote_signatures
+        (id, quote_id, revision_id, link_id, signer_name, consent, signature_kind,
+         signature_value, signed_at, ip_address, user_agent, snapshot_sha256, pdf_sha256,
+         audit_event_id, evidence_content, evidence_sha256)
+        values ('01ARZ3NDEKTSV4RRFFQ69G5FAG', '01ARZ3NDEKTSV4RRFFQ69G5FAC',
+                '01ARZ3NDEKTSV4RRFFQ69G5FAD', '01ARZ3NDEKTSV4RRFFQ69G5FAE', 'Client', 1,
+                'typed', 'Client', 1, '127.0.0.1', '', '${'a'.repeat(64)}',
+                '${'b'.repeat(64)}', '01ARZ3NDEKTSV4RRFFQ69G5FAF', x'01', '${'c'.repeat(64)}');
+      insert into orders
+        (id, reference, quote_id, revision_id, client_id, signature_id, status, created_at)
+        values ('01ARZ3NDEKTSV4RRFFQ69G5FAH', 'CO-2026-000001',
+                '01ARZ3NDEKTSV4RRFFQ69G5FAC', '01ARZ3NDEKTSV4RRFFQ69G5FAD',
+                '01ARZ3NDEKTSV4RRFFQ69G5FAB', '01ARZ3NDEKTSV4RRFFQ69G5FAG', 'confirmed', 1);
+      insert into invoices
+        (id, order_id, client_id, status, version, created_at, updated_at)
+        values ('01ARZ3NDEKTSV4RRFFQ69G5FAJ', '01ARZ3NDEKTSV4RRFFQ69G5FAH',
+                '01ARZ3NDEKTSV4RRFFQ69G5FAB', 'draft', 1, 1, 1);
+      insert into invoice_revisions
+        (id, invoice_id, version, invoice_number, issued_at, client_display_name, title,
+         service_date, due_date, payment_terms, currency, net_total_cents, vat_total_cents,
+         total_cents, created_at, created_by_user_id, template_id, template_version,
+         render_snapshot)
+        values ('01ARZ3NDEKTSV4RRFFQ69G5FAK', '01ARZ3NDEKTSV4RRFFQ69G5FAJ', 1, null, null,
+                'Client', 'Invoice', '2026-08-20', '2026-09-20', '', 'EUR', 10000, 2000,
+                12000, 1, '01ARZ3NDEKTSV4RRFFQ69G5FAA', 'invoice-default', 2,
+                '{"templateVersion":2}');
+    `);
+    sqlite.close();
+
+    await cp(join(sourceFolder, snapshotMigration), join(migrationsFolder, snapshotMigration), {
+      recursive: true,
+    });
+    const snapshots = await Effect.runPromise(
+      Database.use(({ sqlite: connection }) =>
+        Effect.sync(() => ({
+          invoice: connection
+            .prepare(
+              `select template_version as templateVersion,
+                      json_extract(render_snapshot, '$.templateVersion') as snapshotVersion,
+                      json_extract(render_snapshot, '$.orderReference') as orderReference,
+                      json_extract(render_snapshot, '$.quoteReference') as quoteReference
+               from invoice_revisions`,
+            )
+            .get(),
+          quote: connection
+            .prepare(
+              `select template_version as templateVersion,
+                      json_extract(render_snapshot, '$.templateVersion') as snapshotVersion,
+                      json_extract(render_snapshot, '$.quoteReference') as quoteReference
+               from quote_revisions`,
+            )
+            .get(),
+        })),
+      ).pipe(Effect.provide(makeMigratedDatabaseLayer(options))),
+    );
+
+    expect(snapshots).toEqual({
+      invoice: {
+        templateVersion: 1,
+        snapshotVersion: 1,
+        orderReference: 'CO-2026-000001',
+        quoteReference: 'DE-2026-000001',
+      },
+      quote: {
+        templateVersion: 1,
+        snapshotVersion: 1,
+        quoteReference: 'DE-2026-000001',
+      },
+    });
+  });
+
   it('assigns the fixed client role to existing clients during an upgrade', async () => {
     const directory = await mkdtemp(join(tmpdir(), 'froment-database-client-role-'));
     directories.push(directory);
