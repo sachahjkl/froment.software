@@ -83,7 +83,21 @@ export type QuoteRevisionCreateRequest = typeof QuoteRevisionCreateRequest.Type;
 export const QuoteSendRequest = Schema.Struct({ expectedVersion: PositiveSafeInteger });
 export type QuoteSendRequest = typeof QuoteSendRequest.Type;
 
-export const QuoteCancelRequest = Schema.Struct({ expectedVersion: PositiveSafeInteger });
+export const QuoteCancellationReason = Schema.Literals([
+  'client-declined',
+  'scope-changed',
+  'budget-unavailable',
+  'duplicate',
+  'replaced',
+  'other',
+]);
+export type QuoteCancellationReason = typeof QuoteCancellationReason.Type;
+
+export const QuoteCancelRequest = Schema.Struct({
+  expectedVersion: PositiveSafeInteger,
+  reason: QuoteCancellationReason,
+  note: Schema.String.check(Schema.isMaxLength(500)),
+});
 export type QuoteCancelRequest = typeof QuoteCancelRequest.Type;
 
 export const PublicQuoteAccessRequest = Schema.Struct({ token: QuoteLinkToken });

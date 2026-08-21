@@ -27,6 +27,7 @@ import {
   Ulid,
   type ClientListValue,
   type QuoteCreateRequestValue,
+  type QuoteCancellationReasonValue,
   type QuoteDetailValue,
   type QuoteLineInputValue,
   type QuoteConditionPresetListValue,
@@ -107,6 +108,8 @@ export class QuoteEditor {
   protected readonly saving = signal(false);
   protected readonly sending = signal(false);
   protected readonly cancelling = signal(false);
+  protected readonly cancellationReason = signal<QuoteCancellationReasonValue | ''>('');
+  protected readonly cancellationNote = signal('');
   protected readonly sentLink = signal<QuoteSendResultValue['link'] | undefined>(undefined);
   protected readonly linkCopied = signal(false);
   protected readonly error = signal<TranslationKey | undefined>(undefined);
@@ -333,18 +336,43 @@ export class QuoteEditor {
       quote === undefined ||
       !['draft', 'sent', 'expired'].includes(quote.status) ||
       this.cancelling() ||
+      this.cancellationReason() === '' ||
       !globalThis.confirm(this.i18n.t('backOffice.quote.cancelConfirm'))
     ) {
       return;
     }
     this.cancelling.set(true);
     this.error.set(undefined);
-    const outcome = await this.quotesApi.cancel(quoteId, { expectedVersion: quote.version });
+    const reason = this.cancellationReason();
+    if (reason === '') return;
+    const outcome = await this.quotesApi.cancel(quoteId, {
+      expectedVersion: quote.version,
+      reason,
+      note: this.cancellationNote().trim(),
+    });
     this.cancelling.set(false);
     if (!outcome.success) return this.setError(outcome.code);
     this.detail.set(outcome.result);
     this.sentLink.set(undefined);
     this.quoteForm().reset();
+  }
+
+  protected setCancellationReason(select: HTMLSelectElement): void {
+    const reason = Schema.decodeUnknownOption(
+      Schema.Literals([
+        'client-declined',
+        'scope-changed',
+        'budget-unavailable',
+        'duplicate',
+        'replaced',
+        'other',
+      ]),
+    )(select.value);
+    this.cancellationReason.set(Option.getOrElse(reason, () => ''));
+  }
+
+  protected setCancellationNote(textarea: HTMLTextAreaElement): void {
+    this.cancellationNote.set(textarea.value.slice(0, 500));
   }
 
   protected async copySentLink(): Promise<void> {

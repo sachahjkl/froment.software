@@ -105,7 +105,7 @@
 - [x] Add contextual next actions to each affair.
 - [x] Add manual quote and overdue invoice reminders.
 - [x] Add due dates, overdue states, and upcoming deadlines.
-- [ ] Record a structured reason when a quote is cancelled.
+- [x] Record a structured reason when a quote is cancelled.
 - [ ] Offer client access creation after client reactivation.
 - [ ] Add a business event journal to each affair.
 - [ ] Add global search across clients and document references.

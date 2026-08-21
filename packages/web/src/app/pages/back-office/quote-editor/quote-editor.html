@@ -221,12 +221,46 @@
     @if (quoteForm().dirty()) {
     <p class="hint">{{ i18n.t('backOffice.quote.sendUnsaved') }}</p>
     } } @if (quote.status === 'draft' || quote.status === 'sent' || quote.status === 'expired') {
+    <label class="field cancel-field" for="quote-cancellation-reason">
+      {{ i18n.t('backOffice.quote.cancelReason') }}
+      <select
+        #reasonSelect
+        id="quote-cancellation-reason"
+        class="select"
+        (change)="setCancellationReason(reasonSelect)"
+      >
+        <option value="">{{ i18n.t('backOffice.quote.cancelReason.select') }}</option>
+        <option value="client-declined">
+          {{ i18n.t('backOffice.quote.cancelReason.client-declined') }}
+        </option>
+        <option value="scope-changed">
+          {{ i18n.t('backOffice.quote.cancelReason.scope-changed') }}
+        </option>
+        <option value="budget-unavailable">
+          {{ i18n.t('backOffice.quote.cancelReason.budget-unavailable') }}
+        </option>
+        <option value="duplicate">{{ i18n.t('backOffice.quote.cancelReason.duplicate') }}</option>
+        <option value="replaced">{{ i18n.t('backOffice.quote.cancelReason.replaced') }}</option>
+        <option value="other">{{ i18n.t('backOffice.quote.cancelReason.other') }}</option>
+      </select>
+    </label>
+    <label class="field cancel-field" for="quote-cancellation-note">
+      {{ i18n.t('backOffice.quote.cancelNote') }}
+      <textarea
+        #cancellationNoteInput
+        id="quote-cancellation-note"
+        class="input"
+        maxlength="500"
+        rows="3"
+        (input)="setCancellationNote(cancellationNoteInput)"
+      ></textarea>
+    </label>
     <button
       class="cancel-quote"
       appButton
       variant="danger"
       type="button"
-      [disabled]="cancelling() || saving() || sending()"
+      [disabled]="cancellationReason() === '' || cancelling() || saving() || sending()"
       (click)="cancelQuote()"
     >
       @if (cancelling()) { {{ i18n.t('backOffice.quote.cancelling') }} } @else { {{

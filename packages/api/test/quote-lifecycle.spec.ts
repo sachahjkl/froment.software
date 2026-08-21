@@ -312,7 +312,11 @@ describe('quote lifecycle', () => {
         yield* seedSentQuote();
         yield* TestClock.setTime(createdAt + 100);
         const quotes = yield* Quotes;
-        const detail = yield* quotes.cancel(quoteId, { expectedVersion: 1 }, actorId);
+        const detail = yield* quotes.cancel(
+          quoteId,
+          { expectedVersion: 1, reason: 'client-declined', note: '' },
+          actorId,
+        );
         const links = yield* QuoteLinks;
         const database = yield* Database;
         return {

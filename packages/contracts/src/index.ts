@@ -113,6 +113,8 @@ export {
   type QuoteCreateRequest as QuoteCreateRequestValue,
   QuoteCancelRequest,
   type QuoteCancelRequest as QuoteCancelRequestValue,
+  QuoteCancellationReason,
+  type QuoteCancellationReason as QuoteCancellationReasonValue,
   QuoteDetail,
   type QuoteDetail as QuoteDetailValue,
   QuoteFailure,

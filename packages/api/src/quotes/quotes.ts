@@ -581,6 +581,7 @@ export const QuotesLive = Layer.effect(
                 actorUserId,
                 resourceType: 'quote',
                 resourceId: quoteId,
+                metadata: { reason: request.reason, note: request.note },
                 occurredAt: now,
               });
               const detail = readDetail(quoteId);
