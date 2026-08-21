@@ -7,6 +7,7 @@
   <app-tabs
     [label]="i18n.t('design.components.tabs')"
     [tabs]="componentTabs()"
+    queryParam="component"
     [(selected)]="componentTab"
   />
 
@@ -586,7 +587,12 @@
     <h2>{{ i18n.t("design.components.navigation") }}</h2>
     <div class="sample-grid wide">
       <app-visual-sample name="tabs / interactive">
-        <app-tabs label="Exemple d’onglets" [tabs]="nestedTabs" [(selected)]="nestedTab" />
+        <app-tabs
+          label="Exemple d’onglets"
+          [tabs]="nestedTabs"
+          queryParam="nested"
+          [(selected)]="nestedTab"
+        />
         @for (tab of nestedTabs; track tab.value) {
           <section
             [id]="tab.panelId"

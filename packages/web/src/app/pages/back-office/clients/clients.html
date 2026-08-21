@@ -171,6 +171,7 @@
   <app-tabs
     [label]="i18n.t('backOffice.clients.tabs')"
     [tabs]="tabs()"
+    queryParam="status"
     [(selected)]="selectedTab"
   />
   <section

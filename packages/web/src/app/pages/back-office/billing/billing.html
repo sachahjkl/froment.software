@@ -19,6 +19,7 @@
   <app-tabs
     [label]="i18n.t('backOffice.billing.tabs')"
     [tabs]="tabs()"
+    queryParam="status"
     [(selected)]="selectedTab"
   />
   @if (selectedInvoices().length > 0) {

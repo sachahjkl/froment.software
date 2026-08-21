@@ -46,7 +46,12 @@
     </section>
   </article>
 
-  <app-tabs [label]="i18n.t('publicQuote.tabs')" [tabs]="quoteTabs()" [(selected)]="quoteTab" />
+  <app-tabs
+    [label]="i18n.t('publicQuote.tabs')"
+    [tabs]="quoteTabs()"
+    queryParam="section"
+    [(selected)]="quoteTab"
+  />
 
   <section
     id="quote-summary-panel"

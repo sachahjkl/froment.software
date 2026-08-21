@@ -6,6 +6,7 @@
       [label]="i18n.t('backOffice.mode')"
       [tabs]="modeTabs()"
       [selected]="mode()"
+      queryParam="mode"
       [disabled]="pending()"
       (selectedChange)="selectMode($event === 'administrator' ? 'administrator' : 'client')"
     />
