@@ -18,14 +18,9 @@ h1 {
   font-size: var(--text-2xl);
 }
 h1,
-.mode-tabs,
-.login-mode-panel {
+.login-panel > p {
   margin-top: var(--space-3);
 }
-.mode-tabs {
-  display: block;
-}
-.login-mode-panel > p,
 form,
 .bootstrap-slot {
   margin-top: var(--space-3);

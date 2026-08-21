@@ -79,11 +79,11 @@ describe('Authentication', () => {
         const authentication = yield* Authentication;
         yield* Effect.forEach(
           Array.from({ length: 60 }, (_, index) => index),
-          (index) => authentication.login(accessIdentifier, 'administrator', `192.0.2.${index}`),
+          (index) => authentication.login(accessIdentifier, `192.0.2.${index}`),
           { discard: true },
         );
         const blocked = yield* Effect.result(
-          authentication.login(accessIdentifier, 'administrator', '198.51.100.1'),
+          authentication.login(accessIdentifier, '198.51.100.1'),
         );
         return {
           blocked,
@@ -109,7 +109,7 @@ describe('Authentication', () => {
         const database = yield* Database;
         seedAdministrator(database);
         const authentication = yield* Authentication;
-        const session = yield* authentication.login(accessIdentifier, 'administrator', '192.0.2.1');
+        const session = yield* authentication.login(accessIdentifier, '192.0.2.1');
         const authorized = yield* authentication.authorize(
           session.sessionToken,
           'client.read',

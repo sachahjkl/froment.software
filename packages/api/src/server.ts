@@ -301,10 +301,10 @@ const ApiHandlers = HttpApiBuilder.group(Api, 'system', (handlers) =>
           const request = yield* HttpServerRequest.HttpServerRequest;
           const clientAddress = Option.getOrElse(request.remoteAddress, () => 'unknown');
           const session = yield* authentication
-            .login(payload.accessIdentifier, payload.mode, clientAddress)
+            .login(payload.accessIdentifier, clientAddress)
             .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
           yield* setSessionCookies(session);
-          return { authenticated: true, mode: payload.mode };
+          return { authenticated: true, mode: session.mode };
         }),
       )
       .handle(

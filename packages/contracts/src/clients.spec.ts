@@ -13,14 +13,11 @@ describe('client contracts', () => {
     country: '',
     email: '',
   };
-  it('accepts both account modes', () => {
+  it('accepts a login identifier without an account mode', () => {
     const accessIdentifier = 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA';
-    expect(
-      Schema.decodeUnknownSync(LoginRequest)({ accessIdentifier, mode: 'administrator' }).mode,
-    ).toBe('administrator');
-    expect(Schema.decodeUnknownSync(LoginRequest)({ accessIdentifier, mode: 'client' }).mode).toBe(
-      'client',
-    );
+    expect(Schema.decodeUnknownSync(LoginRequest)({ accessIdentifier })).toEqual({
+      accessIdentifier,
+    });
   });
 
   it('rejects blank client names', () => {

@@ -18,15 +18,14 @@ describe('Authentication', () => {
     http.expectOne('/api/auth/session').flush({ authenticated: true, mode: 'administrator' });
     await expect(status).resolves.toBe('administrator');
 
-    const login = auth.authenticate('AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA', 'administrator');
+    const login = auth.authenticate('AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA');
     const request = http.expectOne('/api/auth/login');
     expect(request.request.method).toBe('POST');
     expect(request.request.body).toEqual({
       accessIdentifier: 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA',
-      mode: 'administrator',
     });
     request.flush({ authenticated: true, mode: 'administrator' });
-    await expect(login).resolves.toEqual({ success: true });
+    await expect(login).resolves.toEqual({ success: true, mode: 'administrator' });
 
     http.verify();
   });
@@ -46,7 +45,7 @@ describe('Authentication', () => {
 
     const administratorRedirect = await TestBed.runInInjectionContext(() => administratorGuard());
     if (administratorRedirect === true) throw new Error('The administrator route was allowed.');
-    expect(router.serializeUrl(administratorRedirect)).toBe('/backoffice/login/admin');
+    expect(router.serializeUrl(administratorRedirect)).toBe('/backoffice/login');
     await expect(
       TestBed.runInInjectionContext(() =>
         clientGuard({} as never, { url: '/backoffice/client?quote=document-id' } as never),
@@ -59,7 +58,7 @@ describe('Authentication', () => {
       clientGuard({} as never, { url: '/backoffice/client?quote=document-id' } as never),
     )) as UrlTree;
     expect(router.serializeUrl(clientRedirect)).toBe(
-      '/backoffice/login/client?returnUrl=%2Fbackoffice%2Fclient%3Fquote%3Ddocument-id',
+      '/backoffice/login?returnUrl=%2Fbackoffice%2Fclient%3Fquote%3Ddocument-id',
     );
   });
 });

@@ -4,59 +4,36 @@ import { RouterTestingHarness } from '@angular/router/testing';
 
 import { Authentication } from '@backoffice/authentication';
 import { Login } from './login';
-import { TabPanelOutlet } from '@shared/tabs/tab-panel';
 
 class AuthStub {
-  readonly calls: Array<{ accessIdentifier: string; mode: string }> = [];
+  readonly calls: Array<string> = [];
 
-  authenticate(accessIdentifier: string, mode: string): Promise<{ success: true }> {
-    this.calls.push({ accessIdentifier, mode });
-    return Promise.resolve({ success: true });
+  constructor(private readonly mode: 'client' | 'administrator') {}
+
+  authenticate(
+    accessIdentifier: string,
+  ): Promise<{ success: true; mode: 'client' | 'administrator' }> {
+    this.calls.push(accessIdentifier);
+    return Promise.resolve({ success: true, mode: this.mode });
   }
 }
 
 describe('Login', () => {
-  it('switches from client to administrator mode', async () => {
-    const auth = new AuthStub();
+  it('redirects an administrator from the single login form', async () => {
+    const auth = new AuthStub('administrator');
     TestBed.configureTestingModule({
       providers: [
-        provideRouter([
-          {
-            path: '',
-            component: Login,
-            children: [
-              {
-                path: 'client',
-                component: TabPanelOutlet,
-                data: { panel: 'login', mode: 'client' },
-              },
-              {
-                path: 'admin',
-                component: TabPanelOutlet,
-                data: { panel: 'login', mode: 'administrator' },
-              },
-            ],
-          },
-        ]),
+        provideRouter([{ path: '', component: Login }]),
         { provide: Authentication, useValue: auth },
       ],
     });
     const router = TestBed.inject(Router);
-    const harness = await RouterTestingHarness.create('/client');
+    const harness = await RouterTestingHarness.create('/');
     const fixture = harness.fixture;
     const root: HTMLElement = fixture.nativeElement;
     expect(root.querySelector('.eyebrow')).toBeNull();
     expect(root.querySelector('h1')?.textContent).toContain('Back office');
-
-    const bootstrapSlot = root.querySelector<HTMLElement>('.bootstrap-slot');
     const bootstrapLink = () => root.querySelector<HTMLAnchorElement>('.bootstrap-link');
-    expect(bootstrapSlot).not.toBeNull();
-    expect(bootstrapLink()).toBeNull();
-
-    root.querySelector<HTMLAnchorElement>('#administrator-tab')?.click();
-    await fixture.whenStable();
-
-    expect(router.url).toBe('/admin');
     expect(root.querySelector('.bootstrap-slot')).not.toBeNull();
     expect(bootstrapLink()?.hasAttribute('appLinkButton')).toBe(false);
     expect(bootstrapLink()?.getAttribute('href')).toBe('/backoffice/bootstrap');
@@ -68,40 +45,21 @@ describe('Login', () => {
     root.querySelector<HTMLFormElement>('form')?.dispatchEvent(new SubmitEvent('submit'));
     await fixture.whenStable();
 
-    expect(auth.calls).toEqual([
-      {
-        accessIdentifier: 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA',
-        mode: 'administrator',
-      },
-    ]);
+    expect(auth.calls).toEqual(['AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA']);
     expect(navigate).toHaveBeenCalledWith('/backoffice/dashboard');
   });
 
   it('returns a client to the requested portal document', async () => {
-    const auth = new AuthStub();
+    const auth = new AuthStub('client');
     TestBed.configureTestingModule({
       providers: [
-        provideRouter([
-          {
-            path: '',
-            component: Login,
-            children: [
-              {
-                path: 'client',
-                component: TabPanelOutlet,
-                data: { panel: 'login', mode: 'client' },
-              },
-            ],
-          },
-        ]),
+        provideRouter([{ path: '', component: Login }]),
         { provide: Authentication, useValue: auth },
       ],
     });
     const router = TestBed.inject(Router);
     const target = '/backoffice/client?quote=01ARZ3NDEKTSV4RRFFQ69G5FAV';
-    const harness = await RouterTestingHarness.create(
-      `/client?returnUrl=${encodeURIComponent(target)}`,
-    );
+    const harness = await RouterTestingHarness.create(`/?returnUrl=${encodeURIComponent(target)}`);
     const root: HTMLElement = harness.fixture.nativeElement;
     const navigate = vi.spyOn(router, 'navigateByUrl').mockResolvedValue(true);
     const input = root.querySelector<HTMLInputElement>('input');

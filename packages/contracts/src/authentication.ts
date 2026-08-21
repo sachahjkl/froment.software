@@ -8,7 +8,6 @@ export type LoginMode = typeof LoginMode.Type;
 
 export const LoginRequest = Schema.Struct({
   accessIdentifier: AccessIdentifier,
-  mode: LoginMode,
 });
 export type LoginRequest = typeof LoginRequest.Type;
 

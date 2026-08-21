@@ -78,13 +78,7 @@ export const translations = {
     'backOffice.backToAffairs': 'Retour aux affaires',
     'backOffice.backToBilling': 'Retour à la facturation',
     'backOffice.backToClients': 'Retour aux clients',
-    'backOffice.mode': 'Type d’accès',
-    'backOffice.mode.client': 'Client',
-    'backOffice.mode.administrator': 'Administrateur',
-    'backOffice.intro.client':
-      'Entrez votre identifiant de connexion pour accéder à vos documents.',
-    'backOffice.intro.administrator':
-      'Entrez votre identifiant de connexion pour administrer le back office.',
+    'backOffice.intro': 'Entrez votre identifiant de connexion pour accéder à votre espace.',
     'backOffice.accessIdentifier': 'Identifiant de connexion',
     'authentication.invalid_credentials': 'Identifiant incorrect.',
     'authentication.rate_limited': 'Trop de tentatives ont échoué. Réessayez plus tard.',
@@ -1212,12 +1206,7 @@ export const translations = {
     'backOffice.backToAffairs': 'Back to engagements',
     'backOffice.backToBilling': 'Back to billing',
     'backOffice.backToClients': 'Back to clients',
-    'backOffice.mode': 'Access type',
-    'backOffice.mode.client': 'Client',
-    'backOffice.mode.administrator': 'Administrator',
-    'backOffice.intro.client': 'Enter your sign-in identifier to access your documents.',
-    'backOffice.intro.administrator':
-      'Enter your sign-in identifier to administer the back office.',
+    'backOffice.intro': 'Enter your sign-in identifier to access your account.',
     'backOffice.accessIdentifier': 'Sign-in identifier',
     'authentication.invalid_credentials': 'Incorrect identifier.',
     'authentication.rate_limited': 'Too many attempts failed. Try again later.',

@@ -26,12 +26,12 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 const deploymentMetadata = {
   commit: '6c9757782e249d4db6ffb804349b7da620494565',
   packages: [
-    { name: '@froment/api', version: '0.2.0' },
-    { name: '@froment/contracts', version: '0.2.0' },
-    { name: '@froment/documents', version: '0.2.0' },
-    { name: '@froment/l10n', version: '0.2.0' },
-    { name: '@froment/web', version: '0.2.0' },
-    { name: 'froment-software', version: '0.2.0' },
+    { name: '@froment/api', version: '0.2.1' },
+    { name: '@froment/contracts', version: '0.2.1' },
+    { name: '@froment/documents', version: '0.2.1' },
+    { name: '@froment/l10n', version: '0.2.1' },
+    { name: '@froment/web', version: '0.2.1' },
+    { name: 'froment-software', version: '0.2.1' },
   ],
 };
 const emptyClientDetails = {
@@ -316,13 +316,12 @@ describe('HTTP server', () => {
         headers: { 'content-type': 'application/json', origin: baseUrl },
         body: JSON.stringify({
           accessIdentifier: 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA',
-          mode: 'administrator',
         }),
       }),
       fetch(`${baseUrl}/api/auth/login`, {
         method: 'POST',
         headers: { 'content-type': 'application/json', origin: baseUrl },
-        body: JSON.stringify({ accessIdentifier: result.accessIdentifier, mode: 'administrator' }),
+        body: JSON.stringify({ accessIdentifier: result.accessIdentifier }),
       }),
     ]);
     expect(loginRejected.status).toBe(401);
@@ -333,7 +332,6 @@ describe('HTTP server', () => {
       headers: { 'content-type': 'application/json', origin: baseUrl },
       body: JSON.stringify({
         accessIdentifier: 'CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC',
-        mode: 'administrator',
       }),
     });
     expect(firstLimitedIdentifierAttempt.status).toBe(429);
@@ -342,7 +340,6 @@ describe('HTTP server', () => {
       headers: { 'content-type': 'application/json', origin: baseUrl },
       body: JSON.stringify({
         accessIdentifier: 'CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC',
-        mode: 'administrator',
       }),
     });
     expect(rateLimited.status).toBe(429);
@@ -350,7 +347,7 @@ describe('HTTP server', () => {
     const login = await fetch(`${baseUrl}/api/auth/login`, {
       method: 'POST',
       headers: { 'content-type': 'application/json', origin: baseUrl },
-      body: JSON.stringify({ accessIdentifier: result.accessIdentifier, mode: 'administrator' }),
+      body: JSON.stringify({ accessIdentifier: result.accessIdentifier }),
     });
     expect(login.status).toBe(200);
     await expect(login.json()).resolves.toEqual({
@@ -359,18 +356,11 @@ describe('HTTP server', () => {
     });
     expect(login.headers.getSetCookie()).toHaveLength(2);
 
-    const modeMismatch = await fetch(`${baseUrl}/api/auth/login`, {
-      method: 'POST',
-      headers: { 'content-type': 'application/json', origin: baseUrl },
-      body: JSON.stringify({ accessIdentifier: result.accessIdentifier, mode: 'client' }),
-    });
-    expect(modeMismatch.status).toBe(429);
-
     for (let attempt = 0; attempt < 11; attempt += 1) {
       const extraLogin = await fetch(`${baseUrl}/api/auth/login`, {
         method: 'POST',
         headers: { 'content-type': 'application/json', origin: baseUrl },
-        body: JSON.stringify({ accessIdentifier: result.accessIdentifier, mode: 'administrator' }),
+        body: JSON.stringify({ accessIdentifier: result.accessIdentifier }),
       });
       expect(extraLogin.status).toBe(200);
     }
@@ -412,7 +402,6 @@ describe('HTTP server', () => {
       headers: { 'content-type': 'application/json', origin: baseUrl },
       body: JSON.stringify({
         accessIdentifier: administratorAccessIdentifier,
-        mode: 'administrator',
       }),
     });
     expect(administratorLogin.status).toBe(200);
@@ -564,7 +553,7 @@ describe('HTTP server', () => {
     const clientLogin = await fetch(`${baseUrl}/api/auth/login`, {
       method: 'POST',
       headers: { 'content-type': 'application/json', origin: baseUrl },
-      body: JSON.stringify({ accessIdentifier: access.accessIdentifier, mode: 'client' }),
+      body: JSON.stringify({ accessIdentifier: access.accessIdentifier }),
     });
     expect(clientLogin.status).toBe(200);
     const clientCookieHeader = clientLogin.headers
@@ -613,7 +602,7 @@ describe('HTTP server', () => {
     const rotatedLogin = await fetch(`${baseUrl}/api/auth/login`, {
       method: 'POST',
       headers: { 'content-type': 'application/json', origin: baseUrl },
-      body: JSON.stringify({ accessIdentifier: rotatedAccess.accessIdentifier, mode: 'client' }),
+      body: JSON.stringify({ accessIdentifier: rotatedAccess.accessIdentifier }),
     });
     expect(rotatedLogin.status).toBe(200);
     const rotatedSession = await fetch(`${baseUrl}/api/auth/session`, {
@@ -786,7 +775,6 @@ describe('HTTP server', () => {
       headers: { 'content-type': 'application/json', origin: baseUrl },
       body: JSON.stringify({
         accessIdentifier: administratorAccessIdentifier,
-        mode: 'administrator',
       }),
     });
     expect(login.status).toBe(200);
@@ -897,7 +885,7 @@ describe('HTTP server', () => {
     const clientLogin = await fetch(`${baseUrl}/api/auth/login`, {
       method: 'POST',
       headers: { 'content-type': 'application/json', origin: baseUrl },
-      body: JSON.stringify({ accessIdentifier: clientAccess.accessIdentifier, mode: 'client' }),
+      body: JSON.stringify({ accessIdentifier: clientAccess.accessIdentifier }),
     });
     expect(clientLogin.status).toBe(200);
     const clientCookie = clientLogin.headers
@@ -1698,7 +1686,7 @@ describe('HTTP server', () => {
     const foreignLogin = await fetch(`${baseUrl}/api/auth/login`, {
       method: 'POST',
       headers: { 'content-type': 'application/json', origin: baseUrl },
-      body: JSON.stringify({ accessIdentifier: foreignAccess.accessIdentifier, mode: 'client' }),
+      body: JSON.stringify({ accessIdentifier: foreignAccess.accessIdentifier }),
     });
     const foreignCookie = foreignLogin.headers
       .getSetCookie()
@@ -2008,7 +1996,7 @@ describe('HTTP server', () => {
     const response = await fetch(`${baseUrl}/api/auth/login`, {
       method: 'POST',
       headers: { 'content-type': 'application/json', origin: baseUrl },
-      body: JSON.stringify({ accessIdentifier: 'A'.repeat(33_000), mode: 'administrator' }),
+      body: JSON.stringify({ accessIdentifier: 'A'.repeat(33_000) }),
     });
     expect(response.status).toBe(413);
     expect(response.headers.get('cache-control')).toBe('no-store');
@@ -2055,7 +2043,7 @@ describe('HTTP server', () => {
   });
 
   it('serves the application shell for refreshed back-office routes', async () => {
-    const response = await fetch(`${baseUrl}/backoffice/login/client`, {
+    const response = await fetch(`${baseUrl}/backoffice/login`, {
       headers: { accept: 'text/html' },
     });
     expect(response.status).toBe(200);
@@ -2065,15 +2053,15 @@ describe('HTTP server', () => {
     expect(html).not.toContain('Audit et rénovation de logiciels métier.');
   });
 
-  it('bootstraps the client login route from the application shell', async () => {
+  it('bootstraps the login route from the application shell', async () => {
     const browser = await chromium.launch({ executablePath: process.env['CHROMIUM_PATH'] });
     try {
       const page = await browser.newPage();
-      await page.goto(`${baseUrl}/backoffice/login/client`);
+      await page.goto(`${baseUrl}/backoffice/login`);
       await page.locator('#back-office-title').waitFor();
 
       expect(await page.locator('#back-office-title').textContent()).toBeTruthy();
-      expect(await page.locator('#client-tab').getAttribute('aria-current')).toBe('page');
+      expect(await page.locator('app-tabs').count()).toBe(0);
       await page.locator('#back-office-access-identifier').waitFor();
       expect(await page.locator('main app-home').count()).toBe(0);
     } finally {

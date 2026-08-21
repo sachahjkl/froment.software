@@ -16,7 +16,7 @@ import { firstValueFrom } from 'rxjs';
 import { decodeApiFailure, type ApiFailure } from '@shared/api-outcome';
 
 export type AuthenticationOutcome =
-  | { readonly success: true }
+  | { readonly success: true; readonly mode: LoginModeValue }
   | ApiFailure<AuthenticationFailureValue, 'authentication.error'>;
 
 @Injectable({ providedIn: 'root' })
@@ -36,10 +36,7 @@ export class Authentication {
     }
   }
 
-  async authenticate(
-    accessIdentifier: string,
-    mode: LoginModeValue,
-  ): Promise<AuthenticationOutcome> {
+  async authenticate(accessIdentifier: string): Promise<AuthenticationOutcome> {
     if (!this.isBrowser) return { success: false, code: 'authentication.error' };
     let parsedIdentifier: AccessIdentifierValue;
     try {
@@ -50,10 +47,10 @@ export class Authentication {
 
     try {
       const response = await firstValueFrom(
-        this.http.post<unknown>('/api/auth/login', { accessIdentifier: parsedIdentifier, mode }),
+        this.http.post<unknown>('/api/auth/login', { accessIdentifier: parsedIdentifier }),
       );
       const session = Schema.decodeUnknownSync(SessionStatus)(response);
-      if (session.authenticated && session.mode === mode) return { success: true };
+      if (session.authenticated) return { success: true, mode: session.mode };
       return { success: false, code: 'authentication.error' };
     } catch (error) {
       return decodeApiFailure({ cause: error }, AuthenticationFailure, 'authentication.error');
@@ -75,14 +72,14 @@ export const administratorGuard = async () => {
   const auth = inject(Authentication);
   const router = inject(Router);
   if ((await auth.sessionMode()) === 'administrator') return true;
-  return router.createUrlTree(['/backoffice/login/admin']);
+  return router.createUrlTree(['/backoffice/login']);
 };
 
 export const clientGuard: CanActivateFn = async (_route, state) => {
   const auth = inject(Authentication);
   const router = inject(Router);
   if ((await auth.sessionMode()) === 'client') return true;
-  return router.createUrlTree(['/backoffice/login/client'], {
+  return router.createUrlTree(['/backoffice/login'], {
     queryParams: { returnUrl: state.url },
   });
 };

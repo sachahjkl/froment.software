@@ -98,19 +98,6 @@ export const routes: Routes = [
       descriptionKey: 'page.description.back_office',
       robots: 'noindex, nofollow',
     },
-    children: [
-      { path: '', redirectTo: 'client', pathMatch: 'full' },
-      {
-        path: 'client',
-        component: TabPanelOutlet,
-        data: { panel: 'login', mode: 'client' },
-      },
-      {
-        path: 'admin',
-        component: TabPanelOutlet,
-        data: { panel: 'login', mode: 'administrator' },
-      },
-    ],
   },
   {
     path: 'backoffice/bootstrap',

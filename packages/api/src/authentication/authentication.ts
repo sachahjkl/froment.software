@@ -3,6 +3,7 @@ import {
   AuthenticationRateLimited,
   AuthenticationRequired,
   CsrfRejected,
+  LoginMode,
   PermissionDenied,
   SessionRejected,
   type AccessIdentifierValue,
@@ -16,7 +17,11 @@ import { Audit } from '../audit/audit.js';
 import { AuthenticationConfig, hmac } from './authentication-config.js';
 import { generateSession, renewIdleExpiry } from './session.js';
 
-const CredentialLookup = Schema.Struct({ id: Schema.String, userId: Schema.String });
+const CredentialLookup = Schema.Struct({
+  id: Schema.String,
+  userId: Schema.String,
+  mode: LoginMode,
+});
 const SessionLookup = Schema.Struct({ id: Schema.String, absoluteExpiresAt: Schema.Number });
 interface LoginFailureState {
   readonly failures: number;
@@ -36,6 +41,10 @@ export interface SessionTokens {
   readonly expiresAt: Date;
 }
 
+export interface AuthenticatedSession extends SessionTokens {
+  readonly mode: LoginModeValue;
+}
+
 export interface Principal {
   readonly userId: string;
   readonly mode: LoginModeValue;
@@ -44,10 +53,9 @@ export interface Principal {
 export interface AuthenticationService {
   readonly login: (
     accessIdentifier: AccessIdentifierValue,
-    mode: LoginModeValue,
     clientAddress: string,
   ) => Effect.Effect<
-    SessionTokens,
+    AuthenticatedSession,
     AuthenticationRejected | AuthenticationRateLimited | DatabaseError
   >;
   readonly sessionStatus: (
@@ -132,7 +140,6 @@ export const AuthenticationLive = Layer.effect(
 
     const login = Effect.fn('Authentication.login')(function* (
       accessIdentifier: AccessIdentifierValue,
-      mode: LoginModeValue,
       clientAddress: string,
     ) {
       const accessHmac = hmac(config.accessHmacKey, accessIdentifier);
@@ -140,18 +147,18 @@ export const AuthenticationLive = Layer.effect(
         try: () => {
           const row = database.sqlite
             .prepare(
-              `select access_credentials.id, access_credentials.user_id as userId
+              `select access_credentials.id, access_credentials.user_id as userId,
+                      users.kind as mode
                    from access_credentials
                    join users on users.id = access_credentials.user_id
                    left join clients on clients.id = users.id
                    where access_credentials.secret_hmac = ?
                       and access_credentials.revoked_at is null
                       and users.disabled_at is null
-                      and users.kind = ?
-                      and (users.kind <> 'client' or clients.id is not null)
-                    limit 1`,
+                       and (users.kind <> 'client' or clients.id is not null)
+                     limit 1`,
             )
-            .get(accessHmac, mode);
+            .get(accessHmac);
           if (row === undefined) return undefined;
           return Schema.decodeUnknownSync(CredentialLookup)(row);
         },
@@ -232,7 +239,7 @@ export const AuthenticationLive = Layer.effect(
                 actorUserId: credential.userId,
                 resourceType: 'session',
                 resourceId: session.id,
-                metadata: { mode },
+                metadata: { mode: credential.mode },
                 occurredAt: now,
               });
             })
@@ -244,6 +251,7 @@ export const AuthenticationLive = Layer.effect(
       });
 
       return {
+        mode: credential.mode,
         sessionToken: session.sessionToken,
         csrfToken: session.csrfToken,
         expiresAt: session.expiresAt,
