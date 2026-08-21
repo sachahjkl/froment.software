@@ -3,6 +3,7 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 import {
   Ulid,
   type ClientSummaryValue,
+  type AuditEventValue,
   type InvoiceDetailValue,
   type InvoiceStatusValue,
   type OrderSummaryValue,
@@ -127,9 +128,10 @@ export class AffairDetail {
     }
     this.state.set('loading');
     try {
-      const [quoteOutcome, orders] = await Promise.all([
+      const [quoteOutcome, orders, events] = await Promise.all([
         this.quotesApi.get(quoteId.value),
         this.ordersApi.list(),
+        this.quotesApi.listAffairEvents(quoteId.value),
       ]);
       if (!quoteOutcome.success) {
         this.state.set('error');
@@ -147,7 +149,11 @@ export class AffairDetail {
       this.order.set(order);
       this.invoice.set(invoice);
       if (clientOutcome.success) this.client.set(clientOutcome.result);
-      this.timeline.set(this.makeTimeline(quote, order, invoice));
+      this.timeline.set(
+        events.length === 0
+          ? this.makeTimeline(quote, order, invoice)
+          : events.map((event) => this.eventTimelineItem(event)),
+      );
       this.state.set('ready');
     } catch {
       this.state.set('error');
@@ -212,5 +218,25 @@ export class AffairDetail {
 
   private mailto(email: string, subject: string, body: string): string {
     return `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+  }
+
+  private eventTimelineItem(event: AuditEventValue): TimelineItem {
+    let label: TranslationKey = 'backOffice.affair.timeline.event';
+    if (event.action === 'quote.created') label = 'backOffice.affair.timeline.quoteCreated';
+    if (event.action === 'quote.revised') label = 'backOffice.affair.timeline.quoteRevised';
+    if (event.action === 'quote.sent') label = 'backOffice.affair.timeline.quoteSent';
+    if (event.action === 'quote.accepted') label = 'backOffice.affair.timeline.orderConfirmed';
+    if (event.action === 'quote.expired') label = 'backOffice.affair.timeline.quoteExpired';
+    if (event.action === 'quote.cancelled') label = 'backOffice.affair.timeline.quoteCancelled';
+    if (event.action === 'invoice.created') label = 'backOffice.affair.timeline.invoiceCreated';
+    if (event.action === 'invoice.revised') label = 'backOffice.affair.timeline.invoiceRevised';
+    if (event.action === 'invoice.issued') label = 'backOffice.affair.timeline.invoiceIssued';
+    if (event.action === 'invoice.marked-paid') label = 'backOffice.affair.timeline.invoicePaid';
+    if (event.action === 'invoice.voided') label = 'backOffice.affair.timeline.invoiceVoided';
+    return {
+      id: event.id,
+      date: event.occurredAt,
+      label,
+    };
   }
 }

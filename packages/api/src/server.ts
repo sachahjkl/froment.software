@@ -22,6 +22,7 @@ import { createServer } from 'node:http';
 import { randomUUID } from 'node:crypto';
 
 import { Bootstrap } from './bootstrap/bootstrap.js';
+import { Audit } from './audit/audit.js';
 import { Authentication } from './authentication/authentication.js';
 import { AuthenticationConfig, hmac } from './authentication/authentication-config.js';
 import { Clients } from './clients/clients.js';
@@ -556,6 +557,17 @@ const QuoteHandlers = HttpApiBuilder.group(Api, 'quotes', (handlers) =>
           yield* authorizeAdministrator('quote.read');
           return yield* (yield* Quotes)
             .get(params.quoteId)
+            .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
+        }),
+      )
+      .handle(
+        'affairEventList',
+        Effect.fn('affairEventList')(function* ({ params }) {
+          yield* setPrivateResponseHeaders;
+          yield* authorizeAdministrator('quote.read');
+          yield* authorizeAdministrator('audit.read');
+          return yield* (yield* Audit)
+            .listAffair(params.quoteId)
             .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
         }),
       )

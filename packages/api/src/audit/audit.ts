@@ -1,17 +1,19 @@
 import {
   AuditAction,
+  AuditEvent,
   AuditMetadata,
   AuditResourceType,
   Ulid,
   type AuditActionValue,
+  type AuditEventValue,
   type AuditMetadataValue,
   type AuditResourceTypeValue,
   type UlidValue,
 } from '@froment/contracts';
-import { Context, Effect, Layer, Schema } from 'effect';
+import { Context, DateTime, Effect, Layer, Schema } from 'effect';
 import { ulid } from 'ulid';
 
-import { Database } from '../database/database.js';
+import { Database, DatabaseError } from '../database/database.js';
 
 const AuditInsert = Schema.Struct({
   action: AuditAction,
@@ -33,6 +35,9 @@ export interface AuditInsert {
 
 export interface AuditService {
   readonly insert: (event: AuditInsert) => UlidValue;
+  readonly listAffair: (
+    quoteId: UlidValue,
+  ) => Effect.Effect<ReadonlyArray<AuditEventValue>, DatabaseError>;
 }
 
 export class Audit extends Context.Service<Audit, AuditService>()('@froment/api/Audit') {}
@@ -65,6 +70,46 @@ export const AuditLive = Layer.effect(
       return id;
     };
 
-    return Audit.of({ insert });
+    const listAffair = Effect.fn('Audit.listAffair')(function* (quoteId: UlidValue) {
+      return yield* Effect.try({
+        try: () =>
+          database.sqlite
+            .prepare(
+              `select id, action, actor_user_id as actorUserId,
+                      resource_type as resourceType, resource_id as resourceId,
+                      occurred_at as occurredAt, metadata
+               from audit_events
+               where (resource_type = 'quote' and resource_id = ?)
+                  or (resource_type = 'invoice' and resource_id in (
+                    select invoices.id from invoices
+                    join orders on orders.id = invoices.order_id
+                    where orders.quote_id = ?
+                  ))
+               order by occurred_at, id`,
+            )
+            .all(quoteId, quoteId)
+            .map((row) => {
+              const value = Schema.decodeUnknownSync(
+                Schema.Struct({
+                  id: Ulid,
+                  action: AuditAction,
+                  actorUserId: Schema.NullOr(Ulid),
+                  resourceType: AuditResourceType,
+                  resourceId: Schema.String,
+                  occurredAt: Schema.Int,
+                  metadata: Schema.String,
+                }),
+              )(row);
+              return Schema.decodeUnknownSync(AuditEvent)({
+                ...value,
+                occurredAt: DateTime.formatIso(DateTime.makeUnsafe(value.occurredAt)),
+                metadata: JSON.parse(value.metadata),
+              });
+            }),
+        catch: (cause) => new DatabaseError({ operation: 'list affair audit events', cause }),
+      });
+    });
+
+    return Audit.of({ insert, listAffair });
   }),
 );

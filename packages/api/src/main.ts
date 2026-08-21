@@ -45,7 +45,7 @@ const ServicesLive = Layer.mergeAll(
   DeploymentLive,
   ClientPortalLive,
 ).pipe(
-  Layer.provide(AuditLive),
+  Layer.provideMerge(AuditLive),
   Layer.provideMerge(AuthenticationConfigLive),
   Layer.provideMerge(DatabaseLive),
 );

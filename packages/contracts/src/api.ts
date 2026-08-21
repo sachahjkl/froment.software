@@ -32,6 +32,7 @@ import {
   ClientVersionConflict,
 } from './clients.js';
 import { Ulid } from './identifiers.js';
+import { AuditEvent } from './audit.js';
 import { OrderDocumentArtifact, OrderList, OrderNotFound } from './orders.js';
 import {
   QuoteCancelRequest,
@@ -321,6 +322,14 @@ export class QuotesApi extends HttpApiGroup.make('quotes', { topLevel: true }).a
       AuthenticationRequired.pipe(HttpApiSchema.status(401)),
       PermissionDenied.pipe(HttpApiSchema.status(403)),
       QuoteNotFound.pipe(HttpApiSchema.status(404)),
+    ],
+  }),
+  HttpApiEndpoint.get('affairEventList', '/api/affairs/:quoteId/events', {
+    params: { quoteId: Ulid },
+    success: Schema.Array(AuditEvent),
+    error: [
+      AuthenticationRequired.pipe(HttpApiSchema.status(401)),
+      PermissionDenied.pipe(HttpApiSchema.status(403)),
     ],
   }),
   HttpApiEndpoint.get('quotePreview', '/api/quotes/:quoteId/revisions/:version/preview', {

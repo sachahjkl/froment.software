@@ -2,11 +2,13 @@ import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import {
   QuoteDetail,
+  AuditEvent,
   DocumentArtifact,
   QuoteFailure,
   QuoteList,
   QuoteSendResult,
   type QuoteCreateRequestValue,
+  type AuditEventValue,
   type QuoteCancelRequestValue,
   type DocumentArtifactValue,
   type QuoteDetailValue,
@@ -42,6 +44,11 @@ export class QuotesApi {
       QuoteFailure,
       'quote.error',
     );
+  }
+
+  async listAffairEvents(quoteId: UlidValue): Promise<ReadonlyArray<AuditEventValue>> {
+    const response = await firstValueFrom(this.http.get<unknown>(`/api/affairs/${quoteId}/events`));
+    return Schema.decodeUnknownSync(Schema.Array(AuditEvent))(response);
   }
 
   async create(request: QuoteCreateRequestValue): Promise<QuoteOutcome<QuoteDetailValue>> {
