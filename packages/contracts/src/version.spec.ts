@@ -5,7 +5,7 @@ import { DeploymentMetadata } from './version.js';
 
 const validMetadata = {
   commit: '6c9757782e249d4db6ffb804349b7da620494565',
-  packages: [{ name: '@froment/api', version: '0.0.0' }],
+  packages: [{ name: '@froment/api', version: '0.1.0' }],
 };
 
 describe('deployment metadata contract', () => {
