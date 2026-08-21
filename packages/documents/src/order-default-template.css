@@ -2,7 +2,7 @@ html {
   width: 100%;
   min-height: 297mm;
   margin: 0;
-  background: #efefef;
+  background: #fff;
 }
 body {
   width: 210mm;
@@ -10,7 +10,7 @@ body {
   margin: 0 auto;
 }
 froment-order-document {
-  --paper: #efefef;
+  --paper: #fff;
   --ink: #111;
   --line: #555;
   display: block;

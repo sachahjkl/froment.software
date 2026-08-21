@@ -2,7 +2,7 @@ html {
   width: 100%;
   min-height: 297mm;
   margin: 0;
-  background: #efefef;
+  background: #fff;
 }
 
 body {
@@ -12,7 +12,7 @@ body {
 }
 
 froment-invoice-document {
-  --paper: #efefef;
+  --paper: #fff;
   --ink: #111;
   --line: #555;
   display: block;
