@@ -30,12 +30,12 @@
       }
     </div>
     @if (invoice(); as invoice) { @if (invoice.status === 'draft' || invoice.status === 'issued') {
-    <a appButton variant="primary" [routerLink]="['/backoffice/invoices', invoice.id]">
+    <a appLinkButton variant="primary" [routerLink]="['/backoffice/invoices', invoice.id]">
       {{ i18n.t('backOffice.affair.nextAction.openInvoice') }}
     </a>
     } } @else if (order(); as order) {
     <a
-      appButton
+      appLinkButton
       variant="primary"
       routerLink="/backoffice/invoices/new"
       [queryParams]="{ orderId: order.id }"
@@ -43,16 +43,16 @@
       {{ i18n.t('backOffice.affair.nextAction.createInvoiceButton') }}
     </a>
     } @else if (quote.status === 'draft' || quote.status === 'sent' || quote.status === 'expired') {
-    <a appButton variant="primary" [routerLink]="['/backoffice/quotes', quote.id]">
+    <a appLinkButton variant="primary" [routerLink]="['/backoffice/quotes', quote.id]">
       {{ i18n.t('backOffice.affair.nextAction.openQuote') }}
     </a>
     }
   </section>
 
   @if (invoiceReminderHref(); as reminderHref) {
-  <a appButton [href]="reminderHref">{{ i18n.t('backOffice.affair.reminder.invoice') }}</a>
+  <a appLinkButton [href]="reminderHref">{{ i18n.t('backOffice.affair.reminder.invoice') }}</a>
   } @else if (quoteReminderHref(); as reminderHref) {
-  <a appButton [href]="reminderHref">{{ i18n.t('backOffice.affair.reminder.quote') }}</a>
+  <a appLinkButton [href]="reminderHref">{{ i18n.t('backOffice.affair.reminder.quote') }}</a>
   }
 
   <section aria-labelledby="documents-title">
@@ -64,7 +64,7 @@
             <th>{{ i18n.t('backOffice.affair.document') }}</th>
             <th>{{ i18n.t('backOffice.affair.reference') }}</th>
             <th>{{ i18n.t('backOffice.affair.status') }}</th>
-            <th>{{ i18n.t('backOffice.affair.action') }}</th>
+            <th class="actions-column">{{ i18n.t('backOffice.affair.action') }}</th>
           </tr>
         </thead>
         <tbody>
@@ -72,14 +72,19 @@
             <td>{{ i18n.t('backOffice.affair.quote') }}</td>
             <td>{{ quote.reference }}</td>
             <td><span appBadge>{{ quoteStatus(quote.status) }}</span></td>
-            <td>
-              <a
-                class="external-link"
-                [href]="'/api/quotes/' + quote.id + '/revisions/' + quote.version + '/preview'"
-                target="_blank"
-                rel="noopener noreferrer"
-                >{{ i18n.t('backOffice.open') }}<app-icon name="external"
-              /></a>
+            <td class="actions-column">
+              <div class="document-actions">
+                <a
+                  class="external-link"
+                  [href]="'/api/quotes/' + quote.id + '/revisions/' + quote.version + '/preview'"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  >{{ i18n.t('backOffice.open') }}<app-icon name="external"
+                /></a>
+                <button appButton type="button" (click)="copyPortalUrl('quote', quote.id)">
+                  {{ portalCopyLabel('quote', quote.id) }}
+                </button>
+              </div>
             </td>
           </tr>
           @if (order(); as order) {
@@ -87,14 +92,19 @@
             <td>{{ i18n.t('backOffice.affair.order') }}</td>
             <td>{{ order.reference }}</td>
             <td><span appBadge>{{ i18n.t('backOffice.affair.confirmed') }}</span></td>
-            <td>
-              <a
-                class="external-link"
-                [href]="'/api/orders/' + order.id + '/preview'"
-                target="_blank"
-                rel="noopener noreferrer"
-                >{{ i18n.t('backOffice.open') }}<app-icon name="external"
-              /></a>
+            <td class="actions-column">
+              <div class="document-actions">
+                <a
+                  class="external-link"
+                  [href]="'/api/orders/' + order.id + '/preview'"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  >{{ i18n.t('backOffice.open') }}<app-icon name="external"
+                /></a>
+                <button appButton type="button" (click)="copyPortalUrl('order', order.id)">
+                  {{ portalCopyLabel('order', order.id) }}
+                </button>
+              </div>
             </td>
           </tr>
           } @if (invoice(); as invoice) {
@@ -104,14 +114,19 @@
             <td>
               <span appBadge>{{ invoiceStatus(invoice.status) }}</span>
             </td>
-            <td>
-              <a
-                class="external-link"
-                [href]="'/api/invoices/' + invoice.id + '/revisions/' + invoice.version + '/preview'"
-                target="_blank"
-                rel="noopener noreferrer"
-                >{{ i18n.t('backOffice.open') }}<app-icon name="external"
-              /></a>
+            <td class="actions-column">
+              <div class="document-actions">
+                <a
+                  class="external-link"
+                  [href]="'/api/invoices/' + invoice.id + '/revisions/' + invoice.version + '/preview'"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  >{{ i18n.t('backOffice.open') }}<app-icon name="external"
+                /></a>
+                <button appButton type="button" (click)="copyPortalUrl('invoice', invoice.id)">
+                  {{ portalCopyLabel('invoice', invoice.id) }}
+                </button>
+              </div>
             </td>
           </tr>
           }

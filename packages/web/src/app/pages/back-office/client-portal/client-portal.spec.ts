@@ -1,5 +1,5 @@
 import { TestBed } from '@angular/core/testing';
-import { provideRouter } from '@angular/router';
+import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
 import {
   type ClientInvoiceListValue,
   type ClientOrderListValue,
@@ -135,5 +135,29 @@ describe('ClientPortal', () => {
 
     expect(api.calls).toBe(callsBeforeRetry + 1);
     expect(root.textContent).toContain('Security audit');
+  });
+
+  it('focuses the document selected by a portal permalink', async () => {
+    const api = new ClientPortalApiStub();
+    TestBed.configureTestingModule({
+      providers: [
+        provideRouter([]),
+        {
+          provide: ActivatedRoute,
+          useValue: { snapshot: { queryParamMap: convertToParamMap({ order: orderId }) } },
+        },
+        { provide: ClientPortalApi, useValue: api },
+        { provide: Authentication, useValue: { signOut: () => Promise.resolve(true) } },
+      ],
+    });
+    const fixture = TestBed.createComponent(ClientPortal);
+    await fixture.whenStable();
+    await fixture.componentInstance.load();
+    await fixture.whenStable();
+    const root: HTMLElement = fixture.nativeElement;
+    const row = root.querySelector<HTMLElement>(`#client-order-${orderId}`);
+
+    expect(row?.classList.contains('target-document')).toBe(true);
+    expect(row?.tabIndex).toBe(-1);
   });
 });

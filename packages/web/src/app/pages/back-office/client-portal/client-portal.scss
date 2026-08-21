@@ -2,6 +2,11 @@
   display: block;
 }
 
+.target-document {
+  outline: 2px solid var(--color-button-primary-highlight);
+  outline-offset: -2px;
+}
+
 .client-page {
   padding: var(--page-header-y) var(--page-x);
 }

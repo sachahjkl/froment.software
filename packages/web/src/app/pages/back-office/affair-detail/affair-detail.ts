@@ -1,3 +1,4 @@
+import { DOCUMENT } from '@angular/common';
 import { afterNextRender, ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import {
@@ -23,12 +24,15 @@ import { Button } from '@shared/button/button';
 import { DataTable } from '@shared/data-table/data-table';
 import { Icon } from '@shared/icon/icon';
 import { Notice } from '@shared/notice/notice';
+import { TextCopy } from '@shared/text-copy';
 
 interface TimelineItem {
   readonly id: string;
   readonly date: string;
   readonly label: TranslationKey;
 }
+
+type PortalDocumentKind = 'quote' | 'order' | 'invoice';
 
 @Component({
   selector: 'app-affair-detail',
@@ -40,16 +44,19 @@ interface TimelineItem {
 export class AffairDetail {
   protected readonly i18n = inject(I18nService);
   private readonly route = inject(ActivatedRoute);
+  private readonly document = inject(DOCUMENT);
   private readonly quotesApi = inject(QuotesApi);
   private readonly ordersApi = inject(OrdersApi);
   private readonly invoicesApi = inject(InvoicesApi);
   private readonly clientsApi = inject(ClientsApi);
+  private readonly textCopy = inject(TextCopy);
   protected readonly state = signal<'loading' | 'ready' | 'error'>('loading');
   protected readonly quote = signal<QuoteDetailValue | undefined>(undefined);
   protected readonly order = signal<OrderSummaryValue | undefined>(undefined);
   protected readonly invoice = signal<InvoiceDetailValue | undefined>(undefined);
   protected readonly client = signal<ClientSummaryValue | undefined>(undefined);
   protected readonly timeline = signal<readonly TimelineItem[]>([]);
+  protected readonly copiedPortalLink = signal('');
 
   constructor() {
     afterNextRender(() => void this.load());
@@ -95,6 +102,7 @@ export class AffairDetail {
       this.i18n.tf('backOffice.affair.reminder.quoteBody', {
         name: client.displayName,
         reference: quote.reference,
+        url: this.portalUrl('quote', quote.id),
       }),
     );
   }
@@ -117,7 +125,28 @@ export class AffairDetail {
         name: client.displayName,
         reference,
         dueDate: invoice.currentRevision.dueDate,
+        url: this.portalUrl('invoice', invoice.id),
       }),
+    );
+  }
+
+  protected portalUrl(kind: PortalDocumentKind, id: string): string {
+    const url = new URL('/backoffice/client', this.document.location?.origin ?? 'http://localhost');
+    url.searchParams.set(kind, id);
+    return url.toString();
+  }
+
+  protected async copyPortalUrl(kind: PortalDocumentKind, id: string): Promise<void> {
+    if (await this.textCopy.copy(this.portalUrl(kind, id))) {
+      this.copiedPortalLink.set(`${kind}-${id}`);
+    }
+  }
+
+  protected portalCopyLabel(kind: PortalDocumentKind, id: string): string {
+    return this.i18n.t(
+      this.copiedPortalLink() === `${kind}-${id}`
+        ? 'backOffice.affair.portalLinkCopied'
+        : 'backOffice.affair.copyPortalLink',
     );
   }
 

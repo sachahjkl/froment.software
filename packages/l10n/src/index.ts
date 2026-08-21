@@ -155,6 +155,8 @@ export const translations = {
     'backOffice.affair.order': 'Commande',
     'backOffice.affair.invoice': 'Facture',
     'backOffice.affair.confirmed': 'Confirmée',
+    'backOffice.affair.copyPortalLink': 'Copier le lien portail',
+    'backOffice.affair.portalLinkCopied': 'Lien portail copié',
     'backOffice.affair.timeline': 'Chronologie',
     'backOffice.affair.timeline.date': 'Date',
     'backOffice.affair.timeline.eventHeader': 'Événement',
@@ -189,10 +191,10 @@ export const translations = {
     'backOffice.affair.reminder.invoice': 'Préparer une relance de la facture',
     'backOffice.affair.reminder.quoteSubject': 'Relance pour le devis {reference}',
     'backOffice.affair.reminder.quoteBody':
-      'Bonjour {name},\n\nJe reviens vers vous concernant le devis {reference}.\n\nCordialement,',
+      'Bonjour {name},\n\nJe reviens vers vous concernant le devis {reference} :\n{url}\n\nCordialement,',
     'backOffice.affair.reminder.invoiceSubject': 'Relance pour la facture {reference}',
     'backOffice.affair.reminder.invoiceBody':
-      'Bonjour {name},\n\nLa facture {reference}, échue le {dueDate}, reste en attente de règlement.\n\nCordialement,',
+      'Bonjour {name},\n\nLa facture {reference}, échue le {dueDate}, reste en attente de règlement :\n{url}\n\nCordialement,',
     'backOffice.affairs.intro': 'Suivez chaque affaire du devis au règlement de la facture.',
     'backOffice.affairs.tabs': 'Étapes des affaires',
     'backOffice.affairs.attention': 'À traiter',
@@ -1285,6 +1287,8 @@ export const translations = {
     'backOffice.affair.order': 'Order',
     'backOffice.affair.invoice': 'Invoice',
     'backOffice.affair.confirmed': 'Confirmed',
+    'backOffice.affair.copyPortalLink': 'Copy portal link',
+    'backOffice.affair.portalLinkCopied': 'Portal link copied',
     'backOffice.affair.timeline': 'Timeline',
     'backOffice.affair.timeline.date': 'Date',
     'backOffice.affair.timeline.eventHeader': 'Event',
@@ -1319,10 +1323,10 @@ export const translations = {
     'backOffice.affair.reminder.invoice': 'Prepare invoice reminder',
     'backOffice.affair.reminder.quoteSubject': 'Reminder for quote {reference}',
     'backOffice.affair.reminder.quoteBody':
-      'Hello {name},\n\nI am following up about quote {reference}.\n\nRegards,',
+      'Hello {name},\n\nI am following up about quote {reference}:\n{url}\n\nRegards,',
     'backOffice.affair.reminder.invoiceSubject': 'Reminder for invoice {reference}',
     'backOffice.affair.reminder.invoiceBody':
-      'Hello {name},\n\nInvoice {reference}, due on {dueDate}, is still awaiting payment.\n\nRegards,',
+      'Hello {name},\n\nInvoice {reference}, due on {dueDate}, is still awaiting payment:\n{url}\n\nRegards,',
     'backOffice.affairs.intro': 'Track each engagement from quote to invoice payment.',
     'backOffice.affairs.tabs': 'Engagement stages',
     'backOffice.affairs.attention': 'Needs action',

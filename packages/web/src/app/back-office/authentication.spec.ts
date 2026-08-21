@@ -1,7 +1,7 @@
 import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting, HttpTestingController } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
-import { provideRouter, Router } from '@angular/router';
+import { provideRouter, Router, UrlTree } from '@angular/router';
 import { type LoginModeValue } from '@froment/contracts';
 
 import { Authentication, administratorGuard, clientGuard } from './authentication';
@@ -47,12 +47,19 @@ describe('Authentication', () => {
     const administratorRedirect = await TestBed.runInInjectionContext(() => administratorGuard());
     if (administratorRedirect === true) throw new Error('The administrator route was allowed.');
     expect(router.serializeUrl(administratorRedirect)).toBe('/backoffice/login/admin');
-    await expect(TestBed.runInInjectionContext(() => clientGuard())).resolves.toBe(true);
+    await expect(
+      TestBed.runInInjectionContext(() =>
+        clientGuard({} as never, { url: '/backoffice/client?quote=document-id' } as never),
+      ),
+    ).resolves.toBe(true);
 
     mode = 'administrator';
     await expect(TestBed.runInInjectionContext(() => administratorGuard())).resolves.toBe(true);
-    const clientRedirect = await TestBed.runInInjectionContext(() => clientGuard());
-    if (clientRedirect === true) throw new Error('The client route was allowed.');
-    expect(router.serializeUrl(clientRedirect)).toBe('/backoffice/login/client');
+    const clientRedirect = (await TestBed.runInInjectionContext(() =>
+      clientGuard({} as never, { url: '/backoffice/client?quote=document-id' } as never),
+    )) as UrlTree;
+    expect(router.serializeUrl(clientRedirect)).toBe(
+      '/backoffice/login/client?returnUrl=%2Fbackoffice%2Fclient%3Fquote%3Ddocument-id',
+    );
   });
 });

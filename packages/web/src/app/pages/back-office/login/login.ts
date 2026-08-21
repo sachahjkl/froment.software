@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
-import { Router, RouterLink, RouterOutlet } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink, RouterOutlet } from '@angular/router';
 import { type LoginModeValue } from '@froment/contracts';
 import { Authentication } from '@backoffice/authentication';
 import { I18nService, TranslationKey } from '@app/i18n.service';
@@ -37,6 +37,7 @@ const loginModeView = {
 export class Login {
   protected readonly i18n = inject(I18nService);
   private readonly auth = inject(Authentication);
+  private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   protected readonly error = signal<TranslationKey | undefined>(undefined);
   protected readonly modeTabs = computed<readonly TabItem[]>(() => [
@@ -66,7 +67,7 @@ export class Login {
     this.pending.set(true);
     this.error.set(undefined);
 
-    const route = this.modeView(mode).route;
+    const route = this.destination(mode);
     const outcome = await this.auth.authenticate(accessIdentifier, mode);
     if (outcome.success) {
       await this.router.navigateByUrl(route);
@@ -75,5 +76,15 @@ export class Login {
 
     this.pending.set(false);
     this.error.set(outcome.code);
+  }
+
+  private destination(mode: LoginModeValue): string {
+    const fallback = this.modeView(mode).route;
+    const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl');
+    if (mode !== 'client' || returnUrl === null) return fallback;
+    if (returnUrl === '/backoffice/client' || returnUrl.startsWith('/backoffice/client?')) {
+      return returnUrl;
+    }
+    return fallback;
   }
 }

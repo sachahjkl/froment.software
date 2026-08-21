@@ -76,4 +76,41 @@ describe('Login', () => {
     ]);
     expect(navigate).toHaveBeenCalledWith('/backoffice/dashboard');
   });
+
+  it('returns a client to the requested portal document', async () => {
+    const auth = new AuthStub();
+    TestBed.configureTestingModule({
+      providers: [
+        provideRouter([
+          {
+            path: '',
+            component: Login,
+            children: [
+              {
+                path: 'client',
+                component: TabPanelOutlet,
+                data: { panel: 'login', mode: 'client' },
+              },
+            ],
+          },
+        ]),
+        { provide: Authentication, useValue: auth },
+      ],
+    });
+    const router = TestBed.inject(Router);
+    const target = '/backoffice/client?quote=01ARZ3NDEKTSV4RRFFQ69G5FAV';
+    const harness = await RouterTestingHarness.create(
+      `/client?returnUrl=${encodeURIComponent(target)}`,
+    );
+    const root: HTMLElement = harness.fixture.nativeElement;
+    const navigate = vi.spyOn(router, 'navigateByUrl').mockResolvedValue(true);
+    const input = root.querySelector<HTMLInputElement>('input');
+    if (input === null) throw new Error('The access identifier input is missing.');
+    input.value = 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA';
+
+    root.querySelector<HTMLFormElement>('form')?.dispatchEvent(new SubmitEvent('submit'));
+    await harness.fixture.whenStable();
+
+    expect(navigate).toHaveBeenCalledWith(target);
+  });
 });

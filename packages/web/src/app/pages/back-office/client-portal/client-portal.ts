@@ -1,6 +1,15 @@
-import { afterNextRender, ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
-import { Router } from '@angular/router';
+import { DOCUMENT } from '@angular/common';
 import {
+  afterNextRender,
+  afterRenderEffect,
+  ChangeDetectionStrategy,
+  Component,
+  inject,
+  signal,
+} from '@angular/core';
+import { ActivatedRoute, Router } from '@angular/router';
+import {
+  Ulid,
   type ClientInvoiceListValue,
   type ClientInvoiceSummaryValue,
   type ClientOrderListValue,
@@ -8,6 +17,7 @@ import {
   type ClientQuoteSummaryValue,
   type UlidValue,
 } from '@froment/contracts';
+import { Option, Schema } from 'effect';
 
 import { Authentication } from '@backoffice/authentication';
 import { ClientPortalApi } from '@backoffice/client-portal-api';
@@ -18,6 +28,12 @@ import { DataTable } from '@shared/data-table/data-table';
 import { Notice } from '@shared/notice/notice';
 
 type PageState = 'loading' | 'ready' | 'error';
+type DocumentKind = 'quote' | 'order' | 'invoice';
+
+interface PortalTarget {
+  readonly kind: DocumentKind;
+  readonly id: UlidValue;
+}
 
 @Component({
   selector: 'app-client-portal',
@@ -30,14 +46,36 @@ export class ClientPortal {
   protected readonly i18n = inject(I18nService);
   private readonly auth = inject(Authentication);
   protected readonly api = inject(ClientPortalApi);
+  private readonly document = inject(DOCUMENT);
+  private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   protected readonly state = signal<PageState>('loading');
   protected readonly quotes = signal<ClientQuoteListValue>([]);
   protected readonly orders = signal<ClientOrderListValue>([]);
   protected readonly invoices = signal<ClientInvoiceListValue>([]);
+  private readonly target = this.readTarget();
+  private focusedTarget = false;
 
   constructor() {
     afterNextRender(() => void this.load());
+    afterRenderEffect({
+      write: () => {
+        if (this.state() !== 'ready' || this.target === undefined || this.focusedTarget) return;
+        const row = this.document.getElementById(this.rowId(this.target.kind, this.target.id));
+        if (row === null) return;
+        row.scrollIntoView?.({ block: 'center' });
+        row.focus({ preventScroll: true });
+        this.focusedTarget = true;
+      },
+    });
+  }
+
+  protected rowId(kind: DocumentKind, id: UlidValue): string {
+    return `client-${kind}-${id}`;
+  }
+
+  protected isTarget(kind: DocumentKind, id: UlidValue): boolean {
+    return this.target?.kind === kind && this.target.id === id;
   }
 
   protected money(cents: number, currency: string): string {
@@ -92,5 +130,13 @@ export class ClientPortal {
     if (await this.auth.signOut()) {
       await this.router.navigateByUrl('/backoffice/login/client');
     }
+  }
+
+  private readTarget(): PortalTarget | undefined {
+    for (const kind of ['quote', 'order', 'invoice'] as const) {
+      const id = Schema.decodeUnknownOption(Ulid)(this.route.snapshot.queryParamMap.get(kind));
+      if (Option.isSome(id)) return { kind, id: id.value };
+    }
+    return undefined;
   }
 }
