@@ -8,6 +8,7 @@ import {
 import { vi } from 'vitest';
 
 import { InvoicesApi } from '@backoffice/invoices-api';
+import { ClientsApi } from '@backoffice/clients-api';
 import { OrdersApi } from '@backoffice/orders-api';
 import { QuotesApi } from '@backoffice/quotes-api';
 import { Affairs } from './affairs';
@@ -69,6 +70,12 @@ describe('Affairs', () => {
     TestBed.configureTestingModule({
       providers: [
         provideRouter([]),
+        {
+          provide: ClientsApi,
+          useValue: {
+            list: () => Promise.resolve([{ id: draftQuote.clientId, archived: false }]),
+          },
+        },
         {
           provide: QuotesApi,
           useValue: { list: () => Promise.resolve([draftQuote, acceptedQuote]) },

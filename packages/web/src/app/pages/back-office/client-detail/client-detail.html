@@ -9,7 +9,13 @@
   } @else if (error() === 'client.not_found') {
   <p appNotice variant="danger" role="alert">{{ i18n.t('client.not_found') }}</p>
   } @else { @if (archived()) {
-  <p appNotice role="status">{{ i18n.t('backOffice.clientDetail.archived') }}</p>
+  <div class="archived-notice" appNotice role="status">
+    <p>{{ i18n.t('backOffice.clientDetail.archived') }}</p>
+    <button appButton type="button" [disabled]="reactivating()" (click)="reactivate()">
+      @if (reactivating()) { {{ i18n.t('backOffice.clientDetail.reactivating') }} } @else { {{
+      i18n.t('backOffice.clientDetail.reactivate') }} }
+    </button>
+  </div>
   }
   <app-tabs
     [label]="i18n.t('backOffice.clientDetail.tabs')"

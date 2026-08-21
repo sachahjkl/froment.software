@@ -715,10 +715,26 @@ describe('HTTP server', () => {
     });
     expect(archivedAccess.status).toBe(409);
 
+    const reactivateResponse = await fetch(`${baseUrl}/api/clients/${client.id}/reactivate`, {
+      method: 'POST',
+      headers: {
+        cookie: administratorCookieHeader,
+        origin: baseUrl,
+        'x-csrf-token': administratorCsrf,
+      },
+    });
+    expect(reactivateResponse.status).toBe(200);
+    const reactivatedClient = (await reactivateResponse.json()) as typeof client;
+    expect(reactivatedClient).toEqual({
+      ...updatedClient,
+      archived: false,
+      updatedAt: expect.any(Number),
+    });
+
     const finalList = await fetch(`${baseUrl}/api/clients`, {
       headers: { cookie: administratorCookieHeader },
     });
-    await expect(finalList.json()).resolves.toEqual([archivedClient]);
+    await expect(finalList.json()).resolves.toEqual([reactivatedClient]);
 
     const sqlite = new Sqlite(databaseFilename, { readonly: true });
     expect(
@@ -749,6 +765,7 @@ describe('HTTP server', () => {
       'client.access-created',
       'client.access-created',
       'client.archived',
+      'client.reactivated',
     ]);
     expect(
       sqlite

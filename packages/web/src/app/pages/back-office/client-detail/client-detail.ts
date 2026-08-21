@@ -151,6 +151,7 @@ export class ClientDetail {
   });
   protected readonly loading = signal(true);
   protected readonly saving = signal(false);
+  protected readonly reactivating = signal(false);
   protected readonly saved = signal(false);
   protected readonly archived = computed(() => this.client()?.archived ?? false);
   protected readonly error = signal<TranslationKey | undefined>(undefined);
@@ -203,6 +204,17 @@ export class ClientDetail {
     }
     this.accessIdentifier.set(outcome.result.accessIdentifier);
     this.copied.set(false);
+  }
+
+  protected async reactivate(): Promise<void> {
+    const client = this.client();
+    if (!client?.archived || this.reactivating()) return;
+    this.reactivating.set(true);
+    this.error.set(undefined);
+    const outcome = await this.api.reactivate(client.id);
+    this.reactivating.set(false);
+    if (!outcome.success) return this.setError(outcome.code);
+    this.applyClient(outcome.result);
   }
 
   protected async copyAccess(): Promise<void> {

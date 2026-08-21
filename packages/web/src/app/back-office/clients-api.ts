@@ -71,6 +71,15 @@ export class ClientsApi {
     );
   }
 
+  async reactivate(clientId: UlidValue): Promise<ClientOutcome<ClientSummaryValue>> {
+    return requestOutcome(
+      this.http.post<unknown>(`/api/clients/${clientId}/reactivate`, undefined),
+      ClientSummary,
+      ClientFailure,
+      'client.error',
+    );
+  }
+
   async createAccess(clientId: UlidValue): Promise<ClientOutcome<ClientAccessValue>> {
     return requestOutcome(
       this.http.post<unknown>(`/api/clients/${clientId}/access`, undefined),

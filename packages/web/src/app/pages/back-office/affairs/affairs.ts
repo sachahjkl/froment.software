@@ -8,12 +8,14 @@ import {
 } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import {
+  type ClientListValue,
   type InvoiceSummaryValue,
   type OrderSummaryValue,
   type QuoteSummaryValue,
 } from '@froment/contracts';
 
 import { InvoicesApi } from '@backoffice/invoices-api';
+import { ClientsApi } from '@backoffice/clients-api';
 import { OrdersApi } from '@backoffice/orders-api';
 import { QuotesApi } from '@backoffice/quotes-api';
 import { I18nService, type TranslationKey } from '@app/i18n.service';
@@ -31,6 +33,7 @@ type AffairStage =
   | 'sent'
   | 'rejected'
   | 'expired'
+  | 'archived'
   | 'ordered'
   | 'invoiceDraft'
   | 'issued'
@@ -54,6 +57,7 @@ interface Affair {
 export class Affairs {
   protected readonly i18n = inject(I18nService);
   private readonly quotesApi = inject(QuotesApi);
+  private readonly clientsApi = inject(ClientsApi);
   private readonly ordersApi = inject(OrdersApi);
   private readonly invoicesApi = inject(InvoicesApi);
   protected readonly state = signal<PageState>('loading');
@@ -61,6 +65,7 @@ export class Affairs {
   private readonly quotes = signal<ReadonlyArray<QuoteSummaryValue>>([]);
   private readonly orders = signal<ReadonlyArray<OrderSummaryValue>>([]);
   private readonly invoices = signal<ReadonlyArray<InvoiceSummaryValue>>([]);
+  private readonly clients = signal<ClientListValue>([]);
   protected readonly tabs = computed<readonly TabItem[]>(() => [
     this.tab('attention', 'backOffice.affairs.attention'),
     this.tab('active', 'backOffice.affairs.active'),
@@ -73,7 +78,8 @@ export class Affairs {
       const invoice = order
         ? this.invoices().find((current) => current.orderId === order.id)
         : undefined;
-      return { quote, order, invoice, stage: this.stage(quote, order, invoice) };
+      const clientArchived = this.clients().find(({ id }) => id === quote.clientId)?.archived ?? false;
+      return { quote, order, invoice, stage: this.stage(quote, order, invoice, clientArchived) };
     }),
   );
   protected readonly visibleAffairs = computed(() => {
@@ -81,7 +87,7 @@ export class Affairs {
     if (tab === 'all') return this.affairs();
     if (tab === 'completed') {
       return this.affairs().filter(({ stage }) =>
-        ['paid', 'void', 'rejected', 'expired'].includes(stage),
+        ['paid', 'void', 'rejected', 'expired', 'archived'].includes(stage),
       );
     }
     if (tab === 'attention') {
@@ -90,7 +96,7 @@ export class Affairs {
       );
     }
     return this.affairs().filter(
-      ({ stage }) => !['paid', 'void', 'rejected', 'expired'].includes(stage),
+      ({ stage }) => !['paid', 'void', 'rejected', 'expired', 'archived'].includes(stage),
     );
   });
 
@@ -111,7 +117,7 @@ export class Affairs {
 
   protected stageVariant(stage: AffairStage): BadgeVariant {
     if (stage === 'paid') return 'success';
-    if (stage === 'void' || stage === 'rejected') return 'danger';
+    if (stage === 'void' || stage === 'rejected' || stage === 'archived') return 'danger';
     if (stage === 'sent' || stage === 'issued' || stage === 'expired') return 'warning';
     return 'default';
   }
@@ -125,14 +131,16 @@ export class Affairs {
   protected async load(): Promise<void> {
     this.state.set('loading');
     try {
-      const [quotes, orders, invoices] = await Promise.all([
+      const [quotes, orders, invoices, clients] = await Promise.all([
         this.quotesApi.list(),
         this.ordersApi.list(),
         this.invoicesApi.list(),
+        this.clientsApi.list(),
       ]);
       this.quotes.set(quotes);
       this.orders.set(orders);
       this.invoices.set(invoices);
+      this.clients.set(clients);
       this.state.set('ready');
     } catch {
       this.state.set('error');
@@ -143,12 +151,14 @@ export class Affairs {
     quote: QuoteSummaryValue,
     order: OrderSummaryValue | undefined,
     invoice: InvoiceSummaryValue | undefined,
+    clientArchived: boolean,
   ): AffairStage {
     if (invoice) {
       if (invoice.status === 'draft') return 'invoiceDraft';
       return invoice.status;
     }
     if (order) return 'ordered';
+    if (clientArchived) return 'archived';
     if (quote.status === 'sent') return 'sent';
     if (quote.status === 'rejected' || quote.status === 'expired') return quote.status;
     return 'draft';

@@ -396,6 +396,16 @@ const ClientHandlers = HttpApiBuilder.group(Api, 'clients', (handlers) =>
         }),
       )
       .handle(
+        'clientReactivate',
+        Effect.fn('clientReactivate')(function* ({ params }) {
+          yield* setPrivateResponseHeaders;
+          const principal = yield* authorizeAdministratorWrite('client.archive');
+          return yield* (yield* Clients)
+            .reactivate(params.clientId, principal.userId)
+            .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
+        }),
+      )
+      .handle(
         'clientAccessCreate',
         Effect.fn('clientAccessCreate')(function* ({ params }) {
           yield* setPrivateResponseHeaders;

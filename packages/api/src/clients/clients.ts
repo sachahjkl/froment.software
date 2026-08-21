@@ -57,6 +57,10 @@ export interface ClientsService {
     clientId: UlidValue,
     actorUserId: UlidValue,
   ) => Effect.Effect<ClientSummaryValue, ClientNotFound | DatabaseError>;
+  readonly reactivate: (
+    clientId: UlidValue,
+    actorUserId: UlidValue,
+  ) => Effect.Effect<ClientSummaryValue, ClientNotFound | DatabaseError>;
   readonly update: (
     clientId: UlidValue,
     request: ClientUpdateRequestValue,
@@ -354,6 +358,57 @@ export const ClientsLive = Layer.effect(
       });
     });
 
+    const reactivate = Effect.fn('Clients.reactivate')(function* (
+      clientId: UlidValue,
+      actorUserId: UlidValue,
+    ) {
+      const now = yield* Clock.currentTimeMillis;
+      return yield* Effect.try({
+        try: () =>
+          database.sqlite
+            .transaction(() => {
+              const row = database.sqlite
+                .prepare(
+                  `select clients.id, users.display_name as displayName,
+                           clients.address_line_1 as addressLine1,
+                           clients.address_line_2 as addressLine2,
+                           clients.postal_code as postalCode, clients.city,
+                           clients.country, clients.email,
+                           users.disabled_at is not null as archived,
+                           clients.updated_at as updatedAt
+                   from clients join users on users.id = clients.id
+                   where clients.id = ?`,
+                )
+                .get(clientId);
+              if (row === undefined) {
+                throw new ClientNotFound({ code: 'client.not_found' });
+              }
+              const client = Schema.decodeUnknownSync(ClientRecord)(row);
+              if (client.archived === 0) return toSummary(client);
+              const updatedAt = Math.max(now, client.updatedAt + 1);
+              database.sqlite
+                .prepare('update clients set updated_at = ? where id = ?')
+                .run(updatedAt, clientId);
+              database.sqlite
+                .prepare('update users set disabled_at = null, updated_at = ? where id = ?')
+                .run(updatedAt, clientId);
+              audit.insert({
+                action: 'client.reactivated',
+                actorUserId,
+                resourceType: 'client',
+                resourceId: clientId,
+                occurredAt: updatedAt,
+              });
+              return { ...toSummary(client), archived: false, updatedAt };
+            })
+            .immediate(),
+        catch: (cause) => {
+          if (cause instanceof ClientNotFound) return cause;
+          return new DatabaseError({ operation: 'reactivate client', cause });
+        },
+      });
+    });
+
     const createAccess = Effect.fn('Clients.createAccess')(function* (
       clientId: UlidValue,
       actorUserId: UlidValue,
@@ -414,6 +469,6 @@ export const ClientsLive = Layer.effect(
       return { clientId, accessIdentifier };
     });
 
-    return Clients.of({ list, get, create, update, archive, createAccess });
+    return Clients.of({ list, get, create, update, archive, reactivate, createAccess });
   }),
 );

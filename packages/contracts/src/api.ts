@@ -180,6 +180,17 @@ export class ClientsApi extends HttpApiGroup.make('clients', { topLevel: true })
       ClientNotFound.pipe(HttpApiSchema.status(404)),
     ],
   }),
+  HttpApiEndpoint.post('clientReactivate', '/api/clients/:clientId/reactivate', {
+    params: { clientId: Ulid },
+    success: ClientSummary,
+    error: [
+      AuthenticationRequired.pipe(HttpApiSchema.status(401)),
+      PermissionDenied.pipe(HttpApiSchema.status(403)),
+      CsrfRejected.pipe(HttpApiSchema.status(403)),
+      RequestRateLimited.pipe(HttpApiSchema.status(429)),
+      ClientNotFound.pipe(HttpApiSchema.status(404)),
+    ],
+  }),
   HttpApiEndpoint.post('clientAccessCreate', '/api/clients/:clientId/access', {
     params: { clientId: Ulid },
     success: ClientAccess,
