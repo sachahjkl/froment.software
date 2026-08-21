@@ -122,14 +122,24 @@
 
   <section aria-labelledby="timeline-title">
     <h2 id="timeline-title">{{ i18n.t('backOffice.affair.timeline') }}</h2>
-    <ol class="timeline">
-      @for (item of timeline(); track item.id) {
-      <li>
-        <time [attr.datetime]="item.date">{{ date(item.date) }}</time
-        ><strong>{{ i18n.t(item.label) }}</strong>
-      </li>
-      }
-    </ol>
+    <div appDataTable>
+      <table>
+        <thead>
+          <tr>
+            <th>{{ i18n.t('backOffice.affair.timeline.date') }}</th>
+            <th>{{ i18n.t('backOffice.affair.timeline.eventHeader') }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (item of timeline(); track item.id) {
+          <tr>
+            <td><time [attr.datetime]="item.date">{{ date(item.date) }}</time></td>
+            <td><strong>{{ i18n.t(item.label) }}</strong></td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
   </section>
   } } }
 </section>
