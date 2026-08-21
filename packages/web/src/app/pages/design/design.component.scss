@@ -71,29 +71,27 @@ section > ol li + li {
   padding-block: var(--space-7);
 }
 .demo-panel {
-  display: grid;
-  gap: var(--page-section-y);
+  display: block;
+}
+.demo-panel > section + section {
+  margin-top: var(--page-section-y);
 }
 .demo-panel > section > * + * {
   margin-top: var(--space-4);
 }
 .sample-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr));
-  gap: var(--space-4);
+  display: block;
   margin-top: var(--space-4);
 }
-.sample-grid.wide {
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 25rem), 1fr));
-}
-.sample-grid.compact {
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 10rem), 1fr));
+.sample-grid > * + * {
+  margin-top: var(--space-5);
 }
 .icon-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
-  gap: var(--space-3);
+  display: block;
   margin-top: var(--space-4);
+}
+.icon-grid > * + * {
+  margin-top: var(--space-3);
 }
 .icon-sample {
   display: flex;
@@ -106,14 +104,17 @@ section > ol li + li {
   gap: var(--space-2);
 }
 .component-form {
-  display: grid;
-  gap: var(--space-5);
+  display: block;
   margin-top: var(--space-3);
 }
+.component-form > * + * {
+  margin-top: var(--space-5);
+}
 .control-showcase {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr));
-  gap: var(--space-4);
+  display: block;
+}
+.control-showcase > * + * {
+  margin-top: var(--space-4);
 }
 .component-form :where(.input, .select, .range) {
   width: 100%;
@@ -176,8 +177,12 @@ details p {
 .state-sample,
 .auth-panel-sample,
 .form-panel-sample {
-  display: grid;
-  gap: var(--space-3);
+  display: block;
+}
+.state-sample > * + *,
+.auth-panel-sample > * + *,
+.form-panel-sample > * + * {
+  margin-top: var(--space-3);
 }
 .unavailable {
   color: var(--color-muted);

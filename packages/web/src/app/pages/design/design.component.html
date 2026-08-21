@@ -113,30 +113,117 @@
     [hidden]="componentTab() !== 'actions'"
   >
     <h2>{{ i18n.t("design.components.buttons") }}</h2>
-    <div class="sample-grid">
-      @for (button of buttonSamples; track button.variant) {
-        <app-visual-sample [name]="'button / ' + button.variant">
-          <button appButton [variant]="button.variant" type="button">
-            <app-icon [name]="button.icon" />{{ button.variant }}
-          </button>
-        </app-visual-sample>
-        <app-visual-sample [name]="'link button / ' + button.variant">
-          <a appLinkButton [variant]="button.variant" href="#design-actions-panel">
-            <app-icon [name]="button.icon" />{{ button.variant }}
-          </a>
-        </app-visual-sample>
-      }
-      <app-visual-sample name="button / disabled">
-        <button appButton type="button" disabled>{{ i18n.t("design.components.disabled") }}</button>
-      </app-visual-sample>
-      <app-visual-sample name="button / pending">
-        <button appButton variant="primary" type="button" disabled aria-busy="true">
-          Enregistrement…
-        </button>
-      </app-visual-sample>
-      <app-visual-sample name="link button / aria-disabled">
-        <a appLinkButton aria-disabled="true">{{ i18n.t("design.components.disabled") }}</a>
-      </app-visual-sample>
+    <div appDataTable class="component-table">
+      <table>
+        <thead>
+          <tr>
+            <th>Variante</th>
+            <th>Normale</th>
+            <th>Survol</th>
+            <th>Active</th>
+            <th>Lecture seule</th>
+            <th>Désactivée</th>
+            <th>Chargement</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (button of buttonSamples; track button.variant) {
+            <tr>
+              <th scope="row">{{ button.variant }}</th>
+              <td>
+                <button appButton [variant]="button.variant" type="button">
+                  <app-icon [name]="button.icon" />Action
+                </button>
+              </td>
+              <td>
+                <button
+                  appButton
+                  [variant]="button.variant"
+                  data-button-state="hover"
+                  type="button"
+                >
+                  <app-icon [name]="button.icon" />Action
+                </button>
+              </td>
+              <td>
+                <button
+                  appButton
+                  [variant]="button.variant"
+                  data-button-state="active"
+                  type="button"
+                >
+                  <app-icon [name]="button.icon" />Action
+                </button>
+              </td>
+              <td>
+                <button appButton [variant]="button.variant" type="button" aria-disabled="true">
+                  <app-icon [name]="button.icon" />Action
+                </button>
+              </td>
+              <td>
+                <button appButton [variant]="button.variant" type="button" disabled>
+                  <app-icon [name]="button.icon" />Action
+                </button>
+              </td>
+              <td>
+                <button
+                  appButton
+                  [variant]="button.variant"
+                  type="button"
+                  disabled
+                  aria-busy="true"
+                >
+                  Action
+                </button>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Boutons icône seule</h3>
+    <div appDataTable class="component-table">
+      <table>
+        <thead>
+          <tr>
+            <th>Variante</th>
+            <th>Bouton</th>
+            <th>Lien</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (button of buttonSamples; track button.variant) {
+            <tr>
+              <th scope="row">{{ button.variant }}</th>
+              <td>
+                <button
+                  appButton
+                  [variant]="button.variant"
+                  [iconOnly]="true"
+                  type="button"
+                  [attr.aria-label]="button.variant"
+                  [title]="button.variant"
+                >
+                  <app-icon [name]="button.icon" />
+                </button>
+              </td>
+              <td>
+                <a
+                  appLinkButton
+                  [variant]="button.variant"
+                  [iconOnly]="true"
+                  href="#design-actions-panel"
+                  [attr.aria-label]="button.variant"
+                  [title]="button.variant"
+                >
+                  <app-icon [name]="button.icon" />
+                </a>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
     </div>
 
     <h3>{{ i18n.t("design.components.links") }}</h3>
@@ -156,12 +243,25 @@
     </div>
 
     <h3>Icônes</h3>
-    <div class="icon-grid">
-      @for (icon of iconNames; track icon) {
-        <app-visual-sample [name]="'icon / ' + icon">
-          <span class="icon-sample"><app-icon [name]="icon" />{{ icon }}</span>
-        </app-visual-sample>
-      }
+    <div appDataTable class="component-table">
+      <table>
+        <thead>
+          <tr>
+            <th>Nom</th>
+            <th>Rendu</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (icon of iconNames; track icon) {
+            <tr>
+              <th scope="row">
+                <code>{{ icon }}</code>
+              </th>
+              <td><app-icon [name]="icon" /></td>
+            </tr>
+          }
+        </tbody>
+      </table>
     </div>
   </section>
   <section

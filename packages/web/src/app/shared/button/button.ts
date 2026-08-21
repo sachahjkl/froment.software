@@ -18,8 +18,10 @@ export type ButtonVariant =
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: {
     '[attr.data-button-variant]': 'variant()',
+    '[attr.data-button-icon-only]': "iconOnly() ? '' : null",
   },
 })
 export class Button {
   readonly variant = input<ButtonVariant>('default');
+  readonly iconOnly = input(false);
 }

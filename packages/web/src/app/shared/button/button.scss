@@ -95,7 +95,22 @@
   box-shadow: none;
 }
 
-:host(:active:not(:disabled, [aria-disabled="true"])) {
+:host([data-button-icon-only]) {
+  width: var(--control-height);
+  padding: 0;
+}
+
+:host([aria-busy="true"])::before {
+  width: 0.85rem;
+  height: 0.85rem;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  content: "";
+  animation: button-loading 700ms linear infinite;
+}
+
+:host(:is(:active, [data-button-state="active"]):not(:disabled, [aria-disabled="true"])) {
   background-color: var(--button-highlight);
   background-image: none;
   box-shadow:
@@ -110,11 +125,29 @@
     color: var(--button-text);
   }
 
+  :host([data-button-state="hover"]:not(:disabled, [aria-disabled="true"])) {
+    background-color: var(--button-highlight);
+    background-image: linear-gradient(to bottom, var(--button-highlight), var(--button-color));
+    color: var(--button-text);
+  }
+
   :host([data-button-variant="link"]:hover:not(:disabled, [aria-disabled="true"])) {
     --icon-color: color-mix(in oklab, var(--color-link), black 24%);
     border-color: transparent;
     background: transparent;
     color: color-mix(in oklab, var(--color-link), black 24%);
+  }
+}
+
+@keyframes button-loading {
+  to {
+    transform: rotate(1turn);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :host([aria-busy="true"])::before {
+    animation-duration: 1400ms;
   }
 }
 
