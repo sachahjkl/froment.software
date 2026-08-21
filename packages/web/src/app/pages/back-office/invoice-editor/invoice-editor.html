@@ -1,5 +1,8 @@
 <section class="invoice-page" aria-labelledby="invoice-title">
   <header>
+    <a class="back-link" routerLink="/backoffice/facturation">
+      {{ i18n.t('backOffice.backToBilling') }}
+    </a>
     <h1 id="invoice-title">
       @if (isNew()) { {{ i18n.t('backOffice.invoice.title.new') }} } @else { {{
       i18n.t('backOffice.invoice.title.edit') }} }

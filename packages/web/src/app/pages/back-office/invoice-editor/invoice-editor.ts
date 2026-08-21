@@ -24,7 +24,7 @@ import {
   validate,
 } from '@angular/forms/signals';
 import { DomSanitizer, type SafeResourceUrl } from '@angular/platform-browser';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import {
   Ulid,
   type InvoiceCreateRequestValue,
@@ -93,7 +93,7 @@ const errorKeys = {
 
 @Component({
   selector: 'app-invoice-editor',
-  imports: [Button, FormField, Notice],
+  imports: [Button, FormField, Notice, RouterLink],
   templateUrl: './invoice-editor.html',
   styleUrl: './invoice-editor.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
