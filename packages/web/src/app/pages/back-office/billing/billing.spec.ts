@@ -1,10 +1,13 @@
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
+import { RouterTestingHarness } from '@angular/router/testing';
 import { type InvoiceSummaryValue } from '@froment/contracts';
+import { vi } from 'vitest';
 
 import { InvoicesApi } from '@backoffice/invoices-api';
 import { ClientsApi } from '@backoffice/clients-api';
 import { Billing } from './billing';
+import { TabPanelOutlet } from '@shared/tabs/tab-panel';
 
 const invoice = (status: 'issued' | 'paid', suffix: string): InvoiceSummaryValue =>
   ({
@@ -28,7 +31,20 @@ describe('Billing', () => {
   it('starts with outstanding invoices and exposes paid invoices in their tab', async () => {
     TestBed.configureTestingModule({
       providers: [
-        provideRouter([]),
+        provideRouter([
+          {
+            path: '',
+            component: Billing,
+            children: [
+              {
+                path: 'issued',
+                component: TabPanelOutlet,
+                data: { panel: 'billing', tab: 'issued' },
+              },
+              { path: 'paid', component: TabPanelOutlet, data: { panel: 'billing', tab: 'paid' } },
+            ],
+          },
+        ]),
         {
           provide: InvoicesApi,
           useValue: { list: () => Promise.resolve([invoice('issued', '1'), invoice('paid', '2')]) },
@@ -36,15 +52,15 @@ describe('Billing', () => {
         { provide: ClientsApi, useValue: { list: () => Promise.resolve([]) } },
       ],
     });
-    const fixture = TestBed.createComponent(Billing);
-    await fixture.whenStable();
-    const root: HTMLElement = fixture.nativeElement;
+    const harness = await RouterTestingHarness.create('/issued');
+    const root: HTMLElement = harness.fixture.nativeElement;
+    await vi.waitFor(() => expect(root.querySelector('tbody')).not.toBeNull());
 
     expect(root.querySelector('tbody')?.textContent).toContain('FA-2026-000001');
     expect(root.querySelector('tbody')?.textContent).not.toContain('FA-2026-000002');
 
-    root.querySelector<HTMLButtonElement>('#billing-paid-tab')?.click();
-    await fixture.whenStable();
+    root.querySelector<HTMLAnchorElement>('#billing-paid-tab')?.click();
+    await harness.fixture.whenStable();
     expect(root.querySelector('tbody')?.textContent).toContain('FA-2026-000002');
   });
 });

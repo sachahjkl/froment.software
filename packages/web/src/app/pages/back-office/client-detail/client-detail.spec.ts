@@ -1,5 +1,7 @@
 import { TestBed } from '@angular/core/testing';
-import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
+import { By } from '@angular/platform-browser';
+import { provideRouter } from '@angular/router';
+import { RouterTestingHarness } from '@angular/router/testing';
 import { vi } from 'vitest';
 
 import { ClientsApi } from '@backoffice/clients-api';
@@ -7,6 +9,7 @@ import { InvoicesApi } from '@backoffice/invoices-api';
 import { OrdersApi } from '@backoffice/orders-api';
 import { QuotesApi } from '@backoffice/quotes-api';
 import { ClientDetail } from './client-detail';
+import { TabPanelOutlet } from '@shared/tabs/tab-panel';
 
 const client = {
   id: '01ARZ3NDEKTSV4RRFFQ69G5FAV' as const,
@@ -21,21 +24,28 @@ const client = {
   updatedAt: 42,
 };
 
-const configure = (api: Pick<ClientsApi, 'get' | 'update'>) => {
+const configure = async (api: Pick<ClientsApi, 'get' | 'update'>) => {
   TestBed.configureTestingModule({
     providers: [
-      provideRouter([]),
-      {
-        provide: ActivatedRoute,
-        useValue: { snapshot: { paramMap: convertToParamMap({ clientId: client.id }) } },
-      },
+      provideRouter([
+        {
+          path: ':clientId',
+          component: ClientDetail,
+          children: [{ path: 'profile', component: TabPanelOutlet, data: { panel: 'profile' } }],
+        },
+      ]),
       { provide: ClientsApi, useValue: api },
       { provide: QuotesApi, useValue: { list: () => Promise.resolve([]) } },
       { provide: OrdersApi, useValue: { list: () => Promise.resolve([]) } },
       { provide: InvoicesApi, useValue: { list: () => Promise.resolve([]) } },
     ],
   });
-  return TestBed.createComponent(ClientDetail);
+  const harness = await RouterTestingHarness.create(`/${client.id}/profile`);
+  return {
+    fixture: harness.fixture,
+    component: harness.fixture.debugElement.query(By.directive(ClientDetail))
+      .componentInstance as ClientDetail,
+  };
 };
 
 describe('ClientDetail', () => {
@@ -44,7 +54,7 @@ describe('ClientDetail', () => {
       success: true,
       result: { ...client, displayName: 'Acme Conseil', updatedAt: 43 },
     });
-    const fixture = configure({
+    const { fixture } = await configure({
       get: () => Promise.resolve({ success: true as const, result: client }),
       update,
     });
@@ -79,7 +89,7 @@ describe('ClientDetail', () => {
       success: false,
       code: 'client.version_conflict',
     });
-    const fixture = configure({
+    const { fixture } = await configure({
       get: () => Promise.resolve({ success: true as const, result: client }),
       update,
     });
@@ -109,7 +119,7 @@ describe('ClientDetail', () => {
   });
 
   it('disables an archived client form', async () => {
-    const fixture = configure({
+    const { fixture, component } = await configure({
       get: () => Promise.resolve({ success: true as const, result: { ...client, archived: true } }),
       update: vi.fn(),
     });
@@ -119,11 +129,11 @@ describe('ClientDetail', () => {
 
     expect(root.querySelector<HTMLInputElement>('#detail-display-name')?.disabled).toBe(true);
     expect(root.querySelector('button[type="submit"]')).toBeNull();
-    expect(fixture.componentInstance.canDeactivate()).toBe(true);
+    expect(component.canDeactivate()).toBe(true);
   });
 
   it('asks before leaving a dirty client form', async () => {
-    const fixture = configure({
+    const { fixture, component } = await configure({
       get: () => Promise.resolve({ success: true as const, result: client }),
       update: vi.fn(),
     });
@@ -136,7 +146,7 @@ describe('ClientDetail', () => {
     name.dispatchEvent(new Event('input'));
     const confirm = vi.spyOn(globalThis, 'confirm').mockReturnValue(false);
 
-    expect(fixture.componentInstance.canDeactivate()).toBe(false);
+    expect(component.canDeactivate()).toBe(false);
     expect(confirm).toHaveBeenCalledOnce();
   });
 });

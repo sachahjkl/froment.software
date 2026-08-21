@@ -1,4 +1,4 @@
-<section class="billing-page" aria-labelledby="billing-title">
+<section appTabLayout class="billing-page" aria-labelledby="billing-title">
   <app-back-office-nav />
   <header>
     <div>
@@ -16,12 +16,8 @@
     <strong>{{ money(outstandingCents()) }}</strong>
   </section>
 
-  <app-tabs
-    [label]="i18n.t('backOffice.billing.tabs')"
-    [tabs]="tabs()"
-    queryParam="status"
-    [(selected)]="selectedTab"
-  />
+  <app-tabs [label]="i18n.t('backOffice.billing.tabs')" [tabs]="tabs()" />
+  <router-outlet />
   @if (selectedInvoices().length > 0) {
   <section class="bulk-actions" [attr.aria-label]="i18n.t('backOffice.billing.bulkActions')">
     <strong>
@@ -35,82 +31,84 @@
     </button>
   </section>
   }
-  <section
-    id="billing-panel"
-    role="tabpanel"
-    [attr.aria-labelledby]="'billing-' + selectedTab() + '-tab'"
-    tabindex="0"
-  >
-    @switch (state()) { @case ('loading') {
-    <p class="state" aria-live="polite">{{ i18n.t('backOffice.invoices.loading') }}</p>
-    } @case ('error') {
-    <p appNotice variant="danger" role="alert">{{ i18n.t('invoice.error') }}</p>
-    <button appButton type="button" (click)="load()">
-      {{ i18n.t('backOffice.invoices.retry') }}
-    </button>
-    } @case ('ready') { @if (visibleInvoices().length === 0) {
-    <p class="empty">{{ i18n.t('backOffice.billing.empty') }}</p>
-    } @else {
-    <div appDataTable>
-      <table>
-        <thead>
-          <tr>
-            <th>
-              <input
-                #selectAll
-                type="checkbox"
-                [attr.aria-label]="i18n.t('backOffice.billing.selectAll')"
-                (change)="selectVisible(selectAll.checked)"
-              />
-            </th>
-            <th>{{ i18n.t('backOffice.invoices.number') }}</th>
-            <th>{{ i18n.t('backOffice.invoices.client') }}</th>
-            <th>{{ i18n.t('backOffice.invoices.status') }}</th>
-            <th>{{ i18n.t('backOffice.invoices.total') }}</th>
-            <th>{{ i18n.t('backOffice.billing.dueDate') }}</th>
-            <th>{{ i18n.t('backOffice.invoices.updated') }}</th>
-            <th>{{ i18n.t('backOffice.invoices.actions') }}</th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (invoice of visibleInvoices(); track invoice.id) {
-          <tr>
-            <td>
-              <input
-                #invoiceSelection
-                type="checkbox"
-                [checked]="selectedIds().has(invoice.id)"
-                [attr.aria-label]="i18n.tf('backOffice.billing.selectInvoice', { reference: invoice.invoiceNumber ?? invoice.orderReference })"
-                (change)="toggle(invoice.id, invoiceSelection.checked)"
-              />
-            </td>
-            <td>
-              <strong>{{ invoice.invoiceNumber ?? i18n.t('backOffice.invoice.draft') }}</strong>
-              <small>{{ invoice.orderReference }}</small>
-            </td>
-            <td>{{ invoice.clientDisplayName }}</td>
-            <td>
-              <span appBadge [variant]="statusVariant(invoice.status)">
-                {{ statusLabel(invoice.status) }}
-              </span>
-            </td>
-            <td>{{ money(invoice.totalCents) }}</td>
-            <td>
-              <span appBadge [variant]="dueVariant(invoice.status, invoice.dueDate)">
-                {{ dueLabel(invoice.status, invoice.dueDate) }}
-              </span>
-            </td>
-            <td>{{ date(invoice.updatedAt) }}</td>
-            <td>
-              <a appButton [routerLink]="['/backoffice/invoices', invoice.id]">
-                {{ i18n.t('backOffice.invoices.open') }}
-              </a>
-            </td>
-          </tr>
-          }
-        </tbody>
-      </table>
-    </div>
-    } } }
-  </section>
+  <ng-template appTabPanel="billing" let-tab="tab">
+    <section
+      id="billing-panel"
+      role="region"
+      [attr.aria-labelledby]="'billing-' + tab + '-tab'"
+      tabindex="0"
+    >
+      @switch (state()) { @case ('loading') {
+      <p class="state" aria-live="polite">{{ i18n.t('backOffice.invoices.loading') }}</p>
+      } @case ('error') {
+      <p appNotice variant="danger" role="alert">{{ i18n.t('invoice.error') }}</p>
+      <button appButton type="button" (click)="load()">
+        {{ i18n.t('backOffice.invoices.retry') }}
+      </button>
+      } @case ('ready') { @if (visibleInvoices(tab).length === 0) {
+      <p class="empty">{{ i18n.t('backOffice.billing.empty') }}</p>
+      } @else {
+      <div appDataTable>
+        <table>
+          <thead>
+            <tr>
+              <th>
+                <input
+                  #selectAll
+                  type="checkbox"
+                  [attr.aria-label]="i18n.t('backOffice.billing.selectAll')"
+                  (change)="selectVisible(tab, selectAll.checked)"
+                />
+              </th>
+              <th>{{ i18n.t('backOffice.invoices.number') }}</th>
+              <th>{{ i18n.t('backOffice.invoices.client') }}</th>
+              <th>{{ i18n.t('backOffice.invoices.status') }}</th>
+              <th>{{ i18n.t('backOffice.invoices.total') }}</th>
+              <th>{{ i18n.t('backOffice.billing.dueDate') }}</th>
+              <th>{{ i18n.t('backOffice.invoices.updated') }}</th>
+              <th>{{ i18n.t('backOffice.invoices.actions') }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (invoice of visibleInvoices(tab); track invoice.id) {
+            <tr>
+              <td>
+                <input
+                  #invoiceSelection
+                  type="checkbox"
+                  [checked]="selectedIds().has(invoice.id)"
+                  [attr.aria-label]="i18n.tf('backOffice.billing.selectInvoice', { reference: invoice.invoiceNumber ?? invoice.orderReference })"
+                  (change)="toggle(invoice.id, invoiceSelection.checked)"
+                />
+              </td>
+              <td>
+                <strong>{{ invoice.invoiceNumber ?? i18n.t('backOffice.invoice.draft') }}</strong>
+                <small>{{ invoice.orderReference }}</small>
+              </td>
+              <td>{{ invoice.clientDisplayName }}</td>
+              <td>
+                <span appBadge [variant]="statusVariant(invoice.status)">
+                  {{ statusLabel(invoice.status) }}
+                </span>
+              </td>
+              <td>{{ money(invoice.totalCents) }}</td>
+              <td>
+                <span appBadge [variant]="dueVariant(invoice.status, invoice.dueDate)">
+                  {{ dueLabel(invoice.status, invoice.dueDate) }}
+                </span>
+              </td>
+              <td>{{ date(invoice.updatedAt) }}</td>
+              <td>
+                <a appButton [routerLink]="['/backoffice/invoices', invoice.id]">
+                  {{ i18n.t('backOffice.invoices.open') }}
+                </a>
+              </td>
+            </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      } } }
+    </section>
+  </ng-template>
 </section>

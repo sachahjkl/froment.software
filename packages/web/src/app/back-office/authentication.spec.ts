@@ -46,13 +46,13 @@ describe('Authentication', () => {
 
     const administratorRedirect = await TestBed.runInInjectionContext(() => administratorGuard());
     if (administratorRedirect === true) throw new Error('The administrator route was allowed.');
-    expect(router.serializeUrl(administratorRedirect)).toBe('/backoffice/login?mode=admin');
+    expect(router.serializeUrl(administratorRedirect)).toBe('/backoffice/login/admin');
     await expect(TestBed.runInInjectionContext(() => clientGuard())).resolves.toBe(true);
 
     mode = 'administrator';
     await expect(TestBed.runInInjectionContext(() => administratorGuard())).resolves.toBe(true);
     const clientRedirect = await TestBed.runInInjectionContext(() => clientGuard());
     if (clientRedirect === true) throw new Error('The client route was allowed.');
-    expect(router.serializeUrl(clientRedirect)).toBe('/backoffice/login?mode=client');
+    expect(router.serializeUrl(clientRedirect)).toBe('/backoffice/login/client');
   });
 });

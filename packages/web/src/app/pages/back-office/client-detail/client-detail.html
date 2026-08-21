@@ -1,4 +1,4 @@
-<section class="client-page" aria-labelledby="client-title">
+<section appTabLayout class="client-page" aria-labelledby="client-title">
   <header>
     <a class="back-link" routerLink="/backoffice/clients">
       {{ i18n.t('backOffice.backToClients') }}
@@ -19,220 +19,219 @@
     </button>
   </div>
   }
-  <app-tabs
-    [label]="i18n.t('backOffice.clientDetail.tabs')"
-    [tabs]="tabs()"
-    queryParam="section"
-    [(selected)]="selectedTab"
-  />
-  <section
-    id="client-profile-panel"
-    role="tabpanel"
-    aria-labelledby="client-profile-tab"
-    tabindex="0"
-    [hidden]="selectedTab() !== 'profile'"
-  >
-    <form (submit)="save($event)">
-      <label class="field" for="detail-display-name">
-        {{ i18n.t('backOffice.clients.displayName') }}
-        <input
-          id="detail-display-name"
-          class="input"
-          autocomplete="organization"
-          [formField]="clientForm.displayName"
-          [attr.aria-invalid]="invalid('displayName')"
-          aria-describedby="detail-display-name-error"
-        />
-        @if (invalid('displayName')) {
-        <span id="detail-display-name-error" class="field-error"
-          >{{ i18n.t('backOffice.clients.displayNameError') }}</span
-        >
-        }
-      </label>
-      <label class="field" for="detail-address-line-1">
-        {{ i18n.t('backOffice.clients.addressLine1') }}
-        <input
-          id="detail-address-line-1"
-          class="input"
-          autocomplete="address-line1"
-          [formField]="clientForm.addressLine1"
-          [attr.aria-invalid]="invalid('addressLine1')"
-          aria-describedby="detail-address-line-1-error"
-        />
-        @if (invalid('addressLine1')) {
-        <span id="detail-address-line-1-error" class="field-error"
-          >{{ i18n.t('backOffice.clientDetail.fieldInvalid') }}</span
-        >
-        }
-      </label>
-      <label class="field" for="detail-address-line-2">
-        {{ i18n.t('backOffice.clients.addressLine2') }}
-        <input
-          id="detail-address-line-2"
-          class="input"
-          autocomplete="address-line2"
-          [formField]="clientForm.addressLine2"
-          [attr.aria-invalid]="invalid('addressLine2')"
-          aria-describedby="detail-address-line-2-error"
-        />
-        @if (invalid('addressLine2')) {
-        <span id="detail-address-line-2-error" class="field-error"
-          >{{ i18n.t('backOffice.clientDetail.fieldInvalid') }}</span
-        >
-        }
-      </label>
-      <label class="field" for="detail-postal-code">
-        {{ i18n.t('backOffice.clients.postalCode') }}
-        <input
-          id="detail-postal-code"
-          class="input"
-          autocomplete="postal-code"
-          [formField]="clientForm.postalCode"
-          [attr.aria-invalid]="invalid('postalCode')"
-          aria-describedby="detail-postal-code-error"
-        />
-        @if (invalid('postalCode')) {
-        <span id="detail-postal-code-error" class="field-error"
-          >{{ i18n.t('backOffice.clientDetail.fieldInvalid') }}</span
-        >
-        }
-      </label>
-      <label class="field" for="detail-city">
-        {{ i18n.t('backOffice.clients.city') }}
-        <input
-          id="detail-city"
-          class="input"
-          autocomplete="address-level2"
-          [formField]="clientForm.city"
-          [attr.aria-invalid]="invalid('city')"
-          aria-describedby="detail-city-error"
-        />
-        @if (invalid('city')) {
-        <span id="detail-city-error" class="field-error"
-          >{{ i18n.t('backOffice.clientDetail.fieldInvalid') }}</span
-        >
-        }
-      </label>
-      <label class="field" for="detail-country">
-        {{ i18n.t('backOffice.clients.country') }}
-        <input
-          id="detail-country"
-          class="input"
-          autocomplete="country-name"
-          [formField]="clientForm.country"
-          [attr.aria-invalid]="invalid('country')"
-          aria-describedby="detail-country-error"
-        />
-        @if (invalid('country')) {
-        <span id="detail-country-error" class="field-error"
-          >{{ i18n.t('backOffice.clientDetail.fieldInvalid') }}</span
-        >
-        }
-      </label>
-      <label class="field" for="detail-email">
-        {{ i18n.t('backOffice.clients.email') }}
-        <input
-          id="detail-email"
-          class="input"
-          type="email"
-          autocomplete="email"
-          [formField]="clientForm.email"
-          [attr.aria-invalid]="invalid('email')"
-          aria-describedby="detail-email-error"
-        />
-        @if (invalid('email')) {
-        <span id="detail-email-error" class="field-error"
-          >{{ i18n.t('backOffice.clientDetail.emailInvalid') }}</span
-        >
-        }
-      </label>
-      @if (!archived()) {
-      <div class="actions">
-        <button appButton variant="primary" type="submit" [disabled]="saveDisabled()">
-          @if (saving()) { {{ i18n.t('backOffice.clientDetail.saving') }} } @else { {{
-          i18n.t('backOffice.clientDetail.save') }} }
-        </button>
-        @if (saved()) { <span role="status">{{ i18n.t('backOffice.clientDetail.saved') }}</span> }
-      </div>
-      }
-    </form>
-  </section>
-
-  <section
-    id="client-documents-panel"
-    role="tabpanel"
-    aria-labelledby="client-documents-tab"
-    tabindex="0"
-    [hidden]="selectedTab() !== 'documents'"
-  >
-    @if (documentsLoading()) {
-    <p aria-live="polite">{{ i18n.t('backOffice.clientDetail.documentsLoading') }}</p>
-    } @else if (documents().length === 0) {
-    <p class="empty">{{ i18n.t('backOffice.clientDetail.documentsEmpty') }}</p>
-    } @else {
-    <div appDataTable>
-      <table>
-        <thead>
-          <tr>
-            <th>{{ i18n.t('backOffice.clientDetail.document') }}</th>
-            <th>{{ i18n.t('backOffice.clientDetail.reference') }}</th>
-            <th>{{ i18n.t('backOffice.clientDetail.status') }}</th>
-            <th>{{ i18n.t('backOffice.clientDetail.total') }}</th>
-            <th>{{ i18n.t('backOffice.clientDetail.actions') }}</th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (document of documents(); track document.id) {
-          <tr>
-            <td><strong>{{ document.kind }}</strong><small>{{ document.title }}</small></td>
-            <td>{{ document.reference }}</td>
-            <td><span appBadge>{{ document.status }}</span></td>
-            <td>{{ money(document.totalCents) }}</td>
-            <td><a appButton [routerLink]="document.link">{{ i18n.t('backOffice.open') }}</a></td>
-          </tr>
+  <app-tabs [label]="i18n.t('backOffice.clientDetail.tabs')" [tabs]="tabs()" />
+  <router-outlet />
+  <ng-template appTabPanel="profile">
+    <section
+      id="client-profile-panel"
+      role="region"
+      aria-labelledby="client-profile-tab"
+      tabindex="0"
+    >
+      <form (submit)="save($event)">
+        <label class="field" for="detail-display-name">
+          {{ i18n.t('backOffice.clients.displayName') }}
+          <input
+            id="detail-display-name"
+            class="input"
+            autocomplete="organization"
+            [formField]="clientForm.displayName"
+            [attr.aria-invalid]="invalid('displayName')"
+            aria-describedby="detail-display-name-error"
+          />
+          @if (invalid('displayName')) {
+          <span id="detail-display-name-error" class="field-error"
+            >{{ i18n.t('backOffice.clients.displayNameError') }}</span
+          >
           }
-        </tbody>
-      </table>
-    </div>
-    }
-  </section>
+        </label>
+        <label class="field" for="detail-address-line-1">
+          {{ i18n.t('backOffice.clients.addressLine1') }}
+          <input
+            id="detail-address-line-1"
+            class="input"
+            autocomplete="address-line1"
+            [formField]="clientForm.addressLine1"
+            [attr.aria-invalid]="invalid('addressLine1')"
+            aria-describedby="detail-address-line-1-error"
+          />
+          @if (invalid('addressLine1')) {
+          <span id="detail-address-line-1-error" class="field-error"
+            >{{ i18n.t('backOffice.clientDetail.fieldInvalid') }}</span
+          >
+          }
+        </label>
+        <label class="field" for="detail-address-line-2">
+          {{ i18n.t('backOffice.clients.addressLine2') }}
+          <input
+            id="detail-address-line-2"
+            class="input"
+            autocomplete="address-line2"
+            [formField]="clientForm.addressLine2"
+            [attr.aria-invalid]="invalid('addressLine2')"
+            aria-describedby="detail-address-line-2-error"
+          />
+          @if (invalid('addressLine2')) {
+          <span id="detail-address-line-2-error" class="field-error"
+            >{{ i18n.t('backOffice.clientDetail.fieldInvalid') }}</span
+          >
+          }
+        </label>
+        <label class="field" for="detail-postal-code">
+          {{ i18n.t('backOffice.clients.postalCode') }}
+          <input
+            id="detail-postal-code"
+            class="input"
+            autocomplete="postal-code"
+            [formField]="clientForm.postalCode"
+            [attr.aria-invalid]="invalid('postalCode')"
+            aria-describedby="detail-postal-code-error"
+          />
+          @if (invalid('postalCode')) {
+          <span id="detail-postal-code-error" class="field-error"
+            >{{ i18n.t('backOffice.clientDetail.fieldInvalid') }}</span
+          >
+          }
+        </label>
+        <label class="field" for="detail-city">
+          {{ i18n.t('backOffice.clients.city') }}
+          <input
+            id="detail-city"
+            class="input"
+            autocomplete="address-level2"
+            [formField]="clientForm.city"
+            [attr.aria-invalid]="invalid('city')"
+            aria-describedby="detail-city-error"
+          />
+          @if (invalid('city')) {
+          <span id="detail-city-error" class="field-error"
+            >{{ i18n.t('backOffice.clientDetail.fieldInvalid') }}</span
+          >
+          }
+        </label>
+        <label class="field" for="detail-country">
+          {{ i18n.t('backOffice.clients.country') }}
+          <input
+            id="detail-country"
+            class="input"
+            autocomplete="country-name"
+            [formField]="clientForm.country"
+            [attr.aria-invalid]="invalid('country')"
+            aria-describedby="detail-country-error"
+          />
+          @if (invalid('country')) {
+          <span id="detail-country-error" class="field-error"
+            >{{ i18n.t('backOffice.clientDetail.fieldInvalid') }}</span
+          >
+          }
+        </label>
+        <label class="field" for="detail-email">
+          {{ i18n.t('backOffice.clients.email') }}
+          <input
+            id="detail-email"
+            class="input"
+            type="email"
+            autocomplete="email"
+            [formField]="clientForm.email"
+            [attr.aria-invalid]="invalid('email')"
+            aria-describedby="detail-email-error"
+          />
+          @if (invalid('email')) {
+          <span id="detail-email-error" class="field-error"
+            >{{ i18n.t('backOffice.clientDetail.emailInvalid') }}</span
+          >
+          }
+        </label>
+        @if (!archived()) {
+        <div class="actions">
+          <button appButton variant="primary" type="submit" [disabled]="saveDisabled()">
+            @if (saving()) { {{ i18n.t('backOffice.clientDetail.saving') }} } @else { {{
+            i18n.t('backOffice.clientDetail.save') }} }
+          </button>
+          @if (saved()) { <span role="status">{{ i18n.t('backOffice.clientDetail.saved') }}</span> }
+        </div>
+        }
+      </form>
+    </section>
+  </ng-template>
 
-  <section
-    id="client-access-panel"
-    role="tabpanel"
-    aria-labelledby="client-access-tab"
-    tabindex="0"
-    [hidden]="selectedTab() !== 'access'"
-  >
-    <div class="access-panel">
-      <div>
-        <h2>{{ i18n.t('backOffice.clientDetail.accessTitle') }}</h2>
-        <p>{{ i18n.t('backOffice.clientDetail.accessIntro') }}</p>
+  <ng-template appTabPanel="documents">
+    <section
+      id="client-documents-panel"
+      role="region"
+      aria-labelledby="client-documents-tab"
+      tabindex="0"
+    >
+      @if (documentsLoading()) {
+      <p aria-live="polite">{{ i18n.t('backOffice.clientDetail.documentsLoading') }}</p>
+      } @else if (documents().length === 0) {
+      <p class="empty">{{ i18n.t('backOffice.clientDetail.documentsEmpty') }}</p>
+      } @else {
+      <div appDataTable>
+        <table>
+          <thead>
+            <tr>
+              <th>{{ i18n.t('backOffice.clientDetail.document') }}</th>
+              <th>{{ i18n.t('backOffice.clientDetail.reference') }}</th>
+              <th>{{ i18n.t('backOffice.clientDetail.status') }}</th>
+              <th>{{ i18n.t('backOffice.clientDetail.total') }}</th>
+              <th>{{ i18n.t('backOffice.clientDetail.actions') }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (document of documents(); track document.id) {
+            <tr>
+              <td><strong>{{ document.kind }}</strong><small>{{ document.title }}</small></td>
+              <td>{{ document.reference }}</td>
+              <td><span appBadge>{{ document.status }}</span></td>
+              <td>{{ money(document.totalCents) }}</td>
+              <td><a appButton [routerLink]="document.link">{{ i18n.t('backOffice.open') }}</a></td>
+            </tr>
+            }
+          </tbody>
+        </table>
       </div>
-      <button
-        appButton
-        variant="primary"
-        type="button"
-        [disabled]="archived() || accessPending()"
-        (click)="createAccess()"
-      >
-        @if (accessPending()) { {{ i18n.t('backOffice.clientDetail.accessCreating') }} } @else { {{
-        i18n.t('backOffice.clientDetail.accessCreate') }} }
-      </button>
-      @if (archived()) {
-      <p appNotice>{{ i18n.t('backOffice.clientDetail.accessArchived') }}</p>
-      } @if (accessIdentifier(); as identifier) {
-      <div class="credential" role="status">
-        <code>{{ identifier }}</code>
-        <button appButton type="button" (click)="copyAccess()">
-          @if (copied()) { {{ i18n.t('backOffice.clients.copied') }} } @else { {{
-          i18n.t('backOffice.clients.copy') }} }
-        </button>
-      </div>
-      <p class="field-hint">{{ i18n.t('backOffice.clients.accessWarning') }}</p>
       }
-    </div>
-  </section>
+    </section>
+  </ng-template>
+
+  <ng-template appTabPanel="access">
+    <section
+      id="client-access-panel"
+      role="region"
+      aria-labelledby="client-access-tab"
+      tabindex="0"
+    >
+      <div class="access-panel">
+        <div>
+          <h2>{{ i18n.t('backOffice.clientDetail.accessTitle') }}</h2>
+          <p>{{ i18n.t('backOffice.clientDetail.accessIntro') }}</p>
+        </div>
+        <button
+          appButton
+          variant="primary"
+          type="button"
+          [disabled]="archived() || accessPending()"
+          (click)="createAccess()"
+        >
+          @if (accessPending()) { {{ i18n.t('backOffice.clientDetail.accessCreating') }} } @else {
+          {{ i18n.t('backOffice.clientDetail.accessCreate') }} }
+        </button>
+        @if (archived()) {
+        <p appNotice>{{ i18n.t('backOffice.clientDetail.accessArchived') }}</p>
+        } @if (accessIdentifier(); as identifier) {
+        <div class="credential" role="status">
+          <code>{{ identifier }}</code>
+          <button appButton type="button" (click)="copyAccess()">
+            @if (copied()) { {{ i18n.t('backOffice.clients.copied') }} } @else { {{
+            i18n.t('backOffice.clients.copy') }} }
+          </button>
+        </div>
+        <p class="field-hint">{{ i18n.t('backOffice.clients.accessWarning') }}</p>
+        }
+      </div>
+    </section>
+  </ng-template>
   @if (error(); as errorKey) {
   <p appNotice variant="danger" role="alert">{{ i18n.t(errorKey) }}</p>
   } }

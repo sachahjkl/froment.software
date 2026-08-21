@@ -12,7 +12,9 @@
   border-bottom: 1px solid var(--color-line-strong);
 }
 
-button {
+a {
+  display: inline-flex;
+  align-items: center;
   min-height: var(--control-height);
   padding: var(--space-2) var(--space-4);
   border: 0;
@@ -23,13 +25,18 @@ button {
   cursor: pointer;
 }
 
-button:hover {
+a:hover {
   color: var(--color-ink);
   background: color-mix(in oklab, var(--color-surface-sunken), transparent 35%);
 }
 
-button[aria-selected="true"] {
+a[aria-current="page"] {
   border-bottom-color: var(--color-button-primary);
   color: var(--color-ink);
   font-weight: 700;
+}
+
+a[aria-disabled="true"] {
+  cursor: not-allowed;
+  opacity: 0.55;
 }

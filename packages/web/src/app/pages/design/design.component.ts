@@ -1,4 +1,5 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
+import { RouterOutlet } from '@angular/router';
 import { I18nService } from '@app/i18n.service';
 import { Button, type ButtonVariant } from '@shared/button/button';
 import { Badge } from '@shared/badge/badge';
@@ -7,17 +8,9 @@ import { DataTable } from '@shared/data-table/data-table';
 import { Icon, type IconName } from '@shared/icon/icon';
 import { Notice } from '@shared/notice/notice';
 import { Tabs, type TabItem } from '@shared/tabs/tabs';
+import { TabLayout, TabPanel } from '@shared/tabs/tab-panel';
 import { VisualSample } from '@shared/visual-sample/visual-sample';
 import { DesignDocuments } from './design-documents';
-
-type ComponentTab =
-  | 'demo'
-  | 'actions'
-  | 'inputs'
-  | 'feedback'
-  | 'data'
-  | 'documents'
-  | 'navigation';
 
 type ButtonSample = {
   readonly variant: ButtonVariant;
@@ -35,6 +28,9 @@ type ButtonSample = {
     DesignDocuments,
     Icon,
     Notice,
+    RouterOutlet,
+    TabLayout,
+    TabPanel,
     Tabs,
     VisualSample,
   ],
@@ -44,8 +40,6 @@ type ButtonSample = {
 })
 export class DesignComponent {
   protected readonly i18n = inject(I18nService);
-  protected readonly componentTab = signal<ComponentTab>('demo');
-  protected readonly nestedTab = signal('first');
   protected readonly buttonSamples: readonly ButtonSample[] = [
     { variant: 'default', icon: 'mail' },
     { variant: 'primary', icon: 'calendar' },
@@ -72,66 +66,40 @@ export class DesignComponent {
   ];
   protected readonly componentTabs = computed<readonly TabItem[]>(() => [
     {
-      value: 'demo',
+      path: 'demo',
       id: 'design-demo-tab',
       label: this.i18n.t('design.components.demo'),
-      panelId: 'design-demo-panel',
     },
     {
-      value: 'actions',
+      path: 'actions',
       id: 'design-actions-tab',
       label: this.i18n.t('design.components.actions'),
-      panelId: 'design-actions-panel',
     },
     {
-      value: 'inputs',
+      path: 'inputs',
       id: 'design-inputs-tab',
       label: this.i18n.t('design.components.inputs'),
-      panelId: 'design-inputs-panel',
     },
     {
-      value: 'feedback',
+      path: 'feedback',
       id: 'design-feedback-tab',
       label: this.i18n.t('design.components.feedback'),
-      panelId: 'design-feedback-panel',
     },
     {
-      value: 'data',
+      path: 'data',
       id: 'design-data-tab',
       label: this.i18n.t('design.components.dataGroup'),
-      panelId: 'design-data-panel',
     },
     {
-      value: 'documents',
+      path: 'documents',
       id: 'design-documents-tab',
       label: this.i18n.t('design.components.documents'),
-      panelId: 'design-documents-panel',
     },
     {
-      value: 'navigation',
+      path: 'navigation',
       id: 'design-navigation-tab',
       label: this.i18n.t('design.components.navigation'),
-      panelId: 'design-navigation-panel',
+      exact: false,
     },
   ]);
-  protected readonly nestedTabs: readonly TabItem[] = [
-    {
-      value: 'first',
-      id: 'sample-first-tab',
-      label: 'Proposition détaillée',
-      panelId: 'sample-first-panel',
-    },
-    {
-      value: 'second',
-      id: 'sample-second-tab',
-      label: 'Document PDF téléchargeable',
-      panelId: 'sample-second-panel',
-    },
-    {
-      value: 'third',
-      id: 'sample-third-tab',
-      label: 'Acceptation et signature',
-      panelId: 'sample-third-panel',
-    },
-  ];
 }

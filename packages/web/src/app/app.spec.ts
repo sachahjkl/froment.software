@@ -82,9 +82,9 @@ describe('App shell', () => {
     await navigate(fixture, router, '/design?preview=true#profile-sample');
 
     expect(meta('meta[name="robots"]').content).toBe('noindex, follow');
-    expect(meta('meta[property="og:url"]').content).toBe('https://froment.software/design');
+    expect(meta('meta[property="og:url"]').content).toBe('https://froment.software/design/demo');
     expect(document.head.querySelector<HTMLLinkElement>('link[rel="canonical"]')?.href).toBe(
-      'https://froment.software/design',
+      'https://froment.software/design/demo',
     );
     expect(element.querySelector('app-design')).not.toBeNull();
   });

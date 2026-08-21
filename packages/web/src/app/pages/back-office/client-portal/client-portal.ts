@@ -90,7 +90,7 @@ export class ClientPortal {
 
   protected async signOut(): Promise<void> {
     if (await this.auth.signOut()) {
-      await this.router.navigateByUrl('/backoffice/login?mode=client');
+      await this.router.navigateByUrl('/backoffice/login/client');
     }
   }
 }

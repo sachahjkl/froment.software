@@ -1,20 +1,16 @@
-<div class="tab-list" role="tablist" [attr.aria-label]="label()">
-  @for (tab of tabs(); track tab.id; let index = $index) {
-  <button
-    type="button"
-    role="tab"
+<nav class="tab-list" [attr.aria-label]="label()">
+  @for (tab of tabs(); track tab.id) {
+  <a
+    #active="routerLinkActive"
     [id]="tab.id"
-    [attr.aria-controls]="tab.panelId"
-    [attr.aria-selected]="selected() === tab.value"
-    [tabIndex]="selected() === tab.value ? 0 : -1"
-    [disabled]="disabled()"
-    (click)="select(tab)"
-    (keydown.arrowleft)="move($event, index, -1)"
-    (keydown.arrowright)="move($event, index, 1)"
-    (keydown.home)="move($event, index, -index)"
-    (keydown.end)="move($event, index, tabs().length - index - 1)"
+    [routerLink]="tab.path"
+    routerLinkActive="active"
+    [routerLinkActiveOptions]="{ exact: tab.exact ?? true }"
+    [attr.aria-current]="active.isActive ? 'page' : null"
+    [attr.aria-disabled]="disabled()"
+    (click)="disabled() && $event.preventDefault()"
   >
     {{ tab.label }}
-  </button>
+  </a>
   }
-</div>
+</nav>

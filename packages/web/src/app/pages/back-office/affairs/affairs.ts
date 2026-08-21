@@ -6,7 +6,7 @@ import {
   inject,
   signal,
 } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { RouterLink, RouterOutlet } from '@angular/router';
 import {
   type ClientListValue,
   type InvoiceSummaryValue,
@@ -25,6 +25,7 @@ import { Button } from '@shared/button/button';
 import { DataTable } from '@shared/data-table/data-table';
 import { Notice } from '@shared/notice/notice';
 import { Tabs, type TabItem } from '@shared/tabs/tabs';
+import { TabLayout, TabPanel } from '@shared/tabs/tab-panel';
 
 type PageState = 'loading' | 'ready' | 'error';
 type AffairTab = 'attention' | 'active' | 'completed' | 'all';
@@ -50,7 +51,18 @@ interface Affair {
 
 @Component({
   selector: 'app-affairs',
-  imports: [BackOfficeNav, Badge, Button, DataTable, Notice, RouterLink, Tabs],
+  imports: [
+    BackOfficeNav,
+    Badge,
+    Button,
+    DataTable,
+    Notice,
+    RouterLink,
+    RouterOutlet,
+    TabLayout,
+    TabPanel,
+    Tabs,
+  ],
   templateUrl: './affairs.html',
   styleUrl: './affairs.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -62,7 +74,6 @@ export class Affairs {
   private readonly ordersApi = inject(OrdersApi);
   private readonly invoicesApi = inject(InvoicesApi);
   protected readonly state = signal<PageState>('loading');
-  protected readonly selectedTab = signal<AffairTab>('attention');
   private readonly quotes = signal<ReadonlyArray<QuoteSummaryValue>>([]);
   private readonly orders = signal<ReadonlyArray<OrderSummaryValue>>([]);
   private readonly invoices = signal<ReadonlyArray<InvoiceSummaryValue>>([]);
@@ -84,8 +95,7 @@ export class Affairs {
       return { quote, order, invoice, stage: this.stage(quote, order, invoice, clientArchived) };
     }),
   );
-  protected readonly visibleAffairs = computed(() => {
-    const tab = this.selectedTab();
+  protected visibleAffairs(tab: AffairTab): readonly Affair[] {
     if (tab === 'all') return this.affairs();
     if (tab === 'completed') {
       return this.affairs().filter(({ stage }) =>
@@ -101,7 +111,7 @@ export class Affairs {
       ({ stage }) =>
         !['paid', 'void', 'rejected', 'expired', 'archived', 'cancelled'].includes(stage),
     );
-  });
+  }
 
   constructor() {
     afterNextRender(() => void this.load());
@@ -171,10 +181,9 @@ export class Affairs {
 
   private tab(value: AffairTab, label: TranslationKey): TabItem {
     return {
-      value,
+      path: value,
       id: `affairs-${value}-tab`,
       label: this.i18n.t(label),
-      panelId: 'affairs-panel',
     };
   }
 }

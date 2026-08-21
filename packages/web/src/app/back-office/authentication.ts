@@ -75,12 +75,12 @@ export const administratorGuard = async () => {
   const auth = inject(Authentication);
   const router = inject(Router);
   if ((await auth.sessionMode()) === 'administrator') return true;
-  return router.createUrlTree(['/backoffice/login'], { queryParams: { mode: 'admin' } });
+  return router.createUrlTree(['/backoffice/login/admin']);
 };
 
 export const clientGuard = async () => {
   const auth = inject(Authentication);
   const router = inject(Router);
   if ((await auth.sessionMode()) === 'client') return true;
-  return router.createUrlTree(['/backoffice/login'], { queryParams: { mode: 'client' } });
+  return router.createUrlTree(['/backoffice/login/client']);
 };

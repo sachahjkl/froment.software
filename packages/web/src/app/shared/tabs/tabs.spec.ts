@@ -1,4 +1,4 @@
-import { Component, signal } from '@angular/core';
+import { Component } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
 import { beforeEach, describe, expect, it } from 'vitest';
@@ -8,68 +8,58 @@ import { Tabs } from './tabs';
 @Component({
   imports: [Tabs],
   template: `
-    <app-tabs label="Sections" [tabs]="tabs" queryParam="section" [(selected)]="selected" />
-    <section id="first-panel" role="tabpanel" aria-labelledby="first-tab"></section>
-    <section id="second-panel" role="tabpanel" aria-labelledby="second-tab"></section>
+    <app-tabs label="Sections" [tabs]="tabs" />
+    <section id="first-panel" role="region" aria-labelledby="first-tab"></section>
+    <section id="second-panel" role="region" aria-labelledby="second-tab"></section>
   `,
 })
 class TestHost {
-  readonly selected = signal('first');
   readonly tabs = [
-    { value: 'first', id: 'first-tab', label: 'First', panelId: 'first-panel' },
-    { value: 'second', id: 'second-tab', label: 'Second', panelId: 'second-panel' },
+    { path: 'first', id: 'first-tab', label: 'First' },
+    { path: 'second', id: 'second-tab', label: 'Second' },
   ];
 }
 
 @Component({
   imports: [Tabs],
-  template: `<app-tabs label="Sections" [tabs]="tabs" selected="first" [disabled]="true" />`,
+  template: `<app-tabs label="Sections" [tabs]="tabs" [disabled]="true" />`,
 })
 class DisabledHost {
-  readonly tabs = [
-    { value: 'first', id: 'disabled-first-tab', label: 'First', panelId: 'first-panel' },
-  ];
+  readonly tabs = [{ path: 'first', id: 'disabled-first-tab', label: 'First' }];
 }
 
 describe('Tabs', () => {
   beforeEach(() => {
-    TestBed.configureTestingModule({ providers: [provideRouter([])] });
+    TestBed.configureTestingModule({
+      providers: [
+        provideRouter([
+          { path: 'first', component: DisabledHost },
+          { path: 'second', component: DisabledHost },
+        ]),
+      ],
+    });
   });
 
-  it('selects tabs and supports arrow navigation', async () => {
+  it('navigates with relative links and marks the current page', async () => {
     const router = TestBed.inject(Router);
+    await router.navigateByUrl('/first');
     const fixture = TestBed.createComponent(TestHost);
     fixture.detectChanges();
     const root: HTMLElement = fixture.nativeElement;
-    const buttons = root.querySelectorAll<HTMLButtonElement>('[role="tab"]');
+    const links = root.querySelectorAll<HTMLAnchorElement>('a');
 
-    buttons[1]?.click();
+    links[1]?.click();
     await fixture.whenStable();
-    expect(fixture.componentInstance.selected()).toBe('second');
-    expect(buttons[1]?.getAttribute('aria-selected')).toBe('true');
-    expect(router.url).toBe('/?section=second');
-
-    buttons[1]?.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));
-    await fixture.whenStable();
-    expect(fixture.componentInstance.selected()).toBe('first');
-    expect(document.activeElement).toBe(buttons[0]);
-  });
-
-  it('restores the selected tab from the query parameter', async () => {
-    const router = TestBed.inject(Router);
-    await router.navigateByUrl('/?section=second');
-    const fixture = TestBed.createComponent(TestHost);
-    fixture.detectChanges();
-    await fixture.whenStable();
-
-    expect(fixture.componentInstance.selected()).toBe('second');
+    expect(router.url).toBe('/second');
+    expect(links[1]?.getAttribute('aria-current')).toBe('page');
   });
 
   it('disables every tab when interaction is pending', () => {
     const fixture = TestBed.createComponent(DisabledHost);
     fixture.detectChanges();
     const root: HTMLElement = fixture.nativeElement;
-    const button = root.querySelector<HTMLButtonElement>('button');
-    expect(button?.disabled).toBe(true);
+    const link = root.querySelector<HTMLAnchorElement>('a');
+    link?.click();
+    expect(TestBed.inject(Router).url).not.toBe('/first');
   });
 });

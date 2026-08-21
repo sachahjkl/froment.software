@@ -1,10 +1,23 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
+import { RouterTestingHarness } from '@angular/router/testing';
 import { vi } from 'vitest';
 
 import { ClientsApi } from '@backoffice/clients-api';
 import { type ClientCreateRequestValue, type ClientListValue } from '@froment/contracts';
 import { Clients } from './clients';
+import { TabPanelOutlet } from '@shared/tabs/tab-panel';
+
+const clientRoutes = [
+  {
+    path: '',
+    component: Clients,
+    children: [
+      { path: 'active', component: TabPanelOutlet, data: { panel: 'clients', tab: 'active' } },
+      { path: 'archived', component: TabPanelOutlet, data: { panel: 'clients', tab: 'archived' } },
+    ],
+  },
+];
 
 class ClientsApiStub {
   readonly createdNames: Array<string> = [];
@@ -28,7 +41,7 @@ class ClientsApiStub {
   }
 }
 
-const openCreateModal = async (fixture: ComponentFixture<Clients>) => {
+const openCreateModal = async (fixture: ComponentFixture<unknown>) => {
   const root: HTMLElement = fixture.nativeElement;
   const dialog = root.querySelector<HTMLDialogElement>('dialog');
   if (dialog) {
@@ -46,10 +59,10 @@ describe('Clients', () => {
     const api = new ClientsApiStub();
     vi.spyOn(api, 'list').mockReturnValue(new Promise((resolve) => (resolveList = resolve)));
     TestBed.configureTestingModule({
-      providers: [provideRouter([]), { provide: ClientsApi, useValue: api }],
+      providers: [provideRouter(clientRoutes), { provide: ClientsApi, useValue: api }],
     });
-    const fixture = TestBed.createComponent(Clients);
-    await fixture.whenStable();
+    const harness = await RouterTestingHarness.create('/active');
+    const fixture = harness.fixture;
     const root = await openCreateModal(fixture);
     const input = root.querySelector<HTMLInputElement>('input')!;
 
@@ -70,10 +83,10 @@ describe('Clients', () => {
   it('creates and displays a client', async () => {
     const api = new ClientsApiStub();
     TestBed.configureTestingModule({
-      providers: [provideRouter([]), { provide: ClientsApi, useValue: api }],
+      providers: [provideRouter(clientRoutes), { provide: ClientsApi, useValue: api }],
     });
-    const fixture = TestBed.createComponent(Clients);
-    await fixture.whenStable();
+    const harness = await RouterTestingHarness.create('/active');
+    const fixture = harness.fixture;
     const root = await openCreateModal(fixture);
     const input = root.querySelector<HTMLInputElement>('input');
     if (input === null) throw new Error('The client name input is unavailable.');
@@ -92,10 +105,10 @@ describe('Clients', () => {
   it('shows validation feedback without sending an invalid client', async () => {
     const api = new ClientsApiStub();
     TestBed.configureTestingModule({
-      providers: [provideRouter([]), { provide: ClientsApi, useValue: api }],
+      providers: [provideRouter(clientRoutes), { provide: ClientsApi, useValue: api }],
     });
-    const fixture = TestBed.createComponent(Clients);
-    await fixture.whenStable();
+    const harness = await RouterTestingHarness.create('/active');
+    const fixture = harness.fixture;
     const root = await openCreateModal(fixture);
     const form = root.querySelector<HTMLFormElement>('form');
     if (form === null) throw new Error('The client form is unavailable.');
@@ -126,13 +139,12 @@ describe('Clients', () => {
       },
     ]);
     TestBed.configureTestingModule({
-      providers: [provideRouter([]), { provide: ClientsApi, useValue: api }],
+      providers: [provideRouter(clientRoutes), { provide: ClientsApi, useValue: api }],
     });
-    const fixture = TestBed.createComponent(Clients);
-    await fixture.whenStable();
-    const root: HTMLElement = fixture.nativeElement;
-    root.querySelector<HTMLButtonElement>('#clients-archived-tab')?.click();
-    await fixture.whenStable();
+    const harness = await RouterTestingHarness.create('/active');
+    const root: HTMLElement = harness.fixture.nativeElement;
+    root.querySelector<HTMLAnchorElement>('#clients-archived-tab')?.click();
+    await harness.fixture.whenStable();
     const actionCell = root.querySelector<HTMLTableCellElement>('tbody td:last-child');
 
     expect(actionCell?.classList.contains('actions')).toBe(false);
@@ -155,12 +167,11 @@ describe('Clients', () => {
       },
     ]);
     TestBed.configureTestingModule({
-      providers: [provideRouter([]), { provide: ClientsApi, useValue: api }],
+      providers: [provideRouter(clientRoutes), { provide: ClientsApi, useValue: api }],
     });
-    const fixture = TestBed.createComponent(Clients);
-    await fixture.whenStable();
-
-    const root: HTMLElement = fixture.nativeElement;
+    const harness = await RouterTestingHarness.create('/active');
+    const root: HTMLElement = harness.fixture.nativeElement;
+    await vi.waitFor(() => expect(root.querySelector('tbody')).not.toBeNull());
     expect(root.querySelector<HTMLAnchorElement>('tbody a')?.getAttribute('href')).toBe(
       '/backoffice/clients/01ARZ3NDEKTSV4RRFFQ69G5FAV',
     );

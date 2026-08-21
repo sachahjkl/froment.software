@@ -1,8 +1,10 @@
 import { TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
+import { RouterTestingHarness } from '@angular/router/testing';
 
 import { Authentication } from '@backoffice/authentication';
 import { Login } from './login';
+import { TabPanelOutlet } from '@shared/tabs/tab-panel';
 
 class AuthStub {
   readonly calls: Array<{ accessIdentifier: string; mode: string }> = [];
@@ -17,13 +19,31 @@ describe('Login', () => {
   it('switches from client to administrator mode', async () => {
     const auth = new AuthStub();
     TestBed.configureTestingModule({
-      providers: [provideRouter([]), { provide: Authentication, useValue: auth }],
+      providers: [
+        provideRouter([
+          {
+            path: '',
+            component: Login,
+            children: [
+              {
+                path: 'client',
+                component: TabPanelOutlet,
+                data: { panel: 'login', mode: 'client' },
+              },
+              {
+                path: 'admin',
+                component: TabPanelOutlet,
+                data: { panel: 'login', mode: 'administrator' },
+              },
+            ],
+          },
+        ]),
+        { provide: Authentication, useValue: auth },
+      ],
     });
     const router = TestBed.inject(Router);
-    const modeNavigation = vi.spyOn(router, 'navigate').mockResolvedValue(true);
-    const navigate = vi.spyOn(router, 'navigateByUrl').mockResolvedValue(true);
-    const fixture = TestBed.createComponent(Login);
-    await fixture.whenStable();
+    const harness = await RouterTestingHarness.create('/client');
+    const fixture = harness.fixture;
     const root: HTMLElement = fixture.nativeElement;
     expect(root.querySelector('.eyebrow')).toBeNull();
     expect(root.querySelector('h1')?.textContent).toContain('Back office');
@@ -33,16 +53,14 @@ describe('Login', () => {
     expect(bootstrapSlot).not.toBeNull();
     expect(bootstrapLink()).toBeNull();
 
-    root.querySelector<HTMLButtonElement>('#administrator-tab')?.click();
+    root.querySelector<HTMLAnchorElement>('#administrator-tab')?.click();
     await fixture.whenStable();
 
-    expect(modeNavigation).toHaveBeenLastCalledWith(
-      [],
-      expect.objectContaining({ queryParams: { mode: 'admin' }, replaceUrl: true }),
-    );
-    expect(root.querySelector('.bootstrap-slot')).toBe(bootstrapSlot);
+    expect(router.url).toBe('/admin');
+    expect(root.querySelector('.bootstrap-slot')).not.toBeNull();
     expect(bootstrapLink()?.hasAttribute('appLinkButton')).toBe(false);
     expect(bootstrapLink()?.getAttribute('href')).toBe('/backoffice/bootstrap');
+    const navigate = vi.spyOn(router, 'navigateByUrl').mockResolvedValue(true);
 
     const input = root.querySelector<HTMLInputElement>('input');
     if (input === null) return;

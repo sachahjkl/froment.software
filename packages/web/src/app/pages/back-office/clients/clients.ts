@@ -10,7 +10,7 @@ import {
   viewChild,
 } from '@angular/core';
 import { FormField, form, maxLength, pattern, required, submit } from '@angular/forms/signals';
-import { RouterLink } from '@angular/router';
+import { RouterLink, RouterOutlet } from '@angular/router';
 import {
   type ClientAccessValue,
   type ClientSummaryValue,
@@ -26,6 +26,7 @@ import { Badge } from '@shared/badge/badge';
 import { Notice } from '@shared/notice/notice';
 import { TextCopy } from '@shared/text-copy';
 import { Tabs, type TabItem } from '@shared/tabs/tabs';
+import { TabLayout, TabPanel } from '@shared/tabs/tab-panel';
 
 type PageState = 'loading' | 'ready' | 'error';
 type ClientTab = 'active' | 'archived' | 'all';
@@ -35,7 +36,19 @@ interface AccessResult extends ClientAccessValue {
 
 @Component({
   selector: 'app-clients',
-  imports: [BackOfficeNav, Badge, Button, DataTable, FormField, Notice, RouterLink, Tabs],
+  imports: [
+    BackOfficeNav,
+    Badge,
+    Button,
+    DataTable,
+    FormField,
+    Notice,
+    RouterLink,
+    RouterOutlet,
+    TabLayout,
+    TabPanel,
+    Tabs,
+  ],
   templateUrl: './clients.html',
   styleUrl: './clients.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -66,21 +79,18 @@ export class Clients {
     pattern(path.email, /^$|^[^\s@]+@[^\s@]+\.[^\s@]+$/);
   });
   protected readonly clients = signal<ReadonlyArray<ClientSummaryValue>>([]);
-  protected readonly selectedTab = signal<ClientTab>('active');
   protected readonly createOpen = signal(false);
   protected readonly tabs = computed<readonly TabItem[]>(() =>
     (['active', 'archived', 'all'] as const).map((value) => ({
-      value,
+      path: value,
       id: `clients-${value}-tab`,
       label: this.i18n.t(`backOffice.clients.tab.${value}`),
-      panelId: 'clients-panel',
     })),
   );
-  protected readonly visibleClients = computed(() => {
-    const selected = this.selectedTab();
+  protected visibleClients(selected: ClientTab): ReadonlyArray<ClientSummaryValue> {
     if (selected === 'all') return this.clients();
     return this.clients().filter(({ archived }) => archived === (selected === 'archived'));
-  });
+  }
   protected readonly state = signal<PageState>('loading');
   protected readonly error = signal<TranslationKey | undefined>(undefined);
   protected readonly createPending = signal(false);

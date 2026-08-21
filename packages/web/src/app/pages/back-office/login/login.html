@@ -1,49 +1,49 @@
-<section class="login-page" aria-labelledby="back-office-title">
+<section appTabLayout class="login-page" aria-labelledby="back-office-title">
   <div class="login-panel">
     <h1 id="back-office-title">{{ i18n.t('backOffice.title') }}</h1>
     <app-tabs
       class="mode-tabs"
       [label]="i18n.t('backOffice.mode')"
       [tabs]="modeTabs()"
-      [selected]="mode()"
-      queryParam="mode"
       [disabled]="pending()"
-      (selectedChange)="selectMode($event === 'administrator' ? 'administrator' : 'client')"
     />
-    <div
-      id="login-panel"
-      class="login-mode-panel"
-      role="tabpanel"
-      [attr.aria-labelledby]="modeView().panelLabelId"
-    >
-      <p>{{ i18n.t(modeView().intro) }}</p>
-      <form (submit)="submit($event, accessIdentifier.value)">
-        <label for="back-office-access-identifier">
-          {{ i18n.t('backOffice.accessIdentifier') }}
-        </label>
-        <input
-          #accessIdentifier
-          id="back-office-access-identifier"
-          class="input"
-          type="password"
-          autocomplete="off"
-          required
-          autofocus
-        />
-        @if (error(); as errorKey) {
-        <p class="error" role="alert">{{ i18n.t(errorKey) }}</p>
-        }
-        <button appButton variant="primary" type="submit" [disabled]="pending()">
-          {{ i18n.t(submitLabel()) }}
-        </button>
-      </form>
-      <div class="bootstrap-slot">
-        @if (mode() === 'administrator') {
-        <a class="bootstrap-link" routerLink="/backoffice/bootstrap">
-          {{ i18n.t('backOffice.bootstrap') }}
-        </a>
-        }
+    <router-outlet />
+    <ng-template appTabPanel="login" let-mode="mode">
+      <div
+        id="login-panel"
+        class="login-mode-panel"
+        role="region"
+        [attr.aria-labelledby]="modeView(mode).panelLabelId"
+      >
+        <p>{{ i18n.t(modeView(mode).intro) }}</p>
+        <form (submit)="submit($event, accessIdentifier.value, mode)">
+          <label for="back-office-access-identifier">
+            {{ i18n.t('backOffice.accessIdentifier') }}
+          </label>
+          <input
+            #accessIdentifier
+            id="back-office-access-identifier"
+            class="input"
+            type="password"
+            autocomplete="off"
+            required
+            autofocus
+          />
+          @if (error(); as errorKey) {
+          <p class="error" role="alert">{{ i18n.t(errorKey) }}</p>
+          }
+          <button appButton variant="primary" type="submit" [disabled]="pending()">
+            {{ i18n.t(submitLabel()) }}
+          </button>
+        </form>
+        <div class="bootstrap-slot">
+          @if (mode === 'administrator') {
+          <a class="bootstrap-link" routerLink="/backoffice/bootstrap">
+            {{ i18n.t('backOffice.bootstrap') }}
+          </a>
+          }
+        </div>
       </div>
-    </div>
+    </ng-template>
   </div>
 </section>

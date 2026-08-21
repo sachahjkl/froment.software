@@ -16,7 +16,7 @@ import {
   required,
   submit,
 } from '@angular/forms/signals';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink, RouterOutlet } from '@angular/router';
 import {
   Ulid,
   type ClientSummaryValue,
@@ -36,9 +36,8 @@ import { Button } from '@shared/button/button';
 import { DataTable } from '@shared/data-table/data-table';
 import { Notice } from '@shared/notice/notice';
 import { Tabs, type TabItem } from '@shared/tabs/tabs';
+import { TabLayout, TabPanel } from '@shared/tabs/tab-panel';
 import { TextCopy } from '@shared/text-copy';
-
-type ClientTab = 'profile' | 'documents' | 'access';
 
 interface ClientDocument {
   readonly id: string;
@@ -63,7 +62,18 @@ const emptyClient = () => ({
 
 @Component({
   selector: 'app-client-detail',
-  imports: [Badge, Button, DataTable, FormField, Notice, RouterLink, Tabs],
+  imports: [
+    Badge,
+    Button,
+    DataTable,
+    FormField,
+    Notice,
+    RouterLink,
+    RouterOutlet,
+    TabLayout,
+    TabPanel,
+    Tabs,
+  ],
   templateUrl: './client-detail.html',
   styleUrl: './client-detail.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -76,15 +86,14 @@ export class ClientDetail {
   private readonly invoicesApi = inject(InvoicesApi);
   private readonly textCopy = inject(TextCopy);
   private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
   private readonly model = signal(emptyClient());
   private readonly client = signal<ClientSummaryValue | undefined>(undefined);
-  protected readonly selectedTab = signal<ClientTab>('profile');
   protected readonly tabs = computed<readonly TabItem[]>(() =>
     (['profile', 'documents', 'access'] as const).map((value) => ({
-      value,
+      path: value,
       id: `client-${value}-tab`,
       label: this.i18n.t(`backOffice.clientDetail.tab.${value}`),
-      panelId: `client-${value}-panel`,
     })),
   );
   private readonly quotes = signal<ReadonlyArray<QuoteSummaryValue>>([]);
@@ -215,7 +224,7 @@ export class ClientDetail {
     this.reactivating.set(false);
     if (!outcome.success) return this.setError(outcome.code);
     this.applyClient(outcome.result);
-    this.selectedTab.set('access');
+    void this.router.navigate(['access'], { relativeTo: this.route });
   }
 
   protected async copyAccess(): Promise<void> {

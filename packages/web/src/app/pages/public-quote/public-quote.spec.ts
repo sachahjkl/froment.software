@@ -1,9 +1,12 @@
 import { TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
+import { RouterTestingHarness } from '@angular/router/testing';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { PublicQuoteApi } from '../../public-quote/public-quote-api';
 import { PublicQuote } from './public-quote';
 import { I18nService } from '@app/i18n.service';
+import { TabPanelOutlet } from '@shared/tabs/tab-panel';
 
 const token = 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA';
 const quote = {
@@ -81,7 +84,20 @@ describe('PublicQuote', () => {
       value: vi.fn(),
     });
     TestBed.configureTestingModule({
-      providers: [{ provide: PublicQuoteApi, useValue: { get, getPdf, sign } }],
+      providers: [
+        provideRouter([
+          {
+            path: '',
+            component: PublicQuote,
+            children: [
+              { path: 'summary', component: TabPanelOutlet, data: { panel: 'summary' } },
+              { path: 'document', component: TabPanelOutlet, data: { panel: 'document' } },
+              { path: 'signature', component: TabPanelOutlet, data: { panel: 'signature' } },
+            ],
+          },
+        ]),
+        { provide: PublicQuoteApi, useValue: { get, getPdf, sign } },
+      ],
     });
   });
 
@@ -90,18 +106,19 @@ describe('PublicQuote', () => {
   });
 
   it('removes the token and presents the immutable quote', async () => {
-    const fixture = TestBed.createComponent(PublicQuote);
-    await fixture.whenStable();
+    const harness = await RouterTestingHarness.create('/summary');
+    const fixture = harness.fixture;
     const root: HTMLElement = fixture.nativeElement;
+    await vi.waitFor(() => expect(root.textContent).toContain('Software audit'));
 
     expect(get).toHaveBeenCalledWith(token);
     expect(getPdf).toHaveBeenCalledWith(token);
     expect(globalThis.location.hash).toBe('');
     expect(root.textContent).toContain('Software audit');
     expect(root.textContent).toContain('DE-2026-000001');
-    expect(root.querySelectorAll('[role="tab"]')).toHaveLength(3);
-    expect(root.querySelector('#quote-signature-panel')?.hasAttribute('hidden')).toBe(true);
-    root.querySelector<HTMLButtonElement>('#quote-document-tab')?.click();
+    expect(root.querySelectorAll('app-tabs a')).toHaveLength(3);
+    expect(root.querySelector('#quote-signature-panel')).toBeNull();
+    root.querySelector<HTMLAnchorElement>('#quote-document-tab')?.click();
     await fixture.whenStable();
     expect(root.querySelector('a[download]')?.getAttribute('download')).toBe('DE-2026-000001.pdf');
     expect(root.innerHTML).not.toContain(token);
@@ -109,10 +126,11 @@ describe('PublicQuote', () => {
   });
 
   it('submits explicit consent and shows the accepted state', async () => {
-    const fixture = TestBed.createComponent(PublicQuote);
-    await fixture.whenStable();
+    const harness = await RouterTestingHarness.create('/summary');
+    const fixture = harness.fixture;
     const root: HTMLElement = fixture.nativeElement;
-    root.querySelector<HTMLButtonElement>('#quote-signature-tab')?.click();
+    await vi.waitFor(() => expect(root.textContent).toContain('Software audit'));
+    root.querySelector<HTMLAnchorElement>('#quote-signature-tab')?.click();
     await fixture.whenStable();
     const inputs = root.querySelectorAll<HTMLInputElement>('input[type="text"]');
     if (inputs[0] !== undefined) inputs[0].value = 'Ada Lovelace';
@@ -138,10 +156,11 @@ describe('PublicQuote', () => {
 
   it('uses one main landmark, translates its summary, and describes invalid fields', async () => {
     TestBed.inject(I18nService).setLanguage('en');
-    const fixture = TestBed.createComponent(PublicQuote);
-    await fixture.whenStable();
+    const harness = await RouterTestingHarness.create('/summary');
+    const fixture = harness.fixture;
     const root: HTMLElement = fixture.nativeElement;
-    root.querySelector<HTMLButtonElement>('#quote-signature-tab')?.click();
+    await vi.waitFor(() => expect(root.textContent).toContain('Software audit'));
+    root.querySelector<HTMLAnchorElement>('#quote-signature-tab')?.click();
     await fixture.whenStable();
     const name = root.querySelector<HTMLInputElement>('#public-quote-signer-name')!;
 
@@ -150,7 +169,7 @@ describe('PublicQuote', () => {
 
     expect(root.querySelector('main')).toBeNull();
     expect(root.querySelector('.quote-facts')?.getAttribute('aria-label')).toBe('Quote summary');
-    expect(root.querySelector('#quote-signature-tab')?.getAttribute('aria-selected')).toBe('true');
+    expect(root.querySelector('#quote-signature-tab')?.getAttribute('aria-current')).toBe('page');
     expect(name.getAttribute('aria-invalid')).toBe('true');
     expect(name.getAttribute('aria-describedby')).toBe('public-quote-signer-name-error');
     expect(root.querySelector('#public-quote-signer-name-error')).not.toBeNull();

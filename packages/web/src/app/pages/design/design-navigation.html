@@ -1,0 +1,64 @@
+<section
+  appTabLayout
+  id="design-navigation-panel"
+  class="component-panel"
+  role="region"
+  aria-labelledby="design-navigation-tab"
+  tabindex="0"
+>
+  <h2>{{ i18n.t("design.components.navigation") }}</h2>
+  <div class="sample-grid wide">
+    <app-visual-sample name="tabs / interactive">
+      <app-tabs label="Exemple d’onglets" [tabs]="tabs" />
+      <router-outlet />
+      <ng-template appTabPanel="nested" let-label="label" let-id="id" let-tabId="tabId">
+        <section [id]="id" class="nested-panel" role="region" [attr.aria-labelledby]="tabId">
+          Panneau {{ label }}
+        </section>
+      </ng-template>
+    </app-visual-sample>
+    <app-visual-sample name="section heading / actions">
+      <div class="section-heading-sample">
+        <div>
+          <p class="eyebrow">DOCUMENTS</p>
+          <h3>Révisions</h3>
+        </div>
+        <button appButton type="button">Nouvelle révision</button>
+      </div>
+    </app-visual-sample>
+    <app-visual-sample name="page header / back link">
+      <header class="page-header-sample">
+        <a href="#design-navigation-panel">← Retour aux devis</a>
+        <h3>Modifier le devis</h3>
+      </header>
+    </app-visual-sample>
+    <app-visual-sample name="page header / primary action">
+      <header class="section-heading-sample">
+        <h3>Devis</h3>
+        <a appLinkButton variant="primary" href="#design-navigation-panel">Nouveau devis</a>
+      </header>
+    </app-visual-sample>
+    <app-visual-sample name="authentication panel">
+      <section class="auth-panel-sample">
+        <h3>Accès au back-office</h3>
+        <label class="field"
+          >Mot de passe<input class="input" type="password" value="password"
+        /></label>
+        <button appButton variant="primary" type="button">Se connecter</button>
+      </section>
+    </app-visual-sample>
+    <app-visual-sample name="form panel">
+      <form class="form-panel-sample" (submit)="$event.preventDefault()">
+        <label class="field">Nom<input class="input" value="Client Exemple" /></label>
+        <button appButton variant="primary" type="submit">Enregistrer</button>
+      </form>
+    </app-visual-sample>
+    <app-visual-sample name="action group">
+      <div class="component-row">
+        <button appButton variant="primary" type="button">Enregistrer</button>
+        <button appButton type="button">Annuler</button>
+        <button appButton variant="danger" type="button">Supprimer</button>
+      </div>
+    </app-visual-sample>
+  </div>
+</section>

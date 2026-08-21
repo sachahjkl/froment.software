@@ -1,5 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
+import { RouterTestingHarness } from '@angular/router/testing';
 import {
   type InvoiceSummaryValue,
   type OrderSummaryValue,
@@ -12,6 +13,7 @@ import { ClientsApi } from '@backoffice/clients-api';
 import { OrdersApi } from '@backoffice/orders-api';
 import { QuotesApi } from '@backoffice/quotes-api';
 import { Affairs } from './affairs';
+import { TabPanelOutlet } from '@shared/tabs/tab-panel';
 
 const draftQuote = {
   id: '01ARZ3NDEKTSV4RRFFQ69G5FAA',
@@ -69,7 +71,24 @@ describe('Affairs', () => {
   it('groups the quote, order, and invoice into one business workflow', async () => {
     TestBed.configureTestingModule({
       providers: [
-        provideRouter([]),
+        provideRouter([
+          {
+            path: '',
+            component: Affairs,
+            children: [
+              {
+                path: 'attention',
+                component: TabPanelOutlet,
+                data: { panel: 'affairs', tab: 'attention' },
+              },
+              {
+                path: 'completed',
+                component: TabPanelOutlet,
+                data: { panel: 'affairs', tab: 'completed' },
+              },
+            ],
+          },
+        ]),
         {
           provide: ClientsApi,
           useValue: {
@@ -84,16 +103,15 @@ describe('Affairs', () => {
         { provide: InvoicesApi, useValue: { list: () => Promise.resolve([invoice]) } },
       ],
     });
-    const fixture = TestBed.createComponent(Affairs);
-    await fixture.whenStable();
-    const root: HTMLElement = fixture.nativeElement;
+    const harness = await RouterTestingHarness.create('/attention');
+    const root: HTMLElement = harness.fixture.nativeElement;
 
     await vi.waitFor(() => expect(root.textContent).not.toMatch(/Loading engagements|Chargement/));
     expect(root.textContent).toContain('DE-2026-000001');
     expect(root.textContent).not.toContain('DE-2026-000002');
 
-    root.querySelector<HTMLButtonElement>('#affairs-completed-tab')?.click();
-    await fixture.whenStable();
+    root.querySelector<HTMLAnchorElement>('#affairs-completed-tab')?.click();
+    await harness.fixture.whenStable();
     expect(root.textContent).toContain('DE-2026-000002');
     expect(root.textContent).toMatch(/Réglée|Paid/);
   });

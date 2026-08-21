@@ -6,7 +6,7 @@ import {
   inject,
   signal,
 } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { RouterLink, RouterOutlet } from '@angular/router';
 import {
   type ClientListValue,
   type InvoiceListValue,
@@ -22,13 +22,25 @@ import { Button } from '@shared/button/button';
 import { DataTable } from '@shared/data-table/data-table';
 import { Notice } from '@shared/notice/notice';
 import { Tabs, type TabItem } from '@shared/tabs/tabs';
+import { TabLayout, TabPanel } from '@shared/tabs/tab-panel';
 
 type PageState = 'loading' | 'ready' | 'error';
 type BillingTab = InvoiceStatusValue | 'all';
 
 @Component({
   selector: 'app-billing',
-  imports: [BackOfficeNav, Badge, Button, DataTable, Notice, RouterLink, Tabs],
+  imports: [
+    BackOfficeNav,
+    Badge,
+    Button,
+    DataTable,
+    Notice,
+    RouterLink,
+    RouterOutlet,
+    TabLayout,
+    TabPanel,
+    Tabs,
+  ],
   templateUrl: './billing.html',
   styleUrl: './billing.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -41,20 +53,17 @@ export class Billing {
   protected readonly invoices = signal<InvoiceListValue>([]);
   private readonly clients = signal<ClientListValue>([]);
   protected readonly selectedIds = signal<ReadonlySet<string>>(new Set());
-  protected readonly selectedTab = signal<BillingTab>('issued');
   protected readonly tabs = computed<readonly TabItem[]>(() =>
     (['draft', 'issued', 'paid', 'void', 'all'] as const).map((value) => ({
-      value,
+      path: value,
       id: `billing-${value}-tab`,
       label: this.i18n.t(`backOffice.billing.${value}`),
-      panelId: 'billing-panel',
     })),
   );
-  protected readonly visibleInvoices = computed(() => {
-    const selected = this.selectedTab();
+  protected visibleInvoices(selected: BillingTab): InvoiceListValue {
     if (selected === 'all') return this.invoices();
     return this.invoices().filter(({ status }) => status === selected);
-  });
+  }
   protected readonly outstandingCents = computed(() =>
     this.invoices()
       .filter(({ status }) => status === 'issued')
@@ -132,9 +141,9 @@ export class Billing {
     this.selectedIds.set(selectedIds);
   }
 
-  protected selectVisible(checked: boolean): void {
+  protected selectVisible(tab: BillingTab, checked: boolean): void {
     const selectedIds = new Set(this.selectedIds());
-    for (const invoice of this.visibleInvoices()) {
+    for (const invoice of this.visibleInvoices(tab)) {
       if (checked) selectedIds.add(invoice.id);
       else selectedIds.delete(invoice.id);
     }

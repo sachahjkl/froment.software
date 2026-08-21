@@ -3,6 +3,12 @@ import { HomeComponent } from './pages/home/home.component';
 import { policies } from './pages/policy/policy-documents';
 import { administratorGuard, clientGuard } from './back-office/authentication';
 import { unsavedChangesGuard } from './back-office/unsaved-changes-guard';
+import { TabPanelOutlet } from './shared/tabs/tab-panel';
+
+const tabRoutes = (defaultPath: string, panel: string, paths: readonly string[]): Routes => [
+  { path: '', redirectTo: defaultPath, pathMatch: 'full' },
+  ...paths.map((path) => ({ path, component: TabPanelOutlet, data: { panel, tab: path } })),
+];
 
 export const routes: Routes = [
   {
@@ -72,6 +78,12 @@ export const routes: Routes = [
       descriptionKey: 'page.description.public_quote',
       robots: 'noindex, nofollow',
     },
+    children: [
+      { path: '', redirectTo: 'summary', pathMatch: 'full' },
+      { path: 'summary', component: TabPanelOutlet, data: { panel: 'summary' } },
+      { path: 'document', component: TabPanelOutlet, data: { panel: 'document' } },
+      { path: 'signature', component: TabPanelOutlet, data: { panel: 'signature' } },
+    ],
   },
   {
     path: 'backoffice',
@@ -86,6 +98,19 @@ export const routes: Routes = [
       descriptionKey: 'page.description.back_office',
       robots: 'noindex, nofollow',
     },
+    children: [
+      { path: '', redirectTo: 'client', pathMatch: 'full' },
+      {
+        path: 'client',
+        component: TabPanelOutlet,
+        data: { panel: 'login', mode: 'client' },
+      },
+      {
+        path: 'admin',
+        component: TabPanelOutlet,
+        data: { panel: 'login', mode: 'administrator' },
+      },
+    ],
   },
   {
     path: 'backoffice/bootstrap',
@@ -131,6 +156,7 @@ export const routes: Routes = [
       descriptionKey: 'page.description.back_office_clients',
       robots: 'noindex, nofollow',
     },
+    children: tabRoutes('active', 'clients', ['active', 'archived', 'all']),
   },
   {
     path: 'backoffice/clients/:clientId',
@@ -145,6 +171,12 @@ export const routes: Routes = [
       descriptionKey: 'page.description.back_office_client_detail',
       robots: 'noindex, nofollow',
     },
+    children: [
+      { path: '', redirectTo: 'profile', pathMatch: 'full' },
+      { path: 'profile', component: TabPanelOutlet, data: { panel: 'profile' } },
+      { path: 'documents', component: TabPanelOutlet, data: { panel: 'documents' } },
+      { path: 'access', component: TabPanelOutlet, data: { panel: 'access' } },
+    ],
   },
   {
     path: 'backoffice/affaires',
@@ -156,6 +188,7 @@ export const routes: Routes = [
       descriptionKey: 'page.description.back_office_quotes',
       robots: 'noindex, nofollow',
     },
+    children: tabRoutes('attention', 'affairs', ['attention', 'active', 'completed', 'all']),
   },
   {
     path: 'backoffice/affaires/:quoteId',
@@ -204,6 +237,7 @@ export const routes: Routes = [
       descriptionKey: 'page.description.back_office_invoices',
       robots: 'noindex, nofollow',
     },
+    children: tabRoutes('issued', 'billing', ['draft', 'issued', 'paid', 'void', 'all']),
   },
   {
     path: 'backoffice/recherche',
@@ -290,6 +324,52 @@ export const routes: Routes = [
       descriptionKey: 'page.description.design',
       robots: 'noindex, follow',
     },
+    children: [
+      { path: '', redirectTo: 'demo', pathMatch: 'full' },
+      ...['demo', 'actions', 'inputs', 'feedback', 'data', 'documents'].map((path) => ({
+        path,
+        component: TabPanelOutlet,
+        data: { panel: path },
+      })),
+      {
+        path: 'navigation',
+        loadComponent: () =>
+          import('./pages/design/design-navigation').then((module) => module.DesignNavigation),
+        children: [
+          { path: '', redirectTo: 'first', pathMatch: 'full' },
+          {
+            path: 'first',
+            component: TabPanelOutlet,
+            data: {
+              panel: 'nested',
+              label: 'Proposition détaillée',
+              id: 'sample-first-panel',
+              tabId: 'sample-first-tab',
+            },
+          },
+          {
+            path: 'second',
+            component: TabPanelOutlet,
+            data: {
+              panel: 'nested',
+              label: 'Document PDF téléchargeable',
+              id: 'sample-second-panel',
+              tabId: 'sample-second-tab',
+            },
+          },
+          {
+            path: 'third',
+            component: TabPanelOutlet,
+            data: {
+              panel: 'nested',
+              label: 'Acceptation et signature',
+              id: 'sample-third-panel',
+              tabId: 'sample-third-tab',
+            },
+          },
+        ],
+      },
+    ],
   },
   {
     path: 'legal',

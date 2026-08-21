@@ -1,4 +1,4 @@
-<section class="clients-page" aria-labelledby="clients-title">
+<section appTabLayout class="clients-page" aria-labelledby="clients-title">
   <app-back-office-nav />
   <header>
     <div>
@@ -168,78 +168,76 @@
     </div>
   </section>
   }
-  <app-tabs
-    [label]="i18n.t('backOffice.clients.tabs')"
-    [tabs]="tabs()"
-    queryParam="status"
-    [(selected)]="selectedTab"
-  />
-  <section
-    id="clients-panel"
-    role="tabpanel"
-    [attr.aria-labelledby]="'clients-' + selectedTab() + '-tab'"
-    tabindex="0"
-  >
-    @switch (state()) { @case ('loading') {
-    <p aria-live="polite">{{ i18n.t('backOffice.clients.loading') }}</p>
-    } @case ('ready') { @if (visibleClients().length === 0) {
-    <p class="empty">{{ i18n.t('backOffice.clients.empty') }}</p>
-    } @else {
-    <div appDataTable>
-      <table>
-        <thead>
-          <tr>
-            <th>{{ i18n.t('backOffice.clients.displayName') }}</th>
-            <th>{{ i18n.t('backOffice.clients.status') }}</th>
-            <th>{{ i18n.t('backOffice.clients.actions') }}</th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (client of visibleClients(); track client.id) {
-          <tr>
-            <td>
-              <a [routerLink]="['/backoffice/clients', client.id]">
-                <strong>{{ client.displayName }}</strong>
-              </a>
-            </td>
-            <td>
-              @if (client.archived) {
-              <span appBadge variant="warning">{{ i18n.t('backOffice.clients.archived') }}</span>
-              } @else {
-              <span appBadge variant="success">{{ i18n.t('backOffice.clients.active') }}</span>
-              }
-            </td>
-            <td>
-              <div class="actions">
-                <a appButton [routerLink]="['/backoffice/clients', client.id]">
-                  {{ i18n.t('backOffice.clients.open') }}
+  <app-tabs [label]="i18n.t('backOffice.clients.tabs')" [tabs]="tabs()" />
+  <router-outlet />
+  <ng-template appTabPanel="clients" let-tab="tab">
+    <section
+      id="clients-panel"
+      role="region"
+      [attr.aria-labelledby]="'clients-' + tab + '-tab'"
+      tabindex="0"
+    >
+      @switch (state()) { @case ('loading') {
+      <p aria-live="polite">{{ i18n.t('backOffice.clients.loading') }}</p>
+      } @case ('ready') { @if (visibleClients(tab).length === 0) {
+      <p class="empty">{{ i18n.t('backOffice.clients.empty') }}</p>
+      } @else {
+      <div appDataTable>
+        <table>
+          <thead>
+            <tr>
+              <th>{{ i18n.t('backOffice.clients.displayName') }}</th>
+              <th>{{ i18n.t('backOffice.clients.status') }}</th>
+              <th>{{ i18n.t('backOffice.clients.actions') }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (client of visibleClients(tab); track client.id) {
+            <tr>
+              <td>
+                <a [routerLink]="['/backoffice/clients', client.id]">
+                  <strong>{{ client.displayName }}</strong>
                 </a>
-                @if (!client.archived) {
-                <button
-                  appButton
-                  type="button"
-                  [disabled]="pendingClientId() !== undefined"
-                  (click)="createAccess(client)"
-                >
-                  {{ i18n.t('backOffice.clients.createAccess') }}
-                </button>
-                <button
-                  appButton
-                  variant="danger"
-                  type="button"
-                  [disabled]="pendingClientId() !== undefined"
-                  (click)="archive(client)"
-                >
-                  {{ i18n.t('backOffice.clients.archive') }}
-                </button>
+              </td>
+              <td>
+                @if (client.archived) {
+                <span appBadge variant="warning">{{ i18n.t('backOffice.clients.archived') }}</span>
+                } @else {
+                <span appBadge variant="success">{{ i18n.t('backOffice.clients.active') }}</span>
                 }
-              </div>
-            </td>
-          </tr>
-          }
-        </tbody>
-      </table>
-    </div>
-    } } }
-  </section>
+              </td>
+              <td>
+                <div class="actions">
+                  <a appButton [routerLink]="['/backoffice/clients', client.id]">
+                    {{ i18n.t('backOffice.clients.open') }}
+                  </a>
+                  @if (!client.archived) {
+                  <button
+                    appButton
+                    type="button"
+                    [disabled]="pendingClientId() !== undefined"
+                    (click)="createAccess(client)"
+                  >
+                    {{ i18n.t('backOffice.clients.createAccess') }}
+                  </button>
+                  <button
+                    appButton
+                    variant="danger"
+                    type="button"
+                    [disabled]="pendingClientId() !== undefined"
+                    (click)="archive(client)"
+                  >
+                    {{ i18n.t('backOffice.clients.archive') }}
+                  </button>
+                  }
+                </div>
+              </td>
+            </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      } } }
+    </section>
+  </ng-template>
 </section>
