@@ -71,6 +71,14 @@ export class AffairDetail {
     return this.i18n.t(`backOffice.invoice.status.${status}`);
   }
 
+  protected quoteNextAction(status: QuoteStatusValue): string {
+    return this.i18n.t(`backOffice.affair.nextAction.quote.${status}`);
+  }
+
+  protected invoiceNextAction(status: InvoiceStatusValue): string {
+    return this.i18n.t(`backOffice.affair.nextAction.invoice.${status}`);
+  }
+
   protected async load(): Promise<void> {
     const quoteId = Schema.decodeUnknownOption(Ulid)(this.route.snapshot.paramMap.get('quoteId'));
     if (Option.isNone(quoteId)) {

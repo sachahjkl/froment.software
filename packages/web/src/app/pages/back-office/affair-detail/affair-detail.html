@@ -15,6 +15,37 @@
     <strong>{{ money(quote.currentRevision.totalCents) }}</strong>
   </header>
 
+  <section class="next-action" aria-labelledby="next-action-title">
+    <div>
+      <h2 id="next-action-title">{{ i18n.t('backOffice.affair.nextAction') }}</h2>
+      @if (invoice(); as invoice) {
+      <p>{{ invoiceNextAction(invoice.status) }}</p>
+      } @else if (order()) {
+      <p>{{ i18n.t('backOffice.affair.nextAction.createInvoice') }}</p>
+      } @else {
+      <p>{{ quoteNextAction(quote.status) }}</p>
+      }
+    </div>
+    @if (invoice(); as invoice) { @if (invoice.status === 'draft' || invoice.status === 'issued') {
+    <a appButton variant="primary" [routerLink]="['/backoffice/invoices', invoice.id]">
+      {{ i18n.t('backOffice.affair.nextAction.openInvoice') }}
+    </a>
+    } } @else if (order(); as order) {
+    <a
+      appButton
+      variant="primary"
+      routerLink="/backoffice/invoices/new"
+      [queryParams]="{ orderId: order.id }"
+    >
+      {{ i18n.t('backOffice.affair.nextAction.createInvoiceButton') }}
+    </a>
+    } @else if (quote.status === 'draft' || quote.status === 'sent' || quote.status === 'expired') {
+    <a appButton variant="primary" [routerLink]="['/backoffice/quotes', quote.id]">
+      {{ i18n.t('backOffice.affair.nextAction.openQuote') }}
+    </a>
+    }
+  </section>
+
   <section aria-labelledby="documents-title">
     <h2 id="documents-title">{{ i18n.t('backOffice.affair.documents') }}</h2>
     <div appDataTable>
