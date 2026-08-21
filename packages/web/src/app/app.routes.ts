@@ -158,6 +158,19 @@ export const routes: Routes = [
     },
   },
   {
+    path: 'backoffice/affaires/:quoteId',
+    loadComponent: () =>
+      import('./pages/back-office/affair-detail/affair-detail').then(
+        (module) => module.AffairDetail,
+      ),
+    canActivate: [administratorGuard],
+    data: {
+      titleKey: 'page.back_office_affair_detail',
+      descriptionKey: 'page.description.back_office_affair_detail',
+      robots: 'noindex, nofollow',
+    },
+  },
+  {
     path: 'backoffice/quotes/new',
     loadComponent: () =>
       import('./pages/back-office/quote-editor/quote-editor').then((module) => module.QuoteEditor),

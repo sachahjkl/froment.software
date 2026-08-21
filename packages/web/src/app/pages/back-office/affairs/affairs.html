@@ -48,7 +48,9 @@
           @for (affair of visibleAffairs(); track affair.quote.id) {
           <tr>
             <td>
-              <strong>{{ affair.quote.reference }}</strong><small>{{ affair.quote.title }}</small>
+              <a [routerLink]="['/backoffice/affaires', affair.quote.id]"
+                ><strong>{{ affair.quote.reference }}</strong></a
+              ><small>{{ affair.quote.title }}</small>
             </td>
             <td>{{ affair.quote.clientDisplayName }}</td>
             <td>

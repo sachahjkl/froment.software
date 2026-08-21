@@ -101,7 +101,7 @@
 
 ## Back-Office Operations
 
-- [ ] Add a unified affair detail with documents and chronological history.
+- [x] Add a unified affair detail with documents and chronological history.
 - [ ] Add contextual next actions to each affair.
 - [ ] Add manual quote and overdue invoice reminders.
 - [ ] Add due dates, overdue states, and upcoming deadlines.

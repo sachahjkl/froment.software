@@ -1,0 +1,83 @@
+<section class="affair-page" aria-labelledby="affair-title">
+  <app-back-office-nav />
+  @switch (state()) { @case ('loading') {
+  <p class="state" aria-live="polite">{{ i18n.t('backOffice.affair.loading') }}</p>
+  } @case ('error') {
+  <p appNotice variant="danger" role="alert">{{ i18n.t('backOffice.affair.error') }}</p>
+  <button appButton type="button" (click)="load()">{{ i18n.t('backOffice.affair.retry') }}</button>
+  } @case ('ready') { @if (quote(); as quote) {
+  <header>
+    <div>
+      <p class="eyebrow">{{ quote.reference }}</p>
+      <h1 id="affair-title">{{ quote.currentRevision.title }}</h1>
+      <p>{{ quote.currentRevision.clientDisplayName }}</p>
+    </div>
+    <strong>{{ money(quote.currentRevision.totalCents) }}</strong>
+  </header>
+
+  <section aria-labelledby="documents-title">
+    <h2 id="documents-title">{{ i18n.t('backOffice.affair.documents') }}</h2>
+    <div appDataTable>
+      <table>
+        <thead>
+          <tr>
+            <th>{{ i18n.t('backOffice.affair.document') }}</th>
+            <th>{{ i18n.t('backOffice.affair.reference') }}</th>
+            <th>{{ i18n.t('backOffice.affair.status') }}</th>
+            <th>{{ i18n.t('backOffice.affair.action') }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>{{ i18n.t('backOffice.affair.quote') }}</td>
+            <td>{{ quote.reference }}</td>
+            <td><span appBadge>{{ quoteStatus(quote.status) }}</span></td>
+            <td>
+              <a appButton [routerLink]="['/backoffice/quotes', quote.id]"
+                >{{ i18n.t('backOffice.open') }}</a
+              >
+            </td>
+          </tr>
+          @if (order(); as order) {
+          <tr>
+            <td>{{ i18n.t('backOffice.affair.order') }}</td>
+            <td>{{ order.reference }}</td>
+            <td><span appBadge>{{ i18n.t('backOffice.affair.confirmed') }}</span></td>
+            <td>
+              <a appButton [href]="'/api/orders/' + order.id + '/preview'"
+                >{{ i18n.t('backOffice.open') }}</a
+              >
+            </td>
+          </tr>
+          } @if (invoice(); as invoice) {
+          <tr>
+            <td>{{ i18n.t('backOffice.affair.invoice') }}</td>
+            <td>{{ invoice.invoiceNumber ?? invoice.orderReference }}</td>
+            <td>
+              <span appBadge>{{ invoiceStatus(invoice.status) }}</span>
+            </td>
+            <td>
+              <a appButton [routerLink]="['/backoffice/invoices', invoice.id]"
+                >{{ i18n.t('backOffice.open') }}</a
+              >
+            </td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section aria-labelledby="timeline-title">
+    <h2 id="timeline-title">{{ i18n.t('backOffice.affair.timeline') }}</h2>
+    <ol class="timeline">
+      @for (item of timeline(); track item.id) {
+      <li>
+        <time [attr.datetime]="item.date">{{ date(item.date) }}</time
+        ><strong>{{ i18n.t(item.label) }}</strong>
+      </li>
+      }
+    </ol>
+  </section>
+  } } }
+</section>
