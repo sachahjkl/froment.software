@@ -11,7 +11,7 @@ body {
   margin: 0 auto;
 }
 
-froment-invoice-document {
+froment-quote-document {
   --paper: #efefef;
   --ink: #111;
   --line: #555;
@@ -39,7 +39,7 @@ td {
   word-break: break-word;
 }
 
-.invoice {
+.quote {
   width: 100%;
   min-height: 277mm;
   padding: 10mm 11mm 9mm;
@@ -55,9 +55,7 @@ td {
 
 .company,
 .customer,
-.order-info,
-.payment-info,
-.legal,
+.conditions,
 footer {
   display: grid;
   gap: 0.4mm;
@@ -69,7 +67,7 @@ footer {
   height: 2.5mm;
 }
 
-.invoice-meta {
+.quote-meta {
   padding: 1.2mm 2.2mm;
   border: 0.25mm solid var(--line);
 }
@@ -82,10 +80,6 @@ footer {
 
 .customer {
   margin-top: 6mm;
-}
-
-.order-info {
-  margin-top: 5mm;
 }
 
 h1 {
@@ -172,21 +166,14 @@ table {
   border-top: 1mm double var(--line);
 }
 
-.payment-info {
+.conditions {
   margin-top: 5mm;
-}
-
-.legal {
-  gap: 1.5mm;
-  margin-top: 6mm;
-  font-size: 7pt;
-  font-weight: 400;
-  line-height: 1.2;
+  white-space: pre-wrap;
 }
 
 footer {
   gap: 1.5mm;
-  margin-top: 5mm;
+  margin-top: 7mm;
   text-align: center;
 }
 
@@ -196,12 +183,12 @@ footer {
     margin: 0;
   }
 
-  froment-invoice-document {
+  froment-quote-document {
     width: 210mm;
     margin-inline: 0;
   }
 
-  .invoice {
+  .quote {
     min-height: 297mm;
   }
 

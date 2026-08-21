@@ -53,6 +53,18 @@ const snapshot: QuoteRenderSnapshotValue = {
 };
 
 describe('QuoteDefaultTemplate', () => {
+  it('keeps the historical template for version 1 snapshots', async () => {
+    const html = await renderQuoteDefaultTemplate({
+      ...snapshot,
+      templateVersion: 1,
+    });
+
+    expect(html).toContain(snapshot.quoteId);
+    expect(html).toContain('class="document-header"');
+    expect(html).toContain('"Trebuchet MS", Arial, "Liberation Sans", sans-serif');
+    expect(html).not.toContain('font-family: Cousine');
+  });
+
   it('formats every safe cent integer without precision loss', () => {
     expect(formatMoney(Number.MAX_SAFE_INTEGER - 2, 'fr-FR', 'EUR')).toBe(
       '90\u202f071\u202f992\u202f547\u202f409,89\u00a0€',
@@ -90,17 +102,18 @@ describe('QuoteDefaultTemplate', () => {
     expect(html).toContain('120,00&nbsp;€');
     expect(html).toContain('&lt;script&gt;alert(1)&lt;/script&gt; Acme');
     expect(html).not.toContain('<script>alert(1)</script>');
-    expect(html).toContain('"Trebuchet MS", Arial, "Liberation Sans", sans-serif');
-    expect(html).not.toContain('Courier');
+    expect(html).toContain('font-family: Cousine, "Liberation Mono", monospace');
+    expect(html).toMatch(/froment-quote-document[^{]*{[^}]*margin-inline:\s*auto/);
+    expect(html).not.toContain('@import');
+    expect(html).not.toContain('font-toolbar');
+    expect(html).not.toContain('fontPicker');
     expect(html).not.toContain('gradient');
     expect(html).not.toContain('dashed');
     expect(html).toMatch(/@page\s*{[^}]*size:\s*A4/);
-    expect(html).toMatch(/\.document-header[^{]*{[^}]*display:\s*grid/);
-    expect(html).toMatch(/\.quote-meta[^{]*{[^}]*border:\s*1px solid/);
-    expect(html).toMatch(/table[^{]*{[^}]*border:\s*1px solid/);
-    expect(html).toMatch(/th[^{]*,\s*td[^{]*{[^}]*border:\s*1px solid/);
-    expect(html).toMatch(/tbody[^{]*tr[^{]*:nth-child\(even\)[^{]*{[^}]*background:/);
-    expect(html).toMatch(/\.grand-total[^{]*{[^}]*border-top:\s*3px double/);
+    expect(html).toMatch(/\.header[^{]*{[^}]*display:\s*grid/);
+    expect(html).toMatch(/\.quote-meta[^{]*{[^}]*border:\s*0\.25mm solid/);
+    expect(html).toMatch(/\.items[^{]*thead[^{]*{[^}]*border-bottom:\s*0\.25mm solid/);
+    expect(html).toMatch(/\.grand-total[^{]*{[^}]*border-top:\s*1mm double/);
   });
 
   it('renders and protects the supported content limits', async () => {
@@ -131,7 +144,7 @@ describe('QuoteDefaultTemplate', () => {
     const html = await renderQuoteDefaultTemplate(boundarySnapshot);
 
     expect(conditions).toHaveLength(2_000);
-    expect(html.match(/<tr/g)).toHaveLength(21);
+    expect(html.match(/<td[^>]*class="position"/g)).toHaveLength(20);
     expect(html).toContain(`0-&lt;script&gt;alert('line')&lt;/script&gt;${'X'.repeat(300)}`);
     expect(html).toContain("Conditions &lt;script&gt;alert('conditions')&lt;/script&gt; &amp;");
     expect(html).not.toContain("<script>alert('line')</script>");

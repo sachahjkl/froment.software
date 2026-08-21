@@ -597,7 +597,13 @@ describe('Database', () => {
             insert into orders (id, reference, quote_id, revision_id, client_id, signature_id, status, created_at)
               values ('01ARZ3NDEKTSV4RRFFQ69G5FAM', 'CO-1970-000001', '01ARZ3NDEKTSV4RRFFQ69G5FAD',
                       '01ARZ3NDEKTSV4RRFFQ69G5FAE', '01ARZ3NDEKTSV4RRFFQ69G5FAB',
-                      '01ARZ3NDEKTSV4RRFFQ69G5FAK', 'confirmed', 1);
+                       '01ARZ3NDEKTSV4RRFFQ69G5FAK', 'confirmed', 1);
+            insert into document_artifacts
+              (id, order_id, kind, content_type, byte_size, sha256, content, created_at)
+              values ('01ARZ3NDEKTSV4RRFFQ69G5FAS', '01ARZ3NDEKTSV4RRFFQ69G5FAM',
+                      'order-pdf', 'application/pdf', 1,
+                      'ca978112ca1bbdcafac231b39a23dc4da786eff8147c4e72b9807785afee48bb',
+                      x'61', 1);
             insert into invoices (id, order_id, client_id, status, version, created_at, updated_at)
               values ('01ARZ3NDEKTSV4RRFFQ69G5FAP', '01ARZ3NDEKTSV4RRFFQ69G5FAM',
                       '01ARZ3NDEKTSV4RRFFQ69G5FAB', 'draft', 1, 1, 1);
@@ -606,6 +612,20 @@ describe('Database', () => {
           expect(() =>
             sqlite.prepare("update document_artifacts set content = x'62'").run(),
           ).toThrow('document artifacts are immutable');
+          expect(() =>
+            sqlite
+              .prepare(
+                `insert into document_artifacts
+                 (id, revision_id, order_id, kind, content_type, byte_size, sha256, content, created_at)
+                 values (?, ?, ?, 'order-pdf', 'application/pdf', 1, ?, x'61', 1)`,
+              )
+              .run(
+                '01ARZ3NDEKTSV4RRFFQ69G5FAT',
+                '01ARZ3NDEKTSV4RRFFQ69G5FAE',
+                '01ARZ3NDEKTSV4RRFFQ69G5FAM',
+                'a'.repeat(64),
+              ),
+          ).toThrow();
           expect(() => sqlite.prepare('delete from document_artifacts').run()).toThrow(
             'document artifacts are immutable',
           );

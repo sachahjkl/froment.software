@@ -73,6 +73,7 @@
               <th>{{ i18n.t('backOffice.client.status') }}</th>
               <th>{{ i18n.t('backOffice.client.date') }}</th>
               <th>{{ i18n.t('backOffice.client.amount') }}</th>
+              <th>{{ i18n.t('backOffice.client.download') }}</th>
               <th>{{ i18n.t('backOffice.client.invoice') }}</th>
             </tr>
           </thead>
@@ -85,6 +86,13 @@
               <td><span class="badge ok">{{ i18n.t('backOffice.client.confirmed') }}</span></td>
               <td>{{ date(order.createdAt) }}</td>
               <td>{{ money(order.totalCents, order.currency) }}</td>
+              <td>
+                @if (order.pdfAvailable) {
+                <a [href]="orderPdfUrl(order.id)">{{ i18n.t('backOffice.client.pdf') }}</a>
+                } @else {
+                <span class="unavailable">{{ i18n.t('backOffice.client.unavailable') }}</span>
+                }
+              </td>
               <td>
                 {{ order.invoiceId === null ? i18n.t('backOffice.client.invoice.pending') :
                 i18n.t('backOffice.client.invoice.available') }}

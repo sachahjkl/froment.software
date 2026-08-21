@@ -1,5 +1,13 @@
-import { renderInvoiceDefaultTemplate, renderQuoteDefaultTemplate } from '@froment/documents';
-import { type InvoiceRenderSnapshotValue, type QuoteRenderSnapshotValue } from '@froment/contracts';
+import {
+  renderInvoiceDefaultTemplate,
+  renderOrderDefaultTemplate,
+  renderQuoteDefaultTemplate,
+} from '@froment/documents';
+import {
+  type InvoiceRenderSnapshotValue,
+  type OrderRenderSnapshotValue,
+  type QuoteRenderSnapshotValue,
+} from '@froment/contracts';
 import { Config, Context, Effect, Layer, Schema, TxSemaphore } from 'effect';
 import { chromium } from 'playwright-core';
 
@@ -20,6 +28,12 @@ export interface DocumentRendererService {
   ) => Effect.Effect<string, DocumentRenderError>;
   readonly renderInvoicePdf: (
     snapshot: InvoiceRenderSnapshotValue,
+  ) => Effect.Effect<Uint8Array, DocumentRenderError>;
+  readonly renderOrder: (
+    snapshot: OrderRenderSnapshotValue,
+  ) => Effect.Effect<string, DocumentRenderError>;
+  readonly renderOrderPdf: (
+    snapshot: OrderRenderSnapshotValue,
   ) => Effect.Effect<Uint8Array, DocumentRenderError>;
 }
 
@@ -93,12 +107,22 @@ export const DocumentRendererLive = Layer.effect(
     ) {
       return yield* renderPdf(yield* renderInvoice(snapshot));
     });
+    const renderOrder = Effect.fn('DocumentRenderer.renderOrder')(
+      (snapshot: OrderRenderSnapshotValue) => render(snapshot, renderOrderDefaultTemplate),
+    );
+    const renderOrderPdf = Effect.fn('DocumentRenderer.renderOrderPdf')(function* (
+      snapshot: OrderRenderSnapshotValue,
+    ) {
+      return yield* renderPdf(yield* renderOrder(snapshot));
+    });
 
     return DocumentRenderer.of({
       renderQuote,
       renderQuotePdf,
       renderInvoice,
       renderInvoicePdf,
+      renderOrder,
+      renderOrderPdf,
     });
   }),
 );

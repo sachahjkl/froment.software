@@ -1,0 +1,94 @@
+<main class="order">
+  <header class="header">
+    <section class="company" aria-label="Émetteur">
+      <strong>{{ order.issuer.displayName }}</strong>
+      @if (order.issuer.addressLine1) { <span>{{ order.issuer.addressLine1 }}</span> } @if
+      (order.issuer.addressLine2) { <span>{{ order.issuer.addressLine2 }}</span> } @if
+      (order.issuer.postalCode || order.issuer.city) {
+      <span>{{ order.issuer.postalCode }} {{ order.issuer.city }}</span> } @if
+      (order.issuer.country) { <span>{{ order.issuer.country }}</span> } @if (order.issuer.email) {
+      <span>{{ order.issuer.email }}</span> } @if (order.issuer.phone) {
+      <span>{{ order.issuer.phone }}</span> }
+      <span class="company-spacer" aria-hidden="true"></span>
+      @if (order.issuer.registrationNumber) {
+      <span>SIRET : {{ order.issuer.registrationNumber }}</span> } @if (order.issuer.vatNumber) {
+      <span>TVA intracom. : {{ order.issuer.vatNumber }}</span> }
+    </section>
+
+    <section class="order-meta" aria-label="Informations de la commande">
+      <div class="meta-row">
+        <span>Commande n° :</span><strong>{{ order.orderReference }}</strong>
+      </div>
+      <div class="meta-row"><span>Devis n° :</span><span>{{ order.quoteReference }}</span></div>
+      <div class="meta-row">
+        <span>Date de confirmation :</span><span>{{ date(order.confirmedAt) }}</span>
+      </div>
+      <div class="meta-row"><span>Devise :</span><span>{{ order.currency }}</span></div>
+    </section>
+  </header>
+
+  <section class="customer" aria-label="Client">
+    <strong>Commandé par :</strong>
+    <span>{{ order.client.displayName }}</span>
+    @if (order.client.addressLine1) { <span>{{ order.client.addressLine1 }}</span> } @if
+    (order.client.addressLine2) { <span>{{ order.client.addressLine2 }}</span> } @if
+    (order.client.postalCode || order.client.city) {
+    <span>{{ order.client.postalCode }} {{ order.client.city }}</span> } @if (order.client.country)
+    { <span>{{ order.client.country }}</span> } @if (order.client.email) {
+    <span>{{ order.client.email }}</span> }
+  </section>
+
+  <h1>Confirmation de commande · {{ order.title }}</h1>
+
+  <table class="items">
+    <thead>
+      <tr>
+        <th class="position">#</th>
+        <th class="description">Désignation</th>
+        <th class="unit-price">PU HT</th>
+        <th class="quantity">Qté</th>
+        <th class="vat">TVA</th>
+        <th class="amount">Total HT</th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (line of order.lines; track line.id; let position = $index) {
+      <tr>
+        <td class="position">{{ position + 1 }}</td>
+        <td class="description">{{ line.description }}</td>
+        <td class="unit-price">{{ money(line.unitPriceCents) }}</td>
+        <td class="quantity">{{ quantity(line.quantityMilli) }}</td>
+        <td class="vat">{{ percent(line.vatRateBasisPoints) }} %</td>
+        <td class="amount">{{ money(line.netTotalCents) }}</td>
+      </tr>
+      }
+    </tbody>
+  </table>
+
+  <table class="totals" aria-label="Totaux">
+    <tbody>
+      <tr>
+        <td class="label">Total HT</td>
+        <td class="value">{{ money(order.netTotalCents) }}</td>
+      </tr>
+      <tr>
+        <td class="label">TVA</td>
+        <td class="value">{{ money(order.vatTotalCents) }}</td>
+      </tr>
+      <tr class="grand-total">
+        <td class="label">Total TTC</td>
+        <td class="value">{{ money(order.totalCents) }}</td>
+      </tr>
+    </tbody>
+  </table>
+
+  @if (order.conditions) {
+  <section class="conditions">
+    <strong>Conditions :</strong><span>{{ order.conditions }}</span>
+  </section>
+  }
+  <footer>
+    <span>***</span><span>Merci pour votre confiance.</span
+    ><strong>{{ order.issuer.displayName }}</strong>
+  </footer>
+</main>

@@ -1,105 +1,109 @@
-<main>
-  <header class="document-header">
-    <section class="brand" aria-label="Émetteur">
-      <p class="eyebrow">Émetteur</p>
-      <h1>{{ quote.issuer.displayName }}</h1>
-      <address>
-        @if (quote.issuer.addressLine1) { <span>{{ quote.issuer.addressLine1 }}</span> } @if
-        (quote.issuer.addressLine2) { <span>{{ quote.issuer.addressLine2 }}</span> } @if
-        (quote.issuer.postalCode || quote.issuer.city) {
-        <span>{{ quote.issuer.postalCode }} {{ quote.issuer.city }}</span>
-        } @if (quote.issuer.country) { <span>{{ quote.issuer.country }}</span> } @if
-        (quote.issuer.email) { <span>{{ quote.issuer.email }}</span> } @if (quote.issuer.phone) {
-        <span>{{ quote.issuer.phone }}</span> }
-      </address>
+<main class="quote">
+  <header class="header">
+    <section class="company" aria-label="Émetteur">
+      <strong>{{ quote.issuer.displayName }}</strong>
+      @if (quote.issuer.addressLine1) { <span>{{ quote.issuer.addressLine1 }}</span> } @if
+      (quote.issuer.addressLine2) { <span>{{ quote.issuer.addressLine2 }}</span> } @if
+      (quote.issuer.postalCode || quote.issuer.city) {
+      <span>{{ quote.issuer.postalCode }} {{ quote.issuer.city }}</span>
+      } @if (quote.issuer.country) { <span>{{ quote.issuer.country }}</span> } @if
+      (quote.issuer.email) { <span>{{ quote.issuer.email }}</span> } @if (quote.issuer.phone) {
+      <span>{{ quote.issuer.phone }}</span> }
+
+      <span class="company-spacer" aria-hidden="true"></span>
+
+      @if (quote.issuer.registrationNumber) {
+      <span>SIRET : {{ quote.issuer.registrationNumber }}</span>
+      } @if (quote.issuer.vatNumber) {
+      <span>TVA intracom. : {{ quote.issuer.vatNumber }}</span>
+      }
     </section>
-    <section class="quote-meta">
-      <p class="eyebrow">Devis</p>
-      <dl>
-        <div>
-          <dt>Numéro</dt>
-          <dd>{{ quote.templateVersion === 2 ? quote.quoteReference : quote.quoteId }}</dd>
-        </div>
-        <div>
-          <dt>Révision</dt>
-          <dd>{{ quote.version }}</dd>
-        </div>
-        <div>
-          <dt>Date</dt>
-          <dd>{{ date(quote.createdAt) }}</dd>
-        </div>
-      </dl>
+
+    <section class="quote-meta" aria-label="Informations du devis">
+      <div class="meta-row">
+        <span>Devis n° :</span>
+        @if (quote.templateVersion === 2) { <strong>{{ quote.quoteReference }}</strong> }
+      </div>
+      <div class="meta-row">
+        <span>Date d’émission :</span>
+        <span>{{ date(quote.createdAt) }}</span>
+      </div>
+      <div class="meta-row">
+        <span>Révision :</span>
+        <span>{{ quote.version }}</span>
+      </div>
+      <div class="meta-row">
+        <span>Devise :</span>
+        <span>{{ quote.currency }}</span>
+      </div>
     </section>
   </header>
 
-  <section class="recipient" aria-label="Client">
-    <p class="eyebrow">Destinataire</p>
-    <h2>{{ quote.client.displayName }}</h2>
-    <address>
-      @if (quote.client.addressLine1) { <span>{{ quote.client.addressLine1 }}</span> } @if
-      (quote.client.addressLine2) { <span>{{ quote.client.addressLine2 }}</span> } @if
-      (quote.client.postalCode || quote.client.city) {
-      <span>{{ quote.client.postalCode }} {{ quote.client.city }}</span>
-      } @if (quote.client.country) { <span>{{ quote.client.country }}</span> } @if
-      (quote.client.email) { <span>{{ quote.client.email }}</span> }
-    </address>
+  <section class="customer" aria-label="Client">
+    <strong>Proposé à :</strong>
+    <span>{{ quote.client.displayName }}</span>
+    @if (quote.client.addressLine1) { <span>{{ quote.client.addressLine1 }}</span> } @if
+    (quote.client.addressLine2) { <span>{{ quote.client.addressLine2 }}</span> } @if
+    (quote.client.postalCode || quote.client.city) {
+    <span>{{ quote.client.postalCode }} {{ quote.client.city }}</span>
+    } @if (quote.client.country) { <span>{{ quote.client.country }}</span> } @if
+    (quote.client.email) { <span>{{ quote.client.email }}</span> }
   </section>
 
-  <section class="subject">
-    <p class="eyebrow">Objet</p>
-    <h2>{{ quote.title }}</h2>
-  </section>
+  <h1>{{ quote.title }}</h1>
 
-  <table>
+  <table class="items">
     <thead>
       <tr>
-        <th>Prestation</th>
-        <th class="number">Quantité</th>
-        <th class="number">Prix unitaire HT</th>
-        <th class="number">TVA</th>
-        <th class="number">Total TTC</th>
+        <th class="position">#</th>
+        <th class="description">Désignation</th>
+        <th class="unit-price">PU HT</th>
+        <th class="quantity">Qté</th>
+        <th class="vat">TVA</th>
+        <th class="amount">Total HT</th>
       </tr>
     </thead>
     <tbody>
-      @for (line of quote.lines; track line.id) {
+      @for (line of quote.lines; track line.id; let position = $index) {
       <tr>
-        <td>{{ line.description }}</td>
-        <td class="number">{{ quantity(line.quantityMilli) }}</td>
-        <td class="number">{{ money(line.unitPriceCents) }}</td>
-        <td class="number">{{ percent(line.vatRateBasisPoints) }} %</td>
-        <td class="number strong">{{ money(line.totalCents) }}</td>
+        <td class="position">{{ position + 1 }}</td>
+        <td class="description">{{ line.description }}</td>
+        <td class="unit-price">{{ money(line.unitPriceCents) }}</td>
+        <td class="quantity">{{ quantity(line.quantityMilli) }}</td>
+        <td class="vat">{{ percent(line.vatRateBasisPoints) }} %</td>
+        <td class="amount">{{ money(line.netTotalCents) }}</td>
       </tr>
       }
     </tbody>
   </table>
 
-  <section class="totals" aria-label="Totaux">
-    <dl>
-      <div>
-        <dt>Total HT</dt>
-        <dd>{{ money(quote.netTotalCents) }}</dd>
-      </div>
-      <div>
-        <dt>TVA</dt>
-        <dd>{{ money(quote.vatTotalCents) }}</dd>
-      </div>
-      <div class="grand-total">
-        <dt>Total TTC</dt>
-        <dd>{{ money(quote.totalCents) }}</dd>
-      </div>
-    </dl>
-  </section>
+  <table class="totals" aria-label="Totaux">
+    <tbody>
+      <tr>
+        <td class="label">Total HT</td>
+        <td class="value">{{ money(quote.netTotalCents) }}</td>
+      </tr>
+      <tr>
+        <td class="label">TVA</td>
+        <td class="value">{{ money(quote.vatTotalCents) }}</td>
+      </tr>
+      <tr class="grand-total">
+        <td class="label">Total TTC</td>
+        <td class="value">{{ money(quote.totalCents) }}</td>
+      </tr>
+    </tbody>
+  </table>
 
   @if (quote.conditions) {
   <section class="conditions">
-    <p class="eyebrow">Conditions</p>
-    <p>{{ quote.conditions }}</p>
+    <strong>Conditions :</strong>
+    <span>{{ quote.conditions }}</span>
   </section>
   }
 
   <footer>
-    @if (quote.issuer.registrationNumber) {
-    <span>SIRET : {{ quote.issuer.registrationNumber }}</span> } @if (quote.issuer.vatNumber) {
-    <span>TVA : {{ quote.issuer.vatNumber }}</span> }
+    <span>***</span>
+    <span>Merci pour votre confiance.</span>
+    <strong>{{ quote.issuer.displayName }}</strong>
   </footer>
 </main>

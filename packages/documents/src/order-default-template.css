@@ -4,14 +4,12 @@ html {
   margin: 0;
   background: #efefef;
 }
-
 body {
   width: 210mm;
   min-height: 297mm;
   margin: 0 auto;
 }
-
-froment-invoice-document {
+froment-order-document {
   --paper: #efefef;
   --ink: #111;
   --line: #555;
@@ -24,11 +22,9 @@ froment-invoice-document {
   font-weight: 700;
   line-height: 1.18;
 }
-
 * {
   box-sizing: border-box;
 }
-
 span,
 strong,
 h1,
@@ -38,73 +34,56 @@ td {
   overflow-wrap: anywhere;
   word-break: break-word;
 }
-
-.invoice {
+.order {
   width: 100%;
   min-height: 277mm;
   padding: 10mm 11mm 9mm;
   background: var(--paper);
 }
-
 .header {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 78mm;
   gap: 9mm;
   align-items: start;
 }
-
 .company,
 .customer,
-.order-info,
-.payment-info,
-.legal,
+.conditions,
 footer {
   display: grid;
   gap: 0.4mm;
   overflow-wrap: anywhere;
   word-break: break-word;
 }
-
 .company-spacer {
   height: 2.5mm;
 }
-
-.invoice-meta {
+.order-meta {
   padding: 1.2mm 2.2mm;
   border: 0.25mm solid var(--line);
 }
-
 .meta-row {
   display: grid;
   grid-template-columns: 39mm minmax(0, 1fr);
   gap: 2mm;
 }
-
 .customer {
   margin-top: 6mm;
 }
-
-.order-info {
-  margin-top: 5mm;
-}
-
 h1 {
   margin: 6mm 0 1mm;
   font: inherit;
   text-align: center;
 }
-
 table {
   width: 100%;
   border-collapse: collapse;
   table-layout: fixed;
 }
-
 .items thead,
 .items tbody {
   border-bottom: 0.25mm solid var(--line);
 }
-
 .items th,
 .items td {
   padding: 0.6mm 1.8mm 0.6mm 0;
@@ -113,21 +92,17 @@ table {
   word-break: break-word;
   font-weight: inherit;
 }
-
 .items tr {
   break-inside: avoid;
   page-break-inside: avoid;
 }
-
 .position {
   width: 8mm;
   text-align: center;
 }
-
 .description {
   width: auto;
 }
-
 .quantity,
 .unit-price,
 .vat,
@@ -135,76 +110,55 @@ table {
   text-align: right;
   white-space: nowrap;
 }
-
 .quantity {
   width: 13mm;
 }
-
 .unit-price {
   width: 26mm;
 }
-
 .vat {
   width: 16mm;
 }
-
 .amount {
   width: 27mm;
   padding-right: 2.5mm;
 }
-
 .totals td {
   padding: 0.6mm 2.5mm 0.6mm 0;
   font-weight: inherit;
 }
-
 .totals .label {
   text-align: right;
 }
-
 .totals .value {
   width: 28mm;
   text-align: right;
   white-space: nowrap;
 }
-
 .totals .grand-total {
   border-top: 1mm double var(--line);
 }
-
-.payment-info {
+.conditions {
   margin-top: 5mm;
+  white-space: pre-wrap;
 }
-
-.legal {
-  gap: 1.5mm;
-  margin-top: 6mm;
-  font-size: 7pt;
-  font-weight: 400;
-  line-height: 1.2;
-}
-
 footer {
   gap: 1.5mm;
   margin-top: 5mm;
   text-align: center;
 }
-
 @media print {
   @page {
     size: A4 portrait;
     margin: 0;
   }
-
-  froment-invoice-document {
+  froment-order-document {
     width: 210mm;
     margin-inline: 0;
   }
-
-  .invoice {
+  .order {
     min-height: 297mm;
   }
-
   thead {
     display: table-header-group;
   }

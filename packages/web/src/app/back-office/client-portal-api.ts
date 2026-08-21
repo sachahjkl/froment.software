@@ -41,4 +41,8 @@ export class ClientPortalApi {
   invoicePdfUrl(invoiceId: UlidValue): string {
     return `/api/client/invoices/${invoiceId}/pdf`;
   }
+
+  orderPdfUrl(orderId: UlidValue): string {
+    return `/api/client/orders/${orderId}/pdf`;
+  }
 }

@@ -31,4 +31,28 @@ describe('OrdersApi', () => {
     await expect(result).resolves.toHaveLength(1);
     http.verify();
   });
+
+  it('builds order document URLs and decodes generated artifacts', async () => {
+    TestBed.configureTestingModule({
+      providers: [provideHttpClient(), provideHttpClientTesting()],
+    });
+    const api = TestBed.inject(OrdersApi);
+    const http = TestBed.inject(HttpTestingController);
+    const id = '01ARZ3NDEKTSV4RRFFQ69G5FAY';
+    expect(api.previewUrl(id)).toBe(`/api/orders/${id}/preview`);
+    expect(api.pdfUrl(id)).toBe(`/api/orders/${id}/pdf`);
+    const result = api.renderPdf(id);
+    http.expectOne(`/api/orders/${id}/pdf`).flush({
+      id,
+      orderId: id,
+      orderReference: 'CO-2026-000001',
+      kind: 'order-pdf',
+      contentType: 'application/pdf',
+      byteSize: 10,
+      sha256: 'a'.repeat(64),
+      createdAt: '2026-08-20T06:00:00.000Z',
+    });
+    await expect(result).resolves.toMatchObject({ kind: 'order-pdf', orderId: id });
+    http.verify();
+  });
 });

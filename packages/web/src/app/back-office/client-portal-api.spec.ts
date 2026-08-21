@@ -42,5 +42,6 @@ describe('ClientPortalApi', () => {
 
     expect(api.quotePdfUrl(id)).toBe(`/api/client/quotes/${id}/pdf`);
     expect(api.invoicePdfUrl(id)).toBe(`/api/client/invoices/${id}/pdf`);
+    expect(api.orderPdfUrl(id)).toBe(`/api/client/orders/${id}/pdf`);
   });
 });

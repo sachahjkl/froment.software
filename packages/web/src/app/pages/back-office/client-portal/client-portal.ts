@@ -65,6 +65,10 @@ export class ClientPortal {
     return this.api.invoicePdfUrl(invoiceId);
   }
 
+  protected orderPdfUrl(orderId: UlidValue): string {
+    return this.api.orderPdfUrl(orderId);
+  }
+
   async load(): Promise<void> {
     this.state.set('loading');
     try {

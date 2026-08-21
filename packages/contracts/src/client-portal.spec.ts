@@ -34,6 +34,7 @@ describe('client portal contracts', () => {
           totalCents: 1_200,
           createdAt: '2026-08-20T08:00:00.000Z',
           invoiceId: null,
+          pdfAvailable: false,
         },
       ]),
     ).toHaveLength(1);

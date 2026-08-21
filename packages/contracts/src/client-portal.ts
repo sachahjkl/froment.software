@@ -39,6 +39,7 @@ export const ClientOrderSummary = Schema.Struct({
   totalCents: SafeInteger,
   createdAt: IsoUtc,
   invoiceId: Schema.NullOr(Ulid),
+  pdfAvailable: Schema.Boolean,
 });
 export type ClientOrderSummary = typeof ClientOrderSummary.Type;
 

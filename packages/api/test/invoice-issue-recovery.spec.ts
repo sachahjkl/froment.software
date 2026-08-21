@@ -20,6 +20,7 @@ import {
 import { IssuerSettings, type IssuerSettingsService } from '../src/documents/issuer-settings.js';
 import { InvoicePdfJobs, InvoicePdfJobsLive } from '../src/documents/invoice-pdf-jobs.js';
 import { Invoices, InvoicesLive } from '../src/invoices/invoices.js';
+import { OrdersLive } from '../src/orders/orders.js';
 import { Quotes, type QuotesService } from '../src/quotes/quotes.js';
 import { issueInvoice } from '../src/server.js';
 
@@ -111,6 +112,7 @@ const makeTestLayer = (filename: string, renderer: DocumentRendererService) => {
   });
   const coreLayer = Layer.mergeAll(
     InvoicesLive,
+    OrdersLive,
     Layer.succeed(DocumentRenderer, renderer),
     Layer.succeed(Quotes, quotes),
   ).pipe(Layer.provideMerge(Layer.succeed(IssuerSettings, issuerSettings)));
@@ -254,6 +256,8 @@ describe('invoice issue recovery', () => {
             renderQuotePdf: () => Effect.die('unused'),
             renderInvoice: () => Effect.die('unused'),
             renderInvoicePdf: () => Effect.die('unused'),
+            renderOrder: () => Effect.die('unused'),
+            renderOrderPdf: () => Effect.die('unused'),
           }),
         ),
         Effect.provide(TestClock.layer()),
@@ -273,6 +277,8 @@ describe('invoice issue recovery', () => {
       renderQuotePdf: () => Effect.succeed(pdf),
       renderInvoice: () => Effect.succeed(''),
       renderInvoicePdf: () => Effect.succeed(pdf),
+      renderOrder: () => Effect.die('unused'),
+      renderOrderPdf: () => Effect.die('unused'),
     };
 
     const result = await Effect.runPromise(
@@ -323,6 +329,8 @@ describe('invoice issue recovery', () => {
           ? Effect.fail(new DocumentRenderError({ cause: new Error('renderer unavailable') }))
           : Effect.succeed(pdf);
       },
+      renderOrder: () => Effect.die('unused'),
+      renderOrderPdf: () => Effect.die('unused'),
     };
     const testLayer = makeTestLayer(':memory:', renderer);
 
@@ -396,6 +404,8 @@ describe('invoice issue recovery', () => {
       renderInvoice: () => Effect.succeed(''),
       renderInvoicePdf: () =>
         Effect.fail(new DocumentRenderError({ cause: new Error('secret renderer detail') })),
+      renderOrder: () => Effect.die('unused'),
+      renderOrderPdf: () => Effect.die('unused'),
     };
     const testLayer = makeTestLayer(':memory:', renderer);
 
@@ -438,6 +448,8 @@ describe('invoice issue recovery', () => {
           Effect.as(pdf),
         );
       },
+      renderOrder: () => Effect.die('unused'),
+      renderOrderPdf: () => Effect.die('unused'),
     };
 
     const state = await Effect.runPromise(
@@ -487,6 +499,8 @@ describe('invoice issue recovery', () => {
       renderQuotePdf: () => Effect.die('unused'),
       renderInvoice: () => Effect.succeed(''),
       renderInvoicePdf: () => Effect.succeed(pdf),
+      renderOrder: () => Effect.die('unused'),
+      renderOrderPdf: () => Effect.die('unused'),
     };
 
     try {

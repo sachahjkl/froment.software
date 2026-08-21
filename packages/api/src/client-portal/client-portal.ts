@@ -35,6 +35,7 @@ const ClientOrderRecord = Schema.Struct({
   totalCents: Schema.Int,
   createdAt: Schema.Int,
   invoiceId: Schema.NullOr(Ulid),
+  pdfAvailable: Schema.Int,
 });
 const ClientInvoiceRecord = Schema.Struct({
   id: Ulid,
@@ -74,6 +75,14 @@ export interface ClientPortalService {
     userId: string,
     invoiceId: UlidValue,
   ) => Effect.Effect<ClientPdf, DocumentNotFound | DatabaseError>;
+  readonly getOrderPdf: (
+    userId: string,
+    orderId: UlidValue,
+  ) => Effect.Effect<ClientPdf, DocumentNotFound | DatabaseError>;
+  readonly authorizeOrder: (
+    userId: string,
+    orderId: UlidValue,
+  ) => Effect.Effect<void, DocumentNotFound | DatabaseError>;
 }
 
 export class ClientPortal extends Context.Service<ClientPortal, ClientPortalService>()(
@@ -136,7 +145,9 @@ export const ClientPortalLive = Layer.effect(
                          quotes.reference as quoteReference, orders.status,
                         quote_revisions.title, quote_revisions.currency,
                         quote_revisions.total_cents as totalCents,
-                        orders.created_at as createdAt, invoices.id as invoiceId
+                         orders.created_at as createdAt, invoices.id as invoiceId,
+                         (document_artifacts.id is not null
+                          or quote_revisions.render_snapshot is not null) as pdfAvailable
                  from orders
                  join quotes
                    on quotes.id = orders.quote_id
@@ -145,10 +156,13 @@ export const ClientPortalLive = Layer.effect(
                  join quote_revisions
                    on quote_revisions.id = orders.revision_id
                   and quote_revisions.quote_id = orders.quote_id
-                  left join invoices
+                   left join invoices
                     on invoices.order_id = orders.id
                    and invoices.client_id = ?
-                   and invoices.status <> 'draft'
+                    and invoices.status <> 'draft'
+                  left join document_artifacts
+                    on document_artifacts.order_id = orders.id
+                   and document_artifacts.kind = 'order-pdf'
                   where orders.client_id = ? and orders.status = 'confirmed'
                  order by orders.created_at desc, orders.id`,
                 )
@@ -156,6 +170,7 @@ export const ClientPortalLive = Layer.effect(
             ).map((order) => ({
               ...order,
               createdAt: DateTime.formatIso(DateTime.makeUnsafe(order.createdAt)),
+              pdfAvailable: order.pdfAvailable === 1,
             })),
           ),
         catch: (cause) => new DatabaseError({ operation: 'list client orders', cause }),
@@ -281,6 +296,63 @@ export const ClientPortalLive = Layer.effect(
       });
     });
 
-    return ClientPortal.of({ listQuotes, listOrders, listInvoices, getQuotePdf, getInvoicePdf });
+    const getOrderPdf = Effect.fn('ClientPortal.getOrderPdf')(function* (
+      userId: string,
+      orderId: UlidValue,
+    ) {
+      return yield* Effect.try({
+        try: () => {
+          const row = database.sqlite
+            .prepare(
+              `select document_artifacts.content, document_artifacts.sha256,
+                      orders.reference, 1 as version
+               from orders
+               join document_artifacts
+                 on document_artifacts.order_id = orders.id
+                and document_artifacts.kind = 'order-pdf'
+               where orders.id = ? and orders.client_id = ? and orders.status = 'confirmed'
+               limit 1`,
+            )
+            .get(orderId, userId);
+          if (row === undefined) throw new DocumentNotFound({ code: 'document.not_found' });
+          return verifyArtifactContent(Schema.decodeUnknownSync(PdfRecord)(row));
+        },
+        catch: (cause) =>
+          cause instanceof DocumentNotFound
+            ? cause
+            : new DatabaseError({ operation: 'get client order PDF', cause }),
+      });
+    });
+
+    const authorizeOrder = Effect.fn('ClientPortal.authorizeOrder')(function* (
+      userId: string,
+      orderId: UlidValue,
+    ) {
+      return yield* Effect.try({
+        try: () => {
+          const order = database.sqlite
+            .prepare(
+              `select 1 from orders
+               where id = ? and client_id = ? and status = 'confirmed'`,
+            )
+            .get(orderId, userId);
+          if (order === undefined) throw new DocumentNotFound({ code: 'document.not_found' });
+        },
+        catch: (cause) =>
+          cause instanceof DocumentNotFound
+            ? cause
+            : new DatabaseError({ operation: 'authorize client order', cause }),
+      });
+    });
+
+    return ClientPortal.of({
+      listQuotes,
+      listOrders,
+      listInvoices,
+      getQuotePdf,
+      getInvoicePdf,
+      getOrderPdf,
+      authorizeOrder,
+    });
   }),
 );

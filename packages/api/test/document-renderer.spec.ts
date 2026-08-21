@@ -1,4 +1,8 @@
-import { InvoiceRenderSnapshot, QuoteRenderSnapshot } from '@froment/contracts';
+import {
+  InvoiceRenderSnapshot,
+  OrderRenderSnapshot,
+  QuoteRenderSnapshot,
+} from '@froment/contracts';
 import { spawnSync } from 'node:child_process';
 import { Effect, Schema } from 'effect';
 import { chromium, type Page } from 'playwright-core';
@@ -85,6 +89,37 @@ const compactInvoice = Schema.decodeUnknownSync(InvoiceRenderSnapshot)({
   totalCents: 72_000,
   lines: lines.slice(0, 6).map((line) => ({ ...line, description: 'Prestation logicielle' })),
 });
+const compactQuote = Schema.decodeUnknownSync(QuoteRenderSnapshot)({
+  ...quote,
+  templateVersion: 2,
+  quoteReference: 'DE-2026-000001',
+  issuer: { ...issuer, displayName: 'Froment Software' },
+  client: { ...party, displayName: 'Client Exemple' },
+  title: 'Développement logiciel',
+  conditions: 'Paiement à 30 jours',
+  netTotalCents: 60_000,
+  vatTotalCents: 12_000,
+  totalCents: 72_000,
+  lines: lines.slice(0, 6).map((line) => ({ ...line, description: 'Prestation logicielle' })),
+});
+const compactOrder = Schema.decodeUnknownSync(OrderRenderSnapshot)({
+  templateId: 'order-default',
+  templateVersion: 1,
+  orderId: ids[3],
+  revisionId: ids[1],
+  orderReference: 'CO-2026-000001',
+  quoteReference: 'DE-2026-000001',
+  confirmedAt: '2026-08-20T12:00:00.000Z',
+  issuer: compactQuote.issuer,
+  client: compactQuote.client,
+  title: compactQuote.title,
+  conditions: compactQuote.conditions,
+  currency: compactQuote.currency,
+  netTotalCents: compactQuote.netTotalCents,
+  vatTotalCents: compactQuote.vatTotalCents,
+  totalCents: compactQuote.totalCents,
+  lines: compactQuote.lines,
+});
 
 const expectNoHorizontalOverflow = async (page: Page) => {
   const overflows = await page
@@ -139,7 +174,7 @@ const expectBusinessLayout = async (page: Page) => {
 };
 
 describe('DocumentRenderer', () => {
-  it('prints maximal quote and invoice templates without horizontal overflow', async () => {
+  it('prints document templates without horizontal overflow and with embedded text', async () => {
     const rendered = await Effect.runPromise(
       Effect.gen(function* () {
         const renderer = yield* DocumentRenderer;
@@ -190,18 +225,41 @@ describe('DocumentRenderer', () => {
         expect(extracted.stdout.replaceAll(/\s/g, '')).toContain(document.expectedText);
       }
 
-      const renderer = await Effect.runPromise(
-        DocumentRenderer.use((service) => service.renderInvoicePdf(compactInvoice)).pipe(
-          Effect.provide(DocumentRendererLive),
-          Effect.scoped,
-        ),
+      await page.setViewportSize({ width: 1_200, height: 1_123 });
+      await page.emulateMedia({ media: 'screen' });
+      const invoiceDocument = rendered[1];
+      if (invoiceDocument === undefined) throw new Error('The rendered invoice is missing.');
+      await page.setContent(invoiceDocument.html, { waitUntil: 'load' });
+      const invoiceMargins = await page.locator('froment-invoice-document').evaluate((element) => {
+        const rect = element.getBoundingClientRect();
+        return [rect.left, element.ownerDocument.documentElement.clientWidth - rect.right];
+      });
+      const [leftMargin = 0, rightMargin = 0] = invoiceMargins;
+      expect(Math.abs(leftMargin - rightMargin)).toBeLessThan(1);
+
+      const compactDocuments = await Effect.runPromise(
+        DocumentRenderer.use((service) =>
+          Effect.all([
+            service.renderQuotePdf(compactQuote),
+            service.renderOrderPdf(compactOrder),
+            service.renderInvoicePdf(compactInvoice),
+          ]),
+        ).pipe(Effect.provide(DocumentRendererLive), Effect.scoped),
       );
-      const compactPdf = Buffer.from(renderer);
-      expect(compactPdf.toString('latin1').match(/\/Type \/Page\b/g)?.length ?? 0).toBe(1);
-      const fonts = spawnSync('pdffonts', ['-'], { input: compactPdf, encoding: 'utf8' });
-      expect(fonts.error).toBeUndefined();
-      expect(fonts.status).toBe(0);
-      expect(fonts.stdout).toContain('Cousine');
+      for (const document of compactDocuments) {
+        const compactPdf = Buffer.from(document);
+        expect(compactPdf.toString('latin1').match(/\/Type \/Page\b/g)?.length ?? 0).toBe(1);
+        const fonts = spawnSync('pdffonts', ['-'], { input: compactPdf, encoding: 'utf8' });
+        expect(fonts.error).toBeUndefined();
+        expect(fonts.status).toBe(0);
+        expect(fonts.stdout).toContain('Cousine');
+        const extracted = spawnSync('pdftotext', ['-', '-'], {
+          input: compactPdf,
+          encoding: 'utf8',
+        });
+        expect(extracted.status).toBe(0);
+        expect(extracted.stdout).toContain('Froment Software');
+      }
     } finally {
       await browser.close();
     }

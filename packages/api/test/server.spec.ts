@@ -1273,8 +1273,16 @@ describe('HTTP server', () => {
         totalCents: 2,
         createdAt: accepted.acceptedAt,
         invoiceId: null,
+        pdfAvailable: true,
       },
     ]);
+    const clientOrderPdfResponse = await fetch(
+      `${baseUrl}/api/client/orders/${accepted.orderId}/pdf`,
+      { headers: { cookie: clientCookie } },
+    );
+    expect(clientOrderPdfResponse.status).toBe(200);
+    const clientOrderPdf = Buffer.from(await clientOrderPdfResponse.arrayBuffer());
+    expect(clientOrderPdf.subarray(0, 5).toString()).toBe('%PDF-');
     const rejectedSignature = signatureResponses.find((response) => response.status === 409);
     await expect(rejectedSignature?.json()).resolves.toMatchObject({
       code: 'quote_link.not_signable',
@@ -1292,6 +1300,14 @@ describe('HTTP server', () => {
 
     const anonymousOrderList = await fetch(`${baseUrl}/api/orders`);
     expect(anonymousOrderList.status).toBe(401);
+    const missingOrderPdf = await fetch(`${baseUrl}/api/orders/${quote.id}/pdf`, {
+      headers: { cookie },
+    });
+    expect(missingOrderPdf.status).toBe(404);
+    const inaccessibleClientOrderPdf = await fetch(`${baseUrl}/api/client/orders/${quote.id}/pdf`, {
+      headers: { cookie: clientCookie },
+    });
+    expect(inaccessibleClientOrderPdf.status).toBe(404);
     const orderListResponse = await fetch(`${baseUrl}/api/orders`, { headers: { cookie } });
     expect(orderListResponse.status).toBe(200);
     expect(orderListResponse.headers.get('cache-control')).toBe('no-store');
@@ -1312,6 +1328,55 @@ describe('HTTP server', () => {
         invoiceId: null,
       },
     ]);
+
+    const orderPreview = await fetch(`${baseUrl}/api/orders/${accepted.orderId}/preview`, {
+      headers: { cookie },
+    });
+    expect(orderPreview.status).toBe(200);
+    expect(orderPreview.headers.get('content-security-policy')).toBe(
+      "default-src 'none'; style-src 'unsafe-inline'; img-src data:",
+    );
+    const orderPreviewHtml = await orderPreview.text();
+    expect(orderPreviewHtml).toContain(accepted.orderReference);
+    expect(orderPreviewHtml).toContain(quote.reference);
+
+    const orderPdfResponses = await Promise.all([
+      fetch(`${baseUrl}/api/orders/${accepted.orderId}/pdf`, {
+        method: 'POST',
+        headers: writeHeaders,
+      }),
+      fetch(`${baseUrl}/api/orders/${accepted.orderId}/pdf`, {
+        method: 'POST',
+        headers: writeHeaders,
+      }),
+    ]);
+    expect(orderPdfResponses.map((response) => response.status)).toEqual([200, 200]);
+    const orderArtifacts = (await Promise.all(
+      orderPdfResponses.map((response) => response.json()),
+    )) as Array<{ id: string; orderId: string; kind: string; sha256: string }>;
+    expect(orderArtifacts[0]).toEqual(orderArtifacts[1]);
+    expect(orderArtifacts[0]).toMatchObject({
+      orderId: accepted.orderId,
+      kind: 'order-pdf',
+      sha256: expect.stringMatching(/^[a-f0-9]{64}$/),
+    });
+    const orderPdfDownload = await fetch(`${baseUrl}/api/orders/${accepted.orderId}/pdf`, {
+      headers: { cookie },
+    });
+    expect(orderPdfDownload.status).toBe(200);
+    expect(orderPdfDownload.headers.get('content-disposition')).toContain(
+      `${accepted.orderReference}.pdf`,
+    );
+    const orderPdf = Buffer.from(await orderPdfDownload.arrayBuffer());
+    expect(orderPdf.subarray(0, 5).toString()).toBe('%PDF-');
+    expect(createHash('sha256').update(orderPdf).digest('hex')).toBe(orderArtifacts[0]?.sha256);
+    const ordersWithPdf = await fetch(`${baseUrl}/api/client/orders`, {
+      headers: { cookie: clientCookie },
+    });
+    await expect(ordersWithPdf.json()).resolves.toEqual([
+      { ...acceptedClientOrders[0], pdfAvailable: true },
+    ]);
+    expect(clientOrderPdf).toEqual(orderPdf);
 
     const invoiceCreatePayload = {
       orderId: accepted.orderId,
@@ -1390,7 +1455,7 @@ describe('HTTP server', () => {
       headers: { cookie: clientCookie },
     });
     await expect(orderWithDraftInvoice.json()).resolves.toEqual([
-      { ...acceptedClientOrders[0], invoiceId: null },
+      { ...acceptedClientOrders[0], invoiceId: null, pdfAvailable: true },
     ]);
     const invoicedOrderListResponse = await fetch(`${baseUrl}/api/orders`, {
       headers: { cookie },
@@ -1581,7 +1646,7 @@ describe('HTTP server', () => {
       headers: { cookie: clientCookie },
     });
     await expect(orderWithIssuedInvoice.json()).resolves.toEqual([
-      { ...acceptedClientOrders[0], invoiceId: invoice.id },
+      { ...acceptedClientOrders[0], invoiceId: invoice.id, pdfAvailable: true },
     ]);
     const clientQuotePdf = await fetch(`${baseUrl}/api/client/quotes/${quote.id}/pdf`, {
       headers: { cookie: clientCookie },

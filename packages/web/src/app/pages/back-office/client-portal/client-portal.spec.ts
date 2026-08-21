@@ -41,6 +41,7 @@ class ClientPortalApiStub {
       totalCents: 12_000,
       createdAt: '2026-08-20T08:00:00.000Z',
       invoiceId,
+      pdfAvailable: true,
     },
   ];
   invoices: ClientInvoiceListValue = [
@@ -79,6 +80,10 @@ class ClientPortalApiStub {
   invoicePdfUrl(id: string): string {
     return `/api/client/invoices/${id}/pdf`;
   }
+
+  orderPdfUrl(id: string): string {
+    return `/api/client/orders/${id}/pdf`;
+  }
 }
 
 describe('ClientPortal', () => {
@@ -102,6 +107,7 @@ describe('ClientPortal', () => {
     expect(root.textContent).toContain('CO-2026-000001');
     expect(root.textContent).toContain('FA-2026-000001');
     expect(root.querySelector(`a[href="/api/client/quotes/${quoteId}/pdf"]`)).not.toBeNull();
+    expect(root.querySelector(`a[href="/api/client/orders/${orderId}/pdf"]`)).not.toBeNull();
     expect(root.querySelector(`a[href="/api/client/invoices/${invoiceId}/pdf"]`)).toBeNull();
   });
 

@@ -1,4 +1,13 @@
-import { Ulid, type OrderListValue } from '@froment/contracts';
+import {
+  OrderNotFound,
+  OrderRenderSnapshot,
+  QuotePreviewUnavailable,
+  QuoteRenderSnapshot,
+  Ulid,
+  type OrderListValue,
+  type OrderRenderSnapshotValue,
+  type UlidValue,
+} from '@froment/contracts';
 import { Context, DateTime, Effect, Layer, Schema } from 'effect';
 
 import { Database, DatabaseError } from '../database/database.js';
@@ -17,9 +26,23 @@ const OrderSummaryRecord = Schema.Struct({
   createdAt: Schema.Int,
   invoiceId: Schema.NullOr(Ulid),
 });
+const OrderSnapshotRecord = Schema.Struct({
+  id: Ulid,
+  reference: Schema.String,
+  quoteReference: Schema.String,
+  revisionId: Ulid,
+  createdAt: Schema.Int,
+  renderSnapshot: Schema.NullOr(Schema.String),
+});
 
 export interface OrdersService {
   readonly list: Effect.Effect<OrderListValue, DatabaseError>;
+  readonly getSnapshot: (
+    orderId: UlidValue,
+  ) => Effect.Effect<
+    OrderRenderSnapshotValue,
+    OrderNotFound | QuotePreviewUnavailable | DatabaseError
+  >;
 }
 
 export class Orders extends Context.Service<Orders, OrdersService>()('@froment/api/Orders') {}
@@ -59,6 +82,56 @@ export const OrdersLive = Layer.effect(
       catch: (cause) => new DatabaseError({ operation: 'list orders', cause }),
     });
 
-    return Orders.of({ list });
+    const getSnapshot = Effect.fn('Orders.getSnapshot')(function* (orderId: UlidValue) {
+      return yield* Effect.try({
+        try: () => {
+          const raw = database.sqlite
+            .prepare(
+              `select orders.id, orders.reference, quotes.reference as quoteReference,
+                      orders.revision_id as revisionId, orders.created_at as createdAt,
+                      quote_revisions.render_snapshot as renderSnapshot
+               from orders
+               join quotes on quotes.id = orders.quote_id and quotes.status = 'accepted'
+               join quote_revisions
+                 on quote_revisions.id = orders.revision_id
+                and quote_revisions.quote_id = orders.quote_id
+               where orders.id = ? and orders.status = 'confirmed'`,
+            )
+            .get(orderId);
+          if (raw === undefined) throw new OrderNotFound({ code: 'order.not_found' });
+          const order = Schema.decodeUnknownSync(OrderSnapshotRecord)(raw);
+          if (order.renderSnapshot === null) {
+            throw new QuotePreviewUnavailable({ code: 'quote.preview_unavailable' });
+          }
+          const quote = Schema.decodeUnknownSync(QuoteRenderSnapshot)(
+            JSON.parse(order.renderSnapshot),
+          );
+          return Schema.decodeUnknownSync(OrderRenderSnapshot)({
+            templateId: 'order-default',
+            templateVersion: 1,
+            orderId: order.id,
+            revisionId: order.revisionId,
+            orderReference: order.reference,
+            quoteReference: order.quoteReference,
+            confirmedAt: DateTime.formatIso(DateTime.makeUnsafe(order.createdAt)),
+            issuer: quote.issuer,
+            client: quote.client,
+            title: quote.title,
+            conditions: quote.conditions,
+            currency: quote.currency,
+            netTotalCents: quote.netTotalCents,
+            vatTotalCents: quote.vatTotalCents,
+            totalCents: quote.totalCents,
+            lines: quote.lines,
+          });
+        },
+        catch: (cause) =>
+          cause instanceof OrderNotFound || cause instanceof QuotePreviewUnavailable
+            ? cause
+            : new DatabaseError({ operation: 'get order snapshot', cause }),
+      });
+    });
+
+    return Orders.of({ list, getSnapshot });
   }),
 );

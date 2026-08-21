@@ -23,6 +23,11 @@ export { PermissionCode, type PermissionCode as PermissionCodeValue } from './pe
 export {
   OrderList,
   type OrderList as OrderListValue,
+  OrderDocumentArtifact,
+  type OrderDocumentArtifact as OrderDocumentArtifactValue,
+  OrderRenderSnapshot,
+  type OrderRenderSnapshot as OrderRenderSnapshotValue,
+  OrderNotFound,
   OrderSummary,
   type OrderSummary as OrderSummaryValue,
 } from './orders.js';

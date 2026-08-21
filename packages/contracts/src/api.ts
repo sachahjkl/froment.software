@@ -32,7 +32,7 @@ import {
   ClientVersionConflict,
 } from './clients.js';
 import { Ulid } from './identifiers.js';
-import { OrderList } from './orders.js';
+import { OrderDocumentArtifact, OrderList, OrderNotFound } from './orders.js';
 import {
   QuoteCreateRequest,
   QuoteAmountTooLarge,
@@ -200,6 +200,37 @@ export class OrdersApi extends HttpApiGroup.make('orders', { topLevel: true }).a
     error: [
       AuthenticationRequired.pipe(HttpApiSchema.status(401)),
       PermissionDenied.pipe(HttpApiSchema.status(403)),
+    ],
+  }),
+  HttpApiEndpoint.get('orderPreview', '/api/orders/:orderId/preview', {
+    params: { orderId: Ulid },
+    success: Schema.String.pipe(HttpApiSchema.asText({ contentType: 'text/html; charset=utf-8' })),
+    error: [
+      AuthenticationRequired.pipe(HttpApiSchema.status(401)),
+      PermissionDenied.pipe(HttpApiSchema.status(403)),
+      OrderNotFound.pipe(HttpApiSchema.status(404)),
+      QuotePreviewUnavailable.pipe(HttpApiSchema.status(409)),
+    ],
+  }),
+  HttpApiEndpoint.post('orderPdfRender', '/api/orders/:orderId/pdf', {
+    params: { orderId: Ulid },
+    success: OrderDocumentArtifact,
+    error: [
+      AuthenticationRequired.pipe(HttpApiSchema.status(401)),
+      PermissionDenied.pipe(HttpApiSchema.status(403)),
+      CsrfRejected.pipe(HttpApiSchema.status(403)),
+      RequestRateLimited.pipe(HttpApiSchema.status(429)),
+      OrderNotFound.pipe(HttpApiSchema.status(404)),
+      QuotePreviewUnavailable.pipe(HttpApiSchema.status(409)),
+    ],
+  }),
+  HttpApiEndpoint.get('orderPdfDownload', '/api/orders/:orderId/pdf', {
+    params: { orderId: Ulid },
+    success: Schema.Uint8Array.pipe(HttpApiSchema.asUint8Array({ contentType: 'application/pdf' })),
+    error: [
+      AuthenticationRequired.pipe(HttpApiSchema.status(401)),
+      PermissionDenied.pipe(HttpApiSchema.status(403)),
+      DocumentNotFound.pipe(HttpApiSchema.status(404)),
     ],
   }),
 ) {}
@@ -513,6 +544,11 @@ export class ClientPortalApi extends HttpApiGroup.make('clientPortal', { topLeve
   }),
   HttpApiEndpoint.get('clientInvoicePdf', '/api/client/invoices/:invoiceId/pdf', {
     params: { invoiceId: Ulid },
+    success: Schema.Uint8Array.pipe(HttpApiSchema.asUint8Array({ contentType: 'application/pdf' })),
+    error: [...clientReadErrors, DocumentNotFound.pipe(HttpApiSchema.status(404))],
+  }),
+  HttpApiEndpoint.get('clientOrderPdf', '/api/client/orders/:orderId/pdf', {
+    params: { orderId: Ulid },
     success: Schema.Uint8Array.pipe(HttpApiSchema.asUint8Array({ contentType: 'application/pdf' })),
     error: [...clientReadErrors, DocumentNotFound.pipe(HttpApiSchema.status(404))],
   }),

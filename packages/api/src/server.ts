@@ -1,6 +1,7 @@
 import { NodeHttpServer } from '@effect/platform-node';
 import {
   Api,
+  DocumentNotFound,
   RequestRateLimited,
   type InvoiceIssueRequestValue,
   type PermissionCodeValue,
@@ -410,14 +411,60 @@ const ClientHandlers = HttpApiBuilder.group(Api, 'clients', (handlers) =>
 
 const OrderHandlers = HttpApiBuilder.group(Api, 'orders', (handlers) =>
   Effect.succeed(
-    handlers.handle(
-      'orderList',
-      Effect.fn('orderList')(function* () {
-        yield* setPrivateResponseHeaders;
-        yield* authorizeAdministrator('order.read');
-        return yield* (yield* Orders).list.pipe(Effect.catchTag('DatabaseError', Effect.orDie));
-      }),
-    ),
+    handlers
+      .handle(
+        'orderList',
+        Effect.fn('orderList')(function* () {
+          yield* setPrivateResponseHeaders;
+          yield* authorizeAdministrator('order.read');
+          return yield* (yield* Orders).list.pipe(Effect.catchTag('DatabaseError', Effect.orDie));
+        }),
+      )
+      .handle(
+        'orderPreview',
+        Effect.fn('orderPreview')(function* ({ params }) {
+          yield* setPrivateResponseHeaders;
+          yield* setDocumentResponseHeaders;
+          yield* authorizeAdministrator('document.render');
+          const snapshot = yield* (yield* Orders)
+            .getSnapshot(params.orderId)
+            .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
+          return yield* (yield* DocumentRenderer).renderOrder(snapshot).pipe(Effect.orDie);
+        }),
+      )
+      .handle(
+        'orderPdfRender',
+        Effect.fn('orderPdfRender')(function* ({ params }) {
+          yield* setPrivateResponseHeaders;
+          const principal = yield* authorizeAdministratorWrite('document.render', 10);
+          return yield* (yield* DocumentArtifacts)
+            .renderOrderPdf(params.orderId, principal.userId)
+            .pipe(
+              Effect.catchTag('DatabaseError', Effect.orDie),
+              Effect.catchTag('DocumentRenderError', Effect.orDie),
+            );
+        }),
+      )
+      .handle(
+        'orderPdfDownload',
+        Effect.fn('orderPdfDownload')(function* ({ params }) {
+          yield* setPrivateResponseHeaders;
+          yield* authorizeAdministrator('document.download');
+          const pdf = yield* (yield* DocumentArtifacts)
+            .getOrderPdf(params.orderId)
+            .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
+          yield* HttpEffect.appendPreResponseHandler((_request, response) =>
+            Effect.succeed(
+              HttpServerResponse.setHeader(
+                response,
+                'content-disposition',
+                `attachment; filename="${pdf.reference}.pdf"`,
+              ),
+            ),
+          );
+          return pdf.content;
+        }),
+      ),
   ),
 );
 
@@ -821,6 +868,46 @@ const ClientPortalHandlers = HttpApiBuilder.group(Api, 'clientPortal', (handlers
                 response,
                 'content-disposition',
                 `attachment; filename="${pdf.reference}-v${pdf.version}.pdf"`,
+              ),
+            ),
+          );
+          return pdf.content;
+        }),
+      )
+      .handle(
+        'clientOrderPdf',
+        Effect.fn('clientOrderPdf')(function* ({ params }) {
+          yield* setPrivateResponseHeaders;
+          yield* setDocumentResponseHeaders;
+          const principal = yield* authorizeClient('document.download');
+          const portal = yield* ClientPortal;
+          yield* portal
+            .authorizeOrder(principal.userId, params.orderId)
+            .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
+          const pdf = yield* portal.getOrderPdf(principal.userId, params.orderId).pipe(
+            Effect.catchTag('DocumentNotFound', () =>
+              Effect.gen(function* () {
+                yield* (yield* DocumentArtifacts).renderOrderPdf(params.orderId, null).pipe(
+                  Effect.catchTag('DatabaseError', Effect.orDie),
+                  Effect.catchTag('DocumentRenderError', Effect.orDie),
+                  Effect.catchTag('OrderNotFound', Effect.orDie),
+                  Effect.catchTag('QuotePreviewUnavailable', () =>
+                    Effect.fail(new DocumentNotFound({ code: 'document.not_found' })),
+                  ),
+                );
+                return yield* portal
+                  .getOrderPdf(principal.userId, params.orderId)
+                  .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
+              }),
+            ),
+            Effect.catchTag('DatabaseError', Effect.orDie),
+          );
+          yield* HttpEffect.appendPreResponseHandler((_request, response) =>
+            Effect.succeed(
+              HttpServerResponse.setHeader(
+                response,
+                'content-disposition',
+                `attachment; filename="${pdf.reference}.pdf"`,
               ),
             ),
           );

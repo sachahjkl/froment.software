@@ -22,10 +22,12 @@ import { ServerLive } from './server.js';
 import { ObservabilityLive } from './observability/observability.js';
 import { ClientPortalLive } from './client-portal/client-portal.js';
 
-const QuoteCoreLive = Layer.mergeAll(QuotesLive, DocumentRendererLive, InvoicesLive).pipe(
-  Layer.provideMerge(IssuerSettingsLive),
-  Layer.provideMerge(BusinessConfigLive),
-);
+const QuoteCoreLive = Layer.mergeAll(
+  QuotesLive,
+  DocumentRendererLive,
+  InvoicesLive,
+  OrdersLive,
+).pipe(Layer.provideMerge(IssuerSettingsLive), Layer.provideMerge(BusinessConfigLive));
 const QuoteServicesLive = DocumentArtifactsLive.pipe(Layer.provideMerge(QuoteCoreLive));
 const InvoicePdfServicesLive = InvoicePdfJobsLive.pipe(Layer.provideMerge(QuoteServicesLive));
 const InvoicePdfRuntimeLive = Layer.merge(
@@ -37,7 +39,6 @@ const ServicesLive = Layer.mergeAll(
   BootstrapLive,
   AuthenticationLive,
   ClientsLive,
-  OrdersLive,
   InvoicePdfRuntimeLive,
   QuoteLinksLive.pipe(Layer.provide(BusinessConfigLive)),
   QuoteConditionPresetsLive,

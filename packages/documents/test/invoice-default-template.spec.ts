@@ -73,6 +73,7 @@ describe('InvoiceDefaultTemplate', () => {
     expect(html).toContain('&lt;script&gt;alert(1)&lt;/script&gt; Acme');
     expect(html).not.toContain('<script>alert(1)</script>');
     expect(html).toContain('font-family: Cousine, "Liberation Mono", monospace');
+    expect(html).toMatch(/froment-invoice-document[^{]*{[^}]*margin-inline:\s*auto/);
     expect(html).not.toContain('@import');
     expect(html).not.toContain('font-toolbar');
     expect(html).not.toContain('fontPicker');

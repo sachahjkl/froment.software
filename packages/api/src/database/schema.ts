@@ -378,7 +378,8 @@ export const documentArtifacts = sqliteTable(
     invoiceRevisionId: text('invoice_revision_id').references(() => invoiceRevisions.id, {
       onDelete: 'no action',
     }),
-    kind: text({ enum: ['quote-pdf', 'invoice-pdf'] }).notNull(),
+    orderId: text('order_id').references(() => orders.id, { onDelete: 'no action' }),
+    kind: text({ enum: ['quote-pdf', 'invoice-pdf', 'order-pdf'] }).notNull(),
     contentType: text('content_type').notNull(),
     byteSize: integer('byte_size').notNull(),
     sha256: text().notNull(),
@@ -391,13 +392,14 @@ export const documentArtifacts = sqliteTable(
       table.invoiceRevisionId,
       table.kind,
     ),
+    uniqueIndex('document_artifacts_order_kind_unique').on(table.orderId, table.kind),
     check(
       'document_artifacts_id_ulid_check',
       sql`${table.id} is not null and length(${table.id}) = 26 and ${table.id} not glob '*[^0-9A-HJKMNP-TV-Z]*' and substr(${table.id}, 1, 1) between '0' and '7'`,
     ),
     check(
       'document_artifacts_kind_check',
-      sql`(${table.kind} = 'quote-pdf' and ${table.revisionId} is not null and ${table.invoiceRevisionId} is null) or (${table.kind} = 'invoice-pdf' and ${table.revisionId} is null and ${table.invoiceRevisionId} is not null)`,
+      sql`(${table.kind} = 'quote-pdf' and ${table.revisionId} is not null and ${table.invoiceRevisionId} is null and ${table.orderId} is null) or (${table.kind} = 'invoice-pdf' and ${table.revisionId} is null and ${table.invoiceRevisionId} is not null and ${table.orderId} is null) or (${table.kind} = 'order-pdf' and ${table.revisionId} is null and ${table.invoiceRevisionId} is null and ${table.orderId} is not null)`,
     ),
     check('document_artifacts_content_type_check', sql`${table.contentType} = 'application/pdf'`),
     check(
@@ -406,6 +408,7 @@ export const documentArtifacts = sqliteTable(
     ),
     index('document_artifacts_revision_id_index').on(table.revisionId),
     index('document_artifacts_invoice_revision_id_index').on(table.invoiceRevisionId),
+    index('document_artifacts_order_id_index').on(table.orderId),
   ],
 );
 

@@ -10,4 +10,10 @@ export {
   InvoiceDefaultTemplate,
   renderInvoiceDefaultTemplate,
 } from './invoice-default-template.js';
+export {
+  ORDER_DEFAULT_TEMPLATE_ID,
+  ORDER_DEFAULT_TEMPLATE_VERSION,
+  OrderDefaultTemplate,
+  renderOrderDefaultTemplate,
+} from './order-default-template.js';
 export { formatMoney } from './format-money.js';
