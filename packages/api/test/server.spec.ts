@@ -2055,7 +2055,7 @@ describe('HTTP server', () => {
   });
 
   it('serves the application shell for refreshed back-office routes', async () => {
-    const response = await fetch(`${baseUrl}/backoffice/login?mode=client`, {
+    const response = await fetch(`${baseUrl}/backoffice/login/client`, {
       headers: { accept: 'text/html' },
     });
     expect(response.status).toBe(200);
@@ -2069,11 +2069,11 @@ describe('HTTP server', () => {
     const browser = await chromium.launch({ executablePath: process.env['CHROMIUM_PATH'] });
     try {
       const page = await browser.newPage();
-      await page.goto(`${baseUrl}/backoffice/login?mode=client`);
+      await page.goto(`${baseUrl}/backoffice/login/client`);
       await page.locator('#back-office-title').waitFor();
 
       expect(await page.locator('#back-office-title').textContent()).toBeTruthy();
-      expect(await page.locator('#client-tab').getAttribute('aria-selected')).toBe('true');
+      expect(await page.locator('#client-tab').getAttribute('aria-current')).toBe('page');
       await page.locator('#back-office-access-identifier').waitFor();
       expect(await page.locator('main app-home').count()).toBe(0);
     } finally {
