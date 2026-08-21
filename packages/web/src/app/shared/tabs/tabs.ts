@@ -17,9 +17,11 @@ export class Tabs {
   readonly label = input.required<string>();
   readonly tabs = input.required<readonly TabItem[]>();
   readonly selected = input.required<string>();
+  readonly disabled = input(false);
   readonly selectedChange = output<string>();
 
   protected select(tab: TabItem, target?: HTMLElement): void {
+    if (this.disabled()) return;
     this.selectedChange.emit(tab.value);
     target?.focus();
   }

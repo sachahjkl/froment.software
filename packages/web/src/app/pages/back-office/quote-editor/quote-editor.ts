@@ -43,6 +43,7 @@ import { QuoteConditionPresetsApi } from '@backoffice/quote-condition-presets-ap
 import { formatFixedDecimal, parseFixedDecimal } from '@backoffice/quote-input';
 import { I18nService, type TranslationKey } from '@app/i18n.service';
 import { Button } from '@shared/button/button';
+import { Notice } from '@shared/notice/notice';
 import { TextCopy } from '@shared/text-copy';
 
 interface QuoteLineModel {
@@ -76,7 +77,7 @@ const statusKeys = {
 
 @Component({
   selector: 'app-quote-editor',
-  imports: [Button, FormField, RouterLink],
+  imports: [Button, FormField, Notice, RouterLink],
   templateUrl: './quote-editor.html',
   styleUrl: './quote-editor.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

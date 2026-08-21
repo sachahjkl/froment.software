@@ -1,0 +1,101 @@
+<div class="grid">
+  <app-visual-sample name="document overview / quote">
+    <article class="overview">
+      <div>
+        <p class="eyebrow">DEVIS SÉCURISÉ</p>
+        <h3>Audit et plan de rénovation</h3>
+        <p class="muted">Froment Software → Client Exemple</p>
+      </div>
+      <div class="total"><span>Total TTC</span><strong>1 200,00 €</strong></div>
+    </article>
+  </app-visual-sample>
+  <app-visual-sample name="document facts / reference and totals">
+    <dl class="facts">
+      <div>
+        <dt>Référence</dt>
+        <dd>DE-2026-000001</dd>
+      </div>
+      <div>
+        <dt>Total HT</dt>
+        <dd>1 000,00 €</dd>
+      </div>
+      <div>
+        <dt>TVA</dt>
+        <dd>200,00 €</dd>
+      </div>
+      <div>
+        <dt>Expiration</dt>
+        <dd>2026-09-21</dd>
+      </div>
+    </dl>
+  </app-visual-sample>
+  <app-visual-sample name="saved result / order">
+    <aside class="saved-result">
+      <h3>Commande confirmée</h3>
+      <p><span>Commande</span><strong>CO-2026-000001</strong></p>
+      <p><span>État</span><span appBadge variant="success">Confirmée</span></p>
+      <button appButton variant="primary" type="button">Télécharger le PDF</button>
+    </aside>
+  </app-visual-sample>
+  <app-visual-sample name="line editor / editable">
+    <fieldset class="line-editor">
+      <legend>Ligne 1</legend>
+      <label class="field">Description<input class="input" value="Audit logiciel" /></label>
+      <label class="field">Quantité<input class="input" inputmode="decimal" value="2" /></label>
+      <label class="field"
+        >Prix unitaire<input class="input" inputmode="decimal" value="500,00"
+      /></label>
+      <p><span>Total</span><strong>1 000,00 €</strong></p>
+      <button appButton variant="danger" type="button">Supprimer la ligne</button>
+    </fieldset>
+  </app-visual-sample>
+  <app-visual-sample name="signature / ready">
+    <section class="signature">
+      <div>
+        <p class="eyebrow">ACCEPTATION</p>
+        <h3>Signer le devis</h3>
+        <p class="muted">Confirmez votre identité et votre accord.</p>
+      </div>
+      <label class="field">Nom complet<input class="input" value="Camille Exemple" /></label>
+      <label class="choice consent"
+        ><input type="checkbox" checked /><span>J’accepte ce devis.</span></label
+      >
+      <button appButton variant="primary" type="button">Signer et commander</button>
+    </section>
+  </app-visual-sample>
+  <app-visual-sample name="signature / accepted">
+    <div class="accepted" role="status">
+      <p class="eyebrow">COMMANDE CONFIRMÉE</p>
+      <h3>Le devis est accepté</h3>
+      <p>La signature et la commande sont enregistrées.</p>
+    </div>
+  </app-visual-sample>
+  <app-visual-sample name="revision history / actions">
+    <ol class="revisions">
+      <li>
+        <span><strong>Version 2</strong><small>21 août 2026</small></span
+        ><button appButton type="button">Aperçu</button>
+      </li>
+      <li>
+        <span><strong>Version 1</strong><small>20 août 2026</small></span
+        ><a appLinkButton href="#design-documents-panel">PDF</a>
+      </li>
+    </ol>
+  </app-visual-sample>
+  <app-visual-sample name="document preview / loading">
+    <div class="preview" aria-live="polite">Chargement du document PDF…</div>
+  </app-visual-sample>
+  <app-visual-sample name="share link / copied">
+    <div class="share-link">
+      <strong>Lien sécurisé</strong>
+      <a href="#design-documents-panel">https://froment.software/devis#••••••</a>
+      <p><button appButton type="button">Copier</button><span>Copié</span></p>
+    </div>
+  </app-visual-sample>
+  <app-visual-sample name="credential / access identifier">
+    <div class="credential">
+      <span>Identifiant d’accès</span><code>01K34EXAMPLEACCESS00000000</code>
+      <button appButton type="button">Copier</button>
+    </div>
+  </app-visual-sample>
+</div>

@@ -7,6 +7,7 @@
     [attr.aria-controls]="tab.panelId"
     [attr.aria-selected]="selected() === tab.value"
     [tabIndex]="selected() === tab.value ? 0 : -1"
+    [disabled]="disabled()"
     (click)="select(tab)"
     (keydown.arrowleft)="move($event, index, -1)"
     (keydown.arrowright)="move($event, index, 1)"

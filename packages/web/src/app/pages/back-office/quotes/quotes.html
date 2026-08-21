@@ -14,7 +14,7 @@
   @switch (state()) { @case ('loading') {
   <p aria-live="polite">{{ i18n.t('backOffice.quotes.loading') }}</p>
   } @case ('error') {
-  <p class="notice danger" role="alert">{{ i18n.t('quote.error') }}</p>
+  <p appNotice variant="danger" role="alert">{{ i18n.t('quote.error') }}</p>
   <button appButton type="button" (click)="load()">{{ i18n.t('backOffice.quotes.retry') }}</button>
   } @case ('ready') { @if (quotes().length === 0) {
   <p class="empty">{{ i18n.t('backOffice.quotes.empty') }}</p>
@@ -39,7 +39,7 @@
           <td><strong>{{ quote.title }}</strong></td>
           <td>{{ quote.clientDisplayName }}</td>
           <td>
-            <span class="badge" [class.ok]="quote.status === 'accepted'"
+            <span appBadge [variant]="quote.status === 'accepted' ? 'success' : 'default'"
               >{{ statusLabel(quote.status) }}</span
             >
           </td>

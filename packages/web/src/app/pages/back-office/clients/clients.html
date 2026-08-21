@@ -133,7 +133,7 @@
   </form>
 
   @if (error(); as errorKey) {
-  <p class="notice danger" role="alert">{{ i18n.t(errorKey) }}</p>
+  <p appNotice variant="danger" role="alert">{{ i18n.t(errorKey) }}</p>
   } @if (access(); as createdAccess) {
   <section class="access-result" aria-labelledby="access-title">
     <p id="access-title" class="access-title">
@@ -175,9 +175,9 @@
           </td>
           <td>
             @if (client.archived) {
-            <span class="badge warn">{{ i18n.t('backOffice.clients.archived') }}</span>
+            <span appBadge variant="warning">{{ i18n.t('backOffice.clients.archived') }}</span>
             } @else {
-            <span class="badge ok">{{ i18n.t('backOffice.clients.active') }}</span>
+            <span appBadge variant="success">{{ i18n.t('backOffice.clients.active') }}</span>
             }
           </td>
           <td>

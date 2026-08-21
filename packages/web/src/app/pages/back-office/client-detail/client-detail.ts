@@ -23,6 +23,7 @@ import { Option, Schema } from 'effect';
 import { ClientsApi, type ClientErrorCode } from '@backoffice/clients-api';
 import { I18nService, type TranslationKey } from '@app/i18n.service';
 import { Button } from '@shared/button/button';
+import { Notice } from '@shared/notice/notice';
 
 const emptyClient = () => ({
   displayName: '',
@@ -36,7 +37,7 @@ const emptyClient = () => ({
 
 @Component({
   selector: 'app-client-detail',
-  imports: [Button, FormField, RouterLink],
+  imports: [Button, FormField, Notice, RouterLink],
   templateUrl: './client-detail.html',
   styleUrl: './client-detail.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

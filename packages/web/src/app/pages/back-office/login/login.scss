@@ -23,22 +23,7 @@ h1,
   margin-top: var(--space-3);
 }
 .mode-tabs {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  border-bottom: 1px solid var(--color-line-strong);
-}
-.mode-tabs button {
-  padding: var(--space-3);
-  border: 0;
-  border-bottom: 3px solid transparent;
-  background: transparent;
-  color: var(--color-muted);
-  cursor: pointer;
-}
-.mode-tabs button[aria-selected="true"] {
-  border-bottom-color: var(--color-link);
-  color: var(--color-ink);
-  font-weight: 700;
+  display: block;
 }
 .login-mode-panel > p,
 form,

@@ -10,7 +10,7 @@
   @if (loading()) {
   <p aria-live="polite">{{ i18n.t('backOffice.invoices.loading') }}</p>
   } @else if (unavailable()) { @if (error(); as errorKey) {
-  <p class="notice danger" role="alert">{{ i18n.t(errorKey) }}</p>
+  <p appNotice variant="danger" role="alert">{{ i18n.t(errorKey) }}</p>
   } } @else {
   <form (submit)="save($event)">
     @if (isNew()) {
@@ -37,7 +37,7 @@
       }
     </label>
     @if (orders().length === 0) {
-    <p class="notice">{{ i18n.t('backOffice.invoice.noOrder') }}</p>
+    <p appNotice>{{ i18n.t('backOffice.invoice.noOrder') }}</p>
     } } @else {
     <label class="field">
       {{ i18n.t('backOffice.invoice.title') }}
@@ -198,9 +198,9 @@
       }
     </section>
     } @if (error(); as errorKey) {
-    <p class="notice danger" role="alert">{{ i18n.t(errorKey) }}</p>
+    <p appNotice variant="danger" role="alert">{{ i18n.t(errorKey) }}</p>
     } @else if (invoiceForm().invalid() && invoiceForm().touched()) {
-    <p class="notice danger" role="alert">{{ i18n.t('backOffice.invoice.validation') }}</p>
+    <p appNotice variant="danger" role="alert">{{ i18n.t('backOffice.invoice.validation') }}</p>
     }
     <button appButton variant="primary" type="submit" [disabled]="saveDisabled()">
       @if (saving()) { {{ i18n.t('backOffice.invoice.saving') }} } @else { {{
@@ -254,7 +254,7 @@
     </div>
     <h2>{{ i18n.t('backOffice.invoice.total') }}</h2>
     @if (totalsAreStale()) {
-    <p class="notice">{{ i18n.t('backOffice.invoice.dirtyTotals') }}</p>
+    <p appNotice>{{ i18n.t('backOffice.invoice.dirtyTotals') }}</p>
     }
     <dl>
       <div>

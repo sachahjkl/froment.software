@@ -5,13 +5,15 @@ import { type InvoiceListValue, type InvoiceStatusValue } from '@froment/contrac
 import { InvoicesApi } from '@backoffice/invoices-api';
 import { I18nService } from '@app/i18n.service';
 import { Button } from '@shared/button/button';
+import { Badge } from '@shared/badge/badge';
 import { DataTable } from '@shared/data-table/data-table';
+import { Notice } from '@shared/notice/notice';
 
 type PageState = 'loading' | 'ready' | 'error';
 
 @Component({
   selector: 'app-invoices',
-  imports: [Button, DataTable, RouterLink],
+  imports: [Badge, Button, DataTable, Notice, RouterLink],
   templateUrl: './invoices.html',
   styleUrl: './invoices.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

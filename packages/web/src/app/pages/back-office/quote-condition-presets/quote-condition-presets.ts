@@ -18,6 +18,7 @@ import { QuoteConditionPresetsApi } from '@backoffice/quote-condition-presets-ap
 import { I18nService, type TranslationKey } from '@app/i18n.service';
 import { DataTable } from '@shared/data-table/data-table';
 import { Button } from '@shared/button/button';
+import { Notice } from '@shared/notice/notice';
 
 interface PresetModel {
   readonly name: string;
@@ -28,7 +29,7 @@ const emptyModel = (): PresetModel => ({ name: '', conditions: '' });
 
 @Component({
   selector: 'app-quote-condition-presets',
-  imports: [DataTable, Button, FormField, RouterLink],
+  imports: [Button, DataTable, FormField, Notice, RouterLink],
   templateUrl: './quote-condition-presets.html',
   styleUrl: './quote-condition-presets.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

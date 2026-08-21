@@ -13,13 +13,15 @@ import { Authentication } from '@backoffice/authentication';
 import { ClientPortalApi } from '@backoffice/client-portal-api';
 import { I18nService } from '@app/i18n.service';
 import { Button } from '@shared/button/button';
+import { Badge } from '@shared/badge/badge';
 import { DataTable } from '@shared/data-table/data-table';
+import { Notice } from '@shared/notice/notice';
 
 type PageState = 'loading' | 'ready' | 'error';
 
 @Component({
   selector: 'app-client-portal',
-  imports: [Button, DataTable],
+  imports: [Badge, Button, DataTable, Notice],
   templateUrl: './client-portal.html',
   styleUrl: './client-portal.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

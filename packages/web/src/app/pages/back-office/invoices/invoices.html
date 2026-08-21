@@ -12,7 +12,7 @@
   @switch (state()) { @case ('loading') {
   <p aria-live="polite">{{ i18n.t('backOffice.invoices.loading') }}</p>
   } @case ('error') {
-  <p class="notice danger" role="alert">{{ i18n.t('invoice.error') }}</p>
+  <p appNotice variant="danger" role="alert">{{ i18n.t('invoice.error') }}</p>
   <button appButton type="button" (click)="load()">
     {{ i18n.t('backOffice.invoices.retry') }}
   </button>
@@ -42,7 +42,7 @@
           <td>{{ invoice.title }}</td>
           <td>{{ invoice.clientDisplayName }}</td>
           <td>
-            <span class="badge" [class.ok]="invoice.status === 'paid'"
+            <span appBadge [variant]="invoice.status === 'paid' ? 'success' : 'default'"
               >{{ statusLabel(invoice.status) }}</span
             >
           </td>

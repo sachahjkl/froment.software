@@ -20,6 +20,16 @@ class TestHost {
   ];
 }
 
+@Component({
+  imports: [Tabs],
+  template: `<app-tabs label="Sections" [tabs]="tabs" selected="first" [disabled]="true" />`,
+})
+class DisabledHost {
+  readonly tabs = [
+    { value: 'first', id: 'disabled-first-tab', label: 'First', panelId: 'first-panel' },
+  ];
+}
+
 describe('Tabs', () => {
   it('selects tabs and supports arrow navigation', async () => {
     const fixture = TestBed.createComponent(TestHost);
@@ -36,5 +46,13 @@ describe('Tabs', () => {
     await fixture.whenStable();
     expect(fixture.componentInstance.selected()).toBe('first');
     expect(document.activeElement).toBe(buttons[0]);
+  });
+
+  it('disables every tab when interaction is pending', () => {
+    const fixture = TestBed.createComponent(DisabledHost);
+    fixture.detectChanges();
+    const root: HTMLElement = fixture.nativeElement;
+    const button = root.querySelector<HTMLButtonElement>('button');
+    expect(button?.disabled).toBe(true);
   });
 });

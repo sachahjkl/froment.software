@@ -11,7 +11,7 @@
   <p class="state" aria-live="polite">{{ i18n.t('backOffice.client.loading') }}</p>
   } @case ('error') {
   <div class="state">
-    <p class="notice danger" role="alert">{{ i18n.t('backOffice.client.error') }}</p>
+    <p appNotice variant="danger" role="alert">{{ i18n.t('backOffice.client.error') }}</p>
     <button appButton type="button" (click)="load()">
       {{ i18n.t('backOffice.client.retry') }}
     </button>
@@ -40,7 +40,7 @@
             <tr>
               <td><strong>{{ quote.reference }}</strong></td>
               <td><strong>{{ quote.title }}</strong></td>
-              <td><span class="badge">{{ quoteStatus(quote.status) }}</span></td>
+              <td><span appBadge>{{ quoteStatus(quote.status) }}</span></td>
               <td>{{ date(quote.updatedAt) }}</td>
               <td>{{ money(quote.totalCents, quote.currency) }}</td>
               <td>
@@ -83,7 +83,9 @@
               <td><strong>{{ order.reference }}</strong></td>
               <td>{{ order.quoteReference }}</td>
               <td><strong>{{ order.title }}</strong></td>
-              <td><span class="badge ok">{{ i18n.t('backOffice.client.confirmed') }}</span></td>
+              <td>
+                <span appBadge variant="success">{{ i18n.t('backOffice.client.confirmed') }}</span>
+              </td>
               <td>{{ date(order.createdAt) }}</td>
               <td>{{ money(order.totalCents, order.currency) }}</td>
               <td>
@@ -129,7 +131,7 @@
               <td><strong>{{ invoice.invoiceNumber }}</strong></td>
               <td>{{ invoice.orderReference }}</td>
               <td><strong>{{ invoice.title }}</strong></td>
-              <td><span class="badge">{{ invoiceStatus(invoice.status) }}</span></td>
+              <td><span appBadge>{{ invoiceStatus(invoice.status) }}</span></td>
               <td>{{ date(invoice.dueDate) }}</td>
               <td>{{ money(invoice.totalCents, invoice.currency) }}</td>
               <td>

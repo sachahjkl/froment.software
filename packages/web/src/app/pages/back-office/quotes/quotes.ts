@@ -5,13 +5,15 @@ import { type QuoteListValue, type QuoteStatusValue } from '@froment/contracts';
 import { QuotesApi } from '@backoffice/quotes-api';
 import { I18nService } from '@app/i18n.service';
 import { Button } from '@shared/button/button';
+import { Badge } from '@shared/badge/badge';
 import { DataTable } from '@shared/data-table/data-table';
+import { Notice } from '@shared/notice/notice';
 
 type PageState = 'loading' | 'ready' | 'error';
 
 @Component({
   selector: 'app-quotes',
-  imports: [DataTable, Button, RouterLink],
+  imports: [Badge, Button, DataTable, Notice, RouterLink],
   templateUrl: './quotes.html',
   styleUrl: './quotes.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

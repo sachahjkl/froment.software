@@ -18,6 +18,8 @@ import { ClientsApi, type ClientErrorCode } from '@backoffice/clients-api';
 import { I18nService, TranslationKey } from '@app/i18n.service';
 import { Button } from '@shared/button/button';
 import { DataTable } from '@shared/data-table/data-table';
+import { Badge } from '@shared/badge/badge';
+import { Notice } from '@shared/notice/notice';
 import { TextCopy } from '@shared/text-copy';
 
 type PageState = 'loading' | 'ready' | 'error';
@@ -27,7 +29,7 @@ interface AccessResult extends ClientAccessValue {
 
 @Component({
   selector: 'app-clients',
-  imports: [DataTable, Button, FormField, RouterLink],
+  imports: [Badge, Button, DataTable, FormField, Notice, RouterLink],
   templateUrl: './clients.html',
   styleUrl: './clients.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

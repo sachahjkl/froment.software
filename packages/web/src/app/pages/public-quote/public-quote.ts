@@ -29,13 +29,14 @@ import { Option, Schema } from 'effect';
 import { I18nService, type TranslationKey } from '@app/i18n.service';
 import { PublicQuoteApi } from '../../public-quote/public-quote-api';
 import { Button } from '@shared/button/button';
+import { Notice } from '@shared/notice/notice';
 import { Tabs, type TabItem } from '@shared/tabs/tabs';
 
 type QuoteTab = 'summary' | 'document' | 'signature';
 
 @Component({
   selector: 'app-public-quote',
-  imports: [Button, FormField, Tabs],
+  imports: [Button, FormField, Notice, Tabs],
   templateUrl: './public-quote.html',
   styleUrl: './public-quote.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

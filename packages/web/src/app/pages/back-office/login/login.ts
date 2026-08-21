@@ -5,6 +5,7 @@ import { type LoginModeValue } from '@froment/contracts';
 import { Authentication } from '@backoffice/authentication';
 import { I18nService, TranslationKey } from '@app/i18n.service';
 import { Button } from '@shared/button/button';
+import { Tabs, type TabItem } from '@shared/tabs/tabs';
 
 const loginModeView = {
   client: {
@@ -31,7 +32,7 @@ const loginModeView = {
 
 @Component({
   selector: 'app-login',
-  imports: [Button, RouterLink],
+  imports: [Button, RouterLink, Tabs],
   templateUrl: './login.html',
   styleUrl: './login.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -43,6 +44,20 @@ export class Login {
   private readonly router = inject(Router);
   protected readonly error = signal<TranslationKey | undefined>(undefined);
   protected readonly mode = signal<LoginModeValue>('client');
+  protected readonly modeTabs = computed<readonly TabItem[]>(() => [
+    {
+      value: 'client',
+      id: 'client-tab',
+      label: this.i18n.t('backOffice.mode.client'),
+      panelId: 'login-panel',
+    },
+    {
+      value: 'administrator',
+      id: 'administrator-tab',
+      label: this.i18n.t('backOffice.mode.administrator'),
+      panelId: 'login-panel',
+    },
+  ]);
   protected readonly modeView = computed(() => loginModeView[this.mode()]);
   protected readonly pending = signal(false);
   protected readonly submitLabel = computed<TranslationKey>(() => {
@@ -82,11 +97,6 @@ export class Login {
 
     this.pending.set(false);
     this.error.set(outcome.code);
-  }
-
-  tabIndex(mode: LoginModeValue): 0 | -1 {
-    if (this.mode() === mode) return 0;
-    return -1;
   }
 
   private applyQueryMode(mode: string | null): void {

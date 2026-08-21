@@ -1,38 +1,14 @@
 <section class="login-page" aria-labelledby="back-office-title">
   <div class="login-panel">
     <h1 id="back-office-title">{{ i18n.t('backOffice.title') }}</h1>
-    <div class="mode-tabs" role="tablist" [attr.aria-label]="i18n.t('backOffice.mode')">
-      <button
-        #clientTab
-        type="button"
-        role="tab"
-        id="client-tab"
-        aria-controls="login-panel"
-        [attr.aria-selected]="mode() === 'client'"
-        [tabIndex]="tabIndex('client')"
-        [disabled]="pending()"
-        (click)="selectMode('client')"
-        (keydown.arrowleft)="selectMode('administrator', administratorTab); $event.preventDefault()"
-        (keydown.arrowright)="selectMode('administrator', administratorTab); $event.preventDefault()"
-      >
-        {{ i18n.t('backOffice.mode.client') }}
-      </button>
-      <button
-        #administratorTab
-        type="button"
-        role="tab"
-        id="administrator-tab"
-        aria-controls="login-panel"
-        [attr.aria-selected]="mode() === 'administrator'"
-        [tabIndex]="tabIndex('administrator')"
-        [disabled]="pending()"
-        (click)="selectMode('administrator')"
-        (keydown.arrowleft)="selectMode('client', clientTab); $event.preventDefault()"
-        (keydown.arrowright)="selectMode('client', clientTab); $event.preventDefault()"
-      >
-        {{ i18n.t('backOffice.mode.administrator') }}
-      </button>
-    </div>
+    <app-tabs
+      class="mode-tabs"
+      [label]="i18n.t('backOffice.mode')"
+      [tabs]="modeTabs()"
+      [selected]="mode()"
+      [disabled]="pending()"
+      (selectedChange)="selectMode($event === 'administrator' ? 'administrator' : 'client')"
+    />
     <div
       id="login-panel"
       class="login-mode-panel"

@@ -7,9 +7,9 @@
   @if (loading()) {
   <p class="status" aria-live="polite">{{ i18n.t('backOffice.clientDetail.loading') }}</p>
   } @else if (error() === 'client.not_found') {
-  <p class="notice danger" role="alert">{{ i18n.t('client.not_found') }}</p>
+  <p appNotice variant="danger" role="alert">{{ i18n.t('client.not_found') }}</p>
   } @else { @if (archived()) {
-  <p class="notice" role="status">{{ i18n.t('backOffice.clientDetail.archived') }}</p>
+  <p appNotice role="status">{{ i18n.t('backOffice.clientDetail.archived') }}</p>
   }
   <form (submit)="save($event)">
     <label class="field" for="detail-display-name">
@@ -136,6 +136,6 @@
     }
   </form>
   @if (error(); as errorKey) {
-  <p class="notice danger" role="alert">{{ i18n.t(errorKey) }}</p>
+  <p appNotice variant="danger" role="alert">{{ i18n.t(errorKey) }}</p>
   } }
 </section>

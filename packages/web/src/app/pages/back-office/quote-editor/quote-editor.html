@@ -12,7 +12,7 @@
   @if (loading()) {
   <p aria-live="polite">{{ i18n.t('backOffice.quotes.loading') }}</p>
   } @else if (unavailable()) { @if (error(); as errorKey) {
-  <p class="notice danger" role="alert">{{ i18n.t(errorKey) }}</p>
+  <p appNotice variant="danger" role="alert">{{ i18n.t(errorKey) }}</p>
   } } @else {
   <form (submit)="save($event)">
     @if (isNew()) {
@@ -37,7 +37,7 @@
       }
     </label>
     @if (clients().length === 0) {
-    <p class="notice">
+    <p appNotice>
       {{ i18n.t('backOffice.quote.noClient') }}
       <a routerLink="/backoffice/clients">{{ i18n.t('backOffice.quote.manageClients') }}</a>
     </p>
@@ -189,9 +189,9 @@
     </section>
 
     @if (error(); as errorKey) {
-    <p class="notice danger" role="alert">{{ i18n.t(errorKey) }}</p>
+    <p appNotice variant="danger" role="alert">{{ i18n.t(errorKey) }}</p>
     } @else if (quoteForm().invalid() && quoteForm().touched()) {
-    <p class="notice danger" role="alert">{{ i18n.t('backOffice.quote.validation') }}</p>
+    <p appNotice variant="danger" role="alert">{{ i18n.t('backOffice.quote.validation') }}</p>
     }
     <button appButton variant="primary" type="submit" [disabled]="saveDisabled()">
       @if (saving()) { {{ i18n.t('backOffice.quote.saving') }} } @else { {{
@@ -238,7 +238,7 @@
     }
     <h2 id="totals-title">{{ i18n.t('backOffice.quote.total') }}</h2>
     @if (totalsAreStale()) {
-    <p class="notice" role="status">{{ i18n.t('backOffice.quote.dirtyTotals') }}</p>
+    <p appNotice role="status">{{ i18n.t('backOffice.quote.dirtyTotals') }}</p>
     }
     <dl>
       <div>

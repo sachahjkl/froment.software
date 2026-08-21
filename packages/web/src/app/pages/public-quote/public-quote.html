@@ -201,6 +201,6 @@
     }
   </section>
   } @if (quote() && error(); as errorKey) {
-  <p class="notice danger" role="alert">{{ i18n.t(errorKey) }}</p>
+  <p appNotice variant="danger" role="alert">{{ i18n.t(errorKey) }}</p>
   }
 </section>
