@@ -7,7 +7,6 @@ import {
   signal,
 } from '@angular/core';
 import { FormField, form, maxLength, pattern, required, submit } from '@angular/forms/signals';
-import { RouterLink } from '@angular/router';
 import {
   type QuoteConditionPresetListValue,
   type QuoteConditionPresetValue,
@@ -29,7 +28,7 @@ const emptyModel = (): PresetModel => ({ name: '', conditions: '' });
 
 @Component({
   selector: 'app-quote-condition-presets',
-  imports: [Button, DataTable, FormField, Notice, RouterLink],
+  imports: [Button, DataTable, FormField, Notice],
   templateUrl: './quote-condition-presets.html',
   styleUrl: './quote-condition-presets.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

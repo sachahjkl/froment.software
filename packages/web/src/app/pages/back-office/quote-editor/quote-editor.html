@@ -1,8 +1,5 @@
 <section class="quote-page" aria-labelledby="quote-title">
   <header>
-    <p>
-      <a routerLink="/backoffice/affaires">← {{ i18n.t('backOffice.quote.back') }}</a>
-    </p>
     <h1 id="quote-title">
       @if (isNew()) { {{ i18n.t('backOffice.quote.title.new') }} } @else { {{
       i18n.t('backOffice.quote.title.edit') }} }

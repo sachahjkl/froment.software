@@ -8,7 +8,6 @@ import {
   signal,
 } from '@angular/core';
 import { FormField, form, maxLength, pattern, required, submit } from '@angular/forms/signals';
-import { RouterLink } from '@angular/router';
 import { type IssuerSettingsValue } from '@froment/contracts';
 
 import { IssuerSettingsApi } from '@backoffice/issuer-settings-api';
@@ -31,7 +30,7 @@ const emptySettings = (): IssuerSettingsValue => ({
 
 @Component({
   selector: 'app-issuer-settings',
-  imports: [Button, FormField, Notice, RouterLink],
+  imports: [Button, FormField, Notice],
   templateUrl: './issuer-settings.html',
   styleUrl: './issuer-settings.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
