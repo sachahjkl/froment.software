@@ -60,21 +60,22 @@ const reservePort = () =>
   });
 
 const waitForServer = async (url: string, process: ChildProcess, readOutput: () => string) => {
-  for (let attempt = 0; attempt < 50; attempt += 1) {
+  const deadline = Date.now() + 30_000;
+  while (Date.now() < deadline) {
     if (process.exitCode !== null) {
       throw new Error(
         `The server stopped with exit code ${process.exitCode}.\n${readOutput().slice(-5_000)}`,
       );
     }
     try {
-      const response = await fetch(url);
+      const response = await fetch(url, { signal: AbortSignal.timeout(1_000) });
       if (response.ok) return;
     } catch {
       // The process has not bound its socket yet.
     }
-    await new Promise((resolve) => setTimeout(resolve, 50));
+    await new Promise((resolve) => setTimeout(resolve, 100));
   }
-  throw new Error('The server did not start before the timeout.');
+  throw new Error(`The server did not start before the timeout.\n${readOutput().slice(-5_000)}`);
 };
 
 describe('HTTP server', () => {
