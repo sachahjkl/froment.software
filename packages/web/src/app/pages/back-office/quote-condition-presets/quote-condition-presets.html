@@ -69,7 +69,7 @@
         <tr>
           <th>{{ i18n.t('backOffice.conditionPresets.name') }}</th>
           <th>{{ i18n.t('backOffice.quote.conditions') }}</th>
-          <th>{{ i18n.t('backOffice.quotes.actions') }}</th>
+          <th class="actions-column">{{ i18n.t('backOffice.quotes.actions') }}</th>
         </tr>
       </thead>
       <tbody>
@@ -77,7 +77,7 @@
         <tr>
           <td><strong>{{ preset.name }}</strong></td>
           <td class="preset-conditions">{{ preset.conditions }}</td>
-          <td class="row-actions">
+          <td class="actions-column row-actions">
             <button appButton type="button" (click)="edit(preset)">
               {{ i18n.t('backOffice.conditionPresets.edit') }}
             </button>

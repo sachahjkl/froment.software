@@ -175,7 +175,7 @@
               <th>{{ i18n.t('backOffice.clientDetail.reference') }}</th>
               <th>{{ i18n.t('backOffice.clientDetail.status') }}</th>
               <th>{{ i18n.t('backOffice.clientDetail.total') }}</th>
-              <th>{{ i18n.t('backOffice.clientDetail.actions') }}</th>
+              <th class="actions-column">{{ i18n.t('backOffice.clientDetail.actions') }}</th>
             </tr>
           </thead>
           <tbody>
@@ -185,7 +185,9 @@
               <td>{{ document.reference }}</td>
               <td><span appBadge>{{ document.status }}</span></td>
               <td>{{ money(document.totalCents) }}</td>
-              <td><a appButton [routerLink]="document.link">{{ i18n.t('backOffice.open') }}</a></td>
+              <td class="actions-column">
+                <a appLinkButton [routerLink]="document.link">{{ i18n.t('backOffice.open') }}</a>
+              </td>
             </tr>
             }
           </tbody>

@@ -175,5 +175,6 @@ describe('Clients', () => {
     expect(root.querySelector<HTMLAnchorElement>('tbody a')?.getAttribute('href')).toBe(
       '/backoffice/clients/01ARZ3NDEKTSV4RRFFQ69G5FAV',
     );
+    expect(root.querySelector('.actions a[data-button-variant]')).not.toBeNull();
   });
 });

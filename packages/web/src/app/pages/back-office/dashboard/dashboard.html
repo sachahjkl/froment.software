@@ -59,7 +59,7 @@
             <span appBadge [variant]="action.variant">{{ action.label }}</span
             ><strong>{{ action.title }}</strong><small>{{ action.client }}</small>
           </div>
-          <a appButton [routerLink]="action.link">{{ i18n.t('backOffice.open') }}</a>
+          <a appLinkButton [routerLink]="action.link">{{ i18n.t('backOffice.open') }}</a>
         </li>
         }
       </ol>

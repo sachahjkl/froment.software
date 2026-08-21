@@ -32,7 +32,7 @@
         <tr>
           <th>{{ i18n.t('backOffice.search.kind') }}</th>
           <th>{{ i18n.t('backOffice.search.result') }}</th>
-          <th>{{ i18n.t('backOffice.search.action') }}</th>
+          <th class="actions-column">{{ i18n.t('backOffice.search.action') }}</th>
         </tr>
       </thead>
       <tbody>
@@ -40,7 +40,9 @@
         <tr>
           <td><span appBadge>{{ kindLabel(result.kind) }}</span></td>
           <td><strong>{{ result.reference }}</strong><small>{{ result.detail }}</small></td>
-          <td><a appButton [routerLink]="result.link">{{ i18n.t('backOffice.open') }}</a></td>
+          <td class="actions-column">
+            <a appLinkButton [routerLink]="result.link">{{ i18n.t('backOffice.open') }}</a>
+          </td>
         </tr>
         }
       </tbody>

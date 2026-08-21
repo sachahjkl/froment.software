@@ -38,7 +38,7 @@
               <th>{{ i18n.t('backOffice.affairs.client') }}</th>
               <th>{{ i18n.t('backOffice.affairs.progress') }}</th>
               <th>{{ i18n.t('backOffice.affairs.amount') }}</th>
-              <th>{{ i18n.t('backOffice.affairs.action') }}</th>
+              <th class="actions-column">{{ i18n.t('backOffice.affairs.action') }}</th>
             </tr>
           </thead>
           <tbody>
@@ -56,21 +56,21 @@
                 </span>
               </td>
               <td>{{ money(affair.quote.totalCents) }}</td>
-              <td>
+              <td class="actions-column">
                 @if (affair.invoice) {
-                <a appButton [routerLink]="['/backoffice/invoices', affair.invoice.id]">
+                <a appLinkButton [routerLink]="['/backoffice/invoices', affair.invoice.id]">
                   {{ actionLabel(affair) }}
                 </a>
                 } @else if (affair.order) {
                 <a
-                  appButton
+                  appLinkButton
                   routerLink="/backoffice/invoices/new"
                   [queryParams]="{ orderId: affair.order.id }"
                 >
                   {{ actionLabel(affair) }}
                 </a>
                 } @else {
-                <a appButton [routerLink]="['/backoffice/quotes', affair.quote.id]">
+                <a appLinkButton [routerLink]="['/backoffice/quotes', affair.quote.id]">
                   {{ actionLabel(affair) }}
                 </a>
                 }

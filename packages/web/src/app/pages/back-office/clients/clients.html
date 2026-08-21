@@ -188,7 +188,7 @@
             <tr>
               <th>{{ i18n.t('backOffice.clients.displayName') }}</th>
               <th>{{ i18n.t('backOffice.clients.status') }}</th>
-              <th>{{ i18n.t('backOffice.clients.actions') }}</th>
+              <th class="actions-column">{{ i18n.t('backOffice.clients.actions') }}</th>
             </tr>
           </thead>
           <tbody>
@@ -206,9 +206,9 @@
                 <span appBadge variant="success">{{ i18n.t('backOffice.clients.active') }}</span>
                 }
               </td>
-              <td>
+              <td class="actions-column">
                 <div class="actions">
-                  <a appButton [routerLink]="['/backoffice/clients', client.id]">
+                  <a appLinkButton [routerLink]="['/backoffice/clients', client.id]">
                     {{ i18n.t('backOffice.clients.open') }}
                   </a>
                   @if (!client.archived) {

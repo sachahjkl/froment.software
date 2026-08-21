@@ -24,7 +24,7 @@
       {{ i18n.tf('backOffice.billing.selected', { count: selectedInvoices().length }) }}
     </strong>
     @if (bulkReminderHref(); as reminderHref) {
-    <a appButton [href]="reminderHref">{{ i18n.t('backOffice.billing.bulkReminder') }}</a>
+    <a appLinkButton [href]="reminderHref">{{ i18n.t('backOffice.billing.bulkReminder') }}</a>
     }
     <button appButton type="button" [disabled]="exportCount() === 0" (click)="exportSelected()">
       {{ i18n.tf('backOffice.billing.bulkExport', { count: exportCount() }) }}
@@ -66,7 +66,7 @@
               <th>{{ i18n.t('backOffice.invoices.total') }}</th>
               <th>{{ i18n.t('backOffice.billing.dueDate') }}</th>
               <th>{{ i18n.t('backOffice.invoices.updated') }}</th>
-              <th>{{ i18n.t('backOffice.invoices.actions') }}</th>
+              <th class="actions-column">{{ i18n.t('backOffice.invoices.actions') }}</th>
             </tr>
           </thead>
           <tbody>
@@ -98,8 +98,8 @@
                 </span>
               </td>
               <td>{{ date(invoice.updatedAt) }}</td>
-              <td>
-                <a appButton [routerLink]="['/backoffice/invoices', invoice.id]">
+              <td class="actions-column">
+                <a appLinkButton [routerLink]="['/backoffice/invoices', invoice.id]">
                   {{ i18n.t('backOffice.invoices.open') }}
                 </a>
               </td>

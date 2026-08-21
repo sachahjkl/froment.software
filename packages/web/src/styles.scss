@@ -124,6 +124,10 @@ p {
   text-transform: uppercase;
 }
 
+.data-table .actions-column {
+  text-align: right;
+}
+
 .data-table tbody tr,
 .data-table tbody tr * {
   transition: none;

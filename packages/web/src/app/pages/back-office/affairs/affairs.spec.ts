@@ -114,5 +114,8 @@ describe('Affairs', () => {
     await harness.fixture.whenStable();
     expect(root.textContent).toContain('DE-2026-000002');
     expect(root.textContent).toMatch(/Réglée|Paid/);
+    const row = root.querySelector('tbody tr');
+    expect(row?.querySelector('td:nth-child(3)')?.classList.contains('actions-column')).toBe(false);
+    expect(row?.querySelector('td:last-child')?.classList.contains('actions-column')).toBe(true);
   });
 });
