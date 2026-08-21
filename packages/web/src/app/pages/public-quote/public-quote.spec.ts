@@ -15,7 +15,7 @@ const quote = {
   expiresAt: '2026-09-19T06:00:00.000Z',
   snapshot: {
     templateId: 'quote-default' as const,
-    templateVersion: 2 as const,
+    templateVersion: 1 as const,
     quoteReference: 'DE-2026-000001' as const,
     quoteId: '01ARZ3NDEKTSV4RRFFQ69G5FAV',
     revisionId: '01ARZ3NDEKTSV4RRFFQ69G5FAW',

@@ -120,10 +120,11 @@ export type PublicQuoteSignatureRequest = typeof PublicQuoteSignatureRequest.Typ
 export const QuoteLine = DocumentLine;
 export type QuoteLine = typeof QuoteLine.Type;
 
-const QuoteRenderSnapshotV1 = Schema.Struct({
+export const QuoteRenderSnapshot = Schema.Struct({
   templateId: Schema.Literal('quote-default'),
   templateVersion: Schema.Literal(1),
   quoteId: Ulid,
+  quoteReference: QuoteReference,
   revisionId: Ulid,
   version: PositiveSafeInteger,
   createdAt: IsoUtc,
@@ -137,12 +138,6 @@ const QuoteRenderSnapshotV1 = Schema.Struct({
   totalCents: SafeInteger,
   lines: DocumentLines,
 }).check(documentTotalsFilter);
-const QuoteRenderSnapshotV2 = Schema.Struct({
-  ...QuoteRenderSnapshotV1.fields,
-  templateVersion: Schema.Literal(2),
-  quoteReference: QuoteReference,
-}).check(documentTotalsFilter);
-export const QuoteRenderSnapshot = Schema.Union([QuoteRenderSnapshotV1, QuoteRenderSnapshotV2]);
 export type QuoteRenderSnapshot = typeof QuoteRenderSnapshot.Type;
 
 export const PublicQuoteConsultation = Schema.Struct({

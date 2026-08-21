@@ -14,7 +14,7 @@ const party = {
 
 const snapshot: InvoiceRenderSnapshotValue = {
   templateId: 'invoice-default',
-  templateVersion: 2,
+  templateVersion: 1,
   invoiceId: '01ARZ3NDEKTSV4RRFFQ69G5FAV',
   orderId: '01ARZ3NDEKTSV4RRFFQ69G5FAW',
   orderReference: 'CO-2026-000001',
@@ -50,19 +50,6 @@ const snapshot: InvoiceRenderSnapshotValue = {
 };
 
 describe('InvoiceDefaultTemplate', () => {
-  it('keeps the historical template for version 1 snapshots', async () => {
-    const html = await renderInvoiceDefaultTemplate({
-      ...snapshot,
-      templateVersion: 1,
-      invoiceNumber: 'F-000001',
-    });
-
-    expect(html).toContain('F-000001');
-    expect(html).toContain('class="document-header"');
-    expect(html).toContain('"Trebuchet MS", Arial, "Liberation Sans", sans-serif');
-    expect(html).not.toContain('font-family: Cousine');
-  });
-
   it('renders the immutable invoice number and escaped client name', async () => {
     const html = await renderInvoiceDefaultTemplate(snapshot);
 

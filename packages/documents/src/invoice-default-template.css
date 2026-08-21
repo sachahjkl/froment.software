@@ -42,7 +42,7 @@ td {
 .invoice {
   width: 100%;
   min-height: 277mm;
-  padding: 10mm 11mm 9mm;
+  padding: 15mm 11mm;
   background: var(--paper);
 }
 
@@ -81,15 +81,15 @@ footer {
 }
 
 .customer {
-  margin-top: 6mm;
+  margin-top: 4mm;
 }
 
 .order-info {
-  margin-top: 5mm;
+  margin-top: 3mm;
 }
 
 h1 {
-  margin: 6mm 0 1mm;
+  margin: 4mm 0 1mm;
   font: inherit;
   text-align: center;
 }
@@ -173,12 +173,12 @@ table {
 }
 
 .payment-info {
-  margin-top: 5mm;
+  margin-top: 4mm;
 }
 
 .legal {
   gap: 1.5mm;
-  margin-top: 6mm;
+  margin-top: 4mm;
   font-size: 7pt;
   font-weight: 400;
   line-height: 1.2;
@@ -186,7 +186,7 @@ table {
 
 footer {
   gap: 1.5mm;
-  margin-top: 5mm;
+  margin-top: 3mm;
   text-align: center;
 }
 

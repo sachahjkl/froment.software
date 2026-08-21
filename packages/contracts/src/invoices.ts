@@ -70,11 +70,13 @@ export type InvoiceIssueRequest = typeof InvoiceIssueRequest.Type;
 export const InvoiceTransitionRequest = Schema.Struct({ expectedVersion: PositiveSafeInteger });
 export type InvoiceTransitionRequest = typeof InvoiceTransitionRequest.Type;
 
-const InvoiceRenderSnapshotV1 = Schema.Struct({
+export const InvoiceRenderSnapshot = Schema.Struct({
   templateId: Schema.Literal('invoice-default'),
   templateVersion: Schema.Literal(1),
   invoiceId: Ulid,
   orderId: Ulid,
+  quoteReference: QuoteReference,
+  orderReference: OrderReference,
   revisionId: Ulid,
   version: PositiveSafeInteger,
   createdAt: IsoUtc,
@@ -92,16 +94,6 @@ const InvoiceRenderSnapshotV1 = Schema.Struct({
   totalCents: SafeInteger,
   lines: DocumentLines,
 }).check(documentTotalsFilter);
-const InvoiceRenderSnapshotV2 = Schema.Struct({
-  ...InvoiceRenderSnapshotV1.fields,
-  templateVersion: Schema.Literal(2),
-  quoteReference: QuoteReference,
-  orderReference: OrderReference,
-}).check(documentTotalsFilter);
-export const InvoiceRenderSnapshot = Schema.Union([
-  InvoiceRenderSnapshotV1,
-  InvoiceRenderSnapshotV2,
-]);
 export type InvoiceRenderSnapshot = typeof InvoiceRenderSnapshot.Type;
 
 export const InvoiceRevision = Schema.Struct({

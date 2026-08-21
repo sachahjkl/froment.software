@@ -49,7 +49,7 @@ const issuer: IssuerSettingsValue = {
 };
 const snapshot = Schema.decodeUnknownSync(InvoiceRenderSnapshot)({
   templateId: 'invoice-default',
-  templateVersion: 2,
+  templateVersion: 1,
   invoiceId,
   orderId,
   orderReference: 'CO-2026-000001',
@@ -224,7 +224,7 @@ const seedInvoice = (database: DatabaseService, dueDate = '2099-09-19') => {
         render_snapshot)
         values (?, ?, 1, null, null, 'Client', 'Invoice', '2026-08-20', ?,
                 'Payment due within 30 days.', 'EUR', 10000, 2000, 12000, 1, ?,
-                 'invoice-default', 2, ?)`,
+                 'invoice-default', 1, ?)`,
     )
     .run(revisionId, invoiceId, dueDate, actorId, JSON.stringify({ ...snapshot, dueDate }));
   database.sqlite

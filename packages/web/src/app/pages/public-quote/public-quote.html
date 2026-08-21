@@ -25,12 +25,10 @@
     </header>
 
     <section class="quote-facts" [attr.aria-label]="i18n.t('publicQuote.summary')">
-      @if (currentQuote.snapshot.templateVersion === 2) {
       <div>
         <span>{{ i18n.t('publicQuote.reference') }}</span>
         <strong>{{ currentQuote.snapshot.quoteReference }}</strong>
       </div>
-      }
       <div>
         <span>{{ i18n.t('publicQuote.netTotal') }}</span>
         <strong>{{ formatMoney(currentQuote.snapshot.netTotalCents) }}</strong>
@@ -95,14 +93,7 @@
           <h2 id="document-title">{{ i18n.t('publicQuote.document') }}</h2>
         </div>
         @if (pdfUrl(); as documentUrl) {
-        <a
-          [href]="documentUrl"
-          [download]="
-          currentQuote.snapshot.templateVersion === 2
-            ? currentQuote.snapshot.quoteReference + '.pdf'
-            : 'quote-' + currentQuote.snapshot.quoteId + '.pdf'
-        "
-        >
+        <a [href]="documentUrl" [download]="currentQuote.snapshot.quoteReference + '.pdf'">
           {{ i18n.t('publicQuote.download') }}
         </a>
         }

@@ -14,7 +14,7 @@ import { type InvoiceRenderSnapshotValue } from '@froment/contracts';
 import { formatMoney } from './format-money.js';
 
 export const INVOICE_DEFAULT_TEMPLATE_ID = 'invoice-default';
-export const INVOICE_DEFAULT_TEMPLATE_VERSION = 2;
+export const INVOICE_DEFAULT_TEMPLATE_VERSION = 1;
 
 const INVOICE_SNAPSHOT = new InjectionToken<InvoiceRenderSnapshotValue>('INVOICE_SNAPSHOT');
 
@@ -41,14 +41,6 @@ abstract class InvoiceTemplateBase {
 }
 
 @Component({
-  selector: 'froment-invoice-document-v1',
-  templateUrl: './invoice-default-template-v1.html',
-  styleUrl: './quote-default-template.css',
-  changeDetection: ChangeDetectionStrategy.OnPush,
-})
-class InvoiceDefaultTemplateV1 extends InvoiceTemplateBase {}
-
-@Component({
   selector: 'froment-invoice-document',
   templateUrl: './invoice-default-template.html',
   styleUrl: './invoice-default-template.css',
@@ -60,21 +52,18 @@ export class InvoiceDefaultTemplate extends InvoiceTemplateBase {}
 export const renderInvoiceDefaultTemplate = (
   snapshot: InvoiceRenderSnapshotValue,
 ): Promise<string> => {
-  const component =
-    snapshot.templateVersion === 1 ? InvoiceDefaultTemplateV1 : InvoiceDefaultTemplate;
-  const selector =
-    snapshot.templateVersion === 1 ? 'froment-invoice-document-v1' : 'froment-invoice-document';
   return renderApplication(
     (context) =>
       bootstrapApplication(
-        component,
+        InvoiceDefaultTemplate,
         {
           providers: [provideServerRendering(), { provide: INVOICE_SNAPSHOT, useValue: snapshot }],
         },
         context,
       ),
     {
-      document: `<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Facture</title></head><body><${selector}></${selector}></body></html>`,
+      document:
+        '<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Facture</title></head><body><froment-invoice-document></froment-invoice-document></body></html>',
       url: 'https://documents.froment.software/invoice',
       allowedHosts: ['documents.froment.software'],
     },

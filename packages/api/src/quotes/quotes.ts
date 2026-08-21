@@ -326,7 +326,7 @@ export const QuotesLive = Layer.effect(
       const createdAt = DateTime.formatIso(DateTime.makeUnsafe(now));
       const snapshot = Schema.decodeUnknownSync(QuoteRenderSnapshot)({
         templateId: 'quote-default',
-        templateVersion: 2,
+        templateVersion: 1,
         quoteId,
         quoteReference,
         revisionId,
@@ -353,8 +353,8 @@ export const QuotesLive = Layer.effect(
           `insert into quote_revisions
            (id, quote_id, version, client_display_name, title, conditions, currency,
              net_total_cents, vat_total_cents, total_cents, created_at, created_by_user_id,
-              template_id, template_version, render_snapshot)
-             values (?, ?, ?, ?, ?, ?, 'EUR', ?, ?, ?, ?, ?, 'quote-default', 2, ?)`,
+               template_id, template_version, render_snapshot)
+             values (?, ?, ?, ?, ?, ?, 'EUR', ?, ?, ?, ?, ?, 'quote-default', 1, ?)`,
         )
         .run(
           revisionId,

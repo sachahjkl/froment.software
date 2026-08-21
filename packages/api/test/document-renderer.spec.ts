@@ -60,13 +60,14 @@ const quote = Schema.decodeUnknownSync(QuoteRenderSnapshot)({
   ...common,
   templateId: 'quote-default',
   quoteId: ids[0],
+  quoteReference: 'DE-2026-000001',
   revisionId: ids[1],
   conditions: longText,
 });
 const invoice = Schema.decodeUnknownSync(InvoiceRenderSnapshot)({
   ...common,
   templateId: 'invoice-default',
-  templateVersion: 2,
+  templateVersion: 1,
   invoiceId: ids[2],
   orderId: ids[3],
   orderReference: 'CO-2026-000001',
@@ -91,7 +92,7 @@ const compactInvoice = Schema.decodeUnknownSync(InvoiceRenderSnapshot)({
 });
 const compactQuote = Schema.decodeUnknownSync(QuoteRenderSnapshot)({
   ...quote,
-  templateVersion: 2,
+  templateVersion: 1,
   quoteReference: 'DE-2026-000001',
   issuer: { ...issuer, displayName: 'Froment Software' },
   client: { ...party, displayName: 'Client Exemple' },
@@ -152,9 +153,9 @@ const expectBusinessLayout = async (page: Page) => {
     const firstRow = style('tbody tr:nth-child(1)');
     const secondRow = style('tbody tr:nth-child(2)');
     return {
-      headerDisplay: style('.document-header').display,
+      headerDisplay: style('.header').display,
       metadataBorder: style('.quote-meta').borderTopStyle,
-      tableBorder: style('table').borderTopStyle,
+      tableBorder: style('.items tbody').borderBottomStyle,
       cellBorders: ['Top', 'Right', 'Bottom', 'Left'].map((side) =>
         style('tbody td').getPropertyValue(`border-${side.toLowerCase()}-style`),
       ),
@@ -167,8 +168,8 @@ const expectBusinessLayout = async (page: Page) => {
     headerDisplay: 'grid',
     metadataBorder: 'solid',
     tableBorder: 'solid',
-    cellBorders: ['solid', 'solid', 'solid', 'solid'],
-    rowColors: ['rgba(0, 0, 0, 0)', 'rgb(246, 248, 250)'],
+    cellBorders: ['none', 'none', 'none', 'none'],
+    rowColors: ['rgba(0, 0, 0, 0)', 'rgba(0, 0, 0, 0)'],
     totalBorder: 'double',
   });
 };
@@ -183,7 +184,7 @@ describe('DocumentRenderer', () => {
             kind: 'quote' as const,
             html: yield* renderer.renderQuote(quote),
             pdf: yield* renderer.renderQuotePdf(quote),
-            expectedText: quote.quoteId,
+            expectedText: quote.quoteReference,
           },
           {
             kind: 'invoice' as const,
@@ -207,9 +208,7 @@ describe('DocumentRenderer', () => {
         await page.setContent(document.html, { waitUntil: 'load' });
         await expectNoHorizontalOverflow(page);
         if (document.kind === 'quote') await expectBusinessLayout(page);
-        const rows = page.locator(
-          document.kind === 'quote' ? 'main > table tbody tr' : '.items tbody tr',
-        );
+        const rows = page.locator('.items tbody tr');
         expect(await rows.count()).toBe(20);
         const terms = page.locator(document.kind === 'quote' ? '.conditions' : '.payment-info');
         expect(await terms.textContent()).toContain(longText);
@@ -240,15 +239,24 @@ describe('DocumentRenderer', () => {
       const compactDocuments = await Effect.runPromise(
         DocumentRenderer.use((service) =>
           Effect.all([
-            service.renderQuotePdf(compactQuote),
-            service.renderOrderPdf(compactOrder),
-            service.renderInvoicePdf(compactInvoice),
+            service
+              .renderQuotePdf(compactQuote)
+              .pipe(Effect.map((pdf) => ({ kind: 'quote', pdf }))),
+            service
+              .renderOrderPdf(compactOrder)
+              .pipe(Effect.map((pdf) => ({ kind: 'order', pdf }))),
+            service
+              .renderInvoicePdf(compactInvoice)
+              .pipe(Effect.map((pdf) => ({ kind: 'invoice', pdf }))),
           ]),
         ).pipe(Effect.provide(DocumentRendererLive), Effect.scoped),
       );
       for (const document of compactDocuments) {
-        const compactPdf = Buffer.from(document);
-        expect(compactPdf.toString('latin1').match(/\/Type \/Page\b/g)?.length ?? 0).toBe(1);
+        const compactPdf = Buffer.from(document.pdf);
+        expect(
+          compactPdf.toString('latin1').match(/\/Type \/Page\b/g)?.length ?? 0,
+          document.kind,
+        ).toBe(1);
         const fonts = spawnSync('pdffonts', ['-'], { input: compactPdf, encoding: 'utf8' });
         expect(fonts.error).toBeUndefined();
         expect(fonts.status).toBe(0);

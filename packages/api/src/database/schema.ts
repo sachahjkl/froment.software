@@ -300,7 +300,7 @@ export const quoteRevisions = sqliteTable(
     ),
     check(
       'quote_revisions_render_check',
-      sql`(${table.renderSnapshot} is null and ${table.templateId} is null and ${table.templateVersion} is null) or (${table.renderSnapshot} is not null and ${table.templateId} = 'quote-default' and ${table.templateVersion} in (1, 2) and json_valid(${table.renderSnapshot}))`,
+      sql`(${table.renderSnapshot} is null and ${table.templateId} is null and ${table.templateVersion} is null) or (${table.renderSnapshot} is not null and ${table.templateId} = 'quote-default' and ${table.templateVersion} = 1 and json_valid(${table.renderSnapshot}))`,
     ),
   ],
 );
@@ -681,7 +681,7 @@ export const invoiceRevisions = sqliteTable(
     ),
     check(
       'invoice_revisions_render_check',
-      sql`${table.templateId} = 'invoice-default' and ${table.templateVersion} in (1, 2) and json_valid(${table.renderSnapshot})`,
+      sql`${table.templateId} = 'invoice-default' and ${table.templateVersion} = 1 and json_valid(${table.renderSnapshot})`,
     ),
   ],
 );

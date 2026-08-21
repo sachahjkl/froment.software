@@ -53,10 +53,8 @@
   </section>
 
   <section class="order-info" aria-label="Commande">
-    @if (invoice.templateVersion === 2) {
     <span>Commande n° : {{ invoice.orderReference }}</span>
     <span>Devis n° : {{ invoice.quoteReference }}</span>
-    }
     <span>Date de prestation : {{ date(invoice.serviceDate) }}</span>
   </section>
 

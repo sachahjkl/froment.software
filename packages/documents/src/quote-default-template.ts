@@ -14,7 +14,7 @@ import { type QuoteRenderSnapshotValue } from '@froment/contracts';
 import { formatMoney } from './format-money.js';
 
 export const QUOTE_DEFAULT_TEMPLATE_ID = 'quote-default';
-export const QUOTE_DEFAULT_TEMPLATE_VERSION = 2;
+export const QUOTE_DEFAULT_TEMPLATE_VERSION = 1;
 
 const QUOTE_SNAPSHOT = new InjectionToken<QuoteRenderSnapshotValue>('QUOTE_SNAPSHOT');
 
@@ -41,37 +41,27 @@ abstract class QuoteTemplateBase {
 }
 
 @Component({
-  selector: 'froment-quote-document-v1',
-  templateUrl: './quote-default-template-v1.html',
-  styleUrl: './quote-default-template.css',
-  changeDetection: ChangeDetectionStrategy.OnPush,
-})
-class QuoteDefaultTemplateV1 extends QuoteTemplateBase {}
-
-@Component({
   selector: 'froment-quote-document',
   templateUrl: './quote-default-template.html',
-  styleUrl: './quote-default-template-v2.css',
+  styleUrl: './quote-default-template.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
   encapsulation: ViewEncapsulation.None,
 })
 export class QuoteDefaultTemplate extends QuoteTemplateBase {}
 
 export const renderQuoteDefaultTemplate = (snapshot: QuoteRenderSnapshotValue): Promise<string> => {
-  const component = snapshot.templateVersion === 1 ? QuoteDefaultTemplateV1 : QuoteDefaultTemplate;
-  const selector =
-    snapshot.templateVersion === 1 ? 'froment-quote-document-v1' : 'froment-quote-document';
   return renderApplication(
     (context) =>
       bootstrapApplication(
-        component,
+        QuoteDefaultTemplate,
         {
           providers: [provideServerRendering(), { provide: QUOTE_SNAPSHOT, useValue: snapshot }],
         },
         context,
       ),
     {
-      document: `<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Devis</title></head><body><${selector}></${selector}></body></html>`,
+      document:
+        '<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Devis</title></head><body><froment-quote-document></froment-quote-document></body></html>',
       url: 'https://documents.froment.software/quote',
       allowedHosts: ['documents.froment.software'],
     },

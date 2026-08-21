@@ -414,7 +414,7 @@ export const InvoicesLive = Layer.effect(
       const totals = calculateQuoteTotals(calculatedLines);
       const snapshot = Schema.decodeUnknownSync(InvoiceRenderSnapshot)({
         templateId: 'invoice-default',
-        templateVersion: 2,
+        templateVersion: 1,
         invoiceId: input.invoiceId,
         orderId: input.orderId,
         orderReference: input.orderReference,
@@ -441,8 +441,8 @@ export const InvoicesLive = Layer.effect(
            (id, invoice_id, version, invoice_number, issued_at, client_display_name, title,
             service_date, due_date, payment_terms, currency, net_total_cents, vat_total_cents,
             total_cents, created_at, created_by_user_id, template_id, template_version,
-             render_snapshot)
-            values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'EUR', ?, ?, ?, ?, ?, 'invoice-default', 2, ?)`,
+              render_snapshot)
+             values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'EUR', ?, ?, ?, ?, ?, 'invoice-default', 1, ?)`,
         )
         .run(
           revisionId,
@@ -638,10 +638,8 @@ export const InvoicesLive = Layer.effect(
               insertRevision({
                 invoiceId,
                 orderId: invoice.orderId,
-                orderReference:
-                  current.templateVersion === 2 ? current.orderReference : invoice.orderReference,
-                quoteReference:
-                  current.templateVersion === 2 ? current.quoteReference : invoice.quoteReference,
+                orderReference: current.orderReference,
+                quoteReference: current.quoteReference,
                 version: nextVersion,
                 invoiceNumber: null,
                 issuedAt: null,
@@ -765,10 +763,8 @@ export const InvoicesLive = Layer.effect(
               const finalSnapshot = insertRevision({
                 invoiceId,
                 orderId: invoice.orderId,
-                orderReference:
-                  current.templateVersion === 2 ? current.orderReference : invoice.orderReference,
-                quoteReference:
-                  current.templateVersion === 2 ? current.quoteReference : invoice.quoteReference,
+                orderReference: current.orderReference,
+                quoteReference: current.quoteReference,
                 version: nextVersion,
                 invoiceNumber,
                 issuedAt: now,

@@ -26,6 +26,7 @@ describe('PublicQuoteApi', () => {
         templateId: 'quote-default',
         templateVersion: 1,
         quoteId: '01ARZ3NDEKTSV4RRFFQ69G5FAV',
+        quoteReference: 'DE-2026-000001',
         revisionId: '01ARZ3NDEKTSV4RRFFQ69G5FAW',
         version: 1,
         createdAt: '2026-08-20T06:00:00.000Z',

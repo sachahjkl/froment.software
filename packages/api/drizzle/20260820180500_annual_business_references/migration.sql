@@ -135,7 +135,7 @@ CREATE TABLE `__new_invoice_revisions` (
 	CONSTRAINT "invoice_revisions_payment_terms_check" CHECK(length("payment_terms") <= 2000),
 	CONSTRAINT "invoice_revisions_currency_check" CHECK("currency" = 'EUR'),
 	CONSTRAINT "invoice_revisions_totals_check" CHECK("net_total_cents" between 0 and 9007199254740991 and "vat_total_cents" between 0 and 9007199254740991 and "total_cents" between 0 and 9007199254740991 and "total_cents" = "net_total_cents" + "vat_total_cents"),
-	CONSTRAINT "invoice_revisions_render_check" CHECK("template_id" = 'invoice-default' and "template_version" in (1, 2) and json_valid("render_snapshot"))
+	CONSTRAINT "invoice_revisions_render_check" CHECK("template_id" = 'invoice-default' and "template_version" = 1 and json_valid("render_snapshot"))
 );
 --> statement-breakpoint
 INSERT INTO `__new_invoice_revisions`(`id`, `invoice_id`, `version`, `invoice_number`, `issued_at`, `client_display_name`, `title`, `service_date`, `due_date`, `payment_terms`, `currency`, `net_total_cents`, `vat_total_cents`, `total_cents`, `created_at`, `created_by_user_id`, `template_id`, `template_version`, `render_snapshot`)
@@ -197,7 +197,7 @@ CREATE TABLE `__new_quote_revisions` (
 	CONSTRAINT "quote_revisions_conditions_check" CHECK(length("conditions") <= 2000),
 	CONSTRAINT "quote_revisions_currency_check" CHECK("currency" = 'EUR'),
 	CONSTRAINT "quote_revisions_totals_check" CHECK("net_total_cents" between 0 and 9007199254740991 and "vat_total_cents" between 0 and 9007199254740991 and "total_cents" between 0 and 9007199254740991 and "total_cents" = "net_total_cents" + "vat_total_cents"),
-	CONSTRAINT "quote_revisions_render_check" CHECK(("render_snapshot" is null and "template_id" is null and "template_version" is null) or ("render_snapshot" is not null and "template_id" = 'quote-default' and "template_version" in (1, 2) and json_valid("render_snapshot")))
+	CONSTRAINT "quote_revisions_render_check" CHECK(("render_snapshot" is null and "template_id" is null and "template_version" is null) or ("render_snapshot" is not null and "template_id" = 'quote-default' and "template_version" = 1 and json_valid("render_snapshot")))
 );
 --> statement-breakpoint
 INSERT INTO `__new_quote_revisions`(`id`, `quote_id`, `version`, `client_display_name`, `title`, `conditions`, `currency`, `net_total_cents`, `vat_total_cents`, `total_cents`, `created_at`, `created_by_user_id`, `template_id`, `template_version`, `render_snapshot`) SELECT `id`, `quote_id`, `version`, `client_display_name`, `title`, `conditions`, `currency`, `net_total_cents`, `vat_total_cents`, `total_cents`, `created_at`, `created_by_user_id`, `template_id`, `template_version`, `render_snapshot` FROM `quote_revisions`;--> statement-breakpoint

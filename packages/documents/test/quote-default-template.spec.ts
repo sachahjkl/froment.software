@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 
 const snapshot: QuoteRenderSnapshotValue = {
   templateId: 'quote-default',
-  templateVersion: 2,
+  templateVersion: 1,
   quoteId: '01ARZ3NDEKTSV4RRFFQ69G5FAV',
   quoteReference: 'DE-2026-000001',
   revisionId: '01ARZ3NDEKTSV4RRFFQ69G5FAW',
@@ -53,18 +53,6 @@ const snapshot: QuoteRenderSnapshotValue = {
 };
 
 describe('QuoteDefaultTemplate', () => {
-  it('keeps the historical template for version 1 snapshots', async () => {
-    const html = await renderQuoteDefaultTemplate({
-      ...snapshot,
-      templateVersion: 1,
-    });
-
-    expect(html).toContain(snapshot.quoteId);
-    expect(html).toContain('class="document-header"');
-    expect(html).toContain('"Trebuchet MS", Arial, "Liberation Sans", sans-serif');
-    expect(html).not.toContain('font-family: Cousine');
-  });
-
   it('formats every safe cent integer without precision loss', () => {
     expect(formatMoney(Number.MAX_SAFE_INTEGER - 2, 'fr-FR', 'EUR')).toBe(
       '90\u202f071\u202f992\u202f547\u202f409,89\u00a0€',

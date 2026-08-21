@@ -73,6 +73,7 @@ const seedSentQuote = Effect.fn('seedSentQuote')(function* () {
     templateId: 'quote-default',
     templateVersion: 1,
     quoteId,
+    quoteReference: 'DE-2026-000001',
     revisionId,
     version: 1,
     createdAt: '1970-01-01T00:00:01.000Z',

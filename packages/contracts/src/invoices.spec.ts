@@ -102,6 +102,8 @@ describe('invoice contracts', () => {
       templateVersion: 1,
       invoiceId: '01ARZ3NDEKTSV4RRFFQ69G5FAV',
       orderId: '01ARZ3NDEKTSV4RRFFQ69G5FAW',
+      orderReference: 'CO-2026-000001',
+      quoteReference: 'DE-2026-000001',
       revisionId: '01ARZ3NDEKTSV4RRFFQ69G5FAX',
       version: 1,
       createdAt: '2026-08-20T08:00:00.000Z',
