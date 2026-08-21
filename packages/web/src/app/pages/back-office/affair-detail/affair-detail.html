@@ -73,9 +73,13 @@
             <td>{{ quote.reference }}</td>
             <td><span appBadge>{{ quoteStatus(quote.status) }}</span></td>
             <td>
-              <a appButton [routerLink]="['/backoffice/quotes', quote.id]"
-                >{{ i18n.t('backOffice.open') }}</a
-              >
+              <a
+                class="external-link"
+                [href]="'/api/quotes/' + quote.id + '/revisions/' + quote.version + '/preview'"
+                target="_blank"
+                rel="noopener noreferrer"
+                >{{ i18n.t('backOffice.open') }}<app-icon name="external"
+              /></a>
             </td>
           </tr>
           @if (order(); as order) {
@@ -85,7 +89,7 @@
             <td><span appBadge>{{ i18n.t('backOffice.affair.confirmed') }}</span></td>
             <td>
               <a
-                appLinkButton
+                class="external-link"
                 [href]="'/api/orders/' + order.id + '/preview'"
                 target="_blank"
                 rel="noopener noreferrer"
@@ -101,9 +105,13 @@
               <span appBadge>{{ invoiceStatus(invoice.status) }}</span>
             </td>
             <td>
-              <a appButton [routerLink]="['/backoffice/invoices', invoice.id]"
-                >{{ i18n.t('backOffice.open') }}</a
-              >
+              <a
+                class="external-link"
+                [href]="'/api/invoices/' + invoice.id + '/revisions/' + invoice.version + '/preview'"
+                target="_blank"
+                rel="noopener noreferrer"
+                >{{ i18n.t('backOffice.open') }}<app-icon name="external"
+              /></a>
             </td>
           </tr>
           }

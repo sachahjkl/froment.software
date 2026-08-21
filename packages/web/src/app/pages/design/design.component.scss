@@ -172,12 +172,15 @@ details p {
   background: var(--color-surface-sunken);
 }
 .section-heading-sample {
-  align-items: center;
+  align-items: flex-end;
 }
 .state-sample,
 .auth-panel-sample,
 .form-panel-sample {
   display: block;
+}
+.auth-panel-sample > h3 {
+  margin-top: 0;
 }
 .state-sample > * + *,
 .auth-panel-sample > * + *,

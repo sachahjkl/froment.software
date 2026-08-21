@@ -37,6 +37,11 @@ section > [appDataTable],
 .timeline {
   margin-top: var(--space-4);
 }
+.external-link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+}
 .timeline {
   padding-left: var(--space-6);
 }

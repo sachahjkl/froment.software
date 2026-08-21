@@ -108,18 +108,30 @@ export class Dashboard {
           priority: 3,
         })),
       ...this.invoices()
-        .filter(({ status }) => status === 'issued')
+        .filter(({ status }) => status === 'draft' || status === 'issued')
         .map((invoice) => ({
           id: `invoice-${invoice.id}`,
           label:
-            invoice.dueDate < today
-              ? this.i18n.t('backOffice.dashboard.overdue')
-              : this.i18n.t('backOffice.affairs.stage.issued'),
+            invoice.status === 'draft'
+              ? this.i18n.t('backOffice.affairs.stage.invoiceDraft')
+              : invoice.dueDate < today
+                ? this.i18n.t('backOffice.dashboard.overdue')
+                : this.i18n.t('backOffice.affairs.stage.issued'),
           title: invoice.title,
           client: invoice.clientDisplayName,
           link: ['/backoffice/invoices', invoice.id] as const,
-          variant: invoice.dueDate < today ? ('danger' as const) : ('warning' as const),
-          priority: invoice.dueDate < today ? 1 : 2,
+          variant:
+            invoice.status === 'issued' && invoice.dueDate < today
+              ? ('danger' as const)
+              : invoice.status === 'issued'
+                ? ('warning' as const)
+                : ('default' as const),
+          priority:
+            invoice.status === 'issued' && invoice.dueDate < today
+              ? 1
+              : invoice.status === 'issued'
+                ? 2
+                : 4,
         })),
     ]
       .sort((left, right) => left.priority - right.priority)
