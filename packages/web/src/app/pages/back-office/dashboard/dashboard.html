@@ -34,6 +34,10 @@
       <span>{{ i18n.t('backOffice.dashboard.outstanding') }}</span
       ><strong>{{ money(outstandingCents()) }}</strong>
     </article>
+    <article>
+      <span>{{ i18n.t('backOffice.dashboard.overdueInvoices') }}</span
+      ><strong>{{ overdueInvoices() }}</strong>
+    </article>
   </section>
 
   <div class="dashboard-grid">

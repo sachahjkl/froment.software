@@ -32,6 +32,7 @@ interface DashboardAction {
   readonly client: string;
   readonly link: readonly string[];
   readonly variant: BadgeVariant;
+  readonly priority: number;
 }
 
 interface ActivityItem {
@@ -73,38 +74,57 @@ export class Dashboard {
       .filter(({ status }) => status === 'issued')
       .reduce((total, invoice) => total + invoice.totalCents, 0),
   );
-  protected readonly actions = computed<readonly DashboardAction[]>(() => [
-    ...this.quotes()
-      .filter(({ status }) => status === 'draft')
-      .map((quote) => ({
-        id: `quote-${quote.id}`,
-        label: this.i18n.t('backOffice.affairs.stage.draft'),
-        title: quote.title,
-        client: quote.clientDisplayName,
-        link: ['/backoffice/quotes', quote.id] as const,
-        variant: 'default' as const,
-      })),
-    ...this.orders()
-      .filter(({ invoiceId }) => invoiceId === null)
-      .map((order) => ({
-        id: `order-${order.id}`,
-        label: this.i18n.t('backOffice.affairs.stage.ordered'),
-        title: order.title,
-        client: order.clientDisplayName,
-        link: ['/backoffice/affaires'] as const,
-        variant: 'warning' as const,
-      })),
-    ...this.invoices()
-      .filter(({ status }) => status === 'issued')
-      .map((invoice) => ({
-        id: `invoice-${invoice.id}`,
-        label: this.i18n.t('backOffice.affairs.stage.issued'),
-        title: invoice.title,
-        client: invoice.clientDisplayName,
-        link: ['/backoffice/invoices', invoice.id] as const,
-        variant: 'warning' as const,
-      })),
-  ]);
+  protected readonly overdueInvoices = computed(() => {
+    const today = new Date().toISOString().slice(0, 10);
+    return this.invoices().filter(({ status, dueDate }) => status === 'issued' && dueDate < today)
+      .length;
+  });
+  protected readonly actions = computed<readonly DashboardAction[]>(() => {
+    const today = new Date().toISOString().slice(0, 10);
+    return [
+      ...this.quotes()
+        .filter(({ status }) => status === 'draft' || status === 'sent')
+        .map((quote) => ({
+          id: `quote-${quote.id}`,
+          label:
+            quote.status === 'sent'
+              ? this.i18n.t('backOffice.affairs.stage.sent')
+              : this.i18n.t('backOffice.affairs.stage.draft'),
+          title: quote.title,
+          client: quote.clientDisplayName,
+          link: ['/backoffice/affaires', quote.id] as const,
+          variant: quote.status === 'sent' ? ('warning' as const) : ('default' as const),
+          priority: quote.status === 'sent' ? 2 : 4,
+        })),
+      ...this.orders()
+        .filter(({ invoiceId }) => invoiceId === null)
+        .map((order) => ({
+          id: `order-${order.id}`,
+          label: this.i18n.t('backOffice.affairs.stage.ordered'),
+          title: order.title,
+          client: order.clientDisplayName,
+          link: ['/backoffice/affaires', order.quoteId] as const,
+          variant: 'warning' as const,
+          priority: 3,
+        })),
+      ...this.invoices()
+        .filter(({ status }) => status === 'issued')
+        .map((invoice) => ({
+          id: `invoice-${invoice.id}`,
+          label:
+            invoice.dueDate < today
+              ? this.i18n.t('backOffice.dashboard.overdue')
+              : this.i18n.t('backOffice.affairs.stage.issued'),
+          title: invoice.title,
+          client: invoice.clientDisplayName,
+          link: ['/backoffice/invoices', invoice.id] as const,
+          variant: invoice.dueDate < today ? ('danger' as const) : ('warning' as const),
+          priority: invoice.dueDate < today ? 1 : 2,
+        })),
+    ]
+      .sort((left, right) => left.priority - right.priority)
+      .slice(0, 12);
+  });
   protected readonly activity = computed<readonly ActivityItem[]>(() =>
     [
       ...this.quotes().map((quote) => ({
