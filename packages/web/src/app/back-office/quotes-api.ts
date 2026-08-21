@@ -7,6 +7,7 @@ import {
   QuoteList,
   QuoteSendResult,
   type QuoteCreateRequestValue,
+  type QuoteCancelRequestValue,
   type DocumentArtifactValue,
   type QuoteDetailValue,
   type QuoteFailureValue,
@@ -83,6 +84,18 @@ export class QuotesApi {
     return requestOutcome(
       this.http.post<unknown>(`/api/quotes/${quoteId}/send`, request),
       QuoteSendResult,
+      QuoteFailure,
+      'quote.error',
+    );
+  }
+
+  async cancel(
+    quoteId: UlidValue,
+    request: QuoteCancelRequestValue,
+  ): Promise<QuoteOutcome<QuoteDetailValue>> {
+    return requestOutcome(
+      this.http.post<unknown>(`/api/quotes/${quoteId}/cancel`, request),
+      QuoteDetail,
       QuoteFailure,
       'quote.error',
     );

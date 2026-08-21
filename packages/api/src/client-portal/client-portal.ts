@@ -120,7 +120,8 @@ export const ClientPortalLive = Layer.effect(
                  left join document_artifacts
                    on document_artifacts.revision_id = quote_revisions.id
                   and document_artifacts.kind = 'quote-pdf'
-                 where quotes.client_id = ? and quotes.status <> 'draft'
+                 where quotes.client_id = ?
+                   and quotes.status in ('sent', 'accepted', 'rejected', 'expired')
                  order by quotes.updated_at desc, quotes.id`,
                 )
                 .all(userId, userId),
@@ -244,7 +245,8 @@ export const ClientPortalLive = Layer.effect(
                join document_artifacts
                  on document_artifacts.revision_id = quote_revisions.id
                 and document_artifacts.kind = 'quote-pdf'
-               where quotes.id = ? and quotes.client_id = ? and quotes.status <> 'draft'
+               where quotes.id = ? and quotes.client_id = ?
+                 and quotes.status in ('sent', 'accepted', 'rejected', 'expired')
                limit 1`,
             )
             .get(userId, quoteId, userId);

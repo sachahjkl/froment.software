@@ -698,8 +698,7 @@ describe('Database', () => {
     const sourceFolder = join(import.meta.dirname, '..', 'drizzle');
     const correctiveMigration = '20260820125023_perfect_meggan';
     const previousMigrations = (await readdir(sourceFolder)).filter(
-      (migration) =>
-        migration !== correctiveMigration && !migration.endsWith('annual_business_references'),
+      (migration) => migration < correctiveMigration,
     );
     await Promise.all(
       previousMigrations.map((migration) =>

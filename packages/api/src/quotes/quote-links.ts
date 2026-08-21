@@ -33,7 +33,7 @@ const linkLifetimeMillis = 30 * 24 * 60 * 60 * 1_000;
 
 const QuoteSendRecord = Schema.Struct({
   reference: Schema.String,
-  status: Schema.Literals(['draft', 'sent', 'accepted', 'rejected', 'expired']),
+  status: Schema.Literals(['draft', 'sent', 'accepted', 'rejected', 'expired', 'cancelled']),
   version: Schema.Int,
   revisionId: Ulid,
   artifactId: Schema.NullOr(Ulid),
@@ -57,7 +57,7 @@ const AcceptanceRecord = Schema.Struct({
   quoteId: Ulid,
   quoteReference: Schema.String,
   clientId: Ulid,
-  status: Schema.Literals(['draft', 'sent', 'accepted', 'rejected', 'expired']),
+  status: Schema.Literals(['draft', 'sent', 'accepted', 'rejected', 'expired', 'cancelled']),
   currentVersion: Schema.Int,
   revisionVersion: Schema.Int,
   createdAt: Schema.Int,

@@ -60,7 +60,7 @@ const snapshot = {
 
 describe('quote contracts', () => {
   it('defines the complete status cycle', () => {
-    for (const status of ['draft', 'sent', 'accepted', 'rejected', 'expired']) {
+    for (const status of ['draft', 'sent', 'accepted', 'rejected', 'expired', 'cancelled']) {
       expect(Schema.decodeUnknownSync(QuoteStatus)(status)).toBe(status);
     }
   });

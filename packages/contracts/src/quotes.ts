@@ -22,7 +22,14 @@ export const QuoteLinkToken = Schema.String.check(Schema.isPattern(/^[A-Za-z0-9_
 export type QuoteLinkToken = typeof QuoteLinkToken.Type;
 const decodeUrl = Schema.decodeOption(Schema.URLFromString);
 
-export const QuoteStatus = Schema.Literals(['draft', 'sent', 'accepted', 'rejected', 'expired']);
+export const QuoteStatus = Schema.Literals([
+  'draft',
+  'sent',
+  'accepted',
+  'rejected',
+  'expired',
+  'cancelled',
+]);
 export type QuoteStatus = typeof QuoteStatus.Type;
 
 export const QuoteLineInput = DocumentLineInput;
@@ -75,6 +82,9 @@ export type QuoteRevisionCreateRequest = typeof QuoteRevisionCreateRequest.Type;
 
 export const QuoteSendRequest = Schema.Struct({ expectedVersion: PositiveSafeInteger });
 export type QuoteSendRequest = typeof QuoteSendRequest.Type;
+
+export const QuoteCancelRequest = Schema.Struct({ expectedVersion: PositiveSafeInteger });
+export type QuoteCancelRequest = typeof QuoteCancelRequest.Type;
 
 export const PublicQuoteAccessRequest = Schema.Struct({ token: QuoteLinkToken });
 export type PublicQuoteAccessRequest = typeof PublicQuoteAccessRequest.Type;

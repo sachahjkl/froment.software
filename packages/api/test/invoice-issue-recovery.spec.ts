@@ -103,6 +103,7 @@ const quotes: QuotesService = {
   getSnapshot: unused,
   create: unused,
   createRevision: unused,
+  cancel: unused,
 };
 
 const makeTestLayer = (filename: string, renderer: DocumentRendererService) => {

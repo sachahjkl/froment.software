@@ -230,7 +230,7 @@ export const quotes = sqliteTable(
       .notNull()
       .references(() => clients.id, { onDelete: 'no action' }),
     status: text({
-      enum: ['draft', 'sent', 'accepted', 'rejected', 'expired'],
+      enum: ['draft', 'sent', 'accepted', 'rejected', 'expired', 'cancelled'],
     }).notNull(),
     version: integer().notNull(),
     createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull(),
@@ -249,7 +249,7 @@ export const quotes = sqliteTable(
     ),
     check(
       'quotes_status_check',
-      sql`${table.status} in ('draft', 'sent', 'accepted', 'rejected', 'expired')`,
+      sql`${table.status} in ('draft', 'sent', 'accepted', 'rejected', 'expired', 'cancelled')`,
     ),
     check('quotes_version_check', sql`${table.version} >= 1`),
     check('quotes_timestamps_check', sql`${table.updatedAt} >= ${table.createdAt}`),

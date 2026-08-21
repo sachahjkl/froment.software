@@ -34,6 +34,7 @@ type AffairStage =
   | 'rejected'
   | 'expired'
   | 'archived'
+  | 'cancelled'
   | 'ordered'
   | 'invoiceDraft'
   | 'issued'
@@ -78,7 +79,8 @@ export class Affairs {
       const invoice = order
         ? this.invoices().find((current) => current.orderId === order.id)
         : undefined;
-      const clientArchived = this.clients().find(({ id }) => id === quote.clientId)?.archived ?? false;
+      const clientArchived =
+        this.clients().find(({ id }) => id === quote.clientId)?.archived ?? false;
       return { quote, order, invoice, stage: this.stage(quote, order, invoice, clientArchived) };
     }),
   );
@@ -87,7 +89,7 @@ export class Affairs {
     if (tab === 'all') return this.affairs();
     if (tab === 'completed') {
       return this.affairs().filter(({ stage }) =>
-        ['paid', 'void', 'rejected', 'expired', 'archived'].includes(stage),
+        ['paid', 'void', 'rejected', 'expired', 'archived', 'cancelled'].includes(stage),
       );
     }
     if (tab === 'attention') {
@@ -96,7 +98,8 @@ export class Affairs {
       );
     }
     return this.affairs().filter(
-      ({ stage }) => !['paid', 'void', 'rejected', 'expired', 'archived'].includes(stage),
+      ({ stage }) =>
+        !['paid', 'void', 'rejected', 'expired', 'archived', 'cancelled'].includes(stage),
     );
   });
 
@@ -117,7 +120,7 @@ export class Affairs {
 
   protected stageVariant(stage: AffairStage): BadgeVariant {
     if (stage === 'paid') return 'success';
-    if (stage === 'void' || stage === 'rejected' || stage === 'archived') return 'danger';
+    if (['void', 'rejected', 'archived', 'cancelled'].includes(stage)) return 'danger';
     if (stage === 'sent' || stage === 'issued' || stage === 'expired') return 'warning';
     return 'default';
   }
@@ -160,7 +163,9 @@ export class Affairs {
     if (order) return 'ordered';
     if (clientArchived) return 'archived';
     if (quote.status === 'sent') return 'sent';
-    if (quote.status === 'rejected' || quote.status === 'expired') return quote.status;
+    if (quote.status === 'rejected') return 'rejected';
+    if (quote.status === 'expired') return 'expired';
+    if (quote.status === 'cancelled') return 'cancelled';
     return 'draft';
   }
 

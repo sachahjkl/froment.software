@@ -111,6 +111,8 @@ export {
   type IssuerSettingsUpdateRequest as IssuerSettingsUpdateRequestValue,
   QuoteCreateRequest,
   type QuoteCreateRequest as QuoteCreateRequestValue,
+  QuoteCancelRequest,
+  type QuoteCancelRequest as QuoteCancelRequestValue,
   QuoteDetail,
   type QuoteDetail as QuoteDetailValue,
   QuoteFailure,

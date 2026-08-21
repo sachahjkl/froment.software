@@ -306,6 +306,36 @@ describe('quote lifecycle', () => {
     expect(result.orders).toBe(0);
   });
 
+  it('cancels a sent quote and revokes every public link', async () => {
+    const result = await Effect.runPromise(
+      Effect.gen(function* () {
+        yield* seedSentQuote();
+        yield* TestClock.setTime(createdAt + 100);
+        const quotes = yield* Quotes;
+        const detail = yield* quotes.cancel(quoteId, { expectedVersion: 1 }, actorId);
+        const links = yield* QuoteLinks;
+        const database = yield* Database;
+        return {
+          detail,
+          consultation: yield* Effect.result(links.get(token)),
+          revokedAt: database.sqlite
+            .prepare('select revoked_at from quote_links where id = ?')
+            .pluck()
+            .get(linkId),
+          events: database.sqlite
+            .prepare("select count(*) from audit_events where action = 'quote.cancelled'")
+            .pluck()
+            .get(),
+        };
+      }).pipe(Effect.provide(lifecycleLayer()), Effect.provide(TestClock.layer())),
+    );
+
+    expect(result.detail.status).toBe('cancelled');
+    expect(result.consultation._tag).toBe('Failure');
+    expect(result.revokedAt).toBe(createdAt + 100);
+    expect(result.events).toBe(1);
+  });
+
   it('rejects a public PDF whose SHA-256 digest does not match', async () => {
     const result = await Effect.runPromise(
       Effect.gen(function* () {

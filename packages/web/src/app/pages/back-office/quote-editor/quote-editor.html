@@ -223,7 +223,19 @@
     </button>
     @if (quoteForm().dirty()) {
     <p class="hint">{{ i18n.t('backOffice.quote.sendUnsaved') }}</p>
-    } } @if (sentLink(); as link) {
+    } } @if (quote.status === 'draft' || quote.status === 'sent' || quote.status === 'expired') {
+    <button
+      class="cancel-quote"
+      appButton
+      variant="danger"
+      type="button"
+      [disabled]="cancelling() || saving() || sending()"
+      (click)="cancelQuote()"
+    >
+      @if (cancelling()) { {{ i18n.t('backOffice.quote.cancelling') }} } @else { {{
+      i18n.t('backOffice.quote.cancel') }} }
+    </button>
+    } @if (sentLink(); as link) {
     <section class="sent-link" aria-labelledby="sent-link-title">
       <h2 id="sent-link-title">{{ i18n.t('backOffice.quote.link.title') }}</h2>
       <a [href]="link.url" target="_blank" rel="noopener noreferrer">{{ link.url }}</a>

@@ -640,6 +640,16 @@ const QuoteHandlers = HttpApiBuilder.group(Api, 'quotes', (handlers) =>
         }),
       )
       .handle(
+        'quoteCancel',
+        Effect.fn('quoteCancel')(function* ({ params, payload }) {
+          yield* setPrivateResponseHeaders;
+          const principal = yield* authorizeAdministratorWrite('quote.delete');
+          return yield* (yield* Quotes)
+            .cancel(params.quoteId, payload, principal.userId)
+            .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
+        }),
+      )
+      .handle(
         'publicQuoteGet',
         Effect.fn('publicQuoteGet')(function* ({ payload }) {
           yield* setPublicDocumentResponseHeaders;

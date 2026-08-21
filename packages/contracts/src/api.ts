@@ -34,6 +34,7 @@ import {
 import { Ulid } from './identifiers.js';
 import { OrderDocumentArtifact, OrderList, OrderNotFound } from './orders.js';
 import {
+  QuoteCancelRequest,
   QuoteCreateRequest,
   QuoteAmountTooLarge,
   QuoteDetail,
@@ -379,6 +380,20 @@ export class QuotesApi extends HttpApiGroup.make('quotes', { topLevel: true }).a
       QuoteVersionConflict.pipe(HttpApiSchema.status(409)),
       QuoteNotEditable.pipe(HttpApiSchema.status(409)),
       QuotePdfRequired.pipe(HttpApiSchema.status(409)),
+    ],
+  }),
+  HttpApiEndpoint.post('quoteCancel', '/api/quotes/:quoteId/cancel', {
+    params: { quoteId: Ulid },
+    payload: QuoteCancelRequest,
+    success: QuoteDetail,
+    error: [
+      AuthenticationRequired.pipe(HttpApiSchema.status(401)),
+      PermissionDenied.pipe(HttpApiSchema.status(403)),
+      CsrfRejected.pipe(HttpApiSchema.status(403)),
+      RequestRateLimited.pipe(HttpApiSchema.status(429)),
+      QuoteNotFound.pipe(HttpApiSchema.status(404)),
+      QuoteVersionConflict.pipe(HttpApiSchema.status(409)),
+      QuoteNotEditable.pipe(HttpApiSchema.status(409)),
     ],
   }),
   HttpApiEndpoint.post('publicQuoteGet', '/api/public/quote-link', {

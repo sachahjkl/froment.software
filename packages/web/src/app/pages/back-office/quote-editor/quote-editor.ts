@@ -73,6 +73,7 @@ const statusKeys = {
   accepted: 'backOffice.quote.status.accepted',
   rejected: 'backOffice.quote.status.rejected',
   expired: 'backOffice.quote.status.expired',
+  cancelled: 'backOffice.quote.status.cancelled',
 } as const satisfies Record<QuoteStatusValue, TranslationKey>;
 
 @Component({
@@ -105,6 +106,7 @@ export class QuoteEditor {
   protected readonly unavailable = signal(false);
   protected readonly saving = signal(false);
   protected readonly sending = signal(false);
+  protected readonly cancelling = signal(false);
   protected readonly sentLink = signal<QuoteSendResultValue['link'] | undefined>(undefined);
   protected readonly linkCopied = signal(false);
   protected readonly error = signal<TranslationKey | undefined>(undefined);
@@ -167,7 +169,8 @@ export class QuoteEditor {
       quote.status !== 'draft' ||
       this.quoteForm().dirty() ||
       this.saving() ||
-      this.sending()
+      this.sending() ||
+      this.cancelling()
     );
   });
   protected readonly totalsAreStale = computed(
@@ -320,6 +323,28 @@ export class QuoteEditor {
     if (!outcome.success) return this.setError(outcome.code);
     this.detail.set({ ...quote, status: outcome.result.status });
     this.sentLink.set(outcome.result.link);
+  }
+
+  protected async cancelQuote(): Promise<void> {
+    const quoteId = this.quoteId();
+    const quote = this.detail();
+    if (
+      quoteId === undefined ||
+      quote === undefined ||
+      !['draft', 'sent', 'expired'].includes(quote.status) ||
+      this.cancelling() ||
+      !globalThis.confirm(this.i18n.t('backOffice.quote.cancelConfirm'))
+    ) {
+      return;
+    }
+    this.cancelling.set(true);
+    this.error.set(undefined);
+    const outcome = await this.quotesApi.cancel(quoteId, { expectedVersion: quote.version });
+    this.cancelling.set(false);
+    if (!outcome.success) return this.setError(outcome.code);
+    this.detail.set(outcome.result);
+    this.sentLink.set(undefined);
+    this.quoteForm().reset();
   }
 
   protected async copySentLink(): Promise<void> {

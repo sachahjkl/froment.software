@@ -10,6 +10,7 @@ import {
   QuoteVersionConflict,
   Ulid,
   type QuoteCreateRequestValue,
+  type QuoteCancelRequestValue,
   type QuoteDetailValue,
   type QuoteLineInputValue,
   type QuoteLineValue,
@@ -122,6 +123,14 @@ export interface QuotesService {
     request: QuoteRevisionCreateRequestValue,
     createdByUserId: string,
   ) => Effect.Effect<QuoteDetailValue, QuoteError>;
+  readonly cancel: (
+    quoteId: UlidValue,
+    request: QuoteCancelRequestValue,
+    actorUserId: UlidValue,
+  ) => Effect.Effect<
+    QuoteDetailValue,
+    QuoteNotFound | QuoteNotEditable | QuoteVersionConflict | DatabaseError
+  >;
 }
 
 export class Quotes extends Context.Service<Quotes, QuotesService>()('@froment/api/Quotes') {}
@@ -527,6 +536,71 @@ export const QuotesLive = Layer.effect(
       });
     });
 
-    return Quotes.of({ list, get, getSnapshot, create, createRevision });
+    const cancel = Effect.fn('Quotes.cancel')(function* (
+      quoteId: UlidValue,
+      request: QuoteCancelRequestValue,
+      actorUserId: UlidValue,
+    ) {
+      const now = yield* Clock.currentTimeMillis;
+      return yield* Effect.try({
+        try: () =>
+          database.sqlite
+            .transaction(() => {
+              expireSentQuotes(database.sqlite, audit, now, quoteId);
+              const rawQuote = database.sqlite.prepare(`${quoteSql} where id = ?`).get(quoteId);
+              if (rawQuote === undefined) throw new QuoteNotFound({ code: 'quote.not_found' });
+              const quote = Schema.decodeUnknownSync(QuoteRecord)(rawQuote);
+              if (quote.status === 'cancelled') {
+                const detail = readDetail(quoteId);
+                if (detail === undefined) throw new Error('Cancelled quote is missing.');
+                return detail;
+              }
+              if (!['draft', 'sent', 'expired'].includes(quote.status)) {
+                throw new QuoteNotEditable({ code: 'quote.not_editable' });
+              }
+              if (quote.version !== request.expectedVersion) {
+                throw new QuoteVersionConflict({
+                  code: 'quote.version_conflict',
+                  currentVersion: quote.version,
+                });
+              }
+              database.sqlite
+                .prepare("update quotes set status = 'cancelled', updated_at = ? where id = ?")
+                .run(now, quoteId);
+              database.sqlite
+                .prepare(
+                  `update quote_links set revoked_at = ?
+                   where revoked_at is null and consumed_at is null
+                     and revision_id in (
+                       select id from quote_revisions where quote_id = ?
+                     )`,
+                )
+                .run(now, quoteId);
+              audit.insert({
+                action: 'quote.cancelled',
+                actorUserId,
+                resourceType: 'quote',
+                resourceId: quoteId,
+                occurredAt: now,
+              });
+              const detail = readDetail(quoteId);
+              if (detail === undefined) throw new Error('Cancelled quote is missing.');
+              return detail;
+            })
+            .immediate(),
+        catch: (cause) => {
+          if (
+            cause instanceof QuoteNotFound ||
+            cause instanceof QuoteNotEditable ||
+            cause instanceof QuoteVersionConflict
+          ) {
+            return cause;
+          }
+          return new DatabaseError({ operation: 'cancel quote', cause });
+        },
+      });
+    });
+
+    return Quotes.of({ list, get, getSnapshot, create, createRevision, cancel });
   }),
 );
