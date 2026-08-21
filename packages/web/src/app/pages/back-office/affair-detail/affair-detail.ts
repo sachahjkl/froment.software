@@ -2,6 +2,7 @@ import { afterNextRender, ChangeDetectionStrategy, Component, inject, signal } f
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import {
   Ulid,
+  type ClientSummaryValue,
   type InvoiceDetailValue,
   type InvoiceStatusValue,
   type OrderSummaryValue,
@@ -11,6 +12,7 @@ import {
 import { Option, Schema } from 'effect';
 
 import { InvoicesApi } from '@backoffice/invoices-api';
+import { ClientsApi } from '@backoffice/clients-api';
 import { OrdersApi } from '@backoffice/orders-api';
 import { QuotesApi } from '@backoffice/quotes-api';
 import { I18nService, type TranslationKey } from '@app/i18n.service';
@@ -39,10 +41,12 @@ export class AffairDetail {
   private readonly quotesApi = inject(QuotesApi);
   private readonly ordersApi = inject(OrdersApi);
   private readonly invoicesApi = inject(InvoicesApi);
+  private readonly clientsApi = inject(ClientsApi);
   protected readonly state = signal<'loading' | 'ready' | 'error'>('loading');
   protected readonly quote = signal<QuoteDetailValue | undefined>(undefined);
   protected readonly order = signal<OrderSummaryValue | undefined>(undefined);
   protected readonly invoice = signal<InvoiceDetailValue | undefined>(undefined);
+  protected readonly client = signal<ClientSummaryValue | undefined>(undefined);
   protected readonly timeline = signal<readonly TimelineItem[]>([]);
 
   constructor() {
@@ -79,6 +83,42 @@ export class AffairDetail {
     return this.i18n.t(`backOffice.affair.nextAction.invoice.${status}`);
   }
 
+  protected quoteReminderHref(): string | undefined {
+    const quote = this.quote();
+    const client = this.client();
+    if (quote?.status !== 'sent' || !client?.email) return undefined;
+    return this.mailto(
+      client.email,
+      this.i18n.tf('backOffice.affair.reminder.quoteSubject', { reference: quote.reference }),
+      this.i18n.tf('backOffice.affair.reminder.quoteBody', {
+        name: client.displayName,
+        reference: quote.reference,
+      }),
+    );
+  }
+
+  protected invoiceReminderHref(): string | undefined {
+    const invoice = this.invoice();
+    const client = this.client();
+    if (
+      invoice?.status !== 'issued' ||
+      !client?.email ||
+      invoice.currentRevision.dueDate >= new Date().toISOString().slice(0, 10)
+    ) {
+      return undefined;
+    }
+    const reference = invoice.invoiceNumber ?? invoice.orderReference;
+    return this.mailto(
+      client.email,
+      this.i18n.tf('backOffice.affair.reminder.invoiceSubject', { reference }),
+      this.i18n.tf('backOffice.affair.reminder.invoiceBody', {
+        name: client.displayName,
+        reference,
+        dueDate: invoice.currentRevision.dueDate,
+      }),
+    );
+  }
+
   protected async load(): Promise<void> {
     const quoteId = Schema.decodeUnknownOption(Ulid)(this.route.snapshot.paramMap.get('quoteId'));
     if (Option.isNone(quoteId)) {
@@ -97,6 +137,7 @@ export class AffairDetail {
       }
       const quote = quoteOutcome.result;
       const order = orders.find((candidate) => candidate.quoteId === quote.id);
+      const clientOutcome = await this.clientsApi.get(quote.clientId);
       let invoice: InvoiceDetailValue | undefined;
       if (order?.invoiceId) {
         const invoiceOutcome = await this.invoicesApi.get(order.invoiceId);
@@ -105,6 +146,7 @@ export class AffairDetail {
       this.quote.set(quote);
       this.order.set(order);
       this.invoice.set(invoice);
+      if (clientOutcome.success) this.client.set(clientOutcome.result);
       this.timeline.set(this.makeTimeline(quote, order, invoice));
       this.state.set('ready');
     } catch {
@@ -166,5 +208,9 @@ export class AffairDetail {
       }
     }
     return items.sort((left, right) => left.date.localeCompare(right.date));
+  }
+
+  private mailto(email: string, subject: string, body: string): string {
+    return `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
   }
 }

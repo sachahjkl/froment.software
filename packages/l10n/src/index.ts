@@ -157,6 +157,14 @@ export const translations = {
     'backOffice.affair.nextAction.invoice.issued': 'Le règlement de cette facture est attendu.',
     'backOffice.affair.nextAction.invoice.paid': 'Cette affaire est réglée.',
     'backOffice.affair.nextAction.invoice.void': 'Cette facture est annulée.',
+    'backOffice.affair.reminder.quote': 'Préparer une relance du devis',
+    'backOffice.affair.reminder.invoice': 'Préparer une relance de la facture',
+    'backOffice.affair.reminder.quoteSubject': 'Relance pour le devis {reference}',
+    'backOffice.affair.reminder.quoteBody':
+      'Bonjour {name},\n\nJe reviens vers vous concernant le devis {reference}.\n\nCordialement,',
+    'backOffice.affair.reminder.invoiceSubject': 'Relance pour la facture {reference}',
+    'backOffice.affair.reminder.invoiceBody':
+      'Bonjour {name},\n\nLa facture {reference}, échue le {dueDate}, reste en attente de règlement.\n\nCordialement,',
     'backOffice.affairs.intro': 'Suivez chaque affaire du devis au règlement de la facture.',
     'backOffice.affairs.tabs': 'Étapes des affaires',
     'backOffice.affairs.attention': 'À traiter',
@@ -1228,6 +1236,14 @@ export const translations = {
     'backOffice.affair.nextAction.invoice.issued': 'Payment for this invoice is pending.',
     'backOffice.affair.nextAction.invoice.paid': 'This engagement is paid.',
     'backOffice.affair.nextAction.invoice.void': 'This invoice is void.',
+    'backOffice.affair.reminder.quote': 'Prepare quote reminder',
+    'backOffice.affair.reminder.invoice': 'Prepare invoice reminder',
+    'backOffice.affair.reminder.quoteSubject': 'Reminder for quote {reference}',
+    'backOffice.affair.reminder.quoteBody':
+      'Hello {name},\n\nI am following up about quote {reference}.\n\nRegards,',
+    'backOffice.affair.reminder.invoiceSubject': 'Reminder for invoice {reference}',
+    'backOffice.affair.reminder.invoiceBody':
+      'Hello {name},\n\nInvoice {reference}, due on {dueDate}, is still awaiting payment.\n\nRegards,',
     'backOffice.affairs.intro': 'Track each engagement from quote to invoice payment.',
     'backOffice.affairs.tabs': 'Engagement stages',
     'backOffice.affairs.attention': 'Needs action',

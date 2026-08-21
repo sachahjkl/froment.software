@@ -46,6 +46,12 @@
     }
   </section>
 
+  @if (invoiceReminderHref(); as reminderHref) {
+  <a appButton [href]="reminderHref">{{ i18n.t('backOffice.affair.reminder.invoice') }}</a>
+  } @else if (quoteReminderHref(); as reminderHref) {
+  <a appButton [href]="reminderHref">{{ i18n.t('backOffice.affair.reminder.quote') }}</a>
+  }
+
   <section aria-labelledby="documents-title">
     <h2 id="documents-title">{{ i18n.t('backOffice.affair.documents') }}</h2>
     <div appDataTable>
