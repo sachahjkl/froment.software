@@ -211,14 +211,12 @@
   </form>
 
   @if (detail(); as invoice) {
-  <aside class="saved-result">
-    <p class="invoice-number">
-      <span>{{ i18n.t('backOffice.invoices.number') }}</span
-      ><strong>{{ invoice.invoiceNumber ?? i18n.t('backOffice.invoice.draft') }}</strong>
+  <aside appOutcomePanel>
+    <p appDetailRow [label]="i18n.t('backOffice.invoices.number')">
+      <strong>{{ invoice.invoiceNumber ?? i18n.t('backOffice.invoice.draft') }}</strong>
     </p>
-    <p class="invoice-status">
-      <span>{{ i18n.t('backOffice.invoices.status') }}</span
-      ><strong>{{ i18n.t(statusKey(invoice.status)) }}</strong>
+    <p appDetailRow [label]="i18n.t('backOffice.invoices.status')">
+      <strong>{{ i18n.t(statusKey(invoice.status)) }}</strong>
     </p>
     <div class="actions">
       @if (invoice.status === 'draft') {

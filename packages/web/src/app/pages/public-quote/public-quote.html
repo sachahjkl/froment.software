@@ -122,7 +122,7 @@
       tabindex="0"
     >
       @if (acceptance()) {
-      <div class="accepted" role="status">
+      <div appStatusBlock class="accepted" variant="success" role="status">
         <p class="eyebrow">{{ i18n.t('publicQuote.acceptedEyebrow') }}</p>
         <h2 id="signature-title">{{ i18n.t('publicQuote.accepted') }}</h2>
         <p>{{ i18n.t('publicQuote.acceptedDetail') }}</p>
@@ -191,7 +191,7 @@
         <p class="legal-note">{{ i18n.t('publicQuote.legal') }}</p>
       </form>
       } @else {
-      <div class="accepted" role="status">
+      <div appStatusBlock class="accepted" variant="success" role="status">
         <h2 id="signature-title">{{ i18n.t('publicQuote.alreadyAccepted') }}</h2>
       </div>
       }

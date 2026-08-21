@@ -31,12 +31,13 @@ import { I18nService, type TranslationKey } from '@app/i18n.service';
 import { PublicQuoteApi } from '../../public-quote/public-quote-api';
 import { Button } from '@shared/button/button';
 import { Notice } from '@shared/notice/notice';
+import { StatusBlock } from '@shared/status-block/status-block';
 import { Tabs, type TabItem } from '@shared/tabs/tabs';
 import { TabLayout, TabPanel } from '@shared/tabs/tab-panel';
 
 @Component({
   selector: 'app-public-quote',
-  imports: [Button, FormField, Notice, RouterOutlet, TabLayout, TabPanel, Tabs],
+  imports: [Button, FormField, Notice, RouterOutlet, StatusBlock, TabLayout, TabPanel, Tabs],
   templateUrl: './public-quote.html',
   styleUrl: './public-quote.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

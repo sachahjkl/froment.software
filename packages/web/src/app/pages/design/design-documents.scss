@@ -18,14 +18,13 @@
 .muted,
 .total span,
 .facts dt,
-.saved-result span,
-.credential > span,
+[appOutcomePanel] span,
 small {
   color: var(--color-muted);
 }
 .total {
   padding-left: var(--space-4);
-  border-left: 3px solid var(--color-button-primary);
+  border-left: 3px solid var(--color-button-primary-highlight);
 }
 .total span,
 .total strong {
@@ -50,16 +49,12 @@ small {
   margin: var(--space-1) 0 0;
   font-weight: 700;
 }
-.saved-result,
-.share-link,
-.credential,
 .signature,
 .line-editor {
   padding: var(--space-4);
   border: 1px solid var(--color-line-strong);
   background: var(--color-surface-sunken);
 }
-.saved-result p,
 .line-editor p {
   display: flex;
   justify-content: space-between;
@@ -67,40 +62,21 @@ small {
   padding-block: var(--space-2);
   border-bottom: 1px solid var(--color-line-strong);
 }
-.saved-result button {
+[appOutcomePanel] button {
   width: 100%;
   margin-top: var(--space-4);
 }
 .signature,
-.credential,
 .line-editor {
   display: block;
 }
 .signature > * + *,
-.credential > * + *,
 .line-editor > * + * {
   margin-top: var(--space-3);
 }
 .line-editor legend {
   padding-inline: var(--space-2);
   font-weight: 700;
-}
-.accepted {
-  padding: var(--space-5);
-  border-left: 4px solid var(--color-success);
-  background: var(--color-success-soft);
-}
-.accepted > * + *,
-.share-link > * + * {
-  margin-top: var(--space-3);
-}
-.share-link a,
-.credential code {
-  overflow-wrap: anywhere;
-}
-.share-link span {
-  margin-left: var(--space-3);
-  color: var(--color-success);
 }
 .preview {
   min-height: 12rem;

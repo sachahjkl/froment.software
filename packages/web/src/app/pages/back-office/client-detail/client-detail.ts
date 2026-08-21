@@ -33,6 +33,7 @@ import { QuotesApi } from '@backoffice/quotes-api';
 import { I18nService, type TranslationKey } from '@app/i18n.service';
 import { Badge } from '@shared/badge/badge';
 import { Button } from '@shared/button/button';
+import { CopyField } from '@shared/copy-field/copy-field';
 import { DataTable } from '@shared/data-table/data-table';
 import { Notice } from '@shared/notice/notice';
 import { Tabs, type TabItem } from '@shared/tabs/tabs';
@@ -65,6 +66,7 @@ const emptyClient = () => ({
   imports: [
     Badge,
     Button,
+    CopyField,
     DataTable,
     FormField,
     Notice,

@@ -3,11 +3,7 @@
     <p>{{ i18n.tf('footer.rights', { year: currentYear }) }}</p>
     <p><a href="mailto:contact@froment.software">contact@froment.software</a></p>
     <nav class="footer-legal" [attr.aria-label]="i18n.t('shell.legal_nav')">
-      <a
-        routerLink="/backoffice/login"
-        [queryParams]="{ mode: 'admin' }"
-        routerLinkActive="active"
-        ariaCurrentWhenActive="page"
+      <a routerLink="/backoffice/login/admin" routerLinkActive="active" ariaCurrentWhenActive="page"
         >{{ i18n.t('backOffice.title') }}</a
       >
       <a routerLink="/legal" routerLinkActive="active" ariaCurrentWhenActive="page"

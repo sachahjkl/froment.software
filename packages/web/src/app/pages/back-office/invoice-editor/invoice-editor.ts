@@ -42,7 +42,9 @@ import { OrdersApi } from '@backoffice/orders-api';
 import { formatFixedDecimal, parseFixedDecimal } from '@backoffice/quote-input';
 import { I18nService, type TranslationKey } from '@app/i18n.service';
 import { Button } from '@shared/button/button';
+import { DetailRow } from '@shared/detail-row/detail-row';
 import { Notice } from '@shared/notice/notice';
+import { OutcomePanel } from '@shared/outcome-panel/outcome-panel';
 import { Icon } from '@shared/icon/icon';
 
 interface InvoiceLineModel {
@@ -94,7 +96,7 @@ const errorKeys = {
 
 @Component({
   selector: 'app-invoice-editor',
-  imports: [Button, FormField, Icon, Notice, RouterLink],
+  imports: [Button, DetailRow, FormField, Icon, Notice, OutcomePanel, RouterLink],
   templateUrl: './invoice-editor.html',
   styleUrl: './invoice-editor.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

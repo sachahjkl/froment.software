@@ -43,17 +43,17 @@
   width: 2.25rem;
   height: 2.25rem;
   place-items: center;
-  border: 1px solid color-mix(in oklab, var(--color-button-primary), black 30%);
+  border: 1px solid color-mix(in oklab, var(--color-button-primary-highlight), black 30%);
   border-radius: var(--radius-sm);
-  background-color: var(--color-button-primary);
+  background-color: var(--color-button-primary-highlight);
   background-image: linear-gradient(
-    color-mix(in oklab, var(--color-button-primary), white 25%),
-    var(--color-button-primary)
+    color-mix(in oklab, var(--color-button-primary-highlight), white 25%),
+    var(--color-button-primary-highlight)
   );
   color: var(--color-button-on-color);
   font-size: var(--text-sm);
   font-weight: 700;
-  text-shadow: 0 -1px 0 color-mix(in oklab, var(--color-button-primary), black 45%);
+  text-shadow: 0 -1px 0 color-mix(in oklab, var(--color-button-primary-highlight), black 45%);
   box-shadow:
     inset 0 1px 0 var(--color-highlight),
     var(--shadow-xs);

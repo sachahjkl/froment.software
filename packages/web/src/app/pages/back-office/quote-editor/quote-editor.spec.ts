@@ -274,6 +274,8 @@ describe('QuoteEditor', () => {
     root.querySelector<HTMLButtonElement>('.sent-link button')?.click();
     await fixture.whenStable();
     expect(copy).toHaveBeenCalledWith(linkUrl);
-    expect(root.querySelector('.copy-status')?.textContent).toMatch(/copié|copied/i);
+    expect(root.querySelector('app-copy-field [role="status"]')?.textContent).toMatch(
+      /copié|copied/i,
+    );
   });
 });

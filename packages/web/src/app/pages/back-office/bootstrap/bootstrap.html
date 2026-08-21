@@ -4,15 +4,13 @@
 
     @if (accessIdentifier(); as access) {
     <p>{{ i18n.t('bootstrap.success') }}</p>
-    <div class="credential">
-      <p class="credential-label">{{ i18n.t('bootstrap.accessIdentifier') }}</p>
-      <div class="identifier">
-        <code>{{ access }}</code>
-        <button appButton type="button" (click)="copyIdentifier(access)">
-          {{ i18n.t(copyLabel()) }}
-        </button>
-      </div>
-    </div>
+    <app-copy-field
+      class="credential"
+      [label]="i18n.t('bootstrap.accessIdentifier')"
+      [value]="access"
+      [actionLabel]="i18n.t(copyLabel())"
+      (copy)="copyIdentifier(access)"
+    />
     <a appLinkButton variant="primary" routerLink="/backoffice/dashboard">
       {{ i18n.t('bootstrap.login') }}
     </a>
@@ -39,12 +37,7 @@
     </form>
     } @case ('unavailable') {
     <p>{{ i18n.t('bootstrap.unavailable') }}</p>
-    <a
-      appLinkButton
-      variant="primary"
-      routerLink="/backoffice/login"
-      [queryParams]="{ mode: 'admin' }"
-    >
+    <a appLinkButton variant="primary" routerLink="/backoffice/login/admin">
       {{ i18n.t('bootstrap.login') }}
     </a>
     } @case ('error') {

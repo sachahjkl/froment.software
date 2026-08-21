@@ -200,13 +200,11 @@
   </form>
 
   @if (detail(); as quote) {
-  <aside class="saved-result" aria-labelledby="totals-title">
-    <p class="quote-reference">
-      <span>{{ i18n.t('backOffice.quote.reference') }}</span>
+  <aside appOutcomePanel aria-labelledby="totals-title">
+    <p appDetailRow [label]="i18n.t('backOffice.quote.reference')">
       <strong>{{ quote.reference }}</strong>
     </p>
-    <p class="quote-status">
-      <span>{{ i18n.t('backOffice.quote.status') }}</span>
+    <p appDetailRow [label]="i18n.t('backOffice.quote.status')">
       <strong>{{ i18n.t(statusKey(quote.status)) }}</strong>
     </p>
     @if (quote.status === 'draft') {
@@ -270,17 +268,18 @@
       i18n.t('backOffice.quote.cancel') }} }
     </button>
     } @if (sentLink(); as link) {
-    <section class="sent-link" aria-labelledby="sent-link-title">
-      <h2 id="sent-link-title">{{ i18n.t('backOffice.quote.link.title') }}</h2>
-      <a [href]="link.url" target="_blank" rel="noopener noreferrer">{{ link.url }}</a>
-      <p>{{ i18n.tf('backOffice.quote.link.expires', { date: date(link.expiresAt) }) }}</p>
-      <button appButton type="button" (click)="copySentLink()">
-        {{ i18n.t('backOffice.quote.link.copy') }}
-      </button>
-      @if (linkCopied()) {
-      <span class="copy-status" role="status">{{ i18n.t('backOffice.quote.link.copied') }}</span>
-      }
-    </section>
+    <app-copy-field
+      class="sent-link"
+      headingId="sent-link-title"
+      [label]="i18n.t('backOffice.quote.link.title')"
+      [value]="link.url"
+      [href]="link.url"
+      [description]="i18n.tf('backOffice.quote.link.expires', { date: date(link.expiresAt) })"
+      [actionLabel]="i18n.t('backOffice.quote.link.copy')"
+      [status]="linkCopied() ? i18n.t('backOffice.quote.link.copied') : ''"
+      [external]="true"
+      (copy)="copySentLink()"
+    />
     }
     <h2 id="totals-title">{{ i18n.t('backOffice.quote.total') }}</h2>
     @if (totalsAreStale()) {

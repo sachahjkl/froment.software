@@ -44,7 +44,10 @@ import { QuoteConditionPresetsApi } from '@backoffice/quote-condition-presets-ap
 import { formatFixedDecimal, parseFixedDecimal } from '@backoffice/quote-input';
 import { I18nService, type TranslationKey } from '@app/i18n.service';
 import { Button } from '@shared/button/button';
+import { CopyField } from '@shared/copy-field/copy-field';
+import { DetailRow } from '@shared/detail-row/detail-row';
 import { Notice } from '@shared/notice/notice';
+import { OutcomePanel } from '@shared/outcome-panel/outcome-panel';
 import { Icon } from '@shared/icon/icon';
 import { TextCopy } from '@shared/text-copy';
 
@@ -80,7 +83,7 @@ const statusKeys = {
 
 @Component({
   selector: 'app-quote-editor',
-  imports: [Button, FormField, Icon, Notice, RouterLink],
+  imports: [Button, CopyField, DetailRow, FormField, Icon, Notice, OutcomePanel, RouterLink],
   templateUrl: './quote-editor.html',
   styleUrl: './quote-editor.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

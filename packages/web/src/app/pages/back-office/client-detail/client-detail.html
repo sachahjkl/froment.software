@@ -220,13 +220,16 @@
         @if (archived()) {
         <p appNotice>{{ i18n.t('backOffice.clientDetail.accessArchived') }}</p>
         } @if (accessIdentifier(); as identifier) {
-        <div class="credential" role="status">
-          <code>{{ identifier }}</code>
-          <button appButton type="button" (click)="copyAccess()">
-            @if (copied()) { {{ i18n.t('backOffice.clients.copied') }} } @else { {{
-            i18n.t('backOffice.clients.copy') }} }
-          </button>
-        </div>
+        <app-copy-field
+          role="status"
+          [value]="identifier"
+          [actionLabel]="
+            copied()
+              ? i18n.t('backOffice.clients.copied')
+              : i18n.t('backOffice.clients.copy')
+          "
+          (copy)="copyAccess()"
+        />
         <p class="field-hint">{{ i18n.t('backOffice.clients.accessWarning') }}</p>
         }
       </div>

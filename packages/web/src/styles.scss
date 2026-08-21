@@ -285,7 +285,7 @@ textarea.input {
 .range {
   width: 100%;
   min-height: var(--control-height);
-  accent-color: var(--color-button-primary);
+  accent-color: var(--color-button-primary-highlight);
   cursor: pointer;
 }
 
@@ -320,7 +320,7 @@ textarea.input {
   height: 1rem;
   flex: 0 0 auto;
   margin: 0.15em 0 0;
-  accent-color: var(--color-button-primary);
+  accent-color: var(--color-button-primary-highlight);
 }
 
 .badge {

@@ -81,15 +81,6 @@ legend {
   font-size: var(--text-sm);
   text-align: right;
 }
-.saved-result {
-  padding: var(--space-5);
-  border: 1px solid var(--color-line);
-  border-radius: var(--radius-sm);
-  background: var(--color-surface-raised);
-  box-shadow: var(--shadow-panel);
-}
-.invoice-number,
-.invoice-status,
 dl div {
   display: flex;
   justify-content: space-between;
@@ -107,7 +98,7 @@ dl div {
   color: var(--color-muted);
   font-size: var(--text-xs);
 }
-.saved-result h2 {
+[appOutcomePanel] h2 {
   margin-top: var(--space-6);
 }
 dd {
