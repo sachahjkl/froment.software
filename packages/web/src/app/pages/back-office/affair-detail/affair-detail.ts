@@ -21,6 +21,7 @@ import { BackOfficeNav } from '@shared/back-office-nav/back-office-nav';
 import { Badge } from '@shared/badge/badge';
 import { Button } from '@shared/button/button';
 import { DataTable } from '@shared/data-table/data-table';
+import { Icon } from '@shared/icon/icon';
 import { Notice } from '@shared/notice/notice';
 
 interface TimelineItem {
@@ -31,7 +32,7 @@ interface TimelineItem {
 
 @Component({
   selector: 'app-affair-detail',
-  imports: [BackOfficeNav, Badge, Button, DataTable, Notice, RouterLink],
+  imports: [BackOfficeNav, Badge, Button, DataTable, Icon, Notice, RouterLink],
   templateUrl: './affair-detail.html',
   styleUrl: './affair-detail.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

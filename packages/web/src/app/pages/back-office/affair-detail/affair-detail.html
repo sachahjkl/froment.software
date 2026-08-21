@@ -84,9 +84,13 @@
             <td>{{ order.reference }}</td>
             <td><span appBadge>{{ i18n.t('backOffice.affair.confirmed') }}</span></td>
             <td>
-              <a appButton [href]="'/api/orders/' + order.id + '/preview'"
-                >{{ i18n.t('backOffice.open') }}</a
-              >
+              <a
+                appLinkButton
+                [href]="'/api/orders/' + order.id + '/preview'"
+                target="_blank"
+                rel="noopener noreferrer"
+                >{{ i18n.t('backOffice.open') }}<app-icon name="external"
+              /></a>
             </td>
           </tr>
           } @if (invoice(); as invoice) {

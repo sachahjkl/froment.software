@@ -46,6 +46,11 @@ textarea {
   justify-content: space-between;
   gap: var(--space-4);
 }
+.external-link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+}
 fieldset {
   min-width: 0;
   margin: 0;

@@ -43,6 +43,7 @@ import { formatFixedDecimal, parseFixedDecimal } from '@backoffice/quote-input';
 import { I18nService, type TranslationKey } from '@app/i18n.service';
 import { Button } from '@shared/button/button';
 import { Notice } from '@shared/notice/notice';
+import { Icon } from '@shared/icon/icon';
 
 interface InvoiceLineModel {
   readonly description: string;
@@ -93,7 +94,7 @@ const errorKeys = {
 
 @Component({
   selector: 'app-invoice-editor',
-  imports: [Button, FormField, Notice, RouterLink],
+  imports: [Button, FormField, Icon, Notice, RouterLink],
   templateUrl: './invoice-editor.html',
   styleUrl: './invoice-editor.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

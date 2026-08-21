@@ -333,9 +333,9 @@
       <h2 id="preview-title">
         {{ i18n.tf('backOffice.quote.preview.title', { version: previewVersion() ?? '' }) }}
       </h2>
-      <a [href]="url" target="_blank" rel="noopener"
-        >{{ i18n.t('backOffice.quote.preview.open') }}</a
-      >
+      <a class="external-link" [href]="url" target="_blank" rel="noopener noreferrer"
+        >{{ i18n.t('backOffice.quote.preview.open') }}<app-icon name="external"
+      /></a>
     </div>
     <iframe
       [src]="previewFrameUrl()"

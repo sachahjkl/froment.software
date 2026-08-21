@@ -306,9 +306,9 @@
       <h2>
         {{ i18n.tf('backOffice.invoice.preview.title', { version: previewVersion() ?? '' }) }}
       </h2>
-      <a [href]="url" target="_blank" rel="noopener"
-        >{{ i18n.t('backOffice.invoice.preview.open') }}</a
-      >
+      <a class="external-link" [href]="url" target="_blank" rel="noopener noreferrer"
+        >{{ i18n.t('backOffice.invoice.preview.open') }}<app-icon name="external"
+      /></a>
     </div>
     <iframe
       [src]="previewFrameUrl()"
