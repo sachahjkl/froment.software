@@ -98,3 +98,16 @@
 - [x] Remove table-row hover transitions.
 - [x] Verify generated PDFs contain extractable text.
 - [x] Match quote and invoice documents to the USGC business layout.
+
+## Back-Office Operations
+
+- [ ] Add a unified affair detail with documents and chronological history.
+- [ ] Add contextual next actions to each affair.
+- [ ] Add manual quote and overdue invoice reminders.
+- [ ] Add due dates, overdue states, and upcoming deadlines.
+- [ ] Record a structured reason when a quote is cancelled.
+- [ ] Offer client access creation after client reactivation.
+- [ ] Add a business event journal to each affair.
+- [ ] Add global search across clients and document references.
+- [ ] Add bulk invoice reminders and document exports.
+- [ ] Add an operational dashboard for pending and recent work.
