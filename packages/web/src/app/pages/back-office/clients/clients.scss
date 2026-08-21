@@ -20,7 +20,7 @@ h1 {
 }
 
 .intro {
-  max-width: 44rem;
+  max-width: 68ch;
   margin-top: var(--space-2);
   color: var(--color-muted);
 }
@@ -34,7 +34,7 @@ app-tabs {
 }
 
 dialog {
-  width: min(38rem, calc(100% - 2 * var(--space-4)));
+  width: min(68ch, calc(100% - 2 * var(--space-4)));
   max-height: calc(100dvh - 2 * var(--space-4));
   padding: var(--space-5);
   overflow: auto;

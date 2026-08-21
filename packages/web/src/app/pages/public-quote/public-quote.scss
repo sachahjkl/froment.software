@@ -3,8 +3,6 @@
 }
 
 .public-quote {
-  width: min(100%, 82rem);
-  margin-inline: auto;
   padding: clamp(2rem, 6vw, 5rem) var(--page-x);
 }
 
@@ -210,7 +208,7 @@ form {
 }
 
 .state-card {
-  max-width: 42rem;
+  max-width: 68ch;
   margin: 10dvh auto;
   padding: clamp(2rem, 6vw, 4rem);
 }
