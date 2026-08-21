@@ -215,6 +215,7 @@ export class ClientDetail {
     this.reactivating.set(false);
     if (!outcome.success) return this.setError(outcome.code);
     this.applyClient(outcome.result);
+    this.selectedTab.set('access');
   }
 
   protected async copyAccess(): Promise<void> {

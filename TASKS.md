@@ -106,7 +106,7 @@
 - [x] Add manual quote and overdue invoice reminders.
 - [x] Add due dates, overdue states, and upcoming deadlines.
 - [x] Record a structured reason when a quote is cancelled.
-- [ ] Offer client access creation after client reactivation.
+- [x] Offer client access creation after client reactivation.
 - [ ] Add a business event journal to each affair.
 - [ ] Add global search across clients and document references.
 - [ ] Add bulk invoice reminders and document exports.
