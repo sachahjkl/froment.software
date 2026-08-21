@@ -20,6 +20,9 @@ import { I18nService } from '@app/i18n.service';
       <a routerLink="/backoffice/facturation" routerLinkActive="active">
         {{ i18n.t('backOffice.navigation.billing') }}
       </a>
+      <a routerLink="/backoffice/recherche" routerLinkActive="active">
+        {{ i18n.t('backOffice.navigation.search') }}
+      </a>
       <a routerLink="/backoffice/configuration" routerLinkActive="active">
         {{ i18n.t('backOffice.navigation.configuration') }}
       </a>

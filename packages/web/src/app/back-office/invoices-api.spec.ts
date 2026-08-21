@@ -23,6 +23,7 @@ describe('InvoicesApi', () => {
         version: 1,
         invoiceNumber: null,
         title: 'Audit',
+        dueDate: '2026-09-20',
         currency: 'EUR',
         totalCents: 1_200,
         updatedAt: '2026-08-20T06:00:00.000Z',

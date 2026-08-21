@@ -1,0 +1,50 @@
+<section class="search-page" aria-labelledby="search-title">
+  <app-back-office-nav />
+  <header>
+    <p class="eyebrow">{{ i18n.t('backOffice.search.eyebrow') }}</p>
+    <h1 id="search-title">{{ i18n.t('backOffice.search.title') }}</h1>
+  </header>
+  <form role="search" (submit)="submit($event)">
+    <label class="field" for="global-search"
+      >{{ i18n.t('backOffice.search.label') }}<input
+        #searchInput
+        id="global-search"
+        class="input"
+        type="search"
+        maxlength="120"
+        [value]="query()"
+        (input)="updateQuery(searchInput)"
+    /></label>
+    <button appButton variant="primary" type="submit">
+      {{ i18n.t('backOffice.search.submit') }}
+    </button>
+  </form>
+  @switch (state()) { @case ('loading') {
+  <p aria-live="polite">{{ i18n.t('backOffice.search.loading') }}</p>
+  } @case ('error') {
+  <p appNotice variant="danger" role="alert">{{ i18n.t('backOffice.search.error') }}</p>
+  } @case ('ready') { @if (query().trim() && results().length === 0) {
+  <p>{{ i18n.t('backOffice.search.empty') }}</p>
+  } @if (results().length > 0) {
+  <div appDataTable>
+    <table>
+      <thead>
+        <tr>
+          <th>{{ i18n.t('backOffice.search.kind') }}</th>
+          <th>{{ i18n.t('backOffice.search.result') }}</th>
+          <th>{{ i18n.t('backOffice.search.action') }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (result of results(); track result.kind + result.id) {
+        <tr>
+          <td><span appBadge>{{ kindLabel(result.kind) }}</span></td>
+          <td><strong>{{ result.reference }}</strong><small>{{ result.detail }}</small></td>
+          <td><a appButton [routerLink]="result.link">{{ i18n.t('backOffice.open') }}</a></td>
+        </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+  } } }
+</section>

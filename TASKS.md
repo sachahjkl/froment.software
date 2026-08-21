@@ -108,6 +108,6 @@
 - [x] Record a structured reason when a quote is cancelled.
 - [x] Offer client access creation after client reactivation.
 - [x] Add a business event journal to each affair.
-- [ ] Add global search across clients and document references.
+- [x] Add global search across clients and document references.
 - [ ] Add bulk invoice reminders and document exports.
 - [ ] Add an operational dashboard for pending and recent work.
