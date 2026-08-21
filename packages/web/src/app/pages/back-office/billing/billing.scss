@@ -48,6 +48,15 @@ app-tabs {
   margin-top: var(--space-7);
 }
 
+.bulk-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-top: var(--space-4);
+  padding: var(--space-3) var(--space-4);
+  background: var(--color-surface-sunken);
+}
+
 #billing-panel {
   min-height: 20rem;
 }
@@ -69,7 +78,8 @@ td small {
 }
 
 @media (max-width: 38rem) {
-  header {
+  header,
+  .bulk-actions {
     align-items: stretch;
     flex-direction: column;
   }

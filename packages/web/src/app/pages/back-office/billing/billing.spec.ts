@@ -3,6 +3,7 @@ import { provideRouter } from '@angular/router';
 import { type InvoiceSummaryValue } from '@froment/contracts';
 
 import { InvoicesApi } from '@backoffice/invoices-api';
+import { ClientsApi } from '@backoffice/clients-api';
 import { Billing } from './billing';
 
 const invoice = (status: 'issued' | 'paid', suffix: string): InvoiceSummaryValue =>
@@ -16,6 +17,7 @@ const invoice = (status: 'issued' | 'paid', suffix: string): InvoiceSummaryValue
     version: 1,
     invoiceNumber: `FA-2026-00000${suffix}`,
     title: `Facture ${suffix}`,
+    dueDate: '2026-09-21',
     currency: 'EUR',
     totalCents: Number(suffix) * 10_000,
     updatedAt: '2026-08-21T10:00:00.000Z',
@@ -31,6 +33,7 @@ describe('Billing', () => {
           provide: InvoicesApi,
           useValue: { list: () => Promise.resolve([invoice('issued', '1'), invoice('paid', '2')]) },
         },
+        { provide: ClientsApi, useValue: { list: () => Promise.resolve([]) } },
       ],
     });
     const fixture = TestBed.createComponent(Billing);

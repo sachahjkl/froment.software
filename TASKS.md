@@ -109,5 +109,5 @@
 - [x] Offer client access creation after client reactivation.
 - [x] Add a business event journal to each affair.
 - [x] Add global search across clients and document references.
-- [ ] Add bulk invoice reminders and document exports.
+- [x] Add bulk invoice reminders and document exports.
 - [ ] Add an operational dashboard for pending and recent work.

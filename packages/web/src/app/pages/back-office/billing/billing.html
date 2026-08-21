@@ -21,6 +21,19 @@
     [tabs]="tabs()"
     [(selected)]="selectedTab"
   />
+  @if (selectedInvoices().length > 0) {
+  <section class="bulk-actions" [attr.aria-label]="i18n.t('backOffice.billing.bulkActions')">
+    <strong>
+      {{ i18n.tf('backOffice.billing.selected', { count: selectedInvoices().length }) }}
+    </strong>
+    @if (bulkReminderHref(); as reminderHref) {
+    <a appButton [href]="reminderHref">{{ i18n.t('backOffice.billing.bulkReminder') }}</a>
+    }
+    <button appButton type="button" [disabled]="exportCount() === 0" (click)="exportSelected()">
+      {{ i18n.tf('backOffice.billing.bulkExport', { count: exportCount() }) }}
+    </button>
+  </section>
+  }
   <section
     id="billing-panel"
     role="tabpanel"
@@ -41,6 +54,14 @@
       <table>
         <thead>
           <tr>
+            <th>
+              <input
+                #selectAll
+                type="checkbox"
+                [attr.aria-label]="i18n.t('backOffice.billing.selectAll')"
+                (change)="selectVisible(selectAll.checked)"
+              />
+            </th>
             <th>{{ i18n.t('backOffice.invoices.number') }}</th>
             <th>{{ i18n.t('backOffice.invoices.client') }}</th>
             <th>{{ i18n.t('backOffice.invoices.status') }}</th>
@@ -53,6 +74,15 @@
         <tbody>
           @for (invoice of visibleInvoices(); track invoice.id) {
           <tr>
+            <td>
+              <input
+                #invoiceSelection
+                type="checkbox"
+                [checked]="selectedIds().has(invoice.id)"
+                [attr.aria-label]="i18n.tf('backOffice.billing.selectInvoice', { reference: invoice.invoiceNumber ?? invoice.orderReference })"
+                (change)="toggle(invoice.id, invoiceSelection.checked)"
+              />
+            </td>
             <td>
               <strong>{{ invoice.invoiceNumber ?? i18n.t('backOffice.invoice.draft') }}</strong>
               <small>{{ invoice.orderReference }}</small>
