@@ -1,0 +1,35 @@
+:host {
+  display: block;
+  max-width: 100%;
+  overflow-x: auto;
+  overscroll-behavior-inline: contain;
+  scrollbar-width: thin;
+}
+
+.tab-list {
+  display: flex;
+  min-width: max-content;
+  border-bottom: 1px solid var(--color-line-strong);
+}
+
+button {
+  min-height: var(--control-height);
+  padding: var(--space-2) var(--space-4);
+  border: 0;
+  border-bottom: 3px solid transparent;
+  background: transparent;
+  color: var(--color-muted);
+  font-size: var(--text-sm);
+  cursor: pointer;
+}
+
+button:hover {
+  color: var(--color-ink);
+  background: color-mix(in oklab, var(--color-surface-sunken), transparent 35%);
+}
+
+button[aria-selected="true"] {
+  border-bottom-color: var(--color-button-primary);
+  color: var(--color-ink);
+  font-weight: 700;
+}

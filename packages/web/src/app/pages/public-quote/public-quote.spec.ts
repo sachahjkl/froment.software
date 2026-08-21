@@ -99,6 +99,10 @@ describe('PublicQuote', () => {
     expect(globalThis.location.hash).toBe('');
     expect(root.textContent).toContain('Software audit');
     expect(root.textContent).toContain('DE-2026-000001');
+    expect(root.querySelectorAll('[role="tab"]')).toHaveLength(3);
+    expect(root.querySelector('#quote-signature-panel')?.hasAttribute('hidden')).toBe(true);
+    root.querySelector<HTMLButtonElement>('#quote-document-tab')?.click();
+    await fixture.whenStable();
     expect(root.querySelector('a[download]')?.getAttribute('download')).toBe('DE-2026-000001.pdf');
     expect(root.innerHTML).not.toContain(token);
     expect(root.querySelector('iframe')?.getAttribute('src')).toBe('blob:quote-pdf');
@@ -108,6 +112,8 @@ describe('PublicQuote', () => {
     const fixture = TestBed.createComponent(PublicQuote);
     await fixture.whenStable();
     const root: HTMLElement = fixture.nativeElement;
+    root.querySelector<HTMLButtonElement>('#quote-signature-tab')?.click();
+    await fixture.whenStable();
     const inputs = root.querySelectorAll<HTMLInputElement>('input[type="text"]');
     if (inputs[0] !== undefined) inputs[0].value = 'Ada Lovelace';
     inputs[0]?.dispatchEvent(new Event('input'));
@@ -135,6 +141,8 @@ describe('PublicQuote', () => {
     const fixture = TestBed.createComponent(PublicQuote);
     await fixture.whenStable();
     const root: HTMLElement = fixture.nativeElement;
+    root.querySelector<HTMLButtonElement>('#quote-signature-tab')?.click();
+    await fixture.whenStable();
     const name = root.querySelector<HTMLInputElement>('#public-quote-signer-name')!;
 
     name.dispatchEvent(new Event('blur'));
@@ -142,6 +150,7 @@ describe('PublicQuote', () => {
 
     expect(root.querySelector('main')).toBeNull();
     expect(root.querySelector('.quote-facts')?.getAttribute('aria-label')).toBe('Quote summary');
+    expect(root.querySelector('#quote-signature-tab')?.getAttribute('aria-selected')).toBe('true');
     expect(name.getAttribute('aria-invalid')).toBe('true');
     expect(name.getAttribute('aria-describedby')).toBe('public-quote-signer-name-error');
     expect(root.querySelector('#public-quote-signer-name-error')).not.toBeNull();

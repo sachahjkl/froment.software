@@ -58,6 +58,13 @@ section > ol li + li {
 #components h3 {
   margin-top: var(--space-7);
 }
+#components app-tabs {
+  margin-top: var(--space-6);
+}
+.component-panel {
+  min-height: 18rem;
+  padding-block: var(--space-2) var(--space-5);
+}
 .component-row {
   display: flex;
   flex-wrap: wrap;

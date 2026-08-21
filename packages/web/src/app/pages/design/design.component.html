@@ -88,190 +88,237 @@
     <h2 id="components-title">{{ i18n.t("design.components.title") }}</h2>
     <p>{{ i18n.t("design.components.intro") }}</p>
 
-    <h3>{{ i18n.t("design.components.buttons") }}</h3>
-    <p class="component-row">
-      <button appButton type="button">
-        <app-icon name="mail" />{{ i18n.t("design.components.default") }}
-      </button>
-      <button appButton variant="primary" type="button">
-        <app-icon name="calendar" />{{ i18n.t("design.components.primary") }}
-      </button>
-      <button appButton variant="info" type="button">
-        <app-icon name="ai" />{{ i18n.t("design.components.info") }}
-      </button>
-      <button appButton variant="success" type="button">
-        <app-icon name="tests" />{{ i18n.t("design.components.success") }}
-      </button>
-      <button appButton variant="warning" type="button">
-        <app-icon name="upgrade" />{{ i18n.t("design.components.warning") }}
-      </button>
-      <button appButton variant="danger" type="button">
-        <app-icon name="secrets" />{{ i18n.t("design.components.danger") }}
-      </button>
-      <button appButton variant="dark" type="button">
-        <app-icon name="infrastructure" />{{ i18n.t("design.components.dark") }}
-      </button>
-      <button appButton variant="link" type="button">
-        <app-icon name="build" />{{ i18n.t("design.components.link_button") }}
-      </button>
-      <button appButton type="button" disabled>
-        <app-icon name="environment" />{{ i18n.t("design.components.disabled") }}
-      </button>
-    </p>
+    <app-tabs
+      [label]="i18n.t('design.components.tabs')"
+      [tabs]="componentTabs()"
+      [(selected)]="componentTab"
+    />
 
-    <h3>{{ i18n.t("design.components.links") }}</h3>
-    <p>
-      <a href="#components">{{ i18n.t("design.hero.work") }}</a> ·
-      <a href="https://sacha.house" target="_blank" rel="noreferrer">sacha.house</a>
-    </p>
+    <div
+      id="design-actions-panel"
+      class="component-panel"
+      role="tabpanel"
+      aria-labelledby="design-actions-tab"
+      tabindex="0"
+      [hidden]="componentTab() !== 'actions'"
+    >
+      <h3>{{ i18n.t("design.components.buttons") }}</h3>
+      <p class="component-row">
+        <button appButton type="button">
+          <app-icon name="mail" />{{ i18n.t("design.components.default") }}
+        </button>
+        <button appButton variant="primary" type="button">
+          <app-icon name="calendar" />{{ i18n.t("design.components.primary") }}
+        </button>
+        <button appButton variant="info" type="button">
+          <app-icon name="ai" />{{ i18n.t("design.components.info") }}
+        </button>
+        <button appButton variant="success" type="button">
+          <app-icon name="tests" />{{ i18n.t("design.components.success") }}
+        </button>
+        <button appButton variant="warning" type="button">
+          <app-icon name="upgrade" />{{ i18n.t("design.components.warning") }}
+        </button>
+        <button appButton variant="danger" type="button">
+          <app-icon name="secrets" />{{ i18n.t("design.components.danger") }}
+        </button>
+        <button appButton variant="dark" type="button">
+          <app-icon name="infrastructure" />{{ i18n.t("design.components.dark") }}
+        </button>
+        <button appButton variant="link" type="button">
+          <app-icon name="build" />{{ i18n.t("design.components.link_button") }}
+        </button>
+        <button appButton type="button" disabled>
+          <app-icon name="environment" />{{ i18n.t("design.components.disabled") }}
+        </button>
+      </p>
 
-    <h3>{{ i18n.t("design.components.forms") }}</h3>
-    <form class="component-form" action="#" (submit)="$event.preventDefault()">
-      <div class="control-showcase">
+      <h3>{{ i18n.t("design.components.links") }}</h3>
+      <p>
+        <a href="#components">{{ i18n.t("design.hero.work") }}</a> ·
+        <a href="https://sacha.house" target="_blank" rel="noreferrer">sacha.house</a>
+      </p>
+    </div>
+    <div
+      id="design-inputs-panel"
+      class="component-panel"
+      role="tabpanel"
+      aria-labelledby="design-inputs-tab"
+      tabindex="0"
+      [hidden]="componentTab() !== 'inputs'"
+    >
+      <h3>{{ i18n.t("design.components.forms") }}</h3>
+      <form class="component-form" action="#" (submit)="$event.preventDefault()">
+        <div class="control-showcase">
+          <label class="field">
+            <span>{{ i18n.t("design.components.name") }}</span>
+            <input class="input" type="text" value="Sacha Froment" />
+          </label>
+          <label class="field">
+            <span>{{ i18n.t("design.components.email") }}</span>
+            <input class="input" type="email" placeholder="nom@example.com" />
+          </label>
+          <label class="field">
+            <span>{{ i18n.t("design.components.password") }}</span>
+            <input class="input" type="password" value="password" />
+          </label>
+          <label class="field">
+            <span>{{ i18n.t("design.components.disabled") }}</span>
+            <input class="input" type="text" value="Readonly" disabled />
+          </label>
+          <label class="field">
+            <span>{{ i18n.t("design.components.search") }}</span>
+            <input class="input" type="search" placeholder="Angular" />
+          </label>
+          <label class="field">
+            <span>{{ i18n.t("design.components.phone") }}</span>
+            <input class="input" type="tel" value="+33 6 00 00 00 00" />
+          </label>
+          <label class="field">
+            <span>{{ i18n.t("design.components.url") }}</span>
+            <input class="input" type="url" value="https://froment.software" />
+          </label>
+          <label class="field">
+            <span>{{ i18n.t("design.components.number") }}</span>
+            <input class="input" type="number" value="8" min="0" max="20" />
+          </label>
+          <label class="field">
+            <span>{{ i18n.t("design.components.date") }}</span>
+            <input class="input" type="date" value="2026-08-19" />
+          </label>
+          <label class="field">
+            <span>{{ i18n.t("design.components.time") }}</span>
+            <input class="input" type="time" value="14:30" />
+          </label>
+          <label class="field">
+            <span>{{ i18n.t("design.components.datetime") }}</span>
+            <input class="input" type="datetime-local" value="2026-08-19T14:30" />
+          </label>
+          <label class="field">
+            <span>{{ i18n.t("design.components.month") }}</span>
+            <input class="input" type="month" value="2026-08" />
+          </label>
+          <label class="field">
+            <span>{{ i18n.t("design.components.week") }}</span>
+            <input class="input" type="week" value="2026-W34" />
+          </label>
+          <label class="field">
+            <span>{{ i18n.t("design.components.color") }}</span>
+            <input class="input" type="color" value="#1d4ed8" />
+          </label>
+          <label class="field">
+            <span>{{ i18n.t("design.components.subject") }}</span>
+            <select class="select">
+              <option>{{ i18n.t("design.work.build.title") }}</option>
+              <option>{{ i18n.t("design.work.renovate.title") }}</option>
+            </select>
+          </label>
+        </div>
+
         <label class="field">
-          <span>{{ i18n.t("design.components.name") }}</span>
-          <input class="input" type="text" value="Sacha Froment" />
+          <span>{{ i18n.t("design.components.message") }}</span>
+          <textarea class="input" rows="4"></textarea>
         </label>
+
         <label class="field">
-          <span>{{ i18n.t("design.components.email") }}</span>
-          <input class="input" type="email" placeholder="nom@example.com" />
+          <span>{{ i18n.t("design.components.file") }}</span>
+          <input class="input" type="file" />
         </label>
+
         <label class="field">
-          <span>{{ i18n.t("design.components.password") }}</span>
-          <input class="input" type="password" value="password" />
+          <span>{{ i18n.t("design.components.range") }}</span>
+          <input class="range" type="range" min="0" max="100" value="65" />
         </label>
-        <label class="field">
-          <span>{{ i18n.t("design.components.disabled") }}</span>
-          <input class="input" type="text" value="Readonly" disabled />
-        </label>
-        <label class="field">
-          <span>{{ i18n.t("design.components.search") }}</span>
-          <input class="input" type="search" placeholder="Angular" />
-        </label>
-        <label class="field">
-          <span>{{ i18n.t("design.components.phone") }}</span>
-          <input class="input" type="tel" value="+33 6 00 00 00 00" />
-        </label>
-        <label class="field">
-          <span>{{ i18n.t("design.components.url") }}</span>
-          <input class="input" type="url" value="https://froment.software" />
-        </label>
-        <label class="field">
-          <span>{{ i18n.t("design.components.number") }}</span>
-          <input class="input" type="number" value="8" min="0" max="20" />
-        </label>
-        <label class="field">
-          <span>{{ i18n.t("design.components.date") }}</span>
-          <input class="input" type="date" value="2026-08-19" />
-        </label>
-        <label class="field">
-          <span>{{ i18n.t("design.components.time") }}</span>
-          <input class="input" type="time" value="14:30" />
-        </label>
-        <label class="field">
-          <span>{{ i18n.t("design.components.datetime") }}</span>
-          <input class="input" type="datetime-local" value="2026-08-19T14:30" />
-        </label>
-        <label class="field">
-          <span>{{ i18n.t("design.components.month") }}</span>
-          <input class="input" type="month" value="2026-08" />
-        </label>
-        <label class="field">
-          <span>{{ i18n.t("design.components.week") }}</span>
-          <input class="input" type="week" value="2026-W34" />
-        </label>
-        <label class="field">
-          <span>{{ i18n.t("design.components.color") }}</span>
-          <input class="input" type="color" value="#1d4ed8" />
-        </label>
-        <label class="field">
-          <span>{{ i18n.t("design.components.subject") }}</span>
-          <select class="select">
-            <option>{{ i18n.t("design.work.build.title") }}</option>
-            <option>{{ i18n.t("design.work.renovate.title") }}</option>
-          </select>
-        </label>
+
+        <div class="control-showcase">
+          <fieldset class="choice-group">
+            <legend>{{ i18n.t("design.components.checkboxes") }}</legend>
+            <label class="choice">
+              <input type="checkbox" checked />
+              <span>{{ i18n.t("design.components.option_one") }}</span>
+            </label>
+            <label class="choice">
+              <input type="checkbox" disabled />
+              <span>{{ i18n.t("design.components.option_two") }}</span>
+            </label>
+          </fieldset>
+
+          <fieldset class="choice-group">
+            <legend>{{ i18n.t("design.components.radios") }}</legend>
+            <label class="choice">
+              <input type="radio" name="design-radio" checked />
+              <span>{{ i18n.t("design.components.option_one") }}</span>
+            </label>
+            <label class="choice">
+              <input type="radio" name="design-radio" />
+              <span>{{ i18n.t("design.components.option_two") }}</span>
+            </label>
+          </fieldset>
+        </div>
+      </form>
+    </div>
+    <div
+      id="design-feedback-panel"
+      class="component-panel"
+      role="tabpanel"
+      aria-labelledby="design-feedback-tab"
+      tabindex="0"
+      [hidden]="componentTab() !== 'feedback'"
+    >
+      <h3>{{ i18n.t("design.components.notices") }}</h3>
+      <div class="notice-list">
+        <p class="notice">{{ i18n.t("design.components.info") }}</p>
+        <p class="notice success">{{ i18n.t("design.components.success") }}</p>
+        <p class="notice warning">{{ i18n.t("design.components.warning") }}</p>
+        <p class="notice danger">{{ i18n.t("design.components.danger") }}</p>
       </div>
 
-      <label class="field">
-        <span>{{ i18n.t("design.components.message") }}</span>
-        <textarea class="input" rows="4"></textarea>
-      </label>
+      <h3>{{ i18n.t("design.components.status") }}</h3>
+      <p class="component-row">
+        <span class="badge">{{ i18n.t("design.components.default") }}</span>
+        <span class="badge ok">{{ i18n.t("design.components.success") }}</span>
+        <span class="badge warn">{{ i18n.t("design.components.warning") }}</span>
+        <span class="badge err">{{ i18n.t("design.components.danger") }}</span>
+      </p>
 
-      <label class="field">
-        <span>{{ i18n.t("design.components.file") }}</span>
-        <input class="input" type="file" />
-      </label>
-
-      <label class="field">
-        <span>{{ i18n.t("design.components.range") }}</span>
-        <input class="range" type="range" min="0" max="100" value="65" />
-      </label>
-
-      <div class="control-showcase">
-        <fieldset class="choice-group">
-          <legend>{{ i18n.t("design.components.checkboxes") }}</legend>
-          <label class="choice">
-            <input type="checkbox" checked />
-            <span>{{ i18n.t("design.components.option_one") }}</span>
-          </label>
-          <label class="choice">
-            <input type="checkbox" disabled />
-            <span>{{ i18n.t("design.components.option_two") }}</span>
-          </label>
-        </fieldset>
-
-        <fieldset class="choice-group">
-          <legend>{{ i18n.t("design.components.radios") }}</legend>
-          <label class="choice">
-            <input type="radio" name="design-radio" checked />
-            <span>{{ i18n.t("design.components.option_one") }}</span>
-          </label>
-          <label class="choice">
-            <input type="radio" name="design-radio" />
-            <span>{{ i18n.t("design.components.option_two") }}</span>
-          </label>
-        </fieldset>
+      <h3>{{ i18n.t("design.components.details") }}</h3>
+      <details>
+        <summary>{{ i18n.t("design.components.details_summary") }}</summary>
+        <p>{{ i18n.t("design.components.details_copy") }}</p>
+      </details>
+    </div>
+    <div
+      id="design-data-panel"
+      class="component-panel"
+      role="tabpanel"
+      aria-labelledby="design-data-tab"
+      tabindex="0"
+      [hidden]="componentTab() !== 'data'"
+    >
+      <h3>{{ i18n.t("design.components.data") }}</h3>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>{{ i18n.t("design.components.service") }}</th>
+              <th>{{ i18n.t("design.components.subject") }}</th>
+              <th>{{ i18n.t("design.components.status") }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Web</td>
+              <td>Angular</td>
+              <td>{{ i18n.t("design.components.success") }}</td>
+            </tr>
+            <tr>
+              <td>Desktop</td>
+              <td>WPF</td>
+              <td>{{ i18n.t("design.components.info") }}</td>
+            </tr>
+          </tbody>
+        </table>
       </div>
-    </form>
-
-    <h3>{{ i18n.t("design.components.notices") }}</h3>
-    <div class="notice-list">
-      <p class="notice">{{ i18n.t("design.components.info") }}</p>
-      <p class="notice success">{{ i18n.t("design.components.success") }}</p>
-      <p class="notice warning">{{ i18n.t("design.components.warning") }}</p>
-      <p class="notice danger">{{ i18n.t("design.components.danger") }}</p>
     </div>
-
-    <h3>{{ i18n.t("design.components.data") }}</h3>
-    <div class="table-wrap">
-      <table>
-        <thead>
-          <tr>
-            <th>{{ i18n.t("design.components.service") }}</th>
-            <th>{{ i18n.t("design.components.subject") }}</th>
-            <th>{{ i18n.t("design.components.status") }}</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>Web</td>
-            <td>Angular</td>
-            <td>{{ i18n.t("design.components.success") }}</td>
-          </tr>
-          <tr>
-            <td>Desktop</td>
-            <td>WPF</td>
-            <td>{{ i18n.t("design.components.info") }}</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-
-    <h3>{{ i18n.t("design.components.details") }}</h3>
-    <details>
-      <summary>{{ i18n.t("design.components.details_summary") }}</summary>
-      <p>{{ i18n.t("design.components.details_copy") }}</p>
-    </details>
   </section>
 </article>

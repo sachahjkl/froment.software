@@ -29,10 +29,13 @@ import { Option, Schema } from 'effect';
 import { I18nService, type TranslationKey } from '@app/i18n.service';
 import { PublicQuoteApi } from '../../public-quote/public-quote-api';
 import { Button } from '@shared/button/button';
+import { Tabs, type TabItem } from '@shared/tabs/tabs';
+
+type QuoteTab = 'summary' | 'document' | 'signature';
 
 @Component({
   selector: 'app-public-quote',
-  imports: [Button, FormField],
+  imports: [Button, FormField, Tabs],
   templateUrl: './public-quote.html',
   styleUrl: './public-quote.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -63,6 +66,27 @@ export class PublicQuote {
   protected readonly quote = signal<PublicQuoteConsultationValue | undefined>(undefined);
   protected readonly acceptance = signal<QuoteAcceptanceResultValue | undefined>(undefined);
   protected readonly error = signal<TranslationKey | undefined>(undefined);
+  protected readonly quoteTab = signal<QuoteTab>('summary');
+  protected readonly quoteTabs = computed<readonly TabItem[]>(() => [
+    {
+      value: 'summary',
+      id: 'quote-summary-tab',
+      label: this.i18n.t('publicQuote.tab.summary'),
+      panelId: 'quote-summary-panel',
+    },
+    {
+      value: 'document',
+      id: 'quote-document-tab',
+      label: this.i18n.t('publicQuote.tab.document'),
+      panelId: 'quote-document-panel',
+    },
+    {
+      value: 'signature',
+      id: 'quote-signature-tab',
+      label: this.i18n.t('publicQuote.tab.signature'),
+      panelId: 'quote-signature-panel',
+    },
+  ]);
   protected readonly pdfUrl = signal<string | undefined>(undefined);
   protected readonly pdfFrameUrl = computed(() => {
     const url = this.pdfUrl();

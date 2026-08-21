@@ -5,46 +5,57 @@
     <h1 id="public-quote-title">{{ i18n.t('publicQuote.loading') }}</h1>
   </section>
   } @else if (quote(); as currentQuote) {
-  <header class="quote-heading">
-    <div>
-      <p class="eyebrow">{{ i18n.t('publicQuote.eyebrow') }}</p>
-      <h1 id="public-quote-title">{{ currentQuote.snapshot.title }}</h1>
-      <p class="recipient">
-        {{ currentQuote.snapshot.issuer.displayName }} → {{ currentQuote.snapshot.client.displayName
-        }}
-      </p>
-    </div>
-    <div class="total-card">
-      <span>{{ i18n.t('publicQuote.total') }}</span>
-      <strong>{{ formatMoney(currentQuote.snapshot.totalCents) }}</strong>
-      <small
-        >{{ i18n.tf('publicQuote.version', { version: currentQuote.snapshot.version }) }}</small
-      >
-    </div>
-  </header>
+  <article class="quote-overview">
+    <header class="quote-heading">
+      <div>
+        <p class="eyebrow">{{ i18n.t('publicQuote.eyebrow') }}</p>
+        <h1 id="public-quote-title">{{ currentQuote.snapshot.title }}</h1>
+        <p class="recipient">
+          {{ currentQuote.snapshot.issuer.displayName }} → {{
+          currentQuote.snapshot.client.displayName }}
+        </p>
+      </div>
+      <div class="total-card">
+        <span>{{ i18n.t('publicQuote.total') }}</span>
+        <strong>{{ formatMoney(currentQuote.snapshot.totalCents) }}</strong>
+        <small
+          >{{ i18n.tf('publicQuote.version', { version: currentQuote.snapshot.version }) }}</small
+        >
+      </div>
+    </header>
 
-  <section class="quote-facts" [attr.aria-label]="i18n.t('publicQuote.summary')">
-    @if (currentQuote.snapshot.templateVersion === 2) {
-    <div>
-      <span>{{ i18n.t('publicQuote.reference') }}</span>
-      <strong>{{ currentQuote.snapshot.quoteReference }}</strong>
-    </div>
-    }
-    <div>
-      <span>{{ i18n.t('publicQuote.netTotal') }}</span>
-      <strong>{{ formatMoney(currentQuote.snapshot.netTotalCents) }}</strong>
-    </div>
-    <div>
-      <span>{{ i18n.t('publicQuote.vatTotal') }}</span>
-      <strong>{{ formatMoney(currentQuote.snapshot.vatTotalCents) }}</strong>
-    </div>
-    <div>
-      <span>{{ i18n.t('publicQuote.expires') }}</span>
-      <strong>{{ currentQuote.expiresAt.slice(0, 10) }}</strong>
-    </div>
-  </section>
+    <section class="quote-facts" [attr.aria-label]="i18n.t('publicQuote.summary')">
+      @if (currentQuote.snapshot.templateVersion === 2) {
+      <div>
+        <span>{{ i18n.t('publicQuote.reference') }}</span>
+        <strong>{{ currentQuote.snapshot.quoteReference }}</strong>
+      </div>
+      }
+      <div>
+        <span>{{ i18n.t('publicQuote.netTotal') }}</span>
+        <strong>{{ formatMoney(currentQuote.snapshot.netTotalCents) }}</strong>
+      </div>
+      <div>
+        <span>{{ i18n.t('publicQuote.vatTotal') }}</span>
+        <strong>{{ formatMoney(currentQuote.snapshot.vatTotalCents) }}</strong>
+      </div>
+      <div>
+        <span>{{ i18n.t('publicQuote.expires') }}</span>
+        <strong>{{ currentQuote.expiresAt.slice(0, 10) }}</strong>
+      </div>
+    </section>
+  </article>
 
-  <section class="line-summary" aria-labelledby="line-summary-title">
+  <app-tabs [label]="i18n.t('publicQuote.tabs')" [tabs]="quoteTabs()" [(selected)]="quoteTab" />
+
+  <section
+    id="quote-summary-panel"
+    class="line-summary"
+    role="tabpanel"
+    aria-labelledby="quote-summary-tab"
+    tabindex="0"
+    [hidden]="quoteTab() !== 'summary'"
+  >
     <h2 id="line-summary-title">{{ i18n.t('publicQuote.details') }}</h2>
     <ol>
       @for (line of currentQuote.snapshot.lines; track line.id) {
@@ -67,7 +78,14 @@
     }
   </section>
 
-  <section class="document-panel" aria-labelledby="document-title">
+  <section
+    id="quote-document-panel"
+    class="document-panel"
+    role="tabpanel"
+    aria-labelledby="quote-document-tab"
+    tabindex="0"
+    [hidden]="quoteTab() !== 'document'"
+  >
     <div class="section-heading">
       <div>
         <p class="eyebrow">PDF</p>
@@ -91,7 +109,14 @@
     }
   </section>
 
-  <section class="signature-panel" aria-labelledby="signature-title">
+  <section
+    id="quote-signature-panel"
+    class="signature-panel"
+    role="tabpanel"
+    aria-labelledby="quote-signature-tab"
+    tabindex="0"
+    [hidden]="quoteTab() !== 'signature'"
+  >
     @if (acceptance()) {
     <div class="accepted" role="status">
       <p class="eyebrow">{{ i18n.t('publicQuote.acceptedEyebrow') }}</p>
