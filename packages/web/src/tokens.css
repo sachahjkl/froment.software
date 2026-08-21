@@ -1,7 +1,39 @@
+@font-face {
+  font-family: Cousine;
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/fonts/Cousine-Regular.ttf") format("truetype");
+}
+
+@font-face {
+  font-family: Cousine;
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("/fonts/Cousine-Bold.ttf") format("truetype");
+}
+
+@font-face {
+  font-family: Cousine;
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/fonts/Cousine-Italic.ttf") format("truetype");
+}
+
+@font-face {
+  font-family: Cousine;
+  font-style: italic;
+  font-weight: 700;
+  font-display: swap;
+  src: url("/fonts/Cousine-BoldItalic.ttf") format("truetype");
+}
+
 :root {
   --font-body: "Trebuchet MS", Trebuchet, Arial, sans-serif;
   --font-display: "Trebuchet MS", Trebuchet, Arial, sans-serif;
-  --font-mono: "Courier New", Courier, monospace;
+  --font-mono: Cousine, "Liberation Mono", monospace;
   --font-title: var(--font-display);
 
   --text-xs: 0.75rem;
