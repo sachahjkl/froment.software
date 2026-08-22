@@ -88,6 +88,12 @@ export class IntegrationTokenInvalidExpiration extends Schema.TaggedError<Integr
   { httpApiStatus: 422 },
 ) {}
 
+export class IntegrationTokenInvalidCursor extends Schema.TaggedError<IntegrationTokenInvalidCursor>()(
+  'IntegrationTokenInvalidCursor',
+  { code: Schema.Literal('integration_token.invalid_cursor') },
+  { httpApiStatus: 400 },
+) {}
+
 export const IntegrationTokenFailure = Schema.Union([
   AuthenticationRequired,
   PermissionDenied,
@@ -98,5 +104,6 @@ export const IntegrationTokenFailure = Schema.Union([
   IntegrationTokenNotFound,
   IntegrationTokenNameConflict,
   IntegrationTokenInvalidExpiration,
+  IntegrationTokenInvalidCursor,
 ]);
 export type IntegrationTokenFailure = typeof IntegrationTokenFailure.Type;

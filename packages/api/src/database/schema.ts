@@ -1,4 +1,4 @@
-import { sql } from 'drizzle-orm';
+import { desc, sql } from 'drizzle-orm';
 import { createSelectSchema } from 'drizzle-orm/effect-schema';
 import {
   blob,
@@ -186,6 +186,7 @@ export const integrationTokens = sqliteTable(
     index('integration_tokens_unrevoked_name_expiry_index')
       .on(table.name, table.expiresAt)
       .where(sql`${table.revokedAt} is null`),
+    index('integration_tokens_created_at_id_index').on(desc(table.createdAt), desc(table.id)),
     check(
       'integration_tokens_id_ulid_check',
       sql`${table.id} is not null and length(${table.id}) = 26 and ${table.id} not glob '*[^0-9A-HJKMNP-TV-Z]*' and substr(${table.id}, 1, 1) between '0' and '7'`,

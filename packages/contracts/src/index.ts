@@ -44,6 +44,7 @@ export {
   IntegrationTokenFailure,
   type IntegrationTokenFailure as IntegrationTokenFailureValue,
   IntegrationTokenInvalidExpiration,
+  IntegrationTokenInvalidCursor,
   IntegrationTokenList,
   type IntegrationTokenList as IntegrationTokenListValue,
   IntegrationTokenListQuery,

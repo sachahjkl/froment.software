@@ -2,6 +2,7 @@ import {
   AuthenticationRequired,
   IntegrationToken as IntegrationTokenSchema,
   IntegrationTokenInvalidExpiration,
+  IntegrationTokenInvalidCursor,
   IntegrationTokenNameConflict,
   IntegrationTokenNotFound,
   IntegrationTokenSecret,
@@ -50,7 +51,7 @@ export interface IntegrationTokensService {
   readonly list: (
     cursor?: UlidValue,
     limit?: number,
-  ) => Effect.Effect<IntegrationTokenPageValue, DatabaseError>;
+  ) => Effect.Effect<IntegrationTokenPageValue, IntegrationTokenInvalidCursor | DatabaseError>;
   readonly create: (
     request: IntegrationTokenCreateRequestValue,
     actorUserId: UlidValue,
@@ -133,43 +134,60 @@ export const IntegrationTokensLive = Layer.effect(
       rateLimitPerMinute: Schema.Number,
       permissions: Schema.String,
     });
+    const CursorBoundary = Schema.Struct({ createdAt: Schema.Number, id: Ulid });
     const decodePermissions = Schema.decodeUnknownSync(
       Schema.fromJsonString(Schema.Array(IntegrationPermissionCode)),
+    );
+    const tokenPageSelection = `select integration_tokens.id, integration_tokens.name,
+                                       integration_tokens.created_at as createdAt,
+                                       integration_tokens.expires_at as expiresAt,
+                                       integration_tokens.last_used_at as lastUsedAt,
+                                       integration_tokens.revoked_at as revokedAt,
+                                       integration_tokens.rate_limit_per_minute as rateLimitPerMinute,
+                                       coalesce((
+                                         select json_group_array(permission_code)
+                                           from (
+                                             select permission_code
+                                               from integration_token_permissions
+                                              where token_id = integration_tokens.id
+                                              order by permission_code
+                                           )
+                                       ), '[]') as permissions
+                                  from integration_tokens`;
+    const firstTokenPage = database.sqlite.prepare(
+      `${tokenPageSelection}
+       order by integration_tokens.created_at desc, integration_tokens.id desc
+       limit ?`,
+    );
+    const nextTokenPage = database.sqlite.prepare(
+      `${tokenPageSelection}
+       where (integration_tokens.created_at, integration_tokens.id) < (?, ?)
+       order by integration_tokens.created_at desc, integration_tokens.id desc
+       limit ?`,
     );
 
     const list = Effect.fn('IntegrationTokens.list')(function* (cursor?: UlidValue, limit = 50) {
       return yield* Effect.try({
         try: () => {
+          const boundary =
+            cursor === undefined
+              ? undefined
+              : Schema.decodeUnknownOption(CursorBoundary)(
+                  database.sqlite
+                    .prepare(
+                      `select created_at as createdAt, id
+                         from integration_tokens
+                        where id = ?`,
+                    )
+                    .get(cursor),
+                ).pipe(Option.getOrUndefined);
+          if (cursor !== undefined && boundary === undefined) {
+            throw new IntegrationTokenInvalidCursor({ code: 'integration_token.invalid_cursor' });
+          }
           const rows = Schema.decodeUnknownSync(Schema.Array(IntegrationTokenListRow))(
-            database.sqlite
-              .prepare(
-                `select integration_tokens.id, integration_tokens.name,
-                        integration_tokens.created_at as createdAt,
-                        integration_tokens.expires_at as expiresAt,
-                        integration_tokens.last_used_at as lastUsedAt,
-                        integration_tokens.revoked_at as revokedAt,
-                        integration_tokens.rate_limit_per_minute as rateLimitPerMinute,
-                        coalesce((
-                          select json_group_array(permission_code)
-                            from (
-                              select permission_code
-                                from integration_token_permissions
-                               where token_id = integration_tokens.id
-                               order by permission_code
-                            )
-                        ), '[]') as permissions
-                   from integration_tokens
-                  where (? is null
-                     or integration_tokens.created_at < (
-                          select cursor.created_at from integration_tokens as cursor where cursor.id = ?
-                        )
-                     or (integration_tokens.created_at = (
-                          select cursor.created_at from integration_tokens as cursor where cursor.id = ?
-                        ) and integration_tokens.id < ?))
-                  order by integration_tokens.created_at desc, integration_tokens.id desc
-                  limit ?`,
-              )
-              .all(cursor ?? null, cursor ?? null, cursor ?? null, cursor ?? null, limit + 1),
+            boundary === undefined
+              ? firstTokenPage.all(limit + 1)
+              : nextTokenPage.all(boundary.createdAt, boundary.id, limit + 1),
           );
           const hasMore = rows.length > limit;
           const items = rows.slice(0, limit).map(({ permissions: encodedPermissions, ...row }) =>
@@ -183,7 +201,10 @@ export const IntegrationTokensLive = Layer.effect(
             nextCursor: hasMore ? (items.at(-1)?.id ?? null) : null,
           } satisfies IntegrationTokenPageValue;
         },
-        catch: (cause) => new DatabaseError({ operation: 'list integration tokens', cause }),
+        catch: (cause) =>
+          cause instanceof IntegrationTokenInvalidCursor
+            ? cause
+            : new DatabaseError({ operation: 'list integration tokens', cause }),
       });
     });
 

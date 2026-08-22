@@ -268,17 +268,30 @@ describe('IntegrationTokens', () => {
             { name, permissions: ['client.read'], expiresAt: 86_400_000 },
             userId,
           );
-          yield* TestClock.adjust(1);
         }
         const first = yield* service.list(undefined, 2);
+        yield* TestClock.adjust(1);
+        yield* service.create(
+          { name: 'Newer', permissions: ['client.read'], expiresAt: 86_400_000 },
+          userId,
+        );
+        const cursor = first.nextCursor;
+        if (cursor === null) throw new Error('The first page has no cursor.');
+        yield* service.revoke(cursor, userId);
         const second = yield* service.list(first.nextCursor ?? undefined, 2);
-        return { first, second };
+        const invalidCursor = yield* Effect.result(service.list('01ARZ3NDEKTSV4RRFFQ69G5FZZ', 2));
+        return { first, invalidCursor, second };
       }).pipe(Effect.provide(integrationTokensLayer()), Effect.provide(TestClock.layer())),
     );
 
-    expect(pages.first.items.map(({ name }) => name)).toEqual(['Third', 'Second']);
     expect(pages.first.nextCursor).toBe(pages.first.items[1]?.id);
-    expect(pages.second.items.map(({ name }) => name)).toEqual(['First']);
+    const names = [...pages.first.items, ...pages.second.items].map(({ name }) => name);
+    expect(names).toHaveLength(3);
+    expect(new Set(names)).toEqual(new Set(['First', 'Second', 'Third']));
     expect(pages.second.nextCursor).toBeNull();
+    expect(pages.invalidCursor).toMatchObject({
+      _tag: 'Failure',
+      failure: { _tag: 'IntegrationTokenInvalidCursor' },
+    });
   });
 });

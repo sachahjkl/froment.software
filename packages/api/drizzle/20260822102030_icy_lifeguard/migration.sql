@@ -1,0 +1,1 @@
+CREATE INDEX `integration_tokens_created_at_id_index` ON `integration_tokens` ("created_at" desc,"id" desc);

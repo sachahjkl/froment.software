@@ -857,6 +857,15 @@ describe('HTTP server', () => {
       ],
       nextCursor: null,
     });
+    const invalidCursor = await fetch(
+      `${baseUrl}/api/integration-tokens?cursor=01ARZ3NDEKTSV4RRFFQ69G5FZZ`,
+      { headers: { cookie } },
+    );
+    expect(invalidCursor.status).toBe(400);
+    await expect(invalidCursor.json()).resolves.toMatchObject({
+      _tag: 'IntegrationTokenInvalidCursor',
+      code: 'integration_token.invalid_cursor',
+    });
 
     const bearerList = await fetch(`${baseUrl}/api/clients`, {
       headers: { authorization: `Bearer ${created.secret}` },

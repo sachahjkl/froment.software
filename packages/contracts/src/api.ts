@@ -106,6 +106,7 @@ import {
   IntegrationTokenCreateRequest,
   IntegrationTokenCreated,
   IntegrationTokenInvalidExpiration,
+  IntegrationTokenInvalidCursor,
   IntegrationTokenListQuery,
   IntegrationTokenNameConflict,
   IntegrationTokenNotFound,
@@ -888,6 +889,7 @@ export class IntegrationTokensApi extends HttpApiGroup.make('integrationTokens',
       error: [
         AuthenticationRequired.pipe(HttpApiSchema.status(401)),
         PermissionDenied.pipe(HttpApiSchema.status(403)),
+        IntegrationTokenInvalidCursor.pipe(HttpApiSchema.status(400)),
       ],
     }),
     HttpApiEndpoint.post('integrationTokenCreate', '/api/integration-tokens', {

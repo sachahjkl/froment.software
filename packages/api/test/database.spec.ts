@@ -342,6 +342,18 @@ describe('Database', () => {
           expect(() =>
             sqlite.prepare('delete from integration_tokens where id = ?').run(tokenId),
           ).toThrow('integration tokens are append-only');
+          expect(
+            sqlite
+              .prepare(
+                `explain query plan
+                 select id from integration_tokens
+                  where (created_at, id) < (?, ?)
+                  order by created_at desc, id desc`,
+              )
+              .all(100, tokenId),
+          ).toEqual([
+            expect.objectContaining({ detail: expect.stringContaining('created_at_id_index') }),
+          ]);
           expect(() =>
             sqlite
               .prepare(
