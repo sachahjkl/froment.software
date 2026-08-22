@@ -22,7 +22,7 @@ export const documentText = {
       'En cas de retard de paiement, des pénalités sont exigibles au taux prévu par l’article L441-10 du Code de commerce.',
     collectionFee: 'Indemnité forfaitaire pour frais de recouvrement : 40 €.',
     orderedBy: 'Commandé par :',
-    confirmationDate: 'Date de confirmation :',
+    confirmationDate: 'Confirmée le :',
     orderConfirmation: 'Confirmation de commande',
     lineNumber: '#',
     lineDescription: 'Désignation',
