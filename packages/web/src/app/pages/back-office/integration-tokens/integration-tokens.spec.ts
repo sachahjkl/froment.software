@@ -18,7 +18,7 @@ const secret = `froment_it_v1_${token.id}.${'a'.repeat(43)}`;
 
 describe('IntegrationTokens', () => {
   it('does not replace a created token with an older list response', async () => {
-    let resolveList!: (tokens: ReadonlyArray<typeof token>) => void;
+    let resolveList!: (page: { items: ReadonlyArray<typeof token>; nextCursor: null }) => void;
     const list = vi.fn().mockReturnValue(new Promise((resolve) => (resolveList = resolve)));
     const create = vi.fn().mockResolvedValue({
       success: true,
@@ -54,7 +54,7 @@ describe('IntegrationTokens', () => {
     expect(acknowledge).not.toBeNull();
     acknowledge?.click();
     await fixture.whenStable();
-    resolveList([]);
+    resolveList({ items: [], nextCursor: null });
     await vi.waitFor(() => expect(root.textContent).not.toMatch(/Loading tokens|Chargement/));
 
     expect(root.textContent).toContain('ERP');
@@ -69,7 +69,11 @@ describe('IntegrationTokens', () => {
       providers: [
         {
           provide: IntegrationTokensApi,
-          useValue: { list: () => Promise.resolve([]), create, revoke: vi.fn() },
+          useValue: {
+            list: () => Promise.resolve({ items: [], nextCursor: null }),
+            create,
+            revoke: vi.fn(),
+          },
         },
       ],
     });
@@ -114,7 +118,11 @@ describe('IntegrationTokens', () => {
       providers: [
         {
           provide: IntegrationTokensApi,
-          useValue: { list: () => Promise.resolve([token]), create: vi.fn(), revoke },
+          useValue: {
+            list: () => Promise.resolve({ items: [token], nextCursor: null }),
+            create: vi.fn(),
+            revoke,
+          },
         },
       ],
     });

@@ -39,8 +39,15 @@ describe('IntegrationTokensApi', () => {
     const secret = `froment_it_v1_${token.id}.${'a'.repeat(43)}`;
 
     const list = api.list();
-    http.expectOne('/api/integration-tokens').flush([token]);
-    await expect(list).resolves.toEqual([token]);
+    http.expectOne('/api/integration-tokens').flush({ items: [token], nextCursor: null });
+    await expect(list).resolves.toEqual({ items: [token], nextCursor: null });
+
+    const nextPage = api.list(token.id);
+    http.expectOne(`/api/integration-tokens?cursor=${token.id}`).flush({
+      items: [],
+      nextCursor: null,
+    });
+    await expect(nextPage).resolves.toEqual({ items: [], nextCursor: null });
 
     const payload = {
       name: 'ERP',
@@ -77,7 +84,9 @@ describe('IntegrationTokensApi', () => {
     const http = TestBed.inject(HttpTestingController);
 
     const list = api.list();
-    http.expectOne('/api/integration-tokens').flush([{ id: 'invalid' }]);
+    http
+      .expectOne('/api/integration-tokens')
+      .flush({ items: [{ id: 'invalid' }], nextCursor: null });
     await expect(list).rejects.toThrow();
     http.verify();
   });

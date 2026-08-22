@@ -15,7 +15,7 @@
     </a>
   </p>
 
-  @if (error(); as errorKey) {
+  @if (pageError(); as errorKey) {
   <p appNotice variant="danger" role="alert">{{ i18n.t(errorKey) }}</p>
   } @if (loading()) {
   <p aria-live="polite">{{ i18n.t('backOffice.integrationTokens.loading') }}</p>
@@ -57,12 +57,13 @@
             <span appBadge [variant]="statusVariant(token)">{{ i18n.t(statusLabel(token)) }}</span>
           </td>
           <td>
-            @if (status(token) === 'active') {
+            @if (status(token) !== 'revoked') {
             <button
               appButton
               variant="danger"
               type="button"
-              [disabled]="pendingTokenId() === token.id"
+              [disabled]="revoking()"
+              [attr.aria-label]="i18n.t('backOffice.integrationTokens.revoke') + ' ' + token.name"
               (click)="revoke(token)"
             >
               {{ i18n.t('backOffice.integrationTokens.revoke') }}
@@ -74,31 +75,47 @@
       </tbody>
     </table>
   </div>
-  }
+  @if (nextCursor() !== null) {
+  <button appButton type="button" [disabled]="loadingMore()" (click)="loadMore()">
+    {{ i18n.t('backOffice.integrationTokens.loadMore') }}
+  </button>
+  } }
 </section>
 
-<dialog #createDialog (cancel)="closeCreate()" (close)="closeCreate()">
+<dialog
+  #createDialog
+  [attr.aria-labelledby]="
+    secret() === undefined ? 'integration-token-create-title' : 'integration-token-secret-title'
+  "
+  (cancel)="cancelCreate($event)"
+  (close)="closeCreate()"
+>
   @if (secret(); as currentSecret) {
   <section class="dialog-content" aria-labelledby="integration-token-secret-title">
     <h2 id="integration-token-secret-title">
       {{ i18n.t('backOffice.integrationTokens.secretTitle') }}
     </h2>
     <p appNotice variant="warning">{{ i18n.t('backOffice.integrationTokens.secretWarning') }}</p>
+    @if (dialogError(); as errorKey) {
+    <p appNotice variant="danger" role="alert">{{ i18n.t(errorKey) }}</p>
+    }
     <app-copy-field
       [value]="currentSecret"
       [actionLabel]="i18n.t('backOffice.integrationTokens.copy')"
       [status]="copied() ? i18n.t('backOffice.integrationTokens.copied') : ''"
       (copy)="copySecret(currentSecret)"
     />
-    <button appButton variant="primary" type="button" (click)="closeCreate()">
+    <button appButton variant="primary" type="button" (click)="acknowledgeSecret()">
       {{ i18n.t('backOffice.integrationTokens.secretSaved') }}
     </button>
   </section>
   } @else {
   <form class="dialog-content" (submit)="create($event)">
     <div class="dialog-heading">
-      <h2>{{ i18n.t('backOffice.integrationTokens.createTitle') }}</h2>
-      <button appButton type="button" (click)="closeCreate()">
+      <h2 id="integration-token-create-title">
+        {{ i18n.t('backOffice.integrationTokens.createTitle') }}
+      </h2>
+      <button appButton type="button" [disabled]="saving()" (click)="closeCreate()">
         {{ i18n.t('backOffice.integrationTokens.cancel') }}
       </button>
     </div>
@@ -135,6 +152,9 @@
         }
       </div>
     </fieldset>
+    @if (dialogError(); as errorKey) {
+    <p appNotice variant="danger" role="alert">{{ i18n.t(errorKey) }}</p>
+    }
     <button appButton variant="primary" type="submit" [disabled]="createDisabled()">
       {{ i18n.t('backOffice.integrationTokens.create') }}
     </button>

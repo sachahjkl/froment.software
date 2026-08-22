@@ -1,6 +1,6 @@
 import Sqlite from 'better-sqlite3';
 import { Effect, Schema } from 'effect';
-import { cp, mkdtemp, readdir, rm } from 'node:fs/promises';
+import { appendFile, cp, mkdtemp, readdir, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
@@ -319,6 +319,31 @@ describe('Database', () => {
     await Effect.runPromise(
       Database.use(() => Effect.void).pipe(Effect.provide(makeMigratedDatabaseLayer(options))),
     );
+  });
+
+  it('rejects a changed migration that was already applied', async () => {
+    const directory = await mkdtemp(join(tmpdir(), 'froment-database-hash-'));
+    directories.push(directory);
+    const migrationsFolder = join(directory, 'drizzle');
+    const sourceFolder = join(import.meta.dirname, '..', 'drizzle');
+    await cp(sourceFolder, migrationsFolder, { recursive: true });
+    const options = { filename: join(directory, 'database.sqlite'), migrationsFolder };
+
+    await Effect.runPromise(
+      Database.use(() => Effect.void).pipe(Effect.provide(makeMigratedDatabaseLayer(options))),
+    );
+    const migration = (await readdir(migrationsFolder)).sort().at(-1);
+    if (migration === undefined) throw new Error('No migration was copied.');
+    await appendFile(join(migrationsFolder, migration, 'migration.sql'), '\n-- changed\n');
+
+    await expect(
+      Effect.runPromise(
+        Database.use(() => Effect.void).pipe(Effect.provide(makeMigratedDatabaseLayer(options))),
+      ),
+    ).rejects.toMatchObject({
+      _tag: 'DatabaseError',
+      cause: expect.objectContaining({ message: expect.stringContaining('different hash') }),
+    });
   });
 
   it('normalizes persisted document snapshots during an upgrade', async () => {

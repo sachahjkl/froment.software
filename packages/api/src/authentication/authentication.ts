@@ -77,6 +77,12 @@ export interface AuthenticationService {
     Principal,
     AuthenticationRequired | PermissionDenied | CsrfRejected | DatabaseError
   >;
+  readonly authorizeCsrf: (
+    sessionToken: string,
+    csrfCookie: string | undefined,
+    csrfHeader: string | undefined,
+    origin: string | undefined,
+  ) => Effect.Effect<void, CsrfRejected | DatabaseError>;
   readonly logout: (
     sessionToken: string | undefined,
     csrfCookie: string | undefined,
@@ -333,16 +339,13 @@ export const AuthenticationLive = Layer.effect(
       return principal;
     });
 
-    const authorizeWrite = Effect.fn('Authentication.authorizeWrite')(function* (
-      sessionToken: string | undefined,
+    const authorizeCsrf = Effect.fn('Authentication.authorizeCsrf')(function* (
+      sessionToken: string,
       csrfCookie: string | undefined,
       csrfHeader: string | undefined,
       origin: string | undefined,
-      permission: PermissionCodeValue,
-      requiredMode: LoginModeValue,
     ) {
       if (
-        sessionToken === undefined ||
         csrfCookie === undefined ||
         csrfHeader === undefined ||
         csrfCookie !== csrfHeader ||
@@ -350,7 +353,6 @@ export const AuthenticationLive = Layer.effect(
       ) {
         return yield* new CsrfRejected({ code: 'authentication.invalid_csrf' });
       }
-      const principal = yield* authorize(sessionToken, permission, requiredMode);
       const validCsrf = yield* Effect.try({
         try: () =>
           database.sqlite
@@ -366,6 +368,21 @@ export const AuthenticationLive = Layer.effect(
       if (!validCsrf) {
         return yield* new CsrfRejected({ code: 'authentication.invalid_csrf' });
       }
+    });
+
+    const authorizeWrite = Effect.fn('Authentication.authorizeWrite')(function* (
+      sessionToken: string | undefined,
+      csrfCookie: string | undefined,
+      csrfHeader: string | undefined,
+      origin: string | undefined,
+      permission: PermissionCodeValue,
+      requiredMode: LoginModeValue,
+    ) {
+      if (sessionToken === undefined) {
+        return yield* new CsrfRejected({ code: 'authentication.invalid_csrf' });
+      }
+      const principal = yield* authorize(sessionToken, permission, requiredMode);
+      yield* authorizeCsrf(sessionToken, csrfCookie, csrfHeader, origin);
       return principal;
     });
 
@@ -418,6 +435,13 @@ export const AuthenticationLive = Layer.effect(
       });
     });
 
-    return Authentication.of({ login, sessionStatus, authorize, authorizeWrite, logout });
+    return Authentication.of({
+      login,
+      sessionStatus,
+      authorize,
+      authorizeCsrf,
+      authorizeWrite,
+      logout,
+    });
   }),
 );

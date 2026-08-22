@@ -11,7 +11,7 @@ import {
   type IntegrationPermissionCodeValue,
   type IntegrationTokenCreateRequestValue,
   type IntegrationTokenCreatedValue,
-  type IntegrationTokenListValue,
+  type IntegrationTokenPageValue,
   type IntegrationTokenValue,
   type PermissionCodeValue,
   type UlidValue,
@@ -47,7 +47,10 @@ export interface IntegrationPrincipal {
 }
 
 export interface IntegrationTokensService {
-  readonly list: Effect.Effect<IntegrationTokenListValue, DatabaseError>;
+  readonly list: (
+    cursor?: UlidValue,
+    limit?: number,
+  ) => Effect.Effect<IntegrationTokenPageValue, DatabaseError>;
   readonly create: (
     request: IntegrationTokenCreateRequestValue,
     actorUserId: UlidValue,
@@ -58,6 +61,13 @@ export interface IntegrationTokensService {
     | PermissionDenied
     | DatabaseError
   >;
+  readonly authenticate: (
+    token: string,
+  ) => Effect.Effect<IntegrationPrincipal, AuthenticationRequired | DatabaseError>;
+  readonly authorizePermission: (
+    principal: IntegrationPrincipal,
+    permission: PermissionCodeValue,
+  ) => Effect.Effect<void, PermissionDenied | DatabaseError>;
   readonly authorize: (
     token: string,
     permission: PermissionCodeValue,
@@ -120,16 +130,68 @@ export const IntegrationTokensLive = Layer.effect(
       });
     };
 
-    const list = Effect.try({
-      try: () =>
-        Schema.decodeUnknownSync(Schema.Array(IntegrationTokenSchema))(
-          Schema.decodeUnknownSync(Schema.Array(Schema.Struct({ id: Schema.String })))(
+    const IntegrationTokenListRow = Schema.Struct({
+      id: Ulid,
+      name: Schema.String,
+      createdAt: Schema.Number,
+      expiresAt: Schema.Number,
+      lastUsedAt: Schema.NullOr(Schema.Number),
+      revokedAt: Schema.NullOr(Schema.Number),
+      rateLimitPerMinute: Schema.Number,
+      permissions: Schema.String,
+    });
+    const decodePermissions = Schema.decodeUnknownSync(
+      Schema.fromJsonString(Schema.Array(IntegrationPermissionCode)),
+    );
+
+    const list = Effect.fn('IntegrationTokens.list')(function* (cursor?: UlidValue, limit = 50) {
+      return yield* Effect.try({
+        try: () => {
+          const rows = Schema.decodeUnknownSync(Schema.Array(IntegrationTokenListRow))(
             database.sqlite
-              .prepare('select id from integration_tokens order by created_at desc, id')
-              .all(),
-          ).map(({ id }) => read(id)),
-        ),
-      catch: (cause) => new DatabaseError({ operation: 'list integration tokens', cause }),
+              .prepare(
+                `select integration_tokens.id, integration_tokens.name,
+                        integration_tokens.created_at as createdAt,
+                        integration_tokens.expires_at as expiresAt,
+                        integration_tokens.last_used_at as lastUsedAt,
+                        integration_tokens.revoked_at as revokedAt,
+                        integration_tokens.rate_limit_per_minute as rateLimitPerMinute,
+                        coalesce((
+                          select json_group_array(permission_code)
+                            from (
+                              select permission_code
+                                from integration_token_permissions
+                               where token_id = integration_tokens.id
+                               order by permission_code
+                            )
+                        ), '[]') as permissions
+                   from integration_tokens
+                  where (? is null
+                     or integration_tokens.created_at < (
+                          select cursor.created_at from integration_tokens as cursor where cursor.id = ?
+                        )
+                     or (integration_tokens.created_at = (
+                          select cursor.created_at from integration_tokens as cursor where cursor.id = ?
+                        ) and integration_tokens.id < ?))
+                  order by integration_tokens.created_at desc, integration_tokens.id desc
+                  limit ?`,
+              )
+              .all(cursor ?? null, cursor ?? null, cursor ?? null, cursor ?? null, limit + 1),
+          );
+          const hasMore = rows.length > limit;
+          const items = rows.slice(0, limit).map(({ permissions: encodedPermissions, ...row }) =>
+            Schema.decodeUnknownSync(IntegrationTokenSchema)({
+              ...row,
+              permissions: decodePermissions(encodedPermissions),
+            }),
+          );
+          return {
+            items,
+            nextCursor: hasMore ? (items.at(-1)?.id ?? null) : null,
+          } satisfies IntegrationTokenPageValue;
+        },
+        catch: (cause) => new DatabaseError({ operation: 'list integration tokens', cause }),
+      });
     });
 
     const create = Effect.fn('IntegrationTokens.create')(function* (
@@ -178,8 +240,11 @@ export const IntegrationTokensLive = Layer.effect(
             .transaction(() => {
               if (
                 database.sqlite
-                  .prepare('select 1 from integration_tokens where name = ? limit 1')
-                  .get(name) !== undefined
+                  .prepare(
+                    `select 1 from integration_tokens
+                      where name = ? and revoked_at is null and expires_at > ? limit 1`,
+                  )
+                  .get(name, now) !== undefined
               ) {
                 throw new IntegrationTokenNameConflict({
                   code: 'integration_token.name_conflict',
@@ -234,10 +299,7 @@ export const IntegrationTokensLive = Layer.effect(
       });
     });
 
-    const authorize = Effect.fn('IntegrationTokens.authorize')(function* (
-      candidate: string,
-      permission: PermissionCodeValue,
-    ) {
+    const authenticate = Effect.fn('IntegrationTokens.authenticate')(function* (candidate: string) {
       const decoded = Schema.decodeUnknownOption(IntegrationTokenSecret)(candidate);
       if (Option.isNone(decoded)) {
         return yield* new AuthenticationRequired({ code: 'authentication.required' });
@@ -280,6 +342,27 @@ export const IntegrationTokensLive = Layer.effect(
       ) {
         return yield* new AuthenticationRequired({ code: 'authentication.required' });
       }
+      yield* Effect.try({
+        try: () =>
+          database.sqlite
+            .prepare(
+              `update integration_tokens set last_used_at = ?
+               where id = ? and (last_used_at is null or last_used_at <= ?)`,
+            )
+            .run(now, record.id, now - 60_000),
+        catch: (cause) => new DatabaseError({ operation: 'update integration token use', cause }),
+      });
+      return {
+        userId: record.userId,
+        tokenId: record.id,
+        rateLimitPerMinute: record.rateLimitPerMinute,
+      };
+    });
+
+    const authorizePermission = Effect.fn('IntegrationTokens.authorizePermission')(function* (
+      principal: IntegrationPrincipal,
+      permission: PermissionCodeValue,
+    ) {
       const allowed = yield* Effect.try({
         try: () =>
           database.sqlite
@@ -294,28 +377,22 @@ export const IntegrationTokensLive = Layer.effect(
                   and integration_token_permissions.permission_code = ?
                 limit 1`,
             )
-            .get(record.userId, record.id, permission) !== undefined,
+            .get(principal.userId, principal.tokenId, permission) !== undefined,
         catch: (cause) =>
           new DatabaseError({ operation: 'authorize integration token permission', cause }),
-      });
-      yield* Effect.try({
-        try: () =>
-          database.sqlite
-            .prepare(
-              `update integration_tokens set last_used_at = ?
-               where id = ? and (last_used_at is null or last_used_at <= ?)`,
-            )
-            .run(now, record.id, now - 60_000),
-        catch: (cause) => new DatabaseError({ operation: 'update integration token use', cause }),
       });
       if (!allowed) {
         return yield* new PermissionDenied({ code: 'authentication.permission_denied' });
       }
-      return {
-        userId: record.userId,
-        tokenId: record.id,
-        rateLimitPerMinute: record.rateLimitPerMinute,
-      };
+    });
+
+    const authorize = Effect.fn('IntegrationTokens.authorize')(function* (
+      token: string,
+      permission: PermissionCodeValue,
+    ) {
+      const principal = yield* authenticate(token);
+      yield* authorizePermission(principal, permission);
+      return principal;
     });
 
     const revoke = Effect.fn('IntegrationTokens.revoke')(function* (
@@ -359,6 +436,13 @@ export const IntegrationTokensLive = Layer.effect(
       });
     });
 
-    return IntegrationTokens.of({ list, create, authorize, revoke });
+    return IntegrationTokens.of({
+      list,
+      create,
+      authenticate,
+      authorize,
+      authorizePermission,
+      revoke,
+    });
   }),
 );

@@ -63,15 +63,24 @@ const migrate = (
           name text,
           applied_at TEXT
         )`);
-        const appliedNames = new Set(
-          Schema.decodeUnknownSync(Schema.Array(Schema.String))(
+        const appliedMigrations = new Map(
+          Schema.decodeUnknownSync(
+            Schema.Array(Schema.Struct({ name: Schema.String, hash: Schema.String })),
+          )(
             sqlite
-              .prepare('select name from __drizzle_migrations where name is not null')
-              .pluck()
+              .prepare(
+                'select name, hash from __drizzle_migrations where name is not null order by id',
+              )
               .all(),
-          ),
+          ).map(({ name, hash }) => [name, hash]),
         );
-        const pending = migrations.filter((migration) => !appliedNames.has(migration.name));
+        for (const migration of migrations) {
+          const appliedHash = appliedMigrations.get(migration.name);
+          if (appliedHash !== undefined && appliedHash !== migration.hash) {
+            throw new Error(`Applied migration ${migration.name} has a different hash`);
+          }
+        }
+        const pending = migrations.filter((migration) => !appliedMigrations.has(migration.name));
         for (const migration of pending) {
           for (const statement of migration.sql) sqlite.exec(statement);
         }

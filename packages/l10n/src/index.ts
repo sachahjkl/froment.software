@@ -258,6 +258,7 @@ export const translations = {
     'backOffice.integrationTokens.createTitle': 'Nouveau jeton d’intégration',
     'backOffice.integrationTokens.cancel': 'Annuler',
     'backOffice.integrationTokens.loading': 'Chargement des jetons…',
+    'backOffice.integrationTokens.loadMore': 'Charger plus de jetons',
     'backOffice.integrationTokens.empty': 'Aucun jeton d’intégration.',
     'backOffice.integrationTokens.name': 'Nom',
     'backOffice.integrationTokens.permissions': 'Permissions',
@@ -280,6 +281,8 @@ export const translations = {
     'backOffice.integrationTokens.copy': 'Copier',
     'backOffice.integrationTokens.copied': 'Secret copié',
     'backOffice.integrationTokens.secretSaved': 'J’ai enregistré le secret',
+    'backOffice.integrationTokens.leaveConfirmation':
+      'Le secret peut être perdu définitivement. Quitter cette page ?',
     'integration_token.error': 'Le serveur ne peut pas traiter ce jeton.',
     'integration_token.not_found': 'Ce jeton n’existe pas.',
     'integration_token.name_conflict': 'Un jeton porte déjà ce nom.',
@@ -1420,6 +1423,7 @@ export const translations = {
     'backOffice.integrationTokens.createTitle': 'New integration token',
     'backOffice.integrationTokens.cancel': 'Cancel',
     'backOffice.integrationTokens.loading': 'Loading tokens…',
+    'backOffice.integrationTokens.loadMore': 'Load more tokens',
     'backOffice.integrationTokens.empty': 'No integration tokens.',
     'backOffice.integrationTokens.name': 'Name',
     'backOffice.integrationTokens.permissions': 'Permissions',
@@ -1442,6 +1446,8 @@ export const translations = {
     'backOffice.integrationTokens.copy': 'Copy',
     'backOffice.integrationTokens.copied': 'Secret copied',
     'backOffice.integrationTokens.secretSaved': 'I saved the secret',
+    'backOffice.integrationTokens.leaveConfirmation':
+      'The secret can be lost permanently. Leave this page?',
     'integration_token.error': 'The server cannot process this token.',
     'integration_token.not_found': 'This token does not exist.',
     'integration_token.name_conflict': 'A token already uses this name.',

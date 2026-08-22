@@ -60,5 +60,8 @@ describe('API contracts', () => {
       description: expect.stringContaining('Required permission: `quote.delete`.'),
       'x-required-permission': 'quote.delete',
     });
+    expect(specification.paths['/api/quotes/{quoteId}/cancel']?.post?.responses).toHaveProperty(
+      '413',
+    );
   });
 });

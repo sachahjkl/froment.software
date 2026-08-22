@@ -93,7 +93,7 @@ describe('IntegrationTokens', () => {
         return {
           authorized,
           created,
-          list: yield* service.list,
+          list: yield* service.list(),
           missingScope,
           removedOwnerPermission,
           stored,
@@ -200,7 +200,7 @@ describe('IntegrationTokens', () => {
         const invalidExpiry = yield* Effect.result(
           service.create({ name: 'Expired', permissions: ['client.read'], expiresAt: 0 }, userId),
         );
-        yield* service.create(
+        const unique = yield* service.create(
           { name: 'Unique', permissions: ['client.read'], expiresAt: 86_400_000 },
           userId,
         );
@@ -216,7 +216,27 @@ describe('IntegrationTokens', () => {
             userId,
           ),
         );
-        return { duplicateName, escalation, invalidExpiry };
+        yield* service.revoke(unique.token.id, userId);
+        const reusedRevokedName = yield* service.create(
+          { name: 'Unique', permissions: ['client.read'], expiresAt: 86_400_000 },
+          userId,
+        );
+        yield* service.create(
+          { name: 'Expired name', permissions: ['client.read'], expiresAt: 1_000 },
+          userId,
+        );
+        yield* TestClock.adjust('2 seconds');
+        const reusedExpiredName = yield* service.create(
+          { name: 'Expired name', permissions: ['client.read'], expiresAt: 86_400_000 },
+          userId,
+        );
+        return {
+          duplicateName,
+          escalation,
+          invalidExpiry,
+          reusedExpiredName,
+          reusedRevokedName,
+        };
       }).pipe(Effect.provide(integrationTokensLayer()), Effect.provide(TestClock.layer())),
     );
 
@@ -232,5 +252,32 @@ describe('IntegrationTokens', () => {
       _tag: 'Failure',
       failure: { _tag: 'PermissionDenied' },
     });
+    expect(result.reusedRevokedName.token.name).toBe('Unique');
+    expect(result.reusedExpiredName.token.name).toBe('Expired name');
+  });
+
+  it('paginates token history with a stable cursor', async () => {
+    const pages = await Effect.runPromise(
+      Effect.gen(function* () {
+        const database = yield* Database;
+        seedAdministrator(database);
+        const service = yield* IntegrationTokens;
+        for (const name of ['First', 'Second', 'Third']) {
+          yield* service.create(
+            { name, permissions: ['client.read'], expiresAt: 86_400_000 },
+            userId,
+          );
+          yield* TestClock.adjust(1);
+        }
+        const first = yield* service.list(undefined, 2);
+        const second = yield* service.list(first.nextCursor ?? undefined, 2);
+        return { first, second };
+      }).pipe(Effect.provide(integrationTokensLayer()), Effect.provide(TestClock.layer())),
+    );
+
+    expect(pages.first.items.map(({ name }) => name)).toEqual(['Third', 'Second']);
+    expect(pages.first.nextCursor).toBe(pages.first.items[1]?.id);
+    expect(pages.second.items.map(({ name }) => name)).toEqual(['First']);
+    expect(pages.second.nextCursor).toBeNull();
   });
 });

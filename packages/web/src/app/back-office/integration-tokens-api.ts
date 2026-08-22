@@ -1,14 +1,14 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import {
   IntegrationToken,
   IntegrationTokenCreated,
   IntegrationTokenFailure,
-  IntegrationTokenList,
+  IntegrationTokenPage,
   type IntegrationTokenCreateRequestValue,
   type IntegrationTokenCreatedValue,
   type IntegrationTokenFailureValue,
-  type IntegrationTokenListValue,
+  type IntegrationTokenPageValue,
   type IntegrationTokenValue,
   type UlidValue,
 } from '@froment/contracts';
@@ -32,9 +32,10 @@ export type IntegrationTokenRevokeOutcome = ApiOutcome<
 export class IntegrationTokensApi {
   private readonly http = inject(HttpClient);
 
-  async list(): Promise<IntegrationTokenListValue> {
-    return Schema.decodeUnknownSync(IntegrationTokenList)(
-      await firstValueFrom(this.http.get<unknown>('/api/integration-tokens')),
+  async list(cursor?: UlidValue): Promise<IntegrationTokenPageValue> {
+    const params = cursor === undefined ? undefined : new HttpParams().set('cursor', cursor);
+    return Schema.decodeUnknownSync(IntegrationTokenPage)(
+      await firstValueFrom(this.http.get<unknown>('/api/integration-tokens', { params })),
     );
   }
 

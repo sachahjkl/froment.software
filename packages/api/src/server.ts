@@ -2,16 +2,21 @@ import { NodeHttpServer } from '@effect/platform-node';
 import {
   Api,
   ApiAuthentication,
+  ApiAuthorization,
   ApiCredentials,
+  ApiPrincipal,
+  ApiWriteProtection,
   AuthenticationRequired,
   DocumentNotFound,
+  MutationRateLimit,
   RequestRateLimited,
+  RequiredPermission,
   Ulid,
   type InvoiceIssueRequestValue,
   type PermissionCodeValue,
   type UlidValue,
 } from '@froment/contracts';
-import { Config, Effect, FileSystem, Layer, Option, Redacted, Schema } from 'effect';
+import { Config, Context, Effect, FileSystem, Layer, Option, Redacted, Schema } from 'effect';
 import {
   HttpEffect,
   HttpMiddleware,
@@ -118,29 +123,6 @@ const identifyRequest = <E, R>(
     );
   });
 
-const isIntegrationMutation = (method: string, url: string) => {
-  const path = url.split('?', 1)[0];
-  if (method === 'POST' && (path === '/api/clients' || path === '/api/quotes')) return true;
-  if (method === 'PUT' && /^\/api\/clients\/[0-7][0-9A-HJKMNP-TV-Z]{25}$/.test(path)) return true;
-  if (
-    method === 'POST' &&
-    /^\/api\/clients\/[0-7][0-9A-HJKMNP-TV-Z]{25}\/(archive|reactivate)$/.test(path)
-  ) {
-    return true;
-  }
-  if (
-    method === 'POST' &&
-    /^\/api\/quotes\/[0-7][0-9A-HJKMNP-TV-Z]{25}\/(revisions|send|cancel)$/.test(path)
-  ) {
-    return true;
-  }
-  if (method === 'POST' && path === '/api/invoices') return true;
-  return (
-    method === 'POST' &&
-    /^\/api\/invoices\/[0-7][0-9A-HJKMNP-TV-Z]{25}\/(revisions|issue|mark-paid|void)$/.test(path)
-  );
-};
-
 const protectRequest =
   (publicOrigin: string) =>
   <E, R>(application: Effect.Effect<HttpServerResponse.HttpServerResponse, E, R>) =>
@@ -151,8 +133,7 @@ const protectRequest =
       if (mutation && request.url.startsWith('/api/')) {
         const bearerIntegrationRequest =
           request.headers['authorization'] !== undefined &&
-          request.cookies[sessionCookieName] === undefined &&
-          isIntegrationMutation(request.method, request.url);
+          request.cookies[sessionCookieName] === undefined;
         if (!bearerIntegrationRequest && request.headers['origin'] !== publicOrigin) {
           return yield* HttpServerResponse.json(
             { code: 'request.invalid_origin' },
@@ -232,90 +213,10 @@ const authorizeAdministratorSession = Effect.fn('authorizeAdministratorSession')
     .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
 });
 
-const authorizeAdministrator = Effect.fn('authorizeAdministrator')(function* (
-  permission: PermissionCodeValue,
-) {
-  const apiCredentials = yield* Effect.serviceOption(ApiCredentials);
-  if (Option.isSome(apiCredentials)) {
-    const request = yield* HttpServerRequest.HttpServerRequest;
-    if (apiCredentials.value.kind === 'session') {
-      if (request.headers['authorization'] !== undefined) {
-        return yield* new AuthenticationRequired({ code: 'authentication.required' });
-      }
-      return yield* (yield* Authentication)
-        .authorize(apiCredentials.value.token, permission, 'administrator')
-        .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
-    }
-    if (
-      request.cookies[sessionCookieName] !== undefined ||
-      request.cookies[csrfCookieName] !== undefined
-    ) {
-      return yield* new AuthenticationRequired({ code: 'authentication.required' });
-    }
-    const principal = yield* (yield* IntegrationTokens)
-      .authorize(apiCredentials.value.token, permission)
-      .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
-    if (
-      !(yield* (yield* RequestLimiter).allowMutation(
-        `integration-token:${principal.tokenId}:all`,
-        principal.rateLimitPerMinute,
-      ))
-    ) {
-      return yield* new RequestRateLimited({ code: 'request.rate_limited' });
-    }
-    return { userId: principal.userId, mode: 'administrator' as const };
-  }
-  const request = yield* HttpServerRequest.HttpServerRequest;
-  return yield* (yield* Authentication)
-    .authorize(request.cookies[sessionCookieName], permission, 'administrator')
-    .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
-});
-
 const authorizeAdministratorWrite = Effect.fn('authorizeAdministratorWrite')(function* (
   permission: PermissionCodeValue,
   limit = 60,
 ) {
-  const apiCredentials = yield* Effect.serviceOption(ApiCredentials);
-  if (Option.isSome(apiCredentials)) {
-    const request = yield* HttpServerRequest.HttpServerRequest;
-    if (apiCredentials.value.kind === 'integration-token') {
-      if (
-        request.cookies[sessionCookieName] !== undefined ||
-        request.cookies[csrfCookieName] !== undefined
-      ) {
-        return yield* new AuthenticationRequired({ code: 'authentication.required' });
-      }
-      const principal = yield* (yield* IntegrationTokens)
-        .authorize(apiCredentials.value.token, permission)
-        .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
-      const limiter = yield* RequestLimiter;
-      if (
-        !(yield* limiter.allowMutation(
-          `integration-token:${principal.tokenId}:all`,
-          principal.rateLimitPerMinute,
-        ))
-      ) {
-        return yield* new RequestRateLimited({ code: 'request.rate_limited' });
-      }
-      yield* limitPrincipalMutation(principal.tokenId, permission, limit);
-      return { userId: principal.userId, mode: 'administrator' as const };
-    }
-    if (request.headers['authorization'] !== undefined) {
-      return yield* new AuthenticationRequired({ code: 'authentication.required' });
-    }
-    const principal = yield* (yield* Authentication)
-      .authorizeWrite(
-        apiCredentials.value.token,
-        request.cookies[csrfCookieName],
-        request.headers[csrfHeaderName],
-        request.headers['origin'],
-        permission,
-        'administrator',
-      )
-      .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
-    yield* limitPrincipalMutation(principal.userId, permission, limit);
-    return principal;
-  }
   const request = yield* HttpServerRequest.HttpServerRequest;
   const principal = yield* (yield* Authentication)
     .authorizeWrite(
@@ -369,6 +270,118 @@ const ApiAuthenticationLive = Layer.succeed(
         token: Redacted.value(credential),
       });
     }),
+  }),
+);
+
+const ApiAuthorizationLive = Layer.effect(
+  ApiAuthorization,
+  Effect.gen(function* () {
+    const authentication = yield* Authentication;
+    const integrationTokens = yield* IntegrationTokens;
+    const limiter = yield* RequestLimiter;
+
+    return ApiAuthorization.of(
+      Effect.fn('ApiAuthorization')(function* (httpEffect, { endpoint }) {
+        const credentials = yield* ApiCredentials;
+        const request = yield* HttpServerRequest.HttpServerRequest;
+        const permission = Option.getOrThrowWith(
+          Context.getOption(endpoint.annotations, RequiredPermission),
+          () => new Error(`Endpoint ${endpoint.identifier} has no required permission.`),
+        );
+
+        if (credentials.kind === 'session') {
+          if (request.headers['authorization'] !== undefined) {
+            return yield* new AuthenticationRequired({ code: 'authentication.required' });
+          }
+          const principal = yield* authentication
+            .authorize(credentials.token, permission, 'administrator')
+            .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
+          return yield* Effect.provideService(httpEffect, ApiPrincipal, {
+            userId: Schema.decodeUnknownSync(Ulid)(principal.userId),
+            credential: { kind: 'session', token: credentials.token },
+          });
+        }
+
+        if (
+          request.cookies[sessionCookieName] !== undefined ||
+          request.cookies[csrfCookieName] !== undefined
+        ) {
+          return yield* new AuthenticationRequired({ code: 'authentication.required' });
+        }
+        const principal = yield* integrationTokens.authenticate(credentials.token).pipe(
+          Effect.catchTag(
+            'AuthenticationRequired',
+            Effect.fn('ApiAuthorization.limitInvalidBearer')(function* (failure) {
+              if (
+                !(yield* limiter.allowMutation(
+                  `integration-auth:address:${yield* getClientAddress()}`,
+                  120,
+                ))
+              ) {
+                return yield* new RequestRateLimited({ code: 'request.rate_limited' });
+              }
+              return yield* failure;
+            }),
+          ),
+          Effect.catchTag('DatabaseError', Effect.orDie),
+        );
+        if (
+          !(yield* limiter.allowMutation(
+            `integration-token:${principal.tokenId}:all`,
+            principal.rateLimitPerMinute,
+          ))
+        ) {
+          return yield* new RequestRateLimited({ code: 'request.rate_limited' });
+        }
+        yield* integrationTokens
+          .authorizePermission(principal, permission)
+          .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
+        return yield* Effect.provideService(httpEffect, ApiPrincipal, {
+          userId: principal.userId,
+          credential: { kind: 'integration-token', tokenId: principal.tokenId },
+        });
+      }),
+    );
+  }),
+);
+
+const ApiWriteProtectionLive = Layer.effect(
+  ApiWriteProtection,
+  Effect.gen(function* () {
+    const authentication = yield* Authentication;
+    const limiter = yield* RequestLimiter;
+
+    return ApiWriteProtection.of(
+      Effect.fn('ApiWriteProtection')(function* (httpEffect, { endpoint }) {
+        const principal = yield* ApiPrincipal;
+        const request = yield* HttpServerRequest.HttpServerRequest;
+        if (principal.credential.kind === 'session') {
+          yield* authentication
+            .authorizeCsrf(
+              principal.credential.token,
+              request.cookies[csrfCookieName],
+              request.headers[csrfHeaderName],
+              request.headers['origin'],
+            )
+            .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
+        }
+        const rateLimit = Option.getOrElse(
+          Context.getOption(endpoint.annotations, MutationRateLimit),
+          () => 60,
+        );
+        const principalId =
+          principal.credential.kind === 'session' ? principal.userId : principal.credential.tokenId;
+        if (
+          !(yield* limiter.allowMutation(
+            `principal:${principalId}:${endpoint.identifier}`,
+            rateLimit,
+          ))
+        ) {
+          return yield* new RequestRateLimited({ code: 'request.rate_limited' });
+        }
+        return yield* httpEffect;
+      }),
+    );
   }),
 );
 
@@ -495,7 +508,6 @@ const ClientHandlers = HttpApiBuilder.group(Api, 'clients', (handlers) =>
         'clientList',
         Effect.fn('clientList')(function* () {
           yield* setPrivateResponseHeaders;
-          yield* authorizeAdministrator('client.read');
           const clients = yield* Clients;
           return yield* clients.list.pipe(Effect.catchTag('DatabaseError', Effect.orDie));
         }),
@@ -504,7 +516,6 @@ const ClientHandlers = HttpApiBuilder.group(Api, 'clients', (handlers) =>
         'clientGet',
         Effect.fn('clientGet')(function* ({ params }) {
           yield* setPrivateResponseHeaders;
-          yield* authorizeAdministrator('client.read');
           return yield* (yield* Clients)
             .get(params.clientId)
             .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
@@ -514,7 +525,7 @@ const ClientHandlers = HttpApiBuilder.group(Api, 'clients', (handlers) =>
         'clientCreate',
         Effect.fn('clientCreate')(function* ({ payload }) {
           yield* setPrivateResponseHeaders;
-          const principal = yield* authorizeAdministratorWrite('client.create');
+          const principal = yield* ApiPrincipal;
           const clients = yield* Clients;
           return yield* clients
             .create(payload, principal.userId)
@@ -525,7 +536,7 @@ const ClientHandlers = HttpApiBuilder.group(Api, 'clients', (handlers) =>
         'clientUpdate',
         Effect.fn('clientUpdate')(function* ({ params, payload }) {
           yield* setPrivateResponseHeaders;
-          const principal = yield* authorizeAdministratorWrite('client.update');
+          const principal = yield* ApiPrincipal;
           return yield* (yield* Clients)
             .update(params.clientId, payload, principal.userId)
             .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
@@ -535,7 +546,7 @@ const ClientHandlers = HttpApiBuilder.group(Api, 'clients', (handlers) =>
         'clientArchive',
         Effect.fn('clientArchive')(function* ({ params }) {
           yield* setPrivateResponseHeaders;
-          const principal = yield* authorizeAdministratorWrite('client.archive');
+          const principal = yield* ApiPrincipal;
           const clients = yield* Clients;
           return yield* clients
             .archive(params.clientId, principal.userId)
@@ -546,7 +557,7 @@ const ClientHandlers = HttpApiBuilder.group(Api, 'clients', (handlers) =>
         'clientReactivate',
         Effect.fn('clientReactivate')(function* ({ params }) {
           yield* setPrivateResponseHeaders;
-          const principal = yield* authorizeAdministratorWrite('client.archive');
+          const principal = yield* ApiPrincipal;
           return yield* (yield* Clients)
             .reactivate(params.clientId, principal.userId)
             .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
@@ -573,7 +584,6 @@ const OrderHandlers = HttpApiBuilder.group(Api, 'orders', (handlers) =>
         'orderList',
         Effect.fn('orderList')(function* () {
           yield* setPrivateResponseHeaders;
-          yield* authorizeAdministrator('order.read');
           return yield* (yield* Orders).list.pipe(Effect.catchTag('DatabaseError', Effect.orDie));
         }),
       )
@@ -606,7 +616,6 @@ const OrderHandlers = HttpApiBuilder.group(Api, 'orders', (handlers) =>
         'orderPdfDownload',
         Effect.fn('orderPdfDownload')(function* ({ params }) {
           yield* setPrivateResponseHeaders;
-          yield* authorizeAdministrator('document.download');
           const pdf = yield* (yield* DocumentArtifacts)
             .getOrderPdf(params.orderId)
             .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
@@ -692,7 +701,6 @@ const QuoteHandlers = HttpApiBuilder.group(Api, 'quotes', (handlers) =>
         'quoteList',
         Effect.fn('quoteList')(function* () {
           yield* setPrivateResponseHeaders;
-          yield* authorizeAdministrator('quote.read');
           return yield* (yield* Quotes).list.pipe(Effect.catchTag('DatabaseError', Effect.orDie));
         }),
       )
@@ -700,7 +708,6 @@ const QuoteHandlers = HttpApiBuilder.group(Api, 'quotes', (handlers) =>
         'quoteGet',
         Effect.fn('quoteGet')(function* ({ params }) {
           yield* setPrivateResponseHeaders;
-          yield* authorizeAdministrator('quote.read');
           return yield* (yield* Quotes)
             .get(params.quoteId)
             .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
@@ -761,7 +768,6 @@ const QuoteHandlers = HttpApiBuilder.group(Api, 'quotes', (handlers) =>
               ),
             ),
           );
-          yield* authorizeAdministrator('document.download');
           return yield* (yield* DocumentArtifacts)
             .getQuotePdf(params.quoteId, params.version)
             .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
@@ -771,7 +777,7 @@ const QuoteHandlers = HttpApiBuilder.group(Api, 'quotes', (handlers) =>
         'quoteCreate',
         Effect.fn('quoteCreate')(function* ({ payload }) {
           yield* setPrivateResponseHeaders;
-          const principal = yield* authorizeAdministratorWrite('quote.create');
+          const principal = yield* ApiPrincipal;
           return yield* (yield* Quotes)
             .create(payload, principal.userId)
             .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
@@ -781,7 +787,7 @@ const QuoteHandlers = HttpApiBuilder.group(Api, 'quotes', (handlers) =>
         'quoteRevisionCreate',
         Effect.fn('quoteRevisionCreate')(function* ({ params, payload }) {
           yield* setPrivateResponseHeaders;
-          const principal = yield* authorizeAdministratorWrite('quote.update');
+          const principal = yield* ApiPrincipal;
           return yield* (yield* Quotes)
             .createRevision(params.quoteId, payload, principal.userId)
             .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
@@ -791,7 +797,7 @@ const QuoteHandlers = HttpApiBuilder.group(Api, 'quotes', (handlers) =>
         'quoteSend',
         Effect.fn('quoteSend')(function* ({ params, payload }) {
           yield* setPrivateResponseHeaders;
-          const principal = yield* authorizeAdministratorWrite('quote.send', 10);
+          const principal = yield* ApiPrincipal;
           return yield* (yield* QuoteLinks)
             .send(params.quoteId, payload, principal.userId)
             .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
@@ -801,7 +807,7 @@ const QuoteHandlers = HttpApiBuilder.group(Api, 'quotes', (handlers) =>
         'quoteCancel',
         Effect.fn('quoteCancel')(function* ({ params, payload }) {
           yield* setPrivateResponseHeaders;
-          const principal = yield* authorizeAdministratorWrite('quote.delete');
+          const principal = yield* ApiPrincipal;
           return yield* (yield* Quotes)
             .cancel(params.quoteId, payload, principal.userId)
             .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
@@ -862,7 +868,6 @@ const InvoiceHandlers = HttpApiBuilder.group(Api, 'invoices', (handlers) =>
         'invoiceList',
         Effect.fn('invoiceList')(function* () {
           yield* setPrivateResponseHeaders;
-          yield* authorizeAdministrator('invoice.read');
           return yield* (yield* Invoices).list.pipe(Effect.catchTag('DatabaseError', Effect.orDie));
         }),
       )
@@ -870,7 +875,6 @@ const InvoiceHandlers = HttpApiBuilder.group(Api, 'invoices', (handlers) =>
         'invoiceGet',
         Effect.fn('invoiceGet')(function* ({ params }) {
           yield* setPrivateResponseHeaders;
-          yield* authorizeAdministrator('invoice.read');
           return yield* (yield* Invoices)
             .get(params.invoiceId)
             .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
@@ -920,7 +924,6 @@ const InvoiceHandlers = HttpApiBuilder.group(Api, 'invoices', (handlers) =>
               ),
             ),
           );
-          yield* authorizeAdministrator('document.download');
           return yield* (yield* DocumentArtifacts)
             .getInvoicePdf(params.invoiceId, params.version)
             .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
@@ -930,7 +933,7 @@ const InvoiceHandlers = HttpApiBuilder.group(Api, 'invoices', (handlers) =>
         'invoiceCreate',
         Effect.fn('invoiceCreate')(function* ({ payload }) {
           yield* setPrivateResponseHeaders;
-          const principal = yield* authorizeAdministratorWrite('invoice.create');
+          const principal = yield* ApiPrincipal;
           return yield* (yield* Invoices)
             .create(payload, principal.userId)
             .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
@@ -940,7 +943,7 @@ const InvoiceHandlers = HttpApiBuilder.group(Api, 'invoices', (handlers) =>
         'invoiceRevisionCreate',
         Effect.fn('invoiceRevisionCreate')(function* ({ params, payload }) {
           yield* setPrivateResponseHeaders;
-          const principal = yield* authorizeAdministratorWrite('invoice.update');
+          const principal = yield* ApiPrincipal;
           return yield* (yield* Invoices)
             .createRevision(params.invoiceId, payload, principal.userId)
             .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
@@ -950,7 +953,7 @@ const InvoiceHandlers = HttpApiBuilder.group(Api, 'invoices', (handlers) =>
         'invoiceIssue',
         Effect.fn('invoiceIssue')(function* ({ params, payload }) {
           yield* setPrivateResponseHeaders;
-          const principal = yield* authorizeAdministratorWrite('invoice.issue', 10);
+          const principal = yield* ApiPrincipal;
           return yield* issueInvoice(params.invoiceId, payload, principal.userId);
         }),
       )
@@ -958,7 +961,7 @@ const InvoiceHandlers = HttpApiBuilder.group(Api, 'invoices', (handlers) =>
         'invoiceMarkPaid',
         Effect.fn('invoiceMarkPaid')(function* ({ params, payload }) {
           yield* setPrivateResponseHeaders;
-          const principal = yield* authorizeAdministratorWrite('invoice.mark-paid', 10);
+          const principal = yield* ApiPrincipal;
           return yield* (yield* Invoices)
             .markPaid(params.invoiceId, payload, principal.userId)
             .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
@@ -968,7 +971,7 @@ const InvoiceHandlers = HttpApiBuilder.group(Api, 'invoices', (handlers) =>
         'invoiceVoid',
         Effect.fn('invoiceVoid')(function* ({ params, payload }) {
           yield* setPrivateResponseHeaders;
-          const principal = yield* authorizeAdministratorWrite('invoice.void', 10);
+          const principal = yield* ApiPrincipal;
           return yield* (yield* Invoices)
             .voidInvoice(params.invoiceId, payload, principal.userId)
             .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
@@ -1100,12 +1103,12 @@ const IntegrationTokenHandlers = HttpApiBuilder.group(Api, 'integrationTokens', 
     handlers
       .handle(
         'integrationTokenList',
-        Effect.fn('integrationTokenList')(function* () {
+        Effect.fn('integrationTokenList')(function* ({ query }) {
           yield* setPrivateResponseHeaders;
           yield* authorizeAdministratorSession('integration-token.manage');
-          return yield* (yield* IntegrationTokens).list.pipe(
-            Effect.catchTag('DatabaseError', Effect.orDie),
-          );
+          return yield* (yield* IntegrationTokens)
+            .list(query.cursor, query.limit)
+            .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
         }),
       )
       .handle(
@@ -1143,7 +1146,9 @@ const ApiRoutes = HttpApiBuilder.layer(Api, { openapiPath: '/api/openapi.json' }
       IntegrationTokenHandlers,
     ),
   ),
-  Layer.provide(ApiAuthenticationLive),
+  Layer.provide(
+    Layer.mergeAll(ApiAuthenticationLive, ApiAuthorizationLive, ApiWriteProtectionLive),
+  ),
 );
 
 const ApiDocs = HttpApiScalar.layer(Api, {

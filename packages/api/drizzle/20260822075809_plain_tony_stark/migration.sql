@@ -1,0 +1,1 @@
+DROP INDEX IF EXISTS `integration_tokens_name_unique`;

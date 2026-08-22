@@ -843,13 +843,16 @@ describe('HTTP server', () => {
     expect(tokenList.status).toBe(200);
     const tokenListBody = await tokenList.text();
     expect(tokenListBody).not.toContain(created.secret);
-    expect(JSON.parse(tokenListBody)).toEqual([
-      expect.objectContaining({
-        id: created.token.id,
-        name: 'Test ERP',
-        permissions: ['client.create', 'client.read'],
-      }),
-    ]);
+    expect(JSON.parse(tokenListBody)).toEqual({
+      items: [
+        expect.objectContaining({
+          id: created.token.id,
+          name: 'Test ERP',
+          permissions: ['client.create', 'client.read'],
+        }),
+      ],
+      nextCursor: null,
+    });
 
     const bearerList = await fetch(`${baseUrl}/api/clients`, {
       headers: { authorization: `Bearer ${created.secret}` },
@@ -879,6 +882,35 @@ describe('HTTP server', () => {
     });
     expect(mixedCredentials.status).toBe(401);
 
+    const createLimitedToken = await fetch(`${baseUrl}/api/integration-tokens`, {
+      method: 'POST',
+      headers: {
+        cookie,
+        'content-type': 'application/json',
+        origin: baseUrl,
+        'x-csrf-token': csrf,
+      },
+      body: JSON.stringify({
+        name: 'Limited ERP',
+        permissions: ['client.read'],
+        expiresAt: Date.now() + 86_400_000,
+        rateLimitPerMinute: 2,
+      }),
+    });
+    expect(createLimitedToken.status).toBe(200);
+    const limitedToken = (await createLimitedToken.json()) as { secret: string };
+    const deniedStatuses = [];
+    for (let attempt = 0; attempt < 3; attempt += 1) {
+      deniedStatuses.push(
+        (
+          await fetch(`${baseUrl}/api/quotes`, {
+            headers: { authorization: `Bearer ${limitedToken.secret}` },
+          })
+        ).status,
+      );
+    }
+    expect(deniedStatuses).toEqual([403, 403, 429]);
+
     const sqlite = new Sqlite(databaseFilename, { readonly: true });
     const storedToken = sqlite
       .prepare(
@@ -907,6 +939,19 @@ describe('HTTP server', () => {
       headers: { authorization: `Bearer ${created.secret}` },
     });
     expect(revoked.status).toBe(401);
+
+    const invalidBearerStatuses = [];
+    for (let attempt = 0; attempt < 120; attempt += 1) {
+      invalidBearerStatuses.push(
+        (
+          await fetch(`${baseUrl}/api/clients`, {
+            headers: { authorization: 'Bearer invalid' },
+          })
+        ).status,
+      );
+    }
+    expect(invalidBearerStatuses[0]).toBe(401);
+    expect(invalidBearerStatuses.at(-1)).toBe(429);
   });
 
   it('creates and revises draft quotes with complete history', async () => {
@@ -1210,7 +1255,7 @@ describe('HTTP server', () => {
       headers: { 'content-type': 'application/json', origin: baseUrl },
       body: JSON.stringify({ expectedVersion: 2 }),
     });
-    expect(anonymousSend.status).toBe(403);
+    expect(anonymousSend.status).toBe(401);
 
     const missingSendCsrf = await fetch(`${baseUrl}/api/quotes/${quote.id}/send`, {
       method: 'POST',

@@ -41,6 +41,18 @@ export class RequestRateLimited extends Schema.TaggedError<RequestRateLimited>()
   { httpApiStatus: 429 },
 ) {}
 
+export class RequestInvalidOrigin extends Schema.TaggedError<RequestInvalidOrigin>()(
+  'RequestInvalidOrigin',
+  { code: Schema.Literal('request.invalid_origin') },
+  { httpApiStatus: 403 },
+) {}
+
+export class RequestTooLarge extends Schema.TaggedError<RequestTooLarge>()(
+  'RequestTooLarge',
+  { code: Schema.Literal('request.too_large') },
+  { httpApiStatus: 413 },
+) {}
+
 export class AuthenticationRequired extends Schema.TaggedError<AuthenticationRequired>()(
   'AuthenticationRequired',
   { code: Schema.Literal('authentication.required') },

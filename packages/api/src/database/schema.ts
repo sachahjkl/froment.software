@@ -179,7 +179,6 @@ export const integrationTokens = sqliteTable(
     rateLimitPerMinute: integer('rate_limit_per_minute').notNull(),
   },
   (table) => [
-    uniqueIndex('integration_tokens_name_unique').on(table.name),
     uniqueIndex('integration_tokens_token_hmac_unique').on(table.tokenHmac),
     index('integration_tokens_user_id_index').on(table.userId),
     index('integration_tokens_expires_at_index').on(table.expiresAt),

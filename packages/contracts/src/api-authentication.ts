@@ -1,7 +1,15 @@
 import { Context } from 'effect';
 import { HttpApiMiddleware, HttpApiSecurity, OpenApi } from 'effect/unstable/httpapi';
 
-import { RequestRateLimited } from './authentication.js';
+import {
+  AuthenticationRequired,
+  CsrfRejected,
+  PermissionDenied,
+  RequestInvalidOrigin,
+  RequestRateLimited,
+  RequestTooLarge,
+} from './authentication.js';
+import type { Ulid as UlidValue } from './identifiers.js';
 import type { PermissionCode as PermissionCodeValue } from './permissions.js';
 
 export type ApiCredentialsValue =
@@ -14,6 +22,27 @@ export class ApiCredentials extends Context.Service<ApiCredentials, ApiCredentia
 
 export class RequiredPermission extends Context.Service<RequiredPermission, PermissionCodeValue>()(
   '@froment/contracts/RequiredPermission',
+) {}
+
+export class MutationRateLimit extends Context.Service<MutationRateLimit, number>()(
+  '@froment/contracts/MutationRateLimit',
+) {}
+
+export type ApiPrincipalValue =
+  | {
+      readonly userId: UlidValue;
+      readonly credential: { readonly kind: 'session'; readonly token: string };
+    }
+  | {
+      readonly userId: UlidValue;
+      readonly credential: {
+        readonly kind: 'integration-token';
+        readonly tokenId: UlidValue;
+      };
+    };
+
+export class ApiPrincipal extends Context.Service<ApiPrincipal, ApiPrincipalValue>()(
+  '@froment/contracts/ApiPrincipal',
 ) {}
 
 const sessionCookie = HttpApiSecurity.apiKey({
@@ -40,5 +69,18 @@ export class ApiAuthentication extends HttpApiMiddleware.Service<
 >()('@froment/contracts/ApiAuthentication', {
   requiredForClient: false,
   security: { sessionCookie, bearer },
-  error: RequestRateLimited,
+}) {}
+
+export class ApiAuthorization extends HttpApiMiddleware.Service<
+  ApiAuthorization,
+  { requires: ApiCredentials; provides: ApiPrincipal }
+>()('@froment/contracts/ApiAuthorization', {
+  error: [AuthenticationRequired, PermissionDenied, RequestRateLimited],
+}) {}
+
+export class ApiWriteProtection extends HttpApiMiddleware.Service<
+  ApiWriteProtection,
+  { requires: ApiPrincipal }
+>()('@froment/contracts/ApiWriteProtection', {
+  error: [CsrfRejected, RequestInvalidOrigin, RequestRateLimited, RequestTooLarge],
 }) {}

@@ -38,6 +38,10 @@ export {
   IntegrationTokenInvalidExpiration,
   IntegrationTokenList,
   type IntegrationTokenList as IntegrationTokenListValue,
+  IntegrationTokenListQuery,
+  type IntegrationTokenListQuery as IntegrationTokenListQueryValue,
+  IntegrationTokenPage,
+  type IntegrationTokenPage as IntegrationTokenPageValue,
   IntegrationTokenNameConflict,
   IntegrationTokenNotFound,
   IntegrationTokenSecret,
@@ -78,7 +82,9 @@ export {
   type LoginMode as LoginModeValue,
   LoginRequest,
   PermissionDenied,
+  RequestInvalidOrigin,
   RequestRateLimited,
+  RequestTooLarge,
   type LoginRequest as LoginRequestValue,
   SessionRejected,
   SessionStatus,
@@ -188,8 +194,13 @@ export {
 } from './api.js';
 export {
   ApiAuthentication,
+  ApiAuthorization,
   ApiCredentials,
   type ApiCredentialsValue,
+  ApiPrincipal,
+  type ApiPrincipalValue,
+  ApiWriteProtection,
+  MutationRateLimit,
   RequiredPermission,
 } from './api-authentication.js';
 export {

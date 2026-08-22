@@ -34,6 +34,24 @@ export type IntegrationToken = typeof IntegrationToken.Type;
 export const IntegrationTokenList = Schema.Array(IntegrationToken);
 export type IntegrationTokenList = typeof IntegrationTokenList.Type;
 
+export const IntegrationTokenPage = Schema.Struct({
+  items: IntegrationTokenList,
+  nextCursor: Schema.NullOr(Ulid),
+});
+export type IntegrationTokenPage = typeof IntegrationTokenPage.Type;
+
+export const IntegrationTokenListQuery = Schema.Struct({
+  cursor: Schema.optionalKey(Ulid),
+  limit: Schema.optionalKey(
+    Schema.NumberFromString.check(
+      Schema.isInt(),
+      Schema.isGreaterThanOrEqualTo(1),
+      Schema.isLessThanOrEqualTo(100),
+    ),
+  ),
+});
+export type IntegrationTokenListQuery = typeof IntegrationTokenListQuery.Type;
+
 export const IntegrationTokenCreateRequest = Schema.Struct({
   name: IntegrationTokenName,
   permissions: Schema.Array(IntegrationPermissionCode).check(Schema.isMinLength(1)),
