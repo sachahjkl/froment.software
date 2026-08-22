@@ -308,23 +308,17 @@ const ApiAuthorizationLive = Layer.effect(
         ) {
           return yield* new AuthenticationRequired({ code: 'authentication.required' });
         }
-        const principal = yield* integrationTokens.authenticate(credentials.token).pipe(
-          Effect.catchTag(
-            'AuthenticationRequired',
-            Effect.fn('ApiAuthorization.limitInvalidBearer')(function* (failure) {
-              if (
-                !(yield* limiter.allowMutation(
-                  `integration-auth:address:${yield* getClientAddress()}`,
-                  120,
-                ))
-              ) {
-                return yield* new RequestRateLimited({ code: 'request.rate_limited' });
-              }
-              return yield* failure;
-            }),
-          ),
-          Effect.catchTag('DatabaseError', Effect.orDie),
-        );
+        if (
+          !(yield* limiter.allowMutation(
+            `integration-auth:address:${yield* getClientAddress()}`,
+            120,
+          ))
+        ) {
+          return yield* new RequestRateLimited({ code: 'request.rate_limited' });
+        }
+        const principal = yield* integrationTokens
+          .authenticate(credentials.token)
+          .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
         if (
           !(yield* limiter.allowMutation(
             `integration-token:${principal.tokenId}:all`,
