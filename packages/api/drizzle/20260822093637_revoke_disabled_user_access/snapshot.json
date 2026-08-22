@@ -1,8 +1,6 @@
 {
   "id": "5a4f1d94-d8fe-4a29-8a84-8a376749b8e3",
-  "prevIds": [
-    "bb924a9b-4e1d-4bfa-a37c-83564beb7bfb"
-  ],
+  "prevIds": ["bb924a9b-4e1d-4bfa-a37c-83564beb7bfb"],
   "version": "7",
   "dialect": "sqlite",
   "ddl": [
@@ -2117,13 +2115,9 @@
       "table": "users"
     },
     {
-      "columns": [
-        "user_id"
-      ],
+      "columns": ["user_id"],
       "tableTo": "users",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "nameExplicit": false,
@@ -2132,13 +2126,9 @@
       "table": "access_credentials"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "tableTo": "users",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "nameExplicit": false,
@@ -2147,13 +2137,9 @@
       "table": "clients"
     },
     {
-      "columns": [
-        "revision_id"
-      ],
+      "columns": ["revision_id"],
       "tableTo": "quote_revisions",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "nameExplicit": false,
@@ -2162,13 +2148,9 @@
       "table": "document_artifacts"
     },
     {
-      "columns": [
-        "invoice_revision_id"
-      ],
+      "columns": ["invoice_revision_id"],
       "tableTo": "invoice_revisions",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "NO ACTION",
       "nameExplicit": false,
@@ -2177,13 +2159,9 @@
       "table": "document_artifacts"
     },
     {
-      "columns": [
-        "order_id"
-      ],
+      "columns": ["order_id"],
       "tableTo": "orders",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "NO ACTION",
       "nameExplicit": false,
@@ -2192,13 +2170,9 @@
       "table": "document_artifacts"
     },
     {
-      "columns": [
-        "token_id"
-      ],
+      "columns": ["token_id"],
       "tableTo": "integration_tokens",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "NO ACTION",
       "nameExplicit": false,
@@ -2207,13 +2181,9 @@
       "table": "integration_token_permissions"
     },
     {
-      "columns": [
-        "permission_code"
-      ],
+      "columns": ["permission_code"],
       "tableTo": "permissions",
-      "columnsTo": [
-        "code"
-      ],
+      "columnsTo": ["code"],
       "onUpdate": "NO ACTION",
       "onDelete": "NO ACTION",
       "nameExplicit": false,
@@ -2222,13 +2192,9 @@
       "table": "integration_token_permissions"
     },
     {
-      "columns": [
-        "user_id"
-      ],
+      "columns": ["user_id"],
       "tableTo": "users",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "NO ACTION",
       "nameExplicit": false,
@@ -2237,13 +2203,9 @@
       "table": "integration_tokens"
     },
     {
-      "columns": [
-        "revoked_by_user_id"
-      ],
+      "columns": ["revoked_by_user_id"],
       "tableTo": "users",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "NO ACTION",
       "nameExplicit": false,
@@ -2252,13 +2214,9 @@
       "table": "integration_tokens"
     },
     {
-      "columns": [
-        "revision_id"
-      ],
+      "columns": ["revision_id"],
       "tableTo": "invoice_revisions",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "NO ACTION",
       "nameExplicit": false,
@@ -2267,13 +2225,9 @@
       "table": "invoice_lines"
     },
     {
-      "columns": [
-        "invoice_revision_id"
-      ],
+      "columns": ["invoice_revision_id"],
       "tableTo": "invoice_revisions",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "NO ACTION",
       "nameExplicit": false,
@@ -2282,13 +2236,9 @@
       "table": "invoice_pdf_jobs"
     },
     {
-      "columns": [
-        "invoice_id"
-      ],
+      "columns": ["invoice_id"],
       "tableTo": "invoices",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "NO ACTION",
       "nameExplicit": false,
@@ -2297,13 +2247,9 @@
       "table": "invoice_pdf_jobs"
     },
     {
-      "columns": [
-        "actor_user_id"
-      ],
+      "columns": ["actor_user_id"],
       "tableTo": "users",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "NO ACTION",
       "nameExplicit": false,
@@ -2312,13 +2258,9 @@
       "table": "invoice_pdf_jobs"
     },
     {
-      "columns": [
-        "invoice_id"
-      ],
+      "columns": ["invoice_id"],
       "tableTo": "invoices",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "NO ACTION",
       "nameExplicit": false,
@@ -2327,13 +2269,9 @@
       "table": "invoice_revisions"
     },
     {
-      "columns": [
-        "created_by_user_id"
-      ],
+      "columns": ["created_by_user_id"],
       "tableTo": "users",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "NO ACTION",
       "nameExplicit": false,
@@ -2342,13 +2280,9 @@
       "table": "invoice_revisions"
     },
     {
-      "columns": [
-        "order_id"
-      ],
+      "columns": ["order_id"],
       "tableTo": "orders",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "NO ACTION",
       "nameExplicit": false,
@@ -2357,13 +2291,9 @@
       "table": "invoices"
     },
     {
-      "columns": [
-        "client_id"
-      ],
+      "columns": ["client_id"],
       "tableTo": "clients",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "NO ACTION",
       "nameExplicit": false,
@@ -2372,13 +2302,9 @@
       "table": "invoices"
     },
     {
-      "columns": [
-        "quote_id"
-      ],
+      "columns": ["quote_id"],
       "tableTo": "quotes",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "NO ACTION",
       "nameExplicit": false,
@@ -2387,13 +2313,9 @@
       "table": "orders"
     },
     {
-      "columns": [
-        "revision_id"
-      ],
+      "columns": ["revision_id"],
       "tableTo": "quote_revisions",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "NO ACTION",
       "nameExplicit": false,
@@ -2402,13 +2324,9 @@
       "table": "orders"
     },
     {
-      "columns": [
-        "client_id"
-      ],
+      "columns": ["client_id"],
       "tableTo": "clients",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "NO ACTION",
       "nameExplicit": false,
@@ -2417,13 +2335,9 @@
       "table": "orders"
     },
     {
-      "columns": [
-        "signature_id"
-      ],
+      "columns": ["signature_id"],
       "tableTo": "quote_signatures",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "NO ACTION",
       "nameExplicit": false,
@@ -2432,13 +2346,9 @@
       "table": "orders"
     },
     {
-      "columns": [
-        "revision_id"
-      ],
+      "columns": ["revision_id"],
       "tableTo": "quote_revisions",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "nameExplicit": false,
@@ -2447,13 +2357,9 @@
       "table": "quote_lines"
     },
     {
-      "columns": [
-        "revision_id"
-      ],
+      "columns": ["revision_id"],
       "tableTo": "quote_revisions",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "nameExplicit": false,
@@ -2462,13 +2368,9 @@
       "table": "quote_links"
     },
     {
-      "columns": [
-        "quote_id"
-      ],
+      "columns": ["quote_id"],
       "tableTo": "quotes",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "nameExplicit": false,
@@ -2477,13 +2379,9 @@
       "table": "quote_revisions"
     },
     {
-      "columns": [
-        "created_by_user_id"
-      ],
+      "columns": ["created_by_user_id"],
       "tableTo": "users",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "NO ACTION",
       "nameExplicit": false,
@@ -2492,13 +2390,9 @@
       "table": "quote_revisions"
     },
     {
-      "columns": [
-        "quote_id"
-      ],
+      "columns": ["quote_id"],
       "tableTo": "quotes",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "NO ACTION",
       "nameExplicit": false,
@@ -2507,13 +2401,9 @@
       "table": "quote_signatures"
     },
     {
-      "columns": [
-        "revision_id"
-      ],
+      "columns": ["revision_id"],
       "tableTo": "quote_revisions",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "NO ACTION",
       "nameExplicit": false,
@@ -2522,13 +2412,9 @@
       "table": "quote_signatures"
     },
     {
-      "columns": [
-        "link_id"
-      ],
+      "columns": ["link_id"],
       "tableTo": "quote_links",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "NO ACTION",
       "nameExplicit": false,
@@ -2537,13 +2423,9 @@
       "table": "quote_signatures"
     },
     {
-      "columns": [
-        "audit_event_id"
-      ],
+      "columns": ["audit_event_id"],
       "tableTo": "audit_events",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "NO ACTION",
       "nameExplicit": false,
@@ -2552,13 +2434,9 @@
       "table": "quote_signatures"
     },
     {
-      "columns": [
-        "client_id"
-      ],
+      "columns": ["client_id"],
       "tableTo": "clients",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "NO ACTION",
       "nameExplicit": false,
@@ -2567,13 +2445,9 @@
       "table": "quotes"
     },
     {
-      "columns": [
-        "role_id"
-      ],
+      "columns": ["role_id"],
       "tableTo": "roles",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "nameExplicit": false,
@@ -2582,13 +2456,9 @@
       "table": "role_permissions"
     },
     {
-      "columns": [
-        "permission_code"
-      ],
+      "columns": ["permission_code"],
       "tableTo": "permissions",
-      "columnsTo": [
-        "code"
-      ],
+      "columnsTo": ["code"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "nameExplicit": false,
@@ -2597,13 +2467,9 @@
       "table": "role_permissions"
     },
     {
-      "columns": [
-        "user_id"
-      ],
+      "columns": ["user_id"],
       "tableTo": "users",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "nameExplicit": false,
@@ -2612,13 +2478,9 @@
       "table": "sessions"
     },
     {
-      "columns": [
-        "user_id"
-      ],
+      "columns": ["user_id"],
       "tableTo": "users",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "nameExplicit": false,
@@ -2627,13 +2489,9 @@
       "table": "user_roles"
     },
     {
-      "columns": [
-        "role_id"
-      ],
+      "columns": ["role_id"],
       "tableTo": "roles",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "nameExplicit": false,
@@ -2642,229 +2500,175 @@
       "table": "user_roles"
     },
     {
-      "columns": [
-        "kind",
-        "year"
-      ],
+      "columns": ["kind", "year"],
       "nameExplicit": false,
       "name": "business_reference_counters_pk",
       "entityType": "pks",
       "table": "business_reference_counters"
     },
     {
-      "columns": [
-        "token_id",
-        "permission_code"
-      ],
+      "columns": ["token_id", "permission_code"],
       "nameExplicit": false,
       "name": "integration_token_permissions_pk",
       "entityType": "pks",
       "table": "integration_token_permissions"
     },
     {
-      "columns": [
-        "role_id",
-        "permission_code"
-      ],
+      "columns": ["role_id", "permission_code"],
       "nameExplicit": false,
       "name": "role_permissions_pk",
       "entityType": "pks",
       "table": "role_permissions"
     },
     {
-      "columns": [
-        "user_id",
-        "role_id"
-      ],
+      "columns": ["user_id", "role_id"],
       "nameExplicit": false,
       "name": "user_roles_pk",
       "entityType": "pks",
       "table": "user_roles"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "access_credentials_pk",
       "table": "access_credentials",
       "entityType": "pks"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "audit_events_pk",
       "table": "audit_events",
       "entityType": "pks"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "clients_pk",
       "table": "clients",
       "entityType": "pks"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "document_artifacts_pk",
       "table": "document_artifacts",
       "entityType": "pks"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "integration_tokens_pk",
       "table": "integration_tokens",
       "entityType": "pks"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "invoice_lines_pk",
       "table": "invoice_lines",
       "entityType": "pks"
     },
     {
-      "columns": [
-        "invoice_revision_id"
-      ],
+      "columns": ["invoice_revision_id"],
       "nameExplicit": false,
       "name": "invoice_pdf_jobs_pk",
       "table": "invoice_pdf_jobs",
       "entityType": "pks"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "invoice_revisions_pk",
       "table": "invoice_revisions",
       "entityType": "pks"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "invoices_pk",
       "table": "invoices",
       "entityType": "pks"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "issuer_settings_pk",
       "table": "issuer_settings",
       "entityType": "pks"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "orders_pk",
       "table": "orders",
       "entityType": "pks"
     },
     {
-      "columns": [
-        "code"
-      ],
+      "columns": ["code"],
       "nameExplicit": false,
       "name": "permissions_pk",
       "table": "permissions",
       "entityType": "pks"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "quote_condition_presets_pk",
       "table": "quote_condition_presets",
       "entityType": "pks"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "quote_lines_pk",
       "table": "quote_lines",
       "entityType": "pks"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "quote_links_pk",
       "table": "quote_links",
       "entityType": "pks"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "quote_revisions_pk",
       "table": "quote_revisions",
       "entityType": "pks"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "quote_signatures_pk",
       "table": "quote_signatures",
       "entityType": "pks"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "quotes_pk",
       "table": "quotes",
       "entityType": "pks"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "roles_pk",
       "table": "roles",
       "entityType": "pks"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "sessions_pk",
       "table": "sessions",
       "entityType": "pks"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "users_pk",
       "table": "users",
@@ -3573,9 +3377,7 @@
       "table": "user_roles"
     },
     {
-      "columns": [
-        "name"
-      ],
+      "columns": ["name"],
       "nameExplicit": false,
       "name": "roles_name_unique",
       "entityType": "uniques",
