@@ -176,15 +176,25 @@ describe('Authentication', () => {
           ],
           { concurrency: 'unbounded' },
         );
+        const rotated = concurrent.find((candidate) => candidate.refreshToken !== undefined);
+        if (rotated?.refreshToken === undefined) return yield* Effect.die('Missing rotated token');
         yield* TestClock.adjust('6 seconds');
         const replay = yield* Effect.result(authentication.refresh(session.refreshToken));
-        const family = yield* Effect.result(authentication.refresh(concurrent[0].refreshToken));
-        return { concurrent, family, replay };
+        const family = yield* Effect.result(authentication.refresh(rotated.refreshToken));
+        const sessionCount = database.sqlite
+          .prepare('select count(*) from refresh_sessions where family_id = ?')
+          .pluck()
+          .get(session.familyId);
+        return { concurrent, family, replay, sessionCount };
       }).pipe(Effect.provide(authenticationLayer()), Effect.provide(TestClock.layer())),
     );
 
     expect(result.concurrent).toHaveLength(2);
     expect(result.concurrent[0].familyId).toBe(result.concurrent[1].familyId);
+    expect(
+      result.concurrent.filter((candidate) => candidate.refreshToken !== undefined),
+    ).toHaveLength(1);
+    expect(result.sessionCount).toBe(2);
     expect(result.replay).toMatchObject({
       _tag: 'Failure',
       failure: { _tag: 'SessionRejected' },
@@ -265,6 +275,44 @@ describe('Authentication', () => {
     });
     expect(result.consumedAt).toBeNull();
     expect(result.retried.familyId).toBeDefined();
+  });
+
+  it('does not leave an active session when refresh races with logout', async () => {
+    const result = await Effect.runPromise(
+      Effect.gen(function* () {
+        yield* TestClock.setTime(2_000_000_000_000);
+        const database = yield* Database;
+        yield* seedAdministrator(database);
+        const authentication = yield* Authentication;
+        const session = yield* authentication.login(email, password, '192.0.2.1');
+        const [refresh] = yield* Effect.all(
+          [
+            Effect.result(authentication.refresh(session.refreshToken)),
+            authentication.logout(session.refreshToken),
+          ],
+          { concurrency: 'unbounded' },
+        );
+        const activeSessions = database.sqlite
+          .prepare(
+            'select count(*) from refresh_sessions where family_id = ? and revoked_at is null',
+          )
+          .pluck()
+          .get(session.familyId);
+        const replacement =
+          refresh._tag === 'Success' && refresh.success.refreshToken !== undefined
+            ? yield* Effect.result(authentication.refresh(refresh.success.refreshToken))
+            : undefined;
+        return { activeSessions, replacement };
+      }).pipe(Effect.provide(authenticationLayer()), Effect.provide(TestClock.layer())),
+    );
+
+    expect(result.activeSessions).toBe(0);
+    if (result.replacement !== undefined) {
+      expect(result.replacement).toMatchObject({
+        _tag: 'Failure',
+        failure: { _tag: 'SessionRejected' },
+      });
+    }
   });
 
   it('rejects invalid credentials, malformed tokens, and revoked user sessions', async () => {

@@ -80,7 +80,7 @@
             inherit pname version src;
             pnpm = pkgs.pnpm;
             fetcherVersion = 4;
-            hash = "sha256-IJtyeOKrp1p4PzsEhKeR+HB9NX/kYTFfes7jXj/6p7c=";
+            hash = "sha256-utK6HsJLppbJZzF6Uuc7yQmjDCOp3oioeo+IUr0M4P4=";
           };
 
           mkApplication =
@@ -109,6 +109,11 @@
                 cp packages/api/dist/main.cjs $out/lib/froment-software/server.cjs
                 cp packages/api/dist/migrate.cjs $out/lib/froment-software/migrate.cjs
                 cp -r packages/api/drizzle $out/share/froment-software/drizzle
+                argon2Modules=$(dirname $(readlink -f packages/api/node_modules/argon2))
+                mkdir -p $out/lib/froment-software/node_modules/@phc
+                cp -rL $argon2Modules/argon2 $out/lib/froment-software/node_modules/
+                cp -rL $argon2Modules/@phc/format $out/lib/froment-software/node_modules/@phc/
+                cp -rL $argon2Modules/node-gyp-build $out/lib/froment-software/node_modules/
                 cp -rL packages/api/node_modules/better-sqlite3 $out/lib/froment-software/node_modules/
                 cp -r packages/documents/templates $out/share/froment-software/templates
                 cp -r packages/web/dist/froment-software/browser $out/share/froment-software/web

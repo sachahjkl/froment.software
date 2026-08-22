@@ -9,6 +9,7 @@ import {
   AuthenticationRejected,
   CurrentAccount,
   LoginRequest,
+  RequestRateLimited,
   SessionRejected,
 } from './contracts.js';
 import { ApiAuthentication } from '../api-authentication.js';
@@ -31,7 +32,10 @@ export class AuthenticationApi extends HttpApiGroup.make('authentication', { top
     .pipe(frontendSpecific),
   HttpApiEndpoint.post('refresh', '/api/auth/refresh', {
     success: AccessToken,
-    error: SessionRejected.pipe(HttpApiSchema.status(401)),
+    error: [
+      SessionRejected.pipe(HttpApiSchema.status(401)),
+      RequestRateLimited.pipe(HttpApiSchema.status(429)),
+    ],
   })
     .middleware(ApiBrowserRequest)
     .pipe(frontendSpecific),

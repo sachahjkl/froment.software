@@ -7,7 +7,7 @@
     ".": "./src/index.ts"
   },
   "scripts": {
-    "build": "tsc --noEmit && esbuild src/main.ts src/migrate.ts --bundle --platform=node --format=cjs --external:better-sqlite3 --out-extension:.js=.cjs --outdir=dist",
+    "build": "tsc --noEmit && esbuild src/main.ts src/migrate.ts --bundle --platform=node --format=cjs --external:argon2 --external:better-sqlite3 --out-extension:.js=.cjs --outdir=dist",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "node dist/migrate.cjs",
     "start": "node dist/main.cjs",
@@ -19,8 +19,8 @@
     "@froment/contracts": "workspace:*",
     "@froment/documents": "workspace:*",
     "@froment/l10n": "workspace:*",
-    "@noble/hashes": "^2.3.0",
     "@stablelib/ed25519": "^2.1.0",
+    "argon2": "^0.45.1",
     "better-sqlite3": "catalog:",
     "drizzle-orm": "catalog:",
     "effect": "catalog:",

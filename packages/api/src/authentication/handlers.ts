@@ -1,9 +1,16 @@
-import { Api, ApiCredentials, AuthenticationRequired } from '@froment/contracts';
+import {
+  Api,
+  ApiCredentials,
+  AuthenticationRequired,
+  RequestRateLimited,
+} from '@froment/contracts';
 import { Effect, Option } from 'effect';
 import { HttpServerRequest } from 'effect/unstable/http';
 import { HttpApiBuilder } from 'effect/unstable/httpapi';
 
 import { setPrivateResponseHeaders } from '../http/response.js';
+import { getClientAddress } from '../http/request.js';
+import { RequestLimiter } from '../server/request-limiter.js';
 import { Authentication } from './authentication.js';
 import { clearRefreshCookie, refreshCookieName, setRefreshCookie } from './http.js';
 
@@ -40,6 +47,14 @@ export const AuthenticationHandlers = HttpApiBuilder.group(Api, 'authentication'
         'refresh',
         Effect.fn('refresh')(function* () {
           yield* setPrivateResponseHeaders;
+          if (
+            !(yield* (yield* RequestLimiter).allowRequest(
+              `refresh:address:${yield* getClientAddress()}`,
+              120,
+            ))
+          ) {
+            return yield* new RequestRateLimited({ code: 'request.rate_limited' });
+          }
           const request = yield* HttpServerRequest.HttpServerRequest;
           const session = yield* (yield* Authentication)
             .refresh(request.cookies[refreshCookieName])
@@ -49,7 +64,9 @@ export const AuthenticationHandlers = HttpApiBuilder.group(Api, 'authentication'
               ),
               Effect.catchTag('DatabaseError', Effect.orDie),
             );
-          yield* setRefreshCookie(session);
+          if (session.refreshToken !== undefined) {
+            yield* setRefreshCookie({ ...session, refreshToken: session.refreshToken });
+          }
           return tokenResponse(session);
         }),
       )

@@ -52,6 +52,10 @@ export interface AuthenticatedSession {
   readonly familyId: string;
 }
 
+export interface RefreshedSession extends Omit<AuthenticatedSession, 'refreshToken'> {
+  readonly refreshToken: string | undefined;
+}
+
 export interface Principal {
   readonly userId: string;
   readonly mode: LoginModeValue;
@@ -73,7 +77,7 @@ export interface AuthenticationService {
   ) => Effect.Effect<AuthenticatedSession, DatabaseError>;
   readonly refresh: (
     refreshToken: string | undefined,
-  ) => Effect.Effect<AuthenticatedSession, SessionRejected | DatabaseError>;
+  ) => Effect.Effect<RefreshedSession, SessionRejected | DatabaseError>;
   readonly authenticate: (
     accessToken: string | undefined,
   ) => Effect.Effect<Principal, AuthenticationRequired | DatabaseError>;
@@ -185,6 +189,18 @@ export const AuthenticationLive = Layer.effect(
           session.absoluteExpiresAt,
         );
 
+    const cleanupExpiredSessions = (now: number) =>
+      database.sqlite
+        .prepare(
+          `delete from refresh_sessions where id in (
+             select id from refresh_sessions
+              where absolute_expires_at <= ?
+              order by absolute_expires_at
+              limit 500
+           )`,
+        )
+        .run(now);
+
     const createSession = Effect.fn('Authentication.createSession')(function* (
       userId: string,
       mode: LoginModeValue,
@@ -192,7 +208,10 @@ export const AuthenticationLive = Layer.effect(
       const now = yield* Clock.currentTimeMillis;
       const session = yield* prepareSession(userId, mode, ulid(now), now + refreshLifetime, now);
       yield* Effect.try({
-        try: () => insertSession(session),
+        try: () => {
+          cleanupExpiredSessions(now);
+          insertSession(session);
+        },
         catch: (cause) => new DatabaseError({ operation: 'create refresh session', cause }),
       });
       return session;
@@ -205,6 +224,15 @@ export const AuthenticationLive = Layer.effect(
     ) {
       const normalizedEmail = email.trim().toLowerCase();
       const accountKey = hmac(config.refreshHmacKey, normalizedEmail).toString('hex');
+      const now = yield* Clock.currentTimeMillis;
+      const addressFailureState = yield* Cache.get(addressFailures, clientAddress);
+      const accountFailureState = yield* Cache.get(accountFailures, accountKey);
+      if (
+        now < (yield* Ref.get(addressFailureState)).blockedUntil ||
+        now < (yield* Ref.get(accountFailureState)).blockedUntil
+      ) {
+        return yield* new AuthenticationRateLimited({ code: 'authentication.rate_limited' });
+      }
       const credential = yield* Effect.try({
         try: () => {
           const row = database.sqlite
@@ -233,17 +261,15 @@ export const AuthenticationLive = Layer.effect(
         password,
       );
       if (credential === undefined || !passwordAccepted) {
-        const now = yield* Clock.currentTimeMillis;
-        if (!(yield* registerFailure(yield* Cache.get(addressFailures, clientAddress), now))) {
+        if (!(yield* registerFailure(addressFailureState, now))) {
           return yield* new AuthenticationRateLimited({ code: 'authentication.rate_limited' });
         }
-        if (!(yield* registerFailure(yield* Cache.get(accountFailures, accountKey), now))) {
+        if (!(yield* registerFailure(accountFailureState, now))) {
           return yield* new AuthenticationRateLimited({ code: 'authentication.rate_limited' });
         }
         return yield* new AuthenticationRejected({ code: 'authentication.invalid_credentials' });
       }
 
-      const now = yield* Clock.currentTimeMillis;
       if (
         !(yield* consumeLoginQuota(`address:${clientAddress}`, now)) ||
         !(yield* consumeLoginQuota(`account:${accountKey}`, now))
@@ -262,6 +288,7 @@ export const AuthenticationLive = Layer.effect(
         try: () => {
           database.sqlite
             .transaction(() => {
+              cleanupExpiredSessions(now);
               insertSession(session);
               audit.insert({
                 action: 'authentication.login-succeeded',
@@ -279,6 +306,27 @@ export const AuthenticationLive = Layer.effect(
       return session;
     });
 
+    const findRefreshSession = (tokenHmac: Buffer) => {
+      const row = database.sqlite
+        .prepare(
+          `select refresh_sessions.id, refresh_sessions.family_id as familyId,
+                  refresh_sessions.user_id as userId, users.kind as mode,
+                  refresh_sessions.created_at as createdAt,
+                  refresh_sessions.absolute_expires_at as absoluteExpiresAt,
+                  refresh_sessions.consumed_at as consumedAt,
+                  refresh_sessions.replacement_session_id as replacementSessionId,
+                  refresh_sessions.revoked_at as revokedAt,
+                  users.disabled_at as disabledAt,
+                  password_credentials.password_changed_at as passwordChangedAt
+             from refresh_sessions
+             join users on users.id = refresh_sessions.user_id
+             join password_credentials on password_credentials.user_id = users.id
+            where refresh_sessions.token_hmac = ? limit 1`,
+        )
+        .get(tokenHmac);
+      return row === undefined ? undefined : Schema.decodeUnknownSync(RefreshSessionLookup)(row);
+    };
+
     const refresh = Effect.fn('Authentication.refresh')(function* (
       refreshToken: string | undefined,
     ) {
@@ -286,96 +334,132 @@ export const AuthenticationLive = Layer.effect(
         return yield* new SessionRejected({ code: 'authentication.invalid_session' });
       }
       const now = yield* Clock.currentTimeMillis;
-      const row = yield* Effect.try({
+      const tokenHmac = hmac(config.refreshHmacKey, refreshToken);
+      const replacementSessionId = ulid(now);
+      const replacementToken = randomBytes(32).toString('base64url');
+      const replacementTokenHmac = hmac(config.refreshHmacKey, replacementToken);
+      const rotation = yield* Effect.try({
         try: () =>
           database.sqlite
-            .prepare(
-              `select refresh_sessions.id, refresh_sessions.family_id as familyId,
-                      refresh_sessions.user_id as userId, users.kind as mode,
-                      refresh_sessions.created_at as createdAt,
-                      refresh_sessions.absolute_expires_at as absoluteExpiresAt,
-                      refresh_sessions.consumed_at as consumedAt,
-                      refresh_sessions.revoked_at as revokedAt,
-                      users.disabled_at as disabledAt,
-                      password_credentials.password_changed_at as passwordChangedAt
-                 from refresh_sessions
-                 join users on users.id = refresh_sessions.user_id
-                 join password_credentials on password_credentials.user_id = users.id
-                where refresh_sessions.token_hmac = ? limit 1`,
-            )
-            .get(hmac(config.refreshHmacKey, refreshToken)),
-        catch: (cause) => new DatabaseError({ operation: 'find refresh session', cause }),
-      });
-      if (row === undefined) {
-        return yield* new SessionRejected({ code: 'authentication.invalid_session' });
-      }
-      const current = Schema.decodeUnknownSync(RefreshSessionLookup)(row);
-      const invalidAccount =
-        current.revokedAt !== null ||
-        current.disabledAt !== null ||
-        current.absoluteExpiresAt <= now ||
-        current.passwordChangedAt > current.createdAt;
-      const replayed = current.consumedAt !== null && now - current.consumedAt > rotationGrace;
-      if (invalidAccount || replayed) {
-        yield* Effect.try({
-          try: () =>
-            database.sqlite
-              .prepare(
-                'update refresh_sessions set revoked_at = coalesce(revoked_at, ?) where family_id = ?',
-              )
-              .run(now, current.familyId),
-          catch: (cause) => new DatabaseError({ operation: 'revoke refresh family', cause }),
-        });
-        return yield* new SessionRejected({ code: 'authentication.invalid_session' });
-      }
-
-      const next = yield* prepareSession(
-        current.userId,
-        current.mode,
-        current.familyId,
-        current.absoluteExpiresAt,
-        now,
-      );
-      yield* Effect.try({
-        try: () =>
-          database.sqlite
-            .transaction(() => {
-              if (current.consumedAt === null) {
+            .transaction(
+              ():
+                | {
+                    readonly kind: 'concurrent';
+                    readonly sessionId: string;
+                    readonly familyId: string;
+                    readonly userId: string;
+                    readonly mode: LoginModeValue;
+                    readonly absoluteExpiresAt: number;
+                    readonly refreshToken: undefined;
+                  }
+                | {
+                    readonly kind: 'rotated';
+                    readonly sessionId: string;
+                    readonly familyId: string;
+                    readonly userId: string;
+                    readonly mode: LoginModeValue;
+                    readonly absoluteExpiresAt: number;
+                    readonly refreshToken: string;
+                  }
+                | { readonly kind: 'rejected' } => {
+                const fresh = findRefreshSession(tokenHmac);
+                if (fresh === undefined) return { kind: 'rejected' };
+                const invalidAccount =
+                  fresh.revokedAt !== null ||
+                  fresh.disabledAt !== null ||
+                  fresh.absoluteExpiresAt <= now ||
+                  fresh.passwordChangedAt > fresh.createdAt;
+                if (invalidAccount) {
+                  database.sqlite
+                    .prepare(
+                      'update refresh_sessions set revoked_at = coalesce(revoked_at, ?) where family_id = ?',
+                    )
+                    .run(now, fresh.familyId);
+                  return { kind: 'rejected' };
+                }
+                if (fresh.consumedAt !== null) {
+                  if (
+                    now - fresh.consumedAt > rotationGrace ||
+                    fresh.replacementSessionId === null
+                  ) {
+                    database.sqlite
+                      .prepare(
+                        'update refresh_sessions set revoked_at = coalesce(revoked_at, ?) where family_id = ?',
+                      )
+                      .run(now, fresh.familyId);
+                    return { kind: 'rejected' };
+                  }
+                  const replacement = database.sqlite
+                    .prepare(
+                      `select id from refresh_sessions
+                      where id = ? and family_id = ? and user_id = ? and revoked_at is null`,
+                    )
+                    .get(fresh.replacementSessionId, fresh.familyId, fresh.userId);
+                  if (replacement === undefined) return { kind: 'rejected' };
+                  return {
+                    kind: 'concurrent',
+                    sessionId: fresh.replacementSessionId,
+                    familyId: fresh.familyId,
+                    userId: fresh.userId,
+                    mode: fresh.mode,
+                    absoluteExpiresAt: fresh.absoluteExpiresAt,
+                    refreshToken: undefined,
+                  };
+                }
                 const consumed = database.sqlite
                   .prepare(
-                    'update refresh_sessions set consumed_at = ?, rotated_at = ? where id = ? and consumed_at is null and revoked_at is null',
+                    `update refresh_sessions
+                      set consumed_at = ?, rotated_at = ?, replacement_session_id = ?
+                    where id = ? and consumed_at is null and revoked_at is null`,
                   )
-                  .run(now, now, current.id).changes;
-                if (consumed !== 1) {
-                  const state = database.sqlite
-                    .prepare(
-                      'select consumed_at as consumedAt, revoked_at as revokedAt from refresh_sessions where id = ?',
-                    )
-                    .get(current.id);
-                  const decoded = Schema.decodeUnknownSync(
-                    Schema.Struct({
-                      consumedAt: Schema.NullOr(Schema.Int),
-                      revokedAt: Schema.NullOr(Schema.Int),
-                    }),
-                  )(state);
-                  if (
-                    decoded.revokedAt !== null ||
-                    decoded.consumedAt === null ||
-                    now - decoded.consumedAt > rotationGrace
-                  ) {
-                    throw new SessionRejected({ code: 'authentication.invalid_session' });
-                  }
-                }
-              }
-              insertSession(next);
-            })
+                  .run(now, now, replacementSessionId, fresh.id).changes;
+                if (consumed !== 1) return { kind: 'rejected' };
+                database.sqlite
+                  .prepare(
+                    `insert into refresh_sessions
+                     (id, family_id, user_id, token_hmac, created_at, rotated_at, absolute_expires_at)
+                   values (?, ?, ?, ?, ?, ?, ?)`,
+                  )
+                  .run(
+                    replacementSessionId,
+                    fresh.familyId,
+                    fresh.userId,
+                    replacementTokenHmac,
+                    now,
+                    now,
+                    fresh.absoluteExpiresAt,
+                  );
+                return {
+                  kind: 'rotated',
+                  sessionId: replacementSessionId,
+                  familyId: fresh.familyId,
+                  userId: fresh.userId,
+                  mode: fresh.mode,
+                  absoluteExpiresAt: fresh.absoluteExpiresAt,
+                  refreshToken: replacementToken,
+                };
+              },
+            )
             .immediate(),
-        catch: (cause) =>
-          cause instanceof SessionRejected
-            ? cause
-            : new DatabaseError({ operation: 'rotate refresh session', cause }),
+        catch: (cause) => new DatabaseError({ operation: 'rotate refresh session', cause }),
       });
-      return next;
+      if (rotation.kind === 'rejected') {
+        return yield* new SessionRejected({ code: 'authentication.invalid_session' });
+      }
+      const access = yield* accessTokens.issue({
+        userId: rotation.userId,
+        sessionId: rotation.sessionId,
+        mode: rotation.mode,
+      });
+      return {
+        accessToken: access.accessToken,
+        accessExpiresAt: access.expiresAt,
+        refreshToken: rotation.refreshToken,
+        refreshExpiresAt: new Date(rotation.absoluteExpiresAt),
+        mode: rotation.mode,
+        sessionId: rotation.sessionId,
+        familyId: rotation.familyId,
+      };
     });
 
     const authenticate = Effect.fn('Authentication.authenticate')(function* (

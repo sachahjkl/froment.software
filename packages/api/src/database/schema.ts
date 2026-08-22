@@ -133,10 +133,12 @@ export const refreshSessions = sqliteTable(
     rotatedAt: integer('rotated_at', { mode: 'timestamp_ms' }).notNull(),
     absoluteExpiresAt: integer('absolute_expires_at', { mode: 'timestamp_ms' }).notNull(),
     consumedAt: integer('consumed_at', { mode: 'timestamp_ms' }),
+    replacementSessionId: text('replacement_session_id'),
     revokedAt: integer('revoked_at', { mode: 'timestamp_ms' }),
   },
   (table) => [
     uniqueIndex('refresh_sessions_token_hmac_unique').on(table.tokenHmac),
+    uniqueIndex('refresh_sessions_replacement_session_id_unique').on(table.replacementSessionId),
     index('refresh_sessions_user_id_index').on(table.userId, table.revokedAt),
     index('refresh_sessions_family_id_index').on(table.familyId, table.revokedAt),
     index('refresh_sessions_expiry_index').on(table.absoluteExpiresAt),
@@ -151,6 +153,10 @@ export const refreshSessions = sqliteTable(
     check(
       'refresh_sessions_token_hmac_check',
       sql`typeof(${table.tokenHmac}) = 'blob' and length(${table.tokenHmac}) = 32`,
+    ),
+    check(
+      'refresh_sessions_replacement_session_id_check',
+      sql`${table.replacementSessionId} is null or (length(${table.replacementSessionId}) = 26 and ${table.replacementSessionId} not glob '*[^0-9A-HJKMNP-TV-Z]*' and substr(${table.replacementSessionId}, 1, 1) between '0' and '7')`,
     ),
     check(
       'refresh_sessions_timestamps_check',
@@ -901,6 +907,7 @@ export const RefreshSessionLookup = Schema.Struct({
   createdAt: Schema.Int,
   absoluteExpiresAt: Schema.Int,
   consumedAt: Schema.NullOr(Schema.Int),
+  replacementSessionId: Schema.NullOr(ulid(Schema.String)),
   revokedAt: Schema.NullOr(Schema.Int),
   disabledAt: Schema.NullOr(Schema.Int),
   passwordChangedAt: Schema.Int,

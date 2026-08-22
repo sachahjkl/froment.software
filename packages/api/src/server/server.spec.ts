@@ -341,6 +341,20 @@ describe('HTTP server', () => {
     expect(rejected.status).toBe(401);
   });
 
+  it('rate-limits refresh attempts independently', async () => {
+    let limited: Response | undefined;
+    for (let attempt = 0; attempt < 121 && limited === undefined; attempt += 1) {
+      const response = await fetch(`${baseUrl}/api/auth/refresh`, {
+        method: 'POST',
+        headers: { origin: baseUrl },
+      });
+      if (response.status === 429) limited = response;
+    }
+    if (limited === undefined) throw new Error('The refresh quota did not reject a request.');
+    expect(limited.status).toBe(429);
+    await expect(limited.json()).resolves.toMatchObject({ code: 'request.rate_limited' });
+  });
+
   it('serves static, prerendered, and missing routes correctly', async () => {
     const root = await fetch(`${baseUrl}/`);
     expect(root.status).toBe(200);
