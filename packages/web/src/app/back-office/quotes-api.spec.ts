@@ -31,6 +31,20 @@ describe('QuotesApi', () => {
     http.verify();
   });
 
+  it('loads a PDF preview as a blob', async () => {
+    TestBed.configureTestingModule({
+      providers: [provideHttpClient(), provideHttpClientTesting()],
+    });
+    const api = TestBed.inject(QuotesApi);
+    const http = TestBed.inject(HttpTestingController);
+    const id = '01ARZ3NDEKTSV4RRFFQ69G5FAY';
+    const result = api.preview(id, 2);
+    const request = http.expectOne(`/api/quotes/${id}/revisions/2/preview`);
+    expect(request.request.responseType).toBe('blob');
+    request.flush(new Blob(['%PDF-'], { type: 'application/pdf' }));
+    await expect(result).resolves.toBeInstanceOf(Blob);
+  });
+
   it('decodes a version conflict', async () => {
     TestBed.configureTestingModule({
       providers: [provideHttpClient(), provideHttpClientTesting()],

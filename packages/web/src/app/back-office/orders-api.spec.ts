@@ -39,7 +39,10 @@ describe('OrdersApi', () => {
     const api = TestBed.inject(OrdersApi);
     const http = TestBed.inject(HttpTestingController);
     const id = '01ARZ3NDEKTSV4RRFFQ69G5FAY';
-    expect(api.previewUrl(id)).toBe(`/api/orders/${id}/preview`);
+    const preview = api.preview(id);
+    const previewRequest = http.expectOne(`/api/orders/${id}/preview`);
+    expect(previewRequest.request.responseType).toBe('blob');
+    previewRequest.flush(new Blob(['%PDF-'], { type: 'application/pdf' }));
     expect(api.pdfUrl(id)).toBe(`/api/orders/${id}/pdf`);
     const result = api.renderPdf(id);
     http.expectOne(`/api/orders/${id}/pdf`).flush({
@@ -53,6 +56,7 @@ describe('OrdersApi', () => {
       createdAt: '2026-08-20T06:00:00.000Z',
     });
     await expect(result).resolves.toMatchObject({ kind: 'order-pdf', orderId: id });
+    await expect(preview).resolves.toBeInstanceOf(Blob);
     http.verify();
   });
 });

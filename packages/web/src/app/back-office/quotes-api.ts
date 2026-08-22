@@ -72,6 +72,14 @@ export class QuotesApi {
     );
   }
 
+  async preview(quoteId: UlidValue, version: number): Promise<Blob> {
+    return firstValueFrom(
+      this.http.get(`/api/quotes/${quoteId}/revisions/${version}/preview`, {
+        responseType: 'blob',
+      }),
+    );
+  }
+
   async renderPdf(
     quoteId: UlidValue,
     version: number,

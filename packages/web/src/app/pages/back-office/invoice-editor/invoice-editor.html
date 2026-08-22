@@ -298,21 +298,32 @@
       }
     </ol>
   </aside>
-  @if (previewUrl(); as url) {
+  @if (previewVersion() !== undefined) {
   <section class="preview">
     <div class="section-heading">
       <h2>
         {{ i18n.tf('backOffice.invoice.preview.title', { version: previewVersion() ?? '' }) }}
       </h2>
+      @if (previewUrl(); as url) {
       <a class="external-link" [href]="url" target="_blank" rel="noopener noreferrer"
         >{{ i18n.t('backOffice.invoice.preview.open') }}<app-icon name="external"
       /></a>
+      }
     </div>
+    @if (previewLoading()) {
+    <p aria-live="polite">{{ i18n.t('backOffice.invoice.preview.loading') }}</p>
+    } @else if (previewFailed()) {
+    <p role="alert">{{ i18n.t('backOffice.invoice.preview.failure') }}</p>
+    <button appButton type="button" (click)="retryPreview()">
+      {{ i18n.t('backOffice.invoice.preview.retry') }}
+    </button>
+    } @else if (previewFrameUrl(); as frameUrl) {
     <iframe
-      [src]="previewFrameUrl()"
+      [src]="frameUrl"
       [title]="i18n.t('backOffice.invoice.preview.frameTitle')"
       sandbox
     ></iframe>
+    }
   </section>
   } } }
 </section>

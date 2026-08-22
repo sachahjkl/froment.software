@@ -47,6 +47,61 @@ const quoteDetail = {
 };
 
 describe('QuoteEditor', () => {
+  it('replaces and revokes PDF preview object URLs', async () => {
+    const createObjectUrl = vi
+      .fn()
+      .mockReturnValueOnce('blob:quote-first')
+      .mockReturnValueOnce('blob:quote-second');
+    const revokeObjectUrl = vi.fn();
+    Object.defineProperty(URL, 'createObjectURL', { configurable: true, value: createObjectUrl });
+    Object.defineProperty(URL, 'revokeObjectURL', { configurable: true, value: revokeObjectUrl });
+    const preview = vi.fn().mockResolvedValue(new Blob(['%PDF-'], { type: 'application/pdf' }));
+    TestBed.configureTestingModule({
+      providers: [
+        provideRouter([]),
+        {
+          provide: ActivatedRoute,
+          useValue: {
+            snapshot: { paramMap: convertToParamMap({ quoteId }) },
+            paramMap: of(convertToParamMap({ quoteId })),
+          },
+        },
+        { provide: ClientsApi, useValue: { list: () => Promise.resolve([]) } },
+        { provide: QuoteConditionPresetsApi, useValue: { list: () => Promise.resolve([]) } },
+        {
+          provide: QuotesApi,
+          useValue: {
+            preview,
+            get: () =>
+              Promise.resolve({
+                success: true,
+                result: {
+                  ...quoteDetail,
+                  revisions: [{ ...quoteDetail.currentRevision, previewAvailable: true }],
+                },
+              }),
+          },
+        },
+      ],
+    });
+    const fixture = TestBed.createComponent(QuoteEditor);
+    fixture.detectChanges();
+    const root: HTMLElement = fixture.nativeElement;
+    await vi.waitFor(() => expect(preview).toHaveBeenCalledTimes(1));
+    await vi.waitFor(() => expect(root.querySelector('iframe')).not.toBeNull());
+    const previewButton = [...root.querySelectorAll<HTMLButtonElement>('button')].find(
+      (candidate) => /Aperçu|Preview/.test(candidate.textContent ?? ''),
+    );
+    if (previewButton === undefined) throw new Error('The preview button is unavailable.');
+
+    previewButton.click();
+    await vi.waitFor(() => expect(preview).toHaveBeenCalledTimes(2));
+    expect(revokeObjectUrl).toHaveBeenCalledWith('blob:quote-first');
+
+    fixture.destroy();
+    expect(revokeObjectUrl).toHaveBeenCalledWith('blob:quote-second');
+  });
+
   it('keeps the newest quote when route responses finish out of order', async () => {
     type QuoteOutcome = { readonly success: true; readonly result: typeof quoteDetail };
     const secondQuoteId = '01ARZ3NDEKTSV4RRFFQ69G5FB0';

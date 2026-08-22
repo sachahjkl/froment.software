@@ -20,8 +20,10 @@ export class OrdersApi {
     );
   }
 
-  previewUrl(orderId: UlidValue): string {
-    return `/api/orders/${orderId}/preview`;
+  async preview(orderId: UlidValue): Promise<Blob> {
+    return firstValueFrom(
+      this.http.get(`/api/orders/${orderId}/preview`, { responseType: 'blob' }),
+    );
   }
 
   pdfUrl(orderId: UlidValue): string {
