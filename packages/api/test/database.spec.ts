@@ -1,4 +1,5 @@
 import Sqlite from 'better-sqlite3';
+import { PermissionCodes } from '@froment/contracts';
 import { Effect, Schema } from 'effect';
 import { appendFile, cp, mkdtemp, readdir, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
@@ -70,7 +71,7 @@ describe('Database', () => {
 
     expect(state.foreignKeys).toBe(1);
     expect(state.journalMode).toBe('wal');
-    expect(state.permissions).toBe(31);
+    expect(state.permissions).toBe(PermissionCodes.length);
     expect(state.clientRolePermissions).toEqual([
       'document.download',
       'invoice.read',

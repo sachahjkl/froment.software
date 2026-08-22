@@ -20,11 +20,19 @@ export {
   type Ulid as UlidValue,
 } from './identifiers.js';
 export {
+  ClientRolePermissionCodes,
   IntegrationPermissionCode,
   IntegrationPermissionCodes,
   type IntegrationPermissionCode as IntegrationPermissionCodeValue,
+  type IntegrationPermission,
   PermissionCode,
+  PermissionCodes,
+  PermissionDefinitions,
+  PermissionAudience,
+  type PermissionAudience as PermissionAudienceValue,
+  type Permission,
   type PermissionCode as PermissionCodeValue,
+  Permissions,
 } from './permissions.js';
 export {
   IntegrationToken,

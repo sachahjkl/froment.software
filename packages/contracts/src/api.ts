@@ -101,7 +101,7 @@ import {
   MutationRateLimit,
   RequiredPermission,
 } from './api-authentication.js';
-import type { PermissionCode } from './permissions.js';
+import { Permissions, type IntegrationPermission } from './permissions.js';
 import {
   IntegrationTokenCreateRequest,
   IntegrationTokenCreated,
@@ -113,7 +113,7 @@ import {
 } from './integration-tokens.js';
 
 const documentedRead =
-  (permission: PermissionCode, summary: string, description: string) =>
+  (permission: IntegrationPermission, summary: string, description: string) =>
   <
     Identifier extends string,
     Method extends HttpMethod.HttpMethod,
@@ -142,19 +142,19 @@ const documentedRead =
     >,
   ) =>
     endpoint
-      .annotate(RequiredPermission, permission)
+      .annotate(RequiredPermission, permission.code)
       .middleware(ApiAuthorization)
       .middleware(ApiAuthentication)
       .annotateMerge(
         OpenApi.annotations({
           summary,
-          description: `${description}\n\nRequired permission: \`${permission}\`.`,
-          override: { 'x-required-permission': permission },
+          description: `${description}\n\nRequired permission: \`${permission.code}\`.`,
+          override: { 'x-required-permission': permission.code },
         }),
       );
 
 const documentedWrite =
-  (permission: PermissionCode, summary: string, description: string, rateLimit = 60) =>
+  (permission: IntegrationPermission, summary: string, description: string, rateLimit = 60) =>
   <
     Identifier extends string,
     Method extends HttpMethod.HttpMethod,
@@ -183,7 +183,7 @@ const documentedWrite =
     >,
   ) =>
     endpoint
-      .annotate(RequiredPermission, permission)
+      .annotate(RequiredPermission, permission.code)
       .annotate(MutationRateLimit, rateLimit)
       .middleware(ApiWriteProtection)
       .middleware(ApiAuthorization)
@@ -191,8 +191,8 @@ const documentedWrite =
       .annotateMerge(
         OpenApi.annotations({
           summary,
-          description: `${description}\n\nRequired permission: \`${permission}\`.`,
-          override: { 'x-required-permission': permission },
+          description: `${description}\n\nRequired permission: \`${permission.code}\`.`,
+          override: { 'x-required-permission': permission.code },
         }),
       );
 
@@ -276,7 +276,9 @@ export class ClientsApi extends HttpApiGroup.make('clients', { topLevel: true })
         AuthenticationRequired.pipe(HttpApiSchema.status(401)),
         PermissionDenied.pipe(HttpApiSchema.status(403)),
       ],
-    }).pipe(documentedRead('client.read', 'List clients', 'Lists active and archived clients.')),
+    }).pipe(
+      documentedRead(Permissions.clientRead, 'List clients', 'Lists active and archived clients.'),
+    ),
     HttpApiEndpoint.get('clientGet', '/api/clients/:clientId', {
       params: { clientId: Ulid },
       success: ClientSummary,
@@ -285,7 +287,9 @@ export class ClientsApi extends HttpApiGroup.make('clients', { topLevel: true })
         PermissionDenied.pipe(HttpApiSchema.status(403)),
         ClientNotFound.pipe(HttpApiSchema.status(404)),
       ],
-    }).pipe(documentedRead('client.read', 'Get a client', 'Returns one client by identifier.')),
+    }).pipe(
+      documentedRead(Permissions.clientRead, 'Get a client', 'Returns one client by identifier.'),
+    ),
     HttpApiEndpoint.post('clientCreate', '/api/clients', {
       payload: ClientCreateRequest,
       success: ClientSummary,
@@ -295,7 +299,7 @@ export class ClientsApi extends HttpApiGroup.make('clients', { topLevel: true })
         CsrfRejected.pipe(HttpApiSchema.status(403)),
         RequestRateLimited.pipe(HttpApiSchema.status(429)),
       ],
-    }).pipe(documentedWrite('client.create', 'Create a client', 'Creates a client.')),
+    }).pipe(documentedWrite(Permissions.clientCreate, 'Create a client', 'Creates a client.')),
     HttpApiEndpoint.put('clientUpdate', '/api/clients/:clientId', {
       params: { clientId: Ulid },
       payload: ClientUpdateRequest,
@@ -309,7 +313,9 @@ export class ClientsApi extends HttpApiGroup.make('clients', { topLevel: true })
         ClientArchived.pipe(HttpApiSchema.status(409)),
         ClientVersionConflict.pipe(HttpApiSchema.status(409)),
       ],
-    }).pipe(documentedWrite('client.update', 'Update a client', 'Updates an active client.')),
+    }).pipe(
+      documentedWrite(Permissions.clientUpdate, 'Update a client', 'Updates an active client.'),
+    ),
     HttpApiEndpoint.post('clientArchive', '/api/clients/:clientId/archive', {
       params: { clientId: Ulid },
       success: ClientSummary,
@@ -320,7 +326,7 @@ export class ClientsApi extends HttpApiGroup.make('clients', { topLevel: true })
         RequestRateLimited.pipe(HttpApiSchema.status(429)),
         ClientNotFound.pipe(HttpApiSchema.status(404)),
       ],
-    }).pipe(documentedWrite('client.archive', 'Archive a client', 'Archives a client.')),
+    }).pipe(documentedWrite(Permissions.clientArchive, 'Archive a client', 'Archives a client.')),
     HttpApiEndpoint.post('clientReactivate', '/api/clients/:clientId/reactivate', {
       params: { clientId: Ulid },
       success: ClientSummary,
@@ -332,7 +338,11 @@ export class ClientsApi extends HttpApiGroup.make('clients', { topLevel: true })
         ClientNotFound.pipe(HttpApiSchema.status(404)),
       ],
     }).pipe(
-      documentedWrite('client.archive', 'Reactivate a client', 'Reactivates an archived client.'),
+      documentedWrite(
+        Permissions.clientArchive,
+        'Reactivate a client',
+        'Reactivates an archived client.',
+      ),
     ),
     HttpApiEndpoint.post('clientAccessCreate', '/api/clients/:clientId/access', {
       params: { clientId: Ulid },
@@ -360,7 +370,11 @@ export class OrdersApi extends HttpApiGroup.make('orders', { topLevel: true })
         PermissionDenied.pipe(HttpApiSchema.status(403)),
       ],
     }).pipe(
-      documentedRead('order.read', 'List orders', 'Lists orders created from accepted quotes.'),
+      documentedRead(
+        Permissions.orderRead,
+        'List orders',
+        'Lists orders created from accepted quotes.',
+      ),
     ),
     HttpApiEndpoint.get('orderPreview', '/api/orders/:orderId/preview', {
       params: { orderId: Ulid },
@@ -398,7 +412,7 @@ export class OrdersApi extends HttpApiGroup.make('orders', { topLevel: true })
       ],
     }).pipe(
       documentedRead(
-        'document.download',
+        Permissions.documentDownload,
         'Download an order PDF',
         'Downloads an existing order PDF.',
       ),
@@ -475,7 +489,13 @@ export class QuotesApi extends HttpApiGroup.make('quotes', { topLevel: true })
         AuthenticationRequired.pipe(HttpApiSchema.status(401)),
         PermissionDenied.pipe(HttpApiSchema.status(403)),
       ],
-    }).pipe(documentedRead('quote.read', 'List quotes', 'Lists quotes and their latest revision.')),
+    }).pipe(
+      documentedRead(
+        Permissions.quoteRead,
+        'List quotes',
+        'Lists quotes and their latest revision.',
+      ),
+    ),
     HttpApiEndpoint.get('quoteGet', '/api/quotes/:quoteId', {
       params: { quoteId: Ulid },
       success: QuoteDetail,
@@ -485,7 +505,11 @@ export class QuotesApi extends HttpApiGroup.make('quotes', { topLevel: true })
         QuoteNotFound.pipe(HttpApiSchema.status(404)),
       ],
     }).pipe(
-      documentedRead('quote.read', 'Get a quote', 'Returns a quote and all of its revisions.'),
+      documentedRead(
+        Permissions.quoteRead,
+        'Get a quote',
+        'Returns a quote and all of its revisions.',
+      ),
     ),
     HttpApiEndpoint.get('affairEventList', '/api/affairs/:quoteId/events', {
       params: { quoteId: Ulid },
@@ -531,7 +555,7 @@ export class QuotesApi extends HttpApiGroup.make('quotes', { topLevel: true })
       ],
     }).pipe(
       documentedRead(
-        'document.download',
+        Permissions.documentDownload,
         'Download a quote PDF',
         'Downloads an existing quote revision PDF.',
       ),
@@ -549,7 +573,11 @@ export class QuotesApi extends HttpApiGroup.make('quotes', { topLevel: true })
         QuoteAmountTooLarge.pipe(HttpApiSchema.status(422)),
       ],
     }).pipe(
-      documentedWrite('quote.create', 'Create a quote', 'Creates the first revision of a quote.'),
+      documentedWrite(
+        Permissions.quoteCreate,
+        'Create a quote',
+        'Creates the first revision of a quote.',
+      ),
     ),
     HttpApiEndpoint.post('quoteSend', '/api/quotes/:quoteId/send', {
       params: { quoteId: Ulid },
@@ -567,7 +595,7 @@ export class QuotesApi extends HttpApiGroup.make('quotes', { topLevel: true })
       ],
     }).pipe(
       documentedWrite(
-        'quote.send',
+        Permissions.quoteSend,
         'Send a quote',
         'Creates a public consultation link for a rendered quote.',
         10,
@@ -586,7 +614,9 @@ export class QuotesApi extends HttpApiGroup.make('quotes', { topLevel: true })
         QuoteVersionConflict.pipe(HttpApiSchema.status(409)),
         QuoteNotEditable.pipe(HttpApiSchema.status(409)),
       ],
-    }).pipe(documentedWrite('quote.delete', 'Cancel a quote', 'Cancels an editable quote.')),
+    }).pipe(
+      documentedWrite(Permissions.quoteDelete, 'Cancel a quote', 'Cancels an editable quote.'),
+    ),
     HttpApiEndpoint.post('publicQuoteGet', '/api/public/quote-link', {
       payload: PublicQuoteAccessRequest,
       success: PublicQuoteConsultation,
@@ -632,7 +662,7 @@ export class QuotesApi extends HttpApiGroup.make('quotes', { topLevel: true })
       ],
     }).pipe(
       documentedWrite(
-        'quote.update',
+        Permissions.quoteUpdate,
         'Create a quote revision',
         'Creates a new revision of an editable quote.',
       ),
@@ -671,14 +701,22 @@ export class InvoicesApi extends HttpApiGroup.make('invoices', { topLevel: true 
       success: InvoiceList,
       error: invoiceReadErrors,
     }).pipe(
-      documentedRead('invoice.read', 'List invoices', 'Lists invoices and their current state.'),
+      documentedRead(
+        Permissions.invoiceRead,
+        'List invoices',
+        'Lists invoices and their current state.',
+      ),
     ),
     HttpApiEndpoint.get('invoiceGet', '/api/invoices/:invoiceId', {
       params: { invoiceId: Ulid },
       success: InvoiceDetail,
       error: [...invoiceReadErrors, InvoiceNotFound.pipe(HttpApiSchema.status(404))],
     }).pipe(
-      documentedRead('invoice.read', 'Get an invoice', 'Returns an invoice and its revisions.'),
+      documentedRead(
+        Permissions.invoiceRead,
+        'Get an invoice',
+        'Returns an invoice and its revisions.',
+      ),
     ),
     HttpApiEndpoint.get('invoicePreview', '/api/invoices/:invoiceId/revisions/:version/preview', {
       params: { invoiceId: Ulid, version: RevisionVersionParameter },
@@ -700,7 +738,7 @@ export class InvoicesApi extends HttpApiGroup.make('invoices', { topLevel: true 
       error: [...invoiceReadErrors, DocumentNotFound.pipe(HttpApiSchema.status(404))],
     }).pipe(
       documentedRead(
-        'document.download',
+        Permissions.documentDownload,
         'Download an invoice PDF',
         'Downloads an existing invoice revision PDF.',
       ),
@@ -717,7 +755,7 @@ export class InvoicesApi extends HttpApiGroup.make('invoices', { topLevel: true 
       ],
     }).pipe(
       documentedWrite(
-        'invoice.create',
+        Permissions.invoiceCreate,
         'Create an invoice',
         'Creates a draft invoice from an order.',
       ),
@@ -736,7 +774,7 @@ export class InvoicesApi extends HttpApiGroup.make('invoices', { topLevel: true 
       ],
     }).pipe(
       documentedWrite(
-        'invoice.update',
+        Permissions.invoiceUpdate,
         'Create an invoice revision',
         'Creates a new draft invoice revision.',
       ),
@@ -754,7 +792,7 @@ export class InvoicesApi extends HttpApiGroup.make('invoices', { topLevel: true 
       ],
     }).pipe(
       documentedWrite(
-        'invoice.issue',
+        Permissions.invoiceIssue,
         'Issue an invoice',
         'Assigns the legal invoice number and issues the invoice.',
         10,
@@ -772,7 +810,7 @@ export class InvoicesApi extends HttpApiGroup.make('invoices', { topLevel: true 
       ],
     }).pipe(
       documentedWrite(
-        'invoice.mark-paid',
+        Permissions.invoiceMarkPaid,
         'Mark an invoice as paid',
         'Transitions an issued invoice to paid.',
         10,
@@ -788,7 +826,7 @@ export class InvoicesApi extends HttpApiGroup.make('invoices', { topLevel: true 
         InvoiceVersionConflict.pipe(HttpApiSchema.status(409)),
         InvoiceInvalidTransition.pipe(HttpApiSchema.status(409)),
       ],
-    }).pipe(documentedWrite('invoice.void', 'Void an invoice', 'Voids an invoice.', 10)),
+    }).pipe(documentedWrite(Permissions.invoiceVoid, 'Void an invoice', 'Voids an invoice.', 10)),
   )
   .annotateMerge(
     OpenApi.annotations({

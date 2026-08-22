@@ -19,7 +19,7 @@ export type IntegrationTokenSecret = typeof IntegrationTokenSecret.Type;
 export const IntegrationToken = Schema.Struct({
   id: Ulid,
   name: IntegrationTokenName,
-  permissions: Schema.Array(IntegrationPermissionCode),
+  permissions: Schema.UniqueArray(IntegrationPermissionCode),
   createdAt: Schema.Int,
   expiresAt: Schema.Int,
   lastUsedAt: Schema.NullOr(Schema.Int),
@@ -54,7 +54,7 @@ export type IntegrationTokenListQuery = typeof IntegrationTokenListQuery.Type;
 
 export const IntegrationTokenCreateRequest = Schema.Struct({
   name: IntegrationTokenName,
-  permissions: Schema.Array(IntegrationPermissionCode).check(Schema.isMinLength(1)),
+  permissions: Schema.UniqueArray(IntegrationPermissionCode).check(Schema.isMinLength(1)),
   expiresAt: Schema.Int,
   rateLimitPerMinute: Schema.optionalKey(
     Schema.Int.check(Schema.isGreaterThanOrEqualTo(1), Schema.isLessThanOrEqualTo(600)),

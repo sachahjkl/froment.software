@@ -13,7 +13,9 @@ import {
   ClientOrderList,
   ClientQuoteList,
   ClientSummary,
+  ClientRolePermissionCodes,
   OrderList,
+  PermissionCodes,
   QuoteDetail,
 } from '@froment/contracts';
 import Sqlite from 'better-sqlite3';
@@ -273,7 +275,9 @@ describe('HTTP server', () => {
       sqlite.prepare("select count(*) from roles where name = 'administrator'").pluck().get(),
     ).toBe(1);
     expect(sqlite.prepare('select count(*) from user_roles').pluck().get()).toBe(1);
-    expect(sqlite.prepare('select count(*) from role_permissions').pluck().get()).toBe(35);
+    expect(sqlite.prepare('select count(*) from role_permissions').pluck().get()).toBe(
+      PermissionCodes.length + ClientRolePermissionCodes.length,
+    );
     expect(sqlite.prepare('select count(*) from access_credentials').pluck().get()).toBe(1);
     expect(sqlite.prepare('select count(*) from sessions').pluck().get()).toBe(1);
     expect(

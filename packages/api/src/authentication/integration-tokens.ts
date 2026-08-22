@@ -204,10 +204,7 @@ export const IntegrationTokensLive = Layer.effect(
           code: 'integration_token.invalid_expiration',
         });
       }
-      const requestedPermissions = [...new Set(request.permissions)].sort();
-      if (requestedPermissions.length !== request.permissions.length) {
-        return yield* new PermissionDenied({ code: 'authentication.permission_denied' });
-      }
+      const requestedPermissions = [...request.permissions].sort();
       const allowedPermissions = yield* Effect.try({
         try: () =>
           new Set(

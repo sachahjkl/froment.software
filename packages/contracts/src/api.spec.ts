@@ -3,6 +3,7 @@ import { OpenApi } from 'effect/unstable/httpapi';
 import { describe, expect, it } from 'vitest';
 
 import { Api, RevisionVersionParameter } from './api.js';
+import { IntegrationPermissionCodes } from './permissions.js';
 
 describe('API contracts', () => {
   it('accepts only positive safe route versions', () => {
@@ -63,5 +64,17 @@ describe('API contracts', () => {
     expect(specification.paths['/api/quotes/{quoteId}/cancel']?.post?.responses).toHaveProperty(
       '413',
     );
+    const documentedPermissions = new Set(
+      Object.values(specification.paths).flatMap((path) =>
+        Object.values(path).flatMap((operation) => {
+          if (typeof operation !== 'object' || operation === null) return [];
+          const permission = (
+            operation as typeof operation & { readonly 'x-required-permission'?: unknown }
+          )['x-required-permission'];
+          return typeof permission === 'string' ? [permission] : [];
+        }),
+      ),
+    );
+    expect([...documentedPermissions].sort()).toEqual([...IntegrationPermissionCodes].sort());
   });
 });

@@ -18,11 +18,18 @@ describe('integration token contracts', () => {
     });
   });
 
-  it('rejects empty permissions and administrative permissions', () => {
+  it('rejects empty, duplicate, and administrative permissions', () => {
     expect(() =>
       Schema.decodeUnknownSync(IntegrationTokenCreateRequest)({
         name: 'ERP principal',
         permissions: [],
+        expiresAt: 1_800_000_000_000,
+      }),
+    ).toThrow();
+    expect(() =>
+      Schema.decodeUnknownSync(IntegrationTokenCreateRequest)({
+        name: 'ERP principal',
+        permissions: ['client.read', 'client.read'],
         expiresAt: 1_800_000_000_000,
       }),
     ).toThrow();
