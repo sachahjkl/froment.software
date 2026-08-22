@@ -78,7 +78,7 @@
         let total = pair.at(1)
         let cells = (total.at(0), total.at(1))
         if index == data.totals.len() - 1 {
-          (grid.cell(stroke: (top: 0.75mm + rgb("555555")))[#cells.at(0)], grid.cell(stroke: (top: 0.75mm + rgb("555555")))[#cells.at(1)])
+          (grid.cell(stroke: (top: 0.75mm + rgb("555555")), inset: (top: line-gap))[#cells.at(0)], grid.cell(stroke: (top: 0.75mm + rgb("555555")), inset: (top: line-gap))[#cells.at(1)])
         } else { cells }
       }).flatten(),
     )
