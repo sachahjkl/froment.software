@@ -30,4 +30,12 @@ export const frontendSpecific = <
     Middleware,
     MiddlewareServices
   >,
-) => endpoint.annotate(OpenApi.Exclude, true);
+) =>
+  endpoint.annotateMerge(
+    OpenApi.annotations({
+      transform: (operation) => ({
+        ...operation,
+        tags: [...operation['tags'], 'frontend'],
+      }),
+    }),
+  );

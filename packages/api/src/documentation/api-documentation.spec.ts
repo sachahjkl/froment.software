@@ -43,6 +43,11 @@ describe('API documentation', () => {
       summary: 'List clients',
       description: expect.stringContaining('Required permission: `client.read`.'),
     });
+    expect(french.paths['/api/auth/login']?.post?.tags).toEqual(['Authentification', 'Frontend']);
+    expect(french.tags).toContainEqual({
+      name: 'Frontend',
+      description: 'Routes utilisées par le frontend Froment Software.',
+    });
     expect(Object.keys(french.paths)).toEqual(Object.keys(english.paths));
     expect(french.components.schemas).toEqual(english.components.schemas);
     expect(JSON.stringify(specification)).not.toContain('List clients');

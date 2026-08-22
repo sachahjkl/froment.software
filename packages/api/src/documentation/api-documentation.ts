@@ -53,8 +53,16 @@ const applyApiDocumentation = (
       ),
     ]),
   );
-  const tags = (specification.tags ?? []).map((tag) => {
-    const group = groups[tag.name];
+  const sourceTags = new Map((specification.tags ?? []).map((tag) => [tag.name, tag]));
+  const tagNames = new Set([
+    ...sourceTags.keys(),
+    ...Object.values(specification.paths ?? {}).flatMap((path) =>
+      Object.values(path).flatMap((operation) => operation?.tags ?? []),
+    ),
+  ]);
+  const tags = [...tagNames].map((name) => {
+    const tag = sourceTags.get(name) ?? { name };
+    const group = groups[name];
     return group === undefined
       ? tag
       : { ...tag, name: group.title, description: group.description };

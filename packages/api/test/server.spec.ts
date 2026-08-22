@@ -190,7 +190,7 @@ describe('HTTP server', () => {
       version: 'latest',
     });
     expect(specification.paths).toHaveProperty('/api/clients');
-    expect(specification.paths).not.toHaveProperty('/api/auth/login');
+    expect(specification.paths).toHaveProperty('/api/auth/login');
 
     const docsResponse = await fetch(`${baseUrl}/api/docs`);
     expect(docsResponse.status).toBe(200);
@@ -198,7 +198,8 @@ describe('HTTP server', () => {
     const html = await docsResponse.text();
     expect(html).toContain('API d’intégration Froment Software');
     expect(html).toContain('/api/clients');
-    expect(html).not.toContain('/api/auth/login');
+    expect(html).toContain('/api/auth/login');
+    expect(html).toContain('Frontend');
     expect(html).toContain('"localization":{"locale":"fr"}');
 
     const englishOpenApiResponse = await fetch(`${baseUrl}/api/openapi.en.json`);

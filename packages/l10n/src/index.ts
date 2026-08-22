@@ -47,6 +47,36 @@ export const apiDocumentation = {
         title: 'Factures',
         description: 'Factures, révisions, cycle de vie et documents.',
       },
+      affairs: { title: 'Affaires', description: 'Historique commercial des clients.' },
+      authentication: {
+        title: 'Authentification',
+        description: 'Connexion, session et déconnexion.',
+      },
+      bootstrap: {
+        title: 'Initialisation',
+        description: 'Création du premier compte administrateur.',
+      },
+      clientPortal: {
+        title: 'Espace client',
+        description: 'Documents accessibles aux comptes clients.',
+      },
+      frontend: {
+        title: 'Frontend',
+        description: 'Routes utilisées par le frontend Froment Software.',
+      },
+      integrationTokens: {
+        title: 'Jetons d’intégration',
+        description: 'Jetons Bearer et permissions associées.',
+      },
+      issuerSettings: {
+        title: 'Paramètres émetteur',
+        description: 'Coordonnées utilisées dans les documents.',
+      },
+      quoteConditionPresets: {
+        title: 'Préréglages de devis',
+        description: 'Conditions réutilisables dans les devis.',
+      },
+      status: { title: 'État', description: 'Santé et version du déploiement.' },
     },
     operations: {
       clientList: {
@@ -126,6 +156,135 @@ export const apiDocumentation = {
         description: 'Passe une facture émise à l’état payé.',
       },
       invoiceVoid: { summary: 'Annuler une facture', description: 'Annule une facture.' },
+      affairEventList: {
+        summary: 'Lister les événements d’une affaire',
+        description: 'Liste les événements commerciaux liés à un client.',
+      },
+      bootstrapCreate: {
+        summary: 'Créer le premier administrateur',
+        description: 'Initialise le premier compte administrateur.',
+      },
+      bootstrapStatus: {
+        summary: 'Obtenir l’état de l’initialisation',
+        description: 'Indique si la création du premier administrateur reste disponible.',
+      },
+      clientAccessCreate: {
+        summary: 'Créer un accès client',
+        description: 'Remplace les identifiants d’accès d’un client.',
+      },
+      clientInvoiceList: {
+        summary: 'Lister les factures du client',
+        description: 'Liste les factures accessibles au client connecté.',
+      },
+      clientInvoicePdf: {
+        summary: 'Télécharger une facture du client',
+        description: 'Télécharge le PDF d’une facture accessible au client connecté.',
+      },
+      clientOrderList: {
+        summary: 'Lister les commandes du client',
+        description: 'Liste les commandes accessibles au client connecté.',
+      },
+      clientOrderPdf: {
+        summary: 'Télécharger une commande du client',
+        description: 'Télécharge le PDF d’une commande accessible au client connecté.',
+      },
+      clientQuoteList: {
+        summary: 'Lister les devis du client',
+        description: 'Liste les devis accessibles au client connecté.',
+      },
+      clientQuotePdf: {
+        summary: 'Télécharger un devis du client',
+        description: 'Télécharge le PDF d’un devis accessible au client connecté.',
+      },
+      health: {
+        summary: 'Vérifier la santé du service',
+        description: 'Renvoie l’état de santé du service et de ses dépendances.',
+      },
+      integrationTokenCreate: {
+        summary: 'Créer un jeton d’intégration',
+        description: 'Crée un jeton Bearer et révèle son secret une seule fois.',
+      },
+      integrationTokenList: {
+        summary: 'Lister les jetons d’intégration',
+        description: 'Liste les jetons actifs, expirés et révoqués.',
+      },
+      integrationTokenRevoke: {
+        summary: 'Révoquer un jeton d’intégration',
+        description: 'Révoque définitivement un jeton.',
+      },
+      invoicePdfRender: {
+        summary: 'Générer le PDF d’une facture',
+        description: 'Génère et conserve le PDF d’une révision de facture.',
+      },
+      invoicePreview: {
+        summary: 'Prévisualiser une facture',
+        description: 'Génère un aperçu sans créer de document conservé.',
+      },
+      issuerSettingsGet: {
+        summary: 'Obtenir les paramètres émetteur',
+        description: 'Renvoie les coordonnées utilisées dans les documents.',
+      },
+      issuerSettingsUpdate: {
+        summary: 'Modifier les paramètres émetteur',
+        description: 'Modifie les coordonnées utilisées dans les futurs documents.',
+      },
+      login: {
+        summary: 'Se connecter',
+        description: 'Authentifie un compte et crée une session.',
+      },
+      logout: { summary: 'Se déconnecter', description: 'Révoque la session active.' },
+      orderPdfRender: {
+        summary: 'Générer le PDF d’une commande',
+        description: 'Génère et conserve le PDF d’une commande.',
+      },
+      orderPreview: {
+        summary: 'Prévisualiser une commande',
+        description: 'Génère un aperçu sans créer de document conservé.',
+      },
+      publicQuoteGet: {
+        summary: 'Consulter un devis public',
+        description: 'Ouvre un devis avec un lien public valide.',
+      },
+      publicQuotePdfDownload: {
+        summary: 'Télécharger un devis public',
+        description: 'Télécharge le PDF associé à un lien public valide.',
+      },
+      publicQuoteSign: {
+        summary: 'Signer un devis public',
+        description: 'Accepte et signe un devis avec un lien public valide.',
+      },
+      quoteConditionPresetCreate: {
+        summary: 'Créer un préréglage de devis',
+        description: 'Crée un jeu de conditions réutilisable.',
+      },
+      quoteConditionPresetDelete: {
+        summary: 'Supprimer un préréglage de devis',
+        description: 'Supprime un jeu de conditions réutilisable.',
+      },
+      quoteConditionPresetList: {
+        summary: 'Lister les préréglages de devis',
+        description: 'Liste les jeux de conditions réutilisables.',
+      },
+      quoteConditionPresetUpdate: {
+        summary: 'Modifier un préréglage de devis',
+        description: 'Modifie un jeu de conditions réutilisable.',
+      },
+      quotePdfRender: {
+        summary: 'Générer le PDF d’un devis',
+        description: 'Génère et conserve le PDF d’une révision de devis.',
+      },
+      quotePreview: {
+        summary: 'Prévisualiser un devis',
+        description: 'Génère un aperçu sans créer de document conservé.',
+      },
+      sessionStatus: {
+        summary: 'Obtenir l’état de la session',
+        description: 'Indique le type du compte connecté.',
+      },
+      version: {
+        summary: 'Obtenir la version du service',
+        description: 'Renvoie les métadonnées du déploiement actif.',
+      },
     },
   },
   en: {
@@ -148,6 +307,36 @@ export const apiDocumentation = {
         title: 'Invoices',
         description: 'Invoices, revisions, lifecycle, and documents.',
       },
+      affairs: { title: 'Affairs', description: 'Client commercial history.' },
+      authentication: {
+        title: 'Authentication',
+        description: 'Login, session, and logout.',
+      },
+      bootstrap: {
+        title: 'Bootstrap',
+        description: 'First administrator account creation.',
+      },
+      clientPortal: {
+        title: 'Client portal',
+        description: 'Documents available to client accounts.',
+      },
+      frontend: {
+        title: 'Frontend',
+        description: 'Routes used by the Froment Software frontend.',
+      },
+      integrationTokens: {
+        title: 'Integration tokens',
+        description: 'Bearer tokens and their permissions.',
+      },
+      issuerSettings: {
+        title: 'Issuer settings',
+        description: 'Issuer details used in documents.',
+      },
+      quoteConditionPresets: {
+        title: 'Quote presets',
+        description: 'Reusable quote terms.',
+      },
+      status: { title: 'Status', description: 'Deployment health and version.' },
     },
     operations: {
       clientList: { summary: 'List clients', description: 'Lists active and archived clients.' },
@@ -218,6 +407,132 @@ export const apiDocumentation = {
         description: 'Transitions an issued invoice to paid.',
       },
       invoiceVoid: { summary: 'Void an invoice', description: 'Voids an invoice.' },
+      affairEventList: {
+        summary: 'List affair events',
+        description: 'Lists the commercial events related to a client.',
+      },
+      bootstrapCreate: {
+        summary: 'Create the first administrator',
+        description: 'Creates the first administrator account.',
+      },
+      bootstrapStatus: {
+        summary: 'Get bootstrap status',
+        description: 'Reports whether first administrator creation remains available.',
+      },
+      clientAccessCreate: {
+        summary: 'Create client access',
+        description: 'Replaces the access credentials for a client.',
+      },
+      clientInvoiceList: {
+        summary: 'List client invoices',
+        description: 'Lists invoices available to the authenticated client.',
+      },
+      clientInvoicePdf: {
+        summary: 'Download a client invoice',
+        description: 'Downloads an invoice PDF available to the authenticated client.',
+      },
+      clientOrderList: {
+        summary: 'List client orders',
+        description: 'Lists orders available to the authenticated client.',
+      },
+      clientOrderPdf: {
+        summary: 'Download a client order',
+        description: 'Downloads an order PDF available to the authenticated client.',
+      },
+      clientQuoteList: {
+        summary: 'List client quotes',
+        description: 'Lists quotes available to the authenticated client.',
+      },
+      clientQuotePdf: {
+        summary: 'Download a client quote',
+        description: 'Downloads a quote PDF available to the authenticated client.',
+      },
+      health: {
+        summary: 'Check service health',
+        description: 'Returns the health of the service and its dependencies.',
+      },
+      integrationTokenCreate: {
+        summary: 'Create an integration token',
+        description: 'Creates a Bearer token and reveals its secret once.',
+      },
+      integrationTokenList: {
+        summary: 'List integration tokens',
+        description: 'Lists active, expired, and revoked tokens.',
+      },
+      integrationTokenRevoke: {
+        summary: 'Revoke an integration token',
+        description: 'Permanently revokes a token.',
+      },
+      invoicePdfRender: {
+        summary: 'Render an invoice PDF',
+        description: 'Renders and stores an invoice revision PDF.',
+      },
+      invoicePreview: {
+        summary: 'Preview an invoice',
+        description: 'Renders a preview without creating a stored document.',
+      },
+      issuerSettingsGet: {
+        summary: 'Get issuer settings',
+        description: 'Returns the issuer details used in documents.',
+      },
+      issuerSettingsUpdate: {
+        summary: 'Update issuer settings',
+        description: 'Updates the issuer details used in future documents.',
+      },
+      login: { summary: 'Log in', description: 'Authenticates an account and creates a session.' },
+      logout: { summary: 'Log out', description: 'Revokes the active session.' },
+      orderPdfRender: {
+        summary: 'Render an order PDF',
+        description: 'Renders and stores an order PDF.',
+      },
+      orderPreview: {
+        summary: 'Preview an order',
+        description: 'Renders a preview without creating a stored document.',
+      },
+      publicQuoteGet: {
+        summary: 'Open a public quote',
+        description: 'Opens a quote with a valid public link.',
+      },
+      publicQuotePdfDownload: {
+        summary: 'Download a public quote',
+        description: 'Downloads the PDF for a valid public link.',
+      },
+      publicQuoteSign: {
+        summary: 'Sign a public quote',
+        description: 'Accepts and signs a quote with a valid public link.',
+      },
+      quoteConditionPresetCreate: {
+        summary: 'Create a quote preset',
+        description: 'Creates a reusable set of quote terms.',
+      },
+      quoteConditionPresetDelete: {
+        summary: 'Delete a quote preset',
+        description: 'Deletes a reusable set of quote terms.',
+      },
+      quoteConditionPresetList: {
+        summary: 'List quote presets',
+        description: 'Lists reusable sets of quote terms.',
+      },
+      quoteConditionPresetUpdate: {
+        summary: 'Update a quote preset',
+        description: 'Updates a reusable set of quote terms.',
+      },
+      quotePdfRender: {
+        summary: 'Render a quote PDF',
+        description: 'Renders and stores a quote revision PDF.',
+      },
+      quotePreview: {
+        summary: 'Preview a quote',
+        description: 'Renders a preview without creating a stored document.',
+      },
+      sessionStatus: {
+        summary: 'Get session status',
+        description: 'Reports the authenticated account type.',
+      },
+      version: {
+        summary: 'Get service version',
+        description: 'Returns the active deployment metadata.',
+      },
     },
   },
 } as const satisfies Record<Language, ApiDocumentation>;

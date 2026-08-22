@@ -20,35 +20,24 @@ describe('API contracts', () => {
     }
   });
 
-  it('publishes only the integration API contract', () => {
+  it('publishes the complete API contract', () => {
     const specification = OpenApi.fromApi(Api);
 
     expect(specification.openapi).toBe('3.1.0');
     expect(specification.info).toMatchObject({ version: 'latest' });
-    expect(Object.keys(specification.paths).sort()).toEqual([
-      '/api/clients',
-      '/api/clients/{clientId}',
-      '/api/clients/{clientId}/archive',
-      '/api/clients/{clientId}/reactivate',
-      '/api/invoices',
-      '/api/invoices/{invoiceId}',
-      '/api/invoices/{invoiceId}/issue',
-      '/api/invoices/{invoiceId}/mark-paid',
-      '/api/invoices/{invoiceId}/revisions',
-      '/api/invoices/{invoiceId}/revisions/{version}/pdf',
-      '/api/invoices/{invoiceId}/void',
-      '/api/orders',
-      '/api/orders/{orderId}/pdf',
-      '/api/quotes',
-      '/api/quotes/{quoteId}',
-      '/api/quotes/{quoteId}/cancel',
-      '/api/quotes/{quoteId}/revisions',
-      '/api/quotes/{quoteId}/revisions/{version}/pdf',
-      '/api/quotes/{quoteId}/send',
+    expect(specification.paths['/api/auth/login']?.post?.tags).toEqual([
+      'authentication',
+      'frontend',
     ]);
-    expect(specification.paths['/api/auth/login']).toBeUndefined();
-    expect(specification.paths['/api/integration-tokens']).toBeUndefined();
-    expect(specification.paths['/api/public/quote-link']).toBeUndefined();
+    expect(specification.paths['/api/integration-tokens']?.get?.tags).toEqual([
+      'integrationTokens',
+      'frontend',
+    ]);
+    expect(specification.paths['/api/public/quote-link']?.post?.tags).toEqual([
+      'quoteLinks',
+      'frontend',
+    ]);
+    expect(specification.paths['/api/health']?.get?.tags).toEqual(['status']);
     expect(specification.components.securitySchemes).toMatchObject({
       bearer: { type: 'http', scheme: 'Bearer' },
       sessionCookie: { type: 'apiKey', in: 'cookie', name: '__Host-froment-session' },
@@ -77,7 +66,7 @@ describe('API contracts', () => {
         }),
       ),
     );
-    expect([...documentedPermissions].sort()).toEqual([...IntegrationPermissionCodes].sort());
+    expect(IntegrationPermissionCodes.every((code) => documentedPermissions.has(code))).toBe(true);
   });
 
   it('keeps permissions, mutation quotas, and frontend visibility independent', () => {
