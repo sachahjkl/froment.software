@@ -183,6 +183,9 @@ export const integrationTokens = sqliteTable(
     index('integration_tokens_user_id_index').on(table.userId),
     index('integration_tokens_expires_at_index').on(table.expiresAt),
     index('integration_tokens_active_index').on(table.revokedAt, table.expiresAt),
+    index('integration_tokens_unrevoked_name_expiry_index')
+      .on(table.name, table.expiresAt)
+      .where(sql`${table.revokedAt} is null`),
     check(
       'integration_tokens_id_ulid_check',
       sql`${table.id} is not null and length(${table.id}) = 26 and ${table.id} not glob '*[^0-9A-HJKMNP-TV-Z]*' and substr(${table.id}, 1, 1) between '0' and '7'`,

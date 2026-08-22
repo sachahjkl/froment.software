@@ -27,6 +27,7 @@ import { AuthenticationConfig, hmac } from './authentication-config.js';
 const maximumLifetime = 365 * 24 * 60 * 60 * 1_000;
 const defaultRateLimit = 120;
 const tokenPrefix = 'froment_it_v1_';
+const activeNameConflictMessage = 'integration token active name conflict';
 
 const IntegrationTokenRecord = Schema.Struct({
   id: Ulid,
@@ -228,18 +229,6 @@ export const IntegrationTokensLive = Layer.effect(
         try: () =>
           database.sqlite
             .transaction(() => {
-              if (
-                database.sqlite
-                  .prepare(
-                    `select 1 from integration_tokens
-                      where name = ? and revoked_at is null and expires_at > ? limit 1`,
-                  )
-                  .get(name, now) !== undefined
-              ) {
-                throw new IntegrationTokenNameConflict({
-                  code: 'integration_token.name_conflict',
-                });
-              }
               database.sqlite
                 .prepare(
                   `insert into integration_tokens
@@ -283,8 +272,8 @@ export const IntegrationTokensLive = Layer.effect(
             })
             .immediate(),
         catch: (cause) =>
-          cause instanceof IntegrationTokenNameConflict
-            ? cause
+          cause instanceof Error && cause.message === activeNameConflictMessage
+            ? new IntegrationTokenNameConflict({ code: 'integration_token.name_conflict' })
             : new DatabaseError({ operation: 'create integration token', cause }),
       });
     });

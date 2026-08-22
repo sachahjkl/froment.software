@@ -271,6 +271,59 @@ describe('Database', () => {
                values (?, ?, 'ERP', ?, 1, 1000, 120)`,
             )
             .run(tokenId, userId, Buffer.alloc(32, 2));
+          const insertToken = sqlite.prepare(
+            `insert into integration_tokens
+             (id, user_id, name, token_hmac, created_at, expires_at, rate_limit_per_minute)
+             values (?, ?, ?, ?, ?, ?, 120)`,
+          );
+          expect(() =>
+            insertToken.run(
+              '01ARZ3NDEKTSV4RRFFQ69G5FAE',
+              userId,
+              'ERP',
+              Buffer.alloc(32, 3),
+              2,
+              2000,
+            ),
+          ).toThrow('integration token active name conflict');
+          expect(() =>
+            insertToken.run(
+              '01ARZ3NDEKTSV4RRFFQ69G5FAF',
+              userId,
+              ' ERP ',
+              Buffer.alloc(32, 4),
+              2,
+              2000,
+            ),
+          ).toThrow('integration token name must be trimmed');
+          expect(() =>
+            insertToken.run(
+              '01ARZ3NDEKTSV4RRFFQ69G5FAG',
+              userId,
+              'erp',
+              Buffer.alloc(32, 5),
+              2,
+              2000,
+            ),
+          ).not.toThrow();
+          insertToken.run(
+            '01ARZ3NDEKTSV4RRFFQ69G5FAH',
+            userId,
+            'Expired',
+            Buffer.alloc(32, 6),
+            1,
+            10,
+          );
+          expect(() =>
+            insertToken.run(
+              '01ARZ3NDEKTSV4RRFFQ69G5FAJ',
+              userId,
+              'Expired',
+              Buffer.alloc(32, 7),
+              10,
+              2000,
+            ),
+          ).not.toThrow();
           sqlite
             .prepare(
               "insert into integration_token_permissions (token_id, permission_code) values (?, 'client.read')",
@@ -295,6 +348,16 @@ describe('Database', () => {
                 'update integration_tokens set revoked_at = 10, revoked_by_user_id = ? where id = ?',
               )
               .run(userId, tokenId),
+          ).not.toThrow();
+          expect(() =>
+            insertToken.run(
+              '01ARZ3NDEKTSV4RRFFQ69G5FAK',
+              userId,
+              'ERP',
+              Buffer.alloc(32, 8),
+              10,
+              2000,
+            ),
           ).not.toThrow();
           expect(() =>
             sqlite
