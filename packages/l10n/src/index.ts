@@ -4,31 +4,15 @@ export type Translations = (typeof translations)[Language];
 export type TranslationKey = keyof Translations;
 export type TranslationDictionary = Record<TranslationKey, string>;
 
-type ApiDocumentationGroup = 'clients' | 'orders' | 'quotes' | 'quoteLinks' | 'invoices';
-type ApiDocumentationOperation =
-  | 'clientList'
-  | 'clientGet'
-  | 'clientCreate'
-  | 'clientUpdate'
-  | 'clientArchive'
-  | 'clientReactivate'
-  | 'orderList'
-  | 'orderPdfDownload'
-  | 'quoteList'
-  | 'quoteGet'
-  | 'quotePdfDownload'
-  | 'quoteCreate'
-  | 'quoteSend'
-  | 'quoteCancel'
-  | 'quoteRevisionCreate'
-  | 'invoiceList'
-  | 'invoiceGet'
-  | 'invoicePdfDownload'
-  | 'invoiceCreate'
-  | 'invoiceRevisionCreate'
-  | 'invoiceIssue'
-  | 'invoiceMarkPaid'
-  | 'invoiceVoid';
+interface ApiDocumentationGroup {
+  readonly title: string;
+  readonly description: string;
+}
+
+interface ApiDocumentationOperation {
+  readonly summary: string;
+  readonly description: string;
+}
 
 interface ApiDocumentation {
   readonly title: string;
@@ -38,12 +22,8 @@ interface ApiDocumentation {
     readonly sessionCookie: string;
     readonly bearer: string;
   };
-  readonly groups: Readonly<
-    Record<ApiDocumentationGroup, { readonly title: string; readonly description: string }>
-  >;
-  readonly operations: Readonly<
-    Record<ApiDocumentationOperation, { readonly summary: string; readonly description: string }>
-  >;
+  readonly groups: Readonly<Record<string, ApiDocumentationGroup>>;
+  readonly operations: Readonly<Record<string, ApiDocumentationOperation>>;
 }
 
 export const apiDocumentation = {
