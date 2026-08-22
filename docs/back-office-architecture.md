@@ -11,8 +11,8 @@ Les décisions suivantes sont validées :
 - pnpm pour le workspace.
 - Drizzle ORM avec SQLite pour la persistance.
 - Une seule instance applicative avec un volume persistant.
-- Des sessions serveur dans des cookies sécurisés.
-- Un identifiant secret comme seul justificatif de connexion.
+- Une connexion par adresse électronique et mot de passe.
+- Des jetons d'accès PASETO en mémoire et des sessions de renouvellement rotatives.
 - Une preuve électronique pour la signature des devis.
 - Les PDF et les preuves sont stockés comme BLOB dans SQLite.
 - Le premier programme de livraison couvre le flux métier complet.
@@ -97,15 +97,15 @@ Une sauvegarde SQLite cohérente contient donc toutes les données et tous les d
 
 ## Authentification
 
-L'identifiant de connexion est un secret opaque d'au moins 256 bits.
-
 Une route dédiée permet l'amorçage du premier administrateur.
 
 Cette route reste disponible seulement tant qu'aucun administrateur n'existe.
 
-Le formulaire d'amorçage accepte un mot de passe simple.
+Le formulaire accepte le mot de passe d'amorçage, l'adresse électronique et le mot de passe administrateur.
 
-Le serveur dérive le mot de passe avec scrypt et compare le condensat en temps constant.
+Le serveur vérifie le mot de passe d'amorçage avec scrypt.
+
+Il dérive les mots de passe des comptes avec Argon2id.
 
 La variable obligatoire `BOOTSTRAP_PASSWORD_SCRYPT` contient les paramètres, le sel et le condensat en base64url.
 
@@ -117,69 +117,64 @@ La variable obligatoire `REFRESH_HMAC_KEY` contient une clé aléatoire de 32 oc
 
 La variable obligatoire `QUOTE_LINK_HMAC_KEY` contient une troisième clé aléatoire de 32 octets en base64url.
 
-Le bundle Angular ne contient ni mot de passe, ni condensat de mot de passe.
+Le bundle Angular ne contient ni mot de passe, ni condensat de mot de passe, ni clé secrète.
 
-Une transaction unique crée le compte, le rôle administrateur et toutes ses permissions.
+Une transaction unique crée le compte, ses identifiants de connexion et son rôle administrateur.
 
 La même transaction rend les amorçages concurrents impossibles.
 
-Le serveur ouvre ensuite une session sécurisée pour le nouvel administrateur.
-
-La page de résultat affiche l'ULID du compte et l'identifiant secret.
-
-La page propose une action de copie pour chaque valeur.
-
-Le composant de copie reprend l'objectif ergonomique de Clockin sans reprendre son implémentation ni son apparence.
-
-L'ULID identifie le compte. Il ne constitue pas un justificatif secret.
+Le serveur crée ensuite une famille de sessions de renouvellement et émet un jeton d'accès.
 
 Le flux de connexion est le suivant :
 
-1. L'utilisateur saisit son identifiant.
+1. L'utilisateur saisit son adresse électronique et son mot de passe.
 2. Le navigateur appelle `POST /api/auth/login`.
-3. Le serveur calcule un HMAC avec un pepper distinct.
-4. Le serveur compare le condensat avec l'accès configuré.
-5. Le serveur crée une session aléatoire.
-6. Le serveur place le jeton de session dans un cookie `HttpOnly`.
+3. Le serveur normalise l'adresse et vérifie le condensat Argon2id.
+4. Le serveur crée une famille de sessions de renouvellement.
+5. Le serveur retourne un jeton d'accès PASETO `v4.public` valable dix minutes.
+6. Le serveur place le jeton de renouvellement opaque dans un cookie sécurisé.
 
-Le navigateur ne stocke aucun justificatif dans `localStorage` ou `sessionStorage`.
+Angular conserve le jeton d'accès seulement en mémoire.
 
-SQLite conserve seulement le condensat du jeton de session.
+Le navigateur ne stocke aucun jeton d'authentification dans `localStorage` ou `sessionStorage`.
 
-Le cookie de production utilise ces attributs :
+Le cookie `__Secure-froment-refresh` utilise ces attributs :
 
 - `HttpOnly` ;
 - `Secure` ;
 - `SameSite=Strict` ;
-- `Path=/` ;
-- une expiration absolue ;
-- une expiration après inactivité.
+- `Path=/api/auth` ;
+- une expiration absolue de 30 jours.
 
-La déconnexion révoque la session côté serveur.
+SQLite conserve seulement le HMAC-SHA-256 de chaque jeton de renouvellement.
 
-Une rotation de l'identifiant administrateur révoque ses sessions existantes.
+Chaque renouvellement consomme le jeton courant et crée son remplacement dans une transaction.
 
-Le serveur retourne une erreur uniforme pour un identifiant absent ou invalide.
+Une réutilisation hors du délai de concurrence révoque toute la famille.
 
-Le serveur ne fournit aucun endpoint public de vérification d'identifiant.
+La déconnexion révoque la famille courante et supprime le cookie.
 
-## API d'intégration
+Un changement de mot de passe, une désactivation ou un archivage client révoque les sessions concernées.
+
+Le serveur retourne une erreur uniforme pour une adresse ou un mot de passe invalide.
+
+## API et jetons d'API
 
 Le serveur publie le contrat OpenAPI 3.1 sur `GET /api/openapi.json`.
 
-Le serveur publie la documentation Scalar sur `GET /api/docs`.
+Le serveur publie la documentation Scalar localisée sur `GET /api/docs`.
 
-Le contrat documente seulement les clients, les devis, les commandes, les factures et leurs PDF.
+Le contrat documente toutes les routes serveur avec leurs mécanismes de sécurité.
 
 Les URLs ne contiennent aucun segment de version.
 
-Un administrateur gère les jetons depuis la section Configuration, puis Intégrations.
+Un administrateur gère les jetons d'API depuis la section Configuration.
 
-Le secret suit le format `froment_it_v1_<ulid>.<secret>`.
+Le secret suit le format `froment_api_v1_<ulid>.<secret>`.
 
 Le serveur affiche le secret seulement dans la réponse de création.
 
-SQLite conserve uniquement son HMAC-SHA-256.
+SQLite conserve uniquement son HMAC-SHA-256 dans `api_tokens`.
 
 Chaque jeton possède une expiration, une limite de fréquence et une liste de permissions.
 
@@ -189,29 +184,29 @@ La révocation est définitive et idempotente.
 
 ## Protection des écritures
 
-Une écriture avec session exige :
+Une requête privée du navigateur exige un jeton d'accès PASETO actif avec les permissions requises.
 
-- une session active ;
-- un jeton CSRF lié à cette session ;
-- une origine autorisée.
+Une requête d'API exige un jeton d'API Bearer actif avec les permissions requises.
 
-Une écriture d'intégration exige un jeton Bearer actif avec la permission requise.
+Le serveur sélectionne explicitement le type de Bearer par son préfixe et rejette les justificatifs mixtes.
 
-Les deux méthodes exigent :
+Les routes de connexion, d'amorçage, de renouvellement et de déconnexion exigent l'origine configurée.
+
+Les deux types de jetons exigent :
 
 - un type de contenu accepté ;
 - un corps inférieur à la limite configurée ;
 - une limite de fréquence disponible.
 
-Le serveur ne journalise jamais les identifiants, les cookies ou les jetons de permalien.
+Le serveur ne journalise jamais les mots de passe, les cookies, les Bearer ou les jetons de permalien.
 
 Les réponses privées utilisent `Cache-Control: no-store`.
 
 ## Autorisation
 
-Le cookie ne contient aucun rôle et aucune permission.
+Le jeton PASETO ne contient aucun rôle et aucune permission.
 
-Le serveur charge le principal et ses permissions depuis SQLite.
+Le serveur charge le compte, ses rôles et ses permissions depuis SQLite après validation du jeton.
 
 Chaque endpoint vérifie une permission et la portée de la ressource.
 
@@ -260,17 +255,17 @@ audit.read
 
 L'administrateur initial reçoit toutes les permissions.
 
-Un administrateur peut créer un accès client aléatoire.
-
-Le serveur affiche cet identifiant une seule fois.
+Un administrateur peut définir ou remplacer l'adresse électronique et le mot de passe d'un compte client.
 
 ## Modèle de données
 
 Le premier schéma contient ces tables :
 
 - `users` ;
-- `access_credentials` ;
-- `sessions` ;
+- `password_credentials` ;
+- `refresh_sessions` ;
+- `api_tokens` ;
+- `api_token_permissions` ;
 - `roles` ;
 - `permissions` ;
 - `user_roles` ;
@@ -409,10 +404,10 @@ Cette preuve ne constitue pas une signature qualifiée eIDAS.
 
 Le premier programme comprend ces écrans :
 
-- connexion par identifiant ;
+- connexion par adresse électronique et mot de passe ;
 - tableau de bord ;
 - gestion des clients ;
-- gestion des accès clients ;
+- gestion des identifiants de connexion client ;
 - éditeur de devis ;
 - éditeur de factures ;
 - aperçu PDF des documents ;
@@ -421,7 +416,7 @@ Le premier programme comprend ces écrans :
 - consultation des signatures ;
 - téléchargement PDF ;
 - journal d'audit ;
-- gestion des sessions ;
+- révocation des sessions de renouvellement ;
 - informations de version du déploiement.
 
 La page de version affiche chaque package du workspace avec sa version publiée.
@@ -491,9 +486,9 @@ Utilisez `OTEL_SDK_DISABLED=true` pour interdire explicitement tout export.
 3. Créer `contracts`, `api` et `documents`.
 4. Ajouter le serveur Effect et le service des fichiers statiques.
 5. Ajouter Drizzle, SQLite et les migrations.
-6. Ajouter l'amorçage administrateur à usage unique et l'affichage copiable de son ULID.
-7. Remplacer l'authentification actuelle, puis ajouter les sessions, CSRF, rôles et permissions.
-8. Ajouter la gestion des clients et des accès.
+6. Ajouter l'amorçage administrateur à usage unique.
+7. Ajouter les mots de passe, PASETO, les sessions de renouvellement, les rôles et les permissions.
+8. Ajouter la gestion des clients et de leurs identifiants de connexion.
 9. Ajouter l'éditeur et le cycle des devis.
 10. Ajouter les templates Typst et le rendu PDF local.
 11. Ajouter le stockage des PDF.
@@ -530,8 +525,8 @@ Le programme doit passer ces validations :
 - tests des contrats ;
 - tests SQLite sur une base temporaire ;
 - matrice des permissions ;
-- tests de session et de révocation ;
-- tests CSRF ;
+- tests des jetons d'accès, du renouvellement, de la rotation et de la révocation ;
+- tests d'origine des routes sensibles au cookie ;
 - tests de concurrence sur la signature ;
 - tests de numérotation ;
 - tests des transitions métier ;

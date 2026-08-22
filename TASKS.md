@@ -202,12 +202,11 @@
 ### Verification
 
 - Add compact and maximum-content fixtures for every document type.
-- Add reviewed PDF or rasterized-page references for all three templates.
-- Compare every page against its reviewed visual reference with an explicit tolerance.
+- Validate each template with document-specific semantic assertions over extracted PDF text and metadata.
 - Verify A4 dimensions, page counts, text extraction, and embedded Cousine fonts with Poppler.
 - Verify all twenty lines and complete long terms remain in multipage output.
 - Verify table headings repeat and monetary columns do not wrap.
-- Verify repeated rendering of one fixture produces identical PDF bytes.
+- Verify identical snapshots, templates, fonts, and toolchains produce identical PDF bytes.
 - Verify previews return PDF content and never create stored artifacts.
 - Verify preview object URLs are replaced and revoked correctly in Angular tests.
 - Verify signed quote proofs match their stored Typst PDF hashes.
