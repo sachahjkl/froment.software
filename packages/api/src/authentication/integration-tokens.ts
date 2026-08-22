@@ -68,13 +68,6 @@ export interface IntegrationTokensService {
     principal: IntegrationPrincipal,
     permission: PermissionCodeValue,
   ) => Effect.Effect<void, PermissionDenied | DatabaseError>;
-  readonly authorize: (
-    token: string,
-    permission: PermissionCodeValue,
-  ) => Effect.Effect<
-    IntegrationPrincipal,
-    AuthenticationRequired | PermissionDenied | DatabaseError
-  >;
   readonly revoke: (
     tokenId: UlidValue,
     actorUserId: UlidValue,
@@ -383,15 +376,6 @@ export const IntegrationTokensLive = Layer.effect(
       }
     });
 
-    const authorize = Effect.fn('IntegrationTokens.authorize')(function* (
-      token: string,
-      permission: PermissionCodeValue,
-    ) {
-      const principal = yield* authenticate(token);
-      yield* authorizePermission(principal, permission);
-      return principal;
-    });
-
     const revoke = Effect.fn('IntegrationTokens.revoke')(function* (
       tokenId: UlidValue,
       actorUserId: UlidValue,
@@ -437,7 +421,6 @@ export const IntegrationTokensLive = Layer.effect(
       list,
       create,
       authenticate,
-      authorize,
       authorizePermission,
       revoke,
     });

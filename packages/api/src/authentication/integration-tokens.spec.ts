@@ -80,15 +80,18 @@ describe('IntegrationTokens', () => {
         const stored = database.sqlite
           .prepare('select token_hmac from integration_tokens where id = ?')
           .get(created.token.id);
-        const authorized = yield* service.authorize(created.secret, 'client.read');
-        const missingScope = yield* Effect.result(service.authorize(created.secret, 'quote.read'));
+        const authorized = yield* service.authenticate(created.secret);
+        yield* service.authorizePermission(authorized, 'client.read');
+        const missingScope = yield* Effect.result(
+          service.authorizePermission(authorized, 'quote.read'),
+        );
         database.sqlite
           .prepare(
             "delete from role_permissions where role_id = ? and permission_code = 'client.read'",
           )
           .run(roleId);
         const removedOwnerPermission = yield* Effect.result(
-          service.authorize(created.secret, 'client.read'),
+          service.authorizePermission(authorized, 'client.read'),
         );
         return {
           authorized,
@@ -130,10 +133,10 @@ describe('IntegrationTokens', () => {
           userId,
         );
         const altered = `${created.secret.slice(0, -1)}${created.secret.endsWith('A') ? 'B' : 'A'}`;
-        const malformed = yield* Effect.result(service.authorize('invalid', 'client.read'));
-        const invalidHmac = yield* Effect.result(service.authorize(altered, 'client.read'));
+        const malformed = yield* Effect.result(service.authenticate('invalid'));
+        const invalidHmac = yield* Effect.result(service.authenticate(altered));
         yield* TestClock.adjust('2 seconds');
-        const expired = yield* Effect.result(service.authorize(created.secret, 'client.read'));
+        const expired = yield* Effect.result(service.authenticate(created.secret));
 
         const revocable = yield* service.create(
           {
@@ -145,7 +148,7 @@ describe('IntegrationTokens', () => {
         );
         const firstRevocation = yield* service.revoke(revocable.token.id, userId);
         const secondRevocation = yield* service.revoke(revocable.token.id, userId);
-        const revoked = yield* Effect.result(service.authorize(revocable.secret, 'client.read'));
+        const revoked = yield* Effect.result(service.authenticate(revocable.secret));
 
         const disabled = yield* service.create(
           {
@@ -156,9 +159,7 @@ describe('IntegrationTokens', () => {
           userId,
         );
         database.sqlite.prepare('update users set disabled_at = 2000 where id = ?').run(userId);
-        const disabledOwner = yield* Effect.result(
-          service.authorize(disabled.secret, 'client.read'),
-        );
+        const disabledOwner = yield* Effect.result(service.authenticate(disabled.secret));
         return {
           disabledOwner,
           expired,
