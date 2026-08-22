@@ -184,8 +184,10 @@ export class IntegrationTokens {
   protected async copySecret(secret: string): Promise<void> {
     if (await this.textCopy.copy(secret)) {
       this.copied.set(true);
+      this.dialogError.set(undefined);
       return;
     }
+    this.copied.set(false);
     this.dialogError.set('clipboard.error');
   }
 

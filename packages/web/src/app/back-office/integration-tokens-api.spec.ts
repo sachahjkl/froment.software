@@ -90,4 +90,45 @@ describe('IntegrationTokensApi', () => {
     await expect(list).rejects.toThrow();
     http.verify();
   });
+
+  it('preserves typed request-policy failures', async () => {
+    TestBed.configureTestingModule({
+      providers: [provideHttpClient(), provideHttpClientTesting()],
+    });
+    const api = TestBed.inject(IntegrationTokensApi);
+    const http = TestBed.inject(HttpTestingController);
+    const payload = {
+      name: 'ERP',
+      permissions: ['client.read'] as const,
+      expiresAt: 1_800_000_000_000,
+    };
+
+    const create = api.create(payload);
+    http
+      .expectOne('/api/integration-tokens')
+      .flush(
+        { _tag: 'RequestInvalidOrigin', code: 'request.invalid_origin' },
+        { status: 403, statusText: 'Forbidden' },
+      );
+    await expect(create).resolves.toMatchObject({
+      success: false,
+      code: 'request.invalid_origin',
+      status: 403,
+    });
+
+    const tokenId = '01ARZ3NDEKTSV4RRFFQ69G5FAV';
+    const revoke = api.revoke(tokenId);
+    http
+      .expectOne(`/api/integration-tokens/${tokenId}/revoke`)
+      .flush(
+        { _tag: 'RequestTooLarge', code: 'request.too_large' },
+        { status: 413, statusText: 'Content Too Large' },
+      );
+    await expect(revoke).resolves.toMatchObject({
+      success: false,
+      code: 'request.too_large',
+      status: 413,
+    });
+    http.verify();
+  });
 });

@@ -2,6 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { vi } from 'vitest';
 
 import { IntegrationTokensApi } from '@backoffice/integration-tokens-api';
+import { TextCopy } from '@shared/text-copy';
 import { IntegrationTokens } from './integration-tokens';
 
 const token = {
@@ -86,6 +87,7 @@ describe('IntegrationTokens', () => {
   });
 
   it('shows a created secret once and clears it when acknowledged', async () => {
+    const copy = vi.fn().mockResolvedValueOnce(false).mockResolvedValueOnce(true);
     const create = vi.fn().mockResolvedValue({
       success: true,
       result: { token, secret },
@@ -100,6 +102,7 @@ describe('IntegrationTokens', () => {
             revoke: vi.fn(),
           },
         },
+        { provide: TextCopy, useValue: { copy } },
       ],
     });
     const fixture = TestBed.createComponent(IntegrationTokens);
@@ -123,6 +126,13 @@ describe('IntegrationTokens', () => {
       expect.objectContaining({ name: 'ERP', permissions: ['client.read'] }),
     );
     expect(root.textContent).toContain(secret);
+    const copyButton = root.querySelector<HTMLButtonElement>('app-copy-field button')!;
+    copyButton.click();
+    await fixture.whenStable();
+    expect(root.querySelector('dialog [role="alert"]')).not.toBeNull();
+    copyButton.click();
+    await fixture.whenStable();
+    expect(root.querySelector('dialog [role="alert"]')).toBeNull();
     const confirm = vi.spyOn(globalThis, 'confirm').mockReturnValue(false);
     expect(fixture.componentInstance.canDeactivate()).toBe(false);
     expect(confirm).toHaveBeenCalledOnce();
@@ -135,6 +145,27 @@ describe('IntegrationTokens', () => {
     await fixture.whenStable();
     expect(root.textContent).not.toContain(secret);
     expect(fixture.componentInstance.canDeactivate()).toBe(true);
+  });
+
+  it('does not present a failed initial load as an empty list', async () => {
+    TestBed.configureTestingModule({
+      providers: [
+        {
+          provide: IntegrationTokensApi,
+          useValue: {
+            list: () => Promise.reject(new Error('Unavailable')),
+            create: vi.fn(),
+            revoke: vi.fn(),
+          },
+        },
+      ],
+    });
+    const fixture = TestBed.createComponent(IntegrationTokens);
+    await fixture.whenStable();
+    const root: HTMLElement = fixture.nativeElement;
+
+    expect(root.querySelector('.tokens-page [role="alert"]')).not.toBeNull();
+    expect(root.querySelector('.empty')).toBeNull();
   });
 
   it('blocks route deactivation while token creation is pending', async () => {

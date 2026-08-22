@@ -19,7 +19,7 @@
   <p appNotice variant="danger" role="alert">{{ i18n.t(errorKey) }}</p>
   } @if (loading()) {
   <p aria-live="polite">{{ i18n.t('backOffice.integrationTokens.loading') }}</p>
-  } @else if (tokens().length === 0) {
+  } @else if (tokens().length === 0 && pageError() === undefined) {
   <p class="empty">{{ i18n.t('backOffice.integrationTokens.empty') }}</p>
   } @else {
   <div appDataTable>

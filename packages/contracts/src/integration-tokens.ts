@@ -4,7 +4,9 @@ import {
   AuthenticationRequired,
   CsrfRejected,
   PermissionDenied,
+  RequestInvalidOrigin,
   RequestRateLimited,
+  RequestTooLarge,
 } from './authentication.js';
 import { Ulid } from './identifiers.js';
 import { IntegrationPermissionCode } from './permissions.js';
@@ -91,6 +93,8 @@ export const IntegrationTokenFailure = Schema.Union([
   PermissionDenied,
   CsrfRejected,
   RequestRateLimited,
+  RequestInvalidOrigin,
+  RequestTooLarge,
   IntegrationTokenNotFound,
   IntegrationTokenNameConflict,
   IntegrationTokenInvalidExpiration,
