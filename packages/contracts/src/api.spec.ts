@@ -65,6 +65,7 @@ describe('API contracts', () => {
     expect(specification.paths['/api/quotes/{quoteId}/cancel']?.post?.responses).toHaveProperty(
       '413',
     );
+    expect(specification.paths['/api/clients']?.get?.responses).not.toHaveProperty('413');
     const documentedPermissions = new Set(
       Object.values(specification.paths).flatMap((path) =>
         Object.values(path).flatMap((operation) => {

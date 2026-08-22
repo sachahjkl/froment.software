@@ -6,11 +6,13 @@ import {
   ApiBrowserRequest,
   ApiCredentials,
   ApiPrincipal,
+  ApiRequestBody,
   AuthenticationRequired,
   DocumentNotFound,
   MutationRateLimit,
   RequestInvalidOrigin,
   RequestRateLimited,
+  RequestTooLarge,
   RequiredPermissions,
   Ulid,
   type InvoiceIssueRequestValue,
@@ -121,50 +123,6 @@ const identifyRequest = <E, R>(
     return yield* application.pipe(
       Effect.annotateLogs({ 'request.id': requestId }),
       Effect.annotateSpans({ 'request.id': requestId }),
-    );
-  });
-
-const protectRequest = <E, R>(
-  application: Effect.Effect<HttpServerResponse.HttpServerResponse, E, R>,
-) =>
-  Effect.gen(function* () {
-    const request = yield* HttpServerRequest.HttpServerRequest;
-    const mutation =
-      request.method !== 'GET' && request.method !== 'HEAD' && request.method !== 'OPTIONS';
-    if (mutation && request.url.startsWith('/api/')) {
-      if (request.headers['transfer-encoding'] !== undefined) {
-        return yield* HttpServerResponse.json(
-          { code: 'request.too_large' },
-          { status: 413, headers: { 'cache-control': 'no-store' } },
-        ).pipe(Effect.orDie);
-      }
-    }
-    const contentLength = Schema.decodeUnknownOption(Schema.NumberFromString)(
-      request.headers['content-length'],
-    );
-    if (Option.isSome(contentLength) && contentLength.value > 32 * 1024) {
-      return yield* HttpServerResponse.json(
-        { code: 'request.too_large' },
-        { status: 413, headers: { 'cache-control': 'no-store' } },
-      ).pipe(Effect.orDie);
-    }
-    return yield* application.pipe(
-      Effect.catch((error) => {
-        if (
-          !(error instanceof HttpServerError.HttpServerError) ||
-          error.reason._tag !== 'RequestParseError' ||
-          !(error.reason.cause instanceof Error) ||
-          error.reason.cause.message !== 'maxBytes exceeded'
-        ) {
-          return Effect.fail(error);
-        }
-        return Effect.succeed(
-          HttpServerResponse.jsonUnsafe(
-            { code: 'request.too_large' },
-            { status: 413, headers: { 'cache-control': 'no-store' } },
-          ),
-        );
-      }),
     );
   });
 
@@ -331,6 +289,33 @@ const ApiBrowserRequestLive = Layer.effect(
       }),
     );
   }),
+);
+
+const ApiRequestBodyLive = Layer.succeed(
+  ApiRequestBody,
+  ApiRequestBody.of(
+    Effect.fn('ApiRequestBody')(function* (httpEffect) {
+      yield* setPrivateResponseHeaders;
+      const request = yield* HttpServerRequest.HttpServerRequest;
+      if (request.headers['transfer-encoding'] !== undefined) {
+        return yield* new RequestTooLarge({ code: 'request.too_large' });
+      }
+      const contentLength = Schema.decodeUnknownOption(Schema.NumberFromString)(
+        request.headers['content-length'],
+      );
+      if (Option.isSome(contentLength) && contentLength.value > 32 * 1024) {
+        return yield* new RequestTooLarge({ code: 'request.too_large' });
+      }
+      return yield* httpEffect.pipe(
+        Effect.mapError((error) =>
+          error instanceof HttpServerError.HttpServerError &&
+          error.reason._tag === 'RequestParseError'
+            ? new RequestTooLarge({ code: 'request.too_large' })
+            : error,
+        ),
+      );
+    }),
+  ),
 );
 
 export const limitPublicQuoteRequest = Effect.fn('limitPublicQuoteRequest')(function* (
@@ -1086,7 +1071,14 @@ const ApiRoutes = HttpApiBuilder.layer(Api, { openapiPath: '/api/openapi.json' }
       IntegrationTokenHandlers,
     ),
   ),
-  Layer.provide(Layer.mergeAll(ApiAuthenticationLive, ApiAuthorizationLive, ApiBrowserRequestLive)),
+  Layer.provide(
+    Layer.mergeAll(
+      ApiAuthenticationLive,
+      ApiAuthorizationLive,
+      ApiBrowserRequestLive,
+      ApiRequestBodyLive,
+    ),
+  ),
 );
 
 const ApiDocs = HttpApiScalar.layer(Api, {
@@ -1127,9 +1119,7 @@ export const makeServerLayer = (options: {
     {
       middleware: (application) =>
         Effect.gen(function* () {
-          return yield* traceRequest(
-            identifyRequest(HttpMiddleware.logger(protectRequest(application))),
-          );
+          return yield* traceRequest(identifyRequest(HttpMiddleware.logger(application)));
         }),
       disableLogger: true,
     },

@@ -78,6 +78,11 @@ export class ApiBrowserRequest extends HttpApiMiddleware.Service<ApiBrowserReque
   { error: RequestInvalidOrigin },
 ) {}
 
+export class ApiRequestBody extends HttpApiMiddleware.Service<ApiRequestBody>()(
+  '@froment/contracts/ApiRequestBody',
+  { error: RequestTooLarge },
+) {}
+
 export class ApiAuthorization extends HttpApiMiddleware.Service<
   ApiAuthorization,
   { requires: ApiCredentials; provides: ApiPrincipal }
@@ -88,6 +93,5 @@ export class ApiAuthorization extends HttpApiMiddleware.Service<
     CsrfRejected,
     RequestInvalidOrigin,
     RequestRateLimited,
-    RequestTooLarge,
   ],
 }) {}

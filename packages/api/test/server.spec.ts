@@ -2264,7 +2264,10 @@ describe('HTTP server', () => {
     });
     expect(response.status).toBe(413);
     expect(response.headers.get('cache-control')).toBe('no-store');
-    await expect(response.json()).resolves.toEqual({ code: 'request.too_large' });
+    await expect(response.json()).resolves.toEqual({
+      _tag: 'RequestTooLarge',
+      code: 'request.too_large',
+    });
     const health = await fetch(`${baseUrl}/api/health`);
     expect(health.status).toBe(200);
   });
@@ -2296,7 +2299,10 @@ describe('HTTP server', () => {
     );
 
     expect(response.status).toBe(413);
-    expect(JSON.parse(response.body)).toEqual({ code: 'request.too_large' });
+    expect(JSON.parse(response.body)).toEqual({
+      _tag: 'RequestTooLarge',
+      code: 'request.too_large',
+    });
     expect((await fetch(`${baseUrl}/api/health`)).status).toBe(200);
   });
 
