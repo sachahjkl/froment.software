@@ -208,9 +208,8 @@ export {
   type ApiCredentialsValue,
   ApiPrincipal,
   type ApiPrincipalValue,
-  ApiWriteProtection,
   MutationRateLimit,
-  RequiredPermission,
+  RequiredPermissions,
 } from './api-authentication.js';
 export {
   ClientInvoiceList,

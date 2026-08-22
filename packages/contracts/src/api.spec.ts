@@ -1,8 +1,9 @@
-import { Schema } from 'effect';
+import { Context, Option, Schema } from 'effect';
 import { OpenApi } from 'effect/unstable/httpapi';
 import { describe, expect, it } from 'vitest';
 
 import { Api, RevisionVersionParameter } from './api.js';
+import { MutationRateLimit, RequiredPermissions } from './api-authentication.js';
 import { IntegrationPermissionCodes } from './permissions.js';
 
 describe('API contracts', () => {
@@ -76,5 +77,27 @@ describe('API contracts', () => {
       ),
     );
     expect([...documentedPermissions].sort()).toEqual([...IntegrationPermissionCodes].sort());
+  });
+
+  it('annotates internal administrator permissions and mutation quotas', () => {
+    const clientAccess = Api.groups.clients.endpoints.clientAccessCreate;
+    const affairEvents = Api.groups.quotes.endpoints.affairEventList;
+    const tokenCreate = Api.groups.integrationTokens.endpoints.integrationTokenCreate;
+
+    expect(
+      Option.getOrUndefined(Context.getOption(clientAccess.annotations, RequiredPermissions)),
+    ).toEqual(['client.access.create']);
+    expect(
+      Option.getOrUndefined(Context.getOption(clientAccess.annotations, MutationRateLimit)),
+    ).toBe(10);
+    expect(
+      Option.getOrUndefined(Context.getOption(affairEvents.annotations, RequiredPermissions)),
+    ).toEqual(['quote.read', 'audit.read']);
+    expect(
+      Option.getOrUndefined(Context.getOption(tokenCreate.annotations, RequiredPermissions)),
+    ).toEqual(['integration-token.manage']);
+    expect(
+      Option.getOrUndefined(Context.getOption(tokenCreate.annotations, MutationRateLimit)),
+    ).toBe(10);
   });
 });

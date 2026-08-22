@@ -63,20 +63,9 @@ export interface AuthenticationService {
   ) => Effect.Effect<Principal | undefined, DatabaseError>;
   readonly authorize: (
     sessionToken: string | undefined,
-    permission: PermissionCodeValue,
+    permissions: readonly [PermissionCodeValue, ...ReadonlyArray<PermissionCodeValue>],
     requiredMode: LoginModeValue,
   ) => Effect.Effect<Principal, AuthenticationRequired | PermissionDenied | DatabaseError>;
-  readonly authorizeWrite: (
-    sessionToken: string | undefined,
-    csrfCookie: string | undefined,
-    csrfHeader: string | undefined,
-    origin: string | undefined,
-    permission: PermissionCodeValue,
-    requiredMode: LoginModeValue,
-  ) => Effect.Effect<
-    Principal,
-    AuthenticationRequired | PermissionDenied | CsrfRejected | DatabaseError
-  >;
   readonly authorizeCsrf: (
     sessionToken: string,
     csrfCookie: string | undefined,
@@ -312,7 +301,7 @@ export const AuthenticationLive = Layer.effect(
 
     const authorize = Effect.fn('Authentication.authorize')(function* (
       sessionToken: string | undefined,
-      permission: PermissionCodeValue,
+      permissions: readonly [PermissionCodeValue, ...ReadonlyArray<PermissionCodeValue>],
       requiredMode: LoginModeValue,
     ) {
       const principal = yield* findActiveSession(sessionToken);
@@ -322,18 +311,20 @@ export const AuthenticationLive = Layer.effect(
       if (principal.mode !== requiredMode) {
         return yield* new PermissionDenied({ code: 'authentication.permission_denied' });
       }
-      const allowed = yield* Effect.try({
+      const allowedPermissionCount = yield* Effect.try({
         try: () =>
           database.sqlite
             .prepare(
-              `select 1 from user_roles
+              `select count(distinct role_permissions.permission_code) from user_roles
                join role_permissions on role_permissions.role_id = user_roles.role_id
-               where user_roles.user_id = ? and role_permissions.permission_code = ? limit 1`,
+               where user_roles.user_id = ?
+                 and role_permissions.permission_code in (${permissions.map(() => '?').join(', ')})`,
             )
-            .get(principal.userId, permission) !== undefined,
+            .pluck()
+            .get(principal.userId, ...permissions),
         catch: (cause) => new DatabaseError({ operation: 'authorize permission', cause }),
       });
-      if (!allowed) {
+      if (allowedPermissionCount !== permissions.length) {
         return yield* new PermissionDenied({ code: 'authentication.permission_denied' });
       }
       return principal;
@@ -368,22 +359,6 @@ export const AuthenticationLive = Layer.effect(
       if (!validCsrf) {
         return yield* new CsrfRejected({ code: 'authentication.invalid_csrf' });
       }
-    });
-
-    const authorizeWrite = Effect.fn('Authentication.authorizeWrite')(function* (
-      sessionToken: string | undefined,
-      csrfCookie: string | undefined,
-      csrfHeader: string | undefined,
-      origin: string | undefined,
-      permission: PermissionCodeValue,
-      requiredMode: LoginModeValue,
-    ) {
-      if (sessionToken === undefined) {
-        return yield* new CsrfRejected({ code: 'authentication.invalid_csrf' });
-      }
-      const principal = yield* authorize(sessionToken, permission, requiredMode);
-      yield* authorizeCsrf(sessionToken, csrfCookie, csrfHeader, origin);
-      return principal;
     });
 
     const logout = Effect.fn('Authentication.logout')(function* (
@@ -440,7 +415,6 @@ export const AuthenticationLive = Layer.effect(
       sessionStatus,
       authorize,
       authorizeCsrf,
-      authorizeWrite,
       logout,
     });
   }),

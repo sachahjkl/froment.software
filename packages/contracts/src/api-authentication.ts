@@ -20,9 +20,10 @@ export class ApiCredentials extends Context.Service<ApiCredentials, ApiCredentia
   '@froment/contracts/ApiCredentials',
 ) {}
 
-export class RequiredPermission extends Context.Service<RequiredPermission, PermissionCodeValue>()(
-  '@froment/contracts/RequiredPermission',
-) {}
+export class RequiredPermissions extends Context.Service<
+  RequiredPermissions,
+  readonly [PermissionCodeValue, ...ReadonlyArray<PermissionCodeValue>]
+>()('@froment/contracts/RequiredPermissions') {}
 
 export class MutationRateLimit extends Context.Service<MutationRateLimit, number>()(
   '@froment/contracts/MutationRateLimit',
@@ -76,12 +77,12 @@ export class ApiAuthorization extends HttpApiMiddleware.Service<
   ApiAuthorization,
   { requires: ApiCredentials; provides: ApiPrincipal }
 >()('@froment/contracts/ApiAuthorization', {
-  error: [AuthenticationRequired, PermissionDenied, RequestRateLimited],
-}) {}
-
-export class ApiWriteProtection extends HttpApiMiddleware.Service<
-  ApiWriteProtection,
-  { requires: ApiPrincipal }
->()('@froment/contracts/ApiWriteProtection', {
-  error: [CsrfRejected, RequestInvalidOrigin, RequestRateLimited, RequestTooLarge],
+  error: [
+    AuthenticationRequired,
+    PermissionDenied,
+    CsrfRejected,
+    RequestInvalidOrigin,
+    RequestRateLimited,
+    RequestTooLarge,
+  ],
 }) {}

@@ -113,42 +113,36 @@ describe('Authentication', () => {
         const session = yield* authentication.login(accessIdentifier, '192.0.2.1');
         const authorized = yield* authentication.authorize(
           session.sessionToken,
-          'client.read',
+          ['client.read', 'client.create'],
           'administrator',
         );
         const wrongMode = yield* Effect.result(
-          authentication.authorize(session.sessionToken, 'client.read', 'client'),
+          authentication.authorize(session.sessionToken, ['client.read'], 'client'),
         );
         const missingSession = yield* Effect.result(
-          authentication.authorize(undefined, 'client.read', 'administrator'),
+          authentication.authorize(undefined, ['client.read'], 'administrator'),
         );
         const invalidCsrf = yield* Effect.result(
-          authentication.authorizeWrite(
+          authentication.authorizeCsrf(
             session.sessionToken,
             session.csrfToken,
             'different-token',
             'https://example.test',
-            'client.create',
-            'administrator',
           ),
         );
         const invalidOrigin = yield* Effect.result(
-          authentication.authorizeWrite(
+          authentication.authorizeCsrf(
             session.sessionToken,
             session.csrfToken,
             session.csrfToken,
             'https://attacker.test',
-            'client.create',
-            'administrator',
           ),
         );
-        const writeAuthorized = yield* authentication.authorizeWrite(
+        yield* authentication.authorizeCsrf(
           session.sessionToken,
           session.csrfToken,
           session.csrfToken,
           'https://example.test',
-          'client.create',
-          'administrator',
         );
         yield* authentication.logout(
           session.sessionToken,
@@ -162,14 +156,12 @@ describe('Authentication', () => {
           invalidOrigin,
           missingSession,
           revokedSession: yield* authentication.sessionStatus(session.sessionToken),
-          writeAuthorized,
           wrongMode,
         };
       }).pipe(Effect.provide(authenticationLayer()), Effect.provide(TestClock.layer())),
     );
 
     expect(result.authorized).toEqual({ userId, mode: 'administrator' });
-    expect(result.writeAuthorized).toEqual(result.authorized);
     expect(result.wrongMode).toMatchObject({
       _tag: 'Failure',
       failure: { _tag: 'PermissionDenied' },
