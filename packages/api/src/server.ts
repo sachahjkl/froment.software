@@ -1,6 +1,7 @@
 import { NodeHttpServer } from '@effect/platform-node';
 import {
   Api,
+  apiForLanguage,
   ApiAuthentication,
   ApiAuthorization,
   ApiBrowserRequest,
@@ -9,7 +10,7 @@ import {
   ApiRequestBody,
   AuthenticationRequired,
   DocumentNotFound,
-  MutationRateLimit,
+  EndpointRateLimit,
   RequestInvalidOrigin,
   RequestRateLimited,
   RequestTooLarge,
@@ -22,6 +23,7 @@ import {
 import { Config, Context, Effect, FileSystem, Layer, Option, Redacted, Schema } from 'effect';
 import {
   HttpEffect,
+  HttpMethod,
   HttpMiddleware,
   HttpRouter,
   HttpServerError,
@@ -29,7 +31,7 @@ import {
   HttpServerResponse,
   HttpStaticServer,
 } from 'effect/unstable/http';
-import { HttpApiBuilder, HttpApiScalar, HttpApiSecurity } from 'effect/unstable/httpapi';
+import { HttpApiBuilder, HttpApiScalar, HttpApiSecurity, OpenApi } from 'effect/unstable/httpapi';
 import { createServer } from 'node:http';
 import { randomUUID } from 'node:crypto';
 
@@ -195,12 +197,12 @@ const ApiAuthorizationLive = Layer.effect(
     const config = yield* AuthenticationConfig;
     const integrationTokens = yield* IntegrationTokens;
     const limiter = yield* RequestLimiter;
-    const limitMutation = Effect.fn('ApiAuthorization.limitMutation')(function* (
+    const limitEndpoint = Effect.fn('ApiAuthorization.limitEndpoint')(function* (
       principalId: string,
       endpointId: string,
       limit: number,
     ) {
-      if (!(yield* limiter.allowMutation(`principal:${principalId}:${endpointId}`, limit))) {
+      if (!(yield* limiter.allowRequest(`principal:${principalId}:${endpointId}`, limit))) {
         return yield* new RequestRateLimited({ code: 'request.rate_limited' });
       }
     });
@@ -212,13 +214,13 @@ const ApiAuthorizationLive = Layer.effect(
           Context.getOption(endpoint.annotations, RequiredPermissions),
           () => new Error(`Endpoint ${endpoint.identifier} has no required permission.`),
         );
-        const mutationRateLimit = Context.getOption(endpoint.annotations, MutationRateLimit);
+        const endpointRateLimit = Context.getOption(endpoint.annotations, EndpointRateLimit);
 
         if (credentials.kind === 'session') {
           const principal = yield* authentication
             .authorize(credentials.token, permissions, 'administrator')
             .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
-          if (Option.isSome(mutationRateLimit)) {
+          if (HttpMethod.hasBody(endpoint.method)) {
             const request = yield* HttpServerRequest.HttpServerRequest;
             if (request.headers['origin'] !== config.publicOrigin) {
               return yield* new RequestInvalidOrigin({ code: 'request.invalid_origin' });
@@ -231,7 +233,9 @@ const ApiAuthorizationLive = Layer.effect(
                 request.headers['origin'],
               )
               .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
-            yield* limitMutation(principal.userId, endpoint.identifier, mutationRateLimit.value);
+          }
+          if (Option.isSome(endpointRateLimit)) {
+            yield* limitEndpoint(principal.userId, endpoint.identifier, endpointRateLimit.value);
           }
           return yield* Effect.provideService(httpEffect, ApiPrincipal, {
             userId: Schema.decodeUnknownSync(Ulid)(principal.userId),
@@ -240,7 +244,7 @@ const ApiAuthorizationLive = Layer.effect(
         }
 
         if (
-          !(yield* limiter.allowMutation(
+          !(yield* limiter.allowRequest(
             `integration-auth:address:${yield* getClientAddress()}`,
             120,
           ))
@@ -251,7 +255,7 @@ const ApiAuthorizationLive = Layer.effect(
           .authenticate(credentials.token)
           .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
         if (
-          !(yield* limiter.allowMutation(
+          !(yield* limiter.allowRequest(
             `integration-token:${principal.tokenId}:all`,
             principal.rateLimitPerMinute,
           ))
@@ -263,8 +267,8 @@ const ApiAuthorizationLive = Layer.effect(
             .authorizePermission(principal, permission)
             .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
         }
-        if (Option.isSome(mutationRateLimit)) {
-          yield* limitMutation(principal.tokenId, endpoint.identifier, mutationRateLimit.value);
+        if (Option.isSome(endpointRateLimit)) {
+          yield* limitEndpoint(principal.tokenId, endpoint.identifier, endpointRateLimit.value);
         }
         return yield* Effect.provideService(httpEffect, ApiPrincipal, {
           userId: principal.userId,
@@ -327,11 +331,11 @@ export const limitPublicQuoteRequest = Effect.fn('limitPublicQuoteRequest')(func
   const limiter = yield* RequestLimiter;
   const config = yield* AuthenticationConfig;
   const tokenDigest = hmac(config.quoteLinkHmacKey, token).toString('hex');
-  const addressAllowed = yield* limiter.allowMutation(
+  const addressAllowed = yield* limiter.allowRequest(
     `public-quote-${route}:address:${clientAddress}`,
     limit,
   );
-  const tokenAllowed = yield* limiter.allowMutation(
+  const tokenAllowed = yield* limiter.allowRequest(
     `public-quote-${route}:token:${tokenDigest}`,
     limit,
   );
@@ -1059,7 +1063,10 @@ const IntegrationTokenHandlers = HttpApiBuilder.group(Api, 'integrationTokens', 
   ),
 );
 
-const ApiRoutes = HttpApiBuilder.layer(Api, { openapiPath: '/api/openapi.json' }).pipe(
+const FrenchApi = apiForLanguage('fr');
+const EnglishApi = apiForLanguage('en');
+
+const ApiRoutes = HttpApiBuilder.layer(FrenchApi, { openapiPath: '/api/openapi.json' }).pipe(
   Layer.provide(
     Layer.mergeAll(
       ApiHandlers,
@@ -1081,10 +1088,32 @@ const ApiRoutes = HttpApiBuilder.layer(Api, { openapiPath: '/api/openapi.json' }
   ),
 );
 
-const ApiDocs = HttpApiScalar.layer(Api, {
+const frenchScalar = { showOperationId: true, localization: { locale: 'fr' } };
+const englishScalar = { showOperationId: true, localization: { locale: 'en' } };
+const ApiDocs = HttpApiScalar.layer(FrenchApi, {
   path: '/api/docs',
-  scalar: { showOperationId: true },
+  scalar: frenchScalar,
 });
+const FrenchApiDocs = HttpApiScalar.layer(FrenchApi, {
+  path: '/api/docs/fr',
+  scalar: frenchScalar,
+});
+const EnglishApiDocs = HttpApiScalar.layer(EnglishApi, {
+  path: '/api/docs/en',
+  scalar: englishScalar,
+});
+const LocalizedOpenApiRoutes = Layer.mergeAll(
+  HttpRouter.add(
+    'GET',
+    '/api/openapi.fr.json',
+    HttpServerResponse.jsonUnsafe(OpenApi.fromApi(FrenchApi)),
+  ),
+  HttpRouter.add(
+    'GET',
+    '/api/openapi.en.json',
+    HttpServerResponse.jsonUnsafe(OpenApi.fromApi(EnglishApi)),
+  ),
+);
 
 export const makeServerLayer = (options: {
   readonly port: number;
@@ -1112,6 +1141,9 @@ export const makeServerLayer = (options: {
     Layer.mergeAll(
       ApiRoutes,
       ApiDocs,
+      FrenchApiDocs,
+      EnglishApiDocs,
+      LocalizedOpenApiRoutes,
       BackOfficeStaticRoutes,
       PublicQuoteStaticRoutes,
       StaticRoutes,

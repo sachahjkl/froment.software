@@ -2,8 +2,9 @@ import { Context, Option, Schema } from 'effect';
 import { OpenApi } from 'effect/unstable/httpapi';
 import { describe, expect, it } from 'vitest';
 
-import { Api, RevisionVersionParameter } from './api.js';
-import { MutationRateLimit, RequiredPermissions } from './api-authentication.js';
+import { Api, apiForLanguage, RevisionVersionParameter } from './api.js';
+import { RequiredPermissions } from './api-policy/permissions.js';
+import { EndpointRateLimit } from './api-policy/rate-limit.js';
 import { IntegrationPermissionCodes } from './permissions.js';
 
 describe('API contracts', () => {
@@ -19,7 +20,7 @@ describe('API contracts', () => {
   });
 
   it('publishes only the integration API contract', () => {
-    const specification = OpenApi.fromApi(Api);
+    const specification = OpenApi.fromApi(apiForLanguage('en'));
 
     expect(specification.openapi).toBe('3.1.0');
     expect(specification.info).toMatchObject({
@@ -60,7 +61,7 @@ describe('API contracts', () => {
     ]);
     expect(specification.paths['/api/quotes/{quoteId}/cancel']?.post).toMatchObject({
       description: expect.stringContaining('Required permission: `quote.delete`.'),
-      'x-required-permission': 'quote.delete',
+      'x-required-permissions': ['quote.delete'],
     });
     expect(specification.paths['/api/quotes/{quoteId}/cancel']?.post?.responses).toHaveProperty(
       '413',
@@ -70,17 +71,44 @@ describe('API contracts', () => {
       Object.values(specification.paths).flatMap((path) =>
         Object.values(path).flatMap((operation) => {
           if (typeof operation !== 'object' || operation === null) return [];
-          const permission = (
-            operation as typeof operation & { readonly 'x-required-permission'?: unknown }
-          )['x-required-permission'];
-          return typeof permission === 'string' ? [permission] : [];
+          const permissions = (
+            operation as typeof operation & {
+              readonly 'x-required-permissions'?: ReadonlyArray<string>;
+            }
+          )['x-required-permissions'];
+          return permissions ?? [];
         }),
       ),
     );
     expect([...documentedPermissions].sort()).toEqual([...IntegrationPermissionCodes].sort());
   });
 
-  it('annotates internal administrator permissions and mutation quotas', () => {
+  it('localizes API prose without changing operations or schemas', () => {
+    const base = OpenApi.fromApi(Api);
+    const french = OpenApi.fromApi(apiForLanguage('fr'));
+    const english = OpenApi.fromApi(apiForLanguage('en'));
+
+    expect(french.info).toMatchObject({
+      title: 'API d’intégration Froment Software',
+      description: 'API pour les clients, devis, commandes, factures et documents générés.',
+    });
+    expect(french.paths['/api/clients']?.get).toMatchObject({
+      operationId: 'clientList',
+      summary: 'Lister les clients',
+      description: expect.stringContaining('Permission requise : `client.read`.'),
+    });
+    expect(english.paths['/api/clients']?.get).toMatchObject({
+      operationId: 'clientList',
+      summary: 'List clients',
+      description: expect.stringContaining('Required permission: `client.read`.'),
+    });
+    expect(Object.keys(french.paths)).toEqual(Object.keys(english.paths));
+    expect(french.components.schemas).toEqual(english.components.schemas);
+    expect(JSON.stringify(base)).not.toContain('List clients');
+    expect(JSON.stringify(base)).not.toContain('Client records and lifecycle.');
+  });
+
+  it('keeps permissions, mutation quotas, and frontend visibility independent', () => {
     const clientAccess = Api.groups.clients.endpoints.clientAccessCreate;
     const affairEvents = Api.groups.quotes.endpoints.affairEventList;
     const tokenCreate = Api.groups.integrationTokens.endpoints.integrationTokenCreate;
@@ -89,7 +117,7 @@ describe('API contracts', () => {
       Option.getOrUndefined(Context.getOption(clientAccess.annotations, RequiredPermissions)),
     ).toEqual(['client.access.create']);
     expect(
-      Option.getOrUndefined(Context.getOption(clientAccess.annotations, MutationRateLimit)),
+      Option.getOrUndefined(Context.getOption(clientAccess.annotations, EndpointRateLimit)),
     ).toBe(10);
     expect(
       Option.getOrUndefined(Context.getOption(affairEvents.annotations, RequiredPermissions)),
@@ -98,7 +126,7 @@ describe('API contracts', () => {
       Option.getOrUndefined(Context.getOption(tokenCreate.annotations, RequiredPermissions)),
     ).toEqual(['integration-token.manage']);
     expect(
-      Option.getOrUndefined(Context.getOption(tokenCreate.annotations, MutationRateLimit)),
+      Option.getOrUndefined(Context.getOption(tokenCreate.annotations, EndpointRateLimit)),
     ).toBe(10);
   });
 });

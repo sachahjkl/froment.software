@@ -10,7 +10,6 @@ import {
   RequestTooLarge,
 } from './authentication.js';
 import type { Ulid as UlidValue } from './identifiers.js';
-import type { PermissionCode as PermissionCodeValue } from './permissions.js';
 
 export type ApiCredentialsValue =
   | { readonly kind: 'session'; readonly token: string }
@@ -18,15 +17,6 @@ export type ApiCredentialsValue =
 
 export class ApiCredentials extends Context.Service<ApiCredentials, ApiCredentialsValue>()(
   '@froment/contracts/ApiCredentials',
-) {}
-
-export class RequiredPermissions extends Context.Service<
-  RequiredPermissions,
-  readonly [PermissionCodeValue, ...ReadonlyArray<PermissionCodeValue>]
->()('@froment/contracts/RequiredPermissions') {}
-
-export class MutationRateLimit extends Context.Service<MutationRateLimit, number>()(
-  '@froment/contracts/MutationRateLimit',
 ) {}
 
 export type ApiPrincipalValue =
@@ -49,16 +39,11 @@ export class ApiPrincipal extends Context.Service<ApiPrincipal, ApiPrincipalValu
 const sessionCookie = HttpApiSecurity.apiKey({
   key: '__Host-froment-session',
   in: 'cookie',
-}).pipe(
-  HttpApiSecurity.annotateMerge(
-    OpenApi.annotations({ description: 'Administrator browser session cookie.' }),
-  ),
-);
+});
 
 const bearer = HttpApiSecurity.bearer.pipe(
   HttpApiSecurity.annotateMerge(
     OpenApi.annotations({
-      description: 'Integration token created in the administrator back office.',
       format: 'froment_it_v1_<token-id>.<secret>',
     }),
   ),

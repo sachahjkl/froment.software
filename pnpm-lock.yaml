@@ -177,6 +177,9 @@ importers:
 
   packages/contracts:
     dependencies:
+      '@froment/l10n':
+        specifier: workspace:*
+        version: link:../l10n
       effect:
         specifier: 'catalog:'
         version: 4.0.0-rc.110

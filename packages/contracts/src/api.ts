@@ -1,5 +1,5 @@
 import { Schema } from 'effect';
-import type * as HttpMethod from 'effect/unstable/http/HttpMethod';
+import type { Language } from '@froment/l10n';
 import {
   HttpApi,
   HttpApiEndpoint,
@@ -94,19 +94,8 @@ import {
   InvoiceVersionConflict,
 } from './invoices.js';
 import { ClientInvoiceList, ClientOrderList, ClientQuoteList } from './client-portal.js';
-import {
-  ApiAuthentication,
-  ApiAuthorization,
-  ApiBrowserRequest,
-  ApiRequestBody,
-  MutationRateLimit,
-  RequiredPermissions,
-} from './api-authentication.js';
-import {
-  Permissions,
-  type IntegrationPermission,
-  type PermissionCode as PermissionCodeValue,
-} from './permissions.js';
+import { ApiBrowserRequest, ApiRequestBody } from './api-authentication.js';
+import { Permissions } from './permissions.js';
 import {
   IntegrationTokenCreateRequest,
   IntegrationTokenCreated,
@@ -117,191 +106,11 @@ import {
   IntegrationTokenNotFound,
   IntegrationTokenPage,
 } from './integration-tokens.js';
-
-const documentedRead =
-  (permission: IntegrationPermission, summary: string, description: string) =>
-  <
-    Identifier extends string,
-    Method extends HttpMethod.HttpMethod,
-    Path extends string,
-    Params extends Schema.Top,
-    Query extends Schema.Top,
-    Payload extends Schema.Top,
-    Headers extends Schema.Top,
-    Success extends Schema.Top,
-    Error extends Schema.Top,
-    Middleware,
-    MiddlewareServices,
-  >(
-    endpoint: HttpApiEndpoint.HttpApiEndpoint<
-      Identifier,
-      Method,
-      Path,
-      Params,
-      Query,
-      Payload,
-      Headers,
-      Success,
-      Error,
-      Middleware,
-      MiddlewareServices
-    >,
-  ) =>
-    endpoint
-      .annotate(RequiredPermissions, [permission.code])
-      .middleware(ApiAuthorization)
-      .middleware(ApiAuthentication)
-      .annotateMerge(
-        OpenApi.annotations({
-          summary,
-          description: `${description}\n\nRequired permission: \`${permission.code}\`.`,
-          override: { 'x-required-permission': permission.code },
-        }),
-      );
-
-const documentedWrite =
-  (permission: IntegrationPermission, summary: string, description: string, rateLimit = 60) =>
-  <
-    Identifier extends string,
-    Method extends HttpMethod.HttpMethod,
-    Path extends string,
-    Params extends Schema.Top,
-    Query extends Schema.Top,
-    Payload extends Schema.Top,
-    Headers extends Schema.Top,
-    Success extends Schema.Top,
-    Error extends Schema.Top,
-    Middleware,
-    MiddlewareServices,
-  >(
-    endpoint: HttpApiEndpoint.HttpApiEndpoint<
-      Identifier,
-      Method,
-      Path,
-      Params,
-      Query,
-      Payload,
-      Headers,
-      Success,
-      Error,
-      Middleware,
-      MiddlewareServices
-    >,
-  ) =>
-    endpoint
-      .annotate(RequiredPermissions, [permission.code])
-      .annotate(MutationRateLimit, rateLimit)
-      .middleware(ApiAuthorization)
-      .middleware(ApiAuthentication)
-      .annotateMerge(
-        OpenApi.annotations({
-          summary,
-          description: `${description}\n\nRequired permission: \`${permission.code}\`.`,
-          override: { 'x-required-permission': permission.code },
-        }),
-      );
-
-const internal = <
-  Identifier extends string,
-  Method extends HttpMethod.HttpMethod,
-  Path extends string,
-  Params extends Schema.Top,
-  Query extends Schema.Top,
-  Payload extends Schema.Top,
-  Headers extends Schema.Top,
-  Success extends Schema.Top,
-  Error extends Schema.Top,
-  Middleware,
-  MiddlewareServices,
->(
-  endpoint: HttpApiEndpoint.HttpApiEndpoint<
-    Identifier,
-    Method,
-    Path,
-    Params,
-    Query,
-    Payload,
-    Headers,
-    Success,
-    Error,
-    Middleware,
-    MiddlewareServices
-  >,
-) => endpoint.annotate(OpenApi.Exclude, true);
-
-const administratorRead =
-  (permissions: readonly [PermissionCodeValue, ...ReadonlyArray<PermissionCodeValue>]) =>
-  <
-    Identifier extends string,
-    Method extends HttpMethod.HttpMethod,
-    Path extends string,
-    Params extends Schema.Top,
-    Query extends Schema.Top,
-    Payload extends Schema.Top,
-    Headers extends Schema.Top,
-    Success extends Schema.Top,
-    Error extends Schema.Top,
-    Middleware,
-    MiddlewareServices,
-  >(
-    endpoint: HttpApiEndpoint.HttpApiEndpoint<
-      Identifier,
-      Method,
-      Path,
-      Params,
-      Query,
-      Payload,
-      Headers,
-      Success,
-      Error,
-      Middleware,
-      MiddlewareServices
-    >,
-  ) =>
-    endpoint
-      .annotate(RequiredPermissions, permissions)
-      .middleware(ApiAuthorization)
-      .middleware(ApiAuthentication)
-      .pipe(internal);
-
-const administratorWrite =
-  (
-    permissions: readonly [PermissionCodeValue, ...ReadonlyArray<PermissionCodeValue>],
-    rateLimit = 60,
-  ) =>
-  <
-    Identifier extends string,
-    Method extends HttpMethod.HttpMethod,
-    Path extends string,
-    Params extends Schema.Top,
-    Query extends Schema.Top,
-    Payload extends Schema.Top,
-    Headers extends Schema.Top,
-    Success extends Schema.Top,
-    Error extends Schema.Top,
-    Middleware,
-    MiddlewareServices,
-  >(
-    endpoint: HttpApiEndpoint.HttpApiEndpoint<
-      Identifier,
-      Method,
-      Path,
-      Params,
-      Query,
-      Payload,
-      Headers,
-      Success,
-      Error,
-      Middleware,
-      MiddlewareServices
-    >,
-  ) =>
-    endpoint
-      .annotate(RequiredPermissions, permissions)
-      .annotate(MutationRateLimit, rateLimit)
-      .middleware(ApiAuthorization)
-      .middleware(ApiAuthentication)
-      .pipe(internal);
+import { localizeOpenApi } from './api-documentation.js';
+import { requireBrowserOrigin } from './api-policy/origin.js';
+import { requirePermissions } from './api-policy/permissions.js';
+import { rateLimit, RateLimits } from './api-policy/rate-limit.js';
+import { frontendSpecific } from './api-policy/visibility.js';
 
 export const RevisionVersionParameter = Schema.NumberFromString.check(
   Schema.isInt(),
@@ -351,436 +160,376 @@ export class SystemApi extends HttpApiGroup.make('system', { topLevel: true })
   )
   .annotate(OpenApi.Exclude, true) {}
 
-export class ClientsApi extends HttpApiGroup.make('clients', { topLevel: true })
-  .add(
-    HttpApiEndpoint.get('clientList', '/api/clients', {
-      success: ClientList,
-      error: [
-        AuthenticationRequired.pipe(HttpApiSchema.status(401)),
-        PermissionDenied.pipe(HttpApiSchema.status(403)),
-      ],
-    }).pipe(
-      documentedRead(Permissions.clientRead, 'List clients', 'Lists active and archived clients.'),
-    ),
-    HttpApiEndpoint.get('clientGet', '/api/clients/:clientId', {
-      params: { clientId: Ulid },
-      success: ClientSummary,
-      error: [
-        AuthenticationRequired.pipe(HttpApiSchema.status(401)),
-        PermissionDenied.pipe(HttpApiSchema.status(403)),
-        ClientNotFound.pipe(HttpApiSchema.status(404)),
-      ],
-    }).pipe(
-      documentedRead(Permissions.clientRead, 'Get a client', 'Returns one client by identifier.'),
-    ),
-    HttpApiEndpoint.post('clientCreate', '/api/clients', {
-      payload: ClientCreateRequest,
-      success: ClientSummary,
-      error: [
-        AuthenticationRequired.pipe(HttpApiSchema.status(401)),
-        PermissionDenied.pipe(HttpApiSchema.status(403)),
-        CsrfRejected.pipe(HttpApiSchema.status(403)),
-        RequestRateLimited.pipe(HttpApiSchema.status(429)),
-      ],
-    })
-      .middleware(ApiRequestBody)
-      .pipe(documentedWrite(Permissions.clientCreate, 'Create a client', 'Creates a client.')),
-    HttpApiEndpoint.put('clientUpdate', '/api/clients/:clientId', {
-      params: { clientId: Ulid },
-      payload: ClientUpdateRequest,
-      success: ClientSummary,
-      error: [
-        AuthenticationRequired.pipe(HttpApiSchema.status(401)),
-        PermissionDenied.pipe(HttpApiSchema.status(403)),
-        CsrfRejected.pipe(HttpApiSchema.status(403)),
-        RequestRateLimited.pipe(HttpApiSchema.status(429)),
-        ClientNotFound.pipe(HttpApiSchema.status(404)),
-        ClientArchived.pipe(HttpApiSchema.status(409)),
-        ClientVersionConflict.pipe(HttpApiSchema.status(409)),
-      ],
-    })
-      .middleware(ApiRequestBody)
-      .pipe(
-        documentedWrite(Permissions.clientUpdate, 'Update a client', 'Updates an active client.'),
-      ),
-    HttpApiEndpoint.post('clientArchive', '/api/clients/:clientId/archive', {
-      params: { clientId: Ulid },
-      success: ClientSummary,
-      error: [
-        AuthenticationRequired.pipe(HttpApiSchema.status(401)),
-        PermissionDenied.pipe(HttpApiSchema.status(403)),
-        CsrfRejected.pipe(HttpApiSchema.status(403)),
-        RequestRateLimited.pipe(HttpApiSchema.status(429)),
-        ClientNotFound.pipe(HttpApiSchema.status(404)),
-      ],
-    }).pipe(documentedWrite(Permissions.clientArchive, 'Archive a client', 'Archives a client.')),
-    HttpApiEndpoint.post('clientReactivate', '/api/clients/:clientId/reactivate', {
-      params: { clientId: Ulid },
-      success: ClientSummary,
-      error: [
-        AuthenticationRequired.pipe(HttpApiSchema.status(401)),
-        PermissionDenied.pipe(HttpApiSchema.status(403)),
-        CsrfRejected.pipe(HttpApiSchema.status(403)),
-        RequestRateLimited.pipe(HttpApiSchema.status(429)),
-        ClientNotFound.pipe(HttpApiSchema.status(404)),
-      ],
-    }).pipe(
-      documentedWrite(
-        Permissions.clientArchive,
-        'Reactivate a client',
-        'Reactivates an archived client.',
-      ),
-    ),
-    HttpApiEndpoint.post('clientAccessCreate', '/api/clients/:clientId/access', {
-      params: { clientId: Ulid },
-      success: ClientAccess,
-      error: [
-        AuthenticationRequired.pipe(HttpApiSchema.status(401)),
-        PermissionDenied.pipe(HttpApiSchema.status(403)),
-        CsrfRejected.pipe(HttpApiSchema.status(403)),
-        RequestRateLimited.pipe(HttpApiSchema.status(429)),
-        ClientNotFound.pipe(HttpApiSchema.status(404)),
-        ClientArchived.pipe(HttpApiSchema.status(409)),
-      ],
-    }).pipe(administratorWrite([Permissions.clientAccessCreate.code], 10)),
-  )
-  .annotateMerge(
-    OpenApi.annotations({ title: 'Clients', description: 'Client records and lifecycle.' }),
-  ) {}
+export class ClientsApi extends HttpApiGroup.make('clients', { topLevel: true }).add(
+  HttpApiEndpoint.get('clientList', '/api/clients', {
+    success: ClientList,
+    error: [
+      AuthenticationRequired.pipe(HttpApiSchema.status(401)),
+      PermissionDenied.pipe(HttpApiSchema.status(403)),
+    ],
+  }).pipe(requirePermissions([Permissions.clientRead])),
+  HttpApiEndpoint.get('clientGet', '/api/clients/:clientId', {
+    params: { clientId: Ulid },
+    success: ClientSummary,
+    error: [
+      AuthenticationRequired.pipe(HttpApiSchema.status(401)),
+      PermissionDenied.pipe(HttpApiSchema.status(403)),
+      ClientNotFound.pipe(HttpApiSchema.status(404)),
+    ],
+  }).pipe(requirePermissions([Permissions.clientRead])),
+  HttpApiEndpoint.post('clientCreate', '/api/clients', {
+    payload: ClientCreateRequest,
+    success: ClientSummary,
+    error: [
+      AuthenticationRequired.pipe(HttpApiSchema.status(401)),
+      PermissionDenied.pipe(HttpApiSchema.status(403)),
+      CsrfRejected.pipe(HttpApiSchema.status(403)),
+      RequestRateLimited.pipe(HttpApiSchema.status(429)),
+    ],
+  })
+    .middleware(ApiRequestBody)
+    .pipe(requirePermissions([Permissions.clientCreate]), rateLimit(RateLimits.sixtyPerMinute)),
+  HttpApiEndpoint.put('clientUpdate', '/api/clients/:clientId', {
+    params: { clientId: Ulid },
+    payload: ClientUpdateRequest,
+    success: ClientSummary,
+    error: [
+      AuthenticationRequired.pipe(HttpApiSchema.status(401)),
+      PermissionDenied.pipe(HttpApiSchema.status(403)),
+      CsrfRejected.pipe(HttpApiSchema.status(403)),
+      RequestRateLimited.pipe(HttpApiSchema.status(429)),
+      ClientNotFound.pipe(HttpApiSchema.status(404)),
+      ClientArchived.pipe(HttpApiSchema.status(409)),
+      ClientVersionConflict.pipe(HttpApiSchema.status(409)),
+    ],
+  })
+    .middleware(ApiRequestBody)
+    .pipe(requirePermissions([Permissions.clientUpdate]), rateLimit(RateLimits.sixtyPerMinute)),
+  HttpApiEndpoint.post('clientArchive', '/api/clients/:clientId/archive', {
+    params: { clientId: Ulid },
+    success: ClientSummary,
+    error: [
+      AuthenticationRequired.pipe(HttpApiSchema.status(401)),
+      PermissionDenied.pipe(HttpApiSchema.status(403)),
+      CsrfRejected.pipe(HttpApiSchema.status(403)),
+      RequestRateLimited.pipe(HttpApiSchema.status(429)),
+      ClientNotFound.pipe(HttpApiSchema.status(404)),
+    ],
+  }).pipe(requirePermissions([Permissions.clientArchive]), rateLimit(RateLimits.sixtyPerMinute)),
+  HttpApiEndpoint.post('clientReactivate', '/api/clients/:clientId/reactivate', {
+    params: { clientId: Ulid },
+    success: ClientSummary,
+    error: [
+      AuthenticationRequired.pipe(HttpApiSchema.status(401)),
+      PermissionDenied.pipe(HttpApiSchema.status(403)),
+      CsrfRejected.pipe(HttpApiSchema.status(403)),
+      RequestRateLimited.pipe(HttpApiSchema.status(429)),
+      ClientNotFound.pipe(HttpApiSchema.status(404)),
+    ],
+  }).pipe(requirePermissions([Permissions.clientArchive]), rateLimit(RateLimits.sixtyPerMinute)),
+  HttpApiEndpoint.post('clientAccessCreate', '/api/clients/:clientId/access', {
+    params: { clientId: Ulid },
+    success: ClientAccess,
+    error: [
+      AuthenticationRequired.pipe(HttpApiSchema.status(401)),
+      PermissionDenied.pipe(HttpApiSchema.status(403)),
+      CsrfRejected.pipe(HttpApiSchema.status(403)),
+      RequestRateLimited.pipe(HttpApiSchema.status(429)),
+      ClientNotFound.pipe(HttpApiSchema.status(404)),
+      ClientArchived.pipe(HttpApiSchema.status(409)),
+    ],
+  }).pipe(
+    requirePermissions([Permissions.clientAccessCreate]),
+    rateLimit(RateLimits.tenPerMinute),
+    frontendSpecific,
+  ),
+) {}
 
-export class OrdersApi extends HttpApiGroup.make('orders', { topLevel: true })
-  .add(
-    HttpApiEndpoint.get('orderList', '/api/orders', {
-      success: OrderList,
-      error: [
-        AuthenticationRequired.pipe(HttpApiSchema.status(401)),
-        PermissionDenied.pipe(HttpApiSchema.status(403)),
-      ],
-    }).pipe(
-      documentedRead(
-        Permissions.orderRead,
-        'List orders',
-        'Lists orders created from accepted quotes.',
-      ),
-    ),
-    HttpApiEndpoint.get('orderPreview', '/api/orders/:orderId/preview', {
-      params: { orderId: Ulid },
-      success: Schema.String.pipe(
-        HttpApiSchema.asText({ contentType: 'text/html; charset=utf-8' }),
-      ),
-      error: [
-        AuthenticationRequired.pipe(HttpApiSchema.status(401)),
-        PermissionDenied.pipe(HttpApiSchema.status(403)),
-        OrderNotFound.pipe(HttpApiSchema.status(404)),
-        QuotePreviewUnavailable.pipe(HttpApiSchema.status(409)),
-      ],
-    }).pipe(administratorRead([Permissions.documentRender.code])),
-    HttpApiEndpoint.post('orderPdfRender', '/api/orders/:orderId/pdf', {
-      params: { orderId: Ulid },
-      success: OrderDocumentArtifact,
-      error: [
-        AuthenticationRequired.pipe(HttpApiSchema.status(401)),
-        PermissionDenied.pipe(HttpApiSchema.status(403)),
-        CsrfRejected.pipe(HttpApiSchema.status(403)),
-        RequestRateLimited.pipe(HttpApiSchema.status(429)),
-        OrderNotFound.pipe(HttpApiSchema.status(404)),
-        QuotePreviewUnavailable.pipe(HttpApiSchema.status(409)),
-      ],
-    }).pipe(administratorWrite([Permissions.documentRender.code], 10)),
-    HttpApiEndpoint.get('orderPdfDownload', '/api/orders/:orderId/pdf', {
-      params: { orderId: Ulid },
-      success: Schema.Uint8Array.pipe(
-        HttpApiSchema.asUint8Array({ contentType: 'application/pdf' }),
-      ),
-      error: [
-        AuthenticationRequired.pipe(HttpApiSchema.status(401)),
-        PermissionDenied.pipe(HttpApiSchema.status(403)),
-        DocumentNotFound.pipe(HttpApiSchema.status(404)),
-      ],
-    }).pipe(
-      documentedRead(
-        Permissions.documentDownload,
-        'Download an order PDF',
-        'Downloads an existing order PDF.',
-      ),
-    ),
-  )
-  .annotateMerge(
-    OpenApi.annotations({ title: 'Orders', description: 'Orders and their generated documents.' }),
-  ) {}
+export class OrdersApi extends HttpApiGroup.make('orders', { topLevel: true }).add(
+  HttpApiEndpoint.get('orderList', '/api/orders', {
+    success: OrderList,
+    error: [
+      AuthenticationRequired.pipe(HttpApiSchema.status(401)),
+      PermissionDenied.pipe(HttpApiSchema.status(403)),
+    ],
+  }).pipe(requirePermissions([Permissions.orderRead])),
+  HttpApiEndpoint.get('orderPreview', '/api/orders/:orderId/preview', {
+    params: { orderId: Ulid },
+    success: Schema.String.pipe(HttpApiSchema.asText({ contentType: 'text/html; charset=utf-8' })),
+    error: [
+      AuthenticationRequired.pipe(HttpApiSchema.status(401)),
+      PermissionDenied.pipe(HttpApiSchema.status(403)),
+      OrderNotFound.pipe(HttpApiSchema.status(404)),
+      QuotePreviewUnavailable.pipe(HttpApiSchema.status(409)),
+    ],
+  }).pipe(requirePermissions([Permissions.documentRender]), frontendSpecific),
+  HttpApiEndpoint.post('orderPdfRender', '/api/orders/:orderId/pdf', {
+    params: { orderId: Ulid },
+    success: OrderDocumentArtifact,
+    error: [
+      AuthenticationRequired.pipe(HttpApiSchema.status(401)),
+      PermissionDenied.pipe(HttpApiSchema.status(403)),
+      CsrfRejected.pipe(HttpApiSchema.status(403)),
+      RequestRateLimited.pipe(HttpApiSchema.status(429)),
+      OrderNotFound.pipe(HttpApiSchema.status(404)),
+      QuotePreviewUnavailable.pipe(HttpApiSchema.status(409)),
+    ],
+  }).pipe(
+    requirePermissions([Permissions.documentRender]),
+    rateLimit(RateLimits.tenPerMinute),
+    frontendSpecific,
+  ),
+  HttpApiEndpoint.get('orderPdfDownload', '/api/orders/:orderId/pdf', {
+    params: { orderId: Ulid },
+    success: Schema.Uint8Array.pipe(HttpApiSchema.asUint8Array({ contentType: 'application/pdf' })),
+    error: [
+      AuthenticationRequired.pipe(HttpApiSchema.status(401)),
+      PermissionDenied.pipe(HttpApiSchema.status(403)),
+      DocumentNotFound.pipe(HttpApiSchema.status(404)),
+    ],
+  }).pipe(requirePermissions([Permissions.documentDownload])),
+) {}
 
-export class QuotesApi extends HttpApiGroup.make('quotes', { topLevel: true })
-  .add(
-    HttpApiEndpoint.get('quoteConditionPresetList', '/api/quote-condition-presets', {
-      success: QuoteConditionPresetList,
-      error: [
-        AuthenticationRequired.pipe(HttpApiSchema.status(401)),
-        PermissionDenied.pipe(HttpApiSchema.status(403)),
-      ],
-    }).pipe(administratorRead([Permissions.quoteRead.code])),
-    HttpApiEndpoint.post('quoteConditionPresetCreate', '/api/quote-condition-presets', {
-      payload: QuoteConditionPresetWriteRequest,
-      success: QuoteConditionPreset,
-      error: [
-        AuthenticationRequired.pipe(HttpApiSchema.status(401)),
-        PermissionDenied.pipe(HttpApiSchema.status(403)),
-        CsrfRejected.pipe(HttpApiSchema.status(403)),
-        RequestRateLimited.pipe(HttpApiSchema.status(429)),
-        QuoteConditionPresetNameConflict.pipe(HttpApiSchema.status(409)),
-      ],
-    })
-      .middleware(ApiRequestBody)
-      .pipe(administratorWrite([Permissions.quoteUpdate.code])),
-    HttpApiEndpoint.put('quoteConditionPresetUpdate', '/api/quote-condition-presets/:presetId', {
-      params: { presetId: Ulid },
-      payload: QuoteConditionPresetWriteRequest,
-      success: QuoteConditionPreset,
-      error: [
-        AuthenticationRequired.pipe(HttpApiSchema.status(401)),
-        PermissionDenied.pipe(HttpApiSchema.status(403)),
-        CsrfRejected.pipe(HttpApiSchema.status(403)),
-        RequestRateLimited.pipe(HttpApiSchema.status(429)),
-        QuoteConditionPresetNotFound.pipe(HttpApiSchema.status(404)),
-        QuoteConditionPresetNameConflict.pipe(HttpApiSchema.status(409)),
-      ],
-    })
-      .middleware(ApiRequestBody)
-      .pipe(administratorWrite([Permissions.quoteUpdate.code])),
-    HttpApiEndpoint.delete('quoteConditionPresetDelete', '/api/quote-condition-presets/:presetId', {
-      params: { presetId: Ulid },
-      success: QuoteConditionPreset,
-      error: [
-        AuthenticationRequired.pipe(HttpApiSchema.status(401)),
-        PermissionDenied.pipe(HttpApiSchema.status(403)),
-        CsrfRejected.pipe(HttpApiSchema.status(403)),
-        RequestRateLimited.pipe(HttpApiSchema.status(429)),
-        QuoteConditionPresetNotFound.pipe(HttpApiSchema.status(404)),
-      ],
-    }).pipe(administratorWrite([Permissions.quoteUpdate.code])),
-    HttpApiEndpoint.get('issuerSettingsGet', '/api/issuer-settings', {
-      success: IssuerSettings,
-      error: [
-        AuthenticationRequired.pipe(HttpApiSchema.status(401)),
-        PermissionDenied.pipe(HttpApiSchema.status(403)),
-      ],
-    }).pipe(administratorRead([Permissions.templateRead.code])),
-    HttpApiEndpoint.put('issuerSettingsUpdate', '/api/issuer-settings', {
-      payload: IssuerSettingsUpdateRequest,
-      success: IssuerSettings,
-      error: [
-        AuthenticationRequired.pipe(HttpApiSchema.status(401)),
-        PermissionDenied.pipe(HttpApiSchema.status(403)),
-        CsrfRejected.pipe(HttpApiSchema.status(403)),
-        RequestRateLimited.pipe(HttpApiSchema.status(429)),
-      ],
-    })
-      .middleware(ApiRequestBody)
-      .pipe(administratorWrite([Permissions.templateSelect.code])),
-    HttpApiEndpoint.get('quoteList', '/api/quotes', {
-      success: QuoteList,
-      error: [
-        AuthenticationRequired.pipe(HttpApiSchema.status(401)),
-        PermissionDenied.pipe(HttpApiSchema.status(403)),
-      ],
-    }).pipe(
-      documentedRead(
-        Permissions.quoteRead,
-        'List quotes',
-        'Lists quotes and their latest revision.',
-      ),
+export class QuotesApi extends HttpApiGroup.make('quotes', { topLevel: true }).add(
+  HttpApiEndpoint.get('quoteConditionPresetList', '/api/quote-condition-presets', {
+    success: QuoteConditionPresetList,
+    error: [
+      AuthenticationRequired.pipe(HttpApiSchema.status(401)),
+      PermissionDenied.pipe(HttpApiSchema.status(403)),
+    ],
+  }).pipe(requirePermissions([Permissions.quoteRead]), frontendSpecific),
+  HttpApiEndpoint.post('quoteConditionPresetCreate', '/api/quote-condition-presets', {
+    payload: QuoteConditionPresetWriteRequest,
+    success: QuoteConditionPreset,
+    error: [
+      AuthenticationRequired.pipe(HttpApiSchema.status(401)),
+      PermissionDenied.pipe(HttpApiSchema.status(403)),
+      CsrfRejected.pipe(HttpApiSchema.status(403)),
+      RequestRateLimited.pipe(HttpApiSchema.status(429)),
+      QuoteConditionPresetNameConflict.pipe(HttpApiSchema.status(409)),
+    ],
+  })
+    .middleware(ApiRequestBody)
+    .pipe(
+      requirePermissions([Permissions.quoteUpdate]),
+      rateLimit(RateLimits.sixtyPerMinute),
+      frontendSpecific,
     ),
-    HttpApiEndpoint.get('quoteGet', '/api/quotes/:quoteId', {
-      params: { quoteId: Ulid },
-      success: QuoteDetail,
-      error: [
-        AuthenticationRequired.pipe(HttpApiSchema.status(401)),
-        PermissionDenied.pipe(HttpApiSchema.status(403)),
-        QuoteNotFound.pipe(HttpApiSchema.status(404)),
-      ],
-    }).pipe(
-      documentedRead(
-        Permissions.quoteRead,
-        'Get a quote',
-        'Returns a quote and all of its revisions.',
-      ),
+  HttpApiEndpoint.put('quoteConditionPresetUpdate', '/api/quote-condition-presets/:presetId', {
+    params: { presetId: Ulid },
+    payload: QuoteConditionPresetWriteRequest,
+    success: QuoteConditionPreset,
+    error: [
+      AuthenticationRequired.pipe(HttpApiSchema.status(401)),
+      PermissionDenied.pipe(HttpApiSchema.status(403)),
+      CsrfRejected.pipe(HttpApiSchema.status(403)),
+      RequestRateLimited.pipe(HttpApiSchema.status(429)),
+      QuoteConditionPresetNotFound.pipe(HttpApiSchema.status(404)),
+      QuoteConditionPresetNameConflict.pipe(HttpApiSchema.status(409)),
+    ],
+  })
+    .middleware(ApiRequestBody)
+    .pipe(
+      requirePermissions([Permissions.quoteUpdate]),
+      rateLimit(RateLimits.sixtyPerMinute),
+      frontendSpecific,
     ),
-    HttpApiEndpoint.get('affairEventList', '/api/affairs/:quoteId/events', {
-      params: { quoteId: Ulid },
-      success: Schema.Array(AuditEvent),
-      error: [
-        AuthenticationRequired.pipe(HttpApiSchema.status(401)),
-        PermissionDenied.pipe(HttpApiSchema.status(403)),
-      ],
-    }).pipe(administratorRead([Permissions.quoteRead.code, Permissions.auditRead.code])),
-    HttpApiEndpoint.get('quotePreview', '/api/quotes/:quoteId/revisions/:version/preview', {
-      params: { quoteId: Ulid, version: RevisionVersionParameter },
-      success: Schema.String.pipe(
-        HttpApiSchema.asText({ contentType: 'text/html; charset=utf-8' }),
-      ),
-      error: [
-        AuthenticationRequired.pipe(HttpApiSchema.status(401)),
-        PermissionDenied.pipe(HttpApiSchema.status(403)),
-        QuoteNotFound.pipe(HttpApiSchema.status(404)),
-        QuotePreviewUnavailable.pipe(HttpApiSchema.status(409)),
-      ],
-    }).pipe(administratorRead([Permissions.documentRender.code])),
-    HttpApiEndpoint.post('quotePdfRender', '/api/quotes/:quoteId/revisions/:version/pdf', {
-      params: { quoteId: Ulid, version: RevisionVersionParameter },
-      success: DocumentArtifact,
-      error: [
-        AuthenticationRequired.pipe(HttpApiSchema.status(401)),
-        PermissionDenied.pipe(HttpApiSchema.status(403)),
-        CsrfRejected.pipe(HttpApiSchema.status(403)),
-        RequestRateLimited.pipe(HttpApiSchema.status(429)),
-        QuoteNotFound.pipe(HttpApiSchema.status(404)),
-        QuotePreviewUnavailable.pipe(HttpApiSchema.status(409)),
-      ],
-    }).pipe(administratorWrite([Permissions.documentRender.code], 10)),
-    HttpApiEndpoint.get('quotePdfDownload', '/api/quotes/:quoteId/revisions/:version/pdf', {
-      params: { quoteId: Ulid, version: RevisionVersionParameter },
-      success: Schema.Uint8Array.pipe(
-        HttpApiSchema.asUint8Array({ contentType: 'application/pdf' }),
-      ),
-      error: [
-        AuthenticationRequired.pipe(HttpApiSchema.status(401)),
-        PermissionDenied.pipe(HttpApiSchema.status(403)),
-        DocumentNotFound.pipe(HttpApiSchema.status(404)),
-      ],
-    }).pipe(
-      documentedRead(
-        Permissions.documentDownload,
-        'Download a quote PDF',
-        'Downloads an existing quote revision PDF.',
-      ),
+  HttpApiEndpoint.delete('quoteConditionPresetDelete', '/api/quote-condition-presets/:presetId', {
+    params: { presetId: Ulid },
+    success: QuoteConditionPreset,
+    error: [
+      AuthenticationRequired.pipe(HttpApiSchema.status(401)),
+      PermissionDenied.pipe(HttpApiSchema.status(403)),
+      CsrfRejected.pipe(HttpApiSchema.status(403)),
+      RequestRateLimited.pipe(HttpApiSchema.status(429)),
+      QuoteConditionPresetNotFound.pipe(HttpApiSchema.status(404)),
+    ],
+  }).pipe(
+    requirePermissions([Permissions.quoteUpdate]),
+    rateLimit(RateLimits.sixtyPerMinute),
+    frontendSpecific,
+  ),
+  HttpApiEndpoint.get('issuerSettingsGet', '/api/issuer-settings', {
+    success: IssuerSettings,
+    error: [
+      AuthenticationRequired.pipe(HttpApiSchema.status(401)),
+      PermissionDenied.pipe(HttpApiSchema.status(403)),
+    ],
+  }).pipe(requirePermissions([Permissions.templateRead]), frontendSpecific),
+  HttpApiEndpoint.put('issuerSettingsUpdate', '/api/issuer-settings', {
+    payload: IssuerSettingsUpdateRequest,
+    success: IssuerSettings,
+    error: [
+      AuthenticationRequired.pipe(HttpApiSchema.status(401)),
+      PermissionDenied.pipe(HttpApiSchema.status(403)),
+      CsrfRejected.pipe(HttpApiSchema.status(403)),
+      RequestRateLimited.pipe(HttpApiSchema.status(429)),
+    ],
+  })
+    .middleware(ApiRequestBody)
+    .pipe(
+      requirePermissions([Permissions.templateSelect]),
+      rateLimit(RateLimits.sixtyPerMinute),
+      frontendSpecific,
     ),
-    HttpApiEndpoint.post('quoteCreate', '/api/quotes', {
-      payload: QuoteCreateRequest,
-      success: QuoteDetail,
-      error: [
-        AuthenticationRequired.pipe(HttpApiSchema.status(401)),
-        PermissionDenied.pipe(HttpApiSchema.status(403)),
-        CsrfRejected.pipe(HttpApiSchema.status(403)),
-        RequestRateLimited.pipe(HttpApiSchema.status(429)),
-        ClientNotFound.pipe(HttpApiSchema.status(404)),
-        ClientArchived.pipe(HttpApiSchema.status(409)),
-        QuoteAmountTooLarge.pipe(HttpApiSchema.status(422)),
-      ],
-    })
-      .middleware(ApiRequestBody)
-      .pipe(
-        documentedWrite(
-          Permissions.quoteCreate,
-          'Create a quote',
-          'Creates the first revision of a quote.',
-        ),
-      ),
-    HttpApiEndpoint.post('quoteSend', '/api/quotes/:quoteId/send', {
-      params: { quoteId: Ulid },
-      payload: QuoteSendRequest,
-      success: QuoteSendResult,
-      error: [
-        AuthenticationRequired.pipe(HttpApiSchema.status(401)),
-        PermissionDenied.pipe(HttpApiSchema.status(403)),
-        CsrfRejected.pipe(HttpApiSchema.status(403)),
-        RequestRateLimited.pipe(HttpApiSchema.status(429)),
-        QuoteNotFound.pipe(HttpApiSchema.status(404)),
-        QuoteVersionConflict.pipe(HttpApiSchema.status(409)),
-        QuoteNotEditable.pipe(HttpApiSchema.status(409)),
-        QuotePdfRequired.pipe(HttpApiSchema.status(409)),
-      ],
-    })
-      .middleware(ApiRequestBody)
-      .pipe(
-        documentedWrite(
-          Permissions.quoteSend,
-          'Send a quote',
-          'Creates a public consultation link for a rendered quote.',
-          10,
-        ),
-      ),
-    HttpApiEndpoint.post('quoteCancel', '/api/quotes/:quoteId/cancel', {
-      params: { quoteId: Ulid },
-      payload: QuoteCancelRequest,
-      success: QuoteDetail,
-      error: [
-        AuthenticationRequired.pipe(HttpApiSchema.status(401)),
-        PermissionDenied.pipe(HttpApiSchema.status(403)),
-        CsrfRejected.pipe(HttpApiSchema.status(403)),
-        RequestRateLimited.pipe(HttpApiSchema.status(429)),
-        QuoteNotFound.pipe(HttpApiSchema.status(404)),
-        QuoteVersionConflict.pipe(HttpApiSchema.status(409)),
-        QuoteNotEditable.pipe(HttpApiSchema.status(409)),
-      ],
-    })
-      .middleware(ApiRequestBody)
-      .pipe(
-        documentedWrite(Permissions.quoteDelete, 'Cancel a quote', 'Cancels an editable quote.'),
-      ),
-    HttpApiEndpoint.post('publicQuoteGet', '/api/public/quote-link', {
-      payload: PublicQuoteAccessRequest,
-      success: PublicQuoteConsultation,
-      error: [
-        QuoteLinkNotFound.pipe(HttpApiSchema.status(404)),
-        RequestRateLimited.pipe(HttpApiSchema.status(429)),
-      ],
-    })
-      .middleware(ApiRequestBody)
-      .pipe((endpoint) => endpoint.middleware(ApiBrowserRequest).pipe(internal)),
-    HttpApiEndpoint.post('publicQuotePdfDownload', '/api/public/quote-link/pdf', {
-      payload: PublicQuoteAccessRequest,
-      success: Schema.Uint8Array.pipe(
-        HttpApiSchema.asUint8Array({ contentType: 'application/pdf' }),
-      ),
-      error: [
-        QuoteLinkNotFound.pipe(HttpApiSchema.status(404)),
-        RequestRateLimited.pipe(HttpApiSchema.status(429)),
-      ],
-    })
-      .middleware(ApiRequestBody)
-      .pipe((endpoint) => endpoint.middleware(ApiBrowserRequest).pipe(internal)),
-    HttpApiEndpoint.post('publicQuoteSign', '/api/public/quote-link/signature', {
-      payload: PublicQuoteSignatureRequest,
-      success: QuoteAcceptanceResult,
-      error: [
-        QuoteLinkNotFound.pipe(HttpApiSchema.status(404)),
-        QuoteLinkNotSignable.pipe(HttpApiSchema.status(409)),
-        RequestRateLimited.pipe(HttpApiSchema.status(429)),
-      ],
-    })
-      .middleware(ApiRequestBody)
-      .pipe((endpoint) => endpoint.middleware(ApiBrowserRequest).pipe(internal)),
-    HttpApiEndpoint.post('quoteRevisionCreate', '/api/quotes/:quoteId/revisions', {
-      params: { quoteId: Ulid },
-      payload: QuoteRevisionCreateRequest,
-      success: QuoteDetail,
-      error: [
-        AuthenticationRequired.pipe(HttpApiSchema.status(401)),
-        PermissionDenied.pipe(HttpApiSchema.status(403)),
-        CsrfRejected.pipe(HttpApiSchema.status(403)),
-        RequestRateLimited.pipe(HttpApiSchema.status(429)),
-        QuoteNotFound.pipe(HttpApiSchema.status(404)),
-        QuoteVersionConflict.pipe(HttpApiSchema.status(409)),
-        QuoteNotEditable.pipe(HttpApiSchema.status(409)),
-        ClientNotFound.pipe(HttpApiSchema.status(404)),
-        ClientArchived.pipe(HttpApiSchema.status(409)),
-        QuoteAmountTooLarge.pipe(HttpApiSchema.status(422)),
-      ],
-    })
-      .middleware(ApiRequestBody)
-      .pipe(
-        documentedWrite(
-          Permissions.quoteUpdate,
-          'Create a quote revision',
-          'Creates a new revision of an editable quote.',
-        ),
-      ),
-  )
-  .annotateMerge(
-    OpenApi.annotations({
-      title: 'Quotes',
-      description: 'Quotes, revisions, delivery, and documents.',
-    }),
-  ) {}
+  HttpApiEndpoint.get('quoteList', '/api/quotes', {
+    success: QuoteList,
+    error: [
+      AuthenticationRequired.pipe(HttpApiSchema.status(401)),
+      PermissionDenied.pipe(HttpApiSchema.status(403)),
+    ],
+  }).pipe(requirePermissions([Permissions.quoteRead])),
+  HttpApiEndpoint.get('quoteGet', '/api/quotes/:quoteId', {
+    params: { quoteId: Ulid },
+    success: QuoteDetail,
+    error: [
+      AuthenticationRequired.pipe(HttpApiSchema.status(401)),
+      PermissionDenied.pipe(HttpApiSchema.status(403)),
+      QuoteNotFound.pipe(HttpApiSchema.status(404)),
+    ],
+  }).pipe(requirePermissions([Permissions.quoteRead])),
+  HttpApiEndpoint.get('affairEventList', '/api/affairs/:quoteId/events', {
+    params: { quoteId: Ulid },
+    success: Schema.Array(AuditEvent),
+    error: [
+      AuthenticationRequired.pipe(HttpApiSchema.status(401)),
+      PermissionDenied.pipe(HttpApiSchema.status(403)),
+    ],
+  }).pipe(requirePermissions([Permissions.quoteRead, Permissions.auditRead]), frontendSpecific),
+  HttpApiEndpoint.get('quotePreview', '/api/quotes/:quoteId/revisions/:version/preview', {
+    params: { quoteId: Ulid, version: RevisionVersionParameter },
+    success: Schema.String.pipe(HttpApiSchema.asText({ contentType: 'text/html; charset=utf-8' })),
+    error: [
+      AuthenticationRequired.pipe(HttpApiSchema.status(401)),
+      PermissionDenied.pipe(HttpApiSchema.status(403)),
+      QuoteNotFound.pipe(HttpApiSchema.status(404)),
+      QuotePreviewUnavailable.pipe(HttpApiSchema.status(409)),
+    ],
+  }).pipe(requirePermissions([Permissions.documentRender]), frontendSpecific),
+  HttpApiEndpoint.post('quotePdfRender', '/api/quotes/:quoteId/revisions/:version/pdf', {
+    params: { quoteId: Ulid, version: RevisionVersionParameter },
+    success: DocumentArtifact,
+    error: [
+      AuthenticationRequired.pipe(HttpApiSchema.status(401)),
+      PermissionDenied.pipe(HttpApiSchema.status(403)),
+      CsrfRejected.pipe(HttpApiSchema.status(403)),
+      RequestRateLimited.pipe(HttpApiSchema.status(429)),
+      QuoteNotFound.pipe(HttpApiSchema.status(404)),
+      QuotePreviewUnavailable.pipe(HttpApiSchema.status(409)),
+    ],
+  }).pipe(
+    requirePermissions([Permissions.documentRender]),
+    rateLimit(RateLimits.tenPerMinute),
+    frontendSpecific,
+  ),
+  HttpApiEndpoint.get('quotePdfDownload', '/api/quotes/:quoteId/revisions/:version/pdf', {
+    params: { quoteId: Ulid, version: RevisionVersionParameter },
+    success: Schema.Uint8Array.pipe(HttpApiSchema.asUint8Array({ contentType: 'application/pdf' })),
+    error: [
+      AuthenticationRequired.pipe(HttpApiSchema.status(401)),
+      PermissionDenied.pipe(HttpApiSchema.status(403)),
+      DocumentNotFound.pipe(HttpApiSchema.status(404)),
+    ],
+  }).pipe(requirePermissions([Permissions.documentDownload])),
+  HttpApiEndpoint.post('quoteCreate', '/api/quotes', {
+    payload: QuoteCreateRequest,
+    success: QuoteDetail,
+    error: [
+      AuthenticationRequired.pipe(HttpApiSchema.status(401)),
+      PermissionDenied.pipe(HttpApiSchema.status(403)),
+      CsrfRejected.pipe(HttpApiSchema.status(403)),
+      RequestRateLimited.pipe(HttpApiSchema.status(429)),
+      ClientNotFound.pipe(HttpApiSchema.status(404)),
+      ClientArchived.pipe(HttpApiSchema.status(409)),
+      QuoteAmountTooLarge.pipe(HttpApiSchema.status(422)),
+    ],
+  })
+    .middleware(ApiRequestBody)
+    .pipe(requirePermissions([Permissions.quoteCreate]), rateLimit(RateLimits.sixtyPerMinute)),
+  HttpApiEndpoint.post('quoteSend', '/api/quotes/:quoteId/send', {
+    params: { quoteId: Ulid },
+    payload: QuoteSendRequest,
+    success: QuoteSendResult,
+    error: [
+      AuthenticationRequired.pipe(HttpApiSchema.status(401)),
+      PermissionDenied.pipe(HttpApiSchema.status(403)),
+      CsrfRejected.pipe(HttpApiSchema.status(403)),
+      RequestRateLimited.pipe(HttpApiSchema.status(429)),
+      QuoteNotFound.pipe(HttpApiSchema.status(404)),
+      QuoteVersionConflict.pipe(HttpApiSchema.status(409)),
+      QuoteNotEditable.pipe(HttpApiSchema.status(409)),
+      QuotePdfRequired.pipe(HttpApiSchema.status(409)),
+    ],
+  })
+    .middleware(ApiRequestBody)
+    .pipe(requirePermissions([Permissions.quoteSend]), rateLimit(RateLimits.tenPerMinute)),
+  HttpApiEndpoint.post('quoteCancel', '/api/quotes/:quoteId/cancel', {
+    params: { quoteId: Ulid },
+    payload: QuoteCancelRequest,
+    success: QuoteDetail,
+    error: [
+      AuthenticationRequired.pipe(HttpApiSchema.status(401)),
+      PermissionDenied.pipe(HttpApiSchema.status(403)),
+      CsrfRejected.pipe(HttpApiSchema.status(403)),
+      RequestRateLimited.pipe(HttpApiSchema.status(429)),
+      QuoteNotFound.pipe(HttpApiSchema.status(404)),
+      QuoteVersionConflict.pipe(HttpApiSchema.status(409)),
+      QuoteNotEditable.pipe(HttpApiSchema.status(409)),
+    ],
+  })
+    .middleware(ApiRequestBody)
+    .pipe(requirePermissions([Permissions.quoteDelete]), rateLimit(RateLimits.sixtyPerMinute)),
+  HttpApiEndpoint.post('publicQuoteGet', '/api/public/quote-link', {
+    payload: PublicQuoteAccessRequest,
+    success: PublicQuoteConsultation,
+    error: [
+      QuoteLinkNotFound.pipe(HttpApiSchema.status(404)),
+      RequestRateLimited.pipe(HttpApiSchema.status(429)),
+    ],
+  })
+    .middleware(ApiRequestBody)
+    .pipe(requireBrowserOrigin, frontendSpecific),
+  HttpApiEndpoint.post('publicQuotePdfDownload', '/api/public/quote-link/pdf', {
+    payload: PublicQuoteAccessRequest,
+    success: Schema.Uint8Array.pipe(HttpApiSchema.asUint8Array({ contentType: 'application/pdf' })),
+    error: [
+      QuoteLinkNotFound.pipe(HttpApiSchema.status(404)),
+      RequestRateLimited.pipe(HttpApiSchema.status(429)),
+    ],
+  })
+    .middleware(ApiRequestBody)
+    .pipe(requireBrowserOrigin, frontendSpecific),
+  HttpApiEndpoint.post('publicQuoteSign', '/api/public/quote-link/signature', {
+    payload: PublicQuoteSignatureRequest,
+    success: QuoteAcceptanceResult,
+    error: [
+      QuoteLinkNotFound.pipe(HttpApiSchema.status(404)),
+      QuoteLinkNotSignable.pipe(HttpApiSchema.status(409)),
+      RequestRateLimited.pipe(HttpApiSchema.status(429)),
+    ],
+  })
+    .middleware(ApiRequestBody)
+    .pipe(requireBrowserOrigin, frontendSpecific),
+  HttpApiEndpoint.post('quoteRevisionCreate', '/api/quotes/:quoteId/revisions', {
+    params: { quoteId: Ulid },
+    payload: QuoteRevisionCreateRequest,
+    success: QuoteDetail,
+    error: [
+      AuthenticationRequired.pipe(HttpApiSchema.status(401)),
+      PermissionDenied.pipe(HttpApiSchema.status(403)),
+      CsrfRejected.pipe(HttpApiSchema.status(403)),
+      RequestRateLimited.pipe(HttpApiSchema.status(429)),
+      QuoteNotFound.pipe(HttpApiSchema.status(404)),
+      QuoteVersionConflict.pipe(HttpApiSchema.status(409)),
+      QuoteNotEditable.pipe(HttpApiSchema.status(409)),
+      ClientNotFound.pipe(HttpApiSchema.status(404)),
+      ClientArchived.pipe(HttpApiSchema.status(409)),
+      QuoteAmountTooLarge.pipe(HttpApiSchema.status(422)),
+    ],
+  })
+    .middleware(ApiRequestBody)
+    .pipe(requirePermissions([Permissions.quoteUpdate]), rateLimit(RateLimits.sixtyPerMinute)),
+) {}
 
 const invoiceReadErrors = [
   AuthenticationRequired.pipe(HttpApiSchema.status(401)),
@@ -802,155 +551,104 @@ const InvoiceRevisionCreatePayload = Schema.Struct({
   dueDate: CalendarDateText,
 }).annotate({ identifier: 'InvoiceRevisionCreateRequest' });
 
-export class InvoicesApi extends HttpApiGroup.make('invoices', { topLevel: true })
-  .add(
-    HttpApiEndpoint.get('invoiceList', '/api/invoices', {
-      success: InvoiceList,
-      error: invoiceReadErrors,
-    }).pipe(
-      documentedRead(
-        Permissions.invoiceRead,
-        'List invoices',
-        'Lists invoices and their current state.',
-      ),
-    ),
-    HttpApiEndpoint.get('invoiceGet', '/api/invoices/:invoiceId', {
-      params: { invoiceId: Ulid },
-      success: InvoiceDetail,
-      error: [...invoiceReadErrors, InvoiceNotFound.pipe(HttpApiSchema.status(404))],
-    }).pipe(
-      documentedRead(
-        Permissions.invoiceRead,
-        'Get an invoice',
-        'Returns an invoice and its revisions.',
-      ),
-    ),
-    HttpApiEndpoint.get('invoicePreview', '/api/invoices/:invoiceId/revisions/:version/preview', {
-      params: { invoiceId: Ulid, version: RevisionVersionParameter },
-      success: Schema.String.pipe(
-        HttpApiSchema.asText({ contentType: 'text/html; charset=utf-8' }),
-      ),
-      error: [...invoiceReadErrors, InvoiceNotFound.pipe(HttpApiSchema.status(404))],
-    }).pipe(administratorRead([Permissions.documentRender.code])),
-    HttpApiEndpoint.post('invoicePdfRender', '/api/invoices/:invoiceId/revisions/:version/pdf', {
-      params: { invoiceId: Ulid, version: RevisionVersionParameter },
-      success: InvoiceDocumentArtifact,
-      error: [...invoiceWriteErrors, InvoiceNotFound.pipe(HttpApiSchema.status(404))],
-    }).pipe(administratorWrite([Permissions.documentRender.code], 10)),
-    HttpApiEndpoint.get('invoicePdfDownload', '/api/invoices/:invoiceId/revisions/:version/pdf', {
-      params: { invoiceId: Ulid, version: RevisionVersionParameter },
-      success: Schema.Uint8Array.pipe(
-        HttpApiSchema.asUint8Array({ contentType: 'application/pdf' }),
-      ),
-      error: [...invoiceReadErrors, DocumentNotFound.pipe(HttpApiSchema.status(404))],
-    }).pipe(
-      documentedRead(
-        Permissions.documentDownload,
-        'Download an invoice PDF',
-        'Downloads an existing invoice revision PDF.',
-      ),
-    ),
-    HttpApiEndpoint.post('invoiceCreate', '/api/invoices', {
-      payload: InvoiceCreatePayload,
-      success: InvoiceDetail,
-      error: [
-        ...invoiceWriteErrors,
-        InvoiceOrderNotFound.pipe(HttpApiSchema.status(404)),
-        InvoiceAlreadyExists.pipe(HttpApiSchema.status(409)),
-        InvoiceInvalidDates.pipe(HttpApiSchema.status(422)),
-        InvoiceAmountTooLarge.pipe(HttpApiSchema.status(422)),
-      ],
-    })
-      .middleware(ApiRequestBody)
-      .pipe(
-        documentedWrite(
-          Permissions.invoiceCreate,
-          'Create an invoice',
-          'Creates a draft invoice from an order.',
-        ),
-      ),
-    HttpApiEndpoint.post('invoiceRevisionCreate', '/api/invoices/:invoiceId/revisions', {
-      params: { invoiceId: Ulid },
-      payload: InvoiceRevisionCreatePayload,
-      success: InvoiceDetail,
-      error: [
-        ...invoiceWriteErrors,
-        InvoiceNotFound.pipe(HttpApiSchema.status(404)),
-        InvoiceNotEditable.pipe(HttpApiSchema.status(409)),
-        InvoiceVersionConflict.pipe(HttpApiSchema.status(409)),
-        InvoiceInvalidDates.pipe(HttpApiSchema.status(422)),
-        InvoiceAmountTooLarge.pipe(HttpApiSchema.status(422)),
-      ],
-    })
-      .middleware(ApiRequestBody)
-      .pipe(
-        documentedWrite(
-          Permissions.invoiceUpdate,
-          'Create an invoice revision',
-          'Creates a new draft invoice revision.',
-        ),
-      ),
-    HttpApiEndpoint.post('invoiceIssue', '/api/invoices/:invoiceId/issue', {
-      params: { invoiceId: Ulid },
-      payload: InvoiceIssueRequest,
-      success: InvoiceIssueResult,
-      error: [
-        ...invoiceWriteErrors,
-        InvoiceNotFound.pipe(HttpApiSchema.status(404)),
-        InvoiceVersionConflict.pipe(HttpApiSchema.status(409)),
-        InvoiceInvalidDates.pipe(HttpApiSchema.status(422)),
-        InvoiceInvalidTransition.pipe(HttpApiSchema.status(409)),
-      ],
-    })
-      .middleware(ApiRequestBody)
-      .pipe(
-        documentedWrite(
-          Permissions.invoiceIssue,
-          'Issue an invoice',
-          'Assigns the legal invoice number and issues the invoice.',
-          10,
-        ),
-      ),
-    HttpApiEndpoint.post('invoiceMarkPaid', '/api/invoices/:invoiceId/mark-paid', {
-      params: { invoiceId: Ulid },
-      payload: InvoiceTransitionRequest,
-      success: InvoiceDetail,
-      error: [
-        ...invoiceWriteErrors,
-        InvoiceNotFound.pipe(HttpApiSchema.status(404)),
-        InvoiceVersionConflict.pipe(HttpApiSchema.status(409)),
-        InvoiceInvalidTransition.pipe(HttpApiSchema.status(409)),
-      ],
-    })
-      .middleware(ApiRequestBody)
-      .pipe(
-        documentedWrite(
-          Permissions.invoiceMarkPaid,
-          'Mark an invoice as paid',
-          'Transitions an issued invoice to paid.',
-          10,
-        ),
-      ),
-    HttpApiEndpoint.post('invoiceVoid', '/api/invoices/:invoiceId/void', {
-      params: { invoiceId: Ulid },
-      payload: InvoiceTransitionRequest,
-      success: InvoiceDetail,
-      error: [
-        ...invoiceWriteErrors,
-        InvoiceNotFound.pipe(HttpApiSchema.status(404)),
-        InvoiceVersionConflict.pipe(HttpApiSchema.status(409)),
-        InvoiceInvalidTransition.pipe(HttpApiSchema.status(409)),
-      ],
-    })
-      .middleware(ApiRequestBody)
-      .pipe(documentedWrite(Permissions.invoiceVoid, 'Void an invoice', 'Voids an invoice.', 10)),
-  )
-  .annotateMerge(
-    OpenApi.annotations({
-      title: 'Invoices',
-      description: 'Invoices, revisions, lifecycle, and documents.',
-    }),
-  ) {}
+export class InvoicesApi extends HttpApiGroup.make('invoices', { topLevel: true }).add(
+  HttpApiEndpoint.get('invoiceList', '/api/invoices', {
+    success: InvoiceList,
+    error: invoiceReadErrors,
+  }).pipe(requirePermissions([Permissions.invoiceRead])),
+  HttpApiEndpoint.get('invoiceGet', '/api/invoices/:invoiceId', {
+    params: { invoiceId: Ulid },
+    success: InvoiceDetail,
+    error: [...invoiceReadErrors, InvoiceNotFound.pipe(HttpApiSchema.status(404))],
+  }).pipe(requirePermissions([Permissions.invoiceRead])),
+  HttpApiEndpoint.get('invoicePreview', '/api/invoices/:invoiceId/revisions/:version/preview', {
+    params: { invoiceId: Ulid, version: RevisionVersionParameter },
+    success: Schema.String.pipe(HttpApiSchema.asText({ contentType: 'text/html; charset=utf-8' })),
+    error: [...invoiceReadErrors, InvoiceNotFound.pipe(HttpApiSchema.status(404))],
+  }).pipe(requirePermissions([Permissions.documentRender]), frontendSpecific),
+  HttpApiEndpoint.post('invoicePdfRender', '/api/invoices/:invoiceId/revisions/:version/pdf', {
+    params: { invoiceId: Ulid, version: RevisionVersionParameter },
+    success: InvoiceDocumentArtifact,
+    error: [...invoiceWriteErrors, InvoiceNotFound.pipe(HttpApiSchema.status(404))],
+  }).pipe(
+    requirePermissions([Permissions.documentRender]),
+    rateLimit(RateLimits.tenPerMinute),
+    frontendSpecific,
+  ),
+  HttpApiEndpoint.get('invoicePdfDownload', '/api/invoices/:invoiceId/revisions/:version/pdf', {
+    params: { invoiceId: Ulid, version: RevisionVersionParameter },
+    success: Schema.Uint8Array.pipe(HttpApiSchema.asUint8Array({ contentType: 'application/pdf' })),
+    error: [...invoiceReadErrors, DocumentNotFound.pipe(HttpApiSchema.status(404))],
+  }).pipe(requirePermissions([Permissions.documentDownload])),
+  HttpApiEndpoint.post('invoiceCreate', '/api/invoices', {
+    payload: InvoiceCreatePayload,
+    success: InvoiceDetail,
+    error: [
+      ...invoiceWriteErrors,
+      InvoiceOrderNotFound.pipe(HttpApiSchema.status(404)),
+      InvoiceAlreadyExists.pipe(HttpApiSchema.status(409)),
+      InvoiceInvalidDates.pipe(HttpApiSchema.status(422)),
+      InvoiceAmountTooLarge.pipe(HttpApiSchema.status(422)),
+    ],
+  })
+    .middleware(ApiRequestBody)
+    .pipe(requirePermissions([Permissions.invoiceCreate]), rateLimit(RateLimits.sixtyPerMinute)),
+  HttpApiEndpoint.post('invoiceRevisionCreate', '/api/invoices/:invoiceId/revisions', {
+    params: { invoiceId: Ulid },
+    payload: InvoiceRevisionCreatePayload,
+    success: InvoiceDetail,
+    error: [
+      ...invoiceWriteErrors,
+      InvoiceNotFound.pipe(HttpApiSchema.status(404)),
+      InvoiceNotEditable.pipe(HttpApiSchema.status(409)),
+      InvoiceVersionConflict.pipe(HttpApiSchema.status(409)),
+      InvoiceInvalidDates.pipe(HttpApiSchema.status(422)),
+      InvoiceAmountTooLarge.pipe(HttpApiSchema.status(422)),
+    ],
+  })
+    .middleware(ApiRequestBody)
+    .pipe(requirePermissions([Permissions.invoiceUpdate]), rateLimit(RateLimits.sixtyPerMinute)),
+  HttpApiEndpoint.post('invoiceIssue', '/api/invoices/:invoiceId/issue', {
+    params: { invoiceId: Ulid },
+    payload: InvoiceIssueRequest,
+    success: InvoiceIssueResult,
+    error: [
+      ...invoiceWriteErrors,
+      InvoiceNotFound.pipe(HttpApiSchema.status(404)),
+      InvoiceVersionConflict.pipe(HttpApiSchema.status(409)),
+      InvoiceInvalidDates.pipe(HttpApiSchema.status(422)),
+      InvoiceInvalidTransition.pipe(HttpApiSchema.status(409)),
+    ],
+  })
+    .middleware(ApiRequestBody)
+    .pipe(requirePermissions([Permissions.invoiceIssue]), rateLimit(RateLimits.tenPerMinute)),
+  HttpApiEndpoint.post('invoiceMarkPaid', '/api/invoices/:invoiceId/mark-paid', {
+    params: { invoiceId: Ulid },
+    payload: InvoiceTransitionRequest,
+    success: InvoiceDetail,
+    error: [
+      ...invoiceWriteErrors,
+      InvoiceNotFound.pipe(HttpApiSchema.status(404)),
+      InvoiceVersionConflict.pipe(HttpApiSchema.status(409)),
+      InvoiceInvalidTransition.pipe(HttpApiSchema.status(409)),
+    ],
+  })
+    .middleware(ApiRequestBody)
+    .pipe(requirePermissions([Permissions.invoiceMarkPaid]), rateLimit(RateLimits.tenPerMinute)),
+  HttpApiEndpoint.post('invoiceVoid', '/api/invoices/:invoiceId/void', {
+    params: { invoiceId: Ulid },
+    payload: InvoiceTransitionRequest,
+    success: InvoiceDetail,
+    error: [
+      ...invoiceWriteErrors,
+      InvoiceNotFound.pipe(HttpApiSchema.status(404)),
+      InvoiceVersionConflict.pipe(HttpApiSchema.status(409)),
+      InvoiceInvalidTransition.pipe(HttpApiSchema.status(409)),
+    ],
+  })
+    .middleware(ApiRequestBody)
+    .pipe(requirePermissions([Permissions.invoiceVoid]), rateLimit(RateLimits.tenPerMinute)),
+) {}
 
 const clientReadErrors = [
   AuthenticationRequired.pipe(HttpApiSchema.status(401)),
@@ -1007,7 +705,7 @@ export class IntegrationTokensApi extends HttpApiGroup.make('integrationTokens',
         PermissionDenied.pipe(HttpApiSchema.status(403)),
         IntegrationTokenInvalidCursor.pipe(HttpApiSchema.status(400)),
       ],
-    }).pipe(administratorRead([Permissions.integrationTokenManage.code])),
+    }).pipe(requirePermissions([Permissions.integrationTokenManage]), frontendSpecific),
     HttpApiEndpoint.post('integrationTokenCreate', '/api/integration-tokens', {
       payload: IntegrationTokenCreateRequest,
       success: IntegrationTokenCreated,
@@ -1021,7 +719,11 @@ export class IntegrationTokensApi extends HttpApiGroup.make('integrationTokens',
       ],
     })
       .middleware(ApiRequestBody)
-      .pipe(administratorWrite([Permissions.integrationTokenManage.code], 10)),
+      .pipe(
+        requirePermissions([Permissions.integrationTokenManage]),
+        rateLimit(RateLimits.tenPerMinute),
+        frontendSpecific,
+      ),
     HttpApiEndpoint.post('integrationTokenRevoke', '/api/integration-tokens/:tokenId/revoke', {
       params: { tokenId: Ulid },
       success: IntegrationTokenCreated.fields.token,
@@ -1032,7 +734,11 @@ export class IntegrationTokensApi extends HttpApiGroup.make('integrationTokens',
         RequestRateLimited.pipe(HttpApiSchema.status(429)),
         IntegrationTokenNotFound.pipe(HttpApiSchema.status(404)),
       ],
-    }).pipe(administratorWrite([Permissions.integrationTokenManage.code], 10)),
+    }).pipe(
+      requirePermissions([Permissions.integrationTokenManage]),
+      rateLimit(RateLimits.tenPerMinute),
+      frontendSpecific,
+    ),
   )
   .annotate(OpenApi.Exclude, true) {}
 
@@ -1044,10 +750,9 @@ export class Api extends HttpApi.make('froment-api')
   .add(InvoicesApi)
   .add(ClientPortalApi)
   .add(IntegrationTokensApi)
-  .annotateMerge(
-    OpenApi.annotations({
-      title: 'Froment Software Integration API',
-      version: 'latest',
-      description: 'API for client records, quotes, orders, invoices, and generated documents.',
-    }),
-  ) {}
+  .annotateMerge(OpenApi.annotations({ version: 'latest' })) {}
+
+export const apiForLanguage = (language: Language) =>
+  Api.annotateMerge(
+    OpenApi.annotations({ transform: (specification) => localizeOpenApi(specification, language) }),
+  );

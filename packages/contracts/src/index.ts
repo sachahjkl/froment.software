@@ -192,6 +192,7 @@ export {
 } from './quotes.js';
 export {
   Api,
+  apiForLanguage,
   ClientPortalApi,
   ClientsApi,
   InvoicesApi,
@@ -201,6 +202,7 @@ export {
   RevisionVersionParameter,
   SystemApi,
 } from './api.js';
+export { localizeOpenApi } from './api-documentation.js';
 export {
   ApiAuthentication,
   ApiAuthorization,
@@ -210,9 +212,16 @@ export {
   type ApiCredentialsValue,
   ApiPrincipal,
   type ApiPrincipalValue,
-  MutationRateLimit,
-  RequiredPermissions,
 } from './api-authentication.js';
+export { requireBrowserOrigin } from './api-policy/origin.js';
+export { requirePermissions, RequiredPermissions } from './api-policy/permissions.js';
+export {
+  EndpointRateLimit,
+  rateLimit,
+  RateLimits,
+  type RateLimit,
+} from './api-policy/rate-limit.js';
+export { frontendSpecific } from './api-policy/visibility.js';
 export {
   ClientInvoiceList,
   type ClientInvoiceList as ClientInvoiceListValue,

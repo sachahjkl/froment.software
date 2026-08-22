@@ -4,6 +4,236 @@ export type Translations = (typeof translations)[Language];
 export type TranslationKey = keyof Translations;
 export type TranslationDictionary = Record<TranslationKey, string>;
 
+type ApiDocumentationGroup = 'clients' | 'orders' | 'quotes' | 'invoices';
+type ApiDocumentationOperation =
+  | 'clientList'
+  | 'clientGet'
+  | 'clientCreate'
+  | 'clientUpdate'
+  | 'clientArchive'
+  | 'clientReactivate'
+  | 'orderList'
+  | 'orderPdfDownload'
+  | 'quoteList'
+  | 'quoteGet'
+  | 'quotePdfDownload'
+  | 'quoteCreate'
+  | 'quoteSend'
+  | 'quoteCancel'
+  | 'quoteRevisionCreate'
+  | 'invoiceList'
+  | 'invoiceGet'
+  | 'invoicePdfDownload'
+  | 'invoiceCreate'
+  | 'invoiceRevisionCreate'
+  | 'invoiceIssue'
+  | 'invoiceMarkPaid'
+  | 'invoiceVoid';
+
+interface ApiDocumentation {
+  readonly title: string;
+  readonly description: string;
+  readonly requiredPermission: string;
+  readonly security: {
+    readonly sessionCookie: string;
+    readonly bearer: string;
+  };
+  readonly groups: Readonly<
+    Record<ApiDocumentationGroup, { readonly title: string; readonly description: string }>
+  >;
+  readonly operations: Readonly<
+    Record<ApiDocumentationOperation, { readonly summary: string; readonly description: string }>
+  >;
+}
+
+export const apiDocumentation = {
+  fr: {
+    title: 'API d’intégration Froment Software',
+    description: 'API pour les clients, devis, commandes, factures et documents générés.',
+    requiredPermission: 'Permission requise : `{permission}`.',
+    security: {
+      sessionCookie: 'Cookie de session administrateur du navigateur.',
+      bearer: 'Jeton d’intégration créé dans le back-office administrateur.',
+    },
+    groups: {
+      clients: { title: 'Clients', description: 'Fiches clients et cycle de vie.' },
+      orders: { title: 'Commandes', description: 'Commandes et documents générés.' },
+      quotes: { title: 'Devis', description: 'Devis, révisions, envoi et documents.' },
+      invoices: {
+        title: 'Factures',
+        description: 'Factures, révisions, cycle de vie et documents.',
+      },
+    },
+    operations: {
+      clientList: {
+        summary: 'Lister les clients',
+        description: 'Liste les clients actifs et archivés.',
+      },
+      clientGet: {
+        summary: 'Obtenir un client',
+        description: 'Renvoie un client par identifiant.',
+      },
+      clientCreate: { summary: 'Créer un client', description: 'Crée un client.' },
+      clientUpdate: { summary: 'Modifier un client', description: 'Modifie un client actif.' },
+      clientArchive: { summary: 'Archiver un client', description: 'Archive un client.' },
+      clientReactivate: {
+        summary: 'Réactiver un client',
+        description: 'Réactive un client archivé.',
+      },
+      orderList: {
+        summary: 'Lister les commandes',
+        description: 'Liste les commandes créées depuis les devis acceptés.',
+      },
+      orderPdfDownload: {
+        summary: 'Télécharger le PDF d’une commande',
+        description: 'Télécharge le PDF existant d’une commande.',
+      },
+      quoteList: {
+        summary: 'Lister les devis',
+        description: 'Liste les devis et leur dernière révision.',
+      },
+      quoteGet: {
+        summary: 'Obtenir un devis',
+        description: 'Renvoie un devis et toutes ses révisions.',
+      },
+      quotePdfDownload: {
+        summary: 'Télécharger le PDF d’un devis',
+        description: 'Télécharge le PDF existant d’une révision de devis.',
+      },
+      quoteCreate: {
+        summary: 'Créer un devis',
+        description: 'Crée la première révision d’un devis.',
+      },
+      quoteSend: {
+        summary: 'Envoyer un devis',
+        description: 'Crée un lien public de consultation pour un devis rendu.',
+      },
+      quoteCancel: { summary: 'Annuler un devis', description: 'Annule un devis modifiable.' },
+      quoteRevisionCreate: {
+        summary: 'Créer une révision de devis',
+        description: 'Crée une révision d’un devis modifiable.',
+      },
+      invoiceList: {
+        summary: 'Lister les factures',
+        description: 'Liste les factures et leur état actuel.',
+      },
+      invoiceGet: {
+        summary: 'Obtenir une facture',
+        description: 'Renvoie une facture et ses révisions.',
+      },
+      invoicePdfDownload: {
+        summary: 'Télécharger le PDF d’une facture',
+        description: 'Télécharge le PDF existant d’une révision de facture.',
+      },
+      invoiceCreate: {
+        summary: 'Créer une facture',
+        description: 'Crée un brouillon de facture depuis une commande.',
+      },
+      invoiceRevisionCreate: {
+        summary: 'Créer une révision de facture',
+        description: 'Crée une révision de brouillon de facture.',
+      },
+      invoiceIssue: {
+        summary: 'Émettre une facture',
+        description: 'Attribue le numéro légal et émet la facture.',
+      },
+      invoiceMarkPaid: {
+        summary: 'Marquer une facture comme payée',
+        description: 'Passe une facture émise à l’état payé.',
+      },
+      invoiceVoid: { summary: 'Annuler une facture', description: 'Annule une facture.' },
+    },
+  },
+  en: {
+    title: 'Froment Software Integration API',
+    description: 'API for client records, quotes, orders, invoices, and generated documents.',
+    requiredPermission: 'Required permission: `{permission}`.',
+    security: {
+      sessionCookie: 'Administrator browser session cookie.',
+      bearer: 'Integration token created in the administrator back office.',
+    },
+    groups: {
+      clients: { title: 'Clients', description: 'Client records and lifecycle.' },
+      orders: { title: 'Orders', description: 'Orders and their generated documents.' },
+      quotes: { title: 'Quotes', description: 'Quotes, revisions, delivery, and documents.' },
+      invoices: {
+        title: 'Invoices',
+        description: 'Invoices, revisions, lifecycle, and documents.',
+      },
+    },
+    operations: {
+      clientList: { summary: 'List clients', description: 'Lists active and archived clients.' },
+      clientGet: { summary: 'Get a client', description: 'Returns one client by identifier.' },
+      clientCreate: { summary: 'Create a client', description: 'Creates a client.' },
+      clientUpdate: { summary: 'Update a client', description: 'Updates an active client.' },
+      clientArchive: { summary: 'Archive a client', description: 'Archives a client.' },
+      clientReactivate: {
+        summary: 'Reactivate a client',
+        description: 'Reactivates an archived client.',
+      },
+      orderList: {
+        summary: 'List orders',
+        description: 'Lists orders created from accepted quotes.',
+      },
+      orderPdfDownload: {
+        summary: 'Download an order PDF',
+        description: 'Downloads an existing order PDF.',
+      },
+      quoteList: { summary: 'List quotes', description: 'Lists quotes and their latest revision.' },
+      quoteGet: {
+        summary: 'Get a quote',
+        description: 'Returns a quote and all of its revisions.',
+      },
+      quotePdfDownload: {
+        summary: 'Download a quote PDF',
+        description: 'Downloads an existing quote revision PDF.',
+      },
+      quoteCreate: {
+        summary: 'Create a quote',
+        description: 'Creates the first revision of a quote.',
+      },
+      quoteSend: {
+        summary: 'Send a quote',
+        description: 'Creates a public consultation link for a rendered quote.',
+      },
+      quoteCancel: { summary: 'Cancel a quote', description: 'Cancels an editable quote.' },
+      quoteRevisionCreate: {
+        summary: 'Create a quote revision',
+        description: 'Creates a new revision of an editable quote.',
+      },
+      invoiceList: {
+        summary: 'List invoices',
+        description: 'Lists invoices and their current state.',
+      },
+      invoiceGet: {
+        summary: 'Get an invoice',
+        description: 'Returns an invoice and its revisions.',
+      },
+      invoicePdfDownload: {
+        summary: 'Download an invoice PDF',
+        description: 'Downloads an existing invoice revision PDF.',
+      },
+      invoiceCreate: {
+        summary: 'Create an invoice',
+        description: 'Creates a draft invoice from an order.',
+      },
+      invoiceRevisionCreate: {
+        summary: 'Create an invoice revision',
+        description: 'Creates a new draft invoice revision.',
+      },
+      invoiceIssue: {
+        summary: 'Issue an invoice',
+        description: 'Assigns the legal invoice number and issues the invoice.',
+      },
+      invoiceMarkPaid: {
+        summary: 'Mark an invoice as paid',
+        description: 'Transitions an issued invoice to paid.',
+      },
+      invoiceVoid: { summary: 'Void an invoice', description: 'Voids an invoice.' },
+    },
+  },
+} as const satisfies Record<Language, ApiDocumentation>;
+
 export const translations = {
   fr: {
     'nav.home': 'Accueil',

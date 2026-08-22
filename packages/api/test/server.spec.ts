@@ -186,7 +186,7 @@ describe('HTTP server', () => {
       };
     };
     expect(specification.info).toMatchObject({
-      title: 'Froment Software Integration API',
+      title: 'API d’intégration Froment Software',
       version: 'latest',
     });
     expect(specification.paths).toHaveProperty('/api/clients');
@@ -196,9 +196,26 @@ describe('HTTP server', () => {
     expect(docsResponse.status).toBe(200);
     expect(docsResponse.headers.get('content-type')).toContain('text/html');
     const html = await docsResponse.text();
-    expect(html).toContain('Froment Software Integration API');
+    expect(html).toContain('API d’intégration Froment Software');
     expect(html).toContain('/api/clients');
     expect(html).not.toContain('/api/auth/login');
+    expect(html).toContain('"localization":{"locale":"fr"}');
+
+    const englishOpenApiResponse = await fetch(`${baseUrl}/api/openapi.en.json`);
+    expect(englishOpenApiResponse.status).toBe(200);
+    await expect(englishOpenApiResponse.json()).resolves.toMatchObject({
+      info: { title: 'Froment Software Integration API' },
+      paths: {
+        '/api/clients': {
+          get: { summary: 'List clients' },
+        },
+      },
+    });
+    const englishDocsResponse = await fetch(`${baseUrl}/api/docs/en`);
+    expect(englishDocsResponse.status).toBe(200);
+    const englishHtml = await englishDocsResponse.text();
+    expect(englishHtml).toContain('Froment Software Integration API');
+    expect(englishHtml).toContain('"localization":{"locale":"en"}');
   });
 
   it('creates the initial administrator and session once', async () => {

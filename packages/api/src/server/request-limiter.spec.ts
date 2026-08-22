@@ -31,12 +31,12 @@ describe('RequestLimiter', () => {
         const limiter = yield* RequestLimiter;
         const allowed = yield* Effect.forEach(
           Array.from({ length: 120 }),
-          () => limiter.allowMutation('127.0.0.1', 120),
+          () => limiter.allowRequest('127.0.0.1', 120),
           { discard: true },
         );
-        const blocked = yield* limiter.allowMutation('127.0.0.1', 120);
+        const blocked = yield* limiter.allowRequest('127.0.0.1', 120);
         yield* TestClock.adjust('1 minute');
-        const renewed = yield* limiter.allowMutation('127.0.0.1', 120);
+        const renewed = yield* limiter.allowRequest('127.0.0.1', 120);
         return { allowed, blocked, renewed };
       }).pipe(Effect.provide(RequestLimiterLive), Effect.provide(TestClock.layer())),
     );
@@ -48,11 +48,11 @@ describe('RequestLimiter', () => {
     const result = await Effect.runPromise(
       Effect.gen(function* () {
         const limiter = yield* RequestLimiter;
-        yield* limiter.allowMutation('principal:user:client.access.create', 1);
+        yield* limiter.allowRequest('principal:user:client.access.create', 1);
         return {
-          sameRoute: yield* limiter.allowMutation('principal:user:client.access.create', 1),
-          otherRoute: yield* limiter.allowMutation('principal:user:quote.create', 1),
-          otherUser: yield* limiter.allowMutation('principal:other:client.access.create', 1),
+          sameRoute: yield* limiter.allowRequest('principal:user:client.access.create', 1),
+          otherRoute: yield* limiter.allowRequest('principal:user:quote.create', 1),
+          otherUser: yield* limiter.allowRequest('principal:other:client.access.create', 1),
         };
       }).pipe(Effect.provide(RequestLimiterLive), Effect.provide(TestClock.layer())),
     );
