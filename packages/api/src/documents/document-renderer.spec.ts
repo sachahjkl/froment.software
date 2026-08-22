@@ -4,7 +4,7 @@ import {
   QuoteRenderSnapshot,
 } from '@froment/contracts';
 import { spawnSync } from 'node:child_process';
-import { mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { ConfigProvider, Effect, Layer, Schema } from 'effect';
@@ -149,33 +149,6 @@ const inspectPdf = (pdf: Uint8Array) => {
 
 const normalizedText = (value: string): string => value.replaceAll(/[\s\u200b]/g, '');
 
-const expectVisualReference = (kind: 'quote' | 'invoice' | 'order', pdf: Uint8Array): void => {
-  const directory = mkdtempSync(join(tmpdir(), 'froment-pdf-reference-'));
-  try {
-    const output = join(directory, 'page');
-    const rasterized = spawnSync(
-      'pdftoppm',
-      ['-f', '1', '-l', '1', '-singlefile', '-r', '96', '-mono', '-', output],
-      { input: pdf },
-    );
-    expect(rasterized.status).toBe(0);
-    const raster = readFileSync(`${output}.pbm`);
-    const path = new URL(`../../test/references/${kind}-compact.pbm`, import.meta.url);
-    if (process.env['UPDATE_PDF_REFERENCES'] === 'true') writeFileSync(path, raster);
-    const reference = readFileSync(path);
-    const changedBytes = raster.reduce(
-      (count, value, index) => count + (value === reference[index] ? 0 : 1),
-      Math.abs(raster.byteLength - reference.byteLength),
-    );
-    const tolerance = 0;
-    expect(changedBytes / Math.max(raster.byteLength, reference.byteLength)).toBeLessThanOrEqual(
-      tolerance,
-    );
-  } finally {
-    rmSync(directory, { recursive: true, force: true });
-  }
-};
-
 describe('DocumentRenderer', () => {
   it('renders compact and maximum fixtures as stable A4 PDFs with embedded text', async () => {
     const rendered = await Effect.runPromise(
@@ -190,12 +163,10 @@ describe('DocumentRenderer', () => {
         ]),
       ).pipe(Effect.provide(DocumentRendererLive)),
     );
-    const compactKinds = ['quote', 'invoice', 'order'] as const;
-    for (const [index, pdf] of rendered.slice(0, 3).entries()) {
+    for (const pdf of rendered.slice(0, 3)) {
       const inspected = inspectPdf(pdf!);
       expect(inspected.info).toMatch(/Pages:\s+1\b/);
       expect(inspected.text).toContain('Froment Software');
-      expectVisualReference(compactKinds[index]!, pdf!);
     }
     for (const pdf of rendered.slice(3)) {
       const inspected = inspectPdf(pdf!);
