@@ -4,19 +4,22 @@
   }
 }
 
-#let document(data, compact: false) = {
+#let document(data) = {
+  let line-gap = 1.4mm
+  let row-inset = 1.3mm
+
   set page(paper: "a4", margin: 12.7mm, fill: white)
   set text(font: ("Cousine", "Liberation Mono"), size: 8.5pt, weight: "bold")
-  set par(leading: 0.5em)
+  set par(leading: 0.65em)
 
   grid(
     columns: (1fr, 78mm),
     gutter: 9mm,
     align: top,
-    stack-lines(data.issuer),
+    stack-lines(data.issuer, gap: line-gap),
     box(width: 100%, stroke: 0.25mm + rgb("555555"), inset: (x: 2.2mm, y: 1.2mm))[
       #stack(
-        spacing: 0.8mm,
+        spacing: line-gap,
         ..data.metadata.map(pair => grid(
           columns: (39mm, 1fr),
           gutter: 2mm,
@@ -27,23 +30,23 @@
     ],
   )
 
-  v(if compact { 4mm } else { 6mm })
+  v(6mm)
   strong(data.clientHeading)
-  stack-lines(data.client)
+  stack-lines(data.client, gap: line-gap)
 
   if data.context.len() > 0 {
     v(3mm)
-    stack-lines(data.context)
+    stack-lines(data.context, gap: line-gap)
   }
 
-  align(center)[#v(if compact { 4mm } else { 6mm }) #data.title]
+  align(center)[#v(6mm) #data.title]
   v(1mm)
 
   table(
     columns: (8mm, 1fr, 26mm, 13mm, 16mm, 27mm),
     align: (center, left, right, right, right, right),
     stroke: none,
-    inset: (right: 1.8mm, top: 1mm, bottom: 1mm),
+    inset: (right: 1.8mm, top: row-inset, bottom: row-inset),
     table.header(
       table.cell(breakable: false)[#data.lineHeadings.at(0)],
       table.cell(breakable: false)[#data.lineHeadings.at(1)],
@@ -68,7 +71,7 @@
     #grid(
       columns: (auto, 28mm),
       column-gutter: 2.5mm,
-      row-gutter: 0.8mm,
+      row-gutter: line-gap,
       align: right,
       ..data.totals.enumerate().map(pair => {
         let index = pair.at(0)
@@ -82,7 +85,7 @@
   ]
 
   if data.terms.len() > 0 {
-    v(if compact { 4mm } else { 5mm })
+    v(5mm)
     strong(data.termsHeading)
     linebreak()
     data.terms
@@ -94,6 +97,6 @@
     stack-lines(data.legal, gap: 1.5mm)
   }
 
-  v(if compact { 3mm } else { 5mm })
+  v(5mm)
   align(center)[\*\*\* #linebreak() #v(1.5mm) #data.thankYou #linebreak() #v(1.5mm) #strong(data.footer)]
 }

@@ -21,6 +21,7 @@ import { Config, Context, Effect, Layer, Schema, TxSemaphore } from 'effect';
 import { RuntimeConfiguration } from '../runtime-config.js';
 
 const execFileAsync = promisify(execFile);
+const documentTemplate = 'document.typ';
 type DocumentInput = QuoteDocumentInputValue | InvoiceDocumentInputValue | OrderDocumentInputValue;
 
 export class DocumentRenderError extends Schema.TaggedError<DocumentRenderError>()(
@@ -53,10 +54,7 @@ export const DocumentRendererLive = Layer.effect(
     const config = (yield* RuntimeConfiguration).documentRenderer;
     const permits = yield* TxSemaphore.make(config.concurrency);
 
-    const compile = Effect.fn('DocumentRenderer.compile')(function* (
-      template: 'quote.typ' | 'invoice.typ' | 'order.typ',
-      input: DocumentInput,
-    ) {
+    const compile = Effect.fn('DocumentRenderer.compile')(function* (input: DocumentInput) {
       const json = yield* Effect.try({
         try: () => JSON.stringify(input),
         catch: () => new DocumentRenderError({ reason: 'input' }),
@@ -80,7 +78,10 @@ export const DocumentRendererLive = Layer.effect(
                   mkdir(templateDirectory),
                 ]);
                 await Promise.all([
-                  copyFile(join(templatesPath, template), join(templateDirectory, template)),
+                  copyFile(
+                    join(templatesPath, documentTemplate),
+                    join(templateDirectory, documentTemplate),
+                  ),
                   copyFile(
                     join(templatesPath, 'shared.typ'),
                     join(templateDirectory, 'shared.typ'),
@@ -101,7 +102,7 @@ export const DocumentRendererLive = Layer.effect(
                     fontsPath,
                     '--creation-timestamp',
                     '0',
-                    join(templateDirectory, template),
+                    join(templateDirectory, documentTemplate),
                     output,
                   ],
                   {
@@ -132,19 +133,19 @@ export const DocumentRendererLive = Layer.effect(
 
     const renderQuotePdf = Effect.fn('DocumentRenderer.renderQuotePdf')(
       (snapshot: QuoteRenderSnapshotValue) =>
-        compile('quote.typ', prepareQuoteDocument(snapshot)).pipe(
+        compile(prepareQuoteDocument(snapshot)).pipe(
           Effect.catchDefect(() => new DocumentRenderError({ reason: 'input' })),
         ),
     );
     const renderInvoicePdf = Effect.fn('DocumentRenderer.renderInvoicePdf')(
       (snapshot: InvoiceRenderSnapshotValue) =>
-        compile('invoice.typ', prepareInvoiceDocument(snapshot)).pipe(
+        compile(prepareInvoiceDocument(snapshot)).pipe(
           Effect.catchDefect(() => new DocumentRenderError({ reason: 'input' })),
         ),
     );
     const renderOrderPdf = Effect.fn('DocumentRenderer.renderOrderPdf')(
       (snapshot: OrderRenderSnapshotValue) =>
-        compile('order.typ', prepareOrderDocument(snapshot)).pipe(
+        compile(prepareOrderDocument(snapshot)).pipe(
           Effect.catchDefect(() => new DocumentRenderError({ reason: 'input' })),
         ),
     );

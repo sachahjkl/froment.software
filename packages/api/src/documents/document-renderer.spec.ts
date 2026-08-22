@@ -193,7 +193,7 @@ describe('DocumentRenderer', () => {
   it('uses only local template imports', () => {
     const templatesPath = process.env['DOCUMENT_TEMPLATES_PATH'];
     expect(templatesPath).toBeDefined();
-    for (const template of ['quote.typ', 'invoice.typ', 'order.typ', 'shared.typ']) {
+    for (const template of ['document.typ', 'shared.typ']) {
       const source = readFileSync(join(templatesPath!, template), 'utf8');
       expect(source).not.toMatch(/https?:|@preview|@local/);
       for (const match of source.matchAll(/#import\s+"([^"]+)"/g)) {
