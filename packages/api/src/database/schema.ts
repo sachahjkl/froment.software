@@ -37,6 +37,35 @@ export const users = sqliteTable(
   ],
 );
 
+export const passwordCredentials = sqliteTable(
+  'password_credentials',
+  {
+    userId: text('user_id')
+      .notNull()
+      .primaryKey()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    email: text().notNull().unique(),
+    passwordHash: text('password_hash').notNull(),
+    createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull(),
+    updatedAt: integer('updated_at', { mode: 'timestamp_ms' }).notNull(),
+    passwordChangedAt: integer('password_changed_at', { mode: 'timestamp_ms' }).notNull(),
+  },
+  (table) => [
+    check(
+      'password_credentials_email_check',
+      sql`${table.email} = lower(trim(${table.email})) and length(${table.email}) between 3 and 254`,
+    ),
+    check(
+      'password_credentials_password_hash_check',
+      sql`${table.passwordHash} glob '$argon2id$*'`,
+    ),
+    check(
+      'password_credentials_timestamps_check',
+      sql`${table.updatedAt} >= ${table.createdAt} and ${table.passwordChangedAt} between ${table.createdAt} and ${table.updatedAt}`,
+    ),
+  ],
+);
+
 export const clients = sqliteTable(
   'clients',
   {
