@@ -89,7 +89,6 @@ interface ApiStub {
   markPaid: ReturnType<typeof vi.fn>;
   void: ReturnType<typeof vi.fn>;
   renderPdf: ReturnType<typeof vi.fn>;
-  preview: ReturnType<typeof vi.fn>;
 }
 
 const input = (element: HTMLInputElement | HTMLSelectElement, value: string): void => {
@@ -115,7 +114,6 @@ const setup = async (status?: InvoiceDetailValue['status']) => {
     markPaid: vi.fn(),
     void: vi.fn(),
     renderPdf: vi.fn(),
-    preview: vi.fn().mockResolvedValue(new Blob(['%PDF-'], { type: 'application/pdf' })),
   };
   TestBed.configureTestingModule({
     providers: [
@@ -140,25 +138,16 @@ const setup = async (status?: InvoiceDetailValue['status']) => {
 describe('InvoiceEditor', () => {
   afterEach(() => vi.restoreAllMocks());
 
-  it('replaces and revokes PDF preview object URLs', async () => {
-    const createObjectUrl = vi
-      .fn()
-      .mockReturnValueOnce('blob:invoice-first')
-      .mockReturnValueOnce('blob:invoice-second');
-    const revokeObjectUrl = vi.fn();
-    Object.defineProperty(URL, 'createObjectURL', { configurable: true, value: createObjectUrl });
-    Object.defineProperty(URL, 'revokeObjectURL', { configurable: true, value: revokeObjectUrl });
-    const { api, fixture, root } = await setup('draft');
+  it('loads the PDF preview directly without a sandbox', async () => {
+    const { fixture, root } = await setup('draft');
     fixture.detectChanges();
-    await vi.waitFor(() => expect(api.preview).toHaveBeenCalledTimes(1));
-    await vi.waitFor(() => expect(root.querySelector('iframe')).not.toBeNull());
-
-    button(root, /Aperçu|Preview/).click();
-    await vi.waitFor(() => expect(api.preview).toHaveBeenCalledTimes(2));
-    expect(revokeObjectUrl).toHaveBeenCalledWith('blob:invoice-first');
-
-    fixture.destroy();
-    expect(revokeObjectUrl).toHaveBeenCalledWith('blob:invoice-second');
+    const frame = await vi.waitFor(() => {
+      const result = root.querySelector('iframe');
+      if (result === null) throw new Error('The invoice preview frame is unavailable.');
+      return result;
+    });
+    expect(frame.getAttribute('src')).toBe(`/api/invoices/${invoiceId}/revisions/1/preview`);
+    expect(frame.hasAttribute('sandbox')).toBe(false);
   });
 
   it('keeps the newest invoice when route responses finish out of order', async () => {

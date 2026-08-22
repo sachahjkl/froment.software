@@ -34,20 +34,6 @@ describe('InvoicesApi', () => {
     http.verify();
   });
 
-  it('loads a PDF preview as a blob', async () => {
-    TestBed.configureTestingModule({
-      providers: [provideHttpClient(), provideHttpClientTesting()],
-    });
-    const api = TestBed.inject(InvoicesApi);
-    const http = TestBed.inject(HttpTestingController);
-    const id = '01ARZ3NDEKTSV4RRFFQ69G5FAY';
-    const result = api.preview(id, 1);
-    const request = http.expectOne(`/api/invoices/${id}/revisions/1/preview`);
-    expect(request.request.responseType).toBe('blob');
-    request.flush(new Blob(['%PDF-'], { type: 'application/pdf' }));
-    await expect(result).resolves.toBeInstanceOf(Blob);
-  });
-
   it('preserves the existing invoice identifier', async () => {
     TestBed.configureTestingModule({
       providers: [provideHttpClient(), provideHttpClientTesting()],

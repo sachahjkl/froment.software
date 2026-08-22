@@ -121,10 +121,13 @@ export class InvoiceEditor {
   protected readonly pdfPendingVersion = signal<number | undefined>(undefined);
   protected readonly generatedPdfVersions = signal<ReadonlySet<number>>(new Set());
   protected readonly previewVersion = signal<number | undefined>(undefined);
-  protected readonly previewUrl = signal<string | undefined>(undefined);
-  protected readonly previewLoading = signal(false);
-  protected readonly previewFailed = signal(false);
-  private previewRequest = 0;
+  protected readonly previewUrl = computed(() => {
+    const invoiceId = this.invoiceId();
+    const version = this.previewVersion();
+    return invoiceId === undefined || version === undefined
+      ? undefined
+      : `/api/invoices/${invoiceId}/revisions/${version}/preview`;
+  });
   protected readonly error = signal<TranslationKey | undefined>(undefined);
   private readonly model = signal<InvoiceModel>({
     orderId: '',
@@ -200,10 +203,6 @@ export class InvoiceEditor {
   });
 
   constructor() {
-    this.destroyRef.onDestroy(() => {
-      this.previewRequest += 1;
-      this.revokePreviewUrl();
-    });
     afterNextRender(() => {
       this.route.paramMap.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((params) => {
         void this.load(params.get('invoiceId'));
@@ -329,29 +328,8 @@ export class InvoiceEditor {
     await this.transition('void');
   }
 
-  protected async showPreview(version: number): Promise<void> {
-    const invoiceId = this.invoiceId();
-    if (invoiceId === undefined) return;
-    const request = ++this.previewRequest;
+  protected showPreview(version: number): void {
     this.previewVersion.set(version);
-    this.previewLoading.set(true);
-    this.previewFailed.set(false);
-    try {
-      const pdf = await this.invoicesApi.preview(invoiceId, version);
-      if (request !== this.previewRequest) return;
-      const url = URL.createObjectURL(pdf);
-      this.revokePreviewUrl();
-      this.previewUrl.set(url);
-    } catch {
-      if (request === this.previewRequest) this.previewFailed.set(true);
-    } finally {
-      if (request === this.previewRequest) this.previewLoading.set(false);
-    }
-  }
-
-  protected retryPreview(): void {
-    const version = this.previewVersion();
-    if (version !== undefined) void this.showPreview(version);
   }
 
   protected async generatePdf(version: number): Promise<void> {
@@ -403,10 +381,6 @@ export class InvoiceEditor {
     this.detail.set(undefined);
     this.orders.set([]);
     this.previewVersion.set(undefined);
-    this.previewRequest += 1;
-    this.previewLoading.set(false);
-    this.previewFailed.set(false);
-    this.revokePreviewUrl();
     this.pdfPendingVersion.set(undefined);
     this.generatedPdfVersions.set(new Set());
     this.error.set(undefined);
@@ -489,15 +463,9 @@ export class InvoiceEditor {
 
   private applyDetail(detail: InvoiceDetailValue): void {
     this.detail.set(detail);
-    void this.showPreview(detail.version);
+    this.showPreview(detail.version);
     this.model.set(this.modelFromDetail(detail));
     this.invoiceForm().reset();
-  }
-
-  private revokePreviewUrl(): void {
-    const url = this.previewUrl();
-    if (url !== undefined) URL.revokeObjectURL(url);
-    this.previewUrl.set(undefined);
   }
 
   private modelFromDetail(detail: InvoiceDetailValue): InvoiceModel {

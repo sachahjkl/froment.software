@@ -64,14 +64,6 @@ export class InvoicesApi {
     );
   }
 
-  async preview(invoiceId: UlidValue, version: number): Promise<Blob> {
-    return firstValueFrom(
-      this.http.get(`/api/invoices/${invoiceId}/revisions/${version}/preview`, {
-        responseType: 'blob',
-      }),
-    );
-  }
-
   async issue(
     invoiceId: UlidValue,
     expectedVersion: number,

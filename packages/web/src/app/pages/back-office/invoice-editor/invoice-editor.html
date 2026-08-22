@@ -310,19 +310,8 @@
       /></a>
       }
     </div>
-    @if (previewLoading()) {
-    <p aria-live="polite">{{ i18n.t('backOffice.invoice.preview.loading') }}</p>
-    } @else if (previewFailed()) {
-    <p role="alert">{{ i18n.t('backOffice.invoice.preview.failure') }}</p>
-    <button appButton type="button" (click)="retryPreview()">
-      {{ i18n.t('backOffice.invoice.preview.retry') }}
-    </button>
-    } @else if (previewFrameUrl(); as frameUrl) {
-    <iframe
-      [src]="frameUrl"
-      [title]="i18n.t('backOffice.invoice.preview.frameTitle')"
-      sandbox
-    ></iframe>
+    @if (previewFrameUrl(); as frameUrl) {
+    <iframe [src]="frameUrl" [title]="i18n.t('backOffice.invoice.preview.frameTitle')"></iframe>
     }
   </section>
   } } }

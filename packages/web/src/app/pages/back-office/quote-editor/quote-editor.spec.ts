@@ -47,15 +47,7 @@ const quoteDetail = {
 };
 
 describe('QuoteEditor', () => {
-  it('replaces and revokes PDF preview object URLs', async () => {
-    const createObjectUrl = vi
-      .fn()
-      .mockReturnValueOnce('blob:quote-first')
-      .mockReturnValueOnce('blob:quote-second');
-    const revokeObjectUrl = vi.fn();
-    Object.defineProperty(URL, 'createObjectURL', { configurable: true, value: createObjectUrl });
-    Object.defineProperty(URL, 'revokeObjectURL', { configurable: true, value: revokeObjectUrl });
-    const preview = vi.fn().mockResolvedValue(new Blob(['%PDF-'], { type: 'application/pdf' }));
+  it('loads the PDF preview directly without a sandbox', async () => {
     TestBed.configureTestingModule({
       providers: [
         provideRouter([]),
@@ -71,7 +63,6 @@ describe('QuoteEditor', () => {
         {
           provide: QuotesApi,
           useValue: {
-            preview,
             get: () =>
               Promise.resolve({
                 success: true,
@@ -87,19 +78,13 @@ describe('QuoteEditor', () => {
     const fixture = TestBed.createComponent(QuoteEditor);
     fixture.detectChanges();
     const root: HTMLElement = fixture.nativeElement;
-    await vi.waitFor(() => expect(preview).toHaveBeenCalledTimes(1));
-    await vi.waitFor(() => expect(root.querySelector('iframe')).not.toBeNull());
-    const previewButton = [...root.querySelectorAll<HTMLButtonElement>('button')].find(
-      (candidate) => /Aperçu|Preview/.test(candidate.textContent ?? ''),
-    );
-    if (previewButton === undefined) throw new Error('The preview button is unavailable.');
-
-    previewButton.click();
-    await vi.waitFor(() => expect(preview).toHaveBeenCalledTimes(2));
-    expect(revokeObjectUrl).toHaveBeenCalledWith('blob:quote-first');
-
-    fixture.destroy();
-    expect(revokeObjectUrl).toHaveBeenCalledWith('blob:quote-second');
+    const frame = await vi.waitFor(() => {
+      const result = root.querySelector('iframe');
+      if (result === null) throw new Error('The quote preview frame is unavailable.');
+      return result;
+    });
+    expect(frame.getAttribute('src')).toBe(`/api/quotes/${quoteId}/revisions/2/preview`);
+    expect(frame.hasAttribute('sandbox')).toBe(false);
   });
 
   it('keeps the newest quote when route responses finish out of order', async () => {

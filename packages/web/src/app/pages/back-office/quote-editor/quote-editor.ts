@@ -105,10 +105,13 @@ export class QuoteEditor {
   protected readonly conditionPresets = signal<QuoteConditionPresetListValue>([]);
   protected readonly detail = signal<QuoteDetailValue | undefined>(undefined);
   protected readonly previewVersion = signal<number | undefined>(undefined);
-  protected readonly previewUrl = signal<string | undefined>(undefined);
-  protected readonly previewLoading = signal(false);
-  protected readonly previewFailed = signal(false);
-  private previewRequest = 0;
+  protected readonly previewUrl = computed(() => {
+    const quoteId = this.quoteId();
+    const version = this.previewVersion();
+    return quoteId === undefined || version === undefined
+      ? undefined
+      : `/api/quotes/${quoteId}/revisions/${version}/preview`;
+  });
   protected readonly pdfPendingVersion = signal<number | undefined>(undefined);
   protected readonly generatedPdfVersions = signal<ReadonlySet<number>>(new Set());
   protected readonly loading = signal(true);
@@ -193,10 +196,6 @@ export class QuoteEditor {
   });
 
   constructor() {
-    this.destroyRef.onDestroy(() => {
-      this.previewRequest += 1;
-      this.revokePreviewUrl();
-    });
     afterNextRender(() => {
       this.route.paramMap.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((params) => {
         void this.load(params.get('quoteId'));
@@ -304,29 +303,8 @@ export class QuoteEditor {
     }).format(new Date(value));
   }
 
-  protected async showPreview(version: number): Promise<void> {
-    const quoteId = this.quoteId();
-    if (quoteId === undefined) return;
-    const request = ++this.previewRequest;
+  protected showPreview(version: number): void {
     this.previewVersion.set(version);
-    this.previewLoading.set(true);
-    this.previewFailed.set(false);
-    try {
-      const pdf = await this.quotesApi.preview(quoteId, version);
-      if (request !== this.previewRequest) return;
-      const url = URL.createObjectURL(pdf);
-      this.revokePreviewUrl();
-      this.previewUrl.set(url);
-    } catch {
-      if (request === this.previewRequest) this.previewFailed.set(true);
-    } finally {
-      if (request === this.previewRequest) this.previewLoading.set(false);
-    }
-  }
-
-  protected retryPreview(): void {
-    const version = this.previewVersion();
-    if (version !== undefined) void this.showPreview(version);
   }
 
   protected async generatePdf(version: number): Promise<void> {
@@ -425,10 +403,6 @@ export class QuoteEditor {
     this.isNew.set(parameter === null);
     this.detail.set(undefined);
     this.previewVersion.set(undefined);
-    this.previewRequest += 1;
-    this.previewLoading.set(false);
-    this.previewFailed.set(false);
-    this.revokePreviewUrl();
     this.pdfPendingVersion.set(undefined);
     this.generatedPdfVersions.set(new Set());
     this.sentLink.set(undefined);
@@ -466,7 +440,7 @@ export class QuoteEditor {
           return;
         }
         this.detail.set(outcome.result);
-        void this.showPreview(outcome.result.version);
+        this.showPreview(outcome.result.version);
         this.model.set(this.modelFromDetail(outcome.result));
         this.quoteForm().reset();
       }
@@ -477,12 +451,6 @@ export class QuoteEditor {
     } finally {
       if (request === this.routeRequest) this.loading.set(false);
     }
-  }
-
-  private revokePreviewUrl(): void {
-    const url = this.previewUrl();
-    if (url !== undefined) URL.revokeObjectURL(url);
-    this.previewUrl.set(undefined);
   }
 
   private parseLines(): ReadonlyArray<QuoteLineInputValue> | undefined {
