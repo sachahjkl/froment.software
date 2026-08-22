@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 
 import { RequestLimiter, RequestLimiterLive } from './request-limiter.js';
 import { AuthenticationConfig } from '../authentication/authentication-config.js';
-import { limitPublicQuoteRequest } from '../server.js';
+import { limitPublicQuoteRequest } from '../quote-links/request-limit.js';
 
 const authenticationConfigLayer = Layer.succeed(
   AuthenticationConfig,

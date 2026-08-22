@@ -22,7 +22,7 @@ import { InvoicePdfJobs, InvoicePdfJobsLive } from '../src/invoices/pdf-jobs.js'
 import { Invoices, InvoicesLive } from '../src/invoices/invoices.js';
 import { OrdersLive } from '../src/orders/orders.js';
 import { Quotes, type QuotesService } from '../src/quotes/quotes.js';
-import { issueInvoice } from '../src/server.js';
+import { issueInvoice } from '../src/invoices/issue.js';
 
 const actorId = '01ARZ3NDEKTSV4RRFFQ69G5FAV';
 const invoiceId = '01ARZ3NDEKTSV4RRFFQ69G5FAW';
