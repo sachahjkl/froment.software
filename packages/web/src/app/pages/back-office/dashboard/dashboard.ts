@@ -40,6 +40,7 @@ interface ActivityItem {
   readonly title: string;
   readonly client: string;
   readonly date: string;
+  readonly link: readonly string[];
 }
 
 @Component({
@@ -144,12 +145,14 @@ export class Dashboard {
         title: quote.reference,
         client: quote.clientDisplayName,
         date: quote.updatedAt,
+        link: ['/backoffice/affaires', quote.id] as const,
       })),
       ...this.invoices().map((invoice) => ({
         id: `invoice-${invoice.id}`,
         title: invoice.invoiceNumber ?? invoice.orderReference,
         client: invoice.clientDisplayName,
         date: invoice.updatedAt,
+        link: ['/backoffice/invoices', invoice.id] as const,
       })),
     ]
       .sort((left, right) => right.date.localeCompare(left.date))

@@ -76,7 +76,8 @@
       <ol class="activity-list">
         @for (item of activity(); track item.id) {
         <li>
-          <span><strong>{{ item.title }}</strong><small>{{ item.client }}</small></span
+          <a [routerLink]="item.link"
+            ><strong>{{ item.title }}</strong><small>{{ item.client }}</small></a
           ><time [dateTime]="item.date">{{ date(item.date) }}</time>
         </li>
         }

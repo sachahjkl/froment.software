@@ -42,5 +42,9 @@ describe('Dashboard', () => {
 
     expect(actions[0]?.label).toMatch(/Facture à finaliser|Invoice to finalize/);
     expect(actions[0]?.title).toBe('Facture de cadrage');
+    expect(fixture.componentInstance['activity']()[0]?.link).toEqual([
+      '/backoffice/invoices',
+      invoice.id,
+    ]);
   });
 });
