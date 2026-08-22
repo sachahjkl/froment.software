@@ -11,7 +11,7 @@
     </a>
   </header>
 
-  <section class="billing-summary" aria-label="Résumé">
+  <section class="billing-summary" [attr.aria-label]="i18n.t('backOffice.billing.summary')">
     <span>{{ i18n.t('backOffice.billing.outstanding') }}</span>
     <strong>{{ money(outstandingCents()) }}</strong>
   </section>

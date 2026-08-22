@@ -28,7 +28,9 @@ describe('business references', () => {
         "update business_reference_counters set next_value = 1000000 where kind = 'quote' and year = 2026",
       )
       .run();
-    expect(() => allocateBusinessReference(sqlite, 'quote', 2026)).toThrow('sequence exhausted');
+    expect(() => allocateBusinessReference(sqlite, 'quote', 2026)).toThrow(
+      'business.reference.sequence_exhausted',
+    );
     sqlite.close();
   });
 });

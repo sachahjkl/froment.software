@@ -6,6 +6,7 @@ import { type AddressInfo, createServer } from 'node:net';
 import { promisify } from 'node:util';
 
 const execFileAsync = promisify(execFile);
+const serverStartAttempts = 5;
 
 const reservePort = () =>
   new Promise<number>((resolve, reject) => {
@@ -39,6 +40,12 @@ const waitForServer = async (url: string, process: ChildProcess, readOutput: () 
   throw new Error(`The server did not start.\n${readOutput().slice(-5_000)}`);
 };
 
+const stopProcess = async (process: ChildProcess) => {
+  if (process.exitCode !== null || process.signalCode !== null) return;
+  process.kill('SIGTERM');
+  await new Promise<void>((resolve) => process.once('exit', () => resolve()));
+};
+
 export interface HttpTestServer {
   readonly baseUrl: string;
   readonly databaseFilename: string;
@@ -53,10 +60,8 @@ export const startHttpTestServer = async (): Promise<HttpTestServer> => {
   await cp(join(import.meta.dirname, '../../../web/dist/froment-software/browser'), staticRoot, {
     recursive: true,
   });
-  const port = await reservePort();
-  const baseUrl = `http://127.0.0.1:${port}`;
   const databaseFilename = join(staticRoot, 'database.sqlite');
-  const env = {
+  const baseEnv = {
     ...process.env,
     API_TOKEN_HMAC_KEY: 'DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD',
     BOOTSTRAP_PASSWORD_SCRYPT:
@@ -71,19 +76,35 @@ export const startHttpTestServer = async (): Promise<HttpTestServer> => {
     OTEL_SDK_DISABLED: 'true',
     PASETO_SECRET_KEY:
       'k4.secret.NXrAOzhnhDuDrGPrMHzfIwwJi88ZgKI4L4x6DaXjp2ycuz4ubSc_ZLzoQlOEnp-gDMpdjFgTwp0mHG8LP2QuFA',
-    PORT: String(port),
-    PUBLIC_ORIGIN: baseUrl,
     QUOTE_LINK_HMAC_KEY: 'CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC',
     REFRESH_HMAC_KEY: 'BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB',
     STATIC_ROOT: staticRoot,
   };
   const cwd = join(import.meta.dirname, '../..');
-  await execFileAsync(process.execPath, ['dist/migrate.cjs'], { cwd, env });
-  const processHandle = spawn(process.execPath, ['dist/main.cjs'], { cwd, env, stdio: 'pipe' });
+  await execFileAsync(process.execPath, ['dist/migrate.cjs'], {
+    cwd,
+    env: { ...baseEnv, PORT: '0', PUBLIC_ORIGIN: 'http://127.0.0.1' },
+  });
+  let baseUrl = '';
+  let processHandle: ChildProcess | undefined;
   let serverOutput = '';
-  processHandle.stdout?.on('data', (chunk: Buffer) => (serverOutput += chunk.toString()));
-  processHandle.stderr?.on('data', (chunk: Buffer) => (serverOutput += chunk.toString()));
-  await waitForServer(`${baseUrl}/api/health`, processHandle, () => serverOutput);
+  for (let attempt = 1; attempt <= serverStartAttempts; attempt += 1) {
+    const port = await reservePort();
+    baseUrl = `http://127.0.0.1:${port}`;
+    const env = { ...baseEnv, PORT: String(port), PUBLIC_ORIGIN: baseUrl };
+    serverOutput = '';
+    processHandle = spawn(process.execPath, ['dist/main.cjs'], { cwd, env, stdio: 'pipe' });
+    processHandle.stdout?.on('data', (chunk: Buffer) => (serverOutput += chunk.toString()));
+    processHandle.stderr?.on('data', (chunk: Buffer) => (serverOutput += chunk.toString()));
+    try {
+      await waitForServer(`${baseUrl}/api/health`, processHandle, () => serverOutput);
+      break;
+    } catch (error) {
+      await stopProcess(processHandle);
+      if (!serverOutput.includes('EADDRINUSE') || attempt === serverStartAttempts) throw error;
+    }
+  }
+  if (processHandle === undefined) throw new Error('The test server did not start.');
 
   const bootstrap = await fetch(`${baseUrl}/api/bootstrap`, {
     method: 'POST',
@@ -106,10 +127,7 @@ export const startHttpTestServer = async (): Promise<HttpTestServer> => {
     authorization,
     jsonHeaders: { ...authorization, 'content-type': 'application/json' },
     close: async () => {
-      if (processHandle.exitCode === null) {
-        processHandle.kill('SIGTERM');
-        await new Promise<void>((resolve) => processHandle.once('exit', () => resolve()));
-      }
+      await stopProcess(processHandle);
       await rm(staticRoot, { recursive: true, force: true });
     },
   };

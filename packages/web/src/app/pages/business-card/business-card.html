@@ -1,16 +1,16 @@
 <article class="business-card-page">
   <header class="card-toolbar">
     <div>
-      <p><a routerLink="/backoffice/configuration">← Configuration</a></p>
-      <h1>Carte de visite</h1>
+      <p><a routerLink="/backoffice/configuration">{{ i18n.t("businessCard.back") }}</a></p>
+      <h1>{{ i18n.t("businessCard.title") }}</h1>
     </div>
     <button appButton variant="primary" type="button" (click)="print()">
-      Imprimer ou exporter en PDF
+      {{ i18n.t("businessCard.print") }}
     </button>
   </header>
 
-  <div class="card-sheet" aria-label="Aperçu recto-verso de la carte de visite">
-    <section class="business-card front" aria-label="Recto">
+  <div class="card-sheet" [attr.aria-label]="i18n.t('businessCard.preview')">
+    <section class="business-card front" [attr.aria-label]="i18n.t('businessCard.front')">
       <div class="front-content">
         <div class="identity">
           <h2>{{ content().name }}</h2>
@@ -23,7 +23,7 @@
       </div>
     </section>
 
-    <section class="business-card back" aria-label="Verso">
+    <section class="business-card back" [attr.aria-label]="i18n.t('businessCard.backSide')">
       <div class="brand-lockup">
         <img src="/brand/favicon.png" width="48" height="48" alt="" />
         <p>{{ content().brandName }}</p>
@@ -34,13 +34,13 @@
   <div class="card-editor">
     <form class="editor-form ds-panel" (submit)="saveVersion(); $event.preventDefault()">
       <header>
-        <h2>Personnaliser la carte</h2>
-        <p>Les modifications apparaissent directement dans l’aperçu.</p>
+        <h2>{{ i18n.t("businessCard.edit") }}</h2>
+        <p>{{ i18n.t("businessCard.editIntro") }}</p>
       </header>
 
       <div class="form-grid">
         <label>
-          <span>Nom</span>
+          <span>{{ i18n.t("businessCard.name") }}</span>
           <input
             class="input"
             autocomplete="name"
@@ -49,15 +49,15 @@
           />
         </label>
         <label>
-          <span>Poste</span>
+          <span>{{ i18n.t("businessCard.role") }}</span>
           <input class="input" autocomplete="organization-title" [formField]="contentForm.role" />
         </label>
         <label>
-          <span>Adresse e-mail</span>
+          <span>{{ i18n.t("businessCard.email") }}</span>
           <input class="input" type="email" autocomplete="email" [formField]="contentForm.email" />
         </label>
         <label>
-          <span>Site web</span>
+          <span>{{ i18n.t("businessCard.website") }}</span>
           <input
             class="input"
             inputmode="url"
@@ -66,25 +66,23 @@
           />
         </label>
         <label>
-          <span>Nom de marque au verso</span>
+          <span>{{ i18n.t("businessCard.brand") }}</span>
           <input class="input" [formField]="contentForm.brandName" />
         </label>
       </div>
 
       <div class="version-save">
         <label>
-          <span>Nom de la version</span>
+          <span>{{ i18n.t("businessCard.versionName") }}</span>
           <input class="input" [formField]="versionForm.name" (input)="markVersionNameEdited()" />
         </label>
-        <button appButton variant="primary" type="submit">Enregistrer cette version</button>
+        <button appButton variant="primary" type="submit">{{ i18n.t("businessCard.save") }}</button>
       </div>
 
       @if (contentForm().invalid() && contentForm().touched()) {
-      <p class="notice danger" role="alert">
-        Renseignez tous les champs avec une adresse e-mail valide.
-      </p>
+      <p class="notice danger" role="alert">{{ i18n.t("businessCard.contentInvalid") }}</p>
       } @if (versionForm().invalid() && versionForm().touched()) {
-      <p class="notice danger" role="alert">Renseignez le nom de la version.</p>
+      <p class="notice danger" role="alert">{{ i18n.t("businessCard.versionInvalid") }}</p>
       } @if (storageMessage()) {
       <p class="notice" role="status">{{ storageMessage() }}</p>
       }
@@ -92,8 +90,8 @@
 
     <section class="version-panel ds-panel" aria-labelledby="version-list-title">
       <header>
-        <h2 id="version-list-title">Versions locales</h2>
-        <p>Ces versions restent uniquement dans ce navigateur.</p>
+        <h2 id="version-list-title">{{ i18n.t("businessCard.versions") }}</h2>
+        <p>{{ i18n.t("businessCard.versionsIntro") }}</p>
       </header>
 
       @if (versions().length) {
@@ -112,15 +110,15 @@
             variant="danger"
             type="button"
             (click)="deleteVersion(version)"
-            [attr.aria-label]="'Supprimer ' + version.name"
+            [attr.aria-label]="i18n.tf('businessCard.deleteLabel', { name: version.name })"
           >
-            Supprimer
+            {{ i18n.t("businessCard.delete") }}
           </button>
         </li>
         }
       </ul>
       } @else {
-      <p class="empty-versions">Aucune version enregistrée.</p>
+      <p class="empty-versions">{{ i18n.t("businessCard.empty") }}</p>
       }
     </section>
   </div>

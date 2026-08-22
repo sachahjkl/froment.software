@@ -18,6 +18,8 @@ import { join } from 'node:path';
 import { promisify } from 'node:util';
 import { Config, Context, Effect, Layer, Schema, TxSemaphore } from 'effect';
 
+import { RuntimeConfiguration } from '../runtime-config.js';
+
 const execFileAsync = promisify(execFile);
 type DocumentInput = QuoteDocumentInputValue | InvoiceDocumentInputValue | OrderDocumentInputValue;
 
@@ -48,7 +50,8 @@ export const DocumentRendererLive = Layer.effect(
     const executable = yield* Config.string('TYPST_PATH');
     const templatesPath = yield* Config.string('DOCUMENT_TEMPLATES_PATH');
     const fontsPath = yield* Config.string('DOCUMENT_FONTS_PATH');
-    const permits = yield* TxSemaphore.make(2);
+    const config = (yield* RuntimeConfiguration).documentRenderer;
+    const permits = yield* TxSemaphore.make(config.concurrency);
 
     const compile = Effect.fn('DocumentRenderer.compile')(function* (
       template: 'quote.typ' | 'invoice.typ' | 'order.typ',
@@ -108,7 +111,7 @@ export const DocumentRendererLive = Layer.effect(
                       SOURCE_DATE_EPOCH: '0',
                       TYPST_PACKAGE_PATH: join(root, 'packages'),
                     },
-                    maxBuffer: 1024 * 1024,
+                    maxBuffer: config.maximumOutputBytes,
                   },
                 );
                 const pdf = await readFile(output);

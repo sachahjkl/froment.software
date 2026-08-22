@@ -19,9 +19,7 @@ import { PasswordCredentialLookup, RefreshSessionLookup } from '../database/sche
 import { AuthenticationConfig, hmac } from './authentication-config.js';
 import { AccessTokens } from './paseto.js';
 import { Passwords } from './password.js';
-
-const refreshLifetime = 30 * 24 * 60 * 60 * 1_000;
-const rotationGrace = 5_000;
+import { RuntimeConfiguration } from '../runtime-config.js';
 
 interface LoginFailureState {
   readonly failures: number;
@@ -101,22 +99,23 @@ export const AuthenticationLive = Layer.effect(
   Effect.gen(function* () {
     const database = yield* Database;
     const config = yield* AuthenticationConfig;
+    const runtime = yield* RuntimeConfiguration;
     const audit = yield* Audit;
     const passwords = yield* Passwords;
     const accessTokens = yield* AccessTokens;
     const addressFailures = yield* Cache.make({
-      capacity: 10_000,
-      timeToLive: '1 hour',
+      capacity: runtime.authentication.failureCacheCapacity,
+      timeToLive: runtime.authentication.failureCacheLifetimeMillis,
       lookup: () => Ref.make<LoginFailureState>(initialLoginFailureState),
     });
     const accountFailures = yield* Cache.make({
-      capacity: 10_000,
-      timeToLive: '1 hour',
+      capacity: runtime.authentication.failureCacheCapacity,
+      timeToLive: runtime.authentication.failureCacheLifetimeMillis,
       lookup: () => Ref.make<LoginFailureState>(initialLoginFailureState),
     });
     const successfulLogins = yield* Cache.make({
-      capacity: 20_000,
-      timeToLive: '2 minutes',
+      capacity: runtime.authentication.successfulLoginCacheCapacity,
+      timeToLive: runtime.authentication.successfulLoginCacheLifetimeMillis,
       lookup: () =>
         Clock.currentTimeMillis.pipe(
           Effect.flatMap((startedAt) => Ref.make<LoginQuotaState>({ count: 0, startedAt })),
@@ -129,8 +128,11 @@ export const AuthenticationLive = Layer.effect(
     ) {
       const state = yield* Cache.get(successfulLogins, key);
       return yield* Ref.modify(state, (current): readonly [boolean, LoginQuotaState] => {
-        if (now - current.startedAt >= 60_000) return [true, { count: 1, startedAt: now }];
-        if (current.count >= 60) return [false, current];
+        if (now - current.startedAt >= runtime.authentication.quotaWindowMillis) {
+          return [true, { count: 1, startedAt: now }];
+        }
+        if (current.count >= runtime.authentication.successfulLoginsPerMinute)
+          return [false, current];
         return [true, { ...current, count: current.count + 1 }];
       });
     });
@@ -142,7 +144,11 @@ export const AuthenticationLive = Layer.effect(
       return yield* Ref.modify(state, (current) => {
         if (now < current.blockedUntil) return [false, current];
         const failures = current.failures + 1;
-        const delay = Math.min(15 * 60 * 1_000, 1_000 * 2 ** Math.min(failures - 1, 10));
+        const delay = Math.min(
+          runtime.authentication.failureMaximumDelayMillis,
+          runtime.authentication.failureBaseDelayMillis *
+            2 ** Math.min(failures - 1, runtime.authentication.failureExponentLimit),
+        );
         return [true, { failures, blockedUntil: now + delay }];
       });
     });
@@ -196,23 +202,29 @@ export const AuthenticationLive = Layer.effect(
              select id from refresh_sessions
               where absolute_expires_at <= ?
               order by absolute_expires_at
-              limit 500
+               limit ?
            )`,
         )
-        .run(now);
+        .run(now, runtime.authentication.expiredSessionCleanupLimit);
 
     const createSession = Effect.fn('Authentication.createSession')(function* (
       userId: string,
       mode: LoginModeValue,
     ) {
       const now = yield* Clock.currentTimeMillis;
-      const session = yield* prepareSession(userId, mode, ulid(now), now + refreshLifetime, now);
+      const session = yield* prepareSession(
+        userId,
+        mode,
+        ulid(now),
+        now + runtime.authentication.refreshSessionLifetimeMillis,
+        now,
+      );
       yield* Effect.try({
         try: () => {
           cleanupExpiredSessions(now);
           insertSession(session);
         },
-        catch: (cause) => new DatabaseError({ operation: 'create refresh session', cause }),
+        catch: (cause) => new DatabaseError({ operation: 'create.refresh.session', cause }),
       });
       return session;
     });
@@ -253,7 +265,7 @@ export const AuthenticationLive = Layer.effect(
             ? undefined
             : Schema.decodeUnknownSync(PasswordCredentialLookup)(row);
         },
-        catch: (cause) => new DatabaseError({ operation: 'find password credential', cause }),
+        catch: (cause) => new DatabaseError({ operation: 'find.password.credential', cause }),
       });
       const passwordAccepted = yield* passwords.verify(
         credential?.passwordHash ??
@@ -281,7 +293,7 @@ export const AuthenticationLive = Layer.effect(
         credential.userId,
         credential.mode,
         ulid(now),
-        now + refreshLifetime,
+        now + runtime.authentication.refreshSessionLifetimeMillis,
         now,
       );
       yield* Effect.try({
@@ -301,7 +313,7 @@ export const AuthenticationLive = Layer.effect(
             })
             .immediate();
         },
-        catch: (cause) => new DatabaseError({ operation: 'create login session', cause }),
+        catch: (cause) => new DatabaseError({ operation: 'create.login.session', cause }),
       });
       return session;
     });
@@ -379,7 +391,7 @@ export const AuthenticationLive = Layer.effect(
                 }
                 if (fresh.consumedAt !== null) {
                   if (
-                    now - fresh.consumedAt > rotationGrace ||
+                    now - fresh.consumedAt > runtime.authentication.refreshRotationGraceMillis ||
                     fresh.replacementSessionId === null
                   ) {
                     database.sqlite
@@ -441,7 +453,7 @@ export const AuthenticationLive = Layer.effect(
               },
             )
             .immediate(),
-        catch: (cause) => new DatabaseError({ operation: 'rotate refresh session', cause }),
+        catch: (cause) => new DatabaseError({ operation: 'rotate.refresh.session', cause }),
       });
       if (rotation.kind === 'rejected') {
         return yield* new SessionRejected({ code: 'authentication.invalid_session' });
@@ -474,7 +486,7 @@ export const AuthenticationLive = Layer.effect(
           database.sqlite
             .prepare('select kind as mode from users where id = ? and disabled_at is null')
             .get(claims.userId),
-        catch: (cause) => new DatabaseError({ operation: 'authenticate access token', cause }),
+        catch: (cause) => new DatabaseError({ operation: 'authenticate.access.token', cause }),
       });
       if (row === undefined) {
         return yield* new AuthenticationRequired({ code: 'authentication.required' });
@@ -508,7 +520,7 @@ export const AuthenticationLive = Layer.effect(
             )
             .pluck()
             .get(principal.userId, ...permissions),
-        catch: (cause) => new DatabaseError({ operation: 'authorize permission', cause }),
+        catch: (cause) => new DatabaseError({ operation: 'authorize.permission', cause }),
       });
       if (count !== permissions.length) {
         return yield* new PermissionDenied({ code: 'authentication.permission_denied' });
@@ -550,7 +562,7 @@ export const AuthenticationLive = Layer.effect(
               return changes;
             })
             .immediate(),
-        catch: (cause) => new DatabaseError({ operation: 'logout refresh session', cause }),
+        catch: (cause) => new DatabaseError({ operation: 'logout.refresh.session', cause }),
       });
       if (changed === 0) {
         return yield* new SessionRejected({ code: 'authentication.invalid_session' });
@@ -568,7 +580,7 @@ export const AuthenticationLive = Layer.effect(
               'update refresh_sessions set revoked_at = coalesce(revoked_at, ?) where user_id = ?',
             )
             .run(now, userId),
-        catch: (cause) => new DatabaseError({ operation: 'revoke user sessions', cause }),
+        catch: (cause) => new DatabaseError({ operation: 'revoke.user.sessions', cause }),
       });
     });
 

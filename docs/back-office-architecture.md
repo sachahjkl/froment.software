@@ -19,14 +19,15 @@ Les décisions suivantes sont validées :
 
 ## Workspace
 
-Le dépôt contient quatre packages :
+Le dépôt contient cinq packages :
 
 ```text
 packages/
 ├── web/          # Application Angular
 ├── api/          # Serveur Effect
 ├── contracts/    # Schémas Effect et description HttpApi
-└── documents/    # Entrées TypeScript et templates Typst
+├── documents/    # Entrées TypeScript et templates Typst
+└── l10n/         # Textes localisés partagés
 ```
 
 Le package racine orchestre les commandes pnpm, le formatage, les tests et les builds.

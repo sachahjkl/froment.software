@@ -5,6 +5,11 @@ import { describe, expect, it } from 'vitest';
 import { RequestLimiter, RequestLimiterLive } from './request-limiter.js';
 import { AuthenticationConfig } from '../authentication/authentication-config.js';
 import { limitPublicQuoteRequest } from '../quote-links/request-limit.js';
+import {
+  defaultRuntimeConfig,
+  RuntimeConfiguration,
+  RuntimeConfigurationDefaults,
+} from '../runtime-config.js';
 
 const authenticationConfigLayer = Layer.succeed(
   AuthenticationConfig,
@@ -25,6 +30,15 @@ const authenticationConfigLayer = Layer.succeed(
     publicOrigin: 'https://example.test',
   }),
 );
+const publicQuoteRuntimeLayer = Layer.succeed(RuntimeConfiguration, {
+  ...defaultRuntimeConfig,
+  publicQuote: {
+    ...defaultRuntimeConfig.publicQuote,
+    readPerMinute: 1,
+    downloadPerMinute: 1,
+    signaturePerMinute: 1,
+  },
+});
 
 describe('RequestLimiter', () => {
   it('renews the mutation allowance after one minute', async () => {
@@ -40,7 +54,11 @@ describe('RequestLimiter', () => {
         yield* TestClock.adjust('1 minute');
         const renewed = yield* limiter.allowRequest('127.0.0.1', 120);
         return { allowed, blocked, renewed };
-      }).pipe(Effect.provide(RequestLimiterLive), Effect.provide(TestClock.layer())),
+      }).pipe(
+        Effect.provide(RequestLimiterLive),
+        Effect.provide(RuntimeConfigurationDefaults),
+        Effect.provide(TestClock.layer()),
+      ),
     );
 
     expect(result).toEqual({ allowed: undefined, blocked: false, renewed: true });
@@ -56,7 +74,11 @@ describe('RequestLimiter', () => {
           otherRoute: yield* limiter.allowRequest('principal:user:quote.create', 1),
           otherUser: yield* limiter.allowRequest('principal:other:client.access.create', 1),
         };
-      }).pipe(Effect.provide(RequestLimiterLive), Effect.provide(TestClock.layer())),
+      }).pipe(
+        Effect.provide(RequestLimiterLive),
+        Effect.provide(RuntimeConfigurationDefaults),
+        Effect.provide(TestClock.layer()),
+      ),
     );
 
     expect(result).toEqual({ sameRoute: false, otherRoute: true, otherUser: true });
@@ -67,19 +89,19 @@ describe('RequestLimiter', () => {
     const tokenB = 'BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB';
     const result = await Effect.runPromise(
       Effect.gen(function* () {
-        yield* limitPublicQuoteRequest('read', tokenA, '192.0.2.1', 1);
+        yield* limitPublicQuoteRequest('read', tokenA, '192.0.2.1');
         return {
-          distributed: yield* Effect.result(
-            limitPublicQuoteRequest('read', tokenA, '192.0.2.2', 1),
-          ),
-          changedToken: yield* Effect.result(
-            limitPublicQuoteRequest('read', tokenB, '192.0.2.1', 1),
-          ),
+          distributed: yield* Effect.result(limitPublicQuoteRequest('read', tokenA, '192.0.2.2')),
+          changedToken: yield* Effect.result(limitPublicQuoteRequest('read', tokenB, '192.0.2.1')),
           separateDownload: yield* Effect.result(
-            limitPublicQuoteRequest('download', tokenA, '192.0.2.1', 1),
+            limitPublicQuoteRequest('download', tokenA, '192.0.2.1'),
           ),
         };
-      }).pipe(Effect.provide(RequestLimiterLive), Effect.provide(authenticationConfigLayer)),
+      }).pipe(
+        Effect.provide(RequestLimiterLive),
+        Effect.provide(authenticationConfigLayer),
+        Effect.provide(publicQuoteRuntimeLayer),
+      ),
     );
 
     expect(result.distributed).toMatchObject({ _tag: 'Failure' });

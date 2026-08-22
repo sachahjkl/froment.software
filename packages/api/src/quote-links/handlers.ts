@@ -9,7 +9,7 @@ import {
   setPrivateResponseHeaders,
   setPublicDocumentResponseHeaders,
 } from '../http/response.js';
-import { limitPublicQuoteRequest, PublicQuoteRateLimits } from './request-limit.js';
+import { limitPublicQuoteRequest } from './request-limit.js';
 import { QuoteLinks } from './service.js';
 
 export const QuoteLinkHandlers = HttpApiBuilder.group(Api, 'quoteLinks', (handlers) =>
@@ -29,12 +29,7 @@ export const QuoteLinkHandlers = HttpApiBuilder.group(Api, 'quoteLinks', (handle
         'publicQuoteGet',
         Effect.fn('publicQuoteGet')(function* ({ payload }) {
           yield* setPublicDocumentResponseHeaders;
-          yield* limitPublicQuoteRequest(
-            'read',
-            payload.token,
-            yield* getClientAddress(),
-            PublicQuoteRateLimits.readPerMinute,
-          );
+          yield* limitPublicQuoteRequest('read', payload.token, yield* getClientAddress());
           return yield* (yield* QuoteLinks)
             .get(payload.token)
             .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
@@ -44,12 +39,7 @@ export const QuoteLinkHandlers = HttpApiBuilder.group(Api, 'quoteLinks', (handle
         'publicQuotePdfDownload',
         Effect.fn('publicQuotePdfDownload')(function* ({ payload }) {
           yield* setPublicDocumentResponseHeaders;
-          yield* limitPublicQuoteRequest(
-            'download',
-            payload.token,
-            yield* getClientAddress(),
-            PublicQuoteRateLimits.downloadPerMinute,
-          );
+          yield* limitPublicQuoteRequest('download', payload.token, yield* getClientAddress());
           const pdf = yield* (yield* QuoteLinks)
             .getPdf(payload.token)
             .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
@@ -63,12 +53,7 @@ export const QuoteLinkHandlers = HttpApiBuilder.group(Api, 'quoteLinks', (handle
           yield* setPublicDocumentResponseHeaders;
           const request = yield* HttpServerRequest.HttpServerRequest;
           const clientAddress = yield* getClientAddress();
-          yield* limitPublicQuoteRequest(
-            'signature',
-            payload.token,
-            clientAddress,
-            PublicQuoteRateLimits.signaturePerMinute,
-          );
+          yield* limitPublicQuoteRequest('signature', payload.token, clientAddress);
           return yield* (yield* QuoteLinks)
             .accept(payload, {
               ipAddress: clientAddress,

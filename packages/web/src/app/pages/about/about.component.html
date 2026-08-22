@@ -3,7 +3,7 @@
     <h1>{{ i18n.t("about.faq.title") }}</h1>
   </header>
 
-  <section aria-label="FAQ">
+  <section [attr.aria-label]="i18n.t('about.faq.label')">
     <div class="faq-list">
       @for (item of faqKeys; track item.questionKey) {
         <details class="faq-item">

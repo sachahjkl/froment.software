@@ -5,6 +5,7 @@ import {
   type OrderRenderSnapshotValue,
   type QuoteRenderSnapshotValue,
 } from '@froment/contracts';
+import { documentText } from '@froment/l10n';
 import { Schema } from 'effect';
 
 import { formatMoney } from './format-money.js';
@@ -25,12 +26,21 @@ const PreparedDocument = Schema.Struct({
   metadata: Schema.Array(TextPair),
   context: Schema.Array(Schema.String),
   title: Schema.String,
+  lineHeadings: Schema.Tuple([
+    Schema.String,
+    Schema.String,
+    Schema.String,
+    Schema.String,
+    Schema.String,
+    Schema.String,
+  ]),
   lines: Schema.Array(DocumentLine),
   totals: Schema.Array(TextPair),
   termsHeading: Schema.String,
   terms: Schema.String,
   legal: Schema.Array(Schema.String),
   footer: Schema.String,
+  thankYou: Schema.String,
 });
 
 export const QuoteDocumentInput = PreparedDocument.annotate({ identifier: 'QuoteDocumentInput' });
@@ -60,8 +70,10 @@ const issuerLines = (issuer: IssuerSettings): Array<string> => [
   ...partyLines(issuer),
   ...nonEmpty([
     issuer.phone,
-    issuer.registrationNumber.length === 0 ? '' : `SIRET : ${issuer.registrationNumber}`,
-    issuer.vatNumber.length === 0 ? '' : `TVA intracom. : ${issuer.vatNumber}`,
+    issuer.registrationNumber.length === 0
+      ? ''
+      : `${documentText.fr.registrationNumber} ${issuer.registrationNumber}`,
+    issuer.vatNumber.length === 0 ? '' : `${documentText.fr.vatNumber} ${issuer.vatNumber}`,
   ]),
 ];
 
@@ -88,30 +100,41 @@ const totals = (snapshot: {
   readonly vatTotalCents: number;
   readonly totalCents: number;
 }): Array<readonly [string, string]> => [
-  ['Total HT', money(snapshot.netTotalCents)],
-  ['TVA', money(snapshot.vatTotalCents)],
-  ['Total TTC', money(snapshot.totalCents)],
+  [documentText.fr.netTotal, money(snapshot.netTotalCents)],
+  [documentText.fr.vatTotal, money(snapshot.vatTotalCents)],
+  [documentText.fr.total, money(snapshot.totalCents)],
 ];
+
+const lineHeadings = [
+  documentText.fr.lineNumber,
+  documentText.fr.lineDescription,
+  documentText.fr.lineUnitPrice,
+  documentText.fr.lineQuantity,
+  documentText.fr.lineVat,
+  documentText.fr.lineAmount,
+] as const;
 
 export const prepareQuoteDocument = (snapshot: QuoteRenderSnapshotValue): QuoteDocumentInput =>
   Schema.decodeUnknownSync(QuoteDocumentInput)({
     issuer: issuerLines(snapshot.issuer),
-    clientHeading: 'Proposé à :',
+    clientHeading: documentText.fr.proposedTo,
     client: partyLines(snapshot.client),
     metadata: [
-      ['Devis n° :', snapshot.quoteReference],
-      ['Date d’émission :', date(snapshot.createdAt)],
-      ['Révision :', String(snapshot.version)],
-      ['Devise :', snapshot.currency],
+      [documentText.fr.quoteNumber, snapshot.quoteReference],
+      [documentText.fr.issueDate, date(snapshot.createdAt)],
+      [documentText.fr.revision, String(snapshot.version)],
+      [documentText.fr.currency, snapshot.currency],
     ],
     context: [],
     title: wrapText(snapshot.title),
+    lineHeadings,
     lines: lines(snapshot.lines),
     totals: totals(snapshot),
-    termsHeading: snapshot.conditions.length === 0 ? '' : 'Conditions :',
+    termsHeading: snapshot.conditions.length === 0 ? '' : documentText.fr.conditions,
     terms: wrapText(snapshot.conditions),
     legal: [],
     footer: snapshot.issuer.displayName,
+    thankYou: documentText.fr.thankYou,
   });
 
 export const prepareInvoiceDocument = (
@@ -119,50 +142,51 @@ export const prepareInvoiceDocument = (
 ): InvoiceDocumentInput =>
   Schema.decodeUnknownSync(InvoiceDocumentInput)({
     issuer: issuerLines(snapshot.issuer),
-    clientHeading: 'Facturé à :',
+    clientHeading: documentText.fr.billedTo,
     client: partyLines(snapshot.client),
     metadata: [
-      ['Facture n° :', snapshot.invoiceNumber ?? 'Brouillon'],
+      [documentText.fr.invoiceNumber, snapshot.invoiceNumber ?? documentText.fr.draft],
       ...(snapshot.issuedAt === null
         ? []
-        : ([['Date d’émission :', date(snapshot.issuedAt)]] as const)),
-      ['Date d’échéance :', date(snapshot.dueDate)],
-      ['Devise :', snapshot.currency],
+        : ([[documentText.fr.issueDate, date(snapshot.issuedAt)]] as const)),
+      [documentText.fr.dueDate, date(snapshot.dueDate)],
+      [documentText.fr.currency, snapshot.currency],
     ],
     context: [
-      `Commande n° : ${snapshot.orderReference}`,
-      `Devis n° : ${snapshot.quoteReference}`,
-      `Date de prestation : ${date(snapshot.serviceDate)}`,
+      `${documentText.fr.orderNumber} ${snapshot.orderReference}`,
+      `${documentText.fr.quoteNumber} ${snapshot.quoteReference}`,
+      `${documentText.fr.serviceDate} ${date(snapshot.serviceDate)}`,
     ],
     title: wrapText(snapshot.title),
+    lineHeadings,
     lines: lines(snapshot.lines),
     totals: totals(snapshot),
-    termsHeading: snapshot.paymentTerms.length === 0 ? '' : 'Conditions de règlement :',
+    termsHeading: snapshot.paymentTerms.length === 0 ? '' : documentText.fr.paymentTerms,
     terms: wrapText(snapshot.paymentTerms),
-    legal: [
-      'En cas de retard de paiement, des pénalités sont exigibles au taux prévu par l’article L441-10 du Code de commerce.',
-      'Indemnité forfaitaire pour frais de recouvrement : 40 €.',
-    ],
+    legal: [documentText.fr.latePayment, documentText.fr.collectionFee],
     footer: snapshot.issuer.displayName,
+    thankYou: documentText.fr.thankYou,
   });
 
 export const prepareOrderDocument = (snapshot: OrderRenderSnapshotValue): OrderDocumentInput =>
   Schema.decodeUnknownSync(OrderDocumentInput)({
     issuer: issuerLines(snapshot.issuer),
-    clientHeading: 'Commandé par :',
+    clientHeading: documentText.fr.orderedBy,
     client: partyLines(snapshot.client),
     metadata: [
-      ['Commande n° :', snapshot.orderReference],
-      ['Devis n° :', snapshot.quoteReference],
-      ['Date de confirmation :', date(snapshot.confirmedAt)],
-      ['Devise :', snapshot.currency],
+      [documentText.fr.orderNumber, snapshot.orderReference],
+      [documentText.fr.quoteNumber, snapshot.quoteReference],
+      [documentText.fr.confirmationDate, date(snapshot.confirmedAt)],
+      [documentText.fr.currency, snapshot.currency],
     ],
     context: [],
-    title: wrapText(`Confirmation de commande · ${snapshot.title}`),
+    title: wrapText(`${documentText.fr.orderConfirmation} · ${snapshot.title}`),
+    lineHeadings,
     lines: lines(snapshot.lines),
     totals: totals(snapshot),
-    termsHeading: snapshot.conditions.length === 0 ? '' : 'Conditions :',
+    termsHeading: snapshot.conditions.length === 0 ? '' : documentText.fr.conditions,
     terms: wrapText(snapshot.conditions),
     legal: [],
     footer: snapshot.issuer.displayName,
+    thankYou: documentText.fr.thankYou,
   });

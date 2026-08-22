@@ -2,6 +2,7 @@ import { Clock, Context, Effect, Layer, Schedule, Schema } from 'effect';
 
 import { Database, DatabaseError } from '../database/database.js';
 import { DocumentArtifacts } from '../documents/document-artifacts.js';
+import { RuntimeConfiguration } from '../runtime-config.js';
 
 const JobRecord = Schema.Struct({
   invoiceRevisionId: Schema.String,
@@ -22,6 +23,7 @@ export class InvoicePdfJobs extends Context.Service<InvoicePdfJobs, InvoicePdfJo
 export const InvoicePdfJobsLive = Layer.effect(
   InvoicePdfJobs,
   Effect.gen(function* () {
+    const config = (yield* RuntimeConfiguration).invoicePdfWorker;
     const database = yield* Database;
     const artifacts = yield* DocumentArtifacts;
 
@@ -35,7 +37,7 @@ export const InvoicePdfJobsLive = Layer.effect(
           )
           .run();
       },
-      catch: (cause) => new DatabaseError({ operation: 'recover invoice PDF jobs', cause }),
+      catch: (cause) => new DatabaseError({ operation: 'recover.invoice.pdf.jobs', cause }),
     });
 
     const processJob = Effect.fn('InvoicePdfJobs.processJob')(function* (
@@ -63,7 +65,7 @@ export const InvoicePdfJobsLive = Layer.effect(
                 .get(invoiceRevisionId),
             );
           })(),
-        catch: (cause) => new DatabaseError({ operation: 'claim invoice PDF job', cause }),
+        catch: (cause) => new DatabaseError({ operation: 'claim.invoice.pdf.job', cause }),
       });
       if (job === undefined) return;
 
@@ -88,7 +90,7 @@ export const InvoicePdfJobsLive = Layer.effect(
               invoiceRevisionId,
             );
         },
-        catch: (cause) => new DatabaseError({ operation: 'complete invoice PDF job', cause }),
+        catch: (cause) => new DatabaseError({ operation: 'complete.invoice.pdf.job', cause }),
       });
     });
 
@@ -104,9 +106,9 @@ export const InvoicePdfJobsLive = Layer.effect(
               .pluck()
               .all(),
           ),
-        catch: (cause) => new DatabaseError({ operation: 'list invoice PDF jobs', cause }),
+        catch: (cause) => new DatabaseError({ operation: 'list.invoice.pdf.jobs', cause }),
       });
-      yield* Effect.forEach(ids, processJob, { concurrency: 1, discard: true });
+      yield* Effect.forEach(ids, processJob, { concurrency: config.concurrency, discard: true });
     });
 
     return InvoicePdfJobs.of({ runPending, recoverInterrupted });
@@ -116,10 +118,11 @@ export const InvoicePdfJobsLive = Layer.effect(
 export const InvoicePdfWorkerLive = Layer.effectDiscard(
   Effect.gen(function* () {
     const jobs = yield* InvoicePdfJobs;
+    const config = (yield* RuntimeConfiguration).invoicePdfWorker;
     yield* jobs.recoverInterrupted;
     yield* jobs.runPending().pipe(
-      Effect.catch((error) => Effect.logError('Invoice PDF worker cycle failed', error)),
-      Effect.repeat(Schedule.spaced('1 second')),
+      Effect.catch((error) => Effect.logError('invoice.pdf.worker_cycle_failed', error)),
+      Effect.repeat(Schedule.spaced(config.intervalMillis)),
       Effect.forkScoped,
     );
   }),

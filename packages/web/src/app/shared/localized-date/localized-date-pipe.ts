@@ -21,7 +21,7 @@ export function formatLocalizedDate(
         date.getUTCMonth() !== month - 1 ||
         date.getUTCDate() !== day
       ) {
-        throw new RangeError(`Invalid ISO date: ${value}`);
+        throw new RangeError('invalid_iso_date');
       }
 
       return new Intl.DateTimeFormat(locale, { ...options, timeZone: 'UTC' }).format(date);

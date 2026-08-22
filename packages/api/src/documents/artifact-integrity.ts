@@ -10,7 +10,7 @@ export const verifyArtifactContent = <Artifact extends StoredArtifactContent>(
 ) => {
   const digest = createHash('sha256').update(artifact.content).digest('hex');
   if (digest !== artifact.sha256) {
-    throw new Error('The stored PDF SHA-256 digest does not match its content.');
+    throw new Error('document.artifact.digest_mismatch');
   }
   return artifact;
 };

@@ -1,4 +1,5 @@
 import { TestBed } from '@angular/core/testing';
+import { ApiTokenPermissionCodes } from '@froment/contracts';
 import { vi } from 'vitest';
 
 import { ApiTokensApi } from '@backoffice/api-tokens-api';
@@ -28,6 +29,40 @@ const nextToken = {
 };
 
 describe('ApiTokens', () => {
+  it('lists every API token permission and filters labels with fuzzy search', async () => {
+    TestBed.configureTestingModule({
+      providers: [
+        {
+          provide: ApiTokensApi,
+          useValue: {
+            list: () => Promise.resolve({ items: [], nextCursor: null }),
+            create: vi.fn(),
+            revoke: vi.fn(),
+          },
+        },
+      ],
+    });
+    const fixture = TestBed.createComponent(ApiTokens);
+    await fixture.whenStable();
+    const root: HTMLElement = fixture.nativeElement;
+    const dialog = root.querySelector<HTMLDialogElement>('dialog')!;
+    dialog.showModal = vi.fn(() => dialog.setAttribute('open', ''));
+    root.querySelector<HTMLButtonElement>('button')!.click();
+    await fixture.whenStable();
+
+    expect(root.querySelectorAll('.permission-grid tbody tr')).toHaveLength(
+      ApiTokenPermissionCodes.length,
+    );
+    const search = root.querySelector<HTMLInputElement>('#api-token-permission-search')!;
+    search.value = 'paid';
+    search.dispatchEvent(new Event('input'));
+    fixture.detectChanges();
+
+    const rows = root.querySelectorAll('.permission-grid tbody tr');
+    expect(rows).toHaveLength(1);
+    expect(rows[0]?.textContent).toContain('invoice.mark-paid');
+  });
+
   it('merges a creation with initial and subsequent list pages', async () => {
     let resolveList!: (page: {
       items: ReadonlyArray<typeof serverToken>;

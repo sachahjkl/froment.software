@@ -23,13 +23,12 @@ import { ulid } from 'ulid';
 
 import { Audit } from '../audit/audit.js';
 import { AuthenticationConfig, hmac } from '../authentication/authentication-config.js';
+import { RuntimeConfiguration } from '../runtime-config.js';
 import { Database, DatabaseError } from '../database/database.js';
 import { BusinessConfig } from '../business/business-config.js';
 import { allocateBusinessReference, businessYear } from '../business/business-references.js';
 import { verifyArtifactContent } from '../documents/artifact-integrity.js';
 import { expireSentQuotes } from '../quotes/quote-expiration.js';
-
-const linkLifetimeMillis = 30 * 24 * 60 * 60 * 1_000;
 
 const QuoteSendRecord = Schema.Struct({
   reference: Schema.String,
@@ -118,6 +117,7 @@ export const QuoteLinksLive = Layer.effect(
   Effect.gen(function* () {
     const audit = yield* Audit;
     const config = yield* AuthenticationConfig;
+    const runtime = yield* RuntimeConfiguration;
     const database = yield* Database;
     const businessConfig = yield* BusinessConfig;
 
@@ -127,7 +127,7 @@ export const QuoteLinksLive = Layer.effect(
       actorUserId: UlidValue,
     ) {
       const now = yield* Clock.currentTimeMillis;
-      const expiresAt = now + linkLifetimeMillis;
+      const expiresAt = now + runtime.publicQuote.linkLifetimeMillis;
       const linkId = ulid(now);
       const token = randomBytes(32).toString('base64url');
 
@@ -225,7 +225,7 @@ export const QuoteLinksLive = Layer.effect(
           ) {
             return cause;
           }
-          return new DatabaseError({ operation: 'send quote', cause });
+          return new DatabaseError({ operation: 'send.quote', cause });
         },
       });
     });
@@ -277,7 +277,7 @@ export const QuoteLinksLive = Layer.effect(
         catch: (cause) =>
           cause instanceof QuoteLinkNotFound
             ? cause
-            : new DatabaseError({ operation: 'get public quote', cause }),
+            : new DatabaseError({ operation: 'get.public.quote', cause }),
       });
     });
 
@@ -301,7 +301,7 @@ export const QuoteLinksLive = Layer.effect(
         catch: (cause) =>
           cause instanceof QuoteLinkNotFound
             ? cause
-            : new DatabaseError({ operation: 'get public quote PDF', cause }),
+            : new DatabaseError({ operation: 'get.public.quote.pdf', cause }),
       });
     });
 
@@ -482,7 +482,7 @@ export const QuoteLinksLive = Layer.effect(
           if (cause instanceof QuoteLinkNotFound || cause instanceof QuoteLinkNotSignable) {
             return cause;
           }
-          return new DatabaseError({ operation: 'accept quote', cause });
+          return new DatabaseError({ operation: 'accept.quote', cause });
         },
       });
     });

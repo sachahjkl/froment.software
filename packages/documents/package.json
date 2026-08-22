@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@froment/contracts": "workspace:*",
+    "@froment/l10n": "workspace:*",
     "effect": "catalog:"
   },
   "devDependencies": {

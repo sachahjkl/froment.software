@@ -12,6 +12,7 @@ import { PasswordsLive } from '../authentication/password.js';
 import { Clients, ClientsLive } from '../clients/clients.js';
 import { Database } from '../database/database.js';
 import { makeMigratedDatabaseLayer } from '../database/database.spec-helper.js';
+import { RuntimeConfigurationDefaults } from '../runtime-config.js';
 import { IssuerSettingsLive } from '../issuer-settings/service.js';
 import { QuoteLinks, QuoteLinksLive } from '../quote-links/service.js';
 import { Quotes, QuotesLive } from './quotes.js';
@@ -66,6 +67,7 @@ const lifecycleLayer = () => {
     Layer.provide(AuditLive),
     Layer.provide(PasswordsLive),
     Layer.provide(configLayer),
+    Layer.provide(RuntimeConfigurationDefaults),
     Layer.provide(businessConfigLayer),
     Layer.provideMerge(databaseLayer()),
   );

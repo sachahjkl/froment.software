@@ -37,7 +37,7 @@ export const IssuerSettingsLive = Layer.effect(
         Schema.decodeUnknownSync(IssuerSettingsSchema)(
           database.sqlite.prepare(selectSettings).get(),
         ),
-      catch: (cause) => new DatabaseError({ operation: 'get issuer settings', cause }),
+      catch: (cause) => new DatabaseError({ operation: 'get.issuer.settings', cause }),
     });
 
     const update = Effect.fn('IssuerSettings.update')(function* (
@@ -83,7 +83,7 @@ export const IssuerSettingsLive = Layer.effect(
               );
             })
             .immediate(),
-        catch: (cause) => new DatabaseError({ operation: 'update issuer settings', cause }),
+        catch: (cause) => new DatabaseError({ operation: 'update.issuer.settings', cause }),
       });
     });
 

@@ -62,8 +62,12 @@ export class PageMetadata {
       datePublished: post.published,
       dateModified: post.updated,
       mainEntityOfPage: url,
-      author: { '@type': 'Person', name: 'Sacha Froment', url: 'https://sacha.house' },
-      publisher: { '@type': 'Organization', name: 'Froment Software', url: origin },
+      author: {
+        '@type': 'Person',
+        name: this.i18n.t('metadata.author'),
+        url: 'https://sacha.house',
+      },
+      publisher: { '@type': 'Organization', name: this.i18n.t('metadata.publisher'), url: origin },
       keywords: post.topics,
       inLanguage: this.i18n.language(),
     });

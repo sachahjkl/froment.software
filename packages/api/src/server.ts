@@ -1,5 +1,5 @@
 import { NodeHttpServer } from '@effect/platform-node';
-import { Config, Effect, Layer, Schema } from 'effect';
+import { Config, Effect, FileSystem, Layer, Schema } from 'effect';
 import {
   HttpMiddleware,
   HttpRouter,
@@ -20,7 +20,8 @@ import { apiForLanguage } from './documentation/api-documentation.js';
 import { HttpTracingLive, traceRequest } from './observability/http-tracing.js';
 import { identifyRequest } from './http/response.js';
 import { ApiBrowserRequestLive } from './http/origin.js';
-import { ApiRequestBodyLive, RequestBodyLimits } from './http/request-body.js';
+import { ApiRequestBodyLive } from './http/request-body.js';
+import { IpAddress, TrustedProxyAddresses } from './http/request.js';
 import { ApiTokenHandlers } from './api-tokens/handlers.js';
 import { InvoiceHandlers } from './invoices/handlers.js';
 import { IssuerSettingsHandlers } from './issuer-settings/handlers.js';
@@ -30,6 +31,7 @@ import { QuoteConditionPresetHandlers } from './quote-condition-presets/handlers
 import { QuoteLinkHandlers } from './quote-links/handlers.js';
 import { RequestLimiterLive } from './server/request-limiter.js';
 import { StatusHandlers } from './status/handlers.js';
+import { RuntimeConfiguration } from './runtime-config.js';
 
 const FrenchApi = apiForLanguage('fr');
 const EnglishApi = apiForLanguage('en');
@@ -125,7 +127,14 @@ export const makeServerLayer = (options: {
   ).pipe(
     Layer.provide(RequestLimiterLive),
     Layer.provide(HttpTracingLive),
-    Layer.provide(Layer.succeed(HttpServerRequest.MaxBodySize, RequestBodyLimits.thirtyTwoKiB)),
+    Layer.provide(
+      Layer.effect(
+        HttpServerRequest.MaxBodySize,
+        Effect.map(RuntimeConfiguration, (runtime) =>
+          FileSystem.Size(runtime.http.maximumRequestBodyBytes),
+        ),
+      ),
+    ),
     Layer.provide(NodeHttpServer.layer(createServer, { port: options.port })),
   );
 };
@@ -135,6 +144,17 @@ export const ServerLive = Layer.unwrap(
     const port = yield* Config.int('PORT').pipe(Config.withDefault(3000));
     const publicUrl = yield* Config.schema(Schema.URL, 'PUBLIC_ORIGIN');
     const staticRoot = yield* Config.string('STATIC_ROOT');
-    return makeServerLayer({ port, publicOrigin: publicUrl.origin, staticRoot });
+    const trustedProxyText = yield* Config.string('TRUSTED_PROXY_ADDRESSES').pipe(
+      Config.withDefault(''),
+    );
+    const trustedProxyAddresses = yield* Schema.decodeUnknownEffect(Schema.Array(IpAddress))(
+      trustedProxyText
+        .split(',')
+        .map((address) => address.trim())
+        .filter(Boolean),
+    );
+    return makeServerLayer({ port, publicOrigin: publicUrl.origin, staticRoot }).pipe(
+      Layer.provide(Layer.succeed(TrustedProxyAddresses, new Set(trustedProxyAddresses))),
+    );
   }),
 );

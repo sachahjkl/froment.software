@@ -203,7 +203,7 @@ export const QuotesLive = Layer.effect(
       const currentRevision = mappedRevisions.find(
         (revision) => revision.version === quote.version,
       );
-      if (currentRevision === undefined) throw new Error('Current quote revision is missing.');
+      if (currentRevision === undefined) throw new Error('quote.current_revision.missing');
       return { ...quote, currentRevision, revisions: mappedRevisions };
     };
 
@@ -234,7 +234,7 @@ export const QuotesLive = Layer.effect(
               }));
             })
             .immediate(),
-        catch: (cause) => new DatabaseError({ operation: 'list quotes', cause }),
+        catch: (cause) => new DatabaseError({ operation: 'list.quotes', cause }),
       });
     });
 
@@ -253,7 +253,7 @@ export const QuotesLive = Layer.effect(
         catch: (cause) =>
           cause instanceof QuoteNotFound
             ? cause
-            : new DatabaseError({ operation: 'get quote', cause }),
+            : new DatabaseError({ operation: 'get.quote', cause }),
       });
     });
 
@@ -279,7 +279,7 @@ export const QuotesLive = Layer.effect(
         catch: (cause) => {
           if (cause instanceof QuoteNotFound || cause instanceof QuotePreviewUnavailable)
             return cause;
-          return new DatabaseError({ operation: 'get quote render snapshot', cause });
+          return new DatabaseError({ operation: 'get.quote.render.snapshot', cause });
         },
       });
     });
@@ -436,7 +436,7 @@ export const QuotesLive = Layer.effect(
                 occurredAt: now,
               });
               const detail = readDetail(quoteId);
-              if (detail === undefined) throw new Error('Created quote is missing.');
+              if (detail === undefined) throw new Error('quote.created.missing');
               return detail;
             })
             .immediate(),
@@ -445,7 +445,7 @@ export const QuotesLive = Layer.effect(
           if (cause instanceof RangeError) {
             return new QuoteAmountTooLarge({ code: 'quote.amount_too_large' });
           }
-          return new DatabaseError({ operation: 'create quote', cause });
+          return new DatabaseError({ operation: 'create.quote', cause });
         },
       });
     });
@@ -514,7 +514,7 @@ export const QuotesLive = Layer.effect(
                 occurredAt: now,
               });
               const detail = readDetail(quoteId);
-              if (detail === undefined) throw new Error('Updated quote is missing.');
+              if (detail === undefined) throw new Error('quote.updated.missing');
               return detail;
             })
             .immediate(),
@@ -531,7 +531,7 @@ export const QuotesLive = Layer.effect(
           if (cause instanceof RangeError) {
             return new QuoteAmountTooLarge({ code: 'quote.amount_too_large' });
           }
-          return new DatabaseError({ operation: 'create quote revision', cause });
+          return new DatabaseError({ operation: 'create.quote.revision', cause });
         },
       });
     });
@@ -552,7 +552,7 @@ export const QuotesLive = Layer.effect(
               const quote = Schema.decodeUnknownSync(QuoteRecord)(rawQuote);
               if (quote.status === 'cancelled') {
                 const detail = readDetail(quoteId);
-                if (detail === undefined) throw new Error('Cancelled quote is missing.');
+                if (detail === undefined) throw new Error('quote.cancelled.missing');
                 return detail;
               }
               if (!['draft', 'sent', 'expired'].includes(quote.status)) {
@@ -585,7 +585,7 @@ export const QuotesLive = Layer.effect(
                 occurredAt: now,
               });
               const detail = readDetail(quoteId);
-              if (detail === undefined) throw new Error('Cancelled quote is missing.');
+              if (detail === undefined) throw new Error('quote.cancelled.missing');
               return detail;
             })
             .immediate(),
@@ -597,7 +597,7 @@ export const QuotesLive = Layer.effect(
           ) {
             return cause;
           }
-          return new DatabaseError({ operation: 'cancel quote', cause });
+          return new DatabaseError({ operation: 'cancel.quote', cause });
         },
       });
     });

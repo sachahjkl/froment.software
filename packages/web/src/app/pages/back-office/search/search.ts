@@ -8,7 +8,7 @@ import {
 } from '@angular/core';
 import { ScrollingModule } from '@angular/cdk/scrolling';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import Fuse, { type FuseResultMatch } from 'fuse.js';
+import { type FuseResultMatch } from 'fuse.js';
 
 import { ClientsApi } from '@backoffice/clients-api';
 import { InvoicesApi } from '@backoffice/invoices-api';
@@ -20,6 +20,7 @@ import { Badge } from '@shared/badge/badge';
 import { Button } from '@shared/button/button';
 import { Notice } from '@shared/notice/notice';
 import { SearchHighlight, SearchHighlightRegistry } from './search-highlight';
+import { createFuzzySearch } from '@shared/fuzzy-search';
 
 interface SearchItem {
   readonly id: string;
@@ -56,38 +57,25 @@ export class Search {
   protected readonly state = signal<'loading' | 'ready' | 'error'>('loading');
   protected readonly query = signal('');
   private readonly items = signal<readonly SearchItem[]>([]);
-  private readonly search = computed(
-    () =>
-      new Fuse(this.items(), {
-        keys: [
-          { name: 'reference', weight: 0.55 },
-          { name: 'detail', weight: 0.35 },
-          { name: 'aliases', weight: 0.1 },
-        ],
-        findAllMatches: true,
-        ignoreDiacritics: true,
-        ignoreLocation: true,
-        includeMatches: true,
-        threshold: 0.35,
-      }),
-  );
-  protected readonly results = computed(() => {
-    const query = this.query().trim();
-    if (!query) {
-      return this.items().map((item) => ({
-        ...item,
-        referenceMatches: noMatches,
-        detailMatches: noMatches,
-      }));
-    }
-    return this.search()
-      .search(query)
-      .map(({ item, matches = [] }) => ({
-        ...item,
-        referenceMatches: matches.find(({ key }) => key === 'reference')?.indices ?? noMatches,
-        detailMatches: matches.find(({ key }) => key === 'detail')?.indices ?? noMatches,
-      }));
+  private readonly searchResults = createFuzzySearch(this.items, this.query, {
+    keys: [
+      { name: 'reference', weight: 0.55 },
+      { name: 'detail', weight: 0.35 },
+      { name: 'aliases', weight: 0.1 },
+    ],
+    findAllMatches: true,
+    ignoreDiacritics: true,
+    ignoreLocation: true,
+    includeMatches: true,
+    threshold: 0.35,
   });
+  protected readonly results = computed(() =>
+    this.searchResults().map(({ item, matches = [] }) => ({
+      ...item,
+      referenceMatches: matches.find(({ key }) => key === 'reference')?.indices ?? noMatches,
+      detailMatches: matches.find(({ key }) => key === 'detail')?.indices ?? noMatches,
+    })),
+  );
 
   constructor() {
     this.query.set(this.route.snapshot.queryParamMap.get('query') ?? '');

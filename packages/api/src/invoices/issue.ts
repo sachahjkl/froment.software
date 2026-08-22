@@ -14,8 +14,6 @@ export const issueInvoice = Effect.fn('issueInvoice')(function* (
     .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
   yield* (yield* InvoicePdfJobs)
     .runPending()
-    .pipe(
-      Effect.catch((error) => Effect.logError('Immediate invoice PDF rendering failed', error)),
-    );
+    .pipe(Effect.catch((error) => Effect.logError('invoice.pdf.immediate_render_failed', error)));
   return result;
 });

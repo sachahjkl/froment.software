@@ -28,8 +28,13 @@
   ],
   "overrides": [
     {
-      "files": ["packages/**/*.spec.ts", "packages/**/test/**/*.ts"],
+      "files": [
+        "packages/**/*.spec.ts",
+        "packages/**/*.spec-helper.ts",
+        "packages/**/test/**/*.ts"
+      ],
       "rules": {
+        "anti-slop/no-natural-language-literals": "off",
         "anti-slop/no-runtime-typeof": "off",
         "anti-slop/require-safety-comment-for-type-assertion": "off",
         "anti-slop-effect/no-service-constructor-imports": "off"
@@ -42,6 +47,7 @@
         "anti-slop/no-conditional-empty-object-spread": "off",
         "anti-slop/no-known-value-widening": "off",
         "anti-slop/no-module-mocking": "off",
+        "anti-slop/no-natural-language-literals": "off",
         "anti-slop/no-object-parameters": "off",
         "anti-slop/no-reflect-apply": "off",
         "anti-slop/no-reflect-get": "off",
@@ -55,6 +61,24 @@
         "anti-slop/require-safety-comment-for-type-assertion": "off",
         "anti-slop-effect/no-service-constructor-imports": "off"
       }
+    },
+    {
+      "files": ["packages/web/tools/**/*.mjs"],
+      "rules": {
+        "anti-slop/no-natural-language-literals": "off"
+      }
+    },
+    {
+      "files": ["packages/l10n/**/*.ts"],
+      "rules": {
+        "anti-slop/no-natural-language-literals": "off"
+      }
+    },
+    {
+      "files": ["packages/**/drizzle/**/*.ts", "packages/**/migrations/**/*.ts"],
+      "rules": {
+        "anti-slop/no-natural-language-literals": "off"
+      }
     }
   ],
   "rules": {
@@ -62,6 +86,7 @@
     "anti-slop/no-conditional-empty-object-spread": "error",
     "anti-slop/no-known-value-widening": "error",
     "anti-slop/no-module-mocking": "error",
+    "anti-slop/no-natural-language-literals": "error",
     "anti-slop/no-object-parameters": "error",
     "anti-slop/no-reflect-apply": "error",
     "anti-slop/no-reflect-get": "error",

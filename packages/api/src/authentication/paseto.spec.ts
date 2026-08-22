@@ -3,6 +3,8 @@ import { TestClock } from 'effect/testing';
 import { sign } from 'paseto-ts/v4';
 import { describe, expect, it } from 'vitest';
 
+import { RuntimeConfigurationDefaults } from '../runtime-config.js';
+
 import { AuthenticationConfig } from './authentication-config.js';
 import { AccessTokens, AccessTokensLive } from './paseto.js';
 
@@ -28,7 +30,10 @@ const configLayer = (publicOrigin = 'https://example.test') =>
   );
 
 const accessLayer = (publicOrigin?: string) =>
-  AccessTokensLive.pipe(Layer.provide(configLayer(publicOrigin)));
+  AccessTokensLive.pipe(
+    Layer.provide(configLayer(publicOrigin)),
+    Layer.provide(RuntimeConfigurationDefaults),
+  );
 
 const secretKey =
   'k4.secret.NXrAOzhnhDuDrGPrMHzfIwwJi88ZgKI4L4x6DaXjp2ycuz4ubSc_ZLzoQlOEnp-gDMpdjFgTwp0mHG8LP2QuFA';

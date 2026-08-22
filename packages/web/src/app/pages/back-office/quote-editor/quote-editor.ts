@@ -146,18 +146,18 @@ export class QuoteEditor {
       validate(line.quantity, ({ value }) => {
         const parsed = parseFixedDecimal(value(), 3);
         return parsed === undefined || parsed === 0
-          ? { kind: 'quantity', message: 'Invalid quantity' }
+          ? { kind: 'quantity', message: 'invalid_quantity' }
           : undefined;
       });
       validate(line.unitPrice, ({ value }) =>
         parseFixedDecimal(value(), 2) === undefined
-          ? { kind: 'unitPrice', message: 'Invalid unit price' }
+          ? { kind: 'unitPrice', message: 'invalid_unit_price' }
           : undefined,
       );
       validate(line.vatRate, ({ value }) => {
         const parsed = parseFixedDecimal(value(), 2);
         return parsed === undefined || parsed > 10_000
-          ? { kind: 'vatRate', message: 'Invalid VAT rate' }
+          ? { kind: 'vatRate', message: 'invalid_vat_rate' }
           : undefined;
       });
     });

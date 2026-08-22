@@ -14,6 +14,7 @@ import { firstValueFrom } from 'rxjs';
 
 import { decodeApiFailure, type ApiFailure } from '@shared/api-outcome';
 import { AccessTokenStore } from './access-token-store';
+import { AuthCookieLock } from './auth-cookie-lock';
 
 export type AuthenticationOutcome =
   | { readonly success: true; readonly mode: LoginModeValue }
@@ -24,6 +25,7 @@ export class Authentication {
   private readonly http = inject(HttpClient);
   private readonly isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
   private readonly tokens = inject(AccessTokenStore);
+  private readonly cookieLock = inject(AuthCookieLock);
 
   async sessionMode(): Promise<LoginModeValue | undefined> {
     if (!this.isBrowser) return undefined;
@@ -44,10 +46,12 @@ export class Authentication {
     }
 
     try {
-      const response = await firstValueFrom(this.http.post<unknown>('/api/auth/login', request));
-      const session = Schema.decodeUnknownSync(AccessToken)(response);
-      this.tokens.set(session);
-      return { success: true, mode: session.mode };
+      return await this.cookieLock.run(async () => {
+        const response = await firstValueFrom(this.http.post<unknown>('/api/auth/login', request));
+        const session = Schema.decodeUnknownSync(AccessToken)(response);
+        this.tokens.set(session);
+        return { success: true, mode: session.mode };
+      });
     } catch (error) {
       return decodeApiFailure({ cause: error }, AuthenticationFailure, 'authentication.error');
     }
@@ -55,13 +59,15 @@ export class Authentication {
 
   async signOut(): Promise<boolean> {
     if (!this.isBrowser) return false;
-    this.tokens.clear();
-    try {
-      await firstValueFrom(this.http.post<void>('/api/auth/logout', undefined));
-      return true;
-    } catch {
-      return false;
-    }
+    return this.cookieLock.run(async () => {
+      this.tokens.clear();
+      try {
+        await firstValueFrom(this.http.post<void>('/api/auth/logout', undefined));
+        return true;
+      } catch {
+        return false;
+      }
+    });
   }
 }
 

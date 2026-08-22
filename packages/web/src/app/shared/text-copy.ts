@@ -8,7 +8,7 @@ export class TextCopy {
   async copy(value: string): Promise<boolean> {
     try {
       const clipboard = this.document.defaultView?.navigator.clipboard;
-      if (clipboard === undefined) throw new Error('Clipboard API unavailable');
+      if (clipboard === undefined) throw new Error('clipboard_unavailable');
       await clipboard.writeText(value);
       return true;
     } catch {

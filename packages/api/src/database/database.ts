@@ -6,6 +6,8 @@ import { createHash } from 'node:crypto';
 import { mkdirSync } from 'node:fs';
 import { dirname } from 'node:path';
 
+import { RuntimeConfiguration } from '../runtime-config.js';
+
 export class DatabaseError extends Schema.TaggedError<DatabaseError>()('DatabaseError', {
   operation: Schema.String,
   cause: Schema.Defect(),
@@ -50,7 +52,7 @@ const migrate = (
     );
     for (const artifact of artifacts) {
       if (createHash('sha256').update(artifact.content).digest('hex') !== artifact.sha256) {
-        throw new Error(`Document artifact ${artifact.id} has an invalid SHA-256 digest`);
+        throw new Error('document.artifact.digest_mismatch');
       }
     }
   }
@@ -80,7 +82,7 @@ const migrate = (
         for (const migration of migrations) {
           const appliedHash = appliedMigrations.get(migration.name);
           if (appliedHash !== undefined && appliedHash !== migration.hash) {
-            throw new Error(`Applied migration ${migration.name} has a different hash`);
+            throw new Error('database.migration.hash_mismatch');
           }
         }
         const pending = migrations.filter((migration) => !appliedMigrations.has(migration.name));
@@ -89,7 +91,7 @@ const migrate = (
         }
         const violations = sqlite.prepare('PRAGMA foreign_key_check').all();
         if (violations.length > 0) {
-          throw new Error('Database migrations introduced foreign key violations');
+          throw new Error('database.migration.foreign_key_violation');
         }
         const recordMigration = sqlite.prepare(
           `insert into __drizzle_migrations (hash, created_at, name, applied_at)
@@ -115,31 +117,35 @@ export const migrateDatabase = (options: {
   readonly migrationsFolder: string;
   readonly businessTimeZone: DateTime.TimeZone.Named;
 }) =>
-  Effect.try({
-    try: () => {
-      mkdirSync(dirname(options.filename), { recursive: true });
-      const sqlite = new Sqlite(options.filename);
-      try {
-        sqlite.pragma('busy_timeout = 5000');
-        migrate(sqlite, options.migrationsFolder, options.businessTimeZone);
-      } finally {
-        sqlite.close();
-      }
-    },
-    catch: (cause) => new DatabaseError({ operation: 'migrate database', cause }),
+  Effect.gen(function* () {
+    const runtime = yield* RuntimeConfiguration;
+    yield* Effect.try({
+      try: () => {
+        mkdirSync(dirname(options.filename), { recursive: true });
+        const sqlite = new Sqlite(options.filename);
+        try {
+          sqlite.pragma(`busy_timeout = ${runtime.database.busyTimeoutMillis}`);
+          migrate(sqlite, options.migrationsFolder, options.businessTimeZone);
+        } finally {
+          sqlite.close();
+        }
+      },
+      catch: (cause) => new DatabaseError({ operation: 'migrate.database', cause }),
+    });
   });
 
 export const makeDatabaseLayer = (options: { readonly filename: string }) =>
   Layer.effect(
     Database,
     Effect.gen(function* () {
+      const runtime = yield* RuntimeConfiguration;
       const sqlite = yield* Effect.acquireRelease(
         Effect.try({
           try: () => {
             mkdirSync(dirname(options.filename), { recursive: true });
             return new Sqlite(options.filename);
           },
-          catch: (cause) => new DatabaseError({ operation: 'open database', cause }),
+          catch: (cause) => new DatabaseError({ operation: 'open.database', cause }),
         }),
         (connection) => Effect.sync(() => connection.close()),
       );
@@ -147,12 +153,12 @@ export const makeDatabaseLayer = (options: { readonly filename: string }) =>
         try: () => {
           sqlite.pragma('journal_mode = WAL');
           sqlite.pragma('foreign_keys = ON');
-          sqlite.pragma('busy_timeout = 5000');
+          sqlite.pragma(`busy_timeout = ${runtime.database.busyTimeoutMillis}`);
           sqlite.pragma('synchronous = FULL');
           const orm = drizzle({ client: sqlite });
           return Database.of({ orm, sqlite });
         },
-        catch: (cause) => new DatabaseError({ operation: 'configure database', cause }),
+        catch: (cause) => new DatabaseError({ operation: 'configure.database', cause }),
       });
     }),
   );

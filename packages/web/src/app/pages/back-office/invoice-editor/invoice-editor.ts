@@ -143,7 +143,7 @@ export class InvoiceEditor {
     pattern(path.dueDate, /^\d{4}-\d{2}-\d{2}$/);
     validate(path.dueDate, ({ value, valueOf }) =>
       value() < valueOf(path.serviceDate)
-        ? { kind: 'dates', message: 'Due date precedes service date' }
+        ? { kind: 'dates', message: 'due_date_precedes_service_date' }
         : undefined,
     );
     maxLength(path.paymentTerms, 2_000);

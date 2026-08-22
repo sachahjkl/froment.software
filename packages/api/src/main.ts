@@ -24,6 +24,7 @@ import { OrdersLive } from './orders/orders.js';
 import { ServerLive } from './server.js';
 import { ObservabilityLive } from './observability/observability.js';
 import { ClientPortalLive } from './client-portal/client-portal.js';
+import { RuntimeConfigurationLive } from './runtime-config.js';
 
 const QuoteCoreLive = Layer.mergeAll(
   QuotesLive,
@@ -54,6 +55,7 @@ const ServicesLive = Layer.mergeAll(
   Layer.provideMerge(AuditLive),
   Layer.provideMerge(PasswordsLive),
   Layer.provideMerge(AuthenticationConfigLive),
+  Layer.provideMerge(RuntimeConfigurationLive),
   Layer.provideMerge(DatabaseLive),
 );
 

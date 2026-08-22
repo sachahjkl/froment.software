@@ -121,13 +121,13 @@
         <table>
           <thead>
             <tr>
-              <th>Variante</th>
-              <th>Normale</th>
-              <th>Survol</th>
-              <th>Active</th>
-              <th>Lecture seule</th>
-              <th>Désactivée</th>
-              <th>Chargement</th>
+              <th>{{ i18n.t("design.demo.variant") }}</th>
+              <th>{{ i18n.t("design.demo.normal") }}</th>
+              <th>{{ i18n.t("design.demo.hover") }}</th>
+              <th>{{ i18n.t("design.demo.active") }}</th>
+              <th>{{ i18n.t("design.demo.readonly") }}</th>
+              <th>{{ i18n.t("design.demo.disabled") }}</th>
+              <th>{{ i18n.t("design.demo.loading") }}</th>
             </tr>
           </thead>
           <tbody>
@@ -136,7 +136,7 @@
                 <th scope="row">{{ button.variant }}</th>
                 <td>
                   <button appButton [variant]="button.variant" type="button">
-                    <app-icon [name]="button.icon" />Action
+                    <app-icon [name]="button.icon" />{{ i18n.t("design.demo.action") }}
                   </button>
                 </td>
                 <td>
@@ -146,7 +146,7 @@
                     data-button-state="hover"
                     type="button"
                   >
-                    <app-icon [name]="button.icon" />Action
+                    <app-icon [name]="button.icon" />{{ i18n.t("design.demo.action") }}
                   </button>
                 </td>
                 <td>
@@ -156,17 +156,17 @@
                     data-button-state="active"
                     type="button"
                   >
-                    <app-icon [name]="button.icon" />Action
+                    <app-icon [name]="button.icon" />{{ i18n.t("design.demo.action") }}
                   </button>
                 </td>
                 <td>
                   <button appButton [variant]="button.variant" type="button" aria-disabled="true">
-                    <app-icon [name]="button.icon" />Action
+                    <app-icon [name]="button.icon" />{{ i18n.t("design.demo.action") }}
                   </button>
                 </td>
                 <td>
                   <button appButton [variant]="button.variant" type="button" disabled>
-                    <app-icon [name]="button.icon" />Action
+                    <app-icon [name]="button.icon" />{{ i18n.t("design.demo.action") }}
                   </button>
                 </td>
                 <td>
@@ -177,7 +177,7 @@
                     disabled
                     aria-busy="true"
                   >
-                    Action
+                    {{ i18n.t("design.demo.action") }}
                   </button>
                 </td>
               </tr>
@@ -186,14 +186,14 @@
         </table>
       </div>
 
-      <h3>Boutons icône seule</h3>
+      <h3>{{ i18n.t("design.demo.iconButtons") }}</h3>
       <div appDataTable class="component-table">
         <table>
           <thead>
             <tr>
-              <th>Variante</th>
-              <th>Bouton</th>
-              <th>Lien</th>
+              <th>{{ i18n.t("design.demo.variant") }}</th>
+              <th>{{ i18n.t("design.demo.button") }}</th>
+              <th>{{ i18n.t("design.demo.link") }}</th>
             </tr>
           </thead>
           <tbody>
@@ -246,13 +246,13 @@
         </app-visual-sample>
       </div>
 
-      <h3>Icônes</h3>
+      <h3>{{ i18n.t("design.demo.icons") }}</h3>
       <div appDataTable class="component-table">
         <table>
           <thead>
             <tr>
-              <th>Nom</th>
-              <th>Rendu</th>
+              <th>{{ i18n.t("design.components.name") }}</th>
+              <th>{{ i18n.t("design.demo.render") }}</th>
             </tr>
           </thead>
           <tbody>
@@ -286,7 +286,7 @@
           </label>
           <label class="field">
             <span>{{ i18n.t("design.components.email") }}</span>
-            <input class="input" type="email" placeholder="nom@example.com" />
+            <input class="input" type="email" [placeholder]="i18n.t('design.components.email')" />
           </label>
           <label class="field">
             <span>{{ i18n.t("design.components.password") }}</span>
@@ -294,17 +294,22 @@
           </label>
           <label class="field">
             <span>{{ i18n.t("design.components.disabled") }}</span>
-            <input class="input" type="text" value="Readonly" disabled />
+            <input
+              class="input"
+              type="text"
+              [value]="i18n.t('design.demo.readonlyValue')"
+              disabled
+            />
           </label>
           <label class="field">
-            <span>Lecture seule</span>
+            <span>{{ i18n.t("design.demo.readonly") }}</span>
             <input class="input" type="text" value="DE-2026-000001" readonly />
-            <span class="field-hint">Cette valeur est immuable.</span>
+            <span class="field-hint">{{ i18n.t("design.demo.readonlyHint") }}</span>
           </label>
           <label class="field">
-            <span>Invalide</span>
+            <span>{{ i18n.t("design.demo.invalid") }}</span>
             <input class="input" type="email" value="adresse-invalide" aria-invalid="true" />
-            <span class="field-error">Saisissez une adresse électronique valide.</span>
+            <span class="field-error">{{ i18n.t("design.demo.invalidEmail") }}</span>
           </label>
           <label class="field">
             <span>{{ i18n.t("design.components.search") }}</span>
@@ -354,9 +359,9 @@
             </select>
           </label>
           <label class="field">
-            <span>Sélection désactivée</span>
+            <span>{{ i18n.t("design.demo.disabledSelect") }}</span>
             <select class="select" disabled>
-              <option>Indisponible</option>
+              <option>{{ i18n.t("design.demo.unavailable") }}</option>
             </select>
           </label>
         </div>
@@ -444,28 +449,44 @@
         </app-visual-sample>
       </div>
 
-      <h3>Statuts métier</h3>
+      <h3>{{ i18n.t("design.demo.businessStatuses") }}</h3>
       <div class="sample-grid compact">
-        <app-visual-sample name="quote / draft"><span appBadge>Brouillon</span></app-visual-sample>
-        <app-visual-sample name="quote / sent"><span appBadge>Envoyé</span></app-visual-sample>
+        <app-visual-sample name="quote / draft"
+          ><span appBadge>{{ i18n.t("backOffice.quote.status.draft") }}</span></app-visual-sample
+        >
+        <app-visual-sample name="quote / sent"
+          ><span appBadge>{{ i18n.t("backOffice.quote.status.sent") }}</span></app-visual-sample
+        >
         <app-visual-sample name="quote / accepted"
-          ><span appBadge variant="success">Accepté</span></app-visual-sample
+          ><span appBadge variant="success">{{
+            i18n.t("backOffice.quote.status.accepted")
+          }}</span></app-visual-sample
         >
         <app-visual-sample name="quote / rejected"
-          ><span appBadge variant="danger">Refusé</span></app-visual-sample
+          ><span appBadge variant="danger">{{
+            i18n.t("backOffice.quote.status.rejected")
+          }}</span></app-visual-sample
         >
         <app-visual-sample name="quote / expired"
-          ><span appBadge variant="warning">Expiré</span></app-visual-sample
+          ><span appBadge variant="warning">{{
+            i18n.t("backOffice.quote.status.expired")
+          }}</span></app-visual-sample
         >
         <app-visual-sample name="invoice / draft"
-          ><span appBadge>Brouillon</span></app-visual-sample
+          ><span appBadge>{{ i18n.t("backOffice.invoice.status.draft") }}</span></app-visual-sample
         >
-        <app-visual-sample name="invoice / issued"><span appBadge>Émise</span></app-visual-sample>
+        <app-visual-sample name="invoice / issued"
+          ><span appBadge>{{ i18n.t("backOffice.invoice.status.issued") }}</span></app-visual-sample
+        >
         <app-visual-sample name="invoice / paid"
-          ><span appBadge variant="success">Payée</span></app-visual-sample
+          ><span appBadge variant="success">{{
+            i18n.t("backOffice.invoice.status.paid")
+          }}</span></app-visual-sample
         >
         <app-visual-sample name="invoice / void"
-          ><span appBadge variant="danger">Annulée</span></app-visual-sample
+          ><span appBadge variant="danger">{{
+            i18n.t("backOffice.invoice.status.void")
+          }}</span></app-visual-sample
         >
       </div>
 
@@ -491,15 +512,15 @@
         </app-visual-sample>
         <app-visual-sample name="error state / retry">
           <div class="state-sample">
-            <p appNotice variant="danger" role="alert">Le chargement a échoué.</p>
-            <button appButton type="button">Réessayer</button>
+            <p appNotice variant="danger" role="alert">{{ i18n.t("design.demo.loadError") }}</p>
+            <button appButton type="button">{{ i18n.t("design.demo.retry") }}</button>
           </div>
         </app-visual-sample>
         <app-visual-sample name="unavailable state">
-          <span class="unavailable">Document indisponible</span>
+          <span class="unavailable">{{ i18n.t("design.demo.documentUnavailable") }}</span>
         </app-visual-sample>
         <app-visual-sample name="copy status">
-          <span class="copy-status" role="status">Copié</span>
+          <span class="copy-status" role="status">{{ i18n.t("design.demo.copied") }}</span>
         </app-visual-sample>
         <app-visual-sample name="field hint">
           <span class="field-hint">{{ i18n.t("publicQuote.typedSignatureHint") }}</span>
@@ -536,7 +557,7 @@
                 <td>{{ i18n.t("design.components.success") }}</td>
               </tr>
               <tr>
-                <td>Desktop</td>
+                <td>{{ i18n.t("design.demo.desktop") }}</td>
                 <td>WPF</td>
                 <td>{{ i18n.t("design.components.info") }}</td>
               </tr>
@@ -545,7 +566,7 @@
         </div>
       </app-visual-sample>
 
-      <h3>Listes et définitions</h3>
+      <h3>{{ i18n.t("design.demo.lists") }}</h3>
       <div class="sample-grid">
         <app-visual-sample name="definition list / totals">
           <dl class="totals-sample">
@@ -558,14 +579,17 @@
               <dd>200,00 €</dd>
             </div>
             <div>
-              <dt>Total</dt>
+              <dt>{{ i18n.t("backOffice.quote.total") }}</dt>
               <dd>1 200,00 €</dd>
             </div>
           </dl>
         </app-visual-sample>
         <app-visual-sample name="document line">
           <div class="document-line">
-            <span><strong>Audit logiciel</strong><small>2 × 500,00 €</small></span>
+            <span
+              ><strong>{{ i18n.t("design.demo.audit") }}</strong
+              ><small>2 × 500,00 €</small></span
+            >
             <strong>1 000,00 €</strong>
           </div>
         </app-visual-sample>

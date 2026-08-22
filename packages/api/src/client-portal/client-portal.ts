@@ -131,7 +131,7 @@ export const ClientPortalLive = Layer.effect(
               pdfAvailable: quote.pdfAvailable === 1,
             })),
           ),
-        catch: (cause) => new DatabaseError({ operation: 'list client quotes', cause }),
+        catch: (cause) => new DatabaseError({ operation: 'list.client.quotes', cause }),
       });
     });
 
@@ -174,7 +174,7 @@ export const ClientPortalLive = Layer.effect(
               pdfAvailable: order.pdfAvailable === 1,
             })),
           ),
-        catch: (cause) => new DatabaseError({ operation: 'list client orders', cause }),
+        catch: (cause) => new DatabaseError({ operation: 'list.client.orders', cause }),
       });
     });
 
@@ -215,7 +215,7 @@ export const ClientPortalLive = Layer.effect(
               pdfAvailable: invoice.pdfAvailable === 1,
             })),
           ),
-        catch: (cause) => new DatabaseError({ operation: 'list client invoices', cause }),
+        catch: (cause) => new DatabaseError({ operation: 'list.client.invoices', cause }),
       });
     });
 
@@ -256,7 +256,7 @@ export const ClientPortalLive = Layer.effect(
         catch: (cause) =>
           cause instanceof DocumentNotFound
             ? cause
-            : new DatabaseError({ operation: 'get client quote PDF', cause }),
+            : new DatabaseError({ operation: 'get.client.quote.pdf', cause }),
       });
     });
 
@@ -294,7 +294,7 @@ export const ClientPortalLive = Layer.effect(
         catch: (cause) =>
           cause instanceof DocumentNotFound
             ? cause
-            : new DatabaseError({ operation: 'get client invoice PDF', cause }),
+            : new DatabaseError({ operation: 'get.client.invoice.pdf', cause }),
       });
     });
 
@@ -322,7 +322,7 @@ export const ClientPortalLive = Layer.effect(
         catch: (cause) =>
           cause instanceof DocumentNotFound
             ? cause
-            : new DatabaseError({ operation: 'get client order PDF', cause }),
+            : new DatabaseError({ operation: 'get.client.order.pdf', cause }),
       });
     });
 
@@ -343,7 +343,7 @@ export const ClientPortalLive = Layer.effect(
         catch: (cause) =>
           cause instanceof DocumentNotFound
             ? cause
-            : new DatabaseError({ operation: 'authorize client order', cause }),
+            : new DatabaseError({ operation: 'authorize.client.order', cause }),
       });
     });
 

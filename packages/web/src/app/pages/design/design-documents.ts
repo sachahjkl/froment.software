@@ -1,4 +1,5 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { I18nService } from '@app/i18n.service';
 import { Button } from '@shared/button/button';
 import { Badge } from '@shared/badge/badge';
 import { CopyField } from '@shared/copy-field/copy-field';
@@ -14,4 +15,6 @@ import { VisualSample } from '@shared/visual-sample/visual-sample';
   styleUrl: './design-documents.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class DesignDocuments {}
+export class DesignDocuments {
+  protected readonly i18n = inject(I18nService);
+}

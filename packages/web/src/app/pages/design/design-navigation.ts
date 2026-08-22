@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 
 import { I18nService } from '@app/i18n.service';
@@ -16,21 +16,21 @@ import { VisualSample } from '@shared/visual-sample/visual-sample';
 })
 export class DesignNavigation {
   protected readonly i18n = inject(I18nService);
-  protected readonly tabs: readonly TabItem[] = [
+  protected readonly tabs = computed<readonly TabItem[]>(() => [
     {
       path: 'first',
       id: 'sample-first-tab',
-      label: 'Proposition détaillée',
+      label: this.i18n.t('design.demo.tabProposal'),
     },
     {
       path: 'second',
       id: 'sample-second-tab',
-      label: 'Document PDF téléchargeable',
+      label: this.i18n.t('design.demo.tabDocument'),
     },
     {
       path: 'third',
       id: 'sample-third-tab',
-      label: 'Acceptation et signature',
+      label: this.i18n.t('design.demo.tabAcceptance'),
     },
-  ];
+  ]);
 }

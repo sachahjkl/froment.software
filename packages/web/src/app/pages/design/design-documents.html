@@ -2,103 +2,131 @@
   <app-visual-sample name="document overview / quote">
     <article class="overview">
       <div>
-        <p class="eyebrow">DEVIS SÉCURISÉ</p>
-        <h3>Audit et plan de rénovation</h3>
-        <p class="muted">Froment Software → Client Exemple</p>
+        <p class="eyebrow">{{ i18n.t("design.demo.secureQuote") }}</p>
+        <h3>{{ i18n.t("design.demo.auditTitle") }}</h3>
+        <p class="muted">{{ i18n.t("design.demo.parties") }}</p>
       </div>
-      <div class="total"><span>Total TTC</span><strong>1 200,00 €</strong></div>
+      <div class="total">
+        <span>{{ i18n.t("backOffice.quote.total") }}</span><strong>1 200,00 €</strong>
+      </div>
     </article>
   </app-visual-sample>
   <app-visual-sample name="document facts / reference and totals">
     <dl class="facts">
       <div>
-        <dt>Référence</dt>
+        <dt>{{ i18n.t("design.demo.reference") }}</dt>
         <dd>DE-2026-000001</dd>
       </div>
       <div>
-        <dt>Total HT</dt>
+        <dt>{{ i18n.t("backOffice.quote.subtotal") }}</dt>
         <dd>1 000,00 €</dd>
       </div>
       <div>
-        <dt>TVA</dt>
+        <dt>{{ i18n.t("backOffice.quote.tax") }}</dt>
         <dd>200,00 €</dd>
       </div>
       <div>
-        <dt>Expiration</dt>
+        <dt>{{ i18n.t("design.demo.expiration") }}</dt>
         <dd>2026-09-21</dd>
       </div>
     </dl>
   </app-visual-sample>
   <app-visual-sample name="saved result / order">
     <aside appOutcomePanel>
-      <h3>Commande confirmée</h3>
-      <p appDetailRow label="Commande"><strong>CO-2026-000001</strong></p>
-      <p appDetailRow label="État"><span appBadge variant="success">Confirmée</span></p>
-      <button appButton variant="primary" type="button">Télécharger le PDF</button>
+      <h3>{{ i18n.t("design.demo.orderConfirmed") }}</h3>
+      <p appDetailRow [label]="i18n.t('design.demo.order')"><strong>CO-2026-000001</strong></p>
+      <p appDetailRow [label]="i18n.t('design.demo.state')">
+        <span appBadge variant="success">{{ i18n.t("design.demo.confirmed") }}</span>
+      </p>
+      <button appButton variant="primary" type="button">
+        {{ i18n.t("publicQuote.download") }}
+      </button>
     </aside>
   </app-visual-sample>
   <app-visual-sample name="line editor / editable">
     <fieldset class="line-editor">
-      <legend>Ligne 1</legend>
-      <label class="field">Description<input class="input" value="Audit logiciel" /></label>
-      <label class="field">Quantité<input class="input" inputmode="decimal" value="2" /></label>
+      <legend>{{ i18n.t("design.demo.line") }}</legend>
       <label class="field"
-        >Prix unitaire<input class="input" inputmode="decimal" value="500,00"
+        >{{ i18n.t("backOffice.quote.description") }}<input
+          class="input"
+          [value]="i18n.t('design.demo.audit')"
       /></label>
-      <p><span>Total</span><strong>1 000,00 €</strong></p>
-      <button appButton variant="danger" type="button">Supprimer la ligne</button>
+      <label class="field"
+        >{{ i18n.t("backOffice.quote.quantity") }}<input
+          class="input"
+          inputmode="decimal"
+          value="2"
+      /></label>
+      <label class="field"
+        >{{ i18n.t("design.demo.unitPrice") }}<input
+          class="input"
+          inputmode="decimal"
+          value="500,00"
+      /></label>
+      <p><span>{{ i18n.t("backOffice.quote.total") }}</span><strong>1 000,00 €</strong></p>
+      <button appButton variant="danger" type="button">
+        {{ i18n.t("backOffice.quote.removeLine") }}
+      </button>
     </fieldset>
   </app-visual-sample>
   <app-visual-sample name="signature / ready">
     <section class="signature">
       <div>
-        <p class="eyebrow">ACCEPTATION</p>
-        <h3>Signer le devis</h3>
-        <p class="muted">Confirmez votre identité et votre accord.</p>
+        <p class="eyebrow">{{ i18n.t("design.demo.acceptance") }}</p>
+        <h3>{{ i18n.t("design.demo.signQuote") }}</h3>
+        <p class="muted">{{ i18n.t("design.demo.signIntro") }}</p>
       </div>
-      <label class="field">Nom complet<input class="input" value="Camille Exemple" /></label>
+      <label class="field"
+        >{{ i18n.t("design.demo.fullName") }}<input
+          class="input"
+          [value]="i18n.t('design.demo.exampleName')"
+      /></label>
       <label class="choice consent"
-        ><input type="checkbox" checked /><span>J’accepte ce devis.</span></label
+        ><input type="checkbox" checked /><span>{{ i18n.t("design.demo.consent") }}</span></label
       >
-      <button appButton variant="primary" type="button">Signer et commander</button>
+      <button appButton variant="primary" type="button">{{ i18n.t("design.demo.sign") }}</button>
     </section>
   </app-visual-sample>
   <app-visual-sample name="signature / accepted">
     <div appStatusBlock variant="success" role="status">
-      <p class="eyebrow">COMMANDE CONFIRMÉE</p>
-      <h3>Le devis est accepté</h3>
-      <p>La signature et la commande sont enregistrées.</p>
+      <p class="eyebrow">{{ i18n.t("design.demo.orderConfirmedEyebrow") }}</p>
+      <h3>{{ i18n.t("design.demo.accepted") }}</h3>
+      <p>{{ i18n.t("design.demo.acceptedDetail") }}</p>
     </div>
   </app-visual-sample>
   <app-visual-sample name="revision history / actions">
     <ol class="revisions">
       <li>
-        <span><strong>Version 2</strong><small>21 août 2026</small></span
-        ><button appButton type="button">Aperçu</button>
+        <span
+          ><strong>{{ i18n.t("design.demo.version2") }}</strong
+          ><small>{{ i18n.t("design.demo.date2") }}</small></span
+        ><button appButton type="button">{{ i18n.t("backOffice.quote.preview.show") }}</button>
       </li>
       <li>
-        <span><strong>Version 1</strong><small>20 août 2026</small></span
+        <span
+          ><strong>{{ i18n.t("design.demo.version1") }}</strong
+          ><small>{{ i18n.t("design.demo.date1") }}</small></span
         ><a appLinkButton href="#design-documents-panel">PDF</a>
       </li>
     </ol>
   </app-visual-sample>
   <app-visual-sample name="document preview / loading">
-    <div class="preview" aria-live="polite">Chargement du document PDF…</div>
+    <div class="preview" aria-live="polite">{{ i18n.t("design.demo.documentLoading") }}</div>
   </app-visual-sample>
   <app-visual-sample name="share link / copied">
     <app-copy-field
-      label="Lien sécurisé"
+      [label]="i18n.t('design.demo.secureLink')"
       value="https://froment.software/devis#••••••"
       href="#design-documents-panel"
-      actionLabel="Copier"
-      status="Copié"
+      [actionLabel]="i18n.t('backOffice.apiTokens.copy')"
+      [status]="i18n.t('design.demo.copied')"
     />
   </app-visual-sample>
   <app-visual-sample name="credential / access identifier">
     <app-copy-field
-      label="Identifiant d’accès"
+      [label]="i18n.t('design.demo.accessId')"
       value="01K34EXAMPLEACCESS00000000"
-      actionLabel="Copier"
+      [actionLabel]="i18n.t('backOffice.apiTokens.copy')"
     />
   </app-visual-sample>
 </div>

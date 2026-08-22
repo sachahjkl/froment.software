@@ -3,9 +3,8 @@ import { Clock, Context, Effect, Layer, Schema } from 'effect';
 import { sign, verify } from 'paseto-ts/v4';
 
 import { AuthenticationConfig } from './authentication-config.js';
+import { RuntimeConfiguration } from '../runtime-config.js';
 
-const accessLifetime = 10 * 60 * 1_000;
-const clockTolerance = 30 * 1_000;
 const audience = 'froment-browser';
 
 const AccessPayload = Schema.Struct({
@@ -40,10 +39,11 @@ export const AccessTokensLive = Layer.effect(
   AccessTokens,
   Effect.gen(function* () {
     const config = yield* AuthenticationConfig;
+    const runtime = yield* RuntimeConfiguration;
 
     const issue = Effect.fn('AccessTokens.issue')(function* (claims: AccessTokenClaims) {
       const now = yield* Clock.currentTimeMillis;
-      const expiresAt = now + accessLifetime;
+      const expiresAt = now + runtime.authentication.accessTokenLifetimeMillis;
       const accessToken = sign(
         config.pasetoSecretKey,
         {
@@ -76,9 +76,9 @@ export const AccessTokensLive = Layer.effect(
         claims.iss !== config.publicOrigin ||
         !Number.isFinite(issuedAt) ||
         !Number.isFinite(expiresAt) ||
-        issuedAt > now + clockTolerance ||
-        expiresAt <= now - clockTolerance ||
-        expiresAt - issuedAt !== accessLifetime
+        issuedAt > now + runtime.authentication.accessTokenClockToleranceMillis ||
+        expiresAt <= now - runtime.authentication.accessTokenClockToleranceMillis ||
+        expiresAt - issuedAt !== runtime.authentication.accessTokenLifetimeMillis
       ) {
         return yield* new AuthenticationRequired({ code: 'authentication.required' });
       }

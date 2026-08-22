@@ -2,7 +2,7 @@ import { computed, inject, Injectable } from '@angular/core';
 import { SecurityContext } from '@angular/core';
 import { DomSanitizer } from '@angular/platform-browser';
 import { marked } from 'marked';
-import { I18nService, Language } from '@app/i18n.service';
+import { I18nService, Language, TranslationKey } from '@app/i18n.service';
 import launchEn from './posts/2026-08-froment-software-arrive.en.md';
 import launchFr from './posts/2026-08-froment-software-arrive.fr.md';
 
@@ -10,13 +10,16 @@ export type BlogPost = {
   slug: string;
   published: string;
   updated: string;
-  title: Record<Language, string>;
-  description: Record<Language, string>;
-  topics: Record<Language, string[]>;
+  titleKey: TranslationKey;
+  descriptionKey: TranslationKey;
+  topicKeys: readonly TranslationKey[];
   body: Record<Language, string>;
 };
 
-export type RenderedBlogPost = Omit<BlogPost, 'title' | 'description' | 'topics' | 'body'> & {
+export type RenderedBlogPost = Omit<
+  BlogPost,
+  'titleKey' | 'descriptionKey' | 'topicKeys' | 'body'
+> & {
   title: string;
   description: string;
   topics: string[];
@@ -28,30 +31,15 @@ const posts: BlogPost[] = [
     slug: '2026-08-froment-software-arrive',
     published: '2026-08-12',
     updated: '2026-08-12',
-    title: {
-      fr: 'Froment Software arrive sur le marché',
-      en: 'Froment Software enters the market',
-    },
-    description: {
-      fr: 'Présentation de Froment Software, de ses missions et de sa méthode fondée sur des changements mesurables.',
-      en: 'Introducing Froment Software, its services and its method based on measurable changes.',
-    },
-    topics: {
-      fr: [
-        'développement logiciel',
-        'reprise d’applications',
-        'CI/CD',
-        'NixOS',
-        'infrastructure as code',
-      ],
-      en: [
-        'software development',
-        'application takeover',
-        'CI/CD',
-        'NixOS',
-        'infrastructure as code',
-      ],
-    },
+    titleKey: 'blog.launch.title',
+    descriptionKey: 'blog.launch.description',
+    topicKeys: [
+      'blog.launch.topic.development',
+      'blog.launch.topic.takeover',
+      'blog.launch.topic.ci',
+      'blog.launch.topic.nixos',
+      'blog.launch.topic.infrastructure',
+    ],
     body: { fr: launchFr, en: launchEn },
   },
 ];
@@ -81,9 +69,9 @@ export class Blog {
       slug: post.slug,
       published: post.published,
       updated: post.updated,
-      title: post.title[language],
-      description: post.description[language],
-      topics: post.topics[language],
+      title: this.i18n.t(post.titleKey),
+      description: this.i18n.t(post.descriptionKey),
+      topics: post.topicKeys.map((key) => this.i18n.t(key)),
       html: this.sanitizer.sanitize(SecurityContext.HTML, html) ?? '',
     };
   }

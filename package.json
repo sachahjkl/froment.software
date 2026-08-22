@@ -8,7 +8,7 @@
     "watch": "pnpm --filter @froment/web watch",
     "test": "pnpm --filter @froment/web build && pnpm --recursive --if-present test",
     "test:watch": "pnpm --filter @froment/web test:watch",
-    "lint": "tsc -p tools/oxlint/tsconfig.json --noEmit && oxlint .",
+    "lint": "tsc -p tools/oxlint/tsconfig.json --noEmit && oxlint . && pnpm --filter @froment/web lint:templates",
     "format": "oxfmt --write .",
     "format:check": "oxfmt --check ."
   },

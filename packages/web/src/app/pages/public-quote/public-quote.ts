@@ -60,7 +60,7 @@ export class PublicQuote {
     pattern(path.signature, /\S/);
     maxLength(path.signature, 160);
     validate(path.consent, ({ value }) =>
-      value() ? undefined : { kind: 'required', message: 'Explicit consent is required.' },
+      value() ? undefined : { kind: 'required', message: 'explicit_consent_required' },
     );
   });
   protected readonly loading = signal(true);

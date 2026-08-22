@@ -2,6 +2,7 @@ import { NodeRuntime } from '@effect/platform-node';
 import { Config, DateTime, Effect, Option, Schema } from 'effect';
 
 import { migrateDatabase } from './database/database.js';
+import { RuntimeConfigurationLive } from './runtime-config.js';
 
 Effect.gen(function* () {
   const filename = yield* Config.string('DATABASE_PATH').pipe(
@@ -11,7 +12,7 @@ Effect.gen(function* () {
   const timeZoneName = yield* Config.schema(
     Schema.String.check(
       Schema.makeFilter((value) => Option.isSome(DateTime.zoneMakeNamed(value)), {
-        message: 'Expected an IANA time zone name.',
+        message: 'config.time_zone.invalid',
       }),
     ),
     'BUSINESS_TIME_ZONE',
@@ -21,4 +22,4 @@ Effect.gen(function* () {
     migrationsFolder,
     businessTimeZone: DateTime.zoneMakeNamedUnsafe(timeZoneName),
   });
-}).pipe(NodeRuntime.runMain);
+}).pipe(Effect.provide(RuntimeConfigurationLive), NodeRuntime.runMain);

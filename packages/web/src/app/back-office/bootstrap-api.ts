@@ -13,6 +13,7 @@ import { firstValueFrom } from 'rxjs';
 
 import { requestOutcome, type ApiOutcome } from '@shared/api-outcome';
 import { AccessTokenStore } from './access-token-store';
+import { AuthCookieLock } from './auth-cookie-lock';
 
 export type BootstrapErrorCode = BootstrapFailureCode | 'bootstrap.error';
 
@@ -26,6 +27,7 @@ export type BootstrapOutcome = ApiOutcome<
 export class BootstrapApi {
   private readonly http = inject(HttpClient);
   private readonly tokens = inject(AccessTokenStore);
+  private readonly cookieLock = inject(AuthCookieLock);
 
   async status(): Promise<boolean> {
     const status = Schema.decodeUnknownSync(BootstrapStatus)(
@@ -39,13 +41,15 @@ export class BootstrapApi {
     readonly email: string;
     readonly password: string;
   }): Promise<BootstrapOutcome> {
-    const outcome = await requestOutcome(
-      this.http.post<unknown>('/api/bootstrap', request),
-      BootstrapResult,
-      BootstrapFailure,
-      'bootstrap.error',
-    );
-    if (outcome.success) this.tokens.set(outcome.result);
-    return outcome;
+    return this.cookieLock.run(async () => {
+      const outcome = await requestOutcome(
+        this.http.post<unknown>('/api/bootstrap', request),
+        BootstrapResult,
+        BootstrapFailure,
+        'bootstrap.error',
+      );
+      if (outcome.success) this.tokens.set(outcome.result);
+      return outcome;
+    });
   }
 }

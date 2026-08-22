@@ -199,7 +199,7 @@ export const QuoteSendResult = Schema.Struct({
       Schema.makeFilter(
         (value) =>
           Option.exists(decodeUrl(value), (url) => ['http:', 'https:'].includes(url.protocol)),
-        { message: 'a valid HTTP URL' },
+        { message: 'quote.link.url.invalid' },
       ),
       Schema.isMaxLength(2_048),
     ),

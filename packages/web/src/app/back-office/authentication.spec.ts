@@ -5,7 +5,20 @@ import { provideRouter, Router, UrlTree } from '@angular/router';
 import { type LoginModeValue } from '@froment/contracts';
 
 import { AccessTokenStore } from './access-token-store';
+import { AUTH_COOKIE_LOCK_MANAGER } from './auth-cookie-lock';
 import { Authentication, administratorGuard, clientGuard } from './authentication';
+import { BootstrapApi } from './bootstrap-api';
+
+const serialLockManager = (): LockManager => {
+  let tail = Promise.resolve<unknown>(undefined);
+  return {
+    request: <A>(_name: string, callback: (lock: Lock) => Promise<A>) => {
+      const result = tail.then(() => callback({} as Lock));
+      tail = result.catch(() => undefined);
+      return result;
+    },
+  } as LockManager;
+};
 
 describe('Authentication', () => {
   it('uses Angular HttpClient for session and login requests', async () => {
@@ -128,6 +141,65 @@ describe('Authentication', () => {
     logoutRequest.flush(null);
 
     await expect(logout).resolves.toBe(true);
+    http.verify();
+  });
+
+  it('serializes every auth cookie mutation in request order', async () => {
+    TestBed.configureTestingModule({
+      providers: [
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        { provide: AUTH_COOKIE_LOCK_MANAGER, useFactory: serialLockManager },
+      ],
+    });
+    const auth = TestBed.inject(Authentication);
+    const bootstrap = TestBed.inject(BootstrapApi);
+    const store = TestBed.inject(AccessTokenStore);
+    const http = TestBed.inject(HttpTestingController);
+
+    const refresh = store.refresh();
+    const login = auth.authenticate('client@example.test', 'client-password');
+    const logout = auth.signOut();
+    const create = bootstrap.create({
+      bootstrapPassword: 'bootstrap-password',
+      email: 'administrator@example.test',
+      password: 'administrator-password',
+    });
+
+    const refreshRequest = await vi.waitFor(() => http.expectOne('/api/auth/refresh'));
+    http.expectNone('/api/auth/login');
+    http.expectNone('/api/auth/logout');
+    http.expectNone('/api/bootstrap');
+    refreshRequest.flush({
+      accessToken: 'v4.public.refresh',
+      expiresAt: Date.now() + 600_000,
+      mode: 'client',
+    });
+    await expect(refresh).resolves.toBe('client');
+
+    const loginRequest = await vi.waitFor(() => http.expectOne('/api/auth/login'));
+    http.expectNone('/api/auth/logout');
+    http.expectNone('/api/bootstrap');
+    loginRequest.flush({
+      accessToken: 'v4.public.login',
+      expiresAt: Date.now() + 600_000,
+      mode: 'client',
+    });
+    await expect(login).resolves.toEqual({ success: true, mode: 'client' });
+
+    const logoutRequest = await vi.waitFor(() => http.expectOne('/api/auth/logout'));
+    http.expectNone('/api/bootstrap');
+    logoutRequest.flush(null);
+    await expect(logout).resolves.toBe(true);
+
+    const bootstrapRequest = await vi.waitFor(() => http.expectOne('/api/bootstrap'));
+    bootstrapRequest.flush({
+      accessToken: 'v4.public.bootstrap',
+      expiresAt: Date.now() + 600_000,
+      mode: 'administrator',
+    });
+    await expect(create).resolves.toMatchObject({ success: true });
+    expect(store.token()).toBe('v4.public.bootstrap');
     http.verify();
   });
 });

@@ -14,10 +14,12 @@ import { Authentication, type AuthenticatedSession } from '../authentication/aut
 import { Passwords } from '../authentication/password.js';
 import { Audit } from '../audit/audit.js';
 import { Database, DatabaseError } from '../database/database.js';
+import { RuntimeConfiguration } from '../runtime-config.js';
 
 export const verifyBootstrapPassword = Effect.fn('verifyBootstrapPassword')(function* (
   password: string,
   expected: AuthenticationConfig['Service']['bootstrapPasswordHash'],
+  maximumMemoryBytes: number,
 ) {
   const actual = yield* Effect.callback<Buffer>((resume) => {
     scrypt(
@@ -28,7 +30,7 @@ export const verifyBootstrapPassword = Effect.fn('verifyBootstrapPassword')(func
         N: expected.cost,
         r: expected.blockSize,
         p: expected.parallelization,
-        maxmem: 32 * 1024 * 1024,
+        maxmem: maximumMemoryBytes,
       },
       (error, derivedKey) =>
         resume(error === null ? Effect.succeed(derivedKey) : Effect.die(error)),
@@ -60,10 +62,11 @@ export const BootstrapLive = Layer.effect(
   Effect.gen(function* () {
     const database = yield* Database;
     const config = yield* AuthenticationConfig;
+    const runtime = yield* RuntimeConfiguration;
     const audit = yield* Audit;
     const passwords = yield* Passwords;
     const authentication = yield* Authentication;
-    const attemptSemaphore = yield* Semaphore.make(1);
+    const attemptSemaphore = yield* Semaphore.make(runtime.authentication.bootstrapConcurrency);
     let failedAttempts = 0;
     let blockedUntil = 0;
 
@@ -76,7 +79,7 @@ export const BootstrapLive = Layer.effect(
              where users.kind = 'administrator' limit 1`,
           )
           .get() === undefined,
-      catch: (cause) => new DatabaseError({ operation: 'check bootstrap availability', cause }),
+      catch: (cause) => new DatabaseError({ operation: 'check.bootstrap.availability', cause }),
     });
 
     const create = Effect.fn('Bootstrap.create')(function* (request: BootstrapRequestValue) {
@@ -92,10 +95,18 @@ export const BootstrapLive = Layer.effect(
           return yield* new BootstrapRateLimited({ code: 'bootstrap.rate_limited' });
         }
         if (
-          !(yield* verifyBootstrapPassword(request.bootstrapPassword, config.bootstrapPasswordHash))
+          !(yield* verifyBootstrapPassword(
+            request.bootstrapPassword,
+            config.bootstrapPasswordHash,
+            runtime.authentication.bootstrapScryptMaximumMemoryBytes,
+          ))
         ) {
           failedAttempts += 1;
-          const delay = Math.min(15 * 60 * 1_000, 1_000 * 2 ** Math.min(failedAttempts - 1, 10));
+          const delay = Math.min(
+            runtime.authentication.failureMaximumDelayMillis,
+            runtime.authentication.failureBaseDelayMillis *
+              2 ** Math.min(failedAttempts - 1, runtime.authentication.failureExponentLimit),
+          );
           blockedUntil = now + delay;
           return yield* new BootstrapRejected({ code: 'bootstrap.invalid_credentials' });
         }
@@ -165,7 +176,7 @@ export const BootstrapLive = Layer.effect(
               .immediate(),
           catch: (cause) => {
             if (cause instanceof BootstrapUnavailable) return cause;
-            return new DatabaseError({ operation: 'create administrator bootstrap', cause });
+            return new DatabaseError({ operation: 'create.administrator.bootstrap', cause });
           },
         });
 

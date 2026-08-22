@@ -10,6 +10,7 @@ import Sqlite from 'better-sqlite3';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 const execFileAsync = promisify(execFile);
+const serverStartAttempts = 5;
 const administrator = {
   email: 'administrator@example.test',
   password: 'administrator-password',
@@ -56,6 +57,12 @@ const waitForServer = async (url: string, process: ChildProcess, readOutput: () 
   throw new Error(`The server did not start.\n${readOutput().slice(-5_000)}`);
 };
 
+const stopProcess = async (process: ChildProcess) => {
+  if (process.exitCode !== null || process.signalCode !== null) return;
+  process.kill('SIGTERM');
+  await new Promise<void>((resolve) => process.once('exit', () => resolve()));
+};
+
 describe('HTTP server', () => {
   let administratorAccessToken: string;
   let baseUrl: string;
@@ -69,10 +76,8 @@ describe('HTTP server', () => {
     await cp(join(import.meta.dirname, '../../../web/dist/froment-software/browser'), staticRoot, {
       recursive: true,
     });
-    const port = await reservePort();
-    baseUrl = `http://127.0.0.1:${port}`;
     databaseFilename = join(staticRoot, 'database.sqlite');
-    const env = {
+    const baseEnv = {
       ...process.env,
       API_TOKEN_HMAC_KEY: 'DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD',
       BOOTSTRAP_PASSWORD_SCRYPT:
@@ -87,42 +92,69 @@ describe('HTTP server', () => {
       OTEL_SDK_DISABLED: 'true',
       PASETO_SECRET_KEY:
         'k4.secret.NXrAOzhnhDuDrGPrMHzfIwwJi88ZgKI4L4x6DaXjp2ycuz4ubSc_ZLzoQlOEnp-gDMpdjFgTwp0mHG8LP2QuFA',
-      PORT: String(port),
-      PUBLIC_ORIGIN: baseUrl,
       QUOTE_LINK_HMAC_KEY: 'CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC',
       REFRESH_HMAC_KEY: 'BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB',
       STATIC_ROOT: staticRoot,
+      TRUSTED_PROXY_ADDRESSES: '127.0.0.1,::ffff:127.0.0.1',
     };
     const cwd = join(import.meta.dirname, '../..');
-    await execFileAsync(process.execPath, ['dist/migrate.cjs'], { cwd, env });
-    server = spawn(process.execPath, ['dist/main.cjs'], { cwd, env, stdio: 'pipe' });
-    server.stdout?.on('data', (chunk: Buffer) => {
-      serverOutput += chunk.toString();
+    await execFileAsync(process.execPath, ['dist/migrate.cjs'], {
+      cwd,
+      env: { ...baseEnv, PORT: '0', PUBLIC_ORIGIN: 'http://127.0.0.1' },
     });
-    server.stderr?.on('data', (chunk: Buffer) => {
-      serverOutput += chunk.toString();
-    });
-    await waitForServer(`${baseUrl}/api/health`, server, () => serverOutput);
+    for (let attempt = 1; attempt <= serverStartAttempts; attempt += 1) {
+      const port = await reservePort();
+      baseUrl = `http://127.0.0.1:${port}`;
+      const env = { ...baseEnv, PORT: String(port), PUBLIC_ORIGIN: baseUrl };
+      serverOutput = '';
+      server = spawn(process.execPath, ['dist/main.cjs'], { cwd, env, stdio: 'pipe' });
+      server.stdout?.on('data', (chunk: Buffer) => {
+        serverOutput += chunk.toString();
+      });
+      server.stderr?.on('data', (chunk: Buffer) => {
+        serverOutput += chunk.toString();
+      });
+      try {
+        await waitForServer(`${baseUrl}/api/health`, server, () => serverOutput);
+        break;
+      } catch (error) {
+        await stopProcess(server);
+        if (!serverOutput.includes('EADDRINUSE') || attempt === serverStartAttempts) throw error;
+      }
+    }
   });
 
   afterAll(async () => {
-    if (server.exitCode === null) {
-      server.kill('SIGTERM');
-      await new Promise<void>((resolve) => server.once('exit', () => resolve()));
-    }
+    await stopProcess(server);
     await rm(staticRoot, { recursive: true, force: true });
   });
 
-  it('serves health, localized OpenAPI, and the client-rendered back-office shell', async () => {
+  it('serves health, localized API documentation, and the back-office shell', async () => {
     await expect((await fetch(`${baseUrl}/api/health`)).json()).resolves.toEqual({ status: 'ok' });
-    const specification = (await (await fetch(`${baseUrl}/api/openapi.en.json`)).json()) as {
+
+    for (const path of ['/api/docs', '/api/docs/fr', '/api/docs/en']) {
+      const documentation = await fetch(`${baseUrl}${path}`);
+      expect(documentation.status).toBe(200);
+      expect(documentation.headers.get('content-type')).toContain('text/html');
+      expect(await documentation.text()).toContain('window.Scalar.createApiReference');
+    }
+
+    const frenchResponse = await fetch(`${baseUrl}/api/openapi.fr.json`);
+    const englishResponse = await fetch(`${baseUrl}/api/openapi.en.json`);
+    expect(frenchResponse.status).toBe(200);
+    expect(englishResponse.status).toBe(200);
+    const frenchSpecification = (await frenchResponse.json()) as { info: { title: string } };
+    const englishSpecification = (await englishResponse.json()) as {
+      info: { title: string };
       components: { securitySchemes: { bearer?: object; sessionCookie?: object } };
       paths: { '/api/auth/refresh'?: object; '/api/auth/account'?: object };
     };
-    expect(specification.paths).toHaveProperty('/api/auth/refresh');
-    expect(specification.paths).toHaveProperty('/api/auth/account');
-    expect(specification.components.securitySchemes).toHaveProperty('bearer');
-    expect(specification.components.securitySchemes).not.toHaveProperty('sessionCookie');
+    expect(frenchSpecification.info.title).toBe('API Froment Software');
+    expect(englishSpecification.info.title).toBe('Froment Software API');
+    expect(englishSpecification.paths).toHaveProperty('/api/auth/refresh');
+    expect(englishSpecification.paths).toHaveProperty('/api/auth/account');
+    expect(englishSpecification.components.securitySchemes).toHaveProperty('bearer');
+    expect(englishSpecification.components.securitySchemes).not.toHaveProperty('sessionCookie');
     const shell = await fetch(`${baseUrl}/backoffice/login`, { headers: { accept: 'text/html' } });
     expect(await shell.text()).toContain('<app-root></app-root>');
   });
@@ -341,18 +373,56 @@ describe('HTTP server', () => {
     expect(rejected.status).toBe(401);
   });
 
-  it('rate-limits refresh attempts independently', async () => {
-    let limited: Response | undefined;
-    for (let attempt = 0; attempt < 121 && limited === undefined; attempt += 1) {
+  it('rate-limits refresh attempts by token and trusted client address', async () => {
+    const firstToken = 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA';
+    for (let attempt = 0; attempt < 10; attempt += 1) {
       const response = await fetch(`${baseUrl}/api/auth/refresh`, {
         method: 'POST',
-        headers: { origin: baseUrl },
+        headers: {
+          cookie: `__Secure-froment-refresh=${firstToken}`,
+          origin: baseUrl,
+          'x-real-ip': '192.0.2.1',
+        },
+      });
+      expect(response.status).toBe(401);
+    }
+    const tokenLimited = await fetch(`${baseUrl}/api/auth/refresh`, {
+      method: 'POST',
+      headers: {
+        cookie: `__Secure-froment-refresh=${firstToken}`,
+        origin: baseUrl,
+        'x-real-ip': '192.0.2.1',
+      },
+    });
+    expect(tokenLimited.status).toBe(429);
+
+    const otherToken = await fetch(`${baseUrl}/api/auth/refresh`, {
+      method: 'POST',
+      headers: {
+        cookie: '__Secure-froment-refresh=BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB',
+        origin: baseUrl,
+        'x-real-ip': '192.0.2.1',
+      },
+    });
+    expect(otherToken.status).toBe(401);
+
+    let limited: Response | undefined;
+    for (let attempt = 0; attempt < 601 && limited === undefined; attempt += 1) {
+      const response = await fetch(`${baseUrl}/api/auth/refresh`, {
+        method: 'POST',
+        headers: { origin: baseUrl, 'x-real-ip': '192.0.2.3' },
       });
       if (response.status === 429) limited = response;
     }
     if (limited === undefined) throw new Error('The refresh quota did not reject a request.');
     expect(limited.status).toBe(429);
     await expect(limited.json()).resolves.toMatchObject({ code: 'request.rate_limited' });
+
+    const otherAddress = await fetch(`${baseUrl}/api/auth/refresh`, {
+      method: 'POST',
+      headers: { origin: baseUrl, 'x-real-ip': '192.0.2.4' },
+    });
+    expect(otherAddress.status).toBe(401);
   });
 
   it('serves static, prerendered, and missing routes correctly', async () => {

@@ -4,9 +4,12 @@ import { AccessToken, type AccessTokenValue, type LoginModeValue } from '@fromen
 import { Schema } from 'effect';
 import { firstValueFrom } from 'rxjs';
 
+import { AuthCookieLock } from './auth-cookie-lock';
+
 @Injectable({ providedIn: 'root' })
 export class AccessTokenStore {
   private readonly http = new HttpClient(inject(HttpBackend));
+  private readonly cookieLock = inject(AuthCookieLock);
   private readonly state = signal<AccessTokenValue | undefined>(undefined);
   private refreshRequest: Promise<LoginModeValue | undefined> | undefined;
   private generation = 0;
@@ -42,15 +45,19 @@ export class AccessTokenStore {
   refresh(): Promise<LoginModeValue | undefined> {
     if (this.refreshRequest !== undefined) return this.refreshRequest;
     const generation = this.generation;
-    this.refreshRequest = firstValueFrom(this.http.post<unknown>('/api/auth/refresh', undefined))
-      .then((response) => {
-        const token = Schema.decodeUnknownSync(AccessToken)(response);
-        if (this.generation !== generation) return this.mode();
-        return this.set(token).mode;
-      })
-      .catch(() => {
-        if (this.generation === generation) this.clear();
-        return this.mode();
+    this.refreshRequest = this.cookieLock
+      .run(async () => {
+        try {
+          const response = await firstValueFrom(
+            this.http.post<unknown>('/api/auth/refresh', undefined),
+          );
+          const token = Schema.decodeUnknownSync(AccessToken)(response);
+          if (this.generation !== generation) return this.mode();
+          return this.set(token).mode;
+        } catch {
+          if (this.generation === generation) this.clear();
+          return this.mode();
+        }
       })
       .finally(() => {
         this.refreshRequest = undefined;

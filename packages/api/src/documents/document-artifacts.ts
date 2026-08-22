@@ -151,7 +151,7 @@ export const DocumentArtifactsLive = Layer.effect(
     ) {
       const existing = yield* Effect.try({
         try: () => readMetadata(quoteId, version),
-        catch: (cause) => new DatabaseError({ operation: 'find quote PDF', cause }),
+        catch: (cause) => new DatabaseError({ operation: 'find.quote.pdf', cause }),
       });
       if (existing !== undefined) return existing;
 
@@ -189,11 +189,11 @@ export const DocumentArtifactsLive = Layer.effect(
                 });
               }
               const artifact = readMetadata(quoteId, version);
-              if (artifact === undefined) throw new Error('Rendered quote PDF is missing.');
+              if (artifact === undefined) throw new Error('quote.pdf.rendered.missing');
               return artifact;
             })
             .immediate(),
-        catch: (cause) => new DatabaseError({ operation: 'store quote PDF', cause }),
+        catch: (cause) => new DatabaseError({ operation: 'store.quote.pdf', cause }),
       });
     });
 
@@ -230,7 +230,7 @@ export const DocumentArtifactsLive = Layer.effect(
     ) {
       const existing = yield* Effect.try({
         try: () => readInvoiceMetadata(invoiceId, version),
-        catch: (cause) => new DatabaseError({ operation: 'find invoice PDF', cause }),
+        catch: (cause) => new DatabaseError({ operation: 'find.invoice.pdf', cause }),
       });
       if (existing !== undefined) return existing;
 
@@ -269,11 +269,11 @@ export const DocumentArtifactsLive = Layer.effect(
                 });
               }
               const artifact = readInvoiceMetadata(invoiceId, version);
-              if (artifact === undefined) throw new Error('Rendered invoice PDF is missing.');
+              if (artifact === undefined) throw new Error('invoice.pdf.rendered.missing');
               return artifact;
             })
             .immediate(),
-        catch: (cause) => new DatabaseError({ operation: 'store invoice PDF', cause }),
+        catch: (cause) => new DatabaseError({ operation: 'store.invoice.pdf', cause }),
       });
     });
 
@@ -299,7 +299,7 @@ export const DocumentArtifactsLive = Layer.effect(
         catch: (cause) =>
           cause instanceof DocumentNotFound
             ? cause
-            : new DatabaseError({ operation: 'get quote PDF', cause }),
+            : new DatabaseError({ operation: 'get.quote.pdf', cause }),
       });
     });
 
@@ -326,7 +326,7 @@ export const DocumentArtifactsLive = Layer.effect(
         catch: (cause) =>
           cause instanceof DocumentNotFound
             ? cause
-            : new DatabaseError({ operation: 'get invoice PDF', cause }),
+            : new DatabaseError({ operation: 'get.invoice.pdf', cause }),
       });
     });
 
@@ -356,7 +356,7 @@ export const DocumentArtifactsLive = Layer.effect(
     ) {
       const existing = yield* Effect.try({
         try: () => readOrderMetadata(orderId),
-        catch: (cause) => new DatabaseError({ operation: 'find order PDF', cause }),
+        catch: (cause) => new DatabaseError({ operation: 'find.order.pdf', cause }),
       });
       if (existing !== undefined) return existing;
       const snapshot = yield* orders.getSnapshot(orderId);
@@ -386,11 +386,11 @@ export const DocumentArtifactsLive = Layer.effect(
                 });
               }
               const artifact = readOrderMetadata(orderId);
-              if (artifact === undefined) throw new Error('Rendered order PDF is missing.');
+              if (artifact === undefined) throw new Error('order.pdf.rendered.missing');
               return artifact;
             })
             .immediate(),
-        catch: (cause) => new DatabaseError({ operation: 'store order PDF', cause }),
+        catch: (cause) => new DatabaseError({ operation: 'store.order.pdf', cause }),
       });
     });
 
@@ -411,7 +411,7 @@ export const DocumentArtifactsLive = Layer.effect(
         catch: (cause) =>
           cause instanceof DocumentNotFound
             ? cause
-            : new DatabaseError({ operation: 'get order PDF', cause }),
+            : new DatabaseError({ operation: 'get.order.pdf', cause }),
       });
     });
 

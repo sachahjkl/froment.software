@@ -33,7 +33,6 @@ export const allocateBusinessReference = (
       .pluck()
       .get(kind, year),
   );
-  if (Option.isNone(value))
-    throw new RangeError(`Reference sequence exhausted for ${kind} ${year}`);
+  if (Option.isNone(value)) throw new RangeError('business.reference.sequence_exhausted');
   return `${prefixes[kind]}-${String(year).padStart(4, '0')}-${String(value.value).padStart(6, '0')}`;
 };

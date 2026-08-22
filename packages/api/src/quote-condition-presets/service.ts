@@ -84,7 +84,7 @@ export const QuoteConditionPresetsLive = Layer.effect(
             )
             .all(),
         ),
-      catch: (cause) => new DatabaseError({ operation: 'list quote condition presets', cause }),
+      catch: (cause) => new DatabaseError({ operation: 'list.quote.condition.presets', cause }),
     });
 
     const create = Effect.fn('QuoteConditionPresets.create')(function* (
@@ -114,14 +114,14 @@ export const QuoteConditionPresetsLive = Layer.effect(
                 occurredAt: now,
               });
               const preset = read(presetId);
-              if (preset === undefined) throw new Error('Created condition preset is missing.');
+              if (preset === undefined) throw new Error('quote_condition_preset.created.missing');
               return preset;
             })
             .immediate(),
         catch: (cause) =>
           cause instanceof QuoteConditionPresetNameConflict
             ? cause
-            : new DatabaseError({ operation: 'create quote condition preset', cause }),
+            : new DatabaseError({ operation: 'create.quote.condition.preset', cause }),
       });
     });
 
@@ -157,7 +157,7 @@ export const QuoteConditionPresetsLive = Layer.effect(
                 occurredAt: now,
               });
               const preset = read(presetId);
-              if (preset === undefined) throw new Error('Updated condition preset is missing.');
+              if (preset === undefined) throw new Error('quote_condition_preset.updated.missing');
               return preset;
             })
             .immediate(),
@@ -165,7 +165,7 @@ export const QuoteConditionPresetsLive = Layer.effect(
           cause instanceof QuoteConditionPresetNotFound ||
           cause instanceof QuoteConditionPresetNameConflict
             ? cause
-            : new DatabaseError({ operation: 'update quote condition preset', cause }),
+            : new DatabaseError({ operation: 'update.quote.condition.preset', cause }),
       });
     });
 
@@ -201,7 +201,7 @@ export const QuoteConditionPresetsLive = Layer.effect(
         catch: (cause) =>
           cause instanceof QuoteConditionPresetNotFound
             ? cause
-            : new DatabaseError({ operation: 'delete quote condition preset', cause }),
+            : new DatabaseError({ operation: 'delete.quote.condition.preset', cause }),
       });
     });
 

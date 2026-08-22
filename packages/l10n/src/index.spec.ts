@@ -14,6 +14,14 @@ describe('localization', () => {
     );
   });
 
+  it('translates frontend catalog values and parameters', () => {
+    expect(translate('fr', 'businessCard.print')).toBe('Imprimer ou exporter en PDF');
+    expect(translate('en', 'design.demo.tabDocument')).toBe('Downloadable PDF document');
+    expect(formatTranslation('en', 'businessCard.saved', { name: 'Launch' })).toBe(
+      'Version “Launch” saved in this browser.',
+    );
+  });
+
   it.each(['$&', '$`', "$'", '$$'])('preserves the literal replacement %s', (client) => {
     expect(formatTranslation('en', 'backOffice.clients.accessReady', { client })).toBe(
       `Sign-in identifier created for ${client}`,

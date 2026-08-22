@@ -199,6 +199,9 @@ importers:
       '@froment/contracts':
         specifier: workspace:*
         version: link:../contracts
+      '@froment/l10n':
+        specifier: workspace:*
+        version: link:../l10n
       effect:
         specifier: 'catalog:'
         version: 4.0.0-rc.110

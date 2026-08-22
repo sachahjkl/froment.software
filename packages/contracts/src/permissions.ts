@@ -56,7 +56,7 @@ const nonEmpty = <Value>(
   values: ReadonlyArray<Value>,
 ): readonly [Value, ...ReadonlyArray<Value>] => {
   const [first, ...rest] = values;
-  if (first === undefined) throw new Error('The permission registry must not be empty.');
+  if (first === undefined) throw new Error('permission.registry.empty');
   return [first, ...rest];
 };
 

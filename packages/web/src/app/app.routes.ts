@@ -341,7 +341,7 @@ export const routes: Routes = [
             component: TabPanelOutlet,
             data: {
               panel: 'nested',
-              label: 'Proposition détaillée',
+              labelKey: 'design.demo.tabProposal',
               id: 'sample-first-panel',
               tabId: 'sample-first-tab',
             },
@@ -351,7 +351,7 @@ export const routes: Routes = [
             component: TabPanelOutlet,
             data: {
               panel: 'nested',
-              label: 'Document PDF téléchargeable',
+              labelKey: 'design.demo.tabDocument',
               id: 'sample-second-panel',
               tabId: 'sample-second-tab',
             },
@@ -361,7 +361,7 @@ export const routes: Routes = [
             component: TabPanelOutlet,
             data: {
               panel: 'nested',
-              label: 'Acceptation et signature',
+              labelKey: 'design.demo.tabAcceptance',
               id: 'sample-third-panel',
               tabId: 'sample-third-tab',
             },

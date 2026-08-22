@@ -106,7 +106,7 @@ export const AuditLive = Layer.effect(
                 metadata: JSON.parse(value.metadata),
               });
             }),
-        catch: (cause) => new DatabaseError({ operation: 'list affair audit events', cause }),
+        catch: (cause) => new DatabaseError({ operation: 'list.affair.audit.events', cause }),
       });
     });
 

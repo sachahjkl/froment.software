@@ -4,14 +4,16 @@ import {
   AuthenticationRequired,
   RequestRateLimited,
 } from '@froment/contracts';
-import { Effect, Option } from 'effect';
+import { Effect } from 'effect';
 import { HttpServerRequest } from 'effect/unstable/http';
 import { HttpApiBuilder } from 'effect/unstable/httpapi';
 
 import { setPrivateResponseHeaders } from '../http/response.js';
 import { getClientAddress } from '../http/request.js';
 import { RequestLimiter } from '../server/request-limiter.js';
+import { RuntimeConfiguration } from '../runtime-config.js';
 import { Authentication } from './authentication.js';
+import { AuthenticationConfig, hmac } from './authentication-config.js';
 import { clearRefreshCookie, refreshCookieName, setRefreshCookie } from './http.js';
 
 const tokenResponse = (session: {
@@ -31,13 +33,8 @@ export const AuthenticationHandlers = HttpApiBuilder.group(Api, 'authentication'
         'login',
         Effect.fn('login')(function* ({ payload }) {
           yield* setPrivateResponseHeaders;
-          const request = yield* HttpServerRequest.HttpServerRequest;
           const session = yield* (yield* Authentication)
-            .login(
-              payload.email,
-              payload.password,
-              Option.getOrElse(request.remoteAddress, () => 'unknown'),
-            )
+            .login(payload.email, payload.password, yield* getClientAddress())
             .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
           yield* setRefreshCookie(session);
           return tokenResponse(session);
@@ -47,23 +44,36 @@ export const AuthenticationHandlers = HttpApiBuilder.group(Api, 'authentication'
         'refresh',
         Effect.fn('refresh')(function* () {
           yield* setPrivateResponseHeaders;
+          const request = yield* HttpServerRequest.HttpServerRequest;
+          const refreshToken = request.cookies[refreshCookieName];
+          const limiter = yield* RequestLimiter;
+          const config = yield* AuthenticationConfig;
+          const runtime = yield* RuntimeConfiguration;
           if (
-            !(yield* (yield* RequestLimiter).allowRequest(
+            !(yield* limiter.allowRequest(
               `refresh:address:${yield* getClientAddress()}`,
-              120,
+              runtime.authentication.refreshAttemptsPerAddressPerMinute,
             ))
           ) {
             return yield* new RequestRateLimited({ code: 'request.rate_limited' });
           }
-          const request = yield* HttpServerRequest.HttpServerRequest;
-          const session = yield* (yield* Authentication)
-            .refresh(request.cookies[refreshCookieName])
-            .pipe(
-              Effect.catchTag('SessionRejected', (error) =>
-                clearRefreshCookie.pipe(Effect.andThen(Effect.fail(error))),
-              ),
-              Effect.catchTag('DatabaseError', Effect.orDie),
-            );
+          if (refreshToken !== undefined && refreshToken.length === 43) {
+            const tokenKey = hmac(config.refreshHmacKey, refreshToken).toString('hex');
+            if (
+              !(yield* limiter.allowRequest(
+                `refresh:token:${tokenKey}`,
+                runtime.authentication.refreshAttemptsPerTokenPerMinute,
+              ))
+            ) {
+              return yield* new RequestRateLimited({ code: 'request.rate_limited' });
+            }
+          }
+          const session = yield* (yield* Authentication).refresh(refreshToken).pipe(
+            Effect.catchTag('SessionRejected', (error) =>
+              clearRefreshCookie.pipe(Effect.andThen(Effect.fail(error))),
+            ),
+            Effect.catchTag('DatabaseError', Effect.orDie),
+          );
           if (session.refreshToken !== undefined) {
             yield* setRefreshCookie({ ...session, refreshToken: session.refreshToken });
           }

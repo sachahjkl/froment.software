@@ -17,10 +17,10 @@ describe('verifyBootstrapPassword', () => {
     };
 
     await expect(
-      Effect.runPromise(verifyBootstrapPassword('bootstrap-password', expected)),
+      Effect.runPromise(verifyBootstrapPassword('bootstrap-password', expected, 32 * 1024 * 1024)),
     ).resolves.toBe(true);
-    await expect(Effect.runPromise(verifyBootstrapPassword('wrong', expected))).resolves.toBe(
-      false,
-    );
+    await expect(
+      Effect.runPromise(verifyBootstrapPassword('wrong', expected, 32 * 1024 * 1024)),
+    ).resolves.toBe(false);
   });
 });

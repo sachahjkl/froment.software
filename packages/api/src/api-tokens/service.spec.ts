@@ -7,6 +7,7 @@ import { describe, expect, it } from 'vitest';
 import { AuditLive } from '../audit/audit.js';
 import { Database } from '../database/database.js';
 import { makeMigratedDatabaseLayer } from '../database/database.spec-helper.js';
+import { RuntimeConfigurationDefaults } from '../runtime-config.js';
 import { AuthenticationConfig } from '../authentication/authentication-config.js';
 import { ApiTokens, ApiTokensLive } from './service.js';
 
@@ -37,6 +38,7 @@ const apiTokensLayer = () =>
   ApiTokensLive.pipe(
     Layer.provide(AuditLive),
     Layer.provide(configLayer),
+    Layer.provide(RuntimeConfigurationDefaults),
     Layer.provideMerge(
       makeMigratedDatabaseLayer({
         filename: ':memory:',

@@ -32,13 +32,13 @@ export const DocumentLine = Schema.Struct({
     const vatTotal = roundHalfUp(netTotal * BigInt(line.vatRateBasisPoints), 10_000n);
     const issues: Array<Schema.FilterIssue> = [];
     if (BigInt(line.netTotalCents) !== netTotal) {
-      issues.push({ path: ['netTotalCents'], issue: 'an exact calculated net total' });
+      issues.push({ path: ['netTotalCents'], issue: 'document.line.net_total.invalid' });
     }
     if (BigInt(line.vatTotalCents) !== vatTotal) {
-      issues.push({ path: ['vatTotalCents'], issue: 'an exact calculated VAT total' });
+      issues.push({ path: ['vatTotalCents'], issue: 'document.line.vat_total.invalid' });
     }
     if (BigInt(line.totalCents) !== netTotal + vatTotal) {
-      issues.push({ path: ['totalCents'], issue: 'an exact calculated total' });
+      issues.push({ path: ['totalCents'], issue: 'document.line.total.invalid' });
     }
     return issues;
   }),
@@ -52,10 +52,10 @@ export const DocumentLines = Schema.Array(DocumentLine).check(
     const ids = new Set<string>();
     for (const [position, line] of lines.entries()) {
       if (line.position !== position) {
-        issues.push({ path: [position, 'position'], issue: `position ${position}` });
+        issues.push({ path: [position, 'position'], issue: 'document.line.position.invalid' });
       }
       if (ids.has(line.id)) {
-        issues.push({ path: [position, 'id'], issue: 'a unique line identifier' });
+        issues.push({ path: [position, 'id'], issue: 'document.line.id.duplicate' });
       }
       ids.add(line.id);
     }
@@ -78,13 +78,13 @@ export const documentTotalsFilter = Schema.makeFilter<DocumentTotals>((document)
   const vatTotal = document.lines.reduce((total, line) => total + BigInt(line.vatTotalCents), 0n);
   const issues: Array<Schema.FilterIssue> = [];
   if (BigInt(document.netTotalCents) !== netTotal) {
-    issues.push({ path: ['netTotalCents'], issue: 'the sum of line net totals' });
+    issues.push({ path: ['netTotalCents'], issue: 'document.net_total.invalid' });
   }
   if (BigInt(document.vatTotalCents) !== vatTotal) {
-    issues.push({ path: ['vatTotalCents'], issue: 'the sum of line VAT totals' });
+    issues.push({ path: ['vatTotalCents'], issue: 'document.vat_total.invalid' });
   }
   if (BigInt(document.totalCents) !== netTotal + vatTotal) {
-    issues.push({ path: ['totalCents'], issue: 'the sum of line totals' });
+    issues.push({ path: ['totalCents'], issue: 'document.total.invalid' });
   }
   return issues;
 });

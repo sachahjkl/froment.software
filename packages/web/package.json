@@ -8,7 +8,8 @@
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
     "test": "ng test --watch=false",
-    "test:watch": "ng test"
+    "test:watch": "ng test",
+    "lint:templates": "node tools/check-template-prose.mjs"
   },
   "dependencies": {
     "@angular/cdk": "catalog:",

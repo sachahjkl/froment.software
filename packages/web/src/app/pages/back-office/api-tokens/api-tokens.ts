@@ -3,6 +3,7 @@ import {
   afterRenderEffect,
   ChangeDetectionStrategy,
   Component,
+  computed,
   DestroyRef,
   ElementRef,
   inject,
@@ -35,11 +36,17 @@ import { DataTable } from '@shared/data-table/data-table';
 import { LocalizedDatePipe } from '@shared/localized-date/localized-date-pipe';
 import { Notice } from '@shared/notice/notice';
 import { TextCopy } from '@shared/text-copy';
+import { createFuzzySearch } from '@shared/fuzzy-search';
 
 interface TokenModel {
   readonly name: string;
   readonly expiresAt: string;
   readonly permissions: ReadonlyArray<ApiTokenPermissionCodeValue>;
+}
+
+interface PermissionOption {
+  readonly code: ApiTokenPermissionCodeValue;
+  readonly label: string;
 }
 
 const initialExpiration = () => {
@@ -75,7 +82,26 @@ export class ApiTokens {
     required(path.expiresAt);
     minLength(path.permissions, 1);
   });
-  protected readonly permissionCodes = ApiTokenPermissionCodes;
+  protected readonly permissionQuery = signal('');
+  private readonly permissionOptions = computed<ReadonlyArray<PermissionOption>>(() =>
+    ApiTokenPermissionCodes.map((code) => ({
+      code,
+      label: this.i18n.t(this.permissionLabel(code)),
+    })),
+  );
+  protected readonly filteredPermissions = createFuzzySearch(
+    this.permissionOptions,
+    this.permissionQuery,
+    {
+      keys: [
+        { name: 'code', weight: 0.45 },
+        { name: 'label', weight: 0.55 },
+      ],
+      ignoreDiacritics: true,
+      ignoreLocation: true,
+      threshold: 0.35,
+    },
+  );
   protected readonly tokens = signal<ApiTokenListValue>([]);
   protected readonly nextCursor = signal<UlidValue | null>(null);
   protected readonly loading = signal(true);
@@ -153,6 +179,14 @@ export class ApiTokens {
         ? [...model.permissions, permission]
         : model.permissions.filter((current) => current !== permission),
     }));
+  }
+
+  protected updatePermissionQuery(input: HTMLInputElement): void {
+    this.permissionQuery.set(input.value.slice(0, 120));
+  }
+
+  protected permissionLabel(permission: ApiTokenPermissionCodeValue): TranslationKey {
+    return `backOffice.apiTokens.permission.${permission}`;
   }
 
   protected selected(permission: ApiTokenPermissionCodeValue): boolean {

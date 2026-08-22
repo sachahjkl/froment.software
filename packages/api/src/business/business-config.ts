@@ -2,7 +2,7 @@ import { Config, Context, DateTime, Effect, Layer, Option, Schema } from 'effect
 
 const NamedTimeZone = Schema.String.check(
   Schema.makeFilter((value) => Option.isSome(DateTime.zoneMakeNamed(value)), {
-    message: 'Expected an IANA time zone name.',
+    message: 'config.time_zone.invalid',
   }),
 );
 

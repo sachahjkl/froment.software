@@ -107,7 +107,7 @@ export const ClientsLive = Layer.effect(
           .all();
         return Schema.decodeUnknownSync(Schema.Array(ClientRecord))(rows).map(toSummary);
       },
-      catch: (cause) => new DatabaseError({ operation: 'list clients', cause }),
+      catch: (cause) => new DatabaseError({ operation: 'list.clients', cause }),
     });
 
     const get = Effect.fn('Clients.get')(function* (clientId: UlidValue) {
@@ -131,7 +131,7 @@ export const ClientsLive = Layer.effect(
         },
         catch: (cause) => {
           if (cause instanceof ClientNotFound) return cause;
-          return new DatabaseError({ operation: 'get client', cause });
+          return new DatabaseError({ operation: 'get.client', cause });
         },
       });
     });
@@ -185,7 +185,7 @@ export const ClientsLive = Layer.effect(
                 )
                 .run(id).changes;
               if (assignedRole !== 1) {
-                throw new Error('The client role is unavailable.');
+                throw new Error('client.role.unavailable');
               }
               audit.insert({
                 action: 'client.created',
@@ -196,7 +196,7 @@ export const ClientsLive = Layer.effect(
               });
             })
             .immediate(),
-        catch: (cause) => new DatabaseError({ operation: 'create client', cause }),
+        catch: (cause) => new DatabaseError({ operation: 'create.client', cause }),
       });
       return { id, displayName, ...fields, archived: false, updatedAt: now };
     });
@@ -284,7 +284,7 @@ export const ClientsLive = Layer.effect(
           ) {
             return cause;
           }
-          return new DatabaseError({ operation: 'update client', cause });
+          return new DatabaseError({ operation: 'update.client', cause });
         },
       });
     });
@@ -353,7 +353,7 @@ export const ClientsLive = Layer.effect(
             .immediate(),
         catch: (cause) => {
           if (cause instanceof ClientNotFound) return cause;
-          return new DatabaseError({ operation: 'archive client', cause });
+          return new DatabaseError({ operation: 'archive.client', cause });
         },
       });
     });
@@ -404,7 +404,7 @@ export const ClientsLive = Layer.effect(
             .immediate(),
         catch: (cause) => {
           if (cause instanceof ClientNotFound) return cause;
-          return new DatabaseError({ operation: 'reactivate client', cause });
+          return new DatabaseError({ operation: 'reactivate.client', cause });
         },
       });
     });
@@ -479,7 +479,7 @@ export const ClientsLive = Layer.effect(
           ) {
             return cause;
           }
-          return new DatabaseError({ operation: 'create client access', cause });
+          return new DatabaseError({ operation: 'create.client.access', cause });
         },
       });
       return { clientId, email };

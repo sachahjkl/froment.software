@@ -79,7 +79,7 @@ export const OrdersLive = Layer.effect(
           ...order,
           createdAt: DateTime.formatIso(DateTime.makeUnsafe(order.createdAt)),
         })),
-      catch: (cause) => new DatabaseError({ operation: 'list orders', cause }),
+      catch: (cause) => new DatabaseError({ operation: 'list.orders', cause }),
     });
 
     const getSnapshot = Effect.fn('Orders.getSnapshot')(function* (orderId: UlidValue) {
@@ -128,7 +128,7 @@ export const OrdersLive = Layer.effect(
         catch: (cause) =>
           cause instanceof OrderNotFound || cause instanceof QuotePreviewUnavailable
             ? cause
-            : new DatabaseError({ operation: 'get order snapshot', cause }),
+            : new DatabaseError({ operation: 'get.order.snapshot', cause }),
       });
     });
 

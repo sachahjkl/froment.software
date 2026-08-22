@@ -1,7 +1,7 @@
 <footer class="footer">
   <div class="footer-inner">
     <p>{{ i18n.tf('footer.rights', { year: currentYear }) }}</p>
-    <p><a href="mailto:contact@froment.software">contact@froment.software</a></p>
+    <p><a href="mailto:contact@froment.software">{{ i18n.t("shell.contactEmail") }}</a></p>
     <nav class="footer-legal" [attr.aria-label]="i18n.t('shell.legal_nav')">
       <a routerLink="/backoffice/login" routerLinkActive="active" ariaCurrentWhenActive="page"
         >{{ i18n.t('backOffice.title') }}</a

@@ -261,7 +261,7 @@ export const InvoicesLive = Layer.effect(
       const currentRevision = mappedRevisions.find(
         (revision) => revision.version === invoice.version,
       );
-      if (currentRevision === undefined) throw new Error('Current invoice revision is missing.');
+      if (currentRevision === undefined) throw new Error('invoice.current_revision.missing');
       const rawPdf = database.sqlite
         .prepare(
           `select status, attempts, error from invoice_pdf_jobs
@@ -334,7 +334,7 @@ export const InvoicesLive = Layer.effect(
                   error: invoice.pdfError,
                 }),
         })),
-      catch: (cause) => new DatabaseError({ operation: 'list invoices', cause }),
+      catch: (cause) => new DatabaseError({ operation: 'list.invoices', cause }),
     });
 
     const get = Effect.fn('Invoices.get')(function* (invoiceId: UlidValue) {
@@ -347,7 +347,7 @@ export const InvoicesLive = Layer.effect(
         catch: (cause) =>
           cause instanceof InvoiceNotFound
             ? cause
-            : new DatabaseError({ operation: 'get invoice', cause }),
+            : new DatabaseError({ operation: 'get.invoice', cause }),
       });
     });
 
@@ -370,7 +370,7 @@ export const InvoicesLive = Layer.effect(
         catch: (cause) =>
           cause instanceof InvoiceNotFound
             ? cause
-            : new DatabaseError({ operation: 'get invoice snapshot', cause }),
+            : new DatabaseError({ operation: 'get.invoice.snapshot', cause }),
       });
     });
 
@@ -563,7 +563,7 @@ export const InvoicesLive = Layer.effect(
                 occurredAt: now,
               });
               const detail = readDetail(invoiceId);
-              if (detail === undefined) throw new Error('Created invoice is missing.');
+              if (detail === undefined) throw new Error('invoice.created.missing');
               return detail;
             })
             .immediate(),
@@ -578,7 +578,7 @@ export const InvoicesLive = Layer.effect(
           if (cause instanceof RangeError) {
             return new InvoiceAmountTooLarge({ code: 'invoice.amount_too_large' });
           }
-          return new DatabaseError({ operation: 'create invoice', cause });
+          return new DatabaseError({ operation: 'create.invoice', cause });
         },
       });
     });
@@ -617,7 +617,7 @@ export const InvoicesLive = Layer.effect(
                    where invoice_id = ? and version = ?`,
                 )
                 .get(invoiceId, invoice.version);
-              if (currentRaw === undefined) throw new Error('Current invoice snapshot is missing.');
+              if (currentRaw === undefined) throw new Error('invoice.current_snapshot.missing');
               const currentRecord = Schema.decodeUnknownSync(SnapshotRecord)(currentRaw);
               const current = Schema.decodeUnknownSync(InvoiceRenderSnapshot)(
                 JSON.parse(currentRecord.renderSnapshot),
@@ -662,7 +662,7 @@ export const InvoicesLive = Layer.effect(
                 occurredAt: now,
               });
               const detail = readDetail(invoiceId);
-              if (detail === undefined) throw new Error('Revised invoice is missing.');
+              if (detail === undefined) throw new Error('invoice.revised.missing');
               return detail;
             })
             .immediate(),
@@ -678,7 +678,7 @@ export const InvoicesLive = Layer.effect(
           if (cause instanceof RangeError) {
             return new InvoiceAmountTooLarge({ code: 'invoice.amount_too_large' });
           }
-          return new DatabaseError({ operation: 'create invoice revision', cause });
+          return new DatabaseError({ operation: 'create.invoice.revision', cause });
         },
       });
     });
@@ -708,7 +708,7 @@ export const InvoicesLive = Layer.effect(
                   });
                 }
                 if (invoice.invoiceNumber === null || invoice.issuedAt === null) {
-                  throw new Error('Issued invoice metadata is missing.');
+                  throw new Error('invoice.issued_metadata.missing');
                 }
                 if (
                   request.expectedVersion !== invoice.version - 1 &&
@@ -747,7 +747,7 @@ export const InvoicesLive = Layer.effect(
                    where invoice_id = ? and version = ?`,
                 )
                 .get(invoiceId, invoice.version);
-              if (currentRaw === undefined) throw new Error('Current invoice snapshot is missing.');
+              if (currentRaw === undefined) throw new Error('invoice.current_snapshot.missing');
               const currentRecord = Schema.decodeUnknownSync(SnapshotRecord)(currentRaw);
               const current = Schema.decodeUnknownSync(InvoiceRenderSnapshot)(
                 JSON.parse(currentRecord.renderSnapshot),
@@ -845,7 +845,7 @@ export const InvoicesLive = Layer.effect(
           ) {
             return cause;
           }
-          return new DatabaseError({ operation: 'issue invoice', cause });
+          return new DatabaseError({ operation: 'issue.invoice', cause });
         },
       });
     });
@@ -876,7 +876,7 @@ export const InvoicesLive = Layer.effect(
               }
               if (invoice.status === targetStatus) {
                 const detail = readDetail(invoiceId);
-                if (detail === undefined) throw new Error('Transitioned invoice is missing.');
+                if (detail === undefined) throw new Error('invoice.transitioned.missing');
                 return detail;
               }
               if (invoice.status !== 'issued') {
@@ -915,7 +915,7 @@ export const InvoicesLive = Layer.effect(
                 occurredAt: now,
               });
               const detail = readDetail(invoiceId);
-              if (detail === undefined) throw new Error('Transitioned invoice is missing.');
+              if (detail === undefined) throw new Error('invoice.transitioned.missing');
               return detail;
             })
             .immediate(),
@@ -927,7 +927,7 @@ export const InvoicesLive = Layer.effect(
           ) {
             return cause;
           }
-          return new DatabaseError({ operation: `mark invoice ${targetStatus}`, cause });
+          return new DatabaseError({ operation: `mark.invoice.${targetStatus}`, cause });
         },
       });
     });

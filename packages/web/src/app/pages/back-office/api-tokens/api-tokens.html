@@ -133,17 +133,49 @@
     </label>
     <fieldset>
       <legend>{{ i18n.t('backOffice.apiTokens.permissions') }}</legend>
-      <div class="permission-grid">
-        @for (permission of permissionCodes; track permission) {
-        <label>
-          <input
-            type="checkbox"
-            [checked]="selected(permission)"
-            (change)="togglePermission(permission, $any($event.target).checked)"
-          />
-          <code>{{ permission }}</code>
-        </label>
-        }
+      <label class="permission-search" for="api-token-permission-search">
+        {{ i18n.t('backOffice.apiTokens.permissionSearch') }}
+        <input
+          id="api-token-permission-search"
+          class="input"
+          type="search"
+          [value]="permissionQuery()"
+          [placeholder]="i18n.t('backOffice.apiTokens.permissionSearchPlaceholder')"
+          (input)="updatePermissionQuery($any($event.target))"
+        />
+      </label>
+      <div class="permission-grid" appDataTable>
+        <table>
+          <thead>
+            <tr>
+              <th>{{ i18n.t('backOffice.apiTokens.permissionId') }}</th>
+              <th>{{ i18n.t('backOffice.apiTokens.permissionLabel') }}</th>
+              <th>{{ i18n.t('backOffice.apiTokens.permissionSelection') }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (result of filteredPermissions(); track result.item.code) {
+            <tr>
+              <td><code>{{ result.item.code }}</code></td>
+              <td>{{ result.item.label }}</td>
+              <td class="permission-selection">
+                <input
+                  type="checkbox"
+                  [checked]="selected(result.item.code)"
+                  [attr.aria-label]="
+                    i18n.t('backOffice.apiTokens.selectPermission') + ' ' + result.item.label
+                  "
+                  (change)="togglePermission(result.item.code, $any($event.target).checked)"
+                />
+              </td>
+            </tr>
+            } @empty {
+            <tr>
+              <td colspan="3">{{ i18n.t('backOffice.apiTokens.permissionEmpty') }}</td>
+            </tr>
+            }
+          </tbody>
+        </table>
       </div>
     </fieldset>
     @if (dialogError(); as errorKey) {

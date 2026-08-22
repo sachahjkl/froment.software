@@ -11,7 +11,7 @@ const roundHalfUp = (numerator: bigint, denominator: bigint) =>
 
 const safeNumber = (value: bigint) => {
   if (value > BigInt(Number.MAX_SAFE_INTEGER)) {
-    throw new RangeError('Quote amount exceeds Number.MAX_SAFE_INTEGER.');
+    throw new RangeError('document.amount.out_of_range');
   }
   return Number(value);
 };

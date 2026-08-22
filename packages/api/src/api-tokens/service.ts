@@ -24,9 +24,8 @@ import { ulid } from 'ulid';
 import { Audit } from '../audit/audit.js';
 import { Database, DatabaseError, isSqliteError } from '../database/database.js';
 import { AuthenticationConfig, hmac } from '../authentication/authentication-config.js';
+import { RuntimeConfiguration } from '../runtime-config.js';
 
-const maximumLifetime = 365 * 24 * 60 * 60 * 1_000;
-const defaultRateLimit = 120;
 const tokenPrefix = 'froment_api_v1_';
 
 const ApiTokenRecord = Schema.Struct({
@@ -81,6 +80,7 @@ export const ApiTokensLive = Layer.effect(
   Effect.gen(function* () {
     const database = yield* Database;
     const config = yield* AuthenticationConfig;
+    const runtime = yield* RuntimeConfiguration;
     const audit = yield* Audit;
 
     const permissions = (tokenId: string): ReadonlyArray<ApiTokenPermissionCodeValue> =>
@@ -162,7 +162,10 @@ export const ApiTokensLive = Layer.effect(
        limit ?`,
     );
 
-    const list = Effect.fn('ApiTokens.list')(function* (cursor?: UlidValue, limit = 50) {
+    const list = Effect.fn('ApiTokens.list')(function* (
+      cursor?: UlidValue,
+      limit = runtime.apiToken.defaultPageSize,
+    ) {
       return yield* Effect.try({
         try: () => {
           const boundary =
@@ -200,7 +203,7 @@ export const ApiTokensLive = Layer.effect(
         catch: (cause) =>
           cause instanceof ApiTokenInvalidCursor
             ? cause
-            : new DatabaseError({ operation: 'list API tokens', cause }),
+            : new DatabaseError({ operation: 'list.api.tokens', cause }),
       });
     });
 
@@ -209,7 +212,10 @@ export const ApiTokensLive = Layer.effect(
       actorUserId: UlidValue,
     ) {
       const now = yield* Clock.currentTimeMillis;
-      if (request.expiresAt <= now || request.expiresAt > now + maximumLifetime) {
+      if (
+        request.expiresAt <= now ||
+        request.expiresAt > now + runtime.apiToken.maximumLifetimeMillis
+      ) {
         return yield* new ApiTokenInvalidExpiration({
           code: 'api_token.invalid_expiration',
         });
@@ -230,7 +236,7 @@ export const ApiTokensLive = Layer.effect(
                 .all(actorUserId),
             ),
           ),
-        catch: (cause) => new DatabaseError({ operation: 'read API token permissions', cause }),
+        catch: (cause) => new DatabaseError({ operation: 'read.api.token.permissions', cause }),
       });
       if (requestedPermissions.some((permission) => !allowedPermissions.has(permission))) {
         return yield* new PermissionDenied({ code: 'authentication.permission_denied' });
@@ -239,7 +245,8 @@ export const ApiTokensLive = Layer.effect(
       const tokenId = Schema.decodeUnknownSync(Ulid)(ulid(now));
       const secret = `${tokenPrefix}${tokenId}.${randomBytes(32).toString('base64url')}`;
       const name = request.name.trim();
-      const rateLimitPerMinute = request.rateLimitPerMinute ?? defaultRateLimit;
+      const rateLimitPerMinute =
+        request.rateLimitPerMinute ?? runtime.apiToken.defaultRateLimitPerMinute;
       return yield* Effect.try({
         try: () =>
           database.sqlite
@@ -280,7 +287,7 @@ export const ApiTokensLive = Layer.effect(
                 occurredAt: now,
               });
               const token = read(tokenId);
-              if (token === undefined) throw new Error('Created API token is missing.');
+              if (token === undefined) throw new Error('api_token.created.missing');
               return Schema.decodeUnknownSync(
                 Schema.Struct({ token: ApiTokenSchema, secret: ApiTokenSecret }),
               )({ token, secret });
@@ -289,7 +296,7 @@ export const ApiTokensLive = Layer.effect(
         catch: (cause) =>
           isSqliteError(cause, 'SQLITE_CONSTRAINT_TRIGGER')
             ? new ApiTokenNameConflict({ code: 'api_token.name_conflict' })
-            : new DatabaseError({ operation: 'create API token', cause }),
+            : new DatabaseError({ operation: 'create.api.token', cause }),
       });
     });
 
@@ -323,7 +330,7 @@ export const ApiTokensLive = Layer.effect(
             .get(tokenId);
           return row === undefined ? undefined : Schema.decodeUnknownSync(ApiTokenRecord)(row);
         },
-        catch: (cause) => new DatabaseError({ operation: 'read API token', cause }),
+        catch: (cause) => new DatabaseError({ operation: 'read.api.token', cause }),
       });
       const candidateHmac = hmac(config.apiTokenHmacKey, candidate);
       if (
@@ -341,8 +348,8 @@ export const ApiTokensLive = Layer.effect(
               `update api_tokens set last_used_at = ?
                where id = ? and (last_used_at is null or last_used_at <= ?)`,
             )
-            .run(now, record.id, now - 60_000),
-        catch: (cause) => new DatabaseError({ operation: 'update API token use', cause }),
+            .run(now, record.id, now - runtime.apiToken.lastUsedUpdateIntervalMillis),
+        catch: (cause) => new DatabaseError({ operation: 'update.api.token.use', cause }),
       });
       return {
         userId: record.userId,
@@ -370,7 +377,7 @@ export const ApiTokensLive = Layer.effect(
                 limit 1`,
             )
             .get(principal.userId, principal.tokenId, permission) !== undefined,
-        catch: (cause) => new DatabaseError({ operation: 'authorize API token permission', cause }),
+        catch: (cause) => new DatabaseError({ operation: 'authorize.api.token.permission', cause }),
       });
       if (!allowed) {
         return yield* new PermissionDenied({ code: 'authentication.permission_denied' });
@@ -407,14 +414,14 @@ export const ApiTokensLive = Layer.effect(
                 });
               }
               const revoked = read(tokenId);
-              if (revoked === undefined) throw new Error('Revoked API token is missing.');
+              if (revoked === undefined) throw new Error('api_token.revoked.missing');
               return revoked;
             })
             .immediate(),
         catch: (cause) =>
           cause instanceof ApiTokenNotFound
             ? cause
-            : new DatabaseError({ operation: 'revoke API token', cause }),
+            : new DatabaseError({ operation: 'revoke.api.token', cause }),
       });
     });
 

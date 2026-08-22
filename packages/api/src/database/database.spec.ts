@@ -135,9 +135,9 @@ describe('Database', () => {
       .run(auditEventId);
     expect(() =>
       sqlite.prepare('update audit_events set metadata = ? where id = ?').run('{}', auditEventId),
-    ).toThrow('audit events are append-only');
+    ).toThrow('database.trigger.audit_events_update_forbidden');
     expect(() => sqlite.prepare('delete from audit_events where id = ?').run(auditEventId)).toThrow(
-      'audit events are append-only',
+      'database.trigger.audit_events_delete_forbidden',
     );
     expect(() =>
       sqlite
@@ -180,7 +180,7 @@ describe('Database', () => {
       sqlite
         .prepare('insert into clients (id, created_at, updated_at) values (?, ?, ?)')
         .run(userId, 1, 1),
-    ).toThrow('client user required');
+    ).toThrow('database.trigger.clients_kind_before_insert');
     const deletedClientId = '01ARZ3NDEKTSV4RRFFQ69G5FAW';
     sqlite
       .prepare(
@@ -290,7 +290,7 @@ describe('Database', () => {
               2,
               2000,
             ),
-          ).toThrow('API token active name conflict');
+          ).toThrow('database.trigger.api_tokens_active_name_insert_guard');
           expect(() =>
             insertToken.run(
               '01ARZ3NDEKTSV4RRFFQ69G5FAF',
@@ -300,7 +300,7 @@ describe('Database', () => {
               2,
               2000,
             ),
-          ).toThrow('API token name must be trimmed');
+          ).toThrow('database.trigger.api_tokens_name_insert_guard');
           expect(() =>
             insertToken.run(
               '01ARZ3NDEKTSV4RRFFQ69G5FAG',
@@ -336,12 +336,12 @@ describe('Database', () => {
             .run(tokenId);
           expect(() =>
             sqlite.prepare("update api_tokens set name = 'Changed' where id = ?").run(tokenId),
-          ).toThrow('API token identity is immutable');
+          ).toThrow('database.trigger.api_tokens_immutable_guard');
           expect(() =>
             sqlite.prepare('delete from api_token_permissions where token_id = ?').run(tokenId),
-          ).toThrow('API token permissions are immutable');
+          ).toThrow('database.trigger.api_token_permissions_delete_guard');
           expect(() => sqlite.prepare('delete from api_tokens where id = ?').run(tokenId)).toThrow(
-            'API tokens are append-only',
+            'database.trigger.api_tokens_delete_guard',
           );
           expect(
             sqlite
@@ -372,7 +372,7 @@ describe('Database', () => {
           ).not.toThrow();
           expect(() =>
             sqlite.prepare('update api_tokens set revoked_at = null where id = ?').run(tokenId),
-          ).toThrow('API token identity is immutable');
+          ).toThrow('database.trigger.api_tokens_immutable_guard');
         }),
       ).pipe(Effect.provide(makeMigratedDatabaseLayer({ filename: ':memory:', migrationsFolder }))),
     );
@@ -415,7 +415,7 @@ describe('Database', () => {
       ),
     ).rejects.toMatchObject({
       _tag: 'DatabaseError',
-      cause: expect.objectContaining({ message: expect.stringContaining('different hash') }),
+      cause: expect.objectContaining({ message: 'database.migration.hash_mismatch' }),
     });
   });
 
@@ -908,7 +908,7 @@ describe('Database', () => {
 
           expect(() =>
             sqlite.prepare("update document_artifacts set content = x'62'").run(),
-          ).toThrow('document artifacts are immutable');
+          ).toThrow('database.trigger.document_artifacts_immutable_update');
           expect(() =>
             sqlite
               .prepare(
@@ -924,14 +924,14 @@ describe('Database', () => {
               ),
           ).toThrow();
           expect(() => sqlite.prepare('delete from document_artifacts').run()).toThrow(
-            'document artifacts are immutable',
+            'database.trigger.document_artifacts_immutable_delete',
           );
           expect(() =>
             sqlite.prepare("update quote_revisions set title = 'Changed'").run(),
-          ).toThrow('published quote revisions are immutable');
+          ).toThrow('database.trigger.published_quote_revisions_immutable_update');
           expect(() =>
             sqlite.prepare("update quote_lines set description = 'Changed'").run(),
-          ).toThrow('published quote lines are immutable');
+          ).toThrow('database.trigger.published_quote_lines_immutable_update');
           expect(() =>
             sqlite
               .prepare(
@@ -945,7 +945,7 @@ describe('Database', () => {
                 '01ARZ3NDEKTSV4RRFFQ69G5FAC',
                 '01ARZ3NDEKTSV4RRFFQ69G5FAK',
               ),
-          ).toThrow('order business relationship violation');
+          ).toThrow('database.trigger.orders_business_relation_insert');
           expect(() =>
             sqlite
               .prepare(
@@ -958,7 +958,7 @@ describe('Database', () => {
                 '01ARZ3NDEKTSV4RRFFQ69G5FAM',
                 '01ARZ3NDEKTSV4RRFFQ69G5FAC',
               ),
-          ).toThrow('invoice business relationship violation');
+          ).toThrow('database.trigger.invoices_business_relation_insert');
           expect(() =>
             sqlite
               .prepare(

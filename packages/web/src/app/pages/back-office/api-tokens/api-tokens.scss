@@ -5,6 +5,12 @@
 .tokens-page {
   display: grid;
   gap: var(--space-5);
+  padding: var(--page-header-y) var(--page-x);
+}
+
+h1 {
+  margin-top: var(--space-2);
+  font-size: var(--text-2xl);
 }
 
 header,
@@ -27,7 +33,7 @@ header p {
 }
 
 dialog {
-  width: min(52rem, calc(100% - 2rem));
+  width: min(68rem, calc(100% - 2rem));
   max-height: calc(100dvh - 2rem);
   padding: 0;
   border: 1px solid var(--color-line-strong);
@@ -60,15 +66,28 @@ fieldset {
 }
 
 .permission-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: var(--space-3);
+  max-height: min(26rem, 50dvh);
+  overflow: auto;
 }
 
-.permission-grid label {
-  display: flex;
-  align-items: start;
+.permission-search {
+  display: grid;
   gap: var(--space-2);
+}
+
+.permission-grid table {
+  min-width: 38rem;
+}
+
+.permission-grid th:last-child,
+.permission-selection {
+  width: 7rem;
+  text-align: center;
+}
+
+.permission-selection input {
+  width: 1.1rem;
+  height: 1.1rem;
 }
 
 @media (max-width: 42rem) {
@@ -76,9 +95,5 @@ fieldset {
   .dialog-heading {
     align-items: stretch;
     flex-direction: column;
-  }
-
-  .permission-grid {
-    grid-template-columns: 1fr;
   }
 }

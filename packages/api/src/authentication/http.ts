@@ -19,14 +19,11 @@ import { ApiTokens } from '../api-tokens/service.js';
 import { getClientAddress } from '../http/request.js';
 import { setPrivateResponseHeaders } from '../http/response.js';
 import { RequestLimiter } from '../server/request-limiter.js';
+import { RuntimeConfiguration } from '../runtime-config.js';
 import { Authentication } from './authentication.js';
 
 export const refreshCookieName = '__Secure-froment-refresh';
 const refreshCookie = HttpApiSecurity.apiKey({ key: refreshCookieName, in: 'cookie' });
-
-const AuthenticationRateLimits = {
-  apiTokenAttemptsPerAddressPerMinute: 120,
-} as const;
 
 export const setRefreshCookie = (refresh: {
   readonly refreshToken: string;
@@ -92,6 +89,7 @@ const ApiAuthorizationLive = Layer.effect(
     const authentication = yield* Authentication;
     const apiTokens = yield* ApiTokens;
     const limiter = yield* RequestLimiter;
+    const runtime = yield* RuntimeConfiguration;
     const limitEndpoint = Effect.fn('ApiAuthorization.limitEndpoint')(function* (
       principalId: string,
       endpointId: string,
@@ -107,7 +105,7 @@ const ApiAuthorizationLive = Layer.effect(
         const credentials = yield* ApiCredentials;
         const permissions = Option.getOrThrowWith(
           Context.getOption(endpoint.annotations, RequiredPermissions),
-          () => new Error(`Endpoint ${endpoint.identifier} has no required permission.`),
+          () => new Error('authentication.endpoint.permission_missing'),
         );
         const endpointRateLimit = Context.getOption(endpoint.annotations, EndpointRateLimit);
 
@@ -130,7 +128,7 @@ const ApiAuthorizationLive = Layer.effect(
         if (
           !(yield* limiter.allowRequest(
             `api-token-auth:address:${yield* getClientAddress()}`,
-            AuthenticationRateLimits.apiTokenAttemptsPerAddressPerMinute,
+            runtime.authentication.apiTokenAttemptsPerAddressPerMinute,
           ))
         ) {
           return yield* new RequestRateLimited({ code: 'request.rate_limited' });
