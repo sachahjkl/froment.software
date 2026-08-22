@@ -204,6 +204,7 @@ export {
 export {
   ApiAuthentication,
   ApiAuthorization,
+  ApiBrowserRequest,
   ApiCredentials,
   type ApiCredentialsValue,
   ApiPrincipal,

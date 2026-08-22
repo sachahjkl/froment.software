@@ -97,6 +97,7 @@ import { ClientInvoiceList, ClientOrderList, ClientQuoteList } from './client-po
 import {
   ApiAuthentication,
   ApiAuthorization,
+  ApiBrowserRequest,
   MutationRateLimit,
   RequiredPermissions,
 } from './api-authentication.js';
@@ -326,7 +327,7 @@ export class SystemApi extends HttpApiGroup.make('system', { topLevel: true })
         BootstrapUnavailable.pipe(HttpApiSchema.status(409)),
         BootstrapRateLimited.pipe(HttpApiSchema.status(429)),
       ],
-    }),
+    }).middleware(ApiBrowserRequest),
     HttpApiEndpoint.post('login', '/api/auth/login', {
       payload: LoginRequest,
       success: SessionStatus,
@@ -334,14 +335,14 @@ export class SystemApi extends HttpApiGroup.make('system', { topLevel: true })
         AuthenticationRejected.pipe(HttpApiSchema.status(401)),
         AuthenticationRateLimited.pipe(HttpApiSchema.status(429)),
       ],
-    }),
+    }).middleware(ApiBrowserRequest),
     HttpApiEndpoint.get('sessionStatus', '/api/auth/session', {
       success: SessionStatus,
     }),
     HttpApiEndpoint.post('logout', '/api/auth/logout', {
       success: SessionStatus,
       error: SessionRejected.pipe(HttpApiSchema.status(401)),
-    }),
+    }).middleware(ApiBrowserRequest),
   )
   .annotate(OpenApi.Exclude, true) {}
 
@@ -701,7 +702,7 @@ export class QuotesApi extends HttpApiGroup.make('quotes', { topLevel: true })
         QuoteLinkNotFound.pipe(HttpApiSchema.status(404)),
         RequestRateLimited.pipe(HttpApiSchema.status(429)),
       ],
-    }).pipe(internal),
+    }).pipe((endpoint) => endpoint.middleware(ApiBrowserRequest).pipe(internal)),
     HttpApiEndpoint.post('publicQuotePdfDownload', '/api/public/quote-link/pdf', {
       payload: PublicQuoteAccessRequest,
       success: Schema.Uint8Array.pipe(
@@ -711,7 +712,7 @@ export class QuotesApi extends HttpApiGroup.make('quotes', { topLevel: true })
         QuoteLinkNotFound.pipe(HttpApiSchema.status(404)),
         RequestRateLimited.pipe(HttpApiSchema.status(429)),
       ],
-    }).pipe(internal),
+    }).pipe((endpoint) => endpoint.middleware(ApiBrowserRequest).pipe(internal)),
     HttpApiEndpoint.post('publicQuoteSign', '/api/public/quote-link/signature', {
       payload: PublicQuoteSignatureRequest,
       success: QuoteAcceptanceResult,
@@ -720,7 +721,7 @@ export class QuotesApi extends HttpApiGroup.make('quotes', { topLevel: true })
         QuoteLinkNotSignable.pipe(HttpApiSchema.status(409)),
         RequestRateLimited.pipe(HttpApiSchema.status(429)),
       ],
-    }).pipe(internal),
+    }).pipe((endpoint) => endpoint.middleware(ApiBrowserRequest).pipe(internal)),
     HttpApiEndpoint.post('quoteRevisionCreate', '/api/quotes/:quoteId/revisions', {
       params: { quoteId: Ulid },
       payload: QuoteRevisionCreateRequest,

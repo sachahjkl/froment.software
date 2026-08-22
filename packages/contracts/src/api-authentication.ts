@@ -73,6 +73,11 @@ export class ApiAuthentication extends HttpApiMiddleware.Service<
   error: AuthenticationRequired,
 }) {}
 
+export class ApiBrowserRequest extends HttpApiMiddleware.Service<ApiBrowserRequest>()(
+  '@froment/contracts/ApiBrowserRequest',
+  { error: RequestInvalidOrigin },
+) {}
+
 export class ApiAuthorization extends HttpApiMiddleware.Service<
   ApiAuthorization,
   { requires: ApiCredentials; provides: ApiPrincipal }

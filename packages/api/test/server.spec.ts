@@ -214,7 +214,23 @@ describe('HTTP server', () => {
         body: JSON.stringify({ password: 'bootstrap-password' }),
       });
       expect(invalidOrigin.status).toBe(403);
-      await expect(invalidOrigin.json()).resolves.toEqual({ code: 'request.invalid_origin' });
+      await expect(invalidOrigin.json()).resolves.toEqual({
+        _tag: 'RequestInvalidOrigin',
+        code: 'request.invalid_origin',
+      });
+    }
+
+    for (const authorization of ['Basic dXNlcjpwYXNzd29yZA==', 'Bearer invalid']) {
+      const invalidOrigin = await fetch(`${baseUrl}/api/bootstrap`, {
+        method: 'POST',
+        headers: { authorization, 'content-type': 'application/json' },
+        body: JSON.stringify({ password: 'bootstrap-password' }),
+      });
+      expect(invalidOrigin.status).toBe(403);
+      await expect(invalidOrigin.json()).resolves.toMatchObject({
+        _tag: 'RequestInvalidOrigin',
+        code: 'request.invalid_origin',
+      });
     }
 
     const rejected = await fetch(`${baseUrl}/api/bootstrap`, {
@@ -885,6 +901,28 @@ describe('HTTP server', () => {
     });
     expect(bearerCreate.status).toBe(200);
 
+    const bearerCreateWithForeignOrigin = await fetch(`${baseUrl}/api/clients`, {
+      method: 'POST',
+      headers: {
+        authorization: `Bearer ${created.secret}`,
+        'content-type': 'application/json',
+        origin: 'https://attacker.example',
+      },
+      body: JSON.stringify({ ...emptyClientDetails, displayName: 'Foreign origin Bearer client' }),
+    });
+    expect(bearerCreateWithForeignOrigin.status).toBe(200);
+
+    const cookieCreateWithoutOrigin = await fetch(`${baseUrl}/api/clients`, {
+      method: 'POST',
+      headers: { cookie, 'content-type': 'application/json', 'x-csrf-token': csrf },
+      body: JSON.stringify({ ...emptyClientDetails, displayName: 'Rejected browser client' }),
+    });
+    expect(cookieCreateWithoutOrigin.status).toBe(403);
+    await expect(cookieCreateWithoutOrigin.json()).resolves.toMatchObject({
+      _tag: 'RequestInvalidOrigin',
+      code: 'request.invalid_origin',
+    });
+
     const missingScope = await fetch(`${baseUrl}/api/quotes`, {
       headers: { authorization: `Bearer ${created.secret}` },
     });
@@ -894,6 +932,17 @@ describe('HTTP server', () => {
       headers: { authorization: `Bearer ${created.secret}`, cookie },
     });
     expect(mixedCredentials.status).toBe(401);
+    const mixedWrite = await fetch(`${baseUrl}/api/clients`, {
+      method: 'POST',
+      headers: {
+        authorization: `Bearer ${created.secret}`,
+        cookie,
+        'content-type': 'application/json',
+        'x-csrf-token': csrf,
+      },
+      body: JSON.stringify({ ...emptyClientDetails, displayName: 'Mixed client' }),
+    });
+    expect(mixedWrite.status).toBe(401);
 
     for (const headers of [
       undefined,

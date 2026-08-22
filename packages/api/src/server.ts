@@ -3,11 +3,13 @@ import {
   Api,
   ApiAuthentication,
   ApiAuthorization,
+  ApiBrowserRequest,
   ApiCredentials,
   ApiPrincipal,
   AuthenticationRequired,
   DocumentNotFound,
   MutationRateLimit,
+  RequestInvalidOrigin,
   RequestRateLimited,
   RequiredPermissions,
   Ulid,
@@ -122,58 +124,49 @@ const identifyRequest = <E, R>(
     );
   });
 
-const protectRequest =
-  (publicOrigin: string) =>
-  <E, R>(application: Effect.Effect<HttpServerResponse.HttpServerResponse, E, R>) =>
-    Effect.gen(function* () {
-      const request = yield* HttpServerRequest.HttpServerRequest;
-      const mutation =
-        request.method !== 'GET' && request.method !== 'HEAD' && request.method !== 'OPTIONS';
-      if (mutation && request.url.startsWith('/api/')) {
-        const bearerIntegrationRequest =
-          request.headers['authorization'] !== undefined &&
-          request.cookies[sessionCookieName] === undefined;
-        if (!bearerIntegrationRequest && request.headers['origin'] !== publicOrigin) {
-          return yield* HttpServerResponse.json(
-            { code: 'request.invalid_origin' },
-            { status: 403, headers: { 'cache-control': 'no-store' } },
-          ).pipe(Effect.orDie);
-        }
-        if (request.headers['transfer-encoding'] !== undefined) {
-          return yield* HttpServerResponse.json(
-            { code: 'request.too_large' },
-            { status: 413, headers: { 'cache-control': 'no-store' } },
-          ).pipe(Effect.orDie);
-        }
-      }
-      const contentLength = Schema.decodeUnknownOption(Schema.NumberFromString)(
-        request.headers['content-length'],
-      );
-      if (Option.isSome(contentLength) && contentLength.value > 32 * 1024) {
+const protectRequest = <E, R>(
+  application: Effect.Effect<HttpServerResponse.HttpServerResponse, E, R>,
+) =>
+  Effect.gen(function* () {
+    const request = yield* HttpServerRequest.HttpServerRequest;
+    const mutation =
+      request.method !== 'GET' && request.method !== 'HEAD' && request.method !== 'OPTIONS';
+    if (mutation && request.url.startsWith('/api/')) {
+      if (request.headers['transfer-encoding'] !== undefined) {
         return yield* HttpServerResponse.json(
           { code: 'request.too_large' },
           { status: 413, headers: { 'cache-control': 'no-store' } },
         ).pipe(Effect.orDie);
       }
-      return yield* application.pipe(
-        Effect.catch((error) => {
-          if (
-            !(error instanceof HttpServerError.HttpServerError) ||
-            error.reason._tag !== 'RequestParseError' ||
-            !(error.reason.cause instanceof Error) ||
-            error.reason.cause.message !== 'maxBytes exceeded'
-          ) {
-            return Effect.fail(error);
-          }
-          return Effect.succeed(
-            HttpServerResponse.jsonUnsafe(
-              { code: 'request.too_large' },
-              { status: 413, headers: { 'cache-control': 'no-store' } },
-            ),
-          );
-        }),
-      );
-    });
+    }
+    const contentLength = Schema.decodeUnknownOption(Schema.NumberFromString)(
+      request.headers['content-length'],
+    );
+    if (Option.isSome(contentLength) && contentLength.value > 32 * 1024) {
+      return yield* HttpServerResponse.json(
+        { code: 'request.too_large' },
+        { status: 413, headers: { 'cache-control': 'no-store' } },
+      ).pipe(Effect.orDie);
+    }
+    return yield* application.pipe(
+      Effect.catch((error) => {
+        if (
+          !(error instanceof HttpServerError.HttpServerError) ||
+          error.reason._tag !== 'RequestParseError' ||
+          !(error.reason.cause instanceof Error) ||
+          error.reason.cause.message !== 'maxBytes exceeded'
+        ) {
+          return Effect.fail(error);
+        }
+        return Effect.succeed(
+          HttpServerResponse.jsonUnsafe(
+            { code: 'request.too_large' },
+            { status: 413, headers: { 'cache-control': 'no-store' } },
+          ),
+        );
+      }),
+    );
+  });
 
 const setSessionCookies = (session: {
   readonly sessionToken: string;
@@ -241,6 +234,7 @@ const ApiAuthorizationLive = Layer.effect(
   ApiAuthorization,
   Effect.gen(function* () {
     const authentication = yield* Authentication;
+    const config = yield* AuthenticationConfig;
     const integrationTokens = yield* IntegrationTokens;
     const limiter = yield* RequestLimiter;
     const limitMutation = Effect.fn('ApiAuthorization.limitMutation')(function* (
@@ -268,6 +262,9 @@ const ApiAuthorizationLive = Layer.effect(
             .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
           if (Option.isSome(mutationRateLimit)) {
             const request = yield* HttpServerRequest.HttpServerRequest;
+            if (request.headers['origin'] !== config.publicOrigin) {
+              return yield* new RequestInvalidOrigin({ code: 'request.invalid_origin' });
+            }
             yield* authentication
               .authorizeCsrf(
                 credentials.token,
@@ -315,6 +312,22 @@ const ApiAuthorizationLive = Layer.effect(
           userId: principal.userId,
           credential: { kind: 'integration-token', tokenId: principal.tokenId },
         });
+      }),
+    );
+  }),
+);
+
+const ApiBrowserRequestLive = Layer.effect(
+  ApiBrowserRequest,
+  Effect.gen(function* () {
+    const config = yield* AuthenticationConfig;
+    return ApiBrowserRequest.of(
+      Effect.fn('ApiBrowserRequest')(function* (httpEffect) {
+        const request = yield* HttpServerRequest.HttpServerRequest;
+        if (request.headers['origin'] !== config.publicOrigin) {
+          return yield* new RequestInvalidOrigin({ code: 'request.invalid_origin' });
+        }
+        return yield* httpEffect;
       }),
     );
   }),
@@ -1073,7 +1086,7 @@ const ApiRoutes = HttpApiBuilder.layer(Api, { openapiPath: '/api/openapi.json' }
       IntegrationTokenHandlers,
     ),
   ),
-  Layer.provide(Layer.mergeAll(ApiAuthenticationLive, ApiAuthorizationLive)),
+  Layer.provide(Layer.mergeAll(ApiAuthenticationLive, ApiAuthorizationLive, ApiBrowserRequestLive)),
 );
 
 const ApiDocs = HttpApiScalar.layer(Api, {
@@ -1115,9 +1128,7 @@ export const makeServerLayer = (options: {
       middleware: (application) =>
         Effect.gen(function* () {
           return yield* traceRequest(
-            identifyRequest(
-              HttpMiddleware.logger(protectRequest(options.publicOrigin)(application)),
-            ),
+            identifyRequest(HttpMiddleware.logger(protectRequest(application))),
           );
         }),
       disableLogger: true,

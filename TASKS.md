@@ -130,7 +130,7 @@
 - Delete temporary inputs and outputs after each success or failure.
 - Preserve the current rendering concurrency limit and Effect resource lifecycle.
 - Return typed renderer failures without exposing paths, commands, or document content.
-- Keep output stable for the same snapshot, template version, and toolchain.
+- Keep output stable for the same snapshot, template files, and toolchain.
 
 ### PDF-Only Preview
 
@@ -164,20 +164,16 @@
 - Keep totals, legal notices, and the final footer readable across page breaks.
 - Preserve the current flow-based header and footer unless a reviewed reference requires a change.
 - Do not add page numbers or repeated page furniture without an approved visual change.
-- Keep each template identifier and introduce template version `2`.
+- Replace the current template implementations in place. Do not introduce template version `2`.
 
-### Version Cutover
+### Greenfield Replacement
 
-- Keep every stored version `1` PDF unchanged.
-- Never regenerate a signed quote PDF because its SHA-256 belongs to the signature proof.
-- Continue serving existing version `1` artifacts through the current download routes.
-- Audit version `1` snapshots that do not have a stored PDF before removing Chromium.
-- Generate required immutable version `1` artifacts with the current renderer before the cutover.
-- Move mutable drafts to template version `2` only where business immutability permits the change.
-- Finish or explicitly resolve every pending invoice PDF job before the cutover.
-- Make every new revision and document use template version `2` after the cutover.
-- Remove the version `1` runtime renderer after the cutover. Do not keep two production rendering engines.
-- Document the cutover checks and abort conditions in the deployment procedure.
+- Replace the current renderer and templates directly.
+- Do not add a compatibility renderer, migration path, cutover mode, or dual-engine deployment.
+- Reset development artifacts and document data when the new renderer requires incompatible data.
+- Remove obsolete HTML rendering code as soon as the PDF preview path works.
+- Remove the Chromium renderer in the same change that enables Typst rendering.
+- Keep the artifact and signature integrity rules for all documents generated after the replacement.
 
 ### Artifact Behavior
 
@@ -201,7 +197,7 @@
 - Ensure the production image closure contains no Chromium or Playwright paths.
 - Keep Poppler in test derivations for PDF inspection. Do not add it to the production image.
 - Build the production image from the existing Nix `scratch`-style image definition.
-- Record compressed and unpacked image sizes before and after the migration.
+- Record compressed and unpacked image sizes before and after the replacement.
 
 ### Verification
 
@@ -214,8 +210,7 @@
 - Verify repeated rendering of one fixture produces identical PDF bytes.
 - Verify previews return PDF content and never create stored artifacts.
 - Verify preview object URLs are replaced and revoked correctly in Angular tests.
-- Verify stored version `1` artifacts remain byte-for-byte unchanged.
-- Verify signed quote proofs still match their stored PDF hashes.
+- Verify signed quote proofs match their stored Typst PDF hashes.
 - Verify concurrent requests create one logical artifact.
 - Verify invoice jobs recover after compiler failure and process restart.
 - Verify compilation uses no network access.
@@ -224,7 +219,7 @@
 
 ## Integration API Greenfield Cleanup
 
-- [ ] API-001 Enforce Origin from the selected authentication mode. Remove the global exemption based on any `Authorization` header. Require the configured Origin for browser mutations. Exempt only a Bearer credential selected by the integration middleware. Cover arbitrary, Basic, mixed, missing, and valid credentials through HTTP tests.
+- [x] API-001 Enforce Origin from the selected authentication mode. Remove the global exemption based on any `Authorization` header. Require the configured Origin for browser mutations. Exempt only a Bearer credential selected by the integration middleware. Cover arbitrary, Basic, mixed, missing, and valid credentials through HTTP tests.
 - [ ] API-002 Make global request errors match their contracts. Return typed `RequestInvalidOrigin` and `RequestTooLarge` errors through `HttpApiBuilder`, including `_tag` and `code`. Declare each error only on endpoints that can produce it. Cover fixed-length and chunked oversized bodies, then verify that the server remains available.
 - [x] API-003 Use one administrator authorization pipeline. Annotate internal and integration endpoints with their required permission set and mutation quota. Execute authentication, current owner permission checks, CSRF, and quotas in one middleware. Remove `authorizeAdministratorSession`, `authorizeAdministratorWrite`, and `Authentication.authorizeWrite`.
 - [x] API-004 Select Cookie and Bearer credentials without cross-decoding. Give each Effect security handler one credential type. Reject absent, malformed, and mixed credentials explicitly. Remove application calls to `HttpApiBuilder.securityDecode`. Test that each credential invokes exactly one security branch.
