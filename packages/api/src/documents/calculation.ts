@@ -16,7 +16,7 @@ const safeNumber = (value: bigint) => {
   return Number(value);
 };
 
-export const calculateQuoteLine = (line: QuoteLineInputValue): QuoteLineTotals => {
+export const calculateDocumentLine = (line: QuoteLineInputValue): QuoteLineTotals => {
   const netTotal = roundHalfUp(BigInt(line.quantityMilli) * BigInt(line.unitPriceCents), 1_000n);
   const vatTotal = roundHalfUp(netTotal * BigInt(line.vatRateBasisPoints), 10_000n);
   return {
@@ -26,7 +26,7 @@ export const calculateQuoteLine = (line: QuoteLineInputValue): QuoteLineTotals =
   };
 };
 
-export const calculateQuoteTotals = (lines: ReadonlyArray<QuoteLineTotals>): QuoteLineTotals => {
+export const calculateDocumentTotals = (lines: ReadonlyArray<QuoteLineTotals>): QuoteLineTotals => {
   const netTotal = lines.reduce((total, line) => total + BigInt(line.netTotalCents), 0n);
   const vatTotal = lines.reduce((total, line) => total + BigInt(line.vatTotalCents), 0n);
   return {

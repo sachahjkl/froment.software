@@ -11,8 +11,8 @@ import { AuthenticationConfig, hmac } from '../src/authentication/authentication
 import { Clients, ClientsLive } from '../src/clients/clients.js';
 import { Database } from '../src/database/database.js';
 import { makeMigratedDatabaseLayer } from './database-layer.js';
-import { IssuerSettingsLive } from '../src/documents/issuer-settings.js';
-import { QuoteLinks, QuoteLinksLive } from '../src/quotes/quote-links.js';
+import { IssuerSettingsLive } from '../src/issuer-settings/service.js';
+import { QuoteLinks, QuoteLinksLive } from '../src/quote-links/service.js';
 import { Quotes, QuotesLive } from '../src/quotes/quotes.js';
 
 const actorId = '01ARZ3NDEKTSV4RRFFQ69G5FAA';

@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest';
 
-import { calculateQuoteLine, calculateQuoteTotals } from './quote-calculation.js';
+import { calculateDocumentLine, calculateDocumentTotals } from './calculation.js';
 
 describe('quote calculation', () => {
   it('rounds half up for each line', () => {
     expect(
-      calculateQuoteLine({
+      calculateDocumentLine({
         description: 'Half cent',
         quantityMilli: 1,
         unitPriceCents: 500,
@@ -13,7 +13,7 @@ describe('quote calculation', () => {
       }),
     ).toEqual({ netTotalCents: 1, vatTotalCents: 1, totalCents: 2 });
     expect(
-      calculateQuoteLine({
+      calculateDocumentLine({
         description: 'Below half',
         quantityMilli: 1,
         unitPriceCents: 499,
@@ -24,7 +24,7 @@ describe('quote calculation', () => {
 
   it('keeps safe integer boundaries exact', () => {
     expect(
-      calculateQuoteLine({
+      calculateDocumentLine({
         description: 'Maximum',
         quantityMilli: 1_000,
         unitPriceCents: Number.MAX_SAFE_INTEGER,
@@ -32,7 +32,7 @@ describe('quote calculation', () => {
       }).totalCents,
     ).toBe(Number.MAX_SAFE_INTEGER);
     expect(() =>
-      calculateQuoteLine({
+      calculateDocumentLine({
         description: 'Overflow',
         quantityMilli: 1_001,
         unitPriceCents: Number.MAX_SAFE_INTEGER,
@@ -40,7 +40,7 @@ describe('quote calculation', () => {
       }),
     ).toThrow(RangeError);
     expect(() =>
-      calculateQuoteTotals([
+      calculateDocumentTotals([
         {
           netTotalCents: Number.MAX_SAFE_INTEGER,
           vatTotalCents: 0,

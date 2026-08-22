@@ -36,8 +36,8 @@ import { Audit } from '../audit/audit.js';
 import { BusinessConfig } from '../business/business-config.js';
 import { allocateBusinessReference, businessYear } from '../business/business-references.js';
 import { Database, DatabaseError } from '../database/database.js';
-import { IssuerSettings } from '../documents/issuer-settings.js';
-import { calculateQuoteLine, calculateQuoteTotals } from '../quotes/quote-calculation.js';
+import { calculateDocumentLine, calculateDocumentTotals } from '../documents/calculation.js';
+import { IssuerSettings } from '../issuer-settings/service.js';
 
 const InvoiceRecord = Schema.Struct({
   id: Ulid,
@@ -409,9 +409,9 @@ export const InvoicesLive = Layer.effect(
         id: ulid(input.now),
         position,
         description: line.description.trim(),
-        ...calculateQuoteLine(line),
+        ...calculateDocumentLine(line),
       }));
-      const totals = calculateQuoteTotals(calculatedLines);
+      const totals = calculateDocumentTotals(calculatedLines);
       const snapshot = Schema.decodeUnknownSync(InvoiceRenderSnapshot)({
         templateId: 'invoice-default',
         templateVersion: 1,

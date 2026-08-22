@@ -28,8 +28,8 @@ import { Audit } from '../audit/audit.js';
 import { BusinessConfig } from '../business/business-config.js';
 import { allocateBusinessReference, businessYear } from '../business/business-references.js';
 import { Database, DatabaseError } from '../database/database.js';
-import { IssuerSettings } from '../documents/issuer-settings.js';
-import { calculateQuoteLine, calculateQuoteTotals } from './quote-calculation.js';
+import { calculateDocumentLine, calculateDocumentTotals } from '../documents/calculation.js';
+import { IssuerSettings } from '../issuer-settings/service.js';
 import { expireSentQuotes } from './quote-expiration.js';
 
 const QuoteRecord = Schema.Struct({
@@ -320,9 +320,9 @@ export const QuotesLive = Layer.effect(
         position,
         ...line,
         description: line.description.trim(),
-        ...calculateQuoteLine(line),
+        ...calculateDocumentLine(line),
       }));
-      const totals = calculateQuoteTotals(calculatedLines);
+      const totals = calculateDocumentTotals(calculatedLines);
       const createdAt = DateTime.formatIso(DateTime.makeUnsafe(now));
       const snapshot = Schema.decodeUnknownSync(QuoteRenderSnapshot)({
         templateId: 'quote-default',

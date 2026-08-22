@@ -23,7 +23,7 @@ import { ulid } from 'ulid';
 
 import { Audit } from '../audit/audit.js';
 import { Database, DatabaseError, isSqliteError } from '../database/database.js';
-import { AuthenticationConfig, hmac } from './authentication-config.js';
+import { AuthenticationConfig, hmac } from '../authentication/authentication-config.js';
 
 const maximumLifetime = 365 * 24 * 60 * 60 * 1_000;
 const defaultRateLimit = 120;

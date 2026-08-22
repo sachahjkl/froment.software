@@ -17,8 +17,8 @@ import {
   DocumentRenderError,
   type DocumentRendererService,
 } from '../src/documents/document-renderer.js';
-import { IssuerSettings, type IssuerSettingsService } from '../src/documents/issuer-settings.js';
-import { InvoicePdfJobs, InvoicePdfJobsLive } from '../src/documents/invoice-pdf-jobs.js';
+import { IssuerSettings, type IssuerSettingsService } from '../src/issuer-settings/service.js';
+import { InvoicePdfJobs, InvoicePdfJobsLive } from '../src/invoices/pdf-jobs.js';
 import { Invoices, InvoicesLive } from '../src/invoices/invoices.js';
 import { OrdersLive } from '../src/orders/orders.js';
 import { Quotes, type QuotesService } from '../src/quotes/quotes.js';

@@ -7,8 +7,8 @@ import { describe, expect, it } from 'vitest';
 import { AuditLive } from '../audit/audit.js';
 import { Database } from '../database/database.js';
 import { makeMigratedDatabaseLayer } from '../../test/database-layer.js';
-import { AuthenticationConfig } from './authentication-config.js';
-import { IntegrationTokens, IntegrationTokensLive } from './integration-tokens.js';
+import { AuthenticationConfig } from '../authentication/authentication-config.js';
+import { IntegrationTokens, IntegrationTokensLive } from './service.js';
 
 const userId = '01ARZ3NDEKTSV4RRFFQ69G5FAA';
 const roleId = '01ARZ3NDEKTSV4RRFFQ69G5FAC';

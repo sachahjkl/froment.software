@@ -1,7 +1,7 @@
 import { Clock, Context, Effect, Layer, Schedule, Schema } from 'effect';
 
 import { Database, DatabaseError } from '../database/database.js';
-import { DocumentArtifacts } from './document-artifacts.js';
+import { DocumentArtifacts } from '../documents/document-artifacts.js';
 
 const JobRecord = Schema.Struct({
   invoiceRevisionId: Schema.String,

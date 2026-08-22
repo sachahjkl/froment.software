@@ -27,7 +27,7 @@ import { Database, DatabaseError } from '../database/database.js';
 import { BusinessConfig } from '../business/business-config.js';
 import { allocateBusinessReference, businessYear } from '../business/business-references.js';
 import { verifyArtifactContent } from '../documents/artifact-integrity.js';
-import { expireSentQuotes } from './quote-expiration.js';
+import { expireSentQuotes } from '../quotes/quote-expiration.js';
 
 const linkLifetimeMillis = 30 * 24 * 60 * 60 * 1_000;
 
