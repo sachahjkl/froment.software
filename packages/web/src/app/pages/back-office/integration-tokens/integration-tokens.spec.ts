@@ -15,11 +15,27 @@ const token = {
   rateLimitPerMinute: 120,
 };
 const secret = `froment_it_v1_${token.id}.${'a'.repeat(43)}`;
+const serverToken = {
+  ...token,
+  id: '01ARZ3NDEKTSV4RRFFQ69G5FAW',
+  name: 'Server token',
+};
+const nextToken = {
+  ...token,
+  id: '01ARZ3NDEKTSV4RRFFQ69G5FAX',
+  name: 'Next token',
+};
 
 describe('IntegrationTokens', () => {
-  it('does not replace a created token with an older list response', async () => {
-    let resolveList!: (page: { items: ReadonlyArray<typeof token>; nextCursor: null }) => void;
-    const list = vi.fn().mockReturnValue(new Promise((resolve) => (resolveList = resolve)));
+  it('merges a creation with initial and subsequent list pages', async () => {
+    let resolveList!: (page: {
+      items: ReadonlyArray<typeof serverToken>;
+      nextCursor: typeof serverToken.id;
+    }) => void;
+    const list = vi
+      .fn()
+      .mockReturnValueOnce(new Promise((resolve) => (resolveList = resolve)))
+      .mockResolvedValueOnce({ items: [serverToken, nextToken], nextCursor: null });
     const create = vi.fn().mockResolvedValue({
       success: true,
       result: { token, secret },
@@ -54,10 +70,19 @@ describe('IntegrationTokens', () => {
     expect(acknowledge).not.toBeNull();
     acknowledge?.click();
     await fixture.whenStable();
-    resolveList({ items: [], nextCursor: null });
+    resolveList({ items: [serverToken], nextCursor: serverToken.id });
     await vi.waitFor(() => expect(root.textContent).not.toMatch(/Loading tokens|Chargement/));
 
     expect(root.textContent).toContain('ERP');
+    expect(root.textContent).toContain('Server token');
+    const loadMore = [
+      ...root.querySelectorAll<HTMLButtonElement>('section.tokens-page > button'),
+    ].at(-1);
+    loadMore?.click();
+    await fixture.whenStable();
+    expect(list).toHaveBeenLastCalledWith(serverToken.id);
+    expect(root.textContent).toContain('Next token');
+    expect(root.textContent?.match(/Server token/g)).toHaveLength(1);
   });
 
   it('shows a created secret once and clears it when acknowledged', async () => {

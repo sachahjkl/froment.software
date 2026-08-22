@@ -91,7 +91,6 @@ export class IntegrationTokens {
   private readonly createButton = viewChild.required('createButton', { read: ElementRef });
   private readonly createDialog = viewChild.required<ElementRef<HTMLDialogElement>>('createDialog');
   private createWasOpen = false;
-  private tokensRevision = 0;
   private expirationTimer: ReturnType<typeof setTimeout> | undefined;
 
   constructor() {
@@ -176,7 +175,6 @@ export class IntegrationTokens {
         this.dialogError.set(outcome.code);
         return;
       }
-      this.tokensRevision++;
       this.tokens.update((tokens) => [outcome.result.token, ...tokens]);
       this.secret.set(outcome.result.secret);
       this.scheduleExpiration();
@@ -202,7 +200,6 @@ export class IntegrationTokens {
       this.pageError.set(outcome.code);
       return;
     }
-    this.tokensRevision++;
     this.tokens.update((tokens) =>
       tokens.map((current) => (current.id === outcome.result.id ? outcome.result : current)),
     );
@@ -244,10 +241,7 @@ export class IntegrationTokens {
     this.pageError.set(undefined);
     try {
       const page = await this.api.list(cursor);
-      this.tokens.update((tokens) => {
-        const known = new Set(tokens.map(({ id }) => id));
-        return [...tokens, ...page.items.filter(({ id }) => !known.has(id))];
-      });
+      this.appendMissingTokens(page.items);
       this.nextCursor.set(page.nextCursor);
       this.scheduleExpiration();
     } catch {
@@ -267,19 +261,23 @@ export class IntegrationTokens {
   }
 
   private async load(): Promise<void> {
-    const revision = this.tokensRevision;
     try {
       const page = await this.api.list();
-      if (revision === this.tokensRevision) {
-        this.tokens.set(page.items);
-        this.nextCursor.set(page.nextCursor);
-        this.scheduleExpiration();
-      }
+      this.appendMissingTokens(page.items);
+      this.nextCursor.set(page.nextCursor);
+      this.scheduleExpiration();
     } catch {
       this.pageError.set('integration_token.error');
     } finally {
       this.loading.set(false);
     }
+  }
+
+  private appendMissingTokens(items: IntegrationTokenListValue): void {
+    this.tokens.update((tokens) => {
+      const known = new Set(tokens.map(({ id }) => id));
+      return [...tokens, ...items.filter(({ id }) => !known.has(id))];
+    });
   }
 
   private scheduleExpiration(): void {
