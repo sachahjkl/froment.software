@@ -1,4 +1,4 @@
-export { HealthStatus, type HealthStatus as HealthStatusValue } from './status.js';
+export { HealthStatus, type HealthStatus as HealthStatusValue } from './status/contracts.js';
 export {
   InvoiceNumber,
   type InvoiceNumber as InvoiceNumberValue,
@@ -6,13 +6,13 @@ export {
   type OrderReference as OrderReferenceValue,
   QuoteReference,
   type QuoteReference as QuoteReferenceValue,
-} from './business-references.js';
+} from './business/contracts.js';
 export {
   DeploymentMetadata,
   type DeploymentMetadata as DeploymentMetadataValue,
   GitCommit,
   PackageVersion,
-} from './version.js';
+} from './deployment/contracts.js';
 export {
   DisplayName,
   type DisplayName as DisplayNameValue,
@@ -55,7 +55,7 @@ export {
   IntegrationTokenNotFound,
   IntegrationTokenSecret,
   type IntegrationTokenSecret as IntegrationTokenSecretValue,
-} from './integration-tokens.js';
+} from './integration-tokens/contracts.js';
 export {
   OrderList,
   type OrderList as OrderListValue,
@@ -66,7 +66,7 @@ export {
   OrderNotFound,
   OrderSummary,
   type OrderSummary as OrderSummaryValue,
-} from './orders.js';
+} from './orders/contracts.js';
 export {
   AuditAction,
   type AuditAction as AuditActionValue,
@@ -76,7 +76,7 @@ export {
   type AuditMetadata as AuditMetadataValue,
   AuditResourceType,
   type AuditResourceType as AuditResourceTypeValue,
-} from './audit.js';
+} from './audit/contracts.js';
 export {
   AccessIdentifier,
   type AccessIdentifier as AccessIdentifierValue,
@@ -98,7 +98,7 @@ export {
   SessionRejected,
   SessionStatus,
   type SessionStatus as SessionStatusValue,
-} from './authentication.js';
+} from './authentication/contracts.js';
 export {
   ClientAccess,
   type ClientAccess as ClientAccessValue,
@@ -116,7 +116,7 @@ export {
   ClientUpdateRequest,
   type ClientUpdateRequest as ClientUpdateRequestValue,
   ClientVersionConflict,
-} from './clients.js';
+} from './clients/contracts.js';
 export {
   BootstrapFailure,
   type BootstrapFailure as BootstrapFailureValue,
@@ -130,23 +130,26 @@ export {
   BootstrapStatus,
   type BootstrapStatus as BootstrapStatusValue,
   BootstrapUnavailable,
-} from './bootstrap.js';
+} from './bootstrap/contracts.js';
 export {
   DocumentParty,
   type DocumentParty as DocumentPartyValue,
   DocumentArtifact,
   type DocumentArtifact as DocumentArtifactValue,
   DocumentNotFound,
+  IssuerSettings,
+  type IssuerSettings as IssuerSettingsValue,
+  IssuerSettingsUpdateRequest,
+  type IssuerSettingsUpdateRequest as IssuerSettingsUpdateRequestValue,
+  QuotePreviewUnavailable,
+} from './documents/contracts.js';
+export {
   PublicQuoteAccessRequest,
   type PublicQuoteAccessRequest as PublicQuoteAccessRequestValue,
   PublicQuoteConsultation,
   type PublicQuoteConsultation as PublicQuoteConsultationValue,
   PublicQuoteSignatureRequest,
   type PublicQuoteSignatureRequest as PublicQuoteSignatureRequestValue,
-  IssuerSettings,
-  type IssuerSettings as IssuerSettingsValue,
-  IssuerSettingsUpdateRequest,
-  type IssuerSettingsUpdateRequest as IssuerSettingsUpdateRequestValue,
   QuoteCreateRequest,
   type QuoteCreateRequest as QuoteCreateRequestValue,
   QuoteCancelRequest,
@@ -173,7 +176,6 @@ export {
   type QuoteAcceptanceResult as QuoteAcceptanceResultValue,
   QuoteNotEditable,
   QuotePdfRequired,
-  QuotePreviewUnavailable,
   QuoteRenderSnapshot,
   type QuoteRenderSnapshot as QuoteRenderSnapshotValue,
   QuoteRevision,
@@ -189,7 +191,7 @@ export {
   QuoteSummary,
   type QuoteSummary as QuoteSummaryValue,
   QuoteVersionConflict,
-} from './quotes.js';
+} from './quotes/contracts.js';
 export {
   Api,
   apiForLanguage,
@@ -235,7 +237,7 @@ export {
   type ClientQuoteList as ClientQuoteListValue,
   ClientQuoteSummary,
   type ClientQuoteSummary as ClientQuoteSummaryValue,
-} from './client-portal.js';
+} from './client-portal/contracts.js';
 export {
   QuoteConditionPreset,
   type QuoteConditionPreset as QuoteConditionPresetValue,
@@ -247,7 +249,7 @@ export {
   QuoteConditionPresetNotFound,
   QuoteConditionPresetWriteRequest,
   type QuoteConditionPresetWriteRequest as QuoteConditionPresetWriteRequestValue,
-} from './quote-condition-presets.js';
+} from './quote-condition-presets/contracts.js';
 export {
   CalendarDate,
   CalendarDateText,
@@ -289,4 +291,4 @@ export {
   InvoiceSummary,
   type InvoiceSummary as InvoiceSummaryValue,
   InvoiceVersionConflict,
-} from './invoices.js';
+} from './invoices/contracts.js';

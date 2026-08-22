@@ -2,7 +2,8 @@ import { Context, Option, Schema } from 'effect';
 import { OpenApi } from 'effect/unstable/httpapi';
 import { describe, expect, it } from 'vitest';
 
-import { Api, apiForLanguage, RevisionVersionParameter } from './api.js';
+import { RevisionVersionParameter } from './api-common.js';
+import { Api, apiForLanguage } from './api.js';
 import { RequiredPermissions } from './api-policy/permissions.js';
 import { EndpointRateLimit } from './api-policy/rate-limit.js';
 import { IntegrationPermissionCodes } from './permissions.js';

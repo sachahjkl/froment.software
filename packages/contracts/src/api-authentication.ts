@@ -8,7 +8,7 @@ import {
   RequestInvalidOrigin,
   RequestRateLimited,
   RequestTooLarge,
-} from './authentication.js';
+} from './authentication/contracts.js';
 import type { Ulid as UlidValue } from './identifiers.js';
 
 export type ApiCredentialsValue =
