@@ -114,7 +114,7 @@
 
 ## Typst PDF Rendering
 
-- [ ] PDF-001 Replace Angular, Playwright, and Chromium document rendering with local Typst compilation. Complete every requirement below before removing the current renderer.
+- [x] PDF-001 Replace Angular, Playwright, and Chromium document rendering with local Typst compilation. Complete every requirement below before removing the current renderer.
 
 ### Rendering Architecture
 
@@ -164,12 +164,12 @@
 - Keep totals, legal notices, and the final footer readable across page breaks.
 - Preserve the current flow-based header and footer unless a reviewed reference requires a change.
 - Do not add page numbers or repeated page furniture without an approved visual change.
-- Replace the current template implementations in place. Do not introduce template version `2`.
+- Replace the current template implementations in place.
 
 ### Greenfield Replacement
 
 - Replace the current renderer and templates directly.
-- Do not add a compatibility renderer, migration path, cutover mode, or dual-engine deployment.
+- Do not add a compatibility renderer, data migration, or dual-engine deployment.
 - Reset development artifacts and document data when the new renderer requires incompatible data.
 - Remove obsolete HTML rendering code as soon as the PDF preview path works.
 - Remove the Chromium renderer in the same change that enables Typst rendering.
@@ -217,19 +217,75 @@
 - Run all package tests, lint, formatting, migration tests, and `nix flake check`.
 - Deploy only after the production image starts without Chromium and all PDF routes pass smoke tests.
 
-## Integration API Greenfield Cleanup
+## API Greenfield Cleanup
 
-- [x] API-001 Enforce Origin from the selected authentication mode. Remove the global exemption based on any `Authorization` header. Require the configured Origin for browser mutations. Exempt only a Bearer credential selected by the integration middleware. Cover arbitrary, Basic, mixed, missing, and valid credentials through HTTP tests.
+- [x] API-001 Enforce Origin from the selected authentication mode. Remove the global exemption based on any `Authorization` header. Require the configured Origin for browser mutations. Exempt only a Bearer credential selected by the API-token middleware. Cover arbitrary, Basic, mixed, missing, and valid credentials through HTTP tests.
 - [x] API-002 Make global request errors match their contracts. Return typed `RequestInvalidOrigin` and `RequestTooLarge` errors through `HttpApiBuilder`, including `_tag` and `code`. Declare each error only on endpoints that can produce it. Cover fixed-length and chunked oversized bodies, then verify that the server remains available.
-- [x] API-003 Use one administrator authorization pipeline. Annotate internal and integration endpoints with their required permission set and mutation quota. Execute authentication, current owner permission checks, CSRF, and quotas in one middleware. Remove `authorizeAdministratorSession`, `authorizeAdministratorWrite`, and `Authentication.authorizeWrite`.
+- [x] API-003 Use one administrator authorization pipeline. Annotate frontend and API-token endpoints with their required permission set and mutation quota. Execute authentication, current owner permission checks, CSRF, and quotas in one middleware. Remove `authorizeAdministratorSession`, `authorizeAdministratorWrite`, and `Authentication.authorizeWrite`.
 - [x] API-004 Select Cookie and Bearer credentials without cross-decoding. Give each Effect security handler one credential type. Reject absent, malformed, and mixed credentials explicitly. Remove application calls to `HttpApiBuilder.securityDecode`. Test that each credential invokes exactly one security branch.
-- [x] API-005 Apply Bearer admission quotas before token HMAC and SQLite work. Consume an address quota before `IntegrationTokens.authenticate`, then consume the token quota before permission checks. Test the exact execution order with rejected and accepted requests.
-- [x] API-006 Define every permission once. Replace the separate general and integration literal lists with one permission registry containing integration and client-role metadata. Derive schemas, UI options, OpenAPI eligibility, and role expectations from this registry. Reject duplicate requested permissions in the contract schema.
-- [x] API-007 Enforce reusable token names in SQLite. Replace the removed global unique index with an indexed trigger that rejects a duplicate name only while an existing token remains unrevoked and unexpired at the new token creation time. Translate only this database constraint into `IntegrationTokenNameConflict`. Cover direct SQL writes, revocation, expiration, whitespace, and case policy.
+- [x] API-005 Apply Bearer admission quotas before token HMAC and SQLite work. Consume an address quota before `ApiTokens.authenticate`, then consume the token quota before permission checks. Test the exact execution order with rejected and accepted requests.
+- [x] API-006 Define every permission once. Replace the separate general and API-token literal lists with one permission registry containing API-token and client-role metadata. Derive schemas, UI options, OpenAPI eligibility, and role expectations from this registry. Reject duplicate requested permissions in the contract schema.
+- [x] API-007 Enforce reusable token names in SQLite. Replace the removed global unique index with an indexed trigger that rejects a duplicate name only while an existing token remains unrevoked and unexpired at the new token creation time. Translate only this database constraint into `ApiTokenNameConflict`. Cover direct SQL writes, revocation, expiration, whitespace, and case policy.
 - [x] API-008 Index and validate token pagination. Add an index on `(created_at DESC, id DESC)`. Resolve each cursor to its immutable boundary, use a tuple comparison, and return a typed `400` error for an unknown ULID. Cover equal timestamps, exact page sizes, inserted rows, revoked rows, and unknown cursors.
 - [x] API-009 Merge concurrent Angular token loads. Remove the revision-based response discard. Merge initial and subsequent pages by identifier while preserving local creation and revocation results. Preserve the server cursor and retry state. Cover creation during initial loading, pagination failures, retries, and duplicate suppression.
 - [x] API-010 Prevent secret loss during token creation. Block Angular route deactivation while a creation request is pending. Require confirmation only after the one-time secret exists. Keep external navigation protection active. Cover pending creation, rejected navigation, secret acknowledgement, and component destruction.
-- [x] API-011 Remove redundant token authorization surfaces. Delete `IntegrationTokens.authorize` and test the production sequence through `authenticate` followed by `authorizePermission`. Remove any wrapper that permits authentication, quota, and permission ordering to diverge.
-- [x] API-012 Align integration-token failures and UI states. Include every typed request-policy failure in the internal API outcome schema. Keep initial-load errors distinct from an empty list. Clear stale clipboard errors after success. Cover creation, revocation, pagination, request-policy, and clipboard failures.
+- [x] API-011 Remove redundant token authorization surfaces. Delete `ApiTokens.authorize` and test the production sequence through `authenticate` followed by `authorizePermission`. Remove any wrapper that permits authentication, quota, and permission ordering to diverge.
+- [x] API-012 Align API-token failures and UI states. Include every typed request-policy failure in the frontend API outcome schema. Keep initial-load errors distinct from an empty list. Clear stale clipboard errors after success. Cover creation, revocation, pagination, request-policy, and clipboard failures.
 - [x] API-013 Localize the OpenAPI reference. Move every API title, group description, operation summary, and operation description into `@froment/l10n`. Generate localized OpenAPI content for French and English without changing operation identifiers or schemas. Configure Scalar's `localization.locale` for its interface and serve the matching localized document. Cover both locales, fallback behavior, and the absence of hard-coded documentation prose in contracts.
+
+## API Documentation And Account Authentication
+
+### Target Architecture
+
+- Keep one `Api` contract containing every server route.
+- Keep API contracts independent from natural-language documentation and `@froment/l10n`.
+- Generate French and English OpenAPI documents in `@froment/api` by joining `Api` with `apiDocumentation`.
+- Keep business tags on every operation. Add the localized `Frontend` tag to routes used only by the Froment frontend.
+- Authenticate browser API requests with short-lived PASETO `v4.public` access tokens in the `Authorization: Bearer` header.
+- Keep access tokens in frontend memory. Do not store access tokens in cookies, `localStorage`, or `sessionStorage`.
+- Use opaque rotating refresh tokens in one `HttpOnly`, `Secure`, `SameSite=Strict` cookie scoped to `/api/auth`.
+- Use email and password for administrator and client login. Keep API tokens as separate bearer credentials.
+- Store only password hashes and refresh-token HMACs. Never persist or log plaintext credentials.
+
+### Documentation
+
+- [x] API-014 Move API documentation composition into `@froment/api`. Keep `applyApiDocumentation` private, pass one locale dictionary into it, and expose only `apiForLanguage`. Make `@froment/l10n` a runtime dependency of `@froment/api`. Remove the `@froment/contracts` dependency on `@froment/l10n`. Move localization behavior and translation-coverage tests beside the adapter.
+- [x] API-015 Document every route in one OpenAPI specification. Replace `frontendSpecific` exclusion with an additive `frontend` tag while preserving each business tag. Add localized `Frontend` group prose. Require exact French and English keys for every group and operation, including frontend routes. Verify that Scalar displays both tags and no operation disappears.
+- [x] API-016 Remove integration terminology from active code and documentation. Rename integration tokens to API tokens across identifiers, permission codes, routes, database objects, contracts, services, UI, tests, titles, and prose. Use `/api/tokens` for management routes and `api-token.manage` for their permission. Keep immutable migrations unchanged. Verify that active source files contain no remaining integration terminology.
+
+### Account Data
+
+- [x] AUTH-001 Replace access identifiers with password credentials. Add a one-to-one password credential for a user with a canonical email, an Argon2id password hash, creation time, update time, and password-change time. Enforce case-insensitive email uniqueness in SQLite. Keep contact data separate from login credentials. Remove `access_credentials` and every access-identifier contract, service, route, UI, and test.
+- [x] AUTH-002 Replace the authentication model without a compatibility path. Drop legacy sessions and access credentials. Remove their routes, configuration, contracts, and UI in the same change. Require a fresh administrator bootstrap and new client portal credentials. Preserve business records only. Do not convert, claim, or accept legacy authentication data.
+- [x] AUTH-003 Require an email when client portal access is enabled. Let an administrator set or replace the client login email and initial password through one account-management operation. Keep ordinary client records valid without portal access. Reject duplicate canonical emails and weak passwords with typed errors. Revoke all client refresh sessions after email, password, archival, or access-state changes.
+
+### PASETO Access Tokens
+
+- [x] AUTH-004 Add a focused PASETO service using a maintained PASETO v4 library. Use `v4.public` with Ed25519 keys encoded as PASERK. Load and validate the secret key through Effect `Config`. Derive or configure the matching public key without exposing the secret key. Do not implement cryptographic primitives in this repository.
+- [x] AUTH-005 Define and validate one access-token payload with Effect Schema. Include `sub`, refresh-session identifier, account kind, `type: access`, `iss`, `aud`, `iat`, and `exp`. Exclude passwords, email addresses, permissions, and other personal data. Use a ten-minute lifetime and a small explicit clock tolerance. Reject wrong versions, purposes, issuers, audiences, timestamps, signatures, and malformed payloads.
+- [x] AUTH-006 Replace browser session-cookie authentication with PASETO bearer authentication. Select PASETO tokens by their `v4.public.` prefix and keep API-token selection explicit. Reject malformed, unknown, and mixed credentials. Load current roles and permissions from SQLite after token validation so authorization changes take effect immediately. Remove `sessionCookie` from normal route security and OpenAPI documentation.
+
+### Refresh Sessions
+
+- [x] AUTH-007 Replace legacy sessions with refresh sessions. Store a session identifier, family identifier, user identifier, refresh-token HMAC, creation time, rotation time, absolute expiry, consumption time, and revocation time. Index active token lookup, user revocation, family revocation, and expiry cleanup. Use a cryptographically random 256-bit refresh token and a dedicated HMAC key.
+- [x] AUTH-008 Implement transactional refresh-token rotation. Consume each token once, create its replacement, issue a new access token, and replace the cookie in one successful flow. Detect replay and revoke the complete token family. Permit a short bounded concurrency grace period so simultaneous browser tabs do not revoke a valid family. Test exact replay behavior, concurrent refreshes, expiration, disabled users, password changes, and database rollback.
+- [x] AUTH-009 Restrict the refresh cookie to authentication routes. Set `HttpOnly`, `Secure`, `SameSite=Strict`, `Path=/api/auth`, and an explicit expiry. Require the configured browser Origin for refresh and logout because the browser sends this cookie automatically. Clear the cookie after rejection, logout, expiry, and family revocation. Never accept the refresh cookie as authentication for business routes.
+
+### Authentication Flows
+
+- [x] AUTH-010 Replace login with email and password. Normalize the email before lookup, verify Argon2id hashes with constant-work failure behavior, apply address and account rate limits, and return one generic invalid-credentials error. On success, create a refresh family, set its cookie, and return the PASETO access token with its expiry and account kind. Record stable audit events without email, password, or token values.
+- [x] AUTH-011 Replace bootstrap input with bootstrap password, administrator email, and administrator password. Verify the configured bootstrap password, validate the account password policy, and create or claim the administrator account transactionally. Return an access token and refresh cookie through the normal token issuer. Disable bootstrap after the administrator password credential exists. Cover duplicate submissions, concurrent bootstrap, invalid email, weak password, rate limits, and rollback.
+- [x] AUTH-012 Replace session status and logout semantics. Add an authenticated current-account endpoint for frontend initialization. Make logout revoke the current refresh family and clear its cookie. Add an administrator action to revoke all sessions for one account. Accept that an already issued access token remains usable for at most ten minutes unless the normal authorization lookup finds a disabled account.
+
+### Frontend
+
+- [x] AUTH-013 Add an Angular access-token store that keeps the PASETO token only in memory. Add one HTTP interceptor that attaches it to API requests, performs one shared refresh after an authentication failure, retries the original request once, and prevents refresh loops. Exclude login, bootstrap, refresh, public routes, and API-token use from automatic attachment.
+- [x] AUTH-014 Restore authentication after navigation and page reload through the refresh endpoint. Merge concurrent initialization and refresh requests within one tab. Handle another tab rotating the cookie without revoking the family. Clear local authentication state after refresh rejection. Preserve administrator and client route guards and their return URLs.
+- [x] AUTH-015 Replace the shared access-identifier login form with email and password fields. Use standard `email`, `current-password`, and `new-password` autocomplete values for password managers. Add bootstrap administrator email and password fields. Add client portal credential management to the client editor. Localize validation, errors, account state, password replacement, and logout outcomes in French and English.
+
+### Removal And Verification
+
+- [x] AUTH-016 Remove legacy cookie-session and CSRF infrastructure after bearer migration. Delete session-cookie security, CSRF cookies and headers, access-identifier generation, obsolete configuration, old database tables, and dead translations. Keep Origin checks for refresh, logout, login, bootstrap, and other cookie or browser-sensitive mutations. Keep request-body limits and rate limits as independent policies.
+- [ ] AUTH-017 Verify the complete authentication boundary. Cover administrator and client login, bootstrap, refresh rotation, replay, logout, account disablement, permission changes, client archival, password replacement, mixed credentials, API tokens, concurrent tabs, page reloads, redaction, OpenAPI security, and both Scalar locales. Run migration tests, all package tests, lint, formatting, builds, `nix flake check`, and production startup smoke tests.
+
 - [ ] ARCH-001 Remove natural-language literals from application code. Move user-facing prose, API documentation, HTML metadata, operational labels, and runtime messages into `@froment/l10n`. Keep only stable codes, identifiers, protocol values, and typed machine data outside tests. Add a lint or generated consistency check that prevents new prose literals. Preserve immutable migration artifacts and replace their active runtime messages through corrective migrations using stable error codes.

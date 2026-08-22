@@ -7,7 +7,7 @@ Ce document décrit l'architecture cible du back-office de Froment Software.
 Les décisions suivantes sont validées :
 
 - Effect v4 RC pour les effets, les contrats HTTP et le serveur.
-- Angular 22 pour l'interface et les templates de documents.
+- Angular 22 pour l'interface et Typst pour les documents PDF.
 - pnpm pour le workspace.
 - Drizzle ORM avec SQLite pour la persistance.
 - Une seule instance applicative avec un volume persistant.
@@ -26,14 +26,14 @@ packages/
 ├── web/          # Application Angular
 ├── api/          # Serveur Effect
 ├── contracts/    # Schémas Effect et description HttpApi
-└── documents/    # Templates Angular des documents
+└── documents/    # Entrées TypeScript et templates Typst
 ```
 
 Le package racine orchestre les commandes pnpm, le formatage, les tests et les builds.
 
 `packages/contracts` ne dépend ni du navigateur, ni de SQLite.
 
-`packages/documents` expose les composants Angular et le rendu HTML côté serveur.
+`packages/documents` expose les entrées validées et formatées pour les templates Typst.
 
 ## Versions initiales
 
@@ -109,11 +109,11 @@ Le serveur dérive le mot de passe avec scrypt et compare le condensat en temps 
 
 La variable obligatoire `BOOTSTRAP_PASSWORD_SCRYPT` contient les paramètres, le sel et le condensat en base64url.
 
-La variable obligatoire `ACCESS_HMAC_KEY` contient une clé aléatoire de 32 octets en base64url.
+La variable obligatoire `PASETO_SECRET_KEY` contient une clé Ed25519 secrète au format PASERK `k4.secret`.
 
 La variable obligatoire `API_TOKEN_HMAC_KEY` contient une clé distincte de 32 octets en base64url.
 
-La variable obligatoire `SESSION_HMAC_KEY` contient une autre clé aléatoire de 32 octets en base64url.
+La variable obligatoire `REFRESH_HMAC_KEY` contient une clé aléatoire de 32 octets en base64url.
 
 La variable obligatoire `QUOTE_LINK_HMAC_KEY` contient une troisième clé aléatoire de 32 octets en base64url.
 
@@ -345,16 +345,16 @@ Une facture émise devient immuable.
 
 Une correction comptable future utilisera un avoir distinct.
 
-## Templates Angular
+## Templates Typst
 
-`packages/documents` contient des composants Angular autonomes.
+`packages/documents` contient les entrées validées et les templates Typst locaux.
 
-La première version fournit ces templates :
+Le package fournit trois templates :
 
 ```text
-QuoteDefaultTemplate
-InvoiceDefaultTemplate
-SignatureEvidenceTemplate
+quote.typ
+invoice.typ
+order.typ
 ```
 
 Chaque template possède un identifiant stable et une version entière.
@@ -365,13 +365,13 @@ Le snapshot contient l'émetteur, le client, les lignes, les totaux et les condi
 
 Le snapshot conserve aussi l'identifiant et la version du template.
 
-Les anciennes versions restent disponibles pour reproduire les anciens documents.
+Le rendu reçoit des valeurs déjà formatées en français par TypeScript.
 
-Le serveur utilise `renderApplication()` pour produire le HTML.
+Le serveur compile chaque document dans un répertoire temporaire isolé.
 
-Chromium produit ensuite un PDF A4 avec les arrière-plans d'impression.
+Typst produit directement un PDF A4 avec les polices locales embarquées.
 
-Un service Effect conserve une instance Chromium et limite les rendus concurrents.
+Un service Effect limite les compilations concurrentes et supprime chaque répertoire temporaire.
 
 ## Permaliens
 
@@ -415,11 +415,11 @@ Le premier programme comprend ces écrans :
 - gestion des accès clients ;
 - éditeur de devis ;
 - éditeur de factures ;
-- aperçu des templates ;
+- aperçu PDF des documents ;
 - historique des révisions ;
 - gestion des permaliens ;
 - consultation des signatures ;
-- téléchargement HTML et PDF ;
+- téléchargement PDF ;
 - journal d'audit ;
 - gestion des sessions ;
 - informations de version du déploiement.
@@ -440,7 +440,7 @@ Les sauvegardes utilisent une version optimiste pour détecter les modifications
 
 ## Déploiement
 
-Une image OCI contient le serveur Effect, le site Angular et Chromium.
+Une image OCI contient le serveur Effect, le site Angular, Typst et les polices des documents.
 
 Le serveur Effect sert l'API et les fichiers Angular sous la même origine.
 
@@ -449,6 +449,15 @@ Cette topologie évite CORS et les cookies inter-origines.
 Le volume persistant contient la base SQLite.
 
 Les endpoints de santé distinguent la disponibilité du processus et celle de la base.
+
+### Taille de l'image PDF-001
+
+Les tailles ci-dessous utilisent l'archive Nix compressée et la somme des couches indiquée par Skopeo.
+
+| Rendu    | Révision                                   | Archive compressée | Couches décompressées |
+| -------- | ------------------------------------------ | -----------------: | --------------------: |
+| Chromium | `98025b46190089757d4ee77d31548a1239c927c9` | 735 683 638 octets |  2 148 956 160 octets |
+| Typst    | répertoire PDF-001 du 22 août 2026         | 116 837 296 octets |    328 744 960 octets |
 
 ## Observabilité
 
@@ -486,8 +495,8 @@ Utilisez `OTEL_SDK_DISABLED=true` pour interdire explicitement tout export.
 7. Remplacer l'authentification actuelle, puis ajouter les sessions, CSRF, rôles et permissions.
 8. Ajouter la gestion des clients et des accès.
 9. Ajouter l'éditeur et le cycle des devis.
-10. Ajouter les templates Angular et le rendu HTML.
-11. Ajouter Chromium et le stockage des PDF.
+10. Ajouter les templates Typst et le rendu PDF local.
+11. Ajouter le stockage des PDF.
 12. Ajouter les permaliens et la signature.
 13. Créer les commandes après acceptation.
 14. Ajouter les factures et leur numérotation.
@@ -526,7 +535,7 @@ Le programme doit passer ces validations :
 - tests de concurrence sur la signature ;
 - tests de numérotation ;
 - tests des transitions métier ;
-- tests du rendu HTML ;
+- tests du rendu PDF Typst ;
 - génération PDF ;
 - parcours de bout en bout ;
 - build Angular ;
