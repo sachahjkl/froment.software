@@ -37,7 +37,7 @@ td {
 .order {
   width: 100%;
   min-height: 277mm;
-  padding: 15mm 11mm;
+  padding: 12.7mm;
   background: var(--paper);
 }
 .header {

@@ -98,6 +98,7 @@ describe('QuoteDefaultTemplate', () => {
     expect(html).not.toContain('gradient');
     expect(html).not.toContain('dashed');
     expect(html).toMatch(/@page\s*{[^}]*size:\s*A4/);
+    expect(html).toContain('padding: 12.7mm;');
     expect(html).toMatch(/\.header[^{]*{[^}]*display:\s*grid/);
     expect(html).toMatch(/\.quote-meta[^{]*{[^}]*border:\s*0\.25mm solid/);
     expect(html).toMatch(/\.items[^{]*thead[^{]*{[^}]*border-bottom:\s*0\.25mm solid/);

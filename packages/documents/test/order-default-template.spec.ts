@@ -58,5 +58,6 @@ describe('OrderDefaultTemplate', () => {
     expect(html).not.toContain('<script>alert(1)</script>');
     expect(html).toContain('font-family: Cousine, "Liberation Mono", monospace');
     expect(html).toMatch(/@page\s*{[^}]*size:\s*A4/);
+    expect(html).toContain('padding: 12.7mm;');
   });
 });
