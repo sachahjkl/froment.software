@@ -123,6 +123,9 @@ describe('IntegrationTokens', () => {
       expect.objectContaining({ name: 'ERP', permissions: ['client.read'] }),
     );
     expect(root.textContent).toContain(secret);
+    const confirm = vi.spyOn(globalThis, 'confirm').mockReturnValue(false);
+    expect(fixture.componentInstance.canDeactivate()).toBe(false);
+    expect(confirm).toHaveBeenCalledOnce();
 
     const acknowledge = root.querySelector<HTMLButtonElement>(
       'dialog section.dialog-content > button',
@@ -131,6 +134,54 @@ describe('IntegrationTokens', () => {
     acknowledge?.click();
     await fixture.whenStable();
     expect(root.textContent).not.toContain(secret);
+    expect(fixture.componentInstance.canDeactivate()).toBe(true);
+  });
+
+  it('blocks route deactivation while token creation is pending', async () => {
+    let resolveCreate!: (outcome: {
+      success: true;
+      result: { token: typeof token; secret: string };
+    }) => void;
+    const create = vi.fn().mockReturnValue(new Promise((resolve) => (resolveCreate = resolve)));
+    const confirm = vi.spyOn(globalThis, 'confirm');
+    confirm.mockClear();
+    TestBed.configureTestingModule({
+      providers: [
+        {
+          provide: IntegrationTokensApi,
+          useValue: {
+            list: () => Promise.resolve({ items: [], nextCursor: null }),
+            create,
+            revoke: vi.fn(),
+          },
+        },
+      ],
+    });
+    const fixture = TestBed.createComponent(IntegrationTokens);
+    await fixture.whenStable();
+    const root: HTMLElement = fixture.nativeElement;
+    const dialog = root.querySelector<HTMLDialogElement>('dialog')!;
+    dialog.showModal = vi.fn(() => dialog.setAttribute('open', ''));
+    root.querySelector<HTMLButtonElement>('button')!.click();
+    await fixture.whenStable();
+    const name = root.querySelector<HTMLInputElement>('#integration-token-name')!;
+    name.value = 'ERP';
+    name.dispatchEvent(new Event('input'));
+    const permission = root.querySelector<HTMLInputElement>('.permission-grid input')!;
+    permission.checked = true;
+    permission.dispatchEvent(new Event('change'));
+    root.querySelector<HTMLFormElement>('dialog form')!.dispatchEvent(new SubmitEvent('submit'));
+    await vi.waitFor(() => expect(create).toHaveBeenCalledOnce());
+
+    expect(fixture.componentInstance.canDeactivate()).toBe(false);
+    expect(confirm).not.toHaveBeenCalled();
+    const beforeUnload = new Event('beforeunload', { cancelable: true });
+    globalThis.dispatchEvent(beforeUnload);
+    expect(beforeUnload.defaultPrevented).toBe(true);
+
+    resolveCreate({ success: true, result: { token, secret } });
+    await fixture.whenStable();
+    expect(root.textContent).toContain(secret);
   });
 
   it('lists token status and revokes an active token once confirmed', async () => {

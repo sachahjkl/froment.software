@@ -252,7 +252,8 @@ export class IntegrationTokens {
   }
 
   canDeactivate(): boolean {
-    if (!this.saving() && this.secret() === undefined) return true;
+    if (this.saving()) return false;
+    if (this.secret() === undefined) return true;
     return globalThis.confirm(this.i18n.t('backOffice.integrationTokens.leaveConfirmation'));
   }
 
