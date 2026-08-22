@@ -7,6 +7,9 @@ import { firstValueFrom } from 'rxjs';
 
 import { AuthCookieLock } from './auth-cookie-lock';
 
+const refreshLeadTimeMillis = 30_000;
+const maximumTimeoutMillis = 2_147_483_647;
+
 @Injectable({ providedIn: 'root' })
 export class BrowserSessionStore {
   private readonly http = new HttpClient(inject(HttpBackend));
@@ -88,12 +91,16 @@ export class BrowserSessionStore {
       this.refreshTimer = undefined;
       return;
     }
-    const delay = Math.max(0, expiresAt - Date.now() - 30_000);
-    this.refreshTimer = setTimeout(() => void this.refresh(), Math.min(delay, 2_147_483_647));
+    const delay = Math.max(0, expiresAt - Date.now() - refreshLeadTimeMillis);
+    this.refreshTimer = setTimeout(
+      () => void this.refresh(),
+      Math.min(delay, maximumTimeoutMillis),
+    );
   }
 
   private refreshExpiringSession(): void {
     const session = this.state();
-    if (session !== undefined && session.expiresAt <= Date.now() + 30_000) void this.refresh();
+    if (session !== undefined && session.expiresAt <= Date.now() + refreshLeadTimeMillis)
+      void this.refresh();
   }
 }
