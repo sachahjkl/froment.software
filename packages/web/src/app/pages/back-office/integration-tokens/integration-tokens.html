@@ -1,0 +1,143 @@
+<section class="tokens-page" aria-labelledby="integration-tokens-title">
+  <header>
+    <div>
+      <h1 id="integration-tokens-title">{{ i18n.t('backOffice.integrationTokens.title') }}</h1>
+      <p>{{ i18n.t('backOffice.integrationTokens.intro') }}</p>
+    </div>
+    <button #createButton appButton variant="primary" type="button" (click)="openCreate()">
+      {{ i18n.t('backOffice.integrationTokens.create') }}
+    </button>
+  </header>
+
+  <p>
+    <a href="/api/docs" target="_blank" rel="noopener noreferrer">
+      {{ i18n.t('backOffice.integrationTokens.documentation') }}
+    </a>
+  </p>
+
+  @if (error(); as errorKey) {
+  <p appNotice variant="danger" role="alert">{{ i18n.t(errorKey) }}</p>
+  } @if (loading()) {
+  <p aria-live="polite">{{ i18n.t('backOffice.integrationTokens.loading') }}</p>
+  } @else if (tokens().length === 0) {
+  <p class="empty">{{ i18n.t('backOffice.integrationTokens.empty') }}</p>
+  } @else {
+  <div appDataTable>
+    <table>
+      <thead>
+        <tr>
+          <th>{{ i18n.t('backOffice.integrationTokens.name') }}</th>
+          <th>{{ i18n.t('backOffice.integrationTokens.permissions') }}</th>
+          <th>{{ i18n.t('backOffice.integrationTokens.createdAt') }}</th>
+          <th>{{ i18n.t('backOffice.integrationTokens.expiresAt') }}</th>
+          <th>{{ i18n.t('backOffice.integrationTokens.lastUsedAt') }}</th>
+          <th>{{ i18n.t('backOffice.integrationTokens.status') }}</th>
+          <th>{{ i18n.t('backOffice.integrationTokens.actions') }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (token of tokens(); track token.id) {
+        <tr>
+          <td><strong>{{ token.name }}</strong></td>
+          <td class="permissions">{{ token.permissions.join(', ') }}</td>
+          <td>
+            {{ date(token.createdAt) | localizedDate: i18n.language() : { dateStyle: 'short',
+            timeStyle: 'short' } }}
+          </td>
+          <td>
+            {{ date(token.expiresAt) | localizedDate: i18n.language() : { dateStyle: 'short',
+            timeStyle: 'short' } }}
+          </td>
+          <td>
+            @if (token.lastUsedAt === null) { {{ i18n.t('backOffice.integrationTokens.never') }} }
+            @else { {{ date(token.lastUsedAt) | localizedDate: i18n.language() : { dateStyle:
+            'short', timeStyle: 'short' } }} }
+          </td>
+          <td>
+            <span appBadge [variant]="statusVariant(token)">{{ i18n.t(statusLabel(token)) }}</span>
+          </td>
+          <td>
+            @if (status(token) === 'active') {
+            <button
+              appButton
+              variant="danger"
+              type="button"
+              [disabled]="pendingTokenId() === token.id"
+              (click)="revoke(token)"
+            >
+              {{ i18n.t('backOffice.integrationTokens.revoke') }}
+            </button>
+            }
+          </td>
+        </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+  }
+</section>
+
+<dialog #createDialog (cancel)="closeCreate()" (close)="closeCreate()">
+  @if (secret(); as currentSecret) {
+  <section class="dialog-content" aria-labelledby="integration-token-secret-title">
+    <h2 id="integration-token-secret-title">
+      {{ i18n.t('backOffice.integrationTokens.secretTitle') }}
+    </h2>
+    <p appNotice variant="warning">{{ i18n.t('backOffice.integrationTokens.secretWarning') }}</p>
+    <app-copy-field
+      [value]="currentSecret"
+      [actionLabel]="i18n.t('backOffice.integrationTokens.copy')"
+      [status]="copied() ? i18n.t('backOffice.integrationTokens.copied') : ''"
+      (copy)="copySecret(currentSecret)"
+    />
+    <button appButton variant="primary" type="button" (click)="closeCreate()">
+      {{ i18n.t('backOffice.integrationTokens.secretSaved') }}
+    </button>
+  </section>
+  } @else {
+  <form class="dialog-content" (submit)="create($event)">
+    <div class="dialog-heading">
+      <h2>{{ i18n.t('backOffice.integrationTokens.createTitle') }}</h2>
+      <button appButton type="button" (click)="closeCreate()">
+        {{ i18n.t('backOffice.integrationTokens.cancel') }}
+      </button>
+    </div>
+    <label class="field" for="integration-token-name">
+      {{ i18n.t('backOffice.integrationTokens.name') }}
+      <input id="integration-token-name" class="input" [formField]="tokenForm.name" />
+    </label>
+    <label class="field" for="integration-token-expiration">
+      {{ i18n.t('backOffice.integrationTokens.expiresAt') }}
+      <input
+        id="integration-token-expiration"
+        class="input"
+        type="datetime-local"
+        [formField]="tokenForm.expiresAt"
+      />
+      @if (tokenForm.expiresAt().touched() && !expirationValid()) {
+      <span class="field-error"
+        >{{ i18n.t('backOffice.integrationTokens.expirationInvalid') }}</span
+      >
+      }
+    </label>
+    <fieldset>
+      <legend>{{ i18n.t('backOffice.integrationTokens.permissions') }}</legend>
+      <div class="permission-grid">
+        @for (permission of permissionCodes; track permission) {
+        <label>
+          <input
+            type="checkbox"
+            [checked]="selected(permission)"
+            (change)="togglePermission(permission, $any($event.target).checked)"
+          />
+          <code>{{ permission }}</code>
+        </label>
+        }
+      </div>
+    </fieldset>
+    <button appButton variant="primary" type="submit" [disabled]="createDisabled()">
+      {{ i18n.t('backOffice.integrationTokens.create') }}
+    </button>
+  </form>
+  }
+</dialog>

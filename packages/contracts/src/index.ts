@@ -19,7 +19,30 @@ export {
   Ulid,
   type Ulid as UlidValue,
 } from './identifiers.js';
-export { PermissionCode, type PermissionCode as PermissionCodeValue } from './permissions.js';
+export {
+  IntegrationPermissionCode,
+  IntegrationPermissionCodes,
+  type IntegrationPermissionCode as IntegrationPermissionCodeValue,
+  PermissionCode,
+  type PermissionCode as PermissionCodeValue,
+} from './permissions.js';
+export {
+  IntegrationToken,
+  type IntegrationToken as IntegrationTokenValue,
+  IntegrationTokenCreateRequest,
+  type IntegrationTokenCreateRequest as IntegrationTokenCreateRequestValue,
+  IntegrationTokenCreated,
+  type IntegrationTokenCreated as IntegrationTokenCreatedValue,
+  IntegrationTokenFailure,
+  type IntegrationTokenFailure as IntegrationTokenFailureValue,
+  IntegrationTokenInvalidExpiration,
+  IntegrationTokenList,
+  type IntegrationTokenList as IntegrationTokenListValue,
+  IntegrationTokenNameConflict,
+  IntegrationTokenNotFound,
+  IntegrationTokenSecret,
+  type IntegrationTokenSecret as IntegrationTokenSecretValue,
+} from './integration-tokens.js';
 export {
   OrderList,
   type OrderList as OrderListValue,
@@ -157,11 +180,18 @@ export {
   ClientPortalApi,
   ClientsApi,
   InvoicesApi,
+  IntegrationTokensApi,
   OrdersApi,
   QuotesApi,
   RevisionVersionParameter,
   SystemApi,
 } from './api.js';
+export {
+  ApiAuthentication,
+  ApiCredentials,
+  type ApiCredentialsValue,
+  RequiredPermission,
+} from './api-authentication.js';
 export {
   ClientInvoiceList,
   type ClientInvoiceList as ClientInvoiceListValue,

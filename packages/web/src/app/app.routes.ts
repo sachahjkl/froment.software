@@ -272,6 +272,18 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./pages/business-card/business-card').then((module) => module.BusinessCard),
       },
+      {
+        path: 'integrations',
+        loadComponent: () =>
+          import('./pages/back-office/integration-tokens/integration-tokens').then(
+            (module) => module.IntegrationTokens,
+          ),
+        data: {
+          titleKey: 'page.back_office_issuer_settings',
+          descriptionKey: 'page.description.back_office_issuer_settings',
+          robots: 'noindex, nofollow',
+        },
+      },
     ],
   },
   {

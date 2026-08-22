@@ -69,7 +69,7 @@ export const QuoteCreateRequest = Schema.Struct({
   title: QuoteTitle,
   conditions: QuoteConditions,
   lines: QuoteLinesInput,
-});
+}).annotate({ identifier: 'QuoteCreateRequest' });
 export type QuoteCreateRequest = typeof QuoteCreateRequest.Type;
 
 export const QuoteRevisionCreateRequest = Schema.Struct({
@@ -77,7 +77,7 @@ export const QuoteRevisionCreateRequest = Schema.Struct({
   title: QuoteTitle,
   conditions: QuoteConditions,
   lines: QuoteLinesInput,
-});
+}).annotate({ identifier: 'QuoteRevisionCreateRequest' });
 export type QuoteRevisionCreateRequest = typeof QuoteRevisionCreateRequest.Type;
 
 export const QuoteSendRequest = Schema.Struct({ expectedVersion: PositiveSafeInteger });
@@ -175,7 +175,9 @@ export const QuoteRevision = Schema.Struct({
   createdAt: IsoUtc,
   createdByUserId: Ulid,
   lines: DocumentLines,
-}).check(documentTotalsFilter);
+})
+  .check(documentTotalsFilter)
+  .annotate({ identifier: 'QuoteRevision' });
 export type QuoteRevision = typeof QuoteRevision.Type;
 
 export const QuoteSummary = Schema.Struct({
@@ -189,7 +191,7 @@ export const QuoteSummary = Schema.Struct({
   currency: Schema.Literal('EUR'),
   totalCents: SafeInteger,
   updatedAt: IsoUtc,
-});
+}).annotate({ identifier: 'QuoteSummary' });
 export type QuoteSummary = typeof QuoteSummary.Type;
 
 export const QuoteDetail = Schema.Struct({
@@ -200,7 +202,7 @@ export const QuoteDetail = Schema.Struct({
   version: PositiveSafeInteger,
   currentRevision: QuoteRevision,
   revisions: Schema.Array(QuoteRevision),
-});
+}).annotate({ identifier: 'QuoteDetail' });
 export type QuoteDetail = typeof QuoteDetail.Type;
 
 export const QuoteSendResult = Schema.Struct({

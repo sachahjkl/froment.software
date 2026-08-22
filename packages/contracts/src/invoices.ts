@@ -51,7 +51,7 @@ export const InvoiceCreateRequest = Schema.Struct({
   serviceDate: CalendarDate,
   dueDate: CalendarDate,
   paymentTerms: PaymentTerms,
-});
+}).annotate({ identifier: 'InvoiceCreateRequest' });
 export type InvoiceCreateRequest = typeof InvoiceCreateRequest.Type;
 
 export const InvoiceRevisionCreateRequest = Schema.Struct({
@@ -61,7 +61,7 @@ export const InvoiceRevisionCreateRequest = Schema.Struct({
   dueDate: CalendarDate,
   paymentTerms: PaymentTerms,
   lines: InvoiceLinesInput,
-});
+}).annotate({ identifier: 'InvoiceRevisionCreateRequest' });
 export type InvoiceRevisionCreateRequest = typeof InvoiceRevisionCreateRequest.Type;
 
 export const InvoiceIssueRequest = Schema.Struct({ expectedVersion: PositiveSafeInteger });
@@ -113,7 +113,9 @@ export const InvoiceRevision = Schema.Struct({
   createdAt: IsoUtc,
   createdByUserId: Ulid,
   lines: DocumentLines,
-}).check(documentTotalsFilter);
+})
+  .check(documentTotalsFilter)
+  .annotate({ identifier: 'InvoiceRevision' });
 export type InvoiceRevision = typeof InvoiceRevision.Type;
 
 export const InvoiceSummary = Schema.Struct({
@@ -131,7 +133,7 @@ export const InvoiceSummary = Schema.Struct({
   totalCents: SafeInteger,
   updatedAt: IsoUtc,
   pdf: Schema.NullOr(InvoicePdfState),
-});
+}).annotate({ identifier: 'InvoiceSummary' });
 export type InvoiceSummary = typeof InvoiceSummary.Type;
 
 export const InvoiceDetail = Schema.Struct({
@@ -148,7 +150,7 @@ export const InvoiceDetail = Schema.Struct({
   currentRevision: InvoiceRevision,
   revisions: Schema.Array(InvoiceRevision),
   pdf: Schema.NullOr(InvoicePdfState),
-});
+}).annotate({ identifier: 'InvoiceDetail' });
 export type InvoiceDetail = typeof InvoiceDetail.Type;
 
 export const InvoiceIssueResult = Schema.Struct({

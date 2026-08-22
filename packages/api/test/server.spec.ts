@@ -97,6 +97,7 @@ describe('HTTP server', () => {
     const env = {
       ...process.env,
       ACCESS_HMAC_KEY: 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA',
+      INTEGRATION_TOKEN_HMAC_KEY: 'DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD',
       BOOTSTRAP_PASSWORD_SCRYPT:
         'scrypt$16384$8$1$ABEiM0RVZneImaq7zN3u_w$bDQwYDYiQ_8HCiJ3-qXFtXFeV9FhIOa7E8VSgT__uegLrk4vqD6U920ImYTwk5RABOZsIk96bUNH1G9wbCXf1Q',
       BUSINESS_TIME_ZONE: 'Europe/Paris',
@@ -171,6 +172,33 @@ describe('HTTP server', () => {
     expect(metadata).not.toHaveProperty('date');
   });
 
+  it('serves the OpenAPI contract and embedded Scalar documentation', async () => {
+    const openApiResponse = await fetch(`${baseUrl}/api/openapi.json`);
+    expect(openApiResponse.status).toBe(200);
+    expect(openApiResponse.headers.get('content-type')).toContain('application/json');
+    const specification = (await openApiResponse.json()) as {
+      info: { title: string; version: string };
+      paths: {
+        '/api/auth/login'?: unknown;
+        '/api/clients'?: unknown;
+      };
+    };
+    expect(specification.info).toMatchObject({
+      title: 'Froment Software Integration API',
+      version: 'latest',
+    });
+    expect(specification.paths).toHaveProperty('/api/clients');
+    expect(specification.paths).not.toHaveProperty('/api/auth/login');
+
+    const docsResponse = await fetch(`${baseUrl}/api/docs`);
+    expect(docsResponse.status).toBe(200);
+    expect(docsResponse.headers.get('content-type')).toContain('text/html');
+    const html = await docsResponse.text();
+    expect(html).toContain('Froment Software Integration API');
+    expect(html).toContain('/api/clients');
+    expect(html).not.toContain('/api/auth/login');
+  });
+
   it('creates the initial administrator and session once', async () => {
     const initialStatus = await fetch(`${baseUrl}/api/bootstrap`);
     await expect(initialStatus.json()).resolves.toEqual({ available: true });
@@ -216,7 +244,7 @@ describe('HTTP server', () => {
     });
     expect(created.status).toBe(200);
     expect(created.headers.get('cache-control')).toBe('no-store');
-    expect(created.headers.get('vary')).toBe('Cookie');
+    expect(created.headers.get('vary')).toBe('Cookie, Authorization');
     const result = (await created.json()) as {
       accessIdentifier: string;
     };
@@ -245,7 +273,7 @@ describe('HTTP server', () => {
       sqlite.prepare("select count(*) from roles where name = 'administrator'").pluck().get(),
     ).toBe(1);
     expect(sqlite.prepare('select count(*) from user_roles').pluck().get()).toBe(1);
-    expect(sqlite.prepare('select count(*) from role_permissions').pluck().get()).toBe(34);
+    expect(sqlite.prepare('select count(*) from role_permissions').pluck().get()).toBe(35);
     expect(sqlite.prepare('select count(*) from access_credentials').pluck().get()).toBe(1);
     expect(sqlite.prepare('select count(*) from sessions').pluck().get()).toBe(1);
     expect(
@@ -764,6 +792,121 @@ describe('HTTP server', () => {
         .get(`%${access.accessIdentifier}%`),
     ).toBe(0);
     sqlite.close();
+  });
+
+  it('manages scoped integration tokens and authenticates Bearer requests', async () => {
+    if (administratorAccessIdentifier === undefined) {
+      throw new Error('The administrator access identifier is unavailable.');
+    }
+    const login = await fetch(`${baseUrl}/api/auth/login`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', origin: baseUrl },
+      body: JSON.stringify({ accessIdentifier: administratorAccessIdentifier }),
+    });
+    expect(login.status).toBe(200);
+    const cookies = login.headers.getSetCookie();
+    const cookie = cookies.map((value) => value.split(';', 1)[0]).join('; ');
+    const csrf = cookies
+      .find((value) => value.startsWith('__Host-froment-csrf='))
+      ?.split(';', 1)[0]
+      .split('=', 2)[1];
+    if (csrf === undefined) throw new Error('The administrator CSRF token is unavailable.');
+
+    const createToken = await fetch(`${baseUrl}/api/integration-tokens`, {
+      method: 'POST',
+      headers: {
+        cookie,
+        'content-type': 'application/json',
+        origin: baseUrl,
+        'x-csrf-token': csrf,
+      },
+      body: JSON.stringify({
+        name: 'Test ERP',
+        permissions: ['client.read', 'client.create'],
+        expiresAt: Date.now() + 86_400_000,
+        rateLimitPerMinute: 120,
+      }),
+    });
+    expect(createToken.status).toBe(200);
+    expect(createToken.headers.get('cache-control')).toBe('no-store');
+    const created = (await createToken.json()) as {
+      secret: string;
+      token: { id: string; name: string; permissions: ReadonlyArray<string> };
+    };
+    expect(created.secret).toMatch(
+      /^froment_it_v1_[0-7][0-9A-HJKMNP-TV-Z]{25}\.[A-Za-z0-9_-]{43}$/,
+    );
+
+    const tokenList = await fetch(`${baseUrl}/api/integration-tokens`, {
+      headers: { cookie },
+    });
+    expect(tokenList.status).toBe(200);
+    const tokenListBody = await tokenList.text();
+    expect(tokenListBody).not.toContain(created.secret);
+    expect(JSON.parse(tokenListBody)).toEqual([
+      expect.objectContaining({
+        id: created.token.id,
+        name: 'Test ERP',
+        permissions: ['client.create', 'client.read'],
+      }),
+    ]);
+
+    const bearerList = await fetch(`${baseUrl}/api/clients`, {
+      headers: { authorization: `Bearer ${created.secret}` },
+    });
+    expect({ status: bearerList.status, body: await bearerList.clone().json() }).toEqual({
+      status: 200,
+      body: expect.any(Array),
+    });
+
+    const bearerCreate = await fetch(`${baseUrl}/api/clients`, {
+      method: 'POST',
+      headers: {
+        authorization: `Bearer ${created.secret}`,
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify({ ...emptyClientDetails, displayName: 'Bearer client' }),
+    });
+    expect(bearerCreate.status).toBe(200);
+
+    const missingScope = await fetch(`${baseUrl}/api/quotes`, {
+      headers: { authorization: `Bearer ${created.secret}` },
+    });
+    expect(missingScope.status).toBe(403);
+
+    const mixedCredentials = await fetch(`${baseUrl}/api/clients`, {
+      headers: { authorization: `Bearer ${created.secret}`, cookie },
+    });
+    expect(mixedCredentials.status).toBe(401);
+
+    const sqlite = new Sqlite(databaseFilename, { readonly: true });
+    const storedToken = sqlite
+      .prepare(
+        'select typeof(token_hmac) as type, length(token_hmac) as length from integration_tokens',
+      )
+      .get();
+    expect(storedToken).toEqual({ type: 'blob', length: 32 });
+    expect(JSON.stringify(storedToken)).not.toContain(created.secret);
+    sqlite.close();
+
+    const revoke = await fetch(`${baseUrl}/api/integration-tokens/${created.token.id}/revoke`, {
+      method: 'POST',
+      headers: { cookie, origin: baseUrl, 'x-csrf-token': csrf },
+    });
+    expect(revoke.status).toBe(200);
+    const secondRevoke = await fetch(
+      `${baseUrl}/api/integration-tokens/${created.token.id}/revoke`,
+      {
+        method: 'POST',
+        headers: { cookie, origin: baseUrl, 'x-csrf-token': csrf },
+      },
+    );
+    expect(secondRevoke.status).toBe(200);
+
+    const revoked = await fetch(`${baseUrl}/api/clients`, {
+      headers: { authorization: `Bearer ${created.secret}` },
+    });
+    expect(revoked.status).toBe(401);
   });
 
   it('creates and revises draft quotes with complete history', async () => {

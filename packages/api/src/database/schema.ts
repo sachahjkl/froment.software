@@ -160,6 +160,55 @@ export const sessions = sqliteTable(
   ],
 );
 
+export const integrationTokens = sqliteTable(
+  'integration_tokens',
+  {
+    id: text().notNull().primaryKey(),
+    userId: text('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'no action' }),
+    name: text().notNull(),
+    tokenHmac: blob('token_hmac', { mode: 'buffer' }).notNull(),
+    createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull(),
+    expiresAt: integer('expires_at', { mode: 'timestamp_ms' }).notNull(),
+    lastUsedAt: integer('last_used_at', { mode: 'timestamp_ms' }),
+    revokedAt: integer('revoked_at', { mode: 'timestamp_ms' }),
+    revokedByUserId: text('revoked_by_user_id').references(() => users.id, {
+      onDelete: 'no action',
+    }),
+    rateLimitPerMinute: integer('rate_limit_per_minute').notNull(),
+  },
+  (table) => [
+    uniqueIndex('integration_tokens_name_unique').on(table.name),
+    uniqueIndex('integration_tokens_token_hmac_unique').on(table.tokenHmac),
+    index('integration_tokens_user_id_index').on(table.userId),
+    index('integration_tokens_expires_at_index').on(table.expiresAt),
+    index('integration_tokens_active_index').on(table.revokedAt, table.expiresAt),
+    check(
+      'integration_tokens_id_ulid_check',
+      sql`${table.id} is not null and length(${table.id}) = 26 and ${table.id} not glob '*[^0-9A-HJKMNP-TV-Z]*' and substr(${table.id}, 1, 1) between '0' and '7'`,
+    ),
+    check('integration_tokens_name_check', sql`length(trim(${table.name})) between 1 and 120`),
+    check(
+      'integration_tokens_token_hmac_check',
+      sql`typeof(${table.tokenHmac}) = 'blob' and length(${table.tokenHmac}) = 32`,
+    ),
+    check('integration_tokens_expiry_check', sql`${table.expiresAt} > ${table.createdAt}`),
+    check(
+      'integration_tokens_timestamps_check',
+      sql`(${table.lastUsedAt} is null or ${table.lastUsedAt} >= ${table.createdAt}) and (${table.revokedAt} is null or ${table.revokedAt} >= ${table.createdAt})`,
+    ),
+    check(
+      'integration_tokens_revocation_check',
+      sql`(${table.revokedAt} is null and ${table.revokedByUserId} is null) or (${table.revokedAt} is not null and ${table.revokedByUserId} is not null)`,
+    ),
+    check(
+      'integration_tokens_rate_limit_check',
+      sql`${table.rateLimitPerMinute} between 1 and 600`,
+    ),
+  ],
+);
+
 export const roles = sqliteTable(
   'roles',
   {
@@ -186,6 +235,22 @@ export const permissions = sqliteTable(
       'permissions_code_check',
       sql`${table.code} is not null and length(trim(${table.code})) > 0`,
     ),
+  ],
+);
+
+export const integrationTokenPermissions = sqliteTable(
+  'integration_token_permissions',
+  {
+    tokenId: text('token_id')
+      .notNull()
+      .references(() => integrationTokens.id, { onDelete: 'no action' }),
+    permissionCode: text('permission_code')
+      .notNull()
+      .references(() => permissions.code, { onDelete: 'no action' }),
+  },
+  (table) => [
+    primaryKey({ columns: [table.tokenId, table.permissionCode] }),
+    index('integration_token_permissions_code_index').on(table.permissionCode),
   ],
 );
 

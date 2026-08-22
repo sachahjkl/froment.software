@@ -20,7 +20,7 @@ export const ClientSummary = Schema.Struct({
   email: Schema.String,
   archived: Schema.Boolean,
   updatedAt: Schema.Int,
-});
+}).annotate({ identifier: 'ClientSummary' });
 export type ClientSummary = typeof ClientSummary.Type;
 
 export const ClientList = Schema.Array(ClientSummary);
@@ -37,13 +37,13 @@ export const ClientCreateRequest = Schema.Struct({
     Schema.isMaxLength(254),
     Schema.isPattern(/^$|^[^\s@]+@[^\s@]+\.[^\s@]+$/),
   ),
-});
+}).annotate({ identifier: 'ClientCreateRequest' });
 export type ClientCreateRequest = typeof ClientCreateRequest.Type;
 
 export const ClientUpdateRequest = Schema.Struct({
   ...ClientCreateRequest.fields,
   expectedUpdatedAt: Schema.Int,
-});
+}).annotate({ identifier: 'ClientUpdateRequest' });
 export type ClientUpdateRequest = typeof ClientUpdateRequest.Type;
 
 export const ClientAccess = Schema.Struct({

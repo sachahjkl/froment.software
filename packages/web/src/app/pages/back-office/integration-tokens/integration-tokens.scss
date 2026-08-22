@@ -1,0 +1,84 @@
+:host {
+  display: block;
+}
+
+.tokens-page {
+  display: grid;
+  gap: var(--space-5);
+}
+
+header,
+.dialog-heading {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+header p {
+  max-width: 68ch;
+  color: var(--color-muted);
+}
+
+.permissions {
+  min-width: 18rem;
+  max-width: 32rem;
+  overflow-wrap: anywhere;
+}
+
+dialog {
+  width: min(52rem, calc(100% - 2rem));
+  max-height: calc(100dvh - 2rem);
+  padding: 0;
+  border: 1px solid var(--color-line-strong);
+  background: var(--color-surface);
+  color: inherit;
+}
+
+dialog::backdrop {
+  background: rgb(0 0 0 / 55%);
+}
+
+.dialog-content {
+  display: grid;
+  gap: var(--space-5);
+  padding: var(--space-6);
+}
+
+.field {
+  display: grid;
+  gap: var(--space-2);
+}
+
+fieldset {
+  display: grid;
+  gap: var(--space-3);
+  min-width: 0;
+  margin: 0;
+  padding: var(--space-4);
+  border: 1px solid var(--color-line);
+}
+
+.permission-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-3);
+}
+
+.permission-grid label {
+  display: flex;
+  align-items: start;
+  gap: var(--space-2);
+}
+
+@media (max-width: 42rem) {
+  header,
+  .dialog-heading {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .permission-grid {
+    grid-template-columns: 1fr;
+  }
+}

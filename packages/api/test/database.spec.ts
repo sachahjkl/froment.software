@@ -70,7 +70,7 @@ describe('Database', () => {
 
     expect(state.foreignKeys).toBe(1);
     expect(state.journalMode).toBe('wal');
-    expect(state.permissions).toBe(30);
+    expect(state.permissions).toBe(31);
     expect(state.clientRolePermissions).toEqual([
       'document.download',
       'invoice.read',
@@ -87,6 +87,8 @@ describe('Database', () => {
         'business_reference_counters',
         'invoice_revisions',
         'invoices',
+        'integration_token_permissions',
+        'integration_tokens',
         'orders',
         'permissions',
         'quote_lines',
@@ -228,6 +230,79 @@ describe('Database', () => {
       }),
     ).toThrow();
     sqlite.close();
+  });
+
+  it('enforces integration token persistence invariants', async () => {
+    const migrationsFolder = join(import.meta.dirname, '..', 'drizzle');
+
+    await Effect.runPromise(
+      Database.use(({ sqlite }) =>
+        Effect.sync(() => {
+          const userId = '01ARZ3NDEKTSV4RRFFQ69G5FAA';
+          const tokenId = '01ARZ3NDEKTSV4RRFFQ69G5FAB';
+          sqlite
+            .prepare(
+              "insert into users (id, display_name, kind, created_at, updated_at) values (?, 'Administrator', 'administrator', 1, 1)",
+            )
+            .run(userId);
+          expect(() =>
+            sqlite
+              .prepare(
+                `insert into integration_tokens
+                 (id, user_id, name, token_hmac, created_at, expires_at, rate_limit_per_minute)
+                 values (?, ?, 'Invalid HMAC', ?, 1, 2, 120)`,
+              )
+              .run('01ARZ3NDEKTSV4RRFFQ69G5FAC', userId, Buffer.alloc(31)),
+          ).toThrow();
+          expect(() =>
+            sqlite
+              .prepare(
+                `insert into integration_tokens
+                 (id, user_id, name, token_hmac, created_at, expires_at, rate_limit_per_minute)
+                 values (?, ?, 'Invalid expiry', ?, 2, 1, 120)`,
+              )
+              .run('01ARZ3NDEKTSV4RRFFQ69G5FAD', userId, Buffer.alloc(32, 1)),
+          ).toThrow();
+          sqlite
+            .prepare(
+              `insert into integration_tokens
+               (id, user_id, name, token_hmac, created_at, expires_at, rate_limit_per_minute)
+               values (?, ?, 'ERP', ?, 1, 1000, 120)`,
+            )
+            .run(tokenId, userId, Buffer.alloc(32, 2));
+          sqlite
+            .prepare(
+              "insert into integration_token_permissions (token_id, permission_code) values (?, 'client.read')",
+            )
+            .run(tokenId);
+          expect(() =>
+            sqlite
+              .prepare("update integration_tokens set name = 'Changed' where id = ?")
+              .run(tokenId),
+          ).toThrow('integration token identity is immutable');
+          expect(() =>
+            sqlite
+              .prepare('delete from integration_token_permissions where token_id = ?')
+              .run(tokenId),
+          ).toThrow('integration token permissions are immutable');
+          expect(() =>
+            sqlite.prepare('delete from integration_tokens where id = ?').run(tokenId),
+          ).toThrow('integration tokens are append-only');
+          expect(() =>
+            sqlite
+              .prepare(
+                'update integration_tokens set revoked_at = 10, revoked_by_user_id = ? where id = ?',
+              )
+              .run(userId, tokenId),
+          ).not.toThrow();
+          expect(() =>
+            sqlite
+              .prepare('update integration_tokens set revoked_at = null where id = ?')
+              .run(tokenId),
+          ).toThrow('integration token identity is immutable');
+        }),
+      ).pipe(Effect.provide(makeMigratedDatabaseLayer({ filename: ':memory:', migrationsFolder }))),
+    );
   });
 
   it('can apply the migrations more than once', async () => {

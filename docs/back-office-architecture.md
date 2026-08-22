@@ -111,6 +111,8 @@ La variable obligatoire `BOOTSTRAP_PASSWORD_SCRYPT` contient les paramètres, le
 
 La variable obligatoire `ACCESS_HMAC_KEY` contient une clé aléatoire de 32 octets en base64url.
 
+La variable obligatoire `INTEGRATION_TOKEN_HMAC_KEY` contient une clé distincte de 32 octets en base64url.
+
 La variable obligatoire `SESSION_HMAC_KEY` contient une autre clé aléatoire de 32 octets en base64url.
 
 La variable obligatoire `QUOTE_LINK_HMAC_KEY` contient une troisième clé aléatoire de 32 octets en base64url.
@@ -161,13 +163,42 @@ Le serveur retourne une erreur uniforme pour un identifiant absent ou invalide.
 
 Le serveur ne fournit aucun endpoint public de vérification d'identifiant.
 
+## API d'intégration
+
+Le serveur publie le contrat OpenAPI 3.1 sur `GET /api/openapi.json`.
+
+Le serveur publie la documentation Scalar sur `GET /api/docs`.
+
+Le contrat documente seulement les clients, les devis, les commandes, les factures et leurs PDF.
+
+Les URLs ne contiennent aucun segment de version.
+
+Un administrateur gère les jetons depuis la section Configuration, puis Intégrations.
+
+Le secret suit le format `froment_it_v1_<ulid>.<secret>`.
+
+Le serveur affiche le secret seulement dans la réponse de création.
+
+SQLite conserve uniquement son HMAC-SHA-256.
+
+Chaque jeton possède une expiration, une limite de fréquence et une liste de permissions.
+
+Le serveur intersecte ces permissions avec les permissions actuelles du compte propriétaire.
+
+La révocation est définitive et idempotente.
+
 ## Protection des écritures
 
-Chaque écriture authentifiée exige :
+Une écriture avec session exige :
 
 - une session active ;
 - un jeton CSRF lié à cette session ;
-- une origine autorisée ;
+- une origine autorisée.
+
+Une écriture d'intégration exige un jeton Bearer actif avec la permission requise.
+
+Les deux méthodes exigent :
+
 - un type de contenu accepté ;
 - un corps inférieur à la limite configurée ;
 - une limite de fréquence disponible.

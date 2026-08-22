@@ -30,6 +30,29 @@ export const PermissionCode = Schema.Literals([
   'user.create',
   'user.update',
   'session.manage',
+  'integration-token.manage',
   'audit.read',
 ]);
 export type PermissionCode = typeof PermissionCode.Type;
+
+export const IntegrationPermissionCodes = [
+  'client.read',
+  'client.create',
+  'client.update',
+  'client.archive',
+  'quote.read',
+  'quote.create',
+  'quote.update',
+  'quote.delete',
+  'quote.send',
+  'order.read',
+  'invoice.read',
+  'invoice.create',
+  'invoice.update',
+  'invoice.issue',
+  'invoice.mark-paid',
+  'invoice.void',
+  'document.download',
+] as const;
+export const IntegrationPermissionCode = Schema.Literals(IntegrationPermissionCodes);
+export type IntegrationPermissionCode = typeof IntegrationPermissionCode.Type;
