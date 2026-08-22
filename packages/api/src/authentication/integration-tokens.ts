@@ -17,12 +17,11 @@ import {
   type UlidValue,
 } from '@froment/contracts';
 import { Clock, Context, Effect, Layer, Option, Schema } from 'effect';
-import Sqlite from 'better-sqlite3';
 import { randomBytes, timingSafeEqual } from 'node:crypto';
 import { ulid } from 'ulid';
 
 import { Audit } from '../audit/audit.js';
-import { Database, DatabaseError } from '../database/database.js';
+import { Database, DatabaseError, isSqliteError } from '../database/database.js';
 import { AuthenticationConfig, hmac } from './authentication-config.js';
 
 const maximumLifetime = 365 * 24 * 60 * 60 * 1_000;
@@ -272,7 +271,7 @@ export const IntegrationTokensLive = Layer.effect(
             })
             .immediate(),
         catch: (cause) =>
-          cause instanceof Sqlite.SqliteError && cause.code === 'SQLITE_CONSTRAINT_TRIGGER'
+          isSqliteError(cause, 'SQLITE_CONSTRAINT_TRIGGER')
             ? new IntegrationTokenNameConflict({ code: 'integration_token.name_conflict' })
             : new DatabaseError({ operation: 'create integration token', cause }),
       });

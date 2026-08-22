@@ -11,6 +11,9 @@ export class DatabaseError extends Schema.TaggedError<DatabaseError>()('Database
   cause: Schema.Defect(),
 }) {}
 
+export const isSqliteError = (cause: unknown, code: string): cause is Sqlite.SqliteError =>
+  cause instanceof Sqlite.SqliteError && cause.code === code;
+
 export interface DatabaseService {
   readonly orm: BetterSQLite3Database;
   readonly sqlite: Sqlite.Database;
