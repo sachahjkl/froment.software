@@ -2,13 +2,15 @@ import type { Language } from '@froment/l10n';
 import { HttpApi, OpenApi } from 'effect/unstable/httpapi';
 
 import { localizeOpenApi } from './api-documentation.js';
+import { AuthenticationApi } from './authentication/api.js';
+import { BootstrapApi } from './bootstrap/api.js';
 import { ClientPortalApi } from './client-portal/api.js';
 import { ClientsApi } from './clients/api.js';
 import { IntegrationTokensApi } from './integration-tokens/api.js';
 import { InvoicesApi } from './invoices/api.js';
 import { OrdersApi } from './orders/api.js';
 import { QuotesApi } from './quotes/api.js';
-import { SystemApi } from './system/api.js';
+import { StatusApi } from './status/api.js';
 
 export { RevisionVersionParameter } from './api-common.js';
 export { ClientPortalApi } from './client-portal/api.js';
@@ -17,10 +19,14 @@ export { IntegrationTokensApi } from './integration-tokens/api.js';
 export { InvoicesApi } from './invoices/api.js';
 export { OrdersApi } from './orders/api.js';
 export { QuotesApi } from './quotes/api.js';
-export { SystemApi } from './system/api.js';
+export { AuthenticationApi } from './authentication/api.js';
+export { BootstrapApi } from './bootstrap/api.js';
+export { StatusApi } from './status/api.js';
 
 export class Api extends HttpApi.make('froment-api')
-  .add(SystemApi)
+  .add(StatusApi)
+  .add(BootstrapApi)
+  .add(AuthenticationApi)
   .add(ClientsApi)
   .add(OrdersApi)
   .add(QuotesApi)

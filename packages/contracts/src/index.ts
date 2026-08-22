@@ -195,6 +195,8 @@ export {
 export {
   Api,
   apiForLanguage,
+  AuthenticationApi,
+  BootstrapApi,
   ClientPortalApi,
   ClientsApi,
   InvoicesApi,
@@ -202,7 +204,7 @@ export {
   OrdersApi,
   QuotesApi,
   RevisionVersionParameter,
-  SystemApi,
+  StatusApi,
 } from './api.js';
 export { localizeOpenApi } from './api-documentation.js';
 export {

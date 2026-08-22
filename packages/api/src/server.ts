@@ -12,6 +12,8 @@ import { HttpApiBuilder, HttpApiScalar, OpenApi } from 'effect/unstable/httpapi'
 import { createServer } from 'node:http';
 
 import { AuthenticationHttpLive } from './authentication/http.js';
+import { AuthenticationHandlers } from './authentication/handlers.js';
+import { BootstrapHandlers } from './bootstrap/handlers.js';
 import { ClientPortalHandlers } from './client-portal/handlers.js';
 import { ClientHandlers } from './clients/handlers.js';
 import { HttpTracingLive, traceRequest } from './observability/http-tracing.js';
@@ -23,7 +25,7 @@ import { InvoiceHandlers } from './invoices/handlers.js';
 import { OrderHandlers } from './orders/handlers.js';
 import { QuoteHandlers } from './quotes/handlers.js';
 import { RequestLimiterLive } from './server/request-limiter.js';
-import { SystemHandlers } from './system/handlers.js';
+import { StatusHandlers } from './status/handlers.js';
 
 const FrenchApi = apiForLanguage('fr');
 const EnglishApi = apiForLanguage('en');
@@ -31,7 +33,9 @@ const EnglishApi = apiForLanguage('en');
 const ApiRoutes = HttpApiBuilder.layer(FrenchApi, { openapiPath: '/api/openapi.json' }).pipe(
   Layer.provide(
     Layer.mergeAll(
-      SystemHandlers,
+      StatusHandlers,
+      BootstrapHandlers,
+      AuthenticationHandlers,
       ClientHandlers,
       OrderHandlers,
       QuoteHandlers,
