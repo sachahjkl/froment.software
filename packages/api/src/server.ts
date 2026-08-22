@@ -11,11 +11,13 @@ import {
 import { HttpApiBuilder, HttpApiScalar, OpenApi } from 'effect/unstable/httpapi';
 import { createServer } from 'node:http';
 
-import { ApiPolicyMiddlewareLive, RequestBodyLimits } from './authentication/http.js';
+import { AuthenticationHttpLive } from './authentication/http.js';
 import { ClientPortalHandlers } from './client-portal/handlers.js';
 import { ClientHandlers } from './clients/handlers.js';
 import { HttpTracingLive, traceRequest } from './observability/http-tracing.js';
 import { identifyRequest } from './http/response.js';
+import { ApiBrowserRequestLive } from './http/origin.js';
+import { ApiRequestBodyLive, RequestBodyLimits } from './http/request-body.js';
 import { IntegrationTokenHandlers } from './integration-tokens/handlers.js';
 import { InvoiceHandlers } from './invoices/handlers.js';
 import { OrderHandlers } from './orders/handlers.js';
@@ -38,7 +40,7 @@ const ApiRoutes = HttpApiBuilder.layer(FrenchApi, { openapiPath: '/api/openapi.j
       IntegrationTokenHandlers,
     ),
   ),
-  Layer.provide(ApiPolicyMiddlewareLive),
+  Layer.provide(Layer.mergeAll(AuthenticationHttpLive, ApiBrowserRequestLive, ApiRequestBodyLive)),
 );
 
 const frenchScalar = { showOperationId: true, localization: { locale: 'fr' } };

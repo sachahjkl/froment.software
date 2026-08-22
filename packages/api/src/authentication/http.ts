@@ -1,21 +1,18 @@
 import {
   ApiAuthentication,
   ApiAuthorization,
-  ApiBrowserRequest,
   ApiCredentials,
   ApiPrincipal,
-  ApiRequestBody,
   AuthenticationRequired,
   EndpointRateLimit,
   RequestInvalidOrigin,
   RequestRateLimited,
-  RequestTooLarge,
   RequiredPermissions,
   Ulid,
   type PermissionCodeValue,
 } from '@froment/contracts';
-import { Context, Effect, FileSystem, Layer, Option, Redacted, Schema } from 'effect';
-import { HttpMethod, HttpServerError, HttpServerRequest } from 'effect/unstable/http';
+import { Context, Effect, Layer, Option, Redacted, Schema } from 'effect';
+import { HttpMethod, HttpServerRequest } from 'effect/unstable/http';
 import { HttpApiBuilder, HttpApiSecurity } from 'effect/unstable/httpapi';
 
 import { IntegrationTokens } from '../integration-tokens/service.js';
@@ -28,10 +25,6 @@ import { AuthenticationConfig } from './authentication-config.js';
 export const sessionCookieName = '__Host-froment-session';
 export const csrfCookieName = '__Host-froment-csrf';
 export const csrfHeaderName = 'x-csrf-token';
-
-export const RequestBodyLimits = {
-  thirtyTwoKiB: FileSystem.Size(32 * 1024),
-} as const;
 
 const AuthenticationRateLimits = {
   integrationAttemptsPerAddressPerMinute: 120,
@@ -199,55 +192,4 @@ const ApiAuthorizationLive = Layer.effect(
   }),
 );
 
-const ApiBrowserRequestLive = Layer.effect(
-  ApiBrowserRequest,
-  Effect.gen(function* () {
-    const config = yield* AuthenticationConfig;
-    return ApiBrowserRequest.of(
-      Effect.fn('ApiBrowserRequest')(function* (httpEffect) {
-        const request = yield* HttpServerRequest.HttpServerRequest;
-        if (request.headers['origin'] !== config.publicOrigin) {
-          return yield* new RequestInvalidOrigin({ code: 'request.invalid_origin' });
-        }
-        return yield* httpEffect;
-      }),
-    );
-  }),
-);
-
-const ApiRequestBodyLive = Layer.succeed(
-  ApiRequestBody,
-  ApiRequestBody.of(
-    Effect.fn('ApiRequestBody')(function* (httpEffect) {
-      yield* setPrivateResponseHeaders;
-      const request = yield* HttpServerRequest.HttpServerRequest;
-      if (request.headers['transfer-encoding'] !== undefined) {
-        return yield* new RequestTooLarge({ code: 'request.too_large' });
-      }
-      const contentLength = Schema.decodeUnknownOption(Schema.NumberFromString)(
-        request.headers['content-length'],
-      );
-      if (
-        Option.isSome(contentLength) &&
-        contentLength.value > Number(RequestBodyLimits.thirtyTwoKiB)
-      ) {
-        return yield* new RequestTooLarge({ code: 'request.too_large' });
-      }
-      return yield* httpEffect.pipe(
-        Effect.mapError((error) =>
-          error instanceof HttpServerError.HttpServerError &&
-          error.reason._tag === 'RequestParseError'
-            ? new RequestTooLarge({ code: 'request.too_large' })
-            : error,
-        ),
-      );
-    }),
-  ),
-);
-
-export const ApiPolicyMiddlewareLive = Layer.mergeAll(
-  ApiAuthenticationLive,
-  ApiAuthorizationLive,
-  ApiBrowserRequestLive,
-  ApiRequestBodyLive,
-);
+export const AuthenticationHttpLive = Layer.mergeAll(ApiAuthenticationLive, ApiAuthorizationLive);
