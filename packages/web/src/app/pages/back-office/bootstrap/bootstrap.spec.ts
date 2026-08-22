@@ -1,6 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { BootstrapApi, type BootstrapOutcome } from '@backoffice/bootstrap-api';
+import { I18nService } from '../../../i18n.service';
 import { Bootstrap } from './bootstrap';
 
 class BootstrapApiStub {
@@ -25,6 +26,7 @@ describe('Bootstrap', () => {
     TestBed.configureTestingModule({
       providers: [provideRouter([]), { provide: BootstrapApi, useClass: BootstrapApiStub }],
     });
+    TestBed.inject(I18nService).setLanguage('en');
     const fixture = TestBed.createComponent(Bootstrap);
     await fixture.whenStable();
 

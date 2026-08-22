@@ -55,12 +55,11 @@ export class Authentication {
 
   async signOut(): Promise<boolean> {
     if (!this.isBrowser) return false;
+    this.tokens.clear();
     try {
       await firstValueFrom(this.http.post<void>('/api/auth/logout', undefined));
-      this.tokens.clear();
       return true;
     } catch {
-      this.tokens.clear();
       return false;
     }
   }

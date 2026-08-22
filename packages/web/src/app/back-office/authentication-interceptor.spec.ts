@@ -20,7 +20,11 @@ describe('authenticationInterceptor', () => {
     const http = TestBed.inject(HttpClient);
     const testing = TestBed.inject(HttpTestingController);
     const store = TestBed.inject(AccessTokenStore);
-    store.set({ accessToken: 'v4.public.initial', expiresAt: 1, mode: 'administrator' });
+    store.set({
+      accessToken: 'v4.public.initial',
+      expiresAt: Date.now() + 600_000,
+      mode: 'administrator',
+    });
 
     const first = firstValueFrom(http.get('/api/clients'));
     const second = firstValueFrom(http.get('/api/quotes'));
@@ -33,7 +37,7 @@ describe('authenticationInterceptor', () => {
 
     testing.expectOne('/api/auth/refresh').flush({
       accessToken: 'v4.public.refreshed',
-      expiresAt: 2,
+      expiresAt: Date.now() + 600_000,
       mode: 'administrator',
     });
     const retries = await vi.waitFor(() => {
@@ -57,7 +61,7 @@ describe('authenticationInterceptor', () => {
     const testing = TestBed.inject(HttpTestingController);
     TestBed.inject(AccessTokenStore).set({
       accessToken: 'v4.public.memory',
-      expiresAt: 1,
+      expiresAt: Date.now() + 600_000,
       mode: 'administrator',
     });
 
@@ -71,5 +75,25 @@ describe('authenticationInterceptor', () => {
     expect(testing.expectOne('/api/public/quote-link').request.headers.has('authorization')).toBe(
       false,
     );
+  });
+
+  it('does not refresh again when the retried request is unauthorized', async () => {
+    const http = TestBed.inject(HttpClient);
+    const testing = TestBed.inject(HttpTestingController);
+    const request = firstValueFrom(http.get('/api/clients'));
+
+    testing.expectOne('/api/clients').flush({}, { status: 401, statusText: 'Unauthorized' });
+    testing.expectOne('/api/auth/refresh').flush({
+      accessToken: 'v4.public.refreshed',
+      expiresAt: Date.now() + 600_000,
+      mode: 'administrator',
+    });
+    const retry = await vi.waitFor(() => testing.expectOne('/api/clients'));
+    expect(retry.request.headers.get('authorization')).toBe('Bearer v4.public.refreshed');
+    retry.flush({}, { status: 401, statusText: 'Unauthorized' });
+
+    await expect(request).rejects.toMatchObject({ status: 401 });
+    testing.expectNone('/api/auth/refresh');
+    testing.verify();
   });
 });

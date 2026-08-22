@@ -9,31 +9,48 @@ export class AccessTokenStore {
   private readonly http = new HttpClient(inject(HttpBackend));
   private readonly state = signal<AccessTokenValue | undefined>(undefined);
   private refreshRequest: Promise<LoginModeValue | undefined> | undefined;
+  private generation = 0;
+
+  private current(): AccessTokenValue | undefined {
+    const token = this.state();
+    if (token !== undefined && token.expiresAt <= Date.now()) {
+      this.clear();
+      return undefined;
+    }
+    return token;
+  }
 
   token(): string | undefined {
-    return this.state()?.accessToken;
+    return this.current()?.accessToken;
   }
 
   mode(): LoginModeValue | undefined {
-    return this.state()?.mode;
+    return this.current()?.mode;
   }
 
   set(token: AccessTokenValue): AccessTokenValue {
+    this.generation += 1;
     this.state.set(token);
     return token;
   }
 
   clear(): void {
+    this.generation += 1;
     this.state.set(undefined);
   }
 
   refresh(): Promise<LoginModeValue | undefined> {
     if (this.refreshRequest !== undefined) return this.refreshRequest;
+    const generation = this.generation;
     this.refreshRequest = firstValueFrom(this.http.post<unknown>('/api/auth/refresh', undefined))
-      .then((response) => this.set(Schema.decodeUnknownSync(AccessToken)(response)).mode)
+      .then((response) => {
+        const token = Schema.decodeUnknownSync(AccessToken)(response);
+        if (this.generation !== generation) return this.mode();
+        return this.set(token).mode;
+      })
       .catch(() => {
-        this.clear();
-        return undefined;
+        if (this.generation === generation) this.clear();
+        return this.mode();
       })
       .finally(() => {
         this.refreshRequest = undefined;

@@ -4,6 +4,7 @@ import { TestBed } from '@angular/core/testing';
 import { provideRouter, Router, UrlTree } from '@angular/router';
 import { type LoginModeValue } from '@froment/contracts';
 
+import { AccessTokenStore } from './access-token-store';
 import { Authentication, administratorGuard, clientGuard } from './authentication';
 
 describe('Authentication', () => {
@@ -69,5 +70,64 @@ describe('Authentication', () => {
     expect(router.serializeUrl(clientRedirect)).toBe(
       '/backoffice/login?returnUrl=%2Fbackoffice%2Fclient%3Fquote%3Ddocument-id',
     );
+  });
+
+  it('keeps a newer login when a pending session refresh completes', async () => {
+    TestBed.configureTestingModule({
+      providers: [provideHttpClient(), provideHttpClientTesting()],
+    });
+    const auth = TestBed.inject(Authentication);
+    const http = TestBed.inject(HttpTestingController);
+
+    const session = auth.sessionMode();
+    const refreshRequest = http.expectOne('/api/auth/refresh');
+    const login = auth.authenticate('client@example.test', 'client-password');
+    http.expectOne('/api/auth/login').flush({
+      accessToken: 'v4.public.login',
+      expiresAt: Date.now() + 600_000,
+      mode: 'client',
+    });
+    await expect(login).resolves.toEqual({ success: true, mode: 'client' });
+
+    refreshRequest.flush({
+      accessToken: 'v4.public.stale',
+      expiresAt: Date.now() + 600_000,
+      mode: 'administrator',
+    });
+    await expect(session).resolves.toBe('client');
+    expect(TestBed.inject(AccessTokenStore).token()).toBe('v4.public.login');
+    http.verify();
+  });
+
+  it('keeps a pending refresh cleared while logout completes', async () => {
+    TestBed.configureTestingModule({
+      providers: [provideHttpClient(), provideHttpClientTesting()],
+    });
+    const auth = TestBed.inject(Authentication);
+    const store = TestBed.inject(AccessTokenStore);
+    const http = TestBed.inject(HttpTestingController);
+    store.set({
+      accessToken: 'v4.public.session',
+      expiresAt: Date.now() + 600_000,
+      mode: 'administrator',
+    });
+
+    const refresh = store.refresh();
+    const refreshRequest = http.expectOne('/api/auth/refresh');
+    const logout = auth.signOut();
+    const logoutRequest = http.expectOne('/api/auth/logout');
+    expect(store.token()).toBeUndefined();
+    expect(store.mode()).toBeUndefined();
+    refreshRequest.flush({
+      accessToken: 'v4.public.stale',
+      expiresAt: Date.now() + 600_000,
+      mode: 'administrator',
+    });
+    await expect(refresh).resolves.toBeUndefined();
+    expect(store.token()).toBeUndefined();
+    logoutRequest.flush(null);
+
+    await expect(logout).resolves.toBe(true);
+    http.verify();
   });
 });
