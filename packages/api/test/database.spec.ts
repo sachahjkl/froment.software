@@ -646,6 +646,12 @@ describe('Database', () => {
       join(migrationsFolder, clientStateMigration),
       { recursive: true },
     );
+    const accessRevocationMigration = '20260822093637_revoke_disabled_user_access';
+    await cp(
+      join(sourceFolder, accessRevocationMigration),
+      join(migrationsFolder, accessRevocationMigration),
+      { recursive: true },
+    );
     const state = await Effect.runPromise(
       Database.use(({ sqlite: connection }) =>
         Effect.sync(() => ({
