@@ -194,7 +194,6 @@ export {
 } from './quotes/contracts.js';
 export {
   Api,
-  apiForLanguage,
   AffairsApi,
   AuthenticationApi,
   BootstrapApi,
@@ -210,7 +209,6 @@ export {
   RevisionVersionParameter,
   StatusApi,
 } from './api.js';
-export { localizeOpenApi } from './api-documentation.js';
 export {
   ApiAuthentication,
   ApiAuthorization,

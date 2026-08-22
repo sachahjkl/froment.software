@@ -1,5 +1,4 @@
 import { NodeHttpServer } from '@effect/platform-node';
-import { apiForLanguage } from '@froment/contracts';
 import { Config, Effect, Layer, Schema } from 'effect';
 import {
   HttpMiddleware,
@@ -17,6 +16,7 @@ import { AffairHandlers } from './affairs/handlers.js';
 import { BootstrapHandlers } from './bootstrap/handlers.js';
 import { ClientPortalHandlers } from './client-portal/handlers.js';
 import { ClientHandlers } from './clients/handlers.js';
+import { apiForLanguage } from './documentation/api-documentation.js';
 import { HttpTracingLive, traceRequest } from './observability/http-tracing.js';
 import { identifyRequest } from './http/response.js';
 import { ApiBrowserRequestLive } from './http/origin.js';

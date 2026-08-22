@@ -1,6 +1,8 @@
+import { Api } from '@froment/contracts';
 import { apiDocumentation, type Language } from '@froment/l10n';
-import type { OpenApi } from 'effect/unstable/httpapi';
+import { OpenApi } from 'effect/unstable/httpapi';
 
+type ApiDocumentation = (typeof apiDocumentation)[Language];
 type DocumentationEntry = { readonly summary: string; readonly description: string };
 type GroupEntry = { readonly title: string; readonly description: string };
 type DocumentedOperation = OpenApi.OpenAPISpecOperation & {
@@ -14,28 +16,30 @@ interface LocalizableOpenApi {
   readonly components?: OpenApi.OpenAPIComponents;
 }
 
-export const localizeOpenApi = (specification: LocalizableOpenApi, language: Language) => {
-  const documentation = apiDocumentation[language];
+const applyApiDocumentation = (
+  specification: LocalizableOpenApi,
+  documentation: ApiDocumentation,
+) => {
   const groups: Readonly<Record<string, GroupEntry>> = documentation.groups;
   const operations: Readonly<Record<string, DocumentationEntry>> = documentation.operations;
-  const info = specification.info ?? { title: '', version: '' };
   const paths = Object.fromEntries(
     Object.entries(specification.paths ?? {}).map(([pathName, path]) => [
       pathName,
       Object.fromEntries(
         Object.entries(path).map(([method, operation]) => {
           if (operation === undefined) return [method, operation];
+          const documentedOperation: DocumentedOperation = operation;
           const documentationEntry = operations[operation.operationId];
           if (documentationEntry === undefined) return [method, operation];
-          const permissions = operation['x-required-permissions'];
+          const permissions = documentedOperation['x-required-permissions'];
           const description =
-            permissions !== undefined
-              ? `${documentationEntry.description}\n\n${permissions
+            permissions === undefined
+              ? documentationEntry.description
+              : `${documentationEntry.description}\n\n${permissions
                   .map((permission) =>
                     documentation.requiredPermission.replace('{permission}', permission),
                   )
-                  .join('\n')}`
-              : documentationEntry.description;
+                  .join('\n')}`;
           return [
             method,
             {
@@ -56,9 +60,9 @@ export const localizeOpenApi = (specification: LocalizableOpenApi, language: Lan
       : { ...tag, name: group.title, description: group.description };
   });
   const components = specification.components ?? { schemas: {}, securitySchemes: {} };
-  const sessionCookie = components.securitySchemes['sessionCookie'];
-  const bearer = components.securitySchemes['bearer'];
   const securitySchemes = { ...components.securitySchemes };
+  const sessionCookie = securitySchemes['sessionCookie'];
+  const bearer = securitySchemes['bearer'];
   if (sessionCookie !== undefined) {
     securitySchemes['sessionCookie'] = {
       ...sessionCookie,
@@ -71,12 +75,21 @@ export const localizeOpenApi = (specification: LocalizableOpenApi, language: Lan
 
   return {
     ...specification,
-    info: { ...info, title: documentation.title, description: documentation.description },
+    info: {
+      ...(specification.info ?? { title: '', version: '' }),
+      title: documentation.title,
+      description: documentation.description,
+    },
     paths,
     tags,
-    components: {
-      ...components,
-      securitySchemes,
-    },
+    components: { ...components, securitySchemes },
   };
 };
+
+export const apiForLanguage = (language: Language) =>
+  Api.annotateMerge(
+    OpenApi.annotations({
+      transform: (specification) =>
+        applyApiDocumentation(specification, apiDocumentation[language]),
+    }),
+  );

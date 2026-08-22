@@ -18,6 +18,7 @@
     "@effect/platform-node": "catalog:",
     "@froment/contracts": "workspace:*",
     "@froment/documents": "workspace:*",
+    "@froment/l10n": "workspace:*",
     "better-sqlite3": "catalog:",
     "drizzle-orm": "catalog:",
     "effect": "catalog:",
@@ -25,7 +26,6 @@
     "ulid": "catalog:"
   },
   "devDependencies": {
-    "@froment/l10n": "workspace:*",
     "@types/better-sqlite3": "catalog:",
     "@types/node": "catalog:",
     "@vitest/coverage-v8": "catalog:",

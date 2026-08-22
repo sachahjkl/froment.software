@@ -137,6 +137,9 @@ importers:
       '@froment/documents':
         specifier: workspace:*
         version: link:../documents
+      '@froment/l10n':
+        specifier: workspace:*
+        version: link:../l10n
       better-sqlite3:
         specifier: 'catalog:'
         version: 13.0.3
@@ -153,9 +156,6 @@ importers:
         specifier: 'catalog:'
         version: 3.0.2
     devDependencies:
-      '@froment/l10n':
-        specifier: workspace:*
-        version: link:../l10n
       '@types/better-sqlite3':
         specifier: 'catalog:'
         version: 7.6.13
@@ -180,9 +180,6 @@ importers:
 
   packages/contracts:
     dependencies:
-      '@froment/l10n':
-        specifier: workspace:*
-        version: link:../l10n
       effect:
         specifier: 'catalog:'
         version: 4.0.0-rc.110

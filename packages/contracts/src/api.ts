@@ -1,7 +1,5 @@
-import type { Language } from '@froment/l10n';
 import { HttpApi, OpenApi } from 'effect/unstable/httpapi';
 
-import { localizeOpenApi } from './api-documentation.js';
 import { AffairsApi } from './affairs/api.js';
 import { AuthenticationApi } from './authentication/api.js';
 import { BootstrapApi } from './bootstrap/api.js';
@@ -46,8 +44,3 @@ export class Api extends HttpApi.make('froment-api')
   .add(ClientPortalApi)
   .add(IntegrationTokensApi)
   .annotateMerge(OpenApi.annotations({ version: 'latest' })) {}
-
-export const apiForLanguage = (language: Language) =>
-  Api.annotateMerge(
-    OpenApi.annotations({ transform: (specification) => localizeOpenApi(specification, language) }),
-  );
