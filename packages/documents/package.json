@@ -7,21 +7,14 @@
     ".": "./dist/index.js"
   },
   "scripts": {
-    "build": "ngc -p tsconfig.json",
+    "build": "tsc -p tsconfig.json",
     "test": "pnpm build && vitest run test"
   },
   "dependencies": {
-    "@angular/common": "catalog:",
-    "@angular/compiler": "catalog:",
-    "@angular/core": "catalog:",
-    "@angular/platform-browser": "catalog:",
-    "@angular/platform-server": "catalog:",
     "@froment/contracts": "workspace:*",
-    "rxjs": "catalog:",
-    "tslib": "catalog:"
+    "effect": "catalog:"
   },
   "devDependencies": {
-    "@angular/compiler-cli": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:"
   }
