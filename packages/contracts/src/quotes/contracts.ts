@@ -16,7 +16,6 @@ import {
   documentTotalsFilter,
 } from '../documents/lines.js';
 import {
-  DocumentArtifact,
   DocumentNotFound,
   DocumentParty,
   IssuerSettings,
