@@ -9,64 +9,64 @@ import {
 } from '../authentication/contracts.js';
 import { Ulid } from '../identifiers.js';
 import {
-  IntegrationTokenCreateRequest,
-  IntegrationTokenCreated,
-  IntegrationTokenInvalidCursor,
-  IntegrationTokenInvalidExpiration,
-  IntegrationTokenListQuery,
-  IntegrationTokenNameConflict,
-  IntegrationTokenNotFound,
-  IntegrationTokenPage,
-} from '../integration-tokens/contracts.js';
+  ApiTokenCreateRequest,
+  ApiTokenCreated,
+  ApiTokenInvalidCursor,
+  ApiTokenInvalidExpiration,
+  ApiTokenListQuery,
+  ApiTokenNameConflict,
+  ApiTokenNotFound,
+  ApiTokenPage,
+} from '../api-tokens/contracts.js';
 import { authenticate } from '../api-policy/authentication.js';
 import { requirePermissions } from '../api-policy/permissions.js';
 import { rateLimit, RateLimits } from '../api-policy/rate-limit.js';
 import { frontendSpecific } from '../api-policy/visibility.js';
 import { Permissions } from '../permissions.js';
 
-export class IntegrationTokensApi extends HttpApiGroup.make('integrationTokens', {
+export class ApiTokensApi extends HttpApiGroup.make('apiTokens', {
   topLevel: true,
 }).add(
-  HttpApiEndpoint.get('integrationTokenList', '/api/integration-tokens', {
-    query: IntegrationTokenListQuery,
-    success: IntegrationTokenPage,
+  HttpApiEndpoint.get('apiTokenList', '/api/tokens', {
+    query: ApiTokenListQuery,
+    success: ApiTokenPage,
     error: [
       AuthenticationRequired.pipe(HttpApiSchema.status(401)),
       PermissionDenied.pipe(HttpApiSchema.status(403)),
-      IntegrationTokenInvalidCursor.pipe(HttpApiSchema.status(400)),
+      ApiTokenInvalidCursor.pipe(HttpApiSchema.status(400)),
     ],
-  }).pipe(requirePermissions([Permissions.integrationTokenManage]), authenticate, frontendSpecific),
-  HttpApiEndpoint.post('integrationTokenCreate', '/api/integration-tokens', {
-    payload: IntegrationTokenCreateRequest,
-    success: IntegrationTokenCreated,
+  }).pipe(requirePermissions([Permissions.apiTokenManage]), authenticate, frontendSpecific),
+  HttpApiEndpoint.post('apiTokenCreate', '/api/tokens', {
+    payload: ApiTokenCreateRequest,
+    success: ApiTokenCreated,
     error: [
       AuthenticationRequired.pipe(HttpApiSchema.status(401)),
       PermissionDenied.pipe(HttpApiSchema.status(403)),
       CsrfRejected.pipe(HttpApiSchema.status(403)),
       RequestRateLimited.pipe(HttpApiSchema.status(429)),
-      IntegrationTokenNameConflict.pipe(HttpApiSchema.status(409)),
-      IntegrationTokenInvalidExpiration.pipe(HttpApiSchema.status(422)),
+      ApiTokenNameConflict.pipe(HttpApiSchema.status(409)),
+      ApiTokenInvalidExpiration.pipe(HttpApiSchema.status(422)),
     ],
   })
     .middleware(ApiRequestBody)
     .pipe(
-      requirePermissions([Permissions.integrationTokenManage]),
+      requirePermissions([Permissions.apiTokenManage]),
       authenticate,
       rateLimit(RateLimits.tenPerMinute),
       frontendSpecific,
     ),
-  HttpApiEndpoint.post('integrationTokenRevoke', '/api/integration-tokens/:tokenId/revoke', {
+  HttpApiEndpoint.post('apiTokenRevoke', '/api/tokens/:tokenId/revoke', {
     params: { tokenId: Ulid },
-    success: IntegrationTokenCreated.fields.token,
+    success: ApiTokenCreated.fields.token,
     error: [
       AuthenticationRequired.pipe(HttpApiSchema.status(401)),
       PermissionDenied.pipe(HttpApiSchema.status(403)),
       CsrfRejected.pipe(HttpApiSchema.status(403)),
       RequestRateLimited.pipe(HttpApiSchema.status(429)),
-      IntegrationTokenNotFound.pipe(HttpApiSchema.status(404)),
+      ApiTokenNotFound.pipe(HttpApiSchema.status(404)),
     ],
   }).pipe(
-    requirePermissions([Permissions.integrationTokenManage]),
+    requirePermissions([Permissions.apiTokenManage]),
     authenticate,
     rateLimit(RateLimits.tenPerMinute),
     frontendSpecific,

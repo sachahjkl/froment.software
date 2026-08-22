@@ -40,7 +40,7 @@ const configLayer = Layer.succeed(
       hash: Buffer.alloc(64),
     },
     accessHmacKey: Buffer.alloc(32, 1),
-    integrationTokenHmacKey: Buffer.alloc(32, 4),
+    apiTokenHmacKey: Buffer.alloc(32, 4),
     sessionHmacKey: Buffer.alloc(32, 2),
     quoteLinkHmacKey,
     publicOrigin: 'https://example.test',

@@ -160,8 +160,8 @@ export const sessions = sqliteTable(
   ],
 );
 
-export const integrationTokens = sqliteTable(
-  'integration_tokens',
+export const apiTokens = sqliteTable(
+  'api_tokens',
   {
     id: text().notNull().primaryKey(),
     userId: text('user_id')
@@ -179,36 +179,33 @@ export const integrationTokens = sqliteTable(
     rateLimitPerMinute: integer('rate_limit_per_minute').notNull(),
   },
   (table) => [
-    uniqueIndex('integration_tokens_token_hmac_unique').on(table.tokenHmac),
-    index('integration_tokens_user_id_index').on(table.userId),
-    index('integration_tokens_expires_at_index').on(table.expiresAt),
-    index('integration_tokens_active_index').on(table.revokedAt, table.expiresAt),
-    index('integration_tokens_unrevoked_name_expiry_index')
+    uniqueIndex('api_tokens_token_hmac_unique').on(table.tokenHmac),
+    index('api_tokens_user_id_index').on(table.userId),
+    index('api_tokens_expires_at_index').on(table.expiresAt),
+    index('api_tokens_active_index').on(table.revokedAt, table.expiresAt),
+    index('api_tokens_unrevoked_name_expiry_index')
       .on(table.name, table.expiresAt)
       .where(sql`${table.revokedAt} is null`),
-    index('integration_tokens_created_at_id_index').on(desc(table.createdAt), desc(table.id)),
+    index('api_tokens_created_at_id_index').on(desc(table.createdAt), desc(table.id)),
     check(
-      'integration_tokens_id_ulid_check',
+      'api_tokens_id_ulid_check',
       sql`${table.id} is not null and length(${table.id}) = 26 and ${table.id} not glob '*[^0-9A-HJKMNP-TV-Z]*' and substr(${table.id}, 1, 1) between '0' and '7'`,
     ),
-    check('integration_tokens_name_check', sql`length(trim(${table.name})) between 1 and 120`),
+    check('api_tokens_name_check', sql`length(trim(${table.name})) between 1 and 120`),
     check(
-      'integration_tokens_token_hmac_check',
+      'api_tokens_token_hmac_check',
       sql`typeof(${table.tokenHmac}) = 'blob' and length(${table.tokenHmac}) = 32`,
     ),
-    check('integration_tokens_expiry_check', sql`${table.expiresAt} > ${table.createdAt}`),
+    check('api_tokens_expiry_check', sql`${table.expiresAt} > ${table.createdAt}`),
     check(
-      'integration_tokens_timestamps_check',
+      'api_tokens_timestamps_check',
       sql`(${table.lastUsedAt} is null or ${table.lastUsedAt} >= ${table.createdAt}) and (${table.revokedAt} is null or ${table.revokedAt} >= ${table.createdAt})`,
     ),
     check(
-      'integration_tokens_revocation_check',
+      'api_tokens_revocation_check',
       sql`(${table.revokedAt} is null and ${table.revokedByUserId} is null) or (${table.revokedAt} is not null and ${table.revokedByUserId} is not null)`,
     ),
-    check(
-      'integration_tokens_rate_limit_check',
-      sql`${table.rateLimitPerMinute} between 1 and 600`,
-    ),
+    check('api_tokens_rate_limit_check', sql`${table.rateLimitPerMinute} between 1 and 600`),
   ],
 );
 
@@ -241,19 +238,19 @@ export const permissions = sqliteTable(
   ],
 );
 
-export const integrationTokenPermissions = sqliteTable(
-  'integration_token_permissions',
+export const apiTokenPermissions = sqliteTable(
+  'api_token_permissions',
   {
     tokenId: text('token_id')
       .notNull()
-      .references(() => integrationTokens.id, { onDelete: 'no action' }),
+      .references(() => apiTokens.id, { onDelete: 'no action' }),
     permissionCode: text('permission_code')
       .notNull()
       .references(() => permissions.code, { onDelete: 'no action' }),
   },
   (table) => [
     primaryKey({ columns: [table.tokenId, table.permissionCode] }),
-    index('integration_token_permissions_code_index').on(table.permissionCode),
+    index('api_token_permissions_code_index').on(table.permissionCode),
   ],
 );
 

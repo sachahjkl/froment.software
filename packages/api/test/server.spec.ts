@@ -99,7 +99,7 @@ describe('HTTP server', () => {
     const env = {
       ...process.env,
       ACCESS_HMAC_KEY: 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA',
-      INTEGRATION_TOKEN_HMAC_KEY: 'DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD',
+      API_TOKEN_HMAC_KEY: 'DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD',
       BOOTSTRAP_PASSWORD_SCRYPT:
         'scrypt$16384$8$1$ABEiM0RVZneImaq7zN3u_w$bDQwYDYiQ_8HCiJ3-qXFtXFeV9FhIOa7E8VSgT__uegLrk4vqD6U920ImYTwk5RABOZsIk96bUNH1G9wbCXf1Q',
       BUSINESS_TIME_ZONE: 'Europe/Paris',
@@ -186,7 +186,7 @@ describe('HTTP server', () => {
       };
     };
     expect(specification.info).toMatchObject({
-      title: 'API d’intégration Froment Software',
+      title: 'API Froment Software',
       version: 'latest',
     });
     expect(specification.paths).toHaveProperty('/api/clients');
@@ -196,7 +196,7 @@ describe('HTTP server', () => {
     expect(docsResponse.status).toBe(200);
     expect(docsResponse.headers.get('content-type')).toContain('text/html');
     const html = await docsResponse.text();
-    expect(html).toContain('API d’intégration Froment Software');
+    expect(html).toContain('API Froment Software');
     expect(html).toContain('/api/clients');
     expect(html).toContain('/api/auth/login');
     expect(html).toContain('Frontend');
@@ -205,7 +205,7 @@ describe('HTTP server', () => {
     const englishOpenApiResponse = await fetch(`${baseUrl}/api/openapi.en.json`);
     expect(englishOpenApiResponse.status).toBe(200);
     await expect(englishOpenApiResponse.json()).resolves.toMatchObject({
-      info: { title: 'Froment Software Integration API' },
+      info: { title: 'Froment Software API' },
       paths: {
         '/api/clients': {
           get: { summary: 'List clients' },
@@ -215,7 +215,7 @@ describe('HTTP server', () => {
     const englishDocsResponse = await fetch(`${baseUrl}/api/docs/en`);
     expect(englishDocsResponse.status).toBe(200);
     const englishHtml = await englishDocsResponse.text();
-    expect(englishHtml).toContain('Froment Software Integration API');
+    expect(englishHtml).toContain('Froment Software API');
     expect(englishHtml).toContain('"localization":{"locale":"en"}');
   });
 
@@ -832,7 +832,7 @@ describe('HTTP server', () => {
     sqlite.close();
   });
 
-  it('manages scoped integration tokens and authenticates Bearer requests', async () => {
+  it('manages scoped API tokens and authenticates Bearer requests', async () => {
     if (administratorAccessIdentifier === undefined) {
       throw new Error('The administrator access identifier is unavailable.');
     }
@@ -850,7 +850,7 @@ describe('HTTP server', () => {
       .split('=', 2)[1];
     if (csrf === undefined) throw new Error('The administrator CSRF token is unavailable.');
 
-    const createToken = await fetch(`${baseUrl}/api/integration-tokens`, {
+    const createToken = await fetch(`${baseUrl}/api/tokens`, {
       method: 'POST',
       headers: {
         cookie,
@@ -865,17 +865,17 @@ describe('HTTP server', () => {
         rateLimitPerMinute: 120,
       }),
     });
-    expect(createToken.status).toBe(200);
+    expect(createToken.status, await createToken.clone().text()).toBe(200);
     expect(createToken.headers.get('cache-control')).toBe('no-store');
     const created = (await createToken.json()) as {
       secret: string;
       token: { id: string; name: string; permissions: ReadonlyArray<string> };
     };
     expect(created.secret).toMatch(
-      /^froment_it_v1_[0-7][0-9A-HJKMNP-TV-Z]{25}\.[A-Za-z0-9_-]{43}$/,
+      /^froment_api_v1_[0-7][0-9A-HJKMNP-TV-Z]{25}\.[A-Za-z0-9_-]{43}$/,
     );
 
-    const tokenList = await fetch(`${baseUrl}/api/integration-tokens`, {
+    const tokenList = await fetch(`${baseUrl}/api/tokens`, {
       headers: { cookie },
     });
     expect(tokenList.status).toBe(200);
@@ -891,14 +891,13 @@ describe('HTTP server', () => {
       ],
       nextCursor: null,
     });
-    const invalidCursor = await fetch(
-      `${baseUrl}/api/integration-tokens?cursor=01ARZ3NDEKTSV4RRFFQ69G5FZZ`,
-      { headers: { cookie } },
-    );
+    const invalidCursor = await fetch(`${baseUrl}/api/tokens?cursor=01ARZ3NDEKTSV4RRFFQ69G5FZZ`, {
+      headers: { cookie },
+    });
     expect(invalidCursor.status).toBe(400);
     await expect(invalidCursor.json()).resolves.toMatchObject({
-      _tag: 'IntegrationTokenInvalidCursor',
-      code: 'integration_token.invalid_cursor',
+      _tag: 'ApiTokenInvalidCursor',
+      code: 'api_token.invalid_cursor',
     });
 
     const bearerList = await fetch(`${baseUrl}/api/clients`, {
@@ -976,7 +975,7 @@ describe('HTTP server', () => {
       });
     }
 
-    const createLimitedToken = await fetch(`${baseUrl}/api/integration-tokens`, {
+    const createLimitedToken = await fetch(`${baseUrl}/api/tokens`, {
       method: 'POST',
       headers: {
         cookie,
@@ -1007,26 +1006,21 @@ describe('HTTP server', () => {
 
     const sqlite = new Sqlite(databaseFilename, { readonly: true });
     const storedToken = sqlite
-      .prepare(
-        'select typeof(token_hmac) as type, length(token_hmac) as length from integration_tokens',
-      )
+      .prepare('select typeof(token_hmac) as type, length(token_hmac) as length from api_tokens')
       .get();
     expect(storedToken).toEqual({ type: 'blob', length: 32 });
     expect(JSON.stringify(storedToken)).not.toContain(created.secret);
     sqlite.close();
 
-    const revoke = await fetch(`${baseUrl}/api/integration-tokens/${created.token.id}/revoke`, {
+    const revoke = await fetch(`${baseUrl}/api/tokens/${created.token.id}/revoke`, {
       method: 'POST',
       headers: { cookie, origin: baseUrl, 'x-csrf-token': csrf },
     });
     expect(revoke.status).toBe(200);
-    const secondRevoke = await fetch(
-      `${baseUrl}/api/integration-tokens/${created.token.id}/revoke`,
-      {
-        method: 'POST',
-        headers: { cookie, origin: baseUrl, 'x-csrf-token': csrf },
-      },
-    );
+    const secondRevoke = await fetch(`${baseUrl}/api/tokens/${created.token.id}/revoke`, {
+      method: 'POST',
+      headers: { cookie, origin: baseUrl, 'x-csrf-token': csrf },
+    });
     expect(secondRevoke.status).toBe(200);
 
     const revoked = await fetch(`${baseUrl}/api/clients`, {

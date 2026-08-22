@@ -3,36 +3,36 @@ import { Effect, Schema } from 'effect';
 import { HttpApiBuilder } from 'effect/unstable/httpapi';
 
 import { setPrivateResponseHeaders } from '../http/response.js';
-import { IntegrationTokens } from './service.js';
+import { ApiTokens } from './service.js';
 
-export const IntegrationTokenHandlers = HttpApiBuilder.group(Api, 'integrationTokens', (handlers) =>
+export const ApiTokenHandlers = HttpApiBuilder.group(Api, 'apiTokens', (handlers) =>
   Effect.succeed(
     handlers
       .handle(
-        'integrationTokenList',
-        Effect.fn('integrationTokenList')(function* ({ query }) {
+        'apiTokenList',
+        Effect.fn('apiTokenList')(function* ({ query }) {
           yield* setPrivateResponseHeaders;
-          return yield* (yield* IntegrationTokens)
+          return yield* (yield* ApiTokens)
             .list(query.cursor, query.limit)
             .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
         }),
       )
       .handle(
-        'integrationTokenCreate',
-        Effect.fn('integrationTokenCreate')(function* ({ payload }) {
+        'apiTokenCreate',
+        Effect.fn('apiTokenCreate')(function* ({ payload }) {
           yield* setPrivateResponseHeaders;
           const principal = yield* ApiPrincipal;
-          return yield* (yield* IntegrationTokens)
+          return yield* (yield* ApiTokens)
             .create(payload, Schema.decodeUnknownSync(Ulid)(principal.userId))
             .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
         }),
       )
       .handle(
-        'integrationTokenRevoke',
-        Effect.fn('integrationTokenRevoke')(function* ({ params }) {
+        'apiTokenRevoke',
+        Effect.fn('apiTokenRevoke')(function* ({ params }) {
           yield* setPrivateResponseHeaders;
           const principal = yield* ApiPrincipal;
-          return yield* (yield* IntegrationTokens)
+          return yield* (yield* ApiTokens)
             .revoke(params.tokenId, Schema.decodeUnknownSync(Ulid)(principal.userId))
             .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
         }),

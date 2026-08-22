@@ -8,7 +8,7 @@ import { AuditLive } from '../audit/audit.js';
 import { Database } from '../database/database.js';
 import { makeMigratedDatabaseLayer } from '../../test/database-layer.js';
 import { AuthenticationConfig } from '../authentication/authentication-config.js';
-import { IntegrationTokens, IntegrationTokensLive } from './service.js';
+import { ApiTokens, ApiTokensLive } from './service.js';
 
 const userId = '01ARZ3NDEKTSV4RRFFQ69G5FAA';
 const roleId = '01ARZ3NDEKTSV4RRFFQ69G5FAC';
@@ -24,15 +24,15 @@ const configLayer = Layer.succeed(
       hash: Buffer.alloc(64),
     },
     accessHmacKey: Buffer.alloc(32, 1),
-    integrationTokenHmacKey: Buffer.alloc(32, 4),
+    apiTokenHmacKey: Buffer.alloc(32, 4),
     sessionHmacKey: Buffer.alloc(32, 2),
     quoteLinkHmacKey: Buffer.alloc(32, 3),
     publicOrigin: 'https://example.test',
   }),
 );
 
-const integrationTokensLayer = () =>
-  IntegrationTokensLive.pipe(
+const apiTokensLayer = () =>
+  ApiTokensLive.pipe(
     Layer.provide(AuditLive),
     Layer.provide(configLayer),
     Layer.provideMerge(
@@ -57,18 +57,18 @@ const seedAdministrator = (database: Database['Service']) => {
     .run(userId, roleId);
   database.sqlite
     .prepare(
-      "insert into role_permissions (role_id, permission_code) values (?, 'client.read'), (?, 'integration-token.manage')",
+      "insert into role_permissions (role_id, permission_code) values (?, 'client.read'), (?, 'api-token.manage')",
     )
     .run(roleId, roleId);
 };
 
-describe('IntegrationTokens', () => {
+describe('ApiTokens', () => {
   it('stores only a HMAC and enforces token and owner permissions', async () => {
     const result = await Effect.runPromise(
       Effect.gen(function* () {
         const database = yield* Database;
         seedAdministrator(database);
-        const service = yield* IntegrationTokens;
+        const service = yield* ApiTokens;
         const created = yield* service.create(
           {
             name: 'ERP principal',
@@ -78,7 +78,7 @@ describe('IntegrationTokens', () => {
           userId,
         );
         const stored = database.sqlite
-          .prepare('select token_hmac from integration_tokens where id = ?')
+          .prepare('select token_hmac from api_tokens where id = ?')
           .get(created.token.id);
         const authorized = yield* service.authenticate(created.secret);
         yield* service.authorizePermission(authorized, 'client.read');
@@ -101,10 +101,10 @@ describe('IntegrationTokens', () => {
           removedOwnerPermission,
           stored,
         };
-      }).pipe(Effect.provide(integrationTokensLayer()), Effect.provide(TestClock.layer())),
+      }).pipe(Effect.provide(apiTokensLayer()), Effect.provide(TestClock.layer())),
     );
 
-    expect(result.created.secret).toMatch(/^froment_it_v1_.+\..+$/);
+    expect(result.created.secret).toMatch(/^froment_api_v1_.+\..+$/);
     expect(JSON.stringify(result.stored)).not.toContain(result.created.secret);
     expect(JSON.stringify(result.list)).not.toContain(result.created.secret);
     expect(result.authorized).toMatchObject({ userId, tokenId: result.created.token.id });
@@ -123,7 +123,7 @@ describe('IntegrationTokens', () => {
       Effect.gen(function* () {
         const database = yield* Database;
         seedAdministrator(database);
-        const service = yield* IntegrationTokens;
+        const service = yield* ApiTokens;
         const created = yield* service.create(
           {
             name: 'ERP principal',
@@ -167,13 +167,13 @@ describe('IntegrationTokens', () => {
           invalidHmac,
           malformed,
           revocationAudits: database.sqlite
-            .prepare("select count(*) from audit_events where action = 'integration.token-revoked'")
+            .prepare("select count(*) from audit_events where action = 'api.token-revoked'")
             .pluck()
             .get(),
           revoked,
           secondRevocation,
         };
-      }).pipe(Effect.provide(integrationTokensLayer()), Effect.provide(TestClock.layer())),
+      }).pipe(Effect.provide(apiTokensLayer()), Effect.provide(TestClock.layer())),
     );
 
     for (const failure of [
@@ -197,7 +197,7 @@ describe('IntegrationTokens', () => {
       Effect.gen(function* () {
         const database = yield* Database;
         seedAdministrator(database);
-        const service = yield* IntegrationTokens;
+        const service = yield* ApiTokens;
         const invalidExpiry = yield* Effect.result(
           service.create({ name: 'Expired', permissions: ['client.read'], expiresAt: 0 }, userId),
         );
@@ -238,16 +238,16 @@ describe('IntegrationTokens', () => {
           reusedExpiredName,
           reusedRevokedName,
         };
-      }).pipe(Effect.provide(integrationTokensLayer()), Effect.provide(TestClock.layer())),
+      }).pipe(Effect.provide(apiTokensLayer()), Effect.provide(TestClock.layer())),
     );
 
     expect(result.invalidExpiry).toMatchObject({
       _tag: 'Failure',
-      failure: { _tag: 'IntegrationTokenInvalidExpiration' },
+      failure: { _tag: 'ApiTokenInvalidExpiration' },
     });
     expect(result.duplicateName).toMatchObject({
       _tag: 'Failure',
-      failure: { _tag: 'IntegrationTokenNameConflict' },
+      failure: { _tag: 'ApiTokenNameConflict' },
     });
     expect(result.escalation).toMatchObject({
       _tag: 'Failure',
@@ -262,7 +262,7 @@ describe('IntegrationTokens', () => {
       Effect.gen(function* () {
         const database = yield* Database;
         seedAdministrator(database);
-        const service = yield* IntegrationTokens;
+        const service = yield* ApiTokens;
         for (const name of ['First', 'Second', 'Third']) {
           yield* service.create(
             { name, permissions: ['client.read'], expiresAt: 86_400_000 },
@@ -281,7 +281,7 @@ describe('IntegrationTokens', () => {
         const second = yield* service.list(first.nextCursor ?? undefined, 2);
         const invalidCursor = yield* Effect.result(service.list('01ARZ3NDEKTSV4RRFFQ69G5FZZ', 2));
         return { first, invalidCursor, second };
-      }).pipe(Effect.provide(integrationTokensLayer()), Effect.provide(TestClock.layer())),
+      }).pipe(Effect.provide(apiTokensLayer()), Effect.provide(TestClock.layer())),
     );
 
     expect(pages.first.nextCursor).toBe(pages.first.items[1]?.id);
@@ -291,7 +291,7 @@ describe('IntegrationTokens', () => {
     expect(pages.second.nextCursor).toBeNull();
     expect(pages.invalidCursor).toMatchObject({
       _tag: 'Failure',
-      failure: { _tag: 'IntegrationTokenInvalidCursor' },
+      failure: { _tag: 'ApiTokenInvalidCursor' },
     });
   });
 });

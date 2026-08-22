@@ -88,8 +88,8 @@ describe('Database', () => {
         'business_reference_counters',
         'invoice_revisions',
         'invoices',
-        'integration_token_permissions',
-        'integration_tokens',
+        'api_token_permissions',
+        'api_tokens',
         'orders',
         'permissions',
         'quote_lines',
@@ -233,7 +233,7 @@ describe('Database', () => {
     sqlite.close();
   });
 
-  it('enforces integration token persistence invariants', async () => {
+  it('enforces API token persistence invariants', async () => {
     const migrationsFolder = join(import.meta.dirname, '..', 'drizzle');
 
     await Effect.runPromise(
@@ -249,7 +249,7 @@ describe('Database', () => {
           expect(() =>
             sqlite
               .prepare(
-                `insert into integration_tokens
+                `insert into api_tokens
                  (id, user_id, name, token_hmac, created_at, expires_at, rate_limit_per_minute)
                  values (?, ?, 'Invalid HMAC', ?, 1, 2, 120)`,
               )
@@ -258,7 +258,7 @@ describe('Database', () => {
           expect(() =>
             sqlite
               .prepare(
-                `insert into integration_tokens
+                `insert into api_tokens
                  (id, user_id, name, token_hmac, created_at, expires_at, rate_limit_per_minute)
                  values (?, ?, 'Invalid expiry', ?, 2, 1, 120)`,
               )
@@ -266,13 +266,13 @@ describe('Database', () => {
           ).toThrow();
           sqlite
             .prepare(
-              `insert into integration_tokens
+              `insert into api_tokens
                (id, user_id, name, token_hmac, created_at, expires_at, rate_limit_per_minute)
                values (?, ?, 'ERP', ?, 1, 1000, 120)`,
             )
             .run(tokenId, userId, Buffer.alloc(32, 2));
           const insertToken = sqlite.prepare(
-            `insert into integration_tokens
+            `insert into api_tokens
              (id, user_id, name, token_hmac, created_at, expires_at, rate_limit_per_minute)
              values (?, ?, ?, ?, ?, ?, 120)`,
           );
@@ -285,7 +285,7 @@ describe('Database', () => {
               2,
               2000,
             ),
-          ).toThrow('integration token active name conflict');
+          ).toThrow('API token active name conflict');
           expect(() =>
             insertToken.run(
               '01ARZ3NDEKTSV4RRFFQ69G5FAF',
@@ -295,7 +295,7 @@ describe('Database', () => {
               2,
               2000,
             ),
-          ).toThrow('integration token name must be trimmed');
+          ).toThrow('API token name must be trimmed');
           expect(() =>
             insertToken.run(
               '01ARZ3NDEKTSV4RRFFQ69G5FAG',
@@ -326,27 +326,23 @@ describe('Database', () => {
           ).not.toThrow();
           sqlite
             .prepare(
-              "insert into integration_token_permissions (token_id, permission_code) values (?, 'client.read')",
+              "insert into api_token_permissions (token_id, permission_code) values (?, 'client.read')",
             )
             .run(tokenId);
           expect(() =>
-            sqlite
-              .prepare("update integration_tokens set name = 'Changed' where id = ?")
-              .run(tokenId),
-          ).toThrow('integration token identity is immutable');
+            sqlite.prepare("update api_tokens set name = 'Changed' where id = ?").run(tokenId),
+          ).toThrow('API token identity is immutable');
           expect(() =>
-            sqlite
-              .prepare('delete from integration_token_permissions where token_id = ?')
-              .run(tokenId),
-          ).toThrow('integration token permissions are immutable');
-          expect(() =>
-            sqlite.prepare('delete from integration_tokens where id = ?').run(tokenId),
-          ).toThrow('integration tokens are append-only');
+            sqlite.prepare('delete from api_token_permissions where token_id = ?').run(tokenId),
+          ).toThrow('API token permissions are immutable');
+          expect(() => sqlite.prepare('delete from api_tokens where id = ?').run(tokenId)).toThrow(
+            'API tokens are append-only',
+          );
           expect(
             sqlite
               .prepare(
                 `explain query plan
-                 select id from integration_tokens
+                 select id from api_tokens
                   where (created_at, id) < (?, ?)
                   order by created_at desc, id desc`,
               )
@@ -356,9 +352,7 @@ describe('Database', () => {
           ]);
           expect(() =>
             sqlite
-              .prepare(
-                'update integration_tokens set revoked_at = 10, revoked_by_user_id = ? where id = ?',
-              )
+              .prepare('update api_tokens set revoked_at = 10, revoked_by_user_id = ? where id = ?')
               .run(userId, tokenId),
           ).not.toThrow();
           expect(() =>
@@ -372,10 +366,8 @@ describe('Database', () => {
             ),
           ).not.toThrow();
           expect(() =>
-            sqlite
-              .prepare('update integration_tokens set revoked_at = null where id = ?')
-              .run(tokenId),
-          ).toThrow('integration token identity is immutable');
+            sqlite.prepare('update api_tokens set revoked_at = null where id = ?').run(tokenId),
+          ).toThrow('API token identity is immutable');
         }),
       ).pipe(Effect.provide(makeMigratedDatabaseLayer({ filename: ':memory:', migrationsFolder }))),
     );

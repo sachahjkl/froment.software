@@ -6,7 +6,7 @@ import { RevisionVersionParameter } from './api-common.js';
 import { Api } from './api.js';
 import { RequiredPermissions } from './api-policy/permissions.js';
 import { EndpointRateLimit } from './api-policy/rate-limit.js';
-import { IntegrationPermissionCodes } from './permissions.js';
+import { ApiTokenPermissionCodes } from './permissions.js';
 
 describe('API contracts', () => {
   it('accepts only positive safe route versions', () => {
@@ -29,10 +29,7 @@ describe('API contracts', () => {
       'authentication',
       'frontend',
     ]);
-    expect(specification.paths['/api/integration-tokens']?.get?.tags).toEqual([
-      'integrationTokens',
-      'frontend',
-    ]);
+    expect(specification.paths['/api/tokens']?.get?.tags).toEqual(['apiTokens', 'frontend']);
     expect(specification.paths['/api/public/quote-link']?.post?.tags).toEqual([
       'quoteLinks',
       'frontend',
@@ -66,13 +63,13 @@ describe('API contracts', () => {
         }),
       ),
     );
-    expect(IntegrationPermissionCodes.every((code) => documentedPermissions.has(code))).toBe(true);
+    expect(ApiTokenPermissionCodes.every((code) => documentedPermissions.has(code))).toBe(true);
   });
 
   it('keeps permissions, mutation quotas, and frontend visibility independent', () => {
     const clientAccess = Api.groups.clients.endpoints.clientAccessCreate;
     const affairEvents = Api.groups.affairs.endpoints.affairEventList;
-    const tokenCreate = Api.groups.integrationTokens.endpoints.integrationTokenCreate;
+    const tokenCreate = Api.groups.apiTokens.endpoints.apiTokenCreate;
 
     expect(
       Option.getOrUndefined(Context.getOption(clientAccess.annotations, RequiredPermissions)),
@@ -85,7 +82,7 @@ describe('API contracts', () => {
     ).toEqual(['quote.read', 'audit.read']);
     expect(
       Option.getOrUndefined(Context.getOption(tokenCreate.annotations, RequiredPermissions)),
-    ).toEqual(['integration-token.manage']);
+    ).toEqual(['api-token.manage']);
     expect(
       Option.getOrUndefined(Context.getOption(tokenCreate.annotations, EndpointRateLimit)),
     ).toBe(10);

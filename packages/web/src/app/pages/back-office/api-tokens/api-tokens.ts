@@ -19,14 +19,14 @@ import {
   submit,
 } from '@angular/forms/signals';
 import {
-  IntegrationPermissionCodes,
-  type IntegrationPermissionCodeValue,
-  type IntegrationTokenListValue,
-  type IntegrationTokenValue,
+  ApiTokenPermissionCodes,
+  type ApiTokenPermissionCodeValue,
+  type ApiTokenListValue,
+  type ApiTokenValue,
   type UlidValue,
 } from '@froment/contracts';
 
-import { IntegrationTokensApi } from '@backoffice/integration-tokens-api';
+import { ApiTokensApi } from '@backoffice/api-tokens-api';
 import { I18nService, type TranslationKey } from '@app/i18n.service';
 import { Badge, type BadgeVariant } from '@shared/badge/badge';
 import { Button } from '@shared/button/button';
@@ -39,7 +39,7 @@ import { TextCopy } from '@shared/text-copy';
 interface TokenModel {
   readonly name: string;
   readonly expiresAt: string;
-  readonly permissions: ReadonlyArray<IntegrationPermissionCodeValue>;
+  readonly permissions: ReadonlyArray<ApiTokenPermissionCodeValue>;
 }
 
 const initialExpiration = () => {
@@ -55,16 +55,16 @@ const emptyModel = (): TokenModel => ({
 });
 
 @Component({
-  selector: 'app-integration-tokens',
+  selector: 'app-api-tokens',
   imports: [Badge, Button, CopyField, DataTable, FormField, LocalizedDatePipe, Notice],
-  templateUrl: './integration-tokens.html',
-  styleUrl: './integration-tokens.scss',
+  templateUrl: './api-tokens.html',
+  styleUrl: './api-tokens.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { '(window:beforeunload)': 'beforeUnload($event)' },
 })
-export class IntegrationTokens {
+export class ApiTokens {
   protected readonly i18n = inject(I18nService);
-  private readonly api = inject(IntegrationTokensApi);
+  private readonly api = inject(ApiTokensApi);
   private readonly textCopy = inject(TextCopy);
   private readonly destroyRef = inject(DestroyRef);
   private readonly model = signal<TokenModel>(emptyModel());
@@ -75,8 +75,8 @@ export class IntegrationTokens {
     required(path.expiresAt);
     minLength(path.permissions, 1);
   });
-  protected readonly permissionCodes = IntegrationPermissionCodes;
-  protected readonly tokens = signal<IntegrationTokenListValue>([]);
+  protected readonly permissionCodes = ApiTokenPermissionCodes;
+  protected readonly tokens = signal<ApiTokenListValue>([]);
   protected readonly nextCursor = signal<UlidValue | null>(null);
   protected readonly loading = signal(true);
   protected readonly loadingMore = signal(false);
@@ -146,7 +146,7 @@ export class IntegrationTokens {
     this.createOpen.set(false);
   }
 
-  protected togglePermission(permission: IntegrationPermissionCodeValue, selected: boolean): void {
+  protected togglePermission(permission: ApiTokenPermissionCodeValue, selected: boolean): void {
     this.model.update((model) => ({
       ...model,
       permissions: selected
@@ -155,7 +155,7 @@ export class IntegrationTokens {
     }));
   }
 
-  protected selected(permission: IntegrationPermissionCodeValue): boolean {
+  protected selected(permission: ApiTokenPermissionCodeValue): boolean {
     return this.model().permissions.includes(permission);
   }
 
@@ -191,9 +191,9 @@ export class IntegrationTokens {
     this.dialogError.set('clipboard.error');
   }
 
-  protected async revoke(token: IntegrationTokenValue): Promise<void> {
+  protected async revoke(token: ApiTokenValue): Promise<void> {
     if (this.revoking()) return;
-    if (!globalThis.confirm(this.i18n.t('backOffice.integrationTokens.revokeConfirmation'))) return;
+    if (!globalThis.confirm(this.i18n.t('backOffice.apiTokens.revokeConfirmation'))) return;
     this.revoking.set(true);
     this.pageError.set(undefined);
     const outcome = await this.api.revoke(token.id);
@@ -208,7 +208,7 @@ export class IntegrationTokens {
     this.scheduleExpiration();
   }
 
-  protected status(token: IntegrationTokenValue): 'active' | 'expired' | 'revoked' {
+  protected status(token: ApiTokenValue): 'active' | 'expired' | 'revoked' {
     if (token.revokedAt !== null) return 'revoked';
     return token.expiresAt <= this.now() ? 'expired' : 'active';
   }
@@ -221,11 +221,11 @@ export class IntegrationTokens {
     return this.saving() || this.tokenForm().invalid() || !this.expirationValid();
   }
 
-  protected statusLabel(token: IntegrationTokenValue): TranslationKey {
-    return `backOffice.integrationTokens.status.${this.status(token)}`;
+  protected statusLabel(token: ApiTokenValue): TranslationKey {
+    return `backOffice.apiTokens.status.${this.status(token)}`;
   }
 
-  protected statusVariant(token: IntegrationTokenValue): BadgeVariant {
+  protected statusVariant(token: ApiTokenValue): BadgeVariant {
     const status = this.status(token);
     if (status === 'active') return 'success';
     if (status === 'expired') return 'warning';
@@ -247,7 +247,7 @@ export class IntegrationTokens {
       this.nextCursor.set(page.nextCursor);
       this.scheduleExpiration();
     } catch {
-      this.pageError.set('integration_token.error');
+      this.pageError.set('api_token.error');
     } finally {
       this.loadingMore.set(false);
     }
@@ -256,7 +256,7 @@ export class IntegrationTokens {
   canDeactivate(): boolean {
     if (this.saving()) return false;
     if (this.secret() === undefined) return true;
-    return globalThis.confirm(this.i18n.t('backOffice.integrationTokens.leaveConfirmation'));
+    return globalThis.confirm(this.i18n.t('backOffice.apiTokens.leaveConfirmation'));
   }
 
   protected beforeUnload(event: BeforeUnloadEvent): void {
@@ -270,13 +270,13 @@ export class IntegrationTokens {
       this.nextCursor.set(page.nextCursor);
       this.scheduleExpiration();
     } catch {
-      this.pageError.set('integration_token.error');
+      this.pageError.set('api_token.error');
     } finally {
       this.loading.set(false);
     }
   }
 
-  private appendMissingTokens(items: IntegrationTokenListValue): void {
+  private appendMissingTokens(items: ApiTokenListValue): void {
     this.tokens.update((tokens) => {
       const known = new Set(tokens.map(({ id }) => id));
       return [...tokens, ...items.filter(({ id }) => !known.has(id))];

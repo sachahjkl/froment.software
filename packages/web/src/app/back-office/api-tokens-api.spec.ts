@@ -3,9 +3,9 @@ import { provideHttpClient, withXsrfConfiguration } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 
-import { IntegrationTokensApi } from './integration-tokens-api';
+import { ApiTokensApi } from './api-tokens-api';
 
-describe('IntegrationTokensApi', () => {
+describe('ApiTokensApi', () => {
   it('validates responses and sends CSRF tokens on writes', async () => {
     TestBed.configureTestingModule({
       providers: [
@@ -24,7 +24,7 @@ describe('IntegrationTokensApi', () => {
         },
       ],
     });
-    const api = TestBed.inject(IntegrationTokensApi);
+    const api = TestBed.inject(ApiTokensApi);
     const http = TestBed.inject(HttpTestingController);
     const token = {
       id: '01ARZ3NDEKTSV4RRFFQ69G5FAV',
@@ -36,14 +36,14 @@ describe('IntegrationTokensApi', () => {
       revokedAt: null,
       rateLimitPerMinute: 120,
     };
-    const secret = `froment_it_v1_${token.id}.${'a'.repeat(43)}`;
+    const secret = `froment_api_v1_${token.id}.${'a'.repeat(43)}`;
 
     const list = api.list();
-    http.expectOne('/api/integration-tokens').flush({ items: [token], nextCursor: null });
+    http.expectOne('/api/tokens').flush({ items: [token], nextCursor: null });
     await expect(list).resolves.toEqual({ items: [token], nextCursor: null });
 
     const nextPage = api.list(token.id);
-    http.expectOne(`/api/integration-tokens?cursor=${token.id}`).flush({
+    http.expectOne(`/api/tokens?cursor=${token.id}`).flush({
       items: [],
       nextCursor: null,
     });
@@ -55,7 +55,7 @@ describe('IntegrationTokensApi', () => {
       expiresAt: 1_800_000_000_000,
     };
     const create = api.create(payload);
-    const createRequest = http.expectOne('/api/integration-tokens');
+    const createRequest = http.expectOne('/api/tokens');
     expect(createRequest.request.method).toBe('POST');
     expect(createRequest.request.headers.get('x-csrf-token')).toBe(
       'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA',
@@ -65,7 +65,7 @@ describe('IntegrationTokensApi', () => {
     await expect(create).resolves.toEqual({ success: true, result: { token, secret } });
 
     const revoke = api.revoke(token.id);
-    const revokeRequest = http.expectOne(`/api/integration-tokens/${token.id}/revoke`);
+    const revokeRequest = http.expectOne(`/api/tokens/${token.id}/revoke`);
     expect(revokeRequest.request.method).toBe('POST');
     expect(revokeRequest.request.headers.get('x-csrf-token')).toBe(
       'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA',
@@ -80,13 +80,11 @@ describe('IntegrationTokensApi', () => {
     TestBed.configureTestingModule({
       providers: [provideHttpClient(), provideHttpClientTesting()],
     });
-    const api = TestBed.inject(IntegrationTokensApi);
+    const api = TestBed.inject(ApiTokensApi);
     const http = TestBed.inject(HttpTestingController);
 
     const list = api.list();
-    http
-      .expectOne('/api/integration-tokens')
-      .flush({ items: [{ id: 'invalid' }], nextCursor: null });
+    http.expectOne('/api/tokens').flush({ items: [{ id: 'invalid' }], nextCursor: null });
     await expect(list).rejects.toThrow();
     http.verify();
   });
@@ -95,7 +93,7 @@ describe('IntegrationTokensApi', () => {
     TestBed.configureTestingModule({
       providers: [provideHttpClient(), provideHttpClientTesting()],
     });
-    const api = TestBed.inject(IntegrationTokensApi);
+    const api = TestBed.inject(ApiTokensApi);
     const http = TestBed.inject(HttpTestingController);
     const payload = {
       name: 'ERP',
@@ -105,7 +103,7 @@ describe('IntegrationTokensApi', () => {
 
     const create = api.create(payload);
     http
-      .expectOne('/api/integration-tokens')
+      .expectOne('/api/tokens')
       .flush(
         { _tag: 'RequestInvalidOrigin', code: 'request.invalid_origin' },
         { status: 403, statusText: 'Forbidden' },
@@ -119,7 +117,7 @@ describe('IntegrationTokensApi', () => {
     const tokenId = '01ARZ3NDEKTSV4RRFFQ69G5FAV';
     const revoke = api.revoke(tokenId);
     http
-      .expectOne(`/api/integration-tokens/${tokenId}/revoke`)
+      .expectOne(`/api/tokens/${tokenId}/revoke`)
       .flush(
         { _tag: 'RequestTooLarge', code: 'request.too_large' },
         { status: 413, statusText: 'Content Too Large' },

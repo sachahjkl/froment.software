@@ -111,7 +111,7 @@ La variable obligatoire `BOOTSTRAP_PASSWORD_SCRYPT` contient les paramètres, le
 
 La variable obligatoire `ACCESS_HMAC_KEY` contient une clé aléatoire de 32 octets en base64url.
 
-La variable obligatoire `INTEGRATION_TOKEN_HMAC_KEY` contient une clé distincte de 32 octets en base64url.
+La variable obligatoire `API_TOKEN_HMAC_KEY` contient une clé distincte de 32 octets en base64url.
 
 La variable obligatoire `SESSION_HMAC_KEY` contient une autre clé aléatoire de 32 octets en base64url.
 

@@ -1,9 +1,9 @@
 import { TestBed } from '@angular/core/testing';
 import { vi } from 'vitest';
 
-import { IntegrationTokensApi } from '@backoffice/integration-tokens-api';
+import { ApiTokensApi } from '@backoffice/api-tokens-api';
 import { TextCopy } from '@shared/text-copy';
-import { IntegrationTokens } from './integration-tokens';
+import { ApiTokens } from './api-tokens';
 
 const token = {
   id: '01ARZ3NDEKTSV4RRFFQ69G5FAV',
@@ -15,7 +15,7 @@ const token = {
   revokedAt: null,
   rateLimitPerMinute: 120,
 };
-const secret = `froment_it_v1_${token.id}.${'a'.repeat(43)}`;
+const secret = `froment_api_v1_${token.id}.${'a'.repeat(43)}`;
 const serverToken = {
   ...token,
   id: '01ARZ3NDEKTSV4RRFFQ69G5FAW',
@@ -27,7 +27,7 @@ const nextToken = {
   name: 'Next token',
 };
 
-describe('IntegrationTokens', () => {
+describe('ApiTokens', () => {
   it('merges a creation with initial and subsequent list pages', async () => {
     let resolveList!: (page: {
       items: ReadonlyArray<typeof serverToken>;
@@ -44,12 +44,12 @@ describe('IntegrationTokens', () => {
     TestBed.configureTestingModule({
       providers: [
         {
-          provide: IntegrationTokensApi,
+          provide: ApiTokensApi,
           useValue: { list, create, revoke: vi.fn() },
         },
       ],
     });
-    const fixture = TestBed.createComponent(IntegrationTokens);
+    const fixture = TestBed.createComponent(ApiTokens);
     fixture.detectChanges();
     const root: HTMLElement = fixture.nativeElement;
     const dialog = root.querySelector<HTMLDialogElement>('dialog')!;
@@ -57,7 +57,7 @@ describe('IntegrationTokens', () => {
     dialog.close = vi.fn(() => dialog.removeAttribute('open'));
     root.querySelector<HTMLButtonElement>('button')!.click();
     await fixture.whenStable();
-    const name = root.querySelector<HTMLInputElement>('#integration-token-name')!;
+    const name = root.querySelector<HTMLInputElement>('#api-token-name')!;
     name.value = 'ERP';
     name.dispatchEvent(new Event('input'));
     const permission = root.querySelector<HTMLInputElement>('.permission-grid input')!;
@@ -95,7 +95,7 @@ describe('IntegrationTokens', () => {
     TestBed.configureTestingModule({
       providers: [
         {
-          provide: IntegrationTokensApi,
+          provide: ApiTokensApi,
           useValue: {
             list: () => Promise.resolve({ items: [], nextCursor: null }),
             create,
@@ -105,7 +105,7 @@ describe('IntegrationTokens', () => {
         { provide: TextCopy, useValue: { copy } },
       ],
     });
-    const fixture = TestBed.createComponent(IntegrationTokens);
+    const fixture = TestBed.createComponent(ApiTokens);
     await fixture.whenStable();
     const root: HTMLElement = fixture.nativeElement;
     const dialog = root.querySelector<HTMLDialogElement>('dialog')!;
@@ -113,7 +113,7 @@ describe('IntegrationTokens', () => {
     dialog.close = vi.fn(() => dialog.removeAttribute('open'));
     root.querySelector<HTMLButtonElement>('button')!.click();
     await fixture.whenStable();
-    const name = root.querySelector<HTMLInputElement>('#integration-token-name')!;
+    const name = root.querySelector<HTMLInputElement>('#api-token-name')!;
     name.value = 'ERP';
     name.dispatchEvent(new Event('input'));
     const permission = root.querySelector<HTMLInputElement>('.permission-grid input')!;
@@ -151,7 +151,7 @@ describe('IntegrationTokens', () => {
     TestBed.configureTestingModule({
       providers: [
         {
-          provide: IntegrationTokensApi,
+          provide: ApiTokensApi,
           useValue: {
             list: () => Promise.reject(new Error('Unavailable')),
             create: vi.fn(),
@@ -160,7 +160,7 @@ describe('IntegrationTokens', () => {
         },
       ],
     });
-    const fixture = TestBed.createComponent(IntegrationTokens);
+    const fixture = TestBed.createComponent(ApiTokens);
     await fixture.whenStable();
     const root: HTMLElement = fixture.nativeElement;
 
@@ -179,7 +179,7 @@ describe('IntegrationTokens', () => {
     TestBed.configureTestingModule({
       providers: [
         {
-          provide: IntegrationTokensApi,
+          provide: ApiTokensApi,
           useValue: {
             list: () => Promise.resolve({ items: [], nextCursor: null }),
             create,
@@ -188,14 +188,14 @@ describe('IntegrationTokens', () => {
         },
       ],
     });
-    const fixture = TestBed.createComponent(IntegrationTokens);
+    const fixture = TestBed.createComponent(ApiTokens);
     await fixture.whenStable();
     const root: HTMLElement = fixture.nativeElement;
     const dialog = root.querySelector<HTMLDialogElement>('dialog')!;
     dialog.showModal = vi.fn(() => dialog.setAttribute('open', ''));
     root.querySelector<HTMLButtonElement>('button')!.click();
     await fixture.whenStable();
-    const name = root.querySelector<HTMLInputElement>('#integration-token-name')!;
+    const name = root.querySelector<HTMLInputElement>('#api-token-name')!;
     name.value = 'ERP';
     name.dispatchEvent(new Event('input'));
     const permission = root.querySelector<HTMLInputElement>('.permission-grid input')!;
@@ -224,7 +224,7 @@ describe('IntegrationTokens', () => {
     TestBed.configureTestingModule({
       providers: [
         {
-          provide: IntegrationTokensApi,
+          provide: ApiTokensApi,
           useValue: {
             list: () => Promise.resolve({ items: [token], nextCursor: null }),
             create: vi.fn(),
@@ -233,7 +233,7 @@ describe('IntegrationTokens', () => {
         },
       ],
     });
-    const fixture = TestBed.createComponent(IntegrationTokens);
+    const fixture = TestBed.createComponent(ApiTokens);
     await fixture.whenStable();
     const root: HTMLElement = fixture.nativeElement;
     const revokeButton = root.querySelector<HTMLButtonElement>('tbody button');

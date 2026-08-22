@@ -30,7 +30,7 @@ describe('API documentation', () => {
     const english = OpenApi.fromApi(apiForLanguage('en'));
 
     expect(french.info).toMatchObject({
-      title: 'API d’intégration Froment Software',
+      title: 'API Froment Software',
       description: 'API pour les clients, devis, commandes, factures et documents générés.',
     });
     expect(french.paths['/api/clients']?.get).toMatchObject({

@@ -10,7 +10,7 @@ Roles assign permissions to principals. Endpoints declare required permissions.
 
 | Aspect                  | Contract declaration                 | Runtime effect                                                    |
 | ----------------------- | ------------------------------------ | ----------------------------------------------------------------- |
-| API visibility          | `frontendSpecific`                   | Excludes the endpoint from the integration OpenAPI document.      |
+| API visibility          | `frontendSpecific`                   | Adds the Frontend tag to the OpenAPI operation.                   |
 | Authentication          | `authenticate`                       | Selects and validates the declared credential schemes.            |
 | Permissions             | `requirePermissions([...])`          | Checks every permission and documents their stable codes.         |
 | Rate limit              | `rateLimit(RateLimits.tenPerMinute)` | Limits requests for the endpoint and principal.                   |
@@ -25,13 +25,13 @@ Roles assign permissions to principals. Endpoints declare required permissions.
 | ------------------------------------------------------- | ------------ | ------------ | --------------------- |
 | Session Cookie with `POST`, `PUT`, `PATCH`, or `DELETE` | Required     | Required     | Declared per endpoint |
 | Session Cookie with another method                      | Not required | Not required | Declared per endpoint |
-| Integration Bearer                                      | Not required | Not required | Declared per endpoint |
+| API-token Bearer                                        | Not required | Not required | Declared per endpoint |
 
 Mixed credentials are invalid. Missing or malformed credentials are invalid.
 
-## Integration Endpoint
+## Documented Endpoint
 
-Integration endpoints appear in OpenAPI by default.
+All endpoints appear in OpenAPI by default.
 
 ```ts
 HttpApiEndpoint.get("quoteList", "/api/quotes", {
@@ -40,7 +40,7 @@ HttpApiEndpoint.get("quoteList", "/api/quotes", {
 }).pipe(requirePermissions([Permissions.quoteRead]), authenticate);
 ```
 
-## Integration Mutation
+## Documented Mutation
 
 ```ts
 HttpApiEndpoint.post("quoteSend", "/api/quotes/:quoteId/send", {
@@ -59,20 +59,20 @@ HttpApiEndpoint.post("quoteSend", "/api/quotes/:quoteId/send", {
 ## Frontend Endpoint
 
 ```ts
-HttpApiEndpoint.post("integrationTokenCreate", "/api/integration-tokens", {
-  payload: IntegrationTokenCreateRequest,
-  success: IntegrationTokenCreated,
-  error: integrationTokenCreateErrors,
+HttpApiEndpoint.post("apiTokenCreate", "/api/tokens", {
+  payload: ApiTokenCreateRequest,
+  success: ApiTokenCreated,
+  error: apiTokenCreateErrors,
 }).pipe(
   limitRequestBody,
-  requirePermissions([Permissions.integrationTokenManage]),
+  requirePermissions([Permissions.apiTokenManage]),
   authenticate,
   rateLimit(RateLimits.tenPerMinute),
   frontendSpecific,
 );
 ```
 
-`frontendSpecific` only adds `OpenApi.Exclude`.
+`frontendSpecific` preserves the business tag and adds the `Frontend` tag.
 
 ## Localized OpenAPI
 

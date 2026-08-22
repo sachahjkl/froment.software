@@ -3,7 +3,7 @@ import { HomeComponent } from './pages/home/home.component';
 import { policies } from './pages/policy/policy-documents';
 import { administratorGuard, clientGuard } from './back-office/authentication';
 import { unsavedChangesGuard } from './back-office/unsaved-changes-guard';
-import { pendingIntegrationTokenGuard } from './back-office/pending-integration-token-guard';
+import { pendingApiTokenGuard } from './back-office/pending-api-token-guard';
 import { TabPanelOutlet } from './shared/tabs/tab-panel';
 
 const tabRoutes = (defaultPath: string, panel: string, paths: readonly string[]): Routes => [
@@ -274,12 +274,10 @@ export const routes: Routes = [
           import('./pages/business-card/business-card').then((module) => module.BusinessCard),
       },
       {
-        path: 'integrations',
+        path: 'api',
         loadComponent: () =>
-          import('./pages/back-office/integration-tokens/integration-tokens').then(
-            (module) => module.IntegrationTokens,
-          ),
-        canDeactivate: [pendingIntegrationTokenGuard],
+          import('./pages/back-office/api-tokens/api-tokens').then((module) => module.ApiTokens),
+        canDeactivate: [pendingApiTokenGuard],
         data: {
           titleKey: 'page.back_office_issuer_settings',
           descriptionKey: 'page.description.back_office_issuer_settings',

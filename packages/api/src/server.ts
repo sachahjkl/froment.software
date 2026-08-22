@@ -21,7 +21,7 @@ import { HttpTracingLive, traceRequest } from './observability/http-tracing.js';
 import { identifyRequest } from './http/response.js';
 import { ApiBrowserRequestLive } from './http/origin.js';
 import { ApiRequestBodyLive, RequestBodyLimits } from './http/request-body.js';
-import { IntegrationTokenHandlers } from './integration-tokens/handlers.js';
+import { ApiTokenHandlers } from './api-tokens/handlers.js';
 import { InvoiceHandlers } from './invoices/handlers.js';
 import { IssuerSettingsHandlers } from './issuer-settings/handlers.js';
 import { OrderHandlers } from './orders/handlers.js';
@@ -49,7 +49,7 @@ const ApiRoutes = HttpApiBuilder.layer(FrenchApi, { openapiPath: '/api/openapi.j
       QuoteLinkHandlers,
       InvoiceHandlers,
       ClientPortalHandlers,
-      IntegrationTokenHandlers,
+      ApiTokenHandlers,
     ),
   ),
   Layer.provide(Layer.mergeAll(AuthenticationHttpLive, ApiBrowserRequestLive, ApiRequestBodyLive)),

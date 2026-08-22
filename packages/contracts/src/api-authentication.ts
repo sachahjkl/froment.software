@@ -13,7 +13,7 @@ import type { Ulid as UlidValue } from './identifiers.js';
 
 export type ApiCredentialsValue =
   | { readonly kind: 'session'; readonly token: string }
-  | { readonly kind: 'integration-token'; readonly token: string };
+  | { readonly kind: 'api-token'; readonly token: string };
 
 export class ApiCredentials extends Context.Service<ApiCredentials, ApiCredentialsValue>()(
   '@froment/contracts/ApiCredentials',
@@ -27,7 +27,7 @@ export type ApiPrincipalValue =
   | {
       readonly userId: UlidValue;
       readonly credential: {
-        readonly kind: 'integration-token';
+        readonly kind: 'api-token';
         readonly tokenId: UlidValue;
       };
     };
@@ -44,7 +44,7 @@ const sessionCookie = HttpApiSecurity.apiKey({
 const bearer = HttpApiSecurity.bearer.pipe(
   HttpApiSecurity.annotateMerge(
     OpenApi.annotations({
-      format: 'froment_it_v1_<token-id>.<secret>',
+      format: 'froment_api_v1_<token-id>.<secret>',
     }),
   ),
 );

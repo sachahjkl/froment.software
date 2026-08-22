@@ -1,38 +1,38 @@
-<section class="tokens-page" aria-labelledby="integration-tokens-title">
+<section class="tokens-page" aria-labelledby="api-tokens-title">
   <header>
     <div>
-      <h1 id="integration-tokens-title">{{ i18n.t('backOffice.integrationTokens.title') }}</h1>
-      <p>{{ i18n.t('backOffice.integrationTokens.intro') }}</p>
+      <h1 id="api-tokens-title">{{ i18n.t('backOffice.apiTokens.title') }}</h1>
+      <p>{{ i18n.t('backOffice.apiTokens.intro') }}</p>
     </div>
     <button #createButton appButton variant="primary" type="button" (click)="openCreate()">
-      {{ i18n.t('backOffice.integrationTokens.create') }}
+      {{ i18n.t('backOffice.apiTokens.create') }}
     </button>
   </header>
 
   <p>
     <a href="/api/docs" target="_blank" rel="noopener noreferrer">
-      {{ i18n.t('backOffice.integrationTokens.documentation') }}
+      {{ i18n.t('backOffice.apiTokens.documentation') }}
     </a>
   </p>
 
   @if (pageError(); as errorKey) {
   <p appNotice variant="danger" role="alert">{{ i18n.t(errorKey) }}</p>
   } @if (loading()) {
-  <p aria-live="polite">{{ i18n.t('backOffice.integrationTokens.loading') }}</p>
+  <p aria-live="polite">{{ i18n.t('backOffice.apiTokens.loading') }}</p>
   } @else if (tokens().length === 0 && pageError() === undefined) {
-  <p class="empty">{{ i18n.t('backOffice.integrationTokens.empty') }}</p>
+  <p class="empty">{{ i18n.t('backOffice.apiTokens.empty') }}</p>
   } @else {
   <div appDataTable>
     <table>
       <thead>
         <tr>
-          <th>{{ i18n.t('backOffice.integrationTokens.name') }}</th>
-          <th>{{ i18n.t('backOffice.integrationTokens.permissions') }}</th>
-          <th>{{ i18n.t('backOffice.integrationTokens.createdAt') }}</th>
-          <th>{{ i18n.t('backOffice.integrationTokens.expiresAt') }}</th>
-          <th>{{ i18n.t('backOffice.integrationTokens.lastUsedAt') }}</th>
-          <th>{{ i18n.t('backOffice.integrationTokens.status') }}</th>
-          <th>{{ i18n.t('backOffice.integrationTokens.actions') }}</th>
+          <th>{{ i18n.t('backOffice.apiTokens.name') }}</th>
+          <th>{{ i18n.t('backOffice.apiTokens.permissions') }}</th>
+          <th>{{ i18n.t('backOffice.apiTokens.createdAt') }}</th>
+          <th>{{ i18n.t('backOffice.apiTokens.expiresAt') }}</th>
+          <th>{{ i18n.t('backOffice.apiTokens.lastUsedAt') }}</th>
+          <th>{{ i18n.t('backOffice.apiTokens.status') }}</th>
+          <th>{{ i18n.t('backOffice.apiTokens.actions') }}</th>
         </tr>
       </thead>
       <tbody>
@@ -49,9 +49,9 @@
             timeStyle: 'short' } }}
           </td>
           <td>
-            @if (token.lastUsedAt === null) { {{ i18n.t('backOffice.integrationTokens.never') }} }
-            @else { {{ date(token.lastUsedAt) | localizedDate: i18n.language() : { dateStyle:
-            'short', timeStyle: 'short' } }} }
+            @if (token.lastUsedAt === null) { {{ i18n.t('backOffice.apiTokens.never') }} } @else {
+            {{ date(token.lastUsedAt) | localizedDate: i18n.language() : { dateStyle: 'short',
+            timeStyle: 'short' } }} }
           </td>
           <td>
             <span appBadge [variant]="statusVariant(token)">{{ i18n.t(statusLabel(token)) }}</span>
@@ -63,10 +63,10 @@
               variant="danger"
               type="button"
               [disabled]="revoking()"
-              [attr.aria-label]="i18n.t('backOffice.integrationTokens.revoke') + ' ' + token.name"
+              [attr.aria-label]="i18n.t('backOffice.apiTokens.revoke') + ' ' + token.name"
               (click)="revoke(token)"
             >
-              {{ i18n.t('backOffice.integrationTokens.revoke') }}
+              {{ i18n.t('backOffice.apiTokens.revoke') }}
             </button>
             }
           </td>
@@ -77,7 +77,7 @@
   </div>
   @if (nextCursor() !== null) {
   <button appButton type="button" [disabled]="loadingMore()" (click)="loadMore()">
-    {{ i18n.t('backOffice.integrationTokens.loadMore') }}
+    {{ i18n.t('backOffice.apiTokens.loadMore') }}
   </button>
   } }
 </section>
@@ -85,60 +85,54 @@
 <dialog
   #createDialog
   [attr.aria-labelledby]="
-    secret() === undefined ? 'integration-token-create-title' : 'integration-token-secret-title'
+    secret() === undefined ? 'api-token-create-title' : 'api-token-secret-title'
   "
   (cancel)="cancelCreate($event)"
   (close)="closeCreate()"
 >
   @if (secret(); as currentSecret) {
-  <section class="dialog-content" aria-labelledby="integration-token-secret-title">
-    <h2 id="integration-token-secret-title">
-      {{ i18n.t('backOffice.integrationTokens.secretTitle') }}
-    </h2>
-    <p appNotice variant="warning">{{ i18n.t('backOffice.integrationTokens.secretWarning') }}</p>
+  <section class="dialog-content" aria-labelledby="api-token-secret-title">
+    <h2 id="api-token-secret-title">{{ i18n.t('backOffice.apiTokens.secretTitle') }}</h2>
+    <p appNotice variant="warning">{{ i18n.t('backOffice.apiTokens.secretWarning') }}</p>
     @if (dialogError(); as errorKey) {
     <p appNotice variant="danger" role="alert">{{ i18n.t(errorKey) }}</p>
     }
     <app-copy-field
       [value]="currentSecret"
-      [actionLabel]="i18n.t('backOffice.integrationTokens.copy')"
-      [status]="copied() ? i18n.t('backOffice.integrationTokens.copied') : ''"
+      [actionLabel]="i18n.t('backOffice.apiTokens.copy')"
+      [status]="copied() ? i18n.t('backOffice.apiTokens.copied') : ''"
       (copy)="copySecret(currentSecret)"
     />
     <button appButton variant="primary" type="button" (click)="acknowledgeSecret()">
-      {{ i18n.t('backOffice.integrationTokens.secretSaved') }}
+      {{ i18n.t('backOffice.apiTokens.secretSaved') }}
     </button>
   </section>
   } @else {
   <form class="dialog-content" (submit)="create($event)">
     <div class="dialog-heading">
-      <h2 id="integration-token-create-title">
-        {{ i18n.t('backOffice.integrationTokens.createTitle') }}
-      </h2>
+      <h2 id="api-token-create-title">{{ i18n.t('backOffice.apiTokens.createTitle') }}</h2>
       <button appButton type="button" [disabled]="saving()" (click)="closeCreate()">
-        {{ i18n.t('backOffice.integrationTokens.cancel') }}
+        {{ i18n.t('backOffice.apiTokens.cancel') }}
       </button>
     </div>
-    <label class="field" for="integration-token-name">
-      {{ i18n.t('backOffice.integrationTokens.name') }}
-      <input id="integration-token-name" class="input" [formField]="tokenForm.name" />
+    <label class="field" for="api-token-name">
+      {{ i18n.t('backOffice.apiTokens.name') }}
+      <input id="api-token-name" class="input" [formField]="tokenForm.name" />
     </label>
-    <label class="field" for="integration-token-expiration">
-      {{ i18n.t('backOffice.integrationTokens.expiresAt') }}
+    <label class="field" for="api-token-expiration">
+      {{ i18n.t('backOffice.apiTokens.expiresAt') }}
       <input
-        id="integration-token-expiration"
+        id="api-token-expiration"
         class="input"
         type="datetime-local"
         [formField]="tokenForm.expiresAt"
       />
       @if (tokenForm.expiresAt().touched() && !expirationValid()) {
-      <span class="field-error"
-        >{{ i18n.t('backOffice.integrationTokens.expirationInvalid') }}</span
-      >
+      <span class="field-error">{{ i18n.t('backOffice.apiTokens.expirationInvalid') }}</span>
       }
     </label>
     <fieldset>
-      <legend>{{ i18n.t('backOffice.integrationTokens.permissions') }}</legend>
+      <legend>{{ i18n.t('backOffice.apiTokens.permissions') }}</legend>
       <div class="permission-grid">
         @for (permission of permissionCodes; track permission) {
         <label>
@@ -156,7 +150,7 @@
     <p appNotice variant="danger" role="alert">{{ i18n.t(errorKey) }}</p>
     }
     <button appButton variant="primary" type="submit" [disabled]="createDisabled()">
-      {{ i18n.t('backOffice.integrationTokens.create') }}
+      {{ i18n.t('backOffice.apiTokens.create') }}
     </button>
   </form>
   }

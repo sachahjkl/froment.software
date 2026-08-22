@@ -6,7 +6,7 @@ import { AuditLive } from './audit/audit.js';
 import { BusinessConfigLive } from './business/business-config.js';
 import { AuthenticationLive } from './authentication/authentication.js';
 import { AuthenticationConfigLive } from './authentication/authentication-config.js';
-import { IntegrationTokensLive } from './integration-tokens/service.js';
+import { ApiTokensLive } from './api-tokens/service.js';
 import { ClientsLive } from './clients/clients.js';
 import { DatabaseLive } from './database/database.js';
 import { DeploymentLive } from './deployment/deployment.js';
@@ -39,7 +39,7 @@ const InvoicePdfRuntimeLive = Layer.merge(
 const ServicesLive = Layer.mergeAll(
   BootstrapLive,
   AuthenticationLive,
-  IntegrationTokensLive,
+  ApiTokensLive,
   ClientsLive,
   InvoicePdfRuntimeLive,
   QuoteLinksLive.pipe(Layer.provide(BusinessConfigLive)),

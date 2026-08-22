@@ -17,7 +17,7 @@ export interface BootstrapPasswordHash {
 export interface AuthenticationConfigService {
   readonly bootstrapPasswordHash: BootstrapPasswordHash;
   readonly accessHmacKey: Buffer;
-  readonly integrationTokenHmacKey: Buffer;
+  readonly apiTokenHmacKey: Buffer;
   readonly sessionHmacKey: Buffer;
   readonly quoteLinkHmacKey: Buffer;
   readonly publicOrigin: string;
@@ -40,8 +40,8 @@ export const AuthenticationConfigLive = Layer.effect(
     const sessionHmacKey = yield* Schema.decodeUnknownEffect(HmacKey)(
       Redacted.value(yield* Config.redacted('SESSION_HMAC_KEY')),
     );
-    const integrationTokenHmacKey = yield* Schema.decodeUnknownEffect(HmacKey)(
-      Redacted.value(yield* Config.redacted('INTEGRATION_TOKEN_HMAC_KEY')),
+    const apiTokenHmacKey = yield* Schema.decodeUnknownEffect(HmacKey)(
+      Redacted.value(yield* Config.redacted('API_TOKEN_HMAC_KEY')),
     );
     const quoteLinkHmacKey = yield* Schema.decodeUnknownEffect(HmacKey)(
       Redacted.value(yield* Config.redacted('QUOTE_LINK_HMAC_KEY')),
@@ -58,7 +58,7 @@ export const AuthenticationConfigLive = Layer.effect(
         hash: Buffer.from(hash, 'base64url'),
       },
       accessHmacKey: Buffer.from(accessHmacKey, 'base64url'),
-      integrationTokenHmacKey: Buffer.from(integrationTokenHmacKey, 'base64url'),
+      apiTokenHmacKey: Buffer.from(apiTokenHmacKey, 'base64url'),
       sessionHmacKey: Buffer.from(sessionHmacKey, 'base64url'),
       quoteLinkHmacKey: Buffer.from(quoteLinkHmacKey, 'base64url'),
       publicOrigin: publicUrl.origin,

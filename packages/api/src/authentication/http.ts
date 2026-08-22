@@ -15,7 +15,7 @@ import { Context, Effect, Layer, Option, Redacted, Schema } from 'effect';
 import { HttpMethod, HttpServerRequest } from 'effect/unstable/http';
 import { HttpApiBuilder, HttpApiSecurity } from 'effect/unstable/httpapi';
 
-import { IntegrationTokens } from '../integration-tokens/service.js';
+import { ApiTokens } from '../api-tokens/service.js';
 import { getClientAddress } from '../http/request.js';
 import { setPrivateResponseHeaders } from '../http/response.js';
 import { RequestLimiter } from '../server/request-limiter.js';
@@ -27,7 +27,7 @@ export const csrfCookieName = '__Host-froment-csrf';
 export const csrfHeaderName = 'x-csrf-token';
 
 const AuthenticationRateLimits = {
-  integrationAttemptsPerAddressPerMinute: 120,
+  apiTokenAttemptsPerAddressPerMinute: 120,
 } as const;
 
 const sessionCookie = HttpApiSecurity.apiKey({
@@ -96,7 +96,7 @@ const ApiAuthenticationLive = Layer.succeed(
         return yield* new AuthenticationRequired({ code: 'authentication.required' });
       }
       return yield* Effect.provideService(httpEffect, ApiCredentials, {
-        kind: 'integration-token',
+        kind: 'api-token',
         token: bearerToken,
       });
     }),
@@ -108,7 +108,7 @@ const ApiAuthorizationLive = Layer.effect(
   Effect.gen(function* () {
     const authentication = yield* Authentication;
     const config = yield* AuthenticationConfig;
-    const integrationTokens = yield* IntegrationTokens;
+    const apiTokens = yield* ApiTokens;
     const limiter = yield* RequestLimiter;
     const limitEndpoint = Effect.fn('ApiAuthorization.limitEndpoint')(function* (
       principalId: string,
@@ -158,25 +158,25 @@ const ApiAuthorizationLive = Layer.effect(
 
         if (
           !(yield* limiter.allowRequest(
-            `integration-auth:address:${yield* getClientAddress()}`,
-            AuthenticationRateLimits.integrationAttemptsPerAddressPerMinute,
+            `api-token-auth:address:${yield* getClientAddress()}`,
+            AuthenticationRateLimits.apiTokenAttemptsPerAddressPerMinute,
           ))
         ) {
           return yield* new RequestRateLimited({ code: 'request.rate_limited' });
         }
-        const principal = yield* integrationTokens
+        const principal = yield* apiTokens
           .authenticate(credentials.token)
           .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
         if (
           !(yield* limiter.allowRequest(
-            `integration-token:${principal.tokenId}:all`,
+            `api-token:${principal.tokenId}:all`,
             principal.rateLimitPerMinute,
           ))
         ) {
           return yield* new RequestRateLimited({ code: 'request.rate_limited' });
         }
         for (const permission of permissions) {
-          yield* integrationTokens
+          yield* apiTokens
             .authorizePermission(principal, permission)
             .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
         }
@@ -185,7 +185,7 @@ const ApiAuthorizationLive = Layer.effect(
         }
         return yield* Effect.provideService(httpEffect, ApiPrincipal, {
           userId: principal.userId,
-          credential: { kind: 'integration-token', tokenId: principal.tokenId },
+          credential: { kind: 'api-token', tokenId: principal.tokenId },
         });
       }),
     );
