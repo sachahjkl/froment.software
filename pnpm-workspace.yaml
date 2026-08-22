@@ -32,6 +32,7 @@ catalog:
   oxlint: "1.79.0"
   rxjs: "~7.8.0"
   tslib: "^2.3.0"
+  tough-cookie: "6.0.2"
   typescript: "~6.0.3"
   ulid: "3.0.2"
   vitest: "^4.1.10"

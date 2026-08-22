@@ -27,7 +27,7 @@ export const apiDocumentation = {
     description: 'API pour les clients, devis, commandes, factures et documents générés.',
     requiredPermission: 'Permission requise : `{permission}`.',
     security: {
-      bearer: 'Jeton d’accès PASETO ou jeton d’API Bearer.',
+      bearer: 'Jeton d’API transmis avec le schéma Bearer.',
     },
     groups: {
       clients: { title: 'Clients', description: 'Fiches clients et cycle de vie.' },
@@ -294,7 +294,7 @@ export const apiDocumentation = {
     description: 'API for client records, quotes, orders, invoices, and generated documents.',
     requiredPermission: 'Required permission: `{permission}`.',
     security: {
-      bearer: 'PASETO access token or Bearer API token.',
+      bearer: 'API token sent with the Bearer scheme.',
     },
     groups: {
       clients: { title: 'Clients', description: 'Client records and lifecycle.' },

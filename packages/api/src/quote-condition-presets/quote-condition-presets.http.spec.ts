@@ -34,13 +34,13 @@ describe('quote condition preset HTTP routes', () => {
     expect(update.status).toBe(200);
     const updated = await update.json();
     const list = await fetch(`${server.baseUrl}/api/quote-condition-presets`, {
-      headers: server.authorization,
+      headers: server.sessionHeaders,
     });
     await expect(list.json()).resolves.toEqual([updated]);
 
     const remove = await fetch(`${server.baseUrl}/api/quote-condition-presets/${preset.id}`, {
       method: 'DELETE',
-      headers: server.authorization,
+      headers: server.sessionHeaders,
     });
     expect(remove.status).toBe(200);
     expect((await fetch(`${server.baseUrl}/api/quote-condition-presets`)).status).toBe(401);

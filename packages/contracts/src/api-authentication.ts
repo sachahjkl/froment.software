@@ -35,7 +35,7 @@ export class ApiPrincipal extends Context.Service<ApiPrincipal, ApiPrincipalValu
   '@froment/contracts/ApiPrincipal',
 ) {}
 
-const bearer = HttpApiSecurity.bearer.pipe(
+const bearer = HttpApiSecurity.http({ scheme: 'bearer' }).pipe(
   HttpApiSecurity.annotateMerge(
     OpenApi.annotations({
       format: 'froment_api_v1_<token-id>.<secret>',

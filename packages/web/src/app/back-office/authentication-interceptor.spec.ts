@@ -3,7 +3,7 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { TestBed } from '@angular/core/testing';
 import { firstValueFrom } from 'rxjs';
 
-import { AccessTokenStore } from './access-token-store';
+import { BrowserSessionStore } from './browser-session-store';
 import { authenticationInterceptor } from './authentication-interceptor';
 
 describe('authenticationInterceptor', () => {
@@ -16,12 +16,11 @@ describe('authenticationInterceptor', () => {
     });
   });
 
-  it('attaches the memory token and retries once after one shared refresh', async () => {
+  it('retries once after one shared cookie refresh', async () => {
     const http = TestBed.inject(HttpClient);
     const testing = TestBed.inject(HttpTestingController);
-    const store = TestBed.inject(AccessTokenStore);
+    const store = TestBed.inject(BrowserSessionStore);
     store.set({
-      accessToken: 'v4.public.initial',
       expiresAt: Date.now() + 600_000,
       mode: 'administrator',
     });
@@ -30,13 +29,12 @@ describe('authenticationInterceptor', () => {
     const second = firstValueFrom(http.get('/api/quotes'));
     const firstRequest = testing.expectOne('/api/clients');
     const secondRequest = testing.expectOne('/api/quotes');
-    expect(firstRequest.request.headers.get('authorization')).toBe('Bearer v4.public.initial');
-    expect(secondRequest.request.headers.get('authorization')).toBe('Bearer v4.public.initial');
+    expect(firstRequest.request.headers.has('authorization')).toBe(false);
+    expect(secondRequest.request.headers.has('authorization')).toBe(false);
     firstRequest.flush({}, { status: 401, statusText: 'Unauthorized' });
     secondRequest.flush({}, { status: 401, statusText: 'Unauthorized' });
 
     testing.expectOne('/api/auth/refresh').flush({
-      accessToken: 'v4.public.refreshed',
       expiresAt: Date.now() + 600_000,
       mode: 'administrator',
     });
@@ -48,7 +46,7 @@ describe('authenticationInterceptor', () => {
       return matched;
     });
     for (const retry of retries) {
-      expect(retry.request.headers.get('authorization')).toBe('Bearer v4.public.refreshed');
+      expect(retry.request.headers.has('authorization')).toBe(false);
       retry.flush({});
     }
 
@@ -59,8 +57,7 @@ describe('authenticationInterceptor', () => {
   it('does not replace explicit credentials or attach tokens to public routes', () => {
     const http = TestBed.inject(HttpClient);
     const testing = TestBed.inject(HttpTestingController);
-    TestBed.inject(AccessTokenStore).set({
-      accessToken: 'v4.public.memory',
+    TestBed.inject(BrowserSessionStore).set({
       expiresAt: Date.now() + 600_000,
       mode: 'administrator',
     });
@@ -84,12 +81,11 @@ describe('authenticationInterceptor', () => {
 
     testing.expectOne('/api/clients').flush({}, { status: 401, statusText: 'Unauthorized' });
     testing.expectOne('/api/auth/refresh').flush({
-      accessToken: 'v4.public.refreshed',
       expiresAt: Date.now() + 600_000,
       mode: 'administrator',
     });
     const retry = await vi.waitFor(() => testing.expectOne('/api/clients'));
-    expect(retry.request.headers.get('authorization')).toBe('Bearer v4.public.refreshed');
+    expect(retry.request.headers.has('authorization')).toBe(false);
     retry.flush({}, { status: 401, statusText: 'Unauthorized' });
 
     await expect(request).rejects.toMatchObject({ status: 401 });

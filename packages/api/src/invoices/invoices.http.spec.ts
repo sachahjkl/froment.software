@@ -4,7 +4,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import {
   acceptQuote,
   createClient,
-  createClientToken,
+  createClientSession,
   createQuote,
   setIssuer,
   startHttpTestServer,
@@ -19,7 +19,7 @@ describe('invoice HTTP routes', () => {
   it('creates, revises, issues, downloads, and terminates an invoice', async () => {
     await setIssuer(server);
     const client = await createClient(server);
-    const clientToken = await createClientToken(server, client.id);
+    const clientSession = await createClientSession(server, client.id);
     const quote = await createQuote(server, client.id);
     const { accepted } = await acceptQuote(server, quote.id);
     const payload = {
@@ -75,14 +75,14 @@ describe('invoice HTTP routes', () => {
     expect(issued).toMatchObject({ invoiceNumber: 'FA-2026-000001', version: 3 });
 
     const download = await fetch(`${server.baseUrl}/api/invoices/${invoice.id}/revisions/3/pdf`, {
-      headers: server.authorization,
+      headers: server.sessionHeaders,
     });
     expect(download.status).toBe(200);
     expect(download.headers.get('content-disposition')).toContain('FA-2026-000001-v3.pdf');
     const pdf = Buffer.from(await download.arrayBuffer());
     expect(pdf.subarray(0, 5).toString()).toBe('%PDF-');
     const clientDownload = await fetch(`${server.baseUrl}/api/client/invoices/${invoice.id}/pdf`, {
-      headers: { authorization: `Bearer ${clientToken}` },
+      headers: clientSession,
     });
     expect(Buffer.from(await clientDownload.arrayBuffer())).toEqual(pdf);
 

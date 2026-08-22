@@ -36,7 +36,7 @@ describe('API contracts', () => {
     ]);
     expect(specification.paths['/api/health']?.get?.tags).toEqual(['status']);
     expect(specification.components.securitySchemes).toMatchObject({
-      bearer: { type: 'http', scheme: 'Bearer' },
+      bearer: { type: 'http', scheme: 'bearer' },
     });
     expect(specification.components.securitySchemes).not.toHaveProperty('sessionCookie');
     expect(specification.paths['/api/clients']?.get?.security).toEqual([{ bearer: [] }]);

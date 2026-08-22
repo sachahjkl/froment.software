@@ -2,7 +2,7 @@ import { HttpErrorResponse, type HttpInterceptorFn } from '@angular/common/http'
 import { inject } from '@angular/core';
 import { catchError, from, switchMap, throwError } from 'rxjs';
 
-import { AccessTokenStore } from './access-token-store';
+import { BrowserSessionStore } from './browser-session-store';
 
 const excluded = (url: string) =>
   url === '/api/auth/login' ||
@@ -14,7 +14,7 @@ const excluded = (url: string) =>
   url === '/api/version';
 
 export const authenticationInterceptor: HttpInterceptorFn = (request, next) => {
-  const store = inject(AccessTokenStore);
+  const store = inject(BrowserSessionStore);
   if (
     !request.url.startsWith('/api/') ||
     excluded(request.url) ||
@@ -23,21 +23,15 @@ export const authenticationInterceptor: HttpInterceptorFn = (request, next) => {
     return next(request);
   }
 
-  const token = store.token();
-  const authenticated =
-    token === undefined
-      ? request
-      : request.clone({ setHeaders: { Authorization: `Bearer ${token}` } });
-  return next(authenticated).pipe(
+  return next(request).pipe(
     catchError((error: HttpErrorResponse) => {
       if (error.status !== 401) {
         return throwError(() => error);
       }
       return from(store.refresh()).pipe(
         switchMap(() => {
-          const refreshed = store.token();
-          if (refreshed === undefined) return throwError(() => error);
-          return next(request.clone({ setHeaders: { Authorization: `Bearer ${refreshed}` } }));
+          if (store.mode() === undefined) return throwError(() => error);
+          return next(request);
         }),
       );
     }),

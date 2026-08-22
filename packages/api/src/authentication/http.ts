@@ -23,7 +23,21 @@ import { RuntimeConfiguration } from '../runtime-config.js';
 import { Authentication } from './authentication.js';
 
 export const refreshCookieName = '__Secure-froment-refresh';
+export const accessCookieName = '__Secure-froment-access';
 const refreshCookie = HttpApiSecurity.apiKey({ key: refreshCookieName, in: 'cookie' });
+const accessCookie = HttpApiSecurity.apiKey({ key: accessCookieName, in: 'cookie' });
+
+export const setAccessCookie = (access: {
+  readonly accessToken: string;
+  readonly accessExpiresAt: number;
+}) =>
+  HttpApiBuilder.securitySetCookie(accessCookie, access.accessToken, {
+    expires: new Date(access.accessExpiresAt),
+    httpOnly: true,
+    secure: true,
+    path: '/api',
+    sameSite: 'strict',
+  });
 
 export const setRefreshCookie = (refresh: {
   readonly refreshToken: string;
@@ -42,19 +56,22 @@ export const clearRefreshCookie = setRefreshCookie({
   refreshExpiresAt: new Date(0),
 });
 
-const bearerFromRequest = Effect.fn('bearerFromRequest')(function* () {
+export const clearAccessCookie = setAccessCookie({
+  accessToken: '',
+  accessExpiresAt: 0,
+});
+
+const accessCookieFromRequest = Effect.fn('accessCookieFromRequest')(function* () {
   const request = yield* HttpServerRequest.HttpServerRequest;
-  const authorization = request.headers['authorization'];
-  if (authorization === undefined || !authorization.startsWith('Bearer ')) return undefined;
-  const token = authorization.slice('Bearer '.length);
-  return token.length === 0 ? undefined : token;
+  if (request.headers['authorization'] !== undefined) return undefined;
+  return request.cookies[accessCookieName];
 });
 
 export const authorizeClient = Effect.fn('authorizeClient')(function* (
   permission: PermissionCodeValue,
 ) {
   return yield* (yield* Authentication)
-    .authorize(yield* bearerFromRequest(), [permission], 'client')
+    .authorize(yield* accessCookieFromRequest(), [permission], 'client')
     .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
 });
 
@@ -63,21 +80,25 @@ const ApiAuthenticationLive = Layer.succeed(
   ApiAuthentication.of({
     bearer: Effect.fn('ApiAuthentication.bearer')(function* (httpEffect, { credential }) {
       yield* setPrivateResponseHeaders;
+      const request = yield* HttpServerRequest.HttpServerRequest;
       const bearerToken = Redacted.value(credential);
-      if (bearerToken.length === 0 || bearerToken.includes(',')) {
+      const browserToken = request.cookies[accessCookieName];
+      if ((bearerToken.length > 0 && browserToken !== undefined) || bearerToken.includes(',')) {
         return yield* new AuthenticationRequired({ code: 'authentication.required' });
       }
-      const kind = bearerToken.startsWith('v4.public.')
-        ? ('access-token' as const)
-        : bearerToken.startsWith('froment_api_v1_')
-          ? ('api-token' as const)
-          : undefined;
+      const token = browserToken ?? bearerToken;
+      const kind =
+        browserToken !== undefined && token.startsWith('v4.public.')
+          ? ('access-token' as const)
+          : browserToken === undefined && token.startsWith('froment_api_v1_')
+            ? ('api-token' as const)
+            : undefined;
       if (kind === undefined) {
         return yield* new AuthenticationRequired({ code: 'authentication.required' });
       }
       return yield* Effect.provideService(httpEffect, ApiCredentials, {
         kind,
-        token: bearerToken,
+        token,
       });
     }),
   }),

@@ -19,12 +19,11 @@ export const LoginRequest = Schema.Struct({
 });
 export type LoginRequest = typeof LoginRequest.Type;
 
-export const AccessToken = Schema.Struct({
-  accessToken: Schema.String.check(Schema.isPattern(/^v4\.public\./)),
+export const BrowserSession = Schema.Struct({
   expiresAt: Schema.Int,
   mode: LoginMode,
 });
-export type AccessToken = typeof AccessToken.Type;
+export type BrowserSession = typeof BrowserSession.Type;
 
 export const CurrentAccount = Schema.Struct({
   userId: Ulid,

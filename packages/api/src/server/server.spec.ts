@@ -7,7 +7,10 @@ import { createServer } from 'node:net';
 import { promisify } from 'node:util';
 
 import Sqlite from 'better-sqlite3';
+import { CookieJar } from 'tough-cookie';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+
+import { cookieHeaders, storeResponseCookies } from './cookies.spec-helper.js';
 
 const execFileAsync = promisify(execFile);
 const serverStartAttempts = 5;
@@ -64,7 +67,7 @@ const stopProcess = async (process: ChildProcess) => {
 };
 
 describe('HTTP server', () => {
-  let administratorAccessToken: string;
+  let administratorSessionHeaders: Readonly<Record<string, string>>;
   let baseUrl: string;
   let databaseFilename: string;
   let server: ChildProcess;
@@ -146,14 +149,22 @@ describe('HTTP server', () => {
     const frenchSpecification = (await frenchResponse.json()) as { info: { title: string } };
     const englishSpecification = (await englishResponse.json()) as {
       info: { title: string };
-      components: { securitySchemes: { bearer?: object; sessionCookie?: object } };
+      components: {
+        securitySchemes: {
+          bearer?: { scheme?: string; description?: string };
+          sessionCookie?: object;
+        };
+      };
       paths: { '/api/auth/refresh'?: object; '/api/auth/account'?: object };
     };
     expect(frenchSpecification.info.title).toBe('API Froment Software');
     expect(englishSpecification.info.title).toBe('Froment Software API');
     expect(englishSpecification.paths).toHaveProperty('/api/auth/refresh');
     expect(englishSpecification.paths).toHaveProperty('/api/auth/account');
-    expect(englishSpecification.components.securitySchemes).toHaveProperty('bearer');
+    expect(englishSpecification.components.securitySchemes.bearer).toMatchObject({
+      scheme: 'bearer',
+      description: 'API token sent with the Bearer scheme.',
+    });
     expect(englishSpecification.components.securitySchemes).not.toHaveProperty('sessionCookie');
     const shell = await fetch(`${baseUrl}/backoffice/login`, { headers: { accept: 'text/html' } });
     expect(await shell.text()).toContain('<app-root></app-root>');
@@ -227,29 +238,29 @@ describe('HTTP server', () => {
     expect((await fetch(`${baseUrl}/api/health`)).status).toBe(200);
   });
 
-  it('bootstraps one administrator with a PASETO token and refresh cookie', async () => {
+  it('bootstraps one administrator with access and refresh cookies', async () => {
     const response = await fetch(`${baseUrl}/api/bootstrap`, {
       method: 'POST',
       headers: { 'content-type': 'application/json', origin: baseUrl },
       body: JSON.stringify({ bootstrapPassword: 'bootstrap-password', ...administrator }),
     });
     expect(response.status).toBe(200);
-    const body = (await response.json()) as {
-      accessToken: string;
-      expiresAt: number;
-      mode: string;
-    };
-    expect(body).toMatchObject({
-      accessToken: expect.stringMatching(/^v4\.public\./),
+    await expect(response.json()).resolves.toMatchObject({
+      expiresAt: expect.any(Number),
       mode: 'administrator',
     });
-    administratorAccessToken = body.accessToken;
-    const cookie = response.headers.getSetCookie()[0];
-    expect(cookie).toContain('__Secure-froment-refresh=');
-    expect(cookie).toContain('HttpOnly');
-    expect(cookie).toContain('Secure');
-    expect(cookie).toContain('SameSite=Strict');
-    expect(cookie).toContain('Path=/api/auth');
+    const cookies = response.headers.getSetCookie();
+    const accessCookie = cookies.find((cookie) => cookie.startsWith('__Secure-froment-access='));
+    const refreshCookie = cookies.find((cookie) => cookie.startsWith('__Secure-froment-refresh='));
+    expect(accessCookie).toContain('HttpOnly');
+    expect(accessCookie).toContain('Secure');
+    expect(accessCookie).toContain('SameSite=Strict');
+    expect(accessCookie).toContain('Path=/api');
+    expect(refreshCookie).toContain('HttpOnly');
+    expect(refreshCookie).toContain('Path=/api/auth');
+    const jar = new CookieJar();
+    await storeResponseCookies(jar, response, baseUrl);
+    administratorSessionHeaders = await cookieHeaders(jar, `${baseUrl}/api`);
     const sqlite = new Sqlite(databaseFilename, { readonly: true });
     expect(sqlite.prepare('select count(*) from password_credentials').pluck().get()).toBe(1);
     expect(sqlite.prepare('select count(*) from refresh_sessions').pluck().get()).toBe(1);
@@ -265,39 +276,51 @@ describe('HTTP server', () => {
       body: JSON.stringify(administrator),
     });
     expect(login.status).toBe(200);
-    const loginBody = (await login.json()) as { accessToken: string };
-    const cookie = login.headers.getSetCookie()[0]?.split(';', 1)[0] ?? '';
+    const jar = new CookieJar();
+    await storeResponseCookies(jar, login, baseUrl);
     const account = await fetch(`${baseUrl}/api/auth/account`, {
-      headers: { authorization: `Bearer ${loginBody.accessToken}` },
+      headers: await cookieHeaders(jar, `${baseUrl}/api/auth/account`),
     });
     await expect(account.json()).resolves.toMatchObject({ mode: 'administrator' });
     const refresh = await fetch(`${baseUrl}/api/auth/refresh`, {
       method: 'POST',
-      headers: { cookie, origin: baseUrl },
+      headers: { ...(await cookieHeaders(jar, `${baseUrl}/api/auth/refresh`)), origin: baseUrl },
     });
     expect(refresh.status).toBe(200);
-    expect(refresh.headers.getSetCookie()[0]).toContain('__Secure-froment-refresh=');
+    expect(refresh.headers.getSetCookie()).toEqual(
+      expect.arrayContaining([
+        expect.stringContaining('__Secure-froment-refresh='),
+        expect.stringContaining('__Secure-froment-access='),
+      ]),
+    );
   });
 
   it('rejects malformed and mixed bearer credentials', async () => {
-    for (const authorization of ['Bearer invalid', `Bearer ${administratorAccessToken},other`]) {
+    for (const authorization of ['Bearer invalid', 'Bearer v4.public.invalid']) {
       const response = await fetch(`${baseUrl}/api/clients`, { headers: { authorization } });
       expect(response.status).toBe(401);
     }
+    const mixed = await fetch(`${baseUrl}/api/clients`, {
+      headers: {
+        authorization: 'Bearer froment_api_v1_mixed',
+        ...administratorSessionHeaders,
+      },
+    });
+    expect(mixed.status).toBe(401);
   });
 
   it('creates client password credentials and disables their active access', async () => {
-    const authorization = `Bearer ${administratorAccessToken}`;
+    const sessionHeaders = administratorSessionHeaders;
     const created = await fetch(`${baseUrl}/api/clients`, {
       method: 'POST',
-      headers: { authorization, 'content-type': 'application/json' },
+      headers: { ...sessionHeaders, 'content-type': 'application/json' },
       body: JSON.stringify(clientFields),
     });
     const client = (await created.json()) as { id: string };
     const credentials = { email: 'portal@example.test', password: 'portal-password-123' };
     const access = await fetch(`${baseUrl}/api/clients/${client.id}/access`, {
       method: 'POST',
-      headers: { authorization, 'content-type': 'application/json' },
+      headers: { ...sessionHeaders, 'content-type': 'application/json' },
       body: JSON.stringify(credentials),
     });
     expect(access.status).toBe(200);
@@ -306,11 +329,13 @@ describe('HTTP server', () => {
       headers: { 'content-type': 'application/json', origin: baseUrl },
       body: JSON.stringify(credentials),
     });
-    const clientToken = ((await login.json()) as { accessToken: string }).accessToken;
+    const clientJar = new CookieJar();
+    await storeResponseCookies(clientJar, login, baseUrl);
+    const clientSessionHeaders = await cookieHeaders(clientJar, `${baseUrl}/api/client`);
     expect(
       (
         await fetch(`${baseUrl}/api/client/quotes`, {
-          headers: { authorization: `Bearer ${clientToken}` },
+          headers: clientSessionHeaders,
         })
       ).status,
     ).toBe(200);
@@ -318,14 +343,14 @@ describe('HTTP server', () => {
       (
         await fetch(`${baseUrl}/api/clients/${client.id}/archive`, {
           method: 'POST',
-          headers: { authorization },
+          headers: sessionHeaders,
         })
       ).status,
     ).toBe(200);
     expect(
       (
         await fetch(`${baseUrl}/api/client/quotes`, {
-          headers: { authorization: `Bearer ${clientToken}` },
+          headers: clientSessionHeaders,
         })
       ).status,
     ).toBe(401);
@@ -335,7 +360,7 @@ describe('HTTP server', () => {
     const created = await fetch(`${baseUrl}/api/tokens`, {
       method: 'POST',
       headers: {
-        authorization: `Bearer ${administratorAccessToken}`,
+        ...administratorSessionHeaders,
         'content-type': 'application/json',
       },
       body: JSON.stringify({
@@ -359,16 +384,23 @@ describe('HTTP server', () => {
       headers: { 'content-type': 'application/json', origin: baseUrl },
       body: JSON.stringify(administrator),
     });
-    const cookie = login.headers.getSetCookie()[0]?.split(';', 1)[0] ?? '';
+    const jar = new CookieJar();
+    await storeResponseCookies(jar, login, baseUrl);
+    const sessionHeaders = await cookieHeaders(jar, `${baseUrl}/api/auth`);
     const logout = await fetch(`${baseUrl}/api/auth/logout`, {
       method: 'POST',
-      headers: { cookie, origin: baseUrl },
+      headers: { ...sessionHeaders, origin: baseUrl },
     });
     expect(logout.status).toBe(204);
-    expect(logout.headers.getSetCookie()[0]).toContain('Expires=Thu, 01 Jan 1970');
+    expect(logout.headers.getSetCookie()).toEqual(
+      expect.arrayContaining([
+        expect.stringContaining('__Secure-froment-refresh=;'),
+        expect.stringContaining('__Secure-froment-access=;'),
+      ]),
+    );
     const rejected = await fetch(`${baseUrl}/api/auth/refresh`, {
       method: 'POST',
-      headers: { cookie, origin: baseUrl },
+      headers: { ...sessionHeaders, origin: baseUrl },
     });
     expect(rejected.status).toBe(401);
   });

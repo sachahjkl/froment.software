@@ -1,7 +1,7 @@
 import { Schema } from 'effect';
 
 import { AccountEmail, AccountPassword } from '../authentication/contracts.js';
-import { AccessToken } from '../authentication/contracts.js';
+import { BrowserSession } from '../authentication/contracts.js';
 
 export const BootstrapStatus = Schema.Struct({
   available: Schema.Boolean,
@@ -15,7 +15,7 @@ export const BootstrapRequest = Schema.Struct({
 });
 export interface BootstrapRequest extends Schema.Schema.Type<typeof BootstrapRequest> {}
 
-export const BootstrapResult = AccessToken;
+export const BootstrapResult = BrowserSession;
 export interface BootstrapResult extends Schema.Schema.Type<typeof BootstrapResult> {}
 
 export class BootstrapRejected extends Schema.TaggedError<BootstrapRejected>()(

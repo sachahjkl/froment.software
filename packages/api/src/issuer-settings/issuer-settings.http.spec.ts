@@ -16,7 +16,7 @@ describe('issuer settings HTTP routes', () => {
     expect((await fetch(`${server.baseUrl}/api/issuer-settings`)).status).toBe(401);
     const issuer = await setIssuer(server, 'Issuer HTTP test');
     const response = await fetch(`${server.baseUrl}/api/issuer-settings`, {
-      headers: server.authorization,
+      headers: server.sessionHeaders,
     });
     expect(response.headers.get('cache-control')).toBe('no-store');
     await expect(response.json()).resolves.toEqual(issuer);

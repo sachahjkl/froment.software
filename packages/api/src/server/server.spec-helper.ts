@@ -4,6 +4,9 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { type AddressInfo, createServer } from 'node:net';
 import { promisify } from 'node:util';
+import { CookieJar } from 'tough-cookie';
+
+import { cookieHeaders, storeResponseCookies } from './cookies.spec-helper.js';
 
 const execFileAsync = promisify(execFile);
 const serverStartAttempts = 5;
@@ -50,7 +53,7 @@ export interface HttpTestServer {
   readonly baseUrl: string;
   readonly databaseFilename: string;
   readonly output: () => string;
-  readonly authorization: Readonly<Record<string, string>>;
+  readonly sessionHeaders: Readonly<Record<string, string>>;
   readonly jsonHeaders: Readonly<Record<string, string>>;
   readonly close: () => Promise<void>;
 }
@@ -116,16 +119,16 @@ export const startHttpTestServer = async (): Promise<HttpTestServer> => {
     }),
   });
   if (!bootstrap.ok) throw new Error(`Bootstrap failed: ${await bootstrap.text()}`);
-  // SAFETY: A successful bootstrap response follows the HTTP API success schema.
-  const { accessToken } = (await bootstrap.json()) as { accessToken: string };
-  const authorization = { authorization: `Bearer ${accessToken}` };
+  const session = new CookieJar();
+  await storeResponseCookies(session, bootstrap, baseUrl);
+  const sessionHeaders = await cookieHeaders(session, `${baseUrl}/api`);
 
   return {
     baseUrl,
     databaseFilename,
     output: () => serverOutput,
-    authorization,
-    jsonHeaders: { ...authorization, 'content-type': 'application/json' },
+    sessionHeaders,
+    jsonHeaders: { ...sessionHeaders, 'content-type': 'application/json' },
     close: async () => {
       await stopProcess(processHandle);
       await rm(staticRoot, { recursive: true, force: true });
@@ -202,7 +205,7 @@ export const createQuote = async (server: HttpTestServer, clientId: string) => {
   };
 };
 
-export const createClientToken = async (server: HttpTestServer, clientId: string) => {
+export const createClientSession = async (server: HttpTestServer, clientId: string) => {
   const credentials = {
     email: `${clientId.toLowerCase()}@portal.example.test`,
     password: 'portal-password-123',
@@ -219,14 +222,15 @@ export const createClientToken = async (server: HttpTestServer, clientId: string
     body: JSON.stringify(credentials),
   });
   if (!login.ok) throw new Error(`Client login failed: ${await login.text()}`);
-  // SAFETY: A successful login response follows the HTTP API success schema.
-  return ((await login.json()) as { accessToken: string }).accessToken;
+  const session = new CookieJar();
+  await storeResponseCookies(session, login, server.baseUrl);
+  return cookieHeaders(session, `${server.baseUrl}/api/client`);
 };
 
 export const renderQuotePdf = async (server: HttpTestServer, quoteId: string, version = 1) => {
   const response = await fetch(`${server.baseUrl}/api/quotes/${quoteId}/revisions/${version}/pdf`, {
     method: 'POST',
-    headers: server.authorization,
+    headers: server.sessionHeaders,
   });
   if (!response.ok) throw new Error(`Quote PDF render failed: ${await response.text()}`);
   // SAFETY: A successful render response follows the HTTP API success schema.

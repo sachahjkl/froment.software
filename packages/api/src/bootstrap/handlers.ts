@@ -2,7 +2,7 @@ import { Api } from '@froment/contracts';
 import { Effect } from 'effect';
 import { HttpApiBuilder } from 'effect/unstable/httpapi';
 
-import { setRefreshCookie } from '../authentication/http.js';
+import { setAccessCookie, setRefreshCookie } from '../authentication/http.js';
 import { setPrivateResponseHeaders } from '../http/response.js';
 import { Bootstrap } from './bootstrap.js';
 
@@ -25,8 +25,8 @@ export const BootstrapHandlers = HttpApiBuilder.group(Api, 'bootstrap', (handler
             .create(payload)
             .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
           yield* setRefreshCookie(session);
+          yield* setAccessCookie(session);
           return {
-            accessToken: session.accessToken,
             expiresAt: session.accessExpiresAt,
             mode: session.mode,
           };

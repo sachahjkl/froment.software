@@ -13,7 +13,6 @@ class BootstrapApiStub {
     return Promise.resolve({
       success: true,
       result: {
-        accessToken: 'v4.public.test',
         expiresAt: Date.now() + 600_000,
         mode: 'administrator',
       },

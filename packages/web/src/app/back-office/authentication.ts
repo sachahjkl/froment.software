@@ -4,7 +4,7 @@ import { inject, Injectable, PLATFORM_ID } from '@angular/core';
 import { type CanActivateFn, Router } from '@angular/router';
 import {
   AuthenticationFailure,
-  AccessToken,
+  BrowserSession,
   type AuthenticationFailureValue,
   type LoginModeValue,
   LoginRequest,
@@ -13,7 +13,7 @@ import { Schema } from 'effect';
 import { firstValueFrom } from 'rxjs';
 
 import { decodeApiFailure, type ApiFailure } from '@shared/api-outcome';
-import { AccessTokenStore } from './access-token-store';
+import { BrowserSessionStore } from './browser-session-store';
 import { AuthCookieLock } from './auth-cookie-lock';
 
 export type AuthenticationOutcome =
@@ -24,13 +24,13 @@ export type AuthenticationOutcome =
 export class Authentication {
   private readonly http = inject(HttpClient);
   private readonly isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
-  private readonly tokens = inject(AccessTokenStore);
+  private readonly sessions = inject(BrowserSessionStore);
   private readonly cookieLock = inject(AuthCookieLock);
 
   async sessionMode(): Promise<LoginModeValue | undefined> {
     if (!this.isBrowser) return undefined;
     try {
-      return this.tokens.mode() ?? (await this.tokens.refresh());
+      return this.sessions.mode() ?? (await this.sessions.refresh());
     } catch {
       return undefined;
     }
@@ -48,8 +48,8 @@ export class Authentication {
     try {
       return await this.cookieLock.run(async () => {
         const response = await firstValueFrom(this.http.post<unknown>('/api/auth/login', request));
-        const session = Schema.decodeUnknownSync(AccessToken)(response);
-        this.tokens.set(session);
+        const session = Schema.decodeUnknownSync(BrowserSession)(response);
+        this.sessions.set(session);
         return { success: true, mode: session.mode };
       });
     } catch (error) {
@@ -60,7 +60,7 @@ export class Authentication {
   async signOut(): Promise<boolean> {
     if (!this.isBrowser) return false;
     return this.cookieLock.run(async () => {
-      this.tokens.clear();
+      this.sessions.clear();
       try {
         await firstValueFrom(this.http.post<void>('/api/auth/logout', undefined));
         return true;

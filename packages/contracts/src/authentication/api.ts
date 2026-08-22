@@ -3,7 +3,7 @@ import { HttpApiEndpoint, HttpApiGroup, HttpApiSchema } from 'effect/unstable/ht
 import { ApiBrowserRequest, ApiRequestBody } from '../api-authentication.js';
 import { frontendSpecific } from '../api-policy/visibility.js';
 import {
-  AccessToken,
+  BrowserSession,
   AuthenticationRequired,
   AuthenticationRateLimited,
   AuthenticationRejected,
@@ -21,7 +21,7 @@ import { Ulid } from '../identifiers.js';
 export class AuthenticationApi extends HttpApiGroup.make('authentication', { topLevel: true }).add(
   HttpApiEndpoint.post('login', '/api/auth/login', {
     payload: LoginRequest,
-    success: AccessToken,
+    success: BrowserSession,
     error: [
       AuthenticationRejected.pipe(HttpApiSchema.status(401)),
       AuthenticationRateLimited.pipe(HttpApiSchema.status(429)),
@@ -31,7 +31,7 @@ export class AuthenticationApi extends HttpApiGroup.make('authentication', { top
     .middleware(ApiBrowserRequest)
     .pipe(frontendSpecific),
   HttpApiEndpoint.post('refresh', '/api/auth/refresh', {
-    success: AccessToken,
+    success: BrowserSession,
     error: [
       SessionRejected.pipe(HttpApiSchema.status(401)),
       RequestRateLimited.pipe(HttpApiSchema.status(429)),

@@ -21,7 +21,7 @@ describe('quote HTTP routes', () => {
     expect(quote).toMatchObject({ version: 1, currentRevision: { totalCents: 18_002 } });
 
     const preview = await fetch(`${server.baseUrl}/api/quotes/${quote.id}/revisions/1/preview`, {
-      headers: server.authorization,
+      headers: server.sessionHeaders,
     });
     expect(preview.status).toBe(200);
     expect(preview.headers.get('content-type')).toContain('application/pdf');
@@ -34,11 +34,11 @@ describe('quote HTTP routes', () => {
 
     const render = await fetch(`${server.baseUrl}/api/quotes/${quote.id}/revisions/1/pdf`, {
       method: 'POST',
-      headers: server.authorization,
+      headers: server.sessionHeaders,
     });
     const artifact = (await render.json()) as { byteSize: number; sha256: string };
     const download = await fetch(`${server.baseUrl}/api/quotes/${quote.id}/revisions/1/pdf`, {
-      headers: server.authorization,
+      headers: server.sessionHeaders,
     });
     expect(download.headers.get('content-disposition')).toContain(`${quote.reference}-v1.pdf`);
     const pdf = Buffer.from(await download.arrayBuffer());

@@ -4,7 +4,7 @@ import { TestBed } from '@angular/core/testing';
 import { provideRouter, Router, UrlTree } from '@angular/router';
 import { type LoginModeValue } from '@froment/contracts';
 
-import { AccessTokenStore } from './access-token-store';
+import { BrowserSessionStore } from './browser-session-store';
 import { AUTH_COOKIE_LOCK_MANAGER } from './auth-cookie-lock';
 import { Authentication, administratorGuard, clientGuard } from './authentication';
 import { BootstrapApi } from './bootstrap-api';
@@ -30,7 +30,6 @@ describe('Authentication', () => {
 
     const status = auth.sessionMode();
     http.expectOne('/api/auth/refresh').flush({
-      accessToken: 'v4.public.test',
       expiresAt: Date.now() + 600_000,
       mode: 'administrator',
     });
@@ -44,7 +43,6 @@ describe('Authentication', () => {
       password: 'administrator-password',
     });
     request.flush({
-      accessToken: 'v4.public.login',
       expiresAt: Date.now() + 600_000,
       mode: 'administrator',
     });
@@ -96,19 +94,17 @@ describe('Authentication', () => {
     const refreshRequest = http.expectOne('/api/auth/refresh');
     const login = auth.authenticate('client@example.test', 'client-password');
     http.expectOne('/api/auth/login').flush({
-      accessToken: 'v4.public.login',
       expiresAt: Date.now() + 600_000,
       mode: 'client',
     });
     await expect(login).resolves.toEqual({ success: true, mode: 'client' });
 
     refreshRequest.flush({
-      accessToken: 'v4.public.stale',
       expiresAt: Date.now() + 600_000,
       mode: 'administrator',
     });
     await expect(session).resolves.toBe('client');
-    expect(TestBed.inject(AccessTokenStore).token()).toBe('v4.public.login');
+    expect(TestBed.inject(BrowserSessionStore).mode()).toBe('client');
     http.verify();
   });
 
@@ -117,10 +113,9 @@ describe('Authentication', () => {
       providers: [provideHttpClient(), provideHttpClientTesting()],
     });
     const auth = TestBed.inject(Authentication);
-    const store = TestBed.inject(AccessTokenStore);
+    const store = TestBed.inject(BrowserSessionStore);
     const http = TestBed.inject(HttpTestingController);
     store.set({
-      accessToken: 'v4.public.session',
       expiresAt: Date.now() + 600_000,
       mode: 'administrator',
     });
@@ -129,15 +124,13 @@ describe('Authentication', () => {
     const refreshRequest = http.expectOne('/api/auth/refresh');
     const logout = auth.signOut();
     const logoutRequest = http.expectOne('/api/auth/logout');
-    expect(store.token()).toBeUndefined();
     expect(store.mode()).toBeUndefined();
     refreshRequest.flush({
-      accessToken: 'v4.public.stale',
       expiresAt: Date.now() + 600_000,
       mode: 'administrator',
     });
     await expect(refresh).resolves.toBeUndefined();
-    expect(store.token()).toBeUndefined();
+    expect(store.mode()).toBeUndefined();
     logoutRequest.flush(null);
 
     await expect(logout).resolves.toBe(true);
@@ -154,7 +147,7 @@ describe('Authentication', () => {
     });
     const auth = TestBed.inject(Authentication);
     const bootstrap = TestBed.inject(BootstrapApi);
-    const store = TestBed.inject(AccessTokenStore);
+    const store = TestBed.inject(BrowserSessionStore);
     const http = TestBed.inject(HttpTestingController);
 
     const refresh = store.refresh();
@@ -171,7 +164,6 @@ describe('Authentication', () => {
     http.expectNone('/api/auth/logout');
     http.expectNone('/api/bootstrap');
     refreshRequest.flush({
-      accessToken: 'v4.public.refresh',
       expiresAt: Date.now() + 600_000,
       mode: 'client',
     });
@@ -181,7 +173,6 @@ describe('Authentication', () => {
     http.expectNone('/api/auth/logout');
     http.expectNone('/api/bootstrap');
     loginRequest.flush({
-      accessToken: 'v4.public.login',
       expiresAt: Date.now() + 600_000,
       mode: 'client',
     });
@@ -194,12 +185,11 @@ describe('Authentication', () => {
 
     const bootstrapRequest = await vi.waitFor(() => http.expectOne('/api/bootstrap'));
     bootstrapRequest.flush({
-      accessToken: 'v4.public.bootstrap',
       expiresAt: Date.now() + 600_000,
       mode: 'administrator',
     });
     await expect(create).resolves.toMatchObject({ success: true });
-    expect(store.token()).toBe('v4.public.bootstrap');
+    expect(store.mode()).toBe('administrator');
     http.verify();
   });
 });

@@ -33,6 +33,7 @@
     "@vitest/coverage-v8": "catalog:",
     "drizzle-kit": "catalog:",
     "esbuild": "catalog:",
+    "tough-cookie": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:"
   }

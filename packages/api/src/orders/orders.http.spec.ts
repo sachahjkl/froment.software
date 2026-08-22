@@ -5,7 +5,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import {
   acceptQuote,
   createClient,
-  createClientToken,
+  createClientSession,
   createQuote,
   setIssuer,
   startHttpTestServer,
@@ -20,19 +20,19 @@ describe('order HTTP routes', () => {
   it('lists accepted orders and renders one stable PDF', async () => {
     await setIssuer(server);
     const client = await createClient(server);
-    const clientToken = await createClientToken(server, client.id);
+    const clientSession = await createClientSession(server, client.id);
     const quote = await createQuote(server, client.id);
     const { accepted } = await acceptQuote(server, quote.id);
 
     expect((await fetch(`${server.baseUrl}/api/orders`)).status).toBe(401);
-    const list = await fetch(`${server.baseUrl}/api/orders`, { headers: server.authorization });
+    const list = await fetch(`${server.baseUrl}/api/orders`, { headers: server.sessionHeaders });
     expect(list.headers.get('cache-control')).toBe('no-store');
     await expect(list.json()).resolves.toEqual([
       expect.objectContaining({ id: accepted.orderId, quoteId: quote.id, invoiceId: null }),
     ]);
 
     const preview = await fetch(`${server.baseUrl}/api/orders/${accepted.orderId}/preview`, {
-      headers: server.authorization,
+      headers: server.sessionHeaders,
     });
     expect(preview.status).toBe(200);
     expect(preview.headers.get('content-security-policy')).toContain("default-src 'none'");
@@ -45,11 +45,11 @@ describe('order HTTP routes', () => {
     const renders = await Promise.all([
       fetch(`${server.baseUrl}/api/orders/${accepted.orderId}/pdf`, {
         method: 'POST',
-        headers: server.authorization,
+        headers: server.sessionHeaders,
       }),
       fetch(`${server.baseUrl}/api/orders/${accepted.orderId}/pdf`, {
         method: 'POST',
-        headers: server.authorization,
+        headers: server.sessionHeaders,
       }),
     ]);
     const artifacts = (await Promise.all(renders.map((response) => response.json()))) as Array<{
@@ -58,14 +58,14 @@ describe('order HTTP routes', () => {
     }>;
     expect(artifacts[0]).toEqual(artifacts[1]);
     const download = await fetch(`${server.baseUrl}/api/orders/${accepted.orderId}/pdf`, {
-      headers: server.authorization,
+      headers: server.sessionHeaders,
     });
     expect(download.headers.get('content-disposition')).toContain(`${accepted.orderReference}.pdf`);
     const pdf = Buffer.from(await download.arrayBuffer());
     expect(createHash('sha256').update(pdf).digest('hex')).toBe(artifacts[0]!.sha256);
 
     const clientPdf = await fetch(`${server.baseUrl}/api/client/orders/${accepted.orderId}/pdf`, {
-      headers: { authorization: `Bearer ${clientToken}` },
+      headers: clientSession,
     });
     expect(Buffer.from(await clientPdf.arrayBuffer())).toEqual(pdf);
   }, 15_000);

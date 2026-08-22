@@ -12,7 +12,7 @@ import { Schema } from 'effect';
 import { firstValueFrom } from 'rxjs';
 
 import { requestOutcome, type ApiOutcome } from '@shared/api-outcome';
-import { AccessTokenStore } from './access-token-store';
+import { BrowserSessionStore } from './browser-session-store';
 import { AuthCookieLock } from './auth-cookie-lock';
 
 export type BootstrapErrorCode = BootstrapFailureCode | 'bootstrap.error';
@@ -26,7 +26,7 @@ export type BootstrapOutcome = ApiOutcome<
 @Injectable({ providedIn: 'root' })
 export class BootstrapApi {
   private readonly http = inject(HttpClient);
-  private readonly tokens = inject(AccessTokenStore);
+  private readonly sessions = inject(BrowserSessionStore);
   private readonly cookieLock = inject(AuthCookieLock);
 
   async status(): Promise<boolean> {
@@ -48,7 +48,7 @@ export class BootstrapApi {
         BootstrapFailure,
         'bootstrap.error',
       );
-      if (outcome.success) this.tokens.set(outcome.result);
+      if (outcome.success) this.sessions.set(outcome.result);
       return outcome;
     });
   }
