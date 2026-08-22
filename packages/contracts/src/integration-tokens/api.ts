@@ -18,6 +18,7 @@ import {
   IntegrationTokenNotFound,
   IntegrationTokenPage,
 } from '../integration-tokens/contracts.js';
+import { authenticate } from '../api-policy/authentication.js';
 import { requirePermissions } from '../api-policy/permissions.js';
 import { rateLimit, RateLimits } from '../api-policy/rate-limit.js';
 import { frontendSpecific } from '../api-policy/visibility.js';
@@ -35,7 +36,11 @@ export class IntegrationTokensApi extends HttpApiGroup.make('integrationTokens',
         PermissionDenied.pipe(HttpApiSchema.status(403)),
         IntegrationTokenInvalidCursor.pipe(HttpApiSchema.status(400)),
       ],
-    }).pipe(requirePermissions([Permissions.integrationTokenManage]), frontendSpecific),
+    }).pipe(
+      requirePermissions([Permissions.integrationTokenManage]),
+      authenticate,
+      frontendSpecific,
+    ),
     HttpApiEndpoint.post('integrationTokenCreate', '/api/integration-tokens', {
       payload: IntegrationTokenCreateRequest,
       success: IntegrationTokenCreated,
@@ -51,6 +56,7 @@ export class IntegrationTokensApi extends HttpApiGroup.make('integrationTokens',
       .middleware(ApiRequestBody)
       .pipe(
         requirePermissions([Permissions.integrationTokenManage]),
+        authenticate,
         rateLimit(RateLimits.tenPerMinute),
         frontendSpecific,
       ),
@@ -66,6 +72,7 @@ export class IntegrationTokensApi extends HttpApiGroup.make('integrationTokens',
       ],
     }).pipe(
       requirePermissions([Permissions.integrationTokenManage]),
+      authenticate,
       rateLimit(RateLimits.tenPerMinute),
       frontendSpecific,
     ),

@@ -1,6 +1,7 @@
 import { Schema } from 'effect';
 import { HttpApiEndpoint, HttpApiGroup, HttpApiSchema } from 'effect/unstable/httpapi';
 
+import { authenticate } from '../api-policy/authentication.js';
 import { requirePermissions } from '../api-policy/permissions.js';
 import { frontendSpecific } from '../api-policy/visibility.js';
 import { AuditEvent } from '../audit/contracts.js';
@@ -16,5 +17,9 @@ export class AffairsApi extends HttpApiGroup.make('affairs', { topLevel: true })
       AuthenticationRequired.pipe(HttpApiSchema.status(401)),
       PermissionDenied.pipe(HttpApiSchema.status(403)),
     ],
-  }).pipe(requirePermissions([Permissions.quoteRead, Permissions.auditRead]), frontendSpecific),
+  }).pipe(
+    requirePermissions([Permissions.quoteRead, Permissions.auditRead]),
+    authenticate,
+    frontendSpecific,
+  ),
 ) {}

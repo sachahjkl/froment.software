@@ -18,6 +18,7 @@ import {
   ClientVersionConflict,
 } from '../clients/contracts.js';
 import { Ulid } from '../identifiers.js';
+import { authenticate } from '../api-policy/authentication.js';
 import { requirePermissions } from '../api-policy/permissions.js';
 import { rateLimit, RateLimits } from '../api-policy/rate-limit.js';
 import { frontendSpecific } from '../api-policy/visibility.js';
@@ -30,7 +31,7 @@ export class ClientsApi extends HttpApiGroup.make('clients', { topLevel: true })
       AuthenticationRequired.pipe(HttpApiSchema.status(401)),
       PermissionDenied.pipe(HttpApiSchema.status(403)),
     ],
-  }).pipe(requirePermissions([Permissions.clientRead])),
+  }).pipe(requirePermissions([Permissions.clientRead]), authenticate),
   HttpApiEndpoint.get('clientGet', '/api/clients/:clientId', {
     params: { clientId: Ulid },
     success: ClientSummary,
@@ -39,7 +40,7 @@ export class ClientsApi extends HttpApiGroup.make('clients', { topLevel: true })
       PermissionDenied.pipe(HttpApiSchema.status(403)),
       ClientNotFound.pipe(HttpApiSchema.status(404)),
     ],
-  }).pipe(requirePermissions([Permissions.clientRead])),
+  }).pipe(requirePermissions([Permissions.clientRead]), authenticate),
   HttpApiEndpoint.post('clientCreate', '/api/clients', {
     payload: ClientCreateRequest,
     success: ClientSummary,
@@ -51,7 +52,11 @@ export class ClientsApi extends HttpApiGroup.make('clients', { topLevel: true })
     ],
   })
     .middleware(ApiRequestBody)
-    .pipe(requirePermissions([Permissions.clientCreate]), rateLimit(RateLimits.sixtyPerMinute)),
+    .pipe(
+      requirePermissions([Permissions.clientCreate]),
+      authenticate,
+      rateLimit(RateLimits.sixtyPerMinute),
+    ),
   HttpApiEndpoint.put('clientUpdate', '/api/clients/:clientId', {
     params: { clientId: Ulid },
     payload: ClientUpdateRequest,
@@ -67,7 +72,11 @@ export class ClientsApi extends HttpApiGroup.make('clients', { topLevel: true })
     ],
   })
     .middleware(ApiRequestBody)
-    .pipe(requirePermissions([Permissions.clientUpdate]), rateLimit(RateLimits.sixtyPerMinute)),
+    .pipe(
+      requirePermissions([Permissions.clientUpdate]),
+      authenticate,
+      rateLimit(RateLimits.sixtyPerMinute),
+    ),
   HttpApiEndpoint.post('clientArchive', '/api/clients/:clientId/archive', {
     params: { clientId: Ulid },
     success: ClientSummary,
@@ -78,7 +87,11 @@ export class ClientsApi extends HttpApiGroup.make('clients', { topLevel: true })
       RequestRateLimited.pipe(HttpApiSchema.status(429)),
       ClientNotFound.pipe(HttpApiSchema.status(404)),
     ],
-  }).pipe(requirePermissions([Permissions.clientArchive]), rateLimit(RateLimits.sixtyPerMinute)),
+  }).pipe(
+    requirePermissions([Permissions.clientArchive]),
+    authenticate,
+    rateLimit(RateLimits.sixtyPerMinute),
+  ),
   HttpApiEndpoint.post('clientReactivate', '/api/clients/:clientId/reactivate', {
     params: { clientId: Ulid },
     success: ClientSummary,
@@ -89,7 +102,11 @@ export class ClientsApi extends HttpApiGroup.make('clients', { topLevel: true })
       RequestRateLimited.pipe(HttpApiSchema.status(429)),
       ClientNotFound.pipe(HttpApiSchema.status(404)),
     ],
-  }).pipe(requirePermissions([Permissions.clientArchive]), rateLimit(RateLimits.sixtyPerMinute)),
+  }).pipe(
+    requirePermissions([Permissions.clientArchive]),
+    authenticate,
+    rateLimit(RateLimits.sixtyPerMinute),
+  ),
   HttpApiEndpoint.post('clientAccessCreate', '/api/clients/:clientId/access', {
     params: { clientId: Ulid },
     success: ClientAccess,
@@ -103,6 +120,7 @@ export class ClientsApi extends HttpApiGroup.make('clients', { topLevel: true })
     ],
   }).pipe(
     requirePermissions([Permissions.clientAccessCreate]),
+    authenticate,
     rateLimit(RateLimits.tenPerMinute),
     frontendSpecific,
   ),

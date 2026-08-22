@@ -30,6 +30,7 @@ import {
   InvoiceTransitionRequest,
   InvoiceVersionConflict,
 } from '../invoices/contracts.js';
+import { authenticate } from '../api-policy/authentication.js';
 import { requirePermissions } from '../api-policy/permissions.js';
 import { rateLimit, RateLimits } from '../api-policy/rate-limit.js';
 import { frontendSpecific } from '../api-policy/visibility.js';
@@ -59,23 +60,24 @@ export class InvoicesApi extends HttpApiGroup.make('invoices', { topLevel: true 
   HttpApiEndpoint.get('invoiceList', '/api/invoices', {
     success: InvoiceList,
     error: invoiceReadErrors,
-  }).pipe(requirePermissions([Permissions.invoiceRead])),
+  }).pipe(requirePermissions([Permissions.invoiceRead]), authenticate),
   HttpApiEndpoint.get('invoiceGet', '/api/invoices/:invoiceId', {
     params: { invoiceId: Ulid },
     success: InvoiceDetail,
     error: [...invoiceReadErrors, InvoiceNotFound.pipe(HttpApiSchema.status(404))],
-  }).pipe(requirePermissions([Permissions.invoiceRead])),
+  }).pipe(requirePermissions([Permissions.invoiceRead]), authenticate),
   HttpApiEndpoint.get('invoicePreview', '/api/invoices/:invoiceId/revisions/:version/preview', {
     params: { invoiceId: Ulid, version: RevisionVersionParameter },
     success: Schema.String.pipe(HttpApiSchema.asText({ contentType: 'text/html; charset=utf-8' })),
     error: [...invoiceReadErrors, InvoiceNotFound.pipe(HttpApiSchema.status(404))],
-  }).pipe(requirePermissions([Permissions.documentRender]), frontendSpecific),
+  }).pipe(requirePermissions([Permissions.documentRender]), authenticate, frontendSpecific),
   HttpApiEndpoint.post('invoicePdfRender', '/api/invoices/:invoiceId/revisions/:version/pdf', {
     params: { invoiceId: Ulid, version: RevisionVersionParameter },
     success: InvoiceDocumentArtifact,
     error: [...invoiceWriteErrors, InvoiceNotFound.pipe(HttpApiSchema.status(404))],
   }).pipe(
     requirePermissions([Permissions.documentRender]),
+    authenticate,
     rateLimit(RateLimits.tenPerMinute),
     frontendSpecific,
   ),
@@ -83,7 +85,7 @@ export class InvoicesApi extends HttpApiGroup.make('invoices', { topLevel: true 
     params: { invoiceId: Ulid, version: RevisionVersionParameter },
     success: Schema.Uint8Array.pipe(HttpApiSchema.asUint8Array({ contentType: 'application/pdf' })),
     error: [...invoiceReadErrors, DocumentNotFound.pipe(HttpApiSchema.status(404))],
-  }).pipe(requirePermissions([Permissions.documentDownload])),
+  }).pipe(requirePermissions([Permissions.documentDownload]), authenticate),
   HttpApiEndpoint.post('invoiceCreate', '/api/invoices', {
     payload: InvoiceCreatePayload,
     success: InvoiceDetail,
@@ -96,7 +98,11 @@ export class InvoicesApi extends HttpApiGroup.make('invoices', { topLevel: true 
     ],
   })
     .middleware(ApiRequestBody)
-    .pipe(requirePermissions([Permissions.invoiceCreate]), rateLimit(RateLimits.sixtyPerMinute)),
+    .pipe(
+      requirePermissions([Permissions.invoiceCreate]),
+      authenticate,
+      rateLimit(RateLimits.sixtyPerMinute),
+    ),
   HttpApiEndpoint.post('invoiceRevisionCreate', '/api/invoices/:invoiceId/revisions', {
     params: { invoiceId: Ulid },
     payload: InvoiceRevisionCreatePayload,
@@ -111,7 +117,11 @@ export class InvoicesApi extends HttpApiGroup.make('invoices', { topLevel: true 
     ],
   })
     .middleware(ApiRequestBody)
-    .pipe(requirePermissions([Permissions.invoiceUpdate]), rateLimit(RateLimits.sixtyPerMinute)),
+    .pipe(
+      requirePermissions([Permissions.invoiceUpdate]),
+      authenticate,
+      rateLimit(RateLimits.sixtyPerMinute),
+    ),
   HttpApiEndpoint.post('invoiceIssue', '/api/invoices/:invoiceId/issue', {
     params: { invoiceId: Ulid },
     payload: InvoiceIssueRequest,
@@ -125,7 +135,11 @@ export class InvoicesApi extends HttpApiGroup.make('invoices', { topLevel: true 
     ],
   })
     .middleware(ApiRequestBody)
-    .pipe(requirePermissions([Permissions.invoiceIssue]), rateLimit(RateLimits.tenPerMinute)),
+    .pipe(
+      requirePermissions([Permissions.invoiceIssue]),
+      authenticate,
+      rateLimit(RateLimits.tenPerMinute),
+    ),
   HttpApiEndpoint.post('invoiceMarkPaid', '/api/invoices/:invoiceId/mark-paid', {
     params: { invoiceId: Ulid },
     payload: InvoiceTransitionRequest,
@@ -138,7 +152,11 @@ export class InvoicesApi extends HttpApiGroup.make('invoices', { topLevel: true 
     ],
   })
     .middleware(ApiRequestBody)
-    .pipe(requirePermissions([Permissions.invoiceMarkPaid]), rateLimit(RateLimits.tenPerMinute)),
+    .pipe(
+      requirePermissions([Permissions.invoiceMarkPaid]),
+      authenticate,
+      rateLimit(RateLimits.tenPerMinute),
+    ),
   HttpApiEndpoint.post('invoiceVoid', '/api/invoices/:invoiceId/void', {
     params: { invoiceId: Ulid },
     payload: InvoiceTransitionRequest,
@@ -151,5 +169,9 @@ export class InvoicesApi extends HttpApiGroup.make('invoices', { topLevel: true 
     ],
   })
     .middleware(ApiRequestBody)
-    .pipe(requirePermissions([Permissions.invoiceVoid]), rateLimit(RateLimits.tenPerMinute)),
+    .pipe(
+      requirePermissions([Permissions.invoiceVoid]),
+      authenticate,
+      rateLimit(RateLimits.tenPerMinute),
+    ),
 ) {}

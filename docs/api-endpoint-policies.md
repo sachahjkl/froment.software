@@ -11,7 +11,8 @@ Roles assign permissions to principals. Endpoints declare required permissions.
 | Aspect                  | Contract declaration                 | Runtime effect                                                    |
 | ----------------------- | ------------------------------------ | ----------------------------------------------------------------- |
 | API visibility          | `frontendSpecific`                   | Excludes the endpoint from the integration OpenAPI document.      |
-| Permissions             | `requirePermissions([...])`          | Authenticates the credential and checks every permission.         |
+| Authentication          | `authenticate`                       | Selects and validates the declared credential schemes.            |
+| Permissions             | `requirePermissions([...])`          | Checks every permission and documents their stable codes.         |
 | Rate limit              | `rateLimit(RateLimits.tenPerMinute)` | Limits requests for the endpoint and principal.                   |
 | Request size            | `limitRequestBody`                   | Rejects an oversized payload with `RequestTooLarge`.              |
 | Browser Origin          | `requireBrowserOrigin`               | Requires the configured Origin without authenticated credentials. |
@@ -36,7 +37,7 @@ Integration endpoints appear in OpenAPI by default.
 HttpApiEndpoint.get("quoteList", "/api/quotes", {
   success: QuoteList,
   error: quoteReadErrors,
-}).pipe(requirePermissions([Permissions.quoteRead]));
+}).pipe(requirePermissions([Permissions.quoteRead]), authenticate);
 ```
 
 ## Integration Mutation
@@ -50,6 +51,7 @@ HttpApiEndpoint.post("quoteSend", "/api/quotes/:quoteId/send", {
 }).pipe(
   limitRequestBody,
   requirePermissions([Permissions.quoteSend]),
+  authenticate,
   rateLimit(RateLimits.tenPerMinute),
 );
 ```
@@ -64,6 +66,7 @@ HttpApiEndpoint.post("integrationTokenCreate", "/api/integration-tokens", {
 }).pipe(
   limitRequestBody,
   requirePermissions([Permissions.integrationTokenManage]),
+  authenticate,
   rateLimit(RateLimits.tenPerMinute),
   frontendSpecific,
 );

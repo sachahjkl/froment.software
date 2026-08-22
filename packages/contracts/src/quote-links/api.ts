@@ -3,6 +3,7 @@ import { HttpApiEndpoint, HttpApiGroup, HttpApiSchema } from 'effect/unstable/ht
 
 import { ApiRequestBody } from '../api-authentication.js';
 import { requireBrowserOrigin } from '../api-policy/origin.js';
+import { authenticate } from '../api-policy/authentication.js';
 import { requirePermissions } from '../api-policy/permissions.js';
 import { rateLimit, RateLimits } from '../api-policy/rate-limit.js';
 import { frontendSpecific } from '../api-policy/visibility.js';
@@ -46,7 +47,11 @@ export class QuoteLinksApi extends HttpApiGroup.make('quoteLinks', { topLevel: t
     ],
   })
     .middleware(ApiRequestBody)
-    .pipe(requirePermissions([Permissions.quoteSend]), rateLimit(RateLimits.tenPerMinute)),
+    .pipe(
+      requirePermissions([Permissions.quoteSend]),
+      authenticate,
+      rateLimit(RateLimits.tenPerMinute),
+    ),
   HttpApiEndpoint.post('publicQuoteGet', '/api/public/quote-link', {
     payload: PublicQuoteAccessRequest,
     success: PublicQuoteConsultation,

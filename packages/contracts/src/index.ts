@@ -222,6 +222,7 @@ export {
   type ApiPrincipalValue,
 } from './api-authentication.js';
 export { requireBrowserOrigin } from './api-policy/origin.js';
+export { authenticate } from './api-policy/authentication.js';
 export { requirePermissions, RequiredPermissions } from './api-policy/permissions.js';
 export {
   EndpointRateLimit,

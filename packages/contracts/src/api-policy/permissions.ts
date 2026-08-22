@@ -2,7 +2,7 @@ import { Context, Schema } from 'effect';
 import type * as HttpMethod from 'effect/unstable/http/HttpMethod';
 import { OpenApi } from 'effect/unstable/httpapi';
 
-import { ApiAuthentication, ApiAuthorization } from '../api-authentication.js';
+import { ApiAuthorization } from '../api-authentication.js';
 import type { Permission, PermissionCode } from '../permissions.js';
 import type { Endpoint } from './endpoint.js';
 
@@ -50,7 +50,6 @@ export const requirePermissions = (permissions: RequiredPermissionList) => {
     endpoint
       .annotate(RequiredPermissions, codes)
       .middleware(ApiAuthorization)
-      .middleware(ApiAuthentication)
       .annotateMerge(
         OpenApi.annotations({
           override: { 'x-required-permissions': codes },

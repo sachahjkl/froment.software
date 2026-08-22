@@ -10,6 +10,7 @@ import {
 import { DocumentNotFound, QuotePreviewUnavailable } from '../documents/contracts.js';
 import { Ulid } from '../identifiers.js';
 import { OrderDocumentArtifact, OrderList, OrderNotFound } from '../orders/contracts.js';
+import { authenticate } from '../api-policy/authentication.js';
 import { requirePermissions } from '../api-policy/permissions.js';
 import { rateLimit, RateLimits } from '../api-policy/rate-limit.js';
 import { frontendSpecific } from '../api-policy/visibility.js';
@@ -22,7 +23,7 @@ export class OrdersApi extends HttpApiGroup.make('orders', { topLevel: true }).a
       AuthenticationRequired.pipe(HttpApiSchema.status(401)),
       PermissionDenied.pipe(HttpApiSchema.status(403)),
     ],
-  }).pipe(requirePermissions([Permissions.orderRead])),
+  }).pipe(requirePermissions([Permissions.orderRead]), authenticate),
   HttpApiEndpoint.get('orderPreview', '/api/orders/:orderId/preview', {
     params: { orderId: Ulid },
     success: Schema.String.pipe(HttpApiSchema.asText({ contentType: 'text/html; charset=utf-8' })),
@@ -32,7 +33,7 @@ export class OrdersApi extends HttpApiGroup.make('orders', { topLevel: true }).a
       OrderNotFound.pipe(HttpApiSchema.status(404)),
       QuotePreviewUnavailable.pipe(HttpApiSchema.status(409)),
     ],
-  }).pipe(requirePermissions([Permissions.documentRender]), frontendSpecific),
+  }).pipe(requirePermissions([Permissions.documentRender]), authenticate, frontendSpecific),
   HttpApiEndpoint.post('orderPdfRender', '/api/orders/:orderId/pdf', {
     params: { orderId: Ulid },
     success: OrderDocumentArtifact,
@@ -46,6 +47,7 @@ export class OrdersApi extends HttpApiGroup.make('orders', { topLevel: true }).a
     ],
   }).pipe(
     requirePermissions([Permissions.documentRender]),
+    authenticate,
     rateLimit(RateLimits.tenPerMinute),
     frontendSpecific,
   ),
@@ -57,5 +59,5 @@ export class OrdersApi extends HttpApiGroup.make('orders', { topLevel: true }).a
       PermissionDenied.pipe(HttpApiSchema.status(403)),
       DocumentNotFound.pipe(HttpApiSchema.status(404)),
     ],
-  }).pipe(requirePermissions([Permissions.documentDownload])),
+  }).pipe(requirePermissions([Permissions.documentDownload]), authenticate),
 ) {}
