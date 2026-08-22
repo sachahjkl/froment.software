@@ -4,7 +4,7 @@ export type Translations = (typeof translations)[Language];
 export type TranslationKey = keyof Translations;
 export type TranslationDictionary = Record<TranslationKey, string>;
 
-type ApiDocumentationGroup = 'clients' | 'orders' | 'quotes' | 'invoices';
+type ApiDocumentationGroup = 'clients' | 'orders' | 'quotes' | 'quoteLinks' | 'invoices';
 type ApiDocumentationOperation =
   | 'clientList'
   | 'clientGet'
@@ -59,6 +59,10 @@ export const apiDocumentation = {
       clients: { title: 'Clients', description: 'Fiches clients et cycle de vie.' },
       orders: { title: 'Commandes', description: 'Commandes et documents générés.' },
       quotes: { title: 'Devis', description: 'Devis, révisions, envoi et documents.' },
+      quoteLinks: {
+        title: 'Liens de devis',
+        description: 'Envoi et accès sécurisé aux devis.',
+      },
       invoices: {
         title: 'Factures',
         description: 'Factures, révisions, cycle de vie et documents.',
@@ -156,6 +160,10 @@ export const apiDocumentation = {
       clients: { title: 'Clients', description: 'Client records and lifecycle.' },
       orders: { title: 'Orders', description: 'Orders and their generated documents.' },
       quotes: { title: 'Quotes', description: 'Quotes, revisions, delivery, and documents.' },
+      quoteLinks: {
+        title: 'Quote links',
+        description: 'Quote delivery and secure access.',
+      },
       invoices: {
         title: 'Invoices',
         description: 'Invoices, revisions, lifecycle, and documents.',

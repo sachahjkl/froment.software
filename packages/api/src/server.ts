@@ -13,6 +13,7 @@ import { createServer } from 'node:http';
 
 import { AuthenticationHttpLive } from './authentication/http.js';
 import { AuthenticationHandlers } from './authentication/handlers.js';
+import { AffairHandlers } from './affairs/handlers.js';
 import { BootstrapHandlers } from './bootstrap/handlers.js';
 import { ClientPortalHandlers } from './client-portal/handlers.js';
 import { ClientHandlers } from './clients/handlers.js';
@@ -22,8 +23,11 @@ import { ApiBrowserRequestLive } from './http/origin.js';
 import { ApiRequestBodyLive, RequestBodyLimits } from './http/request-body.js';
 import { IntegrationTokenHandlers } from './integration-tokens/handlers.js';
 import { InvoiceHandlers } from './invoices/handlers.js';
+import { IssuerSettingsHandlers } from './issuer-settings/handlers.js';
 import { OrderHandlers } from './orders/handlers.js';
 import { QuoteHandlers } from './quotes/handlers.js';
+import { QuoteConditionPresetHandlers } from './quote-condition-presets/handlers.js';
+import { QuoteLinkHandlers } from './quote-links/handlers.js';
 import { RequestLimiterLive } from './server/request-limiter.js';
 import { StatusHandlers } from './status/handlers.js';
 
@@ -38,7 +42,11 @@ const ApiRoutes = HttpApiBuilder.layer(FrenchApi, { openapiPath: '/api/openapi.j
       AuthenticationHandlers,
       ClientHandlers,
       OrderHandlers,
+      QuoteConditionPresetHandlers,
+      IssuerSettingsHandlers,
+      AffairHandlers,
       QuoteHandlers,
+      QuoteLinkHandlers,
       InvoiceHandlers,
       ClientPortalHandlers,
       IntegrationTokenHandlers,

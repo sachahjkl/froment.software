@@ -111,7 +111,7 @@ describe('API contracts', () => {
 
   it('keeps permissions, mutation quotas, and frontend visibility independent', () => {
     const clientAccess = Api.groups.clients.endpoints.clientAccessCreate;
-    const affairEvents = Api.groups.quotes.endpoints.affairEventList;
+    const affairEvents = Api.groups.affairs.endpoints.affairEventList;
     const tokenCreate = Api.groups.integrationTokens.endpoints.integrationTokenCreate;
 
     expect(
