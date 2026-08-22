@@ -5,7 +5,7 @@ import { HttpApiBuilder } from 'effect/unstable/httpapi';
 
 import { DocumentArtifacts } from '../documents/document-artifacts.js';
 import { DocumentRenderer } from '../documents/document-renderer.js';
-import { setDocumentResponseHeaders, setPrivateResponseHeaders } from '../http/response.js';
+import { setPdfResponseHeaders, setPrivateResponseHeaders } from '../http/response.js';
 import { Orders } from './orders.js';
 
 export const OrderHandlers = HttpApiBuilder.group(Api, 'orders', (handlers) =>
@@ -22,11 +22,11 @@ export const OrderHandlers = HttpApiBuilder.group(Api, 'orders', (handlers) =>
         'orderPreview',
         Effect.fn('orderPreview')(function* ({ params }) {
           yield* setPrivateResponseHeaders;
-          yield* setDocumentResponseHeaders;
+          yield* setPdfResponseHeaders;
           const snapshot = yield* (yield* Orders)
             .getSnapshot(params.orderId)
             .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
-          return yield* (yield* DocumentRenderer).renderOrder(snapshot).pipe(Effect.orDie);
+          return yield* (yield* DocumentRenderer).renderOrderPdf(snapshot).pipe(Effect.orDie);
         }),
       )
       .handle(

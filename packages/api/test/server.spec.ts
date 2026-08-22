@@ -1,7 +1,7 @@
 import { cp, mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { execFile, spawn, type ChildProcess } from 'node:child_process';
+import { execFile, spawn, spawnSync, type ChildProcess } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { request as httpRequest } from 'node:http';
 import { createServer } from 'node:net';
@@ -1228,13 +1228,22 @@ describe('HTTP server', () => {
       headers: { cookie },
     });
     expect(firstPreview.status).toBe(200);
-    expect(firstPreview.headers.get('content-type')).toContain('text/html');
+    expect(firstPreview.headers.get('content-type')).toContain('application/pdf');
     expect(firstPreview.headers.get('cache-control')).toBe('no-store');
     expect(firstPreview.headers.get('content-security-policy')).toContain("default-src 'none'");
     expect(firstPreview.headers.get('x-content-type-options')).toBe('nosniff');
-    const firstPreviewHtml = await firstPreview.text();
-    expect(firstPreviewHtml).toContain('Froment Software A');
-    expect(firstPreviewHtml).toContain('1 rue du Test');
+    const firstPreviewPdf = Buffer.from(await firstPreview.arrayBuffer());
+    expect(firstPreviewPdf.subarray(0, 5).toString()).toBe('%PDF-');
+    const firstPreviewText = spawnSync('pdftotext', ['-', '-'], {
+      input: firstPreviewPdf,
+      encoding: 'utf8',
+    });
+    expect(firstPreviewText.stdout).toContain('Froment Software A');
+    expect(firstPreviewText.stdout).toContain('1 rue du Test');
+    const previewArtifact = await fetch(`${baseUrl}/api/quotes/${quote.id}/revisions/1/pdf`, {
+      headers: { cookie },
+    });
+    expect(previewArtifact.status).toBe(404);
 
     const pdfRender = await fetch(`${baseUrl}/api/quotes/${quote.id}/revisions/1/pdf`, {
       method: 'POST',
@@ -1857,11 +1866,16 @@ describe('HTTP server', () => {
       { headers: { cookie } },
     );
     expect(invoicePreview.status).toBe(200);
-    expect(invoicePreview.headers.get('content-type')).toContain('text/html');
+    expect(invoicePreview.headers.get('content-type')).toContain('application/pdf');
     expect(invoicePreview.headers.get('content-security-policy')).toBe(
-      "default-src 'none'; style-src 'unsafe-inline'; img-src data:",
+      "default-src 'none'; sandbox",
     );
-    await expect(invoicePreview.text()).resolves.toEqual(expect.stringContaining('FA-2026-000001'));
+    const invoicePreviewPdf = Buffer.from(await invoicePreview.arrayBuffer());
+    const invoicePreviewText = spawnSync('pdftotext', ['-', '-'], {
+      input: invoicePreviewPdf,
+      encoding: 'utf8',
+    });
+    expect(invoicePreviewText.stdout).toContain('FA-2026-000001');
 
     const invoicePdfResponses = await Promise.all([
       fetch(`${baseUrl}/api/invoices/${invoice.id}/revisions/3/pdf`, {

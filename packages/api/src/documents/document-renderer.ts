@@ -1,37 +1,38 @@
 import {
-  renderInvoiceDefaultTemplate,
-  renderOrderDefaultTemplate,
-  renderQuoteDefaultTemplate,
+  prepareInvoiceDocument,
+  prepareOrderDocument,
+  prepareQuoteDocument,
+  type InvoiceDocumentInputValue,
+  type OrderDocumentInputValue,
+  type QuoteDocumentInputValue,
 } from '@froment/documents';
 import {
   type InvoiceRenderSnapshotValue,
   type OrderRenderSnapshotValue,
   type QuoteRenderSnapshotValue,
 } from '@froment/contracts';
+import { execFile } from 'node:child_process';
+import { copyFile, mkdtemp, mkdir, readFile, rm, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { promisify } from 'node:util';
 import { Config, Context, Effect, Layer, Schema, TxSemaphore } from 'effect';
-import { chromium } from 'playwright-core';
+
+const execFileAsync = promisify(execFile);
+type DocumentInput = QuoteDocumentInputValue | InvoiceDocumentInputValue | OrderDocumentInputValue;
 
 export class DocumentRenderError extends Schema.TaggedError<DocumentRenderError>()(
   'DocumentRenderError',
-  { cause: Schema.Defect() },
+  { reason: Schema.Literals(['input', 'compiler', 'output']) },
 ) {}
 
 export interface DocumentRendererService {
-  readonly renderQuote: (
-    snapshot: QuoteRenderSnapshotValue,
-  ) => Effect.Effect<string, DocumentRenderError>;
   readonly renderQuotePdf: (
     snapshot: QuoteRenderSnapshotValue,
   ) => Effect.Effect<Uint8Array, DocumentRenderError>;
-  readonly renderInvoice: (
-    snapshot: InvoiceRenderSnapshotValue,
-  ) => Effect.Effect<string, DocumentRenderError>;
   readonly renderInvoicePdf: (
     snapshot: InvoiceRenderSnapshotValue,
   ) => Effect.Effect<Uint8Array, DocumentRenderError>;
-  readonly renderOrder: (
-    snapshot: OrderRenderSnapshotValue,
-  ) => Effect.Effect<string, DocumentRenderError>;
   readonly renderOrderPdf: (
     snapshot: OrderRenderSnapshotValue,
   ) => Effect.Effect<Uint8Array, DocumentRenderError>;
@@ -44,85 +45,107 @@ export class DocumentRenderer extends Context.Service<DocumentRenderer, Document
 export const DocumentRendererLive = Layer.effect(
   DocumentRenderer,
   Effect.gen(function* () {
-    const executablePath = yield* Config.string('CHROMIUM_PATH');
-    const browser = yield* Effect.acquireRelease(
-      Effect.tryPromise({
-        try: () =>
-          chromium.launch({
-            executablePath,
-            headless: true,
-            args: ['--disable-dev-shm-usage'],
-          }),
-        catch: (cause) => new DocumentRenderError({ cause }),
-      }),
-      (activeBrowser) => Effect.promise(() => activeBrowser.close()),
-    );
+    const executable = yield* Config.string('TYPST_PATH');
+    const templatesPath = yield* Config.string('DOCUMENT_TEMPLATES_PATH');
+    const fontsPath = yield* Config.string('DOCUMENT_FONTS_PATH');
     const permits = yield* TxSemaphore.make(2);
 
-    const render = Effect.fn('DocumentRenderer.render')(function* <Snapshot>(
-      snapshot: Snapshot,
-      renderTemplate: (value: Snapshot) => Promise<string>,
+    const compile = Effect.fn('DocumentRenderer.compile')(function* (
+      template: 'quote.typ' | 'invoice.typ' | 'order.typ',
+      input: DocumentInput,
     ) {
-      return yield* Effect.tryPromise({
-        try: () => renderTemplate(snapshot),
-        catch: (cause) => new DocumentRenderError({ cause }),
+      const json = yield* Effect.try({
+        try: () => JSON.stringify(input),
+        catch: () => new DocumentRenderError({ reason: 'input' }),
       });
-    });
-
-    const renderPdf = Effect.fn('DocumentRenderer.renderPdf')(function* (html: string) {
       return yield* TxSemaphore.withPermit(
         permits,
-        Effect.tryPromise({
-          try: async () => {
-            const page = await browser.newPage();
-            try {
-              await page.setContent(html, { waitUntil: 'load' });
-              return await page.pdf({
-                format: 'A4',
-                printBackground: true,
-                preferCSSPageSize: true,
-              });
-            } finally {
-              await page.close();
-            }
-          },
-          catch: (cause) => new DocumentRenderError({ cause }),
-        }),
+        Effect.acquireUseRelease(
+          Effect.tryPromise({
+            try: () => mkdtemp(join(tmpdir(), 'froment-pdf-')),
+            catch: () => new DocumentRenderError({ reason: 'output' }),
+          }),
+          (root) =>
+            Effect.tryPromise({
+              try: async () => {
+                const inputDirectory = join(root, 'input');
+                const outputDirectory = join(root, 'output');
+                const templateDirectory = join(root, 'templates');
+                await Promise.all([
+                  mkdir(inputDirectory),
+                  mkdir(outputDirectory),
+                  mkdir(templateDirectory),
+                ]);
+                await Promise.all([
+                  copyFile(join(templatesPath, template), join(templateDirectory, template)),
+                  copyFile(
+                    join(templatesPath, 'shared.typ'),
+                    join(templateDirectory, 'shared.typ'),
+                  ),
+                ]);
+                await writeFile(join(inputDirectory, 'document.json'), json, {
+                  encoding: 'utf8',
+                  mode: 0o600,
+                });
+                const output = join(outputDirectory, 'document.pdf');
+                await execFileAsync(
+                  executable,
+                  [
+                    'compile',
+                    '--root',
+                    root,
+                    '--font-path',
+                    fontsPath,
+                    '--creation-timestamp',
+                    '0',
+                    join(templateDirectory, template),
+                    output,
+                  ],
+                  {
+                    cwd: root,
+                    env: {
+                      PATH: '',
+                      SOURCE_DATE_EPOCH: '0',
+                      TYPST_PACKAGE_PATH: join(root, 'packages'),
+                    },
+                    maxBuffer: 1024 * 1024,
+                  },
+                );
+                const pdf = await readFile(output);
+                if (!pdf.subarray(0, 5).equals(Buffer.from('%PDF-'))) {
+                  throw new DocumentRenderError({ reason: 'output' });
+                }
+                return new Uint8Array(pdf);
+              },
+              catch: (error) =>
+                error instanceof DocumentRenderError
+                  ? error
+                  : new DocumentRenderError({ reason: 'compiler' }),
+            }),
+          (root) => Effect.promise(() => rm(root, { recursive: true, force: true })),
+        ),
       );
     });
 
-    const renderQuote = Effect.fn('DocumentRenderer.renderQuote')(
-      (snapshot: QuoteRenderSnapshotValue) => render(snapshot, renderQuoteDefaultTemplate),
+    const renderQuotePdf = Effect.fn('DocumentRenderer.renderQuotePdf')(
+      (snapshot: QuoteRenderSnapshotValue) =>
+        compile('quote.typ', prepareQuoteDocument(snapshot)).pipe(
+          Effect.catchDefect(() => new DocumentRenderError({ reason: 'input' })),
+        ),
     );
-    const renderQuotePdf = Effect.fn('DocumentRenderer.renderQuotePdf')(function* (
-      snapshot: QuoteRenderSnapshotValue,
-    ) {
-      return yield* renderPdf(yield* renderQuote(snapshot));
-    });
-    const renderInvoice = Effect.fn('DocumentRenderer.renderInvoice')(
-      (snapshot: InvoiceRenderSnapshotValue) => render(snapshot, renderInvoiceDefaultTemplate),
+    const renderInvoicePdf = Effect.fn('DocumentRenderer.renderInvoicePdf')(
+      (snapshot: InvoiceRenderSnapshotValue) =>
+        compile('invoice.typ', prepareInvoiceDocument(snapshot)).pipe(
+          Effect.catchDefect(() => new DocumentRenderError({ reason: 'input' })),
+        ),
     );
-    const renderInvoicePdf = Effect.fn('DocumentRenderer.renderInvoicePdf')(function* (
-      snapshot: InvoiceRenderSnapshotValue,
-    ) {
-      return yield* renderPdf(yield* renderInvoice(snapshot));
-    });
-    const renderOrder = Effect.fn('DocumentRenderer.renderOrder')(
-      (snapshot: OrderRenderSnapshotValue) => render(snapshot, renderOrderDefaultTemplate),
+    const renderOrderPdf = Effect.fn('DocumentRenderer.renderOrderPdf')(
+      (snapshot: OrderRenderSnapshotValue) =>
+        compile('order.typ', prepareOrderDocument(snapshot)).pipe(
+          Effect.catchDefect(() => new DocumentRenderError({ reason: 'input' })),
+        ),
     );
-    const renderOrderPdf = Effect.fn('DocumentRenderer.renderOrderPdf')(function* (
-      snapshot: OrderRenderSnapshotValue,
-    ) {
-      return yield* renderPdf(yield* renderOrder(snapshot));
-    });
 
-    return DocumentRenderer.of({
-      renderQuote,
-      renderQuotePdf,
-      renderInvoice,
-      renderInvoicePdf,
-      renderOrder,
-      renderOrderPdf,
-    });
+    return DocumentRenderer.of({ renderQuotePdf, renderInvoicePdf, renderOrderPdf });
   }),
 );

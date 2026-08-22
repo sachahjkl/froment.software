@@ -52,7 +52,7 @@ export class QuotesApi extends HttpApiGroup.make('quotes', { topLevel: true }).a
   }).pipe(requirePermissions([Permissions.quoteRead]), authenticate),
   HttpApiEndpoint.get('quotePreview', '/api/quotes/:quoteId/revisions/:version/preview', {
     params: { quoteId: Ulid, version: RevisionVersionParameter },
-    success: Schema.String.pipe(HttpApiSchema.asText({ contentType: 'text/html; charset=utf-8' })),
+    success: Schema.Uint8Array.pipe(HttpApiSchema.asUint8Array({ contentType: 'application/pdf' })),
     error: [
       AuthenticationRequired.pipe(HttpApiSchema.status(401)),
       PermissionDenied.pipe(HttpApiSchema.status(403)),

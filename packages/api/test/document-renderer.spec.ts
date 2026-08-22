@@ -4,8 +4,10 @@ import {
   QuoteRenderSnapshot,
 } from '@froment/contracts';
 import { spawnSync } from 'node:child_process';
-import { Effect, Schema } from 'effect';
-import { chromium, type Page } from 'playwright-core';
+import { mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { ConfigProvider, Effect, Layer, Schema } from 'effect';
 import { describe, expect, it } from 'vitest';
 
 import { DocumentRenderer, DocumentRendererLive } from '../src/documents/document-renderer.js';
@@ -121,155 +123,124 @@ const compactOrder = Schema.decodeUnknownSync(OrderRenderSnapshot)({
   totalCents: compactQuote.totalCents,
   lines: compactQuote.lines,
 });
+const maximumOrder = Schema.decodeUnknownSync(OrderRenderSnapshot)({
+  ...compactOrder,
+  issuer,
+  client: party,
+  title: common.title,
+  conditions: longText,
+  lines,
+  netTotalCents: common.netTotalCents,
+  vatTotalCents: common.vatTotalCents,
+  totalCents: common.totalCents,
+});
 
-const expectNoHorizontalOverflow = async (page: Page) => {
-  const overflows = await page
-    .locator('main, header, section, table, th, td, footer')
-    .evaluateAll((elements) => {
-      const main = elements[0]!.getBoundingClientRect();
-      return elements.flatMap((element) => {
-        const rect = element.getBoundingClientRect();
-        const overflow = element.scrollWidth - element.clientWidth;
-        return overflow > 1 || rect.left < main.left - 1 || rect.right > main.right + 1
-          ? [
-              {
-                tag: element.tagName,
-                className: element.className,
-                overflow,
-                left: rect.left,
-                right: rect.right,
-              },
-            ]
-          : [];
-      });
-    });
-  expect(overflows).toEqual([]);
+const inspectPdf = (pdf: Uint8Array) => {
+  const info = spawnSync('pdfinfo', ['-'], { input: pdf, encoding: 'utf8' });
+  const text = spawnSync('pdftotext', ['-layout', '-', '-'], { input: pdf, encoding: 'utf8' });
+  const fonts = spawnSync('pdffonts', ['-'], { input: pdf, encoding: 'utf8' });
+  expect(info.status).toBe(0);
+  expect(text.status).toBe(0);
+  expect(fonts.status).toBe(0);
+  expect(info.stdout).toMatch(/Page size:\s+595\.\d+ x 841\.\d+ pts \(A4\)/);
+  expect(fonts.stdout).toMatch(/Cousine-Bold\s+CID TrueType\s+Identity-H\s+yes\s+yes\s+yes/);
+  return { info: info.stdout, text: text.stdout };
 };
 
-const expectBusinessLayout = async (page: Page) => {
-  const layout = await page.locator('body').evaluate((body) => {
-    const style = (selector: string) =>
-      body.ownerDocument.defaultView!.getComputedStyle(body.querySelector(selector)!);
-    const firstRow = style('tbody tr:nth-child(1)');
-    const secondRow = style('tbody tr:nth-child(2)');
-    return {
-      headerDisplay: style('.header').display,
-      metadataBorder: style('.quote-meta').borderTopStyle,
-      tableBorder: style('.items tbody').borderBottomStyle,
-      cellBorders: ['Top', 'Right', 'Bottom', 'Left'].map((side) =>
-        style('tbody td').getPropertyValue(`border-${side.toLowerCase()}-style`),
-      ),
-      rowColors: [firstRow.backgroundColor, secondRow.backgroundColor],
-      totalBorder: style('.grand-total').borderTopStyle,
-    };
-  });
-
-  expect(layout).toEqual({
-    headerDisplay: 'grid',
-    metadataBorder: 'solid',
-    tableBorder: 'solid',
-    cellBorders: ['none', 'none', 'none', 'none'],
-    rowColors: ['rgba(0, 0, 0, 0)', 'rgba(0, 0, 0, 0)'],
-    totalBorder: 'double',
-  });
+const expectVisualReference = (kind: 'quote' | 'invoice' | 'order', pdf: Uint8Array): void => {
+  const directory = mkdtempSync(join(tmpdir(), 'froment-pdf-reference-'));
+  try {
+    const output = join(directory, 'page');
+    const rasterized = spawnSync(
+      'pdftoppm',
+      ['-f', '1', '-l', '1', '-singlefile', '-r', '96', '-mono', '-', output],
+      { input: pdf },
+    );
+    expect(rasterized.status).toBe(0);
+    const raster = readFileSync(`${output}.pbm`);
+    const path = new URL(`./references/${kind}-compact.pbm`, import.meta.url);
+    if (process.env['UPDATE_PDF_REFERENCES'] === 'true') writeFileSync(path, raster);
+    const reference = readFileSync(path);
+    const changedBytes = raster.reduce(
+      (count, value, index) => count + (value === reference[index] ? 0 : 1),
+      Math.abs(raster.byteLength - reference.byteLength),
+    );
+    const tolerance = 0;
+    expect(changedBytes / Math.max(raster.byteLength, reference.byteLength)).toBeLessThanOrEqual(
+      tolerance,
+    );
+  } finally {
+    rmSync(directory, { recursive: true, force: true });
+  }
 };
 
 describe('DocumentRenderer', () => {
-  it('prints document templates without horizontal overflow and with embedded text', async () => {
+  it('renders compact and maximum fixtures as stable A4 PDFs with embedded text', async () => {
     const rendered = await Effect.runPromise(
-      Effect.gen(function* () {
-        const renderer = yield* DocumentRenderer;
-        return [
-          {
-            kind: 'quote' as const,
-            html: yield* renderer.renderQuote(quote),
-            pdf: yield* renderer.renderQuotePdf(quote),
-            expectedText: quote.quoteReference,
-          },
-          {
-            kind: 'invoice' as const,
-            html: yield* renderer.renderInvoice(invoice),
-            pdf: yield* renderer.renderInvoicePdf(invoice),
-            expectedText: invoice.invoiceNumber,
-          },
-        ];
-      }).pipe(Effect.provide(DocumentRendererLive), Effect.scoped),
+      DocumentRenderer.use((renderer) =>
+        Effect.all([
+          renderer.renderQuotePdf(compactQuote),
+          renderer.renderInvoicePdf(compactInvoice),
+          renderer.renderOrderPdf(compactOrder),
+          renderer.renderQuotePdf(quote),
+          renderer.renderInvoicePdf(invoice),
+          renderer.renderOrderPdf(maximumOrder),
+        ]),
+      ).pipe(Effect.provide(DocumentRendererLive)),
     );
-    const browser = await chromium.launch({
-      executablePath: process.env['CHROMIUM_PATH'],
-      headless: true,
-      args: ['--disable-dev-shm-usage'],
-    });
-    try {
-      const page = await browser.newPage();
-      await page.setViewportSize({ width: 794, height: 1_123 });
-      await page.emulateMedia({ media: 'print' });
-      for (const document of rendered) {
-        await page.setContent(document.html, { waitUntil: 'load' });
-        await expectNoHorizontalOverflow(page);
-        if (document.kind === 'quote') await expectBusinessLayout(page);
-        const rows = page.locator('.items tbody tr');
-        expect(await rows.count()).toBe(20);
-        const terms = page.locator(document.kind === 'quote' ? '.conditions' : '.payment-info');
-        expect(await terms.textContent()).toContain(longText);
-        const pdfText = Buffer.from(document.pdf).toString('latin1');
-        expect(pdfText.startsWith('%PDF-')).toBe(true);
-        expect(pdfText.match(/\/Type \/Page\b/g)?.length ?? 0).toBeGreaterThan(1);
-        const extracted = spawnSync('pdftotext', ['-', '-'], {
-          input: document.pdf,
-          encoding: 'utf8',
-        });
-        expect(extracted.error).toBeUndefined();
-        expect(extracted.status).toBe(0);
-        expect(extracted.stdout.replaceAll(/\s/g, '')).toContain(document.expectedText);
+    const compactKinds = ['quote', 'invoice', 'order'] as const;
+    for (const [index, pdf] of rendered.slice(0, 3).entries()) {
+      const inspected = inspectPdf(pdf!);
+      expect(inspected.info).toMatch(/Pages:\s+1\b/);
+      expect(inspected.text).toContain('Froment Software');
+      expectVisualReference(compactKinds[index]!, pdf!);
+    }
+    for (const pdf of rendered.slice(3)) {
+      const inspected = inspectPdf(pdf!);
+      expect(Number(inspected.info.match(/Pages:\s+(\d+)/)?.[1])).toBeGreaterThan(1);
+      expect(inspected.text.replaceAll(/\s/g, '')).toContain(longText.replaceAll(/\s/g, '').trim());
+      expect(inspected.text.match(/Désignation/g)?.length).toBeGreaterThan(1);
+      for (let position = 1; position <= 20; position += 1) {
+        expect(inspected.text).toMatch(new RegExp(`^\\s*${position}\\s`, 'm'));
       }
-
-      await page.setViewportSize({ width: 1_200, height: 1_123 });
-      await page.emulateMedia({ media: 'screen' });
-      const invoiceDocument = rendered[1];
-      if (invoiceDocument === undefined) throw new Error('The rendered invoice is missing.');
-      await page.setContent(invoiceDocument.html, { waitUntil: 'load' });
-      const invoiceMargins = await page.locator('froment-invoice-document').evaluate((element) => {
-        const rect = element.getBoundingClientRect();
-        return [rect.left, element.ownerDocument.documentElement.clientWidth - rect.right];
-      });
-      const [leftMargin = 0, rightMargin = 0] = invoiceMargins;
-      expect(Math.abs(leftMargin - rightMargin)).toBeLessThan(1);
-
-      const compactDocuments = await Effect.runPromise(
-        DocumentRenderer.use((service) =>
-          Effect.all([
-            service
-              .renderQuotePdf(compactQuote)
-              .pipe(Effect.map((pdf) => ({ kind: 'quote', pdf }))),
-            service
-              .renderOrderPdf(compactOrder)
-              .pipe(Effect.map((pdf) => ({ kind: 'order', pdf }))),
-            service
-              .renderInvoicePdf(compactInvoice)
-              .pipe(Effect.map((pdf) => ({ kind: 'invoice', pdf }))),
-          ]),
-        ).pipe(Effect.provide(DocumentRendererLive), Effect.scoped),
-      );
-      for (const document of compactDocuments) {
-        const compactPdf = Buffer.from(document.pdf);
-        expect(
-          compactPdf.toString('latin1').match(/\/Type \/Page\b/g)?.length ?? 0,
-          document.kind,
-        ).toBe(1);
-        const fonts = spawnSync('pdffonts', ['-'], { input: compactPdf, encoding: 'utf8' });
-        expect(fonts.error).toBeUndefined();
-        expect(fonts.status).toBe(0);
-        expect(fonts.stdout).toContain('Cousine');
-        const extracted = spawnSync('pdftotext', ['-', '-'], {
-          input: compactPdf,
-          encoding: 'utf8',
-        });
-        expect(extracted.status).toBe(0);
-        expect(extracted.stdout).toContain('Froment Software');
-      }
-    } finally {
-      await browser.close();
     }
   }, 30_000);
+
+  it('produces identical bytes for identical inputs', async () => {
+    const [first, second] = await Effect.runPromise(
+      DocumentRenderer.use((renderer) =>
+        Effect.all([renderer.renderQuotePdf(compactQuote), renderer.renderQuotePdf(compactQuote)]),
+      ).pipe(Effect.provide(DocumentRendererLive)),
+    );
+    expect(first).toEqual(second);
+  });
+
+  it('returns a redacted typed error and removes temporary files after compiler failure', async () => {
+    const before = readdirSync(tmpdir())
+      .filter((name) => name.startsWith('froment-pdf-'))
+      .sort();
+    const config = ConfigProvider.fromUnknown({
+      TYPST_PATH: '/missing/typst',
+      DOCUMENT_TEMPLATES_PATH: process.env['DOCUMENT_TEMPLATES_PATH'],
+      DOCUMENT_FONTS_PATH: process.env['DOCUMENT_FONTS_PATH'],
+    });
+    const rendererLayer = DocumentRendererLive.pipe(Layer.provide(ConfigProvider.layer(config)));
+    const result = await Effect.runPromise(
+      Effect.result(
+        DocumentRenderer.use((renderer) => renderer.renderQuotePdf(compactQuote)).pipe(
+          Effect.provide(rendererLayer),
+        ),
+      ),
+    );
+    expect(result).toMatchObject({
+      _tag: 'Failure',
+      failure: { _tag: 'DocumentRenderError', reason: 'compiler' },
+    });
+    expect(JSON.stringify(result)).not.toContain('/missing/typst');
+    expect(
+      readdirSync(tmpdir())
+        .filter((name) => name.startsWith('froment-pdf-'))
+        .sort(),
+    ).toEqual(before);
+  });
 });

@@ -68,7 +68,7 @@ export class InvoicesApi extends HttpApiGroup.make('invoices', { topLevel: true 
   }).pipe(requirePermissions([Permissions.invoiceRead]), authenticate),
   HttpApiEndpoint.get('invoicePreview', '/api/invoices/:invoiceId/revisions/:version/preview', {
     params: { invoiceId: Ulid, version: RevisionVersionParameter },
-    success: Schema.String.pipe(HttpApiSchema.asText({ contentType: 'text/html; charset=utf-8' })),
+    success: Schema.Uint8Array.pipe(HttpApiSchema.asUint8Array({ contentType: 'application/pdf' })),
     error: [...invoiceReadErrors, InvoiceNotFound.pipe(HttpApiSchema.status(404))],
   }).pipe(requirePermissions([Permissions.documentRender]), authenticate, frontendSpecific),
   HttpApiEndpoint.post('invoicePdfRender', '/api/invoices/:invoiceId/revisions/:version/pdf', {

@@ -253,11 +253,8 @@ describe('invoice issue recovery', () => {
       }).pipe(
         Effect.provide(
           makeTestLayer(':memory:', {
-            renderQuote: () => Effect.die('unused'),
             renderQuotePdf: () => Effect.die('unused'),
-            renderInvoice: () => Effect.die('unused'),
             renderInvoicePdf: () => Effect.die('unused'),
-            renderOrder: () => Effect.die('unused'),
             renderOrderPdf: () => Effect.die('unused'),
           }),
         ),
@@ -274,11 +271,8 @@ describe('invoice issue recovery', () => {
   it('rejects corrupted invoice PDFs for administrator and client downloads', async () => {
     const pdf = Buffer.from('%PDF-corrupted');
     const renderer: DocumentRendererService = {
-      renderQuote: () => Effect.succeed(''),
       renderQuotePdf: () => Effect.succeed(pdf),
-      renderInvoice: () => Effect.succeed(''),
       renderInvoicePdf: () => Effect.succeed(pdf),
-      renderOrder: () => Effect.die('unused'),
       renderOrderPdf: () => Effect.die('unused'),
     };
 
@@ -321,16 +315,13 @@ describe('invoice issue recovery', () => {
     let renderAttempts = 0;
     const pdf = new TextEncoder().encode('%PDF-1.7\nrecovered');
     const renderer: DocumentRendererService = {
-      renderQuote: () => Effect.succeed(''),
       renderQuotePdf: () => Effect.succeed(pdf),
-      renderInvoice: () => Effect.succeed(''),
       renderInvoicePdf: () => {
         renderAttempts += 1;
         return renderAttempts === 1
-          ? Effect.fail(new DocumentRenderError({ cause: new Error('renderer unavailable') }))
+          ? Effect.fail(new DocumentRenderError({ reason: 'compiler' }))
           : Effect.succeed(pdf);
       },
-      renderOrder: () => Effect.die('unused'),
       renderOrderPdf: () => Effect.die('unused'),
     };
     const testLayer = makeTestLayer(':memory:', renderer);
@@ -400,12 +391,8 @@ describe('invoice issue recovery', () => {
 
   it('returns issuance success when the immediate renderer fails', async () => {
     const renderer: DocumentRendererService = {
-      renderQuote: () => Effect.succeed(''),
       renderQuotePdf: () => Effect.die('unused'),
-      renderInvoice: () => Effect.succeed(''),
-      renderInvoicePdf: () =>
-        Effect.fail(new DocumentRenderError({ cause: new Error('secret renderer detail') })),
-      renderOrder: () => Effect.die('unused'),
+      renderInvoicePdf: () => Effect.fail(new DocumentRenderError({ reason: 'compiler' })),
       renderOrderPdf: () => Effect.die('unused'),
     };
     const testLayer = makeTestLayer(':memory:', renderer);
@@ -439,9 +426,7 @@ describe('invoice issue recovery', () => {
     let attempts = 0;
     const pdf = new TextEncoder().encode('%PDF-1.7\nconcurrent');
     const renderer: DocumentRendererService = {
-      renderQuote: () => Effect.succeed(''),
       renderQuotePdf: () => Effect.die('unused'),
-      renderInvoice: () => Effect.succeed(''),
       renderInvoicePdf: () => {
         attempts += 1;
         return Deferred.succeed(started, undefined).pipe(
@@ -449,7 +434,6 @@ describe('invoice issue recovery', () => {
           Effect.as(pdf),
         );
       },
-      renderOrder: () => Effect.die('unused'),
       renderOrderPdf: () => Effect.die('unused'),
     };
 
@@ -496,11 +480,8 @@ describe('invoice issue recovery', () => {
     const filename = join(directory, 'database.sqlite');
     const pdf = new TextEncoder().encode('%PDF-1.7\nrestart');
     const renderer: DocumentRendererService = {
-      renderQuote: () => Effect.succeed(''),
       renderQuotePdf: () => Effect.die('unused'),
-      renderInvoice: () => Effect.succeed(''),
       renderInvoicePdf: () => Effect.succeed(pdf),
-      renderOrder: () => Effect.die('unused'),
       renderOrderPdf: () => Effect.die('unused'),
     };
 

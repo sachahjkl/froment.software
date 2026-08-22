@@ -5,7 +5,7 @@ import { HttpApiBuilder } from 'effect/unstable/httpapi';
 
 import { authorizeClient } from '../authentication/http.js';
 import { DocumentArtifacts } from '../documents/document-artifacts.js';
-import { setDocumentResponseHeaders, setPrivateResponseHeaders } from '../http/response.js';
+import { setPdfResponseHeaders, setPrivateResponseHeaders } from '../http/response.js';
 import { ClientPortal } from './client-portal.js';
 
 export const ClientPortalHandlers = HttpApiBuilder.group(Api, 'clientPortal', (handlers) =>
@@ -45,7 +45,7 @@ export const ClientPortalHandlers = HttpApiBuilder.group(Api, 'clientPortal', (h
         'clientQuotePdf',
         Effect.fn('clientQuotePdf')(function* ({ params }) {
           yield* setPrivateResponseHeaders;
-          yield* setDocumentResponseHeaders;
+          yield* setPdfResponseHeaders;
           const principal = yield* authorizeClient('document.download');
           const pdf = yield* (yield* ClientPortal)
             .getQuotePdf(principal.userId, params.quoteId)
@@ -66,7 +66,7 @@ export const ClientPortalHandlers = HttpApiBuilder.group(Api, 'clientPortal', (h
         'clientInvoicePdf',
         Effect.fn('clientInvoicePdf')(function* ({ params }) {
           yield* setPrivateResponseHeaders;
-          yield* setDocumentResponseHeaders;
+          yield* setPdfResponseHeaders;
           const principal = yield* authorizeClient('document.download');
           const pdf = yield* (yield* ClientPortal)
             .getInvoicePdf(principal.userId, params.invoiceId)
@@ -87,7 +87,7 @@ export const ClientPortalHandlers = HttpApiBuilder.group(Api, 'clientPortal', (h
         'clientOrderPdf',
         Effect.fn('clientOrderPdf')(function* ({ params }) {
           yield* setPrivateResponseHeaders;
-          yield* setDocumentResponseHeaders;
+          yield* setPdfResponseHeaders;
           const principal = yield* authorizeClient('document.download');
           const portal = yield* ClientPortal;
           yield* portal

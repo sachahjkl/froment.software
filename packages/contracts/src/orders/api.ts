@@ -26,7 +26,7 @@ export class OrdersApi extends HttpApiGroup.make('orders', { topLevel: true }).a
   }).pipe(requirePermissions([Permissions.orderRead]), authenticate),
   HttpApiEndpoint.get('orderPreview', '/api/orders/:orderId/preview', {
     params: { orderId: Ulid },
-    success: Schema.String.pipe(HttpApiSchema.asText({ contentType: 'text/html; charset=utf-8' })),
+    success: Schema.Uint8Array.pipe(HttpApiSchema.asUint8Array({ contentType: 'application/pdf' })),
     error: [
       AuthenticationRequired.pipe(HttpApiSchema.status(401)),
       PermissionDenied.pipe(HttpApiSchema.status(403)),
