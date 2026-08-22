@@ -1,6 +1,6 @@
 {
   "name": "@froment/web",
-  "version": "0.2.3",
+  "version": "0.2.4",
   "private": true,
   "scripts": {
     "ng": "ng",
@@ -11,6 +11,7 @@
     "test:watch": "ng test"
   },
   "dependencies": {
+    "@angular/cdk": "catalog:",
     "@angular/common": "catalog:",
     "@angular/compiler": "catalog:",
     "@angular/core": "catalog:",

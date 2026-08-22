@@ -26,12 +26,12 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 const deploymentMetadata = {
   commit: '6c9757782e249d4db6ffb804349b7da620494565',
   packages: [
-    { name: '@froment/api', version: '0.2.3' },
-    { name: '@froment/contracts', version: '0.2.3' },
-    { name: '@froment/documents', version: '0.2.3' },
-    { name: '@froment/l10n', version: '0.2.3' },
-    { name: '@froment/web', version: '0.2.3' },
-    { name: 'froment-software', version: '0.2.3' },
+    { name: '@froment/api', version: '0.2.4' },
+    { name: '@froment/contracts', version: '0.2.4' },
+    { name: '@froment/documents', version: '0.2.4' },
+    { name: '@froment/l10n', version: '0.2.4' },
+    { name: '@froment/web', version: '0.2.4' },
+    { name: 'froment-software', version: '0.2.4' },
   ],
 };
 const emptyClientDetails = {

@@ -14,7 +14,7 @@ describe('VersionApi', () => {
     const result = api.get();
     http.expectOne('/api/version').flush({
       commit: '6c9757782e249d4db6ffb804349b7da620494565',
-      packages: [{ name: '@froment/web', version: '0.2.3' }],
+      packages: [{ name: '@froment/web', version: '0.2.4' }],
     });
 
     await expect(result).resolves.toMatchObject({

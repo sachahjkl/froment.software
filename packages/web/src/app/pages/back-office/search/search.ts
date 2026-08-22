@@ -6,6 +6,7 @@ import {
   inject,
   signal,
 } from '@angular/core';
+import { ScrollingModule } from '@angular/cdk/scrolling';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 
 import { ClientsApi } from '@backoffice/clients-api';
@@ -16,7 +17,6 @@ import { I18nService } from '@app/i18n.service';
 import { BackOfficeNav } from '@shared/back-office-nav/back-office-nav';
 import { Badge } from '@shared/badge/badge';
 import { Button } from '@shared/button/button';
-import { DataTable } from '@shared/data-table/data-table';
 import { Notice } from '@shared/notice/notice';
 
 interface SearchResult {
@@ -30,7 +30,7 @@ interface SearchResult {
 
 @Component({
   selector: 'app-search',
-  imports: [BackOfficeNav, Badge, Button, DataTable, Notice, RouterLink],
+  imports: [BackOfficeNav, Badge, Button, Notice, RouterLink, ScrollingModule],
   templateUrl: './search.html',
   styleUrl: './search.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -48,10 +48,8 @@ export class Search {
   private readonly items = signal<readonly SearchResult[]>([]);
   protected readonly results = computed(() => {
     const terms = this.query().trim().toLocaleLowerCase().split(/\s+/).filter(Boolean);
-    if (terms.length === 0) return [];
-    return this.items()
-      .filter((item) => terms.every((term) => item.search.includes(term)))
-      .slice(0, 50);
+    if (terms.length === 0) return this.items();
+    return this.items().filter((item) => terms.every((term) => item.search.includes(term)));
   });
 
   constructor() {
@@ -66,6 +64,9 @@ export class Search {
   protected kindLabel(kind: SearchResult['kind']): string {
     return this.i18n.t(`backOffice.search.kind.${kind}`);
   }
+
+  protected readonly resultTrackBy = (_index: number, result: SearchResult): string =>
+    `${result.kind}-${result.id}`;
 
   protected submit(event: SubmitEvent): void {
     event.preventDefault();
