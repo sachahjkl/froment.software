@@ -26,6 +26,7 @@ import {
   type ApiTokenValue,
   type UlidValue,
 } from '@froment/contracts';
+import type { FuseResultMatch } from 'fuse.js';
 
 import { ApiTokensApi } from '@backoffice/api-tokens-api';
 import { I18nService, type TranslationKey } from '@app/i18n.service';
@@ -35,6 +36,7 @@ import { CopyField } from '@shared/copy-field/copy-field';
 import { DataTable } from '@shared/data-table/data-table';
 import { LocalizedDatePipe } from '@shared/localized-date/localized-date-pipe';
 import { Notice } from '@shared/notice/notice';
+import { SearchHighlight, SearchHighlightRegistry } from '@shared/search-highlight';
 import { TextCopy } from '@shared/text-copy';
 import { createFuzzySearch } from '@shared/fuzzy-search';
 
@@ -48,6 +50,14 @@ interface PermissionOption {
   readonly code: ApiTokenPermissionCodeValue;
   readonly label: string;
 }
+
+interface PermissionResult {
+  readonly item: PermissionOption;
+  readonly codeMatches: FuseResultMatch['indices'];
+  readonly labelMatches: FuseResultMatch['indices'];
+}
+
+const noMatches: FuseResultMatch['indices'] = [];
 
 const initialExpiration = () => {
   const date = new Date(Date.now() + 90 * 24 * 60 * 60 * 1_000);
@@ -63,7 +73,17 @@ const emptyModel = (): TokenModel => ({
 
 @Component({
   selector: 'app-api-tokens',
-  imports: [Badge, Button, CopyField, DataTable, FormField, LocalizedDatePipe, Notice],
+  imports: [
+    Badge,
+    Button,
+    CopyField,
+    DataTable,
+    FormField,
+    LocalizedDatePipe,
+    Notice,
+    SearchHighlight,
+  ],
+  providers: [SearchHighlightRegistry],
   templateUrl: './api-tokens.html',
   styleUrl: './api-tokens.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -89,7 +109,7 @@ export class ApiTokens {
       label: this.i18n.t(this.permissionLabel(code)),
     })),
   );
-  protected readonly filteredPermissions = createFuzzySearch(
+  private readonly permissionSearchResults = createFuzzySearch(
     this.permissionOptions,
     this.permissionQuery,
     {
@@ -99,8 +119,16 @@ export class ApiTokens {
       ],
       ignoreDiacritics: true,
       ignoreLocation: true,
+      includeMatches: true,
       threshold: 0.35,
     },
+  );
+  protected readonly filteredPermissions = computed<ReadonlyArray<PermissionResult>>(() =>
+    this.permissionSearchResults().map(({ item, matches = [] }) => ({
+      item,
+      codeMatches: matches.find(({ key }) => key === 'code')?.indices ?? noMatches,
+      labelMatches: matches.find(({ key }) => key === 'label')?.indices ?? noMatches,
+    })),
   );
   protected readonly tokens = signal<ApiTokenListValue>([]);
   protected readonly nextCursor = signal<UlidValue | null>(null);

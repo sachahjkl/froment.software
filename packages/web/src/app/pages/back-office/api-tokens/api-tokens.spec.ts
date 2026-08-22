@@ -61,6 +61,9 @@ describe('ApiTokens', () => {
     const rows = root.querySelectorAll('.permission-grid tbody tr');
     expect(rows).toHaveLength(1);
     expect(rows[0]?.textContent).toContain('invoice.mark-paid');
+    expect(
+      fixture.componentInstance['filteredPermissions']()[0]?.codeMatches.length,
+    ).toBeGreaterThan(0);
   });
 
   it('merges a creation with initial and subsequent list pages', async () => {

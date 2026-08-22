@@ -19,7 +19,7 @@ import { BackOfficeNav } from '@shared/back-office-nav/back-office-nav';
 import { Badge } from '@shared/badge/badge';
 import { Button } from '@shared/button/button';
 import { Notice } from '@shared/notice/notice';
-import { SearchHighlight, SearchHighlightRegistry } from './search-highlight';
+import { SearchHighlight, SearchHighlightRegistry } from '@shared/search-highlight';
 import { createFuzzySearch } from '@shared/fuzzy-search';
 
 interface SearchItem {

@@ -156,8 +156,12 @@
           <tbody>
             @for (result of filteredPermissions(); track result.item.code) {
             <tr>
-              <td><code>{{ result.item.code }}</code></td>
-              <td>{{ result.item.label }}</td>
+              <td>
+                <code [appSearchHighlight]="result.codeMatches">{{ result.item.code }}</code>
+              </td>
+              <td>
+                <span [appSearchHighlight]="result.labelMatches">{{ result.item.label }}</span>
+              </td>
               <td class="permission-selection">
                 <input
                   type="checkbox"
