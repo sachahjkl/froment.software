@@ -1,0 +1,1313 @@
+{
+  "version": 1,
+  "items": [
+    {
+      "id": "0b8a238c-7cbd-4a77-acce-9801abf08ca0",
+      "title": "Ajouter des tests de régression visuelle pour les PDF",
+      "notes": "Comparer le rendu des devis, commandes et factures avec des références validées.",
+      "status": "todo"
+    },
+    {
+      "id": "68ceee3b-74a5-4593-9113-d8d2b57dae7f",
+      "title": "Signaler les factures arrivant à échéance",
+      "notes": "Afficher un indicateur dans le back-office sept jours avant la date d’échéance.",
+      "status": "todo"
+    },
+    {
+      "id": "5e05745a-426b-436c-be39-d8c2d90bc7d5",
+      "title": "Ajouter un journal des usages des jetons API",
+      "notes": "Enregistrer la date, la route et le résultat de chaque appel authentifié par jeton.",
+      "status": "doing"
+    },
+    {
+      "id": "34de6e26-b573-4586-a6e9-be2e2c5210de",
+      "title": "Vérifier l’accessibilité du tableau des permissions",
+      "notes": "Tester la navigation clavier, les libellés et les contrastes du tableau des permissions.",
+      "status": "done"
+    },
+    {
+      "id": "e697f903-1189-45e8-87ad-eff4413344f9",
+      "title": "Serve the client-rendered shell for private and capability routes.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > Rendering",
+      "status": "done"
+    },
+    {
+      "id": "e6085bb4-6a38-413e-a0d1-696da1aba2b6",
+      "title": "Prevent the login page from navigating during prerender.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > Rendering",
+      "status": "done"
+    },
+    {
+      "id": "c0fbc8db-1368-4252-9cf7-71d326dfea6e",
+      "title": "Add a regression test for direct back-office navigation.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > Rendering",
+      "status": "done"
+    },
+    {
+      "id": "84229fa7-c615-4516-a709-5502606c6d32",
+      "title": "Expose confirmed orders for invoice creation.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > Invoices",
+      "status": "done"
+    },
+    {
+      "id": "7d048445-47c9-4d30-a8a5-f28e7f69c9ae",
+      "title": "Add the Angular invoice API client.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > Invoices",
+      "status": "done"
+    },
+    {
+      "id": "fa1484cc-a190-4f44-a8d6-cdfaaee4990f",
+      "title": "Add the invoice list and dashboard entry.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > Invoices",
+      "status": "done"
+    },
+    {
+      "id": "24960189-1334-42fb-80a2-ee8a8c8cba14",
+      "title": "Add invoice creation and draft revision forms.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > Invoices",
+      "status": "done"
+    },
+    {
+      "id": "a0176ae9-e24c-4195-9dfa-72ccae0822f0",
+      "title": "Add issue, paid, and void actions.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > Invoices",
+      "status": "done"
+    },
+    {
+      "id": "89be7bf8-1e60-451e-adf1-6f809d22a69a",
+      "title": "Add invoice preview and PDF actions.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > Invoices",
+      "status": "done"
+    },
+    {
+      "id": "30c456c7-fe60-4c33-be9a-17c74142b108",
+      "title": "Add invoice translations and tests.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > Invoices",
+      "status": "done"
+    },
+    {
+      "id": "aa08e563-358a-4115-9db8-e474b875c4db",
+      "title": "Add the client role and assign it to existing and new clients.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > Client Portal",
+      "status": "done"
+    },
+    {
+      "id": "649a1bd1-1df9-4509-b003-52d4602d234d",
+      "title": "Add tenant-scoped quote, order, and invoice contracts.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > Client Portal",
+      "status": "done"
+    },
+    {
+      "id": "39e072b9-4426-4e7c-a2b9-559da565da73",
+      "title": "Add tenant-scoped list endpoints.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > Client Portal",
+      "status": "done"
+    },
+    {
+      "id": "0d8235cc-94ce-4a0a-9af2-02ffe235a664",
+      "title": "Add tenant-scoped PDF download endpoints.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > Client Portal",
+      "status": "done"
+    },
+    {
+      "id": "03cee46d-fcc6-43de-81dd-e2865a984737",
+      "title": "Replace the empty portal with document tables.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > Client Portal",
+      "status": "done"
+    },
+    {
+      "id": "da24d635-fa87-46f9-85d1-37a6d34e9685",
+      "title": "Add tenant-isolation and portal tests.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > Client Portal",
+      "status": "done"
+    },
+    {
+      "id": "ef2e95e4-a7c1-491b-9659-a7060865d923",
+      "title": "Reject impossible invoice calendar dates at every boundary.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > Review Hardening",
+      "status": "done"
+    },
+    {
+      "id": "405bce52-7546-4a4d-9d1f-0f371866c1c1",
+      "title": "Generate the final invoice PDF during invoice issuance.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > Review Hardening",
+      "status": "done"
+    },
+    {
+      "id": "fdf24a81-5d7c-4821-a532-97ad4ba5426f",
+      "title": "Protect PDF layouts against long content and page breaks.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > Review Hardening",
+      "status": "done"
+    },
+    {
+      "id": "1e6c0d4f-1270-4915-b32b-b288211f49c4",
+      "title": "Make invoice form validation accessible.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > Review Hardening",
+      "status": "done"
+    },
+    {
+      "id": "8ed84640-7f0d-461e-90ae-5e90546b47af",
+      "title": "Make the client-role migration fail on identifier collisions.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > Review Hardening",
+      "status": "done"
+    },
+    {
+      "id": "009e582f-ad36-4991-83f5-18f4e5d6391e",
+      "title": "Cover invoice creation, revisions, transitions, failures, and PDFs in Angular tests.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > Review Hardening",
+      "status": "done"
+    },
+    {
+      "id": "c75c5f16-628e-41a9-ab0b-7246eb9527b7",
+      "title": "Add browser coverage for direct private-route rendering.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > Review Hardening",
+      "status": "done"
+    },
+    {
+      "id": "47bf4570-63c2-4807-818b-bc3ef591d930",
+      "title": "Validate all packages, lint, formatting, and migrations.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > Review Hardening",
+      "status": "done"
+    },
+    {
+      "id": "876f6317-084b-4b09-a318-18819f066ed6",
+      "title": "REV-001 Preserve published migrations and add a corrective migration.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > Full Review",
+      "status": "done"
+    },
+    {
+      "id": "bd97cea6-ea57-48bd-b26d-5a1065a33df9",
+      "title": "REV-002 Make invoice PDF rendering durable after issuance.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > Full Review",
+      "status": "done"
+    },
+    {
+      "id": "d97fe993-4454-43de-94d0-1f1cd92c75ed",
+      "title": "REV-003 Expire sent quotes and allow revision after expiration.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > Full Review",
+      "status": "done"
+    },
+    {
+      "id": "292712c9-fcf9-4e81-b511-54cc59430e8a",
+      "title": "REV-004 Revoke public quote links when a client is archived.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > Full Review",
+      "status": "done"
+    },
+    {
+      "id": "c7dcd466-d510-44d7-af4c-162f55b25935",
+      "title": "REV-005 Validate document line calculations and aggregates.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > Full Review",
+      "status": "done"
+    },
+    {
+      "id": "162551c8-6442-4488-a526-3d277b476f9d",
+      "title": "REV-006 Format all safe monetary integers without precision loss.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > Full Review",
+      "status": "done"
+    },
+    {
+      "id": "208e7652-e3c3-4154-a51f-e2033a10d386",
+      "title": "REV-007 Isolate pull-request CI from persistent runners.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > Full Review",
+      "status": "done"
+    },
+    {
+      "id": "0d88f8ec-97e7-406e-91fb-fe0ccde9bc7d",
+      "title": "REV-008 Run Chromium as a sandboxed non-root user.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > Full Review",
+      "status": "done"
+    },
+    {
+      "id": "e5618537-8891-44e2-9b39-9e9b0a4659ca",
+      "title": "REV-009 Expose API test failures in Nix and make the test derivation pass twice.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > Full Review",
+      "status": "done"
+    },
+    {
+      "id": "f7c65dae-ed71-4a98-9897-42f13ebcc3b7",
+      "title": "REV-010 Revoke old client access during rotation.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > Full Review",
+      "status": "done"
+    },
+    {
+      "id": "2bc5d9a9-755e-4368-94a8-3c50625f80d5",
+      "title": "REV-011 Rate-limit successful authentication.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > Full Review",
+      "status": "done"
+    },
+    {
+      "id": "7f1df93f-1430-4d33-8924-96ec4e05e91e",
+      "title": "REV-012 Rate-limit public quote reads and downloads.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > Full Review",
+      "status": "done"
+    },
+    {
+      "id": "02a65ef9-b70e-4527-97c7-47bec141eb14",
+      "title": "REV-013 Make published documents immutable and verify artifact hashes.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > Full Review",
+      "status": "done"
+    },
+    {
+      "id": "fb849c3b-4183-478c-841a-170490c4e0d7",
+      "title": "REV-014 Enforce cross-table business relationships.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > Full Review",
+      "status": "done"
+    },
+    {
+      "id": "2e2c1880-f08c-45b8-864b-3964c76ee301",
+      "title": "REV-015 Roll back migrations that violate foreign keys.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > Full Review",
+      "status": "done"
+    },
+    {
+      "id": "11de45b4-09d8-44aa-be9c-eefa13abaea9",
+      "title": "REV-016 Validate canonical UTC timestamps.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > Full Review",
+      "status": "done"
+    },
+    {
+      "id": "95879540-0e90-45fc-8a97-5698d4564b7c",
+      "title": "REV-017 Render quote dates in UTC.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > Full Review",
+      "status": "done"
+    },
+    {
+      "id": "d9065633-c6e8-48fe-8927-7c97b2d0c98b",
+      "title": "REV-018 Store invoice issue dates in the business time zone.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > Full Review",
+      "status": "done"
+    },
+    {
+      "id": "8e72c59d-c490-41aa-a065-17a98cde1ca8",
+      "title": "REV-019 Validate invoice issue retry versions.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > Full Review",
+      "status": "done"
+    },
+    {
+      "id": "c699ae8b-60f8-4b13-a583-cfc557c7557b",
+      "title": "REV-020 React to document route parameter changes.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > Full Review",
+      "status": "done"
+    },
+    {
+      "id": "3617042e-b723-4dc2-932c-3780eb6f7976",
+      "title": "REV-021 Disable invoice issuance for dirty drafts.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > Full Review",
+      "status": "done"
+    },
+    {
+      "id": "3fb5560b-edbd-4f62-8354-d77f42539134",
+      "title": "REV-022 Expose public quote form validation errors.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > Full Review",
+      "status": "done"
+    },
+    {
+      "id": "1834005d-7be6-4628-8958-a28be4221fad",
+      "title": "REV-023 Expose private form validation errors.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > Full Review",
+      "status": "done"
+    },
+    {
+      "id": "485f46b3-ed11-4ce0-8ff4-acda5924ea31",
+      "title": "REV-024 Prevent stale client-list responses.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > Full Review",
+      "status": "done"
+    },
+    {
+      "id": "dcfa9639-f24b-4688-8e4b-3a8484689ef8",
+      "title": "REV-025 Preserve preset reload errors.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > Full Review",
+      "status": "done"
+    },
+    {
+      "id": "a8da0179-ad67-4756-aba2-69b9c4e209b4",
+      "title": "REV-026 Make mobile navigation modal.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > Full Review",
+      "status": "done"
+    },
+    {
+      "id": "2b9fac2a-bdbb-4ea8-ad87-7724f06599f4",
+      "title": "REV-027 Make overflowing tables keyboard accessible.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > Full Review",
+      "status": "done"
+    },
+    {
+      "id": "5324479c-a267-4e37-b739-9f00372cb390",
+      "title": "REV-028 Configure the production origin at runtime.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > Full Review",
+      "status": "done"
+    },
+    {
+      "id": "66e23a78-4985-4ef9-ac87-f171e9bdf9a4",
+      "title": "REV-029 Serialize image publication.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > Full Review",
+      "status": "done"
+    },
+    {
+      "id": "a5d2ffe5-c2a0-421b-9fb8-e9448b6e6a46",
+      "title": "REV-030 Pin Skopeo through the flake.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > Full Review",
+      "status": "done"
+    },
+    {
+      "id": "d84e75f0-dbee-43cb-ad1e-f58488332f88",
+      "title": "REV-031 Support dirty local image checks.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > Full Review",
+      "status": "done"
+    },
+    {
+      "id": "a99a54c3-5d78-41c0-a3a7-43197db8f260",
+      "title": "REV-032 Lint all tracked TypeScript files.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > Full Review",
+      "status": "done"
+    },
+    {
+      "id": "65bae36d-1b2e-454a-9cbb-85e1eac08fd2",
+      "title": "REV-033 Separate database migrations from application startup.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > Full Review",
+      "status": "done"
+    },
+    {
+      "id": "75abc9c8-ec62-41b1-b6e4-219d6e821c9e",
+      "title": "REV-034 Redact CSRF headers from traces.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > Full Review",
+      "status": "done"
+    },
+    {
+      "id": "488d7f94-861d-4202-9fce-da834261bb5c",
+      "title": "REV-035 Preserve literal translation replacements.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > Full Review",
+      "status": "done"
+    },
+    {
+      "id": "62381cac-f940-4ae4-9989-d90159e6886c",
+      "title": "REV-036 Validate client invoice dates.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > Full Review",
+      "status": "done"
+    },
+    {
+      "id": "47006c92-2748-43e1-a5ac-f09b88ab42d5",
+      "title": "REV-037 Limit document snapshots to 20 lines.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > Full Review",
+      "status": "done"
+    },
+    {
+      "id": "b7655846-846e-4ecd-8952-f3848f9b3294",
+      "title": "REV-038 Verify PDF hashes on every download.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > Full Review",
+      "status": "done"
+    },
+    {
+      "id": "2941fedd-9f60-4e2b-91e5-a8facdf9c820",
+      "title": "REV-039 Make client archival idempotent.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > Full Review",
+      "status": "done"
+    },
+    {
+      "id": "efe1b09b-79b7-4414-8aca-115c00a9e1f7",
+      "title": "REV-040 Use a memory-hard bootstrap password hash.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > Full Review",
+      "status": "done"
+    },
+    {
+      "id": "f2266296-d1a8-40b8-b47d-00c773a034f2",
+      "title": "REV-041 Limit route versions to safe integers.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > Full Review",
+      "status": "done"
+    },
+    {
+      "id": "5a0b6f96-37e3-4887-a5f0-45e07dce444c",
+      "title": "REV-042 Validate generated quote URLs.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > Full Review",
+      "status": "done"
+    },
+    {
+      "id": "bfd6e0b5-ce05-4c7d-87dd-59bc1e2e98d9",
+      "title": "REV-043 Reject whitespace-only display names.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > Full Review",
+      "status": "done"
+    },
+    {
+      "id": "8b74067a-8a76-4c57-b284-1d10ee6a4314",
+      "title": "REV-044 Keep one main landmark on public quotes.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > Full Review",
+      "status": "done"
+    },
+    {
+      "id": "0ec5e02e-0d59-4944-af68-360cc1942afb",
+      "title": "REV-045 Prevent public quote mobile overflow.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > Full Review",
+      "status": "done"
+    },
+    {
+      "id": "96c88f1c-8388-43b2-899c-b0b506d224ad",
+      "title": "REV-046 Clear stale blog metadata.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > Full Review",
+      "status": "done"
+    },
+    {
+      "id": "4e7fe30d-3334-40c8-8faa-854dd1e818f1",
+      "title": "REV-047 Translate public quote accessible names.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > Full Review",
+      "status": "done"
+    },
+    {
+      "id": "f716ed0d-41b9-4aa4-9aa4-6fedcba9809e",
+      "title": "REV-048 Enforce invoice dates and numbers in SQLite.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > Full Review",
+      "status": "done"
+    },
+    {
+      "id": "1d651113-fb63-47f8-ac53-8205b81d74a0",
+      "title": "REV-049 Correct the documented container port.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > Full Review",
+      "status": "done"
+    },
+    {
+      "id": "62093587-f0cf-406f-8a8a-cf05330f8643",
+      "title": "REV-050 Enforce coverage thresholds for sensitive code.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > Full Review",
+      "status": "done"
+    },
+    {
+      "id": "e429d488-d737-4fc3-ab8c-f7828874ec98",
+      "title": "Replace decorative document styling with a compact utility layout.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > Back-Office Usability",
+      "status": "done"
+    },
+    {
+      "id": "001cb23b-e98e-4768-ac03-dd8958e85cb4",
+      "title": "Give line fieldset legends an explicit background.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > Back-Office Usability",
+      "status": "done"
+    },
+    {
+      "id": "75f32912-6830-47f4-b134-965c35d18477",
+      "title": "Add client detail and editing workflows.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > Back-Office Usability",
+      "status": "done"
+    },
+    {
+      "id": "f3620298-5dd2-4600-991f-3aea07929bd3",
+      "title": "Use consistent form panels on client pages.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > Back-Office Usability",
+      "status": "done"
+    },
+    {
+      "id": "bb388668-4bab-4e6c-a423-a616b3a443ed",
+      "title": "Remove table-row hover transitions.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > Back-Office Usability",
+      "status": "done"
+    },
+    {
+      "id": "93eac858-86d7-429c-9529-a46caff1e34a",
+      "title": "Verify generated PDFs contain extractable text.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > Back-Office Usability",
+      "status": "done"
+    },
+    {
+      "id": "e3fcb943-de55-494b-adf1-8892f1343e6f",
+      "title": "Match quote and invoice documents to the USGC business layout.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > Back-Office Usability",
+      "status": "done"
+    },
+    {
+      "id": "e264c409-4b29-4df1-80f5-539fdcf8cd44",
+      "title": "Add a unified affair detail with documents and chronological history.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > Back-Office Operations",
+      "status": "done"
+    },
+    {
+      "id": "9e13b571-d803-45df-b6a1-6320546e505b",
+      "title": "Add contextual next actions to each affair.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > Back-Office Operations",
+      "status": "done"
+    },
+    {
+      "id": "a33c1e29-6b34-4716-b082-02a8f65a8a0b",
+      "title": "Add manual quote and overdue invoice reminders.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > Back-Office Operations",
+      "status": "done"
+    },
+    {
+      "id": "5769b7fc-8ce5-401b-9bd9-4b88284194a1",
+      "title": "Add due dates, overdue states, and upcoming deadlines.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > Back-Office Operations",
+      "status": "done"
+    },
+    {
+      "id": "fd37b941-d412-4ed3-953f-d220a6d8e93b",
+      "title": "Record a structured reason when a quote is cancelled.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > Back-Office Operations",
+      "status": "done"
+    },
+    {
+      "id": "69368ede-a5e3-4b07-bbf3-8f6e72d23abf",
+      "title": "Offer client access creation after client reactivation.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > Back-Office Operations",
+      "status": "done"
+    },
+    {
+      "id": "96622d17-68df-4081-8a0c-199df1bb165d",
+      "title": "Add a business event journal to each affair.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > Back-Office Operations",
+      "status": "done"
+    },
+    {
+      "id": "e8f822db-c7e8-45e0-a652-6ee41418437b",
+      "title": "Add global search across clients and document references.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > Back-Office Operations",
+      "status": "done"
+    },
+    {
+      "id": "cc55acbd-35db-4df1-9306-c42f09a791ba",
+      "title": "Add bulk invoice reminders and document exports.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > Back-Office Operations",
+      "status": "done"
+    },
+    {
+      "id": "e47e7a22-0820-43fb-b205-fb661024a180",
+      "title": "Add an operational dashboard for pending and recent work.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > Back-Office Operations",
+      "status": "done"
+    },
+    {
+      "id": "179e7620-dc54-4e88-a82f-3936304b3f34",
+      "title": "PDF-001 Replace Angular, Playwright, and Chromium document rendering with local Typst compilation. Complete every requirement below before removing the current renderer.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > Typst PDF Rendering",
+      "status": "done"
+    },
+    {
+      "id": "e4d8c1a4-0933-46db-845d-0357ac63950c",
+      "title": "Keep `DocumentRendererService` as the boundary for quote, invoice, and order rendering.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > Typst PDF Rendering > Rendering Architecture",
+      "status": "done"
+    },
+    {
+      "id": "ac10d178-131a-48cb-84f1-ab2b99f7711b",
+      "title": "Replace HTML rendering and `page.pdf()` with a Typst compiler process.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > Typst PDF Rendering > Rendering Architecture",
+      "status": "done"
+    },
+    {
+      "id": "fb0c04e3-d735-4c77-b07f-4fef206110cc",
+      "title": "Pass a validated, document-specific JSON input to each Typst template.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > Typst PDF Rendering > Rendering Architecture",
+      "status": "done"
+    },
+    {
+      "id": "90eaa14e-fd75-446a-8f8e-6ac4da523856",
+      "title": "Keep business calculations, date formatting, and monetary formatting in TypeScript.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > Typst PDF Rendering > Rendering Architecture",
+      "status": "done"
+    },
+    {
+      "id": "a7b6cc1c-be9a-4b66-bc29-ee77cb6ddb0f",
+      "title": "Pass display-ready values to Typst so templates contain no business rules.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > Typst PDF Rendering > Rendering Architecture",
+      "status": "done"
+    },
+    {
+      "id": "0b31b610-9938-4362-9912-e9f8801e85e5",
+      "title": "Create an isolated temporary directory for each compilation.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > Typst PDF Rendering > Rendering Architecture",
+      "status": "done"
+    },
+    {
+      "id": "c890701d-e617-4a95-876a-f272b7c3e369",
+      "title": "Restrict Typst file access to the template, input, font, and output directories.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > Typst PDF Rendering > Rendering Architecture",
+      "status": "done"
+    },
+    {
+      "id": "4c28e902-6b22-4b48-9573-823b88d576da",
+      "title": "Use only local templates, assets, and fonts during compilation.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > Typst PDF Rendering > Rendering Architecture",
+      "status": "done"
+    },
+    {
+      "id": "3bc3ab9a-2fec-4a86-a1a4-c1cc3641c05c",
+      "title": "Remove every network dependency from document rendering.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > Typst PDF Rendering > Rendering Architecture",
+      "status": "done"
+    },
+    {
+      "id": "264c73d3-88f7-4c35-8da1-9aad246a20b6",
+      "title": "Delete temporary inputs and outputs after each success or failure.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > Typst PDF Rendering > Rendering Architecture",
+      "status": "done"
+    },
+    {
+      "id": "8c8c854e-06ce-4788-bdc9-8c09f92890f0",
+      "title": "Preserve the current rendering concurrency limit and Effect resource lifecycle.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > Typst PDF Rendering > Rendering Architecture",
+      "status": "done"
+    },
+    {
+      "id": "e0fc13dc-bbbd-47b5-a404-cc43f51f8834",
+      "title": "Return typed renderer failures without exposing paths, commands, or document content.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > Typst PDF Rendering > Rendering Architecture",
+      "status": "done"
+    },
+    {
+      "id": "b008acd6-2ccf-4795-8424-cd2481101393",
+      "title": "Keep output stable for the same snapshot, template files, and toolchain.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > Typst PDF Rendering > Rendering Architecture",
+      "status": "done"
+    },
+    {
+      "id": "8628a3de-7ef6-4ce0-8c49-7a1ce2fe29bc",
+      "title": "Remove HTML document previews from the API and Angular application.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > Typst PDF Rendering > PDF-Only Preview",
+      "status": "done"
+    },
+    {
+      "id": "ba8f7090-12de-4478-b58b-ac03e6bf8449",
+      "title": "Change quote, invoice, and order preview routes to return `application/pdf`.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > Typst PDF Rendering > PDF-Only Preview",
+      "status": "done"
+    },
+    {
+      "id": "8d40081f-e760-4a48-a3d3-383e8f7719e8",
+      "title": "Compile preview PDFs directly from the current draft snapshot.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > Typst PDF Rendering > PDF-Only Preview",
+      "status": "done"
+    },
+    {
+      "id": "e373eb4a-6ced-4668-9e77-91af58c181e8",
+      "title": "Display preview responses as object URLs in the existing `iframe` surfaces.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > Typst PDF Rendering > PDF-Only Preview",
+      "status": "done"
+    },
+    {
+      "id": "9bd42b8f-84b2-45d2-b489-713c7d1228b8",
+      "title": "Revoke each replaced or destroyed object URL.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > Typst PDF Rendering > PDF-Only Preview",
+      "status": "done"
+    },
+    {
+      "id": "1e054e84-bc4a-4ef5-8e67-9653c1f56aed",
+      "title": "Preserve loading, retry, empty, and failure states in every editor.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > Typst PDF Rendering > PDF-Only Preview",
+      "status": "done"
+    },
+    {
+      "id": "f3193220-d322-4168-9a6d-fbd81e8bc4bb",
+      "title": "Keep preview responses private, uncached, and protected by the current authorization rules.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > Typst PDF Rendering > PDF-Only Preview",
+      "status": "done"
+    },
+    {
+      "id": "fb78a148-fe20-4bed-a912-29c4b7a4d8fe",
+      "title": "Do not store preview PDFs as immutable document artifacts.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > Typst PDF Rendering > PDF-Only Preview",
+      "status": "done"
+    },
+    {
+      "id": "b8a2eb04-d686-4e26-ab86-56132dce99be",
+      "title": "Remove the Angular server-rendered document package after all previews use PDF responses.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > Typst PDF Rendering > PDF-Only Preview",
+      "status": "done"
+    },
+    {
+      "id": "4d711351-47ef-478f-8309-aa245bcfd853",
+      "title": "Create separate Typst templates for quotes, invoices, and order confirmations.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > Typst PDF Rendering > Typst Templates",
+      "status": "done"
+    },
+    {
+      "id": "9bf5cdfa-c0d6-4d60-8a24-566f7cd25c78",
+      "title": "Add shared Typst functions only for repeated business identity, address, table, total, and footer structures.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > Typst PDF Rendering > Typst Templates",
+      "status": "done"
+    },
+    {
+      "id": "cd1389dc-adc0-45da-b3ba-0c7e6568d261",
+      "title": "Reproduce the current templates as closely as Typst permits.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > Typst PDF Rendering > Typst Templates",
+      "status": "done"
+    },
+    {
+      "id": "40fb4a90-bad1-4634-992c-6a9b15741bd8",
+      "title": "Preserve A4 portrait pages, white backgrounds, and `12.7mm` content margins.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > Typst PDF Rendering > Typst Templates",
+      "status": "done"
+    },
+    {
+      "id": "99197305-4c3a-4457-a9a3-4ddcec5a2460",
+      "title": "Preserve the current compact USGC-inspired visual hierarchy, spacing, borders, and alignment.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > Typst PDF Rendering > Typst Templates",
+      "status": "done"
+    },
+    {
+      "id": "c07336a6-65e9-4f41-89da-398ceb469628",
+      "title": "Preserve all French labels, legal notices, references, dates, conditions, and payment details.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > Typst PDF Rendering > Typst Templates",
+      "status": "done"
+    },
+    {
+      "id": "7e90d2c1-6405-4d78-b0c1-11c0910fb1bc",
+      "title": "Preserve `fr-FR` date output in UTC and `fr-FR` EUR monetary output.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > Typst PDF Rendering > Typst Templates",
+      "status": "done"
+    },
+    {
+      "id": "c157cd14-ce95-4990-a9eb-e2a507672de8",
+      "title": "Use Cousine as the primary font and Liberation Mono as the fallback font.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > Typst PDF Rendering > Typst Templates",
+      "status": "done"
+    },
+    {
+      "id": "ee1a028a-4264-410c-8257-53a2ea3b2c73",
+      "title": "Embed the required font subsets in every generated PDF.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > Typst PDF Rendering > Typst Templates",
+      "status": "done"
+    },
+    {
+      "id": "1f930e24-48f5-498e-8721-b8340db02a51",
+      "title": "Preserve selectable and extractable text. Do not rasterize complete pages.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > Typst PDF Rendering > Typst Templates",
+      "status": "done"
+    },
+    {
+      "id": "541561c1-41cf-4aa2-9bf6-ad3352c29fd2",
+      "title": "Support one through twenty document lines without horizontal overflow.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > Typst PDF Rendering > Typst Templates",
+      "status": "done"
+    },
+    {
+      "id": "1edfab7e-cf1b-40c2-b4c6-b92af8f8fefb",
+      "title": "Support 160-character line descriptions and 2,000-character terms without content loss.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > Typst PDF Rendering > Typst Templates",
+      "status": "done"
+    },
+    {
+      "id": "2fe626f4-62b5-46f9-b094-e08278470e36",
+      "title": "Keep monetary columns on one line and align their values consistently.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > Typst PDF Rendering > Typst Templates",
+      "status": "done"
+    },
+    {
+      "id": "6b9f7e60-ee07-4b73-87ee-85a68d448195",
+      "title": "Prevent a document line from splitting across pages when it fits on one page.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > Typst PDF Rendering > Typst Templates",
+      "status": "done"
+    },
+    {
+      "id": "e6d6be11-8eea-4b26-8566-d4e15722a8df",
+      "title": "Repeat table headings after each automatic page break.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > Typst PDF Rendering > Typst Templates",
+      "status": "done"
+    },
+    {
+      "id": "587e3be8-6eb1-4fff-86d3-6612f37cd67a",
+      "title": "Keep totals, legal notices, and the final footer readable across page breaks.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > Typst PDF Rendering > Typst Templates",
+      "status": "done"
+    },
+    {
+      "id": "e4260fb4-8c35-4645-8164-d72c78903777",
+      "title": "Preserve the current flow-based header and footer unless a reviewed reference requires a change.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > Typst PDF Rendering > Typst Templates",
+      "status": "done"
+    },
+    {
+      "id": "b1ed65e2-1ccb-4487-9b3a-b45a09f80cb5",
+      "title": "Do not add page numbers or repeated page furniture without an approved visual change.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > Typst PDF Rendering > Typst Templates",
+      "status": "done"
+    },
+    {
+      "id": "8b286689-0020-4e68-a288-50ffd45dac69",
+      "title": "Replace the current template implementations in place.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > Typst PDF Rendering > Typst Templates",
+      "status": "done"
+    },
+    {
+      "id": "f367216c-61fe-4598-9060-d7d42d2d42e3",
+      "title": "Replace the current renderer and templates directly.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > Typst PDF Rendering > Greenfield Replacement",
+      "status": "done"
+    },
+    {
+      "id": "76f8a728-b627-42b8-9a26-81821c2daedf",
+      "title": "Do not add a compatibility renderer, data migration, or dual-engine deployment.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > Typst PDF Rendering > Greenfield Replacement",
+      "status": "done"
+    },
+    {
+      "id": "09b46aae-4976-4b37-941b-3b40b00eb18a",
+      "title": "Reset development artifacts and document data when the new renderer requires incompatible data.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > Typst PDF Rendering > Greenfield Replacement",
+      "status": "done"
+    },
+    {
+      "id": "a1ff5863-6353-48bb-8501-e2149967dcc9",
+      "title": "Remove obsolete HTML rendering code as soon as the PDF preview path works.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > Typst PDF Rendering > Greenfield Replacement",
+      "status": "done"
+    },
+    {
+      "id": "42e92163-039a-4e65-bc1d-534fc00d78c0",
+      "title": "Remove the Chromium renderer in the same change that enables Typst rendering.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > Typst PDF Rendering > Greenfield Replacement",
+      "status": "done"
+    },
+    {
+      "id": "490497dc-ad66-4fe6-90ce-c35ffc0aadc5",
+      "title": "Keep the artifact and signature integrity rules for all documents generated after the replacement.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > Typst PDF Rendering > Greenfield Replacement",
+      "status": "done"
+    },
+    {
+      "id": "d3782b73-d91a-425d-ae15-3e38ee3df246",
+      "title": "Preserve `document_artifacts` identifiers, relations, MIME type, size, SHA-256, content, and creation time.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > Typst PDF Rendering > Artifact Behavior",
+      "status": "done"
+    },
+    {
+      "id": "6277b0f4-8f32-47ea-957f-c4f183ab6d8a",
+      "title": "Preserve one immutable artifact per revision and artifact type.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > Typst PDF Rendering > Artifact Behavior",
+      "status": "done"
+    },
+    {
+      "id": "7e2962b3-aa3e-4e11-8aa8-35de55947d0f",
+      "title": "Preserve idempotent rendering under concurrent requests.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > Typst PDF Rendering > Artifact Behavior",
+      "status": "done"
+    },
+    {
+      "id": "189a3e1f-1d75-48cd-aa48-cc74d7a22d1e",
+      "title": "Preserve SHA-256 verification on every administrator, client, and public download.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > Typst PDF Rendering > Artifact Behavior",
+      "status": "done"
+    },
+    {
+      "id": "b51676cd-66ef-4a50-a01a-363e1cf4832b",
+      "title": "Preserve `document.rendered` audit events.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > Typst PDF Rendering > Artifact Behavior",
+      "status": "done"
+    },
+    {
+      "id": "237154e5-5081-4d51-a02c-764d1dc846a9",
+      "title": "Preserve the public quote proof relationship between snapshot, PDF, signature, and SHA-256.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > Typst PDF Rendering > Artifact Behavior",
+      "status": "done"
+    },
+    {
+      "id": "2aa54528-5cbf-48af-8d23-a38580cb3d25",
+      "title": "Preserve durable invoice PDF jobs, retries, restart recovery, and public status values.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > Typst PDF Rendering > Artifact Behavior",
+      "status": "done"
+    },
+    {
+      "id": "f9d7a0a7-22f4-4f2d-9c7f-f60f74390f02",
+      "title": "Keep invoice issuance successful when PDF compilation fails after the issuance transaction.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > Typst PDF Rendering > Artifact Behavior",
+      "status": "done"
+    },
+    {
+      "id": "a6ccbdbf-0e84-4ab0-91ab-cea909dcda07",
+      "title": "Preserve all current download routes, file names, authorization checks, and response headers.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > Typst PDF Rendering > Artifact Behavior",
+      "status": "done"
+    },
+    {
+      "id": "3827efe6-1d8b-4740-8369-296ca33f6946",
+      "title": "Package Typst, the local templates, Cousine, and Liberation Mono through Nix.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > Typst PDF Rendering > Nix And Container",
+      "status": "done"
+    },
+    {
+      "id": "29490fbf-3075-4988-8c9b-4cd017931eff",
+      "title": "Pin the Typst version through the repository flake.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > Typst PDF Rendering > Nix And Container",
+      "status": "done"
+    },
+    {
+      "id": "50e58864-83a4-4b48-a7b6-852feffedec0",
+      "title": "Remove `playwright-core` from production dependencies.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > Typst PDF Rendering > Nix And Container",
+      "status": "done"
+    },
+    {
+      "id": "6aaf70eb-44e7-4e68-ba48-846071e81723",
+      "title": "Remove Chromium, its sandbox, `CHROMIUM_PATH`, and browser-specific container setup.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > Typst PDF Rendering > Nix And Container",
+      "status": "done"
+    },
+    {
+      "id": "39a6e9f5-2211-4a0b-a8a5-baa4ea458e2f",
+      "title": "Keep Chromium only in test derivations that still require browser testing.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > Typst PDF Rendering > Nix And Container",
+      "status": "done"
+    },
+    {
+      "id": "46ad7071-a542-4cf9-9673-2e525b660318",
+      "title": "Ensure the production image closure contains no Chromium or Playwright paths.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > Typst PDF Rendering > Nix And Container",
+      "status": "done"
+    },
+    {
+      "id": "fc56aabd-6c21-4753-8742-544249bad6a9",
+      "title": "Keep Poppler in test derivations for PDF inspection. Do not add it to the production image.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > Typst PDF Rendering > Nix And Container",
+      "status": "done"
+    },
+    {
+      "id": "17566557-a8ea-45c0-803d-ac66daff4f8e",
+      "title": "Build the production image from the existing Nix `scratch`-style image definition.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > Typst PDF Rendering > Nix And Container",
+      "status": "done"
+    },
+    {
+      "id": "fded6e78-9f2e-4283-91e1-489fdb2afb0c",
+      "title": "Record compressed and unpacked image sizes before and after the replacement.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > Typst PDF Rendering > Nix And Container",
+      "status": "done"
+    },
+    {
+      "id": "54693c11-6c43-437b-8ae0-a6d46a587fa3",
+      "title": "Add compact and maximum-content fixtures for every document type.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > Typst PDF Rendering > Verification",
+      "status": "done"
+    },
+    {
+      "id": "77a411f3-9ba4-44bd-ba43-7a8e0a6785e4",
+      "title": "Validate each template with document-specific semantic assertions over extracted PDF text and metadata.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > Typst PDF Rendering > Verification",
+      "status": "done"
+    },
+    {
+      "id": "b35c80ff-bef7-47cf-a58d-dd4bd5474a19",
+      "title": "Verify A4 dimensions, page counts, text extraction, and embedded Cousine fonts with Poppler.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > Typst PDF Rendering > Verification",
+      "status": "done"
+    },
+    {
+      "id": "22ef643d-cf67-46e7-a4be-bb11a9be3292",
+      "title": "Verify all twenty lines and complete long terms remain in multipage output.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > Typst PDF Rendering > Verification",
+      "status": "done"
+    },
+    {
+      "id": "7fcc41ae-a09f-475a-b901-02037bb1ab32",
+      "title": "Verify table headings repeat and monetary columns do not wrap.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > Typst PDF Rendering > Verification",
+      "status": "done"
+    },
+    {
+      "id": "1c782d26-f74b-42ba-aa67-b80eb71281f7",
+      "title": "Verify identical snapshots, templates, fonts, and toolchains produce identical PDF bytes.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > Typst PDF Rendering > Verification",
+      "status": "done"
+    },
+    {
+      "id": "a5f82cec-32c1-4ce3-a7c9-e4c32b2bb769",
+      "title": "Verify previews return PDF content and never create stored artifacts.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > Typst PDF Rendering > Verification",
+      "status": "done"
+    },
+    {
+      "id": "39962673-f929-437a-a625-418a7c4ef86b",
+      "title": "Verify preview object URLs are replaced and revoked correctly in Angular tests.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > Typst PDF Rendering > Verification",
+      "status": "done"
+    },
+    {
+      "id": "0860e7b4-dce6-49fb-95b6-8db02f03102b",
+      "title": "Verify signed quote proofs match their stored Typst PDF hashes.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > Typst PDF Rendering > Verification",
+      "status": "done"
+    },
+    {
+      "id": "158dce11-f4c6-427b-8735-ae5ee7fc5e8c",
+      "title": "Verify concurrent requests create one logical artifact.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > Typst PDF Rendering > Verification",
+      "status": "done"
+    },
+    {
+      "id": "0181ab44-d6a3-4009-b176-adffdc7555a7",
+      "title": "Verify invoice jobs recover after compiler failure and process restart.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > Typst PDF Rendering > Verification",
+      "status": "done"
+    },
+    {
+      "id": "51c8f516-2e2d-4752-8a0a-52b90fdc161d",
+      "title": "Verify compilation uses no network access.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > Typst PDF Rendering > Verification",
+      "status": "done"
+    },
+    {
+      "id": "797f27ec-4bae-406a-a151-ab764642dea6",
+      "title": "Run all package tests, lint, formatting, migration tests, and `nix flake check`.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > Typst PDF Rendering > Verification",
+      "status": "done"
+    },
+    {
+      "id": "a8e840b2-f043-4ba8-993b-ce36a3dbab47",
+      "title": "Deploy only after the production image starts without Chromium and all PDF routes pass smoke tests.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > Typst PDF Rendering > Verification",
+      "status": "done"
+    },
+    {
+      "id": "f8cc9d69-2af8-4765-bd62-336b9c05c002",
+      "title": "API-001 Enforce Origin from the selected authentication mode. Remove the global exemption based on any `Authorization` header. Require the configured Origin for browser mutations. Exempt only a Bearer credential selected by the API-token middleware. Cover arbitrary, Basic, mixed, missing, and valid credentials through HTTP tests.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > API Greenfield Cleanup",
+      "status": "done"
+    },
+    {
+      "id": "f7737b8f-1d46-420d-bcfc-64ddb3d462e8",
+      "title": "API-002 Make global request errors match their contracts. Return typed `RequestInvalidOrigin` and `RequestTooLarge` errors through `HttpApiBuilder`, including `_tag` and `code`. Declare each error only on endpoints that can produce it. Cover fixed-length and chunked oversized bodies, then verify that the server remains available.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > API Greenfield Cleanup",
+      "status": "done"
+    },
+    {
+      "id": "159d755e-0c83-4135-b3d6-fd43afaed79c",
+      "title": "API-003 Use one administrator authorization pipeline. Annotate frontend and API-token endpoints with their required permission set and mutation quota. Execute authentication, current owner permission checks, CSRF, and quotas in one middleware. Remove `authorizeAdministratorSession`, `authorizeAdministratorWrite`, and `Authentication.authorizeWrite`.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > API Greenfield Cleanup",
+      "status": "done"
+    },
+    {
+      "id": "a63eecb1-1c15-403a-afe9-0c0c5f2394a3",
+      "title": "API-004 Select Cookie and Bearer credentials without cross-decoding. Give each Effect security handler one credential type. Reject absent, malformed, and mixed credentials explicitly. Remove application calls to `HttpApiBuilder.securityDecode`. Test that each credential invokes exactly one security branch.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > API Greenfield Cleanup",
+      "status": "done"
+    },
+    {
+      "id": "f97efc93-ce26-4888-9c6a-31145fd01ba3",
+      "title": "API-005 Apply Bearer admission quotas before token HMAC and SQLite work. Consume an address quota before `ApiTokens.authenticate`, then consume the token quota before permission checks. Test the exact execution order with rejected and accepted requests.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > API Greenfield Cleanup",
+      "status": "done"
+    },
+    {
+      "id": "45ed83a9-c396-48ca-9c1c-33aa052e83e3",
+      "title": "API-006 Define every permission once. Replace the separate general and API-token literal lists with one permission registry containing API-token and client-role metadata. Derive schemas, UI options, OpenAPI eligibility, and role expectations from this registry. Reject duplicate requested permissions in the contract schema.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > API Greenfield Cleanup",
+      "status": "done"
+    },
+    {
+      "id": "39003b77-4ca8-4e47-ab7d-2782a70bfa48",
+      "title": "API-007 Enforce reusable token names in SQLite. Replace the removed global unique index with an indexed trigger that rejects a duplicate name only while an existing token remains unrevoked and unexpired at the new token creation time. Translate only this database constraint into `ApiTokenNameConflict`. Cover direct SQL writes, revocation, expiration, whitespace, and case policy.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > API Greenfield Cleanup",
+      "status": "done"
+    },
+    {
+      "id": "a9181638-17f5-4bc1-b5a3-a9c7f4c3f225",
+      "title": "API-008 Index and validate token pagination. Add an index on `(created_at DESC, id DESC)`. Resolve each cursor to its immutable boundary, use a tuple comparison, and return a typed `400` error for an unknown ULID. Cover equal timestamps, exact page sizes, inserted rows, revoked rows, and unknown cursors.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > API Greenfield Cleanup",
+      "status": "done"
+    },
+    {
+      "id": "376d0f95-39b4-4f6f-9d85-8dbbb86e2920",
+      "title": "API-009 Merge concurrent Angular token loads. Remove the revision-based response discard. Merge initial and subsequent pages by identifier while preserving local creation and revocation results. Preserve the server cursor and retry state. Cover creation during initial loading, pagination failures, retries, and duplicate suppression.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > API Greenfield Cleanup",
+      "status": "done"
+    },
+    {
+      "id": "043bc11a-4ef0-4885-8c82-0274133284fb",
+      "title": "API-010 Prevent secret loss during token creation. Block Angular route deactivation while a creation request is pending. Require confirmation only after the one-time secret exists. Keep external navigation protection active. Cover pending creation, rejected navigation, secret acknowledgement, and component destruction.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > API Greenfield Cleanup",
+      "status": "done"
+    },
+    {
+      "id": "85422d87-1662-4543-9ae3-6358178cd70a",
+      "title": "API-011 Remove redundant token authorization surfaces. Delete `ApiTokens.authorize` and test the production sequence through `authenticate` followed by `authorizePermission`. Remove any wrapper that permits authentication, quota, and permission ordering to diverge.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > API Greenfield Cleanup",
+      "status": "done"
+    },
+    {
+      "id": "c60c07dd-f300-47e0-8a8f-baf873290f3c",
+      "title": "API-012 Align API-token failures and UI states. Include every typed request-policy failure in the frontend API outcome schema. Keep initial-load errors distinct from an empty list. Clear stale clipboard errors after success. Cover creation, revocation, pagination, request-policy, and clipboard failures.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > API Greenfield Cleanup",
+      "status": "done"
+    },
+    {
+      "id": "1fddfad4-3e44-438d-a02b-4fce7e8b2044",
+      "title": "API-013 Localize the OpenAPI reference. Move every API title, group description, operation summary, and operation description into `@froment/l10n`. Generate localized OpenAPI content for French and English without changing operation identifiers or schemas. Configure Scalar's `localization.locale` for its interface and serve the matching localized document. Cover both locales, fallback behavior, and the absence of hard-coded documentation prose in contracts.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > API Greenfield Cleanup",
+      "status": "done"
+    },
+    {
+      "id": "42cdb0e4-5285-4c2a-97fc-75eaaa9d89ae",
+      "title": "Keep one `Api` contract containing every server route.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > API Documentation And Account Authentication > Target Architecture",
+      "status": "done"
+    },
+    {
+      "id": "205b363f-88c5-4998-b5ad-4dc7b23f20b1",
+      "title": "Keep API contracts independent from natural-language documentation and `@froment/l10n`.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > API Documentation And Account Authentication > Target Architecture",
+      "status": "done"
+    },
+    {
+      "id": "387d5531-fbd8-47d0-89aa-f62f4e1713ee",
+      "title": "Generate French and English OpenAPI documents in `@froment/api` by joining `Api` with `apiDocumentation`.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > API Documentation And Account Authentication > Target Architecture",
+      "status": "done"
+    },
+    {
+      "id": "75d39338-f429-42d9-bf29-03f1c0d0bca9",
+      "title": "Keep business tags on every operation. Add the localized `Frontend` tag to routes used only by the Froment frontend.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > API Documentation And Account Authentication > Target Architecture",
+      "status": "done"
+    },
+    {
+      "id": "33b6196e-255d-4f55-8e9f-857062bf36b8",
+      "title": "Authenticate browser API requests with short-lived PASETO `v4.public` access tokens in the `Authorization: Bearer` header.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > API Documentation And Account Authentication > Target Architecture",
+      "status": "done"
+    },
+    {
+      "id": "2a8ba01d-0e5e-410c-8ddc-a88ee3d6778c",
+      "title": "Keep access tokens in frontend memory. Do not store access tokens in cookies, `localStorage`, or `sessionStorage`.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > API Documentation And Account Authentication > Target Architecture",
+      "status": "done"
+    },
+    {
+      "id": "3a97e1c5-8959-40f4-a1b8-b489f2139d19",
+      "title": "Use opaque rotating refresh tokens in one `HttpOnly`, `Secure`, `SameSite=Strict` cookie scoped to `/api/auth`.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > API Documentation And Account Authentication > Target Architecture",
+      "status": "done"
+    },
+    {
+      "id": "e2379281-8ab2-4590-a5a9-a02036c67be6",
+      "title": "Use email and password for administrator and client login. Keep API tokens as separate bearer credentials.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > API Documentation And Account Authentication > Target Architecture",
+      "status": "done"
+    },
+    {
+      "id": "ab05aeb8-d1dd-4589-b7a7-190f0fcd3f82",
+      "title": "Store only password hashes and refresh-token HMACs. Never persist or log plaintext credentials.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > API Documentation And Account Authentication > Target Architecture",
+      "status": "done"
+    },
+    {
+      "id": "5da949e1-10d0-4f53-9d55-68ee3c62625c",
+      "title": "API-014 Move API documentation composition into `@froment/api`. Keep `applyApiDocumentation` private, pass one locale dictionary into it, and expose only `apiForLanguage`. Make `@froment/l10n` a runtime dependency of `@froment/api`. Remove the `@froment/contracts` dependency on `@froment/l10n`. Move localization behavior and translation-coverage tests beside the adapter.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > API Documentation And Account Authentication > Documentation",
+      "status": "done"
+    },
+    {
+      "id": "0b3272ac-b772-4eb8-9c73-e068d9cc07be",
+      "title": "API-015 Document every route in one OpenAPI specification. Replace `frontendSpecific` exclusion with an additive `frontend` tag while preserving each business tag. Add localized `Frontend` group prose. Require exact French and English keys for every group and operation, including frontend routes. Verify that Scalar displays both tags and no operation disappears.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > API Documentation And Account Authentication > Documentation",
+      "status": "done"
+    },
+    {
+      "id": "507967dd-39b3-4029-a9cf-3b186cc02590",
+      "title": "API-016 Remove integration terminology from active code and documentation. Rename integration tokens to API tokens across identifiers, permission codes, routes, database objects, contracts, services, UI, tests, titles, and prose. Use `/api/tokens` for management routes and `api-token.manage` for their permission. Keep immutable migrations unchanged. Verify that active source files contain no remaining integration terminology.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > API Documentation And Account Authentication > Documentation",
+      "status": "done"
+    },
+    {
+      "id": "4584e2e0-ceb6-4cab-827e-4e0c900b0b36",
+      "title": "AUTH-001 Replace access identifiers with password credentials. Add a one-to-one password credential for a user with a canonical email, an Argon2id password hash, creation time, update time, and password-change time. Enforce case-insensitive email uniqueness in SQLite. Keep contact data separate from login credentials. Remove `access_credentials` and every access-identifier contract, service, route, UI, and test.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > API Documentation And Account Authentication > Account Data",
+      "status": "done"
+    },
+    {
+      "id": "e547e026-776c-4367-86a8-075907a34358",
+      "title": "AUTH-002 Replace the authentication model without a compatibility path. Drop legacy sessions and access credentials. Remove their routes, configuration, contracts, and UI in the same change. Require a fresh administrator bootstrap and new client portal credentials. Preserve business records only. Do not convert, claim, or accept legacy authentication data.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > API Documentation And Account Authentication > Account Data",
+      "status": "done"
+    },
+    {
+      "id": "020b4e28-23bd-40fe-85f9-ccb8a77510c1",
+      "title": "AUTH-003 Require an email when client portal access is enabled. Let an administrator set or replace the client login email and initial password through one account-management operation. Keep ordinary client records valid without portal access. Reject duplicate canonical emails and weak passwords with typed errors. Revoke all client refresh sessions after email, password, archival, or access-state changes.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > API Documentation And Account Authentication > Account Data",
+      "status": "done"
+    },
+    {
+      "id": "a0672ad2-f4f8-4641-8a2e-990d7cf8f33c",
+      "title": "AUTH-004 Add a focused PASETO service using a maintained PASETO v4 library. Use `v4.public` with Ed25519 keys encoded as PASERK. Load and validate the secret key through Effect `Config`. Derive or configure the matching public key without exposing the secret key. Do not implement cryptographic primitives in this repository.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > API Documentation And Account Authentication > PASETO Access Tokens",
+      "status": "done"
+    },
+    {
+      "id": "ac1c4058-bed1-4381-9ab4-761dcf7a9c6a",
+      "title": "AUTH-005 Define and validate one access-token payload with Effect Schema. Include `sub`, refresh-session identifier, account kind, `type: access`, `iss`, `aud`, `iat`, and `exp`. Exclude passwords, email addresses, permissions, and other personal data. Use a ten-minute lifetime and a small explicit clock tolerance. Reject wrong versions, purposes, issuers, audiences, timestamps, signatures, and malformed payloads.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > API Documentation And Account Authentication > PASETO Access Tokens",
+      "status": "done"
+    },
+    {
+      "id": "a418e2aa-1fd1-4d00-8092-d6368b7dd330",
+      "title": "AUTH-006 Replace browser session-cookie authentication with PASETO bearer authentication. Select PASETO tokens by their `v4.public.` prefix and keep API-token selection explicit. Reject malformed, unknown, and mixed credentials. Load current roles and permissions from SQLite after token validation so authorization changes take effect immediately. Remove `sessionCookie` from normal route security and OpenAPI documentation.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > API Documentation And Account Authentication > PASETO Access Tokens",
+      "status": "done"
+    },
+    {
+      "id": "cc2a859a-aed0-4c02-af71-58e3d7292939",
+      "title": "AUTH-007 Replace legacy sessions with refresh sessions. Store a session identifier, family identifier, user identifier, refresh-token HMAC, creation time, rotation time, absolute expiry, consumption time, and revocation time. Index active token lookup, user revocation, family revocation, and expiry cleanup. Use a cryptographically random 256-bit refresh token and a dedicated HMAC key.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > API Documentation And Account Authentication > Refresh Sessions",
+      "status": "done"
+    },
+    {
+      "id": "2dcdad24-329d-4b05-9ee2-5eac3526ea5b",
+      "title": "AUTH-008 Implement transactional refresh-token rotation. Consume each token once, create its replacement, issue a new access token, and replace the cookie in one successful flow. Detect replay and revoke the complete token family. Permit a short bounded concurrency grace period so simultaneous browser tabs do not revoke a valid family. Test exact replay behavior, concurrent refreshes, expiration, disabled users, password changes, and database rollback.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > API Documentation And Account Authentication > Refresh Sessions",
+      "status": "done"
+    },
+    {
+      "id": "a214be01-e301-4c0d-8ce6-3e5e2ad083fd",
+      "title": "AUTH-009 Restrict the refresh cookie to authentication routes. Set `HttpOnly`, `Secure`, `SameSite=Strict`, `Path=/api/auth`, and an explicit expiry. Require the configured browser Origin for refresh and logout because the browser sends this cookie automatically. Clear the cookie after rejection, logout, expiry, and family revocation. Never accept the refresh cookie as authentication for business routes.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > API Documentation And Account Authentication > Refresh Sessions",
+      "status": "done"
+    },
+    {
+      "id": "4f4c56ea-f525-4d4a-98ba-b123e6763406",
+      "title": "AUTH-010 Replace login with email and password. Normalize the email before lookup, verify Argon2id hashes with constant-work failure behavior, apply address and account rate limits, and return one generic invalid-credentials error. On success, create a refresh family, set its cookie, and return the PASETO access token with its expiry and account kind. Record stable audit events without email, password, or token values.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > API Documentation And Account Authentication > Authentication Flows",
+      "status": "done"
+    },
+    {
+      "id": "4c832e88-5bed-45db-a645-bb173340ef7d",
+      "title": "AUTH-011 Replace bootstrap input with bootstrap password, administrator email, and administrator password. Verify the configured bootstrap password, validate the account password policy, and create or claim the administrator account transactionally. Return an access token and refresh cookie through the normal token issuer. Disable bootstrap after the administrator password credential exists. Cover duplicate submissions, concurrent bootstrap, invalid email, weak password, rate limits, and rollback.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > API Documentation And Account Authentication > Authentication Flows",
+      "status": "done"
+    },
+    {
+      "id": "c17cc7dd-9f51-4582-9f7a-5c76a829162a",
+      "title": "AUTH-012 Replace session status and logout semantics. Add an authenticated current-account endpoint for frontend initialization. Make logout revoke the current refresh family and clear its cookie. Add an administrator action to revoke all sessions for one account. Accept that an already issued access token remains usable for at most ten minutes unless the normal authorization lookup finds a disabled account.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > API Documentation And Account Authentication > Authentication Flows",
+      "status": "done"
+    },
+    {
+      "id": "bb609a96-35e6-49e1-bead-3c764e166d9e",
+      "title": "AUTH-013 Add an Angular access-token store that keeps the PASETO token only in memory. Add one HTTP interceptor that attaches it to API requests, performs one shared refresh after an authentication failure, retries the original request once, and prevents refresh loops. Exclude login, bootstrap, refresh, public routes, and API-token use from automatic attachment.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > API Documentation And Account Authentication > Frontend",
+      "status": "done"
+    },
+    {
+      "id": "70fd342f-e15a-4289-9a34-a86813a33ef8",
+      "title": "AUTH-014 Restore authentication after navigation and page reload through the refresh endpoint. Merge concurrent initialization and refresh requests within one tab. Handle another tab rotating the cookie without revoking the family. Clear local authentication state after refresh rejection. Preserve administrator and client route guards and their return URLs.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > API Documentation And Account Authentication > Frontend",
+      "status": "done"
+    },
+    {
+      "id": "38f56c96-6c45-4242-8789-b206908e6d3c",
+      "title": "AUTH-015 Replace the shared access-identifier login form with email and password fields. Use standard `email`, `current-password`, and `new-password` autocomplete values for password managers. Add bootstrap administrator email and password fields. Add client portal credential management to the client editor. Localize validation, errors, account state, password replacement, and logout outcomes in French and English.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > API Documentation And Account Authentication > Frontend",
+      "status": "done"
+    },
+    {
+      "id": "b456f066-80cf-4bbc-abed-c81699f4ad92",
+      "title": "AUTH-016 Remove legacy cookie-session and CSRF infrastructure after bearer migration. Delete session-cookie security, CSRF cookies and headers, access-identifier generation, obsolete configuration, old database tables, and dead translations. Keep Origin checks for refresh, logout, login, bootstrap, and other cookie or browser-sensitive mutations. Keep request-body limits and rate limits as independent policies.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > API Documentation And Account Authentication > Removal And Verification",
+      "status": "done"
+    },
+    {
+      "id": "39ced01e-15e0-471b-8166-770b839cf383",
+      "title": "AUTH-017 Verify the complete authentication boundary. Cover administrator and client login, bootstrap, refresh rotation, replay, logout, account disablement, permission changes, client archival, password replacement, mixed credentials, API tokens, concurrent tabs, page reloads, redaction, OpenAPI security, and both Scalar locales. Run migration tests, all package tests, lint, formatting, builds, `nix flake check`, and production startup smoke tests.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > API Documentation And Account Authentication > Removal And Verification",
+      "status": "done"
+    },
+    {
+      "id": "8c0ef5b8-73ed-4d3d-bc1e-9251bc7087e5",
+      "title": "ARCH-001 Remove natural-language literals from application code. Move user-facing prose, API documentation, HTML metadata, operational labels, and runtime messages into `@froment/l10n`. Keep only stable codes, identifiers, protocol values, and typed machine data outside tests. Add a lint or generated consistency check that prevents new prose literals. Preserve immutable migration artifacts and replace their active runtime messages through corrective migrations using stable error codes.",
+      "notes": "Source : TASKS.md\nSection : Back-Office Delivery > API Documentation And Account Authentication > Removal And Verification",
+      "status": "done"
+    }
+  ]
+}
