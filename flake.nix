@@ -51,8 +51,9 @@
           pname = packageJson.name;
           runtimeNode = pkgs.nodejs-slim_22;
           cousineFonts = pkgs.google-fonts.override { fonts = [ "Cousine" ]; };
-          documentFontConfig = pkgs.makeFontsConf {
-            fontDirectories = [
+          documentFonts = pkgs.symlinkJoin {
+            name = "froment-document-fonts";
+            paths = [
               cousineFonts
               pkgs.liberation_ttf
             ];
@@ -79,7 +80,7 @@
             inherit pname version src;
             pnpm = pkgs.pnpm;
             fetcherVersion = 4;
-            hash = "sha256-7feg+HNIZZQ39IumVC0KmefpcTrSC1v5HOgrV0ApG5g=";
+            hash = "sha256-IJtyeOKrp1p4PzsEhKeR+HB9NX/kYTFfes7jXj/6p7c=";
           };
 
           mkApplication =
@@ -109,13 +110,14 @@
                 cp packages/api/dist/migrate.cjs $out/lib/froment-software/migrate.cjs
                 cp -r packages/api/drizzle $out/share/froment-software/drizzle
                 cp -rL packages/api/node_modules/better-sqlite3 $out/lib/froment-software/node_modules/
-                cp -rL packages/api/node_modules/playwright-core $out/lib/froment-software/node_modules/
+                cp -r packages/documents/templates $out/share/froment-software/templates
                 cp -r packages/web/dist/froment-software/browser $out/share/froment-software/web
                 makeWrapper ${runtimeNode}/bin/node $out/bin/${pname} \
                   --add-flags $out/lib/froment-software/server.cjs \
                   --set BUSINESS_TIME_ZONE Europe/Paris \
-                  --set CHROMIUM_PATH ${pkgs.chromium}/bin/chromium \
-                  --set FONTCONFIG_FILE ${documentFontConfig} \
+                  --set TYPST_PATH ${pkgs.typst}/bin/typst \
+                  --set DOCUMENT_TEMPLATES_PATH $out/share/froment-software/templates \
+                  --set DOCUMENT_FONTS_PATH ${documentFonts}/share/fonts \
                   --set-default DATABASE_PATH data/froment.sqlite \
                   --set DEPLOYMENT_METADATA ${lib.escapeShellArg (deploymentMetadata commit)} \
                   --set STATIC_ROOT $out/share/froment-software/web \
@@ -153,9 +155,12 @@
                 cousineFonts
                 pkgs.liberation_ttf
                 pkgs.poppler-utils
+                pkgs.typst
               ];
               CHROMIUM_PATH = lib.optionalString (name == "test") "${pkgs.chromium}/bin/chromium";
-              FONTCONFIG_FILE = lib.optionalString (name == "test") documentFontConfig;
+              TYPST_PATH = lib.optionalString (name == "test") "${pkgs.typst}/bin/typst";
+              DOCUMENT_TEMPLATES_PATH = lib.optionalString (name == "test") "${./packages/documents/templates}";
+              DOCUMENT_FONTS_PATH = lib.optionalString (name == "test") "${documentFonts}/share/fonts";
               dontBuild = true;
               installPhase = ''
                 runHook preInstall
@@ -173,9 +178,7 @@
               tag = version;
               contents = [
                 imageApplication
-                cousineFonts
                 pkgs.dockerTools.fakeNss
-                pkgs.liberation_ttf
               ];
               fakeRootCommands = ''
                 cp --remove-destination ./etc/passwd ./etc/passwd.writable
@@ -187,19 +190,13 @@
                 echo 'froment:x:1000:' >> ./etc/group
                 mkdir -p ./home/froment/.cache ./home/froment/.config ./tmp
                 chmod 1777 ./tmp
-                mkdir -p ./etc/fonts
-                cp ${documentFontConfig} ./etc/fonts/fonts.conf
                 mkdir -p ./var/lib/froment-software
                 chown -R 1000:1000 ./home/froment ./var/lib/froment-software
-                mkdir -p ./run/wrappers/bin
-                cp ${pkgs.chromium.sandbox}/bin/__chromium-suid-sandbox ./run/wrappers/bin/
-                chmod 4755 ./run/wrappers/bin/__chromium-suid-sandbox
               '';
               config = {
                 Cmd = [ "${imageApplication}/bin/${pname}-deploy" ];
                 Env = [
                   "DATABASE_PATH=/var/lib/froment-software/froment.sqlite"
-                  "FONTCONFIG_FILE=/etc/fonts/fonts.conf"
                   "HOME=/home/froment"
                   "TMPDIR=/tmp"
                 ];
@@ -224,6 +221,17 @@
                 actionlint -config-file ${workflowSource}/.github/actionlint.yaml ${workflowSource}/.github/workflows/*.yml
                 touch $out
               '';
+          productionClosure =
+            let
+              closure = pkgs.closureInfo { rootPaths = [ application ]; };
+            in
+            pkgs.runCommand "${pname}-production-closure" { } ''
+              if grep -E -i '/[^/]*(chromium|playwright)' ${closure}/store-paths; then
+                echo "The production closure contains Chromium or Playwright." >&2
+                exit 1
+              fi
+              touch $out
+            '';
         in
         {
           packages = {
@@ -238,7 +246,7 @@
           };
 
           checks = {
-            inherit actionlint dockerImage;
+            inherit actionlint dockerImage productionClosure;
             build = application;
             format = mkCheck "format" "pnpm format:check";
             lint = mkCheck "lint" "pnpm lint";
@@ -247,7 +255,9 @@
 
           devShells.default = pkgs.mkShell {
             CHROMIUM_PATH = "${pkgs.chromium}/bin/chromium";
-            FONTCONFIG_FILE = documentFontConfig;
+            TYPST_PATH = "${pkgs.typst}/bin/typst";
+            DOCUMENT_TEMPLATES_PATH = "${./packages/documents/templates}";
+            DOCUMENT_FONTS_PATH = "${documentFonts}/share/fonts";
             packages = [
               pkgs.chromium
               cousineFonts
@@ -255,6 +265,7 @@
               pkgs.nodejs_22
               pkgs.poppler-utils
               pkgs.pnpm
+              pkgs.typst
             ];
           };
 
