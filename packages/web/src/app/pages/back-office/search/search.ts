@@ -8,6 +8,7 @@ import {
 } from '@angular/core';
 import { ScrollingModule } from '@angular/cdk/scrolling';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import Fuse, { type FuseResultMatch } from 'fuse.js';
 
 import { ClientsApi } from '@backoffice/clients-api';
 import { InvoicesApi } from '@backoffice/invoices-api';
@@ -18,19 +19,28 @@ import { BackOfficeNav } from '@shared/back-office-nav/back-office-nav';
 import { Badge } from '@shared/badge/badge';
 import { Button } from '@shared/button/button';
 import { Notice } from '@shared/notice/notice';
+import { SearchHighlight, SearchHighlightRegistry } from './search-highlight';
 
-interface SearchResult {
+interface SearchItem {
   readonly id: string;
   readonly kind: 'client' | 'quote' | 'order' | 'invoice';
   readonly reference: string;
   readonly detail: string;
-  readonly search: string;
+  readonly aliases: string;
   readonly link: readonly string[];
 }
 
+interface SearchResult extends SearchItem {
+  readonly referenceMatches: FuseResultMatch['indices'];
+  readonly detailMatches: FuseResultMatch['indices'];
+}
+
+const noMatches: FuseResultMatch['indices'] = [];
+
 @Component({
   selector: 'app-search',
-  imports: [BackOfficeNav, Badge, Button, Notice, RouterLink, ScrollingModule],
+  imports: [BackOfficeNav, Badge, Button, Notice, RouterLink, ScrollingModule, SearchHighlight],
+  providers: [SearchHighlightRegistry],
   templateUrl: './search.html',
   styleUrl: './search.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -45,11 +55,38 @@ export class Search {
   private readonly invoicesApi = inject(InvoicesApi);
   protected readonly state = signal<'loading' | 'ready' | 'error'>('loading');
   protected readonly query = signal('');
-  private readonly items = signal<readonly SearchResult[]>([]);
+  private readonly items = signal<readonly SearchItem[]>([]);
+  private readonly search = computed(
+    () =>
+      new Fuse(this.items(), {
+        keys: [
+          { name: 'reference', weight: 0.55 },
+          { name: 'detail', weight: 0.35 },
+          { name: 'aliases', weight: 0.1 },
+        ],
+        findAllMatches: true,
+        ignoreDiacritics: true,
+        ignoreLocation: true,
+        includeMatches: true,
+        threshold: 0.35,
+      }),
+  );
   protected readonly results = computed(() => {
-    const terms = this.query().trim().toLocaleLowerCase().split(/\s+/).filter(Boolean);
-    if (terms.length === 0) return this.items();
-    return this.items().filter((item) => terms.every((term) => item.search.includes(term)));
+    const query = this.query().trim();
+    if (!query) {
+      return this.items().map((item) => ({
+        ...item,
+        referenceMatches: noMatches,
+        detailMatches: noMatches,
+      }));
+    }
+    return this.search()
+      .search(query)
+      .map(({ item, matches = [] }) => ({
+        ...item,
+        referenceMatches: matches.find(({ key }) => key === 'reference')?.indices ?? noMatches,
+        detailMatches: matches.find(({ key }) => key === 'detail')?.indices ?? noMatches,
+      }));
   });
 
   constructor() {
@@ -61,7 +98,7 @@ export class Search {
     this.query.set(input.value.slice(0, 120));
   }
 
-  protected kindLabel(kind: SearchResult['kind']): string {
+  protected kindLabel(kind: SearchItem['kind']): string {
     return this.i18n.t(`backOffice.search.kind.${kind}`);
   }
 
@@ -91,7 +128,7 @@ export class Search {
           kind: 'client' as const,
           reference: client.displayName,
           detail: client.email,
-          search: `${client.displayName} ${client.email}`.toLocaleLowerCase(),
+          aliases: '',
           link: ['/backoffice/clients', client.id] as const,
         })),
         ...quotes.map((quote) => ({
@@ -99,8 +136,7 @@ export class Search {
           kind: 'quote' as const,
           reference: quote.reference,
           detail: `${quote.clientDisplayName} · ${quote.title}`,
-          search:
-            `${quote.reference} ${quote.clientDisplayName} ${quote.title}`.toLocaleLowerCase(),
+          aliases: '',
           link: ['/backoffice/affaires', quote.id] as const,
         })),
         ...orders.map((order) => ({
@@ -108,8 +144,7 @@ export class Search {
           kind: 'order' as const,
           reference: order.reference,
           detail: `${order.clientDisplayName} · ${order.title}`,
-          search:
-            `${order.reference} ${order.quoteReference} ${order.clientDisplayName} ${order.title}`.toLocaleLowerCase(),
+          aliases: order.quoteReference,
           link: ['/backoffice/affaires', order.quoteId] as const,
         })),
         ...invoices.map((invoice) => ({
@@ -117,8 +152,7 @@ export class Search {
           kind: 'invoice' as const,
           reference: invoice.invoiceNumber ?? invoice.orderReference,
           detail: `${invoice.clientDisplayName} · ${invoice.title}`,
-          search:
-            `${invoice.invoiceNumber ?? ''} ${invoice.orderReference} ${invoice.clientDisplayName} ${invoice.title}`.toLocaleLowerCase(),
+          aliases: invoice.orderReference,
           link: ['/backoffice/invoices', invoice.id] as const,
         })),
       ]);

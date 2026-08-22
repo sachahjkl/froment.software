@@ -1,6 +1,6 @@
 {
   "name": "@froment/web",
-  "version": "0.2.4",
+  "version": "0.2.5",
   "private": true,
   "scripts": {
     "ng": "ng",
@@ -23,6 +23,7 @@
     "@froment/contracts": "workspace:*",
     "@froment/l10n": "workspace:*",
     "effect": "catalog:",
+    "fuse.js": "catalog:",
     "marked": "catalog:",
     "rxjs": "catalog:",
     "tslib": "catalog:"

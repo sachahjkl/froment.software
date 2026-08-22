@@ -79,7 +79,7 @@
             inherit pname version src;
             pnpm = pkgs.pnpm;
             fetcherVersion = 4;
-            hash = "sha256-CqlRqUjTjhKPUPq4+Mw10BiuXzw+jmWy+eR7ElYbSxY=";
+            hash = "sha256-7feg+HNIZZQ39IumVC0KmefpcTrSC1v5HOgrV0ApG5g=";
           };
 
           mkApplication =

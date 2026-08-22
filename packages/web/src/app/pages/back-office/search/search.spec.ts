@@ -32,4 +32,38 @@ describe('Search', () => {
     expect(fixture.componentInstance['results']()).toHaveLength(75);
     expect(fixture.nativeElement.querySelector('cdk-virtual-scroll-viewport')).not.toBeNull();
   });
+
+  it('finds a typo and returns the matching text ranges', async () => {
+    TestBed.configureTestingModule({
+      providers: [
+        provideRouter([]),
+        {
+          provide: ClientsApi,
+          useValue: {
+            list: () =>
+              Promise.resolve([
+                { id: 'client-1', displayName: 'Froment Software', email: 'hello@example.test' },
+              ]),
+          },
+        },
+        { provide: QuotesApi, useValue: { list: () => Promise.resolve([]) } },
+        { provide: OrdersApi, useValue: { list: () => Promise.resolve([]) } },
+        { provide: InvoicesApi, useValue: { list: () => Promise.resolve([]) } },
+      ],
+    });
+    const fixture = TestBed.createComponent(Search);
+    await fixture.componentInstance['load']();
+
+    fixture.componentInstance['query'].set('Fromant');
+
+    expect(fixture.componentInstance['results']()).toMatchObject([
+      {
+        id: 'client-1',
+        referenceMatches: [
+          [0, 3],
+          [5, 6],
+        ],
+      },
+    ]);
+  });
 });

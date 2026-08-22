@@ -46,7 +46,8 @@
       >
         <span role="cell"><span appBadge>{{ kindLabel(result.kind) }}</span></span>
         <span class="result-detail" role="cell"
-          ><strong>{{ result.reference }}</strong><small>{{ result.detail }}</small></span
+          ><strong [appSearchHighlight]="result.referenceMatches">{{ result.reference }}</strong
+          ><small [appSearchHighlight]="result.detailMatches">{{ result.detail }}</small></span
         >
         <span class="result-action" role="cell">
           <a appLinkButton [routerLink]="result.link">{{ i18n.t('backOffice.open') }}</a>

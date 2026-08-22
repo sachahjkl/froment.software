@@ -49,6 +49,14 @@ summary {
   color: var(--color-ink);
 }
 
+::highlight(search-match) {
+  background-color: var(--color-warning-soft);
+  color: var(--color-ink);
+  text-decoration: underline var(--color-warning);
+  text-decoration-thickness: 0.12em;
+  text-underline-offset: 0.08em;
+}
+
 h1,
 h2,
 h3,

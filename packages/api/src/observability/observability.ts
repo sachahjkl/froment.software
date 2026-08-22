@@ -5,6 +5,6 @@ import { OtlpSerialization, OtlpTracer } from 'effect/unstable/observability';
 export const ObservabilityLive = OtlpTracer.layerFromConfig({
   resource: {
     serviceName: 'froment-software',
-    serviceVersion: '0.2.4',
+    serviceVersion: '0.2.5',
   },
 }).pipe(Layer.provide(OtlpSerialization.layerJson), Layer.provide(FetchHttpClient.layer));
