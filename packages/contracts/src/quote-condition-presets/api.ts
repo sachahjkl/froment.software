@@ -7,7 +7,6 @@ import { rateLimit, RateLimits } from '../api-policy/rate-limit.js';
 import { frontendSpecific } from '../api-policy/visibility.js';
 import {
   AuthenticationRequired,
-  CsrfRejected,
   PermissionDenied,
   RequestRateLimited,
 } from '../authentication/contracts.js';
@@ -37,7 +36,6 @@ export class QuoteConditionPresetsApi extends HttpApiGroup.make('quoteConditionP
     error: [
       AuthenticationRequired.pipe(HttpApiSchema.status(401)),
       PermissionDenied.pipe(HttpApiSchema.status(403)),
-      CsrfRejected.pipe(HttpApiSchema.status(403)),
       RequestRateLimited.pipe(HttpApiSchema.status(429)),
       QuoteConditionPresetNameConflict.pipe(HttpApiSchema.status(409)),
     ],
@@ -56,7 +54,6 @@ export class QuoteConditionPresetsApi extends HttpApiGroup.make('quoteConditionP
     error: [
       AuthenticationRequired.pipe(HttpApiSchema.status(401)),
       PermissionDenied.pipe(HttpApiSchema.status(403)),
-      CsrfRejected.pipe(HttpApiSchema.status(403)),
       RequestRateLimited.pipe(HttpApiSchema.status(429)),
       QuoteConditionPresetNotFound.pipe(HttpApiSchema.status(404)),
       QuoteConditionPresetNameConflict.pipe(HttpApiSchema.status(409)),
@@ -75,7 +72,6 @@ export class QuoteConditionPresetsApi extends HttpApiGroup.make('quoteConditionP
     error: [
       AuthenticationRequired.pipe(HttpApiSchema.status(401)),
       PermissionDenied.pipe(HttpApiSchema.status(403)),
-      CsrfRejected.pipe(HttpApiSchema.status(403)),
       RequestRateLimited.pipe(HttpApiSchema.status(429)),
       QuoteConditionPresetNotFound.pipe(HttpApiSchema.status(404)),
     ],

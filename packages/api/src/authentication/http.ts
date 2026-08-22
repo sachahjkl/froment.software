@@ -5,98 +5,81 @@ import {
   ApiPrincipal,
   AuthenticationRequired,
   EndpointRateLimit,
-  RequestInvalidOrigin,
   RequestRateLimited,
   RequiredPermissions,
   Ulid,
   type PermissionCodeValue,
 } from '@froment/contracts';
 import { Context, Effect, Layer, Option, Redacted, Schema } from 'effect';
-import { HttpMethod, HttpServerRequest } from 'effect/unstable/http';
-import { HttpApiBuilder, HttpApiSecurity } from 'effect/unstable/httpapi';
+import { HttpServerRequest } from 'effect/unstable/http';
+import { HttpApiBuilder } from 'effect/unstable/httpapi';
+import { HttpApiSecurity } from 'effect/unstable/httpapi';
 
 import { ApiTokens } from '../api-tokens/service.js';
 import { getClientAddress } from '../http/request.js';
 import { setPrivateResponseHeaders } from '../http/response.js';
 import { RequestLimiter } from '../server/request-limiter.js';
 import { Authentication } from './authentication.js';
-import { AuthenticationConfig } from './authentication-config.js';
 
-export const sessionCookieName = '__Host-froment-session';
-export const csrfCookieName = '__Host-froment-csrf';
-export const csrfHeaderName = 'x-csrf-token';
+export const refreshCookieName = '__Secure-froment-refresh';
+const refreshCookie = HttpApiSecurity.apiKey({ key: refreshCookieName, in: 'cookie' });
 
 const AuthenticationRateLimits = {
   apiTokenAttemptsPerAddressPerMinute: 120,
 } as const;
 
-const sessionCookie = HttpApiSecurity.apiKey({
-  key: sessionCookieName,
-  in: 'cookie',
-});
-const csrfCookie = HttpApiSecurity.apiKey({
-  key: csrfCookieName,
-  in: 'cookie',
+export const setRefreshCookie = (refresh: {
+  readonly refreshToken: string;
+  readonly refreshExpiresAt: Date;
+}) =>
+  HttpApiBuilder.securitySetCookie(refreshCookie, refresh.refreshToken, {
+    expires: refresh.refreshExpiresAt,
+    httpOnly: true,
+    secure: true,
+    path: '/api/auth',
+    sameSite: 'strict',
+  });
+
+export const clearRefreshCookie = setRefreshCookie({
+  refreshToken: '',
+  refreshExpiresAt: new Date(0),
 });
 
-export const setSessionCookies = (session: {
-  readonly sessionToken: string;
-  readonly csrfToken: string;
-  readonly expiresAt: Date;
-}) =>
-  Effect.gen(function* () {
-    const cookieOptions = {
-      expires: session.expiresAt,
-      path: '/',
-      sameSite: 'strict' as const,
-    };
-    yield* HttpApiBuilder.securitySetCookie(sessionCookie, session.sessionToken, cookieOptions);
-    yield* HttpApiBuilder.securitySetCookie(csrfCookie, session.csrfToken, {
-      ...cookieOptions,
-      httpOnly: false,
-    });
-  });
+const bearerFromRequest = Effect.fn('bearerFromRequest')(function* () {
+  const request = yield* HttpServerRequest.HttpServerRequest;
+  const authorization = request.headers['authorization'];
+  if (authorization === undefined || !authorization.startsWith('Bearer ')) return undefined;
+  const token = authorization.slice('Bearer '.length);
+  return token.length === 0 ? undefined : token;
+});
 
 export const authorizeClient = Effect.fn('authorizeClient')(function* (
   permission: PermissionCodeValue,
 ) {
-  const request = yield* HttpServerRequest.HttpServerRequest;
   return yield* (yield* Authentication)
-    .authorize(request.cookies[sessionCookieName], [permission], 'client')
+    .authorize(yield* bearerFromRequest(), [permission], 'client')
     .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
 });
 
 const ApiAuthenticationLive = Layer.succeed(
   ApiAuthentication,
   ApiAuthentication.of({
-    sessionCookie: Effect.fn('ApiAuthentication.sessionCookie')(function* (
-      httpEffect,
-      { credential },
-    ) {
-      yield* setPrivateResponseHeaders;
-      const request = yield* HttpServerRequest.HttpServerRequest;
-      const sessionToken = Redacted.value(credential);
-      if (sessionToken.length === 0 || request.headers['authorization'] !== undefined) {
-        return yield* new AuthenticationRequired({ code: 'authentication.required' });
-      }
-      return yield* Effect.provideService(httpEffect, ApiCredentials, {
-        kind: 'session',
-        token: sessionToken,
-      });
-    }),
     bearer: Effect.fn('ApiAuthentication.bearer')(function* (httpEffect, { credential }) {
       yield* setPrivateResponseHeaders;
-      const request = yield* HttpServerRequest.HttpServerRequest;
       const bearerToken = Redacted.value(credential);
-      if (
-        bearerToken.length === 0 ||
-        request.cookies[sessionCookieName] !== undefined ||
-        request.cookies[csrfCookieName] !== undefined
-      ) {
+      if (bearerToken.length === 0 || bearerToken.includes(',')) {
+        return yield* new AuthenticationRequired({ code: 'authentication.required' });
+      }
+      const kind = bearerToken.startsWith('v4.public.')
+        ? ('access-token' as const)
+        : bearerToken.startsWith('froment_api_v1_')
+          ? ('api-token' as const)
+          : undefined;
+      if (kind === undefined) {
         return yield* new AuthenticationRequired({ code: 'authentication.required' });
       }
       return yield* Effect.provideService(httpEffect, ApiCredentials, {
-        kind: 'api-token',
+        kind,
         token: bearerToken,
       });
     }),
@@ -107,7 +90,6 @@ const ApiAuthorizationLive = Layer.effect(
   ApiAuthorization,
   Effect.gen(function* () {
     const authentication = yield* Authentication;
-    const config = yield* AuthenticationConfig;
     const apiTokens = yield* ApiTokens;
     const limiter = yield* RequestLimiter;
     const limitEndpoint = Effect.fn('ApiAuthorization.limitEndpoint')(function* (
@@ -129,30 +111,19 @@ const ApiAuthorizationLive = Layer.effect(
         );
         const endpointRateLimit = Context.getOption(endpoint.annotations, EndpointRateLimit);
 
-        if (credentials.kind === 'session') {
+        if (credentials.kind === 'access-token') {
           const principal = yield* authentication
             .authorize(credentials.token, permissions, 'administrator')
             .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
-          if (HttpMethod.hasBody(endpoint.method)) {
-            const request = yield* HttpServerRequest.HttpServerRequest;
-            if (request.headers['origin'] !== config.publicOrigin) {
-              return yield* new RequestInvalidOrigin({ code: 'request.invalid_origin' });
-            }
-            yield* authentication
-              .authorizeCsrf(
-                credentials.token,
-                request.cookies[csrfCookieName],
-                request.headers[csrfHeaderName],
-                request.headers['origin'],
-              )
-              .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
-          }
           if (Option.isSome(endpointRateLimit)) {
             yield* limitEndpoint(principal.userId, endpoint.identifier, endpointRateLimit.value);
           }
           return yield* Effect.provideService(httpEffect, ApiPrincipal, {
             userId: Schema.decodeUnknownSync(Ulid)(principal.userId),
-            credential: { kind: 'session', token: credentials.token },
+            credential: {
+              kind: 'access-token',
+              sessionId: Schema.decodeUnknownSync(Ulid)(principal.sessionId),
+            },
           });
         }
 

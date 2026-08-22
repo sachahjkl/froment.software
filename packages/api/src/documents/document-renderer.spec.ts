@@ -10,7 +10,7 @@ import { join } from 'node:path';
 import { ConfigProvider, Effect, Layer, Schema } from 'effect';
 import { describe, expect, it } from 'vitest';
 
-import { DocumentRenderer, DocumentRendererLive } from '../src/documents/document-renderer.js';
+import { DocumentRenderer, DocumentRendererLive } from './document-renderer.js';
 
 const longWord = 'W'.repeat(160);
 const longText = 'Conditions '.repeat(200).slice(0, 2_000);
@@ -147,6 +147,8 @@ const inspectPdf = (pdf: Uint8Array) => {
   return { info: info.stdout, text: text.stdout };
 };
 
+const normalizedText = (value: string): string => value.replaceAll(/[\s\u200b]/g, '');
+
 const expectVisualReference = (kind: 'quote' | 'invoice' | 'order', pdf: Uint8Array): void => {
   const directory = mkdtempSync(join(tmpdir(), 'froment-pdf-reference-'));
   try {
@@ -158,7 +160,7 @@ const expectVisualReference = (kind: 'quote' | 'invoice' | 'order', pdf: Uint8Ar
     );
     expect(rasterized.status).toBe(0);
     const raster = readFileSync(`${output}.pbm`);
-    const path = new URL(`./references/${kind}-compact.pbm`, import.meta.url);
+    const path = new URL(`../../test/references/${kind}-compact.pbm`, import.meta.url);
     if (process.env['UPDATE_PDF_REFERENCES'] === 'true') writeFileSync(path, raster);
     const reference = readFileSync(path);
     const changedBytes = raster.reduce(
@@ -198,8 +200,10 @@ describe('DocumentRenderer', () => {
     for (const pdf of rendered.slice(3)) {
       const inspected = inspectPdf(pdf!);
       expect(Number(inspected.info.match(/Pages:\s+(\d+)/)?.[1])).toBeGreaterThan(1);
-      expect(inspected.text.replaceAll(/\s/g, '')).toContain(longText.replaceAll(/\s/g, '').trim());
+      expect(normalizedText(inspected.text)).toContain(normalizedText(longText));
+      expect(normalizedText(inspected.text)).toContain(longWord);
       expect(inspected.text.match(/Désignation/g)?.length).toBeGreaterThan(1);
+      expect(inspected.text.match(/100,00\s*€/g)).toHaveLength(40);
       for (let position = 1; position <= 20; position += 1) {
         expect(inspected.text).toMatch(new RegExp(`^\\s*${position}\\s`, 'm'));
       }
@@ -213,6 +217,18 @@ describe('DocumentRenderer', () => {
       ).pipe(Effect.provide(DocumentRendererLive)),
     );
     expect(first).toEqual(second);
+  });
+
+  it('uses only local template imports', () => {
+    const templatesPath = process.env['DOCUMENT_TEMPLATES_PATH'];
+    expect(templatesPath).toBeDefined();
+    for (const template of ['quote.typ', 'invoice.typ', 'order.typ', 'shared.typ']) {
+      const source = readFileSync(join(templatesPath!, template), 'utf8');
+      expect(source).not.toMatch(/https?:|@preview|@local/);
+      for (const match of source.matchAll(/#import\s+"([^"]+)"/g)) {
+        expect(match[1]).toBe('shared.typ');
+      }
+    }
   });
 
   it('returns a redacted typed error and removes temporary files after compiler failure', async () => {

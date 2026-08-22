@@ -9,7 +9,6 @@ import { rateLimit, RateLimits } from '../api-policy/rate-limit.js';
 import { frontendSpecific } from '../api-policy/visibility.js';
 import {
   AuthenticationRequired,
-  CsrfRejected,
   PermissionDenied,
   RequestRateLimited,
 } from '../authentication/contracts.js';
@@ -38,7 +37,6 @@ export class QuoteLinksApi extends HttpApiGroup.make('quoteLinks', { topLevel: t
     error: [
       AuthenticationRequired.pipe(HttpApiSchema.status(401)),
       PermissionDenied.pipe(HttpApiSchema.status(403)),
-      CsrfRejected.pipe(HttpApiSchema.status(403)),
       RequestRateLimited.pipe(HttpApiSchema.status(429)),
       QuoteNotFound.pipe(HttpApiSchema.status(404)),
       QuoteVersionConflict.pipe(HttpApiSchema.status(409)),

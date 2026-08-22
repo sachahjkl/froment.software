@@ -12,14 +12,16 @@ class BootstrapApiStub {
     return Promise.resolve({
       success: true,
       result: {
-        accessIdentifier: 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA',
+        accessToken: 'v4.public.test',
+        expiresAt: Date.now() + 600_000,
+        mode: 'administrator',
       },
     });
   }
 }
 
 describe('Bootstrap', () => {
-  it('creates the administrator and displays its identifier', async () => {
+  it('creates the administrator with email and password credentials', async () => {
     TestBed.configureTestingModule({
       providers: [provideRouter([]), { provide: BootstrapApi, useClass: BootstrapApiStub }],
     });
@@ -27,14 +29,16 @@ describe('Bootstrap', () => {
     await fixture.whenStable();
 
     const root: HTMLElement = fixture.nativeElement;
-    const input = root.querySelector<HTMLInputElement>('input');
-    expect(input).not.toBeNull();
-    if (input === null) return;
-    input.value = 'bootstrap-password';
-    input.dispatchEvent(new Event('input'));
+    const inputs = root.querySelectorAll<HTMLInputElement>('input');
+    expect(inputs).toHaveLength(3);
+    const values = ['bootstrap-password', 'administrator@example.test', 'administrator-password'];
+    inputs.forEach((input, index) => {
+      input.value = values[index] ?? '';
+      input.dispatchEvent(new Event('input'));
+    });
     root.querySelector<HTMLFormElement>('form')?.dispatchEvent(new SubmitEvent('submit'));
     await fixture.whenStable();
 
-    expect(root.textContent).toContain('AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA');
+    expect(root.textContent).toContain('The administrator account is ready.');
   });
 });

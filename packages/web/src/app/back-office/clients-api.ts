@@ -6,6 +6,7 @@ import {
   ClientList,
   ClientSummary,
   type ClientAccessValue,
+  type ClientAccessRequestValue,
   type ClientCreateRequestValue,
   type ClientFailureCode,
   type ClientFailureValue,
@@ -80,9 +81,12 @@ export class ClientsApi {
     );
   }
 
-  async createAccess(clientId: UlidValue): Promise<ClientOutcome<ClientAccessValue>> {
+  async createAccess(
+    clientId: UlidValue,
+    request: ClientAccessRequestValue,
+  ): Promise<ClientOutcome<ClientAccessValue>> {
     return requestOutcome(
-      this.http.post<unknown>(`/api/clients/${clientId}/access`, undefined),
+      this.http.post<unknown>(`/api/clients/${clientId}/access`, request),
       ClientAccess,
       ClientFailure,
       'client.error',

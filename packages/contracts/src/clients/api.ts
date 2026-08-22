@@ -3,13 +3,14 @@ import { HttpApiEndpoint, HttpApiGroup, HttpApiSchema } from 'effect/unstable/ht
 import { ApiRequestBody } from '../api-authentication.js';
 import {
   AuthenticationRequired,
-  CsrfRejected,
   PermissionDenied,
   RequestRateLimited,
 } from '../authentication/contracts.js';
 import {
   ClientAccess,
+  ClientAccessRequest,
   ClientArchived,
+  ClientEmailConflict,
   ClientCreateRequest,
   ClientList,
   ClientNotFound,
@@ -47,7 +48,6 @@ export class ClientsApi extends HttpApiGroup.make('clients', { topLevel: true })
     error: [
       AuthenticationRequired.pipe(HttpApiSchema.status(401)),
       PermissionDenied.pipe(HttpApiSchema.status(403)),
-      CsrfRejected.pipe(HttpApiSchema.status(403)),
       RequestRateLimited.pipe(HttpApiSchema.status(429)),
     ],
   })
@@ -64,7 +64,6 @@ export class ClientsApi extends HttpApiGroup.make('clients', { topLevel: true })
     error: [
       AuthenticationRequired.pipe(HttpApiSchema.status(401)),
       PermissionDenied.pipe(HttpApiSchema.status(403)),
-      CsrfRejected.pipe(HttpApiSchema.status(403)),
       RequestRateLimited.pipe(HttpApiSchema.status(429)),
       ClientNotFound.pipe(HttpApiSchema.status(404)),
       ClientArchived.pipe(HttpApiSchema.status(409)),
@@ -83,7 +82,6 @@ export class ClientsApi extends HttpApiGroup.make('clients', { topLevel: true })
     error: [
       AuthenticationRequired.pipe(HttpApiSchema.status(401)),
       PermissionDenied.pipe(HttpApiSchema.status(403)),
-      CsrfRejected.pipe(HttpApiSchema.status(403)),
       RequestRateLimited.pipe(HttpApiSchema.status(429)),
       ClientNotFound.pipe(HttpApiSchema.status(404)),
     ],
@@ -98,7 +96,6 @@ export class ClientsApi extends HttpApiGroup.make('clients', { topLevel: true })
     error: [
       AuthenticationRequired.pipe(HttpApiSchema.status(401)),
       PermissionDenied.pipe(HttpApiSchema.status(403)),
-      CsrfRejected.pipe(HttpApiSchema.status(403)),
       RequestRateLimited.pipe(HttpApiSchema.status(429)),
       ClientNotFound.pipe(HttpApiSchema.status(404)),
     ],
@@ -109,19 +106,22 @@ export class ClientsApi extends HttpApiGroup.make('clients', { topLevel: true })
   ),
   HttpApiEndpoint.post('clientAccessCreate', '/api/clients/:clientId/access', {
     params: { clientId: Ulid },
+    payload: ClientAccessRequest,
     success: ClientAccess,
     error: [
       AuthenticationRequired.pipe(HttpApiSchema.status(401)),
       PermissionDenied.pipe(HttpApiSchema.status(403)),
-      CsrfRejected.pipe(HttpApiSchema.status(403)),
       RequestRateLimited.pipe(HttpApiSchema.status(429)),
       ClientNotFound.pipe(HttpApiSchema.status(404)),
       ClientArchived.pipe(HttpApiSchema.status(409)),
+      ClientEmailConflict.pipe(HttpApiSchema.status(409)),
     ],
-  }).pipe(
-    requirePermissions([Permissions.clientAccessCreate]),
-    authenticate,
-    rateLimit(RateLimits.tenPerMinute),
-    frontendSpecific,
-  ),
+  })
+    .middleware(ApiRequestBody)
+    .pipe(
+      requirePermissions([Permissions.clientAccessCreate]),
+      authenticate,
+      rateLimit(RateLimits.tenPerMinute),
+      frontendSpecific,
+    ),
 ) {}

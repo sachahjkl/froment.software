@@ -2,7 +2,7 @@ import Sqlite from 'better-sqlite3';
 import { DateTime } from 'effect';
 import { describe, expect, it } from 'vitest';
 
-import { allocateBusinessReference, businessYear } from '../src/business/business-references.js';
+import { allocateBusinessReference, businessYear } from './business-references.js';
 
 describe('business references', () => {
   const zone = DateTime.zoneMakeNamedUnsafe('Europe/Paris');

@@ -12,14 +12,13 @@ export const setPrivateResponseHeaders = HttpEffect.appendPreResponseHandler((_r
   ),
 );
 
-export const setPdfResponseHeaders = HttpEffect.appendPreResponseHandler(
-  (_request, response) =>
-    Effect.succeed(
-      HttpServerResponse.setHeaders(response, {
-        'content-security-policy': "default-src 'none'; sandbox",
-        'x-content-type-options': 'nosniff',
-      }),
-    ),
+export const setPdfResponseHeaders = HttpEffect.appendPreResponseHandler((_request, response) =>
+  Effect.succeed(
+    HttpServerResponse.setHeaders(response, {
+      'content-security-policy': "default-src 'none'; sandbox",
+      'x-content-type-options': 'nosniff',
+    }),
+  ),
 );
 
 export const setPublicDocumentResponseHeaders = HttpEffect.appendPreResponseHandler(

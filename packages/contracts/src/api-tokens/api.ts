@@ -3,7 +3,6 @@ import { HttpApiEndpoint, HttpApiGroup, HttpApiSchema } from 'effect/unstable/ht
 import { ApiRequestBody } from '../api-authentication.js';
 import {
   AuthenticationRequired,
-  CsrfRejected,
   PermissionDenied,
   RequestRateLimited,
 } from '../authentication/contracts.js';
@@ -42,7 +41,6 @@ export class ApiTokensApi extends HttpApiGroup.make('apiTokens', {
     error: [
       AuthenticationRequired.pipe(HttpApiSchema.status(401)),
       PermissionDenied.pipe(HttpApiSchema.status(403)),
-      CsrfRejected.pipe(HttpApiSchema.status(403)),
       RequestRateLimited.pipe(HttpApiSchema.status(429)),
       ApiTokenNameConflict.pipe(HttpApiSchema.status(409)),
       ApiTokenInvalidExpiration.pipe(HttpApiSchema.status(422)),
@@ -61,7 +59,6 @@ export class ApiTokensApi extends HttpApiGroup.make('apiTokens', {
     error: [
       AuthenticationRequired.pipe(HttpApiSchema.status(401)),
       PermissionDenied.pipe(HttpApiSchema.status(403)),
-      CsrfRejected.pipe(HttpApiSchema.status(403)),
       RequestRateLimited.pipe(HttpApiSchema.status(429)),
       ApiTokenNotFound.pipe(HttpApiSchema.status(404)),
     ],

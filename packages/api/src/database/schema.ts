@@ -120,71 +120,41 @@ export const issuerSettings = sqliteTable(
   ],
 );
 
-export const accessCredentials = sqliteTable(
-  'access_credentials',
+export const refreshSessions = sqliteTable(
+  'refresh_sessions',
   {
     id: text().notNull().primaryKey(),
-    userId: text('user_id')
-      .notNull()
-      .references(() => users.id, { onDelete: 'cascade' }),
-    secretHmac: blob('secret_hmac', { mode: 'buffer' }).notNull(),
-    createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull(),
-    lastUsedAt: integer('last_used_at', { mode: 'timestamp_ms' }),
-    revokedAt: integer('revoked_at', { mode: 'timestamp_ms' }),
-  },
-  (table) => [
-    uniqueIndex('access_credentials_secret_hmac_unique').on(table.secretHmac),
-    index('access_credentials_user_id_index').on(table.userId),
-    check(
-      'access_credentials_secret_hmac_check',
-      sql`typeof(${table.secretHmac}) = 'blob' and length(${table.secretHmac}) = 32`,
-    ),
-    check(
-      'access_credentials_id_ulid_check',
-      sql`${table.id} is not null and length(${table.id}) = 26 and ${table.id} not glob '*[^0-9A-HJKMNP-TV-Z]*' and substr(${table.id}, 1, 1) between '0' and '7'`,
-    ),
-    check(
-      'access_credentials_timestamps_check',
-      sql`(${table.lastUsedAt} is null or ${table.lastUsedAt} >= ${table.createdAt}) and (${table.revokedAt} is null or ${table.revokedAt} >= ${table.createdAt})`,
-    ),
-  ],
-);
-
-export const sessions = sqliteTable(
-  'sessions',
-  {
-    id: text().notNull().primaryKey(),
+    familyId: text('family_id').notNull(),
     userId: text('user_id')
       .notNull()
       .references(() => users.id, { onDelete: 'cascade' }),
     tokenHmac: blob('token_hmac', { mode: 'buffer' }).notNull(),
-    csrfHmac: blob('csrf_hmac', { mode: 'buffer' }).notNull(),
     createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull(),
-    lastSeenAt: integer('last_seen_at', { mode: 'timestamp_ms' }).notNull(),
-    idleExpiresAt: integer('idle_expires_at', { mode: 'timestamp_ms' }).notNull(),
+    rotatedAt: integer('rotated_at', { mode: 'timestamp_ms' }).notNull(),
     absoluteExpiresAt: integer('absolute_expires_at', { mode: 'timestamp_ms' }).notNull(),
+    consumedAt: integer('consumed_at', { mode: 'timestamp_ms' }),
     revokedAt: integer('revoked_at', { mode: 'timestamp_ms' }),
   },
   (table) => [
-    uniqueIndex('sessions_token_hmac_unique').on(table.tokenHmac),
-    index('sessions_user_id_index').on(table.userId),
-    index('sessions_idle_expiry_index').on(table.idleExpiresAt),
-    index('sessions_absolute_expiry_index').on(table.absoluteExpiresAt),
+    uniqueIndex('refresh_sessions_token_hmac_unique').on(table.tokenHmac),
+    index('refresh_sessions_user_id_index').on(table.userId, table.revokedAt),
+    index('refresh_sessions_family_id_index').on(table.familyId, table.revokedAt),
+    index('refresh_sessions_expiry_index').on(table.absoluteExpiresAt),
     check(
-      'sessions_id_ulid_check',
+      'refresh_sessions_id_ulid_check',
       sql`${table.id} is not null and length(${table.id}) = 26 and ${table.id} not glob '*[^0-9A-HJKMNP-TV-Z]*' and substr(${table.id}, 1, 1) between '0' and '7'`,
     ),
     check(
-      'sessions_token_hmac_check',
+      'refresh_sessions_family_id_ulid_check',
+      sql`${table.familyId} is not null and length(${table.familyId}) = 26 and ${table.familyId} not glob '*[^0-9A-HJKMNP-TV-Z]*' and substr(${table.familyId}, 1, 1) between '0' and '7'`,
+    ),
+    check(
+      'refresh_sessions_token_hmac_check',
       sql`typeof(${table.tokenHmac}) = 'blob' and length(${table.tokenHmac}) = 32`,
     ),
     check(
-      'sessions_csrf_hmac_check',
-      sql`typeof(${table.csrfHmac}) = 'blob' and length(${table.csrfHmac}) = 32`,
-    ),
-    check(
-      'sessions_timestamps_check',
-      sql`${table.lastSeenAt} >= ${table.createdAt} and ${table.idleExpiresAt} > ${table.createdAt} and ${table.absoluteExpiresAt} >= ${table.idleExpiresAt} and (${table.revokedAt} is null or ${table.revokedAt} >= ${table.createdAt})`,
+      'refresh_sessions_timestamps_check',
+      sql`${table.rotatedAt} >= ${table.createdAt} and ${table.absoluteExpiresAt} > ${table.createdAt} and (${table.consumedAt} is null or ${table.consumedAt} >= ${table.createdAt}) and (${table.revokedAt} is null or ${table.revokedAt} >= ${table.createdAt})`,
     ),
   ],
 );
@@ -905,14 +875,33 @@ export interface UserRow extends Schema.Schema.Type<typeof UserRow> {}
 export const ClientRow = createSelectSchema(clients, { id: ulid });
 export interface ClientRow extends Schema.Schema.Type<typeof ClientRow> {}
 
-export const AccessCredentialRow = createSelectSchema(accessCredentials, {
-  id: ulid,
+export const PasswordCredentialRow = createSelectSchema(passwordCredentials, {
   userId: ulid,
 });
-export interface AccessCredentialRow extends Schema.Schema.Type<typeof AccessCredentialRow> {}
+export interface PasswordCredentialRow extends Schema.Schema.Type<typeof PasswordCredentialRow> {}
 
-export const SessionRow = createSelectSchema(sessions, {
+export const RefreshSessionRow = createSelectSchema(refreshSessions, {
   id: ulid,
+  familyId: ulid,
   userId: ulid,
 });
-export interface SessionRow extends Schema.Schema.Type<typeof SessionRow> {}
+export interface RefreshSessionRow extends Schema.Schema.Type<typeof RefreshSessionRow> {}
+
+export const PasswordCredentialLookup = Schema.Struct({
+  userId: ulid(Schema.String),
+  mode: Schema.Literals(['client', 'administrator']),
+  passwordHash: Schema.String,
+});
+
+export const RefreshSessionLookup = Schema.Struct({
+  id: ulid(Schema.String),
+  familyId: ulid(Schema.String),
+  userId: ulid(Schema.String),
+  mode: Schema.Literals(['client', 'administrator']),
+  createdAt: Schema.Int,
+  absoluteExpiresAt: Schema.Int,
+  consumedAt: Schema.NullOr(Schema.Int),
+  revokedAt: Schema.NullOr(Schema.Int),
+  disabledAt: Schema.NullOr(Schema.Int),
+  passwordChangedAt: Schema.Int,
+});

@@ -2,7 +2,6 @@ import { Schema } from 'effect';
 
 import {
   AuthenticationRequired,
-  CsrfRejected,
   PermissionDenied,
   RequestRateLimited,
 } from '../authentication/contracts.js';
@@ -42,7 +41,6 @@ export class QuoteConditionPresetNameConflict extends Schema.TaggedError<QuoteCo
 export const QuoteConditionPresetFailure = Schema.Union([
   AuthenticationRequired,
   PermissionDenied,
-  CsrfRejected,
   RequestRateLimited,
   QuoteConditionPresetNotFound,
   QuoteConditionPresetNameConflict,

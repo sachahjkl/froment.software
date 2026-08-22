@@ -2,11 +2,10 @@ import { Effect, Exit, Tracer } from 'effect';
 import { HttpServerRequest, HttpServerResponse } from 'effect/unstable/http';
 import { describe, expect, it } from 'vitest';
 
-import { HttpTracingLive, traceRequest } from '../src/observability/http-tracing.js';
+import { HttpTracingLive, traceRequest } from './http-tracing.js';
 
 describe('HTTP tracing', () => {
-  it('redacts the CSRF header through the real tracing middleware', async () => {
-    const csrfToken = 'csrf-secret-value-that-must-not-leak';
+  it('redacts authentication headers through the real tracing middleware', async () => {
     let endSpan = () => {};
     const spanEnded = new Promise<void>((resolve) => {
       endSpan = resolve;
@@ -30,8 +29,7 @@ describe('HTTP tracing', () => {
         method: 'POST',
         headers: {
           authorization: 'Bearer another-secret',
-          cookie: '__Host-froment-session=session-secret',
-          'x-csrf-token': csrfToken,
+          cookie: '__Secure-froment-refresh=refresh-secret',
         },
       }),
     );
@@ -48,12 +46,10 @@ describe('HTTP tracing', () => {
     );
 
     const attributes = spans[0]?.attributes;
-    expect(attributes?.get('http.request.header.x-csrf-token')).toBe('<redacted>');
     expect(attributes?.get('http.request.header.authorization')).toBe('<redacted>');
     expect(attributes?.get('http.request.header.cookie')).toBe('<redacted>');
     const serializedAttributes = JSON.stringify([...(attributes?.entries() ?? [])]);
-    expect(serializedAttributes).not.toContain(csrfToken);
     expect(serializedAttributes).not.toContain('another-secret');
-    expect(serializedAttributes).not.toContain('session-secret');
+    expect(serializedAttributes).not.toContain('refresh-secret');
   });
 });

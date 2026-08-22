@@ -2,7 +2,6 @@ import { Schema } from 'effect';
 
 import {
   AuthenticationRequired,
-  CsrfRejected,
   PermissionDenied,
   RequestRateLimited,
 } from '../authentication/contracts.js';
@@ -230,7 +229,6 @@ export class InvoiceInvalidTransition extends Schema.TaggedError<InvoiceInvalidT
 export const InvoiceFailure = Schema.Union([
   AuthenticationRequired,
   PermissionDenied,
-  CsrfRejected,
   RequestRateLimited,
   InvoiceNotFound,
   InvoiceOrderNotFound,

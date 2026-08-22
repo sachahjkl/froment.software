@@ -209,30 +209,37 @@
           <h2>{{ i18n.t('backOffice.clientDetail.accessTitle') }}</h2>
           <p>{{ i18n.t('backOffice.clientDetail.accessIntro') }}</p>
         </div>
-        <button
-          appButton
-          variant="primary"
-          type="button"
-          [disabled]="archived() || accessPending()"
-          (click)="createAccess()"
-        >
-          @if (accessPending()) { {{ i18n.t('backOffice.clientDetail.accessCreating') }} } @else {
-          {{ i18n.t('backOffice.clientDetail.accessCreate') }} }
-        </button>
+        <form (submit)="createAccess($event)">
+          <label for="client-account-email">{{ i18n.t('backOffice.email') }}</label>
+          <input
+            id="client-account-email"
+            class="input"
+            type="email"
+            autocomplete="username"
+            [formField]="accessForm.email"
+          />
+          <label for="client-account-password">{{ i18n.t('backOffice.password') }}</label>
+          <input
+            id="client-account-password"
+            class="input"
+            type="password"
+            autocomplete="new-password"
+            [formField]="accessForm.password"
+          />
+          <button
+            appButton
+            variant="primary"
+            type="submit"
+            [disabled]="archived() || accessPending() || accessForm().invalid()"
+          >
+            @if (accessPending()) { {{ i18n.t('backOffice.clientDetail.accessCreating') }} } @else {
+            {{ i18n.t('backOffice.clientDetail.accessCreate') }} }
+          </button>
+        </form>
         @if (archived()) {
         <p appNotice>{{ i18n.t('backOffice.clientDetail.accessArchived') }}</p>
-        } @if (accessIdentifier(); as identifier) {
-        <app-copy-field
-          role="status"
-          [value]="identifier"
-          [actionLabel]="
-            copied()
-              ? i18n.t('backOffice.clients.copied')
-              : i18n.t('backOffice.clients.copy')
-          "
-          (copy)="copyAccess()"
-        />
-        <p class="field-hint">{{ i18n.t('backOffice.clients.accessWarning') }}</p>
+        } @if (accountEmail(); as email) {
+        <p role="status">{{ i18n.tf('backOffice.clientDetail.accessReady', { email }) }}</p>
         }
       </div>
     </section>

@@ -19,7 +19,6 @@ interface ApiDocumentation {
   readonly description: string;
   readonly requiredPermission: string;
   readonly security: {
-    readonly sessionCookie: string;
     readonly bearer: string;
   };
   readonly groups: Readonly<Record<string, ApiDocumentationGroup>>;
@@ -32,8 +31,7 @@ export const apiDocumentation = {
     description: 'API pour les clients, devis, commandes, factures et documents générés.',
     requiredPermission: 'Permission requise : `{permission}`.',
     security: {
-      sessionCookie: 'Cookie de session administrateur du navigateur.',
-      bearer: 'Jeton d’API créé dans le back-office administrateur.',
+      bearer: 'Jeton d’accès PASETO ou jeton d’API Bearer.',
     },
     groups: {
       clients: { title: 'Clients', description: 'Fiches clients et cycle de vie.' },
@@ -233,6 +231,18 @@ export const apiDocumentation = {
         description: 'Authentifie un compte et crée une session.',
       },
       logout: { summary: 'Se déconnecter', description: 'Révoque la session active.' },
+      refresh: {
+        summary: 'Rafraîchir la connexion',
+        description: 'Fait tourner le jeton de rafraîchissement et renvoie un jeton d’accès.',
+      },
+      currentAccount: {
+        summary: 'Obtenir le compte courant',
+        description: 'Renvoie le compte associé au jeton d’accès.',
+      },
+      accountSessionsRevoke: {
+        summary: 'Révoquer les sessions d’un compte',
+        description: 'Révoque toutes les sessions de rafraîchissement du compte.',
+      },
       orderPdfRender: {
         summary: 'Générer le PDF d’une commande',
         description: 'Génère et conserve le PDF d’une commande.',
@@ -277,10 +287,6 @@ export const apiDocumentation = {
         summary: 'Prévisualiser un devis',
         description: 'Génère un aperçu sans créer de document conservé.',
       },
-      sessionStatus: {
-        summary: 'Obtenir l’état de la session',
-        description: 'Indique le type du compte connecté.',
-      },
       version: {
         summary: 'Obtenir la version du service',
         description: 'Renvoie les métadonnées du déploiement actif.',
@@ -292,8 +298,7 @@ export const apiDocumentation = {
     description: 'API for client records, quotes, orders, invoices, and generated documents.',
     requiredPermission: 'Required permission: `{permission}`.',
     security: {
-      sessionCookie: 'Administrator browser session cookie.',
-      bearer: 'API token created in the administrator back office.',
+      bearer: 'PASETO access token or Bearer API token.',
     },
     groups: {
       clients: { title: 'Clients', description: 'Client records and lifecycle.' },
@@ -481,6 +486,18 @@ export const apiDocumentation = {
       },
       login: { summary: 'Log in', description: 'Authenticates an account and creates a session.' },
       logout: { summary: 'Log out', description: 'Revokes the active session.' },
+      refresh: {
+        summary: 'Refresh authentication',
+        description: 'Rotates the refresh token and returns an access token.',
+      },
+      currentAccount: {
+        summary: 'Get current account',
+        description: 'Returns the account associated with the access token.',
+      },
+      accountSessionsRevoke: {
+        summary: 'Revoke account sessions',
+        description: 'Revokes all refresh sessions for the account.',
+      },
       orderPdfRender: {
         summary: 'Render an order PDF',
         description: 'Renders and stores an order PDF.',
@@ -524,10 +541,6 @@ export const apiDocumentation = {
       quotePreview: {
         summary: 'Preview a quote',
         description: 'Renders a preview without creating a stored document.',
-      },
-      sessionStatus: {
-        summary: 'Get session status',
-        description: 'Reports the authenticated account type.',
       },
       version: {
         summary: 'Get service version',
@@ -611,14 +624,14 @@ export const translations = {
     'backOffice.backToAffairs': 'Retour aux affaires',
     'backOffice.backToBilling': 'Retour à la facturation',
     'backOffice.backToClients': 'Retour aux clients',
-    'backOffice.intro': 'Entrez votre identifiant de connexion pour accéder à votre espace.',
-    'backOffice.accessIdentifier': 'Identifiant de connexion',
-    'authentication.invalid_credentials': 'Identifiant incorrect.',
+    'backOffice.intro': 'Entrez votre adresse email et votre mot de passe.',
+    'backOffice.email': 'Adresse email',
+    'backOffice.password': 'Mot de passe',
+    'authentication.invalid_credentials': 'Adresse email ou mot de passe incorrect.',
     'authentication.rate_limited': 'Trop de tentatives ont échoué. Réessayez plus tard.',
-    'authentication.error': 'Le serveur ne peut pas vérifier cet identifiant.',
+    'authentication.error': 'Le serveur ne peut pas vérifier ces identifiants.',
     'authentication.required': 'La session a expiré. Reconnectez-vous.',
     'authentication.permission_denied': 'Votre compte ne permet pas cette opération.',
-    'authentication.invalid_csrf': 'La protection de la session a refusé cette opération.',
     'backOffice.pending': 'Vérification…',
     'backOffice.submit': 'Se connecter',
     'backOffice.bootstrap': 'Initialiser le premier administrateur',
@@ -1183,23 +1196,23 @@ export const translations = {
     'client.not_found': 'Ce client n’existe pas.',
     'client.archived': 'Ce client est archivé.',
     'client.version_conflict': 'Ce client a été modifié ailleurs. Rechargez la page.',
+    'client.email_conflict': 'Cette adresse email appartient déjà à un compte.',
+    'backOffice.clientDetail.accessReady': 'Le compte {email} est prêt.',
     'client.error': 'Le serveur ne peut pas terminer cette opération.',
     'bootstrap.title': 'Créer le premier administrateur',
     'bootstrap.loading': 'Vérification de la disponibilité…',
     'bootstrap.intro':
       'Saisissez le mot de passe d’amorçage. Cette opération crée le compte administrateur et sa session.',
     'bootstrap.password': 'Mot de passe d’amorçage',
+    'bootstrap.email': 'Adresse email de l’administrateur',
+    'bootstrap.accountPassword': 'Mot de passe de l’administrateur',
     'bootstrap.submit': 'Créer l’administrateur',
     'bootstrap.pending': 'Création…',
     'bootstrap.invalid_credentials': 'Le mot de passe d’amorçage est incorrect.',
     'bootstrap.rate_limited': 'Une autre tentative est en cours. Réessayez.',
     'bootstrap.unavailable': 'Un administrateur existe déjà. L’amorçage est désactivé.',
     'bootstrap.error': 'Le serveur ne peut pas terminer l’amorçage.',
-    'bootstrap.success':
-      'Le compte administrateur est créé. Conservez son identifiant de connexion.',
-    'bootstrap.accessIdentifier': 'Identifiant de connexion',
-    'bootstrap.copy': 'Copier l’identifiant de connexion',
-    'bootstrap.copied': 'Identifiant de connexion copié',
+    'bootstrap.success': 'Le compte administrateur est créé.',
     'bootstrap.login': 'Continuer vers la connexion',
     'clipboard.error': 'Le navigateur n’a pas pu copier le texte.',
     'version.title': 'Version déployée',
@@ -1676,7 +1689,7 @@ export const translations = {
       'Le site enregistre la langue choisie dans le stockage local du navigateur sous la clé « froment.software.language », avec la valeur « fr » ou « en ». Ce réglage persiste jusqu’à sa modification ou sa suppression depuis le navigateur. Il ne s’agit ni d’un cookie ni d’une session.',
     'privacy.session.title': 'Espace privé',
     'privacy.session.content':
-      'Après une connexion, le serveur crée un cookie de session et un cookie de protection CSRF. Ils servent uniquement à authentifier le compte et à protéger les opérations. La session expire après 30 minutes d’inactivité et au plus tard après 24 heures.',
+      'Après une connexion, le navigateur conserve temporairement un jeton d’accès en mémoire. Un cookie de renouvellement sécurisé maintient la connexion pendant 30 jours au maximum. Le serveur limite ce cookie aux routes d’authentification.',
     'privacy.external.title': 'E-mail et services externes',
     'privacy.external.content':
       'Les liens de contact ouvrent votre logiciel de messagerie ; aucun message n’est envoyé par le site lui-même. Si vous suivez un lien vers un autre domaine, ce service applique ses propres règles de traitement.',
@@ -1696,7 +1709,7 @@ export const translations = {
     'cookies.updated': 'Mis à jour le 19 août 2026',
     'cookies.summary.title': 'Situation actuelle',
     'cookies.summary.content':
-      'L’application ne crée aucun cookie de mesure d’audience ou de publicité. Les cookies « __Host-froment-session » et « __Host-froment-csrf » protègent l’espace privé.',
+      'L’application ne crée aucun cookie de mesure d’audience ou de publicité. Le cookie « __Secure-froment-refresh » maintient la connexion à l’espace privé.',
     'cookies.what.title': 'Différence entre cookie et stockage local',
     'cookies.what.content':
       'Un cookie peut être envoyé automatiquement au serveur avec une requête. Le stockage local reste dans le navigateur. froment.software utilise le stockage local pour la langue et les cookies uniquement pour l’espace privé.',
@@ -1785,14 +1798,14 @@ export const translations = {
     'backOffice.backToAffairs': 'Back to engagements',
     'backOffice.backToBilling': 'Back to billing',
     'backOffice.backToClients': 'Back to clients',
-    'backOffice.intro': 'Enter your sign-in identifier to access your account.',
-    'backOffice.accessIdentifier': 'Sign-in identifier',
-    'authentication.invalid_credentials': 'Incorrect identifier.',
+    'backOffice.intro': 'Enter your email address and password.',
+    'backOffice.email': 'Email address',
+    'backOffice.password': 'Password',
+    'authentication.invalid_credentials': 'Incorrect email address or password.',
     'authentication.rate_limited': 'Too many attempts failed. Try again later.',
-    'authentication.error': 'The server cannot verify this identifier.',
+    'authentication.error': 'The server cannot verify these credentials.',
     'authentication.required': 'The session has expired. Sign in again.',
     'authentication.permission_denied': 'Your account cannot perform this operation.',
-    'authentication.invalid_csrf': 'Session protection rejected this operation.',
     'backOffice.pending': 'Checking…',
     'backOffice.submit': 'Sign in',
     'backOffice.bootstrap': 'Initialize the first administrator',
@@ -2344,22 +2357,23 @@ export const translations = {
     'client.not_found': 'This client does not exist.',
     'client.archived': 'This client is archived.',
     'client.version_conflict': 'This client changed elsewhere. Reload the page.',
+    'client.email_conflict': 'This email address already belongs to an account.',
+    'backOffice.clientDetail.accessReady': 'The {email} account is ready.',
     'client.error': 'The server cannot complete this operation.',
     'bootstrap.title': 'Create the first administrator',
     'bootstrap.loading': 'Checking availability…',
     'bootstrap.intro':
       'Enter the bootstrap password. This operation creates the administrator account and its session.',
     'bootstrap.password': 'Bootstrap password',
+    'bootstrap.email': 'Administrator email address',
+    'bootstrap.accountPassword': 'Administrator password',
     'bootstrap.submit': 'Create administrator',
     'bootstrap.pending': 'Creating…',
     'bootstrap.invalid_credentials': 'The bootstrap password is incorrect.',
     'bootstrap.rate_limited': 'Another attempt is in progress. Try again.',
     'bootstrap.unavailable': 'An administrator already exists. Bootstrap is disabled.',
     'bootstrap.error': 'The server cannot complete bootstrap.',
-    'bootstrap.success': 'The administrator account is ready. Keep its sign-in identifier.',
-    'bootstrap.accessIdentifier': 'Sign-in identifier',
-    'bootstrap.copy': 'Copy sign-in identifier',
-    'bootstrap.copied': 'Sign-in identifier copied',
+    'bootstrap.success': 'The administrator account is ready.',
     'bootstrap.login': 'Continue to sign in',
     'clipboard.error': 'The browser could not copy the text.',
     'version.title': 'Deployed version',
@@ -2830,7 +2844,7 @@ export const translations = {
       'The site stores the selected language in the browser’s local storage under the key “froment.software.language”, with the value “fr” or “en”. This setting persists until it is changed or cleared in the browser. It is neither a cookie nor a session.',
     'privacy.session.title': 'Private area',
     'privacy.session.content':
-      'After sign-in, the server creates a session cookie and a CSRF protection cookie. They only authenticate the account and protect operations. The session expires after 30 minutes of inactivity and no later than 24 hours.',
+      'After sign-in, the browser temporarily stores an access token in memory. A secure refresh cookie maintains access for up to 30 days. The server restricts this cookie to authentication routes.',
     'privacy.external.title': 'Email and external services',
     'privacy.external.content':
       'Contact links open your email application; the site itself does not send a message. If you follow a link to another domain, that service applies its own data-handling rules.',
@@ -2850,7 +2864,7 @@ export const translations = {
     'cookies.updated': 'Updated 19 August 2026',
     'cookies.summary.title': 'Current behaviour',
     'cookies.summary.content':
-      'The application creates no audience analytics or advertising cookie. The “__Host-froment-session” and “__Host-froment-csrf” cookies protect the private area.',
+      'The application creates no audience analytics or advertising cookie. The “__Secure-froment-refresh” cookie maintains private-area authentication.',
     'cookies.what.title': 'Cookies and local storage are different',
     'cookies.what.content':
       'A cookie may be sent to the server automatically with a request. Local storage remains in the browser. froment.software uses local storage for language and cookies only for the private area.',

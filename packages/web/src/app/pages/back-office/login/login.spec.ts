@@ -6,14 +6,15 @@ import { Authentication } from '@backoffice/authentication';
 import { Login } from './login';
 
 class AuthStub {
-  readonly calls: Array<string> = [];
+  readonly calls: Array<readonly [string, string]> = [];
 
   constructor(private readonly mode: 'client' | 'administrator') {}
 
   authenticate(
-    accessIdentifier: string,
+    email: string,
+    password: string,
   ): Promise<{ success: true; mode: 'client' | 'administrator' }> {
-    this.calls.push(accessIdentifier);
+    this.calls.push([email, password]);
     return Promise.resolve({ success: true, mode: this.mode });
   }
 }
@@ -39,13 +40,15 @@ describe('Login', () => {
     expect(bootstrapLink()?.getAttribute('href')).toBe('/backoffice/bootstrap');
     const navigate = vi.spyOn(router, 'navigateByUrl').mockResolvedValue(true);
 
-    const input = root.querySelector<HTMLInputElement>('input');
-    if (input === null) return;
-    input.value = 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA';
+    const inputs = root.querySelectorAll<HTMLInputElement>('input');
+    const [email, password] = inputs;
+    if (email === undefined || password === undefined) throw new Error('Login fields are missing.');
+    email.value = 'administrator@example.test';
+    password.value = 'administrator-password';
     root.querySelector<HTMLFormElement>('form')?.dispatchEvent(new SubmitEvent('submit'));
     await fixture.whenStable();
 
-    expect(auth.calls).toEqual(['AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA']);
+    expect(auth.calls).toEqual([['administrator@example.test', 'administrator-password']]);
     expect(navigate).toHaveBeenCalledWith('/backoffice/dashboard');
   });
 
@@ -62,9 +65,11 @@ describe('Login', () => {
     const harness = await RouterTestingHarness.create(`/?returnUrl=${encodeURIComponent(target)}`);
     const root: HTMLElement = harness.fixture.nativeElement;
     const navigate = vi.spyOn(router, 'navigateByUrl').mockResolvedValue(true);
-    const input = root.querySelector<HTMLInputElement>('input');
-    if (input === null) throw new Error('The access identifier input is missing.');
-    input.value = 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA';
+    const inputs = root.querySelectorAll<HTMLInputElement>('input');
+    const [email, password] = inputs;
+    if (email === undefined || password === undefined) throw new Error('Login fields are missing.');
+    email.value = 'client@example.test';
+    password.value = 'client-password';
 
     root.querySelector<HTMLFormElement>('form')?.dispatchEvent(new SubmitEvent('submit'));
     await harness.fixture.whenStable();

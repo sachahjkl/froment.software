@@ -2,18 +2,25 @@
   <div class="login-panel">
     <h1 id="back-office-title">{{ i18n.t('backOffice.title') }}</h1>
     <p>{{ i18n.t('backOffice.intro') }}</p>
-    <form (submit)="submit($event, accessIdentifier.value)">
-      <label for="back-office-access-identifier">
-        {{ i18n.t('backOffice.accessIdentifier') }}
-      </label>
+    <form (submit)="submit($event, email.value, password.value)">
+      <label for="back-office-email"> {{ i18n.t('backOffice.email') }} </label>
       <input
-        #accessIdentifier
-        id="back-office-access-identifier"
+        #email
+        id="back-office-email"
         class="input"
-        type="password"
-        autocomplete="off"
+        type="email"
+        autocomplete="username"
         required
         autofocus
+      />
+      <label for="back-office-password">{{ i18n.t('backOffice.password') }}</label>
+      <input
+        #password
+        id="back-office-password"
+        class="input"
+        type="password"
+        autocomplete="current-password"
+        required
       />
       @if (error(); as errorKey) {
       <p class="error" role="alert">{{ i18n.t(errorKey) }}</p>

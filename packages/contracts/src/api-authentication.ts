@@ -3,7 +3,6 @@ import { HttpApiMiddleware, HttpApiSecurity, OpenApi } from 'effect/unstable/htt
 
 import {
   AuthenticationRequired,
-  CsrfRejected,
   PermissionDenied,
   RequestInvalidOrigin,
   RequestRateLimited,
@@ -12,7 +11,7 @@ import {
 import type { Ulid as UlidValue } from './identifiers.js';
 
 export type ApiCredentialsValue =
-  | { readonly kind: 'session'; readonly token: string }
+  | { readonly kind: 'access-token'; readonly token: string }
   | { readonly kind: 'api-token'; readonly token: string };
 
 export class ApiCredentials extends Context.Service<ApiCredentials, ApiCredentialsValue>()(
@@ -22,7 +21,7 @@ export class ApiCredentials extends Context.Service<ApiCredentials, ApiCredentia
 export type ApiPrincipalValue =
   | {
       readonly userId: UlidValue;
-      readonly credential: { readonly kind: 'session'; readonly token: string };
+      readonly credential: { readonly kind: 'access-token'; readonly sessionId: UlidValue };
     }
   | {
       readonly userId: UlidValue;
@@ -35,11 +34,6 @@ export type ApiPrincipalValue =
 export class ApiPrincipal extends Context.Service<ApiPrincipal, ApiPrincipalValue>()(
   '@froment/contracts/ApiPrincipal',
 ) {}
-
-const sessionCookie = HttpApiSecurity.apiKey({
-  key: '__Host-froment-session',
-  in: 'cookie',
-});
 
 const bearer = HttpApiSecurity.bearer.pipe(
   HttpApiSecurity.annotateMerge(
@@ -54,7 +48,7 @@ export class ApiAuthentication extends HttpApiMiddleware.Service<
   { provides: ApiCredentials }
 >()('@froment/contracts/ApiAuthentication', {
   requiredForClient: false,
-  security: { sessionCookie, bearer },
+  security: { bearer },
   error: AuthenticationRequired,
 }) {}
 
@@ -72,11 +66,5 @@ export class ApiAuthorization extends HttpApiMiddleware.Service<
   ApiAuthorization,
   { requires: ApiCredentials; provides: ApiPrincipal }
 >()('@froment/contracts/ApiAuthorization', {
-  error: [
-    AuthenticationRequired,
-    PermissionDenied,
-    CsrfRejected,
-    RequestInvalidOrigin,
-    RequestRateLimited,
-  ],
+  error: [AuthenticationRequired, PermissionDenied, RequestInvalidOrigin, RequestRateLimited],
 }) {}

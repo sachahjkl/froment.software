@@ -12,6 +12,7 @@ import {
   FormField,
   form,
   maxLength,
+  minLength,
   pattern,
   required,
   submit,
@@ -33,12 +34,10 @@ import { QuotesApi } from '@backoffice/quotes-api';
 import { I18nService, type TranslationKey } from '@app/i18n.service';
 import { Badge } from '@shared/badge/badge';
 import { Button } from '@shared/button/button';
-import { CopyField } from '@shared/copy-field/copy-field';
 import { DataTable } from '@shared/data-table/data-table';
 import { Notice } from '@shared/notice/notice';
 import { Tabs, type TabItem } from '@shared/tabs/tabs';
 import { TabLayout, TabPanel } from '@shared/tabs/tab-panel';
-import { TextCopy } from '@shared/text-copy';
 
 interface ClientDocument {
   readonly id: string;
@@ -66,7 +65,6 @@ const emptyClient = () => ({
   imports: [
     Badge,
     Button,
-    CopyField,
     DataTable,
     FormField,
     Notice,
@@ -86,7 +84,6 @@ export class ClientDetail {
   private readonly quotesApi = inject(QuotesApi);
   private readonly ordersApi = inject(OrdersApi);
   private readonly invoicesApi = inject(InvoicesApi);
-  private readonly textCopy = inject(TextCopy);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly model = signal(emptyClient());
@@ -145,8 +142,15 @@ export class ClientDetail {
     ].sort((left, right) => right.updatedAt.localeCompare(left.updatedAt));
   });
   protected readonly accessPending = signal(false);
-  protected readonly accessIdentifier = signal<string | undefined>(undefined);
-  protected readonly copied = signal(false);
+  private readonly accessModel = signal({ email: '', password: '' });
+  protected readonly accessForm = form(this.accessModel, (path) => {
+    required(path.email);
+    pattern(path.email, /^[^\s@]+@[^\s@]+\.[^\s@]+$/);
+    required(path.password);
+    minLength(path.password, 12);
+    maxLength(path.password, 256);
+  });
+  protected readonly accountEmail = signal<string | undefined>(undefined);
   protected readonly clientForm = form(this.model, (path) => {
     required(path.displayName);
     pattern(path.displayName, /\S/);
@@ -202,19 +206,23 @@ export class ClientDetail {
     }).format(cents / 100);
   }
 
-  protected async createAccess(): Promise<void> {
+  protected createAccess(event: SubmitEvent): void {
+    event.preventDefault();
     const client = this.client();
     if (!client) return;
-    this.accessPending.set(true);
-    this.error.set(undefined);
-    const outcome = await this.api.createAccess(client.id);
-    this.accessPending.set(false);
-    if (!outcome.success) {
-      this.setError(outcome.code);
-      return;
-    }
-    this.accessIdentifier.set(outcome.result.accessIdentifier);
-    this.copied.set(false);
+    void submit(this.accessForm, async () => {
+      this.accessPending.set(true);
+      this.error.set(undefined);
+      const outcome = await this.api.createAccess(client.id, this.accessModel());
+      this.accessPending.set(false);
+      if (!outcome.success) {
+        this.setError(outcome.code);
+        return;
+      }
+      this.accountEmail.set(outcome.result.email);
+      this.accessModel.update((model) => ({ ...model, password: '' }));
+      this.accessForm.password().reset();
+    });
   }
 
   protected async reactivate(): Promise<void> {
@@ -227,11 +235,6 @@ export class ClientDetail {
     if (!outcome.success) return this.setError(outcome.code);
     this.applyClient(outcome.result);
     void this.router.navigate(['access'], { relativeTo: this.route });
-  }
-
-  protected async copyAccess(): Promise<void> {
-    const value = this.accessIdentifier();
-    if (value && (await this.textCopy.copy(value))) this.copied.set(true);
   }
 
   protected save(event: SubmitEvent): void {

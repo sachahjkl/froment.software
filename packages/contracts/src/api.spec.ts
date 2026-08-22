@@ -37,12 +37,9 @@ describe('API contracts', () => {
     expect(specification.paths['/api/health']?.get?.tags).toEqual(['status']);
     expect(specification.components.securitySchemes).toMatchObject({
       bearer: { type: 'http', scheme: 'Bearer' },
-      sessionCookie: { type: 'apiKey', in: 'cookie', name: '__Host-froment-session' },
     });
-    expect(specification.paths['/api/clients']?.get?.security).toEqual([
-      { sessionCookie: [] },
-      { bearer: [] },
-    ]);
+    expect(specification.components.securitySchemes).not.toHaveProperty('sessionCookie');
+    expect(specification.paths['/api/clients']?.get?.security).toEqual([{ bearer: [] }]);
     expect(specification.paths['/api/quotes/{quoteId}/cancel']?.post).toMatchObject({
       'x-required-permissions': ['quote.delete'],
     });

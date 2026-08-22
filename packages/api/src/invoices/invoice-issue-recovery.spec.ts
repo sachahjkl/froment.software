@@ -6,23 +6,23 @@ import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { TestClock } from 'effect/testing';
 
-import { AuditLive } from '../src/audit/audit.js';
-import { BusinessConfig } from '../src/business/business-config.js';
-import { ClientPortal, ClientPortalLive } from '../src/client-portal/client-portal.js';
-import { Database, type DatabaseService } from '../src/database/database.js';
-import { makeMigratedDatabaseLayer } from './database-layer.js';
-import { DocumentArtifacts, DocumentArtifactsLive } from '../src/documents/document-artifacts.js';
+import { AuditLive } from '../audit/audit.js';
+import { BusinessConfig } from '../business/business-config.js';
+import { ClientPortal, ClientPortalLive } from '../client-portal/client-portal.js';
+import { Database, type DatabaseService } from '../database/database.js';
+import { makeMigratedDatabaseLayer } from '../database/database.spec-helper.js';
+import { DocumentArtifacts, DocumentArtifactsLive } from '../documents/document-artifacts.js';
 import {
   DocumentRenderer,
   DocumentRenderError,
   type DocumentRendererService,
-} from '../src/documents/document-renderer.js';
-import { IssuerSettings, type IssuerSettingsService } from '../src/issuer-settings/service.js';
-import { InvoicePdfJobs, InvoicePdfJobsLive } from '../src/invoices/pdf-jobs.js';
-import { Invoices, InvoicesLive } from '../src/invoices/invoices.js';
-import { OrdersLive } from '../src/orders/orders.js';
-import { Quotes, type QuotesService } from '../src/quotes/quotes.js';
-import { issueInvoice } from '../src/invoices/issue.js';
+} from '../documents/document-renderer.js';
+import { IssuerSettings, type IssuerSettingsService } from '../issuer-settings/service.js';
+import { OrdersLive } from '../orders/orders.js';
+import { Quotes, type QuotesService } from '../quotes/quotes.js';
+import { issueInvoice } from './issue.js';
+import { InvoicePdfJobs, InvoicePdfJobsLive } from './pdf-jobs.js';
+import { Invoices, InvoicesLive } from './invoices.js';
 
 const actorId = '01ARZ3NDEKTSV4RRFFQ69G5FAV';
 const invoiceId = '01ARZ3NDEKTSV4RRFFQ69G5FAW';
@@ -109,7 +109,7 @@ const quotes: QuotesService = {
 const makeTestLayer = (filename: string, renderer: DocumentRendererService) => {
   const databaseLayer = makeMigratedDatabaseLayer({
     filename,
-    migrationsFolder: join(import.meta.dirname, '..', 'drizzle'),
+    migrationsFolder: join(import.meta.dirname, '../..', 'drizzle'),
   });
   const coreLayer = Layer.mergeAll(
     InvoicesLive,

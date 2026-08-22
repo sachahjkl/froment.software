@@ -5,7 +5,6 @@ import { ApiRequestBody } from '../api-authentication.js';
 import { RevisionVersionParameter } from '../api-common.js';
 import {
   AuthenticationRequired,
-  CsrfRejected,
   PermissionDenied,
   RequestRateLimited,
 } from '../authentication/contracts.js';
@@ -42,7 +41,6 @@ const invoiceReadErrors = [
 ];
 const invoiceWriteErrors = [
   ...invoiceReadErrors,
-  CsrfRejected.pipe(HttpApiSchema.status(403)),
   RequestRateLimited.pipe(HttpApiSchema.status(429)),
 ];
 const InvoiceCreatePayload = Schema.Struct({

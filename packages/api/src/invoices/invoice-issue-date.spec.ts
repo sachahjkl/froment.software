@@ -1,7 +1,7 @@
 import { DateTime } from 'effect';
 import { describe, expect, it } from 'vitest';
 
-import { invoiceIssueDate } from '../src/invoices/invoices.js';
+import { invoiceIssueDate } from './invoices.js';
 
 const paris = DateTime.zoneMakeNamedUnsafe('Europe/Paris');
 

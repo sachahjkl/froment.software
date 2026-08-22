@@ -13,10 +13,15 @@ describe('client contracts', () => {
     country: '',
     email: '',
   };
-  it('accepts a login identifier without an account mode', () => {
-    const accessIdentifier = 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA';
-    expect(Schema.decodeUnknownSync(LoginRequest)({ accessIdentifier })).toEqual({
-      accessIdentifier,
+  it('accepts email and password without an account mode', () => {
+    expect(
+      Schema.decodeUnknownSync(LoginRequest)({
+        email: 'client@example.test',
+        password: 'correct horse battery staple',
+      }),
+    ).toEqual({
+      email: 'client@example.test',
+      password: 'correct horse battery staple',
     });
   });
 

@@ -16,9 +16,11 @@ const authenticationConfigLayer = Layer.succeed(
       salt: Buffer.alloc(16),
       hash: Buffer.alloc(64),
     },
-    accessHmacKey: Buffer.alloc(32, 1),
+    pasetoSecretKey:
+      'k4.secret.NXrAOzhnhDuDrGPrMHzfIwwJi88ZgKI4L4x6DaXjp2ycuz4ubSc_ZLzoQlOEnp-gDMpdjFgTwp0mHG8LP2QuFA',
+    pasetoPublicKey: 'k4.public.nLs-Lm0nP2S86EJThJ6foAzKXYxYE8KdJhxvCz9kLhQ',
     apiTokenHmacKey: Buffer.alloc(32, 4),
-    sessionHmacKey: Buffer.alloc(32, 2),
+    refreshHmacKey: Buffer.alloc(32, 2),
     quoteLinkHmacKey: Buffer.alloc(32, 3),
     publicOrigin: 'https://example.test',
   }),

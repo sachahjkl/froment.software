@@ -69,14 +69,7 @@ const applyApiDocumentation = (
   });
   const components = specification.components ?? { schemas: {}, securitySchemes: {} };
   const securitySchemes = { ...components.securitySchemes };
-  const sessionCookie = securitySchemes['sessionCookie'];
   const bearer = securitySchemes['bearer'];
-  if (sessionCookie !== undefined) {
-    securitySchemes['sessionCookie'] = {
-      ...sessionCookie,
-      description: documentation.security.sessionCookie,
-    };
-  }
   if (bearer !== undefined) {
     securitySchemes['bearer'] = { ...bearer, description: documentation.security.bearer };
   }

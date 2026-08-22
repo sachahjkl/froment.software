@@ -69,12 +69,12 @@ export const ClientHandlers = HttpApiBuilder.group(Api, 'clients', (handlers) =>
       )
       .handle(
         'clientAccessCreate',
-        Effect.fn('clientAccessCreate')(function* ({ params }) {
+        Effect.fn('clientAccessCreate')(function* ({ params, payload }) {
           yield* setPrivateResponseHeaders;
           const principal = yield* ApiPrincipal;
           const clients = yield* Clients;
           return yield* clients
-            .createAccess(params.clientId, principal.userId)
+            .createAccess(params.clientId, payload, principal.userId)
             .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
         }),
       ),

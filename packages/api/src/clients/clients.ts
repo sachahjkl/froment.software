@@ -1,9 +1,11 @@
 import {
   ClientArchived,
+  ClientEmailConflict,
   ClientNotFound,
   ClientVersionConflict,
   Ulid,
   type ClientAccessValue,
+  type ClientAccessRequestValue,
   type ClientCreateRequestValue,
   type ClientListValue,
   type ClientSummaryValue,
@@ -11,10 +13,9 @@ import {
   type UlidValue,
 } from '@froment/contracts';
 import { Clock, Context, Effect, Layer, Schema } from 'effect';
-import { randomBytes } from 'node:crypto';
 import { ulid } from 'ulid';
 
-import { AuthenticationConfig, hmac } from '../authentication/authentication-config.js';
+import { Passwords } from '../authentication/password.js';
 import { Audit } from '../audit/audit.js';
 import { Database, DatabaseError } from '../database/database.js';
 
@@ -71,8 +72,12 @@ export interface ClientsService {
   >;
   readonly createAccess: (
     clientId: UlidValue,
+    request: ClientAccessRequestValue,
     actorUserId: UlidValue,
-  ) => Effect.Effect<ClientAccessValue, ClientNotFound | ClientArchived | DatabaseError>;
+  ) => Effect.Effect<
+    ClientAccessValue,
+    ClientNotFound | ClientArchived | ClientEmailConflict | DatabaseError
+  >;
 }
 
 export class Clients extends Context.Service<Clients, ClientsService>()('@froment/api/Clients') {}
@@ -81,8 +86,8 @@ export const ClientsLive = Layer.effect(
   Clients,
   Effect.gen(function* () {
     const database = yield* Database;
-    const config = yield* AuthenticationConfig;
     const audit = yield* Audit;
+    const passwords = yield* Passwords;
 
     const list = Effect.try({
       try: () => {
@@ -322,12 +327,7 @@ export const ClientsLive = Layer.effect(
                 .run(updatedAt, updatedAt, clientId);
               database.sqlite
                 .prepare(
-                  'update access_credentials set revoked_at = coalesce(revoked_at, ?) where user_id = ?',
-                )
-                .run(now, clientId);
-              database.sqlite
-                .prepare(
-                  'update sessions set revoked_at = coalesce(revoked_at, ?) where user_id = ?',
+                  'update refresh_sessions set revoked_at = coalesce(revoked_at, ?) where user_id = ?',
                 )
                 .run(now, clientId);
               database.sqlite
@@ -411,10 +411,11 @@ export const ClientsLive = Layer.effect(
 
     const createAccess = Effect.fn('Clients.createAccess')(function* (
       clientId: UlidValue,
+      request: ClientAccessRequestValue,
       actorUserId: UlidValue,
     ) {
-      const accessIdentifier = randomBytes(32).toString('base64url');
-      const credentialId = ulid();
+      const email = request.email.trim().toLowerCase();
+      const passwordHash = yield* passwords.hash(request.password).pipe(Effect.orDie);
       const now = yield* Clock.currentTimeMillis;
       yield* Effect.try({
         try: () =>
@@ -436,37 +437,52 @@ export const ClientsLive = Layer.effect(
               if (client.disabledAt !== null) {
                 throw new ClientArchived({ code: 'client.archived' });
               }
+              const existingEmail = database.sqlite
+                .prepare('select user_id from password_credentials where email = ?')
+                .pluck()
+                .get(email);
+              if (existingEmail !== undefined && existingEmail !== clientId) {
+                throw new ClientEmailConflict({ code: 'client.email_conflict' });
+              }
               database.sqlite
                 .prepare(
-                  'update access_credentials set revoked_at = ? where user_id = ? and revoked_at is null',
+                  'update refresh_sessions set revoked_at = ? where user_id = ? and revoked_at is null',
                 )
                 .run(now, clientId);
               database.sqlite
                 .prepare(
-                  'update sessions set revoked_at = ? where user_id = ? and revoked_at is null',
+                  `insert into password_credentials
+                     (user_id, email, password_hash, created_at, updated_at, password_changed_at)
+                   values (?, ?, ?, ?, ?, ?)
+                   on conflict(user_id) do update set
+                     email = excluded.email,
+                     password_hash = excluded.password_hash,
+                     updated_at = excluded.updated_at,
+                     password_changed_at = excluded.password_changed_at`,
                 )
-                .run(now, clientId);
-              database.sqlite
-                .prepare(
-                  'insert into access_credentials (id, user_id, secret_hmac, created_at) values (?, ?, ?, ?)',
-                )
-                .run(credentialId, clientId, hmac(config.accessHmacKey, accessIdentifier), now);
+                .run(clientId, email, passwordHash, now, now, now);
               audit.insert({
                 action: 'client.access-created',
                 actorUserId,
                 resourceType: 'client',
                 resourceId: clientId,
-                metadata: { credentialId },
+                metadata: {},
                 occurredAt: now,
               });
             })
             .immediate(),
         catch: (cause) => {
-          if (cause instanceof ClientNotFound || cause instanceof ClientArchived) return cause;
+          if (
+            cause instanceof ClientNotFound ||
+            cause instanceof ClientArchived ||
+            cause instanceof ClientEmailConflict
+          ) {
+            return cause;
+          }
           return new DatabaseError({ operation: 'create client access', cause });
         },
       });
-      return { clientId, accessIdentifier };
+      return { clientId, email };
     });
 
     return Clients.of({ list, get, create, update, archive, reactivate, createAccess });

@@ -4,16 +4,24 @@ import { describe, expect, it } from 'vitest';
 import { BootstrapFailure, BootstrapResult } from './contracts.js';
 
 describe('bootstrap contracts', () => {
-  it('validates the sign-in identifier', () => {
+  it('validates the issued access token', () => {
     expect(
       Schema.decodeUnknownSync(BootstrapResult)({
-        accessIdentifier: 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA',
+        accessToken: 'v4.public.token',
+        expiresAt: 600_000,
+        mode: 'administrator',
       }),
     ).toEqual({
-      accessIdentifier: 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA',
+      accessToken: 'v4.public.token',
+      expiresAt: 600_000,
+      mode: 'administrator',
     });
     expect(() =>
-      Schema.decodeUnknownSync(BootstrapResult)({ accessIdentifier: 'invalid' }),
+      Schema.decodeUnknownSync(BootstrapResult)({
+        accessToken: 'invalid',
+        expiresAt: 600_000,
+        mode: 'administrator',
+      }),
     ).toThrow();
   });
 

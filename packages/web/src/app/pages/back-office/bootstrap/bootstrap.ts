@@ -4,14 +4,12 @@ import { RouterLink } from '@angular/router';
 import { BootstrapApi } from '@backoffice/bootstrap-api';
 import { I18nService, TranslationKey } from '@app/i18n.service';
 import { Button } from '@shared/button/button';
-import { CopyField } from '@shared/copy-field/copy-field';
-import { TextCopy } from '@shared/text-copy';
 
 type PageState = 'loading' | 'available' | 'unavailable' | 'error';
 
 @Component({
   selector: 'app-bootstrap',
-  imports: [Button, CopyField, FormField, RouterLink],
+  imports: [Button, FormField, RouterLink],
   templateUrl: './bootstrap.html',
   styleUrl: './bootstrap.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -19,14 +17,16 @@ type PageState = 'loading' | 'available' | 'unavailable' | 'error';
 export class Bootstrap {
   protected readonly i18n = inject(I18nService);
   private readonly api = inject(BootstrapApi);
-  private readonly textCopy = inject(TextCopy);
-  private readonly model = signal({ password: '' });
-  protected readonly bootstrapForm = form(this.model, (path) => required(path.password));
+  private readonly model = signal({ bootstrapPassword: '', email: '', password: '' });
+  protected readonly bootstrapForm = form(this.model, (path) => {
+    required(path.bootstrapPassword);
+    required(path.email);
+    required(path.password);
+  });
   protected readonly state = signal<PageState>('loading');
   protected readonly pending = signal(false);
   protected readonly error = signal<TranslationKey | undefined>(undefined);
-  protected readonly accessIdentifier = signal<string | undefined>(undefined);
-  protected readonly copied = signal(false);
+  protected readonly created = signal(false);
 
   constructor() {
     afterNextRender(() => void this.load());
@@ -38,9 +38,9 @@ export class Bootstrap {
       this.pending.set(true);
       this.error.set(undefined);
       try {
-        const outcome = await this.api.create(this.model().password);
+        const outcome = await this.api.create(this.model());
         if (outcome.success) {
-          this.accessIdentifier.set(outcome.result.accessIdentifier);
+          this.created.set(true);
           this.state.set('unavailable');
           return;
         }
@@ -54,19 +54,6 @@ export class Bootstrap {
         this.pending.set(false);
       }
     });
-  }
-
-  protected async copyIdentifier(value: string): Promise<void> {
-    if (await this.textCopy.copy(value)) {
-      this.copied.set(true);
-      return;
-    }
-    this.error.set('clipboard.error');
-  }
-
-  protected copyLabel(): TranslationKey {
-    if (this.copied()) return 'bootstrap.copied';
-    return 'bootstrap.copy';
   }
 
   protected submitLabel(): TranslationKey {

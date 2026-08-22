@@ -11,11 +11,7 @@ import {
 } from '@angular/core';
 import { FormField, form, maxLength, pattern, required, submit } from '@angular/forms/signals';
 import { RouterLink, RouterOutlet } from '@angular/router';
-import {
-  type ClientAccessValue,
-  type ClientSummaryValue,
-  type UlidValue,
-} from '@froment/contracts';
+import { type ClientSummaryValue, type UlidValue } from '@froment/contracts';
 
 import { ClientsApi, type ClientErrorCode } from '@backoffice/clients-api';
 import { I18nService, TranslationKey } from '@app/i18n.service';
@@ -24,15 +20,11 @@ import { BackOfficeNav } from '@shared/back-office-nav/back-office-nav';
 import { DataTable } from '@shared/data-table/data-table';
 import { Badge } from '@shared/badge/badge';
 import { Notice } from '@shared/notice/notice';
-import { TextCopy } from '@shared/text-copy';
 import { Tabs, type TabItem } from '@shared/tabs/tabs';
 import { TabLayout, TabPanel } from '@shared/tabs/tab-panel';
 
 type PageState = 'loading' | 'ready' | 'error';
 type ClientTab = 'active' | 'archived' | 'all';
-interface AccessResult extends ClientAccessValue {
-  readonly displayName: string;
-}
 
 @Component({
   selector: 'app-clients',
@@ -56,7 +48,6 @@ interface AccessResult extends ClientAccessValue {
 export class Clients {
   protected readonly i18n = inject(I18nService);
   private readonly api = inject(ClientsApi);
-  private readonly textCopy = inject(TextCopy);
   private readonly createModel = signal({
     displayName: '',
     addressLine1: '',
@@ -101,8 +92,6 @@ export class Clients {
     () => this.createForm.displayName().touched() && this.createForm.displayName().invalid(),
   );
   protected readonly pendingClientId = signal<UlidValue | undefined>(undefined);
-  protected readonly access = signal<AccessResult | undefined>(undefined);
-  protected readonly copied = signal(false);
   private readonly createButton = viewChild.required('createButton', { read: ElementRef });
   private readonly createDialog = viewChild.required<ElementRef<HTMLDialogElement>>('createDialog');
   private createWasOpen = false;
@@ -184,28 +173,6 @@ export class Clients {
         return current;
       }),
     );
-  }
-
-  protected async createAccess(client: ClientSummaryValue): Promise<void> {
-    this.pendingClientId.set(client.id);
-    this.error.set(undefined);
-    this.access.set(undefined);
-    this.copied.set(false);
-    const outcome = await this.api.createAccess(client.id);
-    this.pendingClientId.set(undefined);
-    if (!outcome.success) {
-      this.setError(outcome.code);
-      return;
-    }
-    this.access.set({ ...outcome.result, displayName: client.displayName });
-  }
-
-  protected async copyAccess(accessIdentifier: string): Promise<void> {
-    if (await this.textCopy.copy(accessIdentifier)) {
-      this.copied.set(true);
-      return;
-    }
-    this.error.set('clipboard.error');
   }
 
   private async load(): Promise<void> {

@@ -3,17 +3,17 @@ import { HttpClient } from '@angular/common/http';
 import { inject, Injectable, PLATFORM_ID } from '@angular/core';
 import { type CanActivateFn, Router } from '@angular/router';
 import {
-  AccessIdentifier,
   AuthenticationFailure,
+  AccessToken,
   type AuthenticationFailureValue,
   type LoginModeValue,
-  SessionStatus,
-  type AccessIdentifierValue,
+  LoginRequest,
 } from '@froment/contracts';
 import { Schema } from 'effect';
 import { firstValueFrom } from 'rxjs';
 
 import { decodeApiFailure, type ApiFailure } from '@shared/api-outcome';
+import { AccessTokenStore } from './access-token-store';
 
 export type AuthenticationOutcome =
   | { readonly success: true; readonly mode: LoginModeValue }
@@ -23,35 +23,31 @@ export type AuthenticationOutcome =
 export class Authentication {
   private readonly http = inject(HttpClient);
   private readonly isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
+  private readonly tokens = inject(AccessTokenStore);
 
   async sessionMode(): Promise<LoginModeValue | undefined> {
     if (!this.isBrowser) return undefined;
     try {
-      const response = await firstValueFrom(this.http.get<unknown>('/api/auth/session'));
-      const session = Schema.decodeUnknownSync(SessionStatus)(response);
-      if (!session.authenticated) return undefined;
-      return session.mode;
+      return this.tokens.mode() ?? (await this.tokens.refresh());
     } catch {
       return undefined;
     }
   }
 
-  async authenticate(accessIdentifier: string): Promise<AuthenticationOutcome> {
+  async authenticate(email: string, password: string): Promise<AuthenticationOutcome> {
     if (!this.isBrowser) return { success: false, code: 'authentication.error' };
-    let parsedIdentifier: AccessIdentifierValue;
+    let request: typeof LoginRequest.Type;
     try {
-      parsedIdentifier = Schema.decodeUnknownSync(AccessIdentifier)(accessIdentifier);
+      request = Schema.decodeUnknownSync(LoginRequest)({ email, password });
     } catch {
       return { success: false, code: 'authentication.invalid_credentials' };
     }
 
     try {
-      const response = await firstValueFrom(
-        this.http.post<unknown>('/api/auth/login', { accessIdentifier: parsedIdentifier }),
-      );
-      const session = Schema.decodeUnknownSync(SessionStatus)(response);
-      if (session.authenticated) return { success: true, mode: session.mode };
-      return { success: false, code: 'authentication.error' };
+      const response = await firstValueFrom(this.http.post<unknown>('/api/auth/login', request));
+      const session = Schema.decodeUnknownSync(AccessToken)(response);
+      this.tokens.set(session);
+      return { success: true, mode: session.mode };
     } catch (error) {
       return decodeApiFailure({ cause: error }, AuthenticationFailure, 'authentication.error');
     }
@@ -60,9 +56,11 @@ export class Authentication {
   async signOut(): Promise<boolean> {
     if (!this.isBrowser) return false;
     try {
-      const response = await firstValueFrom(this.http.post<unknown>('/api/auth/logout', undefined));
-      return !Schema.decodeUnknownSync(SessionStatus)(response).authenticated;
+      await firstValueFrom(this.http.post<void>('/api/auth/logout', undefined));
+      this.tokens.clear();
+      return true;
     } catch {
+      this.tokens.clear();
       return false;
     }
   }

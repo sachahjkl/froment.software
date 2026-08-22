@@ -3,7 +3,6 @@ import { HttpApiEndpoint, HttpApiGroup, HttpApiSchema } from 'effect/unstable/ht
 
 import {
   AuthenticationRequired,
-  CsrfRejected,
   PermissionDenied,
   RequestRateLimited,
 } from '../authentication/contracts.js';
@@ -40,7 +39,6 @@ export class OrdersApi extends HttpApiGroup.make('orders', { topLevel: true }).a
     error: [
       AuthenticationRequired.pipe(HttpApiSchema.status(401)),
       PermissionDenied.pipe(HttpApiSchema.status(403)),
-      CsrfRejected.pipe(HttpApiSchema.status(403)),
       RequestRateLimited.pipe(HttpApiSchema.status(429)),
       OrderNotFound.pipe(HttpApiSchema.status(404)),
       QuotePreviewUnavailable.pipe(HttpApiSchema.status(409)),

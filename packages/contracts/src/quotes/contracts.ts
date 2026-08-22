@@ -2,7 +2,6 @@ import { Option, Schema } from 'effect';
 
 import {
   AuthenticationRequired,
-  CsrfRejected,
   PermissionDenied,
   RequestRateLimited,
 } from '../authentication/contracts.js';
@@ -260,7 +259,6 @@ export class QuoteLinkNotSignable extends Schema.TaggedError<QuoteLinkNotSignabl
 export const QuoteFailure = Schema.Union([
   AuthenticationRequired,
   PermissionDenied,
-  CsrfRejected,
   QuoteNotFound,
   QuoteVersionConflict,
   QuoteAmountTooLarge,

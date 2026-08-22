@@ -1,21 +1,36 @@
 import { Schema } from 'effect';
+import { Ulid } from '../identifiers.js';
 
-export const AccessIdentifier = Schema.String.check(Schema.isPattern(/^[A-Za-z0-9_-]{43}$/));
-export type AccessIdentifier = typeof AccessIdentifier.Type;
+export const AccountEmail = Schema.String.check(
+  Schema.isMaxLength(254),
+  Schema.isPattern(/^[^\s@]+@[^\s@]+\.[^\s@]+$/),
+);
+export type AccountEmail = typeof AccountEmail.Type;
+
+export const AccountPassword = Schema.String.check(Schema.isMinLength(12), Schema.isMaxLength(256));
+export type AccountPassword = typeof AccountPassword.Type;
 
 export const LoginMode = Schema.Literals(['client', 'administrator']);
 export type LoginMode = typeof LoginMode.Type;
 
 export const LoginRequest = Schema.Struct({
-  accessIdentifier: AccessIdentifier,
+  email: AccountEmail,
+  password: AccountPassword,
 });
 export type LoginRequest = typeof LoginRequest.Type;
 
-export const SessionStatus = Schema.Union([
-  Schema.Struct({ authenticated: Schema.Literal(true), mode: LoginMode }),
-  Schema.Struct({ authenticated: Schema.Literal(false), mode: Schema.Null }),
-]);
-export type SessionStatus = typeof SessionStatus.Type;
+export const AccessToken = Schema.Struct({
+  accessToken: Schema.String.check(Schema.isPattern(/^v4\.public\./)),
+  expiresAt: Schema.Int,
+  mode: LoginMode,
+});
+export type AccessToken = typeof AccessToken.Type;
+
+export const CurrentAccount = Schema.Struct({
+  userId: Ulid,
+  mode: LoginMode,
+});
+export type CurrentAccount = typeof CurrentAccount.Type;
 
 export class AuthenticationRejected extends Schema.TaggedError<AuthenticationRejected>()(
   'AuthenticationRejected',
@@ -62,12 +77,6 @@ export class AuthenticationRequired extends Schema.TaggedError<AuthenticationReq
 export class PermissionDenied extends Schema.TaggedError<PermissionDenied>()(
   'PermissionDenied',
   { code: Schema.Literal('authentication.permission_denied') },
-  { httpApiStatus: 403 },
-) {}
-
-export class CsrfRejected extends Schema.TaggedError<CsrfRejected>()(
-  'CsrfRejected',
-  { code: Schema.Literal('authentication.invalid_csrf') },
   { httpApiStatus: 403 },
 ) {}
 

@@ -150,23 +150,6 @@
   </dialog>
   @if (error(); as errorKey) {
   <p appNotice variant="danger" role="alert">{{ i18n.t(errorKey) }}</p>
-  } @if (access(); as createdAccess) {
-  <section class="access-result" aria-labelledby="access-title">
-    <p id="access-title" class="access-title">
-      <strong
-        >{{ i18n.tf('backOffice.clients.accessReady', { client: createdAccess.displayName })
-        }}</strong
-      >
-    </p>
-    <p>{{ i18n.t('backOffice.clients.accessWarning') }}</p>
-    <div>
-      <code>{{ createdAccess.accessIdentifier }}</code>
-      <button appButton type="button" (click)="copyAccess(createdAccess.accessIdentifier)">
-        @if (copied()) { {{ i18n.t('backOffice.clients.copied') }} } @else { {{
-        i18n.t('backOffice.clients.copy') }} }
-      </button>
-    </div>
-  </section>
   }
   <app-tabs [label]="i18n.t('backOffice.clients.tabs')" [tabs]="tabs()" />
   <router-outlet />
@@ -212,14 +195,6 @@
                     {{ i18n.t('backOffice.clients.open') }}
                   </a>
                   @if (!client.archived) {
-                  <button
-                    appButton
-                    type="button"
-                    [disabled]="pendingClientId() !== undefined"
-                    (click)="createAccess(client)"
-                  >
-                    {{ i18n.t('backOffice.clients.createAccess') }}
-                  </button>
                   <button
                     appButton
                     variant="danger"

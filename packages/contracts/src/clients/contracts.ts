@@ -1,9 +1,9 @@
 import { Schema } from 'effect';
 
 import {
-  AccessIdentifier,
+  AccountEmail,
+  AccountPassword,
   AuthenticationRequired,
-  CsrfRejected,
   PermissionDenied,
   RequestRateLimited,
 } from '../authentication/contracts.js';
@@ -48,9 +48,15 @@ export type ClientUpdateRequest = typeof ClientUpdateRequest.Type;
 
 export const ClientAccess = Schema.Struct({
   clientId: Ulid,
-  accessIdentifier: AccessIdentifier,
+  email: AccountEmail,
 });
 export type ClientAccess = typeof ClientAccess.Type;
+
+export const ClientAccessRequest = Schema.Struct({
+  email: AccountEmail,
+  password: AccountPassword,
+});
+export type ClientAccessRequest = typeof ClientAccessRequest.Type;
 
 export class ClientNotFound extends Schema.TaggedError<ClientNotFound>()(
   'ClientNotFound',
@@ -70,13 +76,19 @@ export class ClientVersionConflict extends Schema.TaggedError<ClientVersionConfl
   { httpApiStatus: 409 },
 ) {}
 
+export class ClientEmailConflict extends Schema.TaggedError<ClientEmailConflict>()(
+  'ClientEmailConflict',
+  { code: Schema.Literal('client.email_conflict') },
+  { httpApiStatus: 409 },
+) {}
+
 export const ClientFailure = Schema.Union([
   AuthenticationRequired,
   PermissionDenied,
-  CsrfRejected,
   ClientNotFound,
   ClientArchived,
   ClientVersionConflict,
+  ClientEmailConflict,
   RequestRateLimited,
 ]);
 export type ClientFailure = typeof ClientFailure.Type;

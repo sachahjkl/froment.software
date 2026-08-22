@@ -5,15 +5,16 @@ import { DateTime, Effect, Layer } from 'effect';
 import { TestClock } from 'effect/testing';
 import { describe, expect, it } from 'vitest';
 
-import { AuditLive } from '../src/audit/audit.js';
-import { BusinessConfig } from '../src/business/business-config.js';
-import { AuthenticationConfig, hmac } from '../src/authentication/authentication-config.js';
-import { Clients, ClientsLive } from '../src/clients/clients.js';
-import { Database } from '../src/database/database.js';
-import { makeMigratedDatabaseLayer } from './database-layer.js';
-import { IssuerSettingsLive } from '../src/issuer-settings/service.js';
-import { QuoteLinks, QuoteLinksLive } from '../src/quote-links/service.js';
-import { Quotes, QuotesLive } from '../src/quotes/quotes.js';
+import { AuditLive } from '../audit/audit.js';
+import { BusinessConfig } from '../business/business-config.js';
+import { AuthenticationConfig, hmac } from '../authentication/authentication-config.js';
+import { PasswordsLive } from '../authentication/password.js';
+import { Clients, ClientsLive } from '../clients/clients.js';
+import { Database } from '../database/database.js';
+import { makeMigratedDatabaseLayer } from '../database/database.spec-helper.js';
+import { IssuerSettingsLive } from '../issuer-settings/service.js';
+import { QuoteLinks, QuoteLinksLive } from '../quote-links/service.js';
+import { Quotes, QuotesLive } from './quotes.js';
 
 const actorId = '01ARZ3NDEKTSV4RRFFQ69G5FAA';
 const clientId = '01ARZ3NDEKTSV4RRFFQ69G5FAB';
@@ -39,9 +40,11 @@ const configLayer = Layer.succeed(
       salt: Buffer.alloc(16),
       hash: Buffer.alloc(64),
     },
-    accessHmacKey: Buffer.alloc(32, 1),
+    pasetoSecretKey:
+      'k4.secret.NXrAOzhnhDuDrGPrMHzfIwwJi88ZgKI4L4x6DaXjp2ycuz4ubSc_ZLzoQlOEnp-gDMpdjFgTwp0mHG8LP2QuFA',
+    pasetoPublicKey: 'k4.public.nLs-Lm0nP2S86EJThJ6foAzKXYxYE8KdJhxvCz9kLhQ',
     apiTokenHmacKey: Buffer.alloc(32, 4),
-    sessionHmacKey: Buffer.alloc(32, 2),
+    refreshHmacKey: Buffer.alloc(32, 2),
     quoteLinkHmacKey,
     publicOrigin: 'https://example.test',
   }),
@@ -54,13 +57,14 @@ const businessConfigLayer = Layer.succeed(
 const databaseLayer = () =>
   makeMigratedDatabaseLayer({
     filename: ':memory:',
-    migrationsFolder: join(import.meta.dirname, '..', 'drizzle'),
+    migrationsFolder: join(import.meta.dirname, '../..', 'drizzle'),
   });
 
 const lifecycleLayer = () => {
   const quoteCore = QuotesLive.pipe(Layer.provideMerge(IssuerSettingsLive));
   return Layer.mergeAll(quoteCore, QuoteLinksLive, ClientsLive).pipe(
     Layer.provide(AuditLive),
+    Layer.provide(PasswordsLive),
     Layer.provide(configLayer),
     Layer.provide(businessConfigLayer),
     Layer.provideMerge(databaseLayer()),

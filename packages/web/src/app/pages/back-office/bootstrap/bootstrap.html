@@ -2,15 +2,8 @@
   <div class="bootstrap-panel">
     <h1 id="bootstrap-title">{{ i18n.t('bootstrap.title') }}</h1>
 
-    @if (accessIdentifier(); as access) {
+    @if (created()) {
     <p>{{ i18n.t('bootstrap.success') }}</p>
-    <app-copy-field
-      class="credential"
-      [label]="i18n.t('bootstrap.accessIdentifier')"
-      [value]="access"
-      [actionLabel]="i18n.t(copyLabel())"
-      (copy)="copyIdentifier(access)"
-    />
     <a appLinkButton variant="primary" routerLink="/backoffice/dashboard">
       {{ i18n.t('bootstrap.login') }}
     </a>
@@ -25,8 +18,24 @@
         class="input"
         type="password"
         autocomplete="new-password"
-        [formField]="bootstrapForm.password"
+        [formField]="bootstrapForm.bootstrapPassword"
         autofocus
+      />
+      <label for="bootstrap-email">{{ i18n.t('bootstrap.email') }}</label>
+      <input
+        id="bootstrap-email"
+        class="input"
+        type="email"
+        autocomplete="username"
+        [formField]="bootstrapForm.email"
+      />
+      <label for="administrator-password">{{ i18n.t('bootstrap.accountPassword') }}</label>
+      <input
+        id="administrator-password"
+        class="input"
+        type="password"
+        autocomplete="new-password"
+        [formField]="bootstrapForm.password"
       />
       @if (error(); as errorKey) {
       <p class="error" role="alert">{{ i18n.t(errorKey) }}</p>

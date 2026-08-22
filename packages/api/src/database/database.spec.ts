@@ -6,9 +6,9 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 
-import { Database, makeDatabaseLayer } from '../src/database/database.js';
-import { UserRow } from '../src/database/schema.js';
-import { makeMigratedDatabaseLayer } from './database-layer.js';
+import { Database, makeDatabaseLayer } from './database.js';
+import { UserRow } from './schema.js';
+import { makeMigratedDatabaseLayer } from './database.spec-helper.js';
 
 describe('Database', () => {
   const directories: Array<string> = [];
@@ -44,7 +44,7 @@ describe('Database', () => {
     const directory = await mkdtemp(join(tmpdir(), 'froment-database-'));
     directories.push(directory);
     const filename = join(directory, 'database.sqlite');
-    const migrationsFolder = join(import.meta.dirname, '..', 'drizzle');
+    const migrationsFolder = join(import.meta.dirname, '../..', 'drizzle');
 
     const state = await Effect.runPromise(
       Database.use(({ sqlite }) =>
@@ -81,7 +81,7 @@ describe('Database', () => {
     expect(state.synchronous).toBe(2);
     expect(state.tables).toEqual(
       expect.arrayContaining([
-        'access_credentials',
+        'password_credentials',
         'audit_events',
         'clients',
         'invoice_lines',
@@ -98,7 +98,7 @@ describe('Database', () => {
         'quote_signatures',
         'quotes',
         'roles',
-        'sessions',
+        'refresh_sessions',
         'users',
       ]),
     );
@@ -192,9 +192,14 @@ describe('Database', () => {
       .run(deletedClientId);
     sqlite
       .prepare(
-        'insert into access_credentials (id, user_id, secret_hmac, created_at) values (?, ?, ?, 1)',
+        'insert into refresh_sessions (id, family_id, user_id, token_hmac, created_at, rotated_at, absolute_expires_at) values (?, ?, ?, ?, 1, 1, 2)',
       )
-      .run('01ARZ3NDEKTSV4RRFFQ69G5FAX', deletedClientId, Buffer.alloc(32, 4));
+      .run(
+        '01ARZ3NDEKTSV4RRFFQ69G5FAX',
+        '01ARZ3NDEKTSV4RRFFQ69G5FAY',
+        deletedClientId,
+        Buffer.alloc(32, 4),
+      );
     sqlite.prepare('delete from clients where id = ?').run(deletedClientId);
     expect(
       sqlite
@@ -204,7 +209,7 @@ describe('Database', () => {
     ).toBe(1);
     expect(
       sqlite
-        .prepare('select revoked_at is not null from access_credentials where user_id = ?')
+        .prepare('select revoked_at is not null from refresh_sessions where user_id = ?')
         .pluck()
         .get(deletedClientId),
     ).toBe(1);
@@ -234,7 +239,7 @@ describe('Database', () => {
   });
 
   it('enforces API token persistence invariants', async () => {
-    const migrationsFolder = join(import.meta.dirname, '..', 'drizzle');
+    const migrationsFolder = join(import.meta.dirname, '../..', 'drizzle');
 
     await Effect.runPromise(
       Database.use(({ sqlite }) =>
@@ -378,7 +383,7 @@ describe('Database', () => {
     directories.push(directory);
     const options = {
       filename: join(directory, 'database.sqlite'),
-      migrationsFolder: join(import.meta.dirname, '..', 'drizzle'),
+      migrationsFolder: join(import.meta.dirname, '../..', 'drizzle'),
     };
 
     await Effect.runPromise(
@@ -393,7 +398,7 @@ describe('Database', () => {
     const directory = await mkdtemp(join(tmpdir(), 'froment-database-hash-'));
     directories.push(directory);
     const migrationsFolder = join(directory, 'drizzle');
-    const sourceFolder = join(import.meta.dirname, '..', 'drizzle');
+    const sourceFolder = join(import.meta.dirname, '../..', 'drizzle');
     await cp(sourceFolder, migrationsFolder, { recursive: true });
     const options = { filename: join(directory, 'database.sqlite'), migrationsFolder };
 
@@ -418,7 +423,7 @@ describe('Database', () => {
     const directory = await mkdtemp(join(tmpdir(), 'froment-database-documents-'));
     directories.push(directory);
     const migrationsFolder = join(directory, 'drizzle');
-    const sourceFolder = join(import.meta.dirname, '..', 'drizzle');
+    const sourceFolder = join(import.meta.dirname, '../..', 'drizzle');
     const snapshotMigration = '20260821193319_certain_nighthawk';
     const migrations = (await readdir(sourceFolder)).filter(
       (migration) => migration !== snapshotMigration,
@@ -536,7 +541,7 @@ describe('Database', () => {
     const directory = await mkdtemp(join(tmpdir(), 'froment-database-client-role-'));
     directories.push(directory);
     const migrationsFolder = join(directory, 'drizzle');
-    const sourceFolder = join(import.meta.dirname, '..', 'drizzle');
+    const sourceFolder = join(import.meta.dirname, '../..', 'drizzle');
     const clientRoleMigrations = [
       '20260820090553_client_role',
       '20260820102552_client_role_integrity',
@@ -606,7 +611,7 @@ describe('Database', () => {
     const directory = await mkdtemp(join(tmpdir(), 'froment-database-client-role-collision-'));
     directories.push(directory);
     const migrationsFolder = join(directory, 'drizzle');
-    const sourceFolder = join(import.meta.dirname, '..', 'drizzle');
+    const sourceFolder = join(import.meta.dirname, '../..', 'drizzle');
     const clientRoleMigrations = [
       '20260820090553_client_role',
       '20260820102552_client_role_integrity',
@@ -647,7 +652,7 @@ describe('Database', () => {
     const directory = await mkdtemp(join(tmpdir(), 'froment-database-upgrade-'));
     directories.push(directory);
     const migrationsFolder = join(directory, 'drizzle');
-    const sourceFolder = join(import.meta.dirname, '..', 'drizzle');
+    const sourceFolder = join(import.meta.dirname, '../..', 'drizzle');
     const initialMigrations = ['20260819152049_familiar_rictor', '20260819152052_seed_permissions'];
     await Promise.all(
       initialMigrations.map((migration) =>
@@ -769,7 +774,7 @@ describe('Database', () => {
     const directory = await mkdtemp(join(tmpdir(), 'froment-database-upgrade-'));
     directories.push(directory);
     const migrationsFolder = join(directory, 'drizzle');
-    const sourceFolder = join(import.meta.dirname, '..', 'drizzle');
+    const sourceFolder = join(import.meta.dirname, '../..', 'drizzle');
     const previousMigrations = [
       '20260819152049_familiar_rictor',
       '20260819152052_seed_permissions',
@@ -840,7 +845,7 @@ describe('Database', () => {
     const directory = await mkdtemp(join(tmpdir(), 'froment-database-integrity-'));
     directories.push(directory);
     const filename = join(directory, 'database.sqlite');
-    const migrationsFolder = join(import.meta.dirname, '..', 'drizzle');
+    const migrationsFolder = join(import.meta.dirname, '../..', 'drizzle');
 
     await Effect.runPromise(
       Database.use(({ sqlite }) =>
@@ -987,7 +992,7 @@ describe('Database', () => {
     const directory = await mkdtemp(join(tmpdir(), 'froment-database-corrective-'));
     directories.push(directory);
     const migrationsFolder = join(directory, 'drizzle');
-    const sourceFolder = join(import.meta.dirname, '..', 'drizzle');
+    const sourceFolder = join(import.meta.dirname, '../..', 'drizzle');
     const correctiveMigration = '20260820125023_perfect_meggan';
     const previousMigrations = (await readdir(sourceFolder)).filter(
       (migration) => migration < correctiveMigration,
@@ -1044,7 +1049,7 @@ describe('Database', () => {
     const directory = await mkdtemp(join(tmpdir(), 'froment-database-artifact-audit-'));
     directories.push(directory);
     const migrationsFolder = join(directory, 'drizzle');
-    const sourceFolder = join(import.meta.dirname, '..', 'drizzle');
+    const sourceFolder = join(import.meta.dirname, '../..', 'drizzle');
     const correctiveMigration = '20260820125023_perfect_meggan';
     const previousMigrations = (await readdir(sourceFolder)).filter(
       (migration) => migration !== correctiveMigration,

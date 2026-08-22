@@ -1,6 +1,7 @@
 import { Schema } from 'effect';
 
-import { AccessIdentifier } from '../authentication/contracts.js';
+import { AccountEmail, AccountPassword } from '../authentication/contracts.js';
+import { AccessToken } from '../authentication/contracts.js';
 
 export const BootstrapStatus = Schema.Struct({
   available: Schema.Boolean,
@@ -8,13 +9,13 @@ export const BootstrapStatus = Schema.Struct({
 export interface BootstrapStatus extends Schema.Schema.Type<typeof BootstrapStatus> {}
 
 export const BootstrapRequest = Schema.Struct({
-  password: Schema.NonEmptyString.check(Schema.isMaxLength(256)),
+  bootstrapPassword: Schema.NonEmptyString.check(Schema.isMaxLength(256)),
+  email: AccountEmail,
+  password: AccountPassword,
 });
 export interface BootstrapRequest extends Schema.Schema.Type<typeof BootstrapRequest> {}
 
-export const BootstrapResult = Schema.Struct({
-  accessIdentifier: AccessIdentifier,
-});
+export const BootstrapResult = AccessToken;
 export interface BootstrapResult extends Schema.Schema.Type<typeof BootstrapResult> {}
 
 export class BootstrapRejected extends Schema.TaggedError<BootstrapRejected>()(

@@ -6,7 +6,7 @@ import {
   HttpServerResponse,
 } from 'effect/unstable/http';
 
-const redactedHeaderNames = ['authorization', 'cookie', 'set-cookie', 'x-api-key', 'x-csrf-token'];
+const redactedHeaderNames = ['authorization', 'cookie', 'set-cookie', 'x-api-key'];
 
 export const traceRequest = <E, R>(
   application: Effect.Effect<

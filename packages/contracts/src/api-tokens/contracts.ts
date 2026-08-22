@@ -2,7 +2,6 @@ import { Schema } from 'effect';
 
 import {
   AuthenticationRequired,
-  CsrfRejected,
   PermissionDenied,
   RequestInvalidOrigin,
   RequestRateLimited,
@@ -97,7 +96,6 @@ export class ApiTokenInvalidCursor extends Schema.TaggedError<ApiTokenInvalidCur
 export const ApiTokenFailure = Schema.Union([
   AuthenticationRequired,
   PermissionDenied,
-  CsrfRejected,
   RequestRateLimited,
   RequestInvalidOrigin,
   RequestTooLarge,

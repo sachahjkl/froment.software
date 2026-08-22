@@ -24,12 +24,12 @@ export class Login {
     return 'backOffice.submit';
   });
 
-  async submit(event: SubmitEvent, accessIdentifier: string): Promise<void> {
+  async submit(event: SubmitEvent, email: string, password: string): Promise<void> {
     event.preventDefault();
     this.pending.set(true);
     this.error.set(undefined);
 
-    const outcome = await this.auth.authenticate(accessIdentifier);
+    const outcome = await this.auth.authenticate(email, password);
     if (outcome.success) {
       await this.router.navigateByUrl(this.destination(outcome.mode));
       return;

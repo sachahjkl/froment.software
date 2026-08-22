@@ -1,28 +1,13 @@
-import { DOCUMENT } from '@angular/common';
-import { provideHttpClient, withXsrfConfiguration } from '@angular/common/http';
+import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 
 import { ApiTokensApi } from './api-tokens-api';
 
 describe('ApiTokensApi', () => {
-  it('validates responses and sends CSRF tokens on writes', async () => {
+  it('validates responses and sends write payloads', async () => {
     TestBed.configureTestingModule({
-      providers: [
-        provideHttpClient(
-          withXsrfConfiguration({
-            cookieName: '__Host-froment-csrf',
-            headerName: 'X-CSRF-Token',
-          }),
-        ),
-        provideHttpClientTesting(),
-        {
-          provide: DOCUMENT,
-          useValue: {
-            cookie: '__Host-froment-csrf=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA',
-          },
-        },
-      ],
+      providers: [provideHttpClient(), provideHttpClientTesting()],
     });
     const api = TestBed.inject(ApiTokensApi);
     const http = TestBed.inject(HttpTestingController);
@@ -57,9 +42,6 @@ describe('ApiTokensApi', () => {
     const create = api.create(payload);
     const createRequest = http.expectOne('/api/tokens');
     expect(createRequest.request.method).toBe('POST');
-    expect(createRequest.request.headers.get('x-csrf-token')).toBe(
-      'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA',
-    );
     expect(createRequest.request.body).toEqual(payload);
     createRequest.flush({ token, secret });
     await expect(create).resolves.toEqual({ success: true, result: { token, secret } });
@@ -67,9 +49,6 @@ describe('ApiTokensApi', () => {
     const revoke = api.revoke(token.id);
     const revokeRequest = http.expectOne(`/api/tokens/${token.id}/revoke`);
     expect(revokeRequest.request.method).toBe('POST');
-    expect(revokeRequest.request.headers.get('x-csrf-token')).toBe(
-      'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA',
-    );
     revokeRequest.flush({ ...token, revokedAt: 1_750_000_000_000 });
     await expect(revoke).resolves.toMatchObject({ success: true });
 

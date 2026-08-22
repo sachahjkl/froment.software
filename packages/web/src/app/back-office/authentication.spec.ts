@@ -15,16 +15,25 @@ describe('Authentication', () => {
     const http = TestBed.inject(HttpTestingController);
 
     const status = auth.sessionMode();
-    http.expectOne('/api/auth/session').flush({ authenticated: true, mode: 'administrator' });
+    http.expectOne('/api/auth/refresh').flush({
+      accessToken: 'v4.public.test',
+      expiresAt: Date.now() + 600_000,
+      mode: 'administrator',
+    });
     await expect(status).resolves.toBe('administrator');
 
-    const login = auth.authenticate('AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA');
+    const login = auth.authenticate('administrator@example.test', 'administrator-password');
     const request = http.expectOne('/api/auth/login');
     expect(request.request.method).toBe('POST');
     expect(request.request.body).toEqual({
-      accessIdentifier: 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA',
+      email: 'administrator@example.test',
+      password: 'administrator-password',
     });
-    request.flush({ authenticated: true, mode: 'administrator' });
+    request.flush({
+      accessToken: 'v4.public.login',
+      expiresAt: Date.now() + 600_000,
+      mode: 'administrator',
+    });
     await expect(login).resolves.toEqual({ success: true, mode: 'administrator' });
 
     http.verify();

@@ -80,7 +80,6 @@ const statusKeys = {
 const errorKeys = {
   'authentication.required': 'authentication.required',
   'authentication.permission_denied': 'authentication.permission_denied',
-  'authentication.invalid_csrf': 'authentication.invalid_csrf',
   'request.rate_limited': 'request.rate_limited',
   'invoice.not_found': 'invoice.not_found',
   'invoice.order_not_found': 'invoice.order_not_found',
