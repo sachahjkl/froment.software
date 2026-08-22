@@ -895,6 +895,20 @@ describe('HTTP server', () => {
     });
     expect(mixedCredentials.status).toBe(401);
 
+    for (const headers of [
+      undefined,
+      { authorization: 'Basic dXNlcjpwYXNzd29yZA==' },
+      { authorization: 'Bearer' },
+      { cookie: `__Host-froment-csrf=${csrf}` },
+    ]) {
+      const rejectedCredentials = await fetch(`${baseUrl}/api/clients`, { headers });
+      expect(rejectedCredentials.status).toBe(401);
+      await expect(rejectedCredentials.json()).resolves.toMatchObject({
+        _tag: 'AuthenticationRequired',
+        code: 'authentication.required',
+      });
+    }
+
     const createLimitedToken = await fetch(`${baseUrl}/api/integration-tokens`, {
       method: 'POST',
       headers: {

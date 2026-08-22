@@ -69,6 +69,7 @@ export class ApiAuthentication extends HttpApiMiddleware.Service<
 >()('@froment/contracts/ApiAuthentication', {
   requiredForClient: false,
   security: { sessionCookie, bearer },
+  error: AuthenticationRequired,
 }) {}
 
 export class ApiAuthorization extends HttpApiMiddleware.Service<

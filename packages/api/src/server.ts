@@ -249,14 +249,8 @@ const ApiAuthenticationLive = Layer.succeed(
       yield* setPrivateResponseHeaders;
       const request = yield* HttpServerRequest.HttpServerRequest;
       const sessionToken = Redacted.value(credential);
-      if (sessionToken.length === 0 && request.headers['authorization'] !== undefined) {
-        const bearerToken = Redacted.value(
-          yield* HttpApiBuilder.securityDecode(HttpApiSecurity.bearer),
-        );
-        return yield* Effect.provideService(httpEffect, ApiCredentials, {
-          kind: 'integration-token',
-          token: bearerToken,
-        });
+      if (sessionToken.length === 0 || request.headers['authorization'] !== undefined) {
+        return yield* new AuthenticationRequired({ code: 'authentication.required' });
       }
       return yield* Effect.provideService(httpEffect, ApiCredentials, {
         kind: 'session',
@@ -265,9 +259,18 @@ const ApiAuthenticationLive = Layer.succeed(
     }),
     bearer: Effect.fn('ApiAuthentication.bearer')(function* (httpEffect, { credential }) {
       yield* setPrivateResponseHeaders;
+      const request = yield* HttpServerRequest.HttpServerRequest;
+      const bearerToken = Redacted.value(credential);
+      if (
+        bearerToken.length === 0 ||
+        request.cookies[sessionCookieName] !== undefined ||
+        request.cookies[csrfCookieName] !== undefined
+      ) {
+        return yield* new AuthenticationRequired({ code: 'authentication.required' });
+      }
       return yield* Effect.provideService(httpEffect, ApiCredentials, {
         kind: 'integration-token',
-        token: Redacted.value(credential),
+        token: bearerToken,
       });
     }),
   }),
@@ -283,16 +286,12 @@ const ApiAuthorizationLive = Layer.effect(
     return ApiAuthorization.of(
       Effect.fn('ApiAuthorization')(function* (httpEffect, { endpoint }) {
         const credentials = yield* ApiCredentials;
-        const request = yield* HttpServerRequest.HttpServerRequest;
         const permission = Option.getOrThrowWith(
           Context.getOption(endpoint.annotations, RequiredPermission),
           () => new Error(`Endpoint ${endpoint.identifier} has no required permission.`),
         );
 
         if (credentials.kind === 'session') {
-          if (request.headers['authorization'] !== undefined) {
-            return yield* new AuthenticationRequired({ code: 'authentication.required' });
-          }
           const principal = yield* authentication
             .authorize(credentials.token, permission, 'administrator')
             .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
@@ -302,12 +301,6 @@ const ApiAuthorizationLive = Layer.effect(
           });
         }
 
-        if (
-          request.cookies[sessionCookieName] !== undefined ||
-          request.cookies[csrfCookieName] !== undefined
-        ) {
-          return yield* new AuthenticationRequired({ code: 'authentication.required' });
-        }
         if (
           !(yield* limiter.allowMutation(
             `integration-auth:address:${yield* getClientAddress()}`,
