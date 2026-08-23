@@ -5,10 +5,11 @@ import { Blog, RenderedBlogPost } from '../../blog/blog';
 import { I18nService } from '@app/i18n.service';
 import { PageMetadata } from '../../page-metadata';
 import { LocalizedDatePipe } from '@shared/localized-date/localized-date-pipe';
+import { MermaidDiagrams } from '@shared/mermaid-diagrams';
 
 @Component({
   selector: 'app-blog-post',
-  imports: [LocalizedDatePipe, RouterLink],
+  imports: [LocalizedDatePipe, MermaidDiagrams, RouterLink],
   templateUrl: './blog-post.html',
   styleUrl: './blog-post.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

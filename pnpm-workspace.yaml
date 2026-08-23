@@ -28,6 +28,7 @@ catalog:
   fuse.js: "7.5.0"
   jsdom: "^27.4.0"
   marked: "^18.0.9"
+  mermaid: "11.17.0"
   oxfmt: "^0.63.0"
   oxlint: "1.79.0"
   rxjs: "~7.8.0"

@@ -16,6 +16,12 @@
   ],
   "items": [
     {
+      "id": "a3f2e33c-addf-443b-9bd7-1b21c34eacb3",
+      "title": "Publier la série sur l’architecture Froment",
+      "notes": "Ajouter Mermaid au blog, puis publier des articles bilingues fondés sur le code pour l’architecture, la sécurité et l’exploitation.",
+      "status": "done"
+    },
+    {
       "id": "c5db96db-4307-43cd-8e01-9573e44dbd4c",
       "title": "Brancher SOPS à SecretSpec",
       "notes": "Importer les valeurs Compose dans SOPS, inclure le contrat chiffré dans l’image, monter uniquement la clé age et redéployer le conteneur.",

@@ -187,16 +187,37 @@ p {
 }
 .blog-body h2 {
   margin-top: var(--space-8);
+  scroll-margin-top: var(--space-6);
 }
 .blog-body p,
-.blog-body ul {
+.blog-body ul,
+.blog-body ol {
   margin-block: var(--space-3) 0;
 }
-.blog-body ul {
+.blog-body ul,
+.blog-body ol {
   padding-left: var(--space-6);
 }
 .blog-body li + li {
   margin-top: var(--space-1);
+}
+.blog-body pre {
+  max-width: 100%;
+  margin-block: var(--space-4) 0;
+  padding: var(--space-4);
+  overflow-x: auto;
+  border: 1px solid var(--color-line);
+  background: var(--color-surface-sunken);
+}
+.blog-body pre.mermaid {
+  display: grid;
+  min-height: 8rem;
+  place-items: center;
+  background: var(--color-surface-raised);
+}
+.blog-body .mermaid svg {
+  max-width: 100%;
+  height: auto;
 }
 
 a {

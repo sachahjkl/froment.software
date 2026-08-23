@@ -26,6 +26,7 @@
     "effect": "catalog:",
     "fuse.js": "catalog:",
     "marked": "catalog:",
+    "mermaid": "catalog:",
     "rxjs": "catalog:",
     "tslib": "catalog:"
   },

@@ -1,4 +1,5 @@
 import { RenderMode, ServerRoute } from '@angular/ssr';
+import { blogPostSlugs } from './blog/blog';
 
 export const serverRoutes: ServerRoute[] = [
   {
@@ -8,7 +9,7 @@ export const serverRoutes: ServerRoute[] = [
   {
     path: 'blog/:slug',
     renderMode: RenderMode.Prerender,
-    getPrerenderParams: async () => [{ slug: '2026-08-froment-software-arrive' }],
+    getPrerenderParams: async () => blogPostSlugs.map((slug) => ({ slug })),
   },
   {
     path: 'quote',
