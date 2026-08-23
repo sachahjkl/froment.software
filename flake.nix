@@ -2,7 +2,7 @@
   description = "Froment Software website";
 
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixos-26.05";
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
     flake-utils.url = "github:numtide/flake-utils";
     git-hooks = {
       url = "github:cachix/git-hooks.nix";
@@ -27,6 +27,7 @@
         system:
         let
           pkgs = import nixpkgs { inherit system; };
+          secretspec = pkgs.secretspec;
           lib = pkgs.lib;
           packageJson = builtins.fromJSON (builtins.readFile ./package.json);
           packageDirectories = builtins.attrNames (
@@ -70,7 +71,31 @@
               ./.oxfmtrc.json
               ./.oxlintrc.json
               ./package.json
-              ./packages
+              ./packages/api/drizzle
+              ./packages/api/drizzle.config.ts
+              ./packages/api/package.json
+              ./packages/api/src
+              ./packages/api/tsconfig.json
+              ./packages/api/vitest.config.ts
+              ./packages/contracts/package.json
+              ./packages/contracts/src
+              ./packages/contracts/tsconfig.json
+              ./packages/documents/package.json
+              ./packages/documents/src
+              ./packages/documents/templates
+              ./packages/documents/test
+              ./packages/documents/tsconfig.json
+              ./packages/l10n/package.json
+              ./packages/l10n/src
+              ./packages/l10n/tsconfig.json
+              ./packages/web/angular.json
+              ./packages/web/package.json
+              ./packages/web/public
+              ./packages/web/src
+              ./packages/web/tools
+              ./packages/web/tsconfig.app.json
+              ./packages/web/tsconfig.json
+              ./packages/web/tsconfig.spec.json
               ./pnpm-lock.yaml
               ./pnpm-workspace.yaml
               ./tsconfig.base.json
@@ -157,13 +182,11 @@
                 pkgs.pnpmConfigHook
               ]
               ++ lib.optionals (name == "test") [
-                pkgs.chromium
                 cousineFonts
                 pkgs.liberation_ttf
                 pkgs.poppler-utils
                 pkgs.typst
               ];
-              CHROMIUM_PATH = lib.optionalString (name == "test") "${pkgs.chromium}/bin/chromium";
               TYPST_PATH = lib.optionalString (name == "test") "${pkgs.typst}/bin/typst";
               DOCUMENT_TEMPLATES_PATH = lib.optionalString (name == "test") "${./packages/documents/templates}";
               DOCUMENT_FONTS_PATH = lib.optionalString (name == "test") "${documentFonts}/share/fonts";
@@ -261,13 +284,24 @@
               fi
               touch $out
             '';
+          secretContract =
+            pkgs.runCommand "${pname}-secret-contract"
+              {
+                nativeBuildInputs = [ secretspec ];
+              }
+              ''
+                export HOME="$TMPDIR"
+                secretspec --file ${./secretspec.toml} schema --profile production >/dev/null
+                touch $out
+              '';
         in
         {
           packages = {
             default = application;
-            inherit dockerImage releaseDockerImage;
+            inherit dockerImage secretspec;
             skopeo = pkgs.skopeo;
-          };
+          }
+          // lib.optionalAttrs (self ? rev) { inherit releaseDockerImage; };
 
           apps.default = {
             type = "app";
@@ -280,22 +314,23 @@
             format = mkCheck "format" "pnpm format:check";
             lint = mkCheck "lint" "pnpm lint";
             pre-commit = preCommitCheck;
+            secret-contract = secretContract;
             test = mkCheck "test" "pnpm test";
           };
 
           devShells.default = pkgs.mkShell {
-            CHROMIUM_PATH = "${pkgs.chromium}/bin/chromium";
             TYPST_PATH = "${pkgs.typst}/bin/typst";
             DOCUMENT_TEMPLATES_PATH = "${./packages/documents/templates}";
             DOCUMENT_FONTS_PATH = "${documentFonts}/share/fonts";
             packages = preCommitCheck.enabledPackages ++ [
-              pkgs.chromium
               cousineFonts
               pkgs.liberation_ttf
               pkgs.nodejs_22
               pkgs.poppler-utils
               pkgs.pnpm
+              pkgs.sops
               pkgs.typst
+              secretspec
             ];
             shellHook = preCommitCheck.shellHook;
           };
