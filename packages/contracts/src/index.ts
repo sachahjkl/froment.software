@@ -77,6 +77,7 @@ export {
   AuditResourceType,
   type AuditResourceType as AuditResourceTypeValue,
 } from './audit/contracts.js';
+export { accountPasswordConfig } from './authentication/config.js';
 export {
   AccountEmail,
   type AccountEmail as AccountEmailValue,

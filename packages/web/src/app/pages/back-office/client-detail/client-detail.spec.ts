@@ -24,14 +24,20 @@ const client = {
   updatedAt: 42,
 };
 
-const configure = async (api: Pick<ClientsApi, 'get' | 'update'>) => {
+const configure = async (
+  api: Pick<ClientsApi, 'get' | 'update'>,
+  panel: 'profile' | 'access' = 'profile',
+) => {
   TestBed.configureTestingModule({
     providers: [
       provideRouter([
         {
           path: ':clientId',
           component: ClientDetail,
-          children: [{ path: 'profile', component: TabPanelOutlet, data: { panel: 'profile' } }],
+          children: [
+            { path: 'profile', component: TabPanelOutlet, data: { panel: 'profile' } },
+            { path: 'access', component: TabPanelOutlet, data: { panel: 'access' } },
+          ],
         },
       ]),
       { provide: ClientsApi, useValue: api },
@@ -40,7 +46,7 @@ const configure = async (api: Pick<ClientsApi, 'get' | 'update'>) => {
       { provide: InvoicesApi, useValue: { list: () => Promise.resolve([]) } },
     ],
   });
-  const harness = await RouterTestingHarness.create(`/${client.id}/profile`);
+  const harness = await RouterTestingHarness.create(`/${client.id}/${panel}`);
   return {
     fixture: harness.fixture,
     component: harness.fixture.debugElement.query(By.directive(ClientDetail))
@@ -130,6 +136,32 @@ describe('ClientDetail', () => {
     expect(root.querySelector<HTMLInputElement>('#detail-display-name')?.disabled).toBe(true);
     expect(root.querySelector('button[type="submit"]')).toBeNull();
     expect(component.canDeactivate()).toBe(true);
+  });
+
+  it('explains the client password length requirement while typing', async () => {
+    const { fixture } = await configure(
+      {
+        get: () => Promise.resolve({ success: true as const, result: client }),
+        update: vi.fn(),
+      },
+      'access',
+    );
+    await fixture.whenStable();
+    fixture.detectChanges();
+    const root: HTMLElement = fixture.nativeElement;
+    const password = root.querySelector<HTMLInputElement>('#client-account-password');
+    if (password === null) throw new Error('The client password input is unavailable.');
+
+    expect(password.closest('.field')).not.toBeNull();
+    expect(root.querySelector('#client-account-password-requirements')?.textContent).toMatch(
+      /12.*256/,
+    );
+
+    password.value = 'court';
+    password.dispatchEvent(new Event('input'));
+    fixture.detectChanges();
+
+    expect(root.querySelector('#client-account-password-error')?.textContent).toMatch(/5.*12/);
   });
 
   it('asks before leaving a dirty client form', async () => {

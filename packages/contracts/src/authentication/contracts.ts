@@ -1,5 +1,6 @@
 import { Schema } from 'effect';
 import { Ulid } from '../identifiers.js';
+import { accountPasswordConfig } from './config.js';
 
 export const AccountEmail = Schema.String.check(
   Schema.isMaxLength(254),
@@ -7,7 +8,10 @@ export const AccountEmail = Schema.String.check(
 );
 export type AccountEmail = typeof AccountEmail.Type;
 
-export const AccountPassword = Schema.String.check(Schema.isMinLength(12), Schema.isMaxLength(256));
+export const AccountPassword = Schema.String.check(
+  Schema.isMinLength(accountPasswordConfig.minLength),
+  Schema.isMaxLength(accountPasswordConfig.maxLength),
+);
 export type AccountPassword = typeof AccountPassword.Type;
 
 export const LoginMode = Schema.Literals(['client', 'administrator']);

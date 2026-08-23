@@ -625,6 +625,11 @@ export const translations = {
     'backOffice.clientDetail.accessCreate': 'Générer un accès',
     'backOffice.clientDetail.accessCreating': 'Génération…',
     'backOffice.clientDetail.accessArchived': 'Réactivez ce client avant de générer un accès.',
+    'backOffice.clientDetail.passwordRequirements': 'Utilisez entre {min} et {max} caractères.',
+    'backOffice.clientDetail.passwordTooShort':
+      'Le mot de passe contient {count} caractères sur les {min} requis.',
+    'backOffice.clientDetail.passwordTooLong':
+      'Le mot de passe dépasse la limite de {max} caractères.',
     'backOffice.clientDetail.loading': 'Chargement du client…',
     'backOffice.clientDetail.save': 'Enregistrer',
     'backOffice.clientDetail.saving': 'Enregistrement…',
@@ -1806,6 +1811,10 @@ export const translations = {
     'backOffice.clientDetail.accessCreate': 'Generate access',
     'backOffice.clientDetail.accessCreating': 'Generating…',
     'backOffice.clientDetail.accessArchived': 'Reactivate this client before you generate access.',
+    'backOffice.clientDetail.passwordRequirements': 'Use between {min} and {max} characters.',
+    'backOffice.clientDetail.passwordTooShort':
+      'The password contains {count} of the required {min} characters.',
+    'backOffice.clientDetail.passwordTooLong': 'The password exceeds the {max}-character limit.',
     'backOffice.clientDetail.loading': 'Loading client…',
     'backOffice.clientDetail.save': 'Save',
     'backOffice.clientDetail.saving': 'Saving…',

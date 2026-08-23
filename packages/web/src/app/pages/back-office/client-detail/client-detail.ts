@@ -19,6 +19,7 @@ import {
 } from '@angular/forms/signals';
 import { ActivatedRoute, Router, RouterLink, RouterOutlet } from '@angular/router';
 import {
+  accountPasswordConfig,
   Ulid,
   type ClientSummaryValue,
   type InvoiceSummaryValue,
@@ -147,9 +148,11 @@ export class ClientDetail {
     required(path.email);
     pattern(path.email, /^[^\s@]+@[^\s@]+\.[^\s@]+$/);
     required(path.password);
-    minLength(path.password, 12);
-    maxLength(path.password, 256);
+    minLength(path.password, accountPasswordConfig.minLength);
+    maxLength(path.password, accountPasswordConfig.maxLength);
   });
+  protected readonly accessPasswordLength = computed(() => this.accessModel().password.length);
+  protected readonly accessPasswordConfig = accountPasswordConfig;
   protected readonly accountEmail = signal<string | undefined>(undefined);
   protected readonly clientForm = form(this.model, (path) => {
     required(path.displayName);

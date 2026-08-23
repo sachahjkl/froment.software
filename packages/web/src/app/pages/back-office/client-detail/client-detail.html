@@ -210,22 +210,46 @@
           <p>{{ i18n.t('backOffice.clientDetail.accessIntro') }}</p>
         </div>
         <form (submit)="createAccess($event)">
-          <label for="client-account-email">{{ i18n.t('backOffice.email') }}</label>
-          <input
-            id="client-account-email"
-            class="input"
-            type="email"
-            autocomplete="username"
-            [formField]="accessForm.email"
-          />
-          <label for="client-account-password">{{ i18n.t('backOffice.password') }}</label>
-          <input
-            id="client-account-password"
-            class="input"
-            type="password"
-            autocomplete="new-password"
-            [formField]="accessForm.password"
-          />
+          <label class="field" for="client-account-email">
+            {{ i18n.t('backOffice.email') }}
+            <input
+              id="client-account-email"
+              class="input"
+              type="email"
+              autocomplete="username"
+              [formField]="accessForm.email"
+            />
+          </label>
+          <label class="field" for="client-account-password">
+            {{ i18n.t('backOffice.password') }}
+            <input
+              id="client-account-password"
+              class="input"
+              type="password"
+              autocomplete="new-password"
+              [formField]="accessForm.password"
+              [attr.aria-invalid]="
+                accessPasswordLength() > 0 && accessForm.password().invalid()
+              "
+              aria-describedby="client-account-password-requirements client-account-password-error"
+            />
+            <span id="client-account-password-requirements" class="field-hint">
+              {{ i18n.tf('backOffice.clientDetail.passwordRequirements', { min:
+              accessPasswordConfig.minLength, max: accessPasswordConfig.maxLength, }) }}
+            </span>
+            @if (accessPasswordLength() > 0 && accessPasswordLength() <
+            accessPasswordConfig.minLength) {
+            <span id="client-account-password-error" class="field-error" aria-live="polite">
+              {{ i18n.tf('backOffice.clientDetail.passwordTooShort', { count:
+              accessPasswordLength(), min: accessPasswordConfig.minLength, }) }}
+            </span>
+            } @else if (accessPasswordLength() > accessPasswordConfig.maxLength) {
+            <span id="client-account-password-error" class="field-error" aria-live="polite">
+              {{ i18n.tf('backOffice.clientDetail.passwordTooLong', { max:
+              accessPasswordConfig.maxLength, }) }}
+            </span>
+            }
+          </label>
           <button
             appButton
             variant="primary"
