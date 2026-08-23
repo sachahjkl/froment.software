@@ -2,6 +2,12 @@
   "version": 1,
   "items": [
     {
+      "id": "690e9a26-eefb-4fa8-9c18-f516c577dbe3",
+      "title": "Créer un shell et un header dédiés au back-office",
+      "notes": "Masquer les liens publics, déplacer la navigation principale, afficher le compte connecté et centraliser la déconnexion.",
+      "status": "done"
+    },
+    {
       "id": "e6246222-a49f-4921-b6bd-95636f4d592a",
       "title": "Corriger le cache entre les déploiements",
       "notes": "Empêcher le cache des shells HTML et recharger automatiquement après une erreur de chunk obsolète.",
@@ -17,12 +23,6 @@
       "id": "3026e491-cadc-420d-9ce6-80af2c6a2b60",
       "title": "Intégrer la recherche au tableau de bord",
       "notes": "Mettre la recherche en avant et supprimer la page dédiée devenue obsolète.",
-      "status": "done"
-    },
-    {
-      "id": "690e9a26-eefb-4fa8-9c18-f516c577dbe3",
-      "title": "Créer un shell et un header dédiés au back-office",
-      "notes": "Masquer les liens publics, déplacer la navigation principale, afficher le compte connecté et centraliser la déconnexion.",
       "status": "done"
     },
     {
