@@ -513,10 +513,12 @@ describe('HTTP server', () => {
   it('serves static, prerendered, and missing routes correctly', async () => {
     const root = await fetch(`${baseUrl}/`);
     expect(root.status).toBe(200);
+    expect(root.headers.get('cache-control')).toBe('no-store');
     expect(await root.text()).toContain('Froment Software');
 
     const about = await fetch(`${baseUrl}/about`);
     expect(about.status).toBe(200);
+    expect(about.headers.get('cache-control')).toBe('no-store');
     expect(await about.text()).toContain('ng-server-context="ssg"');
 
     expect((await fetch(`${baseUrl}/missing`)).status).toBe(404);

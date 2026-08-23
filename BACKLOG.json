@@ -5,7 +5,7 @@
       "id": "e6246222-a49f-4921-b6bd-95636f4d592a",
       "title": "Corriger le cache entre les déploiements",
       "notes": "Empêcher le cache des shells HTML et recharger automatiquement après une erreur de chunk obsolète.",
-      "status": "doing"
+      "status": "done"
     },
     {
       "id": "dbd40920-810c-40de-a1c4-ce8426f81add",

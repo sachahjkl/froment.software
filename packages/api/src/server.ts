@@ -18,7 +18,7 @@ import { ClientPortalHandlers } from './client-portal/handlers.js';
 import { ClientHandlers } from './clients/handlers.js';
 import { apiForLanguage } from './documentation/api-documentation.js';
 import { HttpTracingLive, traceRequest } from './observability/http-tracing.js';
-import { identifyRequest } from './http/response.js';
+import { identifyRequest, preventHtmlCaching } from './http/response.js';
 import { ApiBrowserRequestLive } from './http/origin.js';
 import { ApiRequestBodyLive } from './http/request-body.js';
 import { IpAddress, TrustedProxyAddresses } from './http/request.js';
@@ -120,7 +120,9 @@ export const makeServerLayer = (options: {
     {
       middleware: (application) =>
         Effect.gen(function* () {
-          return yield* traceRequest(identifyRequest(HttpMiddleware.logger(application)));
+          return yield* traceRequest(
+            identifyRequest(preventHtmlCaching(HttpMiddleware.logger(application))),
+          );
         }),
       disableLogger: true,
     },

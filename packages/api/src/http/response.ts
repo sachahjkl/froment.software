@@ -12,6 +12,23 @@ export const setPrivateResponseHeaders = HttpEffect.appendPreResponseHandler((_r
   ),
 );
 
+export const preventHtmlCaching = <Error, Requirements>(
+  application: Effect.Effect<HttpServerResponse.HttpServerResponse, Error, Requirements>,
+) =>
+  Effect.gen(function* () {
+    yield* HttpEffect.appendPreResponseHandler((_request, response) =>
+      Effect.succeed(
+        response.headers['content-type']?.startsWith('text/html')
+          ? HttpServerResponse.setHeaders(response, {
+              'cache-control': 'no-store',
+              pragma: 'no-cache',
+            })
+          : response,
+      ),
+    );
+    return yield* application;
+  });
+
 export const setPdfResponseHeaders = HttpEffect.appendPreResponseHandler((_request, response) =>
   Effect.succeed(
     HttpServerResponse.setHeaders(response, {
