@@ -16,6 +16,12 @@
   ],
   "items": [
     {
+      "id": "79f08104-38ae-4932-959d-d74d8fbf43aa",
+      "title": "Corriger la publication OCI en CI",
+      "notes": "Fournir à Skopeo une configuration registries.conf v2 locale au job, sans dépendre du fichier système du runner.",
+      "status": "doing"
+    },
+    {
       "id": "a3f2e33c-addf-443b-9bd7-1b21c34eacb3",
       "title": "Publier la série sur l’architecture Froment",
       "notes": "Ajouter Mermaid au blog, puis publier des articles bilingues fondés sur le code pour l’architecture, la sécurité et l’exploitation.",
