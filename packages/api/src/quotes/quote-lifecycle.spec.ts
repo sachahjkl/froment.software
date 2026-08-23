@@ -249,6 +249,25 @@ describe('quote lifecycle', () => {
     expect(detail.currentRevision.title).toBe('Revised quote');
   });
 
+  it('keeps an accepted quote available after the signature deadline', async () => {
+    const result = await Effect.runPromise(
+      Effect.gen(function* () {
+        yield* seedSentQuote();
+        yield* TestClock.setTime(createdAt + 100);
+        const links = yield* QuoteLinks;
+        yield* links.accept(signatureRequest, publicContext);
+        yield* TestClock.setTime(expiresAt);
+        return {
+          consultation: yield* links.get(token),
+          pdf: yield* links.getPdf(token),
+        };
+      }).pipe(Effect.provide(lifecycleLayer()), Effect.provide(TestClock.layer())),
+    );
+
+    expect(result.consultation).toMatchObject({ status: 'accepted', canSign: false });
+    expect(result.pdf).toMatchObject({ quoteId, reference: 'DE-1970-000001', version: 1 });
+  });
+
   it('keeps acceptance atomic when expiration runs concurrently', async () => {
     const result = await Effect.runPromise(
       Effect.gen(function* () {

@@ -245,11 +245,12 @@ export const QuoteLinksLive = Layer.effect(
            join document_artifacts
              on document_artifacts.revision_id = quote_revisions.id
             and document_artifacts.kind = 'quote-pdf'
-           where quote_links.token_hmac = ?
-             and quote_links.revoked_at is null
-              and quote_links.expires_at > ?
-              and users.disabled_at is null
-              and quotes.status in ('sent', 'accepted')`,
+            where quote_links.token_hmac = ?
+              and quote_links.revoked_at is null
+              and (
+                (quotes.status = 'sent' and quote_links.expires_at > ? and users.disabled_at is null)
+                or (quotes.status = 'accepted' and quote_links.consumed_at is not null)
+              )`,
         )
         .get(hmac(config.quoteLinkHmacKey, token), now);
       if (raw === undefined) throw new QuoteLinkNotFound({ code: 'quote_link.not_found' });

@@ -143,11 +143,6 @@ export class PublicQuote {
   private async load(): Promise<void> {
     const browser = this.document.defaultView;
     const rawToken = browser?.location.hash.slice(1) ?? '';
-    browser?.history.replaceState(
-      null,
-      '',
-      `${browser.location.pathname}${browser.location.search}`,
-    );
     const token = Option.getOrUndefined(Schema.decodeUnknownOption(QuoteLinkToken)(rawToken));
     if (token === undefined) {
       this.error.set('quote_link.not_found');

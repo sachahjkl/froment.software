@@ -105,7 +105,7 @@ describe('PublicQuote', () => {
     globalThis.history.replaceState(null, '', globalThis.location.pathname);
   });
 
-  it('removes the token and presents the immutable quote', async () => {
+  it('keeps the permalink and presents the immutable quote', async () => {
     const harness = await RouterTestingHarness.create('/summary');
     const fixture = harness.fixture;
     const root: HTMLElement = fixture.nativeElement;
@@ -113,7 +113,7 @@ describe('PublicQuote', () => {
 
     expect(get).toHaveBeenCalledWith(token);
     expect(getPdf).toHaveBeenCalledWith(token);
-    expect(globalThis.location.hash).toBe('');
+    expect(globalThis.location.hash).toBe(`#${token}`);
     expect(root.textContent).toContain('Software audit');
     expect(root.textContent).toContain('DE-2026-000001');
     expect(root.querySelectorAll('app-tabs a')).toHaveLength(3);
