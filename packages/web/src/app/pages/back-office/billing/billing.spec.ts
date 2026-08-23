@@ -28,6 +28,27 @@ const invoice = (status: 'issued' | 'paid', suffix: string): InvoiceSummaryValue
   }) as InvoiceSummaryValue;
 
 describe('Billing', () => {
+  it('warns seven days before an issued invoice is due', () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-09-14T12:00:00.000Z'));
+    TestBed.configureTestingModule({
+      providers: [
+        provideRouter([]),
+        { provide: InvoicesApi, useValue: { list: () => Promise.resolve([]) } },
+        { provide: ClientsApi, useValue: { list: () => Promise.resolve([]) } },
+      ],
+    });
+    const component = TestBed.createComponent(Billing).componentInstance;
+
+    expect(component['dueVariant']('issued', '2026-09-21')).toBe('warning');
+    expect(component['dueLabel']('issued', '2026-09-21')).toMatch(/proche|soon/i);
+    expect(component['dueVariant']('issued', '2026-09-22')).toBe('default');
+    expect(component['dueVariant']('issued', '2026-09-13')).toBe('danger');
+    expect(component['dueVariant']('paid', '2026-09-21')).toBe('default');
+
+    vi.useRealTimers();
+  });
+
   it('starts with outstanding invoices and exposes paid invoices in their tab', async () => {
     TestBed.configureTestingModule({
       providers: [

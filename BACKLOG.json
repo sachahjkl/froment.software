@@ -2,16 +2,16 @@
   "version": 1,
   "items": [
     {
-      "id": "68ceee3b-74a5-4593-9113-d8d2b57dae7f",
-      "title": "Signaler les factures arrivant à échéance",
-      "notes": "Afficher un indicateur dans le back-office sept jours avant la date d’échéance.",
-      "status": "todo"
-    },
-    {
       "id": "5e05745a-426b-436c-be39-d8c2d90bc7d5",
       "title": "Ajouter un journal des usages des jetons API",
       "notes": "Enregistrer la date, la route et le résultat de chaque appel authentifié par jeton.",
       "status": "doing"
+    },
+    {
+      "id": "68ceee3b-74a5-4593-9113-d8d2b57dae7f",
+      "title": "Signaler les factures arrivant à échéance",
+      "notes": "Afficher un indicateur dans le back-office sept jours avant la date d’échéance.",
+      "status": "done"
     },
     {
       "id": "67934b74-5f12-45c4-977d-bdd42e574a31",

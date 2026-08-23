@@ -125,13 +125,22 @@ export class Billing {
     const today = new Date().toISOString().slice(0, 10);
     if (dueDate < today) return this.i18n.t('backOffice.billing.due.overdue');
     if (dueDate === today) return this.i18n.t('backOffice.billing.due.today');
+    if (this.isDueSoon(dueDate)) {
+      return this.i18n.tf('backOffice.billing.due.soon', { date: dueDate });
+    }
     return this.i18n.tf('backOffice.billing.due.upcoming', { date: dueDate });
   }
 
   protected dueVariant(status: InvoiceStatusValue, dueDate: string): BadgeVariant {
-    return status === 'issued' && dueDate < new Date().toISOString().slice(0, 10)
-      ? 'danger'
-      : 'default';
+    if (status !== 'issued') return 'default';
+    if (dueDate < new Date().toISOString().slice(0, 10)) return 'danger';
+    return this.isDueSoon(dueDate) ? 'warning' : 'default';
+  }
+
+  private isDueSoon(dueDate: string): boolean {
+    const limit = new Date();
+    limit.setUTCDate(limit.getUTCDate() + 7);
+    return dueDate <= limit.toISOString().slice(0, 10);
   }
 
   protected toggle(invoiceId: string, checked: boolean): void {
