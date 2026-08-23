@@ -1,5 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { provideRouter } from '@angular/router';
+import { ActivatedRoute, provideRouter } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
 import { vi } from 'vitest';
 
@@ -54,6 +54,23 @@ const openCreateModal = async (fixture: ComponentFixture<unknown>) => {
 };
 
 describe('Clients', () => {
+  it('opens the creation flow from the dashboard query parameter', () => {
+    const api = new ClientsApiStub();
+    TestBed.configureTestingModule({
+      providers: [
+        provideRouter(clientRoutes),
+        { provide: ClientsApi, useValue: api },
+        {
+          provide: ActivatedRoute,
+          useValue: { snapshot: { queryParamMap: { get: () => 'true' } } },
+        },
+      ],
+    });
+    const fixture = TestBed.createComponent(Clients);
+
+    expect(fixture.componentInstance['createOpen']()).toBe(true);
+  });
+
   it('does not replace a created client with an older list response', async () => {
     let resolveList!: (clients: ClientListValue) => void;
     const api = new ClientsApiStub();

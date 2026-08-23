@@ -9,6 +9,26 @@
     <button appButton type="button" (click)="signOut()">{{ i18n.t('backOffice.signOut') }}</button>
   </header>
 
+  <nav class="quick-actions" [attr.aria-label]="i18n.t('backOffice.dashboard.quickActions')">
+    <strong>{{ i18n.t('backOffice.dashboard.quickActions') }}</strong>
+    <div>
+      <a
+        appLinkButton
+        variant="primary"
+        routerLink="/backoffice/clients"
+        [queryParams]="{ create: 'true' }"
+      >
+        {{ i18n.t('backOffice.dashboard.createClient') }}
+      </a>
+      <a appLinkButton routerLink="/backoffice/quotes/new">
+        {{ i18n.t('backOffice.dashboard.createQuote') }}
+      </a>
+      <a appLinkButton routerLink="/backoffice/recherche">
+        {{ i18n.t('backOffice.dashboard.search') }}
+      </a>
+    </div>
+  </nav>
+
   @switch (state()) { @case ('loading') {
   <p class="state" aria-live="polite">{{ i18n.t('backOffice.dashboard.loading') }}</p>
   } @case ('error') {

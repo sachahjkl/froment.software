@@ -20,6 +20,20 @@ h1 {
   margin-top: var(--space-2);
   color: var(--color-muted);
 }
+.quick-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  margin-top: var(--space-6);
+  padding: var(--space-4);
+  border: 1px solid var(--color-line-strong);
+  background: var(--color-surface-sunken);
+}
+.quick-actions > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
 .state,
 [role="alert"] {
   margin-top: var(--space-7);
@@ -108,5 +122,9 @@ time {
   }
   .metrics {
     grid-template-columns: 1fr;
+  }
+  .quick-actions {
+    align-items: stretch;
+    flex-direction: column;
   }
 }

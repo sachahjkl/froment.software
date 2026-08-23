@@ -10,7 +10,7 @@ import {
   viewChild,
 } from '@angular/core';
 import { FormField, form, maxLength, pattern, required, submit } from '@angular/forms/signals';
-import { RouterLink, RouterOutlet } from '@angular/router';
+import { ActivatedRoute, RouterLink, RouterOutlet } from '@angular/router';
 import { type ClientSummaryValue, type UlidValue } from '@froment/contracts';
 
 import { ClientsApi, type ClientErrorCode } from '@backoffice/clients-api';
@@ -48,6 +48,7 @@ type ClientTab = 'active' | 'archived' | 'all';
 export class Clients {
   protected readonly i18n = inject(I18nService);
   private readonly api = inject(ClientsApi);
+  private readonly route = inject(ActivatedRoute);
   private readonly createModel = signal({
     displayName: '',
     addressLine1: '',
@@ -70,7 +71,9 @@ export class Clients {
     pattern(path.email, /^$|^[^\s@]+@[^\s@]+\.[^\s@]+$/);
   });
   protected readonly clients = signal<ReadonlyArray<ClientSummaryValue>>([]);
-  protected readonly createOpen = signal(false);
+  protected readonly createOpen = signal(
+    this.route.snapshot.queryParamMap.get('create') === 'true',
+  );
   protected readonly tabs = computed<readonly TabItem[]>(() =>
     (['active', 'archived', 'all'] as const).map((value) => ({
       path: value,

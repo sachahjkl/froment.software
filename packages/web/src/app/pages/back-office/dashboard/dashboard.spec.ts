@@ -38,6 +38,7 @@ describe('Dashboard', () => {
 
     const fixture = TestBed.createComponent(Dashboard);
     await fixture.componentInstance['load']();
+    fixture.detectChanges();
     const actions = fixture.componentInstance['actions']();
 
     expect(actions[0]?.label).toMatch(/Facture à finaliser|Invoice to finalize/);
@@ -45,6 +46,13 @@ describe('Dashboard', () => {
     expect(fixture.componentInstance['activity']()[0]?.link).toEqual([
       '/backoffice/invoices',
       invoice.id,
+    ]);
+    const root: HTMLElement = fixture.nativeElement;
+    const quickActions = root.querySelectorAll<HTMLAnchorElement>('.quick-actions a');
+    expect(Array.from(quickActions, ({ href }) => href)).toEqual([
+      expect.stringContaining('/backoffice/clients?create=true'),
+      expect.stringContaining('/backoffice/quotes/new'),
+      expect.stringContaining('/backoffice/recherche'),
     ]);
   });
 });
