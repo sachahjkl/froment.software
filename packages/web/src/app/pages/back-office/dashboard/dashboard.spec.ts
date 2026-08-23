@@ -2,7 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { type InvoiceSummaryValue } from '@froment/contracts';
 
-import { Authentication } from '@backoffice/authentication';
+import { ClientsApi } from '@backoffice/clients-api';
 import { InvoicesApi } from '@backoffice/invoices-api';
 import { OrdersApi } from '@backoffice/orders-api';
 import { QuotesApi } from '@backoffice/quotes-api';
@@ -29,7 +29,7 @@ describe('Dashboard', () => {
     TestBed.configureTestingModule({
       providers: [
         provideRouter([]),
-        { provide: Authentication, useValue: { signOut: () => Promise.resolve(true) } },
+        { provide: ClientsApi, useValue: { list: () => Promise.resolve([]) } },
         { provide: QuotesApi, useValue: { list: () => Promise.resolve([]) } },
         { provide: OrdersApi, useValue: { list: () => Promise.resolve([]) } },
         { provide: InvoicesApi, useValue: { list: () => Promise.resolve([invoice]) } },
@@ -52,7 +52,40 @@ describe('Dashboard', () => {
     expect(Array.from(quickActions, ({ href }) => href)).toEqual([
       expect.stringContaining('/backoffice/clients?create=true'),
       expect.stringContaining('/backoffice/quotes/new'),
-      expect.stringContaining('/backoffice/recherche'),
+    ]);
+  });
+
+  it('searches clients directly from the dashboard', async () => {
+    TestBed.configureTestingModule({
+      providers: [
+        provideRouter([]),
+        {
+          provide: ClientsApi,
+          useValue: {
+            list: () =>
+              Promise.resolve([
+                { id: 'client-1', displayName: 'Froment Software', email: 'hello@example.test' },
+              ]),
+          },
+        },
+        { provide: QuotesApi, useValue: { list: () => Promise.resolve([]) } },
+        { provide: OrdersApi, useValue: { list: () => Promise.resolve([]) } },
+        { provide: InvoicesApi, useValue: { list: () => Promise.resolve([]) } },
+      ],
+    });
+    const fixture = TestBed.createComponent(Dashboard);
+    await fixture.componentInstance['load']();
+
+    fixture.componentInstance['query'].set('Fromant');
+
+    expect(fixture.componentInstance['searchResults']()).toMatchObject([
+      {
+        id: 'client-1',
+        referenceMatches: [
+          [0, 3],
+          [5, 6],
+        ],
+      },
     ]);
   });
 });

@@ -101,7 +101,7 @@ export const AuthenticationHandlers = HttpApiBuilder.group(Api, 'authentication'
           const principal = yield* (yield* Authentication)
             .authenticate(credentials.token)
             .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
-          return { userId: principal.userId, mode: principal.mode };
+          return { userId: principal.userId, email: principal.email, mode: principal.mode };
         }),
       )
       .handle(

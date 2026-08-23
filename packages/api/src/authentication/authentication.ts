@@ -1,4 +1,5 @@
 import {
+  AccountEmail,
   AuthenticationRejected,
   AuthenticationRateLimited,
   AuthenticationRequired,
@@ -56,6 +57,7 @@ export interface RefreshedSession extends Omit<AuthenticatedSession, 'refreshTok
 
 export interface Principal {
   readonly userId: string;
+  readonly email: AccountEmailValue;
   readonly mode: LoginModeValue;
   readonly sessionId: string;
 }
@@ -484,20 +486,31 @@ export const AuthenticationLive = Layer.effect(
       const row = yield* Effect.try({
         try: () =>
           database.sqlite
-            .prepare('select kind as mode from users where id = ? and disabled_at is null')
+            .prepare(
+              `select users.kind as mode, password_credentials.email
+                 from users
+                 join password_credentials on password_credentials.user_id = users.id
+                where users.id = ? and users.disabled_at is null`,
+            )
             .get(claims.userId),
         catch: (cause) => new DatabaseError({ operation: 'authenticate.access.token', cause }),
       });
       if (row === undefined) {
         return yield* new AuthenticationRequired({ code: 'authentication.required' });
       }
-      const mode = Schema.decodeUnknownSync(
-        Schema.Struct({ mode: Schema.Literals(['client', 'administrator']) }),
-      )(row).mode;
+      const account = Schema.decodeUnknownSync(
+        Schema.Struct({ email: AccountEmail, mode: Schema.Literals(['client', 'administrator']) }),
+      )(row);
+      const mode = account.mode;
       if (mode !== claims.mode) {
         return yield* new AuthenticationRequired({ code: 'authentication.required' });
       }
-      return { userId: claims.userId, sessionId: claims.sessionId, mode };
+      return {
+        userId: claims.userId,
+        email: account.email,
+        sessionId: claims.sessionId,
+        mode,
+      };
     });
 
     const authorize = Effect.fn('Authentication.authorize')(function* (

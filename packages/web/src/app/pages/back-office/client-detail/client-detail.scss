@@ -76,11 +76,16 @@ td small {
 
 .access-panel {
   display: grid;
-  justify-items: start;
   gap: var(--space-5);
   padding: var(--space-5);
   border: 1px solid var(--color-line);
   background: var(--color-surface-raised);
+}
+
+.access-panel form,
+.access-panel .field,
+.access-panel .input {
+  width: 100%;
 }
 
 .access-panel p {

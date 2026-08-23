@@ -19,7 +19,6 @@ import { ClientsApi } from '@backoffice/clients-api';
 import { OrdersApi } from '@backoffice/orders-api';
 import { QuotesApi } from '@backoffice/quotes-api';
 import { I18nService, type TranslationKey } from '@app/i18n.service';
-import { BackOfficeNav } from '@shared/back-office-nav/back-office-nav';
 import { Badge, type BadgeVariant } from '@shared/badge/badge';
 import { Button } from '@shared/button/button';
 import { DataTable } from '@shared/data-table/data-table';
@@ -51,18 +50,7 @@ interface Affair {
 
 @Component({
   selector: 'app-affairs',
-  imports: [
-    BackOfficeNav,
-    Badge,
-    Button,
-    DataTable,
-    Notice,
-    RouterLink,
-    RouterOutlet,
-    TabLayout,
-    TabPanel,
-    Tabs,
-  ],
+  imports: [Badge, Button, DataTable, Notice, RouterLink, RouterOutlet, TabLayout, TabPanel, Tabs],
   templateUrl: './affairs.html',
   styleUrl: './affairs.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

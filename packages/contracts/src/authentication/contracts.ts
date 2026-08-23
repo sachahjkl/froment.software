@@ -31,6 +31,7 @@ export type BrowserSession = typeof BrowserSession.Type;
 
 export const CurrentAccount = Schema.Struct({
   userId: Ulid,
+  email: AccountEmail,
   mode: LoginMode,
 });
 export type CurrentAccount = typeof CurrentAccount.Type;

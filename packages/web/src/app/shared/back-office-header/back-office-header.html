@@ -1,0 +1,31 @@
+<header class="back-office-header">
+  <div class="header-inner">
+    <div class="identity-row">
+      <a
+        class="brand"
+        [routerLink]="administrator() ? '/backoffice/dashboard' : '/backoffice/client'"
+      >
+        <img src="/brand/favicon.png" alt="" width="36" height="36" />
+        <span
+          ><strong>froment.software</strong
+          ><small>{{ i18n.t('backOffice.header.name') }}</small></span
+        >
+      </a>
+      <div class="account-controls">
+        @if (account(); as current) {
+        <span class="account"
+          ><small>{{ i18n.t('backOffice.header.account') }}</small>{{ current.email }}</span
+        >
+        }
+        <app-language-selector [compact]="true" />
+        <app-theme-toggle />
+        <button appButton type="button" (click)="signOut()">
+          {{ i18n.t('backOffice.signOut') }}
+        </button>
+      </div>
+    </div>
+    @if (administrator()) {
+    <app-back-office-nav />
+    }
+  </div>
+</header>

@@ -18,7 +18,6 @@ import { ClientsApi } from '@backoffice/clients-api';
 import { OrdersApi } from '@backoffice/orders-api';
 import { QuotesApi } from '@backoffice/quotes-api';
 import { I18nService, type TranslationKey } from '@app/i18n.service';
-import { BackOfficeNav } from '@shared/back-office-nav/back-office-nav';
 import { Badge } from '@shared/badge/badge';
 import { Button } from '@shared/button/button';
 import { DataTable } from '@shared/data-table/data-table';
@@ -36,7 +35,7 @@ type PortalDocumentKind = 'quote' | 'order' | 'invoice';
 
 @Component({
   selector: 'app-affair-detail',
-  imports: [BackOfficeNav, Badge, Button, DataTable, Icon, Notice, RouterLink],
+  imports: [Badge, Button, DataTable, Icon, Notice, RouterLink],
   templateUrl: './affair-detail.html',
   styleUrl: './affair-detail.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

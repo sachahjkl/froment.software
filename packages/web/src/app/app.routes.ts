@@ -228,17 +228,6 @@ export const routes: Routes = [
     children: tabRoutes('issued', 'billing', ['draft', 'issued', 'paid', 'void', 'all']),
   },
   {
-    path: 'backoffice/recherche',
-    loadComponent: () =>
-      import('./pages/back-office/search/search').then((module) => module.Search),
-    canActivate: [administratorGuard],
-    data: {
-      titleKey: 'page.back_office_search',
-      descriptionKey: 'page.description.back_office_search',
-      robots: 'noindex, nofollow',
-    },
-  },
-  {
     path: 'backoffice/configuration',
     loadComponent: () =>
       import('./pages/back-office/configuration/configuration').then(

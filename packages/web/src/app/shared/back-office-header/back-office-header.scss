@@ -1,0 +1,77 @@
+:host {
+  display: block;
+}
+
+.back-office-header {
+  padding-inline: var(--page-x);
+  border-bottom: 1px solid var(--color-line-strong);
+  background: var(--color-header);
+}
+
+.header-inner {
+  width: 100%;
+  max-width: var(--layout-max);
+  margin-inline: auto;
+}
+
+.identity-row,
+.account-controls,
+.brand {
+  display: flex;
+  align-items: center;
+}
+
+.identity-row {
+  justify-content: space-between;
+  gap: var(--space-5);
+  padding-block: var(--space-3);
+}
+
+.brand {
+  gap: var(--space-2);
+  color: var(--color-ink);
+  text-decoration: none;
+}
+
+.brand img {
+  border: 1px solid var(--color-line);
+}
+
+.brand span,
+.account {
+  display: grid;
+}
+
+.brand small,
+.account small {
+  color: var(--color-muted);
+  font-size: var(--text-xs);
+}
+
+.account-controls {
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--space-2);
+}
+
+.account {
+  margin-right: var(--space-2);
+  text-align: right;
+}
+
+@media (max-width: 46rem) {
+  .identity-row {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .account-controls {
+    justify-content: flex-start;
+  }
+
+  .account {
+    width: 100%;
+    margin-right: 0;
+    text-align: left;
+  }
+}

@@ -1,13 +1,53 @@
 <section class="dashboard" aria-labelledby="dashboard-title">
-  <app-back-office-nav />
   <header>
     <div>
       <p class="eyebrow">{{ i18n.t('backOffice.dashboard.eyebrow') }}</p>
       <h1 id="dashboard-title">{{ i18n.t('backOffice.dashboard.title') }}</h1>
       <p class="intro">{{ i18n.t('backOffice.dashboard.intro') }}</p>
     </div>
-    <button appButton type="button" (click)="signOut()">{{ i18n.t('backOffice.signOut') }}</button>
   </header>
+
+  <section class="dashboard-search" aria-labelledby="dashboard-search-title">
+    <h2 id="dashboard-search-title">{{ i18n.t('backOffice.search.title') }}</h2>
+    <label class="field" for="global-search"
+      >{{ i18n.t('backOffice.search.label') }}<input
+        #searchInput
+        id="global-search"
+        class="input"
+        type="search"
+        maxlength="120"
+        autocomplete="off"
+        [value]="query()"
+        (input)="updateQuery(searchInput)"
+    /></label>
+    @if (query().trim() !== '') { @if (searchResults().length === 0) {
+    <p>{{ i18n.t('backOffice.search.empty') }}</p>
+    } @else {
+    <div class="search-results" role="table">
+      <div class="search-row search-header" role="row">
+        <span role="columnheader">{{ i18n.t('backOffice.search.kind') }}</span>
+        <span role="columnheader">{{ i18n.t('backOffice.search.result') }}</span>
+        <span role="columnheader">{{ i18n.t('backOffice.search.action') }}</span>
+      </div>
+      <cdk-virtual-scroll-viewport class="search-viewport" role="rowgroup" itemSize="72">
+        <div
+          *cdkVirtualFor="let result of searchResults(); trackBy: resultTrackBy"
+          class="search-row"
+          role="row"
+        >
+          <span role="cell"><span appBadge>{{ kindLabel(result.kind) }}</span></span>
+          <span class="search-detail" role="cell"
+            ><strong [appSearchHighlight]="result.referenceMatches">{{ result.reference }}</strong
+            ><small [appSearchHighlight]="result.detailMatches">{{ result.detail }}</small></span
+          >
+          <span class="search-action" role="cell">
+            <a appLinkButton [routerLink]="result.link">{{ i18n.t('backOffice.open') }}</a>
+          </span>
+        </div>
+      </cdk-virtual-scroll-viewport>
+    </div>
+    } }
+  </section>
 
   <nav class="quick-actions" [attr.aria-label]="i18n.t('backOffice.dashboard.quickActions')">
     <strong>{{ i18n.t('backOffice.dashboard.quickActions') }}</strong>
@@ -22,9 +62,6 @@
       </a>
       <a appLinkButton routerLink="/backoffice/quotes/new">
         {{ i18n.t('backOffice.dashboard.createQuote') }}
-      </a>
-      <a appLinkButton routerLink="/backoffice/recherche">
-        {{ i18n.t('backOffice.dashboard.search') }}
       </a>
     </div>
   </nav>

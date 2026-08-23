@@ -16,7 +16,6 @@ import { type ClientSummaryValue, type UlidValue } from '@froment/contracts';
 import { ClientsApi, type ClientErrorCode } from '@backoffice/clients-api';
 import { I18nService, TranslationKey } from '@app/i18n.service';
 import { Button } from '@shared/button/button';
-import { BackOfficeNav } from '@shared/back-office-nav/back-office-nav';
 import { DataTable } from '@shared/data-table/data-table';
 import { Badge } from '@shared/badge/badge';
 import { Notice } from '@shared/notice/notice';
@@ -29,7 +28,6 @@ type ClientTab = 'active' | 'archived' | 'all';
 @Component({
   selector: 'app-clients',
   imports: [
-    BackOfficeNav,
     Badge,
     Button,
     DataTable,

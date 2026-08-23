@@ -7,7 +7,7 @@ import {
   inject,
   signal,
 } from '@angular/core';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute } from '@angular/router';
 import {
   Ulid,
   type ClientInvoiceListValue,
@@ -19,7 +19,6 @@ import {
 } from '@froment/contracts';
 import { Option, Schema } from 'effect';
 
-import { Authentication } from '@backoffice/authentication';
 import { ClientPortalApi } from '@backoffice/client-portal-api';
 import { I18nService } from '@app/i18n.service';
 import { Button } from '@shared/button/button';
@@ -44,11 +43,9 @@ interface PortalTarget {
 })
 export class ClientPortal {
   protected readonly i18n = inject(I18nService);
-  private readonly auth = inject(Authentication);
   protected readonly api = inject(ClientPortalApi);
   private readonly document = inject(DOCUMENT);
   private readonly route = inject(ActivatedRoute);
-  private readonly router = inject(Router);
   protected readonly state = signal<PageState>('loading');
   protected readonly quotes = signal<ClientQuoteListValue>([]);
   protected readonly orders = signal<ClientOrderListValue>([]);
@@ -123,12 +120,6 @@ export class ClientPortal {
       this.state.set('ready');
     } catch {
       this.state.set('error');
-    }
-  }
-
-  protected async signOut(): Promise<void> {
-    if (await this.auth.signOut()) {
-      await this.router.navigateByUrl('/backoffice/login');
     }
   }
 

@@ -5,6 +5,8 @@ import { type CanActivateFn, Router } from '@angular/router';
 import {
   AuthenticationFailure,
   BrowserSession,
+  CurrentAccount,
+  type CurrentAccountValue,
   type AuthenticationFailureValue,
   type LoginModeValue,
   LoginRequest,
@@ -31,6 +33,16 @@ export class Authentication {
     if (!this.isBrowser) return undefined;
     try {
       return this.sessions.mode() ?? (await this.sessions.refresh());
+    } catch {
+      return undefined;
+    }
+  }
+
+  async currentAccount(): Promise<CurrentAccountValue | undefined> {
+    if (!this.isBrowser) return undefined;
+    try {
+      const response = await firstValueFrom(this.http.get<unknown>('/api/auth/account'));
+      return Schema.decodeUnknownSync(CurrentAccount)(response);
     } catch {
       return undefined;
     }

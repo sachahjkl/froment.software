@@ -1,9 +1,15 @@
 <div class="app-shell">
   <a class="skip-link" href="#main-content">{{ i18n.t("shell.skip") }}</a>
+  @if (backOffice()) {
+  <app-back-office-header [administrator]="administrator()" />
+  } @else {
   <app-site-header />
+  }
   <main id="main-content" tabindex="-1">
     <router-outlet />
   </main>
+  @if (!backOffice()) {
   <app-site-footer />
+  }
   <app-copy-notice />
 </div>

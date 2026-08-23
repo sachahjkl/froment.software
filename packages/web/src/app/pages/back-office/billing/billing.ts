@@ -16,7 +16,6 @@ import {
 import { ClientsApi } from '@backoffice/clients-api';
 import { InvoicesApi } from '@backoffice/invoices-api';
 import { I18nService } from '@app/i18n.service';
-import { BackOfficeNav } from '@shared/back-office-nav/back-office-nav';
 import { Badge, type BadgeVariant } from '@shared/badge/badge';
 import { Button } from '@shared/button/button';
 import { DataTable } from '@shared/data-table/data-table';
@@ -29,18 +28,7 @@ type BillingTab = InvoiceStatusValue | 'all';
 
 @Component({
   selector: 'app-billing',
-  imports: [
-    BackOfficeNav,
-    Badge,
-    Button,
-    DataTable,
-    Notice,
-    RouterLink,
-    RouterOutlet,
-    TabLayout,
-    TabPanel,
-    Tabs,
-  ],
+  imports: [Badge, Button, DataTable, Notice, RouterLink, RouterOutlet, TabLayout, TabPanel, Tabs],
   templateUrl: './billing.html',
   styleUrl: './billing.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
