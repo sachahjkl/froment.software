@@ -1,7 +1,6 @@
 import { isPlatformBrowser } from '@angular/common';
 import { ChangeDetectionStrategy, Component, inject, PLATFORM_ID, signal } from '@angular/core';
 import { email, form, FormField, required } from '@angular/forms/signals';
-import { RouterLink } from '@angular/router';
 import { translate } from '@froment/l10n';
 import { I18nService } from '@app/i18n.service';
 import { Button } from '@shared/button/button';
@@ -21,7 +20,7 @@ const defaultContent: BusinessCardContent = {
 
 @Component({
   selector: 'app-business-card',
-  imports: [Button, FormField, LocalizedDatePipe, RouterLink],
+  imports: [Button, FormField, LocalizedDatePipe],
   templateUrl: './business-card.html',
   styleUrl: './business-card.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

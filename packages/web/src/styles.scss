@@ -111,6 +111,9 @@ h3 {
 h4 {
   font-size: var(--text-base);
 }
+:is(article, aside, div, form, header, main, section) > :is(h1, h2, h3, h4):first-child {
+  margin-top: 0;
+}
 p {
   text-wrap: pretty;
 }

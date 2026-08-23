@@ -34,6 +34,9 @@ describe('BackOfficeHeader', () => {
     expect(Array.from(root.querySelectorAll('button'), (button) => button.textContent)).toEqual(
       expect.arrayContaining([expect.stringMatching(/déconnecter|sign out/i)]),
     );
+    expect(root.querySelector('.sign-out[data-button-variant="danger"] svg')).not.toBeNull();
+    expect(root.querySelector('app-language-selector')).toBeNull();
+    expect(root.querySelector('app-theme-toggle')).toBeNull();
     expect(root.querySelector('a[href="/services"]')).toBeNull();
   });
 });

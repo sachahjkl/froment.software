@@ -6,12 +6,10 @@ import { Authentication } from '@backoffice/authentication';
 import { I18nService } from '@app/i18n.service';
 import { BackOfficeNav } from '@shared/back-office-nav/back-office-nav';
 import { Button } from '@shared/button/button';
-import { LanguageSelector } from '@shared/language-selector/language-selector';
-import { ThemeToggle } from '@shared/theme-toggle/theme-toggle';
 
 @Component({
   selector: 'app-back-office-header',
-  imports: [BackOfficeNav, Button, LanguageSelector, RouterLink, ThemeToggle],
+  imports: [BackOfficeNav, Button, RouterLink],
   templateUrl: './back-office-header.html',
   styleUrl: './back-office-header.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

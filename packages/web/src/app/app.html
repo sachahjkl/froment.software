@@ -8,8 +8,6 @@
   <main id="main-content" tabindex="-1">
     <router-outlet />
   </main>
-  @if (!backOffice()) {
-  <app-site-footer />
-  }
+  <app-site-footer [showPreferences]="backOffice()" />
   <app-copy-notice />
 </div>

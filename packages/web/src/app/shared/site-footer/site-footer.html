@@ -2,22 +2,30 @@
   <div class="footer-inner">
     <p>{{ i18n.tf('footer.rights', { year: currentYear }) }}</p>
     <p><a href="mailto:contact@froment.software">{{ i18n.t("shell.contactEmail") }}</a></p>
-    <nav class="footer-legal" [attr.aria-label]="i18n.t('shell.legal_nav')">
-      <a routerLink="/backoffice/login" routerLinkActive="active" ariaCurrentWhenActive="page"
-        >{{ i18n.t('backOffice.title') }}</a
-      >
-      <a routerLink="/legal" routerLinkActive="active" ariaCurrentWhenActive="page"
-        >{{ i18n.t('nav.legal') }}</a
-      >
-      <a routerLink="/privacy" routerLinkActive="active" ariaCurrentWhenActive="page"
-        >{{ i18n.t('nav.privacy') }}</a
-      >
-      <a routerLink="/cookies" routerLinkActive="active" ariaCurrentWhenActive="page"
-        >{{ i18n.t('nav.cookies') }}</a
-      >
-      <a routerLink="/version" routerLinkActive="active" ariaCurrentWhenActive="page"
-        >{{ i18n.t('nav.version') }}</a
-      >
-    </nav>
+    <div class="footer-actions">
+      @if (showPreferences()) {
+      <div class="footer-controls">
+        <app-language-selector [compact]="true" />
+        <app-theme-toggle />
+      </div>
+      }
+      <nav class="footer-legal" [attr.aria-label]="i18n.t('shell.legal_nav')">
+        <a routerLink="/backoffice/login" routerLinkActive="active" ariaCurrentWhenActive="page"
+          >{{ i18n.t('backOffice.title') }}</a
+        >
+        <a routerLink="/legal" routerLinkActive="active" ariaCurrentWhenActive="page"
+          >{{ i18n.t('nav.legal') }}</a
+        >
+        <a routerLink="/privacy" routerLinkActive="active" ariaCurrentWhenActive="page"
+          >{{ i18n.t('nav.privacy') }}</a
+        >
+        <a routerLink="/cookies" routerLinkActive="active" ariaCurrentWhenActive="page"
+          >{{ i18n.t('nav.cookies') }}</a
+        >
+        <a routerLink="/version" routerLinkActive="active" ariaCurrentWhenActive="page"
+          >{{ i18n.t('nav.version') }}</a
+        >
+      </nav>
+    </div>
   </div>
 </footer>
