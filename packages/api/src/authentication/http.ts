@@ -10,12 +10,13 @@ import {
   Ulid,
   type PermissionCodeValue,
 } from '@froment/contracts';
-import { Context, Effect, Layer, Option, Redacted, Schema } from 'effect';
-import { HttpServerRequest } from 'effect/unstable/http';
+import { Clock, Context, Effect, Layer, Option, Redacted, Schema } from 'effect';
+import { HttpEffect, HttpServerRequest } from 'effect/unstable/http';
 import { HttpApiBuilder } from 'effect/unstable/httpapi';
 import { HttpApiSecurity } from 'effect/unstable/httpapi';
 
 import { ApiTokens } from '../api-tokens/service.js';
+import { Audit } from '../audit/audit.js';
 import { getClientAddress } from '../http/request.js';
 import { setPrivateResponseHeaders } from '../http/response.js';
 import { RequestLimiter } from '../server/request-limiter.js';
@@ -109,6 +110,7 @@ const ApiAuthorizationLive = Layer.effect(
   Effect.gen(function* () {
     const authentication = yield* Authentication;
     const apiTokens = yield* ApiTokens;
+    const audit = yield* Audit;
     const limiter = yield* RequestLimiter;
     const runtime = yield* RuntimeConfiguration;
     const limitEndpoint = Effect.fn('ApiAuthorization.limitEndpoint')(function* (
@@ -157,6 +159,23 @@ const ApiAuthorizationLive = Layer.effect(
         const principal = yield* apiTokens
           .authenticate(credentials.token)
           .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
+        const occurredAt = yield* Clock.currentTimeMillis;
+        yield* HttpEffect.appendPreResponseHandler((_request, response) =>
+          Effect.sync(() => {
+            audit.insert({
+              action: 'api.token-used',
+              actorUserId: principal.userId,
+              resourceType: 'api-token',
+              resourceId: principal.tokenId,
+              occurredAt,
+              metadata: {
+                route: `${endpoint.method} ${endpoint.path}`,
+                result: String(response.status),
+              },
+            });
+            return response;
+          }),
+        );
         if (
           !(yield* limiter.allowRequest(
             `api-token:${principal.tokenId}:all`,

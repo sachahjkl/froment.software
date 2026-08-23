@@ -371,11 +371,64 @@ describe('HTTP server', () => {
       }),
     });
     expect(created.status).toBe(200);
-    const token = (await created.json()) as { secret: string };
+    const token = (await created.json()) as { secret: string; token: { id: string } };
     const clients = await fetch(`${baseUrl}/api/clients`, {
       headers: { authorization: `Bearer ${token.secret}` },
     });
     expect(clients.status).toBe(200);
+
+    const denied = await fetch(`${baseUrl}/api/clients`, {
+      method: 'POST',
+      headers: {
+        authorization: `Bearer ${token.secret}`,
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify(clientFields),
+    });
+    expect(denied.status).toBe(403);
+    expect(
+      (await fetch(`${baseUrl}/api/clients`, { headers: administratorSessionHeaders })).status,
+    ).toBe(200);
+    expect(
+      (
+        await fetch(`${baseUrl}/api/clients`, {
+          headers: { authorization: 'Bearer froment_api_v1_invalid.invalid' },
+        })
+      ).status,
+    ).toBe(401);
+
+    const database = new Sqlite(databaseFilename, { readonly: true });
+    const events = database
+      .prepare(
+        `select actor_user_id as actorUserId, resource_type as resourceType,
+                resource_id as resourceId, occurred_at as occurredAt, metadata
+         from audit_events
+         where action = 'api.token-used' and resource_id = ?
+         order by occurred_at, id`,
+      )
+      .all(token.token.id) as ReadonlyArray<{
+      readonly actorUserId: string;
+      readonly resourceType: string;
+      readonly resourceId: string;
+      readonly occurredAt: number;
+      readonly metadata: string;
+    }>;
+    database.close();
+    expect(events).toHaveLength(2);
+    expect(events.map(({ metadata }) => JSON.parse(metadata))).toEqual([
+      { route: 'GET /api/clients', result: '200' },
+      { route: 'POST /api/clients', result: '403' },
+    ]);
+    expect(events).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          actorUserId: expect.any(String),
+          resourceType: 'api-token',
+          resourceId: token.token.id,
+          occurredAt: expect.any(Number),
+        }),
+      ]),
+    );
   });
 
   it('logs out one refresh family and clears its cookie', async () => {
