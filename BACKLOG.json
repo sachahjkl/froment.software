@@ -17,8 +17,8 @@
   "items": [
     {
       "id": "79f08104-38ae-4932-959d-d74d8fbf43aa",
-      "title": "Corriger la publication OCI en CI",
-      "notes": "Fournir à Skopeo une configuration registries.conf v2 locale au job, sans dépendre du fichier système du runner.",
+      "title": "Corriger la configuration Skopeo du runner",
+      "notes": "Générer registries.conf v2 dans nixconfig, déployer NixOS, retirer le contournement XDG du workflow et vérifier la publication OCI.",
       "status": "done"
     },
     {
