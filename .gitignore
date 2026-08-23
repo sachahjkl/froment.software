@@ -30,6 +30,7 @@ __screenshots__/
 
 # Nix / direnv
 .direnv/
+.pre-commit-config.yaml
 result
 result-*
 

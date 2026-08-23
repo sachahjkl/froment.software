@@ -4,6 +4,10 @@
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-26.05";
     flake-utils.url = "github:numtide/flake-utils";
+    git-hooks = {
+      url = "github:cachix/git-hooks.nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs =
@@ -11,6 +15,7 @@
       self,
       nixpkgs,
       flake-utils,
+      git-hooks,
       ...
     }:
     flake-utils.lib.eachSystem
@@ -57,10 +62,6 @@
               cousineFonts
               pkgs.liberation_ttf
             ];
-          };
-          workflowSource = lib.fileset.toSource {
-            root = ./.;
-            fileset = ./.github;
           };
           src = lib.fileset.toSource {
             root = ./.;
@@ -217,15 +218,38 @@
             )
           );
 
-          actionlint =
-            pkgs.runCommand "${pname}-actionlint"
-              {
-                nativeBuildInputs = [ pkgs.actionlint ];
-              }
-              ''
-                actionlint -config-file ${workflowSource}/.github/actionlint.yaml ${workflowSource}/.github/workflows/*.yml
-                touch $out
-              '';
+          preCommitCheck = git-hooks.lib.${system}.run {
+            src = ./.;
+            hooks = {
+              actionlint.enable = true;
+              check-added-large-files.enable = true;
+              check-case-conflicts.enable = true;
+              check-json = {
+                enable = true;
+                excludes = [
+                  "^\\.vscode/"
+                  "^packages/web/tsconfig.*\\.json$"
+                ];
+              };
+              check-merge-conflicts.enable = true;
+              end-of-file-fixer = {
+                enable = true;
+                excludes = [
+                  "^packages/api/drizzle/"
+                  "^packages/web/public/fonts/OFL\\.txt$"
+                ];
+              };
+              nixfmt.enable = true;
+              shellcheck = {
+                enable = true;
+                excludes = [ "^\\.envrc$" ];
+              };
+              trim-trailing-whitespace = {
+                enable = true;
+                excludes = [ "^packages/web/public/fonts/OFL\\.txt$" ];
+              };
+            };
+          };
           productionClosure =
             let
               closure = pkgs.closureInfo { rootPaths = [ application ]; };
@@ -251,10 +275,11 @@
           };
 
           checks = {
-            inherit actionlint dockerImage productionClosure;
+            inherit dockerImage productionClosure;
             build = application;
             format = mkCheck "format" "pnpm format:check";
             lint = mkCheck "lint" "pnpm lint";
+            pre-commit = preCommitCheck;
             test = mkCheck "test" "pnpm test";
           };
 
@@ -263,7 +288,7 @@
             TYPST_PATH = "${pkgs.typst}/bin/typst";
             DOCUMENT_TEMPLATES_PATH = "${./packages/documents/templates}";
             DOCUMENT_FONTS_PATH = "${documentFonts}/share/fonts";
-            packages = [
+            packages = preCommitCheck.enabledPackages ++ [
               pkgs.chromium
               cousineFonts
               pkgs.liberation_ttf
@@ -272,6 +297,7 @@
               pkgs.pnpm
               pkgs.typst
             ];
+            shellHook = preCommitCheck.shellHook;
           };
 
           formatter = pkgs.nixfmt;
