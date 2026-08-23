@@ -89,7 +89,10 @@ export interface AuthenticationService {
   readonly logout: (
     refreshToken: string | undefined,
   ) => Effect.Effect<void, SessionRejected | DatabaseError>;
-  readonly revokeUserSessions: (userId: string) => Effect.Effect<void, DatabaseError>;
+  readonly revokeUserSessions: (
+    userId: string,
+    actorUserId: string,
+  ) => Effect.Effect<void, DatabaseError>;
 }
 
 export class Authentication extends Context.Service<Authentication, AuthenticationService>()(
@@ -401,6 +404,14 @@ export const AuthenticationLive = Layer.effect(
                         'update refresh_sessions set revoked_at = coalesce(revoked_at, ?) where family_id = ?',
                       )
                       .run(now, fresh.familyId);
+                    audit.insert({
+                      action: 'authentication.refresh-replay-detected',
+                      actorUserId: fresh.userId,
+                      resourceType: 'session',
+                      resourceId: fresh.familyId,
+                      metadata: { sessionId: fresh.id },
+                      occurredAt: now,
+                    });
                     return { kind: 'rejected' };
                   }
                   const replacement = database.sqlite
@@ -584,15 +595,27 @@ export const AuthenticationLive = Layer.effect(
 
     const revokeUserSessions = Effect.fn('Authentication.revokeUserSessions')(function* (
       userId: string,
+      actorUserId: string,
     ) {
       const now = yield* Clock.currentTimeMillis;
       yield* Effect.try({
-        try: () =>
-          database.sqlite
+        try: () => {
+          const changes = database.sqlite
             .prepare(
               'update refresh_sessions set revoked_at = coalesce(revoked_at, ?) where user_id = ?',
             )
-            .run(now, userId),
+            .run(now, userId).changes;
+          if (changes > 0) {
+            audit.insert({
+              action: 'authentication.sessions-revoked',
+              actorUserId,
+              resourceType: 'user',
+              resourceId: userId,
+              metadata: { count: String(changes) },
+              occurredAt: now,
+            });
+          }
+        },
         catch: (cause) => new DatabaseError({ operation: 'revoke.user.sessions', cause }),
       });
     });

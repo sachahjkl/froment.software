@@ -10,10 +10,11 @@ import {
   type AuditResourceTypeValue,
   type UlidValue,
 } from '@froment/contracts';
-import { Context, DateTime, Effect, Layer, Schema } from 'effect';
+import { Context, DateTime, Effect, Fiber, Layer, Option, Schema, Tracer } from 'effect';
 import { ulid } from 'ulid';
 
 import { Database, DatabaseError } from '../database/database.js';
+import { RequestContext } from '../http/request-context.js';
 
 const AuditInsert = Schema.Struct({
   action: AuditAction,
@@ -22,6 +23,9 @@ const AuditInsert = Schema.Struct({
   resourceId: Schema.String.check(Schema.isPattern(/\S/), Schema.isMaxLength(160)),
   metadata: AuditMetadata,
   occurredAt: Schema.Int,
+  requestId: Schema.NullOr(Schema.String.check(Schema.isUUID(4))),
+  traceId: Schema.NullOr(Schema.String.check(Schema.isPattern(/^[a-f0-9]{32}$/))),
+  spanId: Schema.NullOr(Schema.String.check(Schema.isPattern(/^[a-f0-9]{16}$/))),
 });
 
 export interface AuditInsert {
@@ -48,14 +52,26 @@ export const AuditLive = Layer.effect(
     const database = yield* Database;
     const statement = database.sqlite.prepare(
       `insert into audit_events
-       (id, action, actor_user_id, resource_type, resource_id, occurred_at, metadata)
-       values (?, ?, ?, ?, ?, ?, ?)`,
+       (id, action, actor_user_id, resource_type, resource_id,
+        request_id, trace_id, span_id, occurred_at, metadata)
+       values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     );
+    const findEvent = database.sqlite.prepare('select 1 from audit_events where id = ?');
 
     const insert = (input: AuditInsert): UlidValue => {
+      const fiber = Fiber.getCurrent();
+      const requestContext =
+        fiber === undefined
+          ? undefined
+          : Option.getOrUndefined(Context.getOption(fiber.context, RequestContext));
+      const traceId = requestContext?.traceId.match(/^[a-f0-9]{32}$/)?.[0] ?? null;
+      const spanId = requestContext?.spanId.match(/^[a-f0-9]{16}$/)?.[0] ?? null;
       const event = Schema.decodeUnknownSync(AuditInsert)({
         ...input,
         metadata: input.metadata ?? {},
+        requestId: requestContext?.requestId ?? null,
+        traceId,
+        spanId,
       });
       const id = ulid(event.occurredAt);
       statement.run(
@@ -64,9 +80,32 @@ export const AuditLive = Layer.effect(
         event.actorUserId,
         event.resourceType,
         event.resourceId,
+        event.requestId,
+        event.traceId,
+        event.spanId,
         event.occurredAt,
         JSON.stringify(event.metadata),
       );
+      requestContext?.recordAuditEvent({
+        id,
+        action: event.action,
+        actorUserId: event.actorUserId,
+        resourceType: event.resourceType,
+        resourceId: event.resourceId,
+        isCommitted: () => findEvent.get(id) !== undefined,
+      });
+      const span =
+        fiber === undefined
+          ? undefined
+          : Option.getOrUndefined(Context.getOption(fiber.context, Tracer.ParentSpan));
+      if (span?._tag === 'Span') {
+        span.event('audit.event.recorded', BigInt(event.occurredAt) * 1_000_000n, {
+          'audit.event.id': id,
+          'audit.action': event.action,
+          'resource.type': event.resourceType,
+          'resource.id': event.resourceId,
+        });
+      }
       return id;
     };
 
@@ -76,7 +115,8 @@ export const AuditLive = Layer.effect(
           database.sqlite
             .prepare(
               `select id, action, actor_user_id as actorUserId,
-                      resource_type as resourceType, resource_id as resourceId,
+                       resource_type as resourceType, resource_id as resourceId,
+                       request_id as requestId, trace_id as traceId, span_id as spanId,
                       occurred_at as occurredAt, metadata
                from audit_events
                where (resource_type = 'quote' and resource_id = ?)
@@ -96,6 +136,9 @@ export const AuditLive = Layer.effect(
                   actorUserId: Schema.NullOr(Ulid),
                   resourceType: AuditResourceType,
                   resourceId: Schema.String,
+                  requestId: Schema.NullOr(Schema.String),
+                  traceId: Schema.NullOr(Schema.String),
+                  spanId: Schema.NullOr(Schema.String),
                   occurredAt: Schema.Int,
                   metadata: Schema.String,
                 }),

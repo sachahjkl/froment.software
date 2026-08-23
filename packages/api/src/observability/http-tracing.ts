@@ -49,6 +49,21 @@ export const logRequest = <E, R>(
         ? annotations
         : { ...annotations, 'api.operation': apiTelemetry.operation },
     );
+    for (const event of requestContext.recordedAuditEvents()) {
+      if (!event.isCommitted()) continue;
+      const eventAnnotations = {
+        'audit.event.id': event.id,
+        'audit.action': event.action,
+        'resource.type': event.resourceType,
+        'resource.id': event.resourceId,
+      };
+      yield* Effect.annotateLogs(
+        Effect.logInfo('audit.event.recorded'),
+        event.actorUserId === null
+          ? eventAnnotations
+          : { ...eventAnnotations, 'actor.user.id': event.actorUserId },
+      );
+    }
     return yield* exit;
   });
 

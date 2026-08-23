@@ -1,6 +1,7 @@
 import {
   Api,
   ApiCredentials,
+  ApiPrincipal,
   AuthenticationRequired,
   RequestRateLimited,
 } from '@froment/contracts';
@@ -126,8 +127,9 @@ export const AuthenticationHandlers = HttpApiBuilder.group(Api, 'authentication'
         'accountSessionsRevoke',
         Effect.fn('accountSessionsRevoke')(function* ({ params }) {
           yield* setPrivateResponseHeaders;
+          const actor = yield* ApiPrincipal;
           yield* (yield* Authentication)
-            .revokeUserSessions(params.userId)
+            .revokeUserSessions(params.userId, actor.userId)
             .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
         }),
       ),

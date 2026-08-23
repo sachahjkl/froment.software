@@ -264,6 +264,18 @@ describe('HTTP server', () => {
     const sqlite = new Sqlite(databaseFilename, { readonly: true });
     expect(sqlite.prepare('select count(*) from password_credentials').pluck().get()).toBe(1);
     expect(sqlite.prepare('select count(*) from refresh_sessions').pluck().get()).toBe(1);
+    expect(
+      sqlite
+        .prepare(
+          `select request_id as requestId, trace_id as traceId, span_id as spanId
+           from audit_events where action = 'administrator.bootstrapped'`,
+        )
+        .get(),
+    ).toEqual({
+      requestId: response.headers.get('x-request-id'),
+      traceId: expect.stringMatching(/^[a-f0-9]{32}$/),
+      spanId: expect.stringMatching(/^[a-f0-9]{16}$/),
+    });
     expect(() => sqlite.prepare('select * from access_credentials').all()).toThrow();
     expect(() => sqlite.prepare('select * from sessions').all()).toThrow();
     sqlite.close();

@@ -187,7 +187,14 @@ describe('Authentication', () => {
           .prepare('select count(*) from refresh_sessions where family_id = ?')
           .pluck()
           .get(session.familyId);
-        return { concurrent, family, replay, sessionCount };
+        const replayAuditCount = database.sqlite
+          .prepare(
+            `select count(*) from audit_events
+             where action = 'authentication.refresh-replay-detected' and resource_id = ?`,
+          )
+          .pluck()
+          .get(session.familyId);
+        return { concurrent, family, replay, replayAuditCount, sessionCount };
       }).pipe(Effect.provide(authenticationLayer()), Effect.provide(TestClock.layer())),
     );
 
@@ -197,6 +204,7 @@ describe('Authentication', () => {
       result.concurrent.filter((candidate) => candidate.refreshToken !== undefined),
     ).toHaveLength(1);
     expect(result.sessionCount).toBe(2);
+    expect(result.replayAuditCount).toBe(1);
     expect(result.replay).toMatchObject({
       _tag: 'Failure',
       failure: { _tag: 'SessionRejected' },
@@ -331,7 +339,7 @@ describe('Authentication', () => {
           authentication.login('unknown@example.test', password, '192.0.2.1'),
         );
         const session = yield* authentication.login(email, password, '192.0.2.2');
-        yield* authentication.revokeUserSessions(userId);
+        yield* authentication.revokeUserSessions(userId, userId);
         const revoked = yield* Effect.result(authentication.refresh(session.refreshToken));
         const missingAccess = yield* Effect.result(authentication.authenticate(undefined));
         const malformedAccess = yield* Effect.result(authentication.authenticate('invalid'));
@@ -340,6 +348,13 @@ describe('Authentication', () => {
         const unknownLogout = yield* Effect.result(authentication.logout('A'.repeat(43)));
         database.sqlite.prepare("update users set kind = 'client' where id = ?").run(userId);
         const changedMode = yield* Effect.result(authentication.authenticate(session.accessToken));
+        const revocationAuditCount = database.sqlite
+          .prepare(
+            `select count(*) from audit_events
+             where action = 'authentication.sessions-revoked' and resource_id = ?`,
+          )
+          .pluck()
+          .get(userId);
         return {
           changedMode,
           invalidLogin,
@@ -348,6 +363,7 @@ describe('Authentication', () => {
           malformedLogout,
           malformedRefresh,
           missingAccess,
+          revocationAuditCount,
           revoked,
           unknownLogout,
         };
@@ -358,6 +374,7 @@ describe('Authentication', () => {
       _tag: 'Failure',
       failure: { _tag: 'AuthenticationRejected' },
     });
+    expect(result.revocationAuditCount).toBe(1);
     expect(result.limitedLogin).toMatchObject({
       _tag: 'Failure',
       failure: { _tag: 'AuthenticationRateLimited' },

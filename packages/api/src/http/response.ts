@@ -2,7 +2,11 @@ import { Effect } from 'effect';
 import { HttpEffect, HttpServerRequest, HttpServerResponse } from 'effect/unstable/http';
 import { randomUUID } from 'node:crypto';
 
-import { type ApiRequestTelemetry, RequestContext } from './request-context.js';
+import {
+  type ApiRequestTelemetry,
+  type RecordedAuditEvent,
+  RequestContext,
+} from './request-context.js';
 
 export const setPrivateResponseHeaders = HttpEffect.appendPreResponseHandler((_request, response) =>
   Effect.succeed(
@@ -67,6 +71,7 @@ export const identifyRequest = <Error, Requirements>(
     const requestId = randomUUID();
     const span = yield* Effect.orDie(Effect.currentParentSpan);
     let apiTelemetry: ApiRequestTelemetry | undefined;
+    const recordedAuditEvents: Array<RecordedAuditEvent> = [];
     const requestContext = RequestContext.of({
       requestId,
       traceId: span.traceId,
@@ -74,6 +79,10 @@ export const identifyRequest = <Error, Requirements>(
       apiTelemetry: () => apiTelemetry,
       setApiTelemetry: (value) => {
         apiTelemetry = value;
+      },
+      recordedAuditEvents: () => recordedAuditEvents,
+      recordAuditEvent: (event) => {
+        recordedAuditEvents.push(event);
       },
     });
     yield* HttpEffect.appendPreResponseHandler((_request, response) =>

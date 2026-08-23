@@ -1,8 +1,9 @@
-import { Effect, Exit, Tracer } from 'effect';
+import { Effect, Exit, Logger, Tracer } from 'effect';
 import { HttpServerRequest, HttpServerResponse } from 'effect/unstable/http';
 import { describe, expect, it } from 'vitest';
 
-import { HttpTracingLive, traceRequest } from './http-tracing.js';
+import { type RecordedAuditEvent, RequestContext } from '../http/request-context.js';
+import { HttpTracingLive, logRequest, traceRequest } from './http-tracing.js';
 
 describe('HTTP tracing', () => {
   it('redacts authentication headers through the real tracing middleware', async () => {
@@ -51,5 +52,85 @@ describe('HTTP tracing', () => {
     const serializedAttributes = JSON.stringify([...(attributes?.entries() ?? [])]);
     expect(serializedAttributes).not.toContain('another-secret');
     expect(serializedAttributes).not.toContain('refresh-secret');
+  });
+
+  it('logs API, audit, static, and failed responses at their configured levels', async () => {
+    const logs: Array<unknown> = [];
+    const logger = Logger.make((options) => logs.push(Logger.formatStructured.log(options)));
+    const request = HttpServerRequest.fromWeb(new Request('https://froment.software/app.js'));
+    const run = (
+      status: number,
+      apiTelemetry: { readonly operation: string; readonly route: string } | undefined,
+      auditEvents: ReadonlyArray<RecordedAuditEvent>,
+    ) => {
+      const context = RequestContext.of({
+        requestId: '45b0257f-8a17-40d8-bb8d-f7bc6bc50f4a',
+        traceId: '0123456789abcdef0123456789abcdef',
+        spanId: '0123456789abcdef',
+        apiTelemetry: () => apiTelemetry,
+        setApiTelemetry: () => {},
+        recordedAuditEvents: () => auditEvents,
+        recordAuditEvent: () => {},
+      });
+      return Effect.runPromise(
+        logRequest(Effect.succeed(HttpServerResponse.empty({ status }))).pipe(
+          Effect.provideService(HttpServerRequest.HttpServerRequest, request),
+          Effect.provideService(RequestContext, context),
+          Effect.provide(Logger.layer([logger])),
+        ),
+      );
+    };
+
+    await run(200, { operation: 'clientList', route: '/api/clients' }, [
+      {
+        id: '01ARZ3NDEKTSV4RRFFQ69G5FAV',
+        action: 'client.created',
+        actorUserId: '01ARZ3NDEKTSV4RRFFQ69G5FAW',
+        resourceType: 'client',
+        resourceId: '01ARZ3NDEKTSV4RRFFQ69G5FAX',
+        isCommitted: () => true,
+      },
+      {
+        id: '01ARZ3NDEKTSV4RRFFQ69G5FAY',
+        action: 'quote.expired',
+        actorUserId: null,
+        resourceType: 'quote',
+        resourceId: '01ARZ3NDEKTSV4RRFFQ69G5FAZ',
+        isCommitted: () => true,
+      },
+      {
+        id: '01ARZ3NDEKTSV4RRFFQ69G5FB0',
+        action: 'quote.created',
+        actorUserId: null,
+        resourceType: 'quote',
+        resourceId: '01ARZ3NDEKTSV4RRFFQ69G5FB1',
+        isCommitted: () => false,
+      },
+    ]);
+    await run(200, undefined, []);
+    await run(404, undefined, []);
+
+    expect(logs).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          level: 'INFO',
+          message: 'http.response.sent',
+          annotations: expect.objectContaining({ 'api.operation': 'clientList' }),
+        }),
+        expect.objectContaining({
+          level: 'INFO',
+          message: 'audit.event.recorded',
+          annotations: expect.objectContaining({
+            'audit.action': 'client.created',
+            'actor.user.id': '01ARZ3NDEKTSV4RRFFQ69G5FAW',
+          }),
+        }),
+        expect.objectContaining({
+          level: 'WARN',
+          message: 'http.response.sent',
+          annotations: expect.objectContaining({ 'http.status': 404 }),
+        }),
+      ]),
+    );
   });
 });

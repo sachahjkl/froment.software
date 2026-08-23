@@ -441,14 +441,18 @@ export const ClientsLive = Layer.effect(
                 .prepare('select user_id from password_credentials where email = ?')
                 .pluck()
                 .get(email);
+              const hadAccess =
+                database.sqlite
+                  .prepare('select 1 from password_credentials where user_id = ?')
+                  .get(clientId) !== undefined;
               if (existingEmail !== undefined && existingEmail !== clientId) {
                 throw new ClientEmailConflict({ code: 'client.email_conflict' });
               }
-              database.sqlite
+              const revokedSessions = database.sqlite
                 .prepare(
                   'update refresh_sessions set revoked_at = ? where user_id = ? and revoked_at is null',
                 )
-                .run(now, clientId);
+                .run(now, clientId).changes;
               database.sqlite
                 .prepare(
                   `insert into password_credentials
@@ -462,13 +466,23 @@ export const ClientsLive = Layer.effect(
                 )
                 .run(clientId, email, passwordHash, now, now, now);
               audit.insert({
-                action: 'client.access-created',
+                action: hadAccess ? 'client.access-replaced' : 'client.access-created',
                 actorUserId,
                 resourceType: 'client',
                 resourceId: clientId,
                 metadata: {},
                 occurredAt: now,
               });
+              if (revokedSessions > 0) {
+                audit.insert({
+                  action: 'authentication.sessions-revoked',
+                  actorUserId,
+                  resourceType: 'user',
+                  resourceId: clientId,
+                  metadata: { count: String(revokedSessions) },
+                  occurredAt: now,
+                });
+              }
             })
             .immediate(),
         catch: (cause) => {
