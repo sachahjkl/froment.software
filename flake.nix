@@ -208,6 +208,9 @@
               contents = [
                 imageApplication
                 pkgs.dockerTools.fakeNss
+                pkgs.sops
+                secretBundle
+                secretspec
               ];
               fakeRootCommands = ''
                 cp --remove-destination ./etc/passwd ./etc/passwd.writable
@@ -223,10 +226,22 @@
                 chown -R 1000:1000 ./home/froment ./var/lib/froment-software
               '';
               config = {
-                Cmd = [ "${imageApplication}/bin/${pname}-deploy" ];
+                Cmd = [
+                  "${lib.getExe secretspec}"
+                  "--file"
+                  "${secretBundle}/secretspec.toml"
+                  "run"
+                  "--profile"
+                  "production"
+                  "--scope"
+                  "runtime"
+                  "--"
+                  "${imageApplication}/bin/${pname}-deploy"
+                ];
                 Env = [
                   "DATABASE_PATH=/var/lib/froment-software/froment.sqlite"
                   "HOME=/home/froment"
+                  "PATH=${lib.makeBinPath [ pkgs.sops ]}"
                   "TMPDIR=/tmp"
                 ];
                 ExposedPorts."3000/tcp" = { };
@@ -294,6 +309,11 @@
                 secretspec --file ${./secretspec.toml} schema --profile production >/dev/null
                 touch $out
               '';
+          secretBundle = pkgs.runCommand "${pname}-secret-bundle" { } ''
+            mkdir -p $out/secrets/froment-software
+            cp ${./secretspec.toml} $out/secretspec.toml
+            cp ${./secrets/froment-software/production.yaml} $out/secrets/froment-software/production.yaml
+          '';
         in
         {
           packages = {
