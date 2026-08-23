@@ -16,6 +16,12 @@
   ],
   "items": [
     {
+      "id": "722fa09f-0cd3-41be-b3bb-fd22c2239608",
+      "title": "Permettre le retour des longues références du blog",
+      "notes": "Empêcher les chemins, URL et identifiants inline de dépasser la largeur du blog sur petits écrans.",
+      "status": "done"
+    },
+    {
       "id": "79f08104-38ae-4932-959d-d74d8fbf43aa",
       "title": "Corriger la configuration Skopeo du runner",
       "notes": "Générer registries.conf v2 dans nixconfig, déployer NixOS, retirer le contournement XDG du workflow et vérifier la publication OCI.",

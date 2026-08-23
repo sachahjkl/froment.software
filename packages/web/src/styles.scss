@@ -182,6 +182,9 @@ p {
   align-items: baseline;
 }
 
+.blog-body {
+  overflow-wrap: anywhere;
+}
 .blog-body h1 {
   margin-bottom: var(--space-5);
 }

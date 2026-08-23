@@ -19,9 +19,9 @@ Mettre une application en production ne consiste pas seulement à produire un co
 
 Le dépôt `froment.software` contient le code, le contrat SecretSpec, le fichier SOPS chiffré, le build Nix et la CI. Son fichier central est `froment.software/flake.nix`.
 
-Le dépôt voisin `../nixconfig` contient la configuration NixOS du serveur. Il décrit nginx, le réseau Docker partagé et la pile Loki, Tempo, Prometheus, Grafana et OpenTelemetry Collector.
+Le dépôt public [nixconfig](https://github.com/sachahjkl/nixconfig) contient la configuration NixOS du serveur. Il décrit nginx, le réseau Docker partagé et la pile Loki, Tempo, Prometheus, Grafana et OpenTelemetry Collector.
 
-Un troisième élément reste hors de ces dépôts : `/data/Docker/appdata/froment.software/compose.yaml`. Ce Compose externe sélectionne l’image publiée et configure son exécution. Cette séparation est importante : Nix construit l’artefact, la CI le publie, puis Compose décide quand l’exécuter.
+Une configuration Compose sur l’hôte sélectionne l’image publiée et configure son exécution. Nix construit l’artefact, la CI le publie, puis Compose décide quand l’exécuter.
 
 ```mermaid
 flowchart LR
@@ -32,7 +32,7 @@ flowchart LR
   E --> F[GHCR<br/>sha + latest]
   F -. récupération manuelle ou externe .-> G[Compose externe]
   G --> H[Conteneur froment-software]
-  I[../nixconfig<br/>NixOS + nginx + observabilité] --> H
+  I[Dépôt public nixconfig<br/>NixOS + nginx + observabilité] --> H
   I --> J[Collecteur et backends]
   H --> J
 ```
@@ -68,7 +68,7 @@ Le paquet `releaseDockerImage` refuse une source sans révision Git propre. L’
 
 ## Vérifier et publier en CI
 
-Le workflow `froment.software/.github/workflows/ci.yml` exécute `nix flake check --print-build-logs`. Pour une branche ou une pull request, il utilise un runner Ubuntu hébergé. Pour un push sur la branche par défaut, il utilise le runner NixOS auto-hébergé déclaré dans `../nixconfig/hosts/homelab/homelab.mod.nix`.
+Le workflow `froment.software/.github/workflows/ci.yml` exécute `nix flake check --print-build-logs`. Pour une branche ou une pull request, il utilise un runner Ubuntu hébergé. Pour un push sur la branche par défaut, il utilise le runner NixOS auto-hébergé déclaré dans [homelab.mod.nix](https://github.com/sachahjkl/nixconfig/blob/master/hosts/homelab/homelab.mod.nix).
 
 Les checks du flake couvrent :
 
@@ -91,7 +91,7 @@ La CI s’arrête après la publication. Elle ne lance ni `docker compose pull`,
 
 Le fournisseur `runtime` pointe vers `sops://secrets/{project}/{profile}.yaml`. `froment.software/secrets/froment-software/production.yaml` est chiffré par SOPS avec age, puis intégré dans l’image. Le destinataire age et les valeurs chiffrées ne sont pas reproduits ici.
 
-Le conteneur en cours d’exécution monte uniquement le fichier de clé age vers `/run/secrets/sops-age-key`. La variable `SOPS_AGE_KEY_FILE` indique ce chemin à SOPS. Le fichier Compose qui définit ce montage reste externe au dépôt.
+Le conteneur monte uniquement le fichier de clé age en lecture seule. La variable `SOPS_AGE_KEY_FILE` indique son emplacement à SOPS.
 
 ```mermaid
 sequenceDiagram
@@ -105,7 +105,7 @@ sequenceDiagram
 
   Docker->>SecretSpec: profile production, scope runtime
   SecretSpec->>SOPS: lire production.yaml chiffré
-  SOPS->>Age: lire /run/secrets/sops-age-key
+  SOPS->>Age: lire la clé age montée
   Age-->>SOPS: identité locale
   SOPS-->>SecretSpec: valeurs déchiffrées en mémoire
   SecretSpec->>Deploy: injecter les variables et exécuter
@@ -132,11 +132,11 @@ Cette séquence évite de servir un binaire contre un schéma ancien. Elle ne fo
 
 L’inspection du conteneur actif indique un projet Compose nommé `fromentsoftware`. Il utilise `ghcr.io/sachahjkl/froment.software:latest`, la politique de redémarrage `unless-stopped` et le réseau Docker externe `services`.
 
-Le volume nommé persiste `/var/lib/froment-software`. Le montage de clé age cible `/run/secrets/sops-age-key`. Aucun port hôte n’est publié : nginx atteint le port 3000 par le réseau Docker partagé.
+Un volume nommé conserve les données applicatives. La clé age est montée en lecture seule. Aucun port hôte n’est publié : nginx atteint le port 3000 par le réseau Docker partagé.
 
 Les noms de variables visibles dans la configuration active incluent l’endpoint OTLP interne, `PUBLIC_ORIGIN`, `DEPLOYMENT_ENVIRONMENT` et `SOPS_AGE_KEY_FILE`. Le conteneur rejoint directement le collecteur sur le réseau Docker.
 
-Ce Compose n’est pas versionné dans `froment.software` ni dans `../nixconfig`. Le dépôt applicatif ne peut donc pas vérifier sa syntaxe, son évolution ou sa concordance avec une révision donnée.
+Cette configuration Compose n’est pas versionnée. Le dépôt applicatif ne peut donc pas vérifier sa syntaxe, son évolution ou sa concordance avec une révision donnée.
 
 ## Exporter les journaux et les traces en OTLP JSON
 
@@ -157,7 +157,7 @@ Les journaux HTTP incluent la méthode, la route, le statut et, pour les routes 
 
 ## Collecter, stocker et consulter
 
-La pile est déclarée dans `../nixconfig/services/homelab-observability.mod.nix`. Elle exécute cinq conteneurs sur le réseau `services` : OpenTelemetry Collector Contrib, Loki, Tempo, Prometheus et Grafana.
+La pile est déclarée dans [homelab-observability.mod.nix](https://github.com/sachahjkl/nixconfig/blob/master/services/homelab-observability.mod.nix). Elle exécute cinq conteneurs sur le réseau `services` : OpenTelemetry Collector Contrib, Loki, Tempo, Prometheus et Grafana.
 
 ```mermaid
 flowchart LR
@@ -221,11 +221,11 @@ L’audit SQLite reste une donnée métier persistante. Loki et Tempo sont des c
 
 ## Rôle de nginx
 
-`../nixconfig/services/homelab-proxy.mod.nix` configure nginx avec les réglages recommandés pour TLS, le proxy, gzip et l’optimisation. ACME fournit les certificats. Le module génère des upstreams à partir des adresses actuelles des conteneurs Docker et recharge nginx lorsque nécessaire.
+[homelab-proxy.mod.nix](https://github.com/sachahjkl/nixconfig/blob/master/services/homelab-proxy.mod.nix) configure nginx avec les réglages recommandés pour TLS, le proxy, gzip et l’optimisation. ACME fournit les certificats. Le module génère des upstreams à partir des adresses actuelles des conteneurs Docker et recharge nginx lorsque nécessaire.
 
-`../nixconfig/hosts/homelab/proxy-hosts.mod.nix` relie `froment.software` au conteneur `froment-software` sur le port 3000. Il relie aussi le domaine OTLP au collecteur sur 4318 avec authentification HTTP basique et une limite de corps de 16 MiB. Grafana est publié séparément par nginx.
+[proxy-hosts.mod.nix](https://github.com/sachahjkl/nixconfig/blob/master/hosts/homelab/proxy-hosts.mod.nix) relie `froment.software` au conteneur `froment-software` sur le port 3000. Il relie aussi le domaine OTLP au collecteur sur 4318 avec authentification HTTP basique et une limite de corps de 16 MiB. Grafana est publié séparément par nginx.
 
-Les fichiers utilisés pour le mot de passe administrateur Grafana et l’authentification OTLP sont produits par `sops-nix`. Le module `../nixconfig/modules/homelab-sops.mod.nix` fixe leurs propriétaires, groupes et modes, puis redémarre les unités concernées lors d’un changement.
+Les fichiers utilisés pour le mot de passe administrateur Grafana et l’authentification OTLP sont produits par `sops-nix`. Le module [homelab-sops.mod.nix](https://github.com/sachahjkl/nixconfig/blob/master/modules/homelab-sops.mod.nix) fixe leurs propriétaires, groupes et modes, puis redémarre les unités concernées lors d’un changement.
 
 ## Limites actuelles
 
@@ -238,7 +238,7 @@ L’architecture expose plusieurs limites concrètes :
 - la carte de services Grafana référence Prometheus, mais aucune métrique de graphe n’est produite par `spanmetrics` ;
 - le conteneur Froment actif ne déclare aucun healthcheck ;
 - ce conteneur ne fixe aucune limite mémoire, CPU ou nombre de processus ;
-- les conteneurs d’observabilité déclarés dans `../nixconfig` n’ont pas non plus de healthcheck ni de limites de ressources OCI ;
+- les conteneurs d’observabilité déclarés dans `nixconfig` n’ont pas non plus de healthcheck ni de limites de ressources OCI ;
 - `dependsOn` ordonne certains démarrages, mais ne prouve pas que Loki, Tempo ou le collecteur sont prêts ;
 - le stockage Loki et Tempo est local avec un facteur de réplication de un ;
 - monter une clé age dans le conteneur autorise ce conteneur à déchiffrer le paquet SOPS pendant son exécution.

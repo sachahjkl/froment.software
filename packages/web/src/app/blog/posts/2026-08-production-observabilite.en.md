@@ -19,9 +19,9 @@ Putting an application into production involves more than producing a container.
 
 The `froment.software` repository contains the code, SecretSpec contract, encrypted SOPS file, Nix build and CI. Its central file is `froment.software/flake.nix`.
 
-The adjacent `../nixconfig` repository contains the server's NixOS configuration. It describes nginx, the shared Docker network and the Loki, Tempo, Prometheus, Grafana and OpenTelemetry Collector stack.
+The public [nixconfig](https://github.com/sachahjkl/nixconfig) repository contains the server's NixOS configuration. It describes nginx, the shared Docker network and the Loki, Tempo, Prometheus, Grafana and OpenTelemetry Collector stack.
 
-A third part remains outside these repositories: `/data/Docker/appdata/froment.software/compose.yaml`. This external Compose file selects the published image and configures its execution. This separation matters: Nix builds the artifact, CI publishes it, and Compose decides when to run it.
+A host-side Compose configuration selects the published image and configures its execution. Nix builds the artifact, CI publishes it, and Compose decides when to run it.
 
 ```mermaid
 flowchart LR
@@ -32,7 +32,7 @@ flowchart LR
   E --> F[GHCR<br/>sha + latest]
   F -. manual or external retrieval .-> G[External Compose]
   G --> H[froment-software container]
-  I[../nixconfig<br/>NixOS + nginx + observability] --> H
+  I[Public nixconfig repository<br/>NixOS + nginx + observability] --> H
   I --> J[Collector and backends]
   H --> J
 ```
@@ -68,7 +68,7 @@ The `releaseDockerImage` package rejects a source without a clean Git revision. 
 
 ## Check and publish in CI
 
-The `froment.software/.github/workflows/ci.yml` workflow runs `nix flake check --print-build-logs`. It uses a hosted Ubuntu runner for a branch or pull request. It uses the self-hosted NixOS runner declared in `../nixconfig/hosts/homelab/homelab.mod.nix` for a push to the default branch.
+The `froment.software/.github/workflows/ci.yml` workflow runs `nix flake check --print-build-logs`. It uses a hosted Ubuntu runner for a branch or pull request. It uses the self-hosted NixOS runner declared in [homelab.mod.nix](https://github.com/sachahjkl/nixconfig/blob/master/hosts/homelab/homelab.mod.nix) for a push to the default branch.
 
 The flake checks cover:
 
@@ -91,7 +91,7 @@ CI stops after publication. It runs no `docker compose pull`, `docker compose up
 
 The `runtime` provider points to `sops://secrets/{project}/{profile}.yaml`. SOPS encrypts `froment.software/secrets/froment-software/production.yaml` with age before Nix includes it in the image. This article does not reproduce the age recipient or encrypted values.
 
-The running container mounts only the age key file at `/run/secrets/sops-age-key`. `SOPS_AGE_KEY_FILE` tells SOPS to use that path. The Compose file that defines this mount remains external to the repository.
+The running container mounts only the age key file as read-only. `SOPS_AGE_KEY_FILE` tells SOPS its location.
 
 ```mermaid
 sequenceDiagram
@@ -105,7 +105,7 @@ sequenceDiagram
 
   Docker->>SecretSpec: production profile, runtime scope
   SecretSpec->>SOPS: read encrypted production.yaml
-  SOPS->>Age: read /run/secrets/sops-age-key
+  SOPS->>Age: read the mounted age key
   Age-->>SOPS: local identity
   SOPS-->>SecretSpec: decrypted values in memory
   SecretSpec->>Deploy: inject variables and execute
@@ -132,11 +132,11 @@ This sequence prevents a binary from serving against an old schema. It provides 
 
 Inspection of the active container identifies a Compose project named `fromentsoftware`. It uses `ghcr.io/sachahjkl/froment.software:latest`, the `unless-stopped` restart policy and the external `services` Docker network.
 
-A named volume persists `/var/lib/froment-software`. The age key mount targets `/run/secrets/sops-age-key`. No host port is published: nginx reaches port 3000 through the shared Docker network.
+A named volume persists application data. The age key is mounted as read-only. No host port is published: nginx reaches port 3000 through the shared Docker network.
 
 Variable names visible in the active configuration include the internal OTLP endpoint, `PUBLIC_ORIGIN`, `DEPLOYMENT_ENVIRONMENT` and `SOPS_AGE_KEY_FILE`. The container connects directly to the collector through the Docker network.
 
-This Compose file is not versioned in `froment.software` or `../nixconfig`. The application repository therefore cannot check its syntax, changes or agreement with a given revision.
+This Compose configuration is not versioned. The application repository therefore cannot check its syntax, changes or agreement with a given revision.
 
 ## Export logs and traces as OTLP JSON
 
@@ -157,7 +157,7 @@ HTTP logs include the method, route, status and, for API routes, operation name.
 
 ## Collect, store and inspect
 
-The stack is declared in `../nixconfig/services/homelab-observability.mod.nix`. It runs five containers on the `services` network: OpenTelemetry Collector Contrib, Loki, Tempo, Prometheus and Grafana.
+The stack is declared in [homelab-observability.mod.nix](https://github.com/sachahjkl/nixconfig/blob/master/services/homelab-observability.mod.nix). It runs five containers on the `services` network: OpenTelemetry Collector Contrib, Loki, Tempo, Prometheus and Grafana.
 
 ```mermaid
 flowchart LR
@@ -221,11 +221,11 @@ The SQLite audit remains persistent business data. Loki and Tempo hold operation
 
 ## The role of nginx
 
-`../nixconfig/services/homelab-proxy.mod.nix` configures nginx with recommended TLS, proxy, gzip and optimization settings. ACME supplies certificates. The module generates upstreams from current Docker container addresses and reloads nginx when necessary.
+[homelab-proxy.mod.nix](https://github.com/sachahjkl/nixconfig/blob/master/services/homelab-proxy.mod.nix) configures nginx with recommended TLS, proxy, gzip and optimization settings. ACME supplies certificates. The module generates upstreams from current Docker container addresses and reloads nginx when necessary.
 
-`../nixconfig/hosts/homelab/proxy-hosts.mod.nix` connects `froment.software` to the `froment-software` container on port 3000. It also connects the OTLP domain to the collector on port 4318 with HTTP Basic authentication and a 16 MiB body limit. nginx publishes Grafana separately.
+[proxy-hosts.mod.nix](https://github.com/sachahjkl/nixconfig/blob/master/hosts/homelab/proxy-hosts.mod.nix) connects `froment.software` to the `froment-software` container on port 3000. It also connects the OTLP domain to the collector on port 4318 with HTTP Basic authentication and a 16 MiB body limit. nginx publishes Grafana separately.
 
-`sops-nix` produces the files used for the Grafana administrator password and OTLP authentication. `../nixconfig/modules/homelab-sops.mod.nix` sets their owners, groups and modes, then restarts the affected units after a change.
+`sops-nix` produces the files used for the Grafana administrator password and OTLP authentication. [homelab-sops.mod.nix](https://github.com/sachahjkl/nixconfig/blob/master/modules/homelab-sops.mod.nix) sets their owners, groups and modes, then restarts the affected units after a change.
 
 ## Current limits
 
@@ -238,7 +238,7 @@ The architecture exposes several concrete limits:
 - the Grafana service map references Prometheus, but `spanmetrics` produces no graph metrics;
 - the active Froment container declares no healthcheck;
 - this container sets no memory, CPU or process-count limit;
-- the observability containers declared in `../nixconfig` also have no healthcheck or OCI resource limits;
+- the observability containers declared in `nixconfig` also have no healthcheck or OCI resource limits;
 - `dependsOn` orders some starts but does not prove that Loki, Tempo or the collector is ready;
 - Loki and Tempo use local storage with a replication factor of one;
 - mounting an age key in the container lets that container decrypt the SOPS bundle while it runs.
