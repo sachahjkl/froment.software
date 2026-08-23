@@ -1,5 +1,7 @@
 import { HttpApi, OpenApi } from 'effect/unstable/httpapi';
 
+import { ApiTelemetry } from './api-authentication.js';
+
 import { AffairsApi } from './affairs/api.js';
 import { AuthenticationApi } from './authentication/api.js';
 import { BootstrapApi } from './bootstrap/api.js';
@@ -43,4 +45,5 @@ export class Api extends HttpApi.make('froment-api')
   .add(InvoicesApi)
   .add(ClientPortalApi)
   .add(ApiTokensApi)
+  .middleware(ApiTelemetry)
   .annotateMerge(OpenApi.annotations({ version: 'latest' })) {}

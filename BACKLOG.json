@@ -2,6 +2,42 @@
   "version": 1,
   "items": [
     {
+      "id": "35a3973e-6d16-4b08-8eaa-573a94c01245",
+      "title": "Relier les événements d’audit aux requêtes",
+      "notes": "Stocker les identifiants de requête et de trace, journaliser l’ULID d’audit et utiliser un registre d’actions.",
+      "status": "todo"
+    },
+    {
+      "id": "176a97a4-b4c3-4aa9-b3bf-62859e27cfe8",
+      "title": "Exporter les journaux via OTLP",
+      "notes": "Ajouter l’export OTLP des logs corrélés et les attributs de ressource du déploiement.",
+      "status": "todo"
+    },
+    {
+      "id": "a781aee8-1ea9-4e1c-9cab-8a503de991ef",
+      "title": "Durcir la collecte de télémétrie HTTP",
+      "notes": "Limiter les en-têtes et queries exportés, puis réduire le bruit des fichiers statiques.",
+      "status": "todo"
+    },
+    {
+      "id": "e922614e-3ef6-4ad0-9b4f-c8bc138f914e",
+      "title": "Déployer la pile centrale d’observabilité",
+      "notes": "Configurer Collector, Loki, Tempo, Prometheus et Grafana dans nixconfig avec rétention et persistance.",
+      "status": "todo"
+    },
+    {
+      "id": "8ec95a9d-0fa2-421d-afd6-ff4924cea71e",
+      "title": "Exposer et documenter l’observabilité",
+      "notes": "Configurer les domaines Grafana et OTLP, les secrets, le proxy et la documentation d’exploitation.",
+      "status": "todo"
+    },
+    {
+      "id": "bd5ee248-98a2-4c14-b0d9-0515d90c19aa",
+      "title": "Corréler les requêtes et les traces HTTP",
+      "notes": "Ajouter request ID, trace ID, span ID, route stable et opération API aux journaux et spans.",
+      "status": "done"
+    },
+    {
       "id": "f84ddb0f-1d5b-4635-ad52-1b8af9f61e3c",
       "title": "Harmoniser les barres de défilement",
       "notes": "Appliquer des couleurs globales adaptées aux thèmes et réduire les barres horizontales des onglets.",

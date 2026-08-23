@@ -221,6 +221,7 @@ export {
   ApiAuthorization,
   ApiBrowserRequest,
   ApiRequestBody,
+  ApiTelemetry,
   ApiCredentials,
   type ApiCredentialsValue,
   ApiPrincipal,

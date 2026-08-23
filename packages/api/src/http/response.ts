@@ -1,6 +1,8 @@
 import { Effect } from 'effect';
-import { HttpEffect, HttpServerResponse } from 'effect/unstable/http';
+import { HttpEffect, HttpServerRequest, HttpServerResponse } from 'effect/unstable/http';
 import { randomUUID } from 'node:crypto';
+
+import { type ApiRequestTelemetry, RequestContext } from './request-context.js';
 
 export const setPrivateResponseHeaders = HttpEffect.appendPreResponseHandler((_request, response) =>
   Effect.succeed(
@@ -51,15 +53,39 @@ export const setPublicDocumentResponseHeaders = HttpEffect.appendPreResponseHand
 );
 
 export const identifyRequest = <Error, Requirements>(
-  application: Effect.Effect<HttpServerResponse.HttpServerResponse, Error, Requirements>,
-) =>
+  application: Effect.Effect<
+    HttpServerResponse.HttpServerResponse,
+    Error,
+    RequestContext | Requirements
+  >,
+): Effect.Effect<
+  HttpServerResponse.HttpServerResponse,
+  Error,
+  HttpServerRequest.HttpServerRequest | Exclude<Requirements, RequestContext>
+> =>
   Effect.gen(function* () {
     const requestId = randomUUID();
+    const span = yield* Effect.orDie(Effect.currentParentSpan);
+    let apiTelemetry: ApiRequestTelemetry | undefined;
+    const requestContext = RequestContext.of({
+      requestId,
+      traceId: span.traceId,
+      spanId: span.spanId,
+      apiTelemetry: () => apiTelemetry,
+      setApiTelemetry: (value) => {
+        apiTelemetry = value;
+      },
+    });
     yield* HttpEffect.appendPreResponseHandler((_request, response) =>
       Effect.succeed(HttpServerResponse.setHeader(response, 'x-request-id', requestId)),
     );
     return yield* application.pipe(
-      Effect.annotateLogs({ 'request.id': requestId }),
+      Effect.provideService(RequestContext, requestContext),
+      Effect.annotateLogs({
+        'request.id': requestId,
+        'trace.id': span.traceId,
+        'span.id': span.spanId,
+      }),
       Effect.annotateSpans({ 'request.id': requestId }),
     );
   });

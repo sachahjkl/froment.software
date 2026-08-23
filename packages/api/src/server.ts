@@ -1,7 +1,6 @@
 import { NodeHttpServer } from '@effect/platform-node';
 import { Config, Effect, FileSystem, Layer, Schema } from 'effect';
 import {
-  HttpMiddleware,
   HttpRouter,
   HttpServerRequest,
   HttpServerResponse,
@@ -17,7 +16,8 @@ import { BootstrapHandlers } from './bootstrap/handlers.js';
 import { ClientPortalHandlers } from './client-portal/handlers.js';
 import { ClientHandlers } from './clients/handlers.js';
 import { apiForLanguage } from './documentation/api-documentation.js';
-import { HttpTracingLive, traceRequest } from './observability/http-tracing.js';
+import { ApiTelemetryLive } from './observability/api-telemetry.js';
+import { HttpTracingLive, logRequest, traceRequest } from './observability/http-tracing.js';
 import { identifyRequest, preventHtmlCaching } from './http/response.js';
 import { ApiBrowserRequestLive } from './http/origin.js';
 import { ApiRequestBodyLive } from './http/request-body.js';
@@ -55,6 +55,7 @@ const ApiRoutes = HttpApiBuilder.layer(FrenchApi, { openapiPath: '/api/openapi.j
     ),
   ),
   Layer.provide(Layer.mergeAll(AuthenticationHttpLive, ApiBrowserRequestLive, ApiRequestBodyLive)),
+  Layer.provide(ApiTelemetryLive),
 );
 
 const frenchScalar = { showOperationId: true, localization: { locale: 'fr' } };
@@ -119,7 +120,7 @@ export const makeServerLayer = (options: {
     ),
     {
       middleware: (application) =>
-        application.pipe(HttpMiddleware.logger, preventHtmlCaching, identifyRequest, traceRequest),
+        application.pipe(logRequest, preventHtmlCaching, identifyRequest, traceRequest),
       disableLogger: true,
     },
   ).pipe(

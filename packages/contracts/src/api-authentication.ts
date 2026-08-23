@@ -62,6 +62,10 @@ export class ApiRequestBody extends HttpApiMiddleware.Service<ApiRequestBody>()(
   { error: RequestTooLarge },
 ) {}
 
+export class ApiTelemetry extends HttpApiMiddleware.Service<ApiTelemetry>()(
+  '@froment/contracts/ApiTelemetry',
+) {}
+
 export class ApiAuthorization extends HttpApiMiddleware.Service<
   ApiAuthorization,
   { requires: ApiCredentials; provides: ApiPrincipal }
