@@ -26,11 +26,15 @@ describe('HTTP tracing', () => {
       },
     });
     const request = HttpServerRequest.fromWeb(
-      new Request('https://froment.software/api/clients', {
+      new Request('https://froment.software/api/clients?email=private@example.test', {
         method: 'POST',
         headers: {
+          'content-type': 'application/json',
           authorization: 'Bearer another-secret',
           cookie: '__Secure-froment-refresh=refresh-secret',
+          host: 'froment.software',
+          'x-customer-reference': 'private-customer',
+          'x-forwarded-proto': 'https',
         },
       }),
     );
@@ -49,9 +53,15 @@ describe('HTTP tracing', () => {
     const attributes = spans[0]?.attributes;
     expect(attributes?.get('http.request.header.authorization')).toBe('<redacted>');
     expect(attributes?.get('http.request.header.cookie')).toBe('<redacted>');
+    expect(attributes?.get('http.request.header.content-type')).toBe('application/json');
+    expect(attributes?.get('http.request.header.x-customer-reference')).toBe('<redacted>');
+    expect(attributes?.get('url.full')).toBe('https://froment.software/api/clients');
+    expect(attributes?.has('url.query')).toBe(false);
     const serializedAttributes = JSON.stringify([...(attributes?.entries() ?? [])]);
     expect(serializedAttributes).not.toContain('another-secret');
     expect(serializedAttributes).not.toContain('refresh-secret');
+    expect(serializedAttributes).not.toContain('private@example.test');
+    expect(serializedAttributes).not.toContain('private-customer');
   });
 
   it('logs API, audit, static, and failed responses at their configured levels', async () => {

@@ -9,7 +9,9 @@ import {
 
 import { RequestContext } from '../http/request-context.js';
 
-const redactedHeaderNames = ['authorization', 'cookie', 'set-cookie', 'x-api-key'];
+const redactedHeaderNames = [
+  /^(?!(?:accept|cache-control|content-length|content-type|host|traceparent|user-agent|x-forwarded-host|x-forwarded-proto|x-request-id)$).*/i,
+];
 
 export const traceRequest = <E, R>(
   application: Effect.Effect<
@@ -17,7 +19,14 @@ export const traceRequest = <E, R>(
     E,
     HttpServerRequest.HttpServerRequest | R
   >,
-) => HttpMiddleware.tracer(application);
+) =>
+  Effect.gen(function* () {
+    const request = yield* HttpServerRequest.HttpServerRequest;
+    const tracedRequest = request.modify({ url: request.url.split(/[?#]/, 1)[0] });
+    return yield* HttpMiddleware.tracer(
+      Effect.provideService(application, HttpServerRequest.HttpServerRequest, request),
+    ).pipe(Effect.provideService(HttpServerRequest.HttpServerRequest, tracedRequest));
+  });
 
 export const logRequest = <E, R>(
   application: Effect.Effect<

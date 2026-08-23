@@ -467,20 +467,16 @@ Le middleware HTTP Effect accepte les contextes W3C `traceparent` entrants.
 
 L'export OTLP reste désactivé par défaut.
 
-Pour activer l'export des traces et des journaux, configurez ces variables :
+Pour activer l'export des traces, configurez ces variables :
 
 ```text
 OTEL_TRACES_EXPORTER=otlp
-OTEL_LOGS_EXPORTER=otlp
 OTEL_EXPORTER_OTLP_ENDPOINT=https://collector.example
-DEPLOYMENT_ENVIRONMENT=production
 ```
 
 Le serveur ajoute automatiquement `/v1/traces` à l'endpoint OTLP général.
 
 Utilisez `OTEL_EXPORTER_OTLP_TRACES_ENDPOINT` pour fournir l'URL complète du signal.
-
-Utilisez `OTEL_EXPORTER_OTLP_LOGS_ENDPOINT` pour fournir l'URL complète des journaux.
 
 Utilisez `OTEL_SDK_DISABLED=true` pour interdire explicitement tout export.
 
