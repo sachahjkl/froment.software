@@ -119,11 +119,7 @@ export const makeServerLayer = (options: {
     ),
     {
       middleware: (application) =>
-        Effect.gen(function* () {
-          return yield* traceRequest(
-            identifyRequest(preventHtmlCaching(HttpMiddleware.logger(application))),
-          );
-        }),
+        application.pipe(HttpMiddleware.logger, preventHtmlCaching, identifyRequest, traceRequest),
       disableLogger: true,
     },
   ).pipe(
