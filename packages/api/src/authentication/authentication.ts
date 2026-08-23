@@ -257,13 +257,17 @@ export const AuthenticationLive = Layer.effect(
               `select password_credentials.user_id as userId,
                       password_credentials.password_hash as passwordHash,
                       users.kind as mode
-                 from password_credentials
-                 join users on users.id = password_credentials.user_id
-                 left join clients on clients.id = users.id
-                where password_credentials.email = ?
-                  and users.disabled_at is null
-                  and (users.kind <> 'client' or clients.id is not null)
-                limit 1`,
+                  from password_credentials
+                  join users on users.id = password_credentials.user_id
+                  left join client_access_accounts on client_access_accounts.user_id = users.id
+                  left join users as client_users on client_users.id = client_access_accounts.client_id
+                 where password_credentials.email = ?
+                   and users.disabled_at is null
+                   and (
+                     users.kind <> 'client'
+                     or (client_access_accounts.user_id is not null and client_users.disabled_at is null)
+                   )
+                 limit 1`,
             )
             .get(normalizedEmail);
           return row === undefined
@@ -336,9 +340,16 @@ export const AuthenticationLive = Layer.effect(
                   users.disabled_at as disabledAt,
                   password_credentials.password_changed_at as passwordChangedAt
              from refresh_sessions
-             join users on users.id = refresh_sessions.user_id
-             join password_credentials on password_credentials.user_id = users.id
-            where refresh_sessions.token_hmac = ? limit 1`,
+              join users on users.id = refresh_sessions.user_id
+              join password_credentials on password_credentials.user_id = users.id
+              left join client_access_accounts on client_access_accounts.user_id = users.id
+              left join users as client_users on client_users.id = client_access_accounts.client_id
+             where refresh_sessions.token_hmac = ?
+               and (
+                 users.kind <> 'client'
+                 or (client_access_accounts.user_id is not null and client_users.disabled_at is null)
+               )
+             limit 1`,
         )
         .get(tokenHmac);
       return row === undefined ? undefined : Schema.decodeUnknownSync(RefreshSessionLookup)(row);
@@ -499,9 +510,15 @@ export const AuthenticationLive = Layer.effect(
           database.sqlite
             .prepare(
               `select users.kind as mode, password_credentials.email
-                 from users
-                 join password_credentials on password_credentials.user_id = users.id
-                where users.id = ? and users.disabled_at is null`,
+               from users
+               join password_credentials on password_credentials.user_id = users.id
+                left join client_access_accounts on client_access_accounts.user_id = users.id
+                left join users as client_users on client_users.id = client_access_accounts.client_id
+               where users.id = ? and users.disabled_at is null
+                 and (
+                   users.kind <> 'client'
+                   or (client_access_accounts.user_id is not null and client_users.disabled_at is null)
+                 )`,
             )
             .get(claims.userId),
         catch: (cause) => new DatabaseError({ operation: 'authenticate.access.token', cause }),

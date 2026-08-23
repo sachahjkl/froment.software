@@ -13,6 +13,7 @@ export const AuditActions = [
   'authentication.sessions-revoked',
   'client.access-created',
   'client.access-replaced',
+  'client.access-revoked',
   'client.archived',
   'client.created',
   'client.reactivated',

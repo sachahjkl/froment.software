@@ -95,6 +95,21 @@ export const clients = sqliteTable(
   ],
 );
 
+export const clientAccessAccounts = sqliteTable(
+  'client_access_accounts',
+  {
+    userId: text('user_id')
+      .notNull()
+      .primaryKey()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    clientId: text('client_id')
+      .notNull()
+      .references(() => clients.id, { onDelete: 'cascade' }),
+    createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull(),
+  },
+  (table) => [index('client_access_accounts_client_id_index').on(table.clientId)],
+);
+
 export const issuerSettings = sqliteTable(
   'issuer_settings',
   {

@@ -164,7 +164,15 @@ export const apiDocumentation = {
       },
       clientAccessCreate: {
         summary: 'Créer un accès client',
-        description: 'Remplace les identifiants d’accès d’un client.',
+        description: 'Crée un nouveau compte d’accès pour un client.',
+      },
+      clientAccessList: {
+        summary: 'Lister les accès client',
+        description: 'Liste les comptes qui peuvent accéder au portail d’un client.',
+      },
+      clientAccessRevoke: {
+        summary: 'Supprimer un accès client',
+        description: 'Supprime un compte du portail et révoque ses sessions.',
       },
       clientInvoiceList: {
         summary: 'Lister les factures du client',
@@ -234,10 +242,6 @@ export const apiDocumentation = {
       currentAccount: {
         summary: 'Obtenir le compte courant',
         description: 'Renvoie le compte associé au jeton d’accès.',
-      },
-      accountSessionsRevoke: {
-        summary: 'Révoquer les sessions d’un compte',
-        description: 'Révoque toutes les sessions de rafraîchissement du compte.',
       },
       orderPdfRender: {
         summary: 'Générer le PDF d’une commande',
@@ -422,7 +426,15 @@ export const apiDocumentation = {
       },
       clientAccessCreate: {
         summary: 'Create client access',
-        description: 'Replaces the access credentials for a client.',
+        description: 'Creates a new access account for a client.',
+      },
+      clientAccessList: {
+        summary: 'List client access accounts',
+        description: 'Lists the accounts that can access a client portal.',
+      },
+      clientAccessRevoke: {
+        summary: 'Remove client access',
+        description: 'Removes a portal account and revokes its sessions.',
       },
       clientInvoiceList: {
         summary: 'List client invoices',
@@ -489,10 +501,6 @@ export const apiDocumentation = {
       currentAccount: {
         summary: 'Get current account',
         description: 'Returns the account associated with the access token.',
-      },
-      accountSessionsRevoke: {
-        summary: 'Revoke account sessions',
-        description: 'Revokes all refresh sessions for the account.',
       },
       orderPdfRender: {
         summary: 'Render an order PDF',

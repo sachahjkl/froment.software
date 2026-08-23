@@ -209,6 +209,44 @@
           <h2>{{ i18n.t('backOffice.clientDetail.accessTitle') }}</h2>
           <p>{{ i18n.t('backOffice.clientDetail.accessIntro') }}</p>
         </div>
+        @if (accessesLoading()) {
+        <p aria-live="polite">{{ i18n.t('backOffice.clientDetail.accessListLoading') }}</p>
+        } @else if (accesses().length === 0) {
+        <p class="empty">{{ i18n.t('backOffice.clientDetail.accessListEmpty') }}</p>
+        } @else {
+        <div appDataTable>
+          <table>
+            <thead>
+              <tr>
+                <th>{{ i18n.t('backOffice.clientDetail.accessEmail') }}</th>
+                <th>{{ i18n.t('backOffice.clientDetail.accessCreatedAt') }}</th>
+                <th class="actions-column">{{ i18n.t('backOffice.clientDetail.actions') }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (access of accesses(); track access.id) {
+              <tr>
+                <td>{{ access.email }}</td>
+                <td>{{ formatDate(access.createdAt) }}</td>
+                <td class="actions-column">
+                  <button
+                    appButton
+                    variant="danger"
+                    type="button"
+                    [disabled]="revokingAccessId() !== undefined"
+                    (click)="revokeAccess(access)"
+                  >
+                    @if (revokingAccessId() === access.id) { {{
+                    i18n.t('backOffice.clientDetail.accessRevoking') }} } @else { {{
+                    i18n.t('backOffice.clientDetail.accessRevoke') }} }
+                  </button>
+                </td>
+              </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+        }
         <form (submit)="createAccess($event)">
           <label class="field" for="client-account-email">
             {{ i18n.t('backOffice.email') }}

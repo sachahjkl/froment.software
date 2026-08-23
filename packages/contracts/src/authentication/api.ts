@@ -13,10 +13,6 @@ import {
   SessionRejected,
 } from './contracts.js';
 import { ApiAuthentication } from '../api-authentication.js';
-import { authenticate } from '../api-policy/authentication.js';
-import { requirePermissions } from '../api-policy/permissions.js';
-import { Permissions } from '../permissions.js';
-import { Ulid } from '../identifiers.js';
 
 export class AuthenticationApi extends HttpApiGroup.make('authentication', { topLevel: true }).add(
   HttpApiEndpoint.post('login', '/api/auth/login', {
@@ -51,8 +47,4 @@ export class AuthenticationApi extends HttpApiGroup.make('authentication', { top
   })
     .middleware(ApiBrowserRequest)
     .pipe(frontendSpecific),
-  HttpApiEndpoint.post('accountSessionsRevoke', '/api/auth/accounts/:userId/revoke-sessions', {
-    params: { userId: Ulid },
-    success: HttpApiSchema.NoContent,
-  }).pipe(requirePermissions([Permissions.clientAccessCreate]), authenticate, frontendSpecific),
 ) {}

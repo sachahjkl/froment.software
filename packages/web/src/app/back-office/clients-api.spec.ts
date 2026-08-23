@@ -49,6 +49,22 @@ describe('ClientsApi', () => {
     updateRequest.flush({ ...storedClient, displayName: 'Acme updated', updatedAt: 43 });
     await expect(update).resolves.toMatchObject({ success: true });
 
+    const access = {
+      id: '01ARZ3NDEKTSV4RRFFQ69G5FAW',
+      clientId: storedClient.id,
+      email: 'portal@acme.example',
+      createdAt: 1_700_000_000_000,
+    };
+    const accessList = api.listAccess(storedClient.id);
+    http.expectOne(`/api/clients/${storedClient.id}/access`).flush([access]);
+    await expect(accessList).resolves.toEqual({ success: true, result: [access] });
+
+    const revoke = api.revokeAccess(storedClient.id, access.id);
+    const revokeRequest = http.expectOne(`/api/clients/${storedClient.id}/access/${access.id}`);
+    expect(revokeRequest.request.method).toBe('DELETE');
+    revokeRequest.flush(null);
+    await expect(revoke).resolves.toEqual({ success: true, result: null });
+
     http.verify();
   });
 });

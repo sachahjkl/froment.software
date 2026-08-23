@@ -21,6 +21,7 @@ import { ActivatedRoute, Router, RouterLink, RouterOutlet } from '@angular/route
 import {
   accountPasswordConfig,
   Ulid,
+  type ClientAccessValue,
   type ClientSummaryValue,
   type InvoiceSummaryValue,
   type OrderSummaryValue,
@@ -143,6 +144,9 @@ export class ClientDetail {
     ].sort((left, right) => right.updatedAt.localeCompare(left.updatedAt));
   });
   protected readonly accessPending = signal(false);
+  protected readonly accessesLoading = signal(true);
+  protected readonly accesses = signal<ReadonlyArray<ClientAccessValue>>([]);
+  protected readonly revokingAccessId = signal<string | undefined>(undefined);
   private readonly accessModel = signal({ email: '', password: '' });
   protected readonly accessForm = form(this.accessModel, (path) => {
     required(path.email);
@@ -222,10 +226,41 @@ export class ClientDetail {
         this.setError(outcome.code);
         return;
       }
+      this.accesses.update((accesses) =>
+        [...accesses, outcome.result].sort((left, right) => left.email.localeCompare(right.email)),
+      );
       this.accountEmail.set(outcome.result.email);
       this.accessModel.update((model) => ({ ...model, password: '' }));
       this.accessForm.password().reset();
     });
+  }
+
+  protected formatDate(timestamp: number): string {
+    return new Intl.DateTimeFormat(this.i18n.language(), { dateStyle: 'medium' }).format(timestamp);
+  }
+
+  protected async revokeAccess(access: ClientAccessValue): Promise<void> {
+    const client = this.client();
+    if (
+      client === undefined ||
+      this.revokingAccessId() !== undefined ||
+      !globalThis.confirm(
+        this.i18n.tf('backOffice.clientDetail.accessRevokeConfirmation', {
+          email: access.email,
+        }),
+      )
+    ) {
+      return;
+    }
+    this.revokingAccessId.set(access.id);
+    this.error.set(undefined);
+    const outcome = await this.api.revokeAccess(client.id, access.id);
+    this.revokingAccessId.set(undefined);
+    if (!outcome.success) {
+      this.setError(outcome.code);
+      return;
+    }
+    this.accesses.update((accesses) => accesses.filter(({ id }) => id !== access.id));
   }
 
   protected async reactivate(): Promise<void> {
@@ -277,14 +312,22 @@ export class ClientDetail {
     }
     this.applyClient(outcome.result);
     this.loading.set(false);
-    const [quotes, orders, invoices] = await Promise.allSettled([
+    const [quotes, orders, invoices, accesses] = await Promise.allSettled([
       this.quotesApi.list(),
       this.ordersApi.list(),
       this.invoicesApi.list(),
+      this.api.listAccess(clientId.value),
     ]);
     if (quotes.status === 'fulfilled') this.quotes.set(quotes.value);
     if (orders.status === 'fulfilled') this.orders.set(orders.value);
     if (invoices.status === 'fulfilled') this.invoices.set(invoices.value);
+    if (accesses.status === 'fulfilled') {
+      if (accesses.value.success) this.accesses.set(accesses.value.result);
+      else this.setError(accesses.value.code);
+    } else {
+      this.error.set('client.error');
+    }
+    this.accessesLoading.set(false);
     if ([quotes, orders, invoices].every(({ status }) => status === 'rejected')) {
       this.error.set('client.error');
     }

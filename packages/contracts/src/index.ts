@@ -105,8 +105,11 @@ export {
 } from './authentication/contracts.js';
 export {
   ClientAccess,
+  ClientAccessList,
+  ClientAccessNotFound,
   ClientAccessRequest,
   type ClientAccess as ClientAccessValue,
+  type ClientAccessList as ClientAccessListValue,
   type ClientAccessRequest as ClientAccessRequestValue,
   ClientArchived,
   ClientEmailConflict,

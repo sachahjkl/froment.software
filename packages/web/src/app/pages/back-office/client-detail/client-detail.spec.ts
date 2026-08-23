@@ -25,7 +25,8 @@ const client = {
 };
 
 const configure = async (
-  api: Pick<ClientsApi, 'get' | 'update'>,
+  api: Pick<ClientsApi, 'get' | 'update'> &
+    Partial<Pick<ClientsApi, 'listAccess' | 'revokeAccess'>>,
   panel: 'profile' | 'access' = 'profile',
 ) => {
   TestBed.configureTestingModule({
@@ -40,7 +41,13 @@ const configure = async (
           ],
         },
       ]),
-      { provide: ClientsApi, useValue: api },
+      {
+        provide: ClientsApi,
+        useValue: {
+          listAccess: () => Promise.resolve({ success: true as const, result: [] }),
+          ...api,
+        },
+      },
       { provide: QuotesApi, useValue: { list: () => Promise.resolve([]) } },
       { provide: OrdersApi, useValue: { list: () => Promise.resolve([]) } },
       { provide: InvoicesApi, useValue: { list: () => Promise.resolve([]) } },
@@ -162,6 +169,38 @@ describe('ClientDetail', () => {
     fixture.detectChanges();
 
     expect(root.querySelector('#client-account-password-error')?.textContent).toMatch(/5.*12/);
+  });
+
+  it('lists and revokes one client access account', async () => {
+    const access = {
+      id: '01ARZ3NDEKTSV4RRFFQ69G5FAW' as const,
+      clientId: client.id,
+      email: 'portal@acme.example',
+      createdAt: 1_700_000_000_000,
+    };
+    const revokeAccess = vi.fn().mockResolvedValue({ success: true, result: null });
+    const confirm = vi.spyOn(globalThis, 'confirm').mockReturnValue(true);
+    const { fixture } = await configure(
+      {
+        get: () => Promise.resolve({ success: true as const, result: client }),
+        update: vi.fn(),
+        listAccess: () => Promise.resolve({ success: true as const, result: [access] }),
+        revokeAccess,
+      },
+      'access',
+    );
+    await fixture.whenStable();
+    fixture.detectChanges();
+    const root: HTMLElement = fixture.nativeElement;
+
+    expect(root.textContent).toContain(access.email);
+    root.querySelector<HTMLButtonElement>('table button')?.click();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    expect(revokeAccess).toHaveBeenCalledWith(client.id, access.id);
+    expect(root.textContent).not.toContain(access.email);
+    confirm.mockRestore();
   });
 
   it('asks before leaving a dirty client form', async () => {

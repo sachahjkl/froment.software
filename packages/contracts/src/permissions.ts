@@ -8,7 +8,7 @@ export const Permissions = {
   clientCreate: { code: 'client.create', audiences: ['api-token'] },
   clientUpdate: { code: 'client.update', audiences: ['api-token'] },
   clientArchive: { code: 'client.archive', audiences: ['api-token'] },
-  clientAccessCreate: { code: 'client.access.create', audiences: [] },
+  clientAccessManage: { code: 'client.access.manage', audiences: [] },
   quoteRead: { code: 'quote.read', audiences: ['api-token', 'client'] },
   quoteCreate: { code: 'quote.create', audiences: ['api-token'] },
   quoteUpdate: { code: 'quote.update', audiences: ['api-token'] },

@@ -68,6 +68,15 @@ export const ClientHandlers = HttpApiBuilder.group(Api, 'clients', (handlers) =>
         }),
       )
       .handle(
+        'clientAccessList',
+        Effect.fn('clientAccessList')(function* ({ params }) {
+          yield* setPrivateResponseHeaders;
+          return yield* (yield* Clients)
+            .listAccess(params.clientId)
+            .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
+        }),
+      )
+      .handle(
         'clientAccessCreate',
         Effect.fn('clientAccessCreate')(function* ({ params, payload }) {
           yield* setPrivateResponseHeaders;
@@ -75,6 +84,16 @@ export const ClientHandlers = HttpApiBuilder.group(Api, 'clients', (handlers) =>
           const clients = yield* Clients;
           return yield* clients
             .createAccess(params.clientId, payload, principal.userId)
+            .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
+        }),
+      )
+      .handle(
+        'clientAccessRevoke',
+        Effect.fn('clientAccessRevoke')(function* ({ params }) {
+          yield* setPrivateResponseHeaders;
+          const principal = yield* ApiPrincipal;
+          return yield* (yield* Clients)
+            .revokeAccess(params.clientId, params.accessId, principal.userId)
             .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
         }),
       ),

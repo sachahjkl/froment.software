@@ -8,6 +8,8 @@ import {
 } from '../authentication/contracts.js';
 import {
   ClientAccess,
+  ClientAccessList,
+  ClientAccessNotFound,
   ClientAccessRequest,
   ClientArchived,
   ClientEmailConflict,
@@ -104,6 +106,15 @@ export class ClientsApi extends HttpApiGroup.make('clients', { topLevel: true })
     authenticate,
     rateLimit(RateLimits.sixtyPerMinute),
   ),
+  HttpApiEndpoint.get('clientAccessList', '/api/clients/:clientId/access', {
+    params: { clientId: Ulid },
+    success: ClientAccessList,
+    error: [
+      AuthenticationRequired.pipe(HttpApiSchema.status(401)),
+      PermissionDenied.pipe(HttpApiSchema.status(403)),
+      ClientNotFound.pipe(HttpApiSchema.status(404)),
+    ],
+  }).pipe(requirePermissions([Permissions.clientAccessManage]), authenticate, frontendSpecific),
   HttpApiEndpoint.post('clientAccessCreate', '/api/clients/:clientId/access', {
     params: { clientId: Ulid },
     payload: ClientAccessRequest,
@@ -119,9 +130,25 @@ export class ClientsApi extends HttpApiGroup.make('clients', { topLevel: true })
   })
     .middleware(ApiRequestBody)
     .pipe(
-      requirePermissions([Permissions.clientAccessCreate]),
+      requirePermissions([Permissions.clientAccessManage]),
       authenticate,
       rateLimit(RateLimits.tenPerMinute),
       frontendSpecific,
     ),
+  HttpApiEndpoint.delete('clientAccessRevoke', '/api/clients/:clientId/access/:accessId', {
+    params: { clientId: Ulid, accessId: Ulid },
+    success: HttpApiSchema.NoContent,
+    error: [
+      AuthenticationRequired.pipe(HttpApiSchema.status(401)),
+      PermissionDenied.pipe(HttpApiSchema.status(403)),
+      RequestRateLimited.pipe(HttpApiSchema.status(429)),
+      ClientNotFound.pipe(HttpApiSchema.status(404)),
+      ClientAccessNotFound.pipe(HttpApiSchema.status(404)),
+    ],
+  }).pipe(
+    requirePermissions([Permissions.clientAccessManage]),
+    authenticate,
+    rateLimit(RateLimits.tenPerMinute),
+    frontendSpecific,
+  ),
 ) {}

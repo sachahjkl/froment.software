@@ -2,10 +2,12 @@ import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import {
   ClientAccess,
+  ClientAccessList,
   ClientFailure,
   ClientList,
   ClientSummary,
   type ClientAccessValue,
+  type ClientAccessListValue,
   type ClientAccessRequestValue,
   type ClientCreateRequestValue,
   type ClientFailureCode,
@@ -88,6 +90,24 @@ export class ClientsApi {
     return requestOutcome(
       this.http.post<unknown>(`/api/clients/${clientId}/access`, request),
       ClientAccess,
+      ClientFailure,
+      'client.error',
+    );
+  }
+
+  async listAccess(clientId: UlidValue): Promise<ClientOutcome<ClientAccessListValue>> {
+    return requestOutcome(
+      this.http.get<unknown>(`/api/clients/${clientId}/access`),
+      ClientAccessList,
+      ClientFailure,
+      'client.error',
+    );
+  }
+
+  async revokeAccess(clientId: UlidValue, accessId: UlidValue): Promise<ClientOutcome<null>> {
+    return requestOutcome(
+      this.http.delete<unknown>(`/api/clients/${clientId}/access/${accessId}`),
+      Schema.Null,
       ClientFailure,
       'client.error',
     );

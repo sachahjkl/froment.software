@@ -190,6 +190,22 @@ describe('Database', () => {
     sqlite
       .prepare('insert into clients (id, created_at, updated_at) values (?, 1, 1)')
       .run(deletedClientId);
+    const deletedAccessId = '01ARZ3NDEKTSV4RRFFQ69G5FB0';
+    sqlite
+      .prepare(
+        "insert into users (id, display_name, kind, created_at, updated_at) values (?, 'Access', 'client', 1, 1)",
+      )
+      .run(deletedAccessId);
+    sqlite
+      .prepare(
+        'insert into client_access_accounts (user_id, client_id, created_at) values (?, ?, 1)',
+      )
+      .run(deletedAccessId, deletedClientId);
+    sqlite
+      .prepare(
+        "insert into password_credentials (user_id, email, password_hash, created_at, updated_at, password_changed_at) values (?, 'deleted@example.test', '$argon2id$test', 1, 1, 1)",
+      )
+      .run(deletedAccessId);
     sqlite
       .prepare(
         'insert into refresh_sessions (id, family_id, user_id, token_hmac, created_at, rotated_at, absolute_expires_at) values (?, ?, ?, ?, 1, 1, 2)',
@@ -207,6 +223,15 @@ describe('Database', () => {
         .pluck()
         .get(deletedClientId),
     ).toBe(1);
+    expect(
+      sqlite.prepare('select count(*) from users where id = ?').pluck().get(deletedAccessId),
+    ).toBe(0);
+    expect(
+      sqlite
+        .prepare("select count(*) from password_credentials where email = 'deleted@example.test'")
+        .pluck()
+        .get(),
+    ).toBe(0);
     expect(
       sqlite
         .prepare('select revoked_at is not null from refresh_sessions where user_id = ?')

@@ -47,10 +47,15 @@ export const ClientUpdateRequest = Schema.Struct({
 export type ClientUpdateRequest = typeof ClientUpdateRequest.Type;
 
 export const ClientAccess = Schema.Struct({
+  id: Ulid,
   clientId: Ulid,
   email: AccountEmail,
+  createdAt: Schema.Int,
 });
 export type ClientAccess = typeof ClientAccess.Type;
+
+export const ClientAccessList = Schema.Array(ClientAccess);
+export type ClientAccessList = typeof ClientAccessList.Type;
 
 export const ClientAccessRequest = Schema.Struct({
   email: AccountEmail,
@@ -82,6 +87,12 @@ export class ClientEmailConflict extends Schema.TaggedError<ClientEmailConflict>
   { httpApiStatus: 409 },
 ) {}
 
+export class ClientAccessNotFound extends Schema.TaggedError<ClientAccessNotFound>()(
+  'ClientAccessNotFound',
+  { code: Schema.Literal('client.access_not_found') },
+  { httpApiStatus: 404 },
+) {}
+
 export const ClientFailure = Schema.Union([
   AuthenticationRequired,
   PermissionDenied,
@@ -89,6 +100,7 @@ export const ClientFailure = Schema.Union([
   ClientArchived,
   ClientVersionConflict,
   ClientEmailConflict,
+  ClientAccessNotFound,
   RequestRateLimited,
 ]);
 export type ClientFailure = typeof ClientFailure.Type;

@@ -70,7 +70,7 @@ describe('API contracts', () => {
 
     expect(
       Option.getOrUndefined(Context.getOption(clientAccess.annotations, RequiredPermissions)),
-    ).toEqual(['client.access.create']);
+    ).toEqual(['client.access.manage']);
     expect(
       Option.getOrUndefined(Context.getOption(clientAccess.annotations, EndpointRateLimit)),
     ).toBe(10);

@@ -4,6 +4,7 @@ import { HttpEffect, HttpServerResponse } from 'effect/unstable/http';
 import { HttpApiBuilder } from 'effect/unstable/httpapi';
 
 import { authorizeClient } from '../authentication/http.js';
+import { Clients } from '../clients/clients.js';
 import { DocumentArtifacts } from '../documents/document-artifacts.js';
 import { setPdfResponseHeaders, setPrivateResponseHeaders } from '../http/response.js';
 import { ClientPortal } from './client-portal.js';
@@ -16,8 +17,11 @@ export const ClientPortalHandlers = HttpApiBuilder.group(Api, 'clientPortal', (h
         Effect.fn('clientQuoteList')(function* () {
           yield* setPrivateResponseHeaders;
           const principal = yield* authorizeClient('quote.read');
+          const clientId = yield* (yield* Clients)
+            .resolveAccessClientId(principal.userId)
+            .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
           return yield* (yield* ClientPortal)
-            .listQuotes(principal.userId)
+            .listQuotes(clientId)
             .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
         }),
       )
@@ -26,8 +30,11 @@ export const ClientPortalHandlers = HttpApiBuilder.group(Api, 'clientPortal', (h
         Effect.fn('clientOrderList')(function* () {
           yield* setPrivateResponseHeaders;
           const principal = yield* authorizeClient('order.read');
+          const clientId = yield* (yield* Clients)
+            .resolveAccessClientId(principal.userId)
+            .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
           return yield* (yield* ClientPortal)
-            .listOrders(principal.userId)
+            .listOrders(clientId)
             .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
         }),
       )
@@ -36,8 +43,11 @@ export const ClientPortalHandlers = HttpApiBuilder.group(Api, 'clientPortal', (h
         Effect.fn('clientInvoiceList')(function* () {
           yield* setPrivateResponseHeaders;
           const principal = yield* authorizeClient('invoice.read');
+          const clientId = yield* (yield* Clients)
+            .resolveAccessClientId(principal.userId)
+            .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
           return yield* (yield* ClientPortal)
-            .listInvoices(principal.userId)
+            .listInvoices(clientId)
             .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
         }),
       )
@@ -47,8 +57,11 @@ export const ClientPortalHandlers = HttpApiBuilder.group(Api, 'clientPortal', (h
           yield* setPrivateResponseHeaders;
           yield* setPdfResponseHeaders;
           const principal = yield* authorizeClient('document.download');
+          const clientId = yield* (yield* Clients)
+            .resolveAccessClientId(principal.userId)
+            .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
           const pdf = yield* (yield* ClientPortal)
-            .getQuotePdf(principal.userId, params.quoteId)
+            .getQuotePdf(clientId, params.quoteId)
             .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
           yield* HttpEffect.appendPreResponseHandler((_request, response) =>
             Effect.succeed(
@@ -68,8 +81,11 @@ export const ClientPortalHandlers = HttpApiBuilder.group(Api, 'clientPortal', (h
           yield* setPrivateResponseHeaders;
           yield* setPdfResponseHeaders;
           const principal = yield* authorizeClient('document.download');
+          const clientId = yield* (yield* Clients)
+            .resolveAccessClientId(principal.userId)
+            .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
           const pdf = yield* (yield* ClientPortal)
-            .getInvoicePdf(principal.userId, params.invoiceId)
+            .getInvoicePdf(clientId, params.invoiceId)
             .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
           yield* HttpEffect.appendPreResponseHandler((_request, response) =>
             Effect.succeed(
@@ -89,11 +105,14 @@ export const ClientPortalHandlers = HttpApiBuilder.group(Api, 'clientPortal', (h
           yield* setPrivateResponseHeaders;
           yield* setPdfResponseHeaders;
           const principal = yield* authorizeClient('document.download');
+          const clientId = yield* (yield* Clients)
+            .resolveAccessClientId(principal.userId)
+            .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
           const portal = yield* ClientPortal;
           yield* portal
-            .authorizeOrder(principal.userId, params.orderId)
+            .authorizeOrder(clientId, params.orderId)
             .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
-          const pdf = yield* portal.getOrderPdf(principal.userId, params.orderId).pipe(
+          const pdf = yield* portal.getOrderPdf(clientId, params.orderId).pipe(
             Effect.catchTag('DocumentNotFound', () =>
               Effect.gen(function* () {
                 yield* (yield* DocumentArtifacts).renderOrderPdf(params.orderId, null).pipe(
@@ -105,7 +124,7 @@ export const ClientPortalHandlers = HttpApiBuilder.group(Api, 'clientPortal', (h
                   ),
                 );
                 return yield* portal
-                  .getOrderPdf(principal.userId, params.orderId)
+                  .getOrderPdf(clientId, params.orderId)
                   .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
               }),
             ),

@@ -321,7 +321,7 @@ describe('HTTP server', () => {
     expect(mixed.status).toBe(401);
   });
 
-  it('creates client password credentials and disables their active access', async () => {
+  it('manages multiple client access accounts independently', async () => {
     const sessionHeaders = administratorSessionHeaders;
     const created = await fetch(`${baseUrl}/api/clients`, {
       method: 'POST',
@@ -336,6 +336,26 @@ describe('HTTP server', () => {
       body: JSON.stringify(credentials),
     });
     expect(access.status).toBe(200);
+    const firstAccess = (await access.json()) as { id: string; email: string };
+    const secondCredentials = {
+      email: 'billing@example.test',
+      password: 'billing-password-123',
+    };
+    const secondAccessResponse = await fetch(`${baseUrl}/api/clients/${client.id}/access`, {
+      method: 'POST',
+      headers: { ...sessionHeaders, 'content-type': 'application/json' },
+      body: JSON.stringify(secondCredentials),
+    });
+    expect(secondAccessResponse.status).toBe(200);
+    const secondAccess = (await secondAccessResponse.json()) as { id: string; email: string };
+    const accessList = await fetch(`${baseUrl}/api/clients/${client.id}/access`, {
+      headers: sessionHeaders,
+    });
+    expect(accessList.status).toBe(200);
+    expect(await accessList.json()).toEqual([
+      expect.objectContaining({ id: secondAccess.id, email: secondCredentials.email }),
+      expect.objectContaining({ id: firstAccess.id, email: credentials.email }),
+    ]);
     const login = await fetch(`${baseUrl}/api/auth/login`, {
       method: 'POST',
       headers: { 'content-type': 'application/json', origin: baseUrl },
@@ -344,10 +364,40 @@ describe('HTTP server', () => {
     const clientJar = new CookieJar();
     await storeResponseCookies(clientJar, login, baseUrl);
     const clientSessionHeaders = await cookieHeaders(clientJar, `${baseUrl}/api/client`);
+    const secondLogin = await fetch(`${baseUrl}/api/auth/login`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', origin: baseUrl },
+      body: JSON.stringify(secondCredentials),
+    });
+    const secondClientJar = new CookieJar();
+    await storeResponseCookies(secondClientJar, secondLogin, baseUrl);
+    const secondClientSessionHeaders = await cookieHeaders(
+      secondClientJar,
+      `${baseUrl}/api/client`,
+    );
     expect(
       (
         await fetch(`${baseUrl}/api/client/quotes`, {
           headers: clientSessionHeaders,
+        })
+      ).status,
+    ).toBe(200);
+    const revoked = await fetch(`${baseUrl}/api/clients/${client.id}/access/${firstAccess.id}`, {
+      method: 'DELETE',
+      headers: { ...sessionHeaders, origin: baseUrl },
+    });
+    expect(revoked.status).toBe(204);
+    expect(
+      (
+        await fetch(`${baseUrl}/api/client/quotes`, {
+          headers: clientSessionHeaders,
+        })
+      ).status,
+    ).toBe(401);
+    expect(
+      (
+        await fetch(`${baseUrl}/api/client/quotes`, {
+          headers: secondClientSessionHeaders,
         })
       ).status,
     ).toBe(200);
@@ -362,7 +412,7 @@ describe('HTTP server', () => {
     expect(
       (
         await fetch(`${baseUrl}/api/client/quotes`, {
-          headers: clientSessionHeaders,
+          headers: secondClientSessionHeaders,
         })
       ).status,
     ).toBe(401);
