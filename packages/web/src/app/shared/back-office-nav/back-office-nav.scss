@@ -1,9 +1,11 @@
 :host {
+  --scrollbar-size: var(--scrollbar-compact-size);
+  --scrollbar-thumb-border: 1px;
+
   display: block;
   max-width: 100%;
   overflow-x: auto;
   border-bottom: 1px solid var(--color-line-strong);
-  scrollbar-width: thin;
 }
 
 nav {

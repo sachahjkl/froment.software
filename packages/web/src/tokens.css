@@ -100,6 +100,9 @@
   --measure: 78ch;
   --control-height: 2.25rem;
   --shell-height: 3rem;
+  --scrollbar-size: 0.625rem;
+  --scrollbar-compact-size: 0.375rem;
+  --scrollbar-thumb-border: 2px;
   --z-header: 20;
   --z-skip-link: 40;
 

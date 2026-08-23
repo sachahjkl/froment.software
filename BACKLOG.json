@@ -2,6 +2,12 @@
   "version": 1,
   "items": [
     {
+      "id": "f84ddb0f-1d5b-4635-ad52-1b8af9f61e3c",
+      "title": "Harmoniser les barres de défilement",
+      "notes": "Appliquer des couleurs globales adaptées aux thèmes et réduire les barres horizontales des onglets.",
+      "status": "done"
+    },
+    {
       "id": "690e9a26-eefb-4fa8-9c18-f516c577dbe3",
       "title": "Créer un shell et un header dédiés au back-office",
       "notes": "Masquer les liens publics, déplacer la navigation principale, afficher le compte connecté et centraliser la déconnexion.",

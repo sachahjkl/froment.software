@@ -1,9 +1,11 @@
 :host {
+  --scrollbar-size: var(--scrollbar-compact-size);
+  --scrollbar-thumb-border: 1px;
+
   display: block;
   max-width: 100%;
   overflow-x: auto;
   overscroll-behavior-inline: contain;
-  scrollbar-width: thin;
 }
 
 .tab-list {

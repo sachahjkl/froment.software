@@ -16,6 +16,9 @@ h1 {
 }
 
 .configuration-tabs {
+  --scrollbar-size: var(--scrollbar-compact-size);
+  --scrollbar-thumb-border: 1px;
+
   display: flex;
   max-width: 100%;
   margin-top: var(--space-6);
