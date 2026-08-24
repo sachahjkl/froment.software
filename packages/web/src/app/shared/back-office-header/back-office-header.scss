@@ -75,17 +75,33 @@
 
 @media (max-width: 46rem) {
   .identity-row {
-    align-items: stretch;
-    flex-direction: column;
+    gap: var(--space-2);
   }
 
   .account-controls {
-    justify-content: flex-start;
+    flex: 1;
+    flex-wrap: nowrap;
+    min-width: 0;
   }
 
   .account {
-    width: 100%;
+    display: block;
+    min-width: 0;
     margin-right: 0;
-    text-align: left;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .brand small,
+  .account small,
+  .sign-out-label {
+    display: none;
+  }
+
+  .sign-out {
+    flex: 0 0 var(--control-height);
+    width: var(--control-height);
+    padding: 0;
   }
 }

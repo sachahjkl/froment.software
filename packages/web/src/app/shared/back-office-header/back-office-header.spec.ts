@@ -35,6 +35,10 @@ describe('BackOfficeHeader', () => {
       expect.arrayContaining([expect.stringMatching(/déconnecter|sign out/i)]),
     );
     expect(root.querySelector('.sign-out[data-button-variant="danger"] svg')).not.toBeNull();
+    expect(root.querySelector('.sign-out')?.getAttribute('aria-label')).toMatch(
+      /déconnecter|sign out/i,
+    );
+    expect(root.querySelector('.sign-out-label')).not.toBeNull();
     expect(root.querySelector('app-language-selector')).toBeNull();
     expect(root.querySelector('app-theme-toggle')).toBeNull();
     expect(root.querySelector('a[href="/services"]')).toBeNull();

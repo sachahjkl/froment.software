@@ -16,6 +16,12 @@
   ],
   "items": [
     {
+      "id": "e9023d9b-562d-4081-ae58-6169f908698b",
+      "title": "Compacter le compte du back-office sur mobile",
+      "notes": "Conserver l’en-tête sur une ligne, tronquer le compte et afficher la déconnexion comme bouton icône sous 46rem.",
+      "status": "done"
+    },
+    {
       "id": "f371e885-9388-4986-9cc5-2c7994537dd5",
       "title": "Corriger l’espacement initial des en-têtes",
       "notes": "Supprimer les marges hautes des en-têtes placés en premier dans les pages rembourrées et conditionner l’espace des titres à un frère précédent.",
