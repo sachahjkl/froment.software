@@ -16,6 +16,12 @@
   ],
   "items": [
     {
+      "id": "f371e885-9388-4986-9cc5-2c7994537dd5",
+      "title": "Corriger l’espacement initial des en-têtes",
+      "notes": "Supprimer les marges hautes des en-têtes placés en premier dans les pages rembourrées et conditionner l’espace des titres à un frère précédent.",
+      "status": "done"
+    },
+    {
       "id": "722fa09f-0cd3-41be-b3bb-fd22c2239608",
       "title": "Permettre le retour des longues références du blog",
       "notes": "Empêcher les chemins, URL et identifiants inline de dépasser la largeur du blog sur petits écrans.",
