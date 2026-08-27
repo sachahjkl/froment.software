@@ -1,68 +1,70 @@
+[English](README.md) | [Français](README.fr.md)
+
 # froment.software
 
-Workspace pnpm de Froment Software. Un serveur Effect sert l'API et le site Angular pré-rendu.
+Froment Software pnpm workspace. An Effect server serves the API and the pre-rendered Angular site.
 
 ## Architecture
 
-- `packages/web` contient l'application Angular.
-- `packages/api` contient le serveur Effect.
-- `packages/contracts` contient les schémas Effect partagés.
-- `packages/documents` contient les composants Angular des documents.
-- `@angular/build:application` produit le navigateur et le rendu serveur avec `outputMode: "static"`.
-- `packages/web/src/app/app.routes.server.ts` configure le rendu de chaque route Angular.
-- `pnpm build` écrit le site dans `packages/web/dist/froment-software/browser`.
-- `packages/web/src/app/app.routes.ts` porte les composants et les métadonnées de route.
-- `packages/web/src/app/app.ts` met à jour les métadonnées lors de la navigation.
-- Les ressources publiques sont dans `packages/web/public`.
-- La carte sociale déclarée dans `packages/web/src/index.html` mesure 1200 × 630.
+- `packages/web` contains the Angular application.
+- `packages/api` contains the Effect server.
+- `packages/contracts` contains the shared Effect schemas.
+- `packages/documents` contains the Angular document components.
+- `@angular/build:application` produces the browser and server rendering with `outputMode: "static"`.
+- `packages/web/src/app/app.routes.server.ts` configures the rendering of each Angular route.
+- `pnpm build` writes the site to `packages/web/dist/froment-software/browser`.
+- `packages/web/src/app/app.routes.ts` contains the route components and metadata.
+- `packages/web/src/app/app.ts` updates the metadata during navigation.
+- Public assets are in `packages/web/public`.
+- The social card declared in `packages/web/src/index.html` measures 1200 × 630.
 
-### Langues
+### Languages
 
-Le HTML initial et tout le pré-rendu sont en français (`<html lang="fr">`). Dans le navigateur, `I18nService` permet de passer entre français et anglais sans changer d’URL. Il restaure d’abord la préférence enregistrée dans `localStorage`, sinon choisit le français pour un navigateur francophone et l’anglais pour les autres.
+The initial HTML and all pre-rendered content are in French (`<html lang="fr">`). In the browser, `I18nService` switches between French and English without changing the URL. It first restores the preference saved in `localStorage`. Otherwise, it selects French for a French-language browser and English for other browsers.
 
-Cette préférence agit seulement après le chargement côté client. Ajoutez chaque texte dans `packages/web/src/app/i18n.service.ts`.
+This preference takes effect only after the client loads. Add each text to `packages/web/src/app/i18n.service.ts`.
 
-## Routes et indexation
+## Routes and indexing
 
-Les routes publiques indexables figurent dans `packages/web/public/sitemap.xml`.
+The indexable public routes are listed in `packages/web/public/sitemap.xml`.
 
-- `/design` est un atelier de QA visuelle, volontairement absent de la navigation publique et du sitemap, avec `noindex, follow`.
-- `/404` est pré-rendue, porte `noindex, nofollow` et sert de contenu d’erreur.
-- La route Angular générique affiche le même composant pendant une navigation cliente inconnue.
-- Le serveur Effect renvoie un statut `404` pour une URL absente.
+- `/design` is a visual QA workshop. It is intentionally absent from public navigation and the sitemap, with `noindex, follow`.
+- `/404` is pre-rendered, uses `noindex, nofollow`, and provides the error content.
+- The generic Angular route displays the same component during unknown client-side navigation.
+- The Effect server returns a `404` status for a missing URL.
 
-Le serveur résout les fichiers et les répertoires pré-rendus. Il n'utilise pas de fallback général vers `/index.html`.
+The server resolves pre-rendered files and directories. It does not use a general fallback to `/index.html`.
 
-### Ajouter une route
+### Add a route
 
-1. Ajoutez le composant dans `packages/web/src/app/pages/`.
-2. Déclarez le chemin sans slash final dans `packages/web/src/app/app.routes.ts`.
-3. Fournissez `titleKey` et `descriptionKey` dans les deux langues.
-4. Définissez `robots` pour une route non indexable.
-5. Ajoutez les accès de navigation nécessaires.
-6. Si la route est indexable, ajoutez son URL dans `packages/web/public/sitemap.xml`.
-7. Vérifiez le HTML, les métadonnées, les langues et les statuts HTTP.
+1. Add the component to `packages/web/src/app/pages/`.
+2. Declare the path without a trailing slash in `packages/web/src/app/app.routes.ts`.
+3. Provide `titleKey` and `descriptionKey` in both languages.
+4. Set `robots` for a non-indexable route.
+5. Add the required navigation links.
+6. If the route is indexable, add its URL to `packages/web/public/sitemap.xml`.
+7. Check the HTML, metadata, languages, and HTTP statuses.
 
-## Système de design et QA visuelle
+## Design system and visual QA
 
-Les tokens globaux sont dans `packages/web/src/tokens.css`.
+The global tokens are in `packages/web/src/tokens.css`.
 
-Les primitives globales sont dans `packages/web/src/styles.scss`.
+The global primitives are in `packages/web/src/styles.scss`.
 
-Les styles propres à un composant restent avec ce composant.
+Component-specific styles remain with that component.
 
-Avant de modifier une valeur ou une primitive partagée, ouvrir `/design`. Cette route rassemble fondations, composants, données, états, compositions responsives et mouvement. Après une modification, maintenir ses spécimens à jour et contrôler au minimum :
+Before you change a shared value or primitive, open `/design`. This route groups foundations, components, data, states, responsive compositions, and motion. After a change, keep its specimens current and check at least:
 
-- français et anglais;
-- clavier, focus visible, états normal/survol/actif/désactivé/erreur;
-- largeurs mobile et bureau, sans débordement horizontal;
-- préférence système de réduction des animations.
+- French and English;
+- keyboard use, visible focus, and normal/hover/active/disabled/error states;
+- mobile and desktop widths, without horizontal overflow;
+- the system preference for reduced motion.
 
-La route `/design` reste cachée et non indexable; ne pas l’ajouter au sitemap.
+The `/design` route remains hidden and non-indexable. Do not add it to the sitemap.
 
-## Développement local
+## Local development
 
-Prérequis : Node.js 22 et pnpm 11.20.0, ou `nix develop`.
+Prerequisites: Node.js 22 and pnpm 11.20.0, or `nix develop`.
 
 ```bash
 pnpm install --frozen-lockfile
@@ -73,7 +75,7 @@ pnpm --filter @froment/api db:migrate # migration explicite de la base
 pnpm test        # tests Angular
 ```
 
-Le flake construit et vérifie le site sans accès réseau pendant la compilation :
+The flake builds and checks the site without network access during the build:
 
 ```bash
 nix flake check          # build, tests, workflow et image
@@ -82,13 +84,13 @@ nix run                  # serveur Effect local sur le port 3000
 nix build .#dockerImage  # archive Docker reproductible
 ```
 
-## Déploiement Podman
+## Podman deployment
 
-Le flake construit une archive Docker avec Node.js, le serveur Effect et le site pré-rendu.
+The flake builds a Docker archive with Node.js, the Effect server, and the pre-rendered site.
 
-L'image exécute `froment-software-migrate`, puis démarre `froment-software` seulement après sa réussite. Le démarrage direct du serveur n'exécute aucune migration.
+The image runs `froment-software-migrate`, then starts `froment-software` only after it succeeds. Starting the server directly does not run migrations.
 
-Lors d'un déploiement, arrêtez l'ancien conteneur avant de démarrer le nouveau. Sauvegardez le volume, puis lancez le nouveau conteneur avec la commande ci-dessous.
+During deployment, stop the old container before you start the new one. Back up the volume, then start the new container with the command below.
 
 ```bash
 podman load < result
@@ -99,18 +101,18 @@ podman run --rm \
   froment-software:0.0.0
 ```
 
-GitHub Actions vérifie le flake, construit le site, puis publie l’image avec le SHA et le tag `latest` sur la branche par défaut.
+GitHub Actions checks the flake, builds the site, then publishes the image with the SHA and the `latest` tag on the default branch.
 
-Le serveur exige `PUBLIC_ORIGIN` au démarrage. Fournissez l'origine publique complète de chaque environnement, sans chemin.
+The server requires `PUBLIC_ORIGIN` at startup. Provide the complete public origin for each environment, without a path.
 
-L'image utilise l'utilisateur non-root `froment` avec l'UID 1000. Donnez cet UID comme propriétaire aux volumes montés depuis l'hôte.
+The image uses the non-root user `froment` with UID 1000. Make this UID the owner of volumes mounted from the host.
 
-Le serveur exige `BUSINESS_TIME_ZONE`, avec un nom de fuseau IANA valide. La production utilise explicitement `Europe/Paris`.
+The server requires `BUSINESS_TIME_ZONE` with a valid IANA time zone name. Production explicitly uses `Europe/Paris`.
 
-Ce fuseau définit la date métier des émissions de facture. Les horodatages techniques restent en UTC.
+This time zone defines the business date for invoice issuance. Technical timestamps remain in UTC.
 
-## Contenus juridiques
+## Legal content
 
-Les pages juridiques utilisent les textes de `packages/web/src/app/i18n.service.ts`.
+The legal pages use the text from `packages/web/src/app/i18n.service.ts`.
 
-Leur contenu doit décrire le comportement réellement déployé.
+Their content must describe the behavior that is actually deployed.
