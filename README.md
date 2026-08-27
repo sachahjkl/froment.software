@@ -1,5 +1,3 @@
-[English](README.md) | [Français](README.fr.md)
-
 # froment.software
 
 Froment Software pnpm workspace. An Effect server serves the API and the pre-rendered Angular site.
