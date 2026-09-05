@@ -23,6 +23,10 @@ L’impression retire cette marge, la bordure et l’ombre du conteneur.
 Les pages publiques utilisent `.page-intro` pour leur introduction et `.contact-panel` pour leur zone de contact.
 Les titres d’introduction utilisent `--text-hero`, sans modifier les titres des éditeurs métier.
 Les blocs de contenu réutilisent `.ds-panel` et les couleurs des deux thèmes.
+Ces panneaux internes utilisent uniquement le fond `--color-panel` et les petits arrondis, sans bordure ni ombre.
+Cette règle couvre notamment la recherche, les indicateurs et le bloc « Nos prestations ».
+Le fond est plus sombre que la page en thème clair et plus clair en thème sombre.
+Les boutons, les champs, les alertes et les séparateurs conservent leurs marques de contrôle ou de structure.
 
 L’accueil place les prestations à côté de son introduction sur grand écran.
 La grille d’expertise regroupe les sujets dans une surface commune.

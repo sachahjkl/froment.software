@@ -120,6 +120,7 @@
   --color-surface: #fafafa;
   --color-surface-raised: #fff;
   --color-surface-sunken: #e9e8ed;
+  --color-panel: var(--color-surface-sunken);
   --color-selection: #d8e2f0;
 
   --color-link: #064fd5;
@@ -179,6 +180,7 @@
   --color-surface: #20202a;
   --color-surface-raised: #292934;
   --color-surface-sunken: #121219;
+  --color-panel: var(--color-surface-raised);
   --color-selection: #38516d;
 
   --color-link: #8ab8ff;
