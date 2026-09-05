@@ -1,4 +1,5 @@
 import {
+  DocumentIncomplete,
   PublicQuoteConsultation,
   QuoteAcceptanceResult,
   QuoteLinkNotFound,
@@ -28,6 +29,7 @@ import { Database, DatabaseError } from '../database/database.js';
 import { BusinessConfig } from '../business/business-config.js';
 import { allocateBusinessReference, businessYear } from '../business/business-references.js';
 import { verifyArtifactContent } from '../documents/artifact-integrity.js';
+import { validateDocumentParties } from '../documents/validation.js';
 import { expireSentQuotes } from '../quotes/quote-expiration.js';
 
 const QuoteSendRecord = Schema.Struct({
@@ -36,6 +38,7 @@ const QuoteSendRecord = Schema.Struct({
   version: Schema.Int,
   revisionId: Ulid,
   artifactId: Schema.NullOr(Ulid),
+  renderSnapshot: Schema.String,
 });
 
 const PublicQuoteRecord = Schema.Struct({
@@ -85,6 +88,7 @@ type QuoteSendError =
   | QuoteNotEditable
   | QuoteVersionConflict
   | QuotePdfRequired
+  | DocumentIncomplete
   | DatabaseError;
 
 export interface QuoteLinksService {
@@ -140,6 +144,7 @@ export const QuoteLinksLive = Layer.effect(
                 .prepare(
                   `select quotes.reference, quotes.status, quotes.version,
                           quote_revisions.id as revisionId,
+                          quote_revisions.render_snapshot as renderSnapshot,
                           document_artifacts.id as artifactId
                    from quotes
                    join quote_revisions
@@ -165,6 +170,10 @@ export const QuoteLinksLive = Layer.effect(
               if (quote.artifactId === null) {
                 throw new QuotePdfRequired({ code: 'quote.pdf_required' });
               }
+
+              validateDocumentParties(
+                Schema.decodeUnknownSync(QuoteRenderSnapshot)(JSON.parse(quote.renderSnapshot)),
+              );
 
               database.sqlite
                 .prepare(
@@ -221,7 +230,8 @@ export const QuoteLinksLive = Layer.effect(
             cause instanceof QuoteNotFound ||
             cause instanceof QuoteNotEditable ||
             cause instanceof QuoteVersionConflict ||
-            cause instanceof QuotePdfRequired
+            cause instanceof QuotePdfRequired ||
+            cause instanceof DocumentIncomplete
           ) {
             return cause;
           }

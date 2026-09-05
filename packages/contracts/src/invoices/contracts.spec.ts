@@ -52,6 +52,7 @@ describe('invoice contracts', () => {
     expect(() =>
       Schema.decodeUnknownSync(InvoiceRevisionCreateRequest)({
         expectedVersion: 1,
+        refreshParties: false,
         title: 'Invoice',
         serviceDate: '2026-08-20',
         dueDate: '2026-09-19',
@@ -72,6 +73,7 @@ describe('invoice contracts', () => {
         serviceDate: '2026-08-20',
         dueDate: '2026-09-19',
         paymentTerms: '',
+        refreshParties: false,
         lines: Array.from({ length: 20 }, () => revisionLine),
       }).lines,
     ).toHaveLength(20);
@@ -82,6 +84,7 @@ describe('invoice contracts', () => {
         serviceDate: '2026-08-20',
         dueDate: '2026-09-19',
         paymentTerms: '',
+        refreshParties: false,
         lines: Array.from({ length: 21 }, () => revisionLine),
       }),
     ).toThrow();

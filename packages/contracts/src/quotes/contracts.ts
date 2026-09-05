@@ -17,6 +17,7 @@ import {
 import {
   DocumentNotFound,
   DocumentParty,
+  DocumentIncomplete,
   IssuerSettings,
   QuotePreviewUnavailable,
 } from '../documents/contracts.js';
@@ -269,6 +270,7 @@ export const QuoteFailure = Schema.Union([
   QuoteLinkNotSignable,
   DocumentNotFound,
   ClientNotFound,
+  DocumentIncomplete,
   ClientArchived,
   RequestRateLimited,
 ]);

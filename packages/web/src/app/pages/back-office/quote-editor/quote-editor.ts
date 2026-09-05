@@ -25,6 +25,7 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { DomSanitizer, type SafeResourceUrl } from '@angular/platform-browser';
 import {
   Ulid,
+  type DocumentIssueValue,
   type ClientListValue,
   type QuoteCreateRequestValue,
   type QuoteCancellationReasonValue,
@@ -47,6 +48,7 @@ import { Button } from '@shared/button/button';
 import { CopyField } from '@shared/copy-field/copy-field';
 import { DetailRow } from '@shared/detail-row/detail-row';
 import { Notice } from '@shared/notice/notice';
+import { DocumentIssues } from '@shared/document-issues/document-issues';
 import { OutcomePanel } from '@shared/outcome-panel/outcome-panel';
 import { Icon } from '@shared/icon/icon';
 import { TextCopy } from '@shared/text-copy';
@@ -83,7 +85,17 @@ const statusKeys = {
 
 @Component({
   selector: 'app-quote-editor',
-  imports: [Button, CopyField, DetailRow, FormField, Icon, Notice, OutcomePanel, RouterLink],
+  imports: [
+    Button,
+    CopyField,
+    DetailRow,
+    DocumentIssues,
+    FormField,
+    Icon,
+    Notice,
+    OutcomePanel,
+    RouterLink,
+  ],
   templateUrl: './quote-editor.html',
   styleUrl: './quote-editor.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -124,6 +136,7 @@ export class QuoteEditor {
   protected readonly sentLink = signal<QuoteSendResultValue['link'] | undefined>(undefined);
   protected readonly linkCopied = signal(false);
   protected readonly error = signal<TranslationKey | undefined>(undefined);
+  protected readonly documentIssues = signal<ReadonlyArray<DocumentIssueValue>>([]);
   private readonly model = signal<QuoteModel>({
     clientId: '',
     conditions: '',
@@ -169,12 +182,7 @@ export class QuoteEditor {
     () => this.isNew() || ['draft', 'expired'].includes(this.detail()?.status ?? ''),
   );
   protected readonly saveDisabled = computed(
-    () =>
-      this.saving() ||
-      this.loading() ||
-      !this.editable() ||
-      this.quoteForm().invalid() ||
-      (this.quoteId() !== undefined && !this.quoteForm().dirty()),
+    () => this.saving() || this.loading() || !this.editable() || this.quoteForm().invalid(),
   );
   protected readonly sendDisabled = computed(() => {
     const quote = this.detail();
@@ -283,6 +291,7 @@ export class QuoteEditor {
       this.saving.set(false);
       if (!outcome.success) return this.setError(outcome.code);
       this.detail.set(outcome.result);
+      this.documentIssues.set([]);
       void this.showPreview(outcome.result.version);
       this.model.set(this.modelFromDetail(outcome.result));
       this.quoteForm().reset();
@@ -324,10 +333,15 @@ export class QuoteEditor {
     const quote = this.detail();
     if (quote === undefined) return;
     this.sending.set(true);
+    this.documentIssues.set([]);
     this.error.set(undefined);
     this.linkCopied.set(false);
     const outcome = await this.quotesApi.send(quoteId, { expectedVersion: quote.version });
     this.sending.set(false);
+    if (!outcome.success && outcome.failure?._tag === 'DocumentIncomplete') {
+      this.documentIssues.set(outcome.failure.issues);
+      return;
+    }
     if (!outcome.success) return this.setError(outcome.code);
     this.detail.set({ ...quote, status: outcome.result.status });
     this.sentLink.set(outcome.result.link);
@@ -409,6 +423,7 @@ export class QuoteEditor {
     this.linkCopied.set(false);
     this.error.set(undefined);
     this.unavailable.set(false);
+    this.documentIssues.set([]);
     this.loading.set(true);
     this.model.set({ clientId: '', conditions: '', lines: [emptyLine()], title: '' });
     this.quoteForm().reset();

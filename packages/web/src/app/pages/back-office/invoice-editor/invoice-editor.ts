@@ -27,6 +27,7 @@ import { DomSanitizer, type SafeResourceUrl } from '@angular/platform-browser';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import {
   Ulid,
+  type DocumentIssueValue,
   type InvoiceCreateRequestValue,
   type InvoiceDetailValue,
   type InvoiceRevisionCreateRequestValue,
@@ -44,6 +45,7 @@ import { I18nService, type TranslationKey } from '@app/i18n.service';
 import { Button } from '@shared/button/button';
 import { DetailRow } from '@shared/detail-row/detail-row';
 import { Notice } from '@shared/notice/notice';
+import { DocumentIssues } from '@shared/document-issues/document-issues';
 import { OutcomePanel } from '@shared/outcome-panel/outcome-panel';
 import { Icon } from '@shared/icon/icon';
 
@@ -55,6 +57,7 @@ interface InvoiceLineModel {
 }
 
 interface InvoiceModel {
+  readonly refreshParties: boolean;
   readonly orderId: string;
   readonly title: string;
   readonly serviceDate: string;
@@ -90,12 +93,13 @@ const errorKeys = {
   'invoice.invalid_dates': 'invoice.invalid_dates',
   'invoice.invalid_transition': 'invoice.invalid_transition',
   'document.not_found': 'document.not_found',
+  'document.incomplete': 'document.incomplete',
   'invoice.error': 'invoice.error',
 } as const satisfies Record<InvoiceErrorCode, TranslationKey>;
 
 @Component({
   selector: 'app-invoice-editor',
-  imports: [Button, DetailRow, FormField, Icon, Notice, OutcomePanel, RouterLink],
+  imports: [Button, DetailRow, DocumentIssues, FormField, Icon, Notice, OutcomePanel, RouterLink],
   templateUrl: './invoice-editor.html',
   styleUrl: './invoice-editor.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -129,7 +133,9 @@ export class InvoiceEditor {
       : `/api/invoices/${invoiceId}/revisions/${version}/preview`;
   });
   protected readonly error = signal<TranslationKey | undefined>(undefined);
+  protected readonly documentIssues = signal<ReadonlyArray<DocumentIssueValue>>([]);
   private readonly model = signal<InvoiceModel>({
+    refreshParties: false,
     orderId: '',
     title: '',
     serviceDate: '',
@@ -277,6 +283,7 @@ export class InvoiceEditor {
           if (current === undefined || lines === undefined) return this.setError('invoice.error');
           const request: InvoiceRevisionCreateRequestValue = {
             expectedVersion: current.version,
+            refreshParties: model.refreshParties,
             title: model.title.trim(),
             serviceDate: model.serviceDate,
             dueDate: model.dueDate,
@@ -309,8 +316,13 @@ export class InvoiceEditor {
     if (!globalThis.confirm(this.i18n.t('backOffice.invoice.issueConfirm'))) return;
     this.actionPending.set(true);
     this.error.set(undefined);
+    this.documentIssues.set([]);
     try {
       const outcome = await this.invoicesApi.issue(this.invoiceId()!, invoice.version);
+      if (!outcome.success && outcome.failure?._tag === 'DocumentIncomplete') {
+        this.documentIssues.set(outcome.failure.issues);
+        return;
+      }
       if (!outcome.success) return this.setError(outcome.code);
       await this.reload();
     } catch {
@@ -385,8 +397,10 @@ export class InvoiceEditor {
     this.generatedPdfVersions.set(new Set());
     this.error.set(undefined);
     this.unavailable.set(false);
+    this.documentIssues.set([]);
     this.loading.set(true);
     this.model.set({
+      refreshParties: false,
       orderId: '',
       title: '',
       serviceDate: '',
@@ -463,6 +477,7 @@ export class InvoiceEditor {
 
   private applyDetail(detail: InvoiceDetailValue): void {
     this.detail.set(detail);
+    this.documentIssues.set([]);
     this.showPreview(detail.version);
     this.model.set(this.modelFromDetail(detail));
     this.invoiceForm().reset();
@@ -473,6 +488,7 @@ export class InvoiceEditor {
     const revision = detail.currentRevision;
     return {
       orderId: detail.orderId,
+      refreshParties: false,
       title: revision.title,
       serviceDate: revision.serviceDate,
       dueDate: revision.dueDate,

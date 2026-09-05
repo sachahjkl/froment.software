@@ -1,5 +1,7 @@
 import {
   CalendarDate,
+  DocumentIncomplete,
+  DocumentParty,
   InvoiceAlreadyExists,
   InvoiceAmountTooLarge,
   InvoiceDetail,
@@ -37,6 +39,7 @@ import { BusinessConfig } from '../business/business-config.js';
 import { allocateBusinessReference, businessYear } from '../business/business-references.js';
 import { Database, DatabaseError } from '../database/database.js';
 import { calculateDocumentLine, calculateDocumentTotals } from '../documents/calculation.js';
+import { validateDocumentParties } from '../documents/validation.js';
 import { IssuerSettings } from '../issuer-settings/service.js';
 
 const InvoiceRecord = Schema.Struct({
@@ -153,6 +156,7 @@ export interface InvoicesService {
     | InvoiceVersionConflict
     | InvoiceInvalidDates
     | InvoiceInvalidTransition
+    | DocumentIncomplete
     | DatabaseError
   >;
   readonly markPaid: (
@@ -589,7 +593,7 @@ export const InvoicesLive = Layer.effect(
       actorUserId: UlidValue,
     ) {
       const now = yield* Clock.currentTimeMillis;
-      const issuer = yield* issuerSettings.get;
+      const issuer = request.refreshParties ? yield* issuerSettings.get : undefined;
       return yield* Effect.try({
         try: () =>
           database.sqlite
@@ -622,6 +626,20 @@ export const InvoicesLive = Layer.effect(
               const current = Schema.decodeUnknownSync(InvoiceRenderSnapshot)(
                 JSON.parse(currentRecord.renderSnapshot),
               );
+              const client = request.refreshParties
+                ? Schema.decodeUnknownSync(DocumentParty)(
+                    database.sqlite
+                      .prepare(
+                        `select users.display_name as displayName,
+                              clients.address_line_1 as addressLine1,
+                              clients.address_line_2 as addressLine2,
+                              clients.postal_code as postalCode, clients.city,
+                              clients.country, clients.email
+                       from clients join users on users.id = clients.id where clients.id = ?`,
+                      )
+                      .get(invoice.clientId),
+                  )
+                : current.client;
               const nextVersion = invoice.version + 1;
               const updated = database.sqlite
                 .prepare(
@@ -643,8 +661,8 @@ export const InvoicesLive = Layer.effect(
                 version: nextVersion,
                 invoiceNumber: null,
                 issuedAt: null,
-                issuer,
-                client: current.client,
+                issuer: issuer ?? current.issuer,
+                client,
                 title: request.title,
                 serviceDate: request.serviceDate,
                 dueDate: request.dueDate,
@@ -658,7 +676,10 @@ export const InvoicesLive = Layer.effect(
                 actorUserId,
                 resourceType: 'invoice',
                 resourceId: invoiceId,
-                metadata: { version: String(nextVersion) },
+                metadata: {
+                  version: String(nextVersion),
+                  refreshParties: String(request.refreshParties),
+                },
                 occurredAt: now,
               });
               const detail = readDetail(invoiceId);
@@ -754,6 +775,7 @@ export const InvoicesLive = Layer.effect(
               );
               const issueDate = invoiceIssueDate(now, businessConfig.timeZone);
               validateDates(current.serviceDate, current.dueDate, issueDate);
+              validateDocumentParties(current);
               const invoiceNumber = allocateBusinessReference(
                 database.sqlite,
                 'invoice',
@@ -841,7 +863,8 @@ export const InvoicesLive = Layer.effect(
             cause instanceof InvoiceNotFound ||
             cause instanceof InvoiceVersionConflict ||
             cause instanceof InvoiceInvalidDates ||
-            cause instanceof InvoiceInvalidTransition
+            cause instanceof InvoiceInvalidTransition ||
+            cause instanceof DocumentIncomplete
           ) {
             return cause;
           }

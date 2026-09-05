@@ -13,7 +13,12 @@ import {
   SafeInteger,
   documentTotalsFilter,
 } from '../documents/lines.js';
-import { DocumentNotFound, DocumentParty, IssuerSettings } from '../documents/contracts.js';
+import {
+  DocumentIncomplete,
+  DocumentNotFound,
+  DocumentParty,
+  IssuerSettings,
+} from '../documents/contracts.js';
 import { CalendarDate, IsoUtc } from '../temporal.js';
 import {
   InvoiceNumber,
@@ -56,6 +61,7 @@ export type InvoiceCreateRequest = typeof InvoiceCreateRequest.Type;
 
 export const InvoiceRevisionCreateRequest = Schema.Struct({
   expectedVersion: PositiveSafeInteger,
+  refreshParties: Schema.Boolean,
   title: InvoiceTitle,
   serviceDate: CalendarDate,
   dueDate: CalendarDate,
@@ -239,5 +245,6 @@ export const InvoiceFailure = Schema.Union([
   InvoiceInvalidDates,
   InvoiceInvalidTransition,
   DocumentNotFound,
+  DocumentIncomplete,
 ]);
 export type InvoiceFailure = typeof InvoiceFailure.Type;

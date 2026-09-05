@@ -27,6 +27,22 @@ export type IssuerSettings = typeof IssuerSettings.Type;
 export const IssuerSettingsUpdateRequest = IssuerSettings;
 export type IssuerSettingsUpdateRequest = typeof IssuerSettingsUpdateRequest.Type;
 
+export const DocumentIssue = Schema.Struct({
+  party: Schema.Literals(['issuer', 'client']),
+  field: Schema.Literals(['displayName', 'addressLine1', 'city', 'country', 'email']),
+  reason: Schema.Literals(['required', 'invalid_email']),
+});
+export type DocumentIssue = typeof DocumentIssue.Type;
+
+export class DocumentIncomplete extends Schema.TaggedError<DocumentIncomplete>()(
+  'DocumentIncomplete',
+  {
+    code: Schema.Literal('document.incomplete'),
+    issues: Schema.Array(DocumentIssue).check(Schema.isMinLength(1), Schema.isMaxLength(10)),
+  },
+  { httpApiStatus: 409 },
+) {}
+
 export const DocumentArtifact = Schema.Struct({
   id: Ulid,
   quoteReference: QuoteReference,

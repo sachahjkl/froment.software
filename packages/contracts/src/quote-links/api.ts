@@ -13,6 +13,7 @@ import {
   RequestRateLimited,
 } from '../authentication/contracts.js';
 import { Ulid } from '../identifiers.js';
+import { DocumentIncomplete } from '../documents/contracts.js';
 import { Permissions } from '../permissions.js';
 import {
   PublicQuoteAccessRequest,
@@ -42,6 +43,7 @@ export class QuoteLinksApi extends HttpApiGroup.make('quoteLinks', { topLevel: t
       QuoteVersionConflict.pipe(HttpApiSchema.status(409)),
       QuoteNotEditable.pipe(HttpApiSchema.status(409)),
       QuotePdfRequired.pipe(HttpApiSchema.status(409)),
+      DocumentIncomplete.pipe(HttpApiSchema.status(409)),
     ],
   })
     .middleware(ApiRequestBody)

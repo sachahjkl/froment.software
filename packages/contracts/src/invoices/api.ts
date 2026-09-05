@@ -8,7 +8,7 @@ import {
   PermissionDenied,
   RequestRateLimited,
 } from '../authentication/contracts.js';
-import { DocumentNotFound } from '../documents/contracts.js';
+import { DocumentIncomplete, DocumentNotFound } from '../documents/contracts.js';
 import { Ulid } from '../identifiers.js';
 import {
   CalendarDateText,
@@ -130,6 +130,7 @@ export class InvoicesApi extends HttpApiGroup.make('invoices', { topLevel: true 
       InvoiceVersionConflict.pipe(HttpApiSchema.status(409)),
       InvoiceInvalidDates.pipe(HttpApiSchema.status(422)),
       InvoiceInvalidTransition.pipe(HttpApiSchema.status(409)),
+      DocumentIncomplete.pipe(HttpApiSchema.status(409)),
     ],
   })
     .middleware(ApiRequestBody)

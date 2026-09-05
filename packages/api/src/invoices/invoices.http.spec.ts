@@ -51,6 +51,7 @@ describe('invoice HTTP routes', () => {
       body: JSON.stringify({
         expectedVersion: 1,
         title: 'Final invoice',
+        refreshParties: false,
         serviceDate: payload.serviceDate,
         dueDate: payload.dueDate,
         paymentTerms: payload.paymentTerms,

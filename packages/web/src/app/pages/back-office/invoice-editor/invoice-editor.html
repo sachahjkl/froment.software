@@ -203,6 +203,11 @@
     <p appNotice variant="danger" role="alert">{{ i18n.t(errorKey) }}</p>
     } @else if (invoiceForm().invalid() && invoiceForm().touched()) {
     <p appNotice variant="danger" role="alert">{{ i18n.t('backOffice.invoice.validation') }}</p>
+    } @if (!isNew() && editable()) {
+    <label class="choice">
+      <input type="checkbox" [formField]="invoiceForm.refreshParties" />
+      {{ i18n.t('document.refreshParties') }}
+    </label>
     }
     <button appButton variant="primary" type="submit" [disabled]="saveDisabled()">
       @if (saving()) { {{ i18n.t('backOffice.invoice.saving') }} } @else { {{
@@ -212,6 +217,9 @@
 
   @if (detail(); as invoice) {
   <aside appOutcomePanel>
+    @if (invoice.status === 'draft' && documentIssues().length > 0) {
+    <app-document-issues [issues]="documentIssues()" [clientId]="invoice.clientId" kind="invoice" />
+    }
     <p appDetailRow [label]="i18n.t('backOffice.invoices.number')">
       <strong>{{ invoice.invoiceNumber ?? i18n.t('backOffice.invoice.draft') }}</strong>
     </p>

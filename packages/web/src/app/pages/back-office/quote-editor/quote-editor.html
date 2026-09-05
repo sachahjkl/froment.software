@@ -197,6 +197,9 @@
       @if (saving()) { {{ i18n.t('backOffice.quote.saving') }} } @else { {{
       i18n.t('backOffice.quote.save') }} }
     </button>
+    @if (!isNew() && editable()) {
+    <p class="hint">{{ i18n.t('document.quote.refreshHint') }}</p>
+    }
   </form>
 
   @if (detail(); as quote) {
@@ -225,7 +228,9 @@
         <dd>{{ money(quote.currentRevision.totalCents) }}</dd>
       </div>
     </dl>
-    @if (quote.status === 'draft') {
+    @if (quote.status === 'draft') { @if (documentIssues().length > 0) {
+    <app-document-issues [issues]="documentIssues()" [clientId]="quote.clientId" kind="quote" />
+    }
     <button
       class="send-quote"
       appButton

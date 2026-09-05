@@ -454,6 +454,21 @@ export const translations = {
     'backOffice.quote.link.copy': 'Copier le permalien',
     'backOffice.quote.link.copied': 'Permalien copié.',
     'document.not_found': 'Ce document est introuvable.',
+    'document.incomplete': 'Complétez les coordonnées avant de publier ce document.',
+    'document.field.name': 'Nom',
+    'document.required': 'champ requis',
+    'document.quote.refreshHint':
+      'Chaque enregistrement crée une nouvelle version avec les coordonnées actuelles de l’entreprise et du client.',
+    'document.invalidEmail': 'saisissez une adresse e-mail valide',
+    'document.issue': '{field} : {reason}.',
+    'document.issuer.edit': 'Corriger la fiche entreprise',
+    'document.client.edit': 'Corriger la fiche client',
+    'document.quote.recovery':
+      'Corrigez les fiches, puis enregistrez une nouvelle version du devis et générez son PDF avant de recréer le lien.',
+    'document.invoice.recovery':
+      'Corrigez les fiches. Dans le brouillon, cochez l’actualisation des coordonnées, puis enregistrez une nouvelle version avant l’émission.',
+    'document.refreshParties':
+      'Actualiser les coordonnées de l’entreprise et du client depuis leurs fiches lors de cet enregistrement.',
     'backOffice.quote.dirtyTotals': 'Les montants affichés correspondent à la dernière sauvegarde.',
     'backOffice.quote.validation': 'Vérifiez les champs du devis.',
     'backOffice.quote.fieldRequired': 'Ce champ est obligatoire.',
@@ -1664,6 +1679,21 @@ export const translations = {
     'backOffice.quote.link.copy': 'Copy permalink',
     'backOffice.quote.link.copied': 'Permalink copied.',
     'document.not_found': 'This document was not found.',
+    'document.incomplete': 'Complete the contact details before publishing this document.',
+    'document.field.name': 'Name',
+    'document.required': 'required field',
+    'document.quote.refreshHint':
+      'Each save creates a new revision with the current company and client details.',
+    'document.invalidEmail': 'enter a valid email address',
+    'document.issue': '{field}: {reason}.',
+    'document.issuer.edit': 'Correct company details',
+    'document.client.edit': 'Correct client details',
+    'document.quote.recovery':
+      'Correct the profiles, then save a new quote revision and generate its PDF before creating the link again.',
+    'document.invoice.recovery':
+      'Correct the profiles. In the draft, select the contact details refresh, then save a new revision before issuing the invoice.',
+    'document.refreshParties':
+      'Refresh company and client details from their profiles when saving this revision.',
     'backOffice.quote.dirtyTotals': 'Displayed amounts are from the last save.',
     'backOffice.quote.validation': 'Check the quote fields.',
     'backOffice.quote.fieldRequired': 'This field is required.',
