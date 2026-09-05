@@ -28,8 +28,8 @@
       aria-labelledby="client-profile-tab"
       tabindex="0"
     >
-      <form (submit)="save($event)">
-        <label class="field" for="detail-display-name">
+      <form class="profile-form field-grid" (submit)="save($event)">
+        <label class="field wide" for="detail-display-name">
           {{ i18n.t('backOffice.clients.displayName') }}
           <input
             id="detail-display-name"
@@ -45,7 +45,7 @@
           >
           }
         </label>
-        <label class="field" for="detail-address-line-1">
+        <label class="field wide" for="detail-address-line-1">
           {{ i18n.t('backOffice.clients.addressLine1') }}
           <input
             id="detail-address-line-1"
@@ -61,7 +61,7 @@
           >
           }
         </label>
-        <label class="field" for="detail-address-line-2">
+        <label class="field wide" for="detail-address-line-2">
           {{ i18n.t('backOffice.clients.addressLine2') }}
           <input
             id="detail-address-line-2"

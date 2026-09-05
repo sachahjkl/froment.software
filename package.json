@@ -8,15 +8,19 @@
     "watch": "pnpm --filter @froment/web watch",
     "test": "pnpm --filter @froment/web build && pnpm --recursive --if-present test",
     "test:watch": "pnpm --filter @froment/web test:watch",
+    "test:interface": "playwright test --config tools/interface/playwright.config.mjs",
     "lint": "tsc -p tools/oxlint/tsconfig.json --noEmit && oxlint . && pnpm --filter @froment/web lint:templates",
     "format": "oxfmt --write .",
     "format:check": "oxfmt --check ."
   },
   "devDependencies": {
+    "@axe-core/playwright": "catalog:",
     "@oxlint/plugins": "catalog:",
+    "@playwright/test": "catalog:",
     "@types/node": "catalog:",
     "oxfmt": "catalog:",
     "oxlint": "catalog:",
+    "playwright-core": "catalog:",
     "typescript": "catalog:"
   },
   "packageManager": "pnpm@11.20.0"

@@ -49,6 +49,9 @@ The global tokens are in `packages/web/src/tokens.css`.
 
 The global primitives are in `packages/web/src/styles.scss`.
 
+The shared layout rules are in [docs/interface-layout.md](docs/interface-layout.md).
+Run `nix develop --command pnpm test:interface` for the eight focused browser checks.
+
 Component-specific styles remain with that component.
 
 Before you change a shared value or primitive, open `/design`. This route groups foundations, components, data, states, responsive compositions, and motion. After a change, keep its specimens current and check at least:

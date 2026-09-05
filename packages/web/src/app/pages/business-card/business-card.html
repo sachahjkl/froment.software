@@ -1,14 +1,19 @@
 <article class="business-card-page">
   <header class="card-toolbar">
     <div>
-      <h1>{{ i18n.t("businessCard.title") }}</h1>
+      <h2>{{ i18n.t("businessCard.title") }}</h2>
     </div>
     <button appButton variant="primary" type="button" (click)="print()">
       {{ i18n.t("businessCard.print") }}
     </button>
   </header>
 
-  <div class="card-sheet" [attr.aria-label]="i18n.t('businessCard.preview')">
+  <div
+    class="card-sheet"
+    role="region"
+    tabindex="0"
+    [attr.aria-label]="i18n.t('businessCard.preview')"
+  >
     <section class="business-card front" [attr.aria-label]="i18n.t('businessCard.front')">
       <div class="front-content">
         <div class="identity">

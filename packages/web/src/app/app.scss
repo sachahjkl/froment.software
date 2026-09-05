@@ -11,6 +11,10 @@
   color: var(--color-ink);
 }
 
+.back-office-shell {
+  --layout-max: 76rem;
+}
+
 .skip-link {
   position: fixed;
   top: var(--space-2);

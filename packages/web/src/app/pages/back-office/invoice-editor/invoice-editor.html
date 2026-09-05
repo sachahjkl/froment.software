@@ -1,4 +1,4 @@
-<section class="invoice-page" aria-labelledby="invoice-title">
+<section class="invoice-page document-editor" aria-labelledby="invoice-title">
   <header>
     <a class="back-link" routerLink="/backoffice/facturation">
       {{ i18n.t('backOffice.backToBilling') }}
@@ -21,7 +21,7 @@
       <select
         class="input"
         aria-describedby="invoice-order-error"
-        [attr.aria-invalid]="invoiceForm.orderId().invalid()"
+        [attr.aria-invalid]="invoiceForm.orderId().invalid() && invoiceForm.orderId().touched()"
         [formField]="invoiceForm.orderId"
       >
         <option value="">{{ i18n.t('backOffice.invoice.orderPlaceholder') }}</option>
@@ -47,7 +47,7 @@
         class="input"
         type="text"
         aria-describedby="invoice-title-error"
-        [attr.aria-invalid]="invoiceForm.title().invalid()"
+        [attr.aria-invalid]="invoiceForm.title().invalid() && invoiceForm.title().touched()"
         [formField]="invoiceForm.title"
       />
       @if (invoiceForm.title().invalid() && invoiceForm.title().touched()) {
@@ -64,7 +64,7 @@
           class="input"
           type="date"
           aria-describedby="invoice-service-date-error"
-          [attr.aria-invalid]="invoiceForm.serviceDate().invalid()"
+          [attr.aria-invalid]="invoiceForm.serviceDate().invalid() && invoiceForm.serviceDate().touched()"
           [formField]="invoiceForm.serviceDate"
         />
         @if (invoiceForm.serviceDate().invalid() && invoiceForm.serviceDate().touched()) {
@@ -79,7 +79,7 @@
           class="input"
           type="date"
           aria-describedby="invoice-due-date-error"
-          [attr.aria-invalid]="invoiceForm.dueDate().invalid()"
+          [attr.aria-invalid]="invoiceForm.dueDate().invalid() && invoiceForm.dueDate().touched()"
           [formField]="invoiceForm.dueDate"
         />
         @if (invoiceForm.dueDate().invalid() && invoiceForm.dueDate().touched()) {
@@ -119,7 +119,7 @@
         </button>
       </div>
       @for (line of invoiceForm.lines; track $index) {
-      <fieldset>
+      <fieldset class="document-line">
         <legend>{{ i18n.tf('backOffice.invoice.lineNumber', { number: $index + 1 }) }}</legend>
         <label class="field description">
           {{ i18n.t('backOffice.invoice.description') }}
@@ -127,7 +127,7 @@
             class="input"
             type="text"
             [attr.aria-describedby]="'invoice-line-description-error-' + $index"
-            [attr.aria-invalid]="line.description().invalid()"
+            [attr.aria-invalid]="line.description().invalid() && line.description().touched()"
             [formField]="line.description"
           />
           @if (line.description().invalid() && line.description().touched()) {
@@ -142,7 +142,7 @@
             class="input"
             inputmode="decimal"
             [attr.aria-describedby]="'invoice-line-quantity-error-' + $index"
-            [attr.aria-invalid]="line.quantity().invalid()"
+            [attr.aria-invalid]="line.quantity().invalid() && line.quantity().touched()"
             [formField]="line.quantity"
           />
           @if (line.quantity().invalid() && line.quantity().touched()) {
@@ -157,7 +157,7 @@
             class="input"
             inputmode="decimal"
             [attr.aria-describedby]="'invoice-line-price-error-' + $index"
-            [attr.aria-invalid]="line.unitPrice().invalid()"
+            [attr.aria-invalid]="line.unitPrice().invalid() && line.unitPrice().touched()"
             [formField]="line.unitPrice"
           />
           @if (line.unitPrice().invalid() && line.unitPrice().touched()) {
@@ -172,7 +172,7 @@
             class="input"
             inputmode="decimal"
             [attr.aria-describedby]="'invoice-line-vat-error-' + $index"
-            [attr.aria-invalid]="line.vatRate().invalid()"
+            [attr.aria-invalid]="line.vatRate().invalid() && line.vatRate().touched()"
             [formField]="line.vatRate"
           />
           @if (line.vatRate().invalid() && line.vatRate().touched()) {
@@ -279,21 +279,23 @@
           i18n.t('backOffice.invoice.draft') }}</span
         >
         <span>{{ date(revision.createdAt) }} · {{ money(revision.totalCents) }}</span>
-        <button appButton type="button" (click)="showPreview(revision.version)">
-          {{ i18n.t('backOffice.invoice.preview.show') }}
-        </button>
-        <button
-          appButton
-          type="button"
-          [disabled]="pdfPendingVersion() !== undefined"
-          (click)="generatePdf(revision.version)"
-        >
-          @if (pdfPendingVersion() === revision.version) { {{
-          i18n.t('backOffice.invoice.pdf.generating') }} } @else { {{
-          i18n.t('backOffice.invoice.pdf.generate') }} }
-        </button>
-        @if (pdfUrl(revision.version); as pdf) {
-        <a [href]="pdf">{{ i18n.t('backOffice.invoice.pdf.download') }}</a> }
+        <div class="revision-actions">
+          <button appButton type="button" (click)="showPreview(revision.version)">
+            {{ i18n.t('backOffice.invoice.preview.show') }}
+          </button>
+          <button
+            appButton
+            type="button"
+            [disabled]="pdfPendingVersion() !== undefined"
+            (click)="generatePdf(revision.version)"
+          >
+            @if (pdfPendingVersion() === revision.version) { {{
+            i18n.t('backOffice.invoice.pdf.generating') }} } @else { {{
+            i18n.t('backOffice.invoice.pdf.generate') }} }
+          </button>
+          @if (pdfUrl(revision.version); as pdf) {
+          <a [href]="pdf">{{ i18n.t('backOffice.invoice.pdf.download') }}</a> }
+        </div>
       </li>
       }
     </ol>

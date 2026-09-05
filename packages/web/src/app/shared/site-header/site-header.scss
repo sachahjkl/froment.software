@@ -3,7 +3,6 @@
 }
 
 .site-header {
-  padding-inline: var(--page-x);
   border-bottom: 1px solid var(--color-line);
   background: var(--color-header);
 }
@@ -12,6 +11,7 @@
   width: 100%;
   max-width: var(--layout-max);
   margin-inline: auto;
+  padding-inline: var(--page-x);
 }
 
 .identity-row {

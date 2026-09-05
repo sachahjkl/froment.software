@@ -21,13 +21,14 @@ h1 {
 }
 .dashboard-search {
   margin-top: var(--space-6);
-  padding: var(--space-5);
-  border: 2px solid var(--color-line-strong);
+  padding: var(--panel-padding);
+  border: 1px solid var(--color-line);
   background: var(--color-surface-raised);
   box-shadow: var(--shadow-panel);
 }
 .dashboard-search h2 {
   margin-bottom: var(--space-3);
+  font-size: var(--text-lg);
 }
 .search-results {
   overflow: hidden;
@@ -74,16 +75,9 @@ h1 {
 }
 .quick-actions {
   display: flex;
-  align-items: center;
-  gap: var(--space-4);
-  margin-top: var(--space-6);
-  padding: var(--space-4);
-  border: 1px solid var(--color-line-strong);
-  background: var(--color-surface-sunken);
-}
-.quick-actions > div {
-  display: flex;
+  flex: 0 0 auto;
   flex-wrap: wrap;
+  align-items: center;
   gap: var(--space-2);
 }
 .state,
@@ -101,7 +95,9 @@ h1 {
 }
 .metrics article {
   display: grid;
-  gap: var(--space-2);
+  grid-template-rows: 1fr auto;
+  gap: var(--space-3);
+  min-width: 0;
   padding: var(--space-4);
   border: 1px solid var(--color-line);
   background: var(--color-surface-raised);
@@ -113,6 +109,8 @@ h1 {
 .metrics strong {
   font-family: var(--font-display);
   font-size: var(--text-xl);
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
 }
 .dashboard-grid {
   display: grid;
@@ -122,6 +120,7 @@ h1 {
 }
 .section-heading {
   display: flex;
+  flex-wrap: wrap;
   align-items: end;
   justify-content: space-between;
   gap: var(--space-4);
@@ -145,7 +144,18 @@ h1 {
 .work-list li div,
 .activity-list li a {
   display: grid;
+  min-width: 0;
   gap: var(--space-1);
+  overflow-wrap: anywhere;
+}
+
+.dashboard-grid h2 {
+  font-size: var(--text-xl);
+}
+
+.activity-list time {
+  flex: 0 0 auto;
+  white-space: nowrap;
 }
 .work-list small,
 .activity-list small,
@@ -164,7 +174,10 @@ time {
     grid-template-columns: repeat(2, 1fr);
   }
   .dashboard-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .dashboard > header {
+    flex-wrap: wrap;
   }
 }
 @media (max-width: 38rem) {
@@ -173,11 +186,19 @@ time {
     flex-direction: column;
   }
   .metrics {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
-  .quick-actions {
-    align-items: stretch;
-    flex-direction: column;
+  .metrics article:last-child:nth-child(odd) {
+    grid-column: 1 / -1;
+  }
+  .work-list li,
+  .activity-list li {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-2);
+  }
+  .work-list li > a {
+    justify-self: start;
   }
   .dashboard-search {
     padding: var(--space-4);

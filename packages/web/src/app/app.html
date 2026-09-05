@@ -1,4 +1,4 @@
-<div class="app-shell">
+<div class="app-shell" [class.back-office-shell]="backOffice()">
   <a class="skip-link" href="#main-content">{{ i18n.t("shell.skip") }}</a>
   @if (backOffice()) {
   <app-back-office-header [administrator]="administrator()" />

@@ -14,7 +14,8 @@
   margin-inline: auto;
 }
 
-.header-inner {
+.header-inner,
+.navigation-row {
   padding-inline: var(--page-x);
 }
 
@@ -41,8 +42,7 @@
   border: 1px solid var(--color-line);
 }
 
-.brand span,
-.account {
+.brand span {
   display: grid;
 }
 
@@ -59,10 +59,47 @@
 }
 
 .account {
-  margin-right: var(--space-2);
-  text-align: right;
+  position: relative;
+  min-width: 0;
 }
 
+.account summary {
+  min-height: var(--control-height);
+  padding: var(--space-2);
+  border: 1px solid var(--color-line-strong);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-raised);
+  cursor: pointer;
+}
+
+.account summary span {
+  display: inline-block;
+  max-width: 26ch;
+  overflow: hidden;
+  vertical-align: middle;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.account-details {
+  position: absolute;
+  inset-block-start: calc(100% + var(--space-2));
+  inset-inline-end: 0;
+  z-index: var(--z-header);
+  width: min(22rem, calc(100vw - 6rem));
+  padding: var(--space-4);
+  border: 1px solid var(--color-line-strong);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-raised);
+  box-shadow: var(--shadow-sm);
+  overflow-wrap: anywhere;
+}
+
+.account-details p {
+  margin-top: var(--space-2);
+}
+
+.account svg,
 .sign-out svg {
   width: 1rem;
   height: 1rem;
@@ -84,17 +121,8 @@
     min-width: 0;
   }
 
-  .account {
-    display: block;
-    min-width: 0;
-    margin-right: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
+  .account summary span,
   .brand small,
-  .account small,
   .sign-out-label {
     display: none;
   }

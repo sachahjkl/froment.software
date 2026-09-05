@@ -1,6 +1,6 @@
 <section class="issuer-page" aria-labelledby="issuer-title">
   <header>
-    <h1 id="issuer-title">{{ i18n.t('backOffice.issuer.title') }}</h1>
+    <h2 id="issuer-title">{{ i18n.t('backOffice.issuer.title') }}</h2>
   </header>
 
   <p class="intro">{{ i18n.t('backOffice.issuer.intro') }}</p>
@@ -8,7 +8,7 @@
   @if (loading()) {
   <p aria-live="polite">{{ i18n.t('backOffice.issuer.loading') }}</p>
   } @else {
-  <form (submit)="save($event)">
+  <form class="field-grid" (submit)="save($event)">
     <label class="field wide" for="issuer-display-name">
       {{ i18n.t('backOffice.issuer.displayName') }}
       <input

@@ -1,148 +1,24 @@
+@use "../document-editor";
+
 :host {
   display: block;
 }
-.invoice-page {
-  padding: var(--page-header-y) var(--page-x);
-}
-.invoice-page > * + * {
-  margin-top: var(--space-8);
-}
-h1 {
-  margin-top: var(--space-2);
-  font-size: var(--text-2xl);
-}
-form {
-  min-width: 0;
-  padding: var(--space-6);
-  border: 1px solid var(--color-line);
-  border-radius: var(--radius-sm);
-  background: var(--color-surface-raised);
-  box-shadow: var(--shadow-panel);
-}
-form > * + *,
-.lines > * + * {
-  margin-top: var(--space-5);
-}
-.field {
-  display: grid;
-  min-width: 0;
-  gap: var(--space-2);
-}
-.field .input {
-  min-width: 0;
-}
+
 .date-fields {
-  display: block;
-}
-.date-fields > * + * {
-  margin-top: var(--space-4);
-}
-textarea {
-  resize: vertical;
-}
-.section-heading {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: var(--space-4);
 }
-.external-link {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-1);
-}
-fieldset {
-  min-width: 0;
-  margin: 0;
-  padding: var(--space-4);
-  border: 1px solid var(--color-line);
-  border-radius: var(--radius-sm);
-  background: var(--color-surface-sunken);
-}
-fieldset > * + * {
-  margin-top: var(--space-3);
-}
-fieldset > button {
-  display: flex;
-}
-legend {
-  padding: 2px var(--space-2);
-  border: 1px solid var(--color-line);
-  border-radius: var(--radius-sm);
-  background: var(--color-surface-sunken);
-  color: var(--color-muted);
-  font-family: var(--font-mono);
-  font-size: var(--text-xs);
-  font-weight: 700;
-  text-transform: uppercase;
-}
-.line-total {
-  color: var(--color-muted);
-  font-size: var(--text-sm);
-  text-align: right;
-}
-dl div {
-  display: flex;
-  justify-content: space-between;
-  gap: var(--space-4);
-  padding-block: var(--space-2);
-  border-bottom: 1px solid var(--color-line-strong);
-}
+
 .actions {
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-3);
   margin-top: var(--space-4);
 }
-.hint {
-  color: var(--color-muted);
-  font-size: var(--text-xs);
-}
-[appOutcomePanel] h2 {
-  margin-top: var(--space-6);
-}
-dd {
-  font-weight: 700;
-}
-ol {
-  display: grid;
-  gap: var(--space-2);
-  padding-left: var(--space-5);
-}
-ol li span {
-  display: block;
-}
-ol li span:last-of-type {
-  color: var(--color-muted);
-  font-size: var(--text-xs);
-}
-ol li button {
-  margin-top: var(--space-2);
-}
-ol li button + button,
-ol li button + a {
-  margin-left: var(--space-2);
-}
-.preview iframe {
-  width: 100%;
-  min-height: 75rem;
-  margin-top: var(--space-4);
-  border: 1px solid var(--color-line);
-  border-radius: var(--radius-sm);
-  background: white;
-  box-shadow: var(--shadow-panel);
-}
-@media (max-width: 64rem) {
-  .preview iframe {
-    min-height: 52rem;
-  }
-}
-@media (max-width: 52rem) {
-  form {
-    padding: var(--space-4);
-  }
-  .section-heading {
-    align-items: stretch;
-    flex-direction: column;
+
+@container (max-width: 24rem) {
+  .date-fields {
+    grid-template-columns: minmax(0, 1fr);
   }
 }

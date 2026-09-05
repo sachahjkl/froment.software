@@ -26,15 +26,20 @@ form,
 }
 
 form {
-  padding: var(--space-6);
+  min-width: 0;
+  padding: var(--panel-padding);
   border: 1px solid var(--color-line);
   border-radius: var(--radius-sm);
   background: var(--color-surface-raised);
   box-shadow: var(--shadow-panel);
 }
 
-form > * + * {
+form:not(.field-grid) > * + * {
   margin-top: var(--space-4);
+}
+
+.profile-form {
+  max-width: 56rem;
 }
 
 .field-error {
@@ -45,6 +50,7 @@ form > * + * {
 
 .actions {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: var(--space-4);
 }

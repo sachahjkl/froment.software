@@ -6,7 +6,8 @@ import { ChangeDetectionStrategy, Component } from '@angular/core';
   styles: `
     :host {
       display: block;
-      padding: var(--space-5);
+      min-width: 0;
+      padding: var(--panel-padding);
       border: 1px solid var(--color-line);
       border-radius: var(--radius-sm);
       background: var(--color-surface-raised);

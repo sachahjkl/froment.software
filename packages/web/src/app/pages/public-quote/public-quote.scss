@@ -3,7 +3,7 @@
 }
 
 .public-quote {
-  padding: clamp(2rem, 6vw, 5rem) var(--page-x);
+  padding: var(--page-header-y) var(--page-x);
 }
 
 .quote-overview,
@@ -26,7 +26,7 @@
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: end;
   gap: var(--space-8);
-  padding: clamp(1.5rem, 5vw, 4rem);
+  padding: var(--panel-padding);
 }
 
 .eyebrow {
@@ -40,7 +40,8 @@
 
 .quote-heading h1,
 .state-card h1 {
-  margin-top: var(--space-3);
+  margin-top: var(--space-2);
+  font-size: clamp(1.5rem, 3vw, var(--text-3xl));
 }
 
 .recipient {
@@ -50,7 +51,7 @@
 
 .total-card {
   display: grid;
-  min-width: 13rem;
+  min-width: 0;
   gap: var(--space-1);
   padding-left: var(--space-6);
   border-left: 3px solid var(--color-button-primary-highlight);
@@ -65,30 +66,33 @@
 
 .total-card strong {
   font-family: var(--font-display);
-  font-size: clamp(1.8rem, 4vw, 3rem);
+  font-size: clamp(1.5rem, 3vw, var(--text-3xl));
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
 }
 
 .quote-facts {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1px;
   border-top: 1px solid var(--color-line-strong);
-  background: var(--color-surface-sunken);
+  background: var(--color-line-strong);
 }
 
 .quote-facts div {
   display: grid;
   gap: var(--space-1);
-  padding: var(--space-4) clamp(1rem, 3vw, 2rem);
-}
-
-.quote-facts div + div {
-  border-left: 1px solid var(--color-line-strong);
+  min-width: 0;
+  padding: var(--space-4);
+  background: var(--color-surface-sunken);
+  overflow-wrap: anywhere;
+  font-variant-numeric: tabular-nums;
 }
 
 .line-summary,
 .document-panel,
 .signature-panel {
-  padding: clamp(1.25rem, 4vw, 2.5rem);
+  padding: var(--panel-padding);
   border-top: 0;
   border-radius: 0 0 var(--radius-sm) var(--radius-sm);
 }
@@ -144,6 +148,7 @@ app-tabs {
 
 .section-heading {
   display: flex;
+  flex-wrap: wrap;
   align-items: end;
   justify-content: space-between;
   gap: var(--space-4);
@@ -180,6 +185,7 @@ app-tabs {
 
 form {
   display: grid;
+  min-width: 0;
   gap: var(--space-4);
 }
 
@@ -224,7 +230,7 @@ form {
 @media (max-width: 48rem) {
   .quote-heading,
   .signature-panel {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .line-summary li {
@@ -240,12 +246,7 @@ form {
   }
 
   .quote-facts {
-    grid-template-columns: 1fr;
-  }
-
-  .quote-facts div + div {
-    border-top: 1px solid var(--color-line-strong);
-    border-left: 0;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .document-panel iframe {

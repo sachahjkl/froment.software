@@ -5,8 +5,8 @@
 .missing-post {
   padding: var(--page-header-y) var(--page-x);
 }
-.blog-post {
-  --measure: none;
+.blog-post header {
+  max-width: var(--measure);
 }
 .back-link {
   margin-bottom: var(--space-5);

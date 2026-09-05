@@ -63,7 +63,7 @@
       }
     },
     {
-      "files": ["packages/web/tools/**/*.mjs"],
+      "files": ["packages/web/tools/**/*.mjs", "tools/interface/**/*.mjs"],
       "rules": {
         "anti-slop/no-natural-language-literals": "off"
       }

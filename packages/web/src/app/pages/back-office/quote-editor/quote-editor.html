@@ -1,4 +1,4 @@
-<section class="quote-page" aria-labelledby="quote-title">
+<section class="quote-page document-editor" aria-labelledby="quote-title">
   <header>
     <a class="back-link" routerLink="/backoffice/affaires">
       {{ i18n.t('backOffice.backToAffairs') }}
@@ -22,7 +22,7 @@
         id="quote-client"
         class="input"
         aria-describedby="quote-client-error"
-        [attr.aria-invalid]="quoteForm.clientId().invalid()"
+        [attr.aria-invalid]="quoteForm.clientId().invalid() && quoteForm.clientId().touched()"
         [formField]="quoteForm.clientId"
       >
         <option value="">{{ i18n.t('backOffice.quote.clientPlaceholder') }}</option>
@@ -49,7 +49,7 @@
         class="input"
         type="text"
         aria-describedby="quote-name-error"
-        [attr.aria-invalid]="quoteForm.title().invalid()"
+        [attr.aria-invalid]="quoteForm.title().invalid() && quoteForm.title().touched()"
         [formField]="quoteForm.title"
       />
       @if (quoteForm.title().invalid() && quoteForm.title().touched()) {
@@ -106,7 +106,7 @@
         </button>
       </div>
       @for (line of quoteForm.lines; track $index) {
-      <fieldset>
+      <fieldset class="document-line">
         <legend>{{ i18n.tf('backOffice.quote.lineNumber', { number: $index + 1 }) }}</legend>
         <label class="field description">
           {{ i18n.t('backOffice.quote.description') }}
@@ -114,7 +114,7 @@
             class="input"
             type="text"
             [attr.aria-describedby]="'line-description-error-' + $index"
-            [attr.aria-invalid]="line.description().invalid()"
+            [attr.aria-invalid]="line.description().invalid() && line.description().touched()"
             [formField]="line.description"
           />
           @if (line.description().invalid() && line.description().touched()) {
@@ -129,7 +129,7 @@
             class="input"
             inputmode="decimal"
             [attr.aria-describedby]="'line-quantity-error-' + $index"
-            [attr.aria-invalid]="line.quantity().invalid()"
+            [attr.aria-invalid]="line.quantity().invalid() && line.quantity().touched()"
             [formField]="line.quantity"
           />
           @if (line.quantity().invalid() && line.quantity().touched()) {
@@ -144,7 +144,7 @@
             class="input"
             inputmode="decimal"
             [attr.aria-describedby]="'line-price-error-' + $index"
-            [attr.aria-invalid]="line.unitPrice().invalid()"
+            [attr.aria-invalid]="line.unitPrice().invalid() && line.unitPrice().touched()"
             [formField]="line.unitPrice"
           />
           @if (line.unitPrice().invalid() && line.unitPrice().touched()) {
@@ -159,7 +159,7 @@
             class="input"
             inputmode="decimal"
             [attr.aria-describedby]="'line-vat-error-' + $index"
-            [attr.aria-invalid]="line.vatRate().invalid()"
+            [attr.aria-invalid]="line.vatRate().invalid() && line.vatRate().touched()"
             [formField]="line.vatRate"
           />
           @if (line.vatRate().invalid() && line.vatRate().touched()) {
@@ -207,80 +207,6 @@
     <p appDetailRow [label]="i18n.t('backOffice.quote.status')">
       <strong>{{ i18n.t(statusKey(quote.status)) }}</strong>
     </p>
-    @if (quote.status === 'draft') {
-    <button
-      class="send-quote"
-      appButton
-      variant="primary"
-      type="button"
-      [disabled]="sendDisabled()"
-      (click)="sendQuote()"
-    >
-      @if (sending()) { {{ i18n.t('backOffice.quote.sending') }} } @else { {{
-      i18n.t('backOffice.quote.send') }} }
-    </button>
-    @if (quoteForm().dirty()) {
-    <p class="hint">{{ i18n.t('backOffice.quote.sendUnsaved') }}</p>
-    } } @if (quote.status === 'draft' || quote.status === 'sent' || quote.status === 'expired') {
-    <label class="field cancel-field" for="quote-cancellation-reason">
-      {{ i18n.t('backOffice.quote.cancelReason') }}
-      <select
-        #reasonSelect
-        id="quote-cancellation-reason"
-        class="select"
-        (change)="setCancellationReason(reasonSelect)"
-      >
-        <option value="">{{ i18n.t('backOffice.quote.cancelReason.select') }}</option>
-        <option value="client-declined">
-          {{ i18n.t('backOffice.quote.cancelReason.client-declined') }}
-        </option>
-        <option value="scope-changed">
-          {{ i18n.t('backOffice.quote.cancelReason.scope-changed') }}
-        </option>
-        <option value="budget-unavailable">
-          {{ i18n.t('backOffice.quote.cancelReason.budget-unavailable') }}
-        </option>
-        <option value="duplicate">{{ i18n.t('backOffice.quote.cancelReason.duplicate') }}</option>
-        <option value="replaced">{{ i18n.t('backOffice.quote.cancelReason.replaced') }}</option>
-        <option value="other">{{ i18n.t('backOffice.quote.cancelReason.other') }}</option>
-      </select>
-    </label>
-    <label class="field cancel-field" for="quote-cancellation-note">
-      {{ i18n.t('backOffice.quote.cancelNote') }}
-      <textarea
-        #cancellationNoteInput
-        id="quote-cancellation-note"
-        class="input"
-        maxlength="500"
-        rows="3"
-        (input)="setCancellationNote(cancellationNoteInput)"
-      ></textarea>
-    </label>
-    <button
-      class="cancel-quote"
-      appButton
-      variant="danger"
-      type="button"
-      [disabled]="cancellationReason() === '' || cancelling() || saving() || sending()"
-      (click)="cancelQuote()"
-    >
-      @if (cancelling()) { {{ i18n.t('backOffice.quote.cancelling') }} } @else { {{
-      i18n.t('backOffice.quote.cancel') }} }
-    </button>
-    } @if (sentLink(); as link) {
-    <app-copy-field
-      class="sent-link"
-      headingId="sent-link-title"
-      [label]="i18n.t('backOffice.quote.link.title')"
-      [value]="link.url"
-      [href]="link.url"
-      [description]="i18n.tf('backOffice.quote.link.expires', { date: date(link.expiresAt) })"
-      [actionLabel]="i18n.t('backOffice.quote.link.copy')"
-      [status]="linkCopied() ? i18n.t('backOffice.quote.link.copied') : ''"
-      [external]="true"
-      (copy)="copySentLink()"
-    />
-    }
     <h2 id="totals-title">{{ i18n.t('backOffice.quote.total') }}</h2>
     @if (totalsAreStale()) {
     <p appNotice role="status">{{ i18n.t('backOffice.quote.dirtyTotals') }}</p>
@@ -299,6 +225,83 @@
         <dd>{{ money(quote.currentRevision.totalCents) }}</dd>
       </div>
     </dl>
+    @if (quote.status === 'draft') {
+    <button
+      class="send-quote"
+      appButton
+      variant="primary"
+      type="button"
+      [disabled]="sendDisabled()"
+      (click)="sendQuote()"
+    >
+      @if (sending()) { {{ i18n.t('backOffice.quote.sending') }} } @else { {{
+      i18n.t('backOffice.quote.send') }} }
+    </button>
+    @if (quoteForm().dirty()) {
+    <p class="hint">{{ i18n.t('backOffice.quote.sendUnsaved') }}</p>
+    } } @if (quote.status === 'draft' || quote.status === 'sent' || quote.status === 'expired') {
+    <details class="document-cancellation">
+      <summary>{{ i18n.t('backOffice.quote.cancel') }}</summary>
+      <label class="field cancel-field" for="quote-cancellation-reason">
+        {{ i18n.t('backOffice.quote.cancelReason') }}
+        <select
+          #reasonSelect
+          id="quote-cancellation-reason"
+          class="select"
+          (change)="setCancellationReason(reasonSelect)"
+        >
+          <option value="">{{ i18n.t('backOffice.quote.cancelReason.select') }}</option>
+          <option value="client-declined">
+            {{ i18n.t('backOffice.quote.cancelReason.client-declined') }}
+          </option>
+          <option value="scope-changed">
+            {{ i18n.t('backOffice.quote.cancelReason.scope-changed') }}
+          </option>
+          <option value="budget-unavailable">
+            {{ i18n.t('backOffice.quote.cancelReason.budget-unavailable') }}
+          </option>
+          <option value="duplicate">{{ i18n.t('backOffice.quote.cancelReason.duplicate') }}</option>
+          <option value="replaced">{{ i18n.t('backOffice.quote.cancelReason.replaced') }}</option>
+          <option value="other">{{ i18n.t('backOffice.quote.cancelReason.other') }}</option>
+        </select>
+      </label>
+      <label class="field cancel-field" for="quote-cancellation-note">
+        {{ i18n.t('backOffice.quote.cancelNote') }}
+        <textarea
+          #cancellationNoteInput
+          id="quote-cancellation-note"
+          class="input"
+          maxlength="500"
+          rows="3"
+          (input)="setCancellationNote(cancellationNoteInput)"
+        ></textarea>
+      </label>
+      <button
+        class="cancel-quote"
+        appButton
+        variant="danger"
+        type="button"
+        [disabled]="cancellationReason() === '' || cancelling() || saving() || sending()"
+        (click)="cancelQuote()"
+      >
+        @if (cancelling()) { {{ i18n.t('backOffice.quote.cancelling') }} } @else { {{
+        i18n.t('backOffice.quote.cancel') }} }
+      </button>
+    </details>
+    } @if (sentLink(); as link) {
+    <app-copy-field
+      class="sent-link"
+      headingId="sent-link-title"
+      [label]="i18n.t('backOffice.quote.link.title')"
+      [value]="link.url"
+      [href]="link.url"
+      [description]="i18n.tf('backOffice.quote.link.expires', { date: date(link.expiresAt) })"
+      [actionLabel]="i18n.t('backOffice.quote.link.copy')"
+      [status]="linkCopied() ? i18n.t('backOffice.quote.link.copied') : ''"
+      [external]="true"
+      (copy)="copySentLink()"
+    />
+    }
     <h2>{{ i18n.t('backOffice.quote.history') }}</h2>
     <ol>
       @for (revision of quote.revisions; track revision.id) {
@@ -306,22 +309,25 @@
         <span><strong>#{{ revision.version }}</strong> · {{ revision.title }}</span>
         <span>{{ date(revision.createdAt) }} · {{ money(revision.totalCents) }}</span>
         @if (revision.previewAvailable) {
-        <button appButton type="button" (click)="showPreview(revision.version)">
-          {{ i18n.t('backOffice.quote.preview.show') }}
-        </button>
-        <button
-          appButton
-          type="button"
-          [disabled]="pdfPendingVersion() !== undefined"
-          (click)="generatePdf(revision.version)"
-        >
-          @if (pdfPendingVersion() === revision.version) { {{
-          i18n.t('backOffice.quote.pdf.generating') }} } @else { {{
-          i18n.t('backOffice.quote.pdf.generate') }} }
-        </button>
-        @if (pdfUrl(revision.version); as pdf) {
-        <a [href]="pdf">{{ i18n.t('backOffice.quote.pdf.download') }}</a>
-        } }
+        <div class="revision-actions">
+          <button appButton type="button" (click)="showPreview(revision.version)">
+            {{ i18n.t('backOffice.quote.preview.show') }}
+          </button>
+          <button
+            appButton
+            type="button"
+            [disabled]="pdfPendingVersion() !== undefined"
+            (click)="generatePdf(revision.version)"
+          >
+            @if (pdfPendingVersion() === revision.version) { {{
+            i18n.t('backOffice.quote.pdf.generating') }} } @else { {{
+            i18n.t('backOffice.quote.pdf.generate') }} }
+          </button>
+          @if (pdfUrl(revision.version); as pdf) {
+          <a [href]="pdf">{{ i18n.t('backOffice.quote.pdf.download') }}</a>
+          }
+        </div>
+        }
       </li>
       }
     </ol>

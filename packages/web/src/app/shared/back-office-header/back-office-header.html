@@ -13,9 +13,19 @@
       </a>
       <div class="account-controls">
         @if (account(); as current) {
-        <span class="account"
-          ><small>{{ i18n.t('backOffice.header.account') }}</small>{{ current.email }}</span
-        >
+        <details class="account">
+          <summary [attr.aria-label]="current.email">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <circle cx="12" cy="8" r="3" />
+              <path d="M5 21v-2a7 7 0 0 1 14 0v2" />
+            </svg>
+            <span>{{ current.email }}</span>
+          </summary>
+          <div class="account-details">
+            <small>{{ i18n.t('backOffice.header.account') }}</small>
+            <p>{{ current.email }}</p>
+          </div>
+        </details>
         }
         <button
           class="sign-out"

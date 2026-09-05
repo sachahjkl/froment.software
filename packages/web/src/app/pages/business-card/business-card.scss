@@ -152,9 +152,7 @@
   cursor: pointer;
 }
 .version-select strong {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  overflow-wrap: anywhere;
 }
 .version-select span,
 .empty-versions {

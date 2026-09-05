@@ -96,8 +96,9 @@
   --page-x: clamp(1rem, 4vw, 2rem);
   --page-header-y: clamp(var(--space-7), 3vw, var(--space-8));
   --page-section-y: clamp(var(--space-5), 3vw, var(--space-8));
+  --panel-padding: clamp(var(--space-4), 3vw, var(--space-6));
   --layout-max: 60rem;
-  --measure: 78ch;
+  --measure: 72ch;
   --control-height: 2.25rem;
   --shell-height: 3rem;
   --scrollbar-size: 0.625rem;

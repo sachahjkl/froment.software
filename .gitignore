@@ -27,6 +27,8 @@ typings/
 
 # Screenshots / local artifacts
 __screenshots__/
+playwright-report/
+test-results/
 
 # Nix / direnv
 .direnv/

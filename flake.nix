@@ -106,7 +106,7 @@
             inherit pname version src;
             pnpm = pkgs.pnpm;
             fetcherVersion = 4;
-            hash = "sha256-tTYk5rxEpngo9i8dW22RZ+T9BOTwScJgcDcS6DawQIA=";
+            hash = "sha256-JEp9MHfiY26NSFiFhlYkooQSmh3JbGC757xw3Yaarcg=";
           };
 
           mkApplication =
@@ -186,7 +186,14 @@
                 pkgs.liberation_ttf
                 pkgs.poppler-utils
                 pkgs.typst
-              ];
+              ]
+              ++ lib.optionals (name == "interface") [ pkgs.chromium ];
+              PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH = lib.optionalString (
+                name == "interface"
+              ) "${pkgs.chromium}/bin/chromium";
+              FONTCONFIG_FILE = lib.optionalString (name == "interface") (
+                pkgs.makeFontsConf { fontDirectories = [ pkgs.liberation_ttf ]; }
+              );
               TYPST_PATH = lib.optionalString (name == "test") "${pkgs.typst}/bin/typst";
               DOCUMENT_TEMPLATES_PATH = lib.optionalString (name == "test") "${./packages/documents/templates}";
               DOCUMENT_FONTS_PATH = lib.optionalString (name == "test") "${documentFonts}/share/fonts";
@@ -337,9 +344,11 @@
             pre-commit = preCommitCheck;
             secret-contract = secretContract;
             test = mkCheck "test" "pnpm test";
+            interface = mkCheck "interface" "pnpm test:interface";
           };
 
           devShells.default = pkgs.mkShell {
+            PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH = "${pkgs.chromium}/bin/chromium";
             TYPST_PATH = "${pkgs.typst}/bin/typst";
             DOCUMENT_TEMPLATES_PATH = "${./packages/documents/templates}";
             DOCUMENT_FONTS_PATH = "${documentFonts}/share/fonts";

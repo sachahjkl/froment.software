@@ -41,6 +41,8 @@ h1 {
 .billing-summary strong {
   font-family: var(--font-display);
   font-size: var(--text-xl);
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
 }
 
 app-tabs {

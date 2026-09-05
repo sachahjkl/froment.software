@@ -8,9 +8,12 @@
   padding: var(--page-header-y) var(--page-x);
 }
 
-h1 {
+header h2 {
+  font-size: var(--text-xl);
+}
+
+header h2 + p {
   margin-top: var(--space-2);
-  font-size: var(--text-2xl);
 }
 
 header,
