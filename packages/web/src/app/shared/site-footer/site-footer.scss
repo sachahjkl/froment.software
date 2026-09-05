@@ -11,7 +11,7 @@
   grid-template-columns: auto auto minmax(0, 1fr);
   align-items: baseline;
   gap: var(--space-3) var(--space-8);
-  width: 100%;
+  width: calc(100% - 2 * var(--shell-gutter));
   max-width: var(--layout-max);
   margin-inline: auto;
   padding: var(--space-5) var(--page-x);

@@ -1,5 +1,5 @@
 <article class="clients">
-  <header>
+  <header class="page-intro">
     <h1>{{ i18n.t("clients.title") }}</h1>
   </header>
 
@@ -10,7 +10,7 @@
     </h2>
     <ul class="sector-list">
       @for (sectorKey of sectorKeys; track sectorKey) {
-        <li>{{ i18n.t(sectorKey) }}</li>
+        <li class="ds-panel">{{ i18n.t(sectorKey) }}</li>
       }
     </ul>
     <p>

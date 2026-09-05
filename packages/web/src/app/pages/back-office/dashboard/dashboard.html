@@ -20,7 +20,7 @@
     </nav>
   </header>
 
-  <section class="dashboard-search" aria-labelledby="dashboard-search-title">
+  <section class="dashboard-search ds-panel" aria-labelledby="dashboard-search-title">
     <h2 id="dashboard-search-title">{{ i18n.t('backOffice.search.title') }}</h2>
     <label class="field" for="global-search"
       >{{ i18n.t('backOffice.search.label') }}<input
@@ -71,30 +71,30 @@
   </button>
   } @case ('ready') {
   <section class="metrics" [attr.aria-label]="i18n.t('backOffice.dashboard.summary')">
-    <article>
+    <article class="ds-panel">
       <span>{{ i18n.t('backOffice.dashboard.draftQuotes') }}</span
       ><strong>{{ draftQuotes() }}</strong>
     </article>
-    <article>
+    <article class="ds-panel">
       <span>{{ i18n.t('backOffice.dashboard.awaitingSignature') }}</span
       ><strong>{{ sentQuotes() }}</strong>
     </article>
-    <article>
+    <article class="ds-panel">
       <span>{{ i18n.t('backOffice.dashboard.toInvoice') }}</span
       ><strong>{{ ordersToInvoice() }}</strong>
     </article>
-    <article>
+    <article class="ds-panel">
       <span>{{ i18n.t('backOffice.dashboard.outstanding') }}</span
       ><strong>{{ money(outstandingCents()) }}</strong>
     </article>
-    <article>
+    <article class="ds-panel">
       <span>{{ i18n.t('backOffice.dashboard.overdueInvoices') }}</span
       ><strong>{{ overdueInvoices() }}</strong>
     </article>
   </section>
 
   <div class="dashboard-grid">
-    <section aria-labelledby="actions-title">
+    <section class="ds-panel" aria-labelledby="actions-title">
       <div class="section-heading">
         <div>
           <p class="eyebrow">{{ i18n.t('backOffice.dashboard.priority') }}</p>
@@ -119,7 +119,7 @@
       }
     </section>
 
-    <section aria-labelledby="activity-title">
+    <section class="ds-panel" aria-labelledby="activity-title">
       <div class="section-heading">
         <div>
           <p class="eyebrow">{{ i18n.t('backOffice.dashboard.latest') }}</p>

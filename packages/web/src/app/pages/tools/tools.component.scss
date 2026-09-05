@@ -2,7 +2,10 @@
   display: block;
 }
 .page-section {
-  padding: var(--page-header-y) var(--page-x);
+  padding: 0 var(--page-x) var(--page-section-y);
+}
+.page-intro {
+  margin-inline: calc(-1 * var(--page-x));
 }
 .lead,
 .section-heading p,
@@ -11,16 +14,25 @@
   color: var(--color-ink-soft);
 }
 .catalog-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-5);
   margin: var(--space-5) 0 0;
   padding: 0;
   list-style: none;
 }
 .catalog-list li {
-  padding-block: var(--space-4);
+  padding: var(--panel-padding);
 }
-.catalog-list li + li {
-  margin-top: var(--space-3);
+.lab-entry h2 {
+  font-size: var(--text-xl);
 }
 .lab-entry p:last-child {
   font-size: var(--text-sm);
+}
+
+@media (max-width: 38rem) {
+  .catalog-list {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }

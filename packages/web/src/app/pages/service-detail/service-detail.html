@@ -1,5 +1,5 @@
 <article class="service-detail">
-  <header>
+  <header class="page-intro">
     <a class="back-link" routerLink="/services">{{ i18n.t("serviceDetail.back") }}</a>
     <h1>{{ i18n.t(content().titleKey) }}</h1>
     <p class="lead">{{ i18n.t(content().leadKey) }}</p>
@@ -18,7 +18,7 @@
     </h2>
     <dl class="scope-grid">
       @for (scope of content().scopes; track scope.titleKey) {
-      <div>
+      <div class="ds-panel">
         <dt>{{ i18n.t(scope.titleKey) }}</dt>
         <dd>
           {{ i18n.t(scope.descriptionKey) }} @if (scope.links) {
@@ -52,7 +52,7 @@
     </aside>
   </section>
 
-  <section aria-labelledby="contact">
+  <section class="contact-panel" aria-labelledby="contact">
     <h2 id="contact" class="anchored-title">
       <span>{{ i18n.t("serviceDetail.contact.title") }}</span><app-anchor-link fragment="contact" />
     </h2>

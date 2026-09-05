@@ -9,6 +9,8 @@
   align-items: flex-start;
   justify-content: space-between;
   gap: var(--space-5);
+  padding-bottom: var(--space-6);
+  border-bottom: 1px solid var(--color-line);
 }
 h1 {
   margin-top: var(--space-1);
@@ -22,9 +24,6 @@ h1 {
 .dashboard-search {
   margin-top: var(--space-6);
   padding: var(--panel-padding);
-  border: 1px solid var(--color-line);
-  background: var(--color-surface-raised);
-  box-shadow: var(--shadow-panel);
 }
 .dashboard-search h2 {
   margin-bottom: var(--space-3);
@@ -99,8 +98,6 @@ h1 {
   gap: var(--space-3);
   min-width: 0;
   padding: var(--space-4);
-  border: 1px solid var(--color-line);
-  background: var(--color-surface-raised);
 }
 .metrics span {
   color: var(--color-muted);
@@ -108,15 +105,19 @@ h1 {
 }
 .metrics strong {
   font-family: var(--font-display);
-  font-size: var(--text-xl);
+  font-size: var(--text-2xl);
   font-variant-numeric: tabular-nums;
   overflow-wrap: anywhere;
 }
 .dashboard-grid {
   display: grid;
   grid-template-columns: minmax(0, 3fr) minmax(16rem, 2fr);
-  gap: var(--space-7);
+  gap: var(--space-5);
   margin-top: var(--space-8);
+}
+.dashboard-grid > section {
+  min-width: 0;
+  padding: var(--panel-padding);
 }
 .section-heading {
   display: flex;

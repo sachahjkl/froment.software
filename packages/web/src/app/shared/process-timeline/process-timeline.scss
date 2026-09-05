@@ -81,3 +81,31 @@
     gap: var(--space-1);
   }
 }
+
+@media (min-width: 50rem) {
+  .timeline {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: var(--space-5);
+  }
+
+  .timeline li {
+    grid-template-columns: minmax(0, 1fr);
+    align-content: start;
+    padding-bottom: 0;
+  }
+
+  .timeline li::before {
+    top: 1.125rem;
+    left: 2.25rem;
+    right: calc(-1 * var(--space-5));
+    bottom: auto;
+    width: auto;
+    height: 1px;
+  }
+
+  .content {
+    grid-template-columns: minmax(0, 1fr);
+    align-content: start;
+    gap: var(--space-2);
+  }
+}

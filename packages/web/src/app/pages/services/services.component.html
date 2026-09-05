@@ -1,4 +1,4 @@
-<header class="services-hero">
+<header class="services-hero page-intro">
   <div class="hero-inner">
     <h1>{{ i18n.t("services.title") }}</h1>
     <p class="lead">{{ i18n.t("services.lead") }}</p>
@@ -20,8 +20,9 @@
     </h2>
   </div>
   <ol class="services-grid">
-    @for (service of services(); track service.title) {
-      <li class="service-entry">
+    @for (service of services(); track service.title; let number = $index) {
+      <li class="service-entry ds-panel">
+        <span class="service-number" aria-hidden="true">0{{ number + 1 }}</span>
         <h3>{{ service.title }}</h3>
         <div>
           <p>{{ service.description }}</p>
@@ -32,7 +33,7 @@
   </ol>
 </section>
 
-<section class="practical page-section" aria-labelledby="modalites">
+<section class="practical page-section contact-panel" aria-labelledby="modalites">
   <h2 id="modalites" class="anchored-title">
     <span>{{ i18n.t("services.practical.title") }}</span
     ><app-anchor-link fragment="modalites" />

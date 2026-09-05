@@ -35,9 +35,14 @@
 main {
   flex: 1;
   min-width: 0;
-  width: 100%;
+  width: calc(100% - 2 * var(--shell-gutter));
   max-width: var(--layout-max);
+  margin-block: var(--shell-gutter);
   margin-inline: auto;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-page);
   outline: none;
 }
 
@@ -45,4 +50,16 @@ main {
   outline: 2px solid var(--color-focus);
   outline-offset: -2px;
   box-shadow: none;
+}
+
+@media print {
+  main {
+    width: 100%;
+    max-width: none;
+    margin: 0;
+    border: 0;
+    border-radius: 0;
+    background: white;
+    box-shadow: none;
+  }
 }

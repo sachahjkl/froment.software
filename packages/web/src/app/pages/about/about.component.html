@@ -1,15 +1,15 @@
 <article class="about">
-  <header>
+  <header class="page-intro">
     <h1>{{ i18n.t("about.faq.title") }}</h1>
   </header>
 
   <section [attr.aria-label]="i18n.t('about.faq.label')">
-    <div class="faq-list">
+    <div class="faq-list ds-panel">
       @for (item of faqKeys; track item.questionKey) {
         <details class="faq-item">
           <summary>
             <span>{{ i18n.t(item.questionKey) }}</span>
-            <span aria-hidden="true">+</span>
+            <span class="faq-marker" aria-hidden="true"></span>
           </summary>
           <div class="faq-answer">
             <p>{{ i18n.t(item.answerKey) }}</p>
@@ -19,7 +19,7 @@
     </div>
   </section>
 
-  <section aria-labelledby="contact">
+  <section class="contact-panel" aria-labelledby="contact">
     <h2 id="contact" class="anchored-title">
       <span>{{ i18n.t("about.contact.title") }}</span
       ><app-anchor-link fragment="contact" />

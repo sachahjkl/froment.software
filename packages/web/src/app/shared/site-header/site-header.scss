@@ -5,10 +5,11 @@
 .site-header {
   border-bottom: 1px solid var(--color-line);
   background: var(--color-header);
+  box-shadow: var(--shadow-xs);
 }
 
 .header-inner {
-  width: 100%;
+  width: calc(100% - 2 * var(--shell-gutter));
   max-width: var(--layout-max);
   margin-inline: auto;
   padding-inline: var(--page-x);
@@ -92,16 +93,33 @@
 .nav {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--space-3) var(--space-5);
-  padding-block: var(--space-2) var(--space-3);
+  gap: var(--space-1);
+  padding-block: var(--space-2) 0;
   font-size: var(--text-sm);
+}
+
+.nav a {
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid transparent;
+  border-bottom: 2px solid transparent;
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+  text-decoration: none;
+}
+
+@media (hover: hover) {
+  .nav a:hover {
+    background: var(--color-surface-sunken);
+    text-decoration: underline;
+  }
 }
 
 .nav a.active,
 .nav a[aria-current="page"] {
   color: var(--color-ink);
+  border-color: var(--color-line);
+  border-bottom-color: var(--color-ink);
+  background: var(--color-surface-raised);
   font-weight: 700;
-  text-decoration-thickness: 2px;
 }
 
 .nav-backdrop {

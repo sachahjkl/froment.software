@@ -5,18 +5,29 @@
   padding-inline: var(--page-x);
 }
 .clients > header {
-  padding-block: var(--page-header-y);
+  margin-inline: calc(-1 * var(--page-x));
 }
 .clients > section {
   padding-block: var(--page-section-y);
 }
 .sector-list {
-  margin: var(--space-4) 0 0;
-  padding-left: var(--space-6);
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-4);
+  margin: var(--space-5) 0 0;
+  padding: 0;
+  list-style: none;
 }
-.sector-list li + li {
-  margin-top: var(--space-1);
+.sector-list li {
+  padding: var(--panel-padding);
+  font-weight: 700;
 }
 section > p {
   margin-top: var(--space-4);
+}
+
+@media (max-width: 38rem) {
+  .sector-list {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }

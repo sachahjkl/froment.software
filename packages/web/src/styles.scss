@@ -193,6 +193,28 @@ p {
 .lead {
   max-width: var(--measure);
 }
+
+.page-intro {
+  padding: var(--page-intro-y) var(--page-x);
+  border-bottom: 1px solid var(--color-line);
+  border-start-start-radius: var(--radius-md);
+  border-start-end-radius: var(--radius-md);
+  background: linear-gradient(var(--color-surface-raised), var(--color-surface));
+}
+
+.page-intro h1 {
+  max-width: 24ch;
+  font-size: clamp(var(--text-3xl), 4.5vw, var(--text-hero));
+  line-height: var(--leading-tight);
+}
+
+.contact-panel {
+  padding: var(--page-section-y) var(--page-x);
+  border-top: 1px solid var(--color-line);
+  background: var(--color-surface-sunken);
+  border-end-start-radius: var(--radius-md);
+  border-end-end-radius: var(--radius-md);
+}
 .blog-body h1 {
   margin-bottom: var(--space-5);
 }

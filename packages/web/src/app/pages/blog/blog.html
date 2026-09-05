@@ -1,12 +1,12 @@
 <article class="blog-index">
-  <header>
+  <header class="page-intro">
     <h1>{{ i18n.t('blog.title') }}</h1>
     <p>{{ i18n.t('blog.lead') }}</p>
   </header>
 
   <ol class="post-list">
     @for (post of blog.posts(); track post.slug) {
-    <li>
+    <li class="ds-panel">
       <article>
         <time [attr.datetime]="post.published"
           >{{ post.published | localizedDate: i18n.language() : { dateStyle: "long" } }}</time

@@ -16,6 +16,7 @@ type PublicEntry = {
 type ContentEntry = {
   title: string;
   description: string;
+  href: string;
 };
 
 @Component({
@@ -59,10 +60,12 @@ export class HomeComponent {
     {
       title: this.i18n.t('home.services.renovation.title'),
       description: this.i18n.t('home.services.renovation.desc'),
+      href: '/services/audit-renovation',
     },
     {
       title: this.i18n.t('home.services.development.title'),
       description: this.i18n.t('home.services.development.desc'),
+      href: '/services/developpement',
     },
   ]);
 

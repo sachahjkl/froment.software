@@ -45,6 +45,7 @@
   --text-2xl: 1.625rem;
   --text-3xl: 2rem;
   --text-display: 2.375rem;
+  --text-hero: 3.25rem;
   --leading-tight: 1.08;
   --leading-heading: 1.18;
   --leading-body: 1.5;
@@ -83,6 +84,7 @@
   --shadow-xs: 0 1px 1px var(--color-shadow);
   --shadow-sm: 0 1px 3px var(--color-shadow);
   --shadow-panel: 0 1px 2px var(--color-shadow-soft);
+  --shadow-page: 0 2px 4px var(--color-shadow-soft), 0 12px 32px -12px var(--color-shadow);
   --shadow-focus: 0 0 0 3px color-mix(in oklab, var(--color-focus) 20%, transparent);
 
   --duration-press: 80ms;
@@ -94,6 +96,8 @@
   --ease-press: ease-out;
 
   --page-x: clamp(1rem, 4vw, 2rem);
+  --shell-gutter: clamp(0.5rem, 2vw, 1.5rem);
+  --page-intro-y: clamp(var(--space-8), 5vw, var(--space-16));
   --page-header-y: clamp(var(--space-7), 3vw, var(--space-8));
   --page-section-y: clamp(var(--space-5), 3vw, var(--space-8));
   --panel-padding: clamp(var(--space-4), 3vw, var(--space-6));

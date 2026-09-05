@@ -9,7 +9,7 @@
 
 .header-inner,
 .navigation-row {
-  width: 100%;
+  width: calc(100% - 2 * var(--shell-gutter));
   max-width: var(--layout-max);
   margin-inline: auto;
 }
@@ -69,6 +69,7 @@
   border: 1px solid var(--color-line-strong);
   border-radius: var(--radius-sm);
   background: var(--color-surface-raised);
+  white-space: nowrap;
   cursor: pointer;
 }
 
@@ -131,5 +132,16 @@
     flex: 0 0 var(--control-height);
     width: var(--control-height);
     padding: 0;
+  }
+}
+
+@media (max-width: 24rem) {
+  .brand img {
+    width: 1.75rem;
+    height: 1.75rem;
+  }
+
+  .brand strong {
+    font-size: var(--text-sm);
   }
 }
