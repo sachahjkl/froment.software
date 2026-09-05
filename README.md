@@ -65,7 +65,7 @@ The `/design` route remains hidden and non-indexable. Do not add it to the sitem
 
 ## Local development
 
-Prerequisites: Node.js 22 and pnpm 11.20.0, or `nix develop`.
+Prerequisites: Node.js 22.22.3 or later in the 22.x series and pnpm 11.25.0, or `nix develop`.
 
 ```bash
 pnpm install --frozen-lockfile

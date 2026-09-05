@@ -23,5 +23,5 @@
     "playwright-core": "catalog:",
     "typescript": "catalog:"
   },
-  "packageManager": "pnpm@11.20.0"
+  "packageManager": "pnpm@11.25.0"
 }
