@@ -455,6 +455,41 @@ export const quoteConditionPresets = sqliteTable(
   ],
 );
 
+export const invoicePayments = sqliteTable(
+  'invoice_payments',
+  {
+    id: text().notNull().primaryKey(),
+    invoiceId: text('invoice_id')
+      .notNull()
+      .references(() => invoices.id),
+    requestId: text('request_id').notNull().unique(),
+    expectedVersion: integer('expected_version').notNull(),
+    amountCents: integer('amount_cents').notNull(),
+    paidOn: text('paid_on').notNull(),
+    method: text().notNull(),
+    reference: text().notNull(),
+    recordedAt: text('recorded_at').notNull(),
+    recordedByUserId: text('recorded_by_user_id')
+      .notNull()
+      .references(() => users.id),
+  },
+  (table) => [
+    index('invoice_payments_invoice_index').on(table.invoiceId),
+    check(
+      'invoice_payments_amount_check',
+      sql`${table.amountCents} between 1 and 9007199254740991`,
+    ),
+    check(
+      'invoice_payments_method_check',
+      sql`${table.method} in ('transfer', 'card', 'cash', 'cheque', 'other')`,
+    ),
+    check(
+      'invoice_payments_reference_check',
+      sql`length(trim(${table.reference})) between 1 and 160`,
+    ),
+  ],
+);
+
 export const catalogItems = sqliteTable(
   'catalog_items',
   {

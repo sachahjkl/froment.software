@@ -242,15 +242,6 @@
       } } @else if (invoice.status === 'issued') {
       <button
         appButton
-        variant="primary"
-        type="button"
-        [disabled]="actionPending()"
-        (click)="markPaid()"
-      >
-        {{ i18n.t('backOffice.invoice.markPaid') }}
-      </button>
-      <button
-        appButton
         variant="danger"
         type="button"
         [disabled]="actionPending()"
@@ -278,6 +269,59 @@
         <dd>{{ money(invoice.currentRevision.totalCents) }}</dd>
       </div>
     </dl>
+    @if (invoice.status === 'issued' || invoice.status === 'paid') {
+    <h2>{{ i18n.t('payment.title') }}</h2>
+    <p>{{ i18n.t('payment.recorded') }} : {{ money(recordedPaid()) }}</p>
+    @if (invoice.status === 'issued') {
+    <p><strong>{{ i18n.t('payment.remaining') }} : {{ money(remaining()) }}</strong></p>
+    <form class="payment-form" (submit)="recordPayment($event)">
+      <label class="field"
+        >{{ i18n.t('payment.amount') }}<input
+          class="input"
+          inputmode="decimal"
+          [formField]="paymentForm.amount"
+      /></label>
+      <label class="field"
+        >{{ i18n.t('payment.date') }}<input
+          class="input"
+          type="date"
+          [formField]="paymentForm.paidOn"
+      /></label>
+      <label class="field"
+        >{{ i18n.t('payment.method') }}
+        <select class="input" [formField]="paymentForm.method">
+          <option value="transfer">{{ i18n.t('payment.transfer') }}</option>
+          <option value="card">{{ i18n.t('payment.card') }}</option>
+          <option value="cash">{{ i18n.t('payment.cash') }}</option>
+          <option value="cheque">{{ i18n.t('payment.cheque') }}</option>
+          <option value="other">{{ i18n.t('payment.other') }}</option>
+        </select>
+      </label>
+      <label class="field"
+        >{{ i18n.t('payment.reference') }}<input class="input" [formField]="paymentForm.reference"
+      /></label>
+      <p class="hint">{{ i18n.t('payment.hint') }}</p>
+      <button
+        appButton
+        variant="primary"
+        type="submit"
+        [disabled]="actionPending() || paymentForm().invalid()"
+      >
+        {{ i18n.t('payment.save') }}
+      </button>
+    </form>
+    }
+    <ol>
+      @for (payment of invoice.payments; track payment.id) {
+      <li>
+        <strong>{{ money(payment.amountCents) }}</strong> · {{ payment.paidOn }} · {{
+        i18n.t(paymentMethod(payment.method)) }}<br />{{ payment.reference }}
+      </li>
+      } @empty {
+      <li>{{ i18n.t('payment.empty') }}</li>
+      }
+    </ol>
+    }
     <h2>{{ i18n.t('backOffice.invoice.history') }}</h2>
     <ol>
       @for (revision of invoice.revisions; track revision.id) {

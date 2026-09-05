@@ -160,9 +160,10 @@ export const apiDocumentation = {
         summary: 'Émettre une facture',
         description: 'Attribue le numéro légal et émet la facture.',
       },
-      invoiceMarkPaid: {
-        summary: 'Marquer une facture comme payée',
-        description: 'Passe une facture émise à l’état payé.',
+      invoicePaymentCreate: {
+        summary: 'Enregistrer un règlement',
+        description:
+          'Enregistre un règlement partiel ou complet. Réutilisez requestId avec les mêmes valeurs après une erreur réseau. Le solde ne peut pas devenir négatif.',
       },
       invoiceVoid: { summary: 'Annuler une facture', description: 'Annule une facture.' },
       affairEventList: {
@@ -433,9 +434,10 @@ export const apiDocumentation = {
         summary: 'Issue an invoice',
         description: 'Assigns the legal invoice number and issues the invoice.',
       },
-      invoiceMarkPaid: {
-        summary: 'Mark an invoice as paid',
-        description: 'Transitions an issued invoice to paid.',
+      invoicePaymentCreate: {
+        summary: 'Record a payment',
+        description:
+          'Records a partial or full payment. Reuse requestId with unchanged values after a network error. The balance cannot become negative.',
       },
       invoiceVoid: { summary: 'Void an invoice', description: 'Voids an invoice.' },
       affairEventList: {

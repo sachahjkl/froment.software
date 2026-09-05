@@ -1,4 +1,5 @@
 import { Schema } from 'effect';
+import { InvoicePaymentRequest, InvoicePaymentInvalid } from './payments.js';
 import { HttpApiEndpoint, HttpApiGroup, HttpApiSchema } from 'effect/unstable/httpapi';
 
 import { ApiRequestBody } from '../api-authentication.js';
@@ -139,11 +140,12 @@ export class InvoicesApi extends HttpApiGroup.make('invoices', { topLevel: true 
       authenticate,
       rateLimit(RateLimits.tenPerMinute),
     ),
-  HttpApiEndpoint.post('invoiceMarkPaid', '/api/invoices/:invoiceId/mark-paid', {
+  HttpApiEndpoint.post('invoicePaymentCreate', '/api/invoices/:invoiceId/payments', {
     params: { invoiceId: Ulid },
-    payload: InvoiceTransitionRequest,
+    payload: Schema.Struct({ ...InvoicePaymentRequest.fields, paidOn: CalendarDateText }),
     success: InvoiceDetail,
     error: [
+      InvoicePaymentInvalid,
       ...invoiceWriteErrors,
       InvoiceNotFound.pipe(HttpApiSchema.status(404)),
       InvoiceVersionConflict.pipe(HttpApiSchema.status(409)),

@@ -458,6 +458,26 @@ export const translations = {
     'document.field.name': 'Nom',
     'document.required': 'champ requis',
     'catalog.title': 'Catalogue',
+    'payment.title': 'Règlements',
+    'payment.recorded': 'Montant enregistré',
+    'payment.remaining': 'Reste à régler',
+    'payment.amount': 'Montant reçu (EUR)',
+    'payment.date': 'Date de réception',
+    'payment.method': 'Moyen de paiement',
+    'payment.reference': 'Référence ou justificatif',
+    'payment.transfer': 'Virement',
+    'payment.card': 'Carte',
+    'payment.cash': 'Espèces',
+    'payment.cheque': 'Chèque',
+    'payment.other': 'Autre',
+    'payment.save': 'Enregistrer le règlement',
+    'payment.confirm':
+      'Confirmez-vous la réception de ce règlement ? Cette opération sera conservée dans l’historique.',
+    'payment.hint':
+      'Saisissez un montant positif reçu, une date passée ou actuelle et une référence. Cet enregistrement ne déclenche aucun paiement bancaire.',
+    'payment.empty': 'Aucun règlement détaillé enregistré.',
+    'invoice.payment_invalid':
+      'Vérifiez le montant, le solde, la date et la référence. Après une erreur réseau, réessayez sans changer les valeurs ou rechargez la facture.',
     'catalog.intro':
       'Préparez vos prestations en euros. Les prix sont hors taxes. Vérifiez le taux de TVA pour chaque devis.',
     'catalog.create': 'Nouvelle prestation',
@@ -1716,6 +1736,26 @@ export const translations = {
     'document.field.name': 'Name',
     'document.required': 'required field',
     'catalog.title': 'Catalog',
+    'payment.title': 'Payments',
+    'payment.recorded': 'Recorded amount',
+    'payment.remaining': 'Remaining balance',
+    'payment.amount': 'Amount received (EUR)',
+    'payment.date': 'Date received',
+    'payment.method': 'Payment method',
+    'payment.reference': 'Reference or evidence',
+    'payment.transfer': 'Bank transfer',
+    'payment.card': 'Card',
+    'payment.cash': 'Cash',
+    'payment.cheque': 'Cheque',
+    'payment.other': 'Other',
+    'payment.save': 'Record payment',
+    'payment.confirm':
+      'Confirm receipt of this payment? This entry will remain in the payment history.',
+    'payment.hint':
+      'Enter a positive amount received, a past or current date and a reference. This record does not trigger a bank payment.',
+    'payment.empty': 'No detailed payment records.',
+    'invoice.payment_invalid':
+      'Check the amount, balance, date and reference. After a network error, retry with unchanged values or reload the invoice.',
     'catalog.intro':
       'Prepare your services in euros. Prices exclude tax. Check the VAT rate for each quote.',
     'catalog.create': 'New service',

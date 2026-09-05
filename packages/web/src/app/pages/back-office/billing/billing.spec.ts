@@ -23,6 +23,7 @@ const invoice = (status: 'issued' | 'paid', suffix: string): InvoiceSummaryValue
     dueDate: '2026-09-21',
     currency: 'EUR',
     totalCents: Number(suffix) * 10_000,
+    recordedPaidCents: 0,
     updatedAt: '2026-08-21T10:00:00.000Z',
     pdf: null,
   }) as InvoiceSummaryValue;

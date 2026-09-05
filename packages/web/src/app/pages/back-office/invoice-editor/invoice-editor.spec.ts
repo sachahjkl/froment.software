@@ -44,6 +44,7 @@ const revision = {
 };
 
 const detail = (status: InvoiceDetailValue['status'] = 'draft'): InvoiceDetailValue => ({
+  payments: [],
   id: invoiceId,
   orderId,
   orderReference: 'CO-2026-000001',
@@ -86,7 +87,7 @@ interface ApiStub {
   create: ReturnType<typeof vi.fn>;
   createRevision: ReturnType<typeof vi.fn>;
   issue: ReturnType<typeof vi.fn>;
-  markPaid: ReturnType<typeof vi.fn>;
+  recordPayment: ReturnType<typeof vi.fn>;
   void: ReturnType<typeof vi.fn>;
   renderPdf: ReturnType<typeof vi.fn>;
 }
@@ -111,7 +112,7 @@ const setup = async (status?: InvoiceDetailValue['status']) => {
     create: vi.fn(),
     createRevision: vi.fn(),
     issue: vi.fn(),
-    markPaid: vi.fn(),
+    recordPayment: vi.fn(),
     void: vi.fn(),
     renderPdf: vi.fn(),
   };
@@ -257,7 +258,7 @@ describe('InvoiceEditor', () => {
 
     expect(api.issue).toHaveBeenCalledWith(invoiceId, 1);
     expect(root.textContent).toMatch(/Émise|Issued/);
-    expect(button(root, /payée|paid/).disabled).toBe(false);
+    expect(root.querySelector('.payment-form')).not.toBeNull();
   });
 
   it('disables issuance while the draft contains unsaved changes', async () => {
@@ -277,20 +278,20 @@ describe('InvoiceEditor', () => {
     expect(button(root, /Enregistrer|Save/).disabled).toBe(true);
   });
 
-  it.each([
-    ['paid', /payée|paid/i, 'markPaid'],
-    ['void', /Annuler la facture|Void invoice/i, 'void'],
-  ] as const)('transitions an issued invoice to %s', async (status, label, method) => {
-    const { api, fixture, root } = await setup('issued');
-    vi.spyOn(globalThis, 'confirm').mockReturnValue(true);
-    api[method].mockResolvedValue({ success: true, result: detail(status) });
+  it.each([['void', /Annuler la facture|Void invoice/i, 'void']] as const)(
+    'transitions an issued invoice to %s',
+    async (status, label, method) => {
+      const { api, fixture, root } = await setup('issued');
+      vi.spyOn(globalThis, 'confirm').mockReturnValue(true);
+      api[method].mockResolvedValue({ success: true, result: detail(status) });
 
-    button(root, label).click();
-    await fixture.whenStable();
+      button(root, label).click();
+      await fixture.whenStable();
 
-    expect(api[method]).toHaveBeenCalledWith(invoiceId, { expectedVersion: 1 });
-    expect(root.textContent).toMatch(status === 'paid' ? /Payée|Paid/ : /Annulée|Void/);
-  });
+      expect(api[method]).toHaveBeenCalledWith(invoiceId, { expectedVersion: 1 });
+      expect(root.textContent).toMatch(/Annulée|Void/);
+    },
+  );
 
   it('generates a revision PDF and exposes its download URL', async () => {
     const { api, fixture, root } = await setup('draft');
@@ -334,13 +335,53 @@ describe('InvoiceEditor', () => {
   it('restores action pending after a transition network error', async () => {
     const { api, fixture, root } = await setup('issued');
     vi.spyOn(globalThis, 'confirm').mockReturnValue(true);
-    api.markPaid.mockRejectedValue(new Error('offline'));
+    api.void.mockRejectedValue(new Error('offline'));
 
-    button(root, /payée|paid/i).click();
+    button(root, /Annuler la facture|Void invoice/i).click();
     await fixture.whenStable();
 
-    expect(button(root, /payée|paid/i).disabled).toBe(false);
     expect(button(root, /Annuler la facture|Void invoice/i).disabled).toBe(false);
+  });
+
+  it('retries a payment with the same request identifier after a network error', async () => {
+    const { api, fixture, root } = await setup('issued');
+    vi.spyOn(globalThis, 'confirm').mockReturnValue(true);
+    const form = root.querySelector<HTMLFormElement>('.payment-form');
+    if (form === null) throw new Error('payment.form.missing');
+    const fields = form.querySelectorAll<HTMLInputElement>('input');
+    input(fields[0]!, '4.00');
+    input(fields[1]!, '2026-08-20');
+    input(fields[2]!, 'BANK-456');
+    api.recordPayment.mockRejectedValueOnce(new Error('offline'));
+    form.dispatchEvent(new SubmitEvent('submit', { bubbles: true, cancelable: true }));
+    await fixture.whenStable();
+    const request = api.recordPayment.mock.calls[0]?.[1];
+    expect(request).toMatchObject({
+      amountCents: 400,
+      expectedVersion: 1,
+      paidOn: '2026-08-20',
+      method: 'transfer',
+      reference: 'BANK-456',
+    });
+    api.recordPayment.mockResolvedValueOnce({
+      success: true,
+      result: {
+        ...detail('issued'),
+        payments: [
+          {
+            ...request,
+            id: '01ARZ3NDEKTSV4RRFFQ69G5FB9',
+            recordedAt: '2026-08-20T12:00:00.000Z',
+            recordedByUserId: '01ARZ3NDEKTSV4RRFFQ69G5FAV',
+          },
+        ],
+      },
+    });
+    form.dispatchEvent(new SubmitEvent('submit', { bubbles: true, cancelable: true }));
+    await fixture.whenStable();
+    expect(api.recordPayment.mock.calls[1]?.[1]).toEqual(request);
+    expect(root.textContent).toContain('BANK-456');
+    expect(root.querySelector('.payment-form')).not.toBeNull();
   });
 
   it('restores PDF pending after a network error', async () => {

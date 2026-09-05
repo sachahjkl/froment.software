@@ -114,6 +114,7 @@ const invoiceRevision = {
 };
 
 const invoice = {
+  payments: [],
   id: invoiceId,
   orderId,
   orderReference: order.reference,
@@ -130,6 +131,7 @@ const invoice = {
 };
 
 const invoiceSummary = {
+  recordedPaidCents: 0,
   id: invoiceId,
   orderId,
   orderReference: order.reference,

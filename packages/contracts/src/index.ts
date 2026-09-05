@@ -325,3 +325,10 @@ export {
   type CatalogItemUpdateRequest as CatalogItemUpdateRequestValue,
   type CatalogFailure as CatalogFailureValue,
 } from './catalog/contracts.js';
+export {
+  InvoicePayment,
+  InvoicePaymentRequest,
+  InvoicePaymentInvalid,
+  type InvoicePayment as InvoicePaymentValue,
+  type InvoicePaymentRequest as InvoicePaymentRequestValue,
+} from './invoices/payments.js';

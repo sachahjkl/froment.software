@@ -23,6 +23,7 @@ describe('Dashboard', () => {
       dueDate: '2026-09-21',
       currency: 'EUR',
       totalCents: 120_000,
+      recordedPaidCents: 0,
       updatedAt: '2026-08-21T10:00:00.000Z',
       pdf: null,
     } satisfies InvoiceSummaryValue;

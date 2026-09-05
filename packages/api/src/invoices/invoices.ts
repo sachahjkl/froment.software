@@ -41,6 +41,16 @@ import { Database, DatabaseError } from '../database/database.js';
 import { calculateDocumentLine, calculateDocumentTotals } from '../documents/calculation.js';
 import { validateDocumentParties } from '../documents/validation.js';
 import { IssuerSettings } from '../issuer-settings/service.js';
+import {
+  InvoicePayment,
+  InvoicePaymentRequest,
+  InvoicePaymentInvalid,
+  type InvoicePaymentRequestValue,
+} from '@froment/contracts';
+
+const paymentSql = `select id, request_id as requestId, expected_version as expectedVersion,
+  amount_cents as amountCents, paid_on as paidOn, method, reference,
+  recorded_at as recordedAt, recorded_by_user_id as recordedByUserId from invoice_payments`;
 
 const InvoiceRecord = Schema.Struct({
   id: Ulid,
@@ -95,6 +105,7 @@ const OrderRecord = Schema.Struct({
 });
 const SnapshotRecord = Schema.Struct({ renderSnapshot: Schema.String });
 const InvoiceSummaryRecord = Schema.Struct({
+  recordedPaidCents: Schema.Int,
   id: Ulid,
   orderId: Ulid,
   orderReference: Schema.String,
@@ -159,13 +170,17 @@ export interface InvoicesService {
     | DocumentIncomplete
     | DatabaseError
   >;
-  readonly markPaid: (
+  readonly recordPayment: (
     invoiceId: UlidValue,
-    request: InvoiceTransitionRequestValue,
+    request: InvoicePaymentRequestValue,
     actorUserId: UlidValue,
   ) => Effect.Effect<
     InvoiceDetailValue,
-    InvoiceNotFound | InvoiceVersionConflict | InvoiceInvalidTransition | DatabaseError
+    | InvoiceNotFound
+    | InvoiceVersionConflict
+    | InvoiceInvalidTransition
+    | InvoicePaymentInvalid
+    | DatabaseError
   >;
   readonly voidInvoice: (
     invoiceId: UlidValue,
@@ -274,6 +289,11 @@ export const InvoicesLive = Layer.effect(
         .get(currentRevision.id);
       const pdf = rawPdf === undefined ? null : Schema.decodeUnknownSync(InvoicePdfState)(rawPdf);
       return InvoiceDetail.make({
+        payments: Schema.decodeUnknownSync(Schema.Array(InvoicePayment))(
+          database.sqlite
+            .prepare(`${paymentSql} where invoice_id = ? order by recorded_at, id`)
+            .all(invoiceId),
+        ),
         ...invoice,
         issuedAt:
           invoice.issuedAt === null
@@ -303,7 +323,8 @@ export const InvoicesLive = Layer.effect(
                        invoice_revisions.title, invoice_revisions.due_date as dueDate,
                        invoice_revisions.currency,
                        invoice_revisions.total_cents as totalCents, invoices.updated_at as updatedAt
-                       , invoice_pdf_jobs.status as pdfStatus
+                        , coalesce((select sum(amount_cents) from invoice_payments where invoice_id = invoices.id), 0) as recordedPaidCents
+                        , invoice_pdf_jobs.status as pdfStatus
                        , invoice_pdf_jobs.attempts as pdfAttempts
                        , invoice_pdf_jobs.error as pdfError
                 from invoices join orders on orders.id = invoices.order_id
@@ -316,6 +337,7 @@ export const InvoicesLive = Layer.effect(
             )
             .all(),
         ).map((invoice) => ({
+          recordedPaidCents: invoice.recordedPaidCents,
           id: invoice.id,
           orderId: invoice.orderId,
           orderReference: invoice.orderReference,
@@ -873,11 +895,10 @@ export const InvoicesLive = Layer.effect(
       });
     });
 
-    const transition = Effect.fn('Invoices.transition')(function* (
+    const voidInvoice = Effect.fn('Invoices.void')(function* (
       invoiceId: UlidValue,
       request: InvoiceTransitionRequestValue,
       actorUserId: UlidValue,
-      targetStatus: 'paid' | 'void',
     ) {
       const now = yield* Clock.currentTimeMillis;
       return yield* Effect.try({
@@ -897,32 +918,28 @@ export const InvoicesLive = Layer.effect(
                   currentVersion: invoice.version,
                 });
               }
-              if (invoice.status === targetStatus) {
+              if (invoice.status === 'void') {
                 const detail = readDetail(invoiceId);
                 if (detail === undefined) throw new Error('invoice.transitioned.missing');
                 return detail;
               }
-              if (invoice.status !== 'issued') {
+              if (
+                invoice.status !== 'issued' ||
+                database.sqlite
+                  .prepare('select 1 from invoice_payments where invoice_id = ?')
+                  .get(invoiceId) !== undefined
+              ) {
                 throw new InvoiceInvalidTransition({
                   code: 'invoice.invalid_transition',
                   currentStatus: invoice.status,
                 });
               }
-              const paidAt = targetStatus === 'paid' ? now : null;
-              const voidedAt = targetStatus === 'void' ? now : null;
               const updated = database.sqlite
                 .prepare(
                   `update invoices set status = ?, paid_at = ?, voided_at = ?, updated_at = ?
                    where id = ? and status = 'issued' and version = ?`,
                 )
-                .run(
-                  targetStatus,
-                  paidAt,
-                  voidedAt,
-                  now,
-                  invoiceId,
-                  request.expectedVersion,
-                ).changes;
+                .run('void', null, now, now, invoiceId, request.expectedVersion).changes;
               if (updated !== 1) {
                 throw new InvoiceVersionConflict({
                   code: 'invoice.version_conflict',
@@ -930,11 +947,11 @@ export const InvoicesLive = Layer.effect(
                 });
               }
               audit.insert({
-                action: targetStatus === 'paid' ? 'invoice.marked-paid' : 'invoice.voided',
+                action: 'invoice.voided',
                 actorUserId,
                 resourceType: 'invoice',
                 resourceId: invoiceId,
-                metadata: { status: targetStatus, version: String(invoice.version) },
+                metadata: { status: 'void', version: String(invoice.version) },
                 occurredAt: now,
               });
               const detail = readDetail(invoiceId);
@@ -950,19 +967,110 @@ export const InvoicesLive = Layer.effect(
           ) {
             return cause;
           }
-          return new DatabaseError({ operation: `mark.invoice.${targetStatus}`, cause });
+          return new DatabaseError({ operation: 'void.invoice', cause });
         },
       });
     });
 
-    const markPaid = Effect.fn('Invoices.markPaid')(
-      (invoiceId: UlidValue, request: InvoiceTransitionRequestValue, actorUserId: UlidValue) =>
-        transition(invoiceId, request, actorUserId, 'paid'),
-    );
-    const voidInvoice = Effect.fn('Invoices.void')(
-      (invoiceId: UlidValue, request: InvoiceTransitionRequestValue, actorUserId: UlidValue) =>
-        transition(invoiceId, request, actorUserId, 'void'),
-    );
+    const recordPayment = Effect.fn('Invoices.recordPayment')(function* (
+      invoiceId: UlidValue,
+      request: InvoicePaymentRequestValue,
+      actorUserId: UlidValue,
+    ) {
+      const now = yield* Clock.currentTimeMillis;
+      return yield* Effect.try({
+        try: () =>
+          database.sqlite
+            .transaction(() => {
+              if (!Schema.is(InvoicePaymentRequest)(request))
+                throw new InvoicePaymentInvalid({ code: 'invoice.payment_invalid' });
+              const invoice = readDetail(invoiceId);
+              if (invoice === undefined) throw new InvoiceNotFound({ code: 'invoice.not_found' });
+              const existing = database.sqlite
+                .prepare(`${paymentSql} where request_id = ?`)
+                .get(request.requestId);
+              if (existing !== undefined) {
+                const payment = Schema.decodeUnknownSync(InvoicePayment)(existing);
+                if (
+                  !invoice.payments.some((entry) => entry.id === payment.id) ||
+                  payment.amountCents !== request.amountCents ||
+                  payment.paidOn !== request.paidOn ||
+                  payment.method !== request.method ||
+                  payment.reference !== request.reference.trim() ||
+                  payment.expectedVersion !== request.expectedVersion
+                ) {
+                  throw new InvoicePaymentInvalid({ code: 'invoice.payment_invalid' });
+                }
+                return invoice;
+              }
+              if (invoice.version !== request.expectedVersion)
+                throw new InvoiceVersionConflict({
+                  code: 'invoice.version_conflict',
+                  currentVersion: invoice.version,
+                });
+              if (invoice.status !== 'issued')
+                throw new InvoiceInvalidTransition({
+                  code: 'invoice.invalid_transition',
+                  currentStatus: invoice.status,
+                });
+              const paid = invoice.payments.reduce(
+                (sum, payment) => sum + BigInt(payment.amountCents),
+                0n,
+              );
+              const nextPaid = paid + BigInt(request.amountCents);
+              if (
+                nextPaid > BigInt(invoice.currentRevision.totalCents) ||
+                request.paidOn > invoiceIssueDate(now, businessConfig.timeZone)
+              ) {
+                throw new InvoicePaymentInvalid({ code: 'invoice.payment_invalid' });
+              }
+              const id = ulid(now);
+              database.sqlite
+                .prepare(`insert into invoice_payments
+            (id, invoice_id, request_id, expected_version, amount_cents, paid_on, method, reference, recorded_at, recorded_by_user_id)
+            values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
+                .run(
+                  id,
+                  invoiceId,
+                  request.requestId,
+                  request.expectedVersion,
+                  request.amountCents,
+                  request.paidOn,
+                  request.method,
+                  request.reference.trim(),
+                  DateTime.formatIso(DateTime.makeUnsafe(now)),
+                  actorUserId,
+                );
+              const settled = nextPaid === BigInt(invoice.currentRevision.totalCents);
+              database.sqlite
+                .prepare(`update invoices set status = ?, paid_at = ?, updated_at = ? where id = ?`)
+                .run(settled ? 'paid' : 'issued', settled ? now : null, now, invoiceId);
+              audit.insert({
+                action: 'invoice.payment-recorded',
+                actorUserId,
+                resourceType: 'invoice',
+                resourceId: invoiceId,
+                metadata: {
+                  paymentId: id,
+                  amountCents: String(request.amountCents),
+                  method: request.method,
+                },
+                occurredAt: now,
+              });
+              const result = readDetail(invoiceId);
+              if (result === undefined) throw new Error('invoice.payment.result.missing');
+              return result;
+            })
+            .immediate(),
+        catch: (cause) =>
+          cause instanceof InvoiceNotFound ||
+          cause instanceof InvoiceVersionConflict ||
+          cause instanceof InvoiceInvalidTransition ||
+          cause instanceof InvoicePaymentInvalid
+            ? cause
+            : new DatabaseError({ operation: 'record.invoice.payment', cause }),
+      });
+    });
 
     return Invoices.of({
       list,
@@ -971,7 +1079,7 @@ export const InvoicesLive = Layer.effect(
       create,
       createRevision,
       issue,
-      markPaid,
+      recordPayment,
       voidInvoice,
     });
   }),

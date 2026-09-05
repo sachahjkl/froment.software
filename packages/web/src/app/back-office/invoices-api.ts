@@ -14,6 +14,7 @@ import {
   type InvoiceListValue,
   type InvoiceRevisionCreateRequestValue,
   type InvoiceTransitionRequestValue,
+  type InvoicePaymentRequestValue,
   type UlidValue,
 } from '@froment/contracts';
 import { Schema } from 'effect';
@@ -76,12 +77,12 @@ export class InvoicesApi {
     );
   }
 
-  async markPaid(
+  async recordPayment(
     invoiceId: UlidValue,
-    request: InvoiceTransitionRequestValue,
+    request: InvoicePaymentRequestValue,
   ): Promise<InvoiceOutcome<InvoiceDetailValue>> {
     return requestOutcome(
-      this.http.post<unknown>(`/api/invoices/${invoiceId}/mark-paid`, request),
+      this.http.post<unknown>(`/api/invoices/${invoiceId}/payments`, request),
       InvoiceDetail,
       InvoiceFailure,
       'invoice.error',

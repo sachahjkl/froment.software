@@ -105,12 +105,12 @@ export const InvoiceHandlers = HttpApiBuilder.group(Api, 'invoices', (handlers) 
         }),
       )
       .handle(
-        'invoiceMarkPaid',
-        Effect.fn('invoiceMarkPaid')(function* ({ params, payload }) {
+        'invoicePaymentCreate',
+        Effect.fn('invoicePaymentCreate')(function* ({ params, payload }) {
           yield* setPrivateResponseHeaders;
           const principal = yield* ApiPrincipal;
           return yield* (yield* Invoices)
-            .markPaid(params.invoiceId, payload, principal.userId)
+            .recordPayment(params.invoiceId, payload, principal.userId)
             .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
         }),
       )

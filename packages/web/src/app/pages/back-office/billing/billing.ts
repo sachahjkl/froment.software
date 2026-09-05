@@ -55,7 +55,7 @@ export class Billing {
   protected readonly outstandingCents = computed(() =>
     this.invoices()
       .filter(({ status }) => status === 'issued')
-      .reduce((total, invoice) => total + invoice.totalCents, 0),
+      .reduce((total, invoice) => total + invoice.totalCents - invoice.recordedPaidCents, 0),
   );
   protected readonly selectedInvoices = computed(() => {
     const selectedIds = this.selectedIds();

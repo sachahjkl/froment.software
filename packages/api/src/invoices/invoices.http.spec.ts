@@ -36,7 +36,7 @@ describe('invoice HTTP routes', () => {
     expect(create.status).toBe(200);
     const invoice = (await create.json()) as {
       id: string;
-      currentRevision: { lines: ReadonlyArray<object> };
+      currentRevision: { lines: ReadonlyArray<object>; totalCents: number };
     };
     const duplicate = await fetch(`${server.baseUrl}/api/invoices`, {
       method: 'POST',
@@ -87,13 +87,65 @@ describe('invoice HTTP routes', () => {
     });
     expect(Buffer.from(await clientDownload.arrayBuffer())).toEqual(pdf);
 
-    const paid = await fetch(`${server.baseUrl}/api/invoices/${invoice.id}/mark-paid`, {
+    const partialPayload = {
+      expectedVersion: 3,
+      requestId: crypto.randomUUID(),
+      amountCents: 100,
+      paidOn: '2026-08-20',
+      method: 'transfer',
+      reference: 'BANK-001',
+    };
+    const pay = (payload: typeof partialPayload) =>
+      fetch(`${server.baseUrl}/api/invoices/${invoice.id}/payments`, {
+        method: 'POST',
+        headers: server.jsonHeaders,
+        body: JSON.stringify(payload),
+      });
+    const partial = await pay(partialPayload);
+    const forbidden = await fetch(`${server.baseUrl}/api/invoices/${invoice.id}/payments`, {
       method: 'POST',
-      headers: server.jsonHeaders,
-      body: JSON.stringify({ expectedVersion: 3 }),
+      headers: { ...clientSession, 'content-type': 'application/json' },
+      body: JSON.stringify(partialPayload),
     });
+    expect(forbidden.status).toBe(403);
+    expect(partial.status).toBe(200);
+    await expect(partial.json()).resolves.toMatchObject({
+      status: 'issued',
+      payments: [{ amountCents: 100 }],
+    });
+    expect((await pay(partialPayload)).status).toBe(200);
+    expect((await pay({ ...partialPayload, amountCents: 200 })).status).toBe(409);
+    expect(
+      (
+        await pay({
+          ...partialPayload,
+          requestId: crypto.randomUUID(),
+          amountCents: invoice.currentRevision.totalCents,
+        })
+      ).status,
+    ).toBe(409);
+    expect(
+      (await pay({ ...partialPayload, requestId: crypto.randomUUID(), paidOn: '2099-01-01' }))
+        .status,
+    ).toBe(409);
+    expect(
+      (
+        await fetch(`${server.baseUrl}/api/invoices/${invoice.id}/void`, {
+          method: 'POST',
+          headers: server.jsonHeaders,
+          body: JSON.stringify({ expectedVersion: 3 }),
+        })
+      ).status,
+    ).toBe(409);
+    const finalPayload = {
+      ...partialPayload,
+      requestId: crypto.randomUUID(),
+      amountCents: invoice.currentRevision.totalCents - 100,
+    };
+    const paid = await pay(finalPayload);
     expect(paid.status).toBe(200);
     await expect(paid.json()).resolves.toMatchObject({ status: 'paid' });
+    expect((await pay(finalPayload)).status).toBe(200);
     const voided = await fetch(`${server.baseUrl}/api/invoices/${invoice.id}/void`, {
       method: 'POST',
       headers: server.jsonHeaders,
@@ -113,11 +165,11 @@ describe('invoice HTTP routes', () => {
     expect(
       database
         .prepare(
-          "select count(*) from audit_events where action = 'invoice.marked-paid' and resource_id = ?",
+          "select count(*) from audit_events where action = 'invoice.payment-recorded' and resource_id = ?",
         )
         .pluck()
         .get(invoice.id),
-    ).toBe(1);
+    ).toBe(2);
     database.close();
   }, 20_000);
 

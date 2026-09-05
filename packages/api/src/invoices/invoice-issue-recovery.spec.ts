@@ -239,6 +239,119 @@ const seedInvoice = (database: DatabaseService, dueDate = '2099-09-19') => {
 };
 
 describe('invoice issue recovery', () => {
+  it('records partial payments atomically and rejects conflicting retries and excess amounts', async () => {
+    await Effect.runPromise(
+      Effect.gen(function* () {
+        const database = yield* Database;
+        const invoices = yield* Invoices;
+        seedInvoice(database);
+        const request = {
+          requestId: crypto.randomUUID(),
+          expectedVersion: 1,
+          amountCents: 4000,
+          paidOn: '2026-08-20',
+          method: 'transfer' as const,
+          reference: 'BANK-123',
+        };
+        expect(
+          yield* Effect.result(invoices.recordPayment(invoiceId, request, actorId)),
+        ).toMatchObject({ _tag: 'Failure', failure: { _tag: 'InvoiceInvalidTransition' } });
+        expect(
+          yield* Effect.result(
+            invoices.recordPayment('01ARZ3NDEKTSV4RRFFQ69G5FB9', request, actorId),
+          ),
+        ).toMatchObject({ _tag: 'Failure', failure: { _tag: 'InvoiceNotFound' } });
+        const issued = yield* invoices.issue(invoiceId, { expectedVersion: 1 }, actorId);
+        expect(
+          yield* Effect.result(invoices.recordPayment(invoiceId, request, actorId)),
+        ).toMatchObject({ _tag: 'Failure', failure: { _tag: 'InvoiceVersionConflict' } });
+        const partialRequest = { ...request, expectedVersion: issued.version };
+        expect(
+          yield* Effect.result(
+            invoices.recordPayment(invoiceId, { ...partialRequest, amountCents: 0 }, actorId),
+          ),
+        ).toMatchObject({ _tag: 'Failure', failure: { _tag: 'InvoicePaymentInvalid' } });
+        expect(
+          yield* Effect.result(
+            invoices.recordPayment(invoiceId, { ...partialRequest, paidOn: '2026-02-31' }, actorId),
+          ),
+        ).toMatchObject({ _tag: 'Failure', failure: { _tag: 'InvoicePaymentInvalid' } });
+        const partial = yield* invoices.recordPayment(invoiceId, partialRequest, actorId);
+        expect(partial.status).toBe('issued');
+        expect(partial.payments).toHaveLength(1);
+        expect((yield* invoices.list)[0]?.recordedPaidCents).toBe(4000);
+        expect(
+          (yield* invoices.recordPayment(invoiceId, partialRequest, actorId)).payments,
+        ).toHaveLength(1);
+        expect(
+          yield* Effect.result(
+            invoices.recordPayment(invoiceId, { ...partialRequest, amountCents: 1 }, actorId),
+          ),
+        ).toMatchObject({ _tag: 'Failure', failure: { _tag: 'InvoicePaymentInvalid' } });
+        expect(
+          yield* Effect.result(
+            invoices.recordPayment(
+              invoiceId,
+              { ...partialRequest, requestId: crypto.randomUUID(), amountCents: 8001 },
+              actorId,
+            ),
+          ),
+        ).toMatchObject({ _tag: 'Failure', failure: { _tag: 'InvoicePaymentInvalid' } });
+        expect(
+          yield* Effect.result(
+            invoices.recordPayment(
+              invoiceId,
+              { ...partialRequest, requestId: crypto.randomUUID(), paidOn: '2099-01-01' },
+              actorId,
+            ),
+          ),
+        ).toMatchObject({ _tag: 'Failure', failure: { _tag: 'InvoicePaymentInvalid' } });
+        expect(
+          yield* Effect.result(
+            invoices.voidInvoice(invoiceId, { expectedVersion: issued.version }, actorId),
+          ),
+        ).toMatchObject({ _tag: 'Failure', failure: { _tag: 'InvoiceInvalidTransition' } });
+        const finalRequest = {
+          ...partialRequest,
+          requestId: crypto.randomUUID(),
+          amountCents: 8000,
+        };
+        const results = yield* Effect.all(
+          [
+            Effect.result(invoices.recordPayment(invoiceId, finalRequest, actorId)),
+            Effect.result(
+              invoices.recordPayment(
+                invoiceId,
+                { ...finalRequest, requestId: crypto.randomUUID() },
+                actorId,
+              ),
+            ),
+          ],
+          { concurrency: 'unbounded' },
+        );
+        expect(results.filter((result) => result._tag === 'Success')).toHaveLength(1);
+        const paid = yield* invoices.recordPayment(invoiceId, finalRequest, actorId);
+        expect(paid.status).toBe('paid');
+        expect(paid.payments).toHaveLength(2);
+        expect(paid.currentRevision).toEqual(partial.currentRevision);
+        expect(
+          database.sqlite
+            .prepare("select count(*) from audit_events where action = 'invoice.payment-recorded'")
+            .pluck()
+            .get(),
+        ).toBe(2);
+      }).pipe(
+        Effect.provide(
+          makeTestLayer(':memory:', {
+            renderQuotePdf: () => Effect.die('unused'),
+            renderInvoicePdf: () => Effect.die('unused'),
+            renderOrderPdf: () => Effect.die('unused'),
+          }),
+        ),
+      ),
+    );
+  });
+
   it('validates the due date against the Paris issue date after UTC midnight', async () => {
     const result = await Effect.runPromise(
       Effect.gen(function* () {

@@ -26,6 +26,7 @@ describe('InvoicesApi', () => {
         dueDate: '2026-09-20',
         currency: 'EUR',
         totalCents: 1_200,
+        recordedPaidCents: 0,
         updatedAt: '2026-08-20T06:00:00.000Z',
         pdf: null,
       },

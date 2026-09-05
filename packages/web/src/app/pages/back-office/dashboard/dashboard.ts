@@ -149,7 +149,7 @@ export class Dashboard {
   protected readonly outstandingCents = computed(() =>
     this.invoices()
       .filter(({ status }) => status === 'issued')
-      .reduce((total, invoice) => total + invoice.totalCents, 0),
+      .reduce((total, invoice) => total + invoice.totalCents - invoice.recordedPaidCents, 0),
   );
   protected readonly overdueInvoices = computed(() => {
     const today = new Date().toISOString().slice(0, 10);

@@ -22,3 +22,8 @@
     grid-template-columns: minmax(0, 1fr);
   }
 }
+.payment-form {
+  display: grid;
+  gap: var(--space-3);
+  margin-block: var(--space-4);
+}

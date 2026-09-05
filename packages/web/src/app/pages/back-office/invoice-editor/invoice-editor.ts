@@ -27,6 +27,8 @@ import { DomSanitizer, type SafeResourceUrl } from '@angular/platform-browser';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import {
   Ulid,
+  InvoicePaymentRequest,
+  type InvoicePaymentRequestValue,
   type DocumentIssueValue,
   type InvoiceCreateRequestValue,
   type InvoiceDetailValue,
@@ -81,6 +83,7 @@ const statusKeys = {
 } as const satisfies Record<InvoiceStatusValue, TranslationKey>;
 
 const errorKeys = {
+  'invoice.payment_invalid': 'invoice.payment_invalid',
   'authentication.required': 'authentication.required',
   'authentication.permission_denied': 'authentication.permission_denied',
   'request.rate_limited': 'request.rate_limited',
@@ -122,6 +125,28 @@ export class InvoiceEditor {
   protected readonly unavailable = signal(false);
   protected readonly saving = signal(false);
   protected readonly actionPending = signal(false);
+  private readonly paymentModel = signal({
+    amount: '',
+    paidOn: '',
+    method: 'transfer',
+    reference: '',
+  });
+  protected readonly paymentForm = form(this.paymentModel, (path) => {
+    disabled(path, () => this.actionPending());
+    required(path.amount);
+    pattern(path.amount, /^\d+(?:[.,]\d{1,2})?$/);
+    required(path.paidOn);
+    required(path.reference);
+    pattern(path.reference, /\S/);
+    maxLength(path.reference, 160);
+  });
+  private paymentAttempt: InvoicePaymentRequestValue | undefined;
+  protected readonly recordedPaid = computed(
+    () => this.detail()?.payments.reduce((sum, payment) => sum + payment.amountCents, 0) ?? 0,
+  );
+  protected readonly remaining = computed(
+    () => (this.detail()?.currentRevision.totalCents ?? 0) - this.recordedPaid(),
+  );
   protected readonly pdfPendingVersion = signal<number | undefined>(undefined);
   protected readonly generatedPdfVersions = signal<ReadonlySet<number>>(new Set());
   protected readonly previewVersion = signal<number | undefined>(undefined);
@@ -232,15 +257,16 @@ export class InvoiceEditor {
   }
 
   canDeactivate(): boolean {
+    if (this.actionPending()) return false;
     return (
-      !this.invoiceForm().dirty() ||
+      (!this.invoiceForm().dirty() && !this.paymentForm().dirty()) ||
       globalThis.confirm(this.i18n.t('backOffice.invoice.unsavedChanges'))
     );
   }
 
   @HostListener('window:beforeunload', ['$event'])
   protected preventUnsavedUnload(event: BeforeUnloadEvent): void {
-    if (this.invoiceForm().dirty()) event.preventDefault();
+    if (this.invoiceForm().dirty() || this.paymentForm().dirty()) event.preventDefault();
   }
 
   protected save(event: SubmitEvent): void {
@@ -332,12 +358,52 @@ export class InvoiceEditor {
     }
   }
 
-  protected async markPaid(): Promise<void> {
-    await this.transition('paid');
+  protected recordPayment(event: SubmitEvent): void {
+    event.preventDefault();
+    if (this.actionPending()) return;
+    void submit(this.paymentForm, async () => {
+      const invoice = this.detail();
+      if (invoice === undefined || invoice.status !== 'issued') return;
+      const model = this.paymentModel();
+      const parsed = Schema.decodeUnknownOption(InvoicePaymentRequest)({
+        requestId: this.paymentAttempt?.requestId ?? crypto.randomUUID(),
+        expectedVersion: invoice.version,
+        amountCents: parseFixedDecimal(model.amount, 2),
+        paidOn: model.paidOn,
+        method: model.method,
+        reference: model.reference.trim(),
+      });
+      if (Option.isNone(parsed)) return this.setError('invoice.payment_invalid');
+      const prior = this.paymentAttempt;
+      const request = parsed.value;
+      if (prior !== undefined && JSON.stringify(prior) !== JSON.stringify(request)) {
+        this.setError('invoice.payment_invalid');
+        return;
+      }
+      if (!globalThis.confirm(this.i18n.t('payment.confirm'))) return;
+      this.paymentAttempt = request;
+      this.actionPending.set(true);
+      this.error.set(undefined);
+      try {
+        const outcome = await this.invoicesApi.recordPayment(invoice.id, request);
+        if (!outcome.success) {
+          if (outcome.failure !== undefined) this.paymentAttempt = undefined;
+          return this.setError(outcome.code);
+        }
+        this.applyDetail(outcome.result);
+        this.paymentAttempt = undefined;
+        this.paymentModel.set({ amount: '', paidOn: '', method: 'transfer', reference: '' });
+        this.paymentForm().reset();
+      } catch {
+        this.setError('invoice.error');
+      } finally {
+        this.actionPending.set(false);
+      }
+    });
   }
 
   protected async voidInvoice(): Promise<void> {
-    await this.transition('void');
+    await this.transition();
   }
 
   protected showPreview(version: number): void {
@@ -374,6 +440,10 @@ export class InvoiceEditor {
     }).format(cents / 100);
   }
 
+  protected paymentMethod(method: InvoicePaymentRequestValue['method']): TranslationKey {
+    return `payment.${method}`;
+  }
+
   protected date(value: string): string {
     return new Intl.DateTimeFormat(this.i18n.language(), {
       dateStyle: 'medium',
@@ -386,6 +456,9 @@ export class InvoiceEditor {
   }
 
   private async load(parameter: string | null): Promise<void> {
+    this.paymentAttempt = undefined;
+    this.paymentModel.set({ amount: '', paidOn: '', method: 'transfer', reference: '' });
+    this.paymentForm().reset();
     const request = ++this.routeRequest;
     const invoiceId = this.decodeId(parameter);
     this.invoiceId.set(invoiceId);
@@ -447,7 +520,7 @@ export class InvoiceEditor {
     this.applyDetail(outcome.result);
   }
 
-  private async transition(target: 'paid' | 'void'): Promise<void> {
+  private async transition(): Promise<void> {
     const invoice = this.detail();
     if (
       this.invoiceId() === undefined ||
@@ -456,16 +529,13 @@ export class InvoiceEditor {
       this.actionPending()
     )
       return;
-    const confirmation =
-      target === 'paid' ? 'backOffice.invoice.paidConfirm' : 'backOffice.invoice.voidConfirm';
-    if (!globalThis.confirm(this.i18n.t(confirmation))) return;
+    if (!globalThis.confirm(this.i18n.t('backOffice.invoice.voidConfirm'))) return;
     this.actionPending.set(true);
     this.error.set(undefined);
     try {
-      const outcome =
-        target === 'paid'
-          ? await this.invoicesApi.markPaid(this.invoiceId()!, { expectedVersion: invoice.version })
-          : await this.invoicesApi.void(this.invoiceId()!, { expectedVersion: invoice.version });
+      const outcome = await this.invoicesApi.void(this.invoiceId()!, {
+        expectedVersion: invoice.version,
+      });
       if (!outcome.success) return this.setError(outcome.code);
       this.applyDetail(outcome.result);
     } catch {

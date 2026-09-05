@@ -1,4 +1,5 @@
 import { Schema } from 'effect';
+import { InvoicePayment, InvoicePaymentInvalid } from './payments.js';
 
 import {
   AuthenticationRequired,
@@ -125,6 +126,7 @@ export const InvoiceRevision = Schema.Struct({
 export type InvoiceRevision = typeof InvoiceRevision.Type;
 
 export const InvoiceSummary = Schema.Struct({
+  recordedPaidCents: SafeInteger,
   id: Ulid,
   orderId: Ulid,
   orderReference: OrderReference,
@@ -143,6 +145,7 @@ export const InvoiceSummary = Schema.Struct({
 export type InvoiceSummary = typeof InvoiceSummary.Type;
 
 export const InvoiceDetail = Schema.Struct({
+  payments: Schema.Array(InvoicePayment),
   id: Ulid,
   orderId: Ulid,
   orderReference: OrderReference,
@@ -233,6 +236,7 @@ export class InvoiceInvalidTransition extends Schema.TaggedError<InvoiceInvalidT
 ) {}
 
 export const InvoiceFailure = Schema.Union([
+  InvoicePaymentInvalid,
   AuthenticationRequired,
   PermissionDenied,
   RequestRateLimited,
