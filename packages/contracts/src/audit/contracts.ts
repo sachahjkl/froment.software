@@ -18,6 +18,8 @@ export const AuditActions = [
   'client.created',
   'client.reactivated',
   'client.updated',
+  'catalog.created',
+  'catalog.updated',
   'document.rendered',
   'invoice.created',
   'invoice.issued',

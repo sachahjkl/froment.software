@@ -1,0 +1,131 @@
+<section class="catalog-page" aria-labelledby="catalog-title">
+  <header>
+    <h2 id="catalog-title">{{ i18n.t('catalog.title') }}</h2>
+    <p class="intro">{{ i18n.t('catalog.intro') }}</p>
+  </header>
+  <form class="ds-panel editor" (submit)="save($event)">
+    <h3>{{ i18n.t(editing() ? 'catalog.edit' : 'catalog.create') }}</h3>
+    <label class="field">
+      {{ i18n.t('backOffice.quote.description') }}
+      <input
+        id="catalog-description"
+        class="input"
+        [formField]="itemForm.description"
+        [attr.aria-invalid]="invalid('description')"
+        aria-describedby="catalog-description-error"
+      />
+      @if (invalid('description')) {
+      <span id="catalog-description-error" class="field-error"
+        >{{ i18n.t('backOffice.quote.fieldInvalid') }}</span
+      >
+      }
+    </label>
+    <div class="amounts">
+      <label class="field">
+        {{ i18n.t('catalog.quantity') }}
+        <input
+          id="catalog-quantity"
+          class="input"
+          inputmode="decimal"
+          [formField]="itemForm.quantity"
+          [attr.aria-invalid]="invalid('quantity')"
+          aria-describedby="catalog-number-hint"
+        />
+      </label>
+      <label class="field">
+        {{ i18n.t('catalog.price') }}
+        <input
+          id="catalog-price"
+          class="input"
+          inputmode="decimal"
+          [formField]="itemForm.unitPrice"
+          [attr.aria-invalid]="invalid('unitPrice')"
+          aria-describedby="catalog-number-hint"
+        />
+      </label>
+      <label class="field">
+        {{ i18n.t('catalog.tax') }}
+        <input
+          id="catalog-tax"
+          class="input"
+          inputmode="decimal"
+          [formField]="itemForm.vatRate"
+          [attr.aria-invalid]="invalid('vatRate')"
+          aria-describedby="catalog-number-hint"
+        />
+      </label>
+    </div>
+    <p id="catalog-number-hint" class="hint">{{ i18n.t('catalog.invalid') }}</p>
+    @if (editing()) {
+    <label
+      ><input type="checkbox" [formField]="itemForm.archived" /> {{ i18n.t('catalog.archived')
+      }}</label
+    >
+    <p class="hint">{{ i18n.t('catalog.archiveHint') }}</p>
+    }
+    <div class="actions">
+      <button
+        appButton
+        variant="primary"
+        type="submit"
+        [disabled]="saving() || itemForm().invalid()"
+      >
+        {{ i18n.t('catalog.save') }}
+      </button>
+      <button appButton type="button" [disabled]="saving()" (click)="cancel()">
+        {{ i18n.t('catalog.cancel') }}
+      </button>
+    </div>
+  </form>
+  @if (error(); as key) {
+  <div appNotice variant="danger" role="alert">
+    <p>{{ i18n.t(key) }}</p>
+    <button appButton type="button" [disabled]="loading() || saving()" (click)="load()">
+      {{ i18n.t('catalog.reload') }}
+    </button>
+  </div>
+  } @if (saved()) {
+  <p appNotice role="status">{{ i18n.t('catalog.saved') }}</p>
+  }
+  <div class="filters">
+    <label class="field"
+      >{{ i18n.t('catalog.search') }}<input
+        class="input"
+        type="search"
+        [formField]="filters.search"
+    /></label>
+    <label
+      ><input type="checkbox" [formField]="filters.archived" /> {{ i18n.t('catalog.showArchived')
+      }}</label
+    >
+  </div>
+  @if (loading()) {
+  <p role="status">{{ i18n.t('catalog.loading') }}</p>
+  } @else {
+  <ul class="items">
+    @for (item of visibleItems(); track item.id) {
+    <li class="ds-panel">
+      <h3>{{ item.description }}</h3>
+      <p>
+        {{ decimal(item.quantityMilli, 3) }} × {{ decimal(item.unitPriceCents, 2) }} EUR · {{
+        i18n.t('catalog.tax') }} {{ decimal(item.vatRateBasisPoints, 2) }} %
+      </p>
+      @if (item.archived) {
+      <p>{{ i18n.t('catalog.archived') }}</p>
+      }
+      <button
+        appButton
+        type="button"
+        [disabled]="saving()"
+        (click)="edit(item)"
+        [attr.aria-label]="i18n.tf('catalog.editItem', { name: item.description })"
+      >
+        {{ i18n.t('catalog.edit') }}
+      </button>
+    </li>
+    } @empty {
+    <li>{{ i18n.t('catalog.empty') }}</li>
+    }
+  </ul>
+  }
+</section>

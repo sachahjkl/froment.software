@@ -1,0 +1,20 @@
+CREATE TABLE `catalog_items` (
+	`id` text PRIMARY KEY,
+	`description` text NOT NULL,
+	`quantity_milli` integer NOT NULL,
+	`unit_price_cents` integer NOT NULL,
+	`vat_rate_basis_points` integer NOT NULL,
+	`currency` text NOT NULL,
+	`version` integer NOT NULL,
+	`archived` integer NOT NULL,
+	`created_at` integer NOT NULL,
+	`updated_at` integer NOT NULL,
+	CONSTRAINT "catalog_description_check" CHECK(length(trim("description")) between 1 and 160),
+	CONSTRAINT "catalog_quantity_check" CHECK("quantity_milli" between 1 and 9007199254740991),
+	CONSTRAINT "catalog_price_check" CHECK("unit_price_cents" between 0 and 9007199254740991),
+	CONSTRAINT "catalog_tax_check" CHECK("vat_rate_basis_points" between 0 and 10000),
+	CONSTRAINT "catalog_currency_check" CHECK("currency" = 'EUR'),
+	CONSTRAINT "catalog_version_check" CHECK("version" between 1 and 9007199254740991),
+	CONSTRAINT "catalog_archived_check" CHECK("archived" in (0, 1)),
+	CONSTRAINT "catalog_timestamps_check" CHECK("updated_at" >= "created_at")
+);

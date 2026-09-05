@@ -19,6 +19,7 @@ import { InvoicePdfJobsLive, InvoicePdfWorkerLive } from './invoices/pdf-jobs.js
 import { QuotesLive } from './quotes/quotes.js';
 import { QuoteLinksLive } from './quote-links/service.js';
 import { QuoteConditionPresetsLive } from './quote-condition-presets/service.js';
+import { CatalogLive } from './catalog/service.js';
 import { InvoicesLive } from './invoices/invoices.js';
 import { OrdersLive } from './orders/orders.js';
 import { ServerLive } from './server.js';
@@ -49,6 +50,7 @@ const ServicesLive = Layer.mergeAll(
   InvoicePdfRuntimeLive,
   QuoteLinksLive.pipe(Layer.provide(BusinessConfigLive)),
   QuoteConditionPresetsLive,
+  CatalogLive,
   DeploymentLive,
   ClientPortalLive,
 ).pipe(

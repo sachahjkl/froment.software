@@ -71,8 +71,23 @@ export const apiDocumentation = {
         description: 'Conditions réutilisables dans les devis.',
       },
       status: { title: 'État', description: 'Santé et version du déploiement.' },
+      catalog: { title: 'Catalogue', description: 'Prestations réutilisables dans les devis.' },
     },
     operations: {
+      catalogList: {
+        summary: 'Lister les prestations',
+        description: 'Liste les prestations actives et archivées.',
+      },
+      catalogCreate: {
+        summary: 'Créer une prestation',
+        description:
+          'Enregistre une description, une quantité, un prix en euros et un taux de TVA.',
+      },
+      catalogUpdate: {
+        summary: 'Modifier une prestation',
+        description:
+          'Modifie ou archive une prestation si sa version correspond à expectedVersion. Les lignes de devis restent inchangées.',
+      },
       clientList: {
         summary: 'Lister les clients',
         description: 'Liste les clients actifs et archivés.',
@@ -342,8 +357,19 @@ export const apiDocumentation = {
         description: 'Reusable quote terms.',
       },
       status: { title: 'Status', description: 'Deployment health and version.' },
+      catalog: { title: 'Catalog', description: 'Reusable services for quotes.' },
     },
     operations: {
+      catalogList: { summary: 'List services', description: 'Lists active and archived services.' },
+      catalogCreate: {
+        summary: 'Create a service',
+        description: 'Stores a description, quantity, price in euros and VAT rate.',
+      },
+      catalogUpdate: {
+        summary: 'Update a service',
+        description:
+          'Updates or archives a service when its version matches expectedVersion. Quote lines remain unchanged.',
+      },
       clientList: { summary: 'List clients', description: 'Lists active and archived clients.' },
       clientGet: { summary: 'Get a client', description: 'Returns one client by identifier.' },
       clientCreate: { summary: 'Create a client', description: 'Creates a client.' },

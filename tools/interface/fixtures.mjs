@@ -180,6 +180,7 @@ export async function mockApi(
     [`/api/invoices/${invoiceId}`, invoice],
     ["/api/issuer-settings", issuer],
     ["/api/quote-condition-presets", []],
+    ["/api/catalog", []],
     ["/api/tokens", { items: [], nextCursor: null }],
     [`/api/affairs/${quoteId}/events`, []],
     ["/api/public/quote-link", publicQuote],

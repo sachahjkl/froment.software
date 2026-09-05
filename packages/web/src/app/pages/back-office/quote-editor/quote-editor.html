@@ -105,6 +105,26 @@
           {{ i18n.t('backOffice.quote.addLine') }}
         </button>
       </div>
+      <div class="condition-preset">
+        <label class="field">
+          {{ i18n.t('catalog.add') }}
+          <select
+            #catalogItem
+            class="input"
+            [disabled]="!editable() || quoteForm.lines.length >= 20"
+            (change)="addCatalogItem(catalogItem)"
+          >
+            <option value="">{{ i18n.t('catalog.choose') }}</option>
+            @for (item of catalogItems(); track item.id) {
+            <option [value]="item.id">
+              {{ item.description }} — {{ money(item.unitPriceCents) }}
+            </option>
+            }
+          </select>
+        </label>
+        <a routerLink="/backoffice/configuration/catalogue">{{ i18n.t('catalog.manage') }}</a>
+      </div>
+      <p class="hint">{{ i18n.t('catalog.snapshotHint') }}</p>
       @for (line of quoteForm.lines; track $index) {
       <fieldset class="document-line">
         <legend>{{ i18n.tf('backOffice.quote.lineNumber', { number: $index + 1 }) }}</legend>

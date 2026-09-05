@@ -457,6 +457,39 @@ export const translations = {
     'document.incomplete': 'Complétez les coordonnées avant de publier ce document.',
     'document.field.name': 'Nom',
     'document.required': 'champ requis',
+    'catalog.title': 'Catalogue',
+    'catalog.intro':
+      'Préparez vos prestations en euros. Les prix sont hors taxes. Vérifiez le taux de TVA pour chaque devis.',
+    'catalog.create': 'Nouvelle prestation',
+    'catalog.edit': 'Modifier',
+    'catalog.editItem': 'Modifier {name}',
+    'catalog.quantity': 'Quantité par défaut',
+    'catalog.price': 'Prix unitaire HT (EUR)',
+    'catalog.tax': 'TVA (%)',
+    'catalog.archived': 'Archivée',
+    'catalog.archiveHint':
+      'Une prestation archivée reste consultable, mais ne figure plus dans le sélecteur des devis.',
+    'catalog.save': 'Enregistrer',
+    'catalog.cancel': 'Annuler les modifications',
+    'catalog.saved': 'Prestation enregistrée.',
+    'catalog.search': 'Rechercher une prestation',
+    'catalog.showArchived': 'Afficher aussi les prestations archivées',
+    'catalog.loading': 'Chargement du catalogue…',
+    'catalog.empty': 'Aucune prestation ne correspond aux filtres.',
+    'catalog.invalid':
+      'Saisissez une quantité positive (3 décimales maximum), un prix positif ou nul et une TVA entre 0 et 100 % (2 décimales maximum).',
+    'catalog.error':
+      'Le catalogue est indisponible. Rechargez la liste ou réessayez l’enregistrement.',
+    'catalog.not_found':
+      'Cette prestation n’existe plus. Rechargez la liste, puis sélectionnez une prestation.',
+    'catalog.version_conflict':
+      'Cette prestation a changé. Rechargez la liste, puis sélectionnez à nouveau la prestation avant de la modifier.',
+    'catalog.reload': 'Recharger la liste',
+    'catalog.add': 'Ajouter depuis le catalogue',
+    'catalog.choose': 'Choisir une prestation…',
+    'catalog.manage': 'Gérer le catalogue',
+    'catalog.snapshotHint':
+      'L’ajout copie la description, la quantité, le prix et la TVA. Les changements du catalogue ne modifient pas les lignes déjà ajoutées.',
     'document.quote.refreshHint':
       'Chaque enregistrement crée une nouvelle version avec les coordonnées actuelles de l’entreprise et du client.',
     'document.invalidEmail': 'saisissez une adresse e-mail valide',
@@ -1682,6 +1715,37 @@ export const translations = {
     'document.incomplete': 'Complete the contact details before publishing this document.',
     'document.field.name': 'Name',
     'document.required': 'required field',
+    'catalog.title': 'Catalog',
+    'catalog.intro':
+      'Prepare your services in euros. Prices exclude tax. Check the VAT rate for each quote.',
+    'catalog.create': 'New service',
+    'catalog.edit': 'Edit',
+    'catalog.editItem': 'Edit {name}',
+    'catalog.quantity': 'Default quantity',
+    'catalog.price': 'Unit price excluding tax (EUR)',
+    'catalog.tax': 'VAT (%)',
+    'catalog.archived': 'Archived',
+    'catalog.archiveHint':
+      'Archived services remain available here but no longer appear in the quote selector.',
+    'catalog.save': 'Save',
+    'catalog.cancel': 'Discard changes',
+    'catalog.saved': 'Service saved.',
+    'catalog.search': 'Search services',
+    'catalog.showArchived': 'Include archived services',
+    'catalog.loading': 'Loading catalog…',
+    'catalog.empty': 'No services match these filters.',
+    'catalog.invalid':
+      'Enter a positive quantity (up to 3 decimal places), a nonnegative price and VAT between 0 and 100% (up to 2 decimal places).',
+    'catalog.error': 'The catalog is unavailable. Reload the list or try saving again.',
+    'catalog.not_found': 'This service no longer exists. Reload the list, then select a service.',
+    'catalog.version_conflict':
+      'This service has changed. Reload the list, then select the service again before editing.',
+    'catalog.reload': 'Reload list',
+    'catalog.add': 'Add from catalog',
+    'catalog.choose': 'Choose a service…',
+    'catalog.manage': 'Manage catalog',
+    'catalog.snapshotHint':
+      'Adding a service copies its description, quantity, price and VAT. Catalog changes do not alter lines already added.',
     'document.quote.refreshHint':
       'Each save creates a new revision with the current company and client details.',
     'document.invalidEmail': 'enter a valid email address',

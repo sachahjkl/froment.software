@@ -42,6 +42,8 @@ import { Option, Schema } from 'effect';
 import { ClientsApi } from '@backoffice/clients-api';
 import { QuotesApi, type QuoteErrorCode } from '@backoffice/quotes-api';
 import { QuoteConditionPresetsApi } from '@backoffice/quote-condition-presets-api';
+import { CatalogApi } from '@backoffice/catalog-api';
+import { type CatalogItemListValue } from '@froment/contracts';
 import { formatFixedDecimal, parseFixedDecimal } from '@backoffice/quote-input';
 import { I18nService, type TranslationKey } from '@app/i18n.service';
 import { Button } from '@shared/button/button';
@@ -101,6 +103,8 @@ const statusKeys = {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class QuoteEditor {
+  private readonly catalogApi = inject(CatalogApi);
+  protected readonly catalogItems = signal<CatalogItemListValue>([]);
   protected readonly i18n = inject(I18nService);
   private readonly clientsApi = inject(ClientsApi);
   private readonly quotesApi = inject(QuotesApi);
@@ -215,6 +219,26 @@ export class QuoteEditor {
     if (!this.editable() || this.model().lines.length >= 20) return;
     this.model.update((model) => ({ ...model, lines: [...model.lines, emptyLine()] }));
     this.quoteForm().markAsDirty();
+  }
+
+  protected addCatalogItem(select: HTMLSelectElement): void {
+    const item = this.catalogItems().find((entry) => entry.id === select.value);
+    if (!this.editable() || this.model().lines.length >= 20 || item === undefined || item.archived)
+      return;
+    this.model.update((model) => ({
+      ...model,
+      lines: [
+        ...model.lines,
+        {
+          description: item.description,
+          quantity: formatFixedDecimal(item.quantityMilli, 3),
+          unitPrice: formatFixedDecimal(item.unitPriceCents, 2),
+          vatRate: formatFixedDecimal(item.vatRateBasisPoints, 2),
+        },
+      ],
+    }));
+    this.quoteForm().markAsDirty();
+    select.value = '';
   }
 
   protected removeLine(index: number): void {
@@ -435,17 +459,20 @@ export class QuoteEditor {
     }
     try {
       if (quoteId === undefined) {
-        const [conditionPresets, clients] = await Promise.all([
+        const [conditionPresets, clients, catalogItems] = await Promise.all([
           this.conditionPresetsApi.list(),
           this.clientsApi.list(),
+          this.catalogApi.list(),
         ]);
         if (request !== this.routeRequest) return;
         this.conditionPresets.set(conditionPresets);
         this.clients.set(clients.filter((client) => !client.archived));
+        this.catalogItems.set(catalogItems.filter((item) => !item.archived));
       } else {
-        const [conditionPresets, outcome] = await Promise.all([
+        const [conditionPresets, outcome, catalogItems] = await Promise.all([
           this.conditionPresetsApi.list(),
           this.quotesApi.get(quoteId),
+          this.catalogApi.list(),
         ]);
         if (request !== this.routeRequest) return;
         this.conditionPresets.set(conditionPresets);
@@ -455,6 +482,7 @@ export class QuoteEditor {
           return;
         }
         this.detail.set(outcome.result);
+        this.catalogItems.set(catalogItems.filter((item) => !item.archived));
         this.showPreview(outcome.result.version);
         this.model.set(this.modelFromDetail(outcome.result));
         this.quoteForm().reset();

@@ -455,6 +455,32 @@ export const quoteConditionPresets = sqliteTable(
   ],
 );
 
+export const catalogItems = sqliteTable(
+  'catalog_items',
+  {
+    id: text().notNull().primaryKey(),
+    description: text().notNull(),
+    quantityMilli: integer('quantity_milli').notNull(),
+    unitPriceCents: integer('unit_price_cents').notNull(),
+    vatRateBasisPoints: integer('vat_rate_basis_points').notNull(),
+    currency: text().notNull(),
+    version: integer().notNull(),
+    archived: integer({ mode: 'boolean' }).notNull(),
+    createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull(),
+    updatedAt: integer('updated_at', { mode: 'timestamp_ms' }).notNull(),
+  },
+  (table) => [
+    check('catalog_description_check', sql`length(trim(${table.description})) between 1 and 160`),
+    check('catalog_quantity_check', sql`${table.quantityMilli} between 1 and 9007199254740991`),
+    check('catalog_price_check', sql`${table.unitPriceCents} between 0 and 9007199254740991`),
+    check('catalog_tax_check', sql`${table.vatRateBasisPoints} between 0 and 10000`),
+    check('catalog_currency_check', sql`${table.currency} = 'EUR'`),
+    check('catalog_version_check', sql`${table.version} between 1 and 9007199254740991`),
+    check('catalog_archived_check', sql`${table.archived} in (0, 1)`),
+    check('catalog_timestamps_check', sql`${table.updatedAt} >= ${table.createdAt}`),
+  ],
+);
+
 export const documentArtifacts = sqliteTable(
   'document_artifacts',
   {

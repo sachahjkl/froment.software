@@ -242,6 +242,12 @@ export const routes: Routes = [
     children: [
       { path: '', redirectTo: 'entreprise', pathMatch: 'full' },
       {
+        path: 'catalogue',
+        loadComponent: () =>
+          import('./pages/back-office/catalog/catalog').then((module) => module.Catalog),
+        canDeactivate: [unsavedChangesGuard],
+      },
+      {
         path: 'entreprise',
         loadComponent: () =>
           import('./pages/back-office/issuer-settings/issuer-settings').then(

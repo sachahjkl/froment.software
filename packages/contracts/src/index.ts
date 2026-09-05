@@ -311,3 +311,17 @@ export {
   type InvoiceSummary as InvoiceSummaryValue,
   InvoiceVersionConflict,
 } from './invoices/contracts.js';
+export {
+  CatalogItem,
+  CatalogItemCreateRequest,
+  CatalogItemList,
+  CatalogItemUpdateRequest,
+  CatalogItemNotFound,
+  CatalogItemVersionConflict,
+  CatalogFailure,
+  type CatalogItem as CatalogItemValue,
+  type CatalogItemCreateRequest as CatalogItemCreateRequestValue,
+  type CatalogItemList as CatalogItemListValue,
+  type CatalogItemUpdateRequest as CatalogItemUpdateRequestValue,
+  type CatalogFailure as CatalogFailureValue,
+} from './catalog/contracts.js';

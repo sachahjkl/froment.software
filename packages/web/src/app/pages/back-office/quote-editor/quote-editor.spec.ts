@@ -6,6 +6,7 @@ import { of, Subject } from 'rxjs';
 import { ClientsApi } from '@backoffice/clients-api';
 import { QuotesApi } from '@backoffice/quotes-api';
 import { QuoteConditionPresetsApi } from '@backoffice/quote-condition-presets-api';
+import { CatalogApi } from '@backoffice/catalog-api';
 import { TextCopy } from '@shared/text-copy';
 import { QuoteEditor } from './quote-editor';
 
@@ -47,6 +48,57 @@ const quoteDetail = {
 };
 
 describe('QuoteEditor', () => {
+  beforeEach(() => {
+    TestBed.configureTestingModule({
+      providers: [{ provide: CatalogApi, useValue: { list: async () => [] } }],
+    });
+  });
+  it('copies catalog values into an independent quote line', async () => {
+    const item = {
+      id: '01ARZ3NDEKTSV4RRFFQ69G5FA0',
+      description: 'Catalog service',
+      quantityMilli: 1500,
+      unitPriceCents: 12500,
+      vatRateBasisPoints: 550,
+      currency: 'EUR',
+      version: 1,
+      archived: false,
+    };
+    TestBed.configureTestingModule({
+      providers: [
+        provideRouter([]),
+        { provide: ActivatedRoute, useValue: { paramMap: of(convertToParamMap({ quoteId })) } },
+        { provide: ClientsApi, useValue: { list: async () => [] } },
+        { provide: QuoteConditionPresetsApi, useValue: { list: async () => [] } },
+        {
+          provide: QuotesApi,
+          useValue: { get: async () => ({ success: true, result: quoteDetail }) },
+        },
+      ],
+    });
+    TestBed.overrideProvider(CatalogApi, { useValue: { list: async () => [item] } });
+    const fixture = TestBed.createComponent(QuoteEditor);
+    fixture.detectChanges();
+    const root: HTMLElement = fixture.nativeElement;
+    const select = await vi.waitFor(() => {
+      const result = root.querySelector<HTMLSelectElement>('.lines select');
+      if (result === null) throw new Error('catalog.selector.missing');
+      return result;
+    });
+    select.value = item.id;
+    select.dispatchEvent(new Event('change', { bubbles: true }));
+    await fixture.whenStable();
+    item.unitPriceCents = 99999;
+    fixture.detectChanges();
+    const lines = root.querySelectorAll('.document-line');
+    expect(lines).toHaveLength(2);
+    expect(Array.from(lines[1]?.querySelectorAll('input') ?? [], (input) => input.value)).toEqual([
+      'Catalog service',
+      '1.500',
+      '125.00',
+      '5.50',
+    ]);
+  });
   it('loads the PDF preview directly without a sandbox', async () => {
     TestBed.configureTestingModule({
       providers: [
