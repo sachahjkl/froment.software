@@ -112,6 +112,11 @@
 }
 
 @media (max-width: 46rem) {
+  .navigation-row {
+    width: 100%;
+    padding-inline: var(--space-1);
+  }
+
   .identity-row {
     gap: var(--space-2);
   }
