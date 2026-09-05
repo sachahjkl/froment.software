@@ -45,7 +45,7 @@ label {
 }
 
 .error {
-  color: #9e1b1b;
+  color: var(--color-danger);
   font-size: var(--text-sm);
 }
 

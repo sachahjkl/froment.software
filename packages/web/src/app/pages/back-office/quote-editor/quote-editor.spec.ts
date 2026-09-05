@@ -306,7 +306,8 @@ describe('QuoteEditor', () => {
 
     expect(send).toHaveBeenCalledWith(quoteId, { expectedVersion: 2 });
     expect(root.querySelector<HTMLAnchorElement>('.sent-link a')?.href).toContain('/quote#');
-    expect(root.textContent).toMatch(/Envoyé|Sent/);
+    expect(root.textContent).toMatch(/Signature attendue|Signature pending/);
+    expect(root.textContent).toMatch(/aucun email envoyé|no email sent/);
     expect(root.textContent).toContain('DE-2026-000001');
     expect(root.querySelector<HTMLInputElement>('#quote-name')?.disabled).toBe(true);
     expect(root.querySelector('.send-quote')).toBeNull();

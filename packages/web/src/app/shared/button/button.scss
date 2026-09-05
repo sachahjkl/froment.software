@@ -85,6 +85,17 @@
   text-shadow: 0 -1px 0 rgb(0 0 0 / 0.25);
 }
 
+:host(
+  :is(
+    [data-button-variant="info"],
+    [data-button-variant="success"],
+    [data-button-variant="warning"]
+  )
+) {
+  --button-text: var(--color-button-on-bright);
+  text-shadow: none;
+}
+
 :host([data-button-variant="link"]) {
   --icon-color: var(--color-link);
   border-color: transparent;
@@ -110,7 +121,13 @@
   animation: button-loading 700ms linear infinite;
 }
 
-:host(:is(:active, [data-button-state="active"]):not(:disabled, [aria-disabled="true"])) {
+:host(
+  :is(:active, [data-button-state="active"]):not(
+    :disabled,
+    [aria-disabled="true"],
+    [data-button-variant="link"]
+  )
+) {
   background-color: var(--button-highlight);
   background-image: none;
   box-shadow:
@@ -119,23 +136,28 @@
 }
 
 @media (hover: hover) and (pointer: fine) {
-  :host(:hover:not(:disabled, [aria-disabled="true"])) {
+  :host(:hover:not(:disabled, [aria-disabled="true"], [data-button-variant="link"])) {
     background-color: var(--button-highlight);
     background-image: linear-gradient(to bottom, var(--button-highlight), var(--button-color));
     color: var(--button-text);
   }
 
-  :host([data-button-state="hover"]:not(:disabled, [aria-disabled="true"])) {
+  :host(
+    [data-button-state="hover"]:not(:disabled, [aria-disabled="true"], [data-button-variant="link"])
+  ) {
     background-color: var(--button-highlight);
     background-image: linear-gradient(to bottom, var(--button-highlight), var(--button-color));
     color: var(--button-text);
   }
 
-  :host([data-button-variant="link"]:hover:not(:disabled, [aria-disabled="true"])) {
-    --icon-color: color-mix(in oklab, var(--color-link), black 24%);
+  :host([data-button-variant="link"]:hover:not(:disabled, [aria-disabled="true"])),
+  :host(
+    [data-button-variant="link"][data-button-state="hover"]:not(:disabled, [aria-disabled="true"])
+  ) {
+    --icon-color: var(--color-link-hover);
     border-color: transparent;
     background: transparent;
-    color: color-mix(in oklab, var(--color-link), black 24%);
+    color: var(--color-link-hover);
   }
 }
 
