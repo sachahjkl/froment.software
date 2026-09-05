@@ -36,6 +36,11 @@ test("client form and complete account address", async ({ page, colorScheme }) =
   await openPage(page, `/backoffice/clients/${clientId}/profile`, colorScheme);
   await expect(page.locator(".profile-form")).toBeVisible();
   const summary = page.locator(".account summary");
+  if (page.viewportSize().width >= 1024) {
+    const icon = await summary.locator("svg").boundingBox();
+    const label = await summary.locator("span").boundingBox();
+    expect(Math.abs(icon.y + icon.height / 2 - label.y - label.height / 2)).toBeLessThan(1);
+  }
   await summary.focus();
   await summary.press("Enter");
   await expect(page.locator(".account-details p")).toHaveText(accountEmail);

@@ -290,7 +290,7 @@ code {
 
 .ds-panel {
   border-radius: var(--radius-sm);
-  background: var(--color-panel);
+  background: linear-gradient(var(--color-surface-raised), var(--color-panel));
 }
 .ds-panel.inset {
   background: var(--color-surface-sunken);
