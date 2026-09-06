@@ -1,5 +1,15 @@
-import { Api } from '@froment/contracts';
-import { apiDocumentation, type Language } from '@froment/l10n';
+import {
+  Api,
+  InvoiceCreateRequest,
+  InvoicePaymentRequest,
+  InvoicePaymentCancelRequest,
+  BankImportRequest,
+  BankMatchRequest,
+  BankUnmatchRequest,
+  IntegrationSubmission,
+} from '@froment/contracts';
+import { apiDocumentation, apiRequestExamples, type Language } from '@froment/l10n';
+import { Schema, type JsonSchema } from 'effect';
 import { OpenApi } from 'effect/unstable/httpapi';
 import { describe, expect, it } from 'vitest';
 
@@ -49,8 +59,69 @@ describe('API documentation', () => {
       description: 'Routes utilisées par le frontend Froment Software.',
     });
     expect(Object.keys(french.paths)).toEqual(Object.keys(english.paths));
-    expect(french.components.schemas).toEqual(english.components.schemas);
+    const validationOnly = (value: JsonSchema.Definitions): string =>
+      JSON.stringify(value, (key, item) => {
+        if (key === 'description' || key === 'examples') return undefined;
+        return item;
+      });
+    expect(validationOnly(french.components.schemas)).toEqual(
+      validationOnly(english.components.schemas),
+    );
+    expect(validationOnly(french.components.schemas)).toEqual(
+      validationOnly(specification.components.schemas),
+    );
+    for (const [path, methods] of Object.entries(specification.paths)) {
+      for (const [method, operation] of Object.entries(methods)) {
+        const localized = Object.entries(french.paths[path] ?? {}).find(
+          ([name]) => name === method,
+        )?.[1];
+        expect(localized).toBeDefined();
+        if (
+          operation === undefined ||
+          localized === undefined ||
+          Array.isArray(operation) ||
+          Array.isArray(localized)
+        )
+          continue;
+        expect(validationOnly({ parameters: { values: localized.parameters } })).toEqual(
+          validationOnly({ parameters: { values: operation.parameters } }),
+        );
+        expect(validationOnly({ content: { value: localized.requestBody?.content } })).toEqual(
+          validationOnly({ content: { value: operation.requestBody?.content } }),
+        );
+        expect(validationOnly({ responses: localized.responses })).toEqual(
+          validationOnly({ responses: operation.responses }),
+        );
+      }
+    }
     expect(JSON.stringify(specification)).not.toContain('List clients');
     expect(JSON.stringify(specification)).not.toContain('Client records and lifecycle.');
+  });
+  it('publishes examples that pass the real request schemas', () => {
+    const schemas = {
+      invoiceCreate: InvoiceCreateRequest,
+      invoicePaymentCreate: InvoicePaymentRequest,
+      invoicePaymentCancel: InvoicePaymentCancelRequest,
+      bankImport: BankImportRequest,
+      bankMatch: BankMatchRequest,
+      bankUnmatch: BankUnmatchRequest,
+      integrationOperationCreate: IntegrationSubmission,
+    };
+    for (const [operation, schema] of Object.entries(schemas)) {
+      expect(() =>
+        Schema.decodeUnknownSync(schema)(
+          new Map(Object.entries(apiRequestExamples)).get(operation),
+        ),
+      ).not.toThrow();
+      expect(operationIds).toContain(operation);
+    }
+  });
+  it('shows permission requirements as Scalar note alerts', () => {
+    const english = OpenApi.fromApi(apiForLanguage('en'));
+    expect(english.paths['/api/banking/transactions']?.get?.description).toContain('> [!note]');
+    expect(english.paths['/api/banking/transactions']?.get?.description).toContain('`bank.read`');
+    expect(english.paths['/api/banking/transactions']?.get?.description).toContain(
+      'All permissions',
+    );
   });
 });

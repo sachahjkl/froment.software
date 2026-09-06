@@ -380,6 +380,8 @@ export {
   BankTransaction,
   BankTransactionList,
   BankMatchHistory,
+  BankMatchRequest,
+  BankUnmatchRequest,
   BankImportRequest,
   BankImportResult,
   BankFailure,

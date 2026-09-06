@@ -2,6 +2,8 @@ export * from './api-documentation.js';
 export * from './cross-language-text.js';
 export * from './document-text.js';
 export * from './language.js';
+export * from './api-schema-documentation.js';
+export * from './api-request-examples.js';
 export * from './money.js';
 export * from './translation.js';
 export * from './translations.js';

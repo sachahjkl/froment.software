@@ -341,7 +341,13 @@ test("client signing form stays inside its panel", async ({ page, colorScheme },
         openapi: "3.1.0",
         info: { title: "Test API", version: "1" },
         paths: {
-          "/health": { get: { summary: "Health", responses: { 200: { description: "Success" } } } },
+          "/health": {
+            get: {
+              summary: "Health",
+              description: "> [!note]\n> Required permission: `bank.read`.",
+              responses: { 200: { description: "Success" } },
+            },
+          },
         },
       },
     }),
@@ -353,5 +359,6 @@ test("client signing form stays inside its panel", async ({ page, colorScheme },
     page.getByRole("button", { name: new RegExp(labels[language]) }).first(),
   ).toBeVisible();
   await expect(page.getByRole("main")).toHaveCount(1);
+  await expect(page.locator(".markdown-alert-note")).toContainText("bank.read");
   await page.screenshot({ path: testInfo.outputPath("scalar.png"), fullPage: true });
 });
