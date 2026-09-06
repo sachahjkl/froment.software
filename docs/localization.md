@@ -20,6 +20,18 @@ Une date civile sans heure doit rester une date civile, sans décalage selon le 
 
 ## Négociation HTTP
 
+Scalar utilise son option officielle `localization.locale` pour traduire les contrôles.
+Le document OpenAPI localisé fournit séparément les descriptions de l’API.
+La version 1.43.5 embarquée dans Effect ne prend pas en charge cette option.
+Le site distribue donc le bundle Scalar 1.67.0 depuis `/scalar/standalone.js`, sans CDN.
+Angular copie uniquement ce fichier dans les ressources publiques.
+Les polices externes, la télémétrie et l’agent Scalar sont désactivés.
+
+Références :
+
+- https://scalar.com/products/api-references/localization
+- https://scalar.com/products/api-references/configuration
+
 Les routes `/api/docs` et `/api/openapi.json` choisissent entre le français et l’anglais selon `Accept-Language`.
 La bibliothèque `negotiator` traite les priorités `q` et les variantes régionales.
 Le français reste la langue par défaut si aucune langue disponible ne correspond.

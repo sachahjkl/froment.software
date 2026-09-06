@@ -6,7 +6,8 @@ import {
   HttpServerResponse,
   HttpStaticServer,
 } from 'effect/unstable/http';
-import { HttpApiBuilder, HttpApiScalar, OpenApi } from 'effect/unstable/httpapi';
+import { HttpApiBuilder, OpenApi } from 'effect/unstable/httpapi';
+import { scalarDocumentation } from './documentation/scalar.js';
 import { createServer } from 'node:http';
 
 import { AuthenticationHttpLive } from './authentication/http.js';
@@ -69,8 +70,6 @@ const ApiRoutes = HttpApiBuilder.layer(FrenchApi).pipe(
   Layer.provide(ApiTelemetryLive),
 );
 
-const frenchScalar = { showOperationId: true, localization: { locale: 'fr' } };
-const englishScalar = { showOperationId: true, localization: { locale: 'en' } };
 const ApiDocs = HttpRouter.add(
   'GET',
   '/api/docs',
@@ -86,14 +85,20 @@ const ApiDocs = HttpRouter.add(
     });
   }),
 );
-const FrenchApiDocs = HttpApiScalar.layer(FrenchApi, {
-  path: '/api/docs/fr',
-  scalar: frenchScalar,
-});
-const EnglishApiDocs = HttpApiScalar.layer(EnglishApi, {
-  path: '/api/docs/en',
-  scalar: englishScalar,
-});
+const FrenchApiDocs = HttpRouter.add(
+  'GET',
+  '/api/docs/fr',
+  HttpServerResponse.html(scalarDocumentation('fr')).pipe(
+    HttpServerResponse.setHeader('content-language', 'fr'),
+  ),
+);
+const EnglishApiDocs = HttpRouter.add(
+  'GET',
+  '/api/docs/en',
+  HttpServerResponse.html(scalarDocumentation('en')).pipe(
+    HttpServerResponse.setHeader('content-language', 'en'),
+  ),
+);
 const LocalizedOpenApiRoutes = Layer.mergeAll(
   HttpRouter.add(
     'GET',

@@ -53,6 +53,11 @@
             },
             "assets": [
               {
+                "glob": "standalone.js",
+                "input": "node_modules/@scalar/api-reference/dist/browser",
+                "output": "scalar"
+              },
+              {
                 "glob": "**/*",
                 "input": "public"
               }

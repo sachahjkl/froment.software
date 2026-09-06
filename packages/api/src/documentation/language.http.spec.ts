@@ -10,6 +10,16 @@ describe('documentation language negotiation', () => {
       expect(docs.status).toBe(302);
       expect(docs.headers.get('location')).toBe('/api/docs/en');
       expect(docs.headers.get('vary')).toContain('Accept-Language');
+      for (const language of ['fr', 'en']) {
+        const response = await fetch(`${server.baseUrl}/api/docs/${language}`, { headers });
+        const html = await response.text();
+        expect(response.headers.get('content-language')).toBe(language);
+        expect(html).toContain(`<html lang="${language}">`);
+        expect(html).toContain(`localization: { locale: '${language}' }`);
+        expect(html).toContain(`/api/openapi.${language}.json`);
+        expect(html).toContain('/scalar/standalone.js');
+        expect(html).not.toContain('cdn.jsdelivr.net');
+      }
       const api = await fetch(`${server.baseUrl}/api/openapi.json`, { headers });
       expect(api.status).toBe(200);
       expect(api.headers.get('content-language')).toBe('en');

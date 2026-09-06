@@ -34,6 +34,7 @@
     "@angular/build": "catalog:",
     "@angular/cli": "catalog:",
     "@angular/compiler-cli": "catalog:",
+    "@scalar/api-reference": "1.67.0",
     "jsdom": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:"
