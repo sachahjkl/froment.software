@@ -1,7 +1,13 @@
 <section aria-labelledby="emails-title">
   <h1 id="emails-title">{{ i18n.t('emails.title') }}</h1>
   <p>{{ i18n.t('emails.intro') }}</p>
-  @if (mode() === 'simulation') {
+  @if (preparingReminder()) {
+  <p role="status">{{ i18n.t('emails.preparingReminder') }}</p>
+  } @if (reminderFailed()) {
+  <p appNotice variant="danger" role="alert">{{ i18n.t('emails.reminderFailed') }}</p>
+  } @if (reminderPrepared()) {
+  <p appNotice>{{ i18n.t('emails.reminderReview') }}</p>
+  } @if (mode() === 'simulation') {
   <p appNotice variant="info">{{ i18n.t('emails.simulation') }}</p>
   } @if (loading()) {
   <p role="status">{{ i18n.t('integrations.loading') }}</p>

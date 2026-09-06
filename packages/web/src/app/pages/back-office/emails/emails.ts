@@ -1,4 +1,6 @@
 import { Confirmation } from '@shared/confirmation/confirmation';
+import { ActivatedRoute } from '@angular/router';
+import { InvoiceReminder } from '@backoffice/invoice-reminder';
 import {
   afterNextRender,
   ChangeDetectionStrategy,
@@ -19,7 +21,7 @@ import {
   required,
   submit,
 } from '@angular/forms/signals';
-import { EmailSubmission, type IntegrationOperationValue } from '@froment/contracts';
+import { EmailSubmission, Ulid, type IntegrationOperationValue } from '@froment/contracts';
 import { Option, Schema } from 'effect';
 import { IntegrationsApi } from '@backoffice/integrations-api';
 import { I18nService } from '@app/i18n.service';
@@ -40,6 +42,11 @@ export class Emails {
   private readonly confirmation = inject(Confirmation);
   protected readonly i18n = inject(I18nService);
   private readonly api = inject(IntegrationsApi);
+  private readonly route = inject(ActivatedRoute);
+  private readonly reminder = inject(InvoiceReminder);
+  protected readonly preparingReminder = signal(false);
+  protected readonly reminderFailed = signal(false);
+  protected readonly reminderPrepared = signal(false);
   private readonly model = signal(blank());
   protected readonly mode = signal<'simulation' | 'live' | undefined>(undefined);
   protected readonly loading = signal(true);
@@ -53,7 +60,7 @@ export class Emails {
   private readonly notice = viewChild('notice', { read: ElementRef<HTMLElement> });
   private readonly composer = viewChild('composer', { read: ElementRef<HTMLFormElement> });
   protected readonly messageForm = form(this.model, (path) => {
-    disabled(path, () => this.saving() || this.pending() !== undefined);
+    disabled(path, () => this.saving() || this.preparingReminder() || this.pending() !== undefined);
     required(path.recipient);
     email(path.recipient);
     maxLength(path.recipient, 254);
@@ -70,7 +77,31 @@ export class Emails {
   constructor() {
     afterNextRender(() => {
       void this.load();
+      void this.prepareReminder();
     });
+  }
+  private async prepareReminder(): Promise<void> {
+    const value = this.route.snapshot.queryParamMap.get('invoice');
+    if (value === null) return;
+    const id = Schema.decodeUnknownOption(Ulid)(value);
+    if (Option.isNone(id)) {
+      this.reminderFailed.set(true);
+      return;
+    }
+    this.preparingReminder.set(true);
+    try {
+      const draft = await this.reminder.prepare(id.value);
+      if (draft === undefined) {
+        this.reminderFailed.set(true);
+        return;
+      }
+      this.model.set(draft);
+      this.reminderPrepared.set(true);
+    } catch {
+      this.reminderFailed.set(true);
+    } finally {
+      this.preparingReminder.set(false);
+    }
   }
   async load(): Promise<void> {
     if (this.saving()) return;
@@ -91,18 +122,29 @@ export class Emails {
   async canDeactivate(): Promise<boolean> {
     return (
       !this.saving() &&
-      ((!this.messageForm().dirty() && this.pending() === undefined) ||
+      ((!this.messageForm().dirty() && !this.reminderPrepared() && this.pending() === undefined) ||
         (await this.confirmation.request(this.i18n.t('backOffice.quote.unsavedChanges'))))
     );
   }
   @HostListener('window:beforeunload', ['$event'])
   protected preventUnload(event: BeforeUnloadEvent): void {
-    if (this.messageForm().dirty() || this.saving() || this.pending() !== undefined)
+    if (
+      this.messageForm().dirty() ||
+      this.reminderPrepared() ||
+      this.saving() ||
+      this.pending() !== undefined
+    )
       event.preventDefault();
   }
   protected save(event: SubmitEvent): void {
     event.preventDefault();
-    if (this.saving() || this.pending() !== undefined || this.mode() === undefined) return;
+    if (
+      this.saving() ||
+      this.preparingReminder() ||
+      this.pending() !== undefined ||
+      this.mode() === undefined
+    )
+      return;
     void submit(this.messageForm, async () => {
       const mode = this.mode();
       const request = Schema.decodeUnknownOption(EmailSubmission)({
@@ -141,6 +183,7 @@ export class Emails {
       );
       if (this.pending()?.requestId === request.requestId) {
         this.pending.set(undefined);
+        this.reminderPrepared.set(false);
         this.model.set(blank());
         this.messageForm().reset();
         this.composer()?.nativeElement.reset();

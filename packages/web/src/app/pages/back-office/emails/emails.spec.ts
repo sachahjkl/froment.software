@@ -1,4 +1,6 @@
 import { TestBed } from '@angular/core/testing';
+import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
+import { InvoiceReminder } from '@backoffice/invoice-reminder';
 import { vi } from 'vitest';
 import {
   type IntegrationOperationValue,
@@ -48,6 +50,45 @@ const compose = (root: HTMLElement) => {
   fill(root, '#email-body', '<script>alert(1)</script>\nQuote details.');
 };
 describe('Emails', () => {
+  beforeEach(() => {
+    TestBed.configureTestingModule({
+      providers: [
+        provideRouter([]),
+        { provide: InvoiceReminder, useValue: { prepare: async () => undefined } },
+      ],
+    });
+  });
+  it('requires confirmation before discarding a prepared reminder without manual edits', async () => {
+    const draft = {
+      recipient: 'client@example.test',
+      reference: 'FA-2026-000001',
+      subject: 'Payment reminder',
+      body: 'Remaining balance: €75.00',
+    };
+    const prepare = vi.fn().mockResolvedValue(draft);
+    TestBed.configureTestingModule({
+      providers: [
+        { provide: IntegrationsApi, useValue: new EmailApiStub() },
+        { provide: InvoiceReminder, useValue: { prepare } },
+        {
+          provide: ActivatedRoute,
+          useValue: {
+            snapshot: {
+              queryParamMap: convertToParamMap({ invoice: '01ARZ3NDEKTSV4RRFFQ69G5FAY' }),
+            },
+          },
+        },
+      ],
+    });
+    const fixture = TestBed.createComponent(Emails);
+    await fixture.whenStable();
+    const root: HTMLElement = fixture.nativeElement;
+    expect(root.querySelector<HTMLInputElement>('#email-recipient')?.value).toBe(draft.recipient);
+    const confirmation = vi.spyOn(Confirmation.prototype, 'request').mockResolvedValue(false);
+    expect(await fixture.componentInstance.canDeactivate()).toBe(false);
+    expect(confirmation).toHaveBeenCalled();
+    confirmation.mockRestore();
+  });
   it('records a simulated email, preserves literal text, and clears the completed form', async () => {
     const api = new EmailApiStub();
     TestBed.configureTestingModule({ providers: [{ provide: IntegrationsApi, useValue: api }] });

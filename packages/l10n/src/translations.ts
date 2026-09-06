@@ -3,6 +3,15 @@ import { webUiText } from './web-ui-text.js';
 export const translations = {
   fr: {
     ...webUiText.fr,
+    'emails.prepareReminder': 'Préparer un rappel de paiement',
+    'emails.preparingReminder': 'Préparation du rappel…',
+    'emails.reminderFailed':
+      'Impossible de préparer le rappel. Vérifiez que la facture est émise et présente un solde restant.',
+    'emails.reminderReview':
+      'Vérifiez le destinataire et le solde avant de soumettre le message. Le destinataire vient de la fiche client actuelle. Aucune pièce jointe n’est ajoutée. Aucun envoi automatique n’est programmé.',
+    'emails.reminderSubject': 'Rappel de paiement — {reference}',
+    'emails.reminderBody':
+      'Bonjour,\n\nSelon nos règlements enregistrés, le solde de la facture {reference} est de {amount}. Son échéance est le {dueDate}.\n\nSi vous avez déjà effectué le règlement, merci de nous communiquer sa date et sa référence.\n\nCordialement.',
     'confirmation.title': 'Confirmer l’action',
     'confirmation.cancel': 'Annuler',
     'confirmation.accept': 'Confirmer',
@@ -1466,6 +1475,15 @@ export const translations = {
   },
   en: {
     ...webUiText.en,
+    'emails.prepareReminder': 'Prepare a payment reminder',
+    'emails.preparingReminder': 'Preparing the reminder…',
+    'emails.reminderFailed':
+      'Cannot prepare the reminder. Check that the invoice is issued and has a remaining balance.',
+    'emails.reminderReview':
+      'Check the recipient and balance before submitting the message. The recipient comes from the current client profile. No attachment is added. No automatic delivery is scheduled.',
+    'emails.reminderSubject': 'Payment reminder — {reference}',
+    'emails.reminderBody':
+      'Hello,\n\nAccording to our recorded payments, invoice {reference} has a remaining balance of {amount}. Its due date is {dueDate}.\n\nIf you have already paid, please send us the payment date and reference.\n\nKind regards.',
     'confirmation.title': 'Confirm action',
     'confirmation.cancel': 'Cancel',
     'confirmation.accept': 'Confirm',

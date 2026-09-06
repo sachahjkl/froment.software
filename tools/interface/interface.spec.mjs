@@ -59,6 +59,24 @@ for (const [kind, id] of [
         route.fulfill({ json: issuedInvoice }),
       );
       await page.reload();
+      await page
+        .locator(".payment-form")
+        .getByRole("textbox", { name: /Référence|Reference/ })
+        .fill("Unsubmitted payment reference");
+      await page
+        .getByRole("link", { name: /Préparer un rappel de paiement|Prepare a payment reminder/ })
+        .click();
+      await page
+        .getByRole("alertdialog")
+        .getByRole("button", { name: /^(Confirmer|Confirm)$/ })
+        .click();
+      await expect(page.locator("#email-reference")).toHaveValue("FA-2026-000001");
+      await expect(page.locator("#email-body")).toHaveValue(/3.?500[,.]00/);
+      await page.locator('app-emails button[type="submit"]').click();
+      await expect(page.locator('app-emails [role="status"]')).toContainText(
+        /courriel non envoyé|email not sent/,
+      );
+      await page.goto(`/backoffice/invoices/${invoiceId}`);
       await page.getByRole("button", { name: /Annuler cette saisie|Cancel this entry/ }).click();
       const reason = page.getByRole("textbox", {
         name: /Motif de la correction|Correction reason/,
