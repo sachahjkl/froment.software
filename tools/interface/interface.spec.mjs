@@ -79,6 +79,15 @@ test("client form and complete account address", async ({ page, colorScheme }) =
   const bounds = await page.locator(".account-details").boundingBox();
   expect(bounds.x).toBeGreaterThanOrEqual(0);
   expect(bounds.x + bounds.width).toBeLessThanOrEqual(page.viewportSize().width);
+  await page.locator(".account-details p").click();
+  await expect(page.locator(".account-details")).toBeVisible();
+  await page.locator("main h1").click();
+  await expect(page.locator(".account-details")).toBeHidden();
+  await summary.click();
+  await expect(page.locator(".account-details")).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(page.locator(".account-details")).toBeHidden();
+  await expect(summary).toBeFocused();
 });
 
 test("client signing form stays inside its panel", async ({ page, colorScheme }) => {

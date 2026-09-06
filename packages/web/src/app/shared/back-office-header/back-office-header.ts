@@ -1,4 +1,12 @@
-import { ChangeDetectionStrategy, Component, inject, input, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  ElementRef,
+  inject,
+  input,
+  signal,
+  viewChild,
+} from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { type CurrentAccountValue } from '@froment/contracts';
 
@@ -13,6 +21,10 @@ import { Button } from '@shared/button/button';
   templateUrl: './back-office-header.html',
   styleUrl: './back-office-header.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
+  host: {
+    '(document:click)': 'closeAccountOutside($event)',
+    '(document:keydown.escape)': 'closeAccountWithEscape($event)',
+  },
 })
 export class BackOfficeHeader {
   readonly administrator = input(false);
@@ -20,6 +32,21 @@ export class BackOfficeHeader {
   private readonly auth = inject(Authentication);
   private readonly router = inject(Router);
   protected readonly account = signal<CurrentAccountValue | undefined>(undefined);
+  private readonly accountDisclosure =
+    viewChild<ElementRef<HTMLDetailsElement>>('accountDisclosure');
+
+  protected closeAccountOutside(event: MouseEvent): void {
+    const disclosure = this.accountDisclosure()?.nativeElement;
+    if (disclosure?.open && !event.composedPath().includes(disclosure)) disclosure.open = false;
+  }
+
+  protected closeAccountWithEscape(event: Event): void {
+    const disclosure = this.accountDisclosure()?.nativeElement;
+    if (!disclosure?.open) return;
+    disclosure.open = false;
+    disclosure.querySelector('summary')?.focus();
+    event.preventDefault();
+  }
 
   constructor() {
     void this.loadAccount();
