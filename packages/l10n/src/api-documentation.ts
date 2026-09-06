@@ -271,8 +271,18 @@ export const apiDocumentation = {
           'Vérifie le mot de passe actuel et révoque toutes les sessions dans la transaction de changement. Réservé aux sessions navigateur.',
       },
       currentAccount: {
-        summary: 'Obtenir le compte courant',
-        description: 'Renvoie le compte associé au jeton d’accès.',
+        summary: 'Consulter le compte courant',
+        description: 'Retourne le compte authentifié.',
+      },
+      accountSessionList: {
+        summary: 'Lister les sessions actives',
+        description:
+          'Liste les familles de sessions actives du compte connecté, sans jetons ni empreintes.',
+      },
+      accountSessionRevoke: {
+        summary: 'Fermer une autre session',
+        description:
+          'Révoque une famille de sessions appartenant au compte connecté. La session actuelle utilise la déconnexion habituelle.',
       },
       orderPdfRender: {
         summary: 'Générer le PDF d’une commande',
@@ -554,6 +564,16 @@ export const apiDocumentation = {
       currentAccount: {
         summary: 'Get current account',
         description: 'Returns the authenticated account.',
+      },
+      accountSessionList: {
+        summary: 'List active sessions',
+        description:
+          'Lists active session families owned by the signed-in account, without tokens or hashes.',
+      },
+      accountSessionRevoke: {
+        summary: 'Close another session',
+        description:
+          'Revokes a session family owned by the signed-in account. The current session uses the standard sign-out action.',
       },
       passwordChange: {
         summary: 'Change password',

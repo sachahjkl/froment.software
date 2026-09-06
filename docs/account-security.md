@@ -3,7 +3,7 @@
 ## Changement de mot de passe
 
 1. Ouvrez le menu de votre adresse électronique.
-2. Choisissez « Changer le mot de passe ».
+2. Choisissez « Sécurité du compte ».
 3. Saisissez le mot de passe actuel et le nouveau mot de passe.
 4. Confirmez le nouveau mot de passe, puis validez le changement.
 5. Reconnectez-vous avec le nouveau mot de passe.
@@ -33,6 +33,31 @@ Un mot de passe incorrect, identique ou une session devenue inactive produit une
 Si la réponse est perdue, essayez de vous connecter avec le nouveau mot de passe.
 L’application ne réessaie pas automatiquement une modification de mot de passe.
 Si la session a expiré, reconnectez-vous avant de recommencer.
+
+## Sessions actives
+
+La page « Sécurité du compte » liste les sessions actives de votre compte.
+Chaque connexion possède un identifiant stable, même après le renouvellement de ses jetons.
+La liste indique la date de connexion, le dernier renouvellement et l’expiration.
+Le dernier renouvellement ne représente pas la dernière action effectuée.
+Aucun nom d’appareil ni aucune localisation ne sont déduits de ces dates.
+
+1. Repérez la session à fermer grâce à sa date et son identifiant.
+2. Choisissez « Fermer cette session ».
+3. Confirmez la fermeture.
+
+La fermeture révoque tous les jetons de cette session, sans changer le mot de passe.
+Votre session actuelle reste ouverte.
+Pour fermer la session actuelle, utilisez le bouton de déconnexion du bandeau.
+Pour vérifier une fermeture après une erreur réseau, actualisez la liste.
+
+`GET /api/auth/sessions` liste les familles de sessions actives du compte connecté.
+`POST /api/auth/sessions/:sessionId/revoke` révoque une autre famille appartenant au même compte.
+Le serveur vérifie l’origine de cette requête et limite les révocations à dix tentatives par minute et par compte.
+La révocation est transactionnelle et produit un événement d’audit sans jeton ni empreinte.
+Une nouvelle tentative ne produit pas un second événement.
+Une session étrangère ou inconnue retourne `404` ; la session actuelle retourne `409`.
+Les sessions expirées et révoquées ne figurent plus dans la liste.
 
 ## Limites
 

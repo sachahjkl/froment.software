@@ -11,12 +11,14 @@ import {
   type LoginModeValue,
   LoginRequest,
   PasswordChangeFailure,
+  AccountSessionList,
+  AccountSessionFailure,
   type PasswordChangeRequestValue,
 } from '@froment/contracts';
 import { Schema } from 'effect';
 import { firstValueFrom } from 'rxjs';
 
-import { decodeApiFailure, type ApiFailure } from '@shared/api-outcome';
+import { decodeApiFailure, requestOutcome, type ApiFailure } from '@shared/api-outcome';
 import { BrowserSessionStore } from './browser-session-store';
 import { AuthCookieLock } from './auth-cookie-lock';
 
@@ -93,6 +95,26 @@ export class Authentication {
       });
     } catch (cause) {
       return decodeApiFailure({ cause }, PasswordChangeFailure, 'authentication.error');
+    }
+  }
+
+  async listSessions() {
+    return requestOutcome(
+      this.http.get('/api/auth/sessions'),
+      AccountSessionList,
+      AccountSessionFailure,
+      'authentication.error',
+    );
+  }
+
+  async revokeSession(sessionId: string) {
+    try {
+      await firstValueFrom(
+        this.http.post<void>(`/api/auth/sessions/${sessionId}/revoke`, undefined),
+      );
+      return { success: true as const };
+    } catch (cause) {
+      return decodeApiFailure({ cause }, AccountSessionFailure, 'authentication.error');
     }
   }
 }

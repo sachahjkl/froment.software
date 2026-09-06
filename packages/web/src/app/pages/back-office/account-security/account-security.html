@@ -1,13 +1,15 @@
 <section class="account-security" aria-labelledby="password-title">
   <header class="page-intro">
-    <h1 id="password-title">{{ i18n.t('account.password_title') }}</h1>
-    <p>{{ i18n.t('account.password_hint') }}</p>
+    <h1 id="password-title">{{ i18n.t('account.security_title') }}</h1>
+    <p>{{ i18n.t('account.security_hint') }}</p>
   </header>
   @if (complete()) {
   <p appNotice variant="success" role="status">{{ i18n.t('account.password_complete') }}</p>
   <a appLinkButton routerLink="/backoffice/login">{{ i18n.t('account.password_login') }}</a>
   } @else {
   <form class="ds-panel" (submit)="changePassword($event)">
+    <h2>{{ i18n.t('account.password_title') }}</h2>
+    <p>{{ i18n.t('account.password_hint') }}</p>
     <label class="field"
       >{{ i18n.t('account.password_current') }}<input
         class="input"
@@ -46,5 +48,6 @@
       {{ i18n.t(pending() ? 'account.password_pending' : 'account.password_save') }}
     </button>
   </form>
+  <app-account-sessions [disabled]="pending()" />
   }
 </section>

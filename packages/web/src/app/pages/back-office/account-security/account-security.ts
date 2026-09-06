@@ -15,10 +15,11 @@ import { Authentication } from '@backoffice/authentication';
 import { I18nService, type TranslationKey } from '@app/i18n.service';
 import { Button } from '@shared/button/button';
 import { Notice } from '@shared/notice/notice';
+import { AccountSessions } from './account-sessions';
 
 @Component({
   selector: 'app-account-security',
-  imports: [Button, FormField, Notice, RouterLink],
+  imports: [AccountSessions, Button, FormField, Notice, RouterLink],
   templateUrl: './account-security.html',
   styleUrl: './account-security.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

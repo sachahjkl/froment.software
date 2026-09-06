@@ -13,7 +13,13 @@ describe('AccountSecurity', () => {
         : { success: false, code: 'authentication.password_change_rejected' },
     );
     TestBed.configureTestingModule({
-      providers: [provideRouter([]), { provide: Authentication, useValue: { changePassword } }],
+      providers: [
+        provideRouter([]),
+        {
+          provide: Authentication,
+          useValue: { changePassword, listSessions: async () => ({ success: true, result: [] }) },
+        },
+      ],
     });
     const fixture = TestBed.createComponent(AccountSecurity);
     await fixture.whenStable();

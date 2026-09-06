@@ -12,6 +12,7 @@ export const AuditActions = [
   'authentication.password-changed',
   'authentication.refresh-replay-detected',
   'authentication.sessions-revoked',
+  'authentication.session-revoked',
   'client.access-created',
   'client.access-replaced',
   'client.access-revoked',

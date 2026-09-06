@@ -1,0 +1,62 @@
+<section aria-labelledby="account-sessions-title">
+  <header>
+    <h2 id="account-sessions-title">{{ i18n.t('account.sessions_title') }}</h2>
+    <p>{{ i18n.t('account.sessions_hint') }}</p>
+  </header>
+  <button
+    appButton
+    type="button"
+    [disabled]="loading() || revoking() !== undefined || disabled()"
+    (click)="reload()"
+  >
+    {{ i18n.t('account.sessions_reload') }}
+  </button>
+  @if (error(); as message) {
+  <p appNotice variant="danger" role="alert">{{ i18n.t(message) }}</p>
+  <p>{{ i18n.t('account.sessions_retry') }}</p>
+  } @if (revoked()) {
+  <p #revokeStatus appNotice variant="success" role="status" tabindex="-1">
+    {{ i18n.t('account.session_revoked') }}
+  </p>
+  } @if (loading()) {
+  <p role="status">{{ i18n.t('account.sessions_loading') }}</p>
+  } @else {
+  <ul>
+    @for (session of sessions(); track session.id) {
+    <li class="ds-panel">
+      <h3>{{ date(session.startedAt) }}</h3>
+      @if (session.current) { <strong>{{ i18n.t('account.session_current_label') }}</strong> }
+      <dl>
+        <div>
+          <dt>{{ i18n.t('account.session_id') }}</dt>
+          <dd class="session-id">{{ session.id }}</dd>
+        </div>
+        <div>
+          <dt>{{ i18n.t('account.session_renewed') }}</dt>
+          <dd>{{ date(session.renewedAt) }}</dd>
+        </div>
+        <div>
+          <dt>{{ i18n.t('account.session_expires') }}</dt>
+          <dd>{{ date(session.expiresAt) }}</dd>
+        </div>
+      </dl>
+      @if (!session.current) {
+      <button
+        appButton
+        variant="danger"
+        type="button"
+        [disabled]="revoking() !== undefined || disabled()"
+        [attr.aria-label]="i18n.tf('account.session_revoke_label', { id: session.id })"
+        (click)="revoke(session)"
+      >
+        {{ i18n.t(revoking() === session.id ? 'account.session_revoking' : 'account.session_revoke')
+        }}
+      </button>
+      }
+    </li>
+    } @empty { @if (!error()) {
+    <li>{{ i18n.t('account.sessions_empty') }}</li>
+    } }
+  </ul>
+  }
+</section>

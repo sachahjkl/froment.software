@@ -349,3 +349,10 @@ export {
   PasswordChangeFailure,
   type PasswordChangeRequest as PasswordChangeRequestValue,
 } from './authentication/contracts.js';
+export {
+  AccountSessionList,
+  AccountSessionNotFound,
+  AccountSessionCurrent,
+  AccountSessionFailure,
+  type AccountSessionList as AccountSessionListValue,
+} from './authentication/sessions.js';

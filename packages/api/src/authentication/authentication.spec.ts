@@ -79,6 +79,60 @@ const seedAdministrator = Effect.fn('seedAdministrator')(function* (database: Da
 });
 
 describe('Authentication', () => {
+  it('lists session families and revokes another family without closing the current one', async () => {
+    await Effect.runPromise(
+      Effect.gen(function* () {
+        const database = yield* Database;
+        yield* seedAdministrator(database);
+        const authentication = yield* Authentication;
+        const first = yield* authentication.login(email, password, '192.0.2.1');
+        const second = yield* authentication.login(email, password, '192.0.2.2');
+        const rotated = yield* authentication.refresh(second.refreshToken);
+        const principal = yield* authentication.authenticate(first.accessToken);
+        const sessions = yield* authentication.listSessions(principal);
+        expect(sessions).toHaveLength(2);
+        expect(sessions[0]).toMatchObject({ id: first.familyId, current: true });
+        expect(sessions[1]).toMatchObject({ id: second.familyId, current: false });
+        expect(JSON.stringify(sessions)).not.toContain(second.refreshToken);
+        expect(
+          yield* Effect.result(authentication.revokeSession(principal, first.familyId)),
+        ).toMatchObject({ _tag: 'Failure', failure: { _tag: 'AccountSessionCurrent' } });
+        const otherUser = '01ARZ3NDEKTSV4RRFFQ69G5FAD';
+        database.sqlite
+          .prepare(
+            "insert into users (id, display_name, kind, created_at, updated_at) values (?, 'Other', 'administrator', 0, 0)",
+          )
+          .run(otherUser);
+        const other = yield* authentication.createSession(otherUser, 'administrator');
+        expect(
+          yield* Effect.result(authentication.revokeSession(principal, other.familyId)),
+        ).toMatchObject({ _tag: 'Failure', failure: { _tag: 'AccountSessionNotFound' } });
+        yield* authentication.revokeSession(principal, second.familyId);
+        yield* authentication.revokeSession(principal, second.familyId);
+        expect(yield* authentication.listSessions(principal)).toHaveLength(1);
+        expect(yield* Effect.result(authentication.authenticate(second.accessToken))).toMatchObject(
+          { _tag: 'Failure' },
+        );
+        expect(
+          yield* Effect.result(authentication.authenticate(rotated.accessToken)),
+        ).toMatchObject({ _tag: 'Failure' });
+        expect(yield* Effect.result(authentication.refresh(rotated.refreshToken))).toMatchObject({
+          _tag: 'Failure',
+        });
+        expect((yield* authentication.authenticate(first.accessToken)).userId).toBe(userId);
+        expect(
+          database.sqlite
+            .prepare(
+              "select count(*) from audit_events where action = 'authentication.session-revoked'",
+            )
+            .pluck()
+            .get(),
+        ).toBe(1);
+        yield* TestClock.adjust('31 days');
+        expect(yield* authentication.listSessions(principal)).toHaveLength(0);
+      }).pipe(Effect.provide(authenticationLayer()), Effect.provide(TestClock.layer())),
+    );
+  });
   it('allows only one concurrent password change for the same credential', async () => {
     await Effect.runPromise(
       Effect.gen(function* () {

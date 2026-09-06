@@ -460,6 +460,29 @@ export const translations = {
     'catalog.title': 'Catalogue',
     'payment.title': 'Règlements',
     'account.password_title': 'Changer le mot de passe',
+    'account.security_title': 'Sécurité du compte',
+    'account.security_hint': 'Gérez votre mot de passe et vos sessions de connexion.',
+    'account.sessions_title': 'Sessions actives',
+    'account.sessions_hint':
+      'Chaque connexion crée une session. Les dates ne permettent pas d’identifier un appareil ou un lieu. Le renouvellement ne représente pas la dernière action effectuée.',
+    'account.sessions_reload': 'Actualiser les sessions',
+    'account.sessions_loading': 'Chargement des sessions…',
+    'account.sessions_empty': 'Aucune session active. Reconnectez-vous pour vérifier votre compte.',
+    'account.sessions_retry':
+      'Actualisez la liste pour vérifier les sessions. Si votre session a expiré, reconnectez-vous.',
+    'account.session_current_label': 'Session utilisée ici',
+    'account.session_id': 'Identifiant de session',
+    'account.session_renewed': 'Dernier renouvellement',
+    'account.session_expires': 'Expiration',
+    'account.session_revoke': 'Fermer cette session',
+    'account.session_revoking': 'Fermeture en cours…',
+    'account.session_revoke_label': 'Fermer la session {id}',
+    'account.session_revoke_confirm':
+      'Fermer la session du {date} ({id}) ? Cette connexion ne pourra plus accéder au compte.',
+    'account.session_revoked': 'La session a été fermée. Votre session actuelle reste ouverte.',
+    'account.session_not_found': 'Cette session est introuvable. Actualisez la liste.',
+    'account.session_current':
+      'Utilisez le bouton de déconnexion pour fermer votre session actuelle.',
     'account.password_hint':
       'Le changement ferme toutes vos sessions, y compris celle-ci. Les jetons API restent inchangés.',
     'account.password_current': 'Mot de passe actuel',
@@ -1782,6 +1805,28 @@ export const translations = {
     'catalog.title': 'Catalog',
     'payment.title': 'Payments',
     'account.password_title': 'Change password',
+    'account.security_title': 'Account security',
+    'account.security_hint': 'Manage your password and sign-in sessions.',
+    'account.sessions_title': 'Active sessions',
+    'account.sessions_hint':
+      'Each sign-in creates a session. Dates do not identify a device or location. Renewal does not represent the last action performed.',
+    'account.sessions_reload': 'Refresh sessions',
+    'account.sessions_loading': 'Loading sessions…',
+    'account.sessions_empty': 'No active sessions. Sign in again to check your account.',
+    'account.sessions_retry':
+      'Refresh the list to check sessions. If your session has expired, sign in again.',
+    'account.session_current_label': 'Session used here',
+    'account.session_id': 'Session identifier',
+    'account.session_renewed': 'Last renewal',
+    'account.session_expires': 'Expires',
+    'account.session_revoke': 'Close this session',
+    'account.session_revoking': 'Closing session…',
+    'account.session_revoke_label': 'Close session {id}',
+    'account.session_revoke_confirm':
+      'Close the session started on {date} ({id})? This connection will no longer have access to the account.',
+    'account.session_revoked': 'The session was closed. Your current session remains open.',
+    'account.session_not_found': 'This session was not found. Refresh the list.',
+    'account.session_current': 'Use the sign-out button to close your current session.',
     'account.password_hint':
       'Changing your password closes all your sessions, including this one. API tokens remain unchanged.',
     'account.password_current': 'Current password',

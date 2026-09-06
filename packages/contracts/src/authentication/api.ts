@@ -14,8 +14,29 @@ import {
 } from './contracts.js';
 import { ApiAuthentication } from '../api-authentication.js';
 import { PasswordChangeRequest, PasswordChangeRejected } from './contracts.js';
+import { AccountSessionList, AccountSessionNotFound, AccountSessionCurrent } from './sessions.js';
+import { Ulid } from '../identifiers.js';
 
 export class AuthenticationApi extends HttpApiGroup.make('authentication', { topLevel: true }).add(
+  HttpApiEndpoint.get('accountSessionList', '/api/auth/sessions', {
+    success: AccountSessionList,
+    error: AuthenticationRequired,
+  })
+    .middleware(ApiAuthentication)
+    .pipe(frontendSpecific),
+  HttpApiEndpoint.post('accountSessionRevoke', '/api/auth/sessions/:sessionId/revoke', {
+    params: { sessionId: Ulid },
+    success: HttpApiSchema.NoContent,
+    error: [
+      AuthenticationRequired,
+      AccountSessionNotFound,
+      AccountSessionCurrent,
+      RequestRateLimited,
+    ],
+  })
+    .middleware(ApiBrowserRequest)
+    .middleware(ApiAuthentication)
+    .pipe(frontendSpecific),
   HttpApiEndpoint.post('passwordChange', '/api/auth/password', {
     payload: PasswordChangeRequest,
     success: HttpApiSchema.NoContent,

@@ -35,6 +35,42 @@ export const AuthenticationHandlers = HttpApiBuilder.group(Api, 'authentication'
   Effect.succeed(
     handlers
       .handle(
+        'accountSessionList',
+        Effect.fn('accountSessionList')(function* () {
+          yield* setPrivateResponseHeaders;
+          const credentials = yield* ApiCredentials;
+          if (credentials.kind !== 'access-token')
+            return yield* new AuthenticationRequired({ code: 'authentication.required' });
+          const authentication = yield* Authentication;
+          const principal = yield* authentication
+            .authenticate(credentials.token)
+            .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
+          return yield* authentication
+            .listSessions(principal)
+            .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
+        }),
+      )
+      .handle(
+        'accountSessionRevoke',
+        Effect.fn('accountSessionRevoke')(function* ({ params }) {
+          yield* setPrivateResponseHeaders;
+          const credentials = yield* ApiCredentials;
+          if (credentials.kind !== 'access-token')
+            return yield* new AuthenticationRequired({ code: 'authentication.required' });
+          const authentication = yield* Authentication;
+          const principal = yield* authentication
+            .authenticate(credentials.token)
+            .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
+          if (
+            !(yield* (yield* RequestLimiter).allowRequest(`session-revoke:${principal.userId}`, 10))
+          )
+            return yield* new RequestRateLimited({ code: 'request.rate_limited' });
+          yield* authentication
+            .revokeSession(principal, params.sessionId)
+            .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
+        }),
+      )
+      .handle(
         'passwordChange',
         Effect.fn('passwordChange')(function* ({ payload }) {
           yield* setPrivateResponseHeaders;

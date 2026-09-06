@@ -1,5 +1,8 @@
 import {
   AccountEmail,
+  AccountSessionNotFound,
+  AccountSessionCurrent,
+  type AccountSessionListValue,
   AuthenticationRejected,
   AuthenticationRateLimited,
   AuthenticationRequired,
@@ -13,7 +16,7 @@ import {
   type LoginModeValue,
   type PermissionCodeValue,
 } from '@froment/contracts';
-import { Cache, Clock, Context, Effect, Layer, Ref, Schema } from 'effect';
+import { Cache, Clock, Context, DateTime, Effect, Layer, Ref, Schema } from 'effect';
 import { randomBytes } from 'node:crypto';
 import { ulid } from 'ulid';
 
@@ -66,6 +69,16 @@ export interface Principal {
 }
 
 export interface AuthenticationService {
+  readonly listSessions: (
+    principal: Principal,
+  ) => Effect.Effect<AccountSessionListValue, DatabaseError>;
+  readonly revokeSession: (
+    principal: Principal,
+    familyId: string,
+  ) => Effect.Effect<
+    void,
+    AuthenticationRequired | AccountSessionNotFound | AccountSessionCurrent | DatabaseError
+  >;
   readonly changePassword: (
     principal: Principal,
     request: PasswordChangeRequestValue,
@@ -728,7 +741,89 @@ export const AuthenticationLive = Layer.effect(
       });
     });
 
+    const listSessions = Effect.fn('Authentication.listSessions')(function* (principal: Principal) {
+      const now = yield* Clock.currentTimeMillis;
+      return yield* Effect.try({
+        try: () => {
+          const rows = Schema.decodeUnknownSync(
+            Schema.Array(
+              Schema.Struct({
+                id: Schema.String,
+                startedAt: Schema.Int,
+                renewedAt: Schema.Int,
+                expiresAt: Schema.Int,
+                current: Schema.Int,
+              }),
+            ),
+          )(
+            database.sqlite
+              .prepare(`select family_id as id, min(created_at) as startedAt, max(rotated_at) as renewedAt, max(absolute_expires_at) as expiresAt,
+              family_id = (select family_id from refresh_sessions where id = ? and user_id = ?) as current
+              from refresh_sessions where user_id = ? and revoked_at is null and absolute_expires_at > ?
+              group by family_id order by current desc, startedAt desc, family_id`)
+              .all(principal.sessionId, principal.userId, principal.userId, now),
+          );
+          return rows.map((row) => ({
+            id: row.id,
+            startedAt: DateTime.formatIso(DateTime.makeUnsafe(row.startedAt)),
+            renewedAt: DateTime.formatIso(DateTime.makeUnsafe(row.renewedAt)),
+            expiresAt: DateTime.formatIso(DateTime.makeUnsafe(row.expiresAt)),
+            current: row.current === 1,
+          }));
+        },
+        catch: (cause) => new DatabaseError({ operation: 'list.account.sessions', cause }),
+      });
+    });
+    const revokeSession = Effect.fn('Authentication.revokeSession')(function* (
+      principal: Principal,
+      familyId: string,
+    ) {
+      const now = yield* Clock.currentTimeMillis;
+      yield* Effect.try({
+        try: () =>
+          database.sqlite
+            .transaction(() => {
+              const current = database.sqlite
+                .prepare(
+                  'select family_id from refresh_sessions where id = ? and user_id = ? and revoked_at is null and absolute_expires_at > ?',
+                )
+                .pluck()
+                .get(principal.sessionId, principal.userId, now);
+              if (current === undefined)
+                throw new AuthenticationRequired({ code: 'authentication.required' });
+              if (current === familyId)
+                throw new AccountSessionCurrent({ code: 'account.session_current' });
+              const target = database.sqlite
+                .prepare('select 1 from refresh_sessions where family_id = ? and user_id = ?')
+                .get(familyId, principal.userId);
+              if (target === undefined)
+                throw new AccountSessionNotFound({ code: 'account.session_not_found' });
+              const changed = database.sqlite
+                .prepare(
+                  'update refresh_sessions set revoked_at = ? where family_id = ? and user_id = ? and revoked_at is null',
+                )
+                .run(now, familyId, principal.userId).changes;
+              if (changed > 0)
+                audit.insert({
+                  action: 'authentication.session-revoked',
+                  actorUserId: principal.userId,
+                  resourceType: 'session',
+                  resourceId: familyId,
+                  occurredAt: now,
+                });
+            })
+            .immediate(),
+        catch: (cause) =>
+          cause instanceof AuthenticationRequired ||
+          cause instanceof AccountSessionNotFound ||
+          cause instanceof AccountSessionCurrent
+            ? cause
+            : new DatabaseError({ operation: 'revoke.account.session', cause }),
+      });
+    });
     return Authentication.of({
+      listSessions,
+      revokeSession,
       changePassword,
       login,
       createSession,

@@ -130,7 +130,7 @@ export const routes: Routes = [
       ),
     canActivate: [administratorGuard],
     data: {
-      titleKey: 'account.password_title',
+      titleKey: 'account.security_title',
       descriptionKey: 'page.description.back_office',
       robots: 'noindex, nofollow',
     },
@@ -144,7 +144,7 @@ export const routes: Routes = [
       ),
     canActivate: [clientGuard],
     data: {
-      titleKey: 'page.back_office',
+      titleKey: 'account.security_title',
       descriptionKey: 'page.description.back_office',
       robots: 'noindex, nofollow',
     },

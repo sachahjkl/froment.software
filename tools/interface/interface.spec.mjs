@@ -89,7 +89,7 @@ test("client form and complete account address", async ({ page, colorScheme }, t
   await expect(page.locator(".account-details")).toBeHidden();
   await expect(summary).toBeFocused();
   await summary.click();
-  await page.getByRole("link", { name: /Changer le mot de passe|Change password/ }).click();
+  await page.getByRole("link", { name: /Sécurité du compte|Account security/ }).click();
   await expect(page.locator('.account-security input[type="password"]')).toHaveCount(3);
   expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth)).toBe(false);
   const audit = await new AxeBuilder({ page })

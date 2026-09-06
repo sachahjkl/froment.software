@@ -225,6 +225,25 @@ export async function mockApi(
       ]),
     ],
     ["/api/bootstrap", { available: true }],
+    [
+      "/api/auth/sessions",
+      [
+        {
+          id: clientId,
+          startedAt: createdAt,
+          renewedAt: createdAt,
+          expiresAt: "2026-10-05T08:00:00.000Z",
+          current: true,
+        },
+        {
+          id: quoteId,
+          startedAt: createdAt,
+          renewedAt: createdAt,
+          expiresAt: "2026-10-05T08:00:00.000Z",
+          current: false,
+        },
+      ],
+    ],
   ]);
   await page.route("**/api/**", async (route) => {
     const path = new URL(route.request().url()).pathname;
