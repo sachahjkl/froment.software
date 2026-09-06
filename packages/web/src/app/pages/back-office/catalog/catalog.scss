@@ -50,6 +50,16 @@ h3 {
   list-style: none;
   padding: 0;
 }
+.filters {
+  align-items: end;
+}
+.filters > .choice {
+  align-items: center;
+  min-height: var(--control-height);
+}
+.filters > .choice input {
+  margin: 0;
+}
 .items li {
   display: grid;
   gap: var(--space-3);

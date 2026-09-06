@@ -169,6 +169,7 @@ test("client form and complete account address", async ({ page, colorScheme }, t
   for (const [tab, selector] of [
     ["entreprise", ".issuer-page"],
     ["conditions", ".presets-page"],
+    ["catalogue", ".catalog-page"],
   ]) {
     await page.goto(`/backoffice/configuration/${tab}`);
     await expect(page.locator(`${selector} form`)).toBeVisible();
@@ -190,6 +191,13 @@ test("client form and complete account address", async ({ page, colorScheme }, t
     expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth)).toBe(
       false,
     );
+    if (tab === "catalogue") {
+      const label = await page.locator(".filters > .choice").boundingBox();
+      const checkbox = await page.locator(".filters > .choice input").boundingBox();
+      expect(Math.abs(label.y + label.height / 2 - checkbox.y - checkbox.height / 2)).toBeLessThan(
+        1,
+      );
+    }
     await page.screenshot({ path: testInfo.outputPath(`${tab}.png`), fullPage: true });
   }
   await page.goto("/backoffice/configuration/services");
