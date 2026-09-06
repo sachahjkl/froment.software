@@ -4,6 +4,7 @@ export const PermissionAudience = Schema.Literals(['api-token', 'client']);
 export type PermissionAudience = typeof PermissionAudience.Type;
 
 export const Permissions = {
+  emailDraftManage: { code: 'email.draft.manage', audiences: [] },
   bankRead: { code: 'bank.read', audiences: [] },
   bankImport: { code: 'bank.import', audiences: [] },
   bankReconcile: { code: 'bank.reconcile', audiences: [] },

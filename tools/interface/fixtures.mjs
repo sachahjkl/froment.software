@@ -217,6 +217,7 @@ export async function mockApi(
       })),
     ],
     ["/api/integrations/operations", []],
+    ["/api/email-drafts", []],
     ["/api/tokens", { items: [], nextCursor: null }],
     [`/api/affairs/${quoteId}/events`, []],
     ["/api/public/quote-link", publicQuote],
@@ -304,6 +305,10 @@ export async function mockApi(
     }
     if (path === "/api/integrations/operations" && route.request().method() === "POST") {
       const request = route.request().postDataJSON();
+      responses.set(
+        "/api/email-drafts",
+        responses.get("/api/email-drafts").filter((draft) => draft.id !== request.requestId),
+      );
       const operation = {
         id: quoteId,
         request,
@@ -315,6 +320,16 @@ export async function mockApi(
       return route.fulfill({ json: operation });
     }
     if (responses.has(path)) return route.fulfill({ json: responses.get(path) });
+    if (path.startsWith("/api/email-drafts/") && route.request().method() === "PUT") {
+      const request = route.request().postDataJSON();
+      const id = path.split("/").at(-1);
+      const draft = { ...request, id, version: request.expectedVersion + 1, updatedAt: createdAt };
+      responses.set("/api/email-drafts", [
+        draft,
+        ...responses.get("/api/email-drafts").filter((item) => item.id !== id),
+      ]);
+      return route.fulfill({ json: draft });
+    }
     if (path.endsWith("/preview")) {
       return route.fulfill({
         contentType: "text/html",

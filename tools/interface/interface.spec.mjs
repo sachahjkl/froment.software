@@ -244,6 +244,15 @@ test("client form and complete account address", async ({ page, colorScheme }, t
   await expect(confirmation).toBeHidden();
   await expect(bankLink).toBeFocused();
   await expect(page.locator("#email-subject")).toHaveValue("Votre devis / Your quote");
+  await page.getByRole("button", { name: /Enregistrer le brouillon|Save draft/ }).click();
+  await expect(page.locator(".drafts li")).toContainText("Votre devis / Your quote");
+  await page.reload();
+  await page
+    .locator(".drafts")
+    .getByRole("button", { name: /Ouvrir|Open/, exact: true })
+    .click();
+  await expect(page.locator("#email-subject")).toHaveValue("Votre devis / Your quote");
+  await expect(page.locator("#email-recipient")).toHaveValue("client@example.test");
   await page
     .locator("#email-body")
     .fill("Bonjour,\nVoici le récapitulatif de notre proposition.\nCordialement.");

@@ -3,6 +3,7 @@ import {
   IntegrationInvalid,
   IntegrationOperation,
   IntegrationSubmission,
+  EmailDraftContent,
   ProviderReceipt,
   type IntegrationOperationValue,
   type IntegrationSubmissionValue,
@@ -85,6 +86,29 @@ const makeIntegrations = Effect.gen(function* () {
             if (providers[request.kind].mode !== request.expectedMode) {
               throw new IntegrationConflict({ code: 'integration.request_conflict' });
             }
+            const draft = database.sqlite
+              .prepare('select user_id as userId, content, archived from email_drafts where id = ?')
+              .get(request.requestId);
+            if (draft !== undefined) {
+              const saved = Schema.decodeUnknownSync(
+                Schema.Struct({
+                  userId: Schema.String,
+                  content: Schema.fromJsonString(EmailDraftContent),
+                  archived: Schema.Int,
+                }),
+              )(draft);
+              if (
+                request.kind !== 'email' ||
+                saved.userId !== actorUserId ||
+                saved.archived !== 0 ||
+                request.recipient !== saved.content.recipient ||
+                request.subject !== saved.content.subject ||
+                request.reference !== saved.content.reference ||
+                request.body !== saved.content.body
+              ) {
+                throw new IntegrationConflict({ code: 'integration.request_conflict' });
+              }
+            }
             const operation: IntegrationOperationValue = {
               id: ulid(now),
               request,
@@ -103,6 +127,10 @@ const makeIntegrations = Effect.gen(function* () {
                 operation.createdAt,
                 actorUserId,
               );
+            if (draft !== undefined)
+              database.sqlite
+                .prepare('update email_drafts set archived = 1 where id = ?')
+                .run(request.requestId);
             audit.insert({
               action: 'integration.requested',
               actorUserId,

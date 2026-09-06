@@ -66,6 +66,25 @@ export const passwordCredentials = sqliteTable(
   ],
 );
 
+export const emailDrafts = sqliteTable(
+  'email_drafts',
+  {
+    id: text().notNull().primaryKey(),
+    userId: text('user_id')
+      .notNull()
+      .references(() => users.id),
+    content: text().notNull(),
+    version: integer().notNull(),
+    archived: integer({ mode: 'boolean' }).notNull().default(false),
+    updatedAt: text('updated_at').notNull(),
+  },
+  (table) => [
+    index('email_drafts_user_index').on(table.userId, table.archived),
+    check('email_drafts_version_check', sql`${table.version} > 0`),
+    check('email_drafts_content_check', sql`json_valid(${table.content})`),
+  ],
+);
+
 export const passkeys = sqliteTable(
   'passkeys',
   {

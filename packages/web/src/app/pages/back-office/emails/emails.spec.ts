@@ -5,9 +5,29 @@ import { vi } from 'vitest';
 import {
   type IntegrationOperationValue,
   type IntegrationSubmissionValue,
+  EmailDraft,
+  EmailDraftSave,
 } from '@froment/contracts';
 import { IntegrationsApi } from '@backoffice/integrations-api';
 import { Emails } from './emails';
+import { EmailDraftsApi } from '@backoffice/email-drafts-api';
+
+class DraftApiStub {
+  readonly items = new Map<string, typeof EmailDraft.Type>();
+  async list() {
+    return { success: true as const, result: [...this.items.values()] };
+  }
+  async save(id: string, request: typeof EmailDraftSave.Type) {
+    const result = {
+      ...request,
+      id,
+      version: request.expectedVersion + 1,
+      updatedAt: '2026-09-06T10:00:00.000Z',
+    };
+    this.items.set(id, result);
+    return { success: true as const, result };
+  }
+}
 
 class EmailApiStub {
   fail = false;
@@ -55,6 +75,7 @@ describe('Emails', () => {
       providers: [
         provideRouter([]),
         { provide: InvoiceReminder, useValue: { prepare: async () => undefined } },
+        { provide: EmailDraftsApi, useValue: new DraftApiStub() },
       ],
     });
   });
@@ -111,7 +132,9 @@ describe('Emails', () => {
       reference: 'DE-2026-000001',
     });
     expect(root.querySelector<HTMLInputElement>('#email-recipient')?.value).toBe('');
-    expect(root.querySelector('li')?.textContent).toMatch(/non envoyé|not sent/);
+    expect(root.querySelector('.message-body')?.closest('li')?.textContent).toMatch(
+      /non envoyé|not sent/,
+    );
     expect(root.querySelector('.message-body')?.textContent).toContain('<script>alert(1)</script>');
     expect(root.querySelector('script')).toBeNull();
     expect(await fixture.componentInstance.canDeactivate()).toBe(true);
@@ -146,6 +169,44 @@ describe('Emails', () => {
     expect(api.requests[1]).toEqual(api.requests[0]);
     expect(await fixture.componentInstance.canDeactivate()).toBe(true);
     confirm.mockRestore();
+  });
+  it('saves incomplete drafts, restores their text, and uses the saved identifier for submission', async () => {
+    const drafts = new DraftApiStub();
+    const api = new EmailApiStub();
+    TestBed.configureTestingModule({
+      providers: [
+        { provide: EmailDraftsApi, useValue: drafts },
+        { provide: IntegrationsApi, useValue: api },
+      ],
+    });
+    let fixture = TestBed.createComponent(Emails);
+    await fixture.whenStable();
+    let root: HTMLElement = fixture.nativeElement;
+    fill(root, '#email-subject', 'Saved subject');
+    await fixture.whenStable();
+    [...root.querySelectorAll<HTMLButtonElement>('button')]
+      .find((button) => /Enregistrer le brouillon|Save draft/.test(button.textContent ?? ''))
+      ?.click();
+    await fixture.whenStable();
+    expect(drafts.items.size).toBe(1);
+    expect(api.requests).toHaveLength(0);
+    expect(await fixture.componentInstance.canDeactivate()).toBe(true);
+    const id = [...drafts.items.keys()][0];
+    fixture.destroy();
+    fixture = TestBed.createComponent(Emails);
+    await fixture.whenStable();
+    root = fixture.nativeElement;
+    root.querySelector<HTMLButtonElement>('.drafts button')?.click();
+    await fixture.whenStable();
+    expect(root.querySelector<HTMLInputElement>('#email-subject')?.value).toBe('Saved subject');
+    compose(root);
+    await fixture.whenStable();
+    root
+      .querySelector('form')
+      ?.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+    await fixture.whenStable();
+    expect(api.requests).toHaveLength(1);
+    expect(api.requests[0]?.requestId).toBe(id);
   });
 });
 import { Confirmation } from '@shared/confirmation/confirmation';

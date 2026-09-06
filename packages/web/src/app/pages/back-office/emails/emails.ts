@@ -21,10 +21,16 @@ import {
   required,
   submit,
 } from '@angular/forms/signals';
-import { EmailSubmission, Ulid, type IntegrationOperationValue } from '@froment/contracts';
+import {
+  EmailSubmission,
+  EmailDraft,
+  Ulid,
+  type IntegrationOperationValue,
+} from '@froment/contracts';
 import { Option, Schema } from 'effect';
 import { IntegrationsApi } from '@backoffice/integrations-api';
-import { I18nService } from '@app/i18n.service';
+import { I18nService, type TranslationKey } from '@app/i18n.service';
+import { EmailDraftsApi } from '@backoffice/email-drafts-api';
 import { Button } from '@shared/button/button';
 import { Notice } from '@shared/notice/notice';
 import { LocalizedDatePipe } from '@shared/localized-date/localized-date-pipe';
@@ -42,6 +48,13 @@ export class Emails {
   private readonly confirmation = inject(Confirmation);
   protected readonly i18n = inject(I18nService);
   private readonly api = inject(IntegrationsApi);
+  private readonly draftsApi = inject(EmailDraftsApi);
+  protected readonly drafts = signal<ReadonlyArray<typeof EmailDraft.Type>>([]);
+  protected readonly draftsLoading = signal(true);
+  protected readonly draftError = signal<TranslationKey | undefined>(undefined);
+  protected readonly draftSaved = signal(false);
+  private readonly draftId = signal<string | undefined>(undefined);
+  private readonly draftVersion = signal(0);
   private readonly route = inject(ActivatedRoute);
   private readonly reminder = inject(InvoiceReminder);
   protected readonly preparingReminder = signal(false);
@@ -78,7 +91,101 @@ export class Emails {
     afterNextRender(() => {
       void this.load();
       void this.prepareReminder();
+      void this.loadDrafts();
     });
+  }
+  protected async loadDrafts(): Promise<void> {
+    this.draftsLoading.set(true);
+    this.draftError.set(undefined);
+    const outcome = await this.draftsApi.list();
+    if (outcome.success) this.drafts.set(outcome.result);
+    else this.draftError.set(outcome.code);
+    this.draftsLoading.set(false);
+  }
+  protected async saveDraft(): Promise<boolean> {
+    if (this.saving() || this.preparingReminder() || this.pending() !== undefined) return false;
+    const id = this.draftId() ?? crypto.randomUUID();
+    this.draftId.set(id);
+    this.saving.set(true);
+    this.draftError.set(undefined);
+    this.completed.set(undefined);
+    try {
+      const outcome = await this.draftsApi.save(id, {
+        ...this.model(),
+        reminder: this.reminderPrepared(),
+        expectedVersion: this.draftVersion(),
+      });
+      if (!outcome.success) {
+        this.draftError.set(outcome.code);
+        return false;
+      }
+      this.draftVersion.set(outcome.result.version);
+      this.draftSaved.set(true);
+      this.messageForm().reset(this.model());
+      this.notice()?.nativeElement.focus();
+      this.drafts.update((items) => [outcome.result, ...items.filter((item) => item.id !== id)]);
+      return true;
+    } finally {
+      this.saving.set(false);
+    }
+  }
+  private unsaved(): boolean {
+    return (
+      this.messageForm().dirty() ||
+      (this.reminderPrepared() && !this.draftSaved()) ||
+      this.pending() !== undefined
+    );
+  }
+  protected async openDraft(draft?: typeof EmailDraft.Type): Promise<void> {
+    if (this.saving() || this.preparingReminder() || this.pending() !== undefined) return;
+    if (
+      this.unsaved() &&
+      !(await this.confirmation.request(this.i18n.t('backOffice.quote.unsavedChanges')))
+    )
+      return;
+    this.composer()?.nativeElement.reset();
+    this.model.set(
+      draft === undefined
+        ? blank()
+        : {
+            recipient: draft.recipient,
+            reference: draft.reference,
+            subject: draft.subject,
+            body: draft.body,
+          },
+    );
+    this.draftId.set(draft?.id);
+    this.draftVersion.set(draft?.version ?? 0);
+    this.draftSaved.set(draft !== undefined);
+    this.reminderPrepared.set(draft?.reminder ?? false);
+    this.messageForm().reset(this.model());
+    this.draftError.set(undefined);
+    this.completed.set(undefined);
+  }
+  protected async archiveDraft(draft: typeof EmailDraft.Type): Promise<void> {
+    if (this.saving() || this.pending() !== undefined) return;
+    if (!(await this.confirmation.request(this.i18n.t('emailDraft.archiveConfirm')))) return;
+    this.saving.set(true);
+    this.draftError.set(undefined);
+    try {
+      const outcome = await this.draftsApi.archive(draft);
+      if (!outcome.success) {
+        this.draftError.set(outcome.code);
+        return;
+      }
+      this.drafts.update((items) => items.filter((item) => item.id !== draft.id));
+      if (this.draftId() === draft.id) {
+        this.model.set(blank());
+        this.draftId.set(undefined);
+        this.draftVersion.set(0);
+        this.draftSaved.set(false);
+        this.reminderPrepared.set(false);
+        this.messageForm().reset();
+        this.composer()?.nativeElement.reset();
+      }
+    } finally {
+      this.saving.set(false);
+    }
   }
   private async prepareReminder(): Promise<void> {
     const value = this.route.snapshot.queryParamMap.get('invoice');
@@ -122,19 +229,13 @@ export class Emails {
   async canDeactivate(): Promise<boolean> {
     return (
       !this.saving() &&
-      ((!this.messageForm().dirty() && !this.reminderPrepared() && this.pending() === undefined) ||
+      (!this.unsaved() ||
         (await this.confirmation.request(this.i18n.t('backOffice.quote.unsavedChanges'))))
     );
   }
   @HostListener('window:beforeunload', ['$event'])
   protected preventUnload(event: BeforeUnloadEvent): void {
-    if (
-      this.messageForm().dirty() ||
-      this.reminderPrepared() ||
-      this.saving() ||
-      this.pending() !== undefined
-    )
-      event.preventDefault();
+    if (this.unsaved() || this.saving()) event.preventDefault();
   }
   protected save(event: SubmitEvent): void {
     event.preventDefault();
@@ -146,12 +247,13 @@ export class Emails {
     )
       return;
     void submit(this.messageForm, async () => {
+      if (this.draftId() !== undefined && !(await this.saveDraft())) return;
       const mode = this.mode();
       const request = Schema.decodeUnknownOption(EmailSubmission)({
         ...this.model(),
         kind: 'email',
         expectedMode: mode,
-        requestId: crypto.randomUUID(),
+        requestId: this.draftId() ?? crypto.randomUUID(),
       });
       if (Option.isNone(request)) {
         this.invalidRequest.set(true);
@@ -183,6 +285,10 @@ export class Emails {
       );
       if (this.pending()?.requestId === request.requestId) {
         this.pending.set(undefined);
+        this.drafts.update((items) => items.filter((item) => item.id !== request.requestId));
+        this.draftId.set(undefined);
+        this.draftVersion.set(0);
+        this.draftSaved.set(false);
         this.reminderPrepared.set(false);
         this.model.set(blank());
         this.messageForm().reset();

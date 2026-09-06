@@ -1,5 +1,6 @@
 import type { Language } from './language.js';
 import { passkeyDocumentation } from './passkeys.js';
+import { emailDraftDocumentation } from './email-drafts.js';
 
 interface ApiDocumentationGroup {
   readonly title: string;
@@ -32,6 +33,7 @@ export const apiDocumentation = {
     },
     groups: {
       passkeys: passkeyDocumentation.fr.group,
+      emailDrafts: emailDraftDocumentation.fr.group,
       clients: { title: 'Clients', description: 'Fiches clients et cycle de vie.' },
       orders: { title: 'Commandes', description: 'Commandes et documents générés.' },
       quotes: { title: 'Devis', description: 'Devis, révisions, envoi et documents.' },
@@ -82,6 +84,7 @@ export const apiDocumentation = {
     },
     operations: {
       ...passkeyDocumentation.fr.operations,
+      ...emailDraftDocumentation.fr.operations,
       bankMatchHistory: {
         summary: 'Consulter les rapprochements conservés',
         description:
@@ -388,6 +391,7 @@ export const apiDocumentation = {
     groups: {
       clients: { title: 'Clients', description: 'Client records and lifecycle.' },
       passkeys: passkeyDocumentation.en.group,
+      emailDrafts: emailDraftDocumentation.en.group,
       orders: { title: 'Orders', description: 'Orders and their generated documents.' },
       quotes: { title: 'Quotes', description: 'Quotes, revisions, delivery, and documents.' },
       quoteLinks: {
@@ -435,6 +439,7 @@ export const apiDocumentation = {
     operations: {
       catalogList: { summary: 'List services', description: 'Lists active and archived services.' },
       ...passkeyDocumentation.en.operations,
+      ...emailDraftDocumentation.en.operations,
       bankMatchHistory: {
         summary: 'Read reconciliation history',
         description:

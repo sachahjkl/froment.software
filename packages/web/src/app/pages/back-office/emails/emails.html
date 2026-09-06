@@ -14,7 +14,8 @@
   }
   <p #notice tabindex="-1" role="status">
     @if (completed(); as mode) { {{ i18n.t(mode === 'simulation' ? 'emails.simulated' :
-    'emails.submitted') }} }
+    'emails.submitted') }} } @else if (draftSaved() && !messageForm().dirty()) { {{
+    i18n.t('emailDraft.saved') }} }
   </p>
   @if (failed() || loadFailed()) {
   <p appNotice variant="danger" role="alert">
@@ -26,6 +27,9 @@
   }
   <form #composer (submit)="save($event)" class="composer">
     <h2>{{ i18n.t('emails.compose') }}</h2>
+    @if (draftError(); as message) {
+    <p appNotice variant="danger" role="alert">{{ i18n.t(message) }}</p>
+    }
     <p id="message-hint">{{ i18n.t('emails.fieldsHint') }}</p>
     <div class="fields">
       <label
@@ -87,7 +91,60 @@
       {{ i18n.t(mode() === 'simulation' ? 'emails.recordSimulation' : 'emails.send') }}
     </button>
     }
+    <div class="fields">
+      <button
+        appButton
+        type="button"
+        [disabled]="saving() || preparingReminder() || pending() !== undefined"
+        (click)="saveDraft()"
+      >
+        {{ i18n.t('emailDraft.save') }}
+      </button>
+      <button
+        appButton
+        type="button"
+        [disabled]="saving() || preparingReminder() || pending() !== undefined"
+        (click)="openDraft()"
+      >
+        {{ i18n.t('emailDraft.new') }}
+      </button>
+    </div>
   </form>
+  <h2>{{ i18n.t('emailDraft.title') }}</h2>
+  <p>{{ i18n.t('emailDraft.hint') }}</p>
+  <button appButton type="button" [disabled]="draftsLoading() || saving()" (click)="loadDrafts()">
+    {{ i18n.t('integrations.reload') }}
+  </button>
+  @if (draftsLoading()) {
+  <p role="status">{{ i18n.t('integrations.loading') }}</p>
+  } @else {
+  <ol class="drafts">
+    @for (draft of drafts(); track draft.id) {
+    <li class="ds-panel">
+      <h3>{{ draft.subject || i18n.t('emailDraft.unnamed') }}</h3>
+      <p>{{ draft.recipient }}</p>
+      <button
+        appButton
+        type="button"
+        [disabled]="saving() || preparingReminder() || pending() !== undefined"
+        (click)="openDraft(draft)"
+      >
+        {{ i18n.t('emailDraft.open') }}
+      </button>
+      <button
+        appButton
+        type="button"
+        [disabled]="saving() || preparingReminder() || pending() !== undefined"
+        (click)="archiveDraft(draft)"
+      >
+        {{ i18n.t('emailDraft.archive') }}
+      </button>
+    </li>
+    } @empty { @if (!draftError()) {
+    <li>{{ i18n.t('emailDraft.empty') }}</li>
+    } }
+  </ol>
+  }
   <h2>{{ i18n.t('emails.history') }}</h2>
   <p>{{ i18n.t('emails.historyInfo') }}</p>
   @if (!loading() && operations().length === 0) {
