@@ -1,5 +1,6 @@
 import {
   type DocumentParty,
+  type CreditNote,
   type InvoiceRenderSnapshotValue,
   type IssuerSettings,
   type OrderRenderSnapshotValue,
@@ -190,3 +191,27 @@ export const prepareOrderDocument = (snapshot: OrderRenderSnapshotValue): OrderD
     footer: snapshot.issuer.displayName,
     thankYou: documentText.fr.thankYou,
   });
+
+export const prepareCreditNoteDocument = (
+  snapshot: InvoiceRenderSnapshotValue,
+  note: typeof CreditNote.Type,
+): InvoiceDocumentInput => {
+  if (snapshot.issuedAt === null || snapshot.invoiceNumber === null)
+    throw new Error('credit.invoice_not_issued');
+  const invoice = prepareInvoiceDocument(snapshot);
+  return {
+    ...invoice,
+    metadata: [
+      [documentText.fr.creditNoteNumber, note.number],
+      [documentText.fr.issueDate, date(note.issuedAt)],
+      [documentText.fr.invoiceNumber, snapshot.invoiceNumber],
+      [documentText.fr.originalInvoiceDate, date(snapshot.issuedAt)],
+      [documentText.fr.currency, snapshot.currency],
+    ],
+    title: wrapText(`${documentText.fr.creditNote} · ${snapshot.title}`),
+    termsHeading: documentText.fr.creditReason,
+    terms: wrapText(note.reason),
+    legal: [documentText.fr.creditNoRefund],
+    thankYou: '',
+  };
+};

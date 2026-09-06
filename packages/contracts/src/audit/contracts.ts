@@ -3,6 +3,9 @@ import { Schema } from 'effect';
 import { Ulid } from '../identifiers.js';
 
 export const AuditActions = [
+  'invoice.credited',
+  'invoice.refund-recorded',
+  'invoice.refund-cancelled',
   'team.invited',
   'team.invitation-cancelled',
   'team.joined',

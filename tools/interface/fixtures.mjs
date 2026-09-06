@@ -114,6 +114,7 @@ const invoiceRevision = {
 };
 
 const invoice = {
+  creditedCents: 0,
   payments: [],
   id: invoiceId,
   orderId,
@@ -156,6 +157,7 @@ export const issuedInvoice = {
 };
 
 const invoiceSummary = {
+  creditedCents: 0,
   recordedPaidCents: 0,
   id: invoiceId,
   orderId,
@@ -244,6 +246,7 @@ export async function mockApi(
           ...invoiceSummary,
           status: "issued",
           recordedPaidCents: 10000,
+          creditedCents: 0,
           remainingCents: 350000,
           invoiceNumber: "FA-2026-000001",
           pdfAvailable: true,

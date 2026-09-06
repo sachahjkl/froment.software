@@ -53,6 +53,7 @@ describe('InvoicesApi', () => {
         currency: 'EUR',
         totalCents: 1_200,
         recordedPaidCents: 0,
+        creditedCents: 0,
         updatedAt: '2026-08-20T06:00:00.000Z',
         pdf: null,
       },

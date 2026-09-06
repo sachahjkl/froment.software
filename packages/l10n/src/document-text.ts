@@ -1,5 +1,11 @@
 export const documentText = {
   fr: {
+    creditNote: 'Avoir intégral',
+    creditNoteNumber: 'Avoir n°',
+    originalInvoiceDate: 'Date de la facture d’origine',
+    creditReason: 'Motif de l’avoir',
+    creditNoRefund:
+      'Cet avoir annule intégralement la créance de la facture référencée. Il ne prouve pas un remboursement.',
     registrationNumber: 'SIRET :',
     vatNumber: 'TVA intracom. :',
     netTotal: 'Total HT',

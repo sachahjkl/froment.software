@@ -24,6 +24,7 @@ const invoice = (status: 'issued' | 'paid', suffix: string): InvoiceSummaryValue
     currency: 'EUR',
     totalCents: Number(suffix) * 10_000,
     recordedPaidCents: 0,
+    creditedCents: 0,
     updatedAt: '2026-08-21T10:00:00.000Z',
     pdf: null,
   }) as InvoiceSummaryValue;

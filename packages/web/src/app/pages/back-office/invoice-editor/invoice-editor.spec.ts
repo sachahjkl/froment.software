@@ -45,6 +45,7 @@ const revision = {
 
 const detail = (status: InvoiceDetailValue['status'] = 'draft'): InvoiceDetailValue => ({
   payments: [],
+  creditedCents: 0,
   id: invoiceId,
   orderId,
   orderReference: 'CO-2026-000001',

@@ -47,6 +47,7 @@ export const ClientOrderList = Schema.Array(ClientOrderSummary);
 export type ClientOrderList = typeof ClientOrderList.Type;
 
 export const ClientInvoiceSummary = Schema.Struct({
+  creditedCents: SafeInteger,
   recordedPaidCents: SafeInteger,
   remainingCents: SafeInteger,
   id: Ulid,

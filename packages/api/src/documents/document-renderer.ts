@@ -1,5 +1,6 @@
 import {
   prepareInvoiceDocument,
+  prepareCreditNoteDocument,
   prepareOrderDocument,
   prepareQuoteDocument,
   type InvoiceDocumentInputValue,
@@ -8,6 +9,7 @@ import {
 } from '@froment/documents';
 import {
   type InvoiceRenderSnapshotValue,
+  type CreditNote,
   type OrderRenderSnapshotValue,
   type QuoteRenderSnapshotValue,
 } from '@froment/contracts';
@@ -38,6 +40,10 @@ export interface DocumentRenderOptions {
 }
 
 export interface DocumentRendererService {
+  readonly renderCreditNotePdf: (
+    snapshot: InvoiceRenderSnapshotValue,
+    note: typeof CreditNote.Type,
+  ) => Effect.Effect<Uint8Array, DocumentRenderError>;
   readonly renderQuotePdf: (
     snapshot: QuoteRenderSnapshotValue,
     options?: DocumentRenderOptions,
@@ -177,6 +183,17 @@ export const DocumentRendererLive = Layer.effect(
         ).pipe(Effect.catchDefect(() => new DocumentRenderError({ reason: 'input' }))),
     );
 
-    return DocumentRenderer.of({ renderQuotePdf, renderInvoicePdf, renderOrderPdf });
+    const renderCreditNotePdf = Effect.fn('DocumentRenderer.renderCreditNotePdf')(
+      (snapshot: InvoiceRenderSnapshotValue, note: typeof CreditNote.Type) =>
+        compile(prepareCreditNoteDocument(snapshot, note)).pipe(
+          Effect.catchDefect(() => new DocumentRenderError({ reason: 'input' })),
+        ),
+    );
+    return DocumentRenderer.of({
+      renderQuotePdf,
+      renderInvoicePdf,
+      renderOrderPdf,
+      renderCreditNotePdf,
+    });
   }),
 );

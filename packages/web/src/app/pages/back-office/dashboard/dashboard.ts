@@ -149,12 +149,19 @@ export class Dashboard {
   protected readonly outstandingCents = computed(() =>
     this.invoices()
       .filter(({ status }) => status === 'issued')
-      .reduce((total, invoice) => total + invoice.totalCents - invoice.recordedPaidCents, 0),
+      .reduce(
+        (total, invoice) =>
+          total +
+          Math.max(0, invoice.totalCents - invoice.creditedCents - invoice.recordedPaidCents),
+        0,
+      ),
   );
   protected readonly overdueInvoices = computed(() => {
     const today = new Date().toISOString().slice(0, 10);
-    return this.invoices().filter(({ status, dueDate }) => status === 'issued' && dueDate < today)
-      .length;
+    return this.invoices().filter(
+      ({ status, dueDate, creditedCents }) =>
+        status === 'issued' && creditedCents === 0 && dueDate < today,
+    ).length;
   });
   protected readonly actions = computed<readonly DashboardAction[]>(() => {
     const today = new Date().toISOString().slice(0, 10);
@@ -185,7 +192,10 @@ export class Dashboard {
           priority: 3,
         })),
       ...this.invoices()
-        .filter(({ status }) => status === 'draft' || status === 'issued')
+        .filter(
+          ({ status, creditedCents }) =>
+            status === 'draft' || (status === 'issued' && creditedCents === 0),
+        )
         .map((invoice) => ({
           id: `invoice-${invoice.id}`,
           label:

@@ -14,7 +14,7 @@ export interface InvoiceReminderDraft {
 }
 
 export const reminderBalance = (invoice: InvoiceDetailValue): number => {
-  if (invoice.status !== 'issued') return 0;
+  if (invoice.status !== 'issued' || invoice.creditedCents > 0) return 0;
   return (
     invoice.currentRevision.totalCents -
     invoice.payments.reduce((total, payment) => {

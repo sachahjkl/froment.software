@@ -15,6 +15,7 @@ describe('API contracts', () => {
     const dedicatedPolicies = new Set([
       'health',
       'teamInvitationAccept',
+      'clientCreditPdf',
       'version',
       'bootstrapStatus',
       'bootstrapCreate',

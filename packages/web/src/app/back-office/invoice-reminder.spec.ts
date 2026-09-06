@@ -9,6 +9,7 @@ const invoice = () => ({
   status: 'issued',
   clientId: id,
   invoiceNumber: 'FA-2026-000001',
+  creditedCents: 0,
   currentRevision: { totalCents: 10000, currency: 'EUR', dueDate: '2026-09-01' },
   payments: [
     { amountCents: 2500, cancelledAt: null },

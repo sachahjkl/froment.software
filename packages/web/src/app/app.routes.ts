@@ -13,6 +13,14 @@ const tabRoutes = (defaultPath: string, panel: string, paths: readonly string[])
 
 export const routes: Routes = [
   {
+    path: 'backoffice/invoices/:invoiceId/credits',
+    loadComponent: () =>
+      import('./pages/back-office/credit-notes/credit-notes').then((module) => module.CreditNotes),
+    canActivate: [administratorGuard],
+    canDeactivate: [unsavedChangesGuard],
+    data: { titleKey: 'credit.title', robots: 'noindex, nofollow' },
+  },
+  {
     path: 'backoffice/join',
     loadComponent: () =>
       import('./pages/back-office/team/team-join').then((module) => module.TeamJoin),

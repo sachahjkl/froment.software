@@ -109,6 +109,7 @@ const OrderRecord = Schema.Struct({
 });
 const SnapshotRecord = Schema.Struct({ renderSnapshot: Schema.String });
 const InvoiceSummaryRecord = Schema.Struct({
+  creditedCents: Schema.Int,
   recordedPaidCents: Schema.Int,
   id: Ulid,
   orderId: Ulid,
@@ -306,6 +307,14 @@ export const InvoicesLive = Layer.effect(
         .get(currentRevision.id);
       const pdf = rawPdf === undefined ? null : Schema.decodeUnknownSync(InvoicePdfState)(rawPdf);
       return InvoiceDetail.make({
+        creditedCents: Schema.decodeUnknownSync(Schema.Int)(
+          database.sqlite
+            .prepare(
+              'select coalesce(sum(total_cents), 0) from invoice_credit_notes where invoice_id = ?',
+            )
+            .pluck()
+            .get(invoiceId),
+        ),
         payments: Schema.decodeUnknownSync(Schema.Array(InvoicePayment))(
           database.sqlite
             .prepare(`${paymentSql} where invoice_id = ? order by recorded_at, id`)
@@ -341,6 +350,7 @@ export const InvoicesLive = Layer.effect(
                        invoice_revisions.currency,
                        invoice_revisions.total_cents as totalCents, invoices.updated_at as updatedAt
                         , coalesce((select sum(amount_cents) from invoice_payments where invoice_id = invoices.id and cancelled_at is null), 0) as recordedPaidCents
+                        , coalesce((select sum(total_cents) from invoice_credit_notes where invoice_id = invoices.id), 0) as creditedCents
                         , invoice_pdf_jobs.status as pdfStatus
                        , invoice_pdf_jobs.attempts as pdfAttempts
                        , invoice_pdf_jobs.error as pdfError
@@ -355,6 +365,7 @@ export const InvoicesLive = Layer.effect(
             .all(),
         ).map((invoice) => ({
           recordedPaidCents: invoice.recordedPaidCents,
+          creditedCents: invoice.creditedCents,
           id: invoice.id,
           orderId: invoice.orderId,
           orderReference: invoice.orderReference,
@@ -943,6 +954,9 @@ export const InvoicesLive = Layer.effect(
               if (
                 invoice.status !== 'issued' ||
                 database.sqlite
+                  .prepare('select 1 from invoice_credit_notes where invoice_id = ?')
+                  .get(invoiceId) !== undefined ||
+                database.sqlite
                   .prepare('select 1 from invoice_payments where invoice_id = ?')
                   .get(invoiceId) !== undefined
               ) {
@@ -1037,7 +1051,7 @@ export const InvoicesLive = Layer.effect(
               );
               const nextPaid = paid + BigInt(request.amountCents);
               if (
-                nextPaid > BigInt(invoice.currentRevision.totalCents) ||
+                nextPaid > BigInt(invoice.currentRevision.totalCents - invoice.creditedCents) ||
                 request.paidOn > invoiceIssueDate(now, businessConfig.timeZone)
               ) {
                 throw new InvoicePaymentInvalid({ code: 'invoice.payment_invalid' });
@@ -1123,6 +1137,24 @@ export const InvoicesLive = Layer.effect(
                   code: 'invoice.invalid_transition',
                   currentStatus: invoice.status,
                 });
+              const paidAfterCancellation = invoice.payments.reduce(
+                (sum, entry) =>
+                  sum +
+                  (entry.cancelledAt === null && entry.id !== paymentId
+                    ? BigInt(entry.amountCents)
+                    : 0n),
+                0n,
+              );
+              const refunded = Schema.decodeUnknownSync(Schema.Int)(
+                database.sqlite
+                  .prepare(
+                    'select coalesce(sum(amount_cents), 0) from invoice_refunds where invoice_id = ? and cancelled_at is null',
+                  )
+                  .pluck()
+                  .get(invoiceId),
+              );
+              if (BigInt(refunded) > paidAfterCancellation)
+                throw new InvoicePaymentInvalid({ code: 'invoice.payment_invalid' });
               database.sqlite
                 .prepare(
                   `update invoice_payments set cancelled_at = ?, cancelled_by_user_id = ?, cancellation_reason = ? where id = ? and cancelled_at is null`,

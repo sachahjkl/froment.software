@@ -79,7 +79,12 @@ export class Billing {
   protected readonly outstandingCents = computed(() =>
     this.invoices()
       .filter(({ status }) => status === 'issued')
-      .reduce((total, invoice) => total + invoice.totalCents - invoice.recordedPaidCents, 0),
+      .reduce(
+        (total, invoice) =>
+          total +
+          Math.max(0, invoice.totalCents - invoice.creditedCents - invoice.recordedPaidCents),
+        0,
+      ),
   );
   protected readonly selectedInvoices = computed(() => {
     const selectedIds = this.selectedIds();
@@ -89,7 +94,10 @@ export class Billing {
     const today = new Date().toISOString().slice(0, 10);
     const selectedClientIds = new Set(
       this.selectedInvoices()
-        .filter((invoice) => invoice.status === 'issued' && invoice.dueDate < today)
+        .filter(
+          (invoice) =>
+            invoice.status === 'issued' && invoice.creditedCents === 0 && invoice.dueDate < today,
+        )
         .map((invoice) => invoice.clientId),
     );
     const recipients = this.clients()

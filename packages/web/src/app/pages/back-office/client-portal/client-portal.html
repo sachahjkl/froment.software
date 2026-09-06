@@ -159,7 +159,16 @@
                     <dd><strong>{{ money(invoice.remainingCents, invoice.currency) }}</strong></dd>
                   </div>
                 </dl>
-                @if (invoice.status === 'paid' && invoice.recordedPaidCents < invoice.totalCents) {
+                @if (invoice.creditedCents > 0) {
+                <p>
+                  {{ i18n.t('credit.credited') }} {{ money(invoice.creditedCents, invoice.currency)
+                  }}
+                </p>
+                <a [href]="'/api/client/invoices/' + invoice.id + '/credit-note/pdf'" download
+                  >{{ i18n.t('credit.pdf') }}</a
+                >
+                } @if (invoice.status === 'paid' && invoice.recordedPaidCents < invoice.totalCents)
+                {
                 <p class="payment-note">{{ i18n.t('backOffice.client.invoice.historicalPaid') }}</p>
                 } @if (invoice.status === 'void') {
                 <p class="payment-note">{{ i18n.t('backOffice.client.invoice.voidBalance') }}</p>

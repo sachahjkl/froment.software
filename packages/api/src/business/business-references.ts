@@ -1,9 +1,10 @@
 import type Sqlite from 'better-sqlite3';
 import { DateTime, Option, Schema } from 'effect';
 
-export type BusinessReferenceKind = 'quote' | 'order' | 'invoice';
+export type BusinessReferenceKind = 'quote' | 'order' | 'invoice' | 'credit-note';
 
 const prefixes = {
+  'credit-note': 'AV',
   quote: 'DE',
   order: 'CO',
   invoice: 'FA',

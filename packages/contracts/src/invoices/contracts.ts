@@ -126,6 +126,7 @@ export const InvoiceRevision = Schema.Struct({
 export type InvoiceRevision = typeof InvoiceRevision.Type;
 
 export const InvoiceSummary = Schema.Struct({
+  creditedCents: SafeInteger,
   recordedPaidCents: SafeInteger,
   id: Ulid,
   orderId: Ulid,
@@ -145,6 +146,7 @@ export const InvoiceSummary = Schema.Struct({
 export type InvoiceSummary = typeof InvoiceSummary.Type;
 
 export const InvoiceDetail = Schema.Struct({
+  creditedCents: SafeInteger,
   payments: Schema.Array(InvoicePayment),
   id: Ulid,
   orderId: Ulid,

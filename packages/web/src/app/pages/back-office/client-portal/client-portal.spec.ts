@@ -47,6 +47,7 @@ class ClientPortalApiStub {
   invoices: ClientInvoiceListValue = [
     {
       recordedPaidCents: 3000,
+      creditedCents: 0,
       remainingCents: 9000,
       id: invoiceId,
       orderId,

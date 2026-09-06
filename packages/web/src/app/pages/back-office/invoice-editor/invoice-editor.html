@@ -273,9 +273,17 @@
       </div>
     </dl>
     @if (invoice.status === 'issued' || invoice.status === 'paid') {
+    <a [routerLink]="['/backoffice/invoices', invoice.id, 'credits']"
+      >{{ i18n.t('credit.title') }}</a
+    >
+    @if (invoice.creditedCents > 0) {
+    <p appNotice variant="info">
+      {{ i18n.t('credit.credited') }} {{ money(invoice.creditedCents) }}
+    </p>
+    }
     <h2>{{ i18n.t('payment.title') }}</h2>
     <p>{{ i18n.t('payment.recorded') }} : {{ money(recordedPaid()) }}</p>
-    @if (invoice.status === 'issued') {
+    @if (invoice.status === 'issued' && invoice.creditedCents === 0) {
     <p><strong>{{ i18n.t('payment.remaining') }} : {{ money(remaining()) }}</strong></p>
     <form class="payment-form" (submit)="recordPayment($event)">
       <label class="field"

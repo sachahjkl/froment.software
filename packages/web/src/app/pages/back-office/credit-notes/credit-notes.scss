@@ -1,0 +1,29 @@
+:host {
+  display: block;
+}
+.credit-page {
+  display: grid;
+  gap: var(--space-5);
+  padding: var(--page-header-y) var(--page-x);
+}
+form,
+label,
+ul {
+  display: grid;
+  gap: var(--space-3);
+}
+form {
+  max-width: 42rem;
+}
+ul {
+  list-style: none;
+  padding: 0;
+}
+li {
+  padding: var(--panel-padding);
+  overflow-wrap: anywhere;
+}
+p {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}

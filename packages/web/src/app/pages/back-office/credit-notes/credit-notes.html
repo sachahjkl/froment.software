@@ -1,0 +1,83 @@
+<section class="credit-page" aria-labelledby="credit-title">
+  <h1 id="credit-title">{{ i18n.t('credit.title') }}</h1>
+  <a [routerLink]="['/backoffice/invoices', id]">{{ invoice()?.invoiceNumber }}</a>
+  <p appNotice variant="info">{{ i18n.t('credit.noTransfer') }}</p>
+  <p #result tabindex="-1" role="status">@if (saved()) { {{ i18n.t('credit.saved') }} }</p>
+  @if (error(); as error) {
+  <p appNotice variant="danger" role="alert">{{ i18n.t(error) }}</p>
+  }
+  <button appButton type="button" [disabled]="busy() || loading()" (click)="load()">
+    {{ i18n.t('credit.reload') }}
+  </button>
+  @if (state(); as state) { @if (state.creditNote; as note) {
+  <h2>{{ note.number }}</h2>
+  <p>
+    {{ note.issuedAt | localizedDate: i18n.language(): { dateStyle: 'medium' } }} — {{
+    money(note.totalCents) }}
+  </p>
+  <p>{{ note.reason }}</p>
+  <a [href]="'/api/invoices/' + id + '/credit-note/pdf'" download>{{ i18n.t('credit.pdf') }}</a>
+  <h2>{{ i18n.t('credit.refunds') }}</h2>
+  <p>{{ i18n.t('credit.refundable') }} {{ money(state.refundableCents) }}</p>
+  @if (state.refundableCents > 0) {
+  <form (submit)="refund($event)">
+    <label
+      >{{ i18n.t('credit.amount') }}<input
+        class="input"
+        inputmode="decimal"
+        [formField]="refundForm.amount"
+    /></label>
+    <label
+      >{{ i18n.t('credit.refundedOn') }}<input
+        class="input"
+        type="date"
+        [formField]="refundForm.date"
+    /></label>
+    <label
+      >{{ i18n.t('credit.reference') }}<input class="input" [formField]="refundForm.reference"
+    /></label>
+    <button appButton type="submit" [disabled]="busy() || refundForm().invalid()">
+      {{ i18n.t('credit.recordRefund') }}
+    </button>
+  </form>
+  } @if (state.refunds.length > 0) {
+  <label
+    >{{ i18n.t('credit.cancelReason') }}<input class="input" [formField]="cancelForm.reason"
+  /></label>
+  <ul>
+    @for (refund of state.refunds; track refund.id) {
+    <li class="ds-panel">
+      <p>
+        {{ refund.refundedOn | localizedDate: i18n.language(): { dateStyle: 'medium' } }} — {{
+        money(refund.amountCents) }} — {{ refund.reference }}
+      </p>
+      @if (refund.cancelledAt !== null) {
+      <p>{{ i18n.t('credit.cancelled') }} {{ refund.cancellationReason }}</p>
+      } @else {
+      <button
+        appButton
+        type="button"
+        [disabled]="busy() || cancelForm().value().reason.trim() === ''"
+        (click)="cancel(refund.id)"
+      >
+        {{ i18n.t('credit.cancelRefund') }}
+      </button>
+      }
+    </li>
+    }
+  </ul>
+  } } @else if (invoice()?.status === 'issued' || invoice()?.status === 'paid') {
+  <p>{{ i18n.t('credit.fullHint') }}</p>
+  <form (submit)="issue($event)">
+    <label
+      >{{ i18n.t('credit.reason') }}<textarea
+        class="textarea"
+        [formField]="creditForm.reason"
+      ></textarea>
+    </label>
+    <button appButton variant="primary" type="submit" [disabled]="busy() || creditForm().invalid()">
+      {{ i18n.t('credit.issue') }}
+    </button>
+  </form>
+  } }
+</section>

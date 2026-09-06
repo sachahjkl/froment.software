@@ -161,8 +161,13 @@ export class InvoiceEditor {
         0,
       ) ?? 0,
   );
-  protected readonly remaining = computed(
-    () => (this.detail()?.currentRevision.totalCents ?? 0) - this.recordedPaid(),
+  protected readonly remaining = computed(() =>
+    Math.max(
+      0,
+      (this.detail()?.currentRevision.totalCents ?? 0) -
+        (this.detail()?.creditedCents ?? 0) -
+        this.recordedPaid(),
+    ),
   );
   protected readonly pdfPendingVersion = signal<number | undefined>(undefined);
   protected readonly generatedPdfVersions = signal<ReadonlySet<number>>(new Set());

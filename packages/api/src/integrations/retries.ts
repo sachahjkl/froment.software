@@ -86,7 +86,8 @@ export const IntegrationRetriesLive = Layer.effect(
                 scheduled === undefined ||
                 sqlite
                   .prepare(`select 1 from email_reminders m join invoices i on i.id = m.invoice_id join clients c on c.id = i.client_id join users u on u.id = c.id
-                where m.operation_id = ? and i.status = 'issued' and u.disabled_at is null and i.version = m.prepared_version and c.email = m.prepared_recipient
+                 where m.operation_id = ? and i.status = 'issued' and u.disabled_at is null and i.version = m.prepared_version and c.email = m.prepared_recipient
+                 and not exists (select 1 from invoice_credit_notes where invoice_id = i.id)
                 and coalesce((select sum(amount_cents) from invoice_payments where invoice_id = i.id and cancelled_at is null), 0) = m.prepared_paid_cents`)
                   .get(operationId) !== undefined;
               if (allowed === undefined || reminderPermissions !== 3 || !reminderCurrent) {

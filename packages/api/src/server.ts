@@ -14,6 +14,7 @@ import { AuthenticationHttpLive } from './authentication/http.js';
 import { AuthenticationHandlers } from './authentication/handlers.js';
 import { PasskeyHandlers } from './authentication/passkey-handlers.js';
 import { TeamHandlers } from './team/handlers.js';
+import { CreditNoteHandlers } from './invoices/credit-handlers.js';
 import { EmailDraftHandlers } from './integrations/email-draft-handlers.js';
 import { EmailTemplateHandlers } from './integrations/email-template-handlers.js';
 import { ReminderHandlers } from './integrations/reminder-handlers.js';
@@ -59,6 +60,7 @@ const ApiRoutes = HttpApiBuilder.layer(FrenchApi).pipe(
       AuthenticationHandlers,
       PasskeyHandlers,
       TeamHandlers,
+      CreditNoteHandlers,
       EmailDraftHandlers,
       EmailTemplateHandlers,
       ReminderHandlers,

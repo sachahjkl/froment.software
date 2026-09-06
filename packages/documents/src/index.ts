@@ -1,4 +1,5 @@
 export {
+  prepareCreditNoteDocument,
   InvoiceDocumentInput,
   OrderDocumentInput,
   prepareInvoiceDocument,

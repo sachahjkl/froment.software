@@ -121,9 +121,12 @@
               </td>
               <td>{{ money(invoice.totalCents) }}</td>
               <td>
+                @if (invoice.creditedCents > 0) {
+                <span appBadge>{{ i18n.t('credit.title') }}</span> } @else {
                 <span appBadge [variant]="dueVariant(invoice.status, invoice.dueDate)">
                   {{ dueLabel(invoice.status, invoice.dueDate) }}
                 </span>
+                }
               </td>
               <td>{{ date(invoice.updatedAt) }}</td>
               <td class="actions-column">

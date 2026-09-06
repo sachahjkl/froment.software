@@ -641,7 +641,7 @@ export const documentArtifacts = sqliteTable(
       onDelete: 'no action',
     }),
     orderId: text('order_id').references(() => orders.id, { onDelete: 'no action' }),
-    kind: text({ enum: ['quote-pdf', 'invoice-pdf', 'order-pdf'] }).notNull(),
+    kind: text({ enum: ['quote-pdf', 'invoice-pdf', 'order-pdf', 'credit-note-pdf'] }).notNull(),
     contentType: text('content_type').notNull(),
     byteSize: integer('byte_size').notNull(),
     sha256: text().notNull(),
@@ -661,7 +661,7 @@ export const documentArtifacts = sqliteTable(
     ),
     check(
       'document_artifacts_kind_check',
-      sql`(${table.kind} = 'quote-pdf' and ${table.revisionId} is not null and ${table.invoiceRevisionId} is null and ${table.orderId} is null) or (${table.kind} = 'invoice-pdf' and ${table.revisionId} is null and ${table.invoiceRevisionId} is not null and ${table.orderId} is null) or (${table.kind} = 'order-pdf' and ${table.revisionId} is null and ${table.invoiceRevisionId} is null and ${table.orderId} is not null)`,
+      sql`(${table.kind} = 'quote-pdf' and ${table.revisionId} is not null and ${table.invoiceRevisionId} is null and ${table.orderId} is null) or (${table.kind} in ('invoice-pdf', 'credit-note-pdf') and ${table.revisionId} is null and ${table.invoiceRevisionId} is not null and ${table.orderId} is null) or (${table.kind} = 'order-pdf' and ${table.revisionId} is null and ${table.invoiceRevisionId} is null and ${table.orderId} is not null)`,
     ),
     check('document_artifacts_content_type_check', sql`${table.contentType} = 'application/pdf'`),
     check(
@@ -904,6 +904,62 @@ export const invoices = sqliteTable(
   ],
 );
 
+export const invoiceCreditNotes = sqliteTable(
+  'invoice_credit_notes',
+  {
+    id: text().primaryKey().notNull(),
+    invoiceId: text('invoice_id')
+      .notNull()
+      .unique()
+      .references(() => invoices.id),
+    invoiceRevisionId: text('invoice_revision_id')
+      .notNull()
+      .references(() => invoiceRevisions.id),
+    requestId: text('request_id').notNull().unique(),
+    number: text().notNull().unique(),
+    reason: text().notNull(),
+    issuedAt: text('issued_at').notNull(),
+    issuedByUserId: text('issued_by_user_id')
+      .notNull()
+      .references(() => users.id),
+    netTotalCents: integer('net_total_cents').notNull(),
+    vatTotalCents: integer('vat_total_cents').notNull(),
+    totalCents: integer('total_cents').notNull(),
+    expectedVersion: integer('expected_version').notNull(),
+  },
+  (table) => [
+    check(
+      'credit_note_amount_check',
+      sql`${table.totalCents} > 0 and ${table.totalCents} = ${table.netTotalCents} + ${table.vatTotalCents}`,
+    ),
+  ],
+);
+
+export const invoiceRefunds = sqliteTable(
+  'invoice_refunds',
+  {
+    id: text().primaryKey().notNull(),
+    invoiceId: text('invoice_id')
+      .notNull()
+      .references(() => invoices.id),
+    requestId: text('request_id').notNull().unique(),
+    amountCents: integer('amount_cents').notNull(),
+    refundedOn: text('refunded_on').notNull(),
+    reference: text().notNull(),
+    recordedAt: text('recorded_at').notNull(),
+    recordedByUserId: text('recorded_by_user_id')
+      .notNull()
+      .references(() => users.id),
+    cancelledAt: text('cancelled_at'),
+    cancellationReason: text('cancellation_reason'),
+    cancelledByUserId: text('cancelled_by_user_id').references(() => users.id),
+  },
+  (table) => [
+    index('invoice_refund_invoice_index').on(table.invoiceId),
+    check('invoice_refund_amount_check', sql`${table.amountCents} between 1 and 9007199254740991`),
+  ],
+);
+
 export const invoiceRevisions = sqliteTable(
   'invoice_revisions',
   {
@@ -1006,7 +1062,7 @@ export const invoiceLines = sqliteTable(
 export const businessReferenceCounters = sqliteTable(
   'business_reference_counters',
   {
-    kind: text({ enum: ['quote', 'order', 'invoice'] }).notNull(),
+    kind: text({ enum: ['quote', 'order', 'invoice', 'credit-note'] }).notNull(),
     year: integer().notNull(),
     nextValue: integer('next_value').notNull(),
   },
@@ -1014,7 +1070,7 @@ export const businessReferenceCounters = sqliteTable(
     primaryKey({ columns: [table.kind, table.year] }),
     check(
       'business_reference_counters_kind_check',
-      sql`${table.kind} in ('quote', 'order', 'invoice')`,
+      sql`${table.kind} in ('quote', 'order', 'invoice', 'credit-note')`,
     ),
     check('business_reference_counters_year_check', sql`${table.year} between 1 and 9999`),
     check(

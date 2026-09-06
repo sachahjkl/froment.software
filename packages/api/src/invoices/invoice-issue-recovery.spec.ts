@@ -272,6 +272,7 @@ describe('invoice issue recovery', () => {
         Effect.provide(
           makeTestLayer(':memory:', {
             renderQuotePdf: () => Effect.die('unused'),
+            renderCreditNotePdf: () => Effect.die('unused'),
             renderInvoicePdf: () => Effect.die('unused'),
             renderOrderPdf: () => Effect.die('unused'),
           }),
@@ -358,6 +359,7 @@ describe('invoice issue recovery', () => {
         Effect.provide(
           makeTestLayer(':memory:', {
             renderQuotePdf: () => Effect.die('unused'),
+            renderCreditNotePdf: () => Effect.die('unused'),
             renderInvoicePdf: () => Effect.die('unused'),
             renderOrderPdf: () => Effect.die('unused'),
           }),
@@ -400,6 +402,7 @@ describe('invoice issue recovery', () => {
         Effect.provide(
           makeTestLayer(':memory:', {
             renderQuotePdf: () => Effect.die('unused'),
+            renderCreditNotePdf: () => Effect.die('unused'),
             renderInvoicePdf: () => Effect.die('unused'),
             renderOrderPdf: () => Effect.die('unused'),
           }),
@@ -512,6 +515,7 @@ describe('invoice issue recovery', () => {
         Effect.provide(
           makeTestLayer(':memory:', {
             renderQuotePdf: () => Effect.die('unused'),
+            renderCreditNotePdf: () => Effect.die('unused'),
             renderInvoicePdf: () => Effect.die('unused'),
             renderOrderPdf: () => Effect.die('unused'),
           }),
@@ -535,6 +539,7 @@ describe('invoice issue recovery', () => {
         Effect.provide(
           makeTestLayer(':memory:', {
             renderQuotePdf: () => Effect.die('unused'),
+            renderCreditNotePdf: () => Effect.die('unused'),
             renderInvoicePdf: () => Effect.die('unused'),
             renderOrderPdf: () => Effect.die('unused'),
           }),
@@ -553,6 +558,7 @@ describe('invoice issue recovery', () => {
     const pdf = Buffer.from('%PDF-corrupted');
     const renderer: DocumentRendererService = {
       renderQuotePdf: () => Effect.succeed(pdf),
+      renderCreditNotePdf: () => Effect.die('unused'),
       renderInvoicePdf: () => Effect.succeed(pdf),
       renderOrderPdf: () => Effect.die('unused'),
     };
@@ -597,6 +603,7 @@ describe('invoice issue recovery', () => {
     const pdf = new TextEncoder().encode('%PDF-1.7\nrecovered');
     const renderer: DocumentRendererService = {
       renderQuotePdf: () => Effect.succeed(pdf),
+      renderCreditNotePdf: () => Effect.die('unused'),
       renderInvoicePdf: () => {
         renderAttempts += 1;
         return renderAttempts === 1
@@ -673,6 +680,7 @@ describe('invoice issue recovery', () => {
   it('returns issuance success when the immediate renderer fails', async () => {
     const renderer: DocumentRendererService = {
       renderQuotePdf: () => Effect.die('unused'),
+      renderCreditNotePdf: () => Effect.die('unused'),
       renderInvoicePdf: () => Effect.fail(new DocumentRenderError({ reason: 'compiler' })),
       renderOrderPdf: () => Effect.die('unused'),
     };
@@ -708,6 +716,7 @@ describe('invoice issue recovery', () => {
     const pdf = new TextEncoder().encode('%PDF-1.7\nconcurrent');
     const renderer: DocumentRendererService = {
       renderQuotePdf: () => Effect.die('unused'),
+      renderCreditNotePdf: () => Effect.die('unused'),
       renderInvoicePdf: () => {
         attempts += 1;
         return Deferred.succeed(started, undefined).pipe(
@@ -762,6 +771,7 @@ describe('invoice issue recovery', () => {
     const pdf = new TextEncoder().encode('%PDF-1.7\nrestart');
     const renderer: DocumentRendererService = {
       renderQuotePdf: () => Effect.die('unused'),
+      renderCreditNotePdf: () => Effect.die('unused'),
       renderInvoicePdf: () => Effect.succeed(pdf),
       renderOrderPdf: () => Effect.die('unused'),
     };
