@@ -135,6 +135,7 @@
                 mkdir -p $out/bin $out/lib/froment-software/node_modules $out/share/froment-software
                 cp packages/api/dist/main.cjs $out/lib/froment-software/server.cjs
                 cp packages/api/dist/migrate.cjs $out/lib/froment-software/migrate.cjs
+                cp packages/api/dist/backup.cjs $out/lib/froment-software/backup.cjs
                 cp -r packages/api/drizzle $out/share/froment-software/drizzle
                 argon2Modules=$(dirname $(readlink -f packages/api/node_modules/argon2))
                 mkdir -p $out/lib/froment-software/node_modules/@phc
@@ -160,6 +161,9 @@
                   --set-default DATABASE_PATH data/froment.sqlite \
                   --set MIGRATIONS_ROOT $out/share/froment-software/drizzle
                 cp tools/deploy.sh $out/bin/${pname}-deploy
+                makeWrapper ${runtimeNode}/bin/node $out/bin/${pname}-backup \
+                  --add-flags $out/lib/froment-software/backup.cjs \
+                  --set MIGRATIONS_ROOT $out/share/froment-software/drizzle
                 chmod +x $out/bin/${pname}-deploy
                 runHook postInstall
               '';
