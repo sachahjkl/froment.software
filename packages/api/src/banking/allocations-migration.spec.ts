@@ -48,6 +48,17 @@ it('preserves active and cancelled historical matches with their original amount
       { request_id: 'cancelled', amount_cents: 10000 },
     ]);
     expect(sqlite.prepare('pragma foreign_key_check').all()).toEqual([]);
+    sqlite.exec(
+      readFileSync(
+        join(import.meta.dirname, '../../drizzle/20260906182618_bank_fees/migration.sql'),
+        'utf8',
+      ),
+    );
+    expect(sqlite.prepare('select fee_cents from bank_matches').all()).toEqual([
+      { fee_cents: 0 },
+      { fee_cents: 0 },
+    ]);
+    expect(sqlite.prepare('pragma foreign_key_check').all()).toEqual([]);
   } finally {
     sqlite.close();
   }

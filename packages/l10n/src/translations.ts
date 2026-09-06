@@ -70,6 +70,10 @@ export const translations = {
     'bank.allocated': 'Montant rapproché :',
     'bank.remaining': 'Montant restant :',
     'bank.allocationAmount': 'Montant à affecter (EUR)',
+    'bank.feeAmount': 'Commission déduite (EUR)',
+    'bank.fees': 'Commission :',
+    'bank.feeHint':
+      'Le montant affecté inclut la commission. Le crédit bancaire couvre le montant net. Aucune TVA ni écriture comptable n’est déduite automatiquement.',
     'bank.allocation': 'Affectation à dissocier',
     'bank.manageAllocations': 'Gérer les affectations',
     'bank.choosePayment': 'Choisir un règlement',
@@ -1571,6 +1575,10 @@ export const translations = {
     'bank.allocated': 'Matched amount:',
     'bank.remaining': 'Remaining amount:',
     'bank.allocationAmount': 'Amount to allocate (EUR)',
+    'bank.feeAmount': 'Deducted fee (EUR)',
+    'bank.fees': 'Fee:',
+    'bank.feeHint':
+      'The allocated amount includes the fee. The bank credit covers the net amount. No VAT or accounting entry is inferred automatically.',
     'bank.allocation': 'Allocation to remove',
     'bank.manageAllocations': 'Manage allocations',
     'bank.choosePayment': 'Choose a payment',

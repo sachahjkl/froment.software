@@ -76,7 +76,7 @@ export class Banking {
   });
   protected readonly filters = form(signal({ search: '', unmatched: true }));
   protected readonly matchForm = form(
-    signal({ paymentId: '', amount: '', matchId: '', reason: '' }),
+    signal({ paymentId: '', amount: '', fee: '0.00', matchId: '', reason: '' }),
     (path) => {
       maxLength(path.reason, 500);
       disabled(path, () => this.saving());
@@ -200,6 +200,7 @@ export class Banking {
     this.matchRequestId = undefined;
     this.matchForm().reset({
       paymentId: '',
+      fee: '0.00',
       amount: formatFixedDecimal(
         Math.max(0, transaction.amountCents - transaction.matchedCents),
         2,
@@ -237,12 +238,16 @@ export class Banking {
     const selected = this.selected();
     const paymentId = this.matchForm().value().paymentId;
     const amountCents = parseFixedDecimal(this.matchForm().value().amount, 2);
+    const feeCents = parseFixedDecimal(this.matchForm().value().fee, 2);
     if (
       this.saving() ||
       selected === undefined ||
       amountCents === undefined ||
       amountCents <= 0 ||
-      amountCents > selected.amountCents - selected.matchedCents ||
+      feeCents === undefined ||
+      feeCents < 0 ||
+      feeCents >= amountCents ||
+      amountCents - feeCents > selected.amountCents - selected.matchedCents ||
       !this.payments().some(
         (payment) => payment.id === paymentId && payment.availableCents >= amountCents,
       )
@@ -259,6 +264,7 @@ export class Banking {
       const outcome = await this.api.match(selected.id, {
         paymentId,
         amountCents,
+        feeCents,
         requestId: this.matchRequestId,
       });
       if (!outcome.success) {
@@ -303,7 +309,7 @@ export class Banking {
     this.transactions.set(transactions);
     this.selected.set(undefined);
     this.matchRequestId = undefined;
-    this.matchForm().reset({ paymentId: '', amount: '', matchId: '', reason: '' });
+    this.matchForm().reset({ paymentId: '', amount: '', fee: '0.00', matchId: '', reason: '' });
     this.saved.set(true);
     this.result()?.nativeElement.focus();
   }

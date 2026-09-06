@@ -19,6 +19,7 @@ export const apiRequestExamples = {
     csv: 'transaction_id,booked_on,amount,currency,description\nBANK-001,2026-09-01,125.00,EUR,Payment',
   },
   bankMatch: {
+    feeCents: 0,
     paymentId: '01ARZ3NDEKTSV4RRFFQ69G5FAV',
     amountCents: 10000,
     requestId: '91ff5717-c394-4708-bef2-6b5f5cafbdaa',

@@ -27,6 +27,7 @@ describe('Banking', () => {
           invoiceId: transaction.id,
           invoiceNumber: 'FA-2026-000001',
           amountCents: 10000,
+          feeCents: 0,
           matchedAt: transaction.importedAt,
           matchedByUserId: transaction.id,
           cancelledAt: transaction.importedAt,
@@ -77,6 +78,7 @@ describe('Banking', () => {
               invoiceNumber: 'FA-2026-000001',
               amountCents: 10000,
               paymentCancelled: false,
+              feeCents: 0,
             },
           ],
         },
@@ -179,6 +181,7 @@ describe('Banking', () => {
       paymentId: transaction.id,
       amountCents: 10000,
       requestId: expect.any(String),
+      feeCents: 0,
     });
     expect(root.querySelectorAll('li')).toHaveLength(0);
     expect(root.querySelector('.editor')).toBeNull();

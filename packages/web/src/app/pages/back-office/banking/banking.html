@@ -89,6 +89,15 @@
           inputmode="decimal"
           [formField]="matchForm.amount"
       /></label>
+      <label
+        >{{ i18n.t('bank.feeAmount') }}<input
+          class="input"
+          id="bank-fee-amount"
+          inputmode="decimal"
+          [formField]="matchForm.fee"
+          aria-describedby="bank-fee-hint"
+      /></label>
+      <p id="bank-fee-hint">{{ i18n.t('bank.feeHint') }}</p>
       <button
         appButton
         type="button"
@@ -103,7 +112,8 @@
         >{{ i18n.t('bank.allocation') }}<select class="select" [formField]="matchForm.matchId">
           @for (allocation of selected.allocations; track allocation.matchId) {
           <option [value]="allocation.matchId">
-            {{ allocation.invoiceNumber }} — {{ amount(allocation.amountCents) }}
+            {{ allocation.invoiceNumber }} — {{ amount(allocation.amountCents) }} — {{
+            i18n.t('bank.fees') }} {{ amount(allocation.feeCents) }}
           </option>
           }
         </select></label
@@ -159,7 +169,9 @@
       <a [routerLink]="['/backoffice/invoices', allocation.invoiceId]"
         >{{ allocation.invoiceNumber }} — {{ amount(allocation.amountCents) }}</a
       >
-      }
+      @if (allocation.feeCents > 0) {
+      <p>{{ i18n.t('bank.fees') }} {{ amount(allocation.feeCents) }}</p>
+      } }
       <p>{{ i18n.t('bank.allocated') }} {{ amount(transaction.matchedCents) }}</p>
       @if (transaction.amountCents > 0) {
       <button appButton type="button" [disabled]="saving()" (click)="select(transaction)">
@@ -195,7 +207,7 @@
             <p>
               {{ i18n.t('bank.matched') }} · {{ entry.matchedAt | localizedDate: i18n.language(): {
               dateStyle: 'medium', timeStyle: 'short' } }} · {{ entry.matchedByUserId }} · {{
-              amount(entry.amountCents) }}
+              amount(entry.amountCents) }} — {{ i18n.t('bank.fees') }} {{ amount(entry.feeCents) }}
             </p>
             @if (entry.cancelledAt !== null) {
             <p>

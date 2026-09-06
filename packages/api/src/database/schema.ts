@@ -1172,6 +1172,7 @@ export const bankMatches = sqliteTable(
     id: text().notNull().primaryKey(),
     requestId: text('request_id').notNull().unique(),
     amountCents: integer('amount_cents').notNull(),
+    feeCents: integer('fee_cents').notNull().default(0),
     transactionId: text('transaction_id')
       .notNull()
       .references(() => bankTransactions.id),
@@ -1194,5 +1195,9 @@ export const bankMatches = sqliteTable(
       .on(table.paymentId)
       .where(sql`${table.cancelledAt} is null`),
     check('bank_match_amount_check', sql`${table.amountCents} between 1 and 9007199254740991`),
+    check(
+      'bank_match_fee_check',
+      sql`${table.feeCents} >= 0 and ${table.feeCents} < ${table.amountCents}`,
+    ),
   ],
 );

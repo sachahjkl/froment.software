@@ -125,7 +125,7 @@ export const apiDocumentation = {
       bankMatch: {
         summary: 'Rapprocher un encaissement',
         description:
-          'Affecte un montant positif à un règlement actif, dans les limites restantes du crédit et du règlement. Utilisez une clé UUID v4 stable. Conserve chaque affectation sans créer de règlement.',
+          'Affecte amountCents au règlement et amountCents moins feeCents au crédit bancaire. La commission doit être inférieure au montant affecté. Utilisez une clé UUID v4 stable. Ne crée aucun règlement.',
       },
       bankUnmatch: {
         summary: 'Dissocier un rapprochement',
@@ -499,7 +499,7 @@ export const apiDocumentation = {
       bankMatch: {
         summary: 'Reconcile a receipt',
         description:
-          'Allocates a positive amount to an active payment within the remaining credit and payment balances. Use a stable UUID v4 key. Preserves each allocation without creating a payment.',
+          'Allocates amountCents to the payment and amountCents minus feeCents to the bank credit. The fee must be less than the allocated amount. Use a stable UUID v4 key. Creates no payment.',
       },
       bankUnmatch: {
         summary: 'Remove a match',

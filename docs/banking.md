@@ -36,7 +36,8 @@ Chaque affectation conserve son montant, son identifiant, son auteur et sa date.
 
 Exemple : un crédit de 150 EUR peut couvrir 60 EUR d’un règlement et 90 EUR d’un autre.
 Un second crédit peut couvrir les soldes restants de ces règlements.
-Les montants affectés ne peuvent dépasser ni le crédit ni le règlement.
+Les montants affectés ne peuvent dépasser le règlement.
+Les montants nets affectés ne peuvent dépasser le crédit bancaire.
 Les contrôles utilisent tous les rapprochements enregistrés, pas uniquement les opérations affichées.
 
 La page signale les règlements annulés après leur rapprochement.
@@ -56,18 +57,18 @@ Les écritures et leurs événements d’audit partagent une transaction SQLite.
 La page affiche les 1 000 opérations les plus récentes.
 
 Une opération accepte au plus 100 affectations actives.
-Les commissions déduites et les débits ne sont pas assimilés à des règlements clients.
+Les débits ne sont pas assimilés à des règlements clients.
 Les différences restent visibles et ne sont pas corrigées automatiquement.
 
 ## Contrat des affectations
 
-La route `POST /api/banking/transactions/:transactionId/match` exige `paymentId`, `amountCents` et un `requestId` UUID v4.
+La route `POST /api/banking/transactions/:transactionId/match` exige `paymentId`, `amountCents`, `feeCents` et un `requestId` UUID v4.
 Conservez la même clé lors d’une nouvelle tentative.
 Une demande identique ne crée pas une deuxième affectation.
 Un contenu différent sous la même clé produit un conflit.
 Une nouvelle tentative ne réactive pas une affectation déjà dissociée.
 
-La liste des opérations retourne `matchedCents` et le tableau `allocations`.
+La liste des opérations retourne le montant net rapproché dans `matchedCents` et le tableau `allocations`.
 Chaque affectation contient sa facture, son règlement, son montant et l’état d’annulation du règlement.
 La route `GET /api/banking/invoices/:invoiceId/payments` retourne les montants encore disponibles des règlements actifs.
 Le serveur recalcule ces montants dans une transaction lors de chaque affectation.
@@ -75,6 +76,22 @@ Deux demandes concurrentes ne peuvent pas consommer deux fois le même solde.
 
 La mise à jour conserve les anciens rapprochements et leurs motifs de dissociation.
 Leur montant correspond au règlement complet associé par l’ancienne règle d’égalité.
+
+## Commissions déduites
+
+Le champ **Montant à affecter** contient le montant du règlement, commission incluse.
+Le champ **Commission déduite** contient les frais retenus avant le crédit bancaire.
+Une commission nulle correspond à un rapprochement sans frais.
+La commission doit être positive ou nulle et inférieure au montant affecté.
+
+Exemple : pour un règlement de 103 EUR et un crédit de 100 EUR, affectez 103 EUR avec une commission de 3 EUR.
+Le serveur consomme 103 EUR sur le règlement et 100 EUR sur le crédit bancaire.
+Chaque affectation conserve sa propre commission, y compris après dissociation.
+La dissociation libère séparément le montant du règlement et le montant bancaire net.
+
+Le rapprochement n’invente aucun règlement et ne modifie aucune facture.
+Il ne détermine ni la TVA des frais ni leur compte comptable.
+Les anciennes affectations conservent une commission nulle.
 
 ## Historique consultable
 

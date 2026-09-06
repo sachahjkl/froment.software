@@ -14,6 +14,7 @@ export const BankImportRequest = Schema.Struct({
 });
 export type BankImportRequest = typeof BankImportRequest.Type;
 export const BankAllocation = Schema.Struct({
+  feeCents: SafeInteger,
   matchId: Ulid,
   paymentId: Ulid,
   invoiceId: Ulid,
@@ -46,6 +47,7 @@ export const BankMatchHistory = Schema.Array(
   Schema.Struct({
     id: Ulid,
     paymentId: Ulid,
+    feeCents: SafeInteger,
     amountCents: PositiveSafeInteger,
     invoiceId: Ulid,
     invoiceNumber: Schema.NullOr(Schema.String),
@@ -59,10 +61,15 @@ export const BankMatchHistory = Schema.Array(
 export type BankTransaction = typeof BankTransaction.Type;
 export const BankImportResult = Schema.Struct({ added: Schema.Int, existing: Schema.Int });
 export const BankMatchRequest = Schema.Struct({
+  feeCents: SafeInteger,
   requestId: Schema.String.check(Schema.isUUID(4)),
   paymentId: Ulid,
   amountCents: PositiveSafeInteger,
-});
+}).check(
+  Schema.makeFilter((request) => request.feeCents < request.amountCents, {
+    message: 'bank.invalid_fee',
+  }),
+);
 export const BankUnmatchRequest = Schema.Struct({
   matchId: Ulid,
   reason: Schema.String.check(Schema.isPattern(/\S/), Schema.isMaxLength(500)),

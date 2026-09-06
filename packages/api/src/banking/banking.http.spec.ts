@@ -53,7 +53,12 @@ describe('banking HTTP', () => {
       const paid = Schema.decodeUnknownSync(InvoiceDetail)(await paymentResponse.json());
       const payment = paid.payments[0];
       if (payment === undefined) throw new Error('bank.payment.missing');
-      const allocation = { paymentId: payment.id, amountCents: 10000, requestId: randomUUID() };
+      const allocation = {
+        paymentId: payment.id,
+        amountCents: 10000,
+        feeCents: 0,
+        requestId: randomUUID(),
+      };
       expect(
         (
           await post('/api/banking/import', {

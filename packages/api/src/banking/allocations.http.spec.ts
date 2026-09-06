@@ -93,11 +93,17 @@ it('splits receipts across credits, groups receipts, rejects excess allocations,
     const second = invoice.payments.find((payment) => payment.amountCents === 20000);
     const third = invoice.payments.find((payment) => payment.amountCents === 5000);
     if (!a || !b || !first || !second || !third) throw new Error('bank.test.fixture_missing');
-    const allocation = { paymentId: first.id, amountCents: 6000, requestId: randomUUID() };
-    const match = (transactionId: string, paymentId: string, amountCents: number) =>
+    const allocation = {
+      paymentId: first.id,
+      amountCents: 6000,
+      feeCents: 0,
+      requestId: randomUUID(),
+    };
+    const match = (transactionId: string, paymentId: string, amountCents: number, feeCents = 0) =>
       post(`/api/banking/transactions/${transactionId}/match`, {
         paymentId,
         amountCents,
+        feeCents,
         requestId: randomUUID(),
       });
     expect((await post(`/api/banking/transactions/${a.id}/match`, allocation)).status).toBe(200);
@@ -109,11 +115,16 @@ it('splits receipts across credits, groups receipts, rejects excess allocations,
     expect((await match(b.id, first.id, 4001)).status).toBe(409);
     expect((await match(a.id, second.id, 9001)).status).toBe(409);
     expect((await match(a.id, second.id, 0)).status).toBe(400);
+    expect((await match(a.id, second.id, 100, 100)).status).toBe(400);
+    expect((await match(a.id, second.id, 100, -1)).status).toBe(400);
     expect((await match(a.id, second.id, 9000)).status).toBe(200);
     expect((await match(b.id, first.id, 4000)).status).toBe(200);
     expect((await match(b.id, second.id, 11000)).status).toBe(200);
     expect((await available()).find((payment) => payment.id === first.id)?.availableCents).toBe(0);
-    const competing = await Promise.all([match(b.id, third.id, 5000), match(b.id, third.id, 5000)]);
+    const competing = await Promise.all([
+      match(b.id, third.id, 5000, 100),
+      match(b.id, third.id, 5000, 100),
+    ]);
     expect(competing.map((response) => response.status).sort()).toEqual([200, 409]);
     expect((await list()).find((row) => row.id === a.id)).toMatchObject({
       matchedCents: 15000,
@@ -124,11 +135,31 @@ it('splits receipts across credits, groups receipts, rejects excess allocations,
           invoiceId: invoice.id,
           invoiceNumber: invoice.invoiceNumber,
           amountCents: 6000,
+          feeCents: 0,
           paymentCancelled: false,
         },
       ]),
     });
     expect((await list()).find((row) => row.id === b.id)?.allocations).toHaveLength(3);
+    expect((await list()).find((row) => row.id === b.id)?.matchedCents).toBe(19900);
+    expect((await available()).find((payment) => payment.id === third.id)?.availableCents).toBe(0);
+    const feeAllocation = (await list())
+      .find((row) => row.id === b.id)
+      ?.allocations.find((item) => item.paymentId === third.id);
+    if (feeAllocation === undefined) throw new Error('bank.test.fee_allocation_missing');
+    expect(feeAllocation.feeCents).toBe(100);
+    expect(
+      (
+        await post(`/api/banking/transactions/${b.id}/unmatch`, {
+          matchId: feeAllocation.matchId,
+          reason: 'Correct fee',
+        })
+      ).status,
+    ).toBe(200);
+    expect((await list()).find((row) => row.id === b.id)?.matchedCents).toBe(15000);
+    expect((await available()).find((payment) => payment.id === third.id)?.availableCents).toBe(
+      5000,
+    );
     const remove = (await list())
       .find((row) => row.id === a.id)
       ?.allocations.find((item) => item.paymentId === first.id);

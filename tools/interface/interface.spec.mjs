@@ -331,6 +331,8 @@ test("client form and complete account address", async ({ page, colorScheme }, t
   await page.getByRole("alertdialog").locator("button").last().click();
   await page.getByRole("button", { name: /Gérer les affectations|Manage allocations/ }).click();
   await expect(page.locator("#bank-allocation-amount")).toHaveValue("60.00");
+  await page.locator("#bank-allocation-amount").fill("63.00");
+  await page.locator("#bank-fee-amount").fill("3.00");
   await page.locator(".editor select").first().selectOption(invoiceId);
   await page.locator(".editor select").nth(1).selectOption(clientId);
   const allocationAudit = await new AxeBuilder({ page })

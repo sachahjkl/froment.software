@@ -289,6 +289,7 @@ export async function mockApi(
             paymentId: clientId,
             invoiceId,
             amountCents: 10000,
+            feeCents: 0,
             invoiceNumber: "FA-2026-000001",
             matchedAt: createdAt,
             matchedByUserId: clientId,
@@ -329,8 +330,8 @@ export async function mockApi(
             id: clientId,
             paidOn: "2026-09-01",
             reference: "PAYMENT",
-            amountCents: 10000,
-            availableCents: 10000 - allocated,
+            amountCents: 10300,
+            availableCents: 10300 - allocated,
           },
         ],
       });
@@ -339,23 +340,22 @@ export async function mockApi(
       const request = route.request().postDataJSON();
       responses.set(
         "/api/banking/transactions",
-        responses
-          .get("/api/banking/transactions")
-          .map((row) => ({
-            ...row,
-            matchedCents: row.matchedCents + request.amountCents,
-            allocations: [
-              ...row.allocations,
-              {
-                matchId: row.allocations.length === 0 ? clientId : invoiceId,
-                paymentId: request.paymentId,
-                invoiceId,
-                invoiceNumber: "FA-2026-000001",
-                amountCents: request.amountCents,
-                paymentCancelled: false,
-              },
-            ],
-          })),
+        responses.get("/api/banking/transactions").map((row) => ({
+          ...row,
+          matchedCents: row.matchedCents + request.amountCents - request.feeCents,
+          allocations: [
+            ...row.allocations,
+            {
+              matchId: row.allocations.length === 0 ? clientId : invoiceId,
+              paymentId: request.paymentId,
+              invoiceId,
+              invoiceNumber: "FA-2026-000001",
+              amountCents: request.amountCents,
+              feeCents: request.feeCents,
+              paymentCancelled: false,
+            },
+          ],
+        })),
       );
       return route.fulfill({ json: responses.get("/api/banking/transactions") });
     }
