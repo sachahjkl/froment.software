@@ -7,7 +7,7 @@
   <p appNotice variant="success" role="status">{{ i18n.t('account.password_complete') }}</p>
   <a appLinkButton routerLink="/backoffice/login">{{ i18n.t('account.password_login') }}</a>
   } @else {
-  <form class="ds-panel" (submit)="changePassword($event)">
+  <form (submit)="changePassword($event)">
     <h2>{{ i18n.t('account.password_title') }}</h2>
     <p>{{ i18n.t('account.password_hint') }}</p>
     <label class="field"
