@@ -339,3 +339,7 @@ export {
   PaymentExportFailure,
   type PaymentExportQuery as PaymentExportQueryValue,
 } from './invoices/payment-export.js';
+export {
+  InvoicePaymentCancelRequest,
+  type InvoicePaymentCancelRequest as InvoicePaymentCancelRequestValue,
+} from './invoices/payments.js';

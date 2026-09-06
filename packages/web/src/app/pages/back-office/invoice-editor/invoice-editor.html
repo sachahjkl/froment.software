@@ -315,12 +315,50 @@
       @for (payment of invoice.payments; track payment.id) {
       <li>
         <strong>{{ money(payment.amountCents) }}</strong> · {{ payment.paidOn }} · {{
-        i18n.t(paymentMethod(payment.method)) }}<br />{{ payment.reference }}
+        i18n.t(paymentMethod(payment.method)) }}<br />{{ payment.reference }} @if
+        (payment.cancelledAt !== null) {
+        <p>
+          {{ i18n.t('payment.cancelled') }} · {{ date(payment.cancelledAt) }}<br />{{
+          payment.cancellationReason }}
+        </p>
+        } @else if (invoice.status === 'issued' || invoice.status === 'paid') {
+        <button
+          appButton
+          type="button"
+          [disabled]="actionPending() || cancellationPaymentId() !== undefined"
+          (click)="startCancellation(payment.id)"
+        >
+          {{ i18n.t('payment.cancel') }}
+        </button>
+        }
       </li>
       } @empty {
       <li>{{ i18n.t('payment.empty') }}</li>
       }
     </ol>
+    } @if (cancellationPayment(); as payment) {
+    <form class="payment-form" (submit)="cancelPayment($event)">
+      <h2>{{ i18n.t('payment.cancel') }}</h2>
+      <p>{{ money(payment.amountCents) }} · {{ payment.reference }}</p>
+      <p>{{ i18n.t('payment.cancel_hint') }}</p>
+      <label class="field"
+        >{{ i18n.t('payment.cancel_reason') }}<textarea
+          class="input"
+          [formField]="cancellationForm.reason"
+        ></textarea>
+      </label>
+      <button
+        appButton
+        variant="danger"
+        type="submit"
+        [disabled]="actionPending() || cancellationForm().invalid()"
+      >
+        {{ i18n.t('payment.cancel') }}
+      </button>
+      <button appButton type="button" [disabled]="actionPending()" (click)="dismissCancellation()">
+        {{ i18n.t('payment.cancel_dismiss') }}
+      </button>
+    </form>
     }
     <h2>{{ i18n.t('backOffice.invoice.history') }}</h2>
     <ol>

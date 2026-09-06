@@ -25,7 +25,7 @@ const csvCell = (value: string): string => {
 
 export const paymentExportCsv = (rows: ReadonlyArray<PaymentExportRow>): string => {
   const header =
-    'payment_id,invoice_number,client_name,amount,currency,paid_on,method,reference,recorded_at,recorded_by_user_id';
+    'payment_id,invoice_number,client_name,amount,currency,paid_on,method,reference,recorded_at,recorded_by_user_id,original_amount,status,cancelled_at,cancelled_by_user_id,cancellation_reason';
   const lines = rows.map((row) => {
     const cents = BigInt(row.amountCents);
     const amount = `${cents / 100n}.${String(cents % 100n).padStart(2, '0')}`;
@@ -33,13 +33,18 @@ export const paymentExportCsv = (rows: ReadonlyArray<PaymentExportRow>): string 
       row.id,
       row.invoiceNumber,
       row.clientName,
-      amount,
+      row.cancelledAt === null ? amount : '0.00',
       row.currency,
       row.paidOn,
       row.method,
       row.reference,
       row.recordedAt,
       row.recordedByUserId,
+      amount,
+      row.cancelledAt === null ? 'recorded' : 'cancelled',
+      row.cancelledAt ?? '',
+      row.cancelledByUserId ?? '',
+      row.cancellationReason ?? '',
     ]
       .map(csvCell)
       .join(',');
@@ -65,6 +70,7 @@ export const exportInvoicePayments = Effect.fn('exportInvoicePayments')(function
           .prepare(`select p.id, p.request_id as requestId, p.expected_version as expectedVersion,
         p.amount_cents as amountCents, p.paid_on as paidOn, p.method, p.reference,
         p.recorded_at as recordedAt, p.recorded_by_user_id as recordedByUserId,
+        p.cancelled_at as cancelledAt, p.cancelled_by_user_id as cancelledByUserId, p.cancellation_reason as cancellationReason,
         i.invoice_number as invoiceNumber, r.client_display_name as clientName, r.currency
         from invoice_payments p join invoices i on i.id = p.invoice_id
         join invoice_revisions r on r.invoice_id = i.id and r.version = i.version

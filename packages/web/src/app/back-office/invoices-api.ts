@@ -30,6 +30,18 @@ export type InvoiceOutcome<T> = ApiOutcome<T, InvoiceFailureValue, 'invoice.erro
 @Injectable({ providedIn: 'root' })
 export class InvoicesApi {
   private readonly http = inject(HttpClient);
+  async cancelPayment(
+    invoiceId: UlidValue,
+    paymentId: UlidValue,
+    request: InvoicePaymentCancelRequestValue,
+  ) {
+    return requestOutcome(
+      this.http.post(`/api/invoices/${invoiceId}/payments/${paymentId}/cancel`, request),
+      InvoiceDetail,
+      InvoiceFailure,
+      'invoice.error',
+    );
+  }
 
   async exportPayments(query: PaymentExportQueryValue) {
     return requestOutcome(
@@ -127,3 +139,4 @@ export class InvoicesApi {
     );
   }
 }
+import { type InvoicePaymentCancelRequestValue } from '@froment/contracts';

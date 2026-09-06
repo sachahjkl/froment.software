@@ -469,12 +469,19 @@ export const invoicePayments = sqliteTable(
     method: text().notNull(),
     reference: text().notNull(),
     recordedAt: text('recorded_at').notNull(),
+    cancelledAt: text('cancelled_at'),
+    cancelledByUserId: text('cancelled_by_user_id').references(() => users.id),
+    cancellationReason: text('cancellation_reason'),
     recordedByUserId: text('recorded_by_user_id')
       .notNull()
       .references(() => users.id),
   },
   (table) => [
     index('invoice_payments_invoice_index').on(table.invoiceId),
+    check(
+      'invoice_payments_cancellation_check',
+      sql`(${table.cancelledAt} is null and ${table.cancelledByUserId} is null and ${table.cancellationReason} is null) or (${table.cancelledAt} is not null and ${table.cancelledByUserId} is not null and ${table.cancellationReason} is not null and length(trim(${table.cancellationReason})) between 1 and 500)`,
+    ),
     check(
       'invoice_payments_amount_check',
       sql`${table.amountCents} between 1 and 9007199254740991`,

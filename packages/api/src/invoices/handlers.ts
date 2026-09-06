@@ -14,6 +14,16 @@ export const InvoiceHandlers = HttpApiBuilder.group(Api, 'invoices', (handlers) 
   Effect.succeed(
     handlers
       .handle(
+        'invoicePaymentCancel',
+        Effect.fn('invoicePaymentCancel')(function* ({ params, payload }) {
+          yield* setPrivateResponseHeaders;
+          const principal = yield* ApiPrincipal;
+          return yield* (yield* Invoices)
+            .cancelPayment(params.invoiceId, params.paymentId, payload, principal.userId)
+            .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
+        }),
+      )
+      .handle(
         'invoicePaymentExport',
         Effect.fn('invoicePaymentExport')(function* ({ query }) {
           yield* setPrivateResponseHeaders;

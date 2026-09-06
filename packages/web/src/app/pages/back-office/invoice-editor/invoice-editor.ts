@@ -125,6 +125,17 @@ export class InvoiceEditor {
   protected readonly unavailable = signal(false);
   protected readonly saving = signal(false);
   protected readonly actionPending = signal(false);
+  protected readonly cancellationPaymentId = signal<UlidValue | undefined>(undefined);
+  private readonly cancellationModel = signal({ reason: '' });
+  protected readonly cancellationForm = form(this.cancellationModel, (path) => {
+    disabled(path, () => this.actionPending());
+    required(path.reason);
+    pattern(path.reason, /\S/);
+    maxLength(path.reason, 500);
+  });
+  protected readonly cancellationPayment = computed(() =>
+    this.detail()?.payments.find((payment) => payment.id === this.cancellationPaymentId()),
+  );
   private readonly paymentModel = signal({
     amount: '',
     paidOn: '',
@@ -142,7 +153,11 @@ export class InvoiceEditor {
   });
   private paymentAttempt: InvoicePaymentRequestValue | undefined;
   protected readonly recordedPaid = computed(
-    () => this.detail()?.payments.reduce((sum, payment) => sum + payment.amountCents, 0) ?? 0,
+    () =>
+      this.detail()?.payments.reduce(
+        (sum, payment) => sum + (payment.cancelledAt === null ? payment.amountCents : 0),
+        0,
+      ) ?? 0,
   );
   protected readonly remaining = computed(
     () => (this.detail()?.currentRevision.totalCents ?? 0) - this.recordedPaid(),
@@ -259,14 +274,17 @@ export class InvoiceEditor {
   canDeactivate(): boolean {
     if (this.actionPending()) return false;
     return (
-      (!this.invoiceForm().dirty() && !this.paymentForm().dirty()) ||
+      (!this.invoiceForm().dirty() &&
+        !this.paymentForm().dirty() &&
+        !this.cancellationForm().dirty()) ||
       globalThis.confirm(this.i18n.t('backOffice.invoice.unsavedChanges'))
     );
   }
 
   @HostListener('window:beforeunload', ['$event'])
   protected preventUnsavedUnload(event: BeforeUnloadEvent): void {
-    if (this.invoiceForm().dirty() || this.paymentForm().dirty()) event.preventDefault();
+    if (this.invoiceForm().dirty() || this.paymentForm().dirty() || this.cancellationForm().dirty())
+      event.preventDefault();
   }
 
   protected save(event: SubmitEvent): void {
@@ -406,6 +424,51 @@ export class InvoiceEditor {
     await this.transition();
   }
 
+  protected startCancellation(paymentId: UlidValue): void {
+    if (this.actionPending() || this.cancellationPaymentId() !== undefined) return;
+    this.cancellationPaymentId.set(paymentId);
+  }
+
+  protected cancelPayment(event: SubmitEvent): void {
+    event.preventDefault();
+    if (this.actionPending()) return;
+    void submit(this.cancellationForm, async () => {
+      const invoice = this.detail();
+      const paymentId = this.cancellationPaymentId();
+      if (invoice === undefined || paymentId === undefined) return;
+      if (!globalThis.confirm(this.i18n.t('payment.cancel_confirm'))) return;
+      this.actionPending.set(true);
+      this.error.set(undefined);
+      try {
+        const outcome = await this.invoicesApi.cancelPayment(invoice.id, paymentId, {
+          expectedVersion: invoice.version,
+          reason: this.cancellationModel().reason.trim(),
+        });
+        if (!outcome.success) return this.setError(outcome.code);
+        this.applyDetail(outcome.result);
+        this.cancellationPaymentId.set(undefined);
+        this.cancellationModel.set({ reason: '' });
+        this.cancellationForm().reset();
+      } catch {
+        this.setError('invoice.error');
+      } finally {
+        this.actionPending.set(false);
+      }
+    });
+  }
+
+  protected dismissCancellation(): void {
+    if (this.actionPending()) return;
+    if (
+      this.cancellationForm().dirty() &&
+      !globalThis.confirm(this.i18n.t('payment.cancel_discard_confirm'))
+    )
+      return;
+    this.cancellationPaymentId.set(undefined);
+    this.cancellationModel.set({ reason: '' });
+    this.cancellationForm().reset();
+  }
+
   protected showPreview(version: number): void {
     this.previewVersion.set(version);
   }
@@ -456,6 +519,9 @@ export class InvoiceEditor {
   }
 
   private async load(parameter: string | null): Promise<void> {
+    this.cancellationPaymentId.set(undefined);
+    this.cancellationModel.set({ reason: '' });
+    this.cancellationForm().reset();
     this.paymentAttempt = undefined;
     this.paymentModel.set({ amount: '', paidOn: '', method: 'transfer', reference: '' });
     this.paymentForm().reset();

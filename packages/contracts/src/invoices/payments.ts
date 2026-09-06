@@ -17,8 +17,16 @@ export const InvoicePayment = Schema.Struct({
   id: Ulid,
   recordedAt: IsoUtc,
   recordedByUserId: Ulid,
+  cancelledAt: Schema.NullOr(IsoUtc),
+  cancelledByUserId: Schema.NullOr(Ulid),
+  cancellationReason: Schema.NullOr(Schema.String),
 });
 export type InvoicePayment = typeof InvoicePayment.Type;
+export const InvoicePaymentCancelRequest = Schema.Struct({
+  expectedVersion: PositiveSafeInteger,
+  reason: Schema.String.check(Schema.isPattern(/\S/), Schema.isMaxLength(500)),
+});
+export type InvoicePaymentCancelRequest = typeof InvoicePaymentCancelRequest.Type;
 export class InvoicePaymentInvalid extends Schema.TaggedError<InvoicePaymentInvalid>()(
   'InvoicePaymentInvalid',
   { code: Schema.Literal('invoice.payment_invalid') },

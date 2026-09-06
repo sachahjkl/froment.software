@@ -88,6 +88,7 @@ interface ApiStub {
   createRevision: ReturnType<typeof vi.fn>;
   issue: ReturnType<typeof vi.fn>;
   recordPayment: ReturnType<typeof vi.fn>;
+  cancelPayment: ReturnType<typeof vi.fn>;
   void: ReturnType<typeof vi.fn>;
   renderPdf: ReturnType<typeof vi.fn>;
 }
@@ -113,6 +114,7 @@ const setup = async (status?: InvoiceDetailValue['status']) => {
     createRevision: vi.fn(),
     issue: vi.fn(),
     recordPayment: vi.fn(),
+    cancelPayment: vi.fn(),
     void: vi.fn(),
     renderPdf: vi.fn(),
   };
@@ -138,6 +140,67 @@ const setup = async (status?: InvoiceDetailValue['status']) => {
 
 describe('InvoiceEditor', () => {
   afterEach(() => vi.restoreAllMocks());
+  it('requires confirmation and a reason before cancelling a paid entry', async () => {
+    const { api, fixture, root } = await setup('paid');
+    const invoice = detail('paid');
+    const payment = {
+      id: '01ARZ3NDEKTSV4RRFFQ69G5FB9',
+      requestId: crypto.randomUUID(),
+      expectedVersion: invoice.version,
+      amountCents: invoice.currentRevision.totalCents,
+      paidOn: '2026-08-20',
+      method: 'transfer' as const,
+      reference: 'WRONG',
+      recordedAt: '2026-08-20T12:00:00.000Z',
+      recordedByUserId: '01ARZ3NDEKTSV4RRFFQ69G5FAV',
+      cancelledAt: null,
+      cancelledByUserId: null,
+      cancellationReason: null,
+    };
+    fixture.componentInstance['detail'].set({ ...invoice, payments: [payment] });
+    fixture.detectChanges();
+    button(root, /Annuler cette saisie|Cancel this entry/).click();
+    fixture.detectChanges();
+    const field = root.querySelector<HTMLTextAreaElement>('form.payment-form textarea');
+    if (field === null) throw new Error('correction.reason.missing');
+    field.value = 'Wrong amount';
+    field.dispatchEvent(new Event('input', { bubbles: true }));
+    const confirm = vi.spyOn(globalThis, 'confirm').mockReturnValue(false);
+    field.form?.dispatchEvent(new SubmitEvent('submit', { bubbles: true, cancelable: true }));
+    await fixture.whenStable();
+    expect(api.cancelPayment).not.toHaveBeenCalled();
+    confirm.mockReturnValue(true);
+    api.cancelPayment.mockRejectedValueOnce(new Error('offline'));
+    field.form?.dispatchEvent(new SubmitEvent('submit', { bubbles: true, cancelable: true }));
+    await fixture.whenStable();
+    expect(field.value).toBe('Wrong amount');
+    api.cancelPayment.mockResolvedValueOnce({
+      success: true,
+      result: {
+        ...invoice,
+        status: 'issued',
+        paidAt: null,
+        payments: [
+          {
+            ...payment,
+            cancelledAt: '2026-08-21T12:00:00.000Z',
+            cancelledByUserId: payment.recordedByUserId,
+            cancellationReason: 'Wrong amount',
+          },
+        ],
+      },
+    });
+    field.form?.dispatchEvent(new SubmitEvent('submit', { bubbles: true, cancelable: true }));
+    await fixture.whenStable();
+    expect(api.cancelPayment).toHaveBeenLastCalledWith(invoice.id, payment.id, {
+      expectedVersion: invoice.version,
+      reason: 'Wrong amount',
+    });
+    expect(fixture.componentInstance['recordedPaid']()).toBe(0);
+    expect(fixture.componentInstance['remaining']()).toBe(invoice.currentRevision.totalCents);
+    expect(root.textContent).toMatch(/Saisie annulée|Entry cancelled/);
+    expect(root.textContent).toContain('Wrong amount');
+  });
 
   it('loads the PDF preview directly without a sandbox', async () => {
     const { fixture, root } = await setup('draft');
@@ -373,6 +436,9 @@ describe('InvoiceEditor', () => {
             id: '01ARZ3NDEKTSV4RRFFQ69G5FB9',
             recordedAt: '2026-08-20T12:00:00.000Z',
             recordedByUserId: '01ARZ3NDEKTSV4RRFFQ69G5FAV',
+            cancelledAt: null,
+            cancelledByUserId: null,
+            cancellationReason: null,
           },
         ],
       },

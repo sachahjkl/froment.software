@@ -459,6 +459,16 @@ export const translations = {
     'document.required': 'champ requis',
     'catalog.title': 'Catalogue',
     'payment.title': 'Règlements',
+    'payment.cancel': 'Annuler cette saisie',
+    'payment.cancel_dismiss': 'Fermer la correction',
+    'payment.cancel_discard_confirm':
+      'Fermer ce formulaire et abandonner le motif saisi ? Cette action ne rétablit pas une saisie déjà annulée.',
+    'payment.cancelled': 'Saisie annulée',
+    'payment.cancel_hint':
+      'Cette correction conserve le règlement dans l’historique et rétablit le solde dû. Elle ne rembourse pas le client. Saisissez ensuite le règlement correct.',
+    'payment.cancel_reason': 'Motif de la correction',
+    'payment.cancel_confirm':
+      'Annuler cette saisie et rétablir le solde dû ? Le règlement et le motif resteront dans l’historique. Aucun remboursement bancaire ne sera effectué.',
     'payment.export_title': 'Exporter les règlements pour la comptabilité',
     'payment.export_hint':
       'Le CSV contient tous les règlements reçus entre ces dates incluses, indépendamment des factures sélectionnées. Limite : 10 000 lignes.',
@@ -1751,6 +1761,16 @@ export const translations = {
     'document.required': 'required field',
     'catalog.title': 'Catalog',
     'payment.title': 'Payments',
+    'payment.cancel': 'Cancel this entry',
+    'payment.cancel_dismiss': 'Close correction',
+    'payment.cancel_discard_confirm':
+      'Close this form and discard the reason? This action does not restore an entry that was already cancelled.',
+    'payment.cancelled': 'Entry cancelled',
+    'payment.cancel_hint':
+      'This correction keeps the payment in the history and restores the outstanding balance. It does not refund the client. Record the correct payment next.',
+    'payment.cancel_reason': 'Correction reason',
+    'payment.cancel_confirm':
+      'Cancel this entry and restore the outstanding balance? The payment and reason will remain in the history. No bank refund will occur.',
     'payment.export_title': 'Export payments for accounting',
     'payment.export_hint':
       'The CSV includes all payments received between these dates, inclusive, regardless of selected invoices. Limit: 10,000 rows.',

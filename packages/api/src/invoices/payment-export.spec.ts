@@ -2,6 +2,9 @@ import { describe, expect, it } from 'vitest';
 import { paymentExportCsv, type PaymentExportRow } from './payment-export.js';
 
 const row: PaymentExportRow = {
+  cancelledAt: null,
+  cancelledByUserId: null,
+  cancellationReason: null,
   id: '01ARZ3NDEKTSV4RRFFQ69G5FAV',
   requestId: '8a476442-20ae-4a53-88f4-18762e7a1100',
   expectedVersion: 2,
@@ -17,11 +20,24 @@ const row: PaymentExportRow = {
 };
 
 describe('payment CSV export', () => {
+  it('keeps cancelled entries with zero effective amount and their original amount', () => {
+    const csv = paymentExportCsv([
+      {
+        ...row,
+        cancelledAt: row.recordedAt,
+        cancelledByUserId: row.recordedByUserId,
+        cancellationReason: '=wrong',
+      },
+    ]);
+    expect(csv).toContain('"0.00","EUR"');
+    expect(csv).toContain('"123.45","cancelled"');
+    expect(csv).toContain('"\'=wrong"');
+  });
   it('writes UTF-8 BOM, stable columns and exact monetary decimals', () => {
     const csv = paymentExportCsv([row, { ...row, amountCents: Number.MAX_SAFE_INTEGER }]);
     expect(
       csv.startsWith(
-        '\uFEFFpayment_id,invoice_number,client_name,amount,currency,paid_on,method,reference,recorded_at,recorded_by_user_id\r\n',
+        '\uFEFFpayment_id,invoice_number,client_name,amount,currency,paid_on,method,reference,recorded_at,recorded_by_user_id,original_amount,status,cancelled_at,cancelled_by_user_id,cancellation_reason\r\n',
       ),
     ).toBe(true);
     expect(csv).toContain('"123.45","EUR"');

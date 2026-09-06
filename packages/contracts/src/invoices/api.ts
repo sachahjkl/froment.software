@@ -174,6 +174,28 @@ export class InvoicesApi extends HttpApiGroup.make('invoices', { topLevel: true 
       authenticate,
       rateLimit(RateLimits.tenPerMinute),
     ),
+  HttpApiEndpoint.post(
+    'invoicePaymentCancel',
+    '/api/invoices/:invoiceId/payments/:paymentId/cancel',
+    {
+      params: { invoiceId: Ulid, paymentId: Ulid },
+      payload: InvoicePaymentCancelRequest,
+      success: InvoiceDetail,
+      error: [
+        InvoicePaymentInvalid,
+        ...invoiceWriteErrors,
+        InvoiceNotFound.pipe(HttpApiSchema.status(404)),
+        InvoiceVersionConflict.pipe(HttpApiSchema.status(409)),
+        InvoiceInvalidTransition.pipe(HttpApiSchema.status(409)),
+      ],
+    },
+  )
+    .middleware(ApiRequestBody)
+    .pipe(
+      requirePermissions([Permissions.invoiceMarkPaid]),
+      authenticate,
+      rateLimit(RateLimits.tenPerMinute),
+    ),
   HttpApiEndpoint.post('invoiceVoid', '/api/invoices/:invoiceId/void', {
     params: { invoiceId: Ulid },
     payload: InvoiceTransitionRequest,
@@ -192,3 +214,4 @@ export class InvoicesApi extends HttpApiGroup.make('invoices', { topLevel: true 
       rateLimit(RateLimits.tenPerMinute),
     ),
 ) {}
+import { InvoicePaymentCancelRequest } from './payments.js';

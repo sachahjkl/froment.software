@@ -45,12 +45,16 @@ import {
   InvoicePayment,
   InvoicePaymentRequest,
   InvoicePaymentInvalid,
+  InvoicePaymentCancelRequest,
+  type InvoicePaymentCancelRequestValue,
   type InvoicePaymentRequestValue,
 } from '@froment/contracts';
 
 const paymentSql = `select id, request_id as requestId, expected_version as expectedVersion,
   amount_cents as amountCents, paid_on as paidOn, method, reference,
-  recorded_at as recordedAt, recorded_by_user_id as recordedByUserId from invoice_payments`;
+  recorded_at as recordedAt, recorded_by_user_id as recordedByUserId,
+  cancelled_at as cancelledAt, cancelled_by_user_id as cancelledByUserId,
+  cancellation_reason as cancellationReason from invoice_payments`;
 
 const InvoiceRecord = Schema.Struct({
   id: Ulid,
@@ -133,6 +137,19 @@ type InvoiceError =
   | DatabaseError;
 
 export interface InvoicesService {
+  readonly cancelPayment: (
+    invoiceId: UlidValue,
+    paymentId: UlidValue,
+    request: InvoicePaymentCancelRequestValue,
+    actorUserId: UlidValue,
+  ) => Effect.Effect<
+    InvoiceDetailValue,
+    | InvoiceNotFound
+    | InvoiceVersionConflict
+    | InvoiceInvalidTransition
+    | InvoicePaymentInvalid
+    | DatabaseError
+  >;
   readonly list: Effect.Effect<InvoiceListValue, DatabaseError>;
   readonly get: (
     invoiceId: UlidValue,
@@ -323,7 +340,7 @@ export const InvoicesLive = Layer.effect(
                        invoice_revisions.title, invoice_revisions.due_date as dueDate,
                        invoice_revisions.currency,
                        invoice_revisions.total_cents as totalCents, invoices.updated_at as updatedAt
-                        , coalesce((select sum(amount_cents) from invoice_payments where invoice_id = invoices.id), 0) as recordedPaidCents
+                        , coalesce((select sum(amount_cents) from invoice_payments where invoice_id = invoices.id and cancelled_at is null), 0) as recordedPaidCents
                         , invoice_pdf_jobs.status as pdfStatus
                        , invoice_pdf_jobs.attempts as pdfAttempts
                        , invoice_pdf_jobs.error as pdfError
@@ -1014,7 +1031,8 @@ export const InvoicesLive = Layer.effect(
                   currentStatus: invoice.status,
                 });
               const paid = invoice.payments.reduce(
-                (sum, payment) => sum + BigInt(payment.amountCents),
+                (sum, payment) =>
+                  sum + (payment.cancelledAt === null ? BigInt(payment.amountCents) : 0n),
                 0n,
               );
               const nextPaid = paid + BigInt(request.amountCents);
@@ -1072,7 +1090,79 @@ export const InvoicesLive = Layer.effect(
       });
     });
 
+    const cancelPayment = Effect.fn('Invoices.cancelPayment')(function* (
+      invoiceId: UlidValue,
+      paymentId: UlidValue,
+      request: InvoicePaymentCancelRequestValue,
+      actorUserId: UlidValue,
+    ) {
+      const now = yield* Clock.currentTimeMillis;
+      return yield* Effect.try({
+        try: () =>
+          database.sqlite
+            .transaction(() => {
+              if (!Schema.is(InvoicePaymentCancelRequest)(request))
+                throw new InvoicePaymentInvalid({ code: 'invoice.payment_invalid' });
+              const invoice = readDetail(invoiceId);
+              if (invoice === undefined) throw new InvoiceNotFound({ code: 'invoice.not_found' });
+              const payment = invoice.payments.find((entry) => entry.id === paymentId);
+              if (payment === undefined)
+                throw new InvoicePaymentInvalid({ code: 'invoice.payment_invalid' });
+              if (invoice.version !== request.expectedVersion)
+                throw new InvoiceVersionConflict({
+                  code: 'invoice.version_conflict',
+                  currentVersion: invoice.version,
+                });
+              if (payment.cancelledAt !== null) {
+                if (payment.cancellationReason !== request.reason.trim())
+                  throw new InvoicePaymentInvalid({ code: 'invoice.payment_invalid' });
+                return invoice;
+              }
+              if (invoice.status !== 'issued' && invoice.status !== 'paid')
+                throw new InvoiceInvalidTransition({
+                  code: 'invoice.invalid_transition',
+                  currentStatus: invoice.status,
+                });
+              database.sqlite
+                .prepare(
+                  `update invoice_payments set cancelled_at = ?, cancelled_by_user_id = ?, cancellation_reason = ? where id = ? and cancelled_at is null`,
+                )
+                .run(
+                  DateTime.formatIso(DateTime.makeUnsafe(now)),
+                  actorUserId,
+                  request.reason.trim(),
+                  paymentId,
+                );
+              database.sqlite
+                .prepare(
+                  `update invoices set status = 'issued', paid_at = null, updated_at = ? where id = ?`,
+                )
+                .run(now, invoiceId);
+              audit.insert({
+                action: 'invoice.payment-cancelled',
+                actorUserId,
+                resourceType: 'invoice',
+                resourceId: invoiceId,
+                metadata: { paymentId, reason: request.reason.trim() },
+                occurredAt: now,
+              });
+              const result = readDetail(invoiceId);
+              if (result === undefined) throw new Error('invoice.payment.result.missing');
+              return result;
+            })
+            .immediate(),
+        catch: (cause) =>
+          cause instanceof InvoiceNotFound ||
+          cause instanceof InvoiceVersionConflict ||
+          cause instanceof InvoiceInvalidTransition ||
+          cause instanceof InvoicePaymentInvalid
+            ? cause
+            : new DatabaseError({ operation: 'cancel.invoice.payment', cause }),
+      });
+    });
+
     return Invoices.of({
+      cancelPayment,
       list,
       get,
       getSnapshot,

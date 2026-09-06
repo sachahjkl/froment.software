@@ -130,6 +130,31 @@ const invoice = {
   pdf: null,
 };
 
+export const issuedInvoice = {
+  ...invoice,
+  status: "issued",
+  invoiceNumber: "FA-2026-000001",
+  issuedAt: createdAt,
+  currentRevision: { ...invoiceRevision, invoiceNumber: "FA-2026-000001", issuedAt: createdAt },
+  revisions: [{ ...invoiceRevision, invoiceNumber: "FA-2026-000001", issuedAt: createdAt }],
+  payments: [
+    {
+      id: "01ARZ3NDEKTSV4RRFFQ69G5FB9",
+      requestId: "7a476442-20ae-4a53-88f4-18762e7a1100",
+      expectedVersion: 1,
+      amountCents: 10000,
+      paidOn: "2026-09-05",
+      method: "transfer",
+      reference: "BANK-001",
+      recordedAt: createdAt,
+      recordedByUserId: clientId,
+      cancelledAt: null,
+      cancelledByUserId: null,
+      cancellationReason: null,
+    },
+  ],
+};
+
 const invoiceSummary = {
   recordedPaidCents: 0,
   id: invoiceId,

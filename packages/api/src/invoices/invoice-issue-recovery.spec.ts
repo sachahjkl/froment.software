@@ -241,6 +241,92 @@ const seedInvoice = (database: DatabaseService, dueDate = '2099-09-19') => {
 };
 
 describe('invoice issue recovery', () => {
+  it('cancels a payment once, restores the balance and preserves the issued snapshot', async () => {
+    await Effect.runPromise(
+      Effect.gen(function* () {
+        const database = yield* Database;
+        const invoices = yield* Invoices;
+        seedInvoice(database);
+        const issued = yield* invoices.issue(invoiceId, { expectedVersion: 1 }, actorId);
+        const before = yield* invoices.getSnapshot(invoiceId, issued.version);
+        const paymentRequest = {
+          requestId: crypto.randomUUID(),
+          expectedVersion: issued.version,
+          amountCents: 12000,
+          paidOn: '2026-08-20',
+          method: 'transfer' as const,
+          reference: 'WRONG',
+        };
+        const paid = yield* invoices.recordPayment(invoiceId, paymentRequest, actorId);
+        const payment = paid.payments[0];
+        if (payment === undefined) throw new Error('payment.missing');
+        const request = { expectedVersion: issued.version, reason: 'Wrong amount' };
+        const cancel = (value = request) =>
+          invoices.cancelPayment(invoiceId, payment.id, value, actorId);
+        expect(yield* Effect.result(cancel({ ...request, reason: ' ' }))).toMatchObject({
+          _tag: 'Failure',
+          failure: { _tag: 'InvoicePaymentInvalid' },
+        });
+        expect(yield* Effect.result(cancel({ ...request, expectedVersion: 1 }))).toMatchObject({
+          _tag: 'Failure',
+          failure: { _tag: 'InvoiceVersionConflict' },
+        });
+        expect(
+          yield* Effect.result(invoices.cancelPayment(invoiceId, ulid(), request, actorId)),
+        ).toMatchObject({ _tag: 'Failure', failure: { _tag: 'InvoicePaymentInvalid' } });
+        expect(
+          yield* Effect.result(invoices.cancelPayment(ulid(), payment.id, request, actorId)),
+        ).toMatchObject({ _tag: 'Failure', failure: { _tag: 'InvoiceNotFound' } });
+        const cancelled = yield* cancel();
+        expect(cancelled).toMatchObject({
+          status: 'issued',
+          paidAt: null,
+          version: issued.version,
+          payments: [
+            {
+              ...payment,
+              cancelledAt: expect.any(String),
+              cancelledByUserId: actorId,
+              cancellationReason: request.reason,
+            },
+          ],
+        });
+        expect(yield* cancel()).toEqual(cancelled);
+        expect(yield* Effect.result(cancel({ ...request, reason: 'Changed' }))).toMatchObject({
+          _tag: 'Failure',
+          failure: { _tag: 'InvoicePaymentInvalid' },
+        });
+        expect((yield* invoices.list)[0]?.recordedPaidCents).toBe(0);
+        expect(yield* invoices.getSnapshot(invoiceId, issued.version)).toEqual(before);
+        expect((yield* invoices.recordPayment(invoiceId, paymentRequest, actorId)).status).toBe(
+          'issued',
+        );
+        const corrected = yield* invoices.recordPayment(
+          invoiceId,
+          { ...paymentRequest, requestId: crypto.randomUUID(), reference: 'CORRECT' },
+          actorId,
+        );
+        expect(corrected.status).toBe('paid');
+        expect(corrected.payments).toHaveLength(2);
+        expect((yield* invoices.list)[0]?.recordedPaidCents).toBe(12000);
+        expect((yield* cancel()).status).toBe('paid');
+        expect(
+          database.sqlite
+            .prepare("select count(*) from audit_events where action = 'invoice.payment-cancelled'")
+            .pluck()
+            .get(),
+        ).toBe(1);
+      }).pipe(
+        Effect.provide(
+          makeTestLayer(':memory:', {
+            renderQuotePdf: () => Effect.die('unused'),
+            renderInvoicePdf: () => Effect.die('unused'),
+            renderOrderPdf: () => Effect.die('unused'),
+          }),
+        ),
+      ),
+    );
+  });
   it('exports an inclusive period and refuses to truncate more than 10000 payments', async () => {
     await Effect.runPromise(
       Effect.gen(function* () {

@@ -25,6 +25,7 @@ export const AuditActions = [
   'invoice.issued',
   'invoice.marked-paid',
   'invoice.payment-recorded',
+  'invoice.payment-cancelled',
   'invoice.revised',
   'invoice.voided',
   'issuer.updated',

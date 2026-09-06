@@ -160,6 +160,11 @@ export const apiDocumentation = {
         summary: 'Émettre une facture',
         description: 'Attribue le numéro légal et émet la facture.',
       },
+      invoicePaymentCancel: {
+        summary: 'Annuler une saisie de règlement',
+        description:
+          'Conserve le règlement et le motif de correction. Rétablit le solde dû sans modifier le document émis ni effectuer de remboursement.',
+      },
       invoicePaymentExport: {
         summary: 'Exporter les règlements',
         description:
@@ -443,6 +448,11 @@ export const apiDocumentation = {
         summary: 'Export payments',
         description:
           'Exports payments received between from and to inclusive as UTF-8 CSV. Limited to 10,000 rows without silent truncation.',
+      },
+      invoicePaymentCancel: {
+        summary: 'Cancel a payment entry',
+        description:
+          'Keeps the payment and correction reason. Restores the outstanding balance without changing the issued document or making a refund.',
       },
       invoicePaymentCreate: {
         summary: 'Record a payment',

@@ -1,6 +1,14 @@
 import { test, expect } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
-import { accountEmail, clientId, quoteId, invoiceId, quoteToken, mockApi } from "./fixtures.mjs";
+import {
+  accountEmail,
+  clientId,
+  quoteId,
+  invoiceId,
+  issuedInvoice,
+  quoteToken,
+  mockApi,
+} from "./fixtures.mjs";
 
 async function openPage(page, route, colorScheme) {
   await mockApi(page);
@@ -18,7 +26,7 @@ for (const [kind, id] of [
   ["quotes", quoteId],
   ["invoices", invoiceId],
 ]) {
-  test(`${kind}: responsive editor and summary`, async ({ page, colorScheme }) => {
+  test(`${kind}: responsive editor and summary`, async ({ page, colorScheme }, testInfo) => {
     await openPage(page, `/backoffice/${kind}/${id}`, colorScheme);
     await expect(page.locator(".document-line")).toHaveCount(3);
     const form = await page.locator(".document-editor > form").boundingBox();
@@ -28,6 +36,29 @@ for (const [kind, id] of [
       expect(summary.x).toBeGreaterThan(form.x + form.width);
     } else {
       expect(summary.y).toBeGreaterThanOrEqual(form.y + form.height);
+    }
+    if (kind === "invoices") {
+      await page.route(`**/api/invoices/${invoiceId}`, (route) =>
+        route.fulfill({ json: issuedInvoice }),
+      );
+      await page.reload();
+      await page.getByRole("button", { name: /Annuler cette saisie|Cancel this entry/ }).click();
+      const reason = page.getByRole("textbox", {
+        name: /Motif de la correction|Correction reason/,
+      });
+      await expect(reason).toBeVisible();
+      await reason.fill("Montant saisi par erreur");
+      expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth)).toBe(
+        false,
+      );
+      const audit = await new AxeBuilder({ page })
+        .withTags(["wcag2a", "wcag2aa", "wcag21aa"])
+        .analyze();
+      expect(audit.violations).toEqual([]);
+      await page.screenshot({
+        path: testInfo.outputPath("payment-correction.png"),
+        fullPage: true,
+      });
     }
   });
 }

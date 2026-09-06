@@ -169,6 +169,43 @@ describe('invoice HTTP routes', () => {
     });
     expect(voided.status).toBe(409);
 
+    const paidDetail = await fetch(`${server.baseUrl}/api/invoices/${invoice.id}`, {
+      headers: server.sessionHeaders,
+    });
+    const paidInvoice = Schema.decodeUnknownSync(InvoiceDetail)(await paidDetail.json());
+    const payment = paidInvoice.payments[0];
+    if (payment === undefined) throw new Error('payment.missing');
+    const cancelUrl = `${server.baseUrl}/api/invoices/${invoice.id}/payments/${payment.id}/cancel`;
+    const cancelBody = JSON.stringify({
+      expectedVersion: paidInvoice.version,
+      reason: 'Wrong reference',
+    });
+    expect(
+      (
+        await fetch(cancelUrl, {
+          method: 'POST',
+          headers: { ...clientSession, 'content-type': 'application/json' },
+          body: cancelBody,
+        })
+      ).status,
+    ).toBe(403);
+    const cancelled = await fetch(cancelUrl, {
+      method: 'POST',
+      headers: server.jsonHeaders,
+      body: cancelBody,
+    });
+    expect(cancelled.status).toBe(200);
+    expect(await cancelled.json()).toMatchObject({
+      status: 'issued',
+      payments: [{ cancellationReason: 'Wrong reference' }, {}],
+    });
+    expect(
+      (await fetch(cancelUrl, { method: 'POST', headers: server.jsonHeaders, body: cancelBody }))
+        .status,
+    ).toBe(200);
+    const correctedExport = await fetch(exportUrl, { headers: server.sessionHeaders });
+    expect(await correctedExport.text()).toContain('"cancelled"');
+
     const database = new Sqlite(server.databaseFilename, { readonly: true });
     expect(
       database
@@ -205,3 +242,5 @@ describe('invoice HTTP routes', () => {
     await expect(response.json()).resolves.toMatchObject({ code: 'invoice.invalid_dates' });
   });
 });
+import { Schema } from 'effect';
+import { InvoiceDetail } from '@froment/contracts';
