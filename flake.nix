@@ -56,6 +56,7 @@
           inherit (packageJson) version;
           pname = packageJson.name;
           runtimeNode = pkgs.nodejs-slim_26;
+          pnpm = pkgs.pnpm.override { nodejs-slim = runtimeNode; };
           cousineFonts = pkgs.google-fonts.override { fonts = [ "Cousine" ]; };
           documentFonts = pkgs.symlinkJoin {
             name = "froment-document-fonts";
@@ -104,9 +105,9 @@
           };
           pnpmDeps = pkgs.fetchPnpmDeps {
             inherit pname version src;
-            pnpm = pkgs.pnpm;
+            inherit pnpm;
             fetcherVersion = 4;
-            hash = "sha256-ugrt3UTi0w3nWM2+y7AeWK0oEQC6MstyHSkSQb/TlM8=";
+            hash = "sha256-XKfWyXil8J3mPg+XzdBXzx+RUvgsKu//Uy4uaLEtgmo=";
           };
 
           mkApplication =
@@ -120,7 +121,7 @@
                 ;
               nativeBuildInputs = [
                 pkgs.nodejs_26
-                pkgs.pnpm
+                pnpm
                 pkgs.pnpmConfigHook
                 pkgs.makeWrapper
               ];
@@ -178,7 +179,7 @@
               PNPM_CONFIG_REPORTER = "append-only";
               nativeBuildInputs = [
                 pkgs.nodejs_26
-                pkgs.pnpm
+                pnpm
                 pkgs.pnpmConfigHook
               ]
               ++ lib.optionals (name == "test") [
@@ -365,7 +366,7 @@
               pkgs.liberation_ttf
               pkgs.nodejs_26
               pkgs.poppler-utils
-              pkgs.pnpm
+              pnpm
               pkgs.sops
               pkgs.typst
               secretspec
