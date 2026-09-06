@@ -27,7 +27,7 @@
         {{ i18n.t('backOffice.affairs.retry') }}
       </button>
       } @case ('ready') { @if (visibleAffairs(tab).length === 0) {
-      <p class="empty">{{ i18n.t('backOffice.affairs.empty') }}</p>
+      <p class="empty ds-panel">{{ i18n.t('backOffice.affairs.empty') }}</p>
       } @else {
       <div appDataTable>
         <table>

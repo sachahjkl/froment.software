@@ -61,7 +61,7 @@
   @if (loading()) {
   <p aria-live="polite">{{ i18n.t('backOffice.conditionPresets.loading') }}</p>
   } @else if (presets().length === 0) {
-  <p class="empty">{{ i18n.t('backOffice.conditionPresets.empty') }}</p>
+  <p class="empty ds-panel">{{ i18n.t('backOffice.conditionPresets.empty') }}</p>
   } @else {
   <div appDataTable>
     <table>

@@ -18,7 +18,7 @@
     {{ i18n.t('integrations.reload') }}
   </button>
   }
-  <form #composer (submit)="save($event)" class="ds-panel composer">
+  <form #composer (submit)="save($event)" class="composer">
     <h2>{{ i18n.t('emails.compose') }}</h2>
     <p id="message-hint">{{ i18n.t('emails.fieldsHint') }}</p>
     <div class="fields">
@@ -85,7 +85,7 @@
   <h2>{{ i18n.t('emails.history') }}</h2>
   <p>{{ i18n.t('emails.historyInfo') }}</p>
   @if (!loading() && operations().length === 0) {
-  <p>{{ i18n.t('integrations.empty') }}</p>
+  <p class="empty ds-panel">{{ i18n.t('integrations.empty') }}</p>
   }
   <ol>
     @for (operation of operations(); track operation.id) { @if (operation.request.kind === 'email')

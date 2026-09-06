@@ -126,7 +126,7 @@
       </div>
       <p class="hint">{{ i18n.t('catalog.snapshotHint') }}</p>
       @for (line of quoteForm.lines; track $index) {
-      <fieldset class="document-line">
+      <fieldset class="document-line ds-panel">
         <legend>{{ i18n.tf('backOffice.quote.lineNumber', { number: $index + 1 }) }}</legend>
         <label class="field description">
           {{ i18n.t('backOffice.quote.description') }}
@@ -223,7 +223,7 @@
   </form>
 
   @if (detail(); as quote) {
-  <aside appOutcomePanel aria-labelledby="totals-title">
+  <aside appOutcomePanel class="ds-panel" aria-labelledby="totals-title">
     <p appDetailRow [label]="i18n.t('backOffice.quote.reference')">
       <strong>{{ quote.reference }}</strong>
     </p>

@@ -3,7 +3,7 @@
     <h2 id="catalog-title">{{ i18n.t('catalog.title') }}</h2>
     <p class="intro">{{ i18n.t('catalog.intro') }}</p>
   </header>
-  <form class="ds-panel editor" (submit)="save($event)">
+  <form class="editor" (submit)="save($event)">
     <h3>{{ i18n.t(editing() ? 'catalog.edit' : 'catalog.create') }}</h3>
     <label class="field">
       {{ i18n.t('backOffice.quote.description') }}
@@ -124,7 +124,7 @@
       </button>
     </li>
     } @empty {
-    <li>{{ i18n.t('catalog.empty') }}</li>
+    <li class="ds-panel">{{ i18n.t('catalog.empty') }}</li>
     }
   </ul>
   }

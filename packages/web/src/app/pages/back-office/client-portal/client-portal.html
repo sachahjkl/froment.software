@@ -20,7 +20,7 @@
     <section aria-labelledby="client-quotes-title">
       <h2 id="client-quotes-title">{{ i18n.t('backOffice.client.quotes') }}</h2>
       @if (quotes().length === 0) {
-      <p class="empty">{{ i18n.t('backOffice.client.quotes.empty') }}</p>
+      <p class="empty ds-panel">{{ i18n.t('backOffice.client.quotes.empty') }}</p>
       } @else {
       <div appDataTable>
         <table>
@@ -64,7 +64,7 @@
     <section aria-labelledby="client-orders-title">
       <h2 id="client-orders-title">{{ i18n.t('backOffice.client.orders') }}</h2>
       @if (orders().length === 0) {
-      <p class="empty">{{ i18n.t('backOffice.client.orders.empty') }}</p>
+      <p class="empty ds-panel">{{ i18n.t('backOffice.client.orders.empty') }}</p>
       } @else {
       <div appDataTable>
         <table>
@@ -117,7 +117,7 @@
     <section aria-labelledby="client-invoices-title">
       <h2 id="client-invoices-title">{{ i18n.t('backOffice.client.invoices') }}</h2>
       @if (invoices().length === 0) {
-      <p class="empty">{{ i18n.t('backOffice.client.invoices.empty') }}</p>
+      <p class="empty ds-panel">{{ i18n.t('backOffice.client.invoices.empty') }}</p>
       } @else {
       <div appDataTable>
         <table>

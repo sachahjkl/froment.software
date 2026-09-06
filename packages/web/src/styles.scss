@@ -127,10 +127,8 @@ p {
   margin-top: var(--space-7);
   overflow-x: auto;
   overscroll-behavior-inline: contain;
-  border: 1px solid var(--color-line);
   border-radius: var(--radius-sm);
-  background: var(--color-surface-raised);
-  box-shadow: var(--shadow-panel);
+  background: var(--color-panel);
 }
 
 .data-table:focus-visible {
@@ -289,11 +287,15 @@ code {
 }
 
 .ds-panel {
+  border: 0;
   border-radius: var(--radius-sm);
   background: var(--color-panel);
+  box-shadow: none;
 }
-.ds-panel.inset {
-  background: var(--color-surface-sunken);
+
+.ds-panel.empty {
+  padding: var(--panel-padding);
+  color: var(--color-muted);
 }
 
 .ds-label {

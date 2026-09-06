@@ -31,7 +31,7 @@
   <h2>{{ i18n.t('integrations.history') }}</h2>
   <p>{{ i18n.t('integrations.historyInfo') }}</p>
   @if (operations().length === 0) {
-  <p>{{ i18n.t('integrations.empty') }}</p>
+  <p class="empty ds-panel">{{ i18n.t('integrations.empty') }}</p>
   }
   <ol class="operations">
     @for (operation of operations(); track operation.id) {

@@ -24,11 +24,6 @@ form,
 
 form {
   max-width: 56rem;
-  padding: var(--panel-padding);
-  border: 1px solid var(--color-line);
-  border-radius: var(--radius-sm);
-  background: var(--color-surface-raised);
-  box-shadow: var(--shadow-panel);
 }
 
 form > * + * {
@@ -55,10 +50,4 @@ textarea {
 .preset-conditions {
   overflow: hidden;
   text-overflow: ellipsis;
-}
-
-@media (max-width: 48rem) {
-  form {
-    padding: var(--space-4);
-  }
 }

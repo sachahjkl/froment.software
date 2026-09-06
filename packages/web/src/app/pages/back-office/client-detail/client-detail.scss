@@ -27,11 +27,6 @@ form,
 
 form {
   min-width: 0;
-  padding: var(--panel-padding);
-  border: 1px solid var(--color-line);
-  border-radius: var(--radius-sm);
-  background: var(--color-surface-raised);
-  box-shadow: var(--shadow-panel);
 }
 
 form:not(.field-grid) > * + * {
@@ -76,7 +71,6 @@ td small {
 
 .empty {
   padding: var(--space-5);
-  background: var(--color-surface-sunken);
   color: var(--color-muted);
 }
 
@@ -84,8 +78,6 @@ td small {
   display: grid;
   gap: var(--space-5);
   padding: var(--space-5);
-  border: 1px solid var(--color-line);
-  background: var(--color-surface-raised);
 }
 
 .access-panel form,
@@ -96,10 +88,4 @@ td small {
 
 .access-panel p {
   margin-top: var(--space-2);
-}
-
-@media (max-width: 38rem) {
-  form {
-    padding: var(--space-4);
-  }
 }

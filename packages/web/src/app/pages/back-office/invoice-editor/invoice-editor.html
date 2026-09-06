@@ -119,7 +119,7 @@
         </button>
       </div>
       @for (line of invoiceForm.lines; track $index) {
-      <fieldset class="document-line">
+      <fieldset class="document-line ds-panel">
         <legend>{{ i18n.tf('backOffice.invoice.lineNumber', { number: $index + 1 }) }}</legend>
         <label class="field description">
           {{ i18n.t('backOffice.invoice.description') }}
@@ -216,7 +216,7 @@
   </form>
 
   @if (detail(); as invoice) {
-  <aside appOutcomePanel>
+  <aside appOutcomePanel class="ds-panel">
     @if (invoice.status === 'draft' && documentIssues().length > 0) {
     <app-document-issues [issues]="documentIssues()" [clientId]="invoice.clientId" kind="invoice" />
     }

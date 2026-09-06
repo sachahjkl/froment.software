@@ -165,7 +165,7 @@
       @if (documentsLoading()) {
       <p aria-live="polite">{{ i18n.t('backOffice.clientDetail.documentsLoading') }}</p>
       } @else if (documents().length === 0) {
-      <p class="empty">{{ i18n.t('backOffice.clientDetail.documentsEmpty') }}</p>
+      <p class="empty ds-panel">{{ i18n.t('backOffice.clientDetail.documentsEmpty') }}</p>
       } @else {
       <div appDataTable>
         <table>
@@ -204,7 +204,7 @@
       aria-labelledby="client-access-tab"
       tabindex="0"
     >
-      <div class="access-panel">
+      <div class="access-panel ds-panel">
         <div>
           <h2>{{ i18n.t('backOffice.clientDetail.accessTitle') }}</h2>
           <p>{{ i18n.t('backOffice.clientDetail.accessIntro') }}</p>

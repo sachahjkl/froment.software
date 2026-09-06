@@ -44,7 +44,10 @@
   </details>
   <router-outlet />
   @if (selectedInvoices().length > 0) {
-  <section class="bulk-actions" [attr.aria-label]="i18n.t('backOffice.billing.bulkActions')">
+  <section
+    class="bulk-actions ds-panel"
+    [attr.aria-label]="i18n.t('backOffice.billing.bulkActions')"
+  >
     <strong>
       {{ i18n.tf('backOffice.billing.selected', { count: selectedInvoices().length }) }}
     </strong>
@@ -71,7 +74,7 @@
         {{ i18n.t('backOffice.invoices.retry') }}
       </button>
       } @case ('ready') { @if (visibleInvoices(tab).length === 0) {
-      <p class="empty">{{ i18n.t('backOffice.billing.empty') }}</p>
+      <p class="empty ds-panel">{{ i18n.t('backOffice.billing.empty') }}</p>
       } @else {
       <div appDataTable>
         <table>

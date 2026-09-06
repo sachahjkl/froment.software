@@ -17,7 +17,7 @@
         {{ i18n.t('backOffice.clients.cancel') }}
       </button>
     </div>
-    <form class="create-client panel" (submit)="create($event)">
+    <form class="create-client" (submit)="create($event)">
       <label class="field" for="client-display-name">
         {{ i18n.t('backOffice.clients.displayName') }}
         <input
@@ -162,7 +162,7 @@
       @switch (state()) { @case ('loading') {
       <p aria-live="polite">{{ i18n.t('backOffice.clients.loading') }}</p>
       } @case ('ready') { @if (visibleClients(tab).length === 0) {
-      <p class="empty">{{ i18n.t('backOffice.clients.empty') }}</p>
+      <p class="empty ds-panel">{{ i18n.t('backOffice.clients.empty') }}</p>
       } @else {
       <div appDataTable>
         <table>

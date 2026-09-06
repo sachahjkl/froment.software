@@ -20,7 +20,7 @@
   } @if (loading()) {
   <p aria-live="polite">{{ i18n.t('backOffice.apiTokens.loading') }}</p>
   } @else if (tokens().length === 0 && pageError() === undefined) {
-  <p class="empty">{{ i18n.t('backOffice.apiTokens.empty') }}</p>
+  <p class="empty ds-panel">{{ i18n.t('backOffice.apiTokens.empty') }}</p>
   } @else {
   <div appDataTable>
     <table>
@@ -131,7 +131,7 @@
       <span class="field-error">{{ i18n.t('backOffice.apiTokens.expirationInvalid') }}</span>
       }
     </label>
-    <fieldset>
+    <fieldset class="ds-panel">
       <legend>{{ i18n.t('backOffice.apiTokens.permissions') }}</legend>
       <label class="permission-search" for="api-token-permission-search">
         {{ i18n.t('backOffice.apiTokens.permissionSearch') }}

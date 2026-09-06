@@ -24,11 +24,6 @@ form,
 
 form {
   max-width: 56rem;
-  padding: var(--panel-padding);
-  border: 1px solid var(--color-line);
-  border-radius: var(--radius-sm);
-  background: var(--color-surface-raised);
-  box-shadow: var(--shadow-panel);
 }
 
 .actions {
@@ -36,10 +31,4 @@ form {
   flex-wrap: wrap;
   align-items: center;
   gap: var(--space-4);
-}
-
-@media (max-width: 38rem) {
-  form {
-    padding: var(--space-4);
-  }
 }
