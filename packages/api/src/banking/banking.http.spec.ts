@@ -148,6 +148,8 @@ describe('banking HTTP', () => {
       expect(history[0]?.cancelledAt).not.toBeNull();
       expect(history[0]?.cancelledByUserId).toBe(history[0]?.matchedByUserId);
       try {
+        database.prepare("delete from role_permissions where permission_code = 'bank.read'").run();
+        expect((await fetch(historyUrl, { headers: server.sessionHeaders })).status).toBe(403);
         expect(database.prepare('select count(*) as count from invoice_payments').get()).toEqual({
           count: 1,
         });
@@ -213,6 +215,24 @@ describe('banking HTTP', () => {
       expect(await (await post(csv, 'Other')).json()).toEqual({ added: 2, existing: 0 });
       const database = new Sqlite(server.databaseFilename);
       try {
+        database
+          .prepare(
+            "delete from role_permissions where permission_code in ('bank.import', 'bank.reconcile')",
+          )
+          .run();
+        expect(
+          (await fetch(`${url}/transactions`, { headers: server.sessionHeaders })).status,
+        ).toBe(200);
+        expect((await post(csv)).status).toBe(403);
+        expect(
+          (
+            await fetch(`${url}/transactions/01ARZ3NDEKTSV4RRFFQ69G5FAV/match`, {
+              method: 'POST',
+              headers: server.jsonHeaders,
+              body: JSON.stringify({ paymentId: '01ARZ3NDEKTSV4RRFFQ69G5FAV' }),
+            })
+          ).status,
+        ).toBe(403);
         expect(
           database
             .prepare("select count(*) as count from audit_events where action = 'bank.imported'")

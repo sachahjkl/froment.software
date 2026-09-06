@@ -29,7 +29,7 @@ export class QuoteConditionPresetsApi extends HttpApiGroup.make('quoteConditionP
       AuthenticationRequired.pipe(HttpApiSchema.status(401)),
       PermissionDenied.pipe(HttpApiSchema.status(403)),
     ],
-  }).pipe(requirePermissions([Permissions.quoteRead]), authenticate, frontendSpecific),
+  }).pipe(requirePermissions([Permissions.conditionRead]), authenticate, frontendSpecific),
   HttpApiEndpoint.post('quoteConditionPresetCreate', '/api/quote-condition-presets', {
     payload: QuoteConditionPresetWriteRequest,
     success: QuoteConditionPreset,
@@ -42,7 +42,7 @@ export class QuoteConditionPresetsApi extends HttpApiGroup.make('quoteConditionP
   })
     .middleware(ApiRequestBody)
     .pipe(
-      requirePermissions([Permissions.quoteUpdate]),
+      requirePermissions([Permissions.conditionManage]),
       authenticate,
       rateLimit(RateLimits.sixtyPerMinute),
       frontendSpecific,
@@ -61,7 +61,7 @@ export class QuoteConditionPresetsApi extends HttpApiGroup.make('quoteConditionP
   })
     .middleware(ApiRequestBody)
     .pipe(
-      requirePermissions([Permissions.quoteUpdate]),
+      requirePermissions([Permissions.conditionManage]),
       authenticate,
       rateLimit(RateLimits.sixtyPerMinute),
       frontendSpecific,
@@ -76,7 +76,7 @@ export class QuoteConditionPresetsApi extends HttpApiGroup.make('quoteConditionP
       QuoteConditionPresetNotFound.pipe(HttpApiSchema.status(404)),
     ],
   }).pipe(
-    requirePermissions([Permissions.quoteUpdate]),
+    requirePermissions([Permissions.conditionManage]),
     authenticate,
     rateLimit(RateLimits.sixtyPerMinute),
     frontendSpecific,

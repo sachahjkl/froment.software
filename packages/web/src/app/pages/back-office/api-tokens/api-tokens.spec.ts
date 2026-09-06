@@ -98,7 +98,10 @@ describe('ApiTokens', () => {
     const name = root.querySelector<HTMLInputElement>('#api-token-name')!;
     name.value = 'ERP';
     name.dispatchEvent(new Event('input'));
-    const permission = root.querySelector<HTMLInputElement>('.permission-grid input')!;
+    const permission = [...root.querySelectorAll('.permission-grid tr')]
+      .find((row) => row.querySelector('code')?.textContent === 'client.read')
+      ?.querySelector<HTMLInputElement>('input');
+    if (permission == null) throw new Error('permission.client_read.missing');
     permission.checked = true;
     permission.dispatchEvent(new Event('change'));
     root.querySelector<HTMLFormElement>('dialog form')!.dispatchEvent(new SubmitEvent('submit'));
@@ -154,7 +157,10 @@ describe('ApiTokens', () => {
     const name = root.querySelector<HTMLInputElement>('#api-token-name')!;
     name.value = 'ERP';
     name.dispatchEvent(new Event('input'));
-    const permission = root.querySelector<HTMLInputElement>('.permission-grid input')!;
+    const permission = [...root.querySelectorAll('.permission-grid tr')]
+      .find((row) => row.querySelector('code')?.textContent === 'client.read')
+      ?.querySelector<HTMLInputElement>('input');
+    if (permission == null) throw new Error('permission.client_read.missing');
     permission.checked = true;
     permission.dispatchEvent(new Event('change'));
     root.querySelector<HTMLFormElement>('dialog form')!.dispatchEvent(new SubmitEvent('submit'));

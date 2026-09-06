@@ -4,11 +4,59 @@ import { describe, expect, it } from 'vitest';
 
 import { RevisionVersionParameter } from './api-common.js';
 import { Api } from './api.js';
+import { ApiAuthorization } from './api-authentication.js';
+import { PermissionCodes } from './permissions.js';
 import { RequiredPermissions } from './api-policy/permissions.js';
 import { EndpointRateLimit } from './api-policy/rate-limit.js';
 import { ApiTokenPermissionCodes } from './permissions.js';
 
 describe('API contracts', () => {
+  it('requires authorization middleware and documented registered permissions on every business endpoint', () => {
+    const dedicatedPolicies = new Set([
+      'health',
+      'version',
+      'bootstrapStatus',
+      'bootstrapCreate',
+      'login',
+      'refresh',
+      'logout',
+      'currentAccount',
+      'passwordChange',
+      'accountSessionList',
+      'accountSessionRevoke',
+      'publicQuoteGet',
+      'publicQuotePdfDownload',
+      'publicQuoteSign',
+      'clientQuoteList',
+      'clientOrderList',
+      'clientInvoiceList',
+      'clientQuotePdf',
+      'clientOrderPdf',
+      'clientInvoicePdf',
+    ]);
+    const spec = OpenApi.fromApi(Api);
+    const operations = Object.values(spec.paths).flatMap((path) => Object.values(path));
+    for (const group of Object.values(Api.groups)) {
+      for (const endpoint of Object.values(group.endpoints)) {
+        const required = Context.getOption(endpoint.annotations, RequiredPermissions);
+        if (dedicatedPolicies.has(endpoint.identifier)) {
+          expect(Option.isNone(required), endpoint.identifier).toBe(true);
+          continue;
+        }
+        expect(Option.isSome(required), endpoint.identifier).toBe(true);
+        if (Option.isNone(required)) continue;
+        expect(endpoint.middlewares.has(ApiAuthorization), endpoint.identifier).toBe(true);
+        expect(required.value.every((permission) => PermissionCodes.includes(permission))).toBe(
+          true,
+        );
+        expect(
+          operations.find((operation) => operation?.operationId === endpoint.identifier),
+        ).toMatchObject({
+          'x-required-permissions': [...required.value],
+        });
+      }
+    }
+  });
   it('accepts only positive safe route versions', () => {
     expect(Schema.decodeUnknownSync(RevisionVersionParameter)('1')).toBe(1);
     expect(

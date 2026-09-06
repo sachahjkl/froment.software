@@ -20,7 +20,7 @@ export class IssuerSettingsApi extends HttpApiGroup.make('issuerSettings', { top
       AuthenticationRequired.pipe(HttpApiSchema.status(401)),
       PermissionDenied.pipe(HttpApiSchema.status(403)),
     ],
-  }).pipe(requirePermissions([Permissions.templateRead]), authenticate, frontendSpecific),
+  }).pipe(requirePermissions([Permissions.issuerRead]), authenticate, frontendSpecific),
   HttpApiEndpoint.put('issuerSettingsUpdate', '/api/issuer-settings', {
     payload: IssuerSettingsUpdateRequest,
     success: IssuerSettings,
@@ -32,7 +32,7 @@ export class IssuerSettingsApi extends HttpApiGroup.make('issuerSettings', { top
   })
     .middleware(ApiRequestBody)
     .pipe(
-      requirePermissions([Permissions.templateSelect]),
+      requirePermissions([Permissions.issuerUpdate]),
       authenticate,
       rateLimit(RateLimits.sixtyPerMinute),
       frontendSpecific,

@@ -21,11 +21,11 @@ export class BankingApi extends HttpApiGroup.make('banking', { topLevel: true })
     params: { transactionId: Ulid },
     success: BankMatchHistory,
     error: BankFailure.members,
-  }).pipe(requirePermissions([Permissions.invoiceMarkPaid]), authenticate, frontendSpecific),
+  }).pipe(requirePermissions([Permissions.bankRead]), authenticate, frontendSpecific),
   HttpApiEndpoint.get('bankTransactionList', '/api/banking/transactions', {
     success: BankTransactionList,
     error: BankFailure.members,
-  }).pipe(requirePermissions([Permissions.invoiceMarkPaid]), authenticate, frontendSpecific),
+  }).pipe(requirePermissions([Permissions.bankRead]), authenticate, frontendSpecific),
   HttpApiEndpoint.post('bankImport', '/api/banking/import', {
     payload: BankImportRequest,
     success: BankImportResult,
@@ -34,7 +34,7 @@ export class BankingApi extends HttpApiGroup.make('banking', { topLevel: true })
     .middleware(ApiRequestBody)
     .middleware(ApiBrowserRequest)
     .pipe(
-      requirePermissions([Permissions.invoiceMarkPaid]),
+      requirePermissions([Permissions.bankImport]),
       authenticate,
       rateLimit(RateLimits.tenPerMinute),
       frontendSpecific,
@@ -48,7 +48,7 @@ export class BankingApi extends HttpApiGroup.make('banking', { topLevel: true })
     .middleware(ApiRequestBody)
     .middleware(ApiBrowserRequest)
     .pipe(
-      requirePermissions([Permissions.invoiceMarkPaid]),
+      requirePermissions([Permissions.bankReconcile]),
       authenticate,
       rateLimit(RateLimits.sixtyPerMinute),
       frontendSpecific,
@@ -62,7 +62,7 @@ export class BankingApi extends HttpApiGroup.make('banking', { topLevel: true })
     .middleware(ApiRequestBody)
     .middleware(ApiBrowserRequest)
     .pipe(
-      requirePermissions([Permissions.invoiceMarkPaid]),
+      requirePermissions([Permissions.bankReconcile]),
       authenticate,
       rateLimit(RateLimits.sixtyPerMinute),
       frontendSpecific,

@@ -3,6 +3,7 @@ import { webUiText } from './web-ui-text.js';
 export const translations = {
   fr: {
     ...webUiText.fr,
+    'backOffice.apiTokens.permission.payment.read': 'Exporter les règlements et leurs corrections.',
     'design.confirmation.title': 'Modales de confirmation',
     'design.confirmation.hint':
       'Le focus commence sur Annuler. Tab reste dans la modale. Échap et le fond annulent la demande.',
@@ -1495,6 +1496,7 @@ export const translations = {
   },
   en: {
     ...webUiText.en,
+    'backOffice.apiTokens.permission.payment.read': 'Export payments and their corrections.',
     'design.confirmation.title': 'Confirmation dialogs',
     'design.confirmation.hint':
       'Focus starts on Cancel. Tab stays in the dialog. Escape and the backdrop cancel the request.',

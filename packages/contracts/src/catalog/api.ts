@@ -24,7 +24,7 @@ export class CatalogApi extends HttpApiGroup.make('catalog', { topLevel: true })
   HttpApiEndpoint.get('catalogList', '/api/catalog', {
     success: CatalogItemList,
     error: [AuthenticationRequired, PermissionDenied],
-  }).pipe(requirePermissions([Permissions.quoteCreate]), authenticate, frontendSpecific),
+  }).pipe(requirePermissions([Permissions.catalogRead]), authenticate, frontendSpecific),
   HttpApiEndpoint.post('catalogCreate', '/api/catalog', {
     payload: CatalogItemCreateRequest,
     success: CatalogItem,
@@ -32,7 +32,7 @@ export class CatalogApi extends HttpApiGroup.make('catalog', { topLevel: true })
   })
     .middleware(ApiRequestBody)
     .pipe(
-      requirePermissions([Permissions.quoteUpdate]),
+      requirePermissions([Permissions.catalogManage]),
       authenticate,
       rateLimit(RateLimits.sixtyPerMinute),
       frontendSpecific,
@@ -51,7 +51,7 @@ export class CatalogApi extends HttpApiGroup.make('catalog', { topLevel: true })
   })
     .middleware(ApiRequestBody)
     .pipe(
-      requirePermissions([Permissions.quoteUpdate]),
+      requirePermissions([Permissions.catalogManage]),
       authenticate,
       rateLimit(RateLimits.sixtyPerMinute),
       frontendSpecific,

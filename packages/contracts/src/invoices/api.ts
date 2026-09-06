@@ -68,7 +68,7 @@ export class InvoicesApi extends HttpApiGroup.make('invoices', { topLevel: true 
     ),
     error: [...invoiceWriteErrors, PaymentExportInvalidRange, PaymentExportTooLarge],
   }).pipe(
-    requirePermissions([Permissions.invoiceMarkPaid]),
+    requirePermissions([Permissions.paymentRead]),
     authenticate,
     rateLimit(RateLimits.tenPerMinute),
   ),
