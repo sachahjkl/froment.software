@@ -171,8 +171,20 @@ describe('ApiTokens', () => {
     copyButton.click();
     await fixture.whenStable();
     expect(root.querySelector('dialog [role="alert"]')).toBeNull();
-    const confirm = vi.spyOn(globalThis, 'confirm').mockReturnValue(false);
-    expect(fixture.componentInstance.canDeactivate()).toBe(false);
+    let decide!: (result: boolean) => void;
+    const confirm = vi.spyOn(Confirmation.prototype, 'request').mockImplementation(
+      () =>
+        new Promise<boolean>((resolve) => {
+          decide = resolve;
+        }),
+    );
+    copyButton.focus();
+    const leaving = fixture.componentInstance.canDeactivate();
+    expect(dialog.open).toBe(false);
+    decide(false);
+    expect(await leaving).toBe(false);
+    expect(dialog.open).toBe(true);
+    expect(document.activeElement).toBe(copyButton);
     expect(confirm).toHaveBeenCalledOnce();
 
     const acknowledge = root.querySelector<HTMLButtonElement>(
@@ -182,7 +194,7 @@ describe('ApiTokens', () => {
     acknowledge?.click();
     await fixture.whenStable();
     expect(root.textContent).not.toContain(secret);
-    expect(fixture.componentInstance.canDeactivate()).toBe(true);
+    expect(await fixture.componentInstance.canDeactivate()).toBe(true);
   });
 
   it('does not present a failed initial load as an empty list', async () => {
@@ -212,7 +224,7 @@ describe('ApiTokens', () => {
       result: { token: typeof token; secret: string };
     }) => void;
     const create = vi.fn().mockReturnValue(new Promise((resolve) => (resolveCreate = resolve)));
-    const confirm = vi.spyOn(globalThis, 'confirm');
+    const confirm = vi.spyOn(Confirmation.prototype, 'request');
     confirm.mockClear();
     TestBed.configureTestingModule({
       providers: [
@@ -242,7 +254,7 @@ describe('ApiTokens', () => {
     root.querySelector<HTMLFormElement>('dialog form')!.dispatchEvent(new SubmitEvent('submit'));
     await vi.waitFor(() => expect(create).toHaveBeenCalledOnce());
 
-    expect(fixture.componentInstance.canDeactivate()).toBe(false);
+    expect(await fixture.componentInstance.canDeactivate()).toBe(false);
     expect(confirm).not.toHaveBeenCalled();
     const beforeUnload = new Event('beforeunload', { cancelable: true });
     globalThis.dispatchEvent(beforeUnload);
@@ -258,7 +270,7 @@ describe('ApiTokens', () => {
       success: true,
       result: { ...token, revokedAt: Date.now() },
     });
-    vi.spyOn(globalThis, 'confirm').mockReturnValue(true);
+    vi.spyOn(Confirmation.prototype, 'request').mockResolvedValue(true);
     TestBed.configureTestingModule({
       providers: [
         {
@@ -284,3 +296,4 @@ describe('ApiTokens', () => {
     expect(root.querySelector('tbody button')).toBeNull();
   });
 });
+import { Confirmation } from '@shared/confirmation/confirmation';

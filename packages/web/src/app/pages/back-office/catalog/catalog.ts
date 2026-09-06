@@ -1,3 +1,4 @@
+import { Confirmation } from '@shared/confirmation/confirmation';
 import {
   afterNextRender,
   ChangeDetectionStrategy,
@@ -44,6 +45,7 @@ const emptyModel = () => ({
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class Catalog {
+  private readonly confirmation = inject(Confirmation);
   protected readonly i18n = inject(I18nService);
   private readonly api = inject(CatalogApi);
   private readonly model = signal(emptyModel());
@@ -79,11 +81,11 @@ export class Catalog {
       void this.load();
     });
   }
-  canDeactivate(): boolean {
+  async canDeactivate(): Promise<boolean> {
     return (
       !this.saving() &&
       (!this.itemForm().dirty() ||
-        globalThis.confirm(this.i18n.t('backOffice.quote.unsavedChanges')))
+        (await this.confirmation.request(this.i18n.t('backOffice.quote.unsavedChanges'))))
     );
   }
   @HostListener('window:beforeunload', ['$event'])
@@ -93,8 +95,8 @@ export class Catalog {
   protected invalid(field: 'description' | 'quantity' | 'unitPrice' | 'vatRate'): boolean {
     return this.itemForm[field]().invalid() && this.itemForm[field]().touched();
   }
-  protected edit(item: CatalogItemValue): void {
-    if (!this.canDeactivate()) return;
+  protected async edit(item: CatalogItemValue): Promise<void> {
+    if (!(await this.canDeactivate())) return;
     this.editing.set(item);
     this.model.set({
       description: item.description,
@@ -107,8 +109,8 @@ export class Catalog {
     this.error.set(undefined);
     this.saved.set(false);
   }
-  protected cancel(): void {
-    if (this.canDeactivate()) this.reset();
+  protected async cancel(): Promise<void> {
+    if (await this.canDeactivate()) this.reset();
   }
   protected async load(): Promise<void> {
     if (this.saving()) return;

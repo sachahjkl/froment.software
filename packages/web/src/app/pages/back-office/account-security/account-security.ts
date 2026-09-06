@@ -1,3 +1,4 @@
+import { Confirmation } from '@shared/confirmation/confirmation';
 import { ChangeDetectionStrategy, Component, HostListener, inject, signal } from '@angular/core';
 import {
   disabled,
@@ -25,6 +26,7 @@ import { AccountSessions } from './account-sessions';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AccountSecurity {
+  private readonly confirmation = inject(Confirmation);
   protected readonly i18n = inject(I18nService);
   private readonly authentication = inject(Authentication);
   protected readonly pending = signal(false);
@@ -48,7 +50,7 @@ export class AccountSecurity {
     event.preventDefault();
     if (this.pending()) return;
     void submit(this.passwordForm, async () => {
-      if (!globalThis.confirm(this.i18n.t('account.password_confirm'))) return;
+      if (!(await this.confirmation.request(this.i18n.t('account.password_confirm')))) return;
       this.pending.set(true);
       this.error.set(undefined);
       try {
@@ -66,10 +68,11 @@ export class AccountSecurity {
     });
   }
 
-  canDeactivate(): boolean {
+  async canDeactivate(): Promise<boolean> {
     if (this.pending()) return false;
     return (
-      !this.passwordForm().dirty() || globalThis.confirm(this.i18n.t('account.password_discard'))
+      !this.passwordForm().dirty() ||
+      (await this.confirmation.request(this.i18n.t('account.password_discard')))
     );
   }
 

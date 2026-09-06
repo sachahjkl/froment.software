@@ -1,3 +1,4 @@
+import { Confirmation } from '@shared/confirmation/confirmation';
 import {
   afterNextRender,
   ChangeDetectionStrategy,
@@ -36,6 +37,7 @@ const blank = () => ({ recipient: '', reference: '', subject: '', body: '' });
   templateUrl: './emails.html',
 })
 export class Emails {
+  private readonly confirmation = inject(Confirmation);
   protected readonly i18n = inject(I18nService);
   private readonly api = inject(IntegrationsApi);
   private readonly model = signal(blank());
@@ -86,11 +88,11 @@ export class Emails {
       this.loading.set(false);
     }
   }
-  canDeactivate(): boolean {
+  async canDeactivate(): Promise<boolean> {
     return (
       !this.saving() &&
       ((!this.messageForm().dirty() && this.pending() === undefined) ||
-        globalThis.confirm(this.i18n.t('backOffice.quote.unsavedChanges')))
+        (await this.confirmation.request(this.i18n.t('backOffice.quote.unsavedChanges'))))
     );
   }
   @HostListener('window:beforeunload', ['$event'])
@@ -113,7 +115,8 @@ export class Emails {
         this.invalidRequest.set(true);
         return;
       }
-      if (mode === 'live' && !globalThis.confirm(this.i18n.t('emails.confirmSend'))) return;
+      if (mode === 'live' && !(await this.confirmation.request(this.i18n.t('emails.confirmSend'))))
+        return;
       this.pending.set(request.value);
       await this.send(request.value);
     });

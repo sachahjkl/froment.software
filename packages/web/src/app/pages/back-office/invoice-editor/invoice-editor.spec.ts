@@ -165,11 +165,11 @@ describe('InvoiceEditor', () => {
     if (field === null) throw new Error('correction.reason.missing');
     field.value = 'Wrong amount';
     field.dispatchEvent(new Event('input', { bubbles: true }));
-    const confirm = vi.spyOn(globalThis, 'confirm').mockReturnValue(false);
+    const confirm = vi.spyOn(Confirmation.prototype, 'request').mockResolvedValue(false);
     field.form?.dispatchEvent(new SubmitEvent('submit', { bubbles: true, cancelable: true }));
     await fixture.whenStable();
     expect(api.cancelPayment).not.toHaveBeenCalled();
-    confirm.mockReturnValue(true);
+    confirm.mockResolvedValue(true);
     api.cancelPayment.mockRejectedValueOnce(new Error('offline'));
     field.form?.dispatchEvent(new SubmitEvent('submit', { bubbles: true, cancelable: true }));
     await fixture.whenStable();
@@ -312,7 +312,7 @@ describe('InvoiceEditor', () => {
 
   it('issues a saved draft and reloads its issued state', async () => {
     const { api, fixture, root } = await setup('draft');
-    vi.spyOn(globalThis, 'confirm').mockReturnValue(true);
+    vi.spyOn(Confirmation.prototype, 'request').mockResolvedValue(true);
     api.issue.mockResolvedValue({ success: true, result: { status: 'issued' } });
     api.get.mockResolvedValueOnce({ success: true, result: detail('issued') });
 
@@ -345,7 +345,7 @@ describe('InvoiceEditor', () => {
     'transitions an issued invoice to %s',
     async (status, label, method) => {
       const { api, fixture, root } = await setup('issued');
-      vi.spyOn(globalThis, 'confirm').mockReturnValue(true);
+      vi.spyOn(Confirmation.prototype, 'request').mockResolvedValue(true);
       api[method].mockResolvedValue({ success: true, result: detail(status) });
 
       button(root, label).click();
@@ -397,7 +397,7 @@ describe('InvoiceEditor', () => {
 
   it('restores action pending after a transition network error', async () => {
     const { api, fixture, root } = await setup('issued');
-    vi.spyOn(globalThis, 'confirm').mockReturnValue(true);
+    vi.spyOn(Confirmation.prototype, 'request').mockResolvedValue(true);
     api.void.mockRejectedValue(new Error('offline'));
 
     button(root, /Annuler la facture|Void invoice/i).click();
@@ -408,7 +408,7 @@ describe('InvoiceEditor', () => {
 
   it('retries a payment with the same request identifier after a network error', async () => {
     const { api, fixture, root } = await setup('issued');
-    vi.spyOn(globalThis, 'confirm').mockReturnValue(true);
+    vi.spyOn(Confirmation.prototype, 'request').mockResolvedValue(true);
     const form = root.querySelector<HTMLFormElement>('.payment-form');
     if (form === null) throw new Error('payment.form.missing');
     const fields = form.querySelectorAll<HTMLInputElement>('input');
@@ -510,3 +510,4 @@ describe('InvoiceEditor', () => {
     );
   });
 });
+import { Confirmation } from '@shared/confirmation/confirmation';

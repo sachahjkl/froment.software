@@ -2,6 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { vi } from 'vitest';
 import { CatalogApi } from '@backoffice/catalog-api';
 import { Catalog } from './catalog';
+import { Confirmation } from '@shared/confirmation/confirmation';
 
 const item = {
   id: '01ARZ3NDEKTSV4RRFFQ69G5FAV',
@@ -15,6 +16,51 @@ const item = {
 };
 
 describe('Catalog', () => {
+  it('waits for confirmation before replacing or discarding edited values', async () => {
+    let decide!: (result: boolean) => void;
+    const request = vi.fn(
+      () =>
+        new Promise<boolean>((resolve) => {
+          decide = resolve;
+        }),
+    );
+    TestBed.configureTestingModule({
+      providers: [
+        { provide: CatalogApi, useValue: { list: async () => [item] } },
+        { provide: Confirmation, useValue: { request } },
+      ],
+    });
+    const fixture = TestBed.createComponent(Catalog);
+    await fixture.whenStable();
+    const root: HTMLElement = fixture.nativeElement;
+    const description = root.querySelector<HTMLInputElement>('#catalog-description')!;
+    description.value = 'Unsaved work';
+    description.dispatchEvent(new Event('input', { bubbles: true }));
+    await fixture.whenStable();
+    root.querySelector<HTMLButtonElement>('.items button')!.click();
+    expect(request).toHaveBeenCalledOnce();
+    expect(description.value).toBe('Unsaved work');
+    decide(false);
+    await fixture.whenStable();
+    expect(description.value).toBe('Unsaved work');
+    root.querySelector<HTMLButtonElement>('.items button')!.click();
+    decide(true);
+    await fixture.whenStable();
+    expect(description.value).toBe('Audit');
+    description.value = 'Another edit';
+    description.dispatchEvent(new Event('input', { bubbles: true }));
+    await fixture.whenStable();
+    root.querySelector<HTMLButtonElement>('form button[type="button"]')!.click();
+    expect(description.value).toBe('Another edit');
+    decide(false);
+    await fixture.whenStable();
+    expect(description.value).toBe('Another edit');
+    root.querySelector<HTMLButtonElement>('form button[type="button"]')!.click();
+    decide(true);
+    await fixture.whenStable();
+    expect(description.value).toBe('');
+  });
+
   it('updates with the loaded version and archives without deleting', async () => {
     const update = vi.fn(async () => ({
       success: true,

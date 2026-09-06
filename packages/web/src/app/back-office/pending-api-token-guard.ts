@@ -1,6 +1,6 @@
 import type { CanDeactivateFn } from '@angular/router';
 
-import type { ApiTokens } from '@app/pages/back-office/api-tokens/api-tokens';
+import type { UnsavedChangesPage } from './unsaved-changes-guard';
 
-export const pendingApiTokenGuard: CanDeactivateFn<ApiTokens> = (component) =>
+export const pendingApiTokenGuard: CanDeactivateFn<UnsavedChangesPage> = (component) =>
   component.canDeactivate();

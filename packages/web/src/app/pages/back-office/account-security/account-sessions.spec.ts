@@ -27,11 +27,11 @@ describe('AccountSessions', () => {
     expect(root.querySelectorAll('li button')).toHaveLength(1);
     const button = root.querySelector<HTMLButtonElement>('li button');
     if (button === null) throw new Error('session.revoke.missing');
-    const confirm = vi.spyOn(globalThis, 'confirm').mockReturnValue(false);
+    const confirm = vi.spyOn(Confirmation.prototype, 'request').mockResolvedValue(false);
     button.click();
     await fixture.whenStable();
     expect(revokeSession).not.toHaveBeenCalled();
-    confirm.mockReturnValue(true);
+    confirm.mockResolvedValue(true);
     revokeSession.mockRejectedValueOnce(new Error('offline'));
     button.click();
     await fixture.whenStable();
@@ -64,3 +64,4 @@ describe('AccountSessions', () => {
     expect(root.querySelectorAll('li')).toHaveLength(1);
   });
 });
+import { Confirmation } from '@shared/confirmation/confirmation';

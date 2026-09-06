@@ -1,3 +1,4 @@
+import { Confirmation } from '@shared/confirmation/confirmation';
 import {
   afterNextRender,
   ChangeDetectionStrategy,
@@ -108,6 +109,7 @@ const errorKeys = {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class InvoiceEditor {
+  private readonly confirmation = inject(Confirmation);
   protected readonly i18n = inject(I18nService);
   private readonly invoicesApi = inject(InvoicesApi);
   private readonly ordersApi = inject(OrdersApi);
@@ -271,13 +273,13 @@ export class InvoiceEditor {
     this.invoiceForm().markAsDirty();
   }
 
-  canDeactivate(): boolean {
+  async canDeactivate(): Promise<boolean> {
     if (this.actionPending()) return false;
     return (
       (!this.invoiceForm().dirty() &&
         !this.paymentForm().dirty() &&
         !this.cancellationForm().dirty()) ||
-      globalThis.confirm(this.i18n.t('backOffice.invoice.unsavedChanges'))
+      (await this.confirmation.request(this.i18n.t('backOffice.invoice.unsavedChanges')))
     );
   }
 
@@ -357,7 +359,7 @@ export class InvoiceEditor {
       this.issueDisabled()
     )
       return;
-    if (!globalThis.confirm(this.i18n.t('backOffice.invoice.issueConfirm'))) return;
+    if (!(await this.confirmation.request(this.i18n.t('backOffice.invoice.issueConfirm')))) return;
     this.actionPending.set(true);
     this.error.set(undefined);
     this.documentIssues.set([]);
@@ -398,7 +400,7 @@ export class InvoiceEditor {
         this.setError('invoice.payment_invalid');
         return;
       }
-      if (!globalThis.confirm(this.i18n.t('payment.confirm'))) return;
+      if (!(await this.confirmation.request(this.i18n.t('payment.confirm')))) return;
       this.paymentAttempt = request;
       this.actionPending.set(true);
       this.error.set(undefined);
@@ -436,7 +438,7 @@ export class InvoiceEditor {
       const invoice = this.detail();
       const paymentId = this.cancellationPaymentId();
       if (invoice === undefined || paymentId === undefined) return;
-      if (!globalThis.confirm(this.i18n.t('payment.cancel_confirm'))) return;
+      if (!(await this.confirmation.request(this.i18n.t('payment.cancel_confirm')))) return;
       this.actionPending.set(true);
       this.error.set(undefined);
       try {
@@ -457,11 +459,11 @@ export class InvoiceEditor {
     });
   }
 
-  protected dismissCancellation(): void {
+  protected async dismissCancellation(): Promise<void> {
     if (this.actionPending()) return;
     if (
       this.cancellationForm().dirty() &&
-      !globalThis.confirm(this.i18n.t('payment.cancel_discard_confirm'))
+      !(await this.confirmation.request(this.i18n.t('payment.cancel_discard_confirm')))
     )
       return;
     this.cancellationPaymentId.set(undefined);
@@ -497,10 +499,7 @@ export class InvoiceEditor {
   }
 
   protected money(cents: number): string {
-    return new Intl.NumberFormat(this.i18n.language(), {
-      style: 'currency',
-      currency: 'EUR',
-    }).format(cents / 100);
+    return formatMoney(cents, this.i18n.language(), 'EUR');
   }
 
   protected paymentMethod(method: InvoicePaymentRequestValue['method']): TranslationKey {
@@ -595,7 +594,7 @@ export class InvoiceEditor {
       this.actionPending()
     )
       return;
-    if (!globalThis.confirm(this.i18n.t('backOffice.invoice.voidConfirm'))) return;
+    if (!(await this.confirmation.request(this.i18n.t('backOffice.invoice.voidConfirm')))) return;
     this.actionPending.set(true);
     this.error.set(undefined);
     try {
@@ -694,3 +693,4 @@ export class InvoiceEditor {
     this.error.set(errorKeys[code]);
   }
 }
+import { formatMoney } from '@froment/l10n';

@@ -1,3 +1,4 @@
+import { Confirmation } from '@shared/confirmation/confirmation';
 import {
   afterNextRender,
   ChangeDetectionStrategy,
@@ -103,6 +104,7 @@ const statusKeys = {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class QuoteEditor {
+  private readonly confirmation = inject(Confirmation);
   private readonly catalogApi = inject(CatalogApi);
   protected readonly catalogItems = signal<CatalogItemListValue>([]);
   protected readonly i18n = inject(I18nService);
@@ -259,10 +261,10 @@ export class QuoteEditor {
     select.value = '';
   }
 
-  canDeactivate(): boolean {
+  async canDeactivate(): Promise<boolean> {
     return (
       !this.quoteForm().dirty() ||
-      globalThis.confirm(this.i18n.t('backOffice.quote.unsavedChanges'))
+      (await this.confirmation.request(this.i18n.t('backOffice.quote.unsavedChanges')))
     );
   }
 
@@ -323,10 +325,7 @@ export class QuoteEditor {
   }
 
   protected money(cents: number): string {
-    return new Intl.NumberFormat(this.i18n.language(), {
-      style: 'currency',
-      currency: 'EUR',
-    }).format(cents / 100);
+    return formatMoney(cents, this.i18n.language(), 'EUR');
   }
 
   protected date(value: string): string {
@@ -380,7 +379,7 @@ export class QuoteEditor {
       !['draft', 'sent', 'expired'].includes(quote.status) ||
       this.cancelling() ||
       this.cancellationReason() === '' ||
-      !globalThis.confirm(this.i18n.t('backOffice.quote.cancelConfirm'))
+      !(await this.confirmation.request(this.i18n.t('backOffice.quote.cancelConfirm')))
     ) {
       return;
     }
@@ -545,3 +544,4 @@ export class QuoteEditor {
     this.error.set(code);
   }
 }
+import { formatMoney } from '@froment/l10n';

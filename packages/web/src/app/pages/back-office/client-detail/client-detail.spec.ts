@@ -142,7 +142,7 @@ describe('ClientDetail', () => {
 
     expect(root.querySelector<HTMLInputElement>('#detail-display-name')?.disabled).toBe(true);
     expect(root.querySelector('button[type="submit"]')).toBeNull();
-    expect(component.canDeactivate()).toBe(true);
+    expect(await component.canDeactivate()).toBe(true);
   });
 
   it('explains the client password length requirement while typing', async () => {
@@ -179,7 +179,7 @@ describe('ClientDetail', () => {
       createdAt: 1_700_000_000_000,
     };
     const revokeAccess = vi.fn().mockResolvedValue({ success: true, result: null });
-    const confirm = vi.spyOn(globalThis, 'confirm').mockReturnValue(true);
+    const confirm = vi.spyOn(Confirmation.prototype, 'request').mockResolvedValue(true);
     const { fixture } = await configure(
       {
         get: () => Promise.resolve({ success: true as const, result: client }),
@@ -215,9 +215,10 @@ describe('ClientDetail', () => {
     if (name === null) throw new Error('The client name input is unavailable.');
     name.value = 'Changed';
     name.dispatchEvent(new Event('input'));
-    const confirm = vi.spyOn(globalThis, 'confirm').mockReturnValue(false);
+    const confirm = vi.spyOn(Confirmation.prototype, 'request').mockResolvedValue(false);
 
-    expect(component.canDeactivate()).toBe(false);
+    expect(await component.canDeactivate()).toBe(false);
     expect(confirm).toHaveBeenCalledOnce();
   });
 });
+import { Confirmation } from '@shared/confirmation/confirmation';

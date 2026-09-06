@@ -1,3 +1,4 @@
+import { Confirmation } from '@shared/confirmation/confirmation';
 import {
   afterNextRender,
   ChangeDetectionStrategy,
@@ -24,6 +25,7 @@ import { Notice } from '@shared/notice/notice';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AccountSessions {
+  private readonly confirmation = inject(Confirmation);
   readonly disabled = input(false);
   protected readonly i18n = inject(I18nService);
   private readonly authentication = inject(Authentication);
@@ -62,12 +64,12 @@ export class AccountSessions {
     if (session.current || this.revoking() !== undefined || this.loading() || this.disabled())
       return;
     if (
-      !globalThis.confirm(
+      !(await this.confirmation.request(
         this.i18n.tf('account.session_revoke_confirm', {
           date: this.date(session.startedAt),
           id: session.id,
         }),
-      )
+      ))
     )
       return;
     this.revoking.set(session.id);

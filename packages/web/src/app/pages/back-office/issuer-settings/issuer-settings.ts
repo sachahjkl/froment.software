@@ -1,3 +1,4 @@
+import { Confirmation } from '@shared/confirmation/confirmation';
 import {
   afterNextRender,
   ChangeDetectionStrategy,
@@ -36,6 +37,7 @@ const emptySettings = (): IssuerSettingsValue => ({
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class IssuerSettings {
+  private readonly confirmation = inject(Confirmation);
   protected readonly i18n = inject(I18nService);
   private readonly api = inject(IssuerSettingsApi);
   private readonly model = signal(emptySettings());
@@ -73,10 +75,10 @@ export class IssuerSettings {
     afterNextRender(() => void this.load());
   }
 
-  canDeactivate(): boolean {
+  async canDeactivate(): Promise<boolean> {
     return (
       !this.settingsForm().dirty() ||
-      globalThis.confirm(this.i18n.t('backOffice.quote.unsavedChanges'))
+      (await this.confirmation.request(this.i18n.t('backOffice.quote.unsavedChanges')))
     );
   }
 

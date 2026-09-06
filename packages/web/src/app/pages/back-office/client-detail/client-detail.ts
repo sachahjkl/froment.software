@@ -1,3 +1,4 @@
+import { Confirmation } from '@shared/confirmation/confirmation';
 import {
   afterNextRender,
   ChangeDetectionStrategy,
@@ -81,6 +82,7 @@ const emptyClient = () => ({
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ClientDetail {
+  private readonly confirmation = inject(Confirmation);
   protected readonly i18n = inject(I18nService);
   private readonly api = inject(ClientsApi);
   private readonly quotesApi = inject(QuotesApi);
@@ -190,10 +192,10 @@ export class ClientDetail {
     afterNextRender(() => void this.load());
   }
 
-  canDeactivate(): boolean {
+  async canDeactivate(): Promise<boolean> {
     return (
       !this.clientForm().dirty() ||
-      globalThis.confirm(this.i18n.t('backOffice.clientDetail.unsavedChanges'))
+      (await this.confirmation.request(this.i18n.t('backOffice.clientDetail.unsavedChanges')))
     );
   }
 
@@ -207,10 +209,7 @@ export class ClientDetail {
   }
 
   protected money(cents: number): string {
-    return new Intl.NumberFormat(this.i18n.language(), {
-      style: 'currency',
-      currency: 'EUR',
-    }).format(cents / 100);
+    return formatMoney(cents, this.i18n.language(), 'EUR');
   }
 
   protected createAccess(event: SubmitEvent): void {
@@ -244,11 +243,11 @@ export class ClientDetail {
     if (
       client === undefined ||
       this.revokingAccessId() !== undefined ||
-      !globalThis.confirm(
+      !(await this.confirmation.request(
         this.i18n.tf('backOffice.clientDetail.accessRevokeConfirmation', {
           email: access.email,
         }),
-      )
+      ))
     ) {
       return;
     }
@@ -352,3 +351,4 @@ export class ClientDetail {
     this.error.set(code);
   }
 }
+import { formatMoney } from '@froment/l10n';

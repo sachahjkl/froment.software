@@ -1,3 +1,4 @@
+import { Confirmation } from '@shared/confirmation/confirmation';
 import {
   afterNextRender,
   afterRenderEffect,
@@ -44,6 +45,7 @@ type ClientTab = 'active' | 'archived' | 'all';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class Clients {
+  private readonly confirmation = inject(Confirmation);
   protected readonly i18n = inject(I18nService);
   private readonly api = inject(ClientsApi);
   private readonly route = inject(ActivatedRoute);
@@ -158,7 +160,8 @@ export class Clients {
   }
 
   protected async archive(client: ClientSummaryValue): Promise<void> {
-    if (!window.confirm(this.i18n.t('backOffice.clients.archiveConfirmation'))) return;
+    if (!(await this.confirmation.request(this.i18n.t('backOffice.clients.archiveConfirmation'))))
+      return;
     this.pendingClientId.set(client.id);
     this.error.set(undefined);
     const outcome = await this.api.archive(client.id);

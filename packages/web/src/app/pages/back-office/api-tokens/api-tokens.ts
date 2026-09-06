@@ -1,3 +1,4 @@
+import { Confirmation } from '@shared/confirmation/confirmation';
 import {
   afterNextRender,
   afterRenderEffect,
@@ -90,6 +91,7 @@ const emptyModel = (): TokenModel => ({
   host: { '(window:beforeunload)': 'beforeUnload($event)' },
 })
 export class ApiTokens {
+  private readonly confirmation = inject(Confirmation);
   protected readonly i18n = inject(I18nService);
   private readonly api = inject(ApiTokensApi);
   private readonly textCopy = inject(TextCopy);
@@ -255,7 +257,8 @@ export class ApiTokens {
 
   protected async revoke(token: ApiTokenValue): Promise<void> {
     if (this.revoking()) return;
-    if (!globalThis.confirm(this.i18n.t('backOffice.apiTokens.revokeConfirmation'))) return;
+    if (!(await this.confirmation.request(this.i18n.t('backOffice.apiTokens.revokeConfirmation'))))
+      return;
     this.revoking.set(true);
     this.pageError.set(undefined);
     const outcome = await this.api.revoke(token.id);
@@ -315,10 +318,22 @@ export class ApiTokens {
     }
   }
 
-  canDeactivate(): boolean {
+  async canDeactivate(): Promise<boolean> {
     if (this.saving()) return false;
     if (this.secret() === undefined) return true;
-    return globalThis.confirm(this.i18n.t('backOffice.apiTokens.leaveConfirmation'));
+    // Native modal dialogs occupy the top layer above CDK overlays.
+    const dialog = this.createDialog().nativeElement;
+    const wasOpen = dialog.open;
+    const focused = dialog.ownerDocument.activeElement;
+    if (wasOpen) dialog.close();
+    const leave = await this.confirmation.request(
+      this.i18n.t('backOffice.apiTokens.leaveConfirmation'),
+    );
+    if (!leave && wasOpen && !this.destroyRef.destroyed) {
+      dialog.showModal();
+      if (focused instanceof HTMLElement && dialog.contains(focused)) focused.focus();
+    }
+    return leave;
   }
 
   protected beforeUnload(event: BeforeUnloadEvent): void {

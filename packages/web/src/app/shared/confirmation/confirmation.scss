@@ -1,0 +1,33 @@
+:host {
+  display: block;
+  max-height: calc(100dvh - 2rem);
+  overflow: auto;
+  overscroll-behavior: contain;
+  padding: var(--space-6);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  color: var(--color-ink);
+  box-shadow: var(--shadow-page);
+}
+
+h2 {
+  margin: 0;
+  font-size: var(--text-lg);
+}
+
+p {
+  margin-block: var(--space-4) var(--space-6);
+  overflow-wrap: anywhere;
+  white-space: pre-line;
+}
+
+.confirmation-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--space-3);
+}
+
+button {
+  min-height: 2.75rem;
+}

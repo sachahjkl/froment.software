@@ -35,13 +35,13 @@ describe('AccountSecurity', () => {
       field.value = value;
       field.dispatchEvent(new Event('input', { bubbles: true }));
     }
-    const confirm = vi.spyOn(globalThis, 'confirm').mockReturnValue(false);
+    const confirm = vi.spyOn(Confirmation.prototype, 'request').mockResolvedValue(false);
     root
       .querySelector('form')
       ?.dispatchEvent(new SubmitEvent('submit', { bubbles: true, cancelable: true }));
     await fixture.whenStable();
     expect(changePassword).not.toHaveBeenCalled();
-    confirm.mockReturnValue(true);
+    confirm.mockResolvedValue(true);
     root
       .querySelector('form')
       ?.dispatchEvent(new SubmitEvent('submit', { bubbles: true, cancelable: true }));
@@ -53,6 +53,7 @@ describe('AccountSecurity', () => {
     for (const field of root.querySelectorAll<HTMLInputElement>('input'))
       expect(field.value).toBe('');
     expect(root.querySelector(success ? '[role="status"]' : '[role="alert"]')).not.toBeNull();
-    expect(fixture.componentInstance.canDeactivate()).toBe(true);
+    expect(await fixture.componentInstance.canDeactivate()).toBe(true);
   });
 });
+import { Confirmation } from '@shared/confirmation/confirmation';

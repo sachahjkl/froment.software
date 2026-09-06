@@ -73,7 +73,7 @@ describe('Emails', () => {
     expect(root.querySelector('li')?.textContent).toMatch(/non envoyé|not sent/);
     expect(root.querySelector('.message-body')?.textContent).toContain('<script>alert(1)</script>');
     expect(root.querySelector('script')).toBeNull();
-    expect(fixture.componentInstance.canDeactivate()).toBe(true);
+    expect(await fixture.componentInstance.canDeactivate()).toBe(true);
     expect(document.activeElement).toBe(root.querySelector('[role="status"]'));
   });
   it('locks an ambiguous request and retries without changing the key or losing the draft', async () => {
@@ -86,8 +86,8 @@ describe('Emails', () => {
     await fixture.whenStable();
     const root: HTMLElement = fixture.nativeElement;
     compose(root);
-    const confirm = vi.spyOn(globalThis, 'confirm').mockReturnValue(false);
-    expect(fixture.componentInstance.canDeactivate()).toBe(false);
+    const confirm = vi.spyOn(Confirmation.prototype, 'request').mockResolvedValue(false);
+    expect(await fixture.componentInstance.canDeactivate()).toBe(false);
     await fixture.whenStable();
     root
       .querySelector('form')
@@ -103,7 +103,8 @@ describe('Emails', () => {
     await fixture.whenStable();
     expect(api.requests).toHaveLength(2);
     expect(api.requests[1]).toEqual(api.requests[0]);
-    expect(fixture.componentInstance.canDeactivate()).toBe(true);
+    expect(await fixture.componentInstance.canDeactivate()).toBe(true);
     confirm.mockRestore();
   });
 });
+import { Confirmation } from '@shared/confirmation/confirmation';

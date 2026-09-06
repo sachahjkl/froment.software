@@ -3,6 +3,9 @@ import { webUiText } from './web-ui-text.js';
 export const translations = {
   fr: {
     ...webUiText.fr,
+    'confirmation.title': 'Confirmer l’action',
+    'confirmation.cancel': 'Annuler',
+    'confirmation.accept': 'Confirmer',
     'emails.title': 'Courriels',
     'emails.loadError':
       'Impossible de charger le service de courriels. Rechargez l’historique pour réessayer.',
@@ -1416,6 +1419,9 @@ export const translations = {
   },
   en: {
     ...webUiText.en,
+    'confirmation.title': 'Confirm action',
+    'confirmation.cancel': 'Cancel',
+    'confirmation.accept': 'Confirm',
     'emails.title': 'Email',
     'emails.loadError': 'Cannot load the email service. Reload the history to try again.',
     'emails.intro':

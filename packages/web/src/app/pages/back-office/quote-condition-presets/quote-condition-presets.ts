@@ -1,3 +1,4 @@
+import { Confirmation } from '@shared/confirmation/confirmation';
 import {
   afterNextRender,
   ChangeDetectionStrategy,
@@ -34,6 +35,7 @@ const emptyModel = (): PresetModel => ({ name: '', conditions: '' });
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class QuoteConditionPresets {
+  private readonly confirmation = inject(Confirmation);
   protected readonly i18n = inject(I18nService);
   private readonly api = inject(QuoteConditionPresetsApi);
   private readonly model = signal<PresetModel>(emptyModel());
@@ -56,10 +58,10 @@ export class QuoteConditionPresets {
     afterNextRender(() => void this.load());
   }
 
-  canDeactivate(): boolean {
+  async canDeactivate(): Promise<boolean> {
     return (
       !this.presetForm().dirty() ||
-      globalThis.confirm(this.i18n.t('backOffice.quote.unsavedChanges'))
+      (await this.confirmation.request(this.i18n.t('backOffice.quote.unsavedChanges')))
     );
   }
 
@@ -97,7 +99,12 @@ export class QuoteConditionPresets {
   }
 
   protected async remove(preset: QuoteConditionPresetValue): Promise<void> {
-    if (!globalThis.confirm(this.i18n.t('backOffice.conditionPresets.deleteConfirmation'))) return;
+    if (
+      !(await this.confirmation.request(
+        this.i18n.t('backOffice.conditionPresets.deleteConfirmation'),
+      ))
+    )
+      return;
     const outcome = await this.api.remove(preset.id);
     if (!outcome.success) {
       this.error.set(outcome.code);

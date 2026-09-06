@@ -1,0 +1,10 @@
+<h2 id="confirmation-title">{{ i18n.t('confirmation.title') }}</h2>
+<p id="confirmation-message">{{ message }}</p>
+<div class="confirmation-actions">
+  <button appButton type="button" data-confirmation-cancel (click)="dialog.close(false)">
+    {{ i18n.t('confirmation.cancel') }}
+  </button>
+  <button appButton type="button" variant="primary" (click)="dialog.close(true)">
+    {{ i18n.t('confirmation.accept') }}
+  </button>
+</div>
