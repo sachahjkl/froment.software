@@ -5,7 +5,11 @@ import { HttpApiBuilder } from 'effect/unstable/httpapi';
 
 import { DocumentArtifacts } from '../documents/document-artifacts.js';
 import { DocumentRenderer } from '../documents/document-renderer.js';
-import { setPdfResponseHeaders, setPrivateResponseHeaders } from '../http/response.js';
+import {
+  setPdfPreviewFilename,
+  setPdfResponseHeaders,
+  setPrivateResponseHeaders,
+} from '../http/response.js';
 import { Quotes } from './quotes.js';
 
 export const QuoteHandlers = HttpApiBuilder.group(Api, 'quotes', (handlers) =>
@@ -35,7 +39,12 @@ export const QuoteHandlers = HttpApiBuilder.group(Api, 'quotes', (handlers) =>
           const snapshot = yield* (yield* Quotes)
             .getSnapshot(params.quoteId, params.version)
             .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
-          return yield* (yield* DocumentRenderer).renderQuotePdf(snapshot).pipe(Effect.orDie);
+          yield* setPdfPreviewFilename(
+            `preview-devis-${snapshot.quoteReference}-v${snapshot.version}.pdf`,
+          );
+          return yield* (yield* DocumentRenderer)
+            .renderQuotePdf(snapshot, { preview: true })
+            .pipe(Effect.orDie);
         }),
       )
       .handle(

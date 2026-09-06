@@ -33,15 +33,22 @@ export class DocumentRenderError extends Schema.TaggedError<DocumentRenderError>
   { reason: Schema.Literals(['input', 'compiler', 'output']) },
 ) {}
 
+export interface DocumentRenderOptions {
+  readonly preview: boolean;
+}
+
 export interface DocumentRendererService {
   readonly renderQuotePdf: (
     snapshot: QuoteRenderSnapshotValue,
+    options?: DocumentRenderOptions,
   ) => Effect.Effect<Uint8Array, DocumentRenderError>;
   readonly renderInvoicePdf: (
     snapshot: InvoiceRenderSnapshotValue,
+    options?: DocumentRenderOptions,
   ) => Effect.Effect<Uint8Array, DocumentRenderError>;
   readonly renderOrderPdf: (
     snapshot: OrderRenderSnapshotValue,
+    options?: DocumentRenderOptions,
   ) => Effect.Effect<Uint8Array, DocumentRenderError>;
 }
 
@@ -59,7 +66,10 @@ export const DocumentRendererLive = Layer.effect(
     const config = (yield* RuntimeConfiguration).documentRenderer;
     const permits = yield* TxSemaphore.make(config.concurrency);
 
-    const compile = Effect.fn('DocumentRenderer.compile')(function* (input: DocumentInput) {
+    const compile = Effect.fn('DocumentRenderer.compile')(function* (
+      input: DocumentInput,
+      previewTitle?: string,
+    ) {
       const json = yield* Effect.try({
         try: () => JSON.stringify(input),
         catch: () => new DocumentRenderError({ reason: 'input' }),
@@ -101,6 +111,9 @@ export const DocumentRendererLive = Layer.effect(
                   executable,
                   [
                     'compile',
+                    ...(previewTitle === undefined
+                      ? []
+                      : ['--input', `preview-title=${previewTitle}`]),
                     '--root',
                     root,
                     '--font-path',
@@ -137,22 +150,31 @@ export const DocumentRendererLive = Layer.effect(
     });
 
     const renderQuotePdf = Effect.fn('DocumentRenderer.renderQuotePdf')(
-      (snapshot: QuoteRenderSnapshotValue) =>
-        compile(prepareQuoteDocument(snapshot)).pipe(
-          Effect.catchDefect(() => new DocumentRenderError({ reason: 'input' })),
-        ),
+      (snapshot: QuoteRenderSnapshotValue, options?: DocumentRenderOptions) =>
+        compile(
+          prepareQuoteDocument(snapshot),
+          options?.preview
+            ? `PREVIEW — Devis ${snapshot.quoteReference} — v${snapshot.version} — ${snapshot.title}`
+            : undefined,
+        ).pipe(Effect.catchDefect(() => new DocumentRenderError({ reason: 'input' }))),
     );
     const renderInvoicePdf = Effect.fn('DocumentRenderer.renderInvoicePdf')(
-      (snapshot: InvoiceRenderSnapshotValue) =>
-        compile(prepareInvoiceDocument(snapshot)).pipe(
-          Effect.catchDefect(() => new DocumentRenderError({ reason: 'input' })),
-        ),
+      (snapshot: InvoiceRenderSnapshotValue, options?: DocumentRenderOptions) =>
+        compile(
+          prepareInvoiceDocument(snapshot),
+          options?.preview
+            ? `PREVIEW — Facture ${snapshot.invoiceNumber ?? `brouillon ${snapshot.invoiceId}`} — v${snapshot.version} — ${snapshot.title}`
+            : undefined,
+        ).pipe(Effect.catchDefect(() => new DocumentRenderError({ reason: 'input' }))),
     );
     const renderOrderPdf = Effect.fn('DocumentRenderer.renderOrderPdf')(
-      (snapshot: OrderRenderSnapshotValue) =>
-        compile(prepareOrderDocument(snapshot)).pipe(
-          Effect.catchDefect(() => new DocumentRenderError({ reason: 'input' })),
-        ),
+      (snapshot: OrderRenderSnapshotValue, options?: DocumentRenderOptions) =>
+        compile(
+          prepareOrderDocument(snapshot),
+          options?.preview
+            ? `PREVIEW — Commande ${snapshot.orderReference} — ${snapshot.title}`
+            : undefined,
+        ).pipe(Effect.catchDefect(() => new DocumentRenderError({ reason: 'input' }))),
     );
 
     return DocumentRenderer.of({ renderQuotePdf, renderInvoicePdf, renderOrderPdf });

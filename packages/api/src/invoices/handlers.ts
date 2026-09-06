@@ -5,7 +5,11 @@ import { HttpApiBuilder } from 'effect/unstable/httpapi';
 
 import { DocumentArtifacts } from '../documents/document-artifacts.js';
 import { DocumentRenderer } from '../documents/document-renderer.js';
-import { setPdfResponseHeaders, setPrivateResponseHeaders } from '../http/response.js';
+import {
+  setPdfPreviewFilename,
+  setPdfResponseHeaders,
+  setPrivateResponseHeaders,
+} from '../http/response.js';
 import { Invoices } from './invoices.js';
 import { issueInvoice } from './issue.js';
 import { exportInvoicePayments } from './payment-export.js';
@@ -65,7 +69,12 @@ export const InvoiceHandlers = HttpApiBuilder.group(Api, 'invoices', (handlers) 
           const snapshot = yield* (yield* Invoices)
             .getSnapshot(params.invoiceId, params.version)
             .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
-          return yield* (yield* DocumentRenderer).renderInvoicePdf(snapshot).pipe(Effect.orDie);
+          yield* setPdfPreviewFilename(
+            `preview-facture-${snapshot.invoiceNumber ?? snapshot.invoiceId}-v${snapshot.version}.pdf`,
+          );
+          return yield* (yield* DocumentRenderer)
+            .renderInvoicePdf(snapshot, { preview: true })
+            .pipe(Effect.orDie);
         }),
       )
       .handle(

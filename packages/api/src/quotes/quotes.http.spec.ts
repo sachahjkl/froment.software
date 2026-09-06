@@ -24,6 +24,9 @@ describe('quote HTTP routes', () => {
       headers: server.sessionHeaders,
     });
     expect(preview.status).toBe(200);
+    expect(preview.headers.get('content-disposition')).toMatch(
+      /^inline; filename="preview-devis-DE-\d{4}-\d{6}-v1\.pdf"$/,
+    );
     expect(preview.headers.get('content-type')).toContain('application/pdf');
     expect(preview.headers.get('content-security-policy')).toContain("default-src 'none'");
     expect(

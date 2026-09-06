@@ -35,6 +35,9 @@ describe('order HTTP routes', () => {
       headers: server.sessionHeaders,
     });
     expect(preview.status).toBe(200);
+    expect(preview.headers.get('content-disposition')).toMatch(
+      /^inline; filename="preview-commande-CO-\d{4}-\d{6}\.pdf"$/,
+    );
     expect(preview.headers.get('content-security-policy')).toContain("default-src 'none'");
     expect(
       Buffer.from(await preview.arrayBuffer())

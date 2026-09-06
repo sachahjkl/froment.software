@@ -154,6 +154,43 @@ const inspectPdf = (pdf: Uint8Array) => {
 const normalizedText = (value: string): string => value.replaceAll(/[\s\u200b]/g, '');
 
 describe('DocumentRenderer', () => {
+  it('gives previews rich titles and a watermark on every page, without marking final PDFs', async () => {
+    const outputs = await Effect.runPromise(
+      DocumentRenderer.use((renderer) =>
+        Effect.all([
+          renderer.renderQuotePdf(compactQuote, { preview: true }),
+          renderer.renderInvoicePdf(invoice, { preview: true }),
+          renderer.renderOrderPdf(compactOrder, { preview: true }),
+          renderer.renderInvoicePdf(
+            { ...compactInvoice, invoiceNumber: null, issuedAt: null },
+            { preview: true },
+          ),
+          renderer.renderInvoicePdf(invoice),
+        ]),
+      ).pipe(Effect.provide(DocumentRendererLive)),
+    );
+    const titles = [
+      'PREVIEW — Devis DE-2026-000001 — v1 — Développement logiciel',
+      `PREVIEW — Facture FA-2026-000001 — v1 — ${invoice.title}`,
+      'PREVIEW — Commande CO-2026-000001 — Développement logiciel',
+      `PREVIEW — Facture brouillon ${compactInvoice.invoiceId} — v1 — Développement logiciel`,
+    ];
+    for (const [index, title] of titles.entries()) {
+      const pdf = outputs[index];
+      if (pdf === undefined) throw new Error('preview.fixture.missing');
+      const inspected = inspectPdf(pdf);
+      expect(inspected.info).toContain(title);
+      const pages = Number(inspected.info.match(/Pages:\s+(\d+)/)?.[1]);
+      const rawText = spawnSync('pdftotext', ['-raw', '-', '-'], { input: pdf, encoding: 'utf8' });
+      expect(rawText.status).toBe(0);
+      expect(rawText.stdout.match(/PREVIEW/g)).toHaveLength(pages);
+    }
+    const final = outputs[4];
+    if (final === undefined) throw new Error('final.fixture.missing');
+    const inspected = inspectPdf(final);
+    expect(inspected.info).not.toContain('PREVIEW');
+    expect(inspected.text).not.toContain('PREVIEW');
+  }, 30000);
   it('renders compact and maximum fixtures as stable A4 PDFs with embedded text', async () => {
     const rendered = await Effect.runPromise(
       DocumentRenderer.use((renderer) =>

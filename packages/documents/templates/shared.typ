@@ -4,11 +4,18 @@
   }
 }
 
-#let document(data) = {
+#let document(data, preview: false) = {
   let line-gap = 1.4mm
   let row-inset = 1.3mm
 
-  set page(paper: "a4", margin: 12.7mm, fill: white)
+  set page(
+    paper: "a4", margin: 12.7mm, fill: white,
+    background: if preview {
+      align(center + horizon, rotate(-35deg,
+        text(font: "Cousine", size: 64pt, weight: "bold", fill: rgb("dedede"))[PREVIEW],
+      ))
+    } else { none },
+  )
   set text(font: ("Cousine", "Liberation Mono"), size: 8.5pt, weight: "bold")
   set par(leading: 0.65em)
 

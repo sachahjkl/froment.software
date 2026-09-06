@@ -44,6 +44,18 @@ export const setPdfResponseHeaders = HttpEffect.appendPreResponseHandler((_reque
   ),
 );
 
+export const setPdfPreviewFilename = Effect.fn('setPdfPreviewFilename')((filename: string) =>
+  HttpEffect.appendPreResponseHandler((_request, response) =>
+    Effect.succeed(
+      HttpServerResponse.setHeader(
+        response,
+        'content-disposition',
+        `inline; filename="${filename}"`,
+      ),
+    ),
+  ),
+);
+
 export const setPublicDocumentResponseHeaders = HttpEffect.appendPreResponseHandler(
   (_request, response) =>
     Effect.succeed(

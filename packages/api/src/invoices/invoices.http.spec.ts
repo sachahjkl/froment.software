@@ -46,6 +46,20 @@ describe('invoice HTTP routes', () => {
       body: JSON.stringify(payload),
     });
     expect(duplicate.status).toBe(409);
+    const preview = await fetch(
+      `${server.baseUrl}/api/invoices/${invoice.id}/revisions/1/preview`,
+      { headers: server.sessionHeaders },
+    );
+    expect(preview.status).toBe(200);
+    expect(preview.headers.get('content-disposition')).toBe(
+      `inline; filename="preview-facture-${invoice.id}-v1.pdf"`,
+    );
+    expect(preview.headers.get('cache-control')).toContain('no-store');
+    expect(
+      Buffer.from(await preview.arrayBuffer())
+        .subarray(0, 5)
+        .toString(),
+    ).toBe('%PDF-');
 
     const revision = await fetch(`${server.baseUrl}/api/invoices/${invoice.id}/revisions`, {
       method: 'POST',
@@ -76,6 +90,15 @@ describe('invoice HTTP routes', () => {
     expect(issues.map(({ status }) => status)).toEqual([200, 200]);
     const issued = (await issues[0]!.json()) as { invoiceNumber: string; version: number };
     expect(issued).toMatchObject({ invoiceNumber: 'FA-2026-000001', version: 3 });
+    const issuedPreview = await fetch(
+      `${server.baseUrl}/api/invoices/${invoice.id}/revisions/3/preview`,
+      { headers: server.sessionHeaders },
+    );
+    expect(issuedPreview.status).toBe(200);
+    expect(issuedPreview.headers.get('content-disposition')).toBe(
+      'inline; filename="preview-facture-FA-2026-000001-v3.pdf"',
+    );
+    await issuedPreview.arrayBuffer();
 
     const download = await fetch(`${server.baseUrl}/api/invoices/${invoice.id}/revisions/3/pdf`, {
       headers: server.sessionHeaders,
