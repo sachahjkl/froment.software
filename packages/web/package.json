@@ -7,8 +7,8 @@
     "start": "ng serve",
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
-    "test": "ng test --watch=false",
-    "test:watch": "ng test",
+    "test": "NODE_OPTIONS=--no-experimental-webstorage ng test --watch=false",
+    "test:watch": "NODE_OPTIONS=--no-experimental-webstorage ng test",
     "lint:templates": "node tools/check-template-prose.mjs"
   },
   "dependencies": {

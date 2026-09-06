@@ -55,7 +55,7 @@
               "unversioned";
           inherit (packageJson) version;
           pname = packageJson.name;
-          runtimeNode = pkgs.nodejs-slim_22;
+          runtimeNode = pkgs.nodejs-slim_26;
           cousineFonts = pkgs.google-fonts.override { fonts = [ "Cousine" ]; };
           documentFonts = pkgs.symlinkJoin {
             name = "froment-document-fonts";
@@ -119,7 +119,7 @@
                 pnpmDeps
                 ;
               nativeBuildInputs = [
-                pkgs.nodejs_22
+                pkgs.nodejs_26
                 pkgs.pnpm
                 pkgs.pnpmConfigHook
                 pkgs.makeWrapper
@@ -177,7 +177,7 @@
               CI = "true";
               PNPM_CONFIG_REPORTER = "append-only";
               nativeBuildInputs = [
-                pkgs.nodejs_22
+                pkgs.nodejs_26
                 pkgs.pnpm
                 pkgs.pnpmConfigHook
               ]
@@ -337,6 +337,14 @@
           };
 
           checks = {
+            node-runtime = pkgs.runCommand "node-runtime-check" { nativeBuildInputs = [ runtimeNode ]; } ''
+              node --input-type=module -e '
+                import assert from "node:assert/strict";
+                assert.equal(process.versions.node.split(".")[0], "26");
+                assert.equal(Temporal.PlainDate.from("2026-09-06").add({ days: 1 }).toString(), "2026-09-07");
+              '
+              touch "$out"
+            '';
             inherit dockerImage productionClosure;
             build = application;
             format = mkCheck "format" "pnpm format:check";
@@ -355,7 +363,7 @@
             packages = preCommitCheck.enabledPackages ++ [
               cousineFonts
               pkgs.liberation_ttf
-              pkgs.nodejs_22
+              pkgs.nodejs_26
               pkgs.poppler-utils
               pkgs.pnpm
               pkgs.sops
