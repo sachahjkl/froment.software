@@ -1022,3 +1022,48 @@ export const integrationOperations = sqliteTable('integration_operations', {
     .notNull()
     .references(() => users.id),
 });
+
+export const bankTransactions = sqliteTable(
+  'bank_transactions',
+  {
+    id: text().notNull().primaryKey(),
+    account: text().notNull(),
+    reference: text().notNull(),
+    bookedOn: text('booked_on').notNull(),
+    amountCents: integer('amount_cents').notNull(),
+    description: text().notNull(),
+    importedAt: text('imported_at').notNull(),
+    importedByUserId: text('imported_by_user_id')
+      .notNull()
+      .references(() => users.id),
+  },
+  (table) => [uniqueIndex('bank_transaction_source_index').on(table.account, table.reference)],
+);
+
+export const bankMatches = sqliteTable(
+  'bank_matches',
+  {
+    id: text().notNull().primaryKey(),
+    transactionId: text('transaction_id')
+      .notNull()
+      .references(() => bankTransactions.id),
+    paymentId: text('payment_id')
+      .notNull()
+      .references(() => invoicePayments.id),
+    matchedAt: text('matched_at').notNull(),
+    matchedByUserId: text('matched_by_user_id')
+      .notNull()
+      .references(() => users.id),
+    cancelledAt: text('cancelled_at'),
+    cancelledByUserId: text('cancelled_by_user_id').references(() => users.id),
+    cancellationReason: text('cancellation_reason'),
+  },
+  (table) => [
+    uniqueIndex('bank_match_transaction_index')
+      .on(table.transactionId)
+      .where(sql`${table.cancelledAt} is null`),
+    uniqueIndex('bank_match_payment_index')
+      .on(table.paymentId)
+      .where(sql`${table.cancelledAt} is null`),
+  ],
+);

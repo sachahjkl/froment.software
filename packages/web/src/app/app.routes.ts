@@ -325,6 +325,14 @@ export const routes: Routes = [
     data: { titleKey: 'emails.title', descriptionKey: 'emails.intro', robots: 'noindex, nofollow' },
   },
   {
+    path: 'backoffice/banque',
+    loadComponent: () =>
+      import('./pages/back-office/banking/banking').then((module) => module.Banking),
+    canActivate: [administratorGuard],
+    canDeactivate: [unsavedChangesGuard],
+    data: { titleKey: 'bank.title', descriptionKey: 'bank.intro', robots: 'noindex, nofollow' },
+  },
+  {
     path: 'backoffice/invoices/new',
     loadComponent: () =>
       import('./pages/back-office/invoice-editor/invoice-editor').then(

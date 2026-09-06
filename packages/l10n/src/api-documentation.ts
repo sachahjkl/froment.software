@@ -72,12 +72,31 @@ export const apiDocumentation = {
       },
       status: { title: 'État', description: 'Santé et version du déploiement.' },
       catalog: { title: 'Catalogue', description: 'Prestations réutilisables dans les devis.' },
+      banking: { title: 'Banque', description: 'Relevés et rapprochement des règlements.' },
       integrations: {
         title: 'Services externes',
         description: 'Adaptateurs et journal des demandes.',
       },
     },
     operations: {
+      bankTransactionList: {
+        summary: 'Lister les opérations bancaires',
+        description: 'Retourne les 1 000 dernières opérations et leurs rapprochements actifs.',
+      },
+      bankImport: {
+        summary: 'Importer un relevé CSV',
+        description:
+          'Importe atomiquement les lignes et refuse les références réutilisées avec des valeurs différentes.',
+      },
+      bankMatch: {
+        summary: 'Rapprocher un encaissement',
+        description:
+          'Associe un crédit à un règlement actif du même montant, sans créer de règlement.',
+      },
+      bankUnmatch: {
+        summary: 'Dissocier un rapprochement',
+        description: 'Conserve le rapprochement précédent et son motif de dissociation.',
+      },
       integrationStatus: {
         summary: 'Lister les modes des adaptateurs',
         description: 'Indique les services simulés et les prestataires connectés.',
@@ -401,10 +420,28 @@ export const apiDocumentation = {
       },
       status: { title: 'Status', description: 'Deployment health and version.' },
       catalog: { title: 'Catalog', description: 'Reusable services for quotes.' },
+      banking: { title: 'Banking', description: 'Statements and payment reconciliation.' },
       integrations: { title: 'External services', description: 'Adapters and request history.' },
     },
     operations: {
       catalogList: { summary: 'List services', description: 'Lists active and archived services.' },
+      bankTransactionList: {
+        summary: 'List bank transactions',
+        description: 'Returns the latest 1,000 transactions and their active matches.',
+      },
+      bankImport: {
+        summary: 'Import a CSV statement',
+        description: 'Imports rows atomically and rejects reused references with changed values.',
+      },
+      bankMatch: {
+        summary: 'Reconcile a receipt',
+        description:
+          'Links a credit to an active payment of the same amount without creating a payment.',
+      },
+      bankUnmatch: {
+        summary: 'Remove a match',
+        description: 'Preserves the previous match and the reason for removing it.',
+      },
       integrationStatus: {
         summary: 'List adapter modes',
         description: 'Identifies simulated services and connected providers.',

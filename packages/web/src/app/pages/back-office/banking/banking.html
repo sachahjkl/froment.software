@@ -1,0 +1,151 @@
+<section aria-labelledby="bank-title">
+  <h1 id="bank-title">{{ i18n.t('bank.title') }}</h1>
+  <p>{{ i18n.t('bank.intro') }}</p>
+  <p appNotice variant="info">{{ i18n.t('bank.noTransfer') }}</p>
+  <p #result tabindex="-1" role="status">
+    @if (saved()) { {{ i18n.t('bank.saved') }} } @if (importResult(); as result) { {{
+    i18n.t('bank.added') }} {{ result.added }} — {{ i18n.t('bank.existing') }} {{ result.existing }}
+    }
+  </p>
+  @if (error(); as error) {
+  <p appNotice variant="danger" role="alert">{{ i18n.t(error) }}</p>
+  <button appButton type="button" [disabled]="saving() || loading()" (click)="load()">
+    {{ i18n.t('bank.reload') }}
+  </button>
+  }
+  <form class="ds-panel import-form" (submit)="importStatement($event)">
+    <h2>{{ i18n.t('bank.import') }}</h2>
+    <p id="csv-hint">{{ i18n.t('bank.csvHint') }}</p>
+    <a href="/bank-statement-template.csv" download>{{ i18n.t('bank.template') }}</a>
+    <label
+      >{{ i18n.t('bank.account') }}<input
+        id="bank-account"
+        class="input"
+        [formField]="importForm.account"
+    /></label>
+    <label
+      >{{ i18n.t('bank.file') }}<input
+        #statementFile
+        id="bank-file"
+        type="file"
+        accept=".csv,text/csv"
+        aria-describedby="csv-hint"
+        [disabled]="saving()"
+        (change)="readFile(statementFile)"
+    /></label>
+    @if (filename()) {
+    <p>{{ filename() }}</p>
+    }
+    <button
+      appButton
+      type="submit"
+      variant="primary"
+      [disabled]="saving() || importForm().invalid() || csv() === ''"
+    >
+      {{ i18n.t('bank.import') }}
+    </button>
+  </form>
+  <div #editor tabindex="-1">
+    @if (selected(); as selected) {
+    <section class="ds-panel editor" aria-labelledby="match-title">
+      <h2 id="match-title">{{ i18n.t('bank.reconcile') }} — {{ selected.reference }}</h2>
+      <p>{{ selected.description }} — {{ amount(selected.amountCents) }}</p>
+      @if (selected.paymentId === null) {
+      <p>{{ i18n.t('bank.matchHint') }}</p>
+      <label
+        >{{ i18n.t('bank.invoice') }}<select
+          #invoice
+          class="select"
+          [disabled]="saving()"
+          (change)="loadPayments(invoice.value)"
+        >
+          <option value="">{{ i18n.t('bank.chooseInvoice') }}</option>
+          @for (invoice of invoices(); track invoice.id) {
+          <option [value]="invoice.id">{{ invoice.invoiceNumber }} — {{ invoice.title }}</option>
+          }
+        </select></label
+      >
+      @if (paymentLoading()) {
+      <p role="status">{{ i18n.t('bank.loading') }}</p>
+      }
+      <label
+        >{{ i18n.t('bank.payment') }}<select class="select" [formField]="matchForm.paymentId">
+          <option value="">{{ i18n.t('bank.choosePayment') }}</option>
+          @for (payment of payments(); track payment.id) {
+          <option [value]="payment.id">
+            {{ payment.paidOn }} — {{ payment.reference }} — {{ amount(payment.amountCents) }}
+          </option>
+          }
+        </select></label
+      >
+      <button
+        appButton
+        type="button"
+        [disabled]="saving() || paymentLoading() || matchForm().value().paymentId === ''"
+        (click)="reconcile()"
+      >
+        {{ i18n.t('bank.reconcile') }}
+      </button>
+      } @else {
+      <p>{{ i18n.t('bank.unmatchHint') }}</p>
+      <label
+        >{{ i18n.t('bank.reason') }}<textarea
+          class="input"
+          [formField]="matchForm.reason"
+        ></textarea>
+      </label>
+      <button
+        appButton
+        variant="warning"
+        type="button"
+        [disabled]="saving() || matchForm().value().reason.trim() === '' || matchForm().invalid()"
+        (click)="unmatch()"
+      >
+        {{ i18n.t('bank.unmatch') }}
+      </button>
+      }
+    </section>
+    }
+  </div>
+  <h2>{{ i18n.t('bank.transactions') }}</h2>
+  <p>{{ i18n.t('bank.listHint') }}</p>
+  <div class="filters">
+    <label>{{ i18n.t('bank.search') }}<input class="input" [formField]="filters.search" /></label
+    ><label
+      ><input type="checkbox" [formField]="filters.unmatched" /> {{ i18n.t('bank.unmatchedOnly')
+      }}</label
+    >
+  </div>
+  @if (loading()) {
+  <p role="status">{{ i18n.t('bank.loading') }}</p>
+  } @else if (visible().length === 0) {
+  <p>{{ i18n.t('bank.empty') }}</p>
+  }
+  <ol>
+    @for (transaction of visible(); track transaction.id) {
+    <li class="ds-panel">
+      <h3>{{ transaction.account }} — {{ transaction.reference }}</h3>
+      <p>
+        <time [attr.datetime]="transaction.bookedOn"
+          >{{ transaction.bookedOn | localizedDate: i18n.language() }}</time
+        >
+        — {{ amount(transaction.amountCents) }}
+      </p>
+      <p>{{ transaction.description }}</p>
+      @if (transaction.paymentCancelled) {
+      <p appNotice variant="warning">{{ i18n.t('bank.paymentCancelled') }}</p>
+      } @if (transaction.invoiceId !== null) {
+      <a [routerLink]="['/backoffice/invoices', transaction.invoiceId]"
+        >{{ transaction.invoiceNumber }}</a
+      >
+      }
+      <p>{{ i18n.t(transaction.paymentId === null ? 'bank.unmatched' : 'bank.matched') }}</p>
+      @if (transaction.amountCents > 0) {
+      <button appButton type="button" [disabled]="saving()" (click)="select(transaction)">
+        {{ i18n.t(transaction.paymentId === null ? 'bank.reconcile' : 'bank.unmatch') }}
+      </button>
+      }
+    </li>
+    }
+  </ol>
+</section>

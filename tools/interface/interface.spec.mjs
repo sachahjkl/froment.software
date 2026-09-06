@@ -29,6 +29,23 @@ for (const [kind, id] of [
   test(`${kind}: responsive editor and summary`, async ({ page, colorScheme }, testInfo) => {
     await openPage(page, `/backoffice/${kind}/${id}`, colorScheme);
     await expect(page.locator(".document-line")).toHaveCount(3);
+    const conditionsSpacing = await page
+      .locator(".document-editor > form > label")
+      .filter({
+        has: page.locator("textarea"),
+      })
+      .evaluate((field) => {
+        let previous = field.previousElementSibling;
+        while (previous && previous.getClientRects().length === 0) {
+          previous = previous.previousElementSibling;
+        }
+        return {
+          actual: field.getBoundingClientRect().top - previous.getBoundingClientRect().bottom,
+          expected: Number.parseFloat(getComputedStyle(field.parentElement).rowGap),
+        };
+      });
+    expect(conditionsSpacing.expected).toBeGreaterThan(0);
+    expect(Math.abs(conditionsSpacing.actual - conditionsSpacing.expected)).toBeLessThan(1);
     const form = await page.locator(".document-editor > form").boundingBox();
     const summary = await page.locator("[appOutcomePanel]").boundingBox();
     if (page.viewportSize().width >= 1024) {
@@ -118,6 +135,19 @@ test("client form and complete account address", async ({ page, colorScheme }, t
   await page.locator("#email-recipient").fill("client@example.test");
   await page.locator("#email-reference").fill("DE-2026-000001");
   await page.locator("#email-subject").fill("Votre devis / Your quote");
+  const bankLink = page.locator('a[href="/backoffice/banque"]').first();
+  await bankLink.click();
+  const confirmation = page.getByRole("alertdialog");
+  await expect(confirmation).toBeVisible();
+  await expect(confirmation.locator("[data-confirmation-cancel]")).toBeFocused();
+  const confirmationAudit = await new AxeBuilder({ page })
+    .withTags(["wcag2a", "wcag2aa", "wcag21aa"])
+    .analyze();
+  expect(confirmationAudit.violations).toEqual([]);
+  await page.keyboard.press("Escape");
+  await expect(confirmation).toBeHidden();
+  await expect(bankLink).toBeFocused();
+  await expect(page.locator("#email-subject")).toHaveValue("Votre devis / Your quote");
   await page
     .locator("#email-body")
     .fill("Bonjour,\nVoici le récapitulatif de notre proposition.\nCordialement.");
@@ -135,6 +165,24 @@ test("client form and complete account address", async ({ page, colorScheme }, t
     .analyze();
   expect(emailAudit.violations).toEqual([]);
   await page.screenshot({ path: testInfo.outputPath("emails.png"), fullPage: true });
+  await page.goto("/backoffice/banque");
+  await page.locator("#bank-account").fill("MAIN");
+  await page.locator("#bank-file").setInputFiles({
+    name: "statement.csv",
+    mimeType: "text/csv",
+    buffer: Buffer.from(
+      "transaction_id,booked_on,amount,currency,description\nBANK-001,2026-09-01,100.00,EUR,Client payment",
+    ),
+  });
+  await page.locator('app-banking button[type="submit"]').click();
+  await expect(page.locator("app-banking li")).toHaveCount(1);
+  await expect(page.locator('app-banking [role="status"]')).toBeFocused();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth)).toBe(false);
+  const bankingAudit = await new AxeBuilder({ page })
+    .withTags(["wcag2a", "wcag2aa", "wcag21aa"])
+    .analyze();
+  expect(bankingAudit.violations).toEqual([]);
+  await page.screenshot({ path: testInfo.outputPath("banking.png"), fullPage: true });
   await mockApi(page, { mode: "client" });
   await page.goto("/backoffice/client");
   await expect(page.locator(".invoice-balance dd")).toHaveCount(3);

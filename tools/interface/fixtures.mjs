@@ -208,6 +208,7 @@ export async function mockApi(
     ["/api/issuer-settings", issuer],
     ["/api/quote-condition-presets", []],
     ["/api/catalog", []],
+    ["/api/banking/transactions", []],
     [
       "/api/integrations",
       ["email", "signature", "payment", "banking", "electronic-invoice"].map((kind) => ({
@@ -264,6 +265,25 @@ export async function mockApi(
       return route.fulfill({ json: { userId: clientId, email: accountEmail, mode } });
     }
     if (unavailable) return route.fulfill({ status: 503, json: {} });
+    if (path === "/api/banking/import") {
+      responses.set("/api/banking/transactions", [
+        {
+          id: quoteId,
+          account: "MAIN",
+          reference: "BANK-001",
+          bookedOn: "2026-09-01",
+          amountCents: 10000,
+          description: "Client payment",
+          importedAt: createdAt,
+          matchId: null,
+          paymentId: null,
+          invoiceId: null,
+          invoiceNumber: null,
+          paymentCancelled: false,
+        },
+      ]);
+      return route.fulfill({ json: { added: 1, existing: 0 } });
+    }
     if (path === "/api/integrations/operations" && route.request().method() === "POST") {
       const request = route.request().postDataJSON();
       const operation = {

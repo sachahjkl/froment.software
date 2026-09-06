@@ -6,6 +6,53 @@ export const translations = {
     'confirmation.title': 'Confirmer l’action',
     'confirmation.cancel': 'Annuler',
     'confirmation.accept': 'Confirmer',
+    'bank.title': 'Banque',
+    'bank.intro':
+      'Importez les opérations bancaires et rapprochez les encaissements des règlements enregistrés.',
+    'bank.noTransfer':
+      'L’import et le rapprochement utilisent vos données réelles. Ils ne déclenchent aucun virement et ne créent aucun règlement.',
+    'bank.saved': 'Opération enregistrée.',
+    'bank.added': 'Ajoutées :',
+    'bank.existing': 'Déjà présentes :',
+    'bank.reload': 'Recharger les opérations',
+    'bank.import': 'Importer un relevé',
+    'bank.csvHint':
+      'CSV UTF-8, virgules, 1 000 lignes et 500 ko maximum. Colonnes : transaction_id, booked_on, amount, currency, description. Dates AAAA-MM-JJ, montants signés avec deux décimales et un point, devise EUR. Conservez les identifiants bancaires pour éviter les doublons.',
+    'bank.template': 'Télécharger les colonnes du modèle CSV',
+    'bank.account': 'Identifiant stable du compte bancaire',
+    'bank.file': 'Relevé CSV',
+    'bank.reconcile': 'Rapprocher',
+    'bank.matchHint':
+      'Sélectionnez un règlement existant du même montant. Si le règlement manque, enregistrez-le d’abord dans la facture. Les frais et les paiements groupés restent à traiter séparément.',
+    'bank.invoice': 'Facture',
+    'bank.chooseInvoice': 'Choisir une facture',
+    'bank.payment': 'Règlement du même montant',
+    'bank.choosePayment': 'Choisir un règlement',
+    'bank.loading': 'Chargement…',
+    'bank.unmatchHint':
+      'La dissociation conserve le relevé et le règlement. Le motif reste enregistré dans l’historique.',
+    'bank.reason': 'Motif de dissociation',
+    'bank.unmatch': 'Dissocier',
+    'bank.transactions': 'Opérations bancaires',
+    'bank.listHint':
+      'Les 1 000 opérations les plus récentes sont affichées. Les débits ne sont pas rapprochés des règlements clients.',
+    'bank.search': 'Compte, référence ou libellé',
+    'bank.unmatchedOnly': 'Uniquement les opérations à traiter',
+    'bank.empty': 'Aucune opération ne correspond aux filtres.',
+    'bank.paymentCancelled':
+      'Le règlement associé a été annulé. Dissociez-le avant de choisir un autre règlement.',
+    'bank.unmatched': 'Non rapprochée',
+    'bank.matched': 'Règlement associé',
+    'bank.confirmMatch':
+      'Associer cette opération bancaire au règlement sélectionné ? Aucun règlement supplémentaire ne sera créé.',
+    'bank.confirmUnmatch':
+      'Dissocier ce rapprochement ? Le relevé et le règlement resteront inchangés.',
+    'bank.error': 'Impossible de terminer l’opération. Rechargez les données et réessayez.',
+    'bank.import_invalid':
+      'Import refusé. Vérifiez le format, les dates, les montants et les identifiants. Une référence déjà importée doit conserver les mêmes valeurs.',
+    'bank.match_conflict':
+      'Rapprochement refusé. Vérifiez le montant et l’état du règlement, puis rechargez les opérations.',
+    'bank.transaction_not_found': 'Opération introuvable. Rechargez la liste.',
     'emails.title': 'Courriels',
     'emails.loadError':
       'Impossible de charger le service de courriels. Rechargez l’historique pour réessayer.',
@@ -1422,6 +1469,51 @@ export const translations = {
     'confirmation.title': 'Confirm action',
     'confirmation.cancel': 'Cancel',
     'confirmation.accept': 'Confirm',
+    'bank.title': 'Banking',
+    'bank.intro': 'Import bank transactions and reconcile receipts with recorded invoice payments.',
+    'bank.noTransfer':
+      'Imports and reconciliation use your real data. They initiate no transfers and create no payments.',
+    'bank.saved': 'Operation recorded.',
+    'bank.added': 'Added:',
+    'bank.existing': 'Already present:',
+    'bank.reload': 'Reload transactions',
+    'bank.import': 'Import statement',
+    'bank.csvHint':
+      'UTF-8 CSV with commas, at most 1,000 rows and 500 KB. Columns: transaction_id, booked_on, amount, currency, description. Use YYYY-MM-DD dates, signed amounts with two decimal places and a decimal point, and EUR. Keep bank transaction identifiers to prevent duplicates.',
+    'bank.template': 'Download CSV template columns',
+    'bank.account': 'Stable bank account identifier',
+    'bank.file': 'CSV statement',
+    'bank.reconcile': 'Reconcile',
+    'bank.matchHint':
+      'Select an existing payment with the same amount. If the payment is missing, record it in the invoice first. Handle fees and grouped payments separately.',
+    'bank.invoice': 'Invoice',
+    'bank.chooseInvoice': 'Choose an invoice',
+    'bank.payment': 'Payment with the same amount',
+    'bank.choosePayment': 'Choose a payment',
+    'bank.loading': 'Loading…',
+    'bank.unmatchHint':
+      'Removing the match keeps the statement and payment unchanged. The reason stays in the history.',
+    'bank.reason': 'Reason for removing the match',
+    'bank.unmatch': 'Remove match',
+    'bank.transactions': 'Bank transactions',
+    'bank.listHint':
+      'The latest 1,000 transactions are shown. Debits are not reconciled with customer payments.',
+    'bank.search': 'Account, reference or description',
+    'bank.unmatchedOnly': 'Only transactions that need attention',
+    'bank.empty': 'No transactions match the filters.',
+    'bank.paymentCancelled':
+      'The linked payment was cancelled. Remove the match before selecting another payment.',
+    'bank.unmatched': 'Not reconciled',
+    'bank.matched': 'Payment linked',
+    'bank.confirmMatch':
+      'Link this bank transaction to the selected payment? No additional payment will be created.',
+    'bank.confirmUnmatch': 'Remove this match? The statement and payment will stay unchanged.',
+    'bank.error': 'Cannot complete the operation. Reload the data and try again.',
+    'bank.import_invalid':
+      'Import rejected. Check the format, dates, amounts and identifiers. An imported reference must retain its original values.',
+    'bank.match_conflict':
+      'Match rejected. Check the payment amount and status, then reload transactions.',
+    'bank.transaction_not_found': 'Transaction not found. Reload the list.',
     'emails.title': 'Email',
     'emails.loadError': 'Cannot load the email service. Reload the history to try again.',
     'emails.intro':

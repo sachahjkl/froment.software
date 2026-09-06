@@ -376,3 +376,15 @@ export {
   type IntegrationOperation as IntegrationOperationValue,
   type ProviderReceipt as ProviderReceiptValue,
 } from './integrations/contracts.js';
+export {
+  BankTransaction,
+  BankTransactionList,
+  BankImportRequest,
+  BankImportResult,
+  BankFailure,
+  BankImportInvalid,
+  BankMatchConflict,
+  BankTransactionNotFound,
+  type BankTransaction as BankTransactionValue,
+  type BankImportRequest as BankImportRequestValue,
+} from './banking/contracts.js';

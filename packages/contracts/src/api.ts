@@ -3,6 +3,7 @@ import { HttpApi, OpenApi } from 'effect/unstable/httpapi';
 import { ApiTelemetry } from './api-authentication.js';
 import { CatalogApi } from './catalog/api.js';
 import { IntegrationsApi } from './integrations/api.js';
+import { BankingApi } from './banking/api.js';
 
 import { AffairsApi } from './affairs/api.js';
 import { AuthenticationApi } from './authentication/api.js';
@@ -37,6 +38,7 @@ export class Api extends HttpApi.make('froment-api')
   .add(StatusApi)
   .add(CatalogApi)
   .add(IntegrationsApi)
+  .add(BankingApi)
   .add(BootstrapApi)
   .add(AuthenticationApi)
   .add(ClientsApi)

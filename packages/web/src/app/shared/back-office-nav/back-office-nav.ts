@@ -23,6 +23,9 @@ import { I18nService } from '@app/i18n.service';
       <a routerLink="/backoffice/configuration" routerLinkActive="active">
         {{ i18n.t('backOffice.navigation.configuration') }}
       </a>
+      <a routerLink="/backoffice/banque" routerLinkActive="active">
+        {{ i18n.t('bank.title') }}
+      </a>
       <a routerLink="/backoffice/courriels" routerLinkActive="active">{{
         i18n.t('emails.title')
       }}</a>
