@@ -1,0 +1,69 @@
+:host {
+  display: block;
+  padding: var(--page-header-y) var(--page-x);
+}
+h1 {
+  font-size: var(--text-2xl);
+}
+h2 {
+  font-size: var(--text-xl);
+  margin-block-start: var(--space-6);
+}
+h3 {
+  font-size: var(--text-base);
+}
+.composer,
+li {
+  padding: var(--space-4);
+}
+.composer {
+  display: grid;
+  gap: var(--space-4);
+  margin-block: var(--space-6);
+}
+.composer h2 {
+  margin: 0;
+}
+label {
+  display: grid;
+  gap: var(--space-2);
+  min-width: 0;
+}
+.fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr));
+  gap: var(--space-4);
+}
+input,
+textarea {
+  width: 100%;
+  min-width: 0;
+}
+textarea {
+  resize: vertical;
+}
+ol {
+  list-style: none;
+  padding: 0;
+  display: grid;
+  gap: var(--space-4);
+}
+li {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+summary {
+  cursor: pointer;
+  padding-block: var(--space-3);
+}
+.message-body {
+  white-space: pre-wrap;
+}
+button {
+  justify-self: start;
+  max-width: 100%;
+  white-space: normal;
+}
+[role="status"]:empty {
+  margin: 0;
+}

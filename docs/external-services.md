@@ -1,6 +1,9 @@
 # Services externes
 
 La page **Configuration → Services externes** affiche le mode de chaque adaptateur et les 100 dernières opérations.
+La page **Courriels** permet de rédiger des messages en texte brut et de consulter les 100 derniers courriels.
+Elle utilise le même adaptateur et le même journal persistant.
+Le filtre serveur `kind=email` sélectionne les courriels avant d’appliquer la limite de 100 opérations.
 Les cinq adaptateurs livrés fonctionnent en simulation, y compris en production :
 
 - courriels ;
@@ -33,6 +36,22 @@ Un reçu existant est retourné sans nouvel appel au prestataire.
 Si l’adaptateur échoue, la demande reste enregistrée sans reçu.
 Le journal permet de reprendre manuellement les simulations sans reçu, même après un redémarrage.
 Le serveur ne relance pas automatiquement les demandes.
+
+## Courriels
+
+Le formulaire demande un destinataire, une référence interne, un objet et un message.
+Il conserve les valeurs après une erreur et verrouille une demande dont le résultat reste inconnu.
+Une nouvelle tentative reprend exactement cette demande.
+Les protections de navigation signalent les modifications non enregistrées.
+Les brouillons non transmis restent dans la page, pas dans le serveur.
+
+Le journal conserve le contenu en texte brut.
+Le navigateur ne traite pas ce contenu comme du HTML.
+En mode simulation, le bouton et le journal indiquent que le courriel n’est pas envoyé.
+Un reçu réel confirme uniquement la transmission au prestataire, pas la réception du courriel.
+
+Cette page ne remplace pas la boîte Tuta.
+Les pièces jointes, les modèles réutilisables et les relances automatiques restent des modules distincts à raccorder.
 
 ## Accès
 

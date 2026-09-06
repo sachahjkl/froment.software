@@ -16,11 +16,11 @@ export const IntegrationHandlers = HttpApiBuilder.group(Api, 'integrations', (ha
       )
       .handle(
         'integrationOperationList',
-        Effect.fn('integrationOperationList')(function* () {
+        Effect.fn('integrationOperationList')(function* ({ query }) {
           yield* setPrivateResponseHeaders;
-          return yield* (yield* Integrations).list.pipe(
-            Effect.catchTag('DatabaseError', Effect.orDie),
-          );
+          return yield* (yield* Integrations)
+            .list(query.kind)
+            .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
         }),
       )
       .handle(

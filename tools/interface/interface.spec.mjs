@@ -114,6 +114,27 @@ test("client form and complete account address", async ({ page, colorScheme }, t
     .analyze();
   expect(integrationAudit.violations).toEqual([]);
   await page.screenshot({ path: testInfo.outputPath("external-services.png"), fullPage: true });
+  await page.goto("/backoffice/courriels");
+  await page.locator("#email-recipient").fill("client@example.test");
+  await page.locator("#email-reference").fill("DE-2026-000001");
+  await page.locator("#email-subject").fill("Votre devis / Your quote");
+  await page
+    .locator("#email-body")
+    .fill("Bonjour,\nVoici le récapitulatif de notre proposition.\nCordialement.");
+  await page.locator('app-emails button[type="submit"]').click();
+  await expect(page.locator('app-emails [role="status"]')).toContainText(
+    /courriel non envoyé|email not sent/,
+  );
+  await expect(page.locator('app-emails [role="status"]')).toBeFocused();
+  await expect(page.locator("app-emails .input:user-invalid")).toHaveCount(0);
+  await page.locator("app-emails details summary").first().click();
+  await expect(page.locator("app-emails .message-body").first()).toContainText("Bonjour");
+  expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth)).toBe(false);
+  const emailAudit = await new AxeBuilder({ page })
+    .withTags(["wcag2a", "wcag2aa", "wcag21aa"])
+    .analyze();
+  expect(emailAudit.violations).toEqual([]);
+  await page.screenshot({ path: testInfo.outputPath("emails.png"), fullPage: true });
   await mockApi(page, { mode: "client" });
   await page.goto("/backoffice/client");
   await expect(page.locator(".invoice-balance dd")).toHaveCount(3);

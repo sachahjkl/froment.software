@@ -1,0 +1,123 @@
+<section aria-labelledby="emails-title">
+  <h1 id="emails-title">{{ i18n.t('emails.title') }}</h1>
+  <p>{{ i18n.t('emails.intro') }}</p>
+  @if (mode() === 'simulation') {
+  <p appNotice variant="info">{{ i18n.t('emails.simulation') }}</p>
+  } @if (loading()) {
+  <p role="status">{{ i18n.t('integrations.loading') }}</p>
+  }
+  <p #notice tabindex="-1" role="status">
+    @if (completed(); as mode) { {{ i18n.t(mode === 'simulation' ? 'emails.simulated' :
+    'emails.submitted') }} }
+  </p>
+  @if (failed() || loadFailed()) {
+  <p appNotice variant="danger" role="alert">
+    {{ i18n.t(loadFailed() ? 'emails.loadError' : 'emails.error') }}
+  </p>
+  <button appButton type="button" [disabled]="loading() || saving()" (click)="load()">
+    {{ i18n.t('integrations.reload') }}
+  </button>
+  }
+  <form #composer (submit)="save($event)" class="ds-panel composer">
+    <h2>{{ i18n.t('emails.compose') }}</h2>
+    <p id="message-hint">{{ i18n.t('emails.fieldsHint') }}</p>
+    <div class="fields">
+      <label
+        >{{ i18n.t('emails.recipient') }}<input
+          id="email-recipient"
+          class="input"
+          type="email"
+          autocomplete="off"
+          [formField]="messageForm.recipient"
+          [attr.aria-invalid]="invalid('recipient')"
+          aria-describedby="message-hint"
+      /></label>
+      <label
+        >{{ i18n.t('emails.reference') }}<input
+          id="email-reference"
+          class="input"
+          [formField]="messageForm.reference"
+          [attr.aria-invalid]="invalid('reference')"
+          aria-describedby="message-hint"
+      /></label>
+    </div>
+    <label
+      >{{ i18n.t('emails.subject') }}<input
+        id="email-subject"
+        class="input"
+        [formField]="messageForm.subject"
+        [attr.aria-invalid]="invalid('subject')"
+        aria-describedby="message-hint"
+    /></label>
+    <label
+      >{{ i18n.t('emails.body') }}<textarea
+        id="email-body"
+        class="input"
+        rows="10"
+        [formField]="messageForm.body"
+        [attr.aria-invalid]="invalid('body')"
+        aria-describedby="message-hint"
+      ></textarea>
+    </label>
+    @if (invalidRequest()) {
+    <p appNotice variant="danger" role="alert">{{ i18n.t('emails.invalid') }}</p>
+    } @if (pending(); as request) {
+    <p appNotice variant="warning">{{ i18n.t('emails.pending') }}</p>
+    <button
+      appButton
+      type="button"
+      [disabled]="saving() || loading() || request.expectedMode !== mode()"
+      (click)="send(request)"
+    >
+      {{ i18n.t('emails.retry') }}
+    </button>
+    } @else {
+    <button
+      appButton
+      variant="primary"
+      type="submit"
+      [disabled]="saving() || loading() || mode() === undefined || messageForm().invalid()"
+    >
+      {{ i18n.t(mode() === 'simulation' ? 'emails.recordSimulation' : 'emails.send') }}
+    </button>
+    }
+  </form>
+  <h2>{{ i18n.t('emails.history') }}</h2>
+  <p>{{ i18n.t('emails.historyInfo') }}</p>
+  @if (!loading() && operations().length === 0) {
+  <p>{{ i18n.t('integrations.empty') }}</p>
+  }
+  <ol>
+    @for (operation of operations(); track operation.id) { @if (operation.request.kind === 'email')
+    {
+    <li class="ds-panel">
+      <h3>{{ operation.request.subject }}</h3>
+      <p>{{ operation.request.recipient }} — {{ operation.request.reference }}</p>
+      <p>
+        <time [attr.datetime]="operation.createdAt"
+          >{{ operation.createdAt | localizedDate: i18n.language() : { dateStyle: 'medium',
+          timeStyle: 'short' } }}</time
+        >
+      </p>
+      <p>
+        {{ i18n.t(operation.receipt === null ? 'integrations.pending' : operation.receipt.mode ===
+        'simulation' ? 'emails.simulated' : 'emails.submitted') }}
+      </p>
+      <details>
+        <summary>{{ i18n.t('emails.read') }}</summary>
+        <p class="message-body">{{ operation.request.body }}</p>
+      </details>
+      @if (operation.receipt === null) {
+      <button
+        appButton
+        type="button"
+        [disabled]="saving() || loading() || operation.request.expectedMode !== mode()"
+        (click)="send(operation.request)"
+      >
+        {{ i18n.t('emails.retry') }}
+      </button>
+      }
+    </li>
+    } }
+  </ol>
+</section>

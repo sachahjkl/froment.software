@@ -45,13 +45,20 @@ const makeIntegrations = Effect.gen(function* () {
     { kind: 'banking' as const, mode: banking.mode },
     { kind: 'electronic-invoice' as const, mode: electronicInvoice.mode },
   ]);
-  const list = Effect.try({
-    try: () =>
-      Schema.decodeUnknownSync(Schema.Array(Row))(
-        database.sqlite.prepare(`${select} order by created_at desc, id desc limit 100`).all(),
-      ),
-    catch: (cause) => new DatabaseError({ operation: 'list.integration.operations', cause }),
-  });
+  const list = Effect.fn('Integrations.list')(
+    (kind: IntegrationSubmissionValue['kind'] | undefined) =>
+      Effect.try({
+        try: () =>
+          Schema.decodeUnknownSync(Schema.Array(Row))(
+            database.sqlite
+              .prepare(
+                `${select} where (? is null or json_extract(request, '$.kind') = ?) order by created_at desc, id desc limit 100`,
+              )
+              .all(kind ?? null, kind ?? null),
+          ),
+        catch: (cause) => new DatabaseError({ operation: 'list.integration.operations', cause }),
+      }),
+  );
   const submit = Effect.fn('Integrations.submit')(function* (
     request: IntegrationSubmissionValue,
     actorUserId: string,

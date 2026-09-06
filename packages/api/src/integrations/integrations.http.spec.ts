@@ -80,6 +80,18 @@ describe('integration simulations HTTP', () => {
         expect(
           Schema.decodeUnknownSync(IntegrationOperationList)(await history.json()),
         ).toHaveLength(5);
+        const emails = await fetch(`${url}/operations?kind=email`, {
+          headers: server.sessionHeaders,
+        });
+        const emailHistory = Schema.decodeUnknownSync(IntegrationOperationList)(
+          await emails.json(),
+        );
+        expect(emailHistory).toHaveLength(1);
+        expect(emailHistory[0]?.request.kind).toBe('email');
+        expect(
+          (await fetch(`${url}/operations?kind=unknown`, { headers: server.sessionHeaders }))
+            .status,
+        ).toBe(400);
       } finally {
         database.close();
       }

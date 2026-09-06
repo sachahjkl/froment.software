@@ -1,0 +1,109 @@
+import { TestBed } from '@angular/core/testing';
+import { vi } from 'vitest';
+import {
+  type IntegrationOperationValue,
+  type IntegrationSubmissionValue,
+} from '@froment/contracts';
+import { IntegrationsApi } from '@backoffice/integrations-api';
+import { Emails } from './emails';
+
+class EmailApiStub {
+  fail = false;
+  readonly requests: IntegrationSubmissionValue[] = [];
+  async status() {
+    return [{ kind: 'email', mode: 'simulation' }];
+  }
+  async list(): Promise<ReadonlyArray<IntegrationOperationValue>> {
+    return [];
+  }
+  async submit(request: IntegrationSubmissionValue) {
+    this.requests.push(request);
+    if (this.fail) return { success: false as const, code: 'integrations.error' as const };
+    return {
+      success: true as const,
+      result: {
+        id: '01ARZ3NDEKTSV4RRFFQ69G5FAV',
+        request,
+        createdAt: '2026-09-06T10:00:00.000Z',
+        createdByUserId: '01ARZ3NDEKTSV4RRFFQ69G5FAW',
+        receipt: {
+          mode: 'simulation' as const,
+          status: 'simulated' as const,
+          id: `simulation:${request.requestId}`,
+        },
+      },
+    };
+  }
+}
+const fill = (root: HTMLElement, id: string, value: string) => {
+  const input = root.querySelector<HTMLInputElement | HTMLTextAreaElement>(id);
+  if (input === null) throw new Error('email.input.missing');
+  input.value = value;
+  input.dispatchEvent(new Event('input', { bubbles: true }));
+};
+const compose = (root: HTMLElement) => {
+  fill(root, '#email-recipient', 'client@example.test');
+  fill(root, '#email-reference', 'DE-2026-000001');
+  fill(root, '#email-subject', 'Quote');
+  fill(root, '#email-body', '<script>alert(1)</script>\nQuote details.');
+};
+describe('Emails', () => {
+  it('records a simulated email, preserves literal text, and clears the completed form', async () => {
+    const api = new EmailApiStub();
+    TestBed.configureTestingModule({ providers: [{ provide: IntegrationsApi, useValue: api }] });
+    const fixture = TestBed.createComponent(Emails);
+    await fixture.whenStable();
+    await fixture.componentInstance.load();
+    await fixture.whenStable();
+    const root: HTMLElement = fixture.nativeElement;
+    compose(root);
+    await fixture.whenStable();
+    root
+      .querySelector('form')
+      ?.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+    await fixture.whenStable();
+    expect(api.requests).toHaveLength(1);
+    expect(api.requests[0]).toMatchObject({
+      kind: 'email',
+      expectedMode: 'simulation',
+      recipient: 'client@example.test',
+      reference: 'DE-2026-000001',
+    });
+    expect(root.querySelector<HTMLInputElement>('#email-recipient')?.value).toBe('');
+    expect(root.querySelector('li')?.textContent).toMatch(/non envoyé|not sent/);
+    expect(root.querySelector('.message-body')?.textContent).toContain('<script>alert(1)</script>');
+    expect(root.querySelector('script')).toBeNull();
+    expect(fixture.componentInstance.canDeactivate()).toBe(true);
+    expect(document.activeElement).toBe(root.querySelector('[role="status"]'));
+  });
+  it('locks an ambiguous request and retries without changing the key or losing the draft', async () => {
+    const api = new EmailApiStub();
+    api.fail = true;
+    TestBed.configureTestingModule({ providers: [{ provide: IntegrationsApi, useValue: api }] });
+    const fixture = TestBed.createComponent(Emails);
+    await fixture.whenStable();
+    await fixture.componentInstance.load();
+    await fixture.whenStable();
+    const root: HTMLElement = fixture.nativeElement;
+    compose(root);
+    const confirm = vi.spyOn(globalThis, 'confirm').mockReturnValue(false);
+    expect(fixture.componentInstance.canDeactivate()).toBe(false);
+    await fixture.whenStable();
+    root
+      .querySelector('form')
+      ?.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+    await fixture.whenStable();
+    expect(root.querySelector<HTMLInputElement>('#email-recipient')?.disabled).toBe(true);
+    expect(root.querySelector<HTMLInputElement>('#email-recipient')?.value).toBe(
+      'client@example.test',
+    );
+    expect(root.querySelector('[role="alert"]')).not.toBeNull();
+    api.fail = false;
+    root.querySelector<HTMLButtonElement>('form button[type="button"]')?.click();
+    await fixture.whenStable();
+    expect(api.requests).toHaveLength(2);
+    expect(api.requests[1]).toEqual(api.requests[0]);
+    expect(fixture.componentInstance.canDeactivate()).toBe(true);
+    confirm.mockRestore();
+  });
+});

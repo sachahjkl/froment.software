@@ -1,4 +1,5 @@
 import { HttpApiEndpoint, HttpApiGroup } from 'effect/unstable/httpapi';
+import { Schema } from 'effect';
 import { ApiBrowserRequest, ApiRequestBody } from '../api-authentication.js';
 import { authenticate } from '../api-policy/authentication.js';
 import { requirePermissions } from '../api-policy/permissions.js';
@@ -7,6 +8,7 @@ import { Permissions } from '../permissions.js';
 import { frontendSpecific } from '../api-policy/visibility.js';
 import {
   IntegrationFailure,
+  IntegrationKind,
   IntegrationOperation,
   IntegrationOperationList,
   IntegrationStatusList,
@@ -19,6 +21,7 @@ export class IntegrationsApi extends HttpApiGroup.make('integrations', { topLeve
     error: IntegrationFailure.members,
   }).pipe(requirePermissions([Permissions.integrationManage]), authenticate, frontendSpecific),
   HttpApiEndpoint.get('integrationOperationList', '/api/integrations/operations', {
+    query: { kind: Schema.optional(IntegrationKind) },
     success: IntegrationOperationList,
     error: IntegrationFailure.members,
   }).pipe(requirePermissions([Permissions.integrationManage]), authenticate, frontendSpecific),

@@ -3,6 +3,36 @@ import { webUiText } from './web-ui-text.js';
 export const translations = {
   fr: {
     ...webUiText.fr,
+    'emails.title': 'Courriels',
+    'emails.loadError':
+      'Impossible de charger le service de courriels. Rechargez l’historique pour réessayer.',
+    'emails.intro':
+      'Préparez vos messages commerciaux et consultez leur historique. Votre boîte de réception habituelle reste séparée.',
+    'emails.compose': 'Nouveau courriel',
+    'emails.recipient': 'Destinataire',
+    'emails.reference': 'Référence interne',
+    'emails.subject': 'Objet',
+    'emails.body': 'Message',
+    'emails.fieldsHint':
+      'Tous les champs sont obligatoires. Utilisez une adresse valide, 160 caractères maximum pour la référence et l’objet, et 20 000 pour le message.',
+    'emails.simulation':
+      'Mode simulation : les courriels sont enregistrés mais ne sont pas envoyés. Aucun destinataire ne reçoit ces messages.',
+    'emails.recordSimulation': 'Enregistrer la simulation',
+    'emails.send': 'Transmettre le courriel',
+    'emails.confirmSend':
+      'Transmettre ce courriel au prestataire ? Cette opération ne peut pas être annulée.',
+    'emails.simulated': 'Simulation enregistrée — courriel non envoyé.',
+    'emails.submitted': 'Courriel transmis au prestataire — réception non confirmée.',
+    'emails.error':
+      'Le résultat est inconnu. Rechargez l’historique, puis reprenez la même demande. Ne créez pas de copie du message.',
+    'emails.invalid': 'Vérifiez les champs obligatoires, l’adresse et les longueurs maximales.',
+    'emails.pending':
+      'Le message reste verrouillé tant que le résultat est inconnu. Une nouvelle tentative reprend la même demande, sans créer de copie.',
+    'emails.retry': 'Reprendre cette demande',
+    'emails.history': 'Historique des courriels',
+    'emails.historyInfo':
+      'Les 100 derniers courriels sont affichés. Leur contenu reste conservé après transmission ou simulation.',
+    'emails.read': 'Lire le message',
     'integrations.title': 'Services externes',
     'integrations.info':
       'Les adaptateurs simulés sont actifs, y compris en production. Ils n’envoient aucun courriel, ne signent aucun document et ne déplacent aucun argent. Aucun prestataire payant n’est connecté.',
@@ -1386,6 +1416,34 @@ export const translations = {
   },
   en: {
     ...webUiText.en,
+    'emails.title': 'Email',
+    'emails.loadError': 'Cannot load the email service. Reload the history to try again.',
+    'emails.intro':
+      'Prepare business messages and read their history. Your regular inbox remains separate.',
+    'emails.compose': 'New email',
+    'emails.recipient': 'Recipient',
+    'emails.reference': 'Internal reference',
+    'emails.subject': 'Subject',
+    'emails.body': 'Message',
+    'emails.fieldsHint':
+      'All fields are required. Use a valid address, at most 160 characters for the reference and subject, and 20,000 for the message.',
+    'emails.simulation':
+      'Simulation mode: emails are recorded but not sent. No recipient receives these messages.',
+    'emails.recordSimulation': 'Record simulation',
+    'emails.send': 'Submit email',
+    'emails.confirmSend': 'Submit this email to the provider? This operation cannot be undone.',
+    'emails.simulated': 'Simulation recorded — email not sent.',
+    'emails.submitted': 'Email submitted to the provider — delivery not confirmed.',
+    'emails.error':
+      'The result is unknown. Reload the history, then resume the same request. Do not create a copy of the message.',
+    'emails.invalid': 'Check required fields, the email address and maximum lengths.',
+    'emails.pending':
+      'The message stays locked while the result is unknown. A retry resumes the same request without creating a copy.',
+    'emails.retry': 'Resume this request',
+    'emails.history': 'Email history',
+    'emails.historyInfo':
+      'The latest 100 emails are shown. Their content is retained after submission or simulation.',
+    'emails.read': 'Read message',
     'integrations.title': 'External services',
     'integrations.info':
       'Simulated adapters are active, including in production. They send no email, sign no documents and move no money. No paid provider is connected.',

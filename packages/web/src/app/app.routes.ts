@@ -317,6 +317,14 @@ export const routes: Routes = [
     ],
   },
   {
+    path: 'backoffice/courriels',
+    loadComponent: () =>
+      import('./pages/back-office/emails/emails').then((module) => module.Emails),
+    canActivate: [administratorGuard],
+    canDeactivate: [unsavedChangesGuard],
+    data: { titleKey: 'emails.title', descriptionKey: 'emails.intro', robots: 'noindex, nofollow' },
+  },
+  {
     path: 'backoffice/invoices/new',
     loadComponent: () =>
       import('./pages/back-office/invoice-editor/invoice-editor').then(

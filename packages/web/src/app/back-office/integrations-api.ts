@@ -19,9 +19,13 @@ export class IntegrationsApi {
       await firstValueFrom(this.http.get<unknown>('/api/integrations')),
     );
   }
-  async list() {
+  async list(kind?: IntegrationSubmissionValue['kind']) {
     return Schema.decodeUnknownSync(IntegrationOperationList)(
-      await firstValueFrom(this.http.get<unknown>('/api/integrations/operations')),
+      await firstValueFrom(
+        this.http.get<unknown>('/api/integrations/operations', {
+          params: kind === undefined ? {} : { kind },
+        }),
+      ),
     );
   }
   submit(request: IntegrationSubmissionValue) {
