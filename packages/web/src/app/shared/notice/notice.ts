@@ -3,7 +3,7 @@ import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 export type NoticeVariant = 'info' | 'success' | 'warning' | 'danger';
 
 @Component({
-  selector: 'p[appNotice]',
+  selector: 'p[appNotice], div[appNotice]',
   template: '<ng-content />',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: {

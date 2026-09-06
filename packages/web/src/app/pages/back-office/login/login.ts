@@ -4,10 +4,11 @@ import { type LoginModeValue } from '@froment/contracts';
 import { Authentication } from '@backoffice/authentication';
 import { I18nService, TranslationKey } from '@app/i18n.service';
 import { Button } from '@shared/button/button';
+import { Notice } from '@shared/notice/notice';
 
 @Component({
   selector: 'app-login',
-  imports: [Button, RouterLink],
+  imports: [Button, Notice, RouterLink],
   templateUrl: './login.html',
   styleUrl: './login.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

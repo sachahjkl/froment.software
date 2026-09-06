@@ -1,4 +1,5 @@
-import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { Confirmation } from '@shared/confirmation/confirmation';
 import { RouterOutlet } from '@angular/router';
 import { I18nService } from '@app/i18n.service';
 import { Button, type ButtonVariant } from '@shared/button/button';
@@ -35,10 +36,26 @@ type ButtonSample = {
     VisualSample,
   ],
   templateUrl: './design.component.html',
-  changeDetection: ChangeDetectionStrategy.Eager,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrl: './design.component.scss',
 })
 export class DesignComponent {
+  private readonly confirmation = inject(Confirmation);
+  protected readonly confirmationResult = signal<'accepted' | 'cancelled' | undefined>(undefined);
+  protected async demonstrateConfirmation(destructive: boolean): Promise<void> {
+    this.confirmationResult.set(undefined);
+    let message = this.i18n.t('design.confirmation.message');
+    let variant: 'primary' | 'danger' = 'primary';
+    let acceptLabel = this.i18n.t('confirmation.accept');
+    if (destructive) {
+      message = this.i18n.t('design.confirmation.discardMessage');
+      variant = 'danger';
+      acceptLabel = this.i18n.t('design.confirmation.discardLabel');
+    }
+    const accepted = await this.confirmation.request(message, { variant, acceptLabel });
+    if (accepted) this.confirmationResult.set('accepted');
+    else this.confirmationResult.set('cancelled');
+  }
   protected readonly i18n = inject(I18nService);
   protected readonly buttonSamples: readonly ButtonSample[] = [
     { variant: 'default', icon: 'mail' },

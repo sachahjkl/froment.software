@@ -487,6 +487,10 @@ textarea.input {
   background: var(--color-success-soft);
   color: var(--color-success);
 }
+
+.notice-flow > :where(.notice:not(:first-child), .notice + *) {
+  margin-block-start: var(--space-4);
+}
 .notice.warning {
   border-color: color-mix(in oklab, var(--color-warning), white 65%);
   background: var(--color-warning-soft);

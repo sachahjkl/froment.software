@@ -38,7 +38,7 @@
         [formField]="bootstrapForm.password"
       />
       @if (error(); as errorKey) {
-      <p class="error" role="alert">{{ i18n.t(errorKey) }}</p>
+      <p appNotice variant="danger" role="alert">{{ i18n.t(errorKey) }}</p>
       }
       <button appButton variant="primary" type="submit" [disabled]="pending()">
         {{ i18n.t(submitLabel()) }}
@@ -50,7 +50,7 @@
       {{ i18n.t('bootstrap.login') }}
     </a>
     } @case ('error') {
-    <p class="error" role="alert">{{ i18n.t('bootstrap.error') }}</p>
+    <p appNotice variant="danger" role="alert">{{ i18n.t('bootstrap.error') }}</p>
     } } }
   </div>
 </section>

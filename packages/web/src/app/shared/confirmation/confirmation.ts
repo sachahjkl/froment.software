@@ -4,6 +4,14 @@ import { firstValueFrom } from 'rxjs';
 import { I18nService } from '@app/i18n.service';
 import { Button } from '@shared/button/button';
 
+interface ConfirmationOptions {
+  readonly acceptLabel?: string;
+  readonly variant?: 'primary' | 'danger';
+}
+interface ConfirmationData extends ConfirmationOptions {
+  readonly message: string;
+}
+
 @Component({
   selector: 'app-confirmation-dialog',
   imports: [Button],
@@ -13,7 +21,7 @@ import { Button } from '@shared/button/button';
 })
 export class ConfirmationDialog {
   protected readonly i18n = inject(I18nService);
-  protected readonly message = inject<string>(DIALOG_DATA);
+  protected readonly data = inject<ConfirmationData>(DIALOG_DATA);
   protected readonly dialog = inject<DialogRef<boolean>>(DialogRef);
 }
 
@@ -27,23 +35,26 @@ export class Confirmation {
     this.destroyRef.onDestroy(() => this.active?.close(false));
   }
 
-  async request(message: string): Promise<boolean> {
+  async request(message: string, options: ConfirmationOptions = {}): Promise<boolean> {
     // Reject concurrent requests. One approval must authorize only one action.
     if (this.active !== undefined || this.destroyRef.destroyed) return false;
-    const dialog = this.dialogs.open<boolean, string, ConfirmationDialog>(ConfirmationDialog, {
-      data: message,
-      role: 'alertdialog',
-      ariaModal: true,
-      ariaLabelledBy: 'confirmation-title',
-      ariaDescribedBy: 'confirmation-message',
-      autoFocus: '[data-confirmation-cancel]',
-      restoreFocus: true,
-      hasBackdrop: true,
-      disableClose: false,
-      disableAnimations: true,
-      width: '30rem',
-      maxWidth: 'calc(100vw - 2rem)',
-    });
+    const dialog = this.dialogs.open<boolean, ConfirmationData, ConfirmationDialog>(
+      ConfirmationDialog,
+      {
+        data: { message, ...options },
+        role: 'alertdialog',
+        ariaModal: true,
+        ariaLabelledBy: 'confirmation-title',
+        ariaDescribedBy: 'confirmation-message',
+        autoFocus: '[data-confirmation-cancel]',
+        restoreFocus: true,
+        hasBackdrop: true,
+        disableClose: false,
+        disableAnimations: true,
+        width: '30rem',
+        maxWidth: 'calc(100vw - 2rem)',
+      },
+    );
     this.active = dialog;
     try {
       return (await firstValueFrom(dialog.closed, { defaultValue: false })) === true;

@@ -4,12 +4,13 @@ import { RouterLink } from '@angular/router';
 import { BootstrapApi } from '@backoffice/bootstrap-api';
 import { I18nService, TranslationKey } from '@app/i18n.service';
 import { Button } from '@shared/button/button';
+import { Notice } from '@shared/notice/notice';
 
 type PageState = 'loading' | 'available' | 'unavailable' | 'error';
 
 @Component({
   selector: 'app-bootstrap',
-  imports: [Button, FormField, RouterLink],
+  imports: [Button, Notice, FormField, RouterLink],
   templateUrl: './bootstrap.html',
   styleUrl: './bootstrap.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

@@ -216,7 +216,7 @@
   </form>
 
   @if (detail(); as invoice) {
-  <aside appOutcomePanel class="ds-panel">
+  <aside appOutcomePanel class="ds-panel notice-flow">
     @if (invoice.status === 'draft' && documentIssues().length > 0) {
     <app-document-issues [issues]="documentIssues()" [clientId]="invoice.clientId" kind="invoice" />
     }

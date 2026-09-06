@@ -8,12 +8,20 @@ Cette reprise concerne la disposition, la hiérarchie et la lisibilité, pas les
 - Alignez l’en-tête, le contenu et le pied de page avec `--page-x` dans une même largeur maximale.
 - Conservez la largeur publique de 60 rem.
 - Utilisez la largeur de 76 rem du backoffice pour les tableaux et les éditeurs.
-- Utilisez `--panel-padding` pour les panneaux et les formulaires.
+- Utilisez `--panel-padding` pour les sous-groupes qui nécessitent un panneau.
+- Ne placez pas le formulaire principal dans un panneau supplémentaire.
 - Regroupez les champs liés avec `.field-grid` et réservez `.wide` aux champs occupant toute la ligne.
 - Conservez un seul titre `h1` par page, y compris dans les pages de configuration imbriquées.
 - Rendez la valeur complète accessible lorsqu’un texte est tronqué.
 
 ## Surfaces et composition
+
+Les alertes utilisent `Notice` sur un paragraphe ou un bloc contenant plusieurs éléments.
+Le composant gère la présentation, pas la position dans la page.
+Dans une grille ou un conteneur flex, le parent gère l’espacement avec `gap`.
+Dans un flux de blocs sans espacement existant, ajoutez `.notice-flow` au parent direct.
+Cette classe sépare les alertes de leurs voisins avec `--space-4`.
+N’ajoutez pas cette classe à une grille qui possède déjà un `gap`.
 
 La texture reste visible autour du contenu, pas derrière le texte des pages.
 Le conteneur principal utilise un fond opaque, une bordure et l’ombre `--shadow-page`.

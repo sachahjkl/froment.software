@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+import { scalarDocumentation } from "../../packages/api/src/documentation/scalar.ts";
 import AxeBuilder from "@axe-core/playwright";
 import {
   accountEmail,
@@ -20,6 +21,22 @@ async function openPage(page, route, colorScheme) {
   await expect(page.locator("main h1")).toHaveCount(1);
   await expect(page.locator('main [role="alert"]')).toHaveCount(0);
   expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth)).toBe(false);
+}
+
+async function checkNoticeSpacing(page) {
+  const failures = await page.locator(".notice-flow > .notice").evaluateAll((notices) =>
+    notices.flatMap((notice) => {
+      if (notice.getClientRects().length === 0) return [];
+      let previous = notice.previousElementSibling;
+      while (previous && previous.getBoundingClientRect().height === 0)
+        previous = previous.previousElementSibling;
+      if (!previous) return [];
+      const gap = notice.getBoundingClientRect().top - previous.getBoundingClientRect().bottom;
+      if (gap >= 12) return [];
+      return [{ text: notice.textContent, gap }];
+    }),
+  );
+  expect(failures).toEqual([]);
 }
 
 for (const [kind, id] of [
@@ -235,6 +252,7 @@ test("client form and complete account address", async ({ page, colorScheme }, t
     .analyze();
   expect(emailAudit.violations).toEqual([]);
   await page.screenshot({ path: testInfo.outputPath("emails.png"), fullPage: true });
+  await checkNoticeSpacing(page);
   await page.goto("/backoffice/banque");
   await page.locator("#bank-account").fill("MAIN");
   await page.locator("#bank-file").setInputFiles({
@@ -257,6 +275,7 @@ test("client form and complete account address", async ({ page, colorScheme }, t
     .analyze();
   expect(bankingAudit.violations).toEqual([]);
   await page.screenshot({ path: testInfo.outputPath("banking.png"), fullPage: true });
+  await checkNoticeSpacing(page);
   await mockApi(page, { mode: "client" });
   await page.goto("/backoffice/client");
   await expect(page.locator(".invoice-balance dd")).toHaveCount(3);
@@ -269,7 +288,7 @@ test("client form and complete account address", async ({ page, colorScheme }, t
   await page.screenshot({ path: testInfo.outputPath("client-payments.png"), fullPage: true });
 });
 
-test("client signing form stays inside its panel", async ({ page, colorScheme }) => {
+test("client signing form stays inside its panel", async ({ page, colorScheme }, testInfo) => {
   await openPage(page, `/quote/signature#${quoteToken}`, colorScheme);
   await expect(page.locator("#public-quote-signer-name")).toBeVisible();
   const panel = await page.locator(".signature-panel").boundingBox();
@@ -281,4 +300,50 @@ test("client signing form stays inside its panel", async ({ page, colorScheme })
     .withTags(["wcag2a", "wcag2aa", "wcag21aa"])
     .analyze();
   expect(audit.violations).toEqual([]);
+  await page.goto("/design/feedback");
+  const trigger = page.getByRole("button", { name: /Ouvrir une confirmation|Open a confirmation/ });
+  await trigger.click();
+  const dialog = page.getByRole("alertdialog");
+  await expect(dialog.locator("[data-confirmation-cancel]")).toBeFocused();
+  await page.keyboard.press("Shift+Tab");
+  await expect(dialog.locator("button").last()).toBeFocused();
+  const dialogAudit = await new AxeBuilder({ page })
+    .withTags(["wcag2a", "wcag2aa", "wcag21aa"])
+    .analyze();
+  expect(dialogAudit.violations).toEqual([]);
+  await page.screenshot({ path: testInfo.outputPath("design-confirmation.png"), fullPage: true });
+  await page.keyboard.press("Escape");
+  await expect(trigger).toBeFocused();
+  await expect(page.locator('.confirmation-demo [role="status"]')).toContainText(
+    /annulée|cancelled/,
+  );
+  await trigger.click();
+  await dialog.locator("button").last().click();
+  await expect(page.locator('.confirmation-demo [role="status"]')).toContainText(
+    /confirmée|confirmed/,
+  );
+  const locales = { light: "fr", dark: "en" };
+  const language = locales[colorScheme];
+  await page.route(`**/api/docs/${language}`, (route) =>
+    route.fulfill({ contentType: "text/html", body: scalarDocumentation(language) }),
+  );
+  await page.route(`**/api/openapi.${language}.json`, (route) =>
+    route.fulfill({
+      json: {
+        openapi: "3.1.0",
+        info: { title: "Test API", version: "1" },
+        paths: {
+          "/health": { get: { summary: "Health", responses: { 200: { description: "Success" } } } },
+        },
+      },
+    }),
+  );
+  await page.goto(`/api/docs/${language}`);
+  await expect(page.locator("html")).toHaveAttribute("lang", language);
+  const labels = { fr: "Télécharger le document OpenAPI", en: "Download" };
+  await expect(
+    page.getByRole("button", { name: new RegExp(labels[language]) }).first(),
+  ).toBeVisible();
+  await expect(page.getByRole("main")).toHaveCount(1);
+  await page.screenshot({ path: testInfo.outputPath("scalar.png"), fullPage: true });
 });

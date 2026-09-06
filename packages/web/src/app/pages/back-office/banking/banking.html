@@ -1,4 +1,4 @@
-<section aria-labelledby="bank-title">
+<section class="notice-flow" aria-labelledby="bank-title">
   <h1 id="bank-title">{{ i18n.t('bank.title') }}</h1>
   <p>{{ i18n.t('bank.intro') }}</p>
   <p appNotice variant="info">{{ i18n.t('bank.noTransfer') }}</p>
@@ -123,7 +123,7 @@
   }
   <ol>
     @for (transaction of visible(); track transaction.id) {
-    <li class="ds-panel">
+    <li class="ds-panel notice-flow">
       <h3>{{ transaction.account }} — {{ transaction.reference }}</h3>
       <p>
         <time [attr.datetime]="transaction.bookedOn"

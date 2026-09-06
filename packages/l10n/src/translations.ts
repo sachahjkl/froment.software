@@ -3,6 +3,19 @@ import { webUiText } from './web-ui-text.js';
 export const translations = {
   fr: {
     ...webUiText.fr,
+    'design.confirmation.title': 'Modales de confirmation',
+    'design.confirmation.hint':
+      'Le focus commence sur Annuler. Tab reste dans la modale. Échap et le fond annulent la demande.',
+    'design.confirmation.open': 'Ouvrir une confirmation',
+    'design.confirmation.discard': 'Tester un abandon de modifications',
+    'design.confirmation.discardLabel': 'Abandonner les modifications',
+    'design.confirmation.message': 'Confirmer cette action de démonstration ?',
+    'design.confirmation.discardMessage':
+      'Abandonner les modifications de démonstration ? Cette modale utilise le même service que les formulaires du backoffice.',
+    'design.confirmation.accepted': 'Action de démonstration confirmée.',
+    'design.confirmation.cancelled': 'Action de démonstration annulée.',
+    'design.confirmation.noEffect':
+      'Ces exemples ne modifient aucune donnée et n’appellent aucun service externe.',
     'login.heading': 'Connexion',
     'login.description': 'Vos documents et le suivi de vos règlements, au même endroit.',
     'login.access': 'Votre compte donne accès aux documents et aux actions qui vous concernent.',
@@ -1482,6 +1495,18 @@ export const translations = {
   },
   en: {
     ...webUiText.en,
+    'design.confirmation.title': 'Confirmation dialogs',
+    'design.confirmation.hint':
+      'Focus starts on Cancel. Tab stays in the dialog. Escape and the backdrop cancel the request.',
+    'design.confirmation.open': 'Open a confirmation',
+    'design.confirmation.discard': 'Test discarding changes',
+    'design.confirmation.discardLabel': 'Discard changes',
+    'design.confirmation.message': 'Confirm this demonstration action?',
+    'design.confirmation.discardMessage':
+      'Discard the demonstration changes? This dialog uses the same service as the backoffice forms.',
+    'design.confirmation.accepted': 'Demonstration action confirmed.',
+    'design.confirmation.cancelled': 'Demonstration action cancelled.',
+    'design.confirmation.noEffect': 'These examples do not change data or call external services.',
     'login.heading': 'Sign in',
     'login.description': 'Your documents and payment records, in one place.',
     'login.access': 'Your account gives you access to the documents and actions available to you.',

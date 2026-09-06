@@ -410,6 +410,27 @@
     </section>
   </ng-template>
   <ng-template appTabPanel="feedback">
+    <section class="confirmation-demo notice-flow" aria-labelledby="confirmation-demo-title">
+      <h2 id="confirmation-demo-title">{{ i18n.t("design.confirmation.title") }}</h2>
+      <p>{{ i18n.t("design.confirmation.hint") }}</p>
+      <div class="component-row">
+        <button appButton type="button" (click)="demonstrateConfirmation(false)">
+          {{ i18n.t("design.confirmation.open") }}
+        </button>
+        <button appButton variant="danger" type="button" (click)="demonstrateConfirmation(true)">
+          {{ i18n.t("design.confirmation.discard") }}
+        </button>
+      </div>
+      <p role="status">
+        @if (confirmationResult() === "accepted") {
+          {{ i18n.t("design.confirmation.accepted") }}
+        }
+        @if (confirmationResult() === "cancelled") {
+          {{ i18n.t("design.confirmation.cancelled") }}
+        }
+      </p>
+      <p appNotice>{{ i18n.t("design.confirmation.noEffect") }}</p>
+    </section>
     <section
       id="design-feedback-panel"
       class="component-panel"

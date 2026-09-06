@@ -53,6 +53,18 @@ describe('Confirmation', () => {
     expect(document.activeElement).toBe(trigger);
     expect(overlay.querySelectorAll('.cdk-focus-trap-anchor')).toHaveLength(0);
   });
+  it('uses the explicit action label and destructive treatment', async () => {
+    const { fixture, service, overlay } = await setup();
+    const result = service.request('Discard changes?', {
+      acceptLabel: 'Discard changes',
+      variant: 'danger',
+    });
+    await fixture.whenStable();
+    const action = overlay.querySelector<HTMLButtonElement>('[data-button-variant="danger"]');
+    expect(action?.textContent?.trim()).toBe('Discard changes');
+    action?.click();
+    expect(await result).toBe(true);
+  });
 
   it('returns false for Escape and backdrop clicks', async () => {
     const { fixture, service, overlay } = await setup();
