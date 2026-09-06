@@ -22,6 +22,10 @@ import { RuntimeConfiguration } from '../runtime-config.js';
 
 const execFileAsync = promisify(execFile);
 const documentTemplate = 'document.typ';
+export const DocumentTemporaryDirectory = Context.Reference<string>(
+  '@froment/api/DocumentTemporaryDirectory',
+  { defaultValue: tmpdir },
+);
 type DocumentInput = QuoteDocumentInputValue | InvoiceDocumentInputValue | OrderDocumentInputValue;
 
 export class DocumentRenderError extends Schema.TaggedError<DocumentRenderError>()(
@@ -51,6 +55,7 @@ export const DocumentRendererLive = Layer.effect(
     const executable = yield* Config.string('TYPST_PATH');
     const templatesPath = yield* Config.string('DOCUMENT_TEMPLATES_PATH');
     const fontsPath = yield* Config.string('DOCUMENT_FONTS_PATH');
+    const temporaryDirectory = yield* DocumentTemporaryDirectory;
     const config = (yield* RuntimeConfiguration).documentRenderer;
     const permits = yield* TxSemaphore.make(config.concurrency);
 
@@ -63,7 +68,7 @@ export const DocumentRendererLive = Layer.effect(
         permits,
         Effect.acquireUseRelease(
           Effect.tryPromise({
-            try: () => mkdtemp(join(tmpdir(), 'froment-pdf-')),
+            try: () => mkdtemp(join(temporaryDirectory, 'froment-pdf-')),
             catch: () => new DocumentRenderError({ reason: 'output' }),
           }),
           (root) =>

@@ -4,13 +4,17 @@ import {
   QuoteRenderSnapshot,
 } from '@froment/contracts';
 import { spawnSync } from 'node:child_process';
-import { readFileSync, readdirSync } from 'node:fs';
+import { mkdtempSync, readFileSync, readdirSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { ConfigProvider, Effect, Layer, Schema } from 'effect';
 import { describe, expect, it } from 'vitest';
 
-import { DocumentRenderer, DocumentRendererLive } from './document-renderer.js';
+import {
+  DocumentRenderer,
+  DocumentRendererLive,
+  DocumentTemporaryDirectory,
+} from './document-renderer.js';
 
 const longWord = 'W'.repeat(160);
 const longText = 'Conditions '.repeat(200).slice(0, 2_000);
@@ -203,31 +207,32 @@ describe('DocumentRenderer', () => {
   });
 
   it('returns a redacted typed error and removes temporary files after compiler failure', async () => {
-    const before = readdirSync(tmpdir())
-      .filter((name) => name.startsWith('froment-pdf-'))
-      .sort();
-    const config = ConfigProvider.fromUnknown({
-      TYPST_PATH: '/missing/typst',
-      DOCUMENT_TEMPLATES_PATH: process.env['DOCUMENT_TEMPLATES_PATH'],
-      DOCUMENT_FONTS_PATH: process.env['DOCUMENT_FONTS_PATH'],
-    });
-    const rendererLayer = DocumentRendererLive.pipe(Layer.provide(ConfigProvider.layer(config)));
-    const result = await Effect.runPromise(
-      Effect.result(
-        DocumentRenderer.use((renderer) => renderer.renderQuotePdf(compactQuote)).pipe(
-          Effect.provide(rendererLayer),
+    const root = mkdtempSync(join(tmpdir(), 'renderer-cleanup-test-'));
+    try {
+      const config = ConfigProvider.fromUnknown({
+        TYPST_PATH: '/missing/typst',
+        DOCUMENT_TEMPLATES_PATH: process.env['DOCUMENT_TEMPLATES_PATH'],
+        DOCUMENT_FONTS_PATH: process.env['DOCUMENT_FONTS_PATH'],
+      });
+      const rendererLayer = DocumentRendererLive.pipe(
+        Layer.provide(ConfigProvider.layer(config)),
+        Layer.provide(Layer.succeed(DocumentTemporaryDirectory, root)),
+      );
+      const result = await Effect.runPromise(
+        Effect.result(
+          DocumentRenderer.use((renderer) => renderer.renderQuotePdf(compactQuote)).pipe(
+            Effect.provide(rendererLayer),
+          ),
         ),
-      ),
-    );
-    expect(result).toMatchObject({
-      _tag: 'Failure',
-      failure: { _tag: 'DocumentRenderError', reason: 'compiler' },
-    });
-    expect(JSON.stringify(result)).not.toContain('/missing/typst');
-    expect(
-      readdirSync(tmpdir())
-        .filter((name) => name.startsWith('froment-pdf-'))
-        .sort(),
-    ).toEqual(before);
+      );
+      expect(result).toMatchObject({
+        _tag: 'Failure',
+        failure: { _tag: 'DocumentRenderError', reason: 'compiler' },
+      });
+      expect(JSON.stringify(result)).not.toContain('/missing/typst');
+      expect(readdirSync(root)).toEqual([]);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
   });
 });
