@@ -89,10 +89,25 @@ for (const [kind, id] of [
         .click();
       await expect(page.locator("#email-reference")).toHaveValue("FA-2026-000001");
       await expect(page.locator("#email-body")).toHaveValue(/3.?500[,.]00/);
-      await page.locator('app-emails button[type="submit"]').click();
+      await page.locator('app-emails .composer button[type="submit"]').click();
       await expect(page.locator('app-emails [role="status"]')).toContainText(
         /courriel non envoyé|email not sent/,
       );
+      await page.locator("#reminder-date").fill("2026-10-01T10:00");
+      await page.getByRole("button", { name: /Programmer la relance|Schedule reminder/ }).click();
+      await page
+        .getByRole("alertdialog")
+        .getByRole("button", { name: /^(Confirmer|Confirm)$/ })
+        .click();
+      await expect(page.locator('app-reminder-schedules [role="status"]')).toContainText(
+        /Relance enregistrée|Reminder saved/,
+      );
+      await page.getByRole("button", { name: /Annuler la programmation|Cancel schedule/ }).click();
+      await page
+        .getByRole("alertdialog")
+        .getByRole("button", { name: /^(Confirmer|Confirm)$/ })
+        .click();
+      await expect(page.locator("app-reminder-schedules ol")).toContainText(/Annulée|Cancelled/);
       await page.goto(`/backoffice/invoices/${invoiceId}`);
       await page.getByRole("button", { name: /Annuler cette saisie|Cancel this entry/ }).click();
       const reason = page.getByRole("textbox", {
@@ -266,7 +281,7 @@ test("client form and complete account address", async ({ page, colorScheme }, t
   await page.getByRole("button", { name: /Utiliser ce modèle|Use this template/ }).click();
   await page.getByRole("alertdialog").locator("button").last().click();
   await expect(page.locator("#email-recipient")).toHaveValue("client@example.test");
-  await page.locator('app-emails button[type="submit"]').click();
+  await page.locator('app-emails .composer button[type="submit"]').click();
   await expect(page.locator('app-emails [role="status"]')).toContainText(
     /courriel non envoyé|email not sent/,
   );

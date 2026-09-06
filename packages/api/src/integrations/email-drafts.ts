@@ -83,6 +83,8 @@ export const EmailDraftsLive = Layer.effect(
                 .prepare(`${select} where id = ? and user_id = ? and archived = 0`)
                 .get(id, userId);
               if (
+                sqlite.prepare('select 1 from email_reminders where id = ?').get(id) !==
+                  undefined ||
                 sqlite
                   .prepare('select 1 from integration_operations where request_id = ?')
                   .get(id) !== undefined

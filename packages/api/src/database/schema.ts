@@ -1116,6 +1116,39 @@ export const integrationRetries = sqliteTable(
   ],
 );
 
+export const emailReminders = sqliteTable(
+  'email_reminders',
+  {
+    id: text().notNull().primaryKey(),
+    invoiceId: text('invoice_id')
+      .notNull()
+      .references(() => invoices.id),
+    request: text().notNull(),
+    sendAt: text('send_at').notNull(),
+    status: text().notNull().default('scheduled'),
+    reason: text(),
+    operationId: text('operation_id').references(() => integrationOperations.id),
+    preparedVersion: integer('prepared_version'),
+    preparedPaidCents: integer('prepared_paid_cents'),
+    preparedRecipient: text('prepared_recipient'),
+    createdByUserId: text('created_by_user_id')
+      .notNull()
+      .references(() => users.id),
+    createdAt: text('created_at').notNull(),
+  },
+  (table) => [
+    index('email_reminders_due_index').on(table.status, table.sendAt),
+    uniqueIndex('email_reminders_invoice_pending_index')
+      .on(table.invoiceId)
+      .where(sql`${table.status} = 'scheduled'`),
+    check('email_reminders_request_check', sql`json_valid(${table.request})`),
+    check(
+      'email_reminders_status_check',
+      sql`${table.status} in ('scheduled', 'cancelled', 'skipped', 'queued')`,
+    ),
+  ],
+);
+
 export const bankTransactions = sqliteTable(
   'bank_transactions',
   {

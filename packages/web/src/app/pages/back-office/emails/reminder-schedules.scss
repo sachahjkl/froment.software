@@ -1,0 +1,31 @@
+:host {
+  display: block;
+}
+h2 {
+  font-size: var(--text-xl);
+}
+h3 {
+  font-size: var(--text-base);
+}
+form,
+label,
+ol {
+  display: grid;
+  gap: var(--space-3);
+}
+ol {
+  list-style: none;
+  padding: 0;
+}
+li {
+  padding: var(--space-4);
+  overflow-wrap: anywhere;
+}
+button {
+  justify-self: start;
+  max-width: 100%;
+  white-space: normal;
+}
+input {
+  width: 100%;
+}

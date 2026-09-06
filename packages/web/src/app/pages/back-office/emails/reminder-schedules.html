@@ -1,0 +1,60 @@
+<section class="notice-flow" aria-labelledby="reminder-schedules-title">
+  <h2 id="reminder-schedules-title">{{ i18n.t('reminder.title') }}</h2>
+  <p>{{ i18n.t('reminder.info') }}</p>
+  @if (error(); as error) {
+  <p appNotice variant="danger" role="alert">{{ i18n.t(error) }}</p>
+  } @if (saved()) {
+  <p role="status">{{ i18n.t('reminder.saved') }}</p>
+  } @if (invoiceId()) {
+  <p appNotice variant="info">{{ i18n.t('reminder.content') }}</p>
+  <form (submit)="schedule($event)">
+    <label
+      >{{ i18n.t('reminder.date') }}<input
+        id="reminder-date"
+        class="input"
+        type="datetime-local"
+        [formField]="scheduleForm.date"
+    /></label>
+    <button
+      appButton
+      type="submit"
+      [disabled]="busy() || disabled() || mode() === undefined || scheduleForm().invalid()"
+    >
+      {{ i18n.t('reminder.schedule') }}
+    </button>
+  </form>
+  }
+  <button appButton type="button" [disabled]="loading() || busy()" (click)="load()">
+    {{ i18n.t('integrations.reload') }}
+  </button>
+  @if (loading()) {
+  <p role="status">{{ i18n.t('integrations.loading') }}</p>
+  } @else {
+  <ol>
+    @for (item of items(); track item.id) {
+    <li class="ds-panel">
+      <h3>{{ item.invoiceReference }}</h3>
+      <p>
+        {{ i18n.t(statusLabels[item.status]) }} — {{ i18n.t(item.expectedMode === 'simulation' ?
+        'integrations.simulation' : 'integrations.live') }}
+      </p>
+      <p>
+        <time [attr.datetime]="item.sendAt"
+          >{{ item.sendAt | localizedDate: i18n.language() : { dateStyle: 'medium', timeStyle:
+          'short' } }}</time
+        >
+      </p>
+      @if (item.reason; as reason) {
+      <p appNotice variant="warning">{{ i18n.t(reasonLabels[reason]) }}</p>
+      } @if (item.status === 'scheduled') {
+      <button appButton type="button" [disabled]="busy() || disabled()" (click)="cancel(item)">
+        {{ i18n.t('reminder.cancel') }}
+      </button>
+      }
+    </li>
+    } @empty {
+    <li>{{ i18n.t('reminder.empty') }}</li>
+    }
+  </ol>
+  }
+</section>

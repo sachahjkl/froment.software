@@ -15,6 +15,7 @@ import { AuthenticationHandlers } from './authentication/handlers.js';
 import { PasskeyHandlers } from './authentication/passkey-handlers.js';
 import { EmailDraftHandlers } from './integrations/email-draft-handlers.js';
 import { EmailTemplateHandlers } from './integrations/email-template-handlers.js';
+import { ReminderHandlers } from './integrations/reminder-handlers.js';
 import { ProviderActionHandlers } from './integrations/provider-action-handlers.js';
 import { AffairHandlers } from './affairs/handlers.js';
 import { BootstrapHandlers } from './bootstrap/handlers.js';
@@ -58,6 +59,7 @@ const ApiRoutes = HttpApiBuilder.layer(FrenchApi).pipe(
       PasskeyHandlers,
       EmailDraftHandlers,
       EmailTemplateHandlers,
+      ReminderHandlers,
       ProviderActionHandlers,
       ClientHandlers,
       OrderHandlers,

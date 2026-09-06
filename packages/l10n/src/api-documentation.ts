@@ -2,6 +2,7 @@ import type { Language } from './language.js';
 import { passkeyDocumentation } from './passkeys.js';
 import { emailDraftDocumentation } from './email-drafts.js';
 import { emailTemplateDocumentation } from './email-templates.js';
+import { reminderDocumentation } from './reminders.js';
 import { providerActionDocumentation } from './provider-action-documentation.js';
 
 interface ApiDocumentationGroup {
@@ -37,6 +38,7 @@ export const apiDocumentation = {
       passkeys: passkeyDocumentation.fr.group,
       emailDrafts: emailDraftDocumentation.fr.group,
       emailTemplates: emailTemplateDocumentation.fr.group,
+      reminders: reminderDocumentation.fr.group,
       providerActions: {
         title: 'Contrats des fournisseurs',
         description:
@@ -99,6 +101,7 @@ export const apiDocumentation = {
           'Retourne les 100 reprises les plus récentes. Chaque reprise conserve la demande et son mode. Cinq tentatives au maximum après l’appel initial.',
       },
       ...emailTemplateDocumentation.fr.operations,
+      ...reminderDocumentation.fr.operations,
       ...providerActionDocumentation.fr,
       bankMatchHistory: {
         summary: 'Consulter les rapprochements conservés',
@@ -408,6 +411,7 @@ export const apiDocumentation = {
       passkeys: passkeyDocumentation.en.group,
       emailDrafts: emailDraftDocumentation.en.group,
       emailTemplates: emailTemplateDocumentation.en.group,
+      reminders: reminderDocumentation.en.group,
       providerActions: {
         title: 'Provider contracts',
         description:
@@ -467,6 +471,7 @@ export const apiDocumentation = {
           'Returns the latest 100 retry records. Each retry preserves the request and its mode. At most five attempts follow the initial call.',
       },
       ...emailTemplateDocumentation.en.operations,
+      ...reminderDocumentation.en.operations,
       ...providerActionDocumentation.en,
       bankMatchHistory: {
         summary: 'Read reconciliation history',

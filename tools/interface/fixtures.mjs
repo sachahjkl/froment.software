@@ -219,6 +219,7 @@ export async function mockApi(
     ["/api/integrations/operations", []],
     ["/api/email-drafts", []],
     ["/api/email-templates", []],
+    ["/api/reminders", []],
     [
       "/api/integrations/retries",
       [
@@ -357,6 +358,37 @@ export async function mockApi(
         ...responses.get("/api/email-templates").filter((item) => item.id !== id),
       ]);
       return route.fulfill({ json: template });
+    }
+    if (path.startsWith("/api/reminders/") && route.request().method() === "PUT") {
+      const request = route.request().postDataJSON();
+      const id = path.split("/").at(-1);
+      const reminder = {
+        ...request,
+        id,
+        invoiceReference: "FA-2026-000001",
+        status: "scheduled",
+        reason: null,
+        operationId: null,
+        createdByUserId: clientId,
+        createdAt,
+      };
+      responses.set("/api/reminders", [
+        reminder,
+        ...responses.get("/api/reminders").filter((item) => item.id !== id),
+      ]);
+      return route.fulfill({ json: reminder });
+    }
+    if (path.startsWith("/api/reminders/") && path.endsWith("/cancel")) {
+      const id = path.split("/").at(-2);
+      const reminder = {
+        ...responses.get("/api/reminders").find((item) => item.id === id),
+        status: "cancelled",
+      };
+      responses.set(
+        "/api/reminders",
+        responses.get("/api/reminders").map((item) => (item.id === id ? reminder : item)),
+      );
+      return route.fulfill({ json: reminder });
     }
     if (path.endsWith("/preview")) {
       return route.fulfill({

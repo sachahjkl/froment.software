@@ -12,6 +12,7 @@ import { IntegrationsApi } from '@backoffice/integrations-api';
 import { Emails } from './emails';
 import { EmailDraftsApi } from '@backoffice/email-drafts-api';
 import { EmailTemplatesApi } from '@backoffice/email-templates-api';
+import { RemindersApi } from '@backoffice/reminders-api';
 
 class DraftApiStub {
   readonly items = new Map<string, typeof EmailDraft.Type>();
@@ -130,6 +131,7 @@ describe('Emails', () => {
         provideRouter([]),
         { provide: InvoiceReminder, useValue: { prepare: async () => undefined } },
         { provide: EmailDraftsApi, useValue: new DraftApiStub() },
+        { provide: RemindersApi, useValue: { list: async () => ({ success: true, result: [] }) } },
         {
           provide: EmailTemplatesApi,
           useValue: { list: async () => ({ success: true, result: [] }) },

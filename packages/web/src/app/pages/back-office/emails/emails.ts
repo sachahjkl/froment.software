@@ -36,11 +36,12 @@ import { EmailTemplatesApi } from '@backoffice/email-templates-api';
 import { Button } from '@shared/button/button';
 import { Notice } from '@shared/notice/notice';
 import { LocalizedDatePipe } from '@shared/localized-date/localized-date-pipe';
+import { ReminderSchedules } from './reminder-schedules';
 
 const blank = () => ({ recipient: '', reference: '', subject: '', body: '' });
 
 @Component({
-  imports: [Button, Notice, FormField, LocalizedDatePipe],
+  imports: [Button, Notice, FormField, LocalizedDatePipe, ReminderSchedules],
   changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-emails',
   styleUrl: './emails.scss',
@@ -66,6 +67,9 @@ export class Emails {
   private readonly draftId = signal<string | undefined>(undefined);
   private readonly draftVersion = signal(0);
   private readonly route = inject(ActivatedRoute);
+  protected readonly reminderInvoiceId =
+    this.route.snapshot.queryParamMap.get('invoice') ?? undefined;
+  private readonly schedules = viewChild(ReminderSchedules);
   private readonly reminder = inject(InvoiceReminder);
   protected readonly preparingReminder = signal(false);
   protected readonly reminderFailed = signal(false);
@@ -322,13 +326,20 @@ export class Emails {
   async canDeactivate(): Promise<boolean> {
     return (
       !this.saving() &&
-      (!this.unsaved() ||
+      !this.schedules()?.busy() &&
+      ((!this.unsaved() && !this.schedules()?.hasChanges()) ||
         (await this.confirmation.request(this.i18n.t('backOffice.quote.unsavedChanges'))))
     );
   }
   @HostListener('window:beforeunload', ['$event'])
   protected preventUnload(event: BeforeUnloadEvent): void {
-    if (this.unsaved() || this.saving()) event.preventDefault();
+    if (
+      this.unsaved() ||
+      this.saving() ||
+      this.schedules()?.busy() ||
+      this.schedules()?.hasChanges()
+    )
+      event.preventDefault();
   }
   protected save(event: SubmitEvent): void {
     event.preventDefault();

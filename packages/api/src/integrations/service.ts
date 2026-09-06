@@ -5,13 +5,12 @@ import {
   IntegrationSubmission,
   EmailDraftContent,
   ProviderReceipt,
-  type IntegrationOperationValue,
   type IntegrationSubmissionValue,
   type ProviderReceiptValue,
 } from '@froment/contracts';
-import { Clock, Context, DateTime, Effect, Layer, Schema } from 'effect';
+import { Clock, Context, Effect, Layer, Schema } from 'effect';
 import { isDeepStrictEqual } from 'node:util';
-import { ulid } from 'ulid';
+import { recordOperation } from './record-operation.js';
 import { Audit } from '../audit/audit.js';
 import { Database, DatabaseError } from '../database/database.js';
 import {
@@ -86,6 +85,12 @@ const makeIntegrations = Effect.gen(function* () {
             if (providers[request.kind].mode !== request.expectedMode) {
               throw new IntegrationConflict({ code: 'integration.request_conflict' });
             }
+            if (
+              database.sqlite
+                .prepare('select 1 from email_reminders where id = ?')
+                .get(request.requestId) !== undefined
+            )
+              throw new IntegrationConflict({ code: 'integration.request_conflict' });
             const draft = database.sqlite
               .prepare('select user_id as userId, content, archived from email_drafts where id = ?')
               .get(request.requestId);
@@ -109,36 +114,11 @@ const makeIntegrations = Effect.gen(function* () {
                 throw new IntegrationConflict({ code: 'integration.request_conflict' });
               }
             }
-            const operation: IntegrationOperationValue = {
-              id: ulid(now),
-              request,
-              receipt: null,
-              createdAt: DateTime.formatIso(DateTime.makeUnsafe(now)),
-              createdByUserId: actorUserId,
-            };
-            database.sqlite
-              .prepare(
-                'insert into integration_operations (id, request_id, request, receipt, created_at, created_by_user_id) values (?, ?, ?, null, ?, ?)',
-              )
-              .run(
-                operation.id,
-                request.requestId,
-                JSON.stringify(request),
-                operation.createdAt,
-                actorUserId,
-              );
+            const operation = recordOperation(database, audit, request, actorUserId, now);
             if (draft !== undefined)
               database.sqlite
                 .prepare('update email_drafts set archived = 1 where id = ?')
                 .run(request.requestId);
-            audit.insert({
-              action: 'integration.requested',
-              actorUserId,
-              resourceType: 'integration',
-              resourceId: operation.id,
-              metadata: { kind: request.kind },
-              occurredAt: now,
-            });
             return operation;
           })
           .immediate(),

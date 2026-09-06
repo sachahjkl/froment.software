@@ -216,6 +216,11 @@
     } }
   </ol>
   }
+  <app-reminder-schedules
+    [invoiceId]="reminderInvoiceId"
+    [mode]="mode()"
+    [disabled]="saving() || preparingReminder() || pending() !== undefined"
+  />
   <h2>{{ i18n.t('emails.history') }}</h2>
   <p>{{ i18n.t('emails.historyInfo') }}</p>
   @if (!loading() && operations().length === 0) {

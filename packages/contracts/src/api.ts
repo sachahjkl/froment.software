@@ -10,6 +10,7 @@ import { AuthenticationApi } from './authentication/api.js';
 import { PasskeysApi } from './authentication/passkeys-api.js';
 import { EmailDraftsApi } from './integrations/email-drafts-api.js';
 import { EmailTemplatesApi } from './integrations/email-templates-api.js';
+import { RemindersApi } from './integrations/reminders-api.js';
 import { ProviderActionsApi } from './integrations/provider-actions-api.js';
 import { BootstrapApi } from './bootstrap/api.js';
 import { ClientPortalApi } from './client-portal/api.js';
@@ -48,6 +49,7 @@ export class Api extends HttpApi.make('froment-api')
   .add(PasskeysApi)
   .add(EmailDraftsApi)
   .add(EmailTemplatesApi)
+  .add(RemindersApi)
   .add(ProviderActionsApi)
   .add(ClientsApi)
   .add(OrdersApi)
