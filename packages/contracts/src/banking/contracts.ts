@@ -1,6 +1,7 @@
 import { Schema } from 'effect';
 import { Ulid } from '../identifiers.js';
 import { CalendarDate, IsoUtc } from '../temporal.js';
+import { PositiveSafeInteger, SafeInteger } from '../documents/lines.js';
 import {
   AuthenticationRequired,
   PermissionDenied,
@@ -12,8 +13,15 @@ export const BankImportRequest = Schema.Struct({
   csv: Schema.String.check(Schema.isMinLength(1), Schema.isMaxLength(500000)),
 });
 export type BankImportRequest = typeof BankImportRequest.Type;
+export const BankAllocation = Schema.Struct({
+  matchId: Ulid,
+  paymentId: Ulid,
+  invoiceId: Ulid,
+  invoiceNumber: Schema.NullOr(Schema.String),
+  amountCents: PositiveSafeInteger,
+  paymentCancelled: Schema.Boolean,
+});
 export const BankTransaction = Schema.Struct({
-  matchId: Schema.NullOr(Ulid),
   id: Ulid,
   account: Schema.String,
   reference: Schema.String,
@@ -21,16 +29,24 @@ export const BankTransaction = Schema.Struct({
   amountCents: Schema.Int,
   description: Schema.String,
   importedAt: IsoUtc,
-  paymentId: Schema.NullOr(Ulid),
-  invoiceId: Schema.NullOr(Ulid),
-  invoiceNumber: Schema.NullOr(Schema.String),
-  paymentCancelled: Schema.Boolean,
+  matchedCents: SafeInteger,
+  allocations: Schema.Array(BankAllocation),
 });
 export const BankTransactionList = Schema.Array(BankTransaction);
+export const BankPaymentList = Schema.Array(
+  Schema.Struct({
+    id: Ulid,
+    paidOn: CalendarDate,
+    reference: Schema.String,
+    amountCents: PositiveSafeInteger,
+    availableCents: SafeInteger,
+  }),
+);
 export const BankMatchHistory = Schema.Array(
   Schema.Struct({
     id: Ulid,
     paymentId: Ulid,
+    amountCents: PositiveSafeInteger,
     invoiceId: Ulid,
     invoiceNumber: Schema.NullOr(Schema.String),
     matchedAt: IsoUtc,
@@ -42,7 +58,11 @@ export const BankMatchHistory = Schema.Array(
 );
 export type BankTransaction = typeof BankTransaction.Type;
 export const BankImportResult = Schema.Struct({ added: Schema.Int, existing: Schema.Int });
-export const BankMatchRequest = Schema.Struct({ paymentId: Ulid });
+export const BankMatchRequest = Schema.Struct({
+  requestId: Schema.String.check(Schema.isUUID(4)),
+  paymentId: Ulid,
+  amountCents: PositiveSafeInteger,
+});
 export const BankUnmatchRequest = Schema.Struct({
   matchId: Ulid,
   reason: Schema.String.check(Schema.isPattern(/\S/), Schema.isMaxLength(500)),

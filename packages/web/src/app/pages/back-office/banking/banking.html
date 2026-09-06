@@ -50,7 +50,11 @@
     <section class="ds-panel editor" aria-labelledby="match-title">
       <h2 id="match-title">{{ i18n.t('bank.reconcile') }} — {{ selected.reference }}</h2>
       <p>{{ selected.description }} — {{ amount(selected.amountCents) }}</p>
-      @if (selected.paymentId === null) {
+      <p>
+        {{ i18n.t('bank.allocated') }} {{ amount(selected.matchedCents) }} — {{
+        i18n.t('bank.remaining') }} {{ amount(selected.amountCents - selected.matchedCents) }}
+      </p>
+      @if (selected.matchedCents < selected.amountCents) {
       <p>{{ i18n.t('bank.matchHint') }}</p>
       <label
         >{{ i18n.t('bank.invoice') }}<select
@@ -73,11 +77,18 @@
           <option value="">{{ i18n.t('bank.choosePayment') }}</option>
           @for (payment of payments(); track payment.id) {
           <option [value]="payment.id">
-            {{ payment.paidOn }} — {{ payment.reference }} — {{ amount(payment.amountCents) }}
+            {{ payment.paidOn }} — {{ payment.reference }} — {{ amount(payment.availableCents) }}
           </option>
           }
         </select></label
       >
+      <label
+        >{{ i18n.t('bank.allocationAmount') }}<input
+          class="input"
+          id="bank-allocation-amount"
+          inputmode="decimal"
+          [formField]="matchForm.amount"
+      /></label>
       <button
         appButton
         type="button"
@@ -86,8 +97,17 @@
       >
         {{ i18n.t('bank.reconcile') }}
       </button>
-      } @else {
+      } @if (selected.allocations.length > 0) {
       <p>{{ i18n.t('bank.unmatchHint') }}</p>
+      <label
+        >{{ i18n.t('bank.allocation') }}<select class="select" [formField]="matchForm.matchId">
+          @for (allocation of selected.allocations; track allocation.matchId) {
+          <option [value]="allocation.matchId">
+            {{ allocation.invoiceNumber }} — {{ amount(allocation.amountCents) }}
+          </option>
+          }
+        </select></label
+      >
       <label
         >{{ i18n.t('bank.reason') }}<textarea
           class="input"
@@ -132,17 +152,19 @@
         — {{ amount(transaction.amountCents) }}
       </p>
       <p>{{ transaction.description }}</p>
-      @if (transaction.paymentCancelled) {
+      @for (allocation of transaction.allocations; track allocation.matchId) { @if
+      (allocation.paymentCancelled) {
       <p appNotice variant="warning">{{ i18n.t('bank.paymentCancelled') }}</p>
-      } @if (transaction.invoiceId !== null) {
-      <a [routerLink]="['/backoffice/invoices', transaction.invoiceId]"
-        >{{ transaction.invoiceNumber }}</a
+      }
+      <a [routerLink]="['/backoffice/invoices', allocation.invoiceId]"
+        >{{ allocation.invoiceNumber }} — {{ amount(allocation.amountCents) }}</a
       >
       }
-      <p>{{ i18n.t(transaction.paymentId === null ? 'bank.unmatched' : 'bank.matched') }}</p>
+      <p>{{ i18n.t('bank.allocated') }} {{ amount(transaction.matchedCents) }}</p>
       @if (transaction.amountCents > 0) {
       <button appButton type="button" [disabled]="saving()" (click)="select(transaction)">
-        {{ i18n.t(transaction.paymentId === null ? 'bank.reconcile' : 'bank.unmatch') }}
+        {{ i18n.t(transaction.allocations.length === 0 ? 'bank.reconcile' :
+        'bank.manageAllocations') }}
       </button>
       }
       <button
@@ -172,7 +194,8 @@
             >
             <p>
               {{ i18n.t('bank.matched') }} · {{ entry.matchedAt | localizedDate: i18n.language(): {
-              dateStyle: 'medium', timeStyle: 'short' } }} · {{ entry.matchedByUserId }}
+              dateStyle: 'medium', timeStyle: 'short' } }} · {{ entry.matchedByUserId }} · {{
+              amount(entry.amountCents) }}
             </p>
             @if (entry.cancelledAt !== null) {
             <p>

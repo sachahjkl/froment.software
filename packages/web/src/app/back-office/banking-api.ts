@@ -3,6 +3,8 @@ import { inject, Injectable } from '@angular/core';
 import {
   BankFailure,
   BankMatchHistory,
+  BankMatchRequest,
+  BankPaymentList,
   BankImportResult,
   BankTransactionList,
   type BankImportRequestValue,
@@ -14,6 +16,14 @@ import { requestOutcome } from '@shared/api-outcome';
 @Injectable({ providedIn: 'root' })
 export class BankingApi {
   private readonly http = inject(HttpClient);
+  payments(invoiceId: string) {
+    return requestOutcome(
+      this.http.get(`/api/banking/invoices/${invoiceId}/payments`),
+      BankPaymentList,
+      BankFailure,
+      'bank.error',
+    );
+  }
   history(id: string) {
     return requestOutcome(
       this.http.get<unknown>(`/api/banking/transactions/${id}/history`),
@@ -35,9 +45,9 @@ export class BankingApi {
       'bank.error',
     );
   }
-  match(id: string, paymentId: string) {
+  match(id: string, request: typeof BankMatchRequest.Type) {
     return requestOutcome(
-      this.http.post<unknown>(`/api/banking/transactions/${id}/match`, { paymentId }),
+      this.http.post<unknown>(`/api/banking/transactions/${id}/match`, request),
       BankTransactionList,
       BankFailure,
       'bank.error',

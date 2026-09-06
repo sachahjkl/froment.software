@@ -53,6 +53,7 @@ describe('banking HTTP', () => {
       const paid = Schema.decodeUnknownSync(InvoiceDetail)(await paymentResponse.json());
       const payment = paid.payments[0];
       if (payment === undefined) throw new Error('bank.payment.missing');
+      const allocation = { paymentId: payment.id, amountCents: 10000, requestId: randomUUID() };
       expect(
         (
           await post('/api/banking/import', {
@@ -75,23 +76,24 @@ describe('banking HTTP', () => {
       const debit = transactions.find((row) => row.reference === 'BANK-3');
       if (first === undefined || second === undefined || debit === undefined)
         throw new Error('bank.transaction.missing');
+      expect((await post(`/api/banking/transactions/${debit.id}/match`, allocation)).status).toBe(
+        409,
+      );
+      expect((await post(`/api/banking/transactions/${first.id}/match`, allocation)).status).toBe(
+        200,
+      );
+      expect((await post(`/api/banking/transactions/${first.id}/match`, allocation)).status).toBe(
+        200,
+      );
       expect(
-        (await post(`/api/banking/transactions/${debit.id}/match`, { paymentId: payment.id }))
-          .status,
+        (
+          await post(`/api/banking/transactions/${second.id}/match`, {
+            ...allocation,
+            requestId: randomUUID(),
+          })
+        ).status,
       ).toBe(409);
-      expect(
-        (await post(`/api/banking/transactions/${first.id}/match`, { paymentId: payment.id }))
-          .status,
-      ).toBe(200);
-      expect(
-        (await post(`/api/banking/transactions/${first.id}/match`, { paymentId: payment.id }))
-          .status,
-      ).toBe(200);
-      expect(
-        (await post(`/api/banking/transactions/${second.id}/match`, { paymentId: payment.id }))
-          .status,
-      ).toBe(409);
-      const match = (await list()).find((row) => row.id === first.id);
+      const match = (await list()).find((row) => row.id === first.id)?.allocations[0];
       const historyUrl = `${server.baseUrl}/api/banking/transactions/${first.id}/history`;
       const readHistory = async () => {
         const response = await fetch(historyUrl, { headers: server.sessionHeaders });
@@ -129,7 +131,9 @@ describe('banking HTTP', () => {
           })
         ).status,
       ).toBe(200);
-      expect((await list()).find((row) => row.id === first.id)?.paymentCancelled).toBe(true);
+      expect(
+        (await list()).find((row) => row.id === first.id)?.allocations[0]?.paymentCancelled,
+      ).toBe(true);
       const cancel = { matchId: match.matchId, reason: 'Cancelled payment' };
       expect((await post(`/api/banking/transactions/${first.id}/unmatch`, cancel)).status).toBe(
         200,
@@ -138,8 +142,12 @@ describe('banking HTTP', () => {
         200,
       );
       expect(
-        (await post(`/api/banking/transactions/${first.id}/match`, { paymentId: payment.id }))
-          .status,
+        (
+          await post(`/api/banking/transactions/${first.id}/match`, {
+            ...allocation,
+            requestId: randomUUID(),
+          })
+        ).status,
       ).toBe(409);
       const database = new Sqlite(server.databaseFilename);
       const history = await readHistory();
@@ -211,7 +219,7 @@ describe('banking HTTP', () => {
       expect(response.headers.get('cache-control')).toContain('no-store');
       const transactions = Schema.decodeUnknownSync(BankTransactionList)(await response.json());
       expect(transactions).toHaveLength(2);
-      expect(transactions.every((row) => row.paymentId === null)).toBe(true);
+      expect(transactions.every((row) => row.allocations.length === 0)).toBe(true);
       expect(await (await post(csv, 'Other')).json()).toEqual({ added: 2, existing: 0 });
       const database = new Sqlite(server.databaseFilename);
       try {

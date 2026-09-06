@@ -103,6 +103,11 @@ export const apiDocumentation = {
       ...emailTemplateDocumentation.fr.operations,
       ...reminderDocumentation.fr.operations,
       ...providerActionDocumentation.fr,
+      bankPaymentList: {
+        summary: 'Lister les soldes rapprochables des règlements',
+        description:
+          'Retourne les règlements actifs d’une facture et leurs montants disponibles, après déduction de toutes les affectations actives.',
+      },
       bankMatchHistory: {
         summary: 'Consulter les rapprochements conservés',
         description:
@@ -120,7 +125,7 @@ export const apiDocumentation = {
       bankMatch: {
         summary: 'Rapprocher un encaissement',
         description:
-          'Associe un crédit à un règlement actif du même montant, sans créer de règlement.',
+          'Affecte un montant positif à un règlement actif, dans les limites restantes du crédit et du règlement. Utilisez une clé UUID v4 stable. Conserve chaque affectation sans créer de règlement.',
       },
       bankUnmatch: {
         summary: 'Dissocier un rapprochement',
@@ -473,6 +478,11 @@ export const apiDocumentation = {
       ...emailTemplateDocumentation.en.operations,
       ...reminderDocumentation.en.operations,
       ...providerActionDocumentation.en,
+      bankPaymentList: {
+        summary: 'List available payment balances for reconciliation',
+        description:
+          'Returns active invoice payments and their available amounts after deducting all active allocations.',
+      },
       bankMatchHistory: {
         summary: 'Read reconciliation history',
         description:
@@ -489,7 +499,7 @@ export const apiDocumentation = {
       bankMatch: {
         summary: 'Reconcile a receipt',
         description:
-          'Links a credit to an active payment of the same amount without creating a payment.',
+          'Allocates a positive amount to an active payment within the remaining credit and payment balances. Use a stable UUID v4 key. Preserves each allocation without creating a payment.',
       },
       bankUnmatch: {
         summary: 'Remove a match',

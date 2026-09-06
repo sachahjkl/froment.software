@@ -9,6 +9,7 @@ import { Ulid } from '../identifiers.js';
 import {
   BankFailure,
   BankMatchHistory,
+  BankPaymentList,
   BankImportRequest,
   BankImportResult,
   BankTransactionList,
@@ -17,6 +18,15 @@ import {
 } from './contracts.js';
 
 export class BankingApi extends HttpApiGroup.make('banking', { topLevel: true }).add(
+  HttpApiEndpoint.get('bankPaymentList', '/api/banking/invoices/:invoiceId/payments', {
+    params: { invoiceId: Ulid },
+    success: BankPaymentList,
+    error: BankFailure.members,
+  }).pipe(
+    requirePermissions([Permissions.bankRead, Permissions.invoiceRead]),
+    authenticate,
+    frontendSpecific,
+  ),
   HttpApiEndpoint.get('bankMatchHistory', '/api/banking/transactions/:transactionId/history', {
     params: { transactionId: Ulid },
     success: BankMatchHistory,

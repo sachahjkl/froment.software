@@ -14,11 +14,8 @@ const transaction: BankTransactionValue = {
   amountCents: 10000,
   description: 'Receipt',
   importedAt: '2026-09-01T12:00:00.000Z',
-  matchId: null,
-  paymentId: null,
-  invoiceId: null,
-  invoiceNumber: null,
-  paymentCancelled: false,
+  matchedCents: 0,
+  allocations: [],
 };
 describe('Banking', () => {
   it('loads preserved history on demand and keeps cancellation reasons as text', async () => {
@@ -29,6 +26,7 @@ describe('Banking', () => {
           id: transaction.id,
           invoiceId: transaction.id,
           invoiceNumber: 'FA-2026-000001',
+          amountCents: 10000,
           matchedAt: transaction.importedAt,
           matchedByUserId: transaction.id,
           cancelledAt: transaction.importedAt,
@@ -70,17 +68,56 @@ describe('Banking', () => {
       result: [
         {
           ...transaction,
-          paymentId: transaction.id,
-          matchId: transaction.id,
-          invoiceId: transaction.id,
-          invoiceNumber: 'FA-2026-000001',
+          matchedCents: 10000,
+          allocations: [
+            {
+              paymentId: transaction.id,
+              matchId: transaction.id,
+              invoiceId: transaction.id,
+              invoiceNumber: 'FA-2026-000001',
+              amountCents: 10000,
+              paymentCancelled: false,
+            },
+          ],
         },
       ],
     }));
     TestBed.configureTestingModule({
       providers: [
         provideRouter([]),
-        { provide: BankingApi, useValue: { list: async () => [transaction], match } },
+        {
+          provide: BankingApi,
+          useValue: {
+            list: async () => [transaction],
+            match,
+            payments: async () => ({
+              success: true,
+              result: [
+                {
+                  id: transaction.id,
+                  amountCents: 10000,
+                  availableCents: 10000,
+                  paidOn: transaction.bookedOn,
+                  reference: 'MATCH',
+                },
+                {
+                  id: '01ARZ3NDEKTSV4RRFFQ69G5FAW',
+                  amountCents: 5000,
+                  availableCents: 5000,
+                  paidOn: transaction.bookedOn,
+                  reference: 'PARTIAL',
+                },
+                {
+                  id: '01ARZ3NDEKTSV4RRFFQ69G5FAX',
+                  amountCents: 10000,
+                  availableCents: 0,
+                  paidOn: transaction.bookedOn,
+                  reference: 'USED',
+                },
+              ],
+            }),
+          },
+        },
         {
           provide: InvoicesApi,
           useValue: {
@@ -130,7 +167,7 @@ describe('Banking', () => {
     await fixture.whenStable();
     const payment = root.querySelectorAll<HTMLSelectElement>('.editor select')[1];
     if (payment === undefined) throw new Error('bank.payment.input.missing');
-    expect(payment.options).toHaveLength(2);
+    expect(payment.options).toHaveLength(3);
     payment.value = transaction.id;
     payment.dispatchEvent(new Event('input', { bubbles: true }));
     payment.dispatchEvent(new Event('change', { bubbles: true }));
@@ -138,7 +175,11 @@ describe('Banking', () => {
     const confirm = vi.spyOn(Confirmation.prototype, 'request').mockResolvedValue(true);
     root.querySelector<HTMLButtonElement>('.editor button')?.click();
     await fixture.whenStable();
-    expect(match).toHaveBeenCalledWith(transaction.id, transaction.id);
+    expect(match).toHaveBeenCalledWith(transaction.id, {
+      paymentId: transaction.id,
+      amountCents: 10000,
+      requestId: expect.any(String),
+    });
     expect(root.querySelectorAll('li')).toHaveLength(0);
     expect(root.querySelector('.editor')).toBeNull();
     expect(document.activeElement).toBe(root.querySelector('[role="status"]'));

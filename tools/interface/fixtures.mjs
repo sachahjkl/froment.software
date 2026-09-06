@@ -288,6 +288,7 @@ export async function mockApi(
             id: quoteId,
             paymentId: clientId,
             invoiceId,
+            amountCents: 10000,
             invoiceNumber: "FA-2026-000001",
             matchedAt: createdAt,
             matchedByUserId: clientId,
@@ -299,6 +300,9 @@ export async function mockApi(
       });
     }
     if (path === "/api/banking/import") {
+      responses.set("/api/invoices", [
+        { ...invoiceSummary, status: "issued", invoiceNumber: "FA-2026-000001" },
+      ]);
       responses.set("/api/banking/transactions", [
         {
           id: quoteId,
@@ -308,14 +312,52 @@ export async function mockApi(
           amountCents: 10000,
           description: "Client payment",
           importedAt: createdAt,
-          matchId: null,
-          paymentId: null,
-          invoiceId: null,
-          invoiceNumber: null,
-          paymentCancelled: false,
+          matchedCents: 0,
+          allocations: [],
         },
       ]);
       return route.fulfill({ json: { added: 1, existing: 0 } });
+    }
+    if (path === `/api/banking/invoices/${invoiceId}/payments`) {
+      const allocated = responses
+        .get("/api/banking/transactions")
+        .flatMap((row) => row.allocations)
+        .reduce((sum, item) => sum + item.amountCents, 0);
+      return route.fulfill({
+        json: [
+          {
+            id: clientId,
+            paidOn: "2026-09-01",
+            reference: "PAYMENT",
+            amountCents: 10000,
+            availableCents: 10000 - allocated,
+          },
+        ],
+      });
+    }
+    if (path === `/api/banking/transactions/${quoteId}/match`) {
+      const request = route.request().postDataJSON();
+      responses.set(
+        "/api/banking/transactions",
+        responses
+          .get("/api/banking/transactions")
+          .map((row) => ({
+            ...row,
+            matchedCents: row.matchedCents + request.amountCents,
+            allocations: [
+              ...row.allocations,
+              {
+                matchId: row.allocations.length === 0 ? clientId : invoiceId,
+                paymentId: request.paymentId,
+                invoiceId,
+                invoiceNumber: "FA-2026-000001",
+                amountCents: request.amountCents,
+                paymentCancelled: false,
+              },
+            ],
+          })),
+      );
+      return route.fulfill({ json: responses.get("/api/banking/transactions") });
     }
     if (path === "/api/integrations/operations" && route.request().method() === "POST") {
       const request = route.request().postDataJSON();

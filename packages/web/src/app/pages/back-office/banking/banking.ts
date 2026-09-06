@@ -24,11 +24,12 @@ import {
   type BankTransactionValue,
   type BankMatchHistory,
   type InvoiceListValue,
-  type InvoicePayment,
+  type BankPaymentList,
 } from '@froment/contracts';
 import { BankingApi } from '@backoffice/banking-api';
 import { InvoicesApi } from '@backoffice/invoices-api';
 import { formatMoney } from '@froment/l10n';
+import { formatFixedDecimal, parseFixedDecimal } from '@backoffice/quote-input';
 import { I18nService, type TranslationKey } from '@app/i18n.service';
 import { Button } from '@shared/button/button';
 import { Notice } from '@shared/notice/notice';
@@ -58,7 +59,8 @@ export class Banking {
   private historyVersion = 0;
   protected readonly invoices = signal<InvoiceListValue>([]);
   protected readonly selected = signal<BankTransactionValue | undefined>(undefined);
-  protected readonly payments = signal<ReadonlyArray<typeof InvoicePayment.Type>>([]);
+  protected readonly payments = signal<typeof BankPaymentList.Type>([]);
+  private matchRequestId: string | undefined;
   protected readonly paymentLoading = signal(false);
   protected readonly csv = signal('');
   protected readonly filename = signal('');
@@ -73,15 +75,21 @@ export class Banking {
     disabled(path, () => this.saving());
   });
   protected readonly filters = form(signal({ search: '', unmatched: true }));
-  protected readonly matchForm = form(signal({ paymentId: '', reason: '' }), (path) => {
-    maxLength(path.reason, 500);
-    disabled(path, () => this.saving());
-  });
+  protected readonly matchForm = form(
+    signal({ paymentId: '', amount: '', matchId: '', reason: '' }),
+    (path) => {
+      maxLength(path.reason, 500);
+      disabled(path, () => this.saving());
+    },
+  );
   protected readonly visible = computed(() => {
     const filter = this.filters().value();
     return this.transactions().filter(
       (transaction) =>
-        (!filter.unmatched || transaction.paymentId === null || transaction.paymentCancelled) &&
+        (!filter.unmatched ||
+          transaction.matchedCents === 0 ||
+          transaction.matchedCents < transaction.amountCents ||
+          transaction.allocations.some((allocation) => allocation.paymentCancelled)) &&
         `${transaction.account} ${transaction.reference} ${transaction.description}`
           .toLocaleLowerCase()
           .includes(filter.search.toLocaleLowerCase()),
@@ -189,7 +197,17 @@ export class Banking {
       return;
     this.selected.set(transaction);
     this.payments.set([]);
-    this.matchForm().reset({ paymentId: '', reason: '' });
+    this.matchRequestId = undefined;
+    this.matchForm().reset({
+      paymentId: '',
+      amount: formatFixedDecimal(
+        Math.max(0, transaction.amountCents - transaction.matchedCents),
+        2,
+        '.',
+      ),
+      matchId: transaction.allocations[0]?.matchId ?? '',
+      reason: '',
+    });
     this.selectionVersion++;
     this.paymentLoading.set(false);
     this.editor()?.nativeElement.focus();
@@ -204,21 +222,13 @@ export class Banking {
     }
     this.paymentLoading.set(true);
     try {
-      const outcome = await this.invoicesApi.get(invoiceId);
+      const outcome = await this.api.payments(invoiceId);
       if (version !== this.selectionVersion) return;
       if (!outcome.success) {
         this.error.set('bank.error');
         return;
       }
-      const selected = this.selected();
-      this.payments.set(
-        outcome.result.payments.filter(
-          (payment) =>
-            payment.cancelledAt === null &&
-            payment.amountCents === selected?.amountCents &&
-            !this.transactions().some((transaction) => transaction.paymentId === payment.id),
-        ),
-      );
+      this.payments.set(outcome.result.filter((payment) => payment.availableCents > 0));
     } finally {
       if (version === this.selectionVersion) this.paymentLoading.set(false);
     }
@@ -226,18 +236,31 @@ export class Banking {
   protected async reconcile(): Promise<void> {
     const selected = this.selected();
     const paymentId = this.matchForm().value().paymentId;
+    const amountCents = parseFixedDecimal(this.matchForm().value().amount, 2);
     if (
       this.saving() ||
       selected === undefined ||
-      !this.payments().some((payment) => payment.id === paymentId)
-    )
+      amountCents === undefined ||
+      amountCents <= 0 ||
+      amountCents > selected.amountCents - selected.matchedCents ||
+      !this.payments().some(
+        (payment) => payment.id === paymentId && payment.availableCents >= amountCents,
+      )
+    ) {
+      this.error.set('bank.match_conflict');
       return;
+    }
     if (!(await this.confirmation.request(this.i18n.t('bank.confirmMatch')))) return;
     this.saving.set(true);
     this.error.set(undefined);
     this.saved.set(false);
     try {
-      const outcome = await this.api.match(selected.id, paymentId);
+      this.matchRequestId ??= crypto.randomUUID();
+      const outcome = await this.api.match(selected.id, {
+        paymentId,
+        amountCents,
+        requestId: this.matchRequestId,
+      });
       if (!outcome.success) {
         this.error.set(outcome.code);
         return;
@@ -250,14 +273,21 @@ export class Banking {
   protected async unmatch(): Promise<void> {
     const selected = this.selected();
     const reason = this.matchForm().value().reason.trim();
-    if (this.saving() || selected?.matchId == null || reason === '' || this.matchForm().invalid())
+    const matchId = this.matchForm().value().matchId;
+    if (
+      this.saving() ||
+      selected === undefined ||
+      !selected.allocations.some((allocation) => allocation.matchId === matchId) ||
+      reason === '' ||
+      this.matchForm().invalid()
+    )
       return;
     if (!(await this.confirmation.request(this.i18n.t('bank.confirmUnmatch')))) return;
     this.saving.set(true);
     this.error.set(undefined);
     this.saved.set(false);
     try {
-      const outcome = await this.api.unmatch(selected.id, selected.matchId, reason);
+      const outcome = await this.api.unmatch(selected.id, matchId, reason);
       if (!outcome.success) {
         this.error.set(outcome.code);
         return;
@@ -272,7 +302,8 @@ export class Banking {
     this.historyId.set(undefined);
     this.transactions.set(transactions);
     this.selected.set(undefined);
-    this.matchForm().reset({ paymentId: '', reason: '' });
+    this.matchRequestId = undefined;
+    this.matchForm().reset({ paymentId: '', amount: '', matchId: '', reason: '' });
     this.saved.set(true);
     this.result()?.nativeElement.focus();
   }

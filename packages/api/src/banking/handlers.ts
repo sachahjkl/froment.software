@@ -8,6 +8,15 @@ export const BankingHandlers = HttpApiBuilder.group(Api, 'banking', (handlers) =
   Effect.succeed(
     handlers
       .handle(
+        'bankPaymentList',
+        Effect.fn('bankPaymentList')(function* ({ params }) {
+          yield* setPrivateResponseHeaders;
+          return yield* (yield* Banking)
+            .payments(params.invoiceId)
+            .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
+        }),
+      )
+      .handle(
         'bankMatchHistory',
         Effect.fn('bankMatchHistory')(function* ({ params }) {
           yield* setPrivateResponseHeaders;
@@ -37,7 +46,7 @@ export const BankingHandlers = HttpApiBuilder.group(Api, 'banking', (handlers) =
         Effect.fn('bankMatch')(function* ({ params, payload }) {
           yield* setPrivateResponseHeaders;
           return yield* (yield* Banking)
-            .match(params.transactionId, payload.paymentId, (yield* ApiPrincipal).userId)
+            .match(params.transactionId, payload, (yield* ApiPrincipal).userId)
             .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
         }),
       )

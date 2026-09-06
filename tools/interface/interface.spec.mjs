@@ -319,6 +319,30 @@ test("client form and complete account address", async ({ page, colorScheme }, t
   expect(bankingAudit.violations).toEqual([]);
   await page.screenshot({ path: testInfo.outputPath("banking.png"), fullPage: true });
   await checkNoticeSpacing(page);
+  await page.reload();
+  await page.getByRole("button", { name: /^(Rapprocher|Reconcile)$/ }).click();
+  await page.locator(".editor select").first().selectOption(invoiceId);
+  await page.locator(".editor select").nth(1).selectOption(clientId);
+  await page.locator("#bank-allocation-amount").fill("40.00");
+  await page
+    .locator(".editor")
+    .getByRole("button", { name: /^(Rapprocher|Reconcile)$/ })
+    .click();
+  await page.getByRole("alertdialog").locator("button").last().click();
+  await page.getByRole("button", { name: /Gérer les affectations|Manage allocations/ }).click();
+  await expect(page.locator("#bank-allocation-amount")).toHaveValue("60.00");
+  await page.locator(".editor select").first().selectOption(invoiceId);
+  await page.locator(".editor select").nth(1).selectOption(clientId);
+  const allocationAudit = await new AxeBuilder({ page })
+    .withTags(["wcag2a", "wcag2aa", "wcag21aa"])
+    .analyze();
+  expect(allocationAudit.violations).toEqual([]);
+  await page
+    .locator(".editor")
+    .getByRole("button", { name: /^(Rapprocher|Reconcile)$/ })
+    .click();
+  await page.getByRole("alertdialog").locator("button").last().click();
+  await expect(page.locator("app-banking > section > ol > li")).toHaveCount(0);
   await mockApi(page, { mode: "client" });
   await page.goto("/backoffice/client");
   await expect(page.locator(".invoice-balance dd")).toHaveCount(3);

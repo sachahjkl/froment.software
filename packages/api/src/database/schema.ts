@@ -1170,6 +1170,8 @@ export const bankMatches = sqliteTable(
   'bank_matches',
   {
     id: text().notNull().primaryKey(),
+    requestId: text('request_id').notNull().unique(),
+    amountCents: integer('amount_cents').notNull(),
     transactionId: text('transaction_id')
       .notNull()
       .references(() => bankTransactions.id),
@@ -1185,11 +1187,12 @@ export const bankMatches = sqliteTable(
     cancellationReason: text('cancellation_reason'),
   },
   (table) => [
-    uniqueIndex('bank_match_transaction_index')
+    index('bank_match_transaction_index')
       .on(table.transactionId)
       .where(sql`${table.cancelledAt} is null`),
-    uniqueIndex('bank_match_payment_index')
+    index('bank_match_payment_index')
       .on(table.paymentId)
       .where(sql`${table.cancelledAt} is null`),
+    check('bank_match_amount_check', sql`${table.amountCents} between 1 and 9007199254740991`),
   ],
 );

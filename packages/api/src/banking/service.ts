@@ -3,6 +3,9 @@ import {
   BankMatchConflict,
   BankMatchHistory,
   BankTransaction,
+  BankAllocation,
+  BankMatchRequest,
+  BankPaymentList,
   BankTransactionNotFound,
   type BankImportRequestValue,
 } from '@froment/contracts';
@@ -16,6 +19,19 @@ import { parseBankStatement } from './csv.js';
 const makeBanking = Effect.gen(function* () {
   const database = yield* Database;
   const audit = yield* Audit;
+  const payments = Effect.fn('Banking.payments')((invoiceId: string) =>
+    Effect.try({
+      try: () =>
+        Schema.decodeUnknownSync(BankPaymentList)(
+          database.sqlite
+            .prepare(`select p.id, p.paid_on as paidOn, p.reference, p.amount_cents as amountCents,
+      p.amount_cents - coalesce((select sum(amount_cents) from bank_matches where payment_id = p.id and cancelled_at is null), 0) as availableCents
+      from invoice_payments p where p.invoice_id = ? and p.cancelled_at is null order by p.paid_on, p.id`)
+            .all(invoiceId),
+        ),
+      catch: (cause) => new DatabaseError({ operation: 'list.bank.payments', cause }),
+    }),
+  );
   const history = Effect.fn('Banking.history')(function* (transactionId: string) {
     const exists = yield* Effect.try({
       try: () =>
@@ -30,7 +46,7 @@ const makeBanking = Effect.gen(function* () {
         Schema.decodeUnknownSync(BankMatchHistory)(
           database.sqlite
             .prepare(`
-        select m.id, m.payment_id as paymentId, p.invoice_id as invoiceId,
+        select m.id, m.amount_cents as amountCents, m.payment_id as paymentId, p.invoice_id as invoiceId,
           i.invoice_number as invoiceNumber, m.matched_at as matchedAt,
           m.matched_by_user_id as matchedByUserId, m.cancelled_at as cancelledAt,
           m.cancelled_by_user_id as cancelledByUserId, m.cancellation_reason as cancellationReason
@@ -47,15 +63,35 @@ const makeBanking = Effect.gen(function* () {
     try: () =>
       Schema.decodeUnknownSync(
         Schema.Array(
-          Schema.Struct({ ...BankTransaction.fields, paymentCancelled: Schema.Literals([0, 1]) }),
+          Schema.Struct({
+            ...BankTransaction.fields,
+            allocations: Schema.fromJsonString(
+              Schema.Array(
+                Schema.Struct({
+                  ...BankAllocation.fields,
+                  paymentCancelled: Schema.Literals([0, 1]),
+                }),
+              ),
+            ),
+          }),
         ),
       )(
         database.sqlite
           .prepare(
-            `select t.id, t.account, t.reference, t.booked_on as bookedOn, t.amount_cents as amountCents, t.description, t.imported_at as importedAt, m.id as matchId, m.payment_id as paymentId, p.invoice_id as invoiceId, i.invoice_number as invoiceNumber, case when p.cancelled_at is not null then 1 else 0 end as paymentCancelled from bank_transactions t left join bank_matches m on m.transaction_id = t.id and m.cancelled_at is null left join invoice_payments p on p.id = m.payment_id left join invoices i on i.id = p.invoice_id order by t.booked_on desc, t.id desc limit 1000`,
+            `select t.id, t.account, t.reference, t.booked_on as bookedOn, t.amount_cents as amountCents, t.description, t.imported_at as importedAt,
+             coalesce((select sum(amount_cents) from bank_matches where transaction_id = t.id and cancelled_at is null), 0) as matchedCents,
+             (select json_group_array(json_object('matchId', m.id, 'amountCents', m.amount_cents, 'paymentId', m.payment_id, 'invoiceId', p.invoice_id, 'invoiceNumber', i.invoice_number, 'paymentCancelled', case when p.cancelled_at is not null then 1 else 0 end))
+              from bank_matches m join invoice_payments p on p.id = m.payment_id join invoices i on i.id = p.invoice_id where m.transaction_id = t.id and m.cancelled_at is null) as allocations
+             from bank_transactions t order by t.booked_on desc, t.id desc limit 1000`,
           )
           .all(),
-      ).map((row) => ({ ...row, paymentCancelled: row.paymentCancelled === 1 })),
+      ).map((row) => ({
+        ...row,
+        allocations: row.allocations.map((allocation) => ({
+          ...allocation,
+          paymentCancelled: allocation.paymentCancelled === 1,
+        })),
+      })),
     catch: (cause) => new DatabaseError({ operation: 'list.bank.transactions', cause }),
   });
   const importStatement = Effect.fn('Banking.importStatement')(function* (
@@ -130,10 +166,11 @@ const makeBanking = Effect.gen(function* () {
   });
   const match = Effect.fn('Banking.match')(function* (
     transactionId: string,
-    paymentId: string,
+    request: typeof BankMatchRequest.Type,
     actorUserId: string,
   ) {
     const now = yield* Clock.currentTimeMillis;
+    const { paymentId, amountCents, requestId } = request;
     yield* Effect.try({
       try: () =>
         database.sqlite
@@ -148,13 +185,21 @@ const makeBanking = Effect.gen(function* () {
             )(row);
             const existing = database.sqlite
               .prepare(
-                'select payment_id as paymentId from bank_matches where transaction_id = ? and cancelled_at is null',
+                'select transaction_id as transactionId, payment_id as paymentId, amount_cents as amountCents from bank_matches where request_id = ?',
               )
-              .get(transactionId);
+              .get(requestId);
             if (existing !== undefined) {
+              const saved = Schema.decodeUnknownSync(
+                Schema.Struct({
+                  transactionId: Schema.String,
+                  paymentId: Schema.String,
+                  amountCents: Schema.Number,
+                }),
+              )(existing);
               if (
-                Schema.decodeUnknownSync(Schema.Struct({ paymentId: Schema.String }))(existing)
-                  .paymentId === paymentId
+                saved.transactionId === transactionId &&
+                saved.paymentId === paymentId &&
+                saved.amountCents === amountCents
               )
                 return;
               throw new BankMatchConflict({ code: 'bank.match_conflict' });
@@ -164,24 +209,51 @@ const makeBanking = Effect.gen(function* () {
                 'select amount_cents as amountCents from invoice_payments where id = ? and cancelled_at is null',
               )
               .get(paymentId);
+            const allocatedToTransaction = Schema.decodeUnknownSync(Schema.Number)(
+              database.sqlite
+                .prepare(
+                  'select coalesce(sum(amount_cents), 0) from bank_matches where transaction_id = ? and cancelled_at is null',
+                )
+                .pluck()
+                .get(transactionId),
+            );
+            const allocatedToPayment = Schema.decodeUnknownSync(Schema.Number)(
+              database.sqlite
+                .prepare(
+                  'select coalesce(sum(amount_cents), 0) from bank_matches where payment_id = ? and cancelled_at is null',
+                )
+                .pluck()
+                .get(paymentId),
+            );
             if (
               payment === undefined ||
               transaction.amountCents <= 0 ||
+              !Schema.is(BankMatchRequest)(request) ||
+              amountCents > transaction.amountCents - allocatedToTransaction ||
               Schema.decodeUnknownSync(Schema.Struct({ amountCents: Schema.Number }))(payment)
-                .amountCents !== transaction.amountCents ||
-              database.sqlite
-                .prepare('select 1 from bank_matches where payment_id = ? and cancelled_at is null')
-                .get(paymentId) !== undefined
+                .amountCents -
+                allocatedToPayment <
+                amountCents ||
+              Schema.decodeUnknownSync(Schema.Int)(
+                database.sqlite
+                  .prepare(
+                    'select count(*) from bank_matches where transaction_id = ? and cancelled_at is null',
+                  )
+                  .pluck()
+                  .get(transactionId),
+              ) >= 100
             )
               throw new BankMatchConflict({ code: 'bank.match_conflict' });
             database.sqlite
               .prepare(
-                'insert into bank_matches (id, transaction_id, payment_id, matched_at, matched_by_user_id) values (?, ?, ?, ?, ?)',
+                'insert into bank_matches (id, transaction_id, payment_id, amount_cents, request_id, matched_at, matched_by_user_id) values (?, ?, ?, ?, ?, ?, ?)',
               )
               .run(
                 ulid(now),
                 transactionId,
                 paymentId,
+                amountCents,
+                requestId,
                 DateTime.formatIso(DateTime.makeUnsafe(now)),
                 actorUserId,
               );
@@ -190,7 +262,7 @@ const makeBanking = Effect.gen(function* () {
               actorUserId,
               resourceType: 'bank-transaction',
               resourceId: transactionId,
-              metadata: { paymentId },
+              metadata: { paymentId, amountCents: String(amountCents), requestId },
               occurredAt: now,
             });
           })
@@ -261,7 +333,7 @@ const makeBanking = Effect.gen(function* () {
     });
     return yield* list;
   });
-  return { list, history, importStatement, match, unmatch };
+  return { list, history, payments, importStatement, match, unmatch };
 });
 export class Banking extends Context.Service<Banking, Effect.Success<typeof makeBanking>>()(
   '@froment/api/Banking',

@@ -378,6 +378,8 @@ export {
 } from './integrations/contracts.js';
 export {
   BankTransaction,
+  BankAllocation,
+  BankPaymentList,
   BankTransactionList,
   BankMatchHistory,
   BankMatchRequest,
