@@ -3,6 +3,10 @@ import { webUiText } from './web-ui-text.js';
 export const translations = {
   fr: {
     ...webUiText.fr,
+    'bank.history': 'Historique des rapprochements',
+    'bank.historyHint':
+      'Les 100 derniers rapprochements, avec dates, identifiants des auteurs et motifs de dissociation.',
+    'bank.historyEmpty': 'Aucun rapprochement enregistré pour cette opération.',
     'emails.prepareReminder': 'Préparer un rappel de paiement',
     'emails.preparingReminder': 'Préparation du rappel…',
     'emails.reminderFailed':
@@ -1475,6 +1479,10 @@ export const translations = {
   },
   en: {
     ...webUiText.en,
+    'bank.history': 'Reconciliation history',
+    'bank.historyHint':
+      'The latest 100 matches, with dates, actor identifiers and reasons for removal.',
+    'bank.historyEmpty': 'No reconciliation recorded for this transaction.',
     'emails.prepareReminder': 'Prepare a payment reminder',
     'emails.preparingReminder': 'Preparing the reminder…',
     'emails.reminderFailed':

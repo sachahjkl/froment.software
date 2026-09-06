@@ -8,6 +8,7 @@ import { Permissions } from '../permissions.js';
 import { Ulid } from '../identifiers.js';
 import {
   BankFailure,
+  BankMatchHistory,
   BankImportRequest,
   BankImportResult,
   BankTransactionList,
@@ -16,6 +17,11 @@ import {
 } from './contracts.js';
 
 export class BankingApi extends HttpApiGroup.make('banking', { topLevel: true }).add(
+  HttpApiEndpoint.get('bankMatchHistory', '/api/banking/transactions/:transactionId/history', {
+    params: { transactionId: Ulid },
+    success: BankMatchHistory,
+    error: BankFailure.members,
+  }).pipe(requirePermissions([Permissions.invoiceMarkPaid]), authenticate, frontendSpecific),
   HttpApiEndpoint.get('bankTransactionList', '/api/banking/transactions', {
     success: BankTransactionList,
     error: BankFailure.members,

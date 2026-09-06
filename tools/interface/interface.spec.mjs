@@ -195,6 +195,10 @@ test("client form and complete account address", async ({ page, colorScheme }, t
   await page.locator('app-banking button[type="submit"]').click();
   await expect(page.locator("app-banking li")).toHaveCount(1);
   await expect(page.locator('app-banking [role="status"]')).toBeFocused();
+  await page
+    .getByRole("button", { name: /Historique des rapprochements|Reconciliation history/ })
+    .click();
+  await expect(page.locator(`#bank-history-${quoteId}`)).toContainText("Incorrect association");
   expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth)).toBe(false);
   const bankingAudit = await new AxeBuilder({ page })
     .withTags(["wcag2a", "wcag2aa", "wcag21aa"])

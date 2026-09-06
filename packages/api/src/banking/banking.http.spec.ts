@@ -1,4 +1,4 @@
-import { BankTransactionList, InvoiceDetail } from '@froment/contracts';
+import { BankMatchHistory, BankTransactionList, InvoiceDetail } from '@froment/contracts';
 import { randomUUID } from 'node:crypto';
 import { Schema } from 'effect';
 import Sqlite from 'better-sqlite3';
@@ -92,6 +92,26 @@ describe('banking HTTP', () => {
           .status,
       ).toBe(409);
       const match = (await list()).find((row) => row.id === first.id);
+      const historyUrl = `${server.baseUrl}/api/banking/transactions/${first.id}/history`;
+      const readHistory = async () => {
+        const response = await fetch(historyUrl, { headers: server.sessionHeaders });
+        expect(response.status).toBe(200);
+        expect(response.headers.get('cache-control')).toContain('no-store');
+        return Schema.decodeUnknownSync(BankMatchHistory)(await response.json());
+      };
+      expect(await readHistory()).toMatchObject([
+        { paymentId: payment.id, invoiceId: invoice.id, cancelledAt: null },
+      ]);
+      expect((await fetch(historyUrl)).status).toBe(401);
+      const clientHeaders = await createClientSession(server, client.id);
+      expect((await fetch(historyUrl, { headers: clientHeaders })).status).toBe(403);
+      expect(
+        (
+          await fetch(`${server.baseUrl}/api/banking/transactions/${invoice.id}/history`, {
+            headers: server.sessionHeaders,
+          })
+        ).status,
+      ).toBe(404);
       if (match?.matchId == null) throw new Error('bank.match.missing');
       expect(
         (
@@ -122,6 +142,11 @@ describe('banking HTTP', () => {
           .status,
       ).toBe(409);
       const database = new Sqlite(server.databaseFilename);
+      const history = await readHistory();
+      expect(history).toHaveLength(1);
+      expect(history[0]?.cancellationReason).toBe('Cancelled payment');
+      expect(history[0]?.cancelledAt).not.toBeNull();
+      expect(history[0]?.cancelledByUserId).toBe(history[0]?.matchedByUserId);
       try {
         expect(database.prepare('select count(*) as count from invoice_payments').get()).toEqual({
           count: 1,

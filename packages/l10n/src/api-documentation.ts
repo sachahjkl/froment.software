@@ -79,6 +79,11 @@ export const apiDocumentation = {
       },
     },
     operations: {
+      bankMatchHistory: {
+        summary: 'Consulter les rapprochements conservés',
+        description:
+          'Afficher les 100 derniers rapprochements d’une opération, avec auteurs, dates et motifs de dissociation.',
+      },
       bankTransactionList: {
         summary: 'Lister les opérations bancaires',
         description: 'Retourne les 1 000 dernières opérations et leurs rapprochements actifs.',
@@ -425,6 +430,11 @@ export const apiDocumentation = {
     },
     operations: {
       catalogList: { summary: 'List services', description: 'Lists active and archived services.' },
+      bankMatchHistory: {
+        summary: 'Read reconciliation history',
+        description:
+          'Return the latest 100 matches for a transaction, including actors, dates and reasons for removal.',
+      },
       bankTransactionList: {
         summary: 'List bank transactions',
         description: 'Returns the latest 1,000 transactions and their active matches.',

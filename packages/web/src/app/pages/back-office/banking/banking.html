@@ -145,6 +145,48 @@
         {{ i18n.t(transaction.paymentId === null ? 'bank.reconcile' : 'bank.unmatch') }}
       </button>
       }
+      <button
+        appButton
+        type="button"
+        [attr.aria-expanded]="historyId() === transaction.id"
+        [attr.aria-controls]="'bank-history-' + transaction.id"
+        (click)="showHistory(transaction.id)"
+      >
+        {{ i18n.t('bank.history') }}
+      </button>
+      <div [id]="'bank-history-' + transaction.id" [hidden]="historyId() !== transaction.id">
+        @if (historyId() === transaction.id) {
+        <p>{{ i18n.t('bank.historyHint') }}</p>
+        @if (historyLoading()) {
+        <p role="status">{{ i18n.t('bank.loading') }}</p>
+        } @else if (historyFailed()) {
+        <p appNotice variant="danger" role="alert">{{ i18n.t('bank.error') }}</p>
+        } @else if (history().length === 0) {
+        <p>{{ i18n.t('bank.historyEmpty') }}</p>
+        } @else {
+        <ul>
+          @for (entry of history(); track entry.id) {
+          <li>
+            <a [routerLink]="['/backoffice/invoices', entry.invoiceId]"
+              >{{ entry.invoiceNumber }}</a
+            >
+            <p>
+              {{ i18n.t('bank.matched') }} · {{ entry.matchedAt | localizedDate: i18n.language(): {
+              dateStyle: 'medium', timeStyle: 'short' } }} · {{ entry.matchedByUserId }}
+            </p>
+            @if (entry.cancelledAt !== null) {
+            <p>
+              {{ i18n.t('bank.unmatched') }} · {{ entry.cancelledAt | localizedDate:
+              i18n.language(): { dateStyle: 'medium', timeStyle: 'short' } }} · {{
+              entry.cancelledByUserId }}
+            </p>
+            <p>{{ entry.cancellationReason }}</p>
+            }
+          </li>
+          }
+        </ul>
+        } }
+      </div>
     </li>
     }
   </ol>

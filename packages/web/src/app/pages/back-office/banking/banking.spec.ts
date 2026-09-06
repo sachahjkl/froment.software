@@ -21,6 +21,49 @@ const transaction: BankTransactionValue = {
   paymentCancelled: false,
 };
 describe('Banking', () => {
+  it('loads preserved history on demand and keeps cancellation reasons as text', async () => {
+    const history = vi.fn(async () => ({
+      success: true,
+      result: [
+        {
+          id: transaction.id,
+          invoiceId: transaction.id,
+          invoiceNumber: 'FA-2026-000001',
+          matchedAt: transaction.importedAt,
+          matchedByUserId: transaction.id,
+          cancelledAt: transaction.importedAt,
+          cancelledByUserId: transaction.id,
+          cancellationReason: '<script>incorrect match</script>',
+        },
+      ],
+    }));
+    TestBed.configureTestingModule({
+      providers: [
+        provideRouter([]),
+        { provide: BankingApi, useValue: { list: async () => [transaction], history } },
+        { provide: InvoicesApi, useValue: { list: async () => [] } },
+      ],
+    });
+    const fixture = TestBed.createComponent(Banking);
+    await fixture.whenStable();
+    await fixture.componentInstance.load();
+    await fixture.whenStable();
+    const root: HTMLElement = fixture.nativeElement;
+    expect(history).not.toHaveBeenCalled();
+    const disclosure = root.querySelector<HTMLButtonElement>('button[aria-expanded]');
+    disclosure?.click();
+    await fixture.whenStable();
+    expect(history).toHaveBeenCalledWith(transaction.id);
+    expect(disclosure?.getAttribute('aria-expanded')).toBe('true');
+    expect(root.textContent).toContain('<script>incorrect match</script>');
+    expect(root.querySelector('script')).toBeNull();
+    disclosure?.click();
+    await fixture.whenStable();
+    expect(disclosure?.getAttribute('aria-expanded')).toBe('false');
+    disclosure?.click();
+    await fixture.whenStable();
+    expect(history).toHaveBeenCalledTimes(2);
+  });
   it('offers only matching active payments and confirms reconciliation without recording money', async () => {
     const match = vi.fn(async () => ({
       success: true,

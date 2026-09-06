@@ -2,6 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import {
   BankFailure,
+  BankMatchHistory,
   BankImportResult,
   BankTransactionList,
   type BankImportRequestValue,
@@ -13,6 +14,14 @@ import { requestOutcome } from '@shared/api-outcome';
 @Injectable({ providedIn: 'root' })
 export class BankingApi {
   private readonly http = inject(HttpClient);
+  history(id: string) {
+    return requestOutcome(
+      this.http.get<unknown>(`/api/banking/transactions/${id}/history`),
+      BankMatchHistory,
+      BankFailure,
+      'bank.error',
+    );
+  }
   async list() {
     return Schema.decodeUnknownSync(BankTransactionList)(
       await firstValueFrom(this.http.get<unknown>('/api/banking/transactions')),

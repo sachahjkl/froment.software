@@ -22,6 +22,7 @@ import {
 } from '@angular/forms/signals';
 import {
   type BankTransactionValue,
+  type BankMatchHistory,
   type InvoiceListValue,
   type InvoicePayment,
 } from '@froment/contracts';
@@ -50,6 +51,11 @@ export class Banking {
   protected readonly error = signal<TranslationKey | undefined>(undefined);
   protected readonly saved = signal(false);
   protected readonly transactions = signal<ReadonlyArray<BankTransactionValue>>([]);
+  protected readonly historyId = signal<string | undefined>(undefined);
+  protected readonly history = signal<typeof BankMatchHistory.Type>([]);
+  protected readonly historyLoading = signal(false);
+  protected readonly historyFailed = signal(false);
+  private historyVersion = 0;
   protected readonly invoices = signal<InvoiceListValue>([]);
   protected readonly selected = signal<BankTransactionValue | undefined>(undefined);
   protected readonly payments = signal<ReadonlyArray<typeof InvoicePayment.Type>>([]);
@@ -262,6 +268,8 @@ export class Banking {
     }
   }
   private complete(transactions: ReadonlyArray<BankTransactionValue>): void {
+    this.historyVersion++;
+    this.historyId.set(undefined);
     this.transactions.set(transactions);
     this.selected.set(undefined);
     this.matchForm().reset({ paymentId: '', reason: '' });
@@ -270,5 +278,29 @@ export class Banking {
   }
   protected amount(cents: number): string {
     return formatMoney(cents, this.i18n.language(), 'EUR');
+  }
+  protected async showHistory(id: string): Promise<void> {
+    const version = ++this.historyVersion;
+    if (this.historyId() === id) {
+      this.historyId.set(undefined);
+      return;
+    }
+    this.historyId.set(id);
+    this.history.set([]);
+    this.historyFailed.set(false);
+    this.historyLoading.set(true);
+    try {
+      const result = await this.api.history(id);
+      if (version !== this.historyVersion) return;
+      if (!result.success) {
+        this.historyFailed.set(true);
+        return;
+      }
+      this.history.set(result.result);
+    } catch {
+      if (version === this.historyVersion) this.historyFailed.set(true);
+    } finally {
+      if (version === this.historyVersion) this.historyLoading.set(false);
+    }
   }
 }

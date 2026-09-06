@@ -265,6 +265,23 @@ export async function mockApi(
       return route.fulfill({ json: { userId: clientId, email: accountEmail, mode } });
     }
     if (unavailable) return route.fulfill({ status: 503, json: {} });
+    if (path === `/api/banking/transactions/${quoteId}/history`) {
+      return route.fulfill({
+        json: [
+          {
+            id: quoteId,
+            paymentId: clientId,
+            invoiceId,
+            invoiceNumber: "FA-2026-000001",
+            matchedAt: createdAt,
+            matchedByUserId: clientId,
+            cancelledAt: createdAt,
+            cancelledByUserId: clientId,
+            cancellationReason: "Incorrect association",
+          },
+        ],
+      });
+    }
     if (path === "/api/banking/import") {
       responses.set("/api/banking/transactions", [
         {

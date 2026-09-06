@@ -47,3 +47,10 @@ La page affiche les 1 000 opérations les plus récentes.
 Le rapprochement actuel associe un crédit à un règlement exact.
 Les règlements groupés, les commissions déduites et la comptabilité des débits restent hors de ce rapprochement.
 Les différences restent visibles et ne sont pas corrigées automatiquement.
+
+# Historique consultable
+
+Chaque opération donne accès aux 100 derniers rapprochements conservés.
+L’historique indique la facture, les dates, les identifiants des auteurs et les motifs de dissociation.
+La route `GET /api/banking/transactions/:transactionId/history` exige les droits de gestion des règlements.
+Les clients ne peuvent pas consulter cet historique interne.

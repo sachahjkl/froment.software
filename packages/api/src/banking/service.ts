@@ -1,6 +1,7 @@
 import {
   BankImportInvalid,
   BankMatchConflict,
+  BankMatchHistory,
   BankTransaction,
   BankTransactionNotFound,
   type BankImportRequestValue,
@@ -15,6 +16,33 @@ import { parseBankStatement } from './csv.js';
 const makeBanking = Effect.gen(function* () {
   const database = yield* Database;
   const audit = yield* Audit;
+  const history = Effect.fn('Banking.history')(function* (transactionId: string) {
+    const exists = yield* Effect.try({
+      try: () =>
+        database.sqlite
+          .prepare('select 1 from bank_transactions where id = ?')
+          .get(transactionId) !== undefined,
+      catch: (cause) => new DatabaseError({ operation: 'get.bank.transaction', cause }),
+    });
+    if (!exists) return yield* new BankTransactionNotFound({ code: 'bank.transaction_not_found' });
+    return yield* Effect.try({
+      try: () =>
+        Schema.decodeUnknownSync(BankMatchHistory)(
+          database.sqlite
+            .prepare(`
+        select m.id, m.payment_id as paymentId, p.invoice_id as invoiceId,
+          i.invoice_number as invoiceNumber, m.matched_at as matchedAt,
+          m.matched_by_user_id as matchedByUserId, m.cancelled_at as cancelledAt,
+          m.cancelled_by_user_id as cancelledByUserId, m.cancellation_reason as cancellationReason
+        from bank_matches m join invoice_payments p on p.id = m.payment_id
+        join invoices i on i.id = p.invoice_id
+        where m.transaction_id = ? order by m.matched_at desc, m.id desc limit 100
+      `)
+            .all(transactionId),
+        ),
+      catch: (cause) => new DatabaseError({ operation: 'list.bank.match.history', cause }),
+    });
+  });
   const list = Effect.try({
     try: () =>
       Schema.decodeUnknownSync(
@@ -233,7 +261,7 @@ const makeBanking = Effect.gen(function* () {
     });
     return yield* list;
   });
-  return { list, importStatement, match, unmatch };
+  return { list, history, importStatement, match, unmatch };
 });
 export class Banking extends Context.Service<Banking, Effect.Success<typeof makeBanking>>()(
   '@froment/api/Banking',

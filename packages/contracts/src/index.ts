@@ -379,6 +379,7 @@ export {
 export {
   BankTransaction,
   BankTransactionList,
+  BankMatchHistory,
   BankImportRequest,
   BankImportResult,
   BankFailure,

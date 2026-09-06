@@ -27,6 +27,19 @@ export const BankTransaction = Schema.Struct({
   paymentCancelled: Schema.Boolean,
 });
 export const BankTransactionList = Schema.Array(BankTransaction);
+export const BankMatchHistory = Schema.Array(
+  Schema.Struct({
+    id: Ulid,
+    paymentId: Ulid,
+    invoiceId: Ulid,
+    invoiceNumber: Schema.NullOr(Schema.String),
+    matchedAt: IsoUtc,
+    matchedByUserId: Ulid,
+    cancelledAt: Schema.NullOr(IsoUtc),
+    cancelledByUserId: Schema.NullOr(Ulid),
+    cancellationReason: Schema.NullOr(Schema.String),
+  }),
+);
 export type BankTransaction = typeof BankTransaction.Type;
 export const BankImportResult = Schema.Struct({ added: Schema.Int, existing: Schema.Int });
 export const BankMatchRequest = Schema.Struct({ paymentId: Ulid });
