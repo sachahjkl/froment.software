@@ -144,7 +144,27 @@
               <td><strong>{{ invoice.title }}</strong></td>
               <td><span appBadge>{{ invoiceStatus(invoice.status) }}</span></td>
               <td>{{ date(invoice.dueDate) }}</td>
-              <td>{{ money(invoice.totalCents, invoice.currency) }}</td>
+              <td>
+                <dl class="invoice-balance">
+                  <div>
+                    <dt>{{ i18n.t('backOffice.client.invoice.total') }}</dt>
+                    <dd>{{ money(invoice.totalCents, invoice.currency) }}</dd>
+                  </div>
+                  <div>
+                    <dt>{{ i18n.t('backOffice.client.invoice.recordedPaid') }}</dt>
+                    <dd>{{ money(invoice.recordedPaidCents, invoice.currency) }}</dd>
+                  </div>
+                  <div>
+                    <dt>{{ i18n.t('backOffice.client.invoice.remaining') }}</dt>
+                    <dd><strong>{{ money(invoice.remainingCents, invoice.currency) }}</strong></dd>
+                  </div>
+                </dl>
+                @if (invoice.status === 'paid' && invoice.recordedPaidCents < invoice.totalCents) {
+                <p class="payment-note">{{ i18n.t('backOffice.client.invoice.historicalPaid') }}</p>
+                } @if (invoice.status === 'void') {
+                <p class="payment-note">{{ i18n.t('backOffice.client.invoice.voidBalance') }}</p>
+                }
+              </td>
               <td>
                 @if (invoice.pdfAvailable) {
                 <a [href]="invoicePdfUrl(invoice.id)">{{ i18n.t('backOffice.client.pdf') }}</a>

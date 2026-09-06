@@ -459,6 +459,13 @@ export const translations = {
     'document.required': 'champ requis',
     'catalog.title': 'Catalogue',
     'payment.title': 'Règlements',
+    'backOffice.client.invoice.total': 'Total facturé',
+    'backOffice.client.invoice.recordedPaid': 'Règlements enregistrés',
+    'backOffice.client.invoice.remaining': 'Reste à régler',
+    'backOffice.client.invoice.historicalPaid':
+      'Cette facture a été déclarée réglée sans détail complet des règlements.',
+    'backOffice.client.invoice.voidBalance':
+      'Cette facture est annulée. Aucun montant n’est demandé.',
     'account.password_title': 'Changer le mot de passe',
     'account.security_title': 'Sécurité du compte',
     'account.security_hint': 'Gérez votre mot de passe et vos sessions de connexion.',
@@ -1804,6 +1811,12 @@ export const translations = {
     'document.required': 'required field',
     'catalog.title': 'Catalog',
     'payment.title': 'Payments',
+    'backOffice.client.invoice.total': 'Invoice total',
+    'backOffice.client.invoice.recordedPaid': 'Recorded payments',
+    'backOffice.client.invoice.remaining': 'Remaining balance',
+    'backOffice.client.invoice.historicalPaid':
+      'This invoice was declared paid without complete payment details.',
+    'backOffice.client.invoice.voidBalance': 'This invoice is void. No amount is requested.',
     'account.password_title': 'Change password',
     'account.security_title': 'Account security',
     'account.security_hint': 'Manage your password and sign-in sessions.',

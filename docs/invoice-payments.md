@@ -83,6 +83,17 @@ L’API est `GET /api/invoice-payments/export?from=YYYY-MM-DD&to=YYYY-MM-DD`.
 Elle exige la permission `invoice.mark-paid` et interdit la mise en cache.
 Cet export n’est pas un FEC et ne remplace pas les écritures comptables validées.
 
+## Solde dans le portail client
+
+Le portail affiche le total facturé, les règlements enregistrés et le solde restant pour chaque facture.
+Les règlements annulés ne comptent plus dans le montant reçu.
+Une facture réglée ou annulée ne demande aucun paiement supplémentaire.
+Les anciennes déclarations de règlement restent signalées sans inventer de reçus détaillés.
+
+Le serveur calcule les montants depuis les règlements stockés et limite la liste aux factures du client connecté.
+Il ne transmet ni les références internes des règlements, ni les motifs de correction, ni les comptes des opérateurs.
+Les PDF des factures restent inchangés.
+
 ## Limites
 
 Les anciennes déclarations de facture payée restent dans leur état existant.

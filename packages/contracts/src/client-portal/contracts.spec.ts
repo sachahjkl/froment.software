@@ -41,6 +41,8 @@ describe('client portal contracts', () => {
     expect(
       Schema.decodeUnknownSync(ClientInvoiceList)([
         {
+          recordedPaidCents: 200,
+          remainingCents: 1000,
           id,
           orderId: '01ARZ3NDEKTSV4RRFFQ69G5FAX',
           orderReference: 'CO-2026-000001',
@@ -79,6 +81,8 @@ describe('client portal contracts', () => {
 
   it('rejects impossible client invoice dates', () => {
     const invoice = {
+      recordedPaidCents: 0,
+      remainingCents: 1200,
       id,
       orderId: '01ARZ3NDEKTSV4RRFFQ69G5FAX',
       orderReference: 'CO-2026-000001',

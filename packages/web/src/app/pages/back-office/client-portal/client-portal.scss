@@ -81,3 +81,28 @@ h1 {
     flex-direction: column;
   }
 }
+.invoice-balance {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0;
+  min-width: 12rem;
+}
+.invoice-balance div {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: var(--space-3);
+}
+.invoice-balance dt {
+  color: var(--color-muted);
+  font-size: var(--text-sm);
+}
+.invoice-balance dd {
+  margin: 0;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+.payment-note {
+  max-width: 28ch;
+  margin-block-start: var(--space-2);
+  font-size: var(--text-sm);
+}

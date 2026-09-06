@@ -1,4 +1,6 @@
 import Sqlite from 'better-sqlite3';
+import { Schema } from 'effect';
+import { InvoiceDetail, ClientInvoiceList } from '@froment/contracts';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 import {
@@ -109,6 +111,20 @@ describe('invoice HTTP routes', () => {
     });
     expect(forbidden.status).toBe(403);
     expect(partial.status).toBe(200);
+    const portalInvoices = async () => {
+      const response = await fetch(`${server.baseUrl}/api/client/invoices`, {
+        headers: clientSession,
+      });
+      expect(response.status).toBe(200);
+      return Schema.decodeUnknownSync(ClientInvoiceList)(await response.json());
+    };
+    expect(await portalInvoices()).toMatchObject([
+      {
+        id: invoice.id,
+        recordedPaidCents: 100,
+        remainingCents: invoice.currentRevision.totalCents - 100,
+      },
+    ]);
     await expect(partial.json()).resolves.toMatchObject({
       status: 'issued',
       payments: [{ amountCents: 100 }],
@@ -146,6 +162,9 @@ describe('invoice HTTP routes', () => {
     expect(paid.status).toBe(200);
     await expect(paid.json()).resolves.toMatchObject({ status: 'paid' });
     expect((await pay(finalPayload)).status).toBe(200);
+    expect(await portalInvoices()).toMatchObject([
+      { status: 'paid', recordedPaidCents: invoice.currentRevision.totalCents, remainingCents: 0 },
+    ]);
     const exportUrl = `${server.baseUrl}/api/invoice-payments/export?from=2026-08-20&to=2026-08-20`;
     const exported = await fetch(exportUrl, { headers: server.sessionHeaders });
     expect(exported.status).toBe(200);
@@ -204,6 +223,16 @@ describe('invoice HTTP routes', () => {
         .status,
     ).toBe(200);
     const correctedExport = await fetch(exportUrl, { headers: server.sessionHeaders });
+    const clientBalances = await portalInvoices();
+    expect(clientBalances).toMatchObject([
+      {
+        status: 'issued',
+        recordedPaidCents: invoice.currentRevision.totalCents - payment.amountCents,
+        remainingCents: payment.amountCents,
+      },
+    ]);
+    expect(JSON.stringify(clientBalances)).not.toContain('Wrong reference');
+    expect(JSON.stringify(clientBalances)).not.toContain('BANK-001');
     expect(await correctedExport.text()).toContain('"cancelled"');
 
     const database = new Sqlite(server.databaseFilename, { readonly: true });
@@ -242,5 +271,3 @@ describe('invoice HTTP routes', () => {
     await expect(response.json()).resolves.toMatchObject({ code: 'invoice.invalid_dates' });
   });
 });
-import { Schema } from 'effect';
-import { InvoiceDetail } from '@froment/contracts';

@@ -38,6 +38,7 @@ const ClientOrderRecord = Schema.Struct({
   pdfAvailable: Schema.Int,
 });
 const ClientInvoiceRecord = Schema.Struct({
+  recordedPaidCents: Schema.Int,
   id: Ulid,
   orderId: Ulid,
   orderReference: Schema.String,
@@ -190,6 +191,8 @@ export const ClientPortalLive = Layer.effect(
                         invoices.invoice_number as invoiceNumber, invoice_revisions.title,
                         invoice_revisions.due_date as dueDate, invoice_revisions.currency,
                         invoice_revisions.total_cents as totalCents,
+                        coalesce((select sum(amount_cents) from invoice_payments
+                          where invoice_id = invoices.id and cancelled_at is null), 0) as recordedPaidCents,
                         invoices.updated_at as updatedAt,
                         (invoice_pdf_jobs.status = 'ready'
                          and document_artifacts.id is not null) as pdfAvailable
@@ -211,6 +214,8 @@ export const ClientPortalLive = Layer.effect(
                 .all(userId, userId),
             ).map((invoice) => ({
               ...invoice,
+              remainingCents:
+                invoice.status === 'issued' ? invoice.totalCents - invoice.recordedPaidCents : 0,
               updatedAt: DateTime.formatIso(DateTime.makeUnsafe(invoice.updatedAt)),
               pdfAvailable: invoice.pdfAvailable === 1,
             })),

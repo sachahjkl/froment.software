@@ -241,6 +241,44 @@ const seedInvoice = (database: DatabaseService, dueDate = '2099-09-19') => {
 };
 
 describe('invoice issue recovery', () => {
+  it('shows no client balance for historical paid and void invoices without inventing receipts', async () => {
+    await Effect.runPromise(
+      Effect.gen(function* () {
+        const database = yield* Database;
+        seedInvoice(database);
+        const invoices = yield* Invoices;
+        const portal = yield* ClientPortal;
+        expect(yield* portal.listInvoices(clientId)).toEqual([]);
+        yield* invoices.issue(invoiceId, { expectedVersion: 1 }, actorId);
+        expect(yield* portal.listInvoices(clientId)).toMatchObject([
+          { recordedPaidCents: 0, remainingCents: 12000 },
+        ]);
+        expect(yield* portal.listInvoices(actorId)).toEqual([]);
+        database.sqlite
+          .prepare("update invoices set status = 'paid', paid_at = issued_at where id = ?")
+          .run(invoiceId);
+        expect(yield* portal.listInvoices(clientId)).toMatchObject([
+          { status: 'paid', recordedPaidCents: 0, remainingCents: 0 },
+        ]);
+        database.sqlite
+          .prepare(
+            "update invoices set status = 'void', paid_at = null, voided_at = issued_at where id = ?",
+          )
+          .run(invoiceId);
+        expect(yield* portal.listInvoices(clientId)).toMatchObject([
+          { status: 'void', recordedPaidCents: 0, remainingCents: 0 },
+        ]);
+      }).pipe(
+        Effect.provide(
+          makeTestLayer(':memory:', {
+            renderQuotePdf: () => Effect.die('unused'),
+            renderInvoicePdf: () => Effect.die('unused'),
+            renderOrderPdf: () => Effect.die('unused'),
+          }),
+        ),
+      ),
+    );
+  });
   it('cancels a payment once, restores the balance and preserves the issued snapshot', async () => {
     await Effect.runPromise(
       Effect.gen(function* () {

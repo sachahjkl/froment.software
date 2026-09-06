@@ -97,6 +97,16 @@ test("client form and complete account address", async ({ page, colorScheme }, t
     .analyze();
   expect(audit.violations).toEqual([]);
   await page.screenshot({ path: testInfo.outputPath("account-security.png"), fullPage: true });
+  await mockApi(page, { mode: "client" });
+  await page.goto("/backoffice/client");
+  await expect(page.locator(".invoice-balance dd")).toHaveCount(3);
+  await expect(page.locator(".invoice-balance dd").last()).toContainText(/3.?500[,.]00/);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth)).toBe(false);
+  const portalAudit = await new AxeBuilder({ page })
+    .withTags(["wcag2a", "wcag2aa", "wcag21aa"])
+    .analyze();
+  expect(portalAudit.violations).toEqual([]);
+  await page.screenshot({ path: testInfo.outputPath("client-payments.png"), fullPage: true });
 });
 
 test("client signing form stays inside its panel", async ({ page, colorScheme }) => {

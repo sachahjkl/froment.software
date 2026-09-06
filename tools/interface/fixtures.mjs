@@ -219,6 +219,8 @@ export async function mockApi(
         {
           ...invoiceSummary,
           status: "issued",
+          recordedPaidCents: 10000,
+          remainingCents: 350000,
           invoiceNumber: "FA-2026-000001",
           pdfAvailable: true,
         },

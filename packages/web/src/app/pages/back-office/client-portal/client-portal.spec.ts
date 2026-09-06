@@ -46,6 +46,8 @@ class ClientPortalApiStub {
   ];
   invoices: ClientInvoiceListValue = [
     {
+      recordedPaidCents: 3000,
+      remainingCents: 9000,
       id: invoiceId,
       orderId,
       orderReference: 'CO-2026-000001',
@@ -87,6 +89,43 @@ class ClientPortalApiStub {
 }
 
 describe('ClientPortal', () => {
+  it('shows partial balances and explains historical paid and void invoices', async () => {
+    const api = new ClientPortalApiStub();
+    const invoice = api.invoices[0];
+    if (invoice === undefined) throw new Error('invoice.fixture.missing');
+    api.invoices = [
+      invoice,
+      {
+        ...invoice,
+        id: '01ARZ3NDEKTSV4RRFFQ69G5FAY',
+        status: 'paid',
+        recordedPaidCents: 0,
+        remainingCents: 0,
+      },
+      {
+        ...invoice,
+        id: '01ARZ3NDEKTSV4RRFFQ69G5FAZ',
+        status: 'void',
+        recordedPaidCents: 0,
+        remainingCents: 0,
+      },
+    ];
+    TestBed.configureTestingModule({
+      providers: [provideRouter([]), { provide: ClientPortalApi, useValue: api }],
+    });
+    const fixture = TestBed.createComponent(ClientPortal);
+    await fixture.whenStable();
+    await fixture.componentInstance.load();
+    await fixture.whenStable();
+    const root: HTMLElement = fixture.nativeElement;
+    const amounts = root.querySelectorAll('.invoice-balance dd');
+    expect(amounts[0]?.textContent).toMatch(/120[,.]00/);
+    expect(amounts[1]?.textContent).toMatch(/30[,.]00/);
+    expect(amounts[2]?.textContent).toMatch(/90[,.]00/);
+    expect(root.querySelectorAll('.payment-note')).toHaveLength(2);
+    expect(root.textContent).toMatch(/sans détail complet|without complete payment details/);
+    expect(root.textContent).toMatch(/Aucun montant|No amount/);
+  });
   it('shows document tables and only available PDF links', async () => {
     const api = new ClientPortalApiStub();
     TestBed.configureTestingModule({
