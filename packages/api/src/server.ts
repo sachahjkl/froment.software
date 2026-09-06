@@ -29,6 +29,7 @@ import { OrderHandlers } from './orders/handlers.js';
 import { QuoteHandlers } from './quotes/handlers.js';
 import { QuoteConditionPresetHandlers } from './quote-condition-presets/handlers.js';
 import { CatalogHandlers } from './catalog/handlers.js';
+import { IntegrationHandlers } from './integrations/handlers.js';
 import { QuoteLinkHandlers } from './quote-links/handlers.js';
 import { RequestLimiterLive } from './server/request-limiter.js';
 import { StatusHandlers } from './status/handlers.js';
@@ -47,6 +48,7 @@ const ApiRoutes = HttpApiBuilder.layer(FrenchApi, { openapiPath: '/api/openapi.j
       OrderHandlers,
       QuoteConditionPresetHandlers,
       CatalogHandlers,
+      IntegrationHandlers,
       IssuerSettingsHandlers,
       AffairHandlers,
       QuoteHandlers,

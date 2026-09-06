@@ -97,6 +97,23 @@ test("client form and complete account address", async ({ page, colorScheme }, t
     .analyze();
   expect(audit.violations).toEqual([]);
   await page.screenshot({ path: testInfo.outputPath("account-security.png"), fullPage: true });
+  await page.goto("/backoffice/configuration/services");
+  await expect(page.locator(".providers li")).toHaveCount(5);
+  await expect(page.locator(".operations li")).toHaveCount(0);
+  await page.locator(".providers button").first().focus();
+  await page.keyboard.press("Enter");
+  await expect(page.locator(".operations li")).toHaveCount(1);
+  await expect(page.locator(".operations li")).toContainText(
+    /aucune opération réelle|no real operation/,
+  );
+  await expect(page.locator(".operations time")).not.toBeEmpty();
+  await expect(page.locator('app-integrations [role="status"]')).toBeFocused();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth)).toBe(false);
+  const integrationAudit = await new AxeBuilder({ page })
+    .withTags(["wcag2a", "wcag2aa", "wcag21aa"])
+    .analyze();
+  expect(integrationAudit.violations).toEqual([]);
+  await page.screenshot({ path: testInfo.outputPath("external-services.png"), fullPage: true });
   await mockApi(page, { mode: "client" });
   await page.goto("/backoffice/client");
   await expect(page.locator(".invoice-balance dd")).toHaveCount(3);

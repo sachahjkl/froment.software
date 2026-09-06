@@ -1,0 +1,32 @@
+:host {
+  display: block;
+  padding: var(--space-6) var(--page-x);
+}
+h2 {
+  font-size: var(--text-xl);
+}
+h3 {
+  font-size: var(--text-base);
+}
+.providers,
+.operations {
+  display: grid;
+  gap: var(--space-4);
+  list-style: none;
+  padding: 0;
+}
+.providers {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr));
+}
+li {
+  padding: var(--space-4);
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+button {
+  white-space: normal;
+  max-width: 100%;
+}
+[role="status"]:empty {
+  margin: 0;
+}

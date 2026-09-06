@@ -72,8 +72,25 @@ export const apiDocumentation = {
       },
       status: { title: 'État', description: 'Santé et version du déploiement.' },
       catalog: { title: 'Catalogue', description: 'Prestations réutilisables dans les devis.' },
+      integrations: {
+        title: 'Services externes',
+        description: 'Adaptateurs et journal des demandes.',
+      },
     },
     operations: {
+      integrationStatus: {
+        summary: 'Lister les modes des adaptateurs',
+        description: 'Indique les services simulés et les prestataires connectés.',
+      },
+      integrationOperationList: {
+        summary: 'Consulter les opérations externes',
+        description: 'Retourne les 100 dernières demandes et leurs reçus.',
+      },
+      integrationOperationCreate: {
+        summary: 'Soumettre une demande externe',
+        description:
+          'Enregistre la demande et appelle son adaptateur avec une clé d’idempotence. Une simulation ne réalise aucune opération externe.',
+      },
       catalogList: {
         summary: 'Lister les prestations',
         description: 'Liste les prestations actives et archivées.',
@@ -384,9 +401,23 @@ export const apiDocumentation = {
       },
       status: { title: 'Status', description: 'Deployment health and version.' },
       catalog: { title: 'Catalog', description: 'Reusable services for quotes.' },
+      integrations: { title: 'External services', description: 'Adapters and request history.' },
     },
     operations: {
       catalogList: { summary: 'List services', description: 'Lists active and archived services.' },
+      integrationStatus: {
+        summary: 'List adapter modes',
+        description: 'Identifies simulated services and connected providers.',
+      },
+      integrationOperationList: {
+        summary: 'Read external operations',
+        description: 'Returns the latest 100 requests and their receipts.',
+      },
+      integrationOperationCreate: {
+        summary: 'Submit an external request',
+        description:
+          'Records the request and calls its adapter with an idempotency key. A simulation performs no external operation.',
+      },
       catalogCreate: {
         summary: 'Create a service',
         description: 'Stores a description, quantity, price in euros and VAT rate.',

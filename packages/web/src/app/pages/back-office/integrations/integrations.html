@@ -1,0 +1,59 @@
+<section aria-labelledby="integrations-title">
+  <h2 id="integrations-title">{{ i18n.t('integrations.title') }}</h2>
+  <p appNotice variant="info">{{ i18n.t('integrations.info') }}</p>
+  <p #result tabindex="-1" role="status">
+    @if (completed()) { {{ i18n.t('integrations.completed') }} }
+  </p>
+  @if (error()) {
+  <p appNotice variant="danger" role="alert">{{ i18n.t('integrations.error') }}</p>
+  <button appButton type="button" [disabled]="loading() || saving()" (click)="load()">
+    {{ i18n.t('integrations.reload') }}
+  </button>
+  } @if (loading()) {
+  <p role="status">{{ i18n.t('integrations.loading') }}</p>
+  } @else {
+  <ul class="providers">
+    @for (provider of providers(); track provider.kind) {
+    <li class="ds-panel">
+      <h3>{{ i18n.t(labels[provider.kind]) }}</h3>
+      <p>
+        {{ i18n.t(provider.mode === 'simulation' ? 'integrations.simulation' : 'integrations.live')
+        }}
+      </p>
+      @if (provider.mode === 'simulation') {
+      <button appButton type="button" [disabled]="saving()" (click)="simulate(provider.kind)">
+        {{ i18n.t('integrations.test') }} — {{ i18n.t(labels[provider.kind]) }}
+      </button>
+      }
+    </li>
+    }
+  </ul>
+  <h2>{{ i18n.t('integrations.history') }}</h2>
+  <p>{{ i18n.t('integrations.historyInfo') }}</p>
+  @if (operations().length === 0) {
+  <p>{{ i18n.t('integrations.empty') }}</p>
+  }
+  <ol class="operations">
+    @for (operation of operations(); track operation.id) {
+    <li class="ds-panel">
+      <h3>{{ i18n.t(labels[operation.request.kind]) }} — {{ operation.request.reference }}</h3>
+      <p>
+        <time [attr.datetime]="operation.createdAt"
+          >{{ operation.createdAt | localizedDate: i18n.language() : { dateStyle: 'medium',
+          timeStyle: 'short' } }}</time
+        >
+      </p>
+      <p>
+        {{ i18n.t(operation.receipt === null ? 'integrations.pending' : operation.receipt.mode ===
+        'simulation' ? 'integrations.simulated' : 'integrations.submitted') }}
+      </p>
+      @if (operation.receipt === null && operation.request.expectedMode === 'simulation') {
+      <button appButton type="button" [disabled]="saving()" (click)="send(operation.request)">
+        {{ i18n.t('integrations.retry') }}
+      </button>
+      }
+    </li>
+    }
+  </ol>
+  }
+</section>

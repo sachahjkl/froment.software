@@ -3,6 +3,31 @@ import { webUiText } from './web-ui-text.js';
 export const translations = {
   fr: {
     ...webUiText.fr,
+    'integrations.title': 'Services externes',
+    'integrations.info':
+      'Les adaptateurs simulés sont actifs, y compris en production. Ils n’envoient aucun courriel, ne signent aucun document et ne déplacent aucun argent. Aucun prestataire payant n’est connecté.',
+    'integrations.email': 'Courriels',
+    'integrations.signature': 'Signature',
+    'integrations.payment': 'Paiement en ligne',
+    'integrations.banking': 'Banque',
+    'integrations.electronicInvoice': 'Facturation électronique',
+    'integrations.simulation': 'Mode simulation — aucune opération externe.',
+    'integrations.live': 'Prestataire connecté.',
+    'integrations.test': 'Tester la simulation',
+    'integrations.completed':
+      'La simulation est enregistrée. Aucun envoi, signature, paiement ou dépôt réglementaire n’a eu lieu.',
+    'integrations.error':
+      'Le service est indisponible. Rechargez le journal avant de réessayer la même simulation.',
+    'integrations.reload': 'Recharger le journal',
+    'integrations.loading': 'Chargement des services…',
+    'integrations.history': 'Journal des opérations',
+    'integrations.historyInfo':
+      'Les 100 dernières opérations sont affichées. Les essais utilisent des données fictives et ne changent pas les documents commerciaux.',
+    'integrations.empty': 'Aucune opération enregistrée.',
+    'integrations.pending': 'Demande enregistrée, résultat non confirmé.',
+    'integrations.simulated': 'Simulation terminée — aucune opération réelle.',
+    'integrations.submitted': 'Demande transmise au prestataire — résultat final non confirmé.',
+    'integrations.retry': 'Réessayer cette simulation',
     'nav.home': 'Accueil',
     'nav.about': 'FAQ',
     'nav.products': 'Projets',
@@ -1361,6 +1386,31 @@ export const translations = {
   },
   en: {
     ...webUiText.en,
+    'integrations.title': 'External services',
+    'integrations.info':
+      'Simulated adapters are active, including in production. They send no email, sign no documents and move no money. No paid provider is connected.',
+    'integrations.email': 'Email',
+    'integrations.signature': 'Signature',
+    'integrations.payment': 'Online payment',
+    'integrations.banking': 'Banking',
+    'integrations.electronicInvoice': 'Electronic invoicing',
+    'integrations.simulation': 'Simulation mode — no external operation.',
+    'integrations.live': 'Provider connected.',
+    'integrations.test': 'Test simulation',
+    'integrations.completed':
+      'Simulation recorded. No message, signature, payment or regulatory submission occurred.',
+    'integrations.error':
+      'The service is unavailable. Reload the history before retrying the same simulation.',
+    'integrations.reload': 'Reload history',
+    'integrations.loading': 'Loading services…',
+    'integrations.history': 'Operation history',
+    'integrations.historyInfo':
+      'The latest 100 operations are shown. Tests use fictional data and do not change business documents.',
+    'integrations.empty': 'No recorded operations.',
+    'integrations.pending': 'Request recorded, result not confirmed.',
+    'integrations.simulated': 'Simulation complete — no real operation.',
+    'integrations.submitted': 'Request submitted to the provider — final result not confirmed.',
+    'integrations.retry': 'Retry this simulation',
     'nav.home': 'Home',
     'nav.about': 'FAQ',
     'nav.products': 'Projects',

@@ -270,6 +270,13 @@ export const routes: Routes = [
     children: [
       { path: '', redirectTo: 'entreprise', pathMatch: 'full' },
       {
+        path: 'services',
+        loadComponent: () =>
+          import('./pages/back-office/integrations/integrations').then(
+            (module) => module.Integrations,
+          ),
+      },
+      {
         path: 'catalogue',
         loadComponent: () =>
           import('./pages/back-office/catalog/catalog').then((module) => module.Catalog),

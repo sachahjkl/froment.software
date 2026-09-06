@@ -356,3 +356,23 @@ export {
   AccountSessionFailure,
   type AccountSessionList as AccountSessionListValue,
 } from './authentication/sessions.js';
+export {
+  EmailSubmission,
+  SignatureSubmission,
+  PaymentSubmission,
+  BankingSubmission,
+  ElectronicInvoiceSubmission,
+  IntegrationSubmission,
+  IntegrationKind,
+  IntegrationOperation,
+  IntegrationOperationList,
+  IntegrationStatusList,
+  ProviderReceipt,
+  IntegrationFailure,
+  IntegrationConflict,
+  IntegrationInvalid,
+  IntegrationUnavailable,
+  type IntegrationSubmission as IntegrationSubmissionValue,
+  type IntegrationOperation as IntegrationOperationValue,
+  type ProviderReceipt as ProviderReceiptValue,
+} from './integrations/contracts.js';

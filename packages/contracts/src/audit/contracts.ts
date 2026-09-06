@@ -31,6 +31,8 @@ export const AuditActions = [
   'invoice.revised',
   'invoice.voided',
   'issuer.updated',
+  'integration.requested',
+  'integration.processed',
   'quote.accepted',
   'quote.cancelled',
   'quote.condition-preset-created',

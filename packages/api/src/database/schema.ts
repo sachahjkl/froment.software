@@ -1012,3 +1012,13 @@ export const RefreshSessionLookup = Schema.Struct({
   disabledAt: Schema.NullOr(Schema.Int),
   passwordChangedAt: Schema.Int,
 });
+export const integrationOperations = sqliteTable('integration_operations', {
+  id: text().notNull().primaryKey(),
+  requestId: text('request_id').notNull().unique(),
+  request: text().notNull(),
+  receipt: text(),
+  createdAt: text('created_at').notNull(),
+  createdByUserId: text('created_by_user_id')
+    .notNull()
+    .references(() => users.id),
+});

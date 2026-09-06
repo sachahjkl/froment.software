@@ -20,6 +20,8 @@ import { QuotesLive } from './quotes/quotes.js';
 import { QuoteLinksLive } from './quote-links/service.js';
 import { QuoteConditionPresetsLive } from './quote-condition-presets/service.js';
 import { CatalogLive } from './catalog/service.js';
+import { IntegrationsLive } from './integrations/service.js';
+import { SimulatedProviders } from './integrations/providers.js';
 import { InvoicesLive } from './invoices/invoices.js';
 import { OrdersLive } from './orders/orders.js';
 import { ServerLive } from './server.js';
@@ -51,6 +53,7 @@ const ServicesLive = Layer.mergeAll(
   QuoteLinksLive.pipe(Layer.provide(BusinessConfigLive)),
   QuoteConditionPresetsLive,
   CatalogLive,
+  IntegrationsLive.pipe(Layer.provide(SimulatedProviders)),
   DeploymentLive,
   ClientPortalLive,
 ).pipe(

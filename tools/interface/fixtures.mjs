@@ -208,6 +208,14 @@ export async function mockApi(
     ["/api/issuer-settings", issuer],
     ["/api/quote-condition-presets", []],
     ["/api/catalog", []],
+    [
+      "/api/integrations",
+      ["email", "signature", "payment", "banking", "electronic-invoice"].map((kind) => ({
+        kind,
+        mode: "simulation",
+      })),
+    ],
+    ["/api/integrations/operations", []],
     ["/api/tokens", { items: [], nextCursor: null }],
     [`/api/affairs/${quoteId}/events`, []],
     ["/api/public/quote-link", publicQuote],
@@ -256,6 +264,18 @@ export async function mockApi(
       return route.fulfill({ json: { userId: clientId, email: accountEmail, mode } });
     }
     if (unavailable) return route.fulfill({ status: 503, json: {} });
+    if (path === "/api/integrations/operations" && route.request().method() === "POST") {
+      const request = route.request().postDataJSON();
+      const operation = {
+        id: quoteId,
+        request,
+        receipt: { id: `simulation:${request.requestId}`, mode: "simulation", status: "simulated" },
+        createdAt,
+        createdByUserId: clientId,
+      };
+      responses.set(path, [operation]);
+      return route.fulfill({ json: operation });
+    }
     if (responses.has(path)) return route.fulfill({ json: responses.get(path) });
     if (path.endsWith("/preview")) {
       return route.fulfill({
