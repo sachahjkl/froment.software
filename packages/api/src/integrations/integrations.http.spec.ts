@@ -2,6 +2,7 @@ import {
   IntegrationOperation,
   IntegrationOperationList,
   IntegrationStatusList,
+  IntegrationRetryList,
 } from '@froment/contracts';
 import { Schema } from 'effect';
 import { randomUUID } from 'node:crypto';
@@ -20,6 +21,11 @@ describe('integration simulations HTTP', () => {
     try {
       const url = `${server.baseUrl}/api/integrations`;
       expect((await fetch(url)).status).toBe(401);
+      expect((await fetch(`${url}/retries`)).status).toBe(401);
+      const retries = await fetch(`${url}/retries`, { headers: server.sessionHeaders });
+      expect(retries.status).toBe(200);
+      expect(retries.headers.get('cache-control')).toContain('no-store');
+      expect(Schema.decodeUnknownSync(IntegrationRetryList)(await retries.json())).toEqual([]);
       const statuses = await fetch(url, { headers: server.sessionHeaders });
       expect(statuses.status).toBe(200);
       expect(statuses.headers.get('cache-control')).toContain('no-store');
@@ -30,6 +36,7 @@ describe('integration simulations HTTP', () => {
       const clientHeaders = await createClientSession(server, client.id);
       expect((await fetch(url, { headers: clientHeaders })).status).toBe(403);
       expect((await fetch(`${url}/operations`, { headers: clientHeaders })).status).toBe(403);
+      expect((await fetch(`${url}/retries`, { headers: clientHeaders })).status).toBe(403);
       const requests = [
         { kind: 'email', recipient: 'test@example.test', subject: 'Test', body: 'Not sent.' },
         { kind: 'signature', artifactId: client.id, signerEmail: 'test@example.test' },

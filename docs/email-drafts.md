@@ -66,4 +66,5 @@ Les huit contrôles navigateur incluent désormais l’enregistrement et la repr
 
 Les courriels utilisent toujours le fournisseur simulé actuellement configuré.
 Une opération simulée ne signifie pas qu’un courriel a été envoyé.
-Cette fonction n’ajoute pas de modèle de courriel, de planification ou de nouvelle tentative automatique.
+Les modèles de courriels sont décrits dans `docs/email-templates.md`.
+Les reprises automatiques des soumissions sont décrites dans `docs/integration-retries.md`.

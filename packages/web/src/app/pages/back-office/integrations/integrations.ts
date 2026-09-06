@@ -10,6 +10,7 @@ import {
 import { LocalizedDatePipe } from '@shared/localized-date/localized-date-pipe';
 import {
   IntegrationStatusList,
+  IntegrationRetryList,
   type IntegrationOperationValue,
   type IntegrationSubmissionValue,
 } from '@froment/contracts';
@@ -40,6 +41,14 @@ export class Integrations {
   protected readonly labels = labels;
   protected readonly providers = signal<typeof IntegrationStatusList.Type>([]);
   protected readonly operations = signal<ReadonlyArray<IntegrationOperationValue>>([]);
+  protected readonly retries = signal<typeof IntegrationRetryList.Type>([]);
+  protected readonly retryLabels = {
+    waiting: 'integrationRetry.waiting',
+    processing: 'integrationRetry.processing',
+    completed: 'integrationRetry.completed',
+    exhausted: 'integrationRetry.exhausted',
+    blocked: 'integrationRetry.blocked',
+  } satisfies Record<(typeof IntegrationRetryList.Type)[number]['status'], TranslationKey>;
   protected readonly loading = signal(true);
   protected readonly saving = signal(false);
   protected readonly error = signal(false);
@@ -57,9 +66,14 @@ export class Integrations {
     this.loading.set(true);
     this.error.set(false);
     try {
-      const [providers, operations] = await Promise.all([this.api.status(), this.api.list()]);
+      const [providers, operations, retries] = await Promise.all([
+        this.api.status(),
+        this.api.list(),
+        this.api.retries(),
+      ]);
       this.providers.set(providers);
       this.operations.set(operations);
+      this.retries.set(retries);
     } catch {
       this.error.set(true);
     } finally {

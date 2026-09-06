@@ -5,6 +5,7 @@ import {
   IntegrationOperation,
   IntegrationOperationList,
   IntegrationStatusList,
+  IntegrationRetryList,
   type IntegrationSubmissionValue,
 } from '@froment/contracts';
 import { Schema } from 'effect';
@@ -14,6 +15,11 @@ import { requestOutcome } from '@shared/api-outcome';
 @Injectable({ providedIn: 'root' })
 export class IntegrationsApi {
   private readonly http = inject(HttpClient);
+  async retries() {
+    return Schema.decodeUnknownSync(IntegrationRetryList)(
+      await firstValueFrom(this.http.get('/api/integrations/retries')),
+    );
+  }
   async status() {
     return Schema.decodeUnknownSync(IntegrationStatusList)(
       await firstValueFrom(this.http.get<unknown>('/api/integrations')),

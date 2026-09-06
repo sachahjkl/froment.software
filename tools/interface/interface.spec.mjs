@@ -226,6 +226,9 @@ test("client form and complete account address", async ({ page, colorScheme }, t
     .withTags(["wcag2a", "wcag2aa", "wcag21aa"])
     .analyze();
   expect(integrationAudit.violations).toEqual([]);
+  await expect(page.locator("app-integrations .retries")).toContainText(
+    /Tentatives épuisées|Attempts exhausted/,
+  );
   await page.screenshot({ path: testInfo.outputPath("external-services.png"), fullPage: true });
   await page.goto("/backoffice/courriels");
   await page.locator("#email-recipient").fill("client@example.test");

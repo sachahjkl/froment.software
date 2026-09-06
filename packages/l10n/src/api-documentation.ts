@@ -93,6 +93,11 @@ export const apiDocumentation = {
     operations: {
       ...passkeyDocumentation.fr.operations,
       ...emailDraftDocumentation.fr.operations,
+      integrationRetryList: {
+        summary: 'Lire les reprises automatiques',
+        description:
+          'Retourne les 100 reprises les plus récentes. Chaque reprise conserve la demande et son mode. Cinq tentatives au maximum après l’appel initial.',
+      },
       ...emailTemplateDocumentation.fr.operations,
       ...providerActionDocumentation.fr,
       bankMatchHistory: {
@@ -456,6 +461,11 @@ export const apiDocumentation = {
       catalogList: { summary: 'List services', description: 'Lists active and archived services.' },
       ...passkeyDocumentation.en.operations,
       ...emailDraftDocumentation.en.operations,
+      integrationRetryList: {
+        summary: 'Read automatic retries',
+        description:
+          'Returns the latest 100 retry records. Each retry preserves the request and its mode. At most five attempts follow the initial call.',
+      },
       ...emailTemplateDocumentation.en.operations,
       ...providerActionDocumentation.en,
       bankMatchHistory: {

@@ -1,6 +1,10 @@
 <section aria-labelledby="integrations-title">
   <h2 id="integrations-title">{{ i18n.t('integrations.title') }}</h2>
   <p appNotice variant="info">{{ i18n.t('integrations.info') }}</p>
+  <p appNotice variant="info">{{ i18n.t('integrationRetry.info') }}</p>
+  <button appButton type="button" [disabled]="loading() || saving()" (click)="load()">
+    {{ i18n.t('integrations.reload') }}
+  </button>
   <p #result tabindex="-1" role="status">
     @if (completed()) { {{ i18n.t('integrations.completed') }} }
   </p>
@@ -53,6 +57,28 @@
       </button>
       }
     </li>
+    }
+  </ol>
+  <h2>{{ i18n.t('integrationRetry.title') }}</h2>
+  <ol class="retries">
+    @for (retry of retries(); track retry.operationId) {
+    <li class="ds-panel">
+      <h3>{{ retry.operationId }}</h3>
+      <p>{{ i18n.t(retryLabels[retry.status]) }}</p>
+      <p>{{ i18n.t('integrationRetry.attempts') }} : {{ retry.attempts }}</p>
+      @if (retry.nextAttemptAt; as nextAttemptAt) {
+      <p>
+        <time [attr.datetime]="nextAttemptAt"
+          >{{ nextAttemptAt | localizedDate: i18n.language() : { dateStyle: 'medium', timeStyle:
+          'short' } }}</time
+        >
+      </p>
+      } @if (retry.error; as error) {
+      <p appNotice variant="warning">{{ i18n.t(error) }}</p>
+      }
+    </li>
+    } @empty {
+    <li>{{ i18n.t('integrationRetry.empty') }}</li>
     }
   </ol>
   }

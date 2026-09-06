@@ -21,6 +21,7 @@ import { QuoteLinksLive } from './quote-links/service.js';
 import { QuoteConditionPresetsLive } from './quote-condition-presets/service.js';
 import { CatalogLive } from './catalog/service.js';
 import { IntegrationsLive } from './integrations/service.js';
+import { IntegrationRetriesLive, IntegrationRetryWorkerLive } from './integrations/retries.js';
 import { BankingLive } from './banking/service.js';
 import { SimulatedProviders } from './integrations/providers.js';
 import { InvoicesLive } from './invoices/invoices.js';
@@ -47,6 +48,10 @@ const AuthenticationServicesLive = BootstrapLive.pipe(
 );
 
 const ServicesLive = Layer.mergeAll(
+  IntegrationRetryWorkerLive.pipe(
+    Layer.provideMerge(IntegrationRetriesLive),
+    Layer.provideMerge(IntegrationsLive.pipe(Layer.provide(SimulatedProviders))),
+  ),
   AuthenticationServicesLive,
   ApiTokensLive,
   ClientsLive,
@@ -54,7 +59,6 @@ const ServicesLive = Layer.mergeAll(
   QuoteLinksLive.pipe(Layer.provide(BusinessConfigLive)),
   QuoteConditionPresetsLive,
   CatalogLive,
-  IntegrationsLive.pipe(Layer.provide(SimulatedProviders)),
   SimulatedProviders,
   BankingLive,
   DeploymentLive,

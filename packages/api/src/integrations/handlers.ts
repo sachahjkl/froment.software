@@ -3,10 +3,20 @@ import { Effect } from 'effect';
 import { HttpApiBuilder } from 'effect/unstable/httpapi';
 import { setPrivateResponseHeaders } from '../http/response.js';
 import { Integrations } from './service.js';
+import { IntegrationRetries } from './retries.js';
 
 export const IntegrationHandlers = HttpApiBuilder.group(Api, 'integrations', (handlers) =>
   Effect.succeed(
     handlers
+      .handle(
+        'integrationRetryList',
+        Effect.fn('integrationRetryList')(function* () {
+          yield* setPrivateResponseHeaders;
+          return yield* (yield* IntegrationRetries).list.pipe(
+            Effect.catchTag('DatabaseError', Effect.orDie),
+          );
+        }),
+      )
       .handle(
         'integrationStatus',
         Effect.fn('integrationStatus')(function* () {

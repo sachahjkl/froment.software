@@ -8,6 +8,9 @@ import { IntegrationsApi } from '@backoffice/integrations-api';
 import { Integrations } from './integrations';
 
 class IntegrationsApiStub {
+  async retries() {
+    return [];
+  }
   readonly requests: IntegrationSubmissionValue[] = [];
   unavailable = false;
   failSubmission = false;

@@ -35,6 +35,7 @@ Une simulation enregistrée ne devient jamais un envoi réel lors d’un changem
 Un reçu existant est retourné sans nouvel appel au prestataire.
 
 Si l’adaptateur échoue, la demande reste enregistrée sans reçu.
+Le serveur reprend automatiquement les demandes éligibles ; consultez `docs/integration-retries.md`.
 Le journal permet de reprendre manuellement les simulations sans reçu, même après un redémarrage.
 Le serveur ne relance pas automatiquement les demandes.
 

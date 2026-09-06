@@ -219,6 +219,18 @@ export async function mockApi(
     ["/api/integrations/operations", []],
     ["/api/email-drafts", []],
     ["/api/email-templates", []],
+    [
+      "/api/integrations/retries",
+      [
+        {
+          operationId: "01ARZ3NDEKTSV4RRFFQ69G5FAV",
+          attempts: 5,
+          status: "exhausted",
+          nextAttemptAt: null,
+          error: "integration.unavailable",
+        },
+      ],
+    ],
     ["/api/tokens", { items: [], nextCursor: null }],
     [`/api/affairs/${quoteId}/events`, []],
     ["/api/public/quote-link", publicQuote],

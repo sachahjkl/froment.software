@@ -1,6 +1,7 @@
 import { webUiText } from './web-ui-text.js';
 import { passkeyText } from './passkeys.js';
 import { emailDraftText } from './email-drafts.js';
+import { integrationRetryText } from './integration-retries.js';
 import { emailTemplateText } from './email-templates.js';
 
 export const translations = {
@@ -8,6 +9,7 @@ export const translations = {
     ...webUiText.fr,
     ...passkeyText.fr,
     ...emailDraftText.fr,
+    ...integrationRetryText.fr,
     ...emailTemplateText.fr,
     'backOffice.apiTokens.permission.payment.read': 'Exporter les règlements et leurs corrections.',
     'design.confirmation.title': 'Modales de confirmation',
@@ -1504,6 +1506,7 @@ export const translations = {
     ...webUiText.en,
     ...passkeyText.en,
     ...emailDraftText.en,
+    ...integrationRetryText.en,
     ...emailTemplateText.en,
     'backOffice.apiTokens.permission.payment.read': 'Export payments and their corrections.',
     'design.confirmation.title': 'Confirmation dialogs',

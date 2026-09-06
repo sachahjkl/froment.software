@@ -5,6 +5,7 @@ import { authenticate } from '../api-policy/authentication.js';
 import { requirePermissions } from '../api-policy/permissions.js';
 import { rateLimit, RateLimits } from '../api-policy/rate-limit.js';
 import { Permissions } from '../permissions.js';
+import { IntegrationRetryList } from './retries.js';
 import { frontendSpecific } from '../api-policy/visibility.js';
 import {
   IntegrationFailure,
@@ -16,6 +17,10 @@ import {
 } from './contracts.js';
 
 export class IntegrationsApi extends HttpApiGroup.make('integrations', { topLevel: true }).add(
+  HttpApiEndpoint.get('integrationRetryList', '/api/integrations/retries', {
+    success: IntegrationRetryList,
+    error: IntegrationFailure.members,
+  }).pipe(requirePermissions([Permissions.integrationManage]), authenticate, frontendSpecific),
   HttpApiEndpoint.get('integrationStatus', '/api/integrations', {
     success: IntegrationStatusList,
     error: IntegrationFailure.members,

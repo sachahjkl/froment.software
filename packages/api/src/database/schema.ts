@@ -1094,6 +1094,28 @@ export const integrationOperations = sqliteTable('integration_operations', {
     .references(() => users.id),
 });
 
+export const integrationRetries = sqliteTable(
+  'integration_retries',
+  {
+    operationId: text('operation_id')
+      .notNull()
+      .primaryKey()
+      .references(() => integrationOperations.id),
+    attempts: integer().notNull().default(0),
+    status: text().notNull().default('waiting'),
+    nextAttemptAt: integer('next_attempt_at').notNull(),
+    error: text(),
+  },
+  (table) => [
+    index('integration_retries_due_index').on(table.status, table.nextAttemptAt),
+    check('integration_retries_attempts_check', sql`${table.attempts} between 0 and 5`),
+    check(
+      'integration_retries_status_check',
+      sql`${table.status} in ('waiting', 'processing', 'completed', 'exhausted', 'blocked')`,
+    ),
+  ],
+);
+
 export const bankTransactions = sqliteTable(
   'bank_transactions',
   {
