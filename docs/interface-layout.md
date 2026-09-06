@@ -23,8 +23,8 @@ L’impression retire cette marge, la bordure et l’ombre du conteneur.
 Les pages publiques utilisent `.page-intro` pour leur introduction et `.contact-panel` pour leur zone de contact.
 Les titres d’introduction utilisent `--text-hero`, sans modifier les titres des éditeurs métier.
 Les blocs de contenu réutilisent `.ds-panel` et les couleurs des deux thèmes.
-Les blocs internes utilisent un fond uniforme gris bleuté, sans dégradé, contour ni ombre.
-Le token de marque `--color-panel` définit ce fond : `#edf2f5` en clair et `#252d35` en sombre.
+Les blocs internes utilisent un fond uniforme gris neutre, sans dégradé, contour ni ombre.
+Le token de marque `--color-panel` définit ce fond : `#f0f0f0` en clair et `#2b2b2b` en sombre.
 Les petits arrondis et l’espacement distinguent les groupes de contenu.
 Cette règle couvre notamment la recherche, les indicateurs et le bloc « Nos prestations ».
 Les boutons, les champs, les alertes et les séparateurs conservent leurs marques de contrôle ou de structure.
