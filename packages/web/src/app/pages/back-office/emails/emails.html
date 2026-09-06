@@ -27,7 +27,9 @@
   }
   <form #composer (submit)="save($event)" class="composer">
     <h2>{{ i18n.t('emails.compose') }}</h2>
-    @if (draftError(); as message) {
+    @if (templateApplied()) {
+    <p appNotice variant="info">{{ i18n.t('emailTemplate.applied') }}</p>
+    } @if (draftError(); as message) {
     <p appNotice variant="danger" role="alert">{{ i18n.t(message) }}</p>
     }
     <p id="message-hint">{{ i18n.t('emails.fieldsHint') }}</p>
@@ -110,6 +112,74 @@
       </button>
     </div>
   </form>
+  <h2>{{ i18n.t('emailTemplate.title') }}</h2>
+  <p>{{ i18n.t('emailTemplate.hint') }}</p>
+  @if (templateError(); as message) {
+  <p appNotice variant="danger" role="alert">{{ i18n.t(message) }}</p>
+  } @if (templateSaved()) {
+  <p role="status">{{ i18n.t('emailTemplate.saved') }}</p>
+  }
+  <div class="fields">
+    <button
+      appButton
+      type="button"
+      [disabled]="saving() || preparingReminder() || pending() !== undefined || messageForm.subject().invalid() || messageForm.body().invalid()"
+      (click)="saveTemplate()"
+    >
+      {{ i18n.t('emailTemplate.save') }}
+    </button>
+    @if (activeTemplate()) {
+    <button
+      appButton
+      type="button"
+      [disabled]="saving() || preparingReminder() || pending() !== undefined || messageForm.subject().invalid() || messageForm.body().invalid()"
+      (click)="saveTemplate(true)"
+    >
+      {{ i18n.t('emailTemplate.update') }}
+    </button>
+    }
+    <button
+      appButton
+      type="button"
+      [disabled]="templatesLoading() || saving()"
+      (click)="loadTemplates()"
+    >
+      {{ i18n.t('integrations.reload') }}
+    </button>
+  </div>
+  @if (templatesLoading()) {
+  <p role="status">{{ i18n.t('integrations.loading') }}</p>
+  } @else {
+  <ol class="templates">
+    @for (template of templates(); track template.id) {
+    <li class="ds-panel">
+      <h3>{{ template.subject }}</h3>
+      <details>
+        <summary>{{ i18n.t('emails.read') }}</summary>
+        <p class="message-body">{{ template.body }}</p>
+      </details>
+      <button
+        appButton
+        type="button"
+        [disabled]="saving() || preparingReminder() || pending() !== undefined"
+        (click)="useTemplate(template)"
+      >
+        {{ i18n.t('emailTemplate.use') }}
+      </button>
+      <button
+        appButton
+        type="button"
+        [disabled]="saving() || preparingReminder() || pending() !== undefined"
+        (click)="archiveTemplate(template)"
+      >
+        {{ i18n.t('emailDraft.archive') }}
+      </button>
+    </li>
+    } @empty { @if (!templateError()) {
+    <li>{{ i18n.t('emailTemplate.empty') }}</li>
+    } }
+  </ol>
+  }
   <h2>{{ i18n.t('emailDraft.title') }}</h2>
   <p>{{ i18n.t('emailDraft.hint') }}</p>
   <button appButton type="button" [disabled]="draftsLoading() || saving()" (click)="loadDrafts()">

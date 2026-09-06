@@ -1,6 +1,7 @@
 import type { Language } from './language.js';
 import { passkeyDocumentation } from './passkeys.js';
 import { emailDraftDocumentation } from './email-drafts.js';
+import { emailTemplateDocumentation } from './email-templates.js';
 import { providerActionDocumentation } from './provider-action-documentation.js';
 
 interface ApiDocumentationGroup {
@@ -35,6 +36,7 @@ export const apiDocumentation = {
     groups: {
       passkeys: passkeyDocumentation.fr.group,
       emailDrafts: emailDraftDocumentation.fr.group,
+      emailTemplates: emailTemplateDocumentation.fr.group,
       providerActions: {
         title: 'Contrats des fournisseurs',
         description:
@@ -91,6 +93,7 @@ export const apiDocumentation = {
     operations: {
       ...passkeyDocumentation.fr.operations,
       ...emailDraftDocumentation.fr.operations,
+      ...emailTemplateDocumentation.fr.operations,
       ...providerActionDocumentation.fr,
       bankMatchHistory: {
         summary: 'Consulter les rapprochements conservés',
@@ -399,6 +402,7 @@ export const apiDocumentation = {
       clients: { title: 'Clients', description: 'Client records and lifecycle.' },
       passkeys: passkeyDocumentation.en.group,
       emailDrafts: emailDraftDocumentation.en.group,
+      emailTemplates: emailTemplateDocumentation.en.group,
       providerActions: {
         title: 'Provider contracts',
         description:
@@ -452,6 +456,7 @@ export const apiDocumentation = {
       catalogList: { summary: 'List services', description: 'Lists active and archived services.' },
       ...passkeyDocumentation.en.operations,
       ...emailDraftDocumentation.en.operations,
+      ...emailTemplateDocumentation.en.operations,
       ...providerActionDocumentation.en,
       bankMatchHistory: {
         summary: 'Read reconciliation history',

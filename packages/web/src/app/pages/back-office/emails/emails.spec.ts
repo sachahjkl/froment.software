@@ -11,6 +11,7 @@ import {
 import { IntegrationsApi } from '@backoffice/integrations-api';
 import { Emails } from './emails';
 import { EmailDraftsApi } from '@backoffice/email-drafts-api';
+import { EmailTemplatesApi } from '@backoffice/email-templates-api';
 
 class DraftApiStub {
   readonly items = new Map<string, typeof EmailDraft.Type>();
@@ -70,12 +71,69 @@ const compose = (root: HTMLElement) => {
   fill(root, '#email-body', '<script>alert(1)</script>\nQuote details.');
 };
 describe('Emails', () => {
+  it('copies template text without recipients, guards unsaved copies, and preserves text after a failed update', async () => {
+    const template = {
+      id: '91ff5717-c394-4708-bef2-6b5f5cafbdaa',
+      subject: 'Template subject',
+      body: '<b>Literal text</b>',
+      version: 1,
+      updatedAt: '2026-09-06T10:00:00.000Z',
+    };
+    const save = vi.fn().mockResolvedValue({ success: false, code: 'email_template.conflict' });
+    const api = new EmailApiStub();
+    TestBed.configureTestingModule({
+      providers: [
+        { provide: IntegrationsApi, useValue: api },
+        {
+          provide: EmailTemplatesApi,
+          useValue: { list: async () => ({ success: true, result: [template] }), save },
+        },
+      ],
+    });
+    const fixture = TestBed.createComponent(Emails);
+    await fixture.whenStable();
+    const root: HTMLElement = fixture.nativeElement;
+    const click = (pattern: RegExp) =>
+      [...root.querySelectorAll<HTMLButtonElement>('button')]
+        .find((button) => pattern.test(button.textContent ?? ''))
+        ?.click();
+    fill(root, '#email-recipient', 'recipient@example.test');
+    fill(root, '#email-reference', 'FA-2026-000001');
+    const confirmation = vi.spyOn(Confirmation.prototype, 'request').mockResolvedValue(true);
+    await fixture.whenStable();
+    click(/Utiliser ce modèle|Use this template/);
+    await fixture.whenStable();
+    expect(root.querySelector<HTMLInputElement>('#email-recipient')?.value).toBe(
+      'recipient@example.test',
+    );
+    expect(root.querySelector<HTMLInputElement>('#email-reference')?.value).toBe('FA-2026-000001');
+    expect(root.querySelector<HTMLTextAreaElement>('#email-body')?.value).toBe(template.body);
+    confirmation.mockResolvedValue(false);
+    expect(await fixture.componentInstance.canDeactivate()).toBe(false);
+    confirmation.mockResolvedValue(true);
+    fill(root, '#email-body', 'Edited template');
+    await fixture.whenStable();
+    click(/Mettre à jour le modèle|Update the open template/);
+    await fixture.whenStable();
+    expect(save).toHaveBeenCalledWith(template.id, {
+      subject: template.subject,
+      body: 'Edited template',
+      expectedVersion: 1,
+    });
+    expect(root.querySelector<HTMLTextAreaElement>('#email-body')?.value).toBe('Edited template');
+    expect(api.requests).toHaveLength(0);
+    confirmation.mockRestore();
+  });
   beforeEach(() => {
     TestBed.configureTestingModule({
       providers: [
         provideRouter([]),
         { provide: InvoiceReminder, useValue: { prepare: async () => undefined } },
         { provide: EmailDraftsApi, useValue: new DraftApiStub() },
+        {
+          provide: EmailTemplatesApi,
+          useValue: { list: async () => ({ success: true, result: [] }) },
+        },
       ],
     });
   });

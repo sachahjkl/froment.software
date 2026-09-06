@@ -66,6 +66,24 @@ export const passwordCredentials = sqliteTable(
   ],
 );
 
+export const emailTemplates = sqliteTable(
+  'email_templates',
+  {
+    id: text().notNull().primaryKey(),
+    content: text().notNull(),
+    version: integer().notNull(),
+    archived: integer({ mode: 'boolean' }).notNull().default(false),
+    updatedAt: text('updated_at').notNull(),
+    updatedByUserId: text('updated_by_user_id')
+      .notNull()
+      .references(() => users.id),
+  },
+  (table) => [
+    check('email_templates_version_check', sql`${table.version} > 0`),
+    check('email_templates_content_check', sql`json_valid(${table.content})`),
+  ],
+);
+
 export const emailDrafts = sqliteTable(
   'email_drafts',
   {

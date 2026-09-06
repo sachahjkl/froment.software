@@ -9,6 +9,8 @@ export const AuditActions = [
   'api.token-used',
   'authentication.login-succeeded',
   'email.draft-saved',
+  'email.template-saved',
+  'email.template-archived',
   'email.draft-archived',
   'authentication.passkey-added',
   'authentication.passkey-removed',

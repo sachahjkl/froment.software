@@ -256,6 +256,13 @@ test("client form and complete account address", async ({ page, colorScheme }, t
   await page
     .locator("#email-body")
     .fill("Bonjour,\nVoici le récapitulatif de notre proposition.\nCordialement.");
+  await page
+    .getByRole("button", { name: /Créer un modèle avec ce texte|Create a template from this text/ })
+    .click();
+  await expect(page.locator(".templates li")).toContainText("Votre devis / Your quote");
+  await page.getByRole("button", { name: /Utiliser ce modèle|Use this template/ }).click();
+  await page.getByRole("alertdialog").locator("button").last().click();
+  await expect(page.locator("#email-recipient")).toHaveValue("client@example.test");
   await page.locator('app-emails button[type="submit"]').click();
   await expect(page.locator('app-emails [role="status"]')).toContainText(
     /courriel non envoyé|email not sent/,

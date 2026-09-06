@@ -5,6 +5,7 @@ export type PermissionAudience = typeof PermissionAudience.Type;
 
 export const Permissions = {
   emailDraftManage: { code: 'email.draft.manage', audiences: [] },
+  emailTemplateManage: { code: 'email.template.manage', audiences: [] },
   bankRead: { code: 'bank.read', audiences: [] },
   bankImport: { code: 'bank.import', audiences: [] },
   bankReconcile: { code: 'bank.reconcile', audiences: [] },

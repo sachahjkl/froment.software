@@ -218,6 +218,7 @@ export async function mockApi(
     ],
     ["/api/integrations/operations", []],
     ["/api/email-drafts", []],
+    ["/api/email-templates", []],
     ["/api/tokens", { items: [], nextCursor: null }],
     [`/api/affairs/${quoteId}/events`, []],
     ["/api/public/quote-link", publicQuote],
@@ -329,6 +330,21 @@ export async function mockApi(
         ...responses.get("/api/email-drafts").filter((item) => item.id !== id),
       ]);
       return route.fulfill({ json: draft });
+    }
+    if (path.startsWith("/api/email-templates/") && route.request().method() === "PUT") {
+      const request = route.request().postDataJSON();
+      const id = path.split("/").at(-1);
+      const template = {
+        ...request,
+        id,
+        version: request.expectedVersion + 1,
+        updatedAt: createdAt,
+      };
+      responses.set("/api/email-templates", [
+        template,
+        ...responses.get("/api/email-templates").filter((item) => item.id !== id),
+      ]);
+      return route.fulfill({ json: template });
     }
     if (path.endsWith("/preview")) {
       return route.fulfill({

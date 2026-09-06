@@ -24,6 +24,7 @@ import {
 import {
   EmailSubmission,
   EmailDraft,
+  EmailTemplate,
   Ulid,
   type IntegrationOperationValue,
 } from '@froment/contracts';
@@ -31,6 +32,7 @@ import { Option, Schema } from 'effect';
 import { IntegrationsApi } from '@backoffice/integrations-api';
 import { I18nService, type TranslationKey } from '@app/i18n.service';
 import { EmailDraftsApi } from '@backoffice/email-drafts-api';
+import { EmailTemplatesApi } from '@backoffice/email-templates-api';
 import { Button } from '@shared/button/button';
 import { Notice } from '@shared/notice/notice';
 import { LocalizedDatePipe } from '@shared/localized-date/localized-date-pipe';
@@ -49,6 +51,14 @@ export class Emails {
   protected readonly i18n = inject(I18nService);
   private readonly api = inject(IntegrationsApi);
   private readonly draftsApi = inject(EmailDraftsApi);
+  private readonly templatesApi = inject(EmailTemplatesApi);
+  protected readonly templates = signal<ReadonlyArray<typeof EmailTemplate.Type>>([]);
+  protected readonly templatesLoading = signal(true);
+  protected readonly templateError = signal<TranslationKey | undefined>(undefined);
+  protected readonly templateSaved = signal(false);
+  protected readonly templateApplied = signal(false);
+  protected readonly activeTemplate = signal<typeof EmailTemplate.Type | undefined>(undefined);
+  private newTemplateId: string | undefined;
   protected readonly drafts = signal<ReadonlyArray<typeof EmailDraft.Type>>([]);
   protected readonly draftsLoading = signal(true);
   protected readonly draftError = signal<TranslationKey | undefined>(undefined);
@@ -92,7 +102,84 @@ export class Emails {
       void this.load();
       void this.prepareReminder();
       void this.loadDrafts();
+      void this.loadTemplates();
     });
+  }
+  protected async loadTemplates(): Promise<void> {
+    this.templatesLoading.set(true);
+    this.templateError.set(undefined);
+    const outcome = await this.templatesApi.list();
+    if (outcome.success) this.templates.set(outcome.result);
+    else this.templateError.set(outcome.code);
+    this.templatesLoading.set(false);
+  }
+  protected async useTemplate(template: typeof EmailTemplate.Type): Promise<void> {
+    if (this.saving() || this.preparingReminder() || this.pending() !== undefined) return;
+    if (
+      this.unsaved() &&
+      !(await this.confirmation.request(this.i18n.t('backOffice.quote.unsavedChanges')))
+    )
+      return;
+    this.model.update((value) => ({ ...value, subject: template.subject, body: template.body }));
+    this.activeTemplate.set(template);
+    this.templateApplied.set(true);
+    this.templateSaved.set(false);
+    this.draftSaved.set(false);
+    this.completed.set(undefined);
+    this.templateError.set(undefined);
+  }
+  protected async saveTemplate(update = false): Promise<void> {
+    if (
+      this.saving() ||
+      this.preparingReminder() ||
+      this.pending() !== undefined ||
+      this.messageForm.subject().invalid() ||
+      this.messageForm.body().invalid()
+    )
+      return;
+    const current = update ? this.activeTemplate() : undefined;
+    if (update && current === undefined) return;
+    if (update && !(await this.confirmation.request(this.i18n.t('emailTemplate.updateConfirm'))))
+      return;
+    const id = current?.id ?? this.newTemplateId ?? crypto.randomUUID();
+    if (!update) this.newTemplateId = id;
+    this.saving.set(true);
+    this.templateError.set(undefined);
+    this.templateSaved.set(false);
+    try {
+      const outcome = await this.templatesApi.save(id, {
+        subject: this.model().subject,
+        body: this.model().body,
+        expectedVersion: current?.version ?? 0,
+      });
+      if (!outcome.success) {
+        this.templateError.set(outcome.code);
+        return;
+      }
+      this.templates.update((items) => [outcome.result, ...items.filter((item) => item.id !== id)]);
+      this.activeTemplate.set(outcome.result);
+      this.newTemplateId = undefined;
+      this.templateSaved.set(true);
+    } finally {
+      this.saving.set(false);
+    }
+  }
+  protected async archiveTemplate(template: typeof EmailTemplate.Type): Promise<void> {
+    if (this.saving() || this.preparingReminder() || this.pending() !== undefined) return;
+    if (!(await this.confirmation.request(this.i18n.t('emailTemplate.archiveConfirm')))) return;
+    this.saving.set(true);
+    this.templateError.set(undefined);
+    try {
+      const outcome = await this.templatesApi.archive(template);
+      if (!outcome.success) {
+        this.templateError.set(outcome.code);
+        return;
+      }
+      this.templates.update((items) => items.filter((item) => item.id !== template.id));
+      if (this.activeTemplate()?.id === template.id) this.activeTemplate.set(undefined);
+    } finally {
+      this.saving.set(false);
+    }
   }
   protected async loadDrafts(): Promise<void> {
     this.draftsLoading.set(true);
@@ -121,6 +208,7 @@ export class Emails {
       }
       this.draftVersion.set(outcome.result.version);
       this.draftSaved.set(true);
+      this.templateApplied.set(false);
       this.messageForm().reset(this.model());
       this.notice()?.nativeElement.focus();
       this.drafts.update((items) => [outcome.result, ...items.filter((item) => item.id !== id)]);
@@ -132,6 +220,7 @@ export class Emails {
   private unsaved(): boolean {
     return (
       this.messageForm().dirty() ||
+      this.templateApplied() ||
       (this.reminderPrepared() && !this.draftSaved()) ||
       this.pending() !== undefined
     );
@@ -144,6 +233,9 @@ export class Emails {
     )
       return;
     this.composer()?.nativeElement.reset();
+    this.templateApplied.set(false);
+    this.activeTemplate.set(undefined);
+    this.templateSaved.set(false);
     this.model.set(
       draft === undefined
         ? blank()
@@ -179,6 +271,7 @@ export class Emails {
         this.draftId.set(undefined);
         this.draftVersion.set(0);
         this.draftSaved.set(false);
+        this.templateApplied.set(false);
         this.reminderPrepared.set(false);
         this.messageForm().reset();
         this.composer()?.nativeElement.reset();
@@ -285,6 +378,9 @@ export class Emails {
       );
       if (this.pending()?.requestId === request.requestId) {
         this.pending.set(undefined);
+        this.templateSaved.set(false);
+        this.templateApplied.set(false);
+        this.activeTemplate.set(undefined);
         this.drafts.update((items) => items.filter((item) => item.id !== request.requestId));
         this.draftId.set(undefined);
         this.draftVersion.set(0);
