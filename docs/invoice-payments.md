@@ -33,6 +33,28 @@ Une réutilisation avec des valeurs différentes est refusée.
 Après une erreur réseau, réessayez avec les mêmes valeurs.
 Avant de modifier ces valeurs, rechargez la facture pour vérifier si le règlement a été enregistré.
 
+## Export pour la comptabilité
+
+Dans **Facturation**, ouvrez « Exporter les règlements pour la comptabilité ».
+Choisissez les dates de réception, puis téléchargez le CSV.
+Les deux dates sont incluses.
+Les cases de sélection des factures ne limitent pas cet export.
+
+Le fichier contient les règlements détaillés, pas les anciennes déclarations de facture payée.
+Il utilise UTF-8 avec BOM, des virgules comme séparateurs et un point décimal pour les montants.
+Les noms de colonnes et les codes de moyens de paiement sont stables et en anglais.
+Une apostrophe neutralise les textes qui commencent comme une formule de tableur.
+Cette protection ne modifie pas les données stockées.
+
+L’export conserve le nom du client enregistré dans la version émise de la facture.
+Il est limité à 10 000 règlements par période.
+Si cette limite est dépassée, réduisez la période.
+Le serveur refuse l’export au lieu de supprimer silencieusement des lignes.
+
+L’API est `GET /api/invoice-payments/export?from=YYYY-MM-DD&to=YYYY-MM-DD`.
+Elle exige la permission `invoice.mark-paid` et interdit la mise en cache.
+Cet export n’est pas un FEC et ne remplace pas les écritures comptables validées.
+
 ## Limites
 
 Les anciennes déclarations de facture payée restent dans leur état existant.

@@ -3,10 +3,12 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
+  DestroyRef,
   inject,
   signal,
 } from '@angular/core';
 import { RouterLink, RouterOutlet } from '@angular/router';
+import { FormField, disabled, form, required, submit } from '@angular/forms/signals';
 import {
   type ClientListValue,
   type InvoiceListValue,
@@ -15,7 +17,7 @@ import {
 
 import { ClientsApi } from '@backoffice/clients-api';
 import { InvoicesApi } from '@backoffice/invoices-api';
-import { I18nService } from '@app/i18n.service';
+import { I18nService, type TranslationKey } from '@app/i18n.service';
 import { Badge, type BadgeVariant } from '@shared/badge/badge';
 import { Button } from '@shared/button/button';
 import { DataTable } from '@shared/data-table/data-table';
@@ -28,7 +30,18 @@ type BillingTab = InvoiceStatusValue | 'all';
 
 @Component({
   selector: 'app-billing',
-  imports: [Badge, Button, DataTable, Notice, RouterLink, RouterOutlet, TabLayout, TabPanel, Tabs],
+  imports: [
+    Badge,
+    Button,
+    DataTable,
+    FormField,
+    Notice,
+    RouterLink,
+    RouterOutlet,
+    TabLayout,
+    TabPanel,
+    Tabs,
+  ],
   templateUrl: './billing.html',
   styleUrl: './billing.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -38,6 +51,17 @@ export class Billing {
   private readonly api = inject(InvoicesApi);
   private readonly clientsApi = inject(ClientsApi);
   protected readonly state = signal<PageState>('loading');
+  protected readonly exportingPayments = signal(false);
+  protected readonly exportError = signal<TranslationKey | undefined>(undefined);
+  protected readonly exportReady = signal(false);
+  private readonly exportModel = signal({ from: '', to: '' });
+  protected readonly exportForm = form(this.exportModel, (path) => {
+    required(path.from);
+    required(path.to);
+    disabled(path, () => this.exportingPayments());
+  });
+  private exportUrl: string | undefined;
+  private readonly destroyRef = inject(DestroyRef);
   protected readonly invoices = signal<InvoiceListValue>([]);
   private readonly clients = signal<ClientListValue>([]);
   protected readonly selectedIds = signal<ReadonlySet<string>>(new Set());
@@ -81,7 +105,41 @@ export class Billing {
   );
 
   constructor() {
+    this.destroyRef.onDestroy(() => {
+      if (this.exportUrl !== undefined) URL.revokeObjectURL(this.exportUrl);
+    });
     afterNextRender(() => void this.load());
+  }
+
+  protected exportPayments(event: SubmitEvent): void {
+    event.preventDefault();
+    if (this.exportingPayments()) return;
+    void submit(this.exportForm, async () => {
+      this.exportingPayments.set(true);
+      this.exportError.set(undefined);
+      this.exportReady.set(false);
+      try {
+        const outcome = await this.api.exportPayments(this.exportModel());
+        if (this.destroyRef.destroyed) return;
+        if (!outcome.success) {
+          this.exportError.set(outcome.code);
+          return;
+        }
+        if (this.exportUrl !== undefined) URL.revokeObjectURL(this.exportUrl);
+        this.exportUrl = URL.createObjectURL(
+          new Blob([outcome.result], { type: 'text/csv;charset=utf-8' }),
+        );
+        const link = document.createElement('a');
+        link.href = this.exportUrl;
+        link.download = 'invoice-payments.csv';
+        link.click();
+        this.exportReady.set(true);
+      } catch {
+        this.exportError.set('payment.export_error');
+      } finally {
+        this.exportingPayments.set(false);
+      }
+    });
   }
 
   protected money(cents: number): string {

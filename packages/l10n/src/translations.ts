@@ -459,6 +459,20 @@ export const translations = {
     'document.required': 'champ requis',
     'catalog.title': 'Catalogue',
     'payment.title': 'Règlements',
+    'payment.export_title': 'Exporter les règlements pour la comptabilité',
+    'payment.export_hint':
+      'Le CSV contient tous les règlements reçus entre ces dates incluses, indépendamment des factures sélectionnées. Limite : 10 000 lignes.',
+    'payment.export_from': 'Du',
+    'payment.export_to': 'Au',
+    'payment.export_download': 'Télécharger le CSV',
+    'payment.export_pending': 'Préparation du CSV…',
+    'payment.export_ready':
+      'Le fichier CSV est prêt. Le téléchargement a été demandé au navigateur.',
+    'payment.export_error': 'L’export a échoué. Réessayez le téléchargement.',
+    'payment.export_invalid_range':
+      'Saisissez deux dates valides, avec la date de début avant ou égale à la date de fin.',
+    'payment.export_too_large':
+      'Cette période dépasse 10 000 règlements. Réduisez la période, puis relancez l’export.',
     'payment.recorded': 'Montant enregistré',
     'payment.remaining': 'Reste à régler',
     'payment.amount': 'Montant reçu (EUR)',
@@ -1737,6 +1751,19 @@ export const translations = {
     'document.required': 'required field',
     'catalog.title': 'Catalog',
     'payment.title': 'Payments',
+    'payment.export_title': 'Export payments for accounting',
+    'payment.export_hint':
+      'The CSV includes all payments received between these dates, inclusive, regardless of selected invoices. Limit: 10,000 rows.',
+    'payment.export_from': 'From',
+    'payment.export_to': 'To',
+    'payment.export_download': 'Download CSV',
+    'payment.export_pending': 'Preparing CSV…',
+    'payment.export_ready': 'The CSV file is ready. A download was requested from the browser.',
+    'payment.export_error': 'Export failed. Try downloading again.',
+    'payment.export_invalid_range':
+      'Enter two valid dates. The start date must be on or before the end date.',
+    'payment.export_too_large':
+      'This period contains more than 10,000 payments. Select a shorter period and export again.',
     'payment.recorded': 'Recorded amount',
     'payment.remaining': 'Remaining balance',
     'payment.amount': 'Amount received (EUR)',

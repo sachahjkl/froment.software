@@ -8,10 +8,29 @@ import { DocumentRenderer } from '../documents/document-renderer.js';
 import { setPdfResponseHeaders, setPrivateResponseHeaders } from '../http/response.js';
 import { Invoices } from './invoices.js';
 import { issueInvoice } from './issue.js';
+import { exportInvoicePayments } from './payment-export.js';
 
 export const InvoiceHandlers = HttpApiBuilder.group(Api, 'invoices', (handlers) =>
   Effect.succeed(
     handlers
+      .handle(
+        'invoicePaymentExport',
+        Effect.fn('invoicePaymentExport')(function* ({ query }) {
+          yield* setPrivateResponseHeaders;
+          yield* HttpEffect.appendPreResponseHandler((_request, response) =>
+            Effect.succeed(
+              HttpServerResponse.setHeader(
+                response,
+                'content-disposition',
+                'attachment; filename="invoice-payments.csv"',
+              ),
+            ),
+          );
+          return yield* exportInvoicePayments(query).pipe(
+            Effect.catchTag('DatabaseError', Effect.orDie),
+          );
+        }),
+      )
       .handle(
         'invoiceList',
         Effect.fn('invoiceList')(function* () {

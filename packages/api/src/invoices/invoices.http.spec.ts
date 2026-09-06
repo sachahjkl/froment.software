@@ -146,6 +146,22 @@ describe('invoice HTTP routes', () => {
     expect(paid.status).toBe(200);
     await expect(paid.json()).resolves.toMatchObject({ status: 'paid' });
     expect((await pay(finalPayload)).status).toBe(200);
+    const exportUrl = `${server.baseUrl}/api/invoice-payments/export?from=2026-08-20&to=2026-08-20`;
+    const exported = await fetch(exportUrl, { headers: server.sessionHeaders });
+    expect(exported.status).toBe(200);
+    expect(exported.headers.get('content-type')).toContain('text/csv');
+    expect(exported.headers.get('content-disposition')).toContain('invoice-payments.csv');
+    expect(exported.headers.get('cache-control')).toContain('no-store');
+    const csv = await exported.text();
+    expect(csv).toContain('"BANK-001"');
+    expect(csv.split('\r\n')).toHaveLength(4);
+    expect((await fetch(exportUrl)).status).toBe(401);
+    expect((await fetch(exportUrl, { headers: clientSession })).status).toBe(403);
+    const invalidRange = await fetch(
+      `${server.baseUrl}/api/invoice-payments/export?from=2026-02-31&to=2026-09-05`,
+      { headers: server.sessionHeaders },
+    );
+    expect(invalidRange.status).toBe(422);
     const voided = await fetch(`${server.baseUrl}/api/invoices/${invoice.id}/void`, {
       method: 'POST',
       headers: server.jsonHeaders,

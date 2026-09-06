@@ -6,6 +6,8 @@ import {
   InvoiceFailure,
   InvoiceIssueResult,
   InvoiceList,
+  PaymentExportFailure,
+  type PaymentExportQueryValue,
   type InvoiceCreateRequestValue,
   type InvoiceDetailValue,
   type InvoiceDocumentArtifactValue,
@@ -28,6 +30,18 @@ export type InvoiceOutcome<T> = ApiOutcome<T, InvoiceFailureValue, 'invoice.erro
 @Injectable({ providedIn: 'root' })
 export class InvoicesApi {
   private readonly http = inject(HttpClient);
+
+  async exportPayments(query: PaymentExportQueryValue) {
+    return requestOutcome(
+      this.http.get('/api/invoice-payments/export', {
+        params: { from: query.from, to: query.to },
+        responseType: 'text',
+      }),
+      Schema.String,
+      Schema.fromJsonString(PaymentExportFailure),
+      'payment.export_error',
+    );
+  }
 
   async list(): Promise<InvoiceListValue> {
     return Schema.decodeUnknownSync(InvoiceList)(

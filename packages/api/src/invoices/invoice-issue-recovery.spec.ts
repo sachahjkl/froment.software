@@ -5,6 +5,8 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { TestClock } from 'effect/testing';
+import { ulid } from 'ulid';
+import { exportInvoicePayments } from './payment-export.js';
 
 import { AuditLive } from '../audit/audit.js';
 import { BusinessConfig } from '../business/business-config.js';
@@ -239,6 +241,48 @@ const seedInvoice = (database: DatabaseService, dueDate = '2099-09-19') => {
 };
 
 describe('invoice issue recovery', () => {
+  it('exports an inclusive period and refuses to truncate more than 10000 payments', async () => {
+    await Effect.runPromise(
+      Effect.gen(function* () {
+        const database = yield* Database;
+        const invoices = yield* Invoices;
+        seedInvoice(database);
+        const issued = yield* invoices.issue(invoiceId, { expectedVersion: 1 }, actorId);
+        const insert = database.sqlite.prepare(`insert into invoice_payments
+        (id, invoice_id, request_id, expected_version, amount_cents, paid_on, method, reference, recorded_at, recorded_by_user_id)
+        values (?, ?, ?, ?, 1, '2026-08-20', 'transfer', 'BANK', '2026-08-20T12:00:00.000Z', ?)`);
+        database.sqlite
+          .transaction(() => {
+            for (let index = 0; index < 10000; index++)
+              insert.run(ulid(), invoiceId, crypto.randomUUID(), issued.version, actorId);
+          })
+          .immediate();
+        const range = { from: '2026-08-20', to: '2026-08-20' };
+        const csv = new TextDecoder().decode(yield* exportInvoicePayments(range));
+        expect(csv.split('\r\n')).toHaveLength(10002);
+        insert.run(ulid(), invoiceId, crypto.randomUUID(), issued.version, actorId);
+        expect(yield* Effect.result(exportInvoicePayments(range))).toMatchObject({
+          _tag: 'Failure',
+          failure: { _tag: 'PaymentExportTooLarge' },
+        });
+        const empty = new TextDecoder().decode(
+          yield* exportInvoicePayments({ from: '2026-08-21', to: '2026-08-21' }),
+        );
+        expect(empty.split('\r\n')).toHaveLength(2);
+        expect(
+          yield* Effect.result(exportInvoicePayments({ from: '2026-09-01', to: '2026-08-31' })),
+        ).toMatchObject({ _tag: 'Failure', failure: { _tag: 'PaymentExportInvalidRange' } });
+      }).pipe(
+        Effect.provide(
+          makeTestLayer(':memory:', {
+            renderQuotePdf: () => Effect.die('unused'),
+            renderInvoicePdf: () => Effect.die('unused'),
+            renderOrderPdf: () => Effect.die('unused'),
+          }),
+        ),
+      ),
+    );
+  });
   it('records partial payments atomically and rejects conflicting retries and excess amounts', async () => {
     await Effect.runPromise(
       Effect.gen(function* () {

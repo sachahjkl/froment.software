@@ -16,6 +16,32 @@
   </section>
 
   <app-tabs [label]="i18n.t('backOffice.billing.tabs')" [tabs]="tabs()" />
+  <details class="payment-export ds-panel">
+    <summary>{{ i18n.t('payment.export_title') }}</summary>
+    <p class="intro">{{ i18n.t('payment.export_hint') }}</p>
+    <form (submit)="exportPayments($event)">
+      <label class="field"
+        >{{ i18n.t('payment.export_from') }}<input
+          class="input"
+          type="date"
+          [formField]="exportForm.from"
+      /></label>
+      <label class="field"
+        >{{ i18n.t('payment.export_to') }}<input
+          class="input"
+          type="date"
+          [formField]="exportForm.to"
+      /></label>
+      <button appButton type="submit" [disabled]="exportingPayments() || exportForm().invalid()">
+        {{ i18n.t(exportingPayments() ? 'payment.export_pending' : 'payment.export_download') }}
+      </button>
+    </form>
+    @if (exportError(); as error) {
+    <p appNotice variant="danger" role="alert">{{ i18n.t(error) }}</p>
+    } @if (exportReady()) {
+    <p role="status">{{ i18n.t('payment.export_ready') }}</p>
+    }
+  </details>
   <router-outlet />
   @if (selectedInvoices().length > 0) {
   <section class="bulk-actions" [attr.aria-label]="i18n.t('backOffice.billing.bulkActions')">

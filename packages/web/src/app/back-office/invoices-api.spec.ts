@@ -5,6 +5,32 @@ import { TestBed } from '@angular/core/testing';
 import { InvoicesApi } from './invoices-api';
 
 describe('InvoicesApi', () => {
+  it('downloads CSV text and decodes export failures returned as text', async () => {
+    TestBed.configureTestingModule({
+      providers: [provideHttpClient(), provideHttpClientTesting()],
+    });
+    const api = TestBed.inject(InvoicesApi);
+    const http = TestBed.inject(HttpTestingController);
+    const range = { from: '2026-08-01', to: '2026-08-31' };
+    const url = '/api/invoice-payments/export?from=2026-08-01&to=2026-08-31';
+    const result = api.exportPayments(range);
+    const request = http.expectOne(url);
+    expect(request.request.responseType).toBe('text');
+    request.flush('payment_id,amount\r\n');
+    await expect(result).resolves.toEqual({ success: true, result: 'payment_id,amount\r\n' });
+    const failed = api.exportPayments(range);
+    http
+      .expectOne(url)
+      .flush(JSON.stringify({ _tag: 'PaymentExportTooLarge', code: 'payment.export_too_large' }), {
+        status: 422,
+        statusText: 'Unprocessable Entity',
+      });
+    await expect(failed).resolves.toMatchObject({
+      success: false,
+      code: 'payment.export_too_large',
+    });
+    http.verify();
+  });
   it('decodes an invoice list', async () => {
     TestBed.configureTestingModule({
       providers: [provideHttpClient(), provideHttpClientTesting()],

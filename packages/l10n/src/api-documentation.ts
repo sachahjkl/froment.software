@@ -160,6 +160,11 @@ export const apiDocumentation = {
         summary: 'Émettre une facture',
         description: 'Attribue le numéro légal et émet la facture.',
       },
+      invoicePaymentExport: {
+        summary: 'Exporter les règlements',
+        description:
+          'Exporte les règlements reçus entre from et to inclus, dans un CSV UTF-8. Limite de 10 000 lignes ; aucune troncature silencieuse.',
+      },
       invoicePaymentCreate: {
         summary: 'Enregistrer un règlement',
         description:
@@ -433,6 +438,11 @@ export const apiDocumentation = {
       invoiceIssue: {
         summary: 'Issue an invoice',
         description: 'Assigns the legal invoice number and issues the invoice.',
+      },
+      invoicePaymentExport: {
+        summary: 'Export payments',
+        description:
+          'Exports payments received between from and to inclusive as UTF-8 CSV. Limited to 10,000 rows without silent truncation.',
       },
       invoicePaymentCreate: {
         summary: 'Record a payment',

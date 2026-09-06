@@ -29,6 +29,38 @@ const invoice = (status: 'issued' | 'paid', suffix: string): InvoiceSummaryValue
   }) as InvoiceSummaryValue;
 
 describe('Billing', () => {
+  it('keeps the export period and displays a recoverable export error', async () => {
+    const exportPayments = vi.fn(async () => ({
+      success: false,
+      code: 'payment.export_too_large',
+    }));
+    TestBed.configureTestingModule({
+      providers: [
+        provideRouter([]),
+        { provide: InvoicesApi, useValue: { list: async () => [], exportPayments } },
+        { provide: ClientsApi, useValue: { list: async () => [] } },
+      ],
+    });
+    const fixture = TestBed.createComponent(Billing);
+    await fixture.whenStable();
+    const root: HTMLElement = fixture.nativeElement;
+    root.querySelector('summary')?.click();
+    const fields = root.querySelectorAll<HTMLInputElement>('.payment-export input');
+    for (const [index, date] of ['2026-08-01', '2026-08-31'].entries()) {
+      const field = fields[index];
+      if (field === undefined) throw new Error('payment.export.field.missing');
+      field.value = date;
+      field.dispatchEvent(new Event('input', { bubbles: true }));
+    }
+    root
+      .querySelector('.payment-export form')
+      ?.dispatchEvent(new SubmitEvent('submit', { bubbles: true, cancelable: true }));
+    await fixture.whenStable();
+    expect(exportPayments).toHaveBeenCalledWith({ from: '2026-08-01', to: '2026-08-31' });
+    expect(root.querySelector('[role="alert"]')?.textContent).toMatch(/10[ ,]000/);
+    expect(fields[0]?.value).toBe('2026-08-01');
+    expect(root.querySelector<HTMLButtonElement>('.payment-export button')?.disabled).toBe(false);
+  });
   it('warns seven days before an issued invoice is due', () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date('2026-09-14T12:00:00.000Z'));

@@ -332,3 +332,10 @@ export {
   type InvoicePayment as InvoicePaymentValue,
   type InvoicePaymentRequest as InvoicePaymentRequestValue,
 } from './invoices/payments.js';
+export {
+  PaymentExportQuery,
+  PaymentExportInvalidRange,
+  PaymentExportTooLarge,
+  PaymentExportFailure,
+  type PaymentExportQuery as PaymentExportQueryValue,
+} from './invoices/payment-export.js';

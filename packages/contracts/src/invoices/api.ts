@@ -1,5 +1,10 @@
 import { Schema } from 'effect';
 import { InvoicePaymentRequest, InvoicePaymentInvalid } from './payments.js';
+import {
+  PaymentExportQuery,
+  PaymentExportInvalidRange,
+  PaymentExportTooLarge,
+} from './payment-export.js';
 import { HttpApiEndpoint, HttpApiGroup, HttpApiSchema } from 'effect/unstable/httpapi';
 
 import { ApiRequestBody } from '../api-authentication.js';
@@ -56,6 +61,17 @@ const InvoiceRevisionCreatePayload = Schema.Struct({
 }).annotate({ identifier: 'InvoiceRevisionCreateRequest' });
 
 export class InvoicesApi extends HttpApiGroup.make('invoices', { topLevel: true }).add(
+  HttpApiEndpoint.get('invoicePaymentExport', '/api/invoice-payments/export', {
+    query: PaymentExportQuery,
+    success: Schema.Uint8Array.pipe(
+      HttpApiSchema.asUint8Array({ contentType: 'text/csv; charset=utf-8' }),
+    ),
+    error: [...invoiceWriteErrors, PaymentExportInvalidRange, PaymentExportTooLarge],
+  }).pipe(
+    requirePermissions([Permissions.invoiceMarkPaid]),
+    authenticate,
+    rateLimit(RateLimits.tenPerMinute),
+  ),
   HttpApiEndpoint.get('invoiceList', '/api/invoices', {
     success: InvoiceList,
     error: invoiceReadErrors,
