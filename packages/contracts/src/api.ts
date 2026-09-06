@@ -9,6 +9,7 @@ import { AffairsApi } from './affairs/api.js';
 import { AuthenticationApi } from './authentication/api.js';
 import { PasskeysApi } from './authentication/passkeys-api.js';
 import { EmailDraftsApi } from './integrations/email-drafts-api.js';
+import { ProviderActionsApi } from './integrations/provider-actions-api.js';
 import { BootstrapApi } from './bootstrap/api.js';
 import { ClientPortalApi } from './client-portal/api.js';
 import { ClientsApi } from './clients/api.js';
@@ -45,6 +46,7 @@ export class Api extends HttpApi.make('froment-api')
   .add(AuthenticationApi)
   .add(PasskeysApi)
   .add(EmailDraftsApi)
+  .add(ProviderActionsApi)
   .add(ClientsApi)
   .add(OrdersApi)
   .add(QuoteConditionPresetsApi)

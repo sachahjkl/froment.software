@@ -31,6 +31,7 @@ describe('integration persistence', () => {
     const provider = Layer.succeed(
       EmailProvider,
       EmailProvider.of({
+        ...EmailMockActions,
         mode: 'simulation',
         submit: Effect.fn('EmailProvider.test')(function* (request) {
           attempted.push(request.requestId);
@@ -85,3 +86,4 @@ describe('integration persistence', () => {
     );
   });
 });
+import { EmailMockActions } from './provider-mocks.js';

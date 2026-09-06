@@ -393,3 +393,4 @@ export {
 } from './banking/contracts.js';
 export * from './authentication/passkeys.js';
 export * from './integrations/email-drafts.js';
+export * from './integrations/provider-actions.js';

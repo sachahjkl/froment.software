@@ -55,6 +55,7 @@ const ServicesLive = Layer.mergeAll(
   QuoteConditionPresetsLive,
   CatalogLive,
   IntegrationsLive.pipe(Layer.provide(SimulatedProviders)),
+  SimulatedProviders,
   BankingLive,
   DeploymentLive,
   ClientPortalLive,

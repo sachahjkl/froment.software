@@ -21,6 +21,7 @@ Les adaptateurs ne modifient pas les documents commerciaux.
 
 Chaque domaine possède son service Effect dans `packages/api/src/integrations/providers.ts`.
 Chaque demande possède un schéma distinct dans `packages/contracts/src/integrations/contracts.ts`.
+Les autres actions possèdent leurs contrats dans `packages/contracts/src/integrations/provider-actions.ts`.
 La couche de production fournit actuellement `SimulatedProviders`.
 
 SQLite conserve la demande avant l’appel de l’adaptateur, puis son reçu.
@@ -43,7 +44,7 @@ Le formulaire demande un destinataire, une référence interne, un objet et un m
 Il conserve les valeurs après une erreur et verrouille une demande dont le résultat reste inconnu.
 Une nouvelle tentative reprend exactement cette demande.
 Les protections de navigation signalent les modifications non enregistrées.
-Les brouillons non transmis restent dans la page, pas dans le serveur.
+Le bouton d’enregistrement conserve les brouillons sur le serveur ; consultez `docs/email-drafts.md`.
 
 Le journal conserve le contenu en texte brut.
 Le navigateur ne traite pas ce contenu comme du HTML.
@@ -68,5 +69,6 @@ Son reçu `submitted` confirme uniquement la transmission de la demande.
 Il ne constitue ni une preuve de signature, ni une confirmation de règlement ou de réception réglementaire.
 Les notifications vérifiées et les transitions commerciales appartiennent aux modules concernés.
 
-Ces interfaces couvrent la soumission et son journal, pas encore les parcours commerciaux complets.
-Le choix et l’activation des prestataires restent séparés de cette livraison.
+Les interfaces couvrent aussi les 32 actions décrites dans `docs/provider-contracts.md`.
+Leurs implémentations actuelles sont des mocks indépendants, sans appel réseau ni modification métier.
+Le choix d’un prestataire réel n’est pas un préalable à la définition de ces contrats ou de leurs mocks.

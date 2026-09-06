@@ -1,6 +1,7 @@
 import type { Language } from './language.js';
 import { passkeyDocumentation } from './passkeys.js';
 import { emailDraftDocumentation } from './email-drafts.js';
+import { providerActionDocumentation } from './provider-action-documentation.js';
 
 interface ApiDocumentationGroup {
   readonly title: string;
@@ -34,6 +35,11 @@ export const apiDocumentation = {
     groups: {
       passkeys: passkeyDocumentation.fr.group,
       emailDrafts: emailDraftDocumentation.fr.group,
+      providerActions: {
+        title: 'Contrats des fournisseurs',
+        description:
+          'Actions typées des cinq fournisseurs. Implémentations mock sans effet externe.',
+      },
       clients: { title: 'Clients', description: 'Fiches clients et cycle de vie.' },
       orders: { title: 'Commandes', description: 'Commandes et documents générés.' },
       quotes: { title: 'Devis', description: 'Devis, révisions, envoi et documents.' },
@@ -85,6 +91,7 @@ export const apiDocumentation = {
     operations: {
       ...passkeyDocumentation.fr.operations,
       ...emailDraftDocumentation.fr.operations,
+      ...providerActionDocumentation.fr,
       bankMatchHistory: {
         summary: 'Consulter les rapprochements conservés',
         description:
@@ -392,6 +399,11 @@ export const apiDocumentation = {
       clients: { title: 'Clients', description: 'Client records and lifecycle.' },
       passkeys: passkeyDocumentation.en.group,
       emailDrafts: emailDraftDocumentation.en.group,
+      providerActions: {
+        title: 'Provider contracts',
+        description:
+          'Typed actions for all five providers. Mock implementations without external effects.',
+      },
       orders: { title: 'Orders', description: 'Orders and their generated documents.' },
       quotes: { title: 'Quotes', description: 'Quotes, revisions, delivery, and documents.' },
       quoteLinks: {
@@ -440,6 +452,7 @@ export const apiDocumentation = {
       catalogList: { summary: 'List services', description: 'Lists active and archived services.' },
       ...passkeyDocumentation.en.operations,
       ...emailDraftDocumentation.en.operations,
+      ...providerActionDocumentation.en,
       bankMatchHistory: {
         summary: 'Read reconciliation history',
         description:

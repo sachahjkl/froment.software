@@ -14,6 +14,7 @@ import { AuthenticationHttpLive } from './authentication/http.js';
 import { AuthenticationHandlers } from './authentication/handlers.js';
 import { PasskeyHandlers } from './authentication/passkey-handlers.js';
 import { EmailDraftHandlers } from './integrations/email-draft-handlers.js';
+import { ProviderActionHandlers } from './integrations/provider-action-handlers.js';
 import { AffairHandlers } from './affairs/handlers.js';
 import { BootstrapHandlers } from './bootstrap/handlers.js';
 import { ClientPortalHandlers } from './client-portal/handlers.js';
@@ -55,6 +56,7 @@ const ApiRoutes = HttpApiBuilder.layer(FrenchApi).pipe(
       AuthenticationHandlers,
       PasskeyHandlers,
       EmailDraftHandlers,
+      ProviderActionHandlers,
       ClientHandlers,
       OrderHandlers,
       QuoteConditionPresetHandlers,
