@@ -16,6 +16,7 @@ import { BootstrapHandlers } from './bootstrap/handlers.js';
 import { ClientPortalHandlers } from './client-portal/handlers.js';
 import { ClientHandlers } from './clients/handlers.js';
 import { apiForLanguage } from './documentation/api-documentation.js';
+import { requestLanguage } from './http/language.js';
 import { ApiTelemetryLive } from './observability/api-telemetry.js';
 import { HttpTracingLive, logRequest, traceRequest } from './observability/http-tracing.js';
 import { identifyRequest, preventHtmlCaching } from './http/response.js';
@@ -38,8 +39,12 @@ import { RuntimeConfiguration } from './runtime-config.js';
 
 const FrenchApi = apiForLanguage('fr');
 const EnglishApi = apiForLanguage('en');
+const openApiSpecifications = {
+  fr: OpenApi.fromApi(FrenchApi),
+  en: OpenApi.fromApi(EnglishApi),
+};
 
-const ApiRoutes = HttpApiBuilder.layer(FrenchApi, { openapiPath: '/api/openapi.json' }).pipe(
+const ApiRoutes = HttpApiBuilder.layer(FrenchApi).pipe(
   Layer.provide(
     Layer.mergeAll(
       StatusHandlers,
@@ -66,10 +71,21 @@ const ApiRoutes = HttpApiBuilder.layer(FrenchApi, { openapiPath: '/api/openapi.j
 
 const frenchScalar = { showOperationId: true, localization: { locale: 'fr' } };
 const englishScalar = { showOperationId: true, localization: { locale: 'en' } };
-const ApiDocs = HttpApiScalar.layer(FrenchApi, {
-  path: '/api/docs',
-  scalar: frenchScalar,
-});
+const ApiDocs = HttpRouter.add(
+  'GET',
+  '/api/docs',
+  Effect.gen(function* () {
+    const request = yield* HttpServerRequest.HttpServerRequest;
+    const language = requestLanguage(request.headers['accept-language']);
+    return HttpServerResponse.redirect(`/api/docs/${language}`, {
+      headers: {
+        vary: 'Accept-Language',
+        'content-language': language,
+        'cache-control': 'no-store',
+      },
+    });
+  }),
+);
 const FrenchApiDocs = HttpApiScalar.layer(FrenchApi, {
   path: '/api/docs/fr',
   scalar: frenchScalar,
@@ -81,13 +97,24 @@ const EnglishApiDocs = HttpApiScalar.layer(EnglishApi, {
 const LocalizedOpenApiRoutes = Layer.mergeAll(
   HttpRouter.add(
     'GET',
+    '/api/openapi.json',
+    Effect.gen(function* () {
+      const request = yield* HttpServerRequest.HttpServerRequest;
+      const language = requestLanguage(request.headers['accept-language']);
+      return HttpServerResponse.jsonUnsafe(openApiSpecifications[language], {
+        headers: { vary: 'Accept-Language', 'content-language': language },
+      });
+    }),
+  ),
+  HttpRouter.add(
+    'GET',
     '/api/openapi.fr.json',
-    HttpServerResponse.jsonUnsafe(OpenApi.fromApi(FrenchApi)),
+    HttpServerResponse.jsonUnsafe(openApiSpecifications.fr),
   ),
   HttpRouter.add(
     'GET',
     '/api/openapi.en.json',
-    HttpServerResponse.jsonUnsafe(OpenApi.fromApi(EnglishApi)),
+    HttpServerResponse.jsonUnsafe(openApiSpecifications.en),
   ),
 );
 
