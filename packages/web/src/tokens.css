@@ -119,6 +119,7 @@
   --color-canvas: #f3f2f6;
   --color-surface: #fafafa;
   --color-surface-raised: #fff;
+  --color-panel: #edf2f5;
   --color-surface-sunken: #e9e8ed;
   --color-selection: #d8e2f0;
 
@@ -178,6 +179,7 @@
   --color-canvas: #17171f;
   --color-surface: #20202a;
   --color-surface-raised: #292934;
+  --color-panel: #252d35;
   --color-surface-sunken: #121219;
   --color-selection: #38516d;
 
