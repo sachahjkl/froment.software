@@ -17,14 +17,17 @@ h1 {
 form {
   container-type: inline-size;
   min-width: 0;
-  padding: var(--panel-padding);
-  border: 1px solid var(--color-line);
-  border-radius: var(--radius-sm);
-  background: var(--color-surface-raised);
-  box-shadow: var(--shadow-panel);
 }
 
-form > * + *,
+.document-editor > form {
+  display: grid;
+  gap: var(--space-5);
+}
+
+.document-editor > form > * {
+  margin-block: 0;
+}
+
 .lines > * + * {
   margin-top: var(--space-5);
 }
@@ -54,9 +57,6 @@ form > * + *,
   min-width: 0;
   margin: 0;
   padding: var(--space-4);
-  border: 1px solid var(--color-line);
-  border-radius: var(--radius-sm);
-  background: var(--color-surface-sunken);
 }
 
 .document-line > .field {
@@ -69,9 +69,6 @@ form > * + *,
 
 legend {
   padding: var(--space-1) var(--space-2);
-  border: 1px solid var(--color-line);
-  border-radius: var(--radius-sm);
-  background: var(--color-surface-sunken);
   color: var(--color-muted);
   font-family: var(--font-mono);
   font-size: var(--text-xs);
@@ -96,6 +93,12 @@ textarea {
   margin-top: var(--space-2);
   color: var(--color-muted);
   font-size: var(--text-xs);
+}
+
+[appOutcomePanel].ds-panel {
+  border: 0;
+  background: var(--color-panel);
+  box-shadow: none;
 }
 
 [appOutcomePanel] h2 {
