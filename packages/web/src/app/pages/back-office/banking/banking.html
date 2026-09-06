@@ -1,5 +1,6 @@
 <section class="notice-flow" aria-labelledby="bank-title">
   <h1 id="bank-title">{{ i18n.t('bank.title') }}</h1>
+  <a routerLink="/backoffice/banque/ecritures">{{ i18n.t('ledger.title') }}</a>
   <p>{{ i18n.t('bank.intro') }}</p>
   <p appNotice variant="info">{{ i18n.t('bank.noTransfer') }}</p>
   <p #result tabindex="-1" role="status">

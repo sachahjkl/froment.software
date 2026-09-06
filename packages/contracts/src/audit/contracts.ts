@@ -3,6 +3,8 @@ import { Schema } from 'effect';
 import { Ulid } from '../identifiers.js';
 
 export const AuditActions = [
+  'bank.ledger-posted',
+  'bank.ledger-reversed',
   'invoice.credited',
   'invoice.refund-recorded',
   'invoice.refund-cancelled',

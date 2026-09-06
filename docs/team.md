@@ -7,6 +7,7 @@ Elle ne modifie pas les comptes administrateurs existants.
 
 - Le comptable consulte les clients, devis, commandes, factures, règlements, relevés et informations de l’émetteur.
 - Le comptable télécharge les documents et exporte les règlements.
+- Le comptable consulte et exporte le journal des débits et commissions, sans créer ni contrepasser d’écriture.
 - Le comptable consulte le catalogue et les conditions nécessaires à l’affichage des devis.
 - Le collaborateur crée et modifie les clients, devis et factures.
 - Le collaborateur publie les documents, enregistre les règlements et gère les rapprochements bancaires.

@@ -396,6 +396,7 @@ export {
 export * from './authentication/passkeys.js';
 export * from './team/contracts.js';
 export * from './invoices/credit-notes.js';
+export * from './banking/ledger.js';
 export * from './integrations/email-drafts.js';
 export * from './integrations/provider-actions.js';
 export * from './integrations/email-templates.js';

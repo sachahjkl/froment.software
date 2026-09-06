@@ -93,6 +93,9 @@ Le rapprochement n’invente aucun règlement et ne modifie aucune facture.
 Il ne détermine ni la TVA des frais ni leur compte comptable.
 Les anciennes affectations conservent une commission nulle.
 
+Le [journal des débits et commissions](bank-ledger.md) permet de choisir les comptes et de comptabiliser ces sources.
+Avant de dissocier une affectation dont la commission est comptabilisée, contrepassez son écriture.
+
 ## Historique consultable
 
 Chaque opération donne accès aux 100 derniers rapprochements conservés.

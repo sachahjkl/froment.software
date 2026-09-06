@@ -1145,6 +1145,14 @@ export const InvoicesLive = Layer.effect(
                     : 0n),
                 0n,
               );
+              if (
+                database.sqlite
+                  .prepare(`select 1 from bank_ledger_entries e join bank_matches m on m.id = e.source_id
+                where e.source_kind = 'fee' and m.payment_id = ? and e.reverses_id is null
+                and not exists (select 1 from bank_ledger_entries r where r.reverses_id = e.id)`)
+                  .get(paymentId) !== undefined
+              )
+                throw new InvoicePaymentInvalid({ code: 'invoice.payment_invalid' });
               const refunded = Schema.decodeUnknownSync(Schema.Int)(
                 database.sqlite
                   .prepare(

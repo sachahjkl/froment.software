@@ -1,6 +1,7 @@
 import type { Language } from './language.js';
 import { teamDocumentation } from './team.js';
 import { creditDocumentation } from './credit-notes.js';
+import { ledgerDocumentation } from './bank-ledger.js';
 import { passkeyDocumentation } from './passkeys.js';
 import { emailDraftDocumentation } from './email-drafts.js';
 import { emailTemplateDocumentation } from './email-templates.js';
@@ -40,6 +41,7 @@ export const apiDocumentation = {
       passkeys: passkeyDocumentation.fr.group,
       team: teamDocumentation.fr.group,
       creditNotes: creditDocumentation.fr.group,
+      bankLedger: ledgerDocumentation.fr.group,
       emailDrafts: emailDraftDocumentation.fr.group,
       emailTemplates: emailTemplateDocumentation.fr.group,
       reminders: reminderDocumentation.fr.group,
@@ -109,6 +111,7 @@ export const apiDocumentation = {
       ...providerActionDocumentation.fr,
       ...teamDocumentation.fr.operations,
       ...creditDocumentation.fr.operations,
+      ...ledgerDocumentation.fr.operations,
       bankPaymentList: {
         summary: 'Lister les soldes rapprochables des règlements',
         description:
@@ -422,6 +425,7 @@ export const apiDocumentation = {
       passkeys: passkeyDocumentation.en.group,
       team: teamDocumentation.en.group,
       creditNotes: creditDocumentation.en.group,
+      bankLedger: ledgerDocumentation.en.group,
       emailDrafts: emailDraftDocumentation.en.group,
       emailTemplates: emailTemplateDocumentation.en.group,
       reminders: reminderDocumentation.en.group,
@@ -488,6 +492,7 @@ export const apiDocumentation = {
       ...providerActionDocumentation.en,
       ...teamDocumentation.en.operations,
       ...creditDocumentation.en.operations,
+      ...ledgerDocumentation.en.operations,
       bankPaymentList: {
         summary: 'List available payment balances for reconciliation',
         description:

@@ -4,6 +4,8 @@ export const PermissionAudience = Schema.Literals(['api-token', 'client']);
 export type PermissionAudience = typeof PermissionAudience.Type;
 
 export const Permissions = {
+  ledgerRead: { code: 'ledger.read', audiences: [] },
+  ledgerPost: { code: 'ledger.post', audiences: [] },
   invoiceCredit: { code: 'invoice.credit', audiences: [] },
   invoiceRefund: { code: 'invoice.refund', audiences: [] },
   emailDraftManage: { code: 'email.draft.manage', audiences: [] },

@@ -1,0 +1,135 @@
+<section class="ledger-page" aria-labelledby="ledger-title">
+  <header>
+    <a routerLink="/backoffice/banque">{{ i18n.t('bank.title') }}</a>
+    <h1 id="ledger-title">{{ i18n.t('ledger.title') }}</h1>
+  </header>
+  <p appNotice variant="info">{{ i18n.t('ledger.hint') }}</p>
+  <p #result tabindex="-1" role="status">@if (saved()) { {{ i18n.t('ledger.saved') }} }</p>
+  @if (error(); as error) {
+  <p appNotice variant="danger" role="alert">{{ i18n.t(error) }}</p>
+  }
+  <form class="period-form" (submit)="load($event)">
+    <label
+      >{{ i18n.t('ledger.from') }}<input class="input" type="date" [formField]="period.from"
+    /></label>
+    <label
+      >{{ i18n.t('ledger.to') }}<input class="input" type="date" [formField]="period.to"
+    /></label>
+    <button appButton type="submit" [disabled]="busy() || loading() || period().invalid()">
+      {{ i18n.t('ledger.load') }}
+    </button>
+  </form>
+  @if (exportUrl(); as url) { <a [href]="url" download>{{ i18n.t('ledger.export') }}</a> } @if
+  (loading()) {
+  <p role="status">{{ i18n.t('ledger.loading') }}</p>
+  } @if (selected(); as source) {
+  <h2>{{ i18n.t('ledger.post') }} — {{ source.reference }} — {{ money(source.amountCents) }}</h2>
+  <form class="entry-form" (submit)="post($event)">
+    <label
+      >{{ i18n.t('ledger.debitAccount') }}<input class="input" [formField]="entryForm.debitAccount"
+    /></label>
+    <label
+      >{{ i18n.t('ledger.creditAccount') }}<input
+        class="input"
+        [formField]="entryForm.creditAccount"
+    /></label>
+    <label>{{ i18n.t('ledger.label') }}<input class="input" [formField]="entryForm.label" /></label>
+    <button
+      appButton
+      variant="primary"
+      type="submit"
+      [disabled]="busy() || loading() || entryForm().invalid()"
+    >
+      {{ i18n.t('ledger.post') }}
+    </button>
+    <button appButton type="button" [disabled]="busy()" (click)="cancel()">
+      {{ i18n.t('ledger.close') }}
+    </button>
+  </form>
+  } @if (reversing(); as entry) {
+  <h2>{{ i18n.t('ledger.reverse') }} — {{ entry.label }} — {{ money(entry.amountCents) }}</h2>
+  <form class="reversal-form" (submit)="reverse($event)">
+    <label
+      >{{ i18n.t('ledger.reason') }}<input class="input" [formField]="reversalForm.reason"
+    /></label>
+    <label
+      >{{ i18n.t('ledger.date') }}<input
+        class="input"
+        type="date"
+        [formField]="reversalForm.bookedOn"
+    /></label>
+    <button appButton type="submit" [disabled]="busy() || loading() || reversalForm().invalid()">
+      {{ i18n.t('ledger.reverse') }}
+    </button>
+    <button appButton type="button" [disabled]="busy()" (click)="cancel()">
+      {{ i18n.t('ledger.close') }}
+    </button>
+  </form>
+  } @if (records(); as records) {
+  <h2>{{ i18n.t('ledger.sources') }}</h2>
+  <ul class="sources">
+    @for (source of records.sources; track source.sourceKind + source.sourceId) {
+    <li class="ds-panel">
+      <p>
+        {{ source.bookedOn | localizedDate: i18n.language(): { dateStyle: 'medium' } }} — {{
+        i18n.t(source.sourceKind === 'fee' ? 'ledger.fee' : 'ledger.debit') }} — {{
+        money(source.amountCents) }}
+      </p>
+      <p>{{ source.account }} — {{ source.reference }}</p>
+      @if (source.entryId !== null) {
+      <p>{{ i18n.t('ledger.posted') }} {{ source.entryId }}</p>
+      } @else {
+      <button appButton type="button" [disabled]="busy() || loading()" (click)="select(source)">
+        {{ i18n.t('ledger.select') }}
+      </button>
+      }
+    </li>
+    } @empty {
+    <li>{{ i18n.t('ledger.empty') }}</li>
+    }
+  </ul>
+  <h2>{{ i18n.t('ledger.entries') }}</h2>
+  <ul class="entries">
+    @for (entry of records.entries; track entry.id) {
+    <li class="ds-panel">
+      <h3>{{ entry.label }}</h3>
+      <p>
+        {{ entry.bookedOn | localizedDate: i18n.language(): { dateStyle: 'medium' } }} — {{
+        money(entry.amountCents) }}
+      </p>
+      <dl>
+        <div>
+          <dt>{{ i18n.t('ledger.debitAccount') }}</dt>
+          <dd>{{ entry.debitAccount }}</dd>
+        </div>
+        <div>
+          <dt>{{ i18n.t('ledger.creditAccount') }}</dt>
+          <dd>{{ entry.creditAccount }}</dd>
+        </div>
+      </dl>
+      <p>{{ i18n.t('ledger.entryId') }} {{ entry.id }}</p>
+      <p>
+        {{ i18n.t('ledger.actor') }} {{ entry.recordedByUserId }} — {{ entry.recordedAt |
+        localizedDate: i18n.language(): { dateStyle: 'medium', timeStyle: 'short' } }}
+      </p>
+      @if (entry.reversesId !== null) {
+      <p>{{ i18n.t('ledger.reverses') }} {{ entry.reversesId }}</p>
+      } @else if (entry.reversalId !== null) {
+      <p>{{ i18n.t('ledger.reversed') }} {{ entry.reversalId }}</p>
+      } @else {
+      <button
+        appButton
+        type="button"
+        [disabled]="busy() || loading()"
+        (click)="selectReversal(entry)"
+      >
+        {{ i18n.t('ledger.reverse') }}
+      </button>
+      }
+    </li>
+    } @empty {
+    <li>{{ i18n.t('ledger.empty') }}</li>
+    }
+  </ul>
+  }
+</section>

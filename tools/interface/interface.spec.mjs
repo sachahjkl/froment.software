@@ -3,6 +3,7 @@ import { scalarDocumentation } from "../../packages/api/src/documentation/scalar
 import AxeBuilder from "@axe-core/playwright";
 import { checkTeam } from "./team.mjs";
 import { checkCreditNotes } from "./credit-notes.mjs";
+import { checkBankLedger } from "./bank-ledger.mjs";
 import {
   accountEmail,
   clientId,
@@ -426,5 +427,6 @@ test("client signing form stays inside its panel", async ({ page, colorScheme },
   await page.screenshot({ path: testInfo.outputPath("scalar.png"), fullPage: true });
   await checkTeam(page, testInfo);
   await checkCreditNotes(page, testInfo);
+  await checkBankLedger(page, testInfo);
 });
 import { checkPasskeys } from "./passkeys.mjs";

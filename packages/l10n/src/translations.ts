@@ -1,6 +1,7 @@
 import { webUiText } from './web-ui-text.js';
 import { teamText } from './team.js';
 import { creditText } from './credit-notes.js';
+import { ledgerText } from './bank-ledger.js';
 import { passkeyText } from './passkeys.js';
 import { emailDraftText } from './email-drafts.js';
 import { integrationRetryText } from './integration-retries.js';
@@ -12,6 +13,7 @@ export const translations = {
     ...webUiText.fr,
     ...teamText.fr,
     ...creditText.fr,
+    ...ledgerText.fr,
     ...passkeyText.fr,
     ...emailDraftText.fr,
     ...integrationRetryText.fr,
@@ -1521,6 +1523,7 @@ export const translations = {
     ...webUiText.en,
     ...teamText.en,
     ...creditText.en,
+    ...ledgerText.en,
     ...passkeyText.en,
     ...emailDraftText.en,
     ...integrationRetryText.en,

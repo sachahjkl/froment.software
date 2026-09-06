@@ -6,6 +6,7 @@ import { PermissionCode } from '../permissions.js';
 export const TeamProfile = Schema.Literals(['collaborator', 'accountant']);
 export const TeamProfilePermissions = {
   accountant: [
+    'ledger.read',
     'client.read',
     'quote.read',
     'order.read',

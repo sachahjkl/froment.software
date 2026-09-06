@@ -6,6 +6,7 @@ import { IntegrationsApi } from './integrations/api.js';
 import { BankingApi } from './banking/api.js';
 import { TeamApi } from './team/api.js';
 import { CreditNotesApi } from './invoices/credit-notes-api.js';
+import { BankLedgerApi } from './banking/ledger-api.js';
 
 import { AffairsApi } from './affairs/api.js';
 import { AuthenticationApi } from './authentication/api.js';
@@ -48,6 +49,7 @@ export class Api extends HttpApi.make('froment-api')
   .add(BankingApi)
   .add(TeamApi)
   .add(CreditNotesApi)
+  .add(BankLedgerApi)
   .add(BootstrapApi)
   .add(AuthenticationApi)
   .add(PasskeysApi)

@@ -299,7 +299,13 @@ const makeBanking = Effect.gen(function* () {
                 .get(transactionId) === undefined
             )
               throw new BankTransactionNotFound({ code: 'bank.transaction_not_found' });
-            const changed = database.sqlite
+            const postedFee = database.sqlite
+              .prepare(`select 1 from bank_ledger_entries e where e.source_kind = 'fee' and e.source_id = ?
+                and e.reverses_id is null and not exists (select 1 from bank_ledger_entries r where r.reverses_id = e.id)`)
+              .get(matchId);
+            if (postedFee !== undefined)
+              throw new BankMatchConflict({ code: 'bank.match_conflict' });
+            const cancelled = database.sqlite
               .prepare(
                 'update bank_matches set cancelled_at = ?, cancelled_by_user_id = ?, cancellation_reason = ? where transaction_id = ? and id = ? and cancelled_at is null',
               )
@@ -310,7 +316,7 @@ const makeBanking = Effect.gen(function* () {
                 transactionId,
                 matchId,
               ).changes;
-            if (changed === 0) {
+            if (cancelled === 0) {
               const previous = database.sqlite
                 .prepare(
                   'select cancellation_reason as reason from bank_matches where transaction_id = ? and id = ? and cancelled_at is not null',
@@ -323,7 +329,7 @@ const makeBanking = Effect.gen(function* () {
               )
                 throw new BankMatchConflict({ code: 'bank.match_conflict' });
             }
-            if (changed > 0)
+            if (cancelled > 0)
               audit.insert({
                 action: 'bank.unmatched',
                 actorUserId,

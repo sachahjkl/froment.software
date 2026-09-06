@@ -1295,3 +1295,29 @@ export const bankMatches = sqliteTable(
     ),
   ],
 );
+
+export const bankLedgerEntries = sqliteTable(
+  'bank_ledger_entries',
+  {
+    id: text().primaryKey().notNull(),
+    requestId: text('request_id').notNull().unique(),
+    sourceKind: text('source_kind').notNull(),
+    sourceId: text('source_id').notNull(),
+    debitAccount: text('debit_account').notNull(),
+    creditAccount: text('credit_account').notNull(),
+    label: text().notNull(),
+    amountCents: integer('amount_cents').notNull(),
+    bookedOn: text('booked_on').notNull(),
+    recordedAt: text('recorded_at').notNull(),
+    recordedByUserId: text('recorded_by_user_id')
+      .notNull()
+      .references(() => users.id),
+    reversesId: text('reverses_id').unique(),
+  },
+  (table) => [
+    index('bank_ledger_source_index').on(table.sourceKind, table.sourceId),
+    check('bank_ledger_kind_check', sql`${table.sourceKind} in ('debit', 'fee')`),
+    check('bank_ledger_amount_check', sql`${table.amountCents} between 1 and 9007199254740991`),
+    check('bank_ledger_accounts_check', sql`${table.debitAccount} <> ${table.creditAccount}`),
+  ],
+);
