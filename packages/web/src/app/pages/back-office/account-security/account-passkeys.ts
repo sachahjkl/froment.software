@@ -1,0 +1,113 @@
+import {
+  afterNextRender,
+  ChangeDetectionStrategy,
+  Component,
+  ElementRef,
+  Injector,
+  inject,
+  input,
+  model,
+  signal,
+  viewChild,
+} from '@angular/core';
+import { disabled, form, FormField, maxLength, required } from '@angular/forms/signals';
+import { Passkey, PasskeyList, accountPasswordConfig } from '@froment/contracts';
+import { Passkeys } from '@backoffice/passkeys';
+import { I18nService, type TranslationKey } from '@app/i18n.service';
+import { Confirmation } from '@shared/confirmation/confirmation';
+import { Button } from '@shared/button/button';
+import { Notice } from '@shared/notice/notice';
+
+@Component({
+  selector: 'app-account-passkeys',
+  imports: [Button, Notice, FormField],
+  templateUrl: './account-passkeys.html',
+  styleUrl: './account-passkeys.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class AccountPasskeys {
+  readonly busy = model(false);
+  readonly disabled = input(false);
+  protected readonly i18n = inject(I18nService);
+  protected readonly api = inject(Passkeys);
+  private readonly confirmation = inject(Confirmation);
+  private readonly injector = inject(Injector);
+  private readonly operationStatus = viewChild('operationStatus', {
+    read: ElementRef<HTMLElement>,
+  });
+  protected readonly keys = signal<typeof PasskeyList.Type>([]);
+  protected readonly loading = signal(true);
+  protected readonly error = signal<TranslationKey | undefined>(undefined);
+  protected readonly status = signal<TranslationKey | undefined>(undefined);
+  private readonly values = signal({ name: '', password: '' });
+  protected readonly fields = form(this.values, (path) => {
+    disabled(path, () => this.busy() || this.disabled());
+    required(path.name);
+    maxLength(path.name, 80);
+    required(path.password);
+    maxLength(path.password, accountPasswordConfig.maxLength);
+  });
+
+  constructor() {
+    afterNextRender(() => {
+      void this.reload();
+    });
+  }
+
+  private async reload(): Promise<void> {
+    this.loading.set(true);
+    const outcome = await this.api.list();
+    if (outcome.success) this.keys.set(outcome.result);
+    else this.error.set(outcome.code);
+    this.loading.set(false);
+  }
+
+  protected async add(event: SubmitEvent): Promise<void> {
+    event.preventDefault();
+    if (this.busy() || this.disabled() || this.fields().invalid()) return;
+    this.busy.set(true);
+    this.error.set(undefined);
+    this.status.set(undefined);
+    try {
+      const outcome = await this.api.register(this.values());
+      if (outcome.success) {
+        this.status.set('passkey.added');
+        await this.reload();
+        afterNextRender(() => this.operationStatus()?.nativeElement.focus(), {
+          injector: this.injector,
+        });
+      } else this.error.set(outcome.code);
+    } finally {
+      this.values.set({ name: '', password: '' });
+      this.fields().reset();
+      if (event.target instanceof HTMLFormElement) event.target.reset();
+      this.busy.set(false);
+    }
+  }
+
+  protected async remove(key: typeof Passkey.Type): Promise<void> {
+    if (this.busy() || this.disabled() || this.fields.password().invalid()) return;
+    if (
+      !(await this.confirmation.request(this.i18n.t('passkey.remove_confirm'), {
+        variant: 'danger',
+      }))
+    )
+      return;
+    this.busy.set(true);
+    this.error.set(undefined);
+    this.status.set(undefined);
+    try {
+      const outcome = await this.api.remove(key.id, { password: this.values().password });
+      if (outcome.success) {
+        this.status.set('passkey.removed');
+        await this.reload();
+        afterNextRender(() => this.operationStatus()?.nativeElement.focus(), {
+          injector: this.injector,
+        });
+      } else this.error.set(outcome.code);
+    } finally {
+      this.values.update((value) => ({ ...value, password: '' }));
+      this.busy.set(false);
+    }
+  }
+}

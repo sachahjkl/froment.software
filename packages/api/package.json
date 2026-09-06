@@ -19,6 +19,7 @@
     "@froment/contracts": "workspace:*",
     "@froment/documents": "workspace:*",
     "@froment/l10n": "workspace:*",
+    "@simplewebauthn/server": "14.0.1",
     "@stablelib/ed25519": "^2.1.0",
     "argon2": "^0.45.1",
     "better-sqlite3": "catalog:",

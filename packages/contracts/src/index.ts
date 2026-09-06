@@ -391,3 +391,4 @@ export {
   type BankTransaction as BankTransactionValue,
   type BankImportRequest as BankImportRequestValue,
 } from './banking/contracts.js';
+export * from './authentication/passkeys.js';

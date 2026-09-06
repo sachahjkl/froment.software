@@ -1,8 +1,10 @@
 import { webUiText } from './web-ui-text.js';
+import { passkeyText } from './passkeys.js';
 
 export const translations = {
   fr: {
     ...webUiText.fr,
+    ...passkeyText.fr,
     'backOffice.apiTokens.permission.payment.read': 'Exporter les règlements et leurs corrections.',
     'design.confirmation.title': 'Modales de confirmation',
     'design.confirmation.hint':
@@ -1496,6 +1498,7 @@ export const translations = {
   },
   en: {
     ...webUiText.en,
+    ...passkeyText.en,
     'backOffice.apiTokens.permission.payment.read': 'Export payments and their corrections.',
     'design.confirmation.title': 'Confirmation dialogs',
     'design.confirmation.hint':

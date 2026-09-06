@@ -265,6 +265,7 @@ export async function mockApi(
       return route.fulfill({ json: { userId: clientId, email: accountEmail, mode } });
     }
     if (unavailable) return route.fulfill({ status: 503, json: {} });
+    if (path === "/api/auth/passkeys") return route.fulfill({ json: [] });
     if (path === `/api/banking/transactions/${quoteId}/history`) {
       return route.fulfill({
         json: [

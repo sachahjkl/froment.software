@@ -5,6 +5,7 @@ import { Authentication } from '@backoffice/authentication';
 import { I18nService, TranslationKey } from '@app/i18n.service';
 import { Button } from '@shared/button/button';
 import { Notice } from '@shared/notice/notice';
+import { Passkeys } from '@backoffice/passkeys';
 
 @Component({
   selector: 'app-login',
@@ -20,6 +21,17 @@ export class Login {
   private readonly router = inject(Router);
   protected readonly error = signal<TranslationKey | undefined>(undefined);
   protected readonly pending = signal(false);
+  protected readonly passkeys = inject(Passkeys);
+
+  protected async loginPasskey(): Promise<void> {
+    if (this.pending()) return;
+    this.pending.set(true);
+    this.error.set(undefined);
+    const outcome = await this.auth.authenticatePasskey(() => this.passkeys.assertion());
+    this.pending.set(false);
+    if (outcome.success) await this.router.navigateByUrl(this.destination(outcome.mode));
+    else this.error.set(outcome.code);
+  }
   protected readonly submitLabel = computed<TranslationKey>(() => {
     if (this.pending()) return 'backOffice.pending';
     return 'backOffice.submit';
@@ -27,6 +39,7 @@ export class Login {
 
   async submit(event: SubmitEvent, email: string, password: string): Promise<void> {
     event.preventDefault();
+    if (this.pending()) return;
     this.pending.set(true);
     this.error.set(undefined);
 

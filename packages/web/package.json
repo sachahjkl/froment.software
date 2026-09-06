@@ -23,6 +23,7 @@
     "@angular/ssr": "catalog:",
     "@froment/contracts": "workspace:*",
     "@froment/l10n": "workspace:*",
+    "@simplewebauthn/browser": "14.0.0",
     "effect": "catalog:",
     "fuse.js": "catalog:",
     "marked": "catalog:",

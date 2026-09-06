@@ -17,10 +17,11 @@ import { I18nService, type TranslationKey } from '@app/i18n.service';
 import { Button } from '@shared/button/button';
 import { Notice } from '@shared/notice/notice';
 import { AccountSessions } from './account-sessions';
+import { AccountPasskeys } from './account-passkeys';
 
 @Component({
   selector: 'app-account-security',
-  imports: [AccountSessions, Button, FormField, Notice, RouterLink],
+  imports: [AccountPasskeys, AccountSessions, Button, FormField, Notice, RouterLink],
   templateUrl: './account-security.html',
   styleUrl: './account-security.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -30,11 +31,12 @@ export class AccountSecurity {
   protected readonly i18n = inject(I18nService);
   private readonly authentication = inject(Authentication);
   protected readonly pending = signal(false);
+  protected readonly passkeyPending = signal(false);
   protected readonly complete = signal(false);
   protected readonly error = signal<TranslationKey | undefined>(undefined);
   private readonly model = signal({ currentPassword: '', newPassword: '', confirmation: '' });
   protected readonly passwordForm = form(this.model, (path) => {
-    disabled(path, () => this.pending());
+    disabled(path, () => this.pending() || this.passkeyPending());
     required(path.currentPassword);
     required(path.newPassword);
     required(path.confirmation);
@@ -48,7 +50,7 @@ export class AccountSecurity {
 
   protected changePassword(event: SubmitEvent): void {
     event.preventDefault();
-    if (this.pending()) return;
+    if (this.pending() || this.passkeyPending()) return;
     void submit(this.passwordForm, async () => {
       if (!(await this.confirmation.request(this.i18n.t('account.password_confirm')))) return;
       this.pending.set(true);
@@ -69,7 +71,7 @@ export class AccountSecurity {
   }
 
   async canDeactivate(): Promise<boolean> {
-    if (this.pending()) return false;
+    if (this.pending() || this.passkeyPending()) return false;
     return (
       !this.passwordForm().dirty() ||
       (await this.confirmation.request(this.i18n.t('account.password_discard')))
@@ -78,6 +80,7 @@ export class AccountSecurity {
 
   @HostListener('window:beforeunload', ['$event'])
   protected beforeUnload(event: BeforeUnloadEvent): void {
-    if (this.pending() || this.passwordForm().dirty()) event.preventDefault();
+    if (this.pending() || this.passkeyPending() || this.passwordForm().dirty())
+      event.preventDefault();
   }
 }

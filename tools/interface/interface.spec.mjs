@@ -159,13 +159,14 @@ test("client form and complete account address", async ({ page, colorScheme }, t
   await expect(summary).toBeFocused();
   await summary.click();
   await page.getByRole("link", { name: /Sécurité du compte|Account security/ }).click();
-  await expect(page.locator('.account-security input[type="password"]')).toHaveCount(3);
+  await expect(page.locator('.account-security input[type="password"]')).toHaveCount(4);
   expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth)).toBe(false);
   const audit = await new AxeBuilder({ page })
     .withTags(["wcag2a", "wcag2aa", "wcag21aa"])
     .analyze();
   expect(audit.violations).toEqual([]);
   await page.screenshot({ path: testInfo.outputPath("account-security.png"), fullPage: true });
+  await checkPasskeys(page, testInfo);
   for (const [tab, selector] of [
     ["entreprise", ".issuer-page"],
     ["conditions", ".presets-page"],
@@ -362,3 +363,4 @@ test("client signing form stays inside its panel", async ({ page, colorScheme },
   await expect(page.locator(".markdown-alert-note")).toContainText("bank.read");
   await page.screenshot({ path: testInfo.outputPath("scalar.png"), fullPage: true });
 });
+import { checkPasskeys } from "./passkeys.mjs";

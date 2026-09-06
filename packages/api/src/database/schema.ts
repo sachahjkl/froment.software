@@ -66,6 +66,40 @@ export const passwordCredentials = sqliteTable(
   ],
 );
 
+export const passkeys = sqliteTable(
+  'passkeys',
+  {
+    id: text().notNull().primaryKey(),
+    userId: text('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    credentialId: text('credential_id').notNull().unique(),
+    publicKey: blob('public_key', { mode: 'buffer' }).notNull(),
+    counter: integer().notNull(),
+    name: text().notNull(),
+    createdAt: integer('created_at').notNull(),
+    lastUsedAt: integer('last_used_at'),
+  },
+  (table) => [
+    index('passkeys_user_index').on(table.userId),
+    check('passkeys_counter_check', sql`${table.counter} >= 0`),
+  ],
+);
+
+export const passkeyChallenges = sqliteTable(
+  'passkey_challenges',
+  {
+    id: text().notNull().primaryKey(),
+    challenge: text().notNull(),
+    kind: text({ enum: ['registration', 'login'] }).notNull(),
+    userId: text('user_id').references(() => users.id, { onDelete: 'cascade' }),
+    sessionId: text('session_id'),
+    name: text(),
+    expiresAt: integer('expires_at').notNull(),
+  },
+  (table) => [index('passkey_challenges_expiry_index').on(table.expiresAt)],
+);
+
 export const clients = sqliteTable(
   'clients',
   {

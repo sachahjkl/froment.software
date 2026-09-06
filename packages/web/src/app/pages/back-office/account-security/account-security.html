@@ -43,11 +43,12 @@
       appButton
       variant="primary"
       type="submit"
-      [disabled]="pending() || passwordForm().invalid()"
+      [disabled]="pending() || passkeyPending() || passwordForm().invalid()"
     >
       {{ i18n.t(pending() ? 'account.password_pending' : 'account.password_save') }}
     </button>
   </form>
-  <app-account-sessions [disabled]="pending()" />
+  <app-account-passkeys [disabled]="pending()" [(busy)]="passkeyPending" />
+  <app-account-sessions [disabled]="pending() || passkeyPending()" />
   }
 </section>

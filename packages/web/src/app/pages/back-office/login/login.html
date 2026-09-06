@@ -41,6 +41,11 @@
       <button appButton variant="primary" type="submit" [disabled]="pending()">
         {{ i18n.t(submitLabel()) }}
       </button>
+      @if (passkeys.supported) {
+      <button appButton type="button" [disabled]="pending()" (click)="loginPasskey()">
+        {{ i18n.t('passkey.login') }}
+      </button>
+      }
     </form>
     <div class="bootstrap-slot">
       <a class="bootstrap-link" routerLink="/backoffice/bootstrap">

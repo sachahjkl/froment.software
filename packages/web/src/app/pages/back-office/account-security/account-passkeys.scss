@@ -1,0 +1,18 @@
+.passkeys,
+form {
+  display: grid;
+  gap: var(--space-4);
+}
+.passkeys {
+  margin-block: var(--space-6);
+}
+.key {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+.key span {
+  overflow-wrap: anywhere;
+  min-width: 0;
+}

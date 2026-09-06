@@ -21,6 +21,7 @@ import { firstValueFrom } from 'rxjs';
 import { decodeApiFailure, requestOutcome, type ApiFailure } from '@shared/api-outcome';
 import { BrowserSessionStore } from './browser-session-store';
 import { AuthCookieLock } from './auth-cookie-lock';
+import type { AuthenticationResponseJSON } from '@simplewebauthn/browser';
 
 export type AuthenticationOutcome =
   | { readonly success: true; readonly mode: LoginModeValue }
@@ -32,6 +33,22 @@ export class Authentication {
   private readonly isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
   private readonly sessions = inject(BrowserSessionStore);
   private readonly cookieLock = inject(AuthCookieLock);
+
+  async authenticatePasskey(assertion: () => Promise<AuthenticationResponseJSON>) {
+    try {
+      return await this.cookieLock.run(async () => {
+        const responseBody = await assertion();
+        const response = await firstValueFrom(
+          this.http.post('/api/auth/passkeys/login/verify', responseBody),
+        );
+        const session = Schema.decodeUnknownSync(BrowserSession)(response);
+        this.sessions.set(session);
+        return { success: true as const, mode: session.mode };
+      });
+    } catch (cause) {
+      return decodeApiFailure({ cause }, AuthenticationFailure, 'passkey.error');
+    }
+  }
 
   async sessionMode(): Promise<LoginModeValue | undefined> {
     if (!this.isBrowser) return undefined;
