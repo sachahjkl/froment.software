@@ -24,6 +24,11 @@
           <div class="account-details">
             <small>{{ i18n.t('backOffice.header.account') }}</small>
             <p>{{ current.email }}</p>
+            <a
+              [routerLink]="administrator() ? '/backoffice/account' : '/backoffice/client/account'"
+              (click)="accountDisclosure.open = false"
+              >{{ i18n.t('account.password_title') }}</a
+            >
           </div>
         </details>
         }

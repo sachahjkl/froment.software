@@ -122,6 +122,34 @@ export const routes: Routes = [
     },
   },
   {
+    path: 'backoffice/account',
+    canDeactivate: [unsavedChangesGuard],
+    loadComponent: () =>
+      import('./pages/back-office/account-security/account-security').then(
+        (module) => module.AccountSecurity,
+      ),
+    canActivate: [administratorGuard],
+    data: {
+      titleKey: 'account.password_title',
+      descriptionKey: 'page.description.back_office',
+      robots: 'noindex, nofollow',
+    },
+  },
+  {
+    path: 'backoffice/client/account',
+    canDeactivate: [unsavedChangesGuard],
+    loadComponent: () =>
+      import('./pages/back-office/account-security/account-security').then(
+        (module) => module.AccountSecurity,
+      ),
+    canActivate: [clientGuard],
+    data: {
+      titleKey: 'page.back_office',
+      descriptionKey: 'page.description.back_office',
+      robots: 'noindex, nofollow',
+    },
+  },
+  {
     path: 'backoffice/client',
     loadComponent: () =>
       import('./pages/back-office/client-portal/client-portal').then(

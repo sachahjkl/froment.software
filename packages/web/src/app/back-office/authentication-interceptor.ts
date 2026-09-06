@@ -8,6 +8,7 @@ const excluded = (url: string) =>
   url === '/api/auth/login' ||
   url === '/api/auth/refresh' ||
   url === '/api/auth/logout' ||
+  url === '/api/auth/password' ||
   url === '/api/bootstrap' ||
   url.startsWith('/api/public/') ||
   url === '/api/health' ||

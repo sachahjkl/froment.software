@@ -35,6 +35,29 @@ export const AuthenticationHandlers = HttpApiBuilder.group(Api, 'authentication'
   Effect.succeed(
     handlers
       .handle(
+        'passwordChange',
+        Effect.fn('passwordChange')(function* ({ payload }) {
+          yield* setPrivateResponseHeaders;
+          const credentials = yield* ApiCredentials;
+          if (credentials.kind !== 'access-token')
+            return yield* new AuthenticationRequired({ code: 'authentication.required' });
+          const authentication = yield* Authentication;
+          const principal = yield* authentication
+            .authenticate(credentials.token)
+            .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
+          const limiter = yield* RequestLimiter;
+          if (!(yield* limiter.allowRequest(`password-change:${principal.userId}`, 5)))
+            return yield* new RequestRateLimited({ code: 'request.rate_limited' });
+          yield* authentication
+            .changePassword(principal, payload)
+            .pipe(
+              Effect.catchTag(['DatabaseError', 'PasswordHashError'], (error) => Effect.die(error)),
+            );
+          yield* clearRefreshCookie;
+          yield* clearAccessCookie;
+        }),
+      )
+      .handle(
         'login',
         Effect.fn('login')(function* ({ payload }) {
           yield* setPrivateResponseHeaders;

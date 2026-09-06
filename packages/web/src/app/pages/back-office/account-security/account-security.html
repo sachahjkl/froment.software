@@ -1,0 +1,50 @@
+<section class="account-security" aria-labelledby="password-title">
+  <header class="page-intro">
+    <h1 id="password-title">{{ i18n.t('account.password_title') }}</h1>
+    <p>{{ i18n.t('account.password_hint') }}</p>
+  </header>
+  @if (complete()) {
+  <p appNotice variant="success" role="status">{{ i18n.t('account.password_complete') }}</p>
+  <a appLinkButton routerLink="/backoffice/login">{{ i18n.t('account.password_login') }}</a>
+  } @else {
+  <form class="ds-panel" (submit)="changePassword($event)">
+    <label class="field"
+      >{{ i18n.t('account.password_current') }}<input
+        class="input"
+        type="password"
+        autocomplete="current-password"
+        [formField]="passwordForm.currentPassword"
+    /></label>
+    <label class="field"
+      >{{ i18n.t('account.password_new') }}<input
+        class="input"
+        type="password"
+        autocomplete="new-password"
+        aria-describedby="password-rules"
+        [formField]="passwordForm.newPassword"
+    /></label>
+    <p id="password-rules">{{ i18n.t('account.password_rules') }}</p>
+    <label class="field"
+      >{{ i18n.t('account.password_repeat') }}<input
+        class="input"
+        type="password"
+        autocomplete="new-password"
+        [formField]="passwordForm.confirmation"
+    /></label>
+    @if (passwordForm.confirmation().touched() && passwordForm.confirmation().invalid()) {
+    <p appNotice variant="danger">{{ i18n.t('account.password_mismatch') }}</p>
+    } @if (error(); as message) {
+    <p appNotice variant="danger" role="alert">{{ i18n.t(message) }}</p>
+    <p>{{ i18n.t('account.password_retry') }}</p>
+    <a routerLink="/backoffice/login">{{ i18n.t('account.password_login') }}</a> }
+    <button
+      appButton
+      variant="primary"
+      type="submit"
+      [disabled]="pending() || passwordForm().invalid()"
+    >
+      {{ i18n.t(pending() ? 'account.password_pending' : 'account.password_save') }}
+    </button>
+  </form>
+  }
+</section>

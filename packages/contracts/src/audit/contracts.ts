@@ -9,6 +9,7 @@ export const AuditActions = [
   'api.token-used',
   'authentication.login-succeeded',
   'authentication.logout',
+  'authentication.password-changed',
   'authentication.refresh-replay-detected',
   'authentication.sessions-revoked',
   'client.access-created',

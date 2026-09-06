@@ -10,7 +10,7 @@ import { makeMigratedDatabaseLayer } from '../database/database.spec-helper.js';
 import { RuntimeConfigurationDefaults } from '../runtime-config.js';
 import { Authentication, AuthenticationLive } from './authentication.js';
 import { AccessTokensLive } from './paseto.js';
-import { Passwords } from './password.js';
+import { Passwords, PasswordsLive } from './password.js';
 import { AuthenticationConfig } from './authentication-config.js';
 
 const userId = '01ARZ3NDEKTSV4RRFFQ69G5FAA';
@@ -37,18 +37,11 @@ const configLayer = Layer.succeed(
     publicOrigin: 'https://example.test',
   }),
 );
-const passwordsLayer = Layer.succeed(
-  Passwords,
-  Passwords.of({
-    hash: () => Effect.succeed('$argon2id$test'),
-    verify: (_passwordHash, candidate) => Effect.succeed(candidate === password),
-  }),
-);
 
 const authenticationLayer = () =>
   AuthenticationLive.pipe(
     Layer.provideMerge(AccessTokensLive),
-    Layer.provideMerge(passwordsLayer),
+    Layer.provideMerge(PasswordsLive),
     Layer.provide(AuditLive),
     Layer.provide(configLayer),
     Layer.provide(RuntimeConfigurationDefaults),
@@ -86,6 +79,105 @@ const seedAdministrator = Effect.fn('seedAdministrator')(function* (database: Da
 });
 
 describe('Authentication', () => {
+  it('allows only one concurrent password change for the same credential', async () => {
+    await Effect.runPromise(
+      Effect.gen(function* () {
+        const database = yield* Database;
+        yield* seedAdministrator(database);
+        const authentication = yield* Authentication;
+        const session = yield* authentication.login(email, password, '192.0.2.1');
+        const principal = yield* authentication.authenticate(session.accessToken);
+        const results = yield* Effect.all(
+          ['first replacement password', 'second replacement password'].map((newPassword) =>
+            Effect.result(
+              authentication.changePassword(principal, { currentPassword: password, newPassword }),
+            ),
+          ),
+          { concurrency: 'unbounded' },
+        );
+        expect(results.filter((result) => result._tag === 'Success')).toHaveLength(1);
+        expect(results.filter((result) => result._tag === 'Failure')).toHaveLength(1);
+        expect(
+          database.sqlite
+            .prepare(
+              "select count(*) from audit_events where action = 'authentication.password-changed'",
+            )
+            .pluck()
+            .get(),
+        ).toBe(1);
+      }).pipe(Effect.provide(authenticationLayer()), Effect.provide(TestClock.layer())),
+    );
+  });
+  it('changes a password, rejects stale requests and revokes every browser session', async () => {
+    await Effect.runPromise(
+      Effect.gen(function* () {
+        const database = yield* Database;
+        yield* seedAdministrator(database);
+        const authentication = yield* Authentication;
+        const first = yield* authentication.login(email, password, '192.0.2.1');
+        const second = yield* authentication.login(email, password, '192.0.2.2');
+        const principal = yield* authentication.authenticate(first.accessToken);
+        const newPassword = 'a different correct passphrase';
+        expect(
+          yield* Effect.result(
+            authentication.changePassword(principal, {
+              currentPassword: 'wrong password value',
+              newPassword,
+            }),
+          ),
+        ).toMatchObject({ _tag: 'Failure', failure: { _tag: 'PasswordChangeRejected' } });
+        expect(
+          yield* Effect.result(
+            authentication.changePassword(principal, {
+              currentPassword: password,
+              newPassword: password,
+            }),
+          ),
+        ).toMatchObject({ _tag: 'Failure', failure: { _tag: 'PasswordChangeRejected' } });
+        expect(
+          yield* Effect.result(
+            authentication.changePassword(principal, {
+              currentPassword: password,
+              newPassword: 'short',
+            }),
+          ),
+        ).toMatchObject({ _tag: 'Failure', failure: { _tag: 'PasswordChangeRejected' } });
+        expect((yield* authentication.authenticate(second.accessToken)).userId).toBe(userId);
+        yield* authentication.changePassword(principal, { currentPassword: password, newPassword });
+        for (const session of [first, second]) {
+          expect(
+            yield* Effect.result(authentication.authenticate(session.accessToken)),
+          ).toMatchObject({ _tag: 'Failure', failure: { _tag: 'AuthenticationRequired' } });
+          expect(yield* Effect.result(authentication.refresh(session.refreshToken))).toMatchObject({
+            _tag: 'Failure',
+            failure: { _tag: 'SessionRejected' },
+          });
+        }
+        expect(
+          yield* Effect.result(
+            authentication.changePassword(principal, {
+              currentPassword: newPassword,
+              newPassword: password,
+            }),
+          ),
+        ).toMatchObject({ _tag: 'Failure', failure: { _tag: 'PasswordChangeRejected' } });
+        expect((yield* authentication.login(email, newPassword, '192.0.2.3')).mode).toBe(
+          'administrator',
+        );
+        expect(
+          yield* Effect.result(authentication.login(email, password, '192.0.2.4')),
+        ).toMatchObject({ _tag: 'Failure', failure: { _tag: 'AuthenticationRejected' } });
+        const audit = database.sqlite
+          .prepare(
+            "select metadata from audit_events where action = 'authentication.password-changed'",
+          )
+          .all();
+        expect(audit).toHaveLength(1);
+        expect(JSON.stringify(audit)).not.toContain(password);
+        expect(JSON.stringify(audit)).not.toContain(newPassword);
+      }).pipe(Effect.provide(authenticationLayer()), Effect.provide(TestClock.layer())),
+    );
+  });
   it('limits successful logins by credential across client addresses', async () => {
     const result = await Effect.runPromise(
       Effect.gen(function* () {
@@ -141,7 +233,7 @@ describe('Authentication', () => {
           authorized,
           missingSession,
           revokedRefresh: yield* Effect.result(authentication.refresh(rotated.refreshToken)),
-          accessAfterLogout: yield* authentication.authenticate(session.accessToken),
+          accessAfterLogout: yield* Effect.result(authentication.authenticate(session.accessToken)),
           wrongMode,
         };
       }).pipe(Effect.provide(authenticationLayer()), Effect.provide(TestClock.layer())),
@@ -160,7 +252,10 @@ describe('Authentication', () => {
       _tag: 'Failure',
       failure: { _tag: 'SessionRejected' },
     });
-    expect(result.accessAfterLogout).toMatchObject({ userId, mode: 'administrator' });
+    expect(result.accessAfterLogout).toMatchObject({
+      _tag: 'Failure',
+      failure: { _tag: 'AuthenticationRequired' },
+    });
   });
 
   it('allows concurrent rotation, then revokes the family after replay grace', async () => {

@@ -4,6 +4,9 @@ import {
   AuthenticationRateLimited,
   AuthenticationRequired,
   PermissionDenied,
+  PasswordChangeRequest,
+  PasswordChangeRejected,
+  type PasswordChangeRequestValue,
   SessionRejected,
   type AccountEmailValue,
   type AccountPasswordValue,
@@ -19,7 +22,7 @@ import { Database, DatabaseError } from '../database/database.js';
 import { PasswordCredentialLookup, RefreshSessionLookup } from '../database/schema.js';
 import { AuthenticationConfig, hmac } from './authentication-config.js';
 import { AccessTokens } from './paseto.js';
-import { Passwords } from './password.js';
+import { Passwords, type PasswordHashError } from './password.js';
 import { RuntimeConfiguration } from '../runtime-config.js';
 
 interface LoginFailureState {
@@ -63,6 +66,10 @@ export interface Principal {
 }
 
 export interface AuthenticationService {
+  readonly changePassword: (
+    principal: Principal,
+    request: PasswordChangeRequestValue,
+  ) => Effect.Effect<void, PasswordChangeRejected | DatabaseError | PasswordHashError>;
   readonly login: (
     email: AccountEmailValue,
     password: AccountPasswordValue,
@@ -309,6 +316,13 @@ export const AuthenticationLive = Layer.effect(
         try: () => {
           database.sqlite
             .transaction(() => {
+              const unchanged = database.sqlite
+                .prepare(
+                  `select 1 from password_credentials join users on users.id = password_credentials.user_id where user_id = ? and password_hash = ? and users.disabled_at is null`,
+                )
+                .get(credential.userId, credential.passwordHash);
+              if (unchanged === undefined)
+                throw new AuthenticationRejected({ code: 'authentication.invalid_credentials' });
               cleanupExpiredSessions(now);
               insertSession(session);
               audit.insert({
@@ -322,7 +336,10 @@ export const AuthenticationLive = Layer.effect(
             })
             .immediate();
         },
-        catch: (cause) => new DatabaseError({ operation: 'create.login.session', cause }),
+        catch: (cause) =>
+          cause instanceof AuthenticationRejected
+            ? cause
+            : new DatabaseError({ operation: 'create.login.session', cause }),
       });
       return session;
     });
@@ -505,6 +522,7 @@ export const AuthenticationLive = Layer.effect(
         return yield* new AuthenticationRequired({ code: 'authentication.required' });
       }
       const claims = yield* accessTokens.verify(accessToken);
+      const now = yield* Clock.currentTimeMillis;
       const row = yield* Effect.try({
         try: () =>
           database.sqlite
@@ -512,15 +530,18 @@ export const AuthenticationLive = Layer.effect(
               `select users.kind as mode, password_credentials.email
                from users
                join password_credentials on password_credentials.user_id = users.id
+               join refresh_sessions on refresh_sessions.user_id = users.id
                 left join client_access_accounts on client_access_accounts.user_id = users.id
                 left join users as client_users on client_users.id = client_access_accounts.client_id
-               where users.id = ? and users.disabled_at is null
+                where users.id = ? and users.disabled_at is null
+                  and refresh_sessions.id = ? and refresh_sessions.revoked_at is null
+                  and refresh_sessions.absolute_expires_at > ?
                  and (
                    users.kind <> 'client'
                    or (client_access_accounts.user_id is not null and client_users.disabled_at is null)
                  )`,
             )
-            .get(claims.userId),
+            .get(claims.userId, claims.sessionId, now),
         catch: (cause) => new DatabaseError({ operation: 'authenticate.access.token', cause }),
       });
       if (row === undefined) {
@@ -637,7 +658,78 @@ export const AuthenticationLive = Layer.effect(
       });
     });
 
+    const changePassword = Effect.fn('Authentication.changePassword')(function* (
+      principal: Principal,
+      request: PasswordChangeRequestValue,
+    ) {
+      if (
+        !Schema.is(PasswordChangeRequest)(request) ||
+        request.currentPassword === request.newPassword
+      )
+        return yield* new PasswordChangeRejected({
+          code: 'authentication.password_change_rejected',
+        });
+      const currentHash = yield* Effect.try({
+        try: () =>
+          Schema.decodeUnknownSync(Schema.NullOr(Schema.String))(
+            database.sqlite
+              .prepare('select password_hash from password_credentials where user_id = ?')
+              .pluck()
+              .get(principal.userId) ?? null,
+          ),
+        catch: (cause) => new DatabaseError({ operation: 'read.password.change', cause }),
+      });
+      if (currentHash === null || !(yield* passwords.verify(currentHash, request.currentPassword)))
+        return yield* new PasswordChangeRejected({
+          code: 'authentication.password_change_rejected',
+        });
+      const passwordHash = yield* passwords.hash(request.newPassword);
+      const now = yield* Clock.currentTimeMillis;
+      yield* Effect.try({
+        try: () =>
+          database.sqlite
+            .transaction(() => {
+              const active = database.sqlite
+                .prepare(
+                  `select 1 from refresh_sessions join users on users.id = refresh_sessions.user_id where refresh_sessions.id = ? and users.id = ? and users.disabled_at is null and revoked_at is null and absolute_expires_at > ?`,
+                )
+                .get(principal.sessionId, principal.userId, now);
+              if (active === undefined)
+                throw new PasswordChangeRejected({
+                  code: 'authentication.password_change_rejected',
+                });
+              const changed = database.sqlite
+                .prepare(
+                  'update password_credentials set password_hash = ?, password_changed_at = ?, updated_at = ? where user_id = ? and password_hash = ?',
+                )
+                .run(passwordHash, now, now, principal.userId, currentHash).changes;
+              if (changed !== 1)
+                throw new PasswordChangeRejected({
+                  code: 'authentication.password_change_rejected',
+                });
+              database.sqlite
+                .prepare(
+                  'update refresh_sessions set revoked_at = coalesce(revoked_at, ?) where user_id = ?',
+                )
+                .run(now, principal.userId);
+              audit.insert({
+                action: 'authentication.password-changed',
+                actorUserId: principal.userId,
+                resourceType: 'user',
+                resourceId: principal.userId,
+                occurredAt: now,
+              });
+            })
+            .immediate(),
+        catch: (cause) =>
+          cause instanceof PasswordChangeRejected
+            ? cause
+            : new DatabaseError({ operation: 'change.password', cause }),
+      });
+    });
+
     return Authentication.of({
+      changePassword,
       login,
       createSession,
       refresh,

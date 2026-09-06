@@ -63,7 +63,7 @@ for (const [kind, id] of [
   });
 }
 
-test("client form and complete account address", async ({ page, colorScheme }) => {
+test("client form and complete account address", async ({ page, colorScheme }, testInfo) => {
   await openPage(page, `/backoffice/clients/${clientId}/profile`, colorScheme);
   await expect(page.locator(".profile-form")).toBeVisible();
   const summary = page.locator(".account summary");
@@ -81,13 +81,22 @@ test("client form and complete account address", async ({ page, colorScheme }) =
   expect(bounds.x + bounds.width).toBeLessThanOrEqual(page.viewportSize().width);
   await page.locator(".account-details p").click();
   await expect(page.locator(".account-details")).toBeVisible();
-  await page.locator("main h1").click();
+  await page.locator("footer").click({ position: { x: 8, y: 8 } });
   await expect(page.locator(".account-details")).toBeHidden();
   await summary.click();
   await expect(page.locator(".account-details")).toBeVisible();
   await page.keyboard.press("Escape");
   await expect(page.locator(".account-details")).toBeHidden();
   await expect(summary).toBeFocused();
+  await summary.click();
+  await page.getByRole("link", { name: /Changer le mot de passe|Change password/ }).click();
+  await expect(page.locator('.account-security input[type="password"]')).toHaveCount(3);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth)).toBe(false);
+  const audit = await new AxeBuilder({ page })
+    .withTags(["wcag2a", "wcag2aa", "wcag21aa"])
+    .analyze();
+  expect(audit.violations).toEqual([]);
+  await page.screenshot({ path: testInfo.outputPath("account-security.png"), fullPage: true });
 });
 
 test("client signing form stays inside its panel", async ({ page, colorScheme }) => {

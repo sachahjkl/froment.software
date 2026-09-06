@@ -1,4 +1,4 @@
-import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { provideHttpClientTesting, HttpTestingController } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter, Router, UrlTree } from '@angular/router';
@@ -8,6 +8,7 @@ import { BrowserSessionStore } from './browser-session-store';
 import { AUTH_COOKIE_LOCK_MANAGER } from './auth-cookie-lock';
 import { Authentication, administratorGuard, clientGuard } from './authentication';
 import { BootstrapApi } from './bootstrap-api';
+import { authenticationInterceptor } from './authentication-interceptor';
 
 const serialLockManager = (): LockManager => {
   let tail = Promise.resolve<unknown>(undefined);
@@ -21,6 +22,38 @@ const serialLockManager = (): LockManager => {
 };
 
 describe('Authentication', () => {
+  it('clears local sessions after password changes without retrying expired requests', async () => {
+    TestBed.configureTestingModule({
+      providers: [
+        provideHttpClient(withInterceptors([authenticationInterceptor])),
+        provideHttpClientTesting(),
+      ],
+    });
+    const auth = TestBed.inject(Authentication);
+    const http = TestBed.inject(HttpTestingController);
+    const sessions = TestBed.inject(BrowserSessionStore);
+    sessions.set({ mode: 'administrator', expiresAt: Date.now() + 600000 });
+    const payload = { currentPassword: 'current-password-123', newPassword: 'new-password-123' };
+    const result = auth.changePassword(payload);
+    const request = http.expectOne('/api/auth/password');
+    expect(request.request.body).toEqual(payload);
+    request.flush(null, { status: 204, statusText: 'No Content' });
+    await expect(result).resolves.toEqual({ success: true });
+    expect(sessions.mode()).toBeUndefined();
+    const expired = auth.changePassword(payload);
+    http
+      .expectOne('/api/auth/password')
+      .flush(
+        { _tag: 'AuthenticationRequired', code: 'authentication.required' },
+        { status: 401, statusText: 'Unauthorized' },
+      );
+    await expect(expired).resolves.toMatchObject({
+      success: false,
+      code: 'authentication.required',
+    });
+    http.expectNone('/api/auth/refresh');
+    http.verify();
+  });
   it('uses Angular HttpClient for session and login requests', async () => {
     TestBed.configureTestingModule({
       providers: [provideHttpClient(), provideHttpClientTesting()],

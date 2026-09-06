@@ -10,6 +10,8 @@ import {
   type AuthenticationFailureValue,
   type LoginModeValue,
   LoginRequest,
+  PasswordChangeFailure,
+  type PasswordChangeRequestValue,
 } from '@froment/contracts';
 import { Schema } from 'effect';
 import { firstValueFrom } from 'rxjs';
@@ -80,6 +82,18 @@ export class Authentication {
         return false;
       }
     });
+  }
+
+  async changePassword(request: PasswordChangeRequestValue) {
+    try {
+      return await this.cookieLock.run(async () => {
+        await firstValueFrom(this.http.post<void>('/api/auth/password', request));
+        this.sessions.clear();
+        return { success: true as const };
+      });
+    } catch (cause) {
+      return decodeApiFailure({ cause }, PasswordChangeFailure, 'authentication.error');
+    }
   }
 }
 

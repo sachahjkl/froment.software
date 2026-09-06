@@ -343,3 +343,9 @@ export {
   InvoicePaymentCancelRequest,
   type InvoicePaymentCancelRequest as InvoicePaymentCancelRequestValue,
 } from './invoices/payments.js';
+export {
+  PasswordChangeRequest,
+  PasswordChangeRejected,
+  PasswordChangeFailure,
+  type PasswordChangeRequest as PasswordChangeRequestValue,
+} from './authentication/contracts.js';

@@ -459,6 +459,26 @@ export const translations = {
     'document.required': 'champ requis',
     'catalog.title': 'Catalogue',
     'payment.title': 'Règlements',
+    'account.password_title': 'Changer le mot de passe',
+    'account.password_hint':
+      'Le changement ferme toutes vos sessions, y compris celle-ci. Les jetons API restent inchangés.',
+    'account.password_current': 'Mot de passe actuel',
+    'account.password_new': 'Nouveau mot de passe',
+    'account.password_repeat': 'Confirmer le nouveau mot de passe',
+    'account.password_rules':
+      'Utilisez entre 12 et 256 caractères et un mot de passe différent du précédent.',
+    'account.password_mismatch': 'Les deux nouveaux mots de passe doivent être identiques.',
+    'account.password_confirm': 'Changer le mot de passe et fermer toutes vos sessions ?',
+    'account.password_save': 'Changer le mot de passe',
+    'account.password_pending': 'Changement en cours…',
+    'account.password_complete':
+      'Le mot de passe a été changé. Toutes vos sessions sont fermées. Connectez-vous avec le nouveau mot de passe.',
+    'account.password_login': 'Se connecter',
+    'account.password_discard': 'Quitter cette page et abandonner les mots de passe saisis ?',
+    'account.password_retry':
+      'Les champs ont été effacés. Après une erreur réseau, essayez de vous connecter avec le nouveau mot de passe pour vérifier le changement.',
+    'authentication.password_change_rejected':
+      'Le changement a été refusé. Vérifiez le mot de passe actuel et choisissez un nouveau mot de passe différent. Si votre session a changé, reconnectez-vous.',
     'payment.cancel': 'Annuler cette saisie',
     'payment.cancel_dismiss': 'Fermer la correction',
     'payment.cancel_discard_confirm':
@@ -1761,6 +1781,26 @@ export const translations = {
     'document.required': 'required field',
     'catalog.title': 'Catalog',
     'payment.title': 'Payments',
+    'account.password_title': 'Change password',
+    'account.password_hint':
+      'Changing your password closes all your sessions, including this one. API tokens remain unchanged.',
+    'account.password_current': 'Current password',
+    'account.password_new': 'New password',
+    'account.password_repeat': 'Confirm new password',
+    'account.password_rules':
+      'Use 12 to 256 characters and a password that differs from the previous one.',
+    'account.password_mismatch': 'The two new passwords must match.',
+    'account.password_confirm': 'Change your password and close all your sessions?',
+    'account.password_save': 'Change password',
+    'account.password_pending': 'Changing password…',
+    'account.password_complete':
+      'Your password has changed. All your sessions are closed. Sign in with your new password.',
+    'account.password_login': 'Sign in',
+    'account.password_discard': 'Leave this page and discard the entered passwords?',
+    'account.password_retry':
+      'The fields were cleared. After a network error, try signing in with your new password to check the change.',
+    'authentication.password_change_rejected':
+      'The change was rejected. Check your current password and choose a different new password. If your session has changed, sign in again.',
     'payment.cancel': 'Cancel this entry',
     'payment.cancel_dismiss': 'Close correction',
     'payment.cancel_discard_confirm':

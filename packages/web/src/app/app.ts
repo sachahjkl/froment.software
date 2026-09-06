@@ -43,6 +43,8 @@ export class App {
       path !== '/backoffice/login' &&
       path !== '/backoffice/bootstrap';
     this.backOffice.set(authenticated);
-    this.administrator.set(authenticated && path !== '/backoffice/client');
+    this.administrator.set(
+      authenticated && path !== '/backoffice/client' && !path.startsWith('/backoffice/client/'),
+    );
   }
 }

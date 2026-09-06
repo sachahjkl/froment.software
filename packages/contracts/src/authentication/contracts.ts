@@ -22,6 +22,16 @@ export const LoginRequest = Schema.Struct({
   password: AccountPassword,
 });
 export type LoginRequest = typeof LoginRequest.Type;
+export const PasswordChangeRequest = Schema.Struct({
+  currentPassword: AccountPassword,
+  newPassword: AccountPassword,
+});
+export type PasswordChangeRequest = typeof PasswordChangeRequest.Type;
+export class PasswordChangeRejected extends Schema.TaggedError<PasswordChangeRejected>()(
+  'PasswordChangeRejected',
+  { code: Schema.Literal('authentication.password_change_rejected') },
+  { httpApiStatus: 409 },
+) {}
 
 export const BrowserSession = Schema.Struct({
   expiresAt: Schema.Int,
@@ -87,6 +97,13 @@ export class PermissionDenied extends Schema.TaggedError<PermissionDenied>()(
 export const AuthenticationFailure = Schema.Union([
   AuthenticationRejected,
   AuthenticationRateLimited,
+]);
+export const PasswordChangeFailure = Schema.Union([
+  PasswordChangeRejected,
+  AuthenticationRequired,
+  RequestRateLimited,
+  RequestInvalidOrigin,
+  RequestTooLarge,
 ]);
 export type AuthenticationFailure = typeof AuthenticationFailure.Type;
 export type AuthenticationFailureCode = AuthenticationFailure['code'];

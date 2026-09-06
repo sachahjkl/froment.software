@@ -265,6 +265,11 @@ export const apiDocumentation = {
         summary: 'Rafraîchir la connexion',
         description: 'Fait tourner le jeton de rafraîchissement et renvoie un jeton d’accès.',
       },
+      passwordChange: {
+        summary: 'Changer le mot de passe',
+        description:
+          'Vérifie le mot de passe actuel et révoque toutes les sessions dans la transaction de changement. Réservé aux sessions navigateur.',
+      },
       currentAccount: {
         summary: 'Obtenir le compte courant',
         description: 'Renvoie le compte associé au jeton d’accès.',
@@ -548,7 +553,12 @@ export const apiDocumentation = {
       },
       currentAccount: {
         summary: 'Get current account',
-        description: 'Returns the account associated with the access token.',
+        description: 'Returns the authenticated account.',
+      },
+      passwordChange: {
+        summary: 'Change password',
+        description:
+          'Verifies the current password and revokes all sessions in the password change transaction. Requires a browser session.',
       },
       orderPdfRender: {
         summary: 'Render an order PDF',

@@ -157,6 +157,10 @@ La déconnexion révoque la famille courante et supprime le cookie.
 
 Un changement de mot de passe, une désactivation ou un archivage client révoque les sessions concernées.
 
+Chaque authentification vérifie aussi la session SQLite associée au jeton d’accès.
+Une session révoquée ne permet plus d’utiliser ses jetons d’accès déjà émis.
+Le [changement de mot de passe](account-security.md) vérifie le mot de passe actuel avant de fermer toutes les sessions du compte.
+
 Le serveur retourne une erreur uniforme pour une adresse ou un mot de passe invalide.
 
 ## API et jetons d'API
@@ -191,7 +195,7 @@ Une requête d'API exige un jeton d'API Bearer actif avec les permissions requis
 
 Le serveur sélectionne explicitement le type de Bearer par son préfixe et rejette les justificatifs mixtes.
 
-Les routes de connexion, d'amorçage, de renouvellement et de déconnexion exigent l'origine configurée.
+Les routes de connexion, d’amorçage, de renouvellement, de déconnexion et de changement de mot de passe exigent l’origine configurée.
 
 Les deux types de jetons exigent :
 
