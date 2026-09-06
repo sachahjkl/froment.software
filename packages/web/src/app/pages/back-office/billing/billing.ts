@@ -147,9 +147,7 @@ export class Billing {
   }
 
   protected date(value: string): string {
-    return new Intl.DateTimeFormat(this.i18n.language(), { dateStyle: 'medium' }).format(
-      new Date(value),
-    );
+    return formatLocalizedDate(value, this.i18n.language(), { dateStyle: 'medium' });
   }
 
   protected statusLabel(status: InvoiceStatusValue): string {
@@ -227,3 +225,4 @@ export class Billing {
   }
 }
 import { formatMoney } from '@froment/l10n';
+import { formatLocalizedDate } from '@shared/localized-date/localized-date-pipe';

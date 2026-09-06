@@ -16,6 +16,16 @@ describe('LocalizedDatePipe', () => {
     expect(() => formatLocalizedDate('2026-02-30', 'fr')).toThrow(RangeError);
   });
 
+  it('applies time zones to timestamps but never to calendar dates', () => {
+    const options: Intl.DateTimeFormatOptions = {
+      dateStyle: 'medium',
+      timeZone: 'America/Los_Angeles',
+    };
+    expect(formatLocalizedDate('2026-01-01', 'en-US', options)).toBe('Jan 1, 2026');
+    expect(formatLocalizedDate('2026-01-01T00:00:00Z', 'en-US', options)).toBe('Dec 31, 2025');
+    expect(formatLocalizedDate('2024-02-29', 'en-US', options)).toBe('Feb 29, 2024');
+  });
+
   it('uses the explicit locale argument', () => {
     const pipe = new LocalizedDatePipe();
     const options: Intl.DateTimeFormatOptions = { dateStyle: 'long' };

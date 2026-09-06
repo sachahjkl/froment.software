@@ -80,8 +80,7 @@ export class ClientPortal {
   }
 
   protected date(value: string): string {
-    const date = new Date(value.length === 10 ? `${value}T00:00:00Z` : value);
-    return new Intl.DateTimeFormat(this.i18n.language(), { dateStyle: 'medium' }).format(date);
+    return formatLocalizedDate(value, this.i18n.language(), { dateStyle: 'medium' });
   }
 
   protected quoteStatus(status: ClientQuoteSummaryValue['status']): string {
@@ -130,3 +129,4 @@ export class ClientPortal {
   }
 }
 import { formatMoney } from '@froment/l10n';
+import { formatLocalizedDate } from '@shared/localized-date/localized-date-pipe';

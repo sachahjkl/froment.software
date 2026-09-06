@@ -244,9 +244,7 @@ export class Dashboard {
   }
 
   protected date(value: string): string {
-    return new Intl.DateTimeFormat(this.i18n.language(), { dateStyle: 'medium' }).format(
-      new Date(value),
-    );
+    return formatLocalizedDate(value, this.i18n.language(), { dateStyle: 'medium' });
   }
 
   protected updateQuery(input: HTMLInputElement): void {
@@ -280,3 +278,4 @@ export class Dashboard {
   }
 }
 import { formatMoney } from '@froment/l10n';
+import { formatLocalizedDate } from '@shared/localized-date/localized-date-pipe';
