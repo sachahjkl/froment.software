@@ -76,9 +76,7 @@ export class ClientPortal {
   }
 
   protected money(cents: number, currency: string): string {
-    return new Intl.NumberFormat(this.i18n.language(), { style: 'currency', currency }).format(
-      cents / 100,
-    );
+    return formatMoney(cents, this.i18n.language(), currency);
   }
 
   protected date(value: string): string {
@@ -131,3 +129,4 @@ export class ClientPortal {
     return undefined;
   }
 }
+import { formatMoney } from '@froment/l10n';

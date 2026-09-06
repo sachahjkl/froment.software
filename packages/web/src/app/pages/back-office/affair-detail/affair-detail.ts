@@ -62,10 +62,7 @@ export class AffairDetail {
   }
 
   protected money(cents: number): string {
-    return new Intl.NumberFormat(this.i18n.language(), {
-      style: 'currency',
-      currency: 'EUR',
-    }).format(cents / 100);
+    return formatMoney(cents, this.i18n.language(), 'EUR');
   }
 
   protected date(value: string): string {
@@ -269,3 +266,4 @@ export class AffairDetail {
     };
   }
 }
+import { formatMoney } from '@froment/l10n';

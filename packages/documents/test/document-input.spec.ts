@@ -1,5 +1,4 @@
 import {
-  formatMoney,
   prepareInvoiceDocument,
   prepareOrderDocument,
   prepareQuoteDocument,
@@ -10,6 +9,7 @@ import {
   type QuoteRenderSnapshotValue,
 } from '@froment/contracts';
 import { describe, expect, it } from 'vitest';
+import { formatMoney } from '@froment/l10n';
 
 const line = {
   id: '01ARZ3NDEKTSV4RRFFQ69G5FAX',

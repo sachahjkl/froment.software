@@ -8,7 +8,7 @@ import {
 import { documentText } from '@froment/l10n';
 import { Schema } from 'effect';
 
-import { formatMoney } from './format-money.js';
+import { formatMoney } from '@froment/l10n';
 
 const TextPair = Schema.Tuple([Schema.String, Schema.String]);
 const DocumentLine = Schema.Struct({
