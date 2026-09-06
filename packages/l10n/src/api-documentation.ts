@@ -1,4 +1,5 @@
 import type { Language } from './language.js';
+import { teamDocumentation } from './team.js';
 import { passkeyDocumentation } from './passkeys.js';
 import { emailDraftDocumentation } from './email-drafts.js';
 import { emailTemplateDocumentation } from './email-templates.js';
@@ -36,6 +37,7 @@ export const apiDocumentation = {
     },
     groups: {
       passkeys: passkeyDocumentation.fr.group,
+      team: teamDocumentation.fr.group,
       emailDrafts: emailDraftDocumentation.fr.group,
       emailTemplates: emailTemplateDocumentation.fr.group,
       reminders: reminderDocumentation.fr.group,
@@ -103,6 +105,7 @@ export const apiDocumentation = {
       ...emailTemplateDocumentation.fr.operations,
       ...reminderDocumentation.fr.operations,
       ...providerActionDocumentation.fr,
+      ...teamDocumentation.fr.operations,
       bankPaymentList: {
         summary: 'Lister les soldes rapprochables des règlements',
         description:
@@ -414,6 +417,7 @@ export const apiDocumentation = {
     groups: {
       clients: { title: 'Clients', description: 'Client records and lifecycle.' },
       passkeys: passkeyDocumentation.en.group,
+      team: teamDocumentation.en.group,
       emailDrafts: emailDraftDocumentation.en.group,
       emailTemplates: emailTemplateDocumentation.en.group,
       reminders: reminderDocumentation.en.group,
@@ -478,6 +482,7 @@ export const apiDocumentation = {
       ...emailTemplateDocumentation.en.operations,
       ...reminderDocumentation.en.operations,
       ...providerActionDocumentation.en,
+      ...teamDocumentation.en.operations,
       bankPaymentList: {
         summary: 'List available payment balances for reconciliation',
         description:

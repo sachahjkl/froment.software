@@ -3,6 +3,10 @@ import { Schema } from 'effect';
 import { Ulid } from '../identifiers.js';
 
 export const AuditActions = [
+  'team.invited',
+  'team.invitation-cancelled',
+  'team.joined',
+  'team.member-updated',
   'administrator.bootstrapped',
   'api.token-created',
   'api.token-revoked',

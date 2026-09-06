@@ -1,0 +1,89 @@
+import { expect } from "@playwright/test";
+import AxeBuilder from "@axe-core/playwright";
+import { clientId } from "./fixtures.mjs";
+
+export async function checkTeam(page, testInfo) {
+  const token = "T".repeat(43);
+  const state = { members: [], invitations: [] };
+  await page.route("**/api/team**", async (route) => {
+    const path = new URL(route.request().url()).pathname;
+    if (path === "/api/team") return route.fulfill({ json: state });
+    const body = route.request().postDataJSON();
+    if (path === "/api/team/invitations") {
+      const invitation = {
+        id: body.requestId,
+        email: body.email,
+        displayName: body.displayName,
+        profile: body.profile,
+        createdAt: Date.now(),
+        expiresAt: Date.now() + 604800000,
+        acceptedAt: null,
+        cancelledAt: null,
+      };
+      state.invitations.push(invitation);
+      return route.fulfill({
+        json: { invitation, url: `${new URL(page.url()).origin}/backoffice/join#${token}` },
+      });
+    }
+    if (path === "/api/team/accept") {
+      expect(body.token).toBe(token);
+      const invitation = state.invitations[0];
+      invitation.acceptedAt = Date.now();
+      state.members.push({
+        id: clientId,
+        email: invitation.email,
+        displayName: invitation.displayName,
+        profile: invitation.profile,
+        version: 1,
+        disabledAt: null,
+      });
+      return route.fulfill({ status: 204 });
+    }
+    if (path === `/api/team/members/${clientId}`) {
+      const member = state.members[0];
+      expect(body.expectedVersion).toBe(member.version);
+      member.version++;
+      member.profile = body.profile;
+      member.disabledAt = body.disabled ? Date.now() : null;
+      return route.fulfill({ status: 204 });
+    }
+    if (path.endsWith("/cancel")) {
+      state.invitations.find((item) => path.includes(item.id)).cancelledAt = Date.now();
+      return route.fulfill({ status: 204 });
+    }
+    throw new Error(`Unexpected team request: ${path}`);
+  });
+  await page.goto("/backoffice/configuration/equipe");
+  await page.locator("app-team form input").nth(0).fill("Team accountant");
+  await page.locator("app-team form input").nth(1).fill("accountant@example.test");
+  await page.locator('app-team form button[type="submit"]').click();
+  const link = page.locator("app-team input[readonly]");
+  await expect(link).toHaveValue(new RegExp(`#${token}$`));
+  const url = await link.inputValue();
+  expect(
+    (await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21aa"]).analyze())
+      .violations,
+  ).toEqual([]);
+  await page.getByRole("button", { name: /conservé le lien|saved the link/ }).click();
+  await page.goto(url);
+  await expect(page).toHaveURL(/\/backoffice\/join$/);
+  for (const field of await page.locator("app-team-join input").all())
+    await field.fill("invitation-password-123");
+  expect(
+    (await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21aa"]).analyze())
+      .violations,
+  ).toEqual([]);
+  await page.locator('app-team-join button[type="submit"]').click();
+  await expect(page.locator('app-team-join [role="status"]')).toContainText(
+    /Compte créé|Account created/,
+  );
+  await page.goto("/backoffice/configuration/equipe");
+  await page.getByRole("button", { name: /Désactiver l’accès|Disable access/ }).click();
+  await page.getByRole("alertdialog").locator("button").last().click();
+  await expect(page.getByRole("button", { name: /Réactiver l’accès|Enable access/ })).toBeVisible();
+  await page.getByRole("button", { name: /Changer de profil|Change profile/ }).click();
+  await page.getByRole("alertdialog").locator("button").last().click();
+  await expect(page.locator("app-team ul").first()).toContainText(/Collaborateur|Collaborator/);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth)).toBe(false);
+  await page.screenshot({ path: testInfo.outputPath("team.png"), fullPage: true });
+}

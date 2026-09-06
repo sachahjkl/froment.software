@@ -1,0 +1,37 @@
+<section class="notice-flow" aria-labelledby="join-title">
+  <h1 id="join-title">{{ i18n.t('team.join') }}</h1>
+  <p>{{ i18n.t('team.joinHint') }}</p>
+  @if (error(); as error) {
+  <p appNotice variant="danger" role="alert">{{ i18n.t(error) }}</p>
+  } @if (accepted()) {
+  <p appNotice variant="success" role="status">{{ i18n.t('team.joined') }}</p>
+  <a routerLink="/backoffice/login">{{ i18n.t('team.login') }}</a>
+  } @else {
+  <form (submit)="accept($event)">
+    <label
+      >{{ i18n.t('team.password') }}<input
+        type="password"
+        class="input"
+        autocomplete="new-password"
+        [formField]="joinForm.password"
+        aria-describedby="password-hint"
+    /></label>
+    <p id="password-hint">{{ i18n.t('team.passwordHint') }}</p>
+    <label
+      >{{ i18n.t('team.confirmPassword') }}<input
+        type="password"
+        class="input"
+        autocomplete="new-password"
+        [formField]="joinForm.confirmation"
+    /></label>
+    <button
+      appButton
+      variant="primary"
+      type="submit"
+      [disabled]="busy() || !ready() || joinForm().invalid()"
+    >
+      {{ i18n.t('team.accept') }}
+    </button>
+  </form>
+  }
+</section>

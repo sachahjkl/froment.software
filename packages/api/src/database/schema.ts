@@ -66,6 +66,44 @@ export const passwordCredentials = sqliteTable(
   ],
 );
 
+export const teamMembers = sqliteTable(
+  'team_members',
+  {
+    userId: text('user_id')
+      .primaryKey()
+      .references(() => users.id)
+      .notNull(),
+    profile: text().notNull(),
+    version: integer().notNull(),
+  },
+  (table) => [
+    check('team_member_profile_check', sql`${table.profile} in ('collaborator', 'accountant')`),
+    check('team_member_version_check', sql`${table.version} > 0`),
+  ],
+);
+
+export const teamInvitations = sqliteTable(
+  'team_invitations',
+  {
+    id: text().primaryKey().notNull(),
+    email: text().notNull(),
+    displayName: text('display_name').notNull(),
+    profile: text().notNull(),
+    tokenHash: text('token_hash').notNull().unique(),
+    createdByUserId: text('created_by_user_id')
+      .notNull()
+      .references(() => users.id),
+    createdAt: integer('created_at').notNull(),
+    expiresAt: integer('expires_at').notNull(),
+    cancelledAt: integer('cancelled_at'),
+    acceptedAt: integer('accepted_at'),
+  },
+  (table) => [
+    check('team_invitation_profile_check', sql`${table.profile} in ('collaborator', 'accountant')`),
+    index('team_invitation_email_index').on(table.email),
+  ],
+);
+
 export const emailTemplates = sqliteTable(
   'email_templates',
   {

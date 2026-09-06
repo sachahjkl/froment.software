@@ -1,0 +1,32 @@
+:host {
+  display: block;
+}
+.team-page {
+  display: grid;
+  gap: var(--space-6);
+  padding: var(--page-header-y) var(--page-x);
+}
+.team-link {
+  display: grid;
+  gap: var(--space-4);
+}
+form,
+label,
+ul {
+  display: grid;
+  gap: 0.75rem;
+}
+form {
+  max-width: 38rem;
+}
+ul {
+  list-style: none;
+  padding: 0;
+}
+li {
+  overflow-wrap: anywhere;
+  display: grid;
+  gap: var(--space-3);
+  justify-items: start;
+  padding: var(--panel-padding);
+}

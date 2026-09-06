@@ -1,0 +1,116 @@
+<section class="team-page" aria-labelledby="team-title">
+  <h2 id="team-title">{{ i18n.t('team.title') }}</h2>
+  <p>{{ i18n.t('team.intro') }}</p>
+  <p appNotice variant="info">{{ i18n.t('team.profiles') }}</p>
+  <p #result tabindex="-1" role="status">@if (saved()) { {{ i18n.t('team.saved') }} }</p>
+  @if (error(); as error) {
+  <p appNotice variant="danger" role="alert">{{ i18n.t(error) }}</p>
+  }
+  <button appButton type="button" [disabled]="busy() || loading()" (click)="load()">
+    {{ i18n.t('team.reload') }}
+  </button>
+  <form (submit)="invite($event)">
+    <label
+      >{{ i18n.t('team.name') }}<input
+        class="input"
+        [formField]="invitationForm.displayName"
+        autocomplete="name"
+    /></label>
+    <label
+      >{{ i18n.t('team.email') }}<input
+        class="input"
+        type="email"
+        [formField]="invitationForm.email"
+        autocomplete="email"
+    /></label>
+    <label
+      >{{ i18n.t('team.profile') }}<select class="select" [formField]="invitationForm.profile">
+        <option [value]="'accountant'">{{ i18n.t('team.accountant') }}</option>
+        <option [value]="'collaborator'">{{ i18n.t('team.collaborator') }}</option>
+      </select></label
+    >
+    <button
+      appButton
+      variant="primary"
+      type="submit"
+      [disabled]="busy() || loading() || invitationForm().invalid()"
+    >
+      {{ i18n.t('team.invite') }}
+    </button>
+  </form>
+  @if (link()) {
+  <section class="team-link" aria-labelledby="team-link-title">
+    <h3 id="team-link-title">{{ i18n.t('team.link') }}</h3>
+    <p appNotice variant="warning">{{ i18n.t('team.linkHint') }}</p>
+    <label
+      >{{ i18n.t('team.link') }}<input
+        #invitationLink
+        class="input"
+        readonly
+        [value]="link()"
+        (focus)="invitationLink.select()"
+    /></label>
+    <button appButton type="button" (click)="dismissLink()">{{ i18n.t('team.linkSaved') }}</button>
+  </section>
+  }
+  <h3>{{ i18n.t('team.members') }}</h3>
+  <ul>
+    @for (member of data().members; track member.id) {
+    <li class="ds-panel">
+      <h4>{{ member.displayName }}</h4>
+      <p>{{ member.email }}</p>
+      <p>
+        {{ i18n.t(member.profile === 'accountant' ? 'team.accountant' : 'team.collaborator') }} — {{
+        i18n.t(member.disabledAt === null ? 'team.active' : 'team.disabled') }}
+      </p>
+      <button
+        appButton
+        type="button"
+        [disabled]="busy()"
+        (click)="update(member, member.profile, member.disabledAt === null)"
+      >
+        {{ i18n.t(member.disabledAt === null ? 'team.disable' : 'team.enable') }}
+      </button>
+      <button
+        appButton
+        type="button"
+        [disabled]="busy()"
+        (click)="update(member, member.profile === 'accountant' ? 'collaborator' : 'accountant', member.disabledAt !== null)"
+      >
+        {{ i18n.t('team.changeProfile') }}
+      </button>
+    </li>
+    } @empty {
+    <li>{{ i18n.t('team.empty') }}</li>
+    }
+  </ul>
+  <h3>{{ i18n.t('team.invitations') }}</h3>
+  <ul>
+    @for (invitation of data().invitations; track invitation.id) {
+    <li class="ds-panel">
+      <h4>{{ invitation.displayName }}</h4>
+      <p>{{ invitation.email }}</p>
+      <p>
+        {{ i18n.t(invitation.profile === 'accountant' ? 'team.accountant' : 'team.collaborator') }}
+      </p>
+      <p>
+        {{ i18n.t('team.expires') }} {{ date(invitation.expiresAt) | localizedDate: i18n.language():
+        { dateStyle: 'medium', timeStyle: 'short' } }}
+      </p>
+      @if (invitation.acceptedAt !== null) {
+      <p>{{ i18n.t('team.accepted') }}</p>
+      } @else if (invitation.cancelledAt !== null) {
+      <p>{{ i18n.t('team.cancelled') }}</p>
+      } @else if (invitation.expiresAt <= now()) {
+      <p>{{ i18n.t('team.expired') }}</p>
+      } @else {
+      <button appButton type="button" [disabled]="busy()" (click)="cancel(invitation.id)">
+        {{ i18n.t('team.cancel') }}
+      </button>
+      }
+    </li>
+    } @empty {
+    <li>{{ i18n.t('team.empty') }}</li>
+    }
+  </ul>
+</section>

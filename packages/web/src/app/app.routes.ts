@@ -13,6 +13,13 @@ const tabRoutes = (defaultPath: string, panel: string, paths: readonly string[])
 
 export const routes: Routes = [
   {
+    path: 'backoffice/join',
+    loadComponent: () =>
+      import('./pages/back-office/team/team-join').then((module) => module.TeamJoin),
+    canDeactivate: [unsavedChangesGuard],
+    data: { titleKey: 'team.join', robots: 'noindex, nofollow' },
+  },
+  {
     path: '',
     component: HomeComponent,
     data: { titleKey: 'page.home', descriptionKey: 'page.description.home' },
@@ -269,6 +276,11 @@ export const routes: Routes = [
     },
     children: [
       { path: '', redirectTo: 'entreprise', pathMatch: 'full' },
+      {
+        path: 'equipe',
+        loadComponent: () => import('./pages/back-office/team/team').then((module) => module.Team),
+        canDeactivate: [unsavedChangesGuard],
+      },
       {
         path: 'services',
         loadComponent: () =>

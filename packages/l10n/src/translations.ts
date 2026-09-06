@@ -1,4 +1,5 @@
 import { webUiText } from './web-ui-text.js';
+import { teamText } from './team.js';
 import { passkeyText } from './passkeys.js';
 import { emailDraftText } from './email-drafts.js';
 import { integrationRetryText } from './integration-retries.js';
@@ -8,6 +9,7 @@ import { emailTemplateText } from './email-templates.js';
 export const translations = {
   fr: {
     ...webUiText.fr,
+    ...teamText.fr,
     ...passkeyText.fr,
     ...emailDraftText.fr,
     ...integrationRetryText.fr,
@@ -1515,6 +1517,7 @@ export const translations = {
   },
   en: {
     ...webUiText.en,
+    ...teamText.en,
     ...passkeyText.en,
     ...emailDraftText.en,
     ...integrationRetryText.en,

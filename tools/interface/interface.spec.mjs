@@ -1,6 +1,7 @@
 import { test, expect } from "@playwright/test";
 import { scalarDocumentation } from "../../packages/api/src/documentation/scalar.ts";
 import AxeBuilder from "@axe-core/playwright";
+import { checkTeam } from "./team.mjs";
 import {
   accountEmail,
   clientId,
@@ -422,5 +423,6 @@ test("client signing form stays inside its panel", async ({ page, colorScheme },
   await expect(page.getByRole("main")).toHaveCount(1);
   await expect(page.locator(".markdown-alert-note")).toContainText("bank.read");
   await page.screenshot({ path: testInfo.outputPath("scalar.png"), fullPage: true });
+  await checkTeam(page, testInfo);
 });
 import { checkPasskeys } from "./passkeys.mjs";
