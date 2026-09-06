@@ -99,6 +99,23 @@ for (const [kind, id] of [
 }
 
 test("client form and complete account address", async ({ page, colorScheme }, testInfo) => {
+  await mockApi(page);
+  await page.route("**/api/auth/refresh", (route) =>
+    route.fulfill({ status: 401, json: { code: "authentication.required" } }),
+  );
+  await page.goto("/backoffice/login");
+  await page.evaluate((theme) => {
+    document.documentElement.dataset.theme = theme;
+  }, colorScheme);
+  await expect(page.locator(".login-page form")).toBeVisible();
+  await expect(page.locator(".login-page .ds-panel")).toHaveCount(0);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth)).toBe(false);
+  const loginAudit = await new AxeBuilder({ page })
+    .withTags(["wcag2a", "wcag2aa", "wcag21aa"])
+    .analyze();
+  expect(loginAudit.violations).toEqual([]);
+  await page.screenshot({ path: testInfo.outputPath("login.png"), fullPage: true });
+  await page.unroute("**/api/auth/refresh");
   await openPage(page, `/backoffice/clients/${clientId}/profile`, colorScheme);
   await expect(page.locator(".profile-form")).toBeVisible();
   const summary = page.locator(".account summary");
@@ -132,7 +149,42 @@ test("client form and complete account address", async ({ page, colorScheme }, t
     .analyze();
   expect(audit.violations).toEqual([]);
   await page.screenshot({ path: testInfo.outputPath("account-security.png"), fullPage: true });
+  for (const [tab, selector] of [
+    ["entreprise", ".issuer-page"],
+    ["conditions", ".presets-page"],
+  ]) {
+    await page.goto(`/backoffice/configuration/${tab}`);
+    await expect(page.locator(`${selector} form`)).toBeVisible();
+    for (const surface of [selector, `${selector} form`]) {
+      const style = await page.locator(surface).evaluate((element) => {
+        const computed = getComputedStyle(element);
+        return {
+          background: computed.backgroundColor,
+          border: computed.borderTopWidth,
+          shadow: computed.boxShadow,
+          padding: computed.paddingLeft,
+        };
+      });
+      expect(style.background).toBe("rgba(0, 0, 0, 0)");
+      expect(style.border).toBe("0px");
+      expect(style.shadow).toBe("none");
+      if (surface.endsWith("form")) expect(style.padding).toBe("0px");
+    }
+    expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth)).toBe(
+      false,
+    );
+    await page.screenshot({ path: testInfo.outputPath(`${tab}.png`), fullPage: true });
+  }
   await page.goto("/backoffice/configuration/services");
+  const serviceSpacing = await page
+    .locator("app-integrations section > [appNotice]")
+    .first()
+    .evaluate(
+      (notice) =>
+        notice.getBoundingClientRect().top -
+        notice.previousElementSibling.getBoundingClientRect().bottom,
+    );
+  expect(serviceSpacing).toBeGreaterThanOrEqual(16);
   await expect(page.locator(".providers li")).toHaveCount(5);
   await expect(page.locator(".operations li")).toHaveCount(0);
   await page.locator(".providers button").first().focus();

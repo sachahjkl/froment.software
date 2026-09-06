@@ -1,27 +1,40 @@
 <section class="login-page" aria-labelledby="back-office-title">
-  <div class="login-panel ds-panel">
+  <header class="login-intro">
     <h1 id="back-office-title">{{ i18n.t('backOffice.title') }}</h1>
-    <p>{{ i18n.t('backOffice.intro') }}</p>
-    <form (submit)="submit($event, email.value, password.value)">
-      <label for="back-office-email"> {{ i18n.t('backOffice.email') }} </label>
-      <input
-        #email
-        id="back-office-email"
-        class="input"
-        type="email"
-        autocomplete="username"
-        required
-        autofocus
-      />
-      <label for="back-office-password">{{ i18n.t('backOffice.password') }}</label>
-      <input
-        #password
-        id="back-office-password"
-        class="input"
-        type="password"
-        autocomplete="current-password"
-        required
-      />
+    <p class="login-description">{{ i18n.t('login.description') }}</p>
+    <p class="login-access">{{ i18n.t('login.access') }}</p>
+  </header>
+  <div class="login-fields">
+    <h2 id="login-form-title">{{ i18n.t('login.heading') }}</h2>
+    <p id="login-hint">{{ i18n.t('backOffice.intro') }}</p>
+    <form
+      aria-labelledby="login-form-title"
+      aria-describedby="login-hint"
+      (submit)="submit($event, email.value, password.value)"
+    >
+      <div class="field">
+        <label for="back-office-email"> {{ i18n.t('backOffice.email') }} </label>
+        <input
+          #email
+          id="back-office-email"
+          class="input"
+          type="email"
+          autocomplete="username"
+          required
+          autofocus
+        />
+      </div>
+      <div class="field">
+        <label for="back-office-password">{{ i18n.t('backOffice.password') }}</label>
+        <input
+          #password
+          id="back-office-password"
+          class="input"
+          type="password"
+          autocomplete="current-password"
+          required
+        />
+      </div>
       @if (error(); as errorKey) {
       <p class="error" role="alert">{{ i18n.t(errorKey) }}</p>
       }

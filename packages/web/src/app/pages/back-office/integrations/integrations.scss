@@ -5,6 +5,9 @@
 h2 {
   font-size: var(--text-xl);
 }
+section > * + * {
+  margin-top: var(--space-6);
+}
 h3 {
   font-size: var(--text-base);
 }

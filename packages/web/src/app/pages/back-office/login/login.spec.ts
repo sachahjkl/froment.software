@@ -33,6 +33,9 @@ describe('Login', () => {
     const fixture = harness.fixture;
     const root: HTMLElement = fixture.nativeElement;
     expect(root.querySelector('.eyebrow')).toBeNull();
+    expect(root.querySelector('.ds-panel')).toBeNull();
+    expect(root.querySelector('.login-intro')).not.toBeNull();
+    expect(root.querySelector('form')?.getAttribute('aria-labelledby')).toBe('login-form-title');
     expect(root.querySelector('h1')?.textContent).toContain('Back office');
     const bootstrapLink = () => root.querySelector<HTMLAnchorElement>('.bootstrap-link');
     expect(root.querySelector('.bootstrap-slot')).not.toBeNull();

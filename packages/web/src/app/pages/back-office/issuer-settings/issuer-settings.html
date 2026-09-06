@@ -1,9 +1,8 @@
 <section class="issuer-page" aria-labelledby="issuer-title">
   <header>
     <h2 id="issuer-title">{{ i18n.t('backOffice.issuer.title') }}</h2>
+    <p class="intro">{{ i18n.t('backOffice.issuer.intro') }}</p>
   </header>
-
-  <p class="intro">{{ i18n.t('backOffice.issuer.intro') }}</p>
 
   @if (loading()) {
   <p aria-live="polite">{{ i18n.t('backOffice.issuer.loading') }}</p>

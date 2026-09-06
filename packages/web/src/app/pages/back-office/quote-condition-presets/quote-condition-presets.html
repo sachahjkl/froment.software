@@ -1,9 +1,8 @@
 <section class="presets-page" aria-labelledby="presets-title">
   <header>
     <h2 id="presets-title">{{ i18n.t('backOffice.conditionPresets.title') }}</h2>
+    <p class="intro">{{ i18n.t('backOffice.conditionPresets.intro') }}</p>
   </header>
-
-  <p class="intro">{{ i18n.t('backOffice.conditionPresets.intro') }}</p>
 
   <form (submit)="save($event)">
     <label class="field" for="preset-name">

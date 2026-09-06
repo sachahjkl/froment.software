@@ -3,6 +3,9 @@ import { webUiText } from './web-ui-text.js';
 export const translations = {
   fr: {
     ...webUiText.fr,
+    'login.heading': 'Connexion',
+    'login.description': 'Vos documents et le suivi de vos règlements, au même endroit.',
+    'login.access': 'Votre compte donne accès aux documents et aux actions qui vous concernent.',
     'bank.history': 'Historique des rapprochements',
     'bank.historyHint':
       'Les 100 derniers rapprochements, avec dates, identifiants des auteurs et motifs de dissociation.',
@@ -1479,6 +1482,9 @@ export const translations = {
   },
   en: {
     ...webUiText.en,
+    'login.heading': 'Sign in',
+    'login.description': 'Your documents and payment records, in one place.',
+    'login.access': 'Your account gives you access to the documents and actions available to you.',
     'bank.history': 'Reconciliation history',
     'bank.historyHint':
       'The latest 100 matches, with dates, actor identifiers and reasons for removal.',

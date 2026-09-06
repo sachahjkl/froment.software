@@ -3,6 +3,8 @@
 }
 
 .issuer-page {
+  display: grid;
+  gap: var(--space-6);
   padding: var(--page-header-y) var(--page-x);
 }
 
@@ -14,12 +16,6 @@ h2 {
   max-width: var(--measure);
   margin-top: var(--space-2);
   color: var(--color-muted);
-}
-
-form,
-.notice,
-[aria-live] {
-  margin-top: var(--space-6);
 }
 
 form {
