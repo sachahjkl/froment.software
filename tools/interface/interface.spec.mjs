@@ -143,6 +143,14 @@ test("client form and complete account address", async ({ page, colorScheme }, t
     document.documentElement.dataset.theme = theme;
   }, colorScheme);
   await expect(page.locator(".login-page form")).toBeVisible();
+  const mobileMenu = page.locator("app-site-header .menu-trigger");
+  if (await mobileMenu.isVisible()) await mobileMenu.click();
+  const language = page.locator("app-site-header app-language-selector select:visible");
+  const theme = page.locator("app-site-header app-theme-toggle button");
+  await expect(language).toHaveAccessibleName(/Langue|Language/);
+  await expect(language.locator("..").locator("span")).toHaveClass("sr-only");
+  expect((await language.boundingBox()).height).toBe((await theme.boundingBox()).height);
+  if (await mobileMenu.isVisible()) await mobileMenu.click();
   await expect(page.locator(".login-page .ds-panel")).toHaveCount(0);
   await expect(page.locator("main")).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
   await expect(page.locator("main")).toHaveCSS("box-shadow", "none");
