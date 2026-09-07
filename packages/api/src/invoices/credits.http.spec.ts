@@ -1,5 +1,6 @@
 import { InvoiceCredits, InvoiceDetail, InvoiceList, ClientInvoiceList } from '@froment/contracts';
-import { Schema } from 'effect';
+import { DateTime, Schema } from 'effect';
+import { invoiceIssueDate } from './invoices.js';
 import Sqlite from 'better-sqlite3';
 import { randomUUID, createHash } from 'node:crypto';
 import { expect, it } from 'vitest';
@@ -160,10 +161,14 @@ it('issues one immutable full credit, preserves PDFs, stops collection, and reco
         })
       ).status,
     ).toBe(409);
+    if (state.creditNote === null) throw new Error('credit.test.note_missing');
     const refund = {
       requestId: randomUUID(),
       amountCents: 6000,
-      refundedOn: '2026-09-06',
+      refundedOn: invoiceIssueDate(
+        Date.parse(state.creditNote.issuedAt),
+        DateTime.zoneMakeNamedUnsafe('Europe/Paris'),
+      ),
       reference: 'REFUND',
     };
     expect((await post(`${path}/refunds`, { ...refund, refundedOn: '2099-01-01' })).status).toBe(

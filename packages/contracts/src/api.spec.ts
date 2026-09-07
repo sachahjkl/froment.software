@@ -58,7 +58,12 @@ describe('API contracts', () => {
           true,
         );
         expect(
-          operations.find((operation) => operation?.operationId === endpoint.identifier),
+          operations.find(
+            (operation) =>
+              operation !== undefined &&
+              'operationId' in operation &&
+              operation.operationId === endpoint.identifier,
+          ),
         ).toMatchObject({
           'x-required-permissions': [...required.value],
         });
