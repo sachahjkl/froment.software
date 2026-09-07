@@ -67,6 +67,10 @@ export async function checkTeam(page, testInfo) {
   await page.getByRole("button", { name: /conservé le lien|saved the link/ }).click();
   await page.goto(url);
   await expect(page).toHaveURL(/\/backoffice\/join$/);
+  const introduction = await page.locator("app-team-join h1 + p").boundingBox();
+  const form = await page.locator("app-team-join form").boundingBox();
+  expect(form.y - introduction.y - introduction.height).toBeGreaterThanOrEqual(24);
+  await page.screenshot({ path: testInfo.outputPath("team-join.png"), fullPage: true });
   for (const field of await page.locator("app-team-join input").all())
     await field.fill("invitation-password-123");
   expect(
