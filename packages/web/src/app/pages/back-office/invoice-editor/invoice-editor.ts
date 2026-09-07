@@ -102,6 +102,7 @@ const errorKeys = {
 } as const satisfies Record<InvoiceErrorCode, TranslationKey>;
 
 @Component({
+  host: { class: 'page-container' },
   selector: 'app-invoice-editor',
   imports: [Button, DetailRow, DocumentIssues, FormField, Icon, Notice, OutcomePanel, RouterLink],
   templateUrl: './invoice-editor.html',

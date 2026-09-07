@@ -9,6 +9,7 @@ import { Notice } from '@shared/notice/notice';
 type PageState = 'loading' | 'available' | 'unavailable' | 'error';
 
 @Component({
+  host: { class: 'page-container' },
   selector: 'app-bootstrap',
   imports: [Button, Notice, FormField, RouterLink],
   templateUrl: './bootstrap.html',

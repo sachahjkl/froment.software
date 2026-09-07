@@ -29,6 +29,7 @@ type PageState = 'loading' | 'ready' | 'error';
 type BillingTab = InvoiceStatusValue | 'all';
 
 @Component({
+  host: { class: 'page-container' },
   selector: 'app-billing',
   imports: [
     Badge,

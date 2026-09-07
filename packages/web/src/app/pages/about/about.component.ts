@@ -4,6 +4,7 @@ import { AnchorLink } from '@shared/anchor-link/anchor-link';
 import { ContactActions } from '@shared/contact-actions/contact-actions';
 
 @Component({
+  host: { class: 'page-container' },
   selector: 'app-about',
   standalone: true,
   imports: [AnchorLink, ContactActions],

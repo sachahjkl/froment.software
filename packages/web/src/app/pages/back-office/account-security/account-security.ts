@@ -20,6 +20,7 @@ import { AccountSessions } from './account-sessions';
 import { AccountPasskeys } from './account-passkeys';
 
 @Component({
+  host: { class: 'page-container' },
   selector: 'app-account-security',
   imports: [AccountPasskeys, AccountSessions, Button, FormField, Notice, RouterLink],
   templateUrl: './account-security.html',

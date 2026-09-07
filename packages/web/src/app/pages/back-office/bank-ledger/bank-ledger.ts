@@ -41,7 +41,7 @@ import { LocalizedDatePipe } from '@shared/localized-date/localized-date-pipe';
   templateUrl: './bank-ledger.html',
   styleUrl: './bank-ledger.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  host: { '(window:beforeunload)': 'beforeUnload($event)' },
+  host: { class: 'page-container', '(window:beforeunload)': 'beforeUnload($event)' },
 })
 export class BankLedger {
   protected readonly i18n = inject(I18nService);

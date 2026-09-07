@@ -41,6 +41,7 @@ import { ReminderSchedules } from './reminder-schedules';
 const blank = () => ({ recipient: '', reference: '', subject: '', body: '' });
 
 @Component({
+  host: { class: 'page-container' },
   imports: [Button, Notice, FormField, LocalizedDatePipe, ReminderSchedules],
   changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-emails',

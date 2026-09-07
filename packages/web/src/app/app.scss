@@ -39,10 +39,6 @@ main {
   max-width: var(--layout-max);
   margin-block: var(--shell-gutter);
   margin-inline: auto;
-  border: 1px solid var(--color-line);
-  border-radius: var(--radius-md);
-  background: var(--color-surface);
-  box-shadow: var(--shadow-page);
   outline: none;
 }
 
@@ -57,9 +53,5 @@ main {
     width: 100%;
     max-width: none;
     margin: 0;
-    border: 0;
-    border-radius: 0;
-    background: white;
-    box-shadow: none;
   }
 }

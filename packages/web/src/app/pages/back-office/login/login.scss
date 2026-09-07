@@ -75,7 +75,6 @@ form {
 @media (min-width: 56rem) {
   .login-page {
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-    min-height: 32rem;
     gap: var(--space-12);
     padding-block: var(--space-12);
   }

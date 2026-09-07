@@ -64,6 +64,7 @@ interface SearchResult extends SearchItem {
 const noMatches: FuseResultMatch['indices'] = [];
 
 @Component({
+  host: { class: 'page-container' },
   selector: 'app-dashboard',
   imports: [Badge, Button, Notice, RouterLink, ScrollingModule, SearchHighlight],
   providers: [SearchHighlightRegistry],

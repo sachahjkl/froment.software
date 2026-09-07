@@ -64,6 +64,7 @@ const emptyClient = () => ({
 });
 
 @Component({
+  host: { class: 'page-container' },
   selector: 'app-client-detail',
   imports: [
     Badge,

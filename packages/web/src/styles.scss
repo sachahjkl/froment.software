@@ -54,6 +54,24 @@ body {
   text-rendering: optimizeLegibility;
 }
 
+.page-container {
+  display: block;
+  min-width: 0;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-page);
+}
+
+@media print {
+  .page-container {
+    border: 0;
+    border-radius: 0;
+    background: white;
+    box-shadow: none;
+  }
+}
+
 app-root {
   display: block;
   min-height: 100dvh;

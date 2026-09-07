@@ -36,6 +36,7 @@ import { Notice } from '@shared/notice/notice';
 import { LocalizedDatePipe } from '@shared/localized-date/localized-date-pipe';
 
 @Component({
+  host: { class: 'page-container' },
   imports: [Button, Notice, FormField, LocalizedDatePipe, RouterLink],
   changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-banking',

@@ -19,6 +19,7 @@ type ButtonSample = {
 };
 
 @Component({
+  host: { class: 'page-container' },
   selector: 'app-design',
   standalone: true,
   imports: [

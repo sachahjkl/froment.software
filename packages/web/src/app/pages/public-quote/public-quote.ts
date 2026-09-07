@@ -36,6 +36,7 @@ import { Tabs, type TabItem } from '@shared/tabs/tabs';
 import { TabLayout, TabPanel } from '@shared/tabs/tab-panel';
 
 @Component({
+  host: { class: 'page-container' },
   selector: 'app-public-quote',
   imports: [Button, FormField, Notice, RouterOutlet, StatusBlock, TabLayout, TabPanel, Tabs],
   templateUrl: './public-quote.html',

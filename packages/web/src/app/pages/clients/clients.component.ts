@@ -3,6 +3,7 @@ import { I18nService, TranslationKey } from '@app/i18n.service';
 import { AnchorLink } from '@shared/anchor-link/anchor-link';
 
 @Component({
+  host: { class: 'page-container' },
   selector: 'app-clients',
   standalone: true,
   imports: [AnchorLink],

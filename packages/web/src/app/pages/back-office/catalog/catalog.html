@@ -57,7 +57,7 @@
     </div>
     <p id="catalog-number-hint" class="hint">{{ i18n.t('catalog.invalid') }}</p>
     @if (editing()) {
-    <label
+    <label class="choice"
       ><input type="checkbox" [formField]="itemForm.archived" /> {{ i18n.t('catalog.archived')
       }}</label
     >

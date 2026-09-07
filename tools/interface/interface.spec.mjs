@@ -144,6 +144,22 @@ test("client form and complete account address", async ({ page, colorScheme }, t
   }, colorScheme);
   await expect(page.locator(".login-page form")).toBeVisible();
   await expect(page.locator(".login-page .ds-panel")).toHaveCount(0);
+  await expect(page.locator("main")).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
+  await expect(page.locator("main")).toHaveCSS("box-shadow", "none");
+  await expect(page.locator("app-login")).toHaveClass(/page-container/);
+  const originalViewport = page.viewportSize();
+  await page.setViewportSize({ width: originalViewport.width, height: 1600 });
+  const containerHeight = await page
+    .locator("app-login")
+    .evaluate((element) => element.getBoundingClientRect().height);
+  await page.setViewportSize({ width: originalViewport.width, height: 1800 });
+  expect(
+    await page.locator("app-login").evaluate((element) => element.getBoundingClientRect().height),
+  ).toBe(containerHeight);
+  expect(
+    await page.locator("main").evaluate((element) => element.getBoundingClientRect().height),
+  ).toBeGreaterThan(containerHeight);
+  await page.setViewportSize(originalViewport);
   expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth)).toBe(false);
   const loginAudit = await new AxeBuilder({ page })
     .withTags(["wcag2a", "wcag2aa", "wcag21aa"])
@@ -310,6 +326,11 @@ test("client form and complete account address", async ({ page, colorScheme }, t
   });
   await page.locator('app-banking button[type="submit"]').click();
   await expect(page.locator("app-banking li")).toHaveCount(1);
+  const bankChoice = page.locator("app-banking .filters .choice");
+  await expect(bankChoice).toHaveCSS("display", "flex");
+  await expect(bankChoice).toHaveCSS("align-items", "flex-start");
+  await expect(bankChoice.locator("input")).toHaveCSS("width", "16px");
+  await expect(bankChoice.locator("input")).toHaveCSS("flex-shrink", "0");
   await expect(page.locator('app-banking [role="status"]')).toBeFocused();
   await page
     .getByRole("button", { name: /Historique des rapprochements|Reconciliation history/ })

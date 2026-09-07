@@ -12,6 +12,7 @@ type ContentEntry = {
 };
 
 @Component({
+  host: { class: 'page-container' },
   selector: 'app-services',
   standalone: true,
   imports: [AnchorLink, ContactActions, RouterLink],

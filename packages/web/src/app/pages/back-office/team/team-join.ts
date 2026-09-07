@@ -15,7 +15,7 @@ import { Confirmation } from '@shared/confirmation/confirmation';
   templateUrl: './team-join.html',
   styleUrl: './team-join.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  host: { '(window:beforeunload)': 'beforeUnload($event)' },
+  host: { class: 'page-container', '(window:beforeunload)': 'beforeUnload($event)' },
 })
 export class TeamJoin {
   protected readonly i18n = inject(I18nService);

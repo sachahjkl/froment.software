@@ -87,6 +87,7 @@ const statusKeys = {
 } as const satisfies Record<QuoteStatusValue, TranslationKey>;
 
 @Component({
+  host: { class: 'page-container' },
   selector: 'app-quote-editor',
   imports: [
     Button,

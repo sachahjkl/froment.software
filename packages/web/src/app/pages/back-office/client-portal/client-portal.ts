@@ -35,6 +35,7 @@ interface PortalTarget {
 }
 
 @Component({
+  host: { class: 'page-container' },
   selector: 'app-client-portal',
   imports: [Badge, Button, DataTable, Notice],
   templateUrl: './client-portal.html',

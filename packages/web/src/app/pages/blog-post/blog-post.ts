@@ -8,6 +8,7 @@ import { LocalizedDatePipe } from '@shared/localized-date/localized-date-pipe';
 import { MermaidDiagrams } from '@shared/mermaid-diagrams';
 
 @Component({
+  host: { class: 'page-container' },
   selector: 'app-blog-post',
   imports: [LocalizedDatePipe, MermaidDiagrams, RouterLink],
   templateUrl: './blog-post.html',

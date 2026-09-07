@@ -49,6 +49,7 @@ interface Affair {
 }
 
 @Component({
+  host: { class: 'page-container' },
   selector: 'app-affairs',
   imports: [Badge, Button, DataTable, Notice, RouterLink, RouterOutlet, TabLayout, TabPanel, Tabs],
   templateUrl: './affairs.html',

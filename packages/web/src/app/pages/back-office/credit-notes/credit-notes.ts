@@ -32,7 +32,7 @@ import { LocalizedDatePipe } from '@shared/localized-date/localized-date-pipe';
   templateUrl: './credit-notes.html',
   styleUrl: './credit-notes.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  host: { '(window:beforeunload)': 'beforeUnload($event)' },
+  host: { class: 'page-container', '(window:beforeunload)': 'beforeUnload($event)' },
 })
 export class CreditNotes {
   protected readonly i18n = inject(I18nService);

@@ -20,6 +20,7 @@ type ContentEntry = {
 };
 
 @Component({
+  host: { class: 'page-container' },
   selector: 'app-home',
   standalone: true,
   imports: [AnchorLink, ConcreteExamples, ContactActions, ProcessTimeline, RouterLink],

@@ -11,6 +11,7 @@ type LabEntry = {
 };
 
 @Component({
+  host: { class: 'page-container' },
   selector: 'app-tools',
   standalone: true,
   imports: [AnchorLink],

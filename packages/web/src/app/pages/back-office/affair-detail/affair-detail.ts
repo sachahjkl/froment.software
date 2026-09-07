@@ -34,6 +34,7 @@ interface TimelineItem {
 type PortalDocumentKind = 'quote' | 'order' | 'invoice';
 
 @Component({
+  host: { class: 'page-container' },
   selector: 'app-affair-detail',
   imports: [Badge, Button, DataTable, Icon, Notice, RouterLink],
   templateUrl: './affair-detail.html',

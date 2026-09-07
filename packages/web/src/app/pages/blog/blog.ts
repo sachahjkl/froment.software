@@ -5,6 +5,7 @@ import { I18nService } from '@app/i18n.service';
 import { LocalizedDatePipe } from '@shared/localized-date/localized-date-pipe';
 
 @Component({
+  host: { class: 'page-container' },
   selector: 'app-blog',
   imports: [LocalizedDatePipe, RouterLink],
   templateUrl: './blog.html',

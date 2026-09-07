@@ -99,6 +99,7 @@ const detailContent = {
 } satisfies Record<Offer, DetailContent>;
 
 @Component({
+  host: { class: 'page-container' },
   selector: 'app-service-detail',
   imports: [AnchorLink, ContactActions, RouterLink],
   templateUrl: './service-detail.html',

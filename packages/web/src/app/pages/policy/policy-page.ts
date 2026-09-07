@@ -4,6 +4,7 @@ import { I18nService } from '@app/i18n.service';
 import { PolicyDocument, PolicyLink } from './policy-documents';
 
 @Component({
+  host: { class: 'page-container' },
   selector: 'app-policy-page',
   imports: [RouterLink],
   templateUrl: './policy-page.html',

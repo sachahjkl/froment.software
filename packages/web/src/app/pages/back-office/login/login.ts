@@ -8,6 +8,7 @@ import { Notice } from '@shared/notice/notice';
 import { Passkeys } from '@backoffice/passkeys';
 
 @Component({
+  host: { class: 'page-container' },
   selector: 'app-login',
   imports: [Button, Notice, RouterLink],
   templateUrl: './login.html',

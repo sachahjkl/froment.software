@@ -7,6 +7,7 @@ import { VersionApi } from './version-api';
 type VersionState = 'loading' | 'ready' | 'error';
 
 @Component({
+  host: { class: 'page-container' },
   selector: 'app-version',
   templateUrl: './version.html',
   styleUrl: './version.scss',

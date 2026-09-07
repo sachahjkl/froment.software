@@ -4,6 +4,7 @@ import { I18nService } from '@app/i18n.service';
 import { Button } from '@shared/button/button';
 
 @Component({
+  host: { class: 'page-container' },
   selector: 'app-not-found',
   standalone: true,
   imports: [Button, RouterLink],

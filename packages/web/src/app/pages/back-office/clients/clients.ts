@@ -27,6 +27,7 @@ type PageState = 'loading' | 'ready' | 'error';
 type ClientTab = 'active' | 'archived' | 'all';
 
 @Component({
+  host: { class: 'page-container' },
   selector: 'app-clients',
   imports: [
     Badge,
