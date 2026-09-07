@@ -108,6 +108,7 @@ export class AffairDetail {
     const client = this.client();
     if (
       invoice?.status !== 'issued' ||
+      invoice.creditedCents > 0 ||
       !client?.email ||
       invoice.currentRevision.dueDate >= new Date().toISOString().slice(0, 10)
     ) {
