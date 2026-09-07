@@ -257,6 +257,12 @@ test("client form and complete account address", async ({ page, colorScheme }, t
       await page.locator('.filters input[type="search"]').fill("developement");
       await expect(page.locator(".items tbody tr")).toHaveCount(1);
       await expect(page.locator(".items tbody")).toContainText("Développement Angular");
+      for (let column = 0; column < 5; column++) {
+        const heading = page.locator(".items thead th").nth(column);
+        const cell = page.locator(".items tbody tr").first().locator("th, td").nth(column);
+        const alignment = await cell.evaluate((element) => getComputedStyle(element).textAlign);
+        await expect(heading).toHaveCSS("text-align", alignment);
+      }
       const catalogAudit = await new AxeBuilder({ page })
         .withTags(["wcag2a", "wcag2aa", "wcag21aa"])
         .analyze();
