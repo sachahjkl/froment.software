@@ -63,6 +63,10 @@ Les invitations, acceptations, annulations et modifications sont auditées sans 
 
 ## Limites et permissions
 
+Les refus de création indiquent leur cause : adresse déjà utilisée, invitation active, limite atteinte, demande modifiée ou invitation inactive.
+Une adresse déjà liée à un compte ne peut pas recevoir une nouvelle invitation d’équipe.
+Si une invitation active existe, annulez-la dans la liste avant d’en créer une autre.
+
 - `user.read` permet de lister les comptes d’équipe et les invitations.
 - `user.create` permet de créer et d’annuler les invitations.
 - `user.update` permet de changer un profil, désactiver un compte ou le réactiver.

@@ -61,12 +61,15 @@ it('creates single-use team invitations and enforces profiles, version checks an
         await (await post('/api/team/invitations', request)).json(),
       ),
     ).toEqual(invitation);
-    expect(
-      (await post('/api/team/invitations', { ...request, profile: 'collaborator' })).status,
-    ).toBe(409);
-    expect(
-      (await post('/api/team/invitations', { ...request, requestId: randomUUID() })).status,
-    ).toBe(409);
+    const changed = await post('/api/team/invitations', { ...request, profile: 'collaborator' });
+    expect(changed.status).toBe(409);
+    expect(await changed.json()).toEqual({ _tag: 'TeamConflict', code: 'team.invitation_changed' });
+    const duplicate = await post('/api/team/invitations', { ...request, requestId: randomUUID() });
+    expect(duplicate.status).toBe(409);
+    expect(await duplicate.json()).toEqual({
+      _tag: 'TeamConflict',
+      code: 'team.invitation_exists',
+    });
     const token = new URL(invitation.url).hash.slice(1);
     expect(JSON.stringify(await list())).not.toContain(token);
     expect(JSON.stringify(sqlite.prepare('select * from team_invitations').all())).not.toContain(
@@ -87,6 +90,21 @@ it('creates single-use team invitations and enforces profiles, version checks an
     ]);
     expect(accepted.map((item) => item.status).sort()).toEqual([204, 409]);
     expect((await post('/api/team/accept', { token, password }, {})).status).toBe(409);
+    const existingAccount = await post('/api/team/invitations', {
+      ...request,
+      requestId: randomUUID(),
+    });
+    expect(existingAccount.status).toBe(409);
+    expect(await existingAccount.json()).toEqual({
+      _tag: 'TeamConflict',
+      code: 'team.email_exists',
+    });
+    const consumed = await post('/api/team/invitations', request);
+    expect(consumed.status).toBe(409);
+    expect(await consumed.json()).toEqual({
+      _tag: 'TeamConflict',
+      code: 'team.invitation_inactive',
+    });
     let headers = await login('accountant@example.test');
     expect((await fetch(`${server.baseUrl}/api/invoices`, { headers })).status).toBe(200);
     expect((await fetch(`${server.baseUrl}/api/banking/transactions`, { headers })).status).toBe(

@@ -37,6 +37,18 @@ export const teamText = {
     'team.leave':
       'Quitter cette page ? Les données non enregistrées et le lien affiché ne seront pas conservés.',
     'team.error': 'Opération impossible. Vérifiez vos droits et rechargez les données.',
+    'team.email_exists':
+      'Cette adresse appartient déjà à un compte. Utilisez une autre adresse ou gérez le compte existant.',
+    'team.invitation_exists':
+      'Une invitation active existe pour cette adresse. Retrouvez-la dans la liste ou annulez-la avant de recommencer.',
+    'team.invitation_limit':
+      'La limite de 100 invitations actives est atteinte. Annulez une invitation inutilisée avant de recommencer.',
+    'team.invitation_changed':
+      'Les données diffèrent de la demande déjà enregistrée. Rechargez la liste avant de créer une autre invitation.',
+    'team.invitation_inactive':
+      'Cette invitation a expiré, a été annulée ou a déjà été acceptée. Rechargez la liste.',
+    'team.invitation_permission':
+      'Votre compte ne peut plus créer d’invitations. Reconnectez-vous pour actualiser vos droits.',
     'team.conflict':
       'Modification refusée. Vérifiez les données, les invitations existantes et la version du compte.',
     'team.invitation_rejected':
@@ -88,6 +100,18 @@ export const teamText = {
       'Change this access? All sessions and API tokens for this account will be revoked.',
     'team.leave': 'Leave this page? Unsaved data and the displayed link will not be kept.',
     'team.error': 'Cannot complete the operation. Check your permissions and reload the data.',
+    'team.email_exists':
+      'This address already belongs to an account. Use another address or manage the existing account.',
+    'team.invitation_exists':
+      'An active invitation exists for this address. Find it in the list or cancel it before trying again.',
+    'team.invitation_limit':
+      'The limit of 100 active invitations has been reached. Cancel an unused invitation before trying again.',
+    'team.invitation_changed':
+      'The data differs from the saved request. Reload the list before creating another invitation.',
+    'team.invitation_inactive':
+      'This invitation has expired, was cancelled or was already accepted. Reload the list.',
+    'team.invitation_permission':
+      'Your account can no longer create invitations. Sign in again to refresh your permissions.',
     'team.conflict': 'Change rejected. Check the data, existing invitations and account version.',
     'team.invitation_rejected':
       'Invitation unavailable, expired or already used. Ask the administrator for a new invitation.',

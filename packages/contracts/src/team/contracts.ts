@@ -86,7 +86,17 @@ export const TeamList = Schema.Struct({
 });
 export class TeamConflict extends Schema.TaggedError<TeamConflict>()(
   'TeamConflict',
-  { code: Schema.Literal('team.conflict') },
+  {
+    code: Schema.Literals([
+      'team.conflict',
+      'team.email_exists',
+      'team.invitation_exists',
+      'team.invitation_limit',
+      'team.invitation_changed',
+      'team.invitation_inactive',
+      'team.invitation_permission',
+    ]),
+  },
   { httpApiStatus: 409 },
 ) {}
 export class TeamInvitationRejected extends Schema.TaggedError<TeamInvitationRejected>()(

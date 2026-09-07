@@ -83,7 +83,8 @@ const make = Effect.gen(function* () {
       try: () =>
         sqlite
           .transaction(() => {
-            if (!allowed(actor, 'user.create')) throw conflict();
+            if (!allowed(actor, 'user.create'))
+              throw new TeamConflict({ code: 'team.invitation_permission' });
             const existing = sqlite
               .prepare(`${invitationQuery} where id = ?`)
               .get(request.requestId);
@@ -95,24 +96,26 @@ const make = Effect.gen(function* () {
                 saved.actor !== actor ||
                 saved.email !== email ||
                 saved.displayName !== displayName ||
-                saved.profile !== request.profile ||
-                saved.cancelledAt !== null ||
-                saved.acceptedAt !== null ||
-                saved.expiresAt <= now
+                saved.profile !== request.profile
               )
-                throw conflict();
+                throw new TeamConflict({ code: 'team.invitation_changed' });
+              if (saved.cancelledAt !== null || saved.acceptedAt !== null || saved.expiresAt <= now)
+                throw new TeamConflict({ code: 'team.invitation_inactive' });
               return saved;
             }
             if (
               sqlite.prepare('select 1 from password_credentials where email = ?').get(email) !==
-                undefined ||
+              undefined
+            )
+              throw new TeamConflict({ code: 'team.email_exists' });
+            if (
               sqlite
                 .prepare(
                   'select 1 from team_invitations where email = ? and expires_at > ? and accepted_at is null and cancelled_at is null',
                 )
                 .get(email, now) !== undefined
             )
-              throw conflict();
+              throw new TeamConflict({ code: 'team.invitation_exists' });
             const count = Schema.decodeUnknownSync(Schema.Int)(
               sqlite
                 .prepare(
@@ -121,7 +124,7 @@ const make = Effect.gen(function* () {
                 .pluck()
                 .get(now),
             );
-            if (count >= 100) throw conflict();
+            if (count >= 100) throw new TeamConflict({ code: 'team.invitation_limit' });
             const value = {
               id: request.requestId,
               email,
