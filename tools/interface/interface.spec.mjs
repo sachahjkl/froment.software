@@ -148,7 +148,10 @@ test("client form and complete account address", async ({ page, colorScheme }, t
   const language = page.locator("app-site-header app-language-selector select:visible");
   const theme = page.locator("app-site-header app-theme-toggle button");
   await expect(language).toHaveAccessibleName(/Langue|Language/);
-  await expect(language.locator("..").locator("span")).toHaveClass("sr-only");
+  await expect(language.locator("..").locator("span")).toHaveCount(0);
+  await expect(page.locator("app-language-selector").getByText(/^(Langue|Language)$/)).toHaveCount(
+    0,
+  );
   expect((await language.boundingBox()).height).toBe((await theme.boundingBox()).height);
   if (await mobileMenu.isVisible()) await mobileMenu.click();
   await expect(page.locator(".login-page .ds-panel")).toHaveCount(0);
