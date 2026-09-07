@@ -28,6 +28,9 @@ import { formatFixedDecimal, parseFixedDecimal } from '@backoffice/quote-input';
 import { I18nService, type TranslationKey } from '@app/i18n.service';
 import { Button } from '@shared/button/button';
 import { Notice } from '@shared/notice/notice';
+import { DataTable } from '@shared/data-table/data-table';
+import { createFuzzySearch } from '@shared/fuzzy-search';
+import { SearchHighlight, SearchHighlightRegistry } from '@shared/search-highlight';
 
 const emptyModel = () => ({
   description: '',
@@ -38,7 +41,8 @@ const emptyModel = () => ({
 });
 
 @Component({
-  imports: [Button, FormField, Notice],
+  imports: [Button, FormField, Notice, DataTable, SearchHighlight],
+  providers: [SearchHighlightRegistry],
   selector: 'app-catalog',
   styleUrl: './catalog.scss',
   templateUrl: './catalog.html',
@@ -56,14 +60,25 @@ export class Catalog {
   protected readonly error = signal<TranslationKey | undefined>(undefined);
   protected readonly saved = signal(false);
   protected readonly filters = form(signal({ search: '', archived: false }));
-  protected readonly visibleItems = computed(() => {
-    const { search, archived } = this.filters().value();
-    return this.items().filter(
-      (item) =>
-        (archived || !item.archived) &&
-        item.description.toLocaleLowerCase().includes(search.trim().toLocaleLowerCase()),
-    );
-  });
+  private readonly searchResults = createFuzzySearch(
+    computed(() =>
+      this.items().filter((item) => this.filters.archived().value() || !item.archived),
+    ),
+    computed(() => this.filters.search().value()),
+    {
+      keys: ['description'],
+      ignoreDiacritics: true,
+      ignoreLocation: true,
+      includeMatches: true,
+      threshold: 0.35,
+    },
+  );
+  protected readonly visibleItems = computed(() =>
+    this.searchResults().map((result) => ({
+      item: result.item,
+      matches: result.matches?.find((match) => match.key === 'description')?.indices ?? [],
+    })),
+  );
   protected readonly itemForm = form(this.model, (path) => {
     disabled(path, () => this.saving());
     required(path.description);
@@ -85,7 +100,7 @@ export class Catalog {
     return (
       !this.saving() &&
       (!this.itemForm().dirty() ||
-        (await this.confirmation.request(this.i18n.t('backOffice.quote.unsavedChanges'))))
+        (await this.confirmation.request(this.i18n.t('catalog.unsavedChanges'))))
     );
   }
   @HostListener('window:beforeunload', ['$event'])

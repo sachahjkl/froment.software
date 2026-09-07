@@ -16,6 +16,36 @@ const item = {
 };
 
 describe('Catalog', () => {
+  it('searches descriptions with typo and accent tolerance in a compact table', async () => {
+    TestBed.configureTestingModule({
+      providers: [
+        {
+          provide: CatalogApi,
+          useValue: {
+            list: async () => [
+              { ...item, description: 'Développement Angular' },
+              { ...item, id: '01ARZ3NDEKTSV4RRFFQ69G5FAW', description: 'Audit comptable' },
+            ],
+          },
+        },
+      ],
+    });
+    const fixture = TestBed.createComponent(Catalog);
+    await fixture.whenStable();
+    const root: HTMLElement = fixture.nativeElement;
+    expect(root.querySelectorAll('.items tbody tr')).toHaveLength(2);
+    const search = root.querySelector<HTMLInputElement>('input[type="search"]')!;
+    search.value = 'developement';
+    search.dispatchEvent(new Event('input', { bubbles: true }));
+    await fixture.whenStable();
+    expect(root.querySelectorAll('.items tbody tr')).toHaveLength(1);
+    expect(root.querySelector('.items tbody')?.textContent).toContain('Développement Angular');
+    expect(fixture.componentInstance['visibleItems']()[0]?.matches.length).toBeGreaterThan(0);
+    search.value = 'zzzzzzzz';
+    search.dispatchEvent(new Event('input', { bubbles: true }));
+    await fixture.whenStable();
+    expect(root.querySelector('.items td[colspan="6"]')).not.toBeNull();
+  });
   it('waits for confirmation before replacing or discarding edited values', async () => {
     let decide!: (result: boolean) => void;
     const request = vi.fn(

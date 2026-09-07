@@ -6,7 +6,7 @@
   <form class="editor" (submit)="save($event)">
     <h3>{{ i18n.t(editing() ? 'catalog.edit' : 'catalog.create') }}</h3>
     <label class="field">
-      {{ i18n.t('backOffice.quote.description') }}
+      {{ i18n.t('catalog.description') }}
       <input
         id="catalog-description"
         class="input"
@@ -16,7 +16,7 @@
       />
       @if (invalid('description')) {
       <span id="catalog-description-error" class="field-error"
-        >{{ i18n.t('backOffice.quote.fieldInvalid') }}</span
+        >{{ i18n.t('catalog.fieldInvalid') }}</span
       >
       }
     </label>
@@ -102,30 +102,47 @@
   @if (loading()) {
   <p role="status">{{ i18n.t('catalog.loading') }}</p>
   } @else {
-  <ul class="items">
-    @for (item of visibleItems(); track item.id) {
-    <li class="ds-panel">
-      <h3>{{ item.description }}</h3>
-      <p>
-        {{ decimal(item.quantityMilli, 3) }} × {{ decimal(item.unitPriceCents, 2) }} EUR · {{
-        i18n.t('catalog.tax') }} {{ decimal(item.vatRateBasisPoints, 2) }} %
-      </p>
-      @if (item.archived) {
-      <p>{{ i18n.t('catalog.archived') }}</p>
-      }
-      <button
-        appButton
-        type="button"
-        [disabled]="saving()"
-        (click)="edit(item)"
-        [attr.aria-label]="i18n.tf('catalog.editItem', { name: item.description })"
-      >
-        {{ i18n.t('catalog.edit') }}
-      </button>
-    </li>
-    } @empty {
-    <li class="ds-panel">{{ i18n.t('catalog.empty') }}</li>
-    }
-  </ul>
+  <div appDataTable class="items">
+    <table>
+      <thead>
+        <tr>
+          <th scope="col">{{ i18n.t('catalog.description') }}</th>
+          <th scope="col">{{ i18n.t('catalog.quantity') }}</th>
+          <th scope="col">{{ i18n.t('catalog.price') }}</th>
+          <th scope="col">{{ i18n.t('catalog.tax') }}</th>
+          <th scope="col">{{ i18n.t('catalog.archived') }}</th>
+          <th scope="col"><span class="sr-only">{{ i18n.t('catalog.edit') }}</span></th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (result of visibleItems(); track result.item.id) { @let item = result.item;
+        <tr>
+          <th scope="row">
+            <span [appSearchHighlight]="result.matches">{{ item.description }}</span>
+          </th>
+          <td class="numeric">{{ decimal(item.quantityMilli, 3) }}</td>
+          <td class="numeric">{{ decimal(item.unitPriceCents, 2) }} EUR</td>
+          <td class="numeric">{{ decimal(item.vatRateBasisPoints, 2) }} %</td>
+          <td>@if (item.archived) { {{ i18n.t('catalog.archived') }} }</td>
+          <td>
+            <button
+              appButton
+              type="button"
+              [disabled]="saving()"
+              (click)="edit(item)"
+              [attr.aria-label]="i18n.tf('catalog.editItem', { name: item.description })"
+            >
+              {{ i18n.t('catalog.edit') }}
+            </button>
+          </td>
+        </tr>
+        } @empty {
+        <tr>
+          <td colspan="6">{{ i18n.t('catalog.empty') }}</td>
+        </tr>
+        }
+      </tbody>
+    </table>
+  </div>
   }
 </section>
