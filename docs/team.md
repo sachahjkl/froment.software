@@ -70,6 +70,6 @@ Les invitations, acceptations, annulations et modifications sont auditées sans 
 - L’acceptation exige une origine autorisée et limite les demandes à dix par minute et adresse cliente.
 - L’installation accepte au plus 100 comptes d’équipe, comptes désactivés compris.
 - Elle accepte au plus 100 invitations actives simultanément.
-- La page affiche les 100 dernières invitations.
+- La page affiche au plus 100 invitations, avec priorité aux invitations actives, puis aux plus récentes.
 
 Ce module ne crée pas d’administrateur supplémentaire et ne permet pas de modifier le dernier administrateur.

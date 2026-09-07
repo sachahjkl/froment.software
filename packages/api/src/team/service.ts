@@ -50,17 +50,24 @@ const make = Effect.gen(function* () {
         .run(roleId, code);
     sqlite.prepare('insert into user_roles (user_id, role_id) values (?, ?)').run(userId, roleId);
   };
-  const list = Effect.try({
-    try: () =>
-      Schema.decodeUnknownSync(TeamList)({
-        members: sqlite
-          .prepare(
-            'select u.id, p.email, u.display_name as displayName, t.profile, t.version, u.disabled_at as disabledAt from team_members t join users u on u.id = t.user_id join password_credentials p on p.user_id = u.id order by u.created_at desc',
-          )
-          .all(),
-        invitations: sqlite.prepare(`${invitationQuery} order by created_at desc limit 100`).all(),
-      }),
-    catch: (cause) => new DatabaseError({ operation: 'team.list', cause }),
+  const list = Effect.gen(function* () {
+    const now = yield* Clock.currentTimeMillis;
+    return yield* Effect.try({
+      try: () =>
+        Schema.decodeUnknownSync(TeamList)({
+          members: sqlite
+            .prepare(
+              'select u.id, p.email, u.display_name as displayName, t.profile, t.version, u.disabled_at as disabledAt from team_members t join users u on u.id = t.user_id join password_credentials p on p.user_id = u.id order by u.created_at desc',
+            )
+            .all(),
+          invitations: sqlite
+            .prepare(`${invitationQuery}
+          order by (expires_at > ? and accepted_at is null and cancelled_at is null) desc,
+          created_at desc, id desc limit 100`)
+            .all(now),
+        }),
+      catch: (cause) => new DatabaseError({ operation: 'team.list', cause }),
+    });
   });
   const invite = Effect.fn('Team.invite')(function* (
     actor: string,
