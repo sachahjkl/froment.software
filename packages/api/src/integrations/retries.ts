@@ -69,38 +69,12 @@ export const IntegrationRetriesLive = Layer.effect(
                 .prepare(`select 1 from users u join user_roles ur on ur.user_id = u.id join role_permissions rp on rp.role_id = ur.role_id
         where u.id = ? and u.kind = 'administrator' and u.disabled_at is null and rp.permission_code = 'integration.manage'`)
                 .get(job.userId);
-              const scheduled = sqlite
-                .prepare('select 1 from email_reminders where operation_id = ?')
-                .get(operationId);
-              const reminderPermissions =
-                scheduled === undefined
-                  ? 3
-                  : Schema.decodeUnknownSync(Schema.Int)(
-                      sqlite
-                        .prepare(`select count(distinct rp.permission_code) from user_roles ur join role_permissions rp on rp.role_id = ur.role_id
-                where ur.user_id = ? and rp.permission_code in ('email.reminder.manage', 'invoice.read', 'client.read')`)
-                        .pluck()
-                        .get(job.userId),
-                    );
-              const reminderCurrent =
-                scheduled === undefined ||
-                sqlite
-                  .prepare(`select 1 from email_reminders m join invoices i on i.id = m.invoice_id join clients c on c.id = i.client_id join users u on u.id = c.id
-                 where m.operation_id = ? and i.status = 'issued' and u.disabled_at is null and i.version = m.prepared_version and c.email = m.prepared_recipient
-                 and not exists (select 1 from invoice_credit_notes where invoice_id = i.id)
-                and coalesce((select sum(amount_cents) from invoice_payments where invoice_id = i.id and cancelled_at is null), 0) = m.prepared_paid_cents`)
-                  .get(operationId) !== undefined;
-              if (allowed === undefined || reminderPermissions !== 3 || !reminderCurrent) {
+              if (allowed === undefined) {
                 sqlite
                   .prepare(
                     "update integration_retries set status = 'blocked', error = ? where operation_id = ?",
                   )
-                  .run(
-                    reminderCurrent
-                      ? 'integration.retry_permission'
-                      : 'integration.request_conflict',
-                    operationId,
-                  );
+                  .run('integration.retry_permission', operationId);
                 return undefined;
               }
               return job;

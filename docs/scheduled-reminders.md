@@ -45,7 +45,10 @@ La file traite le message au passage suivant, avec cinq tentatives maximum.
 Elle conserve le texte, le destinataire et le mode de la demande préparée.
 Avant chaque tentative, elle vérifie aussi la version de la facture, ses règlements actifs et le destinataire.
 Si ces données changent, elle bloque la reprise au lieu de soumettre un rappel périmé.
-La reprise manuelle reste une action distincte qui exige une vérification du contenu.
+Le service de soumission applique ces contrôles aux reprises automatiques et manuelles avant tout nouvel appel fournisseur.
+Il refuse aussi les factures couvertes par un avoir et les clients désactivés.
+L’initiateur et l’auteur d’une reprise manuelle doivent conserver les quatre permissions requises.
+Une opération déjà terminée restitue son reçu sans appeler le fournisseur.
 
 ## Annulation et historique
 

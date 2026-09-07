@@ -80,6 +80,37 @@ const makeIntegrations = Effect.gen(function* () {
               const decoded = Schema.decodeUnknownSync(Row)(existing);
               if (!isDeepStrictEqual(decoded.request, request))
                 throw new IntegrationConflict({ code: 'integration.request_conflict' });
+              if (
+                decoded.receipt === null &&
+                database.sqlite
+                  .prepare('select 1 from email_reminders where operation_id = ?')
+                  .get(decoded.id) !== undefined
+              ) {
+                const current = database.sqlite
+                  .prepare(`select 1 from email_reminders m
+                  join invoices i on i.id = m.invoice_id join clients c on c.id = i.client_id
+                  join users u on u.id = c.id
+                  where m.operation_id = ? and m.status = 'queued' and i.status = 'issued'
+                  and u.disabled_at is null and i.version = m.prepared_version and c.email = m.prepared_recipient
+                  and not exists (select 1 from invoice_credit_notes where invoice_id = i.id)
+                  and coalesce((select sum(amount_cents) from invoice_payments where invoice_id = i.id and cancelled_at is null), 0) = m.prepared_paid_cents`)
+                  .get(decoded.id);
+                if (current === undefined)
+                  throw new IntegrationConflict({ code: 'integration.request_conflict' });
+                for (const userId of new Set([decoded.createdByUserId, actorUserId])) {
+                  const permissions = Schema.decodeUnknownSync(Schema.Int)(
+                    database.sqlite
+                      .prepare(`select count(distinct rp.permission_code)
+                    from users u join user_roles ur on ur.user_id = u.id join role_permissions rp on rp.role_id = ur.role_id
+                    where u.id = ? and u.kind = 'administrator' and u.disabled_at is null
+                    and rp.permission_code in ('email.reminder.manage', 'invoice.read', 'client.read', 'integration.manage')`)
+                      .pluck()
+                      .get(userId),
+                  );
+                  if (permissions !== 4)
+                    throw new IntegrationConflict({ code: 'integration.request_conflict' });
+                }
+              }
               return decoded;
             }
             if (providers[request.kind].mode !== request.expectedMode) {

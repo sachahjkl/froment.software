@@ -168,6 +168,28 @@ it('schedules, cancels, prepares current balances once, and skips paid invoices 
         .get(queuedId),
     );
     expect(email.recipient).toBe('current@example.test');
+    sqlite.prepare("update clients set email = 'changed@example.test' where id = ?").run(client.id);
+    expect((await post('/api/integrations/operations', email)).status).toBe(409);
+    sqlite.prepare("update clients set email = 'current@example.test' where id = ?").run(client.id);
+    const reminderRole = Schema.decodeUnknownSync(Schema.String)(
+      sqlite
+        .prepare(
+          "select role_id from role_permissions where permission_code = 'email.reminder.manage' limit 1",
+        )
+        .pluck()
+        .get(),
+    );
+    sqlite
+      .prepare(
+        "delete from role_permissions where role_id = ? and permission_code = 'email.reminder.manage'",
+      )
+      .run(reminderRole);
+    expect((await post('/api/integrations/operations', email)).status).toBe(409);
+    sqlite
+      .prepare(
+        "insert into role_permissions (role_id, permission_code) values (?, 'email.reminder.manage')",
+      )
+      .run(reminderRole);
     expect(email.body).toContain('September 19, 2026');
     expect(email.body).toContain(((invoice.currentRevision.totalCents - 100) / 100).toFixed(2));
     expect(
@@ -222,6 +244,13 @@ it('schedules, cancels, prepares current balances once, and skips paid invoices 
         .prepare('select status, error from integration_retries where operation_id = ?')
         .get(queued?.operationId),
     ).toEqual({ status: 'blocked', error: 'integration.request_conflict' });
+    expect(
+      sqlite
+        .prepare('select receipt from integration_operations where request_id = ?')
+        .pluck()
+        .get(queuedId),
+    ).toBeNull();
+    expect((await post('/api/integrations/operations', email)).status).toBe(409);
     expect(
       sqlite
         .prepare('select receipt from integration_operations where request_id = ?')
