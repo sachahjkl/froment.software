@@ -6,7 +6,7 @@ import {
   InvoiceRenderSnapshot,
   type CheckoutErrorCode,
 } from '@froment/contracts';
-import { Clock, Context, DateTime, Effect, Layer, Schedule, Schema } from 'effect';
+import { Cause, Clock, Context, DateTime, Effect, Layer, Schedule, Schema } from 'effect';
 import { isDeepStrictEqual } from 'node:util';
 import { Audit } from '../audit/audit.js';
 import { Database, DatabaseError } from '../database/database.js';
@@ -380,7 +380,11 @@ export const CheckoutWorkerLive = Layer.effectDiscard(
   Effect.gen(function* () {
     const checkouts = yield* Checkouts;
     yield* checkouts.runPending().pipe(
-      Effect.catch(() => Effect.logError('checkout.worker_failed')),
+      Effect.catchCause((cause) =>
+        Cause.hasInterrupts(cause)
+          ? Effect.failCause(cause)
+          : Effect.logError('checkout.worker_failed'),
+      ),
       Effect.repeat(Schedule.spaced('3 seconds')),
       Effect.forkScoped,
     );

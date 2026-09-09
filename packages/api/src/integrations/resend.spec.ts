@@ -19,13 +19,15 @@ const layer = (
   body: Readonly<Record<string, string>>,
   requests: HttpClientRequest.HttpClientRequest[],
   credentials = true,
+  signals: AbortSignal[] = [],
 ) =>
   ResendEmailTransportLive.pipe(
     Layer.provide(
       Layer.succeed(
         HttpClient.HttpClient,
-        HttpClient.make((request) => {
+        HttpClient.make((request, _url, signal) => {
           requests.push(request);
+          signals.push(signal);
           return Effect.succeed(
             HttpClientResponse.fromWeb(
               request,
@@ -75,6 +77,18 @@ it('sends an authenticated idempotent Resend request with the exact message and 
   );
 });
 
+it.each([200, 403])('releases HTTP resources after status %s', async (status) => {
+  const signals: AbortSignal[] = [];
+  await Effect.runPromise(
+    EmailTransport.use((transport) => transport.send(input)).pipe(
+      Effect.provide(layer(status, { id: providerId }, [], true, signals)),
+      Effect.result,
+    ),
+  );
+  expect(signals).toHaveLength(1);
+  expect(signals[0]?.aborted).toBe(true);
+});
+
 it.each([
   [403, 'emailTest.rejected', false],
   [429, 'emailTest.rateLimited', true],
@@ -113,6 +127,27 @@ it('rejects missing credentials before any network request and rejects malformed
   );
   expect(malformed).toMatchObject({ code: 'emailTest.unavailable' });
 });
+
+it.each([
+  ['concurrent_idempotent_requests', true],
+  ['resource_locked', true],
+  ['invalid_idempotent_request', false],
+  ['unrecognized', false],
+] as const)(
+  'classifies conflict %s without replacing the idempotency key',
+  async (name, retryable) => {
+    const requests: HttpClientRequest.HttpClientRequest[] = [];
+    const failure = await Effect.runPromise(
+      EmailTransport.use((transport) => transport.send(input)).pipe(
+        Effect.provide(layer(409, { name }, requests)),
+        Effect.flip,
+      ),
+    );
+    expect(failure).toMatchObject({ retryable });
+    expect(requests).toHaveLength(1);
+    expect(requests[0]?.headers['idempotency-key']).toBe(`froment-email-test/${input.requestId}`);
+  },
+);
 
 it.each([
   ['sent', 'accepted'],

@@ -1334,6 +1334,7 @@ export const emailTests = sqliteTable(
     updatedAt: text('updated_at').notNull(),
     status: text().notNull(),
     attempts: integer().notNull().default(0),
+    lease: integer().notNull().default(0),
     nextAttemptAt: integer('next_attempt_at'),
     providerId: text('provider_id'),
     error: text(),

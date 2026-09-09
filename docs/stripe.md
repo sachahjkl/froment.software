@@ -62,6 +62,8 @@ La base interdit leur modification et la suppression de l’historique.
 Le worker Effect examine les demandes toutes les trois secondes.
 Chaque traitement prend un verrou de deux minutes avec un numéro de génération.
 Une réponse tardive ne remplace pas le résultat d’un traitement plus récent.
+Un défaut de traitement est signalé sans contenu privé. Le worker reprend à la prochaine échéance.
+La fermeture de son périmètre Effect arrête le worker et ses appels en cours.
 
 Les reprises conservent la même clé d’idempotence et les mêmes paramètres Stripe.
 Le serveur autorise cinq tentatives, espacées de deux, quatre, huit et seize minutes.

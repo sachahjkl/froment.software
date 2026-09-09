@@ -5,7 +5,7 @@ import {
   EmailTestRequest,
   IntegrationInvalid,
 } from '@froment/contracts';
-import { Clock, Context, DateTime, Effect, Layer, Schedule, Schema } from 'effect';
+import { Cause, Clock, Context, DateTime, Effect, Layer, Schedule, Schema } from 'effect';
 import { isDeepStrictEqual } from 'node:util';
 import { Database, DatabaseError } from '../database/database.js';
 import { Audit } from '../audit/audit.js';
@@ -16,13 +16,15 @@ const Row = Schema.Struct({
   request: Schema.fromJsonString(EmailTestRequest),
   nextAttemptAt: Schema.NullOr(Schema.Int),
   accountKey: Schema.NullOr(Schema.String),
+  lease: Schema.Int,
 });
 const select = `select request, created_by_user_id as createdByUserId, created_at as createdAt,
   updated_at as updatedAt, status, attempts, next_attempt_at as nextAttemptAt,
-  provider_id as providerId, error, account_key as accountKey from email_tests`;
+  provider_id as providerId, error, account_key as accountKey, lease from email_tests`;
 const iso = (time: number) => DateTime.formatIso(DateTime.makeUnsafe(time));
 const publicOperation = ({
   accountKey: _accountKey,
+  lease: _lease,
   ...row
 }: typeof Row.Type): EmailTestOperation => ({
   ...row,
@@ -131,15 +133,30 @@ const makeEmailTests = Effect.gen(function* () {
               ) {
                 sqlite
                   .prepare(
-                    'update email_tests set next_attempt_at = null, error = ? where request_id = ?',
+                    'update email_tests set lease = lease + 1, next_attempt_at = null, error = ?, updated_at = ? where request_id = ?',
                   )
-                  .run('emailTest.statusUnavailable', requestId);
+                  .run('emailTest.statusUnavailable', iso(now), requestId);
+                audit.insert({
+                  action: 'integration.processed',
+                  actorUserId: row.createdByUserId,
+                  resourceType: 'integration',
+                  resourceId: requestId,
+                  metadata: {
+                    provider: 'resend',
+                    operation: 'email-test',
+                    status: 'accepted',
+                    error: 'emailTest.statusUnavailable',
+                  },
+                  occurredAt: now,
+                });
                 return undefined;
               }
               sqlite
-                .prepare('update email_tests set next_attempt_at = ? where request_id = ?')
+                .prepare(
+                  'update email_tests set lease = lease + 1, next_attempt_at = ? where request_id = ?',
+                )
                 .run(now + 120000, requestId);
-              return row;
+              return read(requestId);
             }
             if (!['queued', 'retrying', 'sending'].includes(row.status)) return undefined;
             const error = !allowed(row.createdByUserId)
@@ -157,7 +174,7 @@ const makeEmailTests = Effect.gen(function* () {
             if (error !== null) {
               sqlite
                 .prepare(
-                  "update email_tests set status = 'blocked', error = ?, updated_at = ?, next_attempt_at = null where request_id = ?",
+                  "update email_tests set lease = lease + 1, status = 'blocked', error = ?, updated_at = ?, next_attempt_at = null where request_id = ?",
                 )
                 .run(error, iso(now), requestId);
               audit.insert({
@@ -172,7 +189,7 @@ const makeEmailTests = Effect.gen(function* () {
             }
             sqlite
               .prepare(
-                "update email_tests set status = 'sending', attempts = attempts + 1, updated_at = ?, next_attempt_at = ?, error = null where request_id = ?",
+                "update email_tests set lease = lease + 1, status = 'sending', attempts = attempts + 1, updated_at = ?, next_attempt_at = ?, error = null where request_id = ?",
               )
               .run(iso(now), now + 120000, requestId);
             return read(requestId);
@@ -194,18 +211,42 @@ const makeEmailTests = Effect.gen(function* () {
       );
       const finished = yield* Clock.currentTimeMillis;
       yield* Effect.try({
-        try: () => {
-          const nextAttemptAt =
-            outcome.status === 'accepted' &&
-            finished - DateTime.toEpochMillis(DateTime.makeUnsafe(job.createdAt)) < 86400000
-              ? finished + (outcome.error === null ? 15000 : 300000)
-              : null;
+        try: () =>
           sqlite
-            .prepare(
-              "update email_tests set status = ?, error = ?, updated_at = ?, next_attempt_at = ? where request_id = ? and status = 'accepted'",
-            )
-            .run(outcome.status, outcome.error, iso(finished), nextAttemptAt, requestId);
-        },
+            .transaction(() => {
+              const nextAttemptAt =
+                outcome.status === 'accepted' &&
+                finished - DateTime.toEpochMillis(DateTime.makeUnsafe(job.createdAt)) < 86400000
+                  ? finished + (outcome.error === null ? 15000 : 300000)
+                  : null;
+              const changed = sqlite
+                .prepare(
+                  "update email_tests set status = ?, error = ?, updated_at = ?, next_attempt_at = ? where request_id = ? and status = 'accepted' and lease = ?",
+                )
+                .run(
+                  outcome.status,
+                  outcome.error,
+                  iso(finished),
+                  nextAttemptAt,
+                  requestId,
+                  job.lease,
+                ).changes;
+              if (changed > 0 && (outcome.status !== job.status || outcome.error !== job.error))
+                audit.insert({
+                  action: 'integration.processed',
+                  actorUserId: job.createdByUserId,
+                  resourceType: 'integration',
+                  resourceId: requestId,
+                  metadata: {
+                    provider: 'resend',
+                    operation: 'email-test',
+                    status: outcome.status,
+                    error: outcome.error ?? '',
+                  },
+                  occurredAt: finished,
+                });
+            })
+            .immediate(),
         catch: databaseError,
       });
       return;
@@ -236,7 +277,7 @@ const makeEmailTests = Effect.gen(function* () {
                   : null;
             const changed = sqlite
               .prepare(
-                "update email_tests set status = ?, provider_id = ?, error = ?, updated_at = ?, next_attempt_at = ? where request_id = ? and status = 'sending' and attempts = ?",
+                "update email_tests set status = ?, provider_id = ?, error = ?, updated_at = ?, next_attempt_at = ? where request_id = ? and status = 'sending' and lease = ?",
               )
               .run(
                 outcome.status,
@@ -245,7 +286,7 @@ const makeEmailTests = Effect.gen(function* () {
                 iso(finished),
                 nextAttemptAt,
                 requestId,
-                job.attempts,
+                job.lease,
               ).changes;
             if (changed > 0)
               audit.insert({
@@ -293,7 +334,11 @@ export const EmailTestWorkerLive = Layer.effectDiscard(
   Effect.gen(function* () {
     const tests = yield* EmailTests;
     yield* tests.runPending().pipe(
-      Effect.catch((error) => Effect.logError('email.test.worker_failed', error)),
+      Effect.catchCause((cause) =>
+        Cause.hasInterrupts(cause)
+          ? Effect.failCause(cause)
+          : Effect.logError('email.test.worker_failed'),
+      ),
       Effect.repeat(Schedule.spaced('3 seconds')),
       Effect.forkScoped,
     );

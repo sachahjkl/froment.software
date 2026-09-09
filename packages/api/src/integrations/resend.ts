@@ -6,6 +6,7 @@ import { ConnectionConfig } from './connection-config.js';
 import { EmailTransport, EmailTransportError, type OutgoingEmail } from './email-transport.js';
 
 const SentEmail = Schema.Struct({ id: Schema.String.check(Schema.isUUID()) });
+const Conflict = Schema.Struct({ name: Schema.String });
 const Delivery = Schema.Struct({
   last_event: Schema.Literals([
     'sent',
@@ -27,6 +28,7 @@ export const ResendEmailTransportLive = Layer.effect(
   Effect.gen(function* () {
     const config = yield* ConnectionConfig;
     const client = (yield* HttpClient.HttpClient).pipe(
+      HttpClient.withScope,
       HttpClient.withRateLimiter({
         limiter: yield* RateLimiter.RateLimiter,
         window: '1 second',
@@ -60,6 +62,19 @@ export const ResendEmailTransportLive = Layer.effect(
         return yield* new EmailTransportError({ code: 'emailTest.rateLimited', retryable: true });
       if (response.status >= 500 || response.status === 408)
         return yield* new EmailTransportError({ code: 'emailTest.unavailable', retryable: true });
+      if (response.status === 409) {
+        const conflict = yield* HttpClientResponse.schemaBodyJson(Conflict)(response).pipe(
+          Effect.mapError(
+            () => new EmailTransportError({ code: 'emailTest.rejected', retryable: false }),
+          ),
+        );
+        const retryable =
+          conflict.name === 'concurrent_idempotent_requests' || conflict.name === 'resource_locked';
+        return yield* new EmailTransportError({
+          code: retryable ? 'emailTest.unavailable' : 'emailTest.rejected',
+          retryable,
+        });
+      }
       if (response.status < 200 || response.status >= 300)
         return yield* new EmailTransportError({ code: 'emailTest.rejected', retryable: false });
       return response;
@@ -87,6 +102,7 @@ export const ResendEmailTransportLive = Layer.effect(
         );
         return result.id;
       },
+      Effect.scoped,
       Effect.timeout('20 seconds'),
       Effect.catchTag('TimeoutError', () =>
         Effect.fail(new EmailTransportError({ code: 'emailTest.unavailable', retryable: true })),
@@ -120,6 +136,7 @@ export const ResendEmailTransportLive = Layer.effect(
             return 'accepted' as const;
         }
       },
+      Effect.scoped,
       Effect.timeout('10 seconds'),
       Effect.catchTag('TimeoutError', () =>
         Effect.fail(

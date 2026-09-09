@@ -1,5 +1,5 @@
 import { EmailTestAddress } from '@froment/contracts';
-import { Deferred, Effect, Fiber, Layer } from 'effect';
+import { Deferred, Effect, Fiber, Layer, Schema } from 'effect';
 import { TestClock } from 'effect/testing';
 import { randomUUID } from 'node:crypto';
 import { join } from 'node:path';
@@ -99,6 +99,14 @@ it('persists before sending, reuses requests after reconstruction, retries once,
       yield* TestClock.adjust('15 seconds');
       yield* run;
       expect(yield* list).toMatchObject([{ status: 'delivered', nextAttemptAt: null }]);
+      expect(
+        sqlite
+          .prepare(
+            "select count(*) from audit_events where resource_id = ? and json_extract(metadata, '$.status') = 'delivered'",
+          )
+          .pluck()
+          .get(input.requestId),
+      ).toBe(1);
       yield* run;
       expect(calls).toHaveLength(2);
       expect(sqlite.prepare('select count(*) from email_tests').pluck().get()).toBe(1);
@@ -112,6 +120,98 @@ it('persists before sending, reuses requests after reconstruction, retries once,
         tests.enqueue({ ...input, body: 'Changed' }, actorId),
       ).pipe(Effect.provide(service(transport)), Effect.flip);
       expect(conflict).toMatchObject({ code: 'emailTest.conflict' });
+    }).pipe(Effect.provide(databaseLayer()), Effect.provide(TestClock.layer())),
+  );
+});
+
+it.each(['newer-lookup', 'permission', 'credentials', 'deadline'] as const)(
+  'rejects late delivery results after %s invalidates the lease',
+  async (change) => {
+    await Effect.runPromise(
+      Effect.gen(function* () {
+        const sqlite = yield* setup;
+        const entered = yield* Deferred.make<void>();
+        const response = yield* Deferred.make<'delivered'>();
+        const slow = yield* EmailTests.pipe(
+          Effect.provide(
+            service({
+              ...succeeded,
+              delivery: () =>
+                Deferred.succeed(entered, undefined).pipe(Effect.andThen(Deferred.await(response))),
+            }),
+          ),
+        );
+        const input = request();
+        yield* slow.enqueue(input, actorId);
+        yield* slow.runPending();
+        yield* TestClock.adjust('15 seconds');
+        const fiber = yield* slow.runPending().pipe(Effect.forkChild);
+        yield* Deferred.await(entered);
+        yield* TestClock.adjust(change === 'deadline' ? '24 hours' : '2 minutes');
+        if (change === 'permission')
+          sqlite.prepare('delete from user_roles where user_id = ?').run(actorId);
+        const fresh = yield* EmailTests.pipe(
+          Effect.provide(
+            service({
+              ...succeeded,
+              accountKey: change === 'credentials' ? 'different-account' : succeeded.accountKey,
+              delivery: () => Effect.succeed('accepted' as const),
+            }),
+          ),
+        );
+        yield* fresh.runPending();
+        const expected = yield* fresh.list();
+        yield* Deferred.succeed(response, 'delivered' as const);
+        yield* Fiber.join(fiber);
+        expect(yield* slow.list()).toEqual(expected);
+        expect(expected).toMatchObject([
+          {
+            status: 'accepted',
+            error: change === 'newer-lookup' ? null : 'emailTest.statusUnavailable',
+          },
+        ]);
+        const events = Schema.decodeUnknownSync(Schema.Array(Schema.String))(
+          sqlite
+            .prepare('select metadata from audit_events where resource_id = ?')
+            .pluck()
+            .all(input.requestId),
+        );
+        expect(events.some((metadata) => metadata.includes('delivered'))).toBe(false);
+        if (change !== 'newer-lookup')
+          expect(events.some((metadata) => metadata.includes('emailTest.statusUnavailable'))).toBe(
+            true,
+          );
+      }).pipe(Effect.provide(databaseLayer()), Effect.provide(TestClock.layer())),
+    );
+  },
+);
+
+it('records each delivery transition once and rolls it back if the audit fails', async () => {
+  await Effect.runPromise(
+    Effect.gen(function* () {
+      const sqlite = yield* setup;
+      const tests = yield* EmailTests.pipe(Effect.provide(service(succeeded)));
+      yield* tests.enqueue(request(), actorId);
+      yield* tests.runPending();
+      yield* TestClock.adjust('15 seconds');
+      sqlite.exec(
+        "create trigger reject_delivery_audit before insert on audit_events when json_extract(new.metadata, '$.status') = 'delivered' begin select raise(abort, 'audit unavailable'); end;",
+      );
+      expect((yield* tests.runPending().pipe(Effect.flip))._tag).toBe('DatabaseError');
+      expect(yield* tests.list()).toMatchObject([{ status: 'accepted' }]);
+      sqlite.exec('drop trigger reject_delivery_audit');
+      yield* TestClock.adjust('2 minutes');
+      yield* tests.runPending();
+      yield* tests.runPending();
+      expect(yield* tests.list()).toMatchObject([{ status: 'delivered' }]);
+      expect(
+        sqlite
+          .prepare(
+            "select count(*) from audit_events where json_extract(metadata, '$.status') = 'delivered'",
+          )
+          .pluck()
+          .get(),
+      ).toBe(1);
     }).pipe(Effect.provide(databaseLayer()), Effect.provide(TestClock.layer())),
   );
 });
