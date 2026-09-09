@@ -2,6 +2,7 @@ import { webUiText } from './web-ui-text.js';
 import { connectionText } from './connections.js';
 import { checkoutText } from './checkout.js';
 import { backOfficeShellText } from './back-office-shell.js';
+import { clientsWorkspaceText } from './clients-workspace.js';
 import { teamText } from './team.js';
 import { creditText } from './credit-notes.js';
 import { ledgerText } from './bank-ledger.js';
@@ -16,6 +17,7 @@ export const translations = {
     ...connectionText.fr,
     ...checkoutText.fr,
     ...backOfficeShellText.fr,
+    ...clientsWorkspaceText.fr,
     ...webUiText.fr,
     ...teamText.fr,
     ...creditText.fr,
@@ -1532,6 +1534,7 @@ export const translations = {
     ...connectionText.en,
     ...checkoutText.en,
     ...backOfficeShellText.en,
+    ...clientsWorkspaceText.en,
     ...webUiText.en,
     ...teamText.en,
     ...creditText.en,

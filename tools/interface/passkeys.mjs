@@ -96,7 +96,10 @@ export async function checkPasskeys(page, testInfo) {
       .getByRole("button", { name: /Confirmer|Confirm/ })
       .click();
     await expect(panel.getByText("Laptop", { exact: true })).toHaveCount(0);
-    await expect(panel.getByRole("status")).toContainText(/Clé retirée|Passkey removed/);
+    await expect(panel.locator('[appNotice][role="status"]')).toContainText(
+      /Clé retirée|Passkey removed/,
+    );
+    await expect(panel.getByText(/Chargement des clés|Loading passkeys/)).toHaveCount(0);
     await page.screenshot({ path: testInfo.outputPath("passkeys.png"), fullPage: true });
   } finally {
     if (!page.isClosed()) {

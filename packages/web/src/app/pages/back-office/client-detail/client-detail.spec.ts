@@ -3,11 +3,11 @@ import { By } from '@angular/platform-browser';
 import { provideRouter } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
 import { vi } from 'vitest';
-
 import { ClientsApi } from '@backoffice/clients-api';
 import { InvoicesApi } from '@backoffice/invoices-api';
 import { OrdersApi } from '@backoffice/orders-api';
 import { QuotesApi } from '@backoffice/quotes-api';
+import { Confirmation } from '@shared/confirmation/confirmation';
 import { ClientDetail } from './client-detail';
 import { TabPanelOutlet } from '@shared/tabs/tab-panel';
 
@@ -23,202 +23,115 @@ const client = {
   archived: false,
   updatedAt: 42,
 };
+const access = {
+  id: '01ARZ3NDEKTSV4RRFFQ69G5FAW',
+  clientId: client.id,
+  email: 'portal@acme.example',
+  createdAt: 1_700_000_000_000,
+};
 
-const configure = async (
-  api: Pick<ClientsApi, 'get' | 'update'> &
-    Partial<Pick<ClientsApi, 'listAccess' | 'revokeAccess'>>,
-  panel: 'profile' | 'access' = 'profile',
-) => {
+async function configure(panel = 'profile', archived = false) {
+  const api = {
+    get: vi.fn().mockResolvedValue({ success: true, result: { ...client, archived } }),
+    listAccess: vi.fn().mockResolvedValue({ success: true, result: [access] }),
+    archive: vi.fn().mockResolvedValue({ success: true, result: { ...client, archived: true } }),
+    reactivate: vi.fn().mockResolvedValue({ success: true, result: client }),
+    revokeAccess: vi.fn().mockResolvedValue({ success: true, result: null }),
+  };
+  const confirmation = { request: vi.fn().mockResolvedValue(false) };
   TestBed.configureTestingModule({
     providers: [
       provideRouter([
         {
           path: ':clientId',
           component: ClientDetail,
-          children: [
-            { path: 'profile', component: TabPanelOutlet, data: { panel: 'profile' } },
-            { path: 'access', component: TabPanelOutlet, data: { panel: 'access' } },
-          ],
+          children: ['profile', 'access', 'documents'].map((path) => ({
+            path,
+            component: TabPanelOutlet,
+            data: { panel: path },
+          })),
         },
       ]),
-      {
-        provide: ClientsApi,
-        useValue: {
-          listAccess: () => Promise.resolve({ success: true as const, result: [] }),
-          ...api,
-        },
-      },
+      { provide: ClientsApi, useValue: api },
+      { provide: Confirmation, useValue: confirmation },
       { provide: QuotesApi, useValue: { list: () => Promise.resolve([]) } },
       { provide: OrdersApi, useValue: { list: () => Promise.resolve([]) } },
       { provide: InvoicesApi, useValue: { list: () => Promise.resolve([]) } },
     ],
   });
   const harness = await RouterTestingHarness.create(`/${client.id}/${panel}`);
+  await harness.fixture.whenStable();
   return {
+    api,
+    confirmation,
     fixture: harness.fixture,
+    root: harness.fixture.nativeElement as HTMLElement,
     component: harness.fixture.debugElement.query(By.directive(ClientDetail))
       .componentInstance as ClientDetail,
   };
-};
+}
 
 describe('ClientDetail', () => {
-  it('loads and updates a client with its expected version', async () => {
-    const update = vi.fn().mockResolvedValue({
-      success: true,
-      result: { ...client, displayName: 'Acme Conseil', updatedAt: 43 },
-    });
-    const { fixture } = await configure({
-      get: () => Promise.resolve({ success: true as const, result: client }),
-      update,
-    });
-    await fixture.whenStable();
-    fixture.detectChanges();
-    const root: HTMLElement = fixture.nativeElement;
-    const name = root.querySelector<HTMLInputElement>('#detail-display-name');
-    if (name === null) throw new Error('The client name input is unavailable.');
-
-    expect(name.value).toBe('Acme');
-    name.value = 'Acme Conseil';
-    name.dispatchEvent(new Event('input'));
-    root.querySelector<HTMLFormElement>('form')?.dispatchEvent(new SubmitEvent('submit'));
-    await fixture.whenStable();
-    fixture.detectChanges();
-
-    expect(update).toHaveBeenCalledWith(client.id, {
-      displayName: 'Acme Conseil',
-      addressLine1: client.addressLine1,
-      addressLine2: '',
-      postalCode: client.postalCode,
-      city: client.city,
-      country: client.country,
-      email: client.email,
-      expectedUpdatedAt: 42,
-    });
-    expect(root.textContent).toMatch(/Client enregistré|Client saved/);
-  });
-
-  it('shows local validation and a version conflict', async () => {
-    const update = vi.fn().mockResolvedValue({
-      success: false,
-      code: 'client.version_conflict',
-    });
-    const { fixture } = await configure({
-      get: () => Promise.resolve({ success: true as const, result: client }),
-      update,
-    });
-    await fixture.whenStable();
-    fixture.detectChanges();
-    const root: HTMLElement = fixture.nativeElement;
-    const email = root.querySelector<HTMLInputElement>('#detail-email');
-    const name = root.querySelector<HTMLInputElement>('#detail-display-name');
-    if (email === null || name === null) throw new Error('The client fields are unavailable.');
-
-    email.value = 'invalid';
-    email.dispatchEvent(new Event('input'));
-    email.dispatchEvent(new Event('blur'));
-    fixture.detectChanges();
-    expect(email.getAttribute('aria-invalid')).toBe('true');
-    expect(root.querySelector('#detail-email-error')?.textContent).toMatch(/e-mail|email/);
-
-    email.value = client.email;
-    email.dispatchEvent(new Event('input'));
-    name.value = 'Changed';
-    name.dispatchEvent(new Event('input'));
-    root.querySelector<HTMLFormElement>('form')?.dispatchEvent(new SubmitEvent('submit'));
-    await fixture.whenStable();
-    fixture.detectChanges();
-
-    expect(root.querySelector('[role="alert"]')?.textContent).toMatch(/ailleurs|elsewhere/);
-  });
-
-  it('disables an archived client form', async () => {
-    const { fixture, component } = await configure({
-      get: () => Promise.resolve({ success: true as const, result: { ...client, archived: true } }),
-      update: vi.fn(),
-    });
-    await fixture.whenStable();
-    fixture.detectChanges();
-    const root: HTMLElement = fixture.nativeElement;
-
-    expect(root.querySelector<HTMLInputElement>('#detail-display-name')?.disabled).toBe(true);
-    expect(root.querySelector('button[type="submit"]')).toBeNull();
-    expect(await component.canDeactivate()).toBe(true);
-  });
-
-  it('explains the client password length requirement while typing', async () => {
-    const { fixture } = await configure(
-      {
-        get: () => Promise.resolve({ success: true as const, result: client }),
-        update: vi.fn(),
-      },
-      'access',
+  it('shows a read-only profile and a dedicated edit link', async () => {
+    const { root } = await configure();
+    expect(root.querySelector('h1')?.textContent?.trim()).toBe('Acme');
+    expect(root.querySelector('form')).toBeNull();
+    expect(root.querySelector('.profile')?.textContent).toContain(client.email);
+    expect(root.querySelector('app-page-header a')?.getAttribute('href')).toBe(
+      `/backoffice/clients/${client.id}/edit`,
     );
-    await fixture.whenStable();
-    fixture.detectChanges();
-    const root: HTMLElement = fixture.nativeElement;
-    const password = root.querySelector<HTMLInputElement>('#client-account-password');
-    if (password === null) throw new Error('The client password input is unavailable.');
+  });
 
-    expect(password.closest('.field')).not.toBeNull();
+  it('requires confirmation before archiving and keeps the client record visible', async () => {
+    const { root, api, confirmation, fixture } = await configure();
+    root.querySelector<HTMLButtonElement>('.client-actions button')!.click();
+    await fixture.whenStable();
+    expect(api.archive).not.toHaveBeenCalled();
+    confirmation.request.mockResolvedValue(true);
+    root.querySelector<HTMLButtonElement>('.client-actions button')!.click();
+    await fixture.whenStable();
+    expect(api.archive).toHaveBeenCalledWith(client.id);
+    expect(root.querySelector('.profile')?.textContent).toContain('Acme');
+    expect(root.querySelector('app-page-header a')).toBeNull();
+    expect(root.querySelector('.archived-notice')).not.toBeNull();
+  });
+
+  it('reactivates an archived client and opens the access page', async () => {
+    const { root, api, fixture } = await configure('profile', true);
+    root.querySelector<HTMLButtonElement>('.archived-notice button')!.click();
+    await fixture.whenStable();
+    expect(api.reactivate).toHaveBeenCalledWith(client.id);
+    expect(root.querySelector('#client-access-panel')).not.toBeNull();
+  });
+
+  it('shows an empty document state separately from the client profile', async () => {
+    const { root } = await configure('documents');
+    expect(root.querySelector('app-empty-state')).not.toBeNull();
+    expect(root.querySelector('.profile')).toBeNull();
+  });
+
+  it('explains password requirements and protects unsubmitted access fields', async () => {
+    const { root, component, fixture, confirmation } = await configure('access');
+    const password = root.querySelector<HTMLInputElement>('#client-account-password')!;
     expect(root.querySelector('#client-account-password-requirements')?.textContent).toMatch(
       /12.*256/,
     );
-
     password.value = 'court';
     password.dispatchEvent(new Event('input'));
-    fixture.detectChanges();
-
+    await fixture.whenStable();
     expect(root.querySelector('#client-account-password-error')?.textContent).toMatch(/5.*12/);
-  });
-
-  it('lists and revokes one client access account', async () => {
-    const access = {
-      id: '01ARZ3NDEKTSV4RRFFQ69G5FAW' as const,
-      clientId: client.id,
-      email: 'portal@acme.example',
-      createdAt: 1_700_000_000_000,
-    };
-    const revokeAccess = vi.fn().mockResolvedValue({ success: true, result: null });
-    const confirm = vi.spyOn(Confirmation.prototype, 'request').mockResolvedValue(true);
-    const { fixture } = await configure(
-      {
-        get: () => Promise.resolve({ success: true as const, result: client }),
-        update: vi.fn(),
-        listAccess: () => Promise.resolve({ success: true as const, result: [access] }),
-        revokeAccess,
-      },
-      'access',
-    );
-    await fixture.whenStable();
-    fixture.detectChanges();
-    const root: HTMLElement = fixture.nativeElement;
-
-    expect(root.textContent).toContain(access.email);
-    root.querySelector<HTMLButtonElement>('table button')?.click();
-    await fixture.whenStable();
-    fixture.detectChanges();
-
-    expect(revokeAccess).toHaveBeenCalledWith(client.id, access.id);
-    expect(root.textContent).not.toContain(access.email);
-    confirm.mockRestore();
-  });
-
-  it('asks before leaving a dirty client form', async () => {
-    const { fixture, component } = await configure({
-      get: () => Promise.resolve({ success: true as const, result: client }),
-      update: vi.fn(),
-    });
-    await fixture.whenStable();
-    fixture.detectChanges();
-    const root: HTMLElement = fixture.nativeElement;
-    const name = root.querySelector<HTMLInputElement>('#detail-display-name');
-    if (name === null) throw new Error('The client name input is unavailable.');
-    name.value = 'Changed';
-    name.dispatchEvent(new Event('input'));
-    const confirm = vi.spyOn(Confirmation.prototype, 'request').mockResolvedValue(false);
-
     expect(await component.canDeactivate()).toBe(false);
-    expect(confirm).toHaveBeenCalledOnce();
+    expect(confirmation.request).toHaveBeenCalledOnce();
+  });
+
+  it('lists and revokes one access account without changing the client', async () => {
+    const { root, api, confirmation, fixture } = await configure('access');
+    expect(root.textContent).toContain(access.email);
+    confirmation.request.mockResolvedValue(true);
+    root.querySelector<HTMLButtonElement>('table button')!.click();
+    await fixture.whenStable();
+    expect(api.revokeAccess).toHaveBeenCalledWith(client.id, access.id);
+    expect(root.textContent).not.toContain(access.email);
+    expect(root.querySelector('h1')?.textContent?.trim()).toBe('Acme');
   });
 });
-import { Confirmation } from '@shared/confirmation/confirmation';

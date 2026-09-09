@@ -12,6 +12,9 @@ import { Tabs, type TabItem } from '@shared/tabs/tabs';
 import { TabLayout, TabPanel } from '@shared/tabs/tab-panel';
 import { VisualSample } from '@shared/visual-sample/visual-sample';
 import { DesignDocuments } from './design-documents';
+import { EmptyState } from '@shared/empty-state/empty-state';
+import { ListToolbar } from '@shared/list-toolbar/list-toolbar';
+import { createFuzzySearch } from '@shared/fuzzy-search';
 
 type ButtonSample = {
   readonly variant: ButtonVariant;
@@ -28,6 +31,8 @@ type ButtonSample = {
     ContactActions,
     DataTable,
     DesignDocuments,
+    EmptyState,
+    ListToolbar,
     Icon,
     Notice,
     RouterOutlet,
@@ -41,6 +46,15 @@ type ButtonSample = {
   styleUrl: './design.component.scss',
 })
 export class DesignComponent {
+  protected readonly tableQuery = signal('');
+  protected readonly tableRows = createFuzzySearch(
+    signal([
+      { service: 'Web', subject: 'Angular' },
+      { service: 'Desktop', subject: 'WPF' },
+    ]),
+    this.tableQuery,
+    { keys: ['service', 'subject'], threshold: 0.35 },
+  );
   private readonly confirmation = inject(Confirmation);
   protected readonly confirmationResult = signal<'accepted' | 'cancelled' | undefined>(undefined);
   protected async demonstrateConfirmation(destructive: boolean): Promise<void> {

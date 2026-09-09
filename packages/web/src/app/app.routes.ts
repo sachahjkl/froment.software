@@ -198,6 +198,26 @@ export const routes: Routes = [
     children: tabRoutes('active', 'clients', ['active', 'archived', 'all']),
   },
   {
+    path: 'backoffice/clients/new',
+    loadComponent: () =>
+      import('./pages/back-office/client-editor/client-editor').then(
+        (module) => module.ClientEditor,
+      ),
+    canActivate: [administratorGuard],
+    canDeactivate: [unsavedChangesGuard],
+    data: { titleKey: 'backOffice.clients.create', robots: 'noindex, nofollow' },
+  },
+  {
+    path: 'backoffice/clients/:clientId/edit',
+    loadComponent: () =>
+      import('./pages/back-office/client-editor/client-editor').then(
+        (module) => module.ClientEditor,
+      ),
+    canActivate: [administratorGuard],
+    canDeactivate: [unsavedChangesGuard],
+    data: { titleKey: 'clientsWorkspace.edit', robots: 'noindex, nofollow' },
+  },
+  {
     path: 'backoffice/clients/:clientId',
     loadComponent: () =>
       import('./pages/back-office/client-detail/client-detail').then(

@@ -1,115 +1,31 @@
 :host {
   display: block;
 }
-
 .clients-page {
   padding: var(--page-header-y) var(--page-x);
 }
-
 h1 {
-  margin-top: var(--space-1);
   font-size: var(--text-2xl);
 }
-
-.clients-page > header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: var(--space-5);
-}
-
 .intro {
-  max-width: 68ch;
-  margin-top: var(--space-2);
+  margin-block-start: var(--space-2);
   color: var(--color-muted);
 }
-
 app-tabs {
-  margin-top: var(--space-7);
+  margin-block-start: var(--space-6);
 }
-
-#clients-panel {
-  min-height: 20rem;
+.search {
+  flex: 0 1 28rem;
+  min-inline-size: 0;
 }
-
-dialog {
-  width: min(68ch, calc(100% - 2 * var(--space-4)));
-  max-height: calc(100dvh - 2 * var(--space-4));
-  padding: var(--space-5);
-  overflow: auto;
-  border: 1px solid var(--color-line-strong);
-  background: var(--color-canvas);
-  color: var(--color-ink);
-  box-shadow: var(--shadow-panel);
+th,
+td {
+  padding-block: var(--space-3);
 }
-
-dialog::backdrop {
-  background: rgb(0 0 0 / 0.55);
+tbody th {
+  font-weight: 600;
 }
-
-.modal-heading {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-4);
-}
-
-.create-client {
-  margin-top: var(--space-5);
-}
-
-.create-client > * + * {
-  margin-top: var(--space-3);
-}
-
-.create-client button {
-  display: flex;
-}
-
-.field-error {
-  color: var(--color-danger);
-  font-size: var(--text-xs);
-  font-weight: 400;
-}
-
-.notice,
-.access-result,
-.empty {
-  margin-top: var(--space-5);
-}
-
-.access-result {
-  padding: var(--space-4);
-  border: 1px solid var(--color-warning);
-  background: var(--color-warning-soft);
-}
-
-.access-result p,
-.access-result > div {
-  margin-top: var(--space-3);
-}
-
-.access-result > div {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--space-3);
-}
-
-.access-result code {
-  overflow-wrap: anywhere;
-}
-
-.actions {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: var(--space-2);
-}
-
-@media (max-width: 38rem) {
-  .clients-page > header {
-    align-items: stretch;
-    flex-direction: column;
-  }
+.name-column,
+.email-column {
+  width: 35%;
 }

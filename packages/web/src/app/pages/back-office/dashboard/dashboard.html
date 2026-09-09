@@ -6,12 +6,7 @@
       <p class="intro">{{ i18n.t('backOffice.dashboard.intro') }}</p>
     </div>
     <nav class="quick-actions" [attr.aria-label]="i18n.t('backOffice.dashboard.quickActions')">
-      <a
-        appLinkButton
-        variant="primary"
-        routerLink="/backoffice/clients"
-        [queryParams]="{ create: 'true' }"
-      >
+      <a appLinkButton variant="primary" routerLink="/backoffice/clients/new">
         {{ i18n.t('backOffice.dashboard.createClient') }}
       </a>
       <a appLinkButton routerLink="/backoffice/quotes/new">

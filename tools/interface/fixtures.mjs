@@ -7,7 +7,7 @@ const createdAt = "2026-09-05T08:00:00.000Z";
 export const accountEmail = "administration.et.comptabilite@entreprise-internationale.example";
 export const quoteToken = "A".repeat(43);
 
-const client = {
+export const client = {
   id: clientId,
   displayName: "Atelier international de conception et de développement des systèmes industriels",
   addressLine1: "128 avenue de la République",

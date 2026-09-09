@@ -1,197 +1,100 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { ActivatedRoute, provideRouter } from '@angular/router';
+import { TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
 import { vi } from 'vitest';
-
 import { ClientsApi } from '@backoffice/clients-api';
-import { type ClientCreateRequestValue, type ClientListValue } from '@froment/contracts';
 import { Clients } from './clients';
 import { TabPanelOutlet } from '@shared/tabs/tab-panel';
 
-const clientRoutes = [
-  {
-    path: '',
-    component: Clients,
-    children: [
-      { path: 'active', component: TabPanelOutlet, data: { panel: 'clients', tab: 'active' } },
-      { path: 'archived', component: TabPanelOutlet, data: { panel: 'clients', tab: 'archived' } },
-    ],
-  },
-];
-
-class ClientsApiStub {
-  readonly createdNames: Array<string> = [];
-  constructor(private readonly initialClients: ClientListValue = []) {}
-
-  list(): Promise<ClientListValue> {
-    return Promise.resolve(this.initialClients);
-  }
-
-  create(request: ClientCreateRequestValue) {
-    this.createdNames.push(request.displayName);
-    return Promise.resolve({
-      success: true as const,
-      result: {
-        id: '01ARZ3NDEKTSV4RRFFQ69G5FAV' as const,
-        ...request,
-        archived: false,
-        updatedAt: 1,
-      },
-    });
-  }
-}
-
-const openCreateModal = async (fixture: ComponentFixture<unknown>) => {
-  const root: HTMLElement = fixture.nativeElement;
-  const dialog = root.querySelector<HTMLDialogElement>('dialog');
-  if (dialog) {
-    dialog.showModal = () => dialog.setAttribute('open', '');
-    dialog.close = () => dialog.removeAttribute('open');
-  }
-  root.querySelector<HTMLButtonElement>('.clients-page > header button')?.click();
-  await fixture.whenStable();
-  return root;
+const client = {
+  id: '01ARZ3NDEKTSV4RRFFQ69G5FAV',
+  displayName: 'Développement Acme',
+  addressLine1: '',
+  addressLine2: '',
+  postalCode: '',
+  city: 'Lyon',
+  country: 'France',
+  email: 'contact@acme.example',
+  archived: false,
+  updatedAt: 1,
+};
+const archivedClient = {
+  ...client,
+  id: '01ARZ3NDEKTSV4RRFFQ69G5FAW',
+  displayName: 'Archived',
+  archived: true,
 };
 
-describe('Clients', () => {
-  it('opens the creation flow from the dashboard query parameter', () => {
-    const api = new ClientsApiStub();
-    TestBed.configureTestingModule({
-      providers: [
-        provideRouter(clientRoutes),
-        { provide: ClientsApi, useValue: api },
+async function configure(list = vi.fn().mockResolvedValue([client, archivedClient])) {
+  TestBed.configureTestingModule({
+    providers: [
+      provideRouter([
         {
-          provide: ActivatedRoute,
-          useValue: { snapshot: { queryParamMap: { get: () => 'true' } } },
+          path: '',
+          component: Clients,
+          children: ['active', 'archived', 'all'].map((tab) => ({
+            path: tab,
+            component: TabPanelOutlet,
+            data: { panel: 'clients', tab },
+          })),
         },
-      ],
-    });
-    const fixture = TestBed.createComponent(Clients);
-
-    expect(fixture.componentInstance['createOpen']()).toBe(true);
+      ]),
+      { provide: ClientsApi, useValue: { list } },
+    ],
   });
+  const harness = await RouterTestingHarness.create('/active');
+  await harness.fixture.whenStable();
+  return { fixture: harness.fixture, root: harness.fixture.nativeElement as HTMLElement };
+}
 
-  it('does not replace a created client with an older list response', async () => {
-    let resolveList!: (clients: ClientListValue) => void;
-    const api = new ClientsApiStub();
-    vi.spyOn(api, 'list').mockReturnValue(new Promise((resolve) => (resolveList = resolve)));
-    TestBed.configureTestingModule({
-      providers: [provideRouter(clientRoutes), { provide: ClientsApi, useValue: api }],
-    });
-    const harness = await RouterTestingHarness.create('/active');
-    const fixture = harness.fixture;
-    const root = await openCreateModal(fixture);
-    const input = root.querySelector<HTMLInputElement>('input')!;
-
-    input.value = 'Created while loading';
-    input.dispatchEvent(new Event('input', { bubbles: true }));
-    await fixture.whenStable();
-    root
-      .querySelector<HTMLFormElement>('form')!
-      .dispatchEvent(new SubmitEvent('submit', { bubbles: true }));
-    await fixture.whenStable();
-    expect(api.createdNames).toEqual(['Created while loading']);
-    resolveList([]);
-    await vi.waitFor(() => expect(root.textContent).not.toMatch(/Loading clients|Chargement/));
-
-    expect(root.textContent).toContain('Created while loading');
-  });
-
-  it('creates and displays a client', async () => {
-    const api = new ClientsApiStub();
-    TestBed.configureTestingModule({
-      providers: [provideRouter(clientRoutes), { provide: ClientsApi, useValue: api }],
-    });
-    const harness = await RouterTestingHarness.create('/active');
-    const fixture = harness.fixture;
-    const root = await openCreateModal(fixture);
-    const input = root.querySelector<HTMLInputElement>('input');
-    if (input === null) throw new Error('The client name input is unavailable.');
-
-    input.value = 'Acme';
-    input.dispatchEvent(new Event('input'));
-    root.querySelector<HTMLFormElement>('form')?.dispatchEvent(new SubmitEvent('submit'));
-    await fixture.whenStable();
-
-    expect(api.createdNames).toEqual(['Acme']);
-    expect(root.textContent).toContain('Acme');
-    expect(root.querySelector('dialog')?.hasAttribute('open')).toBe(false);
-    expect(document.activeElement).toBe(root.querySelector('.clients-page > header button'));
-  });
-
-  it('shows validation feedback without sending an invalid client', async () => {
-    const api = new ClientsApiStub();
-    TestBed.configureTestingModule({
-      providers: [provideRouter(clientRoutes), { provide: ClientsApi, useValue: api }],
-    });
-    const harness = await RouterTestingHarness.create('/active');
-    const fixture = harness.fixture;
-    const root = await openCreateModal(fixture);
-    const form = root.querySelector<HTMLFormElement>('form');
-    if (form === null) throw new Error('The client form is unavailable.');
-
-    form.dispatchEvent(new SubmitEvent('submit'));
-    await fixture.whenStable();
-
-    expect(api.createdNames).toEqual([]);
-    expect(root.querySelector<HTMLInputElement>('input')?.getAttribute('aria-invalid')).toBe(
-      'true',
+describe('Clients', () => {
+  it('separates creation from the list and links clients to their details', async () => {
+    const { root } = await configure();
+    expect(root.querySelector('dialog, form')).toBeNull();
+    expect(root.querySelector('app-page-header a')?.getAttribute('href')).toBe(
+      '/backoffice/clients/new',
     );
-    expect(root.querySelector('#client-display-name-error')?.textContent).toContain('120');
-  });
-
-  it('keeps an archived client action cell in the table layout', async () => {
-    const api = new ClientsApiStub([
-      {
-        id: '01ARZ3NDEKTSV4RRFFQ69G5FAV',
-        displayName: 'Acme',
-        addressLine1: '',
-        addressLine2: '',
-        postalCode: '',
-        city: '',
-        country: '',
-        email: '',
-        archived: true,
-        updatedAt: 1,
-      },
-    ]);
-    TestBed.configureTestingModule({
-      providers: [provideRouter(clientRoutes), { provide: ClientsApi, useValue: api }],
-    });
-    const harness = await RouterTestingHarness.create('/active');
-    const root: HTMLElement = harness.fixture.nativeElement;
-    root.querySelector<HTMLAnchorElement>('#clients-archived-tab')?.click();
-    await harness.fixture.whenStable();
-    const actionCell = root.querySelector<HTMLTableCellElement>('tbody td:last-child');
-
-    expect(actionCell?.classList.contains('actions')).toBe(false);
-    expect(actionCell?.querySelector('.actions')).not.toBeNull();
-  });
-
-  it('links each client to its detail page', async () => {
-    const api = new ClientsApiStub([
-      {
-        id: '01ARZ3NDEKTSV4RRFFQ69G5FAV',
-        displayName: 'Acme',
-        addressLine1: '',
-        addressLine2: '',
-        postalCode: '',
-        city: '',
-        country: '',
-        email: '',
-        archived: false,
-        updatedAt: 1,
-      },
-    ]);
-    TestBed.configureTestingModule({
-      providers: [provideRouter(clientRoutes), { provide: ClientsApi, useValue: api }],
-    });
-    const harness = await RouterTestingHarness.create('/active');
-    const root: HTMLElement = harness.fixture.nativeElement;
-    await vi.waitFor(() => expect(root.querySelector('tbody')).not.toBeNull());
-    expect(root.querySelector<HTMLAnchorElement>('tbody a')?.getAttribute('href')).toBe(
-      '/backoffice/clients/01ARZ3NDEKTSV4RRFFQ69G5FAV',
+    expect(root.querySelector('tbody a')?.getAttribute('href')).toBe(
+      `/backoffice/clients/${client.id}`,
     );
-    expect(root.querySelector('.actions a[data-button-variant]')).not.toBeNull();
+    expect(root.querySelectorAll('tbody tr')).toHaveLength(1);
+  });
+
+  it('combines tabs and fuzzy search across contact details', async () => {
+    const { root, fixture } = await configure();
+    const search = root.querySelector<HTMLInputElement>('#clients-search')!;
+    search.value = 'developement';
+    search.dispatchEvent(new Event('input'));
+    await fixture.whenStable();
+    expect(root.querySelector('tbody')?.textContent).toContain(client.displayName);
+    root.querySelector<HTMLAnchorElement>('#clients-archived-tab')!.click();
+    await fixture.whenStable();
+    expect(root.querySelector('tbody')).toBeNull();
+    expect(root.querySelector('app-empty-state')).not.toBeNull();
+    root.querySelector<HTMLButtonElement>('app-empty-state button')!.click();
+    await fixture.whenStable();
+    expect(root.querySelector('tbody')?.textContent).toContain('Archived');
+  });
+
+  it('shows loading and failure states with an explicit retry', async () => {
+    let reject!: (error: Error) => void;
+    const list = vi
+      .fn()
+      .mockImplementationOnce(
+        () =>
+          new Promise((_, fail) => {
+            reject = fail;
+          }),
+      )
+      .mockResolvedValue([]);
+    const { root, fixture } = await configure(list);
+    expect(root.querySelector('[role="status"]')?.textContent).toMatch(/Loading|Chargement/);
+    reject(new Error('Unavailable'));
+    await fixture.whenStable();
+    await vi.waitFor(() => expect(root.querySelector('[role="alert"]')).not.toBeNull());
+    root.querySelector<HTMLButtonElement>('.notice-flow button')!.click();
+    await fixture.whenStable();
+    expect(list).toHaveBeenCalledTimes(2);
+    expect(root.querySelector('app-empty-state')).not.toBeNull();
   });
 });

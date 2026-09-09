@@ -6,6 +6,7 @@ import { checkServiceConnections } from "./service-connections.mjs";
 import { checkCreditNotes } from "./credit-notes.mjs";
 import { checkBankLedger } from "./bank-ledger.mjs";
 import { checkDashboardShell, openBackOfficeNavigation } from "./dashboard-shell.mjs";
+import { checkClientsWorkspace } from "./clients-workspace.mjs";
 import {
   accountEmail,
   clientId,
@@ -181,7 +182,8 @@ test("client form and complete account address", async ({ page, colorScheme }, t
   expect(loginAudit.violations).toEqual([]);
   await page.screenshot({ path: testInfo.outputPath("login.png"), fullPage: true });
   await page.unroute("**/api/auth/refresh");
-  await openPage(page, `/backoffice/clients/${clientId}/profile`, colorScheme);
+  await checkClientsWorkspace(page, testInfo);
+  await openPage(page, `/backoffice/clients/${clientId}/edit`, colorScheme);
   await expect(page.locator(".profile-form")).toBeVisible();
   await checkDashboardShell(page, testInfo);
   await openBackOfficeNavigation(page);

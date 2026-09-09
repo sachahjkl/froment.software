@@ -28,11 +28,12 @@ export class Drawer {
   readonly closed = output<void>();
   private readonly dialogs = inject(Dialog);
   private readonly overlay = inject(Overlay);
+  private readonly destroyRef = inject(DestroyRef);
   private readonly content = viewChild.required<TemplateRef<unknown>>('content');
   private active: DialogRef | undefined;
 
   constructor() {
-    inject(DestroyRef).onDestroy(() => this.active?.close());
+    this.destroyRef.onDestroy(() => this.active?.close());
     afterRenderEffect(() => {
       if (this.open() && this.active === undefined) {
         const dialog = this.dialogs.open(this.content(), {
@@ -49,7 +50,7 @@ export class Drawer {
         this.active = dialog;
         dialog.closed.subscribe(() => {
           this.active = undefined;
-          this.closed.emit();
+          if (!this.destroyRef.destroyed) this.closed.emit();
         });
       }
       if (!this.open()) this.active?.close();

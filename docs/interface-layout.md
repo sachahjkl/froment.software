@@ -84,6 +84,31 @@ Une navigation annulée conserve le tiroir et la saisie.
 Le composant `PageHeader` sépare le titre des actions avec retour à la ligne.
 L’atelier `/design/navigation` présente ce composant et le tiroir interactif.
 
+### Parcours Clients
+
+La liste `/backoffice/clients` contient les onglets, la recherche et le tableau.
+La recherche Fuse couvre le nom, l’adresse e-mail, la ville et le pays.
+Les cellules longues reviennent à la ligne sur ordinateur.
+Le tableau conserve un défilement horizontal local sur écran étroit.
+
+La création utilise `/backoffice/clients/new`.
+La fiche `/backoffice/clients/:clientId/profile` présente les coordonnées sans formulaire.
+La modification utilise `/backoffice/clients/:clientId/edit`.
+Les onglets Documents et Accès restent associés à la fiche.
+L’archivage se trouve dans les actions de la fiche et nécessite une confirmation.
+
+Le formulaire sépare l’identité de l’adresse de facturation.
+Sa largeur locale maximale est de 44 rem.
+Les modifications conservent le contrôle de version et les erreurs détaillées.
+Les formulaires protègent les champs modifiés et les requêtes en cours lors d’une sortie de page.
+Les documents publiés restent inchangés.
+
+`ListToolbar` regroupe la recherche, les filtres et le nombre de résultats.
+`EmptyState` sépare le titre, l’explication et l’action de création.
+`DataTable` propose le mode `fluid` pour répartir les colonnes et autoriser le retour à la ligne.
+L’atelier `/design/data` présente une recherche interactive et le tableau fluide.
+L’atelier `/design/feedback` présente l’état vide.
+
 Les actions rapides du tableau de bord se trouvent dans son en-tête.
 Les indicateurs utilisent deux colonnes sur mobile.
 Le menu du compte affiche l’adresse complète sans imposer sa largeur à l’en-tête.

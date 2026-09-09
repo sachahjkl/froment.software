@@ -17,6 +17,7 @@ describe('DesignComponent', () => {
             children: [
               { path: 'demo', component: TabPanelOutlet, data: { panel: 'demo' } },
               { path: 'documents', component: TabPanelOutlet, data: { panel: 'documents' } },
+              { path: 'data', component: TabPanelOutlet, data: { panel: 'data' } },
             ],
           },
         ]),
@@ -37,5 +38,12 @@ describe('DesignComponent', () => {
     await fixture.whenStable();
     expect(root.querySelector('#design-demo-panel')).toBeNull();
     expect(root.querySelector('#design-documents-panel app-design-documents')).not.toBeNull();
+    root.querySelector<HTMLAnchorElement>('#design-data-tab')!.click();
+    await fixture.whenStable();
+    const search = root.querySelector<HTMLInputElement>('app-list-toolbar input')!;
+    search.value = 'Angular';
+    search.dispatchEvent(new Event('input'));
+    await fixture.whenStable();
+    expect(root.querySelectorAll('#design-data-panel tbody tr')).toHaveLength(1);
   });
 });

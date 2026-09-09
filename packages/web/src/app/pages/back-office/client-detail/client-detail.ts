@@ -4,10 +4,12 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
+  DestroyRef,
   HostListener,
   inject,
   signal,
 } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import {
   disabled,
   FormField,
@@ -41,6 +43,8 @@ import { DataTable } from '@shared/data-table/data-table';
 import { Notice } from '@shared/notice/notice';
 import { Tabs, type TabItem } from '@shared/tabs/tabs';
 import { TabLayout, TabPanel } from '@shared/tabs/tab-panel';
+import { PageHeader } from '@shared/page-header/page-header';
+import { EmptyState } from '@shared/empty-state/empty-state';
 
 interface ClientDocument {
   readonly id: string;
@@ -52,16 +56,6 @@ interface ClientDocument {
   readonly link: readonly string[];
   readonly updatedAt: string;
 }
-
-const emptyClient = () => ({
-  displayName: '',
-  addressLine1: '',
-  addressLine2: '',
-  postalCode: '',
-  city: '',
-  country: '',
-  email: '',
-});
 
 @Component({
   host: { class: 'page-container' },
@@ -77,6 +71,8 @@ const emptyClient = () => ({
     TabLayout,
     TabPanel,
     Tabs,
+    PageHeader,
+    EmptyState,
   ],
   templateUrl: './client-detail.html',
   styleUrl: './client-detail.scss',
@@ -91,8 +87,11 @@ export class ClientDetail {
   private readonly invoicesApi = inject(InvoicesApi);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
-  private readonly model = signal(emptyClient());
-  private readonly client = signal<ClientSummaryValue | undefined>(undefined);
+  private readonly destroyRef = inject(DestroyRef);
+  private loadGeneration = 0;
+  protected readonly client = signal<ClientSummaryValue | undefined>(undefined);
+  protected readonly archiving = signal(false);
+  protected readonly documentsError = signal(false);
   protected readonly tabs = computed<readonly TabItem[]>(() =>
     (['profile', 'documents', 'access'] as const).map((value) => ({
       path: value,
@@ -129,7 +128,7 @@ export class ClientDetail {
           title: order.title,
           status: this.i18n.t('backOffice.clientDetail.confirmed'),
           totalCents: order.totalCents,
-          link: ['/backoffice/affaires'] as const,
+          link: ['/backoffice/affaires', order.quoteId] as const,
           updatedAt: order.createdAt,
         })),
       ...this.invoices()
@@ -152,6 +151,7 @@ export class ClientDetail {
   protected readonly revokingAccessId = signal<string | undefined>(undefined);
   private readonly accessModel = signal({ email: '', password: '' });
   protected readonly accessForm = form(this.accessModel, (path) => {
+    disabled(path, () => this.accessPending() || this.accessesLoading() || this.archived());
     required(path.email);
     pattern(path.email, /^[^\s@]+@[^\s@]+\.[^\s@]+$/);
     required(path.password);
@@ -161,52 +161,40 @@ export class ClientDetail {
   protected readonly accessPasswordLength = computed(() => this.accessModel().password.length);
   protected readonly accessPasswordConfig = accountPasswordConfig;
   protected readonly accountEmail = signal<string | undefined>(undefined);
-  protected readonly clientForm = form(this.model, (path) => {
-    required(path.displayName);
-    pattern(path.displayName, /\S/);
-    maxLength(path.displayName, 120);
-    maxLength(path.addressLine1, 160);
-    maxLength(path.addressLine2, 160);
-    maxLength(path.postalCode, 32);
-    maxLength(path.city, 120);
-    maxLength(path.country, 120);
-    maxLength(path.email, 254);
-    pattern(path.email, /^$|^[^\s@]+@[^\s@]+\.[^\s@]+$/);
-    disabled(path, { when: () => this.archived() });
-  });
   protected readonly loading = signal(true);
-  protected readonly saving = signal(false);
   protected readonly reactivating = signal(false);
-  protected readonly saved = signal(false);
   protected readonly archived = computed(() => this.client()?.archived ?? false);
   protected readonly error = signal<TranslationKey | undefined>(undefined);
-  protected readonly saveDisabled = computed(
-    () =>
-      this.loading() ||
-      this.saving() ||
-      this.archived() ||
-      this.clientForm().invalid() ||
-      !this.clientForm().dirty(),
-  );
 
   constructor() {
-    afterNextRender(() => void this.load());
+    afterNextRender(() =>
+      this.route.paramMap
+        .pipe(takeUntilDestroyed(this.destroyRef))
+        .subscribe(() => void this.load()),
+    );
   }
 
   async canDeactivate(): Promise<boolean> {
     return (
-      !this.clientForm().dirty() ||
-      (await this.confirmation.request(this.i18n.t('backOffice.clientDetail.unsavedChanges')))
+      !this.accessPending() &&
+      !this.revokingAccessId() &&
+      !this.archiving() &&
+      !this.reactivating() &&
+      (!this.accessForm().dirty() ||
+        (await this.confirmation.request(this.i18n.t('backOffice.clientDetail.unsavedChanges'))))
     );
   }
 
   @HostListener('window:beforeunload', ['$event'])
   protected preventUnsavedUnload(event: BeforeUnloadEvent): void {
-    if (this.clientForm().dirty()) event.preventDefault();
-  }
-
-  protected invalid(field: keyof ReturnType<typeof emptyClient>): boolean {
-    return this.clientForm[field]().touched() && this.clientForm[field]().invalid();
+    if (
+      this.accessForm().dirty() ||
+      this.accessPending() ||
+      this.revokingAccessId() ||
+      this.archiving() ||
+      this.reactivating()
+    )
+      event.preventDefault();
   }
 
   protected money(cents: number): string {
@@ -216,7 +204,7 @@ export class ClientDetail {
   protected createAccess(event: SubmitEvent): void {
     event.preventDefault();
     const client = this.client();
-    if (!client) return;
+    if (!client || client.archived || this.accessPending()) return;
     void submit(this.accessForm, async () => {
       this.accessPending.set(true);
       this.error.set(undefined);
@@ -230,8 +218,8 @@ export class ClientDetail {
         [...accesses, outcome.result].sort((left, right) => left.email.localeCompare(right.email)),
       );
       this.accountEmail.set(outcome.result.email);
-      this.accessModel.update((model) => ({ ...model, password: '' }));
-      this.accessForm.password().reset();
+      this.accessModel.set({ email: '', password: '' });
+      this.accessForm().reset();
     });
   }
 
@@ -271,33 +259,34 @@ export class ClientDetail {
     const outcome = await this.api.reactivate(client.id);
     this.reactivating.set(false);
     if (!outcome.success) return this.setError(outcome.code);
-    this.applyClient(outcome.result);
+    this.client.set(outcome.result);
     void this.router.navigate(['access'], { relativeTo: this.route });
   }
 
-  protected save(event: SubmitEvent): void {
-    event.preventDefault();
+  protected async archive(): Promise<void> {
     const current = this.client();
-    if (current === undefined || current.archived) return;
-    void submit(this.clientForm, async () => {
-      this.saving.set(true);
-      this.saved.set(false);
-      this.error.set(undefined);
-      const outcome = await this.api.update(current.id, {
-        ...this.model(),
-        expectedUpdatedAt: current.updatedAt,
-      });
-      this.saving.set(false);
-      if (!outcome.success) {
-        this.setError(outcome.code);
-        return;
-      }
-      this.applyClient(outcome.result);
-      this.saved.set(true);
-    });
+    if (!current || current.archived || this.archiving()) return;
+    if (
+      !(await this.confirmation.request(this.i18n.t('backOffice.clients.archiveConfirmation'), {
+        variant: 'danger',
+      }))
+    )
+      return;
+    this.archiving.set(true);
+    this.error.set(undefined);
+    const outcome = await this.api.archive(current.id);
+    this.archiving.set(false);
+    if (!outcome.success) return this.setError(outcome.code);
+    this.client.set(outcome.result);
   }
 
-  private async load(): Promise<void> {
+  protected async load(): Promise<void> {
+    const generation = ++this.loadGeneration;
+    this.loading.set(true);
+    this.client.set(undefined);
+    this.documentsLoading.set(true);
+    this.accessesLoading.set(true);
+    this.error.set(undefined);
     const clientId = Schema.decodeUnknownOption(Ulid)(this.route.snapshot.paramMap.get('clientId'));
     if (Option.isNone(clientId)) {
       this.error.set('client.not_found');
@@ -305,12 +294,13 @@ export class ClientDetail {
       return;
     }
     const outcome = await this.api.get(clientId.value);
+    if (generation !== this.loadGeneration || this.destroyRef.destroyed) return;
     if (!outcome.success) {
       this.setError(outcome.code);
       this.loading.set(false);
       return;
     }
-    this.applyClient(outcome.result);
+    this.client.set(outcome.result);
     this.loading.set(false);
     const [quotes, orders, invoices, accesses] = await Promise.allSettled([
       this.quotesApi.list(),
@@ -318,6 +308,7 @@ export class ClientDetail {
       this.invoicesApi.list(),
       this.api.listAccess(clientId.value),
     ]);
+    if (generation !== this.loadGeneration || this.destroyRef.destroyed) return;
     if (quotes.status === 'fulfilled') this.quotes.set(quotes.value);
     if (orders.status === 'fulfilled') this.orders.set(orders.value);
     if (invoices.status === 'fulfilled') this.invoices.set(invoices.value);
@@ -328,24 +319,8 @@ export class ClientDetail {
       this.error.set('client.error');
     }
     this.accessesLoading.set(false);
-    if ([quotes, orders, invoices].every(({ status }) => status === 'rejected')) {
-      this.error.set('client.error');
-    }
+    this.documentsError.set([quotes, orders, invoices].some(({ status }) => status === 'rejected'));
     this.documentsLoading.set(false);
-  }
-
-  private applyClient(client: ClientSummaryValue): void {
-    this.client.set(client);
-    this.model.set({
-      displayName: client.displayName,
-      addressLine1: client.addressLine1,
-      addressLine2: client.addressLine2,
-      postalCode: client.postalCode,
-      city: client.city,
-      country: client.country,
-      email: client.email,
-    });
-    this.clientForm().reset();
   }
 
   private setError(code: ClientErrorCode): void {

@@ -1,0 +1,66 @@
+<section class="client-editor notice-flow" aria-labelledby="client-editor-title">
+  <a [routerLink]="backLink()"
+    >{{ i18n.t(client() ? 'clientsWorkspace.backToClient' : 'backOffice.backToClients') }}</a
+  >
+  <app-page-header>
+    <h1 id="client-editor-title">
+      {{ i18n.t(editing() ? 'clientsWorkspace.edit' : 'backOffice.clients.create') }}
+    </h1>
+    <p class="intro">
+      {{ i18n.t(editing() ? 'clientsWorkspace.editIntro' : 'clientsWorkspace.formIntro') }}
+    </p>
+  </app-page-header>
+  @if (state() === 'loading') {
+  <p role="status">{{ i18n.t('backOffice.clientDetail.loading') }}</p>
+  } @else if (state() === 'error') {
+  <p appNotice variant="danger" role="alert">{{ i18n.t(error()!) }}</p>
+  <button appButton type="button" (click)="load()">
+    {{ i18n.t('backOffice.dashboard.retry') }}
+  </button>
+  } @else if (client()?.archived) {
+  <p appNotice role="status">{{ i18n.t('backOffice.clientDetail.archived') }}</p>
+  } @else {
+  <form class="profile-form" novalidate (submit)="save($event)">
+    @for (group of groups; track group.title) {
+    <fieldset>
+      <legend>{{ i18n.t(group.title) }}</legend>
+      <div class="field-grid">
+        @for (field of group.fields; track field.name) {
+        <label class="field" [class.wide]="field.wide" [for]="'client-' + field.name">
+          {{ i18n.t(fieldLabel(field.name)) }}
+          <input
+            class="input"
+            [id]="'client-' + field.name"
+            [type]="field.type"
+            [autocomplete]="field.autocomplete"
+            [formField]="clientForm[field.name]"
+            [attr.aria-invalid]="invalid(field.name)"
+            [attr.aria-describedby]="invalid(field.name) ? 'client-' + field.name + '-error' : null"
+          />
+          @if (invalid(field.name)) {
+          <span class="field-error" [id]="'client-' + field.name + '-error'"
+            >{{ i18n.t(fieldError(field.name)) }}</span
+          >
+          }
+        </label>
+        }
+      </div>
+    </fieldset>
+    } @if (error(); as code) {
+    <p appNotice variant="danger" role="alert">{{ i18n.t(code) }}</p>
+    }
+    <div class="actions">
+      <button
+        appButton
+        variant="primary"
+        type="submit"
+        [disabled]="saving() || completed() || (editing() && !clientForm().dirty())"
+      >
+        {{ i18n.t(saving() ? 'backOffice.clientDetail.saving' : editing() ?
+        'backOffice.clientDetail.save' : 'backOffice.clients.create') }}
+      </button>
+      <a appLinkButton [routerLink]="backLink()">{{ i18n.t('clientsWorkspace.cancel') }}</a>
+    </div>
+  </form>
+  }
+</section>

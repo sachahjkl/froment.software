@@ -1,0 +1,43 @@
+:host {
+  display: block;
+}
+.client-editor {
+  padding: var(--page-header-y) var(--page-x);
+}
+app-page-header {
+  margin-block: var(--space-4) var(--space-6);
+}
+h1 {
+  font-size: var(--text-2xl);
+}
+.intro {
+  margin-block-start: var(--space-2);
+  color: var(--color-muted);
+}
+form {
+  display: grid;
+  gap: var(--space-6);
+  max-inline-size: 44rem;
+}
+fieldset {
+  min-inline-size: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+legend {
+  margin-block-end: var(--space-4);
+  padding: 0;
+  font-weight: 700;
+}
+.field-error {
+  color: var(--color-danger);
+  font-size: var(--text-xs);
+}
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  padding-block-start: var(--space-4);
+  border-block-start: 1px solid var(--color-line);
+}

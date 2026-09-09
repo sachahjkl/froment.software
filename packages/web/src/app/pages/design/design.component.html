@@ -526,7 +526,12 @@
           </details>
         </app-visual-sample>
         <app-visual-sample name="empty state">
-          <p class="empty">{{ i18n.t("backOffice.quotes.empty") }}</p>
+          <app-empty-state icon="clients" [title]="i18n.t('backOffice.clients.empty')"
+            ><p>{{ i18n.t("clientsWorkspace.emptyIntro") }}</p>
+            <button emptyActions appButton type="button">
+              {{ i18n.t("backOffice.clients.create") }}
+            </button></app-empty-state
+          >
         </app-visual-sample>
         <app-visual-sample name="loading state">
           <p class="loading-state" aria-live="polite">{{ i18n.t("backOffice.quotes.loading") }}</p>
@@ -562,7 +567,21 @@
     >
       <h2>{{ i18n.t("design.components.data") }}</h2>
       <app-visual-sample name="data table / scroll region">
-        <div appDataTable>
+        <app-list-toolbar>
+          <label class="field"
+            >{{ i18n.t("design.components.search")
+            }}<input
+              #tableSearch
+              class="input"
+              type="search"
+              [value]="tableQuery()"
+              (input)="tableQuery.set(tableSearch.value)"
+          /></label>
+          <span listSummary role="status">{{
+            i18n.tf("clientsWorkspace.count", { count: tableRows().length })
+          }}</span>
+        </app-list-toolbar>
+        <div appDataTable tableLayout="fluid">
           <table>
             <thead>
               <tr>
@@ -572,16 +591,13 @@
               </tr>
             </thead>
             <tbody>
-              <tr>
-                <td>Web</td>
-                <td>Angular</td>
-                <td>{{ i18n.t("design.components.success") }}</td>
-              </tr>
-              <tr>
-                <td>{{ i18n.t("design.demo.desktop") }}</td>
-                <td>WPF</td>
-                <td>{{ i18n.t("design.components.info") }}</td>
-              </tr>
+              @for (row of tableRows(); track row.item.subject) {
+                <tr>
+                  <td>{{ row.item.service }}</td>
+                  <td>{{ row.item.subject }}</td>
+                  <td>{{ i18n.t("design.components.success") }}</td>
+                </tr>
+              }
             </tbody>
           </table>
         </div>

@@ -52,7 +52,7 @@ describe('Dashboard', () => {
     const root: HTMLElement = fixture.nativeElement;
     const quickActions = root.querySelectorAll<HTMLAnchorElement>('.quick-actions a');
     expect(Array.from(quickActions, ({ href }) => href)).toEqual([
-      expect.stringContaining('/backoffice/clients?create=true'),
+      expect.stringContaining('/backoffice/clients/new'),
       expect.stringContaining('/backoffice/quotes/new'),
     ]);
   });

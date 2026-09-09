@@ -1,21 +1,43 @@
-<section appTabLayout class="client-page" aria-labelledby="client-title">
-  <header>
-    <a class="back-link" routerLink="/backoffice/clients">
-      {{ i18n.t('backOffice.backToClients') }}
-    </a>
-    <h1 id="client-title">{{ i18n.t('backOffice.clientDetail.title') }}</h1>
-  </header>
-
+<section appTabLayout class="client-page notice-flow" aria-labelledby="client-title">
+  <a routerLink="/backoffice/clients">{{ i18n.t('backOffice.backToClients') }}</a>
+  <app-page-header>
+    <h1 id="client-title">
+      {{ client()?.displayName ?? i18n.t('backOffice.clientDetail.title') }}
+    </h1>
+    @if (client(); as current) {
+    <span appBadge [variant]="current.archived ? 'warning' : 'success'"
+      >{{ i18n.t(current.archived ? 'backOffice.clients.archived' : 'backOffice.clients.active')
+      }}</span
+    >
+    }
+    <div pageActions class="client-primary-actions">
+      @if (client(); as current) { @if (!current.archived) {
+      <a appLinkButton variant="primary" [routerLink]="['/backoffice/clients', current.id, 'edit']"
+        >{{ i18n.t('clientsWorkspace.edit') }}</a
+      >
+      <details class="client-actions">
+        <summary>{{ i18n.t('backOffice.clients.actions') }}</summary>
+        <button
+          appButton
+          type="button"
+          variant="danger"
+          [disabled]="archiving()"
+          (click)="archive()"
+        >
+          {{ i18n.t('backOffice.clients.archive') }}
+        </button>
+      </details>
+      } }
+    </div>
+  </app-page-header>
   @if (loading()) {
-  <p class="status" aria-live="polite">{{ i18n.t('backOffice.clientDetail.loading') }}</p>
-  } @else if (error() === 'client.not_found') {
-  <p appNotice variant="danger" role="alert">{{ i18n.t('client.not_found') }}</p>
-  } @else { @if (archived()) {
+  <p role="status">{{ i18n.t('backOffice.clientDetail.loading') }}</p>
+  } @else if (client(); as current) { @if (archived()) {
   <div class="archived-notice" appNotice role="status">
     <p>{{ i18n.t('backOffice.clientDetail.archived') }}</p>
     <button appButton type="button" [disabled]="reactivating()" (click)="reactivate()">
-      @if (reactivating()) { {{ i18n.t('backOffice.clientDetail.reactivating') }} } @else { {{
-      i18n.t('backOffice.clientDetail.reactivate') }} }
+      {{ i18n.t(reactivating() ? 'backOffice.clientDetail.reactivating' :
+      'backOffice.clientDetail.reactivate') }}
     </button>
   </div>
   }
@@ -27,167 +49,89 @@
       role="region"
       aria-labelledby="client-profile-tab"
       tabindex="0"
+      class="profile"
     >
-      <form class="profile-form field-grid" (submit)="save($event)">
-        <label class="field wide" for="detail-display-name">
-          {{ i18n.t('backOffice.clients.displayName') }}
-          <input
-            id="detail-display-name"
-            class="input"
-            autocomplete="organization"
-            [formField]="clientForm.displayName"
-            [attr.aria-invalid]="invalid('displayName')"
-            aria-describedby="detail-display-name-error"
-          />
-          @if (invalid('displayName')) {
-          <span id="detail-display-name-error" class="field-error"
-            >{{ i18n.t('backOffice.clients.displayNameError') }}</span
-          >
+      <div>
+        <h2>{{ i18n.t('clientsWorkspace.identity') }}</h2>
+        <dl>
+          <div>
+            <dt>{{ i18n.t('backOffice.clients.displayName') }}</dt>
+            <dd>{{ current.displayName }}</dd>
+          </div>
+          <div>
+            <dt>{{ i18n.t('backOffice.clients.email') }}</dt>
+            <dd>{{ current.email || i18n.t('clientsWorkspace.notProvided') }}</dd>
+          </div>
+        </dl>
+      </div>
+      <div>
+        <h2>{{ i18n.t('clientsWorkspace.address') }}</h2>
+        <dl>
+          <div>
+            <dt>{{ i18n.t('backOffice.clients.addressLine1') }}</dt>
+            <dd>{{ current.addressLine1 || i18n.t('clientsWorkspace.notProvided') }}</dd>
+          </div>
+          @if (current.addressLine2) {
+          <div>
+            <dt>{{ i18n.t('backOffice.clients.addressLine2') }}</dt>
+            <dd>{{ current.addressLine2 }}</dd>
+          </div>
           }
-        </label>
-        <label class="field wide" for="detail-address-line-1">
-          {{ i18n.t('backOffice.clients.addressLine1') }}
-          <input
-            id="detail-address-line-1"
-            class="input"
-            autocomplete="address-line1"
-            [formField]="clientForm.addressLine1"
-            [attr.aria-invalid]="invalid('addressLine1')"
-            aria-describedby="detail-address-line-1-error"
-          />
-          @if (invalid('addressLine1')) {
-          <span id="detail-address-line-1-error" class="field-error"
-            >{{ i18n.t('backOffice.clientDetail.fieldInvalid') }}</span
-          >
-          }
-        </label>
-        <label class="field wide" for="detail-address-line-2">
-          {{ i18n.t('backOffice.clients.addressLine2') }}
-          <input
-            id="detail-address-line-2"
-            class="input"
-            autocomplete="address-line2"
-            [formField]="clientForm.addressLine2"
-            [attr.aria-invalid]="invalid('addressLine2')"
-            aria-describedby="detail-address-line-2-error"
-          />
-          @if (invalid('addressLine2')) {
-          <span id="detail-address-line-2-error" class="field-error"
-            >{{ i18n.t('backOffice.clientDetail.fieldInvalid') }}</span
-          >
-          }
-        </label>
-        <label class="field" for="detail-postal-code">
-          {{ i18n.t('backOffice.clients.postalCode') }}
-          <input
-            id="detail-postal-code"
-            class="input"
-            autocomplete="postal-code"
-            [formField]="clientForm.postalCode"
-            [attr.aria-invalid]="invalid('postalCode')"
-            aria-describedby="detail-postal-code-error"
-          />
-          @if (invalid('postalCode')) {
-          <span id="detail-postal-code-error" class="field-error"
-            >{{ i18n.t('backOffice.clientDetail.fieldInvalid') }}</span
-          >
-          }
-        </label>
-        <label class="field" for="detail-city">
-          {{ i18n.t('backOffice.clients.city') }}
-          <input
-            id="detail-city"
-            class="input"
-            autocomplete="address-level2"
-            [formField]="clientForm.city"
-            [attr.aria-invalid]="invalid('city')"
-            aria-describedby="detail-city-error"
-          />
-          @if (invalid('city')) {
-          <span id="detail-city-error" class="field-error"
-            >{{ i18n.t('backOffice.clientDetail.fieldInvalid') }}</span
-          >
-          }
-        </label>
-        <label class="field" for="detail-country">
-          {{ i18n.t('backOffice.clients.country') }}
-          <input
-            id="detail-country"
-            class="input"
-            autocomplete="country-name"
-            [formField]="clientForm.country"
-            [attr.aria-invalid]="invalid('country')"
-            aria-describedby="detail-country-error"
-          />
-          @if (invalid('country')) {
-          <span id="detail-country-error" class="field-error"
-            >{{ i18n.t('backOffice.clientDetail.fieldInvalid') }}</span
-          >
-          }
-        </label>
-        <label class="field" for="detail-email">
-          {{ i18n.t('backOffice.clients.email') }}
-          <input
-            id="detail-email"
-            class="input"
-            type="email"
-            autocomplete="email"
-            [formField]="clientForm.email"
-            [attr.aria-invalid]="invalid('email')"
-            aria-describedby="detail-email-error"
-          />
-          @if (invalid('email')) {
-          <span id="detail-email-error" class="field-error"
-            >{{ i18n.t('backOffice.clientDetail.emailInvalid') }}</span
-          >
-          }
-        </label>
-        @if (!archived()) {
-        <div class="actions">
-          <button appButton variant="primary" type="submit" [disabled]="saveDisabled()">
-            @if (saving()) { {{ i18n.t('backOffice.clientDetail.saving') }} } @else { {{
-            i18n.t('backOffice.clientDetail.save') }} }
-          </button>
-          @if (saved()) { <span role="status">{{ i18n.t('backOffice.clientDetail.saved') }}</span> }
-        </div>
-        }
-      </form>
+          <div>
+            <dt>{{ i18n.t('backOffice.clients.postalCode') }}</dt>
+            <dd>{{ current.postalCode || i18n.t('clientsWorkspace.notProvided') }}</dd>
+          </div>
+          <div>
+            <dt>{{ i18n.t('backOffice.clients.city') }}</dt>
+            <dd>{{ current.city || i18n.t('clientsWorkspace.notProvided') }}</dd>
+          </div>
+          <div>
+            <dt>{{ i18n.t('backOffice.clients.country') }}</dt>
+            <dd>{{ current.country || i18n.t('clientsWorkspace.notProvided') }}</dd>
+          </div>
+        </dl>
+      </div>
     </section>
   </ng-template>
-
   <ng-template appTabPanel="documents">
     <section
       id="client-documents-panel"
       role="region"
       aria-labelledby="client-documents-tab"
       tabindex="0"
+      class="documents notice-flow"
     >
+      <p>{{ i18n.t('clientsWorkspace.documentsIntro') }}</p>
       @if (documentsLoading()) {
-      <p aria-live="polite">{{ i18n.t('backOffice.clientDetail.documentsLoading') }}</p>
+      <p role="status">{{ i18n.t('backOffice.clientDetail.documentsLoading') }}</p>
+      } @else if (documentsError()) {
+      <p appNotice variant="danger" role="alert">{{ i18n.t('client.error') }}</p>
       } @else if (documents().length === 0) {
-      <p class="empty ds-panel">{{ i18n.t('backOffice.clientDetail.documentsEmpty') }}</p>
+      <app-empty-state icon="invoice" [title]="i18n.t('backOffice.clientDetail.documentsEmpty')" />
       } @else {
-      <div appDataTable>
+      <div appDataTable tableLayout="fluid">
         <table>
+          <colgroup>
+            <col class="document-column" />
+            <col />
+            <col />
+          </colgroup>
           <thead>
             <tr>
-              <th>{{ i18n.t('backOffice.clientDetail.document') }}</th>
-              <th>{{ i18n.t('backOffice.clientDetail.reference') }}</th>
-              <th>{{ i18n.t('backOffice.clientDetail.status') }}</th>
-              <th>{{ i18n.t('backOffice.clientDetail.total') }}</th>
-              <th class="actions-column">{{ i18n.t('backOffice.clientDetail.actions') }}</th>
+              <th scope="col">{{ i18n.t('backOffice.clientDetail.document') }}</th>
+              <th scope="col">{{ i18n.t('backOffice.clientDetail.status') }}</th>
+              <th scope="col" class="amount">{{ i18n.t('backOffice.clientDetail.total') }}</th>
             </tr>
           </thead>
           <tbody>
             @for (document of documents(); track document.id) {
             <tr>
-              <td><strong>{{ document.kind }}</strong><small>{{ document.title }}</small></td>
-              <td>{{ document.reference }}</td>
+              <th scope="row">
+                <a [routerLink]="document.link">{{ document.kind }} — {{ document.reference }}</a
+                ><small>{{ document.title }}</small>
+              </th>
               <td><span appBadge>{{ document.status }}</span></td>
-              <td>{{ money(document.totalCents) }}</td>
-              <td class="actions-column">
-                <a appLinkButton [routerLink]="document.link">{{ i18n.t('backOffice.open') }}</a>
-              </td>
+              <td class="amount">{{ money(document.totalCents) }}</td>
             </tr>
             }
           </tbody>
@@ -196,117 +140,117 @@
       }
     </section>
   </ng-template>
-
   <ng-template appTabPanel="access">
     <section
       id="client-access-panel"
       role="region"
       aria-labelledby="client-access-tab"
       tabindex="0"
+      class="access-panel"
     >
-      <div class="access-panel ds-panel">
-        <div>
-          <h2>{{ i18n.t('backOffice.clientDetail.accessTitle') }}</h2>
-          <p>{{ i18n.t('backOffice.clientDetail.accessIntro') }}</p>
-        </div>
-        @if (accessesLoading()) {
-        <p aria-live="polite">{{ i18n.t('backOffice.clientDetail.accessListLoading') }}</p>
-        } @else if (accesses().length === 0) {
-        <p class="empty">{{ i18n.t('backOffice.clientDetail.accessListEmpty') }}</p>
-        } @else {
-        <div appDataTable>
-          <table>
-            <thead>
-              <tr>
-                <th>{{ i18n.t('backOffice.clientDetail.accessEmail') }}</th>
-                <th>{{ i18n.t('backOffice.clientDetail.accessCreatedAt') }}</th>
-                <th class="actions-column">{{ i18n.t('backOffice.clientDetail.actions') }}</th>
-              </tr>
-            </thead>
-            <tbody>
-              @for (access of accesses(); track access.id) {
-              <tr>
-                <td>{{ access.email }}</td>
-                <td>{{ formatDate(access.createdAt) }}</td>
-                <td class="actions-column">
-                  <button
-                    appButton
-                    variant="danger"
-                    type="button"
-                    [disabled]="revokingAccessId() !== undefined"
-                    (click)="revokeAccess(access)"
-                  >
-                    @if (revokingAccessId() === access.id) { {{
-                    i18n.t('backOffice.clientDetail.accessRevoking') }} } @else { {{
-                    i18n.t('backOffice.clientDetail.accessRevoke') }} }
-                  </button>
-                </td>
-              </tr>
-              }
-            </tbody>
-          </table>
-        </div>
-        }
-        <form (submit)="createAccess($event)">
-          <label class="field" for="client-account-email">
-            {{ i18n.t('backOffice.email') }}
-            <input
-              id="client-account-email"
-              class="input"
-              type="email"
-              autocomplete="username"
-              [formField]="accessForm.email"
-            />
-          </label>
-          <label class="field" for="client-account-password">
-            {{ i18n.t('backOffice.password') }}
-            <input
-              id="client-account-password"
-              class="input"
-              type="password"
-              autocomplete="new-password"
-              [formField]="accessForm.password"
-              [attr.aria-invalid]="
-                accessPasswordLength() > 0 && accessForm.password().invalid()
-              "
-              aria-describedby="client-account-password-requirements client-account-password-error"
-            />
-            <span id="client-account-password-requirements" class="field-hint">
-              {{ i18n.tf('backOffice.clientDetail.passwordRequirements', { min:
-              accessPasswordConfig.minLength, max: accessPasswordConfig.maxLength, }) }}
-            </span>
-            @if (accessPasswordLength() > 0 && accessPasswordLength() <
-            accessPasswordConfig.minLength) {
-            <span id="client-account-password-error" class="field-error" aria-live="polite">
-              {{ i18n.tf('backOffice.clientDetail.passwordTooShort', { count:
-              accessPasswordLength(), min: accessPasswordConfig.minLength, }) }}
-            </span>
-            } @else if (accessPasswordLength() > accessPasswordConfig.maxLength) {
-            <span id="client-account-password-error" class="field-error" aria-live="polite">
-              {{ i18n.tf('backOffice.clientDetail.passwordTooLong', { max:
-              accessPasswordConfig.maxLength, }) }}
-            </span>
-            }
-          </label>
-          <button
-            appButton
-            variant="primary"
-            type="submit"
-            [disabled]="archived() || accessPending() || accessForm().invalid()"
-          >
-            @if (accessPending()) { {{ i18n.t('backOffice.clientDetail.accessCreating') }} } @else {
-            {{ i18n.t('backOffice.clientDetail.accessCreate') }} }
-          </button>
-        </form>
-        @if (archived()) {
-        <p appNotice>{{ i18n.t('backOffice.clientDetail.accessArchived') }}</p>
-        } @if (accountEmail(); as email) {
-        <p role="status">{{ i18n.tf('backOffice.clientDetail.accessReady', { email }) }}</p>
-        }
+      <div>
+        <h2>{{ i18n.t('backOffice.clientDetail.accessTitle') }}</h2>
+        <p>{{ i18n.t('backOffice.clientDetail.accessIntro') }}</p>
       </div>
+      @if (accessesLoading()) {
+      <p role="status">{{ i18n.t('backOffice.clientDetail.accessListLoading') }}</p>
+      } @else if (accesses().length === 0) {
+      <p>{{ i18n.t('backOffice.clientDetail.accessListEmpty') }}</p>
+      } @else {
+      <div appDataTable>
+        <table>
+          <thead>
+            <tr>
+              <th scope="col">{{ i18n.t('backOffice.clientDetail.accessEmail') }}</th>
+              <th scope="col">{{ i18n.t('backOffice.clientDetail.accessCreatedAt') }}</th>
+              <th scope="col" class="actions-column">
+                {{ i18n.t('backOffice.clientDetail.actions') }}
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (access of accesses(); track access.id) {
+            <tr>
+              <th scope="row">{{ access.email }}</th>
+              <td>{{ formatDate(access.createdAt) }}</td>
+              <td class="actions-column">
+                <button
+                  appButton
+                  variant="danger"
+                  type="button"
+                  [disabled]="revokingAccessId() !== undefined"
+                  (click)="revokeAccess(access)"
+                >
+                  {{ i18n.t(revokingAccessId() === access.id ?
+                  'backOffice.clientDetail.accessRevoking' : 'backOffice.clientDetail.accessRevoke')
+                  }}
+                </button>
+              </td>
+            </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      } @if (!archived()) {
+      <form (submit)="createAccess($event)">
+        <label class="field" for="client-account-email"
+          >{{ i18n.t('backOffice.email') }}<input
+            id="client-account-email"
+            class="input"
+            type="email"
+            autocomplete="username"
+            [formField]="accessForm.email"
+        /></label>
+        <label class="field" for="client-account-password"
+          >{{ i18n.t('backOffice.password') }}
+          <input
+            id="client-account-password"
+            class="input"
+            type="password"
+            autocomplete="new-password"
+            [formField]="accessForm.password"
+            [attr.aria-invalid]="accessPasswordLength() > 0 && accessForm.password().invalid()"
+            aria-describedby="client-account-password-requirements client-account-password-error"
+          />
+          <span id="client-account-password-requirements" class="field-hint"
+            >{{ i18n.tf('backOffice.clientDetail.passwordRequirements', { min:
+            accessPasswordConfig.minLength, max: accessPasswordConfig.maxLength }) }}</span
+          >
+          @if (accessPasswordLength() > 0 && accessPasswordLength() <
+          accessPasswordConfig.minLength) {
+          <span id="client-account-password-error" class="field-error" aria-live="polite"
+            >{{ i18n.tf('backOffice.clientDetail.passwordTooShort', { count: accessPasswordLength(),
+            min: accessPasswordConfig.minLength }) }}</span
+          >
+          } @else if (accessPasswordLength() > accessPasswordConfig.maxLength) {
+          <span id="client-account-password-error" class="field-error" aria-live="polite"
+            >{{ i18n.tf('backOffice.clientDetail.passwordTooLong', { max:
+            accessPasswordConfig.maxLength }) }}</span
+          >
+          }
+        </label>
+        <button
+          appButton
+          variant="primary"
+          type="submit"
+          [disabled]="accessPending() || accessForm().invalid()"
+        >
+          {{ i18n.t(accessPending() ? 'backOffice.clientDetail.accessCreating' :
+          'backOffice.clientDetail.accessCreate') }}
+        </button>
+      </form>
+      } @else {
+      <p appNotice>{{ i18n.t('backOffice.clientDetail.accessArchived') }}</p>
+      } @if (accountEmail(); as email) {
+      <p role="status">{{ i18n.tf('backOffice.clientDetail.accessReady', { email }) }}</p>
+      }
     </section>
   </ng-template>
-  @if (error(); as errorKey) {
-  <p appNotice variant="danger" role="alert">{{ i18n.t(errorKey) }}</p>
-  } }
+  } @if (error(); as code) {
+  <p appNotice variant="danger" role="alert">{{ i18n.t(code) }}</p>
+  } @if (!loading() && !client()) {
+  <button appButton type="button" (click)="load()">
+    {{ i18n.t('backOffice.dashboard.retry') }}
+  </button>
+  }
 </section>
