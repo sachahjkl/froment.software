@@ -219,6 +219,16 @@ export async function mockApi(
       })),
     ],
     ["/api/integrations/operations", []],
+    [
+      "/api/integrations/connections",
+      ["resend", "stripe", "signwell", "superpdp"].map((provider) => ({
+        provider,
+        credentialsPresent: true,
+        missingSecrets: [],
+        mode: provider === "resend" ? "restricted-test" : "not-connected",
+      })),
+    ],
+    ["/api/integrations/email-tests", []],
     ["/api/email-drafts", []],
     ["/api/email-templates", []],
     ["/api/reminders", []],

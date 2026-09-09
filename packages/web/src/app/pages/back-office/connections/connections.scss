@@ -1,0 +1,22 @@
+@use "../provider-settings";
+
+th {
+  text-align: start;
+}
+th[scope="row"] {
+  background: inherit;
+  color: inherit;
+  text-transform: none;
+  font-size: inherit;
+  font-weight: normal;
+}
+th,
+td {
+  padding: var(--space-4);
+  vertical-align: top;
+}
+.detail {
+  display: block;
+  margin-block-start: var(--space-2);
+  font-size: var(--text-sm);
+}

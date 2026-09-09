@@ -1,0 +1,174 @@
+<section aria-labelledby="email-test-title">
+  <nav [attr.aria-label]="i18n.t('connections.breadcrumb')">
+    <a routerLink="/backoffice/configuration/services">{{ i18n.t('connections.back') }}</a>
+  </nav>
+  <header>
+    <h2 id="email-test-title">{{ i18n.t('emailTest.title') }}</h2>
+    <p>{{ i18n.t('emailTest.intro') }}</p>
+  </header>
+  <p appNotice variant="warning">{{ i18n.t('emailTest.safety') }}</p>
+  @if (error(); as error) {
+  <p appNotice variant="danger" role="alert">{{ i18n.t(error) }}</p>
+  }
+  <section aria-labelledby="email-test-routing">
+    <h3 id="email-test-routing">{{ i18n.t('emailTest.routing') }}</h3>
+    <dl>
+      <dt>{{ i18n.t('emailTest.from') }}</dt>
+      <dd>{{ addresses.from }}</dd>
+      <dt>{{ i18n.t('emailTest.replyTo') }}</dt>
+      <dd>{{ addresses.replyTo }}</dd>
+      <dt>{{ i18n.t('emailTest.recipient') }}</dt>
+      <dd>{{ addresses.recipient }}</dd>
+    </dl>
+    <p>{{ i18n.t('emailTest.routingHint') }}</p>
+  </section>
+  <section aria-labelledby="email-test-compose">
+    <h3 id="email-test-compose">{{ i18n.t('emailTest.compose') }}</h3>
+    <div class="compose-grid">
+      <form (submit)="send($event)" novalidate>
+        <div class="field">
+          <label for="email-test-subject">{{ i18n.t('emailTest.subject') }}</label>
+          <input
+            class="input"
+            #subjectInput
+            id="email-test-subject"
+            [formField]="messageForm.subject"
+            aria-describedby="email-test-subject-hint email-test-subject-error"
+            [attr.aria-invalid]="invalid('subject')"
+          />
+          <p id="email-test-subject-hint" class="hint">{{ i18n.t('emailTest.subjectHint') }}</p>
+          <p id="email-test-subject-error" class="field-error">
+            @if (invalid('subject')) { {{ i18n.t('emailTest.subjectInvalid') }} }
+          </p>
+        </div>
+        <div class="field">
+          <label for="email-test-body">{{ i18n.t('emailTest.body') }}</label>
+          <textarea
+            class="input"
+            #bodyInput
+            id="email-test-body"
+            rows="9"
+            [formField]="messageForm.body"
+            aria-describedby="email-test-body-hint email-test-body-error"
+            [attr.aria-invalid]="invalid('body')"
+          ></textarea>
+          <p id="email-test-body-hint" class="hint">{{ i18n.t('emailTest.bodyHint') }}</p>
+          <p id="email-test-body-error" class="field-error">
+            @if (invalid('body')) { {{ i18n.t('emailTest.bodyInvalid') }} }
+          </p>
+        </div>
+        @if (!credentialsPresent() && !loading()) {
+        <p appNotice variant="warning">{{ i18n.t('emailTest.credentialsMissing') }}</p>
+        } @if (active()) {
+        <p appNotice variant="info">{{ i18n.t('emailTest.active') }}</p>
+        } @if (pending()) {
+        <p appNotice variant="warning">{{ i18n.t('emailTest.pendingRequest') }}</p>
+        }
+        <button
+          appButton
+          variant="primary"
+          type="submit"
+          [disabled]="saving() || loading() || active() || !credentialsPresent()"
+        >
+          {{ i18n.t(saving() ? 'emailTest.saving' : 'emailTest.send') }}
+        </button>
+      </form>
+      <aside class="ds-panel" aria-labelledby="email-test-preview">
+        <h4 id="email-test-preview">{{ i18n.t('emailTest.preview') }}</h4>
+        <p class="preview-subject">{{ '[Test] ' + model().subject }}</p>
+        <p class="message-preview">{{ model().body }}</p>
+      </aside>
+    </div>
+  </section>
+  <section aria-labelledby="email-test-progress">
+    <div class="actions">
+      <h3 id="email-test-progress">{{ i18n.t('emailTest.progress') }}</h3>
+      <button appButton type="button" [disabled]="saving()" (click)="refresh()">
+        {{ i18n.t('emailTest.refresh') }}
+      </button>
+    </div>
+    <p>{{ i18n.t(paused() ? 'emailTest.paused' : 'emailTest.live') }}</p>
+    <p #progress tabindex="-1" role="status" aria-live="polite">
+      @if (current(); as item) { {{ i18n.t(statusLabels[item.status]) }} } @else { {{
+      i18n.t(loading() ? 'connections.loading' : 'emailTest.empty') }} }
+    </p>
+    @if (current(); as item) { @if (item.error; as error) {
+    <p appNotice variant="warning">{{ i18n.t(error) }}</p>
+    }
+    <div class="ds-panel">
+      <dl>
+        <dt>{{ i18n.t('emailTest.subject') }}</dt>
+        <dd>{{ '[Test] ' + item.request.subject }}</dd>
+        <dt>{{ i18n.t('emailTest.attempts') }}</dt>
+        <dd class="numeric">{{ item.attempts }} / 5</dd>
+        <dt>{{ i18n.t('emailTest.updatedAt') }}</dt>
+        <dd>
+          <time [attr.datetime]="item.updatedAt"
+            >{{ item.updatedAt | localizedDate: i18n.language() : { dateStyle: 'medium', timeStyle:
+            'medium' } }}</time
+          >
+        </dd>
+        @if (item.nextAttemptAt; as next) {
+        <dt>{{ i18n.t('emailTest.nextAttempt') }}</dt>
+        <dd>
+          <time [attr.datetime]="next"
+            >{{ next | localizedDate: i18n.language() : { dateStyle: 'medium', timeStyle: 'medium' }
+            }}</time
+          >
+        </dd>
+        } @if (item.providerId; as id) {
+        <dt>{{ i18n.t('emailTest.providerId') }}</dt>
+        <dd><code>{{ id }}</code></dd>
+        }
+        <dt>{{ i18n.t('emailTest.requestId') }}</dt>
+        <dd><code>{{ item.request.requestId }}</code></dd>
+      </dl>
+      <details>
+        <summary>{{ i18n.t('emailTest.body') }}</summary>
+        <p class="message-preview">{{ item.request.body }}</p>
+      </details>
+    </div>
+    <p>
+      {{ i18n.t(item.status === 'failed' || item.status === 'blocked' ? 'emailTest.failureHint' :
+      'emailTest.acceptedHint') }}
+    </p>
+    }
+  </section>
+  @if (operations().length > 0) {
+  <section aria-labelledby="email-test-history">
+    <h3 id="email-test-history">{{ i18n.t('emailTest.history') }}</h3>
+    <p>{{ i18n.t('emailTest.historyHint') }}</p>
+    <div appDataTable>
+      <table>
+        <thead>
+          <tr>
+            <th scope="col">{{ i18n.t('emailTest.createdAt') }}</th>
+            <th scope="col">{{ i18n.t('emailTest.subject') }}</th>
+            <th scope="col">{{ i18n.t('emailTest.status') }}</th>
+            <th scope="col">{{ i18n.t('emailTest.details') }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (item of operations(); track item.request.requestId) {
+          <tr>
+            <td>
+              <time [attr.datetime]="item.createdAt"
+                >{{ item.createdAt | localizedDate: i18n.language() : { dateStyle: 'medium',
+                timeStyle: 'short' } }}</time
+              >
+            </td>
+            <th scope="row">{{ item.request.subject }}</th>
+            <td>{{ i18n.t(statusLabels[item.status]) }}</td>
+            <td>
+              <button appButton type="button" (click)="select(item)">
+                {{ i18n.t('emailTest.details') }}
+              </button>
+            </td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </section>
+  }
+</section>

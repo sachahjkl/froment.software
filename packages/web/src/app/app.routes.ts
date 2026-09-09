@@ -299,6 +299,20 @@ export const routes: Routes = [
       },
       {
         path: 'services',
+        pathMatch: 'full',
+        loadComponent: () =>
+          import('./pages/back-office/connections/connections').then(
+            (module) => module.Connections,
+          ),
+      },
+      {
+        path: 'services/resend',
+        loadComponent: () =>
+          import('./pages/back-office/email-test/email-test').then((module) => module.EmailTest),
+        canDeactivate: [unsavedChangesGuard],
+      },
+      {
+        path: 'services/simulations',
         loadComponent: () =>
           import('./pages/back-office/integrations/integrations').then(
             (module) => module.Integrations,

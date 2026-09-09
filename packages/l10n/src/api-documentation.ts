@@ -4,6 +4,7 @@ import { creditDocumentation } from './credit-notes.js';
 import { ledgerDocumentation } from './bank-ledger.js';
 import { passkeyDocumentation } from './passkeys.js';
 import { emailDraftDocumentation } from './email-drafts.js';
+import { connectionDocumentation } from './connections.js';
 import { emailTemplateDocumentation } from './email-templates.js';
 import { reminderDocumentation } from './reminders.js';
 import { providerActionDocumentation } from './provider-action-documentation.js';
@@ -101,6 +102,7 @@ export const apiDocumentation = {
     operations: {
       ...passkeyDocumentation.fr.operations,
       ...emailDraftDocumentation.fr.operations,
+      ...connectionDocumentation.fr,
       integrationRetryList: {
         summary: 'Lire les reprises automatiques',
         description:
@@ -482,6 +484,7 @@ export const apiDocumentation = {
       catalogList: { summary: 'List services', description: 'Lists active and archived services.' },
       ...passkeyDocumentation.en.operations,
       ...emailDraftDocumentation.en.operations,
+      ...connectionDocumentation.en,
       integrationRetryList: {
         summary: 'Read automatic retries',
         description:

@@ -402,3 +402,4 @@ export * from './integrations/provider-actions.js';
 export * from './integrations/email-templates.js';
 export * from './integrations/retries.js';
 export * from './integrations/reminders.js';
+export * from './integrations/connections.js';

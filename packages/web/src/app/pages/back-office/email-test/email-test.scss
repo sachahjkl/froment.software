@@ -1,0 +1,71 @@
+@use "../provider-settings";
+.compose-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: var(--space-6);
+  align-items: start;
+}
+form {
+  display: grid;
+  gap: var(--space-4);
+}
+.field {
+  display: grid;
+  gap: var(--space-2);
+}
+label {
+  font-weight: 600;
+}
+input,
+textarea {
+  inline-size: 100%;
+  min-inline-size: 0;
+  font-size: 1rem;
+}
+textarea {
+  resize: vertical;
+}
+.hint {
+  color: var(--color-muted);
+  font-weight: 400;
+  font-size: var(--text-sm);
+}
+.field-error {
+  color: var(--color-danger);
+}
+.field-error:empty {
+  display: none;
+}
+.message-preview {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.preview-subject {
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+.numeric {
+  font-variant-numeric: tabular-nums;
+}
+th,
+td {
+  padding: var(--space-3);
+  text-align: start;
+  vertical-align: top;
+  overflow-wrap: anywhere;
+}
+summary {
+  cursor: pointer;
+  padding-block: var(--space-2);
+}
+tbody th {
+  background: inherit;
+  color: inherit;
+  text-transform: none;
+  font-size: inherit;
+}
+@media (max-width: 55rem) {
+  .compose-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

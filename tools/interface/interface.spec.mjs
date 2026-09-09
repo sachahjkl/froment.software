@@ -2,6 +2,7 @@ import { test, expect } from "@playwright/test";
 import { scalarDocumentation } from "../../packages/api/src/documentation/scalar.ts";
 import AxeBuilder from "@axe-core/playwright";
 import { checkTeam } from "./team.mjs";
+import { checkServiceConnections } from "./service-connections.mjs";
 import { checkCreditNotes } from "./credit-notes.mjs";
 import { checkBankLedger } from "./bank-ledger.mjs";
 import {
@@ -286,7 +287,7 @@ test("client form and complete account address", async ({ page, colorScheme }, t
     }
     await page.screenshot({ path: testInfo.outputPath(`${tab}.png`), fullPage: true });
   }
-  await page.goto("/backoffice/configuration/services");
+  await checkServiceConnections(page, testInfo);
   const serviceSpacing = await page
     .locator("app-integrations section > [appNotice]")
     .first()

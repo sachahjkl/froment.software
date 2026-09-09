@@ -4,10 +4,37 @@ import { HttpApiBuilder } from 'effect/unstable/httpapi';
 import { setPrivateResponseHeaders } from '../http/response.js';
 import { Integrations } from './service.js';
 import { IntegrationRetries } from './retries.js';
+import { ConnectionConfig } from './connection-config.js';
+import { EmailTests } from './email-test-service.js';
 
 export const IntegrationHandlers = HttpApiBuilder.group(Api, 'integrations', (handlers) =>
   Effect.succeed(
     handlers
+      .handle(
+        'providerConnections',
+        Effect.fn('providerConnections')(function* () {
+          yield* setPrivateResponseHeaders;
+          return (yield* ConnectionConfig).connections;
+        }),
+      )
+      .handle(
+        'emailTestList',
+        Effect.fn('emailTestList')(function* () {
+          yield* setPrivateResponseHeaders;
+          return yield* (yield* EmailTests)
+            .list()
+            .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
+        }),
+      )
+      .handle(
+        'emailTestCreate',
+        Effect.fn('emailTestCreate')(function* ({ payload }) {
+          yield* setPrivateResponseHeaders;
+          return yield* (yield* EmailTests)
+            .enqueue(payload, (yield* ApiPrincipal).userId)
+            .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
+        }),
+      )
       .handle(
         'integrationRetryList',
         Effect.fn('integrationRetryList')(function* () {

@@ -4,7 +4,7 @@ La page **Configuration → Services externes** affiche le mode de chaque adapta
 La page **Courriels** permet de rédiger des messages en texte brut et de consulter les 100 derniers courriels.
 Elle utilise le même adaptateur et le même journal persistant.
 Le filtre serveur `kind=email` sélectionne les courriels avant d’appliquer la limite de 100 opérations.
-Les cinq adaptateurs livrés fonctionnent en simulation, y compris en production :
+Les cinq adaptateurs des opérations commerciales fonctionnent en simulation, y compris en production :
 
 - courriels ;
 - signature ;
@@ -12,7 +12,8 @@ Les cinq adaptateurs livrés fonctionnent en simulation, y compris en production
 - banque ;
 - facturation électronique.
 
-Chaque bouton de test utilise des données fictives.
+La page **Simulations** utilise des données fictives.
+Le parcours [Vérifier Resend](resend.md) est distinct et envoie un vrai courriel au destinataire autorisé.
 La page signale explicitement les simulations.
 Aucun courriel, signature, encaissement, mouvement bancaire ou dépôt réglementaire ne résulte de ces tests.
 Les adaptateurs ne modifient pas les documents commerciaux.

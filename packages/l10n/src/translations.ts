@@ -1,4 +1,5 @@
 import { webUiText } from './web-ui-text.js';
+import { connectionText } from './connections.js';
 import { teamText } from './team.js';
 import { creditText } from './credit-notes.js';
 import { ledgerText } from './bank-ledger.js';
@@ -10,6 +11,7 @@ import { emailTemplateText } from './email-templates.js';
 
 export const translations = {
   fr: {
+    ...connectionText.fr,
     ...webUiText.fr,
     ...teamText.fr,
     ...creditText.fr,
@@ -1523,6 +1525,7 @@ export const translations = {
     'cookies.contact.content': 'Pour une question sur ce réglage ou le fonctionnement du site :',
   },
   en: {
+    ...connectionText.en,
     ...webUiText.en,
     ...teamText.en,
     ...creditText.en,

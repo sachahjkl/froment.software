@@ -1,5 +1,9 @@
 import { NodeRuntime } from '@effect/platform-node';
 import { Layer } from 'effect';
+import { FetchHttpClient } from 'effect/unstable/http';
+import { ConnectionConfigLive } from './integrations/connection-config.js';
+import { ResendEmailTransportLive } from './integrations/resend.js';
+import { EmailTestsLive, EmailTestWorkerLive } from './integrations/email-test-service.js';
 
 import { BootstrapLive } from './bootstrap/bootstrap.js';
 import { AuditLive } from './audit/audit.js';
@@ -49,6 +53,13 @@ const AuthenticationServicesLive = BootstrapLive.pipe(
 );
 
 const ServicesLive = Layer.mergeAll(
+  EmailTestWorkerLive.pipe(
+    Layer.provideMerge(
+      EmailTestsLive.pipe(
+        Layer.provide(ResendEmailTransportLive.pipe(Layer.provide(FetchHttpClient.layer))),
+      ),
+    ),
+  ),
   ReminderWorkerLive.pipe(
     Layer.provideMerge(RemindersLive.pipe(Layer.provide(SimulatedProviders))),
   ),
@@ -68,6 +79,7 @@ const ServicesLive = Layer.mergeAll(
   DeploymentLive,
   ClientPortalLive,
 ).pipe(
+  Layer.provideMerge(ConnectionConfigLive),
   Layer.provideMerge(AuditLive),
   Layer.provideMerge(PasswordsLive),
   Layer.provideMerge(AuthenticationConfigLive),

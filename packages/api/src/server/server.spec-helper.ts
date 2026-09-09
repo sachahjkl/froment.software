@@ -66,6 +66,11 @@ export const startHttpTestServer = async (): Promise<HttpTestServer> => {
   const databaseFilename = join(staticRoot, 'database.sqlite');
   const baseEnv = {
     ...process.env,
+    RESEND_API_KEY: '',
+    STRIPE_SECRET_KEY: '',
+    SIGNWELL_API_KEY: '',
+    SUPERPDP_CLIENT_ID: '',
+    SUPERPDP_CLIENT_SECRET: '',
     API_TOKEN_HMAC_KEY: 'DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD',
     BOOTSTRAP_PASSWORD_SCRYPT:
       'scrypt$16384$8$1$ABEiM0RVZneImaq7zN3u_w$bDQwYDYiQ_8HCiJ3-qXFtXFeV9FhIOa7E8VSgT__uegLrk4vqD6U920ImYTwk5RABOZsIk96bUNH1G9wbCXf1Q',

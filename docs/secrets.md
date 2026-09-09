@@ -18,7 +18,8 @@ Les identifiants de prestataires restent facultatifs tant que les adaptateurs ne
 Lors du passage en service réel, renseignez ensemble les identifiants liés : client OAuth et secret, clé Stripe et secret de webhook.
 
 Seul le fichier chiffré de production est inclus dans l’image. Aucun déchiffrement ne se produit pendant la construction.
-L’injection des clés n’active pas les prestataires. Les services actuels restent simulés.
+L’injection des clés n’active pas les opérations commerciales. Elles restent simulées.
+Le parcours [Resend](resend.md) autorise un envoi de test explicite à un destinataire imposé.
 Une clé Resend permet des envois réels, même dans le profil de développement.
 
 ## Développement

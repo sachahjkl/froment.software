@@ -1,4 +1,5 @@
 import { TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
 import {
   IntegrationStatusList,
   type IntegrationOperationValue,
@@ -46,6 +47,7 @@ class IntegrationsApiStub {
 }
 
 describe('Integrations', () => {
+  beforeEach(() => TestBed.configureTestingModule({ providers: [provideRouter([])] }));
   it('labels simulations, records a test and focuses the result without claiming delivery', async () => {
     const api = new IntegrationsApiStub();
     TestBed.configureTestingModule({ providers: [{ provide: IntegrationsApi, useValue: api }] });

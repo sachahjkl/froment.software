@@ -1321,3 +1321,28 @@ export const bankLedgerEntries = sqliteTable(
     check('bank_ledger_accounts_check', sql`${table.debitAccount} <> ${table.creditAccount}`),
   ],
 );
+export const emailTests = sqliteTable(
+  'email_tests',
+  {
+    accountKey: text('account_key'),
+    requestId: text('request_id').notNull().primaryKey(),
+    request: text().notNull(),
+    createdByUserId: text('created_by_user_id')
+      .notNull()
+      .references(() => users.id),
+    createdAt: text('created_at').notNull(),
+    updatedAt: text('updated_at').notNull(),
+    status: text().notNull(),
+    attempts: integer().notNull().default(0),
+    nextAttemptAt: integer('next_attempt_at'),
+    providerId: text('provider_id'),
+    error: text(),
+  },
+  (table) => [
+    check(
+      'email_test_status_check',
+      sql`${table.status} in ('queued', 'sending', 'retrying', 'accepted', 'delivered', 'bounced', 'complained', 'failed', 'blocked')`,
+    ),
+    check('email_test_attempts_check', sql`${table.attempts} between 0 and 5`),
+  ],
+);

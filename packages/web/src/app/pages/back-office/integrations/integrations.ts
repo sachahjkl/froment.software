@@ -18,6 +18,7 @@ import { IntegrationsApi } from '@backoffice/integrations-api';
 import { I18nService, type TranslationKey } from '@app/i18n.service';
 import { Button } from '@shared/button/button';
 import { Notice } from '@shared/notice/notice';
+import { RouterLink } from '@angular/router';
 
 type Kind = IntegrationSubmissionValue['kind'];
 const labels = {
@@ -29,7 +30,7 @@ const labels = {
 } satisfies Record<Kind, TranslationKey>;
 
 @Component({
-  imports: [Button, Notice, LocalizedDatePipe],
+  imports: [Button, Notice, LocalizedDatePipe, RouterLink],
   changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-integrations',
   styleUrl: './integrations.scss',
