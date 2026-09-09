@@ -56,6 +56,11 @@ export async function checkServiceConnections(page, testInfo) {
   await page.getByRole("link", { name: /Vérifier Resend|Check Resend/ }).click();
   await expect(page.locator("#main-content")).toBeFocused();
   const form = page.locator("app-email-test");
+  expect(
+    await form
+      .locator("header p")
+      .evaluate((paragraph) => getComputedStyle(paragraph).maxInlineSize),
+  ).toBe("none");
   await expect(form.getByRole("status")).toContainText(/Aucun test|No test/);
   await expect(form).toContainText("sacha@sacha.house");
   await expect(form).toContainText("sacha@froment.software");
