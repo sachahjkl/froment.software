@@ -320,6 +320,7 @@
               ''
                 export HOME="$TMPDIR"
                 secretspec --file ${./secretspec.toml} schema --profile production >/dev/null
+                secretspec --file ${./secretspec.toml} schema --profile development >/dev/null
                 touch $out
               '';
           secretBundle = pkgs.runCommand "${pname}-secret-bundle" { } ''
