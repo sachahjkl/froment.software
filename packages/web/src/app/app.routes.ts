@@ -124,6 +124,13 @@ export const routes: Routes = [
     },
   },
   {
+    path: 'backoffice/sign-out',
+    loadComponent: () =>
+      import('./pages/back-office/sign-out/sign-out').then((module) => module.SignOut),
+    canDeactivate: [unsavedChangesGuard],
+    data: { titleKey: 'backOffice.signOut', robots: 'noindex, nofollow' },
+  },
+  {
     path: 'backoffice/bootstrap',
     loadComponent: () =>
       import('./pages/back-office/bootstrap/bootstrap').then((module) => module.Bootstrap),

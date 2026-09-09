@@ -1,5 +1,5 @@
 import { TestBed } from '@angular/core/testing';
-import { provideRouter } from '@angular/router';
+import { provideRouter, Router } from '@angular/router';
 import { afterEach, beforeEach, vi } from 'vitest';
 
 import { Authentication } from '@backoffice/authentication';
@@ -16,6 +16,7 @@ describe('BackOfficeHeader', () => {
   );
   afterEach(() => vi.unstubAllGlobals());
   it('shows the administrator account, navigation, and sign-out action', async () => {
+    const signOut = vi.fn().mockResolvedValue(true);
     TestBed.configureTestingModule({
       providers: [
         provideRouter([]),
@@ -28,7 +29,7 @@ describe('BackOfficeHeader', () => {
                 email: 'administrator@example.test',
                 mode: 'administrator',
               }),
-            signOut: () => Promise.resolve(true),
+            signOut,
           },
         },
       ],
@@ -53,5 +54,10 @@ describe('BackOfficeHeader', () => {
     expect(root.querySelectorAll('app-back-office-nav a svg')).toHaveLength(8);
     expect(root.querySelector<HTMLSelectElement>('app-language-selector select')?.value).toBe('en');
     expect(root.querySelector('a[href="/services"]')).toBeNull();
+    const navigate = vi.spyOn(TestBed.inject(Router), 'navigateByUrl').mockResolvedValue(false);
+    root.querySelector<HTMLButtonElement>('.sign-out')!.click();
+    await fixture.whenStable();
+    expect(navigate).toHaveBeenCalledWith('/backoffice/sign-out');
+    expect(signOut).not.toHaveBeenCalled();
   });
 });

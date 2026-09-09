@@ -1,0 +1,14 @@
+<section aria-labelledby="sign-out-title" class="notice-flow">
+  <h1 id="sign-out-title">{{ i18n.t('backOffice.signOut') }}</h1>
+  @if (pending()) {
+  <p role="status">{{ i18n.t('backOfficeShell.signingOut') }}</p>
+  } @else if (failed()) {
+  <p appNotice variant="danger" role="alert">{{ i18n.t('backOfficeShell.signOutError') }}</p>
+  <div class="actions">
+    <button appButton type="button" (click)="retry()">
+      {{ i18n.t('backOffice.dashboard.retry') }}
+    </button>
+    <a appLinkButton routerLink="/backoffice/login">{{ i18n.t('backOfficeShell.openLogin') }}</a>
+  </div>
+  }
+</section>

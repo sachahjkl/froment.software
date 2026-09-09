@@ -1,6 +1,7 @@
 import { expect } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
 import { client, clientId, invoiceId, quoteId } from "./fixtures.mjs";
+import { openBackOfficeNavigation } from "./dashboard-shell.mjs";
 
 export async function checkClientsWorkspace(page, testInfo) {
   const createdId = "01ARZ3NDEKTSV4RRFFQ69G5FB0";
@@ -10,9 +11,17 @@ export async function checkClientsWorkspace(page, testInfo) {
   let conflict = true;
   let creationCount = 0;
   let updatedRequest;
+  let logoutRequests = 0;
   const listPattern = "**/api/clients";
   const detailPattern = /\/api\/clients\/[A-Z0-9]+$/;
   const actionPattern = /\/api\/clients\/[A-Z0-9]+\/(archive|reactivate|access)$/;
+  const logoutPattern = "**/api/auth/logout";
+  await page.route(logoutPattern, (route) => {
+    logoutRequests++;
+    return logoutRequests === 1
+      ? route.fulfill({ status: 503, json: { code: "authentication.error" } })
+      : route.fulfill({ status: 204 });
+  });
   await page.route(listPattern, async (route) => {
     if (route.request().method() === "POST") {
       creationCount++;
@@ -166,9 +175,30 @@ export async function checkClientsWorkspace(page, testInfo) {
     await expect(page.getByRole("dialog")).toBeVisible();
     await page.keyboard.press("Escape");
     await expect(page.getByRole("dialog")).toHaveCount(0);
+    await page.goto(`/backoffice/clients/${clientId}/edit`);
+    await page.locator("#client-city").fill("Saisie conservée");
+    await openBackOfficeNavigation(page);
+    await page.locator(".account summary:visible").click();
+    await page.locator(".sign-out:visible").click();
+    await expect(page.getByRole("alertdialog")).toBeVisible();
+    await page.keyboard.press("Escape");
+    expect(logoutRequests).toBe(0);
+    await expect(page.locator("#client-city")).toHaveValue("Saisie conservée");
+    await page.locator(".sign-out:visible").click();
+    await page
+      .getByRole("alertdialog")
+      .getByRole("button", { name: /^(Confirm|Confirmer)$/ })
+      .click();
+    await expect(page.locator('app-sign-out [role="alert"]')).toBeVisible();
+    expect(logoutRequests).toBe(1);
+    await page.screenshot({ path: testInfo.outputPath("sign-out-error.png"), fullPage: true });
+    await page.locator("app-sign-out button").click();
+    await expect(page).toHaveURL(/\/backoffice\/login$/);
+    expect(logoutRequests).toBe(2);
   } finally {
     await page.unroute(listPattern);
     await page.unroute(detailPattern);
     await page.unroute(actionPattern);
+    await page.unroute(logoutPattern);
   }
 }

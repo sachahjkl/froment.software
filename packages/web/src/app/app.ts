@@ -41,6 +41,7 @@ export class App {
     const authenticated =
       path.startsWith('/backoffice/') &&
       path !== '/backoffice/login' &&
+      path !== '/backoffice/sign-out' &&
       path !== '/backoffice/bootstrap';
     this.backOffice.set(authenticated);
     this.administrator.set(

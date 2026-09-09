@@ -99,6 +99,6 @@ export class BackOfficeHeader {
   }
 
   protected async signOut(): Promise<void> {
-    if (await this.auth.signOut()) void this.router.navigateByUrl('/backoffice/login');
+    await this.router.navigateByUrl('/backoffice/sign-out');
   }
 }

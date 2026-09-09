@@ -137,7 +137,7 @@ for (const [kind, id] of [
 }
 
 test("client form and complete account address", async ({ page, colorScheme }, testInfo) => {
-  test.setTimeout(90000);
+  test.setTimeout(150000);
   await mockApi(page);
   await page.route("**/api/auth/refresh", (route) =>
     route.fulfill({ status: 401, json: { code: "authentication.required" } }),
@@ -253,6 +253,7 @@ test("client form and complete account address", async ({ page, colorScheme }, t
     ["catalogue", ".catalog-page"],
   ]) {
     await page.goto(`/backoffice/configuration/${tab}`);
+    await page.waitForLoadState("networkidle");
     await expect(page.locator(`${selector} form`)).toBeVisible();
     for (const surface of [selector, `${selector} form`]) {
       const style = await page.locator(surface).evaluate((element) => {

@@ -81,6 +81,10 @@ Le composant `Drawer` utilise Angular CDK pour le focus, Échap, le fond modal e
 Les confirmations de sortie restent accessibles au-dessus du tiroir.
 Une navigation annulée conserve le tiroir et la saisie.
 
+La déconnexion passe par `/backoffice/sign-out` après les protections de sortie du formulaire.
+Une sortie refusée ne modifie pas la session.
+Un échec de déconnexion affiche une erreur et une action de nouvelle tentative.
+
 Le composant `PageHeader` sépare le titre des actions avec retour à la ligne.
 L’atelier `/design/navigation` présente ce composant et le tiroir interactif.
 

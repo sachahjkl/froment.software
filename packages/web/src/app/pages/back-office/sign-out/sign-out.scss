@@ -1,0 +1,15 @@
+section {
+  padding: var(--page-header-y) var(--page-x);
+}
+h1 {
+  font-size: var(--text-2xl);
+}
+p {
+  margin-block-start: var(--space-4);
+}
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  margin-block-start: var(--space-4);
+}

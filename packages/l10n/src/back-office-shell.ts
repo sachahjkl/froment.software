@@ -2,6 +2,9 @@ export const backOfficeShellText = {
   fr: {
     'backOfficeShell.navigation': 'Navigation',
     'backOfficeShell.accountLoading': 'Chargement du compte…',
+    'backOfficeShell.signingOut': 'Déconnexion en cours…',
+    'backOfficeShell.signOutError': 'Le serveur n’a pas confirmé la déconnexion. Réessayez.',
+    'backOfficeShell.openLogin': 'Ouvrir la page de connexion',
     'backOfficeShell.accountUnavailable': 'Les informations du compte sont indisponibles.',
     'backOfficeShell.closeNavigation': 'Fermer la navigation',
     'backOfficeShell.resources': 'Ressources',
@@ -15,6 +18,9 @@ export const backOfficeShellText = {
   en: {
     'backOfficeShell.navigation': 'Navigation',
     'backOfficeShell.accountLoading': 'Loading account…',
+    'backOfficeShell.signingOut': 'Signing out…',
+    'backOfficeShell.signOutError': 'The server did not confirm sign-out. Try again.',
+    'backOfficeShell.openLogin': 'Open the sign-in page',
     'backOfficeShell.accountUnavailable': 'Account information is unavailable.',
     'backOfficeShell.closeNavigation': 'Close navigation',
     'backOfficeShell.resources': 'Resources',
