@@ -1,13 +1,18 @@
 <div class="app-shell" [class.back-office-shell]="backOffice()">
-  <a class="skip-link" href="#main-content">{{ i18n.t("shell.skip") }}</a>
-  @if (backOffice()) {
+  <a
+    class="skip-link"
+    href="#main-content"
+    (click)="$event.preventDefault(); mainContent.focus({ preventScroll: true })"
+    >{{ i18n.t("shell.skip") }}</a
+  >
+  @if (backOffice()) { @defer (when backOffice()) {
   <app-back-office-header [administrator]="administrator()" />
-  } @else {
+  } } @else {
   <app-site-header />
   }
-  <main id="main-content" tabindex="-1">
+  <main #mainContent id="main-content" tabindex="-1">
     <router-outlet />
   </main>
-  <app-site-footer [showPreferences]="backOffice()" />
+  @if (!backOffice()) { <app-site-footer /> }
   <app-copy-notice />
 </div>

@@ -63,6 +63,13 @@ body {
   box-shadow: var(--shadow-page);
 }
 
+.back-office-shell .page-container {
+  min-block-size: calc(100dvh - 3.75rem);
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+
 @media print {
   .page-container {
     border: 0;

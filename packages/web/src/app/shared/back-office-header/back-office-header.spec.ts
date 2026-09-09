@@ -1,10 +1,20 @@
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
+import { afterEach, beforeEach, vi } from 'vitest';
 
 import { Authentication } from '@backoffice/authentication';
+import { I18nService } from '@app/i18n.service';
 import { BackOfficeHeader } from './back-office-header';
 
 describe('BackOfficeHeader', () => {
+  beforeEach(() =>
+    vi.stubGlobal('matchMedia', () => ({
+      matches: false,
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+    })),
+  );
+  afterEach(() => vi.unstubAllGlobals());
   it('shows the administrator account, navigation, and sign-out action', async () => {
     TestBed.configureTestingModule({
       providers: [
@@ -24,6 +34,7 @@ describe('BackOfficeHeader', () => {
       ],
     });
     const fixture = TestBed.createComponent(BackOfficeHeader);
+    TestBed.inject(I18nService).setLanguage('en');
     fixture.componentRef.setInput('administrator', true);
     await fixture.whenStable();
     fixture.detectChanges();
@@ -35,12 +46,12 @@ describe('BackOfficeHeader', () => {
       expect.arrayContaining([expect.stringMatching(/déconnecter|sign out/i)]),
     );
     expect(root.querySelector('.sign-out[data-button-variant="default"] svg')).not.toBeNull();
-    expect(root.querySelector('.sign-out')?.getAttribute('aria-label')).toMatch(
-      /déconnecter|sign out/i,
-    );
-    expect(root.querySelector('.sign-out-label')).not.toBeNull();
-    expect(root.querySelector('app-language-selector')).toBeNull();
-    expect(root.querySelector('app-theme-toggle')).toBeNull();
+    expect(root.querySelector('.sign-out')?.textContent).toMatch(/déconnecter|sign out/i);
+    expect(root.querySelector('app-language-selector')).not.toBeNull();
+    expect(root.querySelector('app-theme-toggle')).not.toBeNull();
+    expect(root.querySelector('header a[href="/api/docs"]')?.getAttribute('target')).toBe('_blank');
+    expect(root.querySelectorAll('app-back-office-nav a svg')).toHaveLength(8);
+    expect(root.querySelector<HTMLSelectElement>('app-language-selector select')?.value).toBe('en');
     expect(root.querySelector('a[href="/services"]')).toBeNull();
   });
 });

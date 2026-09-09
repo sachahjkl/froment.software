@@ -84,7 +84,10 @@ export async function checkPasskeys(page, testInfo) {
     await expect(page).toHaveURL(/\/backoffice\/dashboard$/);
     expect(assertion.id).toBe(registration.id);
     expect(assertion.response.signature).toBeTruthy();
-    await page.locator(".account summary").click();
+    const navigation = page.locator(".navigation-trigger");
+    await expect(page.locator(".workspace-header")).toBeVisible();
+    if (await navigation.isVisible()) await navigation.click();
+    await page.locator(".account summary:visible").click();
     await page.getByRole("link", { name: /Sécurité du compte|Account security/ }).click();
     await panel.getByLabel(/Mot de passe actuel|Current password/).fill("administrator-password");
     await panel.getByRole("button", { name: /Retirer Laptop|Remove Laptop/ }).click();

@@ -5,6 +5,7 @@ import { checkTeam } from "./team.mjs";
 import { checkServiceConnections } from "./service-connections.mjs";
 import { checkCreditNotes } from "./credit-notes.mjs";
 import { checkBankLedger } from "./bank-ledger.mjs";
+import { checkDashboardShell, openBackOfficeNavigation } from "./dashboard-shell.mjs";
 import {
   accountEmail,
   clientId,
@@ -182,27 +183,31 @@ test("client form and complete account address", async ({ page, colorScheme }, t
   await page.unroute("**/api/auth/refresh");
   await openPage(page, `/backoffice/clients/${clientId}/profile`, colorScheme);
   await expect(page.locator(".profile-form")).toBeVisible();
-  const summary = page.locator(".account summary");
+  await checkDashboardShell(page, testInfo);
+  await openBackOfficeNavigation(page);
+  const account = page.locator(".account:visible");
+  const summary = account.locator("summary");
+  const accountDetails = account.locator(".account-details");
   if (page.viewportSize().width >= 1024) {
-    const icon = await summary.locator("svg").boundingBox();
+    const icon = await summary.locator("svg").first().boundingBox();
     const label = await summary.locator("span").boundingBox();
     expect(Math.abs(icon.y + icon.height / 2 - label.y - label.height / 2)).toBeLessThan(1);
   }
   await summary.focus();
   await summary.press("Enter");
-  await expect(page.locator(".account-details p")).toHaveText(accountEmail);
-  await expect(page.locator(".account-details")).toBeVisible();
-  const bounds = await page.locator(".account-details").boundingBox();
+  await expect(accountDetails.locator("p")).toHaveText(accountEmail);
+  await expect(accountDetails).toBeVisible();
+  const bounds = await accountDetails.boundingBox();
   expect(bounds.x).toBeGreaterThanOrEqual(0);
   expect(bounds.x + bounds.width).toBeLessThanOrEqual(page.viewportSize().width);
-  await page.locator(".account-details p").click();
-  await expect(page.locator(".account-details")).toBeVisible();
-  await page.locator("footer").click({ position: { x: 8, y: 8 } });
-  await expect(page.locator(".account-details")).toBeHidden();
+  await accountDetails.locator("p").click();
+  await expect(accountDetails).toBeVisible();
+  await page.locator(".drawer-heading strong:visible, .workspace-label:visible").click();
+  await expect(accountDetails).toBeHidden();
   await summary.click();
-  await expect(page.locator(".account-details")).toBeVisible();
+  await expect(accountDetails).toBeVisible();
   await page.keyboard.press("Escape");
-  await expect(page.locator(".account-details")).toBeHidden();
+  await expect(accountDetails).toBeHidden();
   await expect(summary).toBeFocused();
   await summary.click();
   await page.getByRole("link", { name: /Sécurité du compte|Account security/ }).click();
@@ -321,7 +326,8 @@ test("client form and complete account address", async ({ page, colorScheme }, t
   await page.locator("#email-recipient").fill("client@example.test");
   await page.locator("#email-reference").fill("DE-2026-000001");
   await page.locator("#email-subject").fill("Votre devis / Your quote");
-  const bankLink = page.locator('a[href="/backoffice/banque"]').first();
+  await openBackOfficeNavigation(page);
+  const bankLink = page.locator('a[href="/backoffice/banque"]:visible').first();
   await bankLink.click();
   const confirmation = page.getByRole("alertdialog");
   await expect(confirmation).toBeVisible();
@@ -333,6 +339,10 @@ test("client form and complete account address", async ({ page, colorScheme }, t
   await page.keyboard.press("Escape");
   await expect(confirmation).toBeHidden();
   await expect(bankLink).toBeFocused();
+  if (await page.locator(".navigation-trigger").isVisible()) {
+    await page.keyboard.press("Escape");
+    await expect(page.getByRole("dialog")).toHaveCount(0);
+  }
   await expect(page.locator("#email-subject")).toHaveValue("Votre devis / Your quote");
   await page.getByRole("button", { name: /Enregistrer le brouillon|Save draft/ }).click();
   await expect(page.locator(".drafts li")).toContainText("Votre devis / Your quote");

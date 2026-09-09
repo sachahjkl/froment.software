@@ -12,24 +12,45 @@
 }
 
 .back-office-shell {
-  --layout-max: 76rem;
+  display: grid;
+  grid-template-columns: 16rem minmax(0, 1fr);
+  grid-template-rows: auto 1fr;
+  grid-template-areas: "sidebar header" "sidebar content";
+  align-items: start;
+}
+.back-office-shell main {
+  grid-area: content;
+  width: 100%;
+  max-width: none;
+  margin: 0;
+}
+.back-office-shell app-copy-notice {
+  display: contents;
+}
+@media (max-width: 63.999rem) {
+  .back-office-shell {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: "header" "content";
+  }
 }
 
 .skip-link {
   position: fixed;
   top: var(--space-2);
-  left: max(var(--page-x), calc((100vw - var(--layout-max)) / 2));
+  inset-inline-start: var(--space-3);
   z-index: var(--z-skip-link);
   padding: var(--space-2) var(--space-3);
   border: 1px solid var(--color-line-strong);
   border-radius: var(--radius-sm);
   background: var(--color-surface-raised);
   font-size: var(--text-sm);
-  transform: translateY(calc(-100% - var(--space-6)));
+  clip-path: inset(50%);
+  translate: 0 calc(-100% - var(--space-6));
 }
 
 .skip-link:focus-visible {
-  transform: translateY(0);
+  clip-path: none;
+  translate: 0 0;
 }
 
 main {
@@ -49,6 +70,9 @@ main {
 }
 
 @media print {
+  .back-office-shell {
+    display: block;
+  }
   main {
     width: 100%;
     max-width: none;

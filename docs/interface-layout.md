@@ -5,9 +5,10 @@
 Le site conserve ses polices, sa texture, ses boutons à dégradés et ses bordures.
 Cette reprise concerne la disposition, la hiérarchie et la lisibilité, pas les fonctions métier.
 
-- Alignez l’en-tête, le contenu et le pied de page avec `--page-x` dans une même largeur maximale.
+- Alignez l’en-tête, le contenu et le pied de page publics avec `--page-x`.
 - Conservez la largeur publique de 60 rem.
-- Utilisez la largeur de 76 rem du backoffice pour les tableaux et les éditeurs.
+- Utilisez toute la largeur disponible dans le backoffice.
+- Limitez localement la largeur des formulaires lorsque leur contenu le nécessite.
 - Utilisez `--panel-padding` pour les sous-groupes qui nécessitent un panneau.
 - Ne placez pas le formulaire principal dans un panneau supplémentaire.
 - Regroupez les champs liés avec `.field-grid` et réservez `.wide` aux champs occupant toute la ligne.
@@ -23,10 +24,14 @@ Dans un flux de blocs sans espacement existant, ajoutez `.notice-flow` au parent
 Cette classe sépare les alertes de leurs voisins avec `--space-4`.
 N’ajoutez pas cette classe à une grille qui possède déjà un `gap`.
 
-La texture reste visible autour du contenu, pas derrière le texte des pages.
-Le conteneur principal utilise un fond opaque, une bordure et l’ombre `--shadow-page`.
-La marge extérieure `--shell-gutter` conserve la texture sur les écrans étroits.
-L’impression retire cette marge, la bordure et l’ombre du conteneur.
+Le conteneur `main` reste transparent et gère uniquement la disposition.
+Chaque page de premier niveau applique `.page-container`.
+Les pages de configuration imbriquées ne répètent pas ce conteneur.
+
+Les pages publiques conservent leur bordure, leur ombre et leur marge extérieure sur la texture.
+Dans le backoffice, la surface de page reste opaque, sans bordure extérieure ni ombre.
+La navigation latérale utilise les couleurs du thème existant.
+L’impression retire la navigation et les marges extérieures.
 
 Les pages publiques utilisent `.page-intro` pour leur introduction et `.contact-panel` pour leur zone de contact.
 Les titres d’introduction utilisent `--text-hero`, sans modifier les titres des éditeurs métier.
@@ -64,6 +69,20 @@ La quantité, le prix et la TVA occupent trois colonnes lorsque la place le perm
 L’abandon d’un devis reste accessible dans une section dépliable explicitement nommée.
 
 ## Autres écrans
+
+Le backoffice possède une navigation latérale avec icônes et un en-tête contenant le lien vers la documentation API.
+La rubrique active couvre aussi ses éditeurs associés.
+Le menu du compte présente le compte actif, sa sécurité et la déconnexion.
+L’API actuelle ne fournit pas de liste de comptes disponibles ni de permissions au navigateur.
+Les contrôles d’accès serveur restent inchangés.
+
+Sous 64 rem, un tiroir remplace la navigation latérale.
+Le composant `Drawer` utilise Angular CDK pour le focus, Échap, le fond modal et le blocage du défilement.
+Les confirmations de sortie restent accessibles au-dessus du tiroir.
+Une navigation annulée conserve le tiroir et la saisie.
+
+Le composant `PageHeader` sépare le titre des actions avec retour à la ligne.
+L’atelier `/design/navigation` présente ce composant et le tiroir interactif.
 
 Les actions rapides du tableau de bord se trouvent dans son en-tête.
 Les indicateurs utilisent deux colonnes sur mobile.

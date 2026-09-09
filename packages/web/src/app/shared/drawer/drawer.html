@@ -1,0 +1,17 @@
+<ng-template #content>
+  <div class="drawer-body">
+    <div class="drawer-heading">
+      <strong>{{ label() }}</strong>
+      <button
+        appButton
+        data-drawer-close
+        type="button"
+        [attr.aria-label]="closeLabel()"
+        (click)="closed.emit()"
+      >
+        <app-icon name="close" />
+      </button>
+    </div>
+    <ng-content />
+  </div>
+</ng-template>

@@ -14,13 +14,76 @@ export type IconName =
   | 'metrics'
   | 'secrets'
   | 'tests'
-  | 'upgrade';
+  | 'upgrade'
+  | 'dashboard'
+  | 'clients'
+  | 'folder'
+  | 'invoice'
+  | 'bank'
+  | 'settings'
+  | 'catalog'
+  | 'book'
+  | 'menu'
+  | 'close'
+  | 'chevron'
+  | 'user'
+  | 'logout'
+  | 'plus'
+  | 'search';
 
 @Component({
   selector: 'app-icon',
   template: `
     <svg viewBox="0 0 24 24" aria-hidden="true">
       @switch (name()) {
+        @case ('dashboard') {
+          <path d="M3 3h7v7H3zm11 0h7v7h-7zM3 14h7v7H3zm11 0h7v7h-7z" />
+        }
+        @case ('clients') {
+          <circle cx="9" cy="8" r="3" />
+          <path d="M3 21v-2a6 6 0 0 1 12 0v2m1-17a3 3 0 0 1 0 6m3 11v-2a6 6 0 0 0-3-5.2" />
+        }
+        @case ('folder') {
+          <path d="M3 7V5a2 2 0 0 1 2-2h5l2 3h7a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+        }
+        @case ('invoice') {
+          <path d="M6 3h9l4 4v14H5V3zm8 0v5h5M8 12h8m-8 4h6" />
+        }
+        @case ('bank') {
+          <path d="m3 9 9-6 9 6zm2 3v7m5-7v7m4-7v7m5-7v7M3 22h18" />
+        }
+        @case ('settings') {
+          <path d="M4 6h16M4 12h16M4 18h16M8 3v6m8 0v6m-6 0v6" />
+        }
+        @case ('catalog') {
+          <path d="M4 3h4v18H4zm8 0h4v18h-4zm7 1 3 16" />
+        }
+        @case ('book') {
+          <path d="M12 5v16m0-16C8 2 4 3 2 4v16c3-1 7-1 10 1 3-2 7-2 10-1V4c-2-1-6-2-10 1" />
+        }
+        @case ('menu') {
+          <path d="M4 6h16M4 12h16M4 18h16" />
+        }
+        @case ('close') {
+          <path d="m6 6 12 12M6 18 18 6" />
+        }
+        @case ('chevron') {
+          <path d="m8 9 4-4 4 4m-8 6 4 4 4-4" />
+        }
+        @case ('user') {
+          <circle cx="12" cy="8" r="3" />
+          <path d="M5 21v-2a7 7 0 0 1 14 0v2" />
+        }
+        @case ('logout') {
+          <path d="M10 5H5v14h5m4-11 4 4-4 4m4-4H9" />
+        }
+        @case ('plus') {
+          <path d="M12 5v14M5 12h14" />
+        }
+        @case ('search') {
+          <circle cx="10" cy="10" r="7" />
+          <path d="m15 15 6 6" />
+        }
         @case ('mail') {
           <g>
             <rect width="20" height="16" x="2" y="4" rx="2" />

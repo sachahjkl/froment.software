@@ -5,7 +5,9 @@
     (change)="setLanguage($any($event.target).value)"
   >
     @for (language of i18n.languages; track language.code) {
-    <option [value]="language.code">{{ i18n.t(language.labelKey) }}</option>
+    <option [value]="language.code" [selected]="i18n.language() === language.code">
+      {{ i18n.t(language.labelKey) }}
+    </option>
     }
   </select>
 </label>

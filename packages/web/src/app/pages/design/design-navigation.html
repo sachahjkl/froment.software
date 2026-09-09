@@ -8,6 +8,25 @@
 >
   <h2>{{ i18n.t("design.components.navigation") }}</h2>
   <div class="sample-grid wide">
+    <app-visual-sample name="navigation drawer / interactive">
+      <p>{{ i18n.t('backOfficeShell.drawerDescription') }}</p>
+      <button
+        appButton
+        type="button"
+        aria-haspopup="dialog"
+        [attr.aria-expanded]="drawerOpen()"
+        (click)="drawerOpen.set(true)"
+      >
+        {{ i18n.t('backOfficeShell.drawerDemo') }}
+      </button>
+      <app-drawer
+        [open]="drawerOpen()"
+        [label]="i18n.t('backOffice.navigation.label')"
+        [closeLabel]="i18n.t('backOfficeShell.closeNavigation')"
+        (closed)="drawerOpen.set(false)"
+        ><app-back-office-nav
+      /></app-drawer>
+    </app-visual-sample>
     <app-visual-sample name="tabs / interactive">
       <app-tabs [label]="i18n.t('design.demo.tabs')" [tabs]="tabs()" />
       <router-outlet />
@@ -33,12 +52,12 @@
       </header>
     </app-visual-sample>
     <app-visual-sample name="page header / primary action">
-      <header class="section-heading-sample">
+      <app-page-header>
         <h3>{{ i18n.t("design.demo.quotes") }}</h3>
-        <a appLinkButton variant="primary" href="#design-navigation-panel"
+        <a pageActions appLinkButton variant="primary" href="#design-navigation-panel"
           >{{ i18n.t("design.demo.newQuote") }}</a
         >
-      </header>
+      </app-page-header>
     </app-visual-sample>
     <app-visual-sample name="authentication panel">
       <section class="auth-panel-sample">
