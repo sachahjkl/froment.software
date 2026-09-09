@@ -6,10 +6,36 @@ import { Integrations } from './service.js';
 import { IntegrationRetries } from './retries.js';
 import { ConnectionConfig } from './connection-config.js';
 import { EmailTests } from './email-test-service.js';
+import { Checkouts } from './checkout-service.js';
 
 export const IntegrationHandlers = HttpApiBuilder.group(Api, 'integrations', (handlers) =>
   Effect.succeed(
     handlers
+      .handle(
+        'checkoutConnection',
+        Effect.fn('checkoutConnection')(function* () {
+          yield* setPrivateResponseHeaders;
+          return (yield* Checkouts).connection;
+        }),
+      )
+      .handle(
+        'checkoutList',
+        Effect.fn('checkoutList')(function* () {
+          yield* setPrivateResponseHeaders;
+          return yield* (yield* Checkouts)
+            .list()
+            .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
+        }),
+      )
+      .handle(
+        'checkoutCreate',
+        Effect.fn('checkoutCreate')(function* ({ payload }) {
+          yield* setPrivateResponseHeaders;
+          return yield* (yield* Checkouts)
+            .enqueue(payload, (yield* ApiPrincipal).userId)
+            .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
+        }),
+      )
       .handle(
         'providerConnections',
         Effect.fn('providerConnections')(function* () {

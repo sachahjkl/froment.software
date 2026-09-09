@@ -4,6 +4,7 @@ import type { ProviderConnections } from '@froment/contracts';
 const makeConnectionConfig = Effect.gen(function* () {
   const resend = yield* Config.option(Config.redacted('RESEND_API_KEY'));
   const stripe = yield* Config.option(Config.redacted('STRIPE_SECRET_KEY'));
+  const stripeWebhook = yield* Config.option(Config.redacted('STRIPE_WEBHOOK_SECRET'));
   const signwell = yield* Config.option(Config.redacted('SIGNWELL_API_KEY'));
   const superpdpId = yield* Config.option(Config.redacted('SUPERPDP_CLIENT_ID'));
   const superpdpSecret = yield* Config.option(Config.redacted('SUPERPDP_CLIENT_SECRET'));
@@ -20,7 +21,7 @@ const makeConnectionConfig = Effect.gen(function* () {
       provider: 'stripe',
       credentialsPresent: present(stripe),
       missingSecrets: present(stripe) ? [] : ['STRIPE_SECRET_KEY'],
-      mode: 'not-connected',
+      mode: 'restricted-test',
     },
     {
       provider: 'signwell',
@@ -38,7 +39,12 @@ const makeConnectionConfig = Effect.gen(function* () {
       mode: 'not-connected',
     },
   ];
-  return { resend: present(resend) ? resend : Option.none(), connections };
+  return {
+    resend: present(resend) ? resend : Option.none(),
+    stripe: present(stripe) ? stripe : Option.none(),
+    stripeWebhook: present(stripeWebhook) ? stripeWebhook : Option.none(),
+    connections,
+  };
 });
 export class ConnectionConfig extends Context.Service<
   ConnectionConfig,

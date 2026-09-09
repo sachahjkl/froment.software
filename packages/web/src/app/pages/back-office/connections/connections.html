@@ -45,7 +45,9 @@
           </td>
           <td>
             @if (connection.provider === 'resend') {
-            <a routerLink="resend">{{ i18n.t('connections.openResend') }}</a> } @else { {{
+            <a routerLink="resend">{{ i18n.t('connections.openResend') }}</a> } @else if
+            (connection.provider === 'stripe') {
+            <a routerLink="stripe">{{ i18n.t('checkout.openSettings') }}</a> } @else { {{
             i18n.t('connections.pending') }} }
           </td>
         </tr>

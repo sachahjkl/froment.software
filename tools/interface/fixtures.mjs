@@ -225,7 +225,7 @@ export async function mockApi(
         provider,
         credentialsPresent: true,
         missingSecrets: [],
-        mode: provider === "resend" ? "restricted-test" : "not-connected",
+        mode: ["resend", "stripe"].includes(provider) ? "restricted-test" : "not-connected",
       })),
     ],
     ["/api/integrations/email-tests", []],

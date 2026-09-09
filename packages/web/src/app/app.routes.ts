@@ -312,6 +312,12 @@ export const routes: Routes = [
         canDeactivate: [unsavedChangesGuard],
       },
       {
+        path: 'services/stripe',
+        canDeactivate: [unsavedChangesGuard],
+        loadComponent: () =>
+          import('./pages/back-office/checkout/checkout').then((module) => module.Checkout),
+      },
+      {
         path: 'services/simulations',
         loadComponent: () =>
           import('./pages/back-office/integrations/integrations').then(

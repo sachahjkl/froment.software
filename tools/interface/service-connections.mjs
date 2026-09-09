@@ -1,6 +1,7 @@
 import { expect } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
 import { clientId } from "./fixtures.mjs";
+import { checkCheckout } from "./checkout.mjs";
 
 export async function checkServiceConnections(page, testInfo) {
   await page.goto("/backoffice/configuration/services");
@@ -107,5 +108,6 @@ export async function checkServiceConnections(page, testInfo) {
   }
   await form.getByRole("link", { name: /Retour aux connexions|Back to connections/ }).click();
   await expect(page).toHaveURL(/configuration\/services$/);
+  await checkCheckout(page, testInfo);
   await page.getByRole("link", { name: /Ouvrir les simulations|Open simulations/ }).click();
 }

@@ -8,6 +8,13 @@ import { Permissions } from '../permissions.js';
 import { IntegrationRetryList } from './retries.js';
 import { frontendSpecific } from '../api-policy/visibility.js';
 import {
+  CheckoutConnection,
+  CheckoutRequest,
+  CheckoutOperation,
+  CheckoutList,
+  CheckoutFailure,
+} from './checkout.js';
+import {
   ProviderConnections,
   EmailTestRequest,
   EmailTestOperation,
@@ -24,6 +31,31 @@ import {
 } from './contracts.js';
 
 export class IntegrationsApi extends HttpApiGroup.make('integrations', { topLevel: true }).add(
+  HttpApiEndpoint.get('checkoutConnection', '/api/integrations/checkout/connection', {
+    success: CheckoutConnection,
+    error: CheckoutFailure.members,
+  }).pipe(requirePermissions([Permissions.integrationConfigure]), authenticate, frontendSpecific),
+  HttpApiEndpoint.get('checkoutList', '/api/integrations/checkout', {
+    success: CheckoutList,
+    error: CheckoutFailure.members,
+  }).pipe(
+    requirePermissions([Permissions.integrationConfigure, Permissions.invoiceRead]),
+    authenticate,
+    frontendSpecific,
+  ),
+  HttpApiEndpoint.post('checkoutCreate', '/api/integrations/checkout', {
+    payload: CheckoutRequest,
+    success: CheckoutOperation,
+    error: CheckoutFailure.members,
+  })
+    .middleware(ApiRequestBody)
+    .middleware(ApiBrowserRequest)
+    .pipe(
+      requirePermissions([Permissions.integrationConfigure, Permissions.invoiceRead]),
+      authenticate,
+      rateLimit(RateLimits.tenPerMinute),
+      frontendSpecific,
+    ),
   HttpApiEndpoint.get('providerConnections', '/api/integrations/connections', {
     success: ProviderConnections,
     error: IntegrationFailure.members,

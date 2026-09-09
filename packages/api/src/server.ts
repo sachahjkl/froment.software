@@ -40,6 +40,7 @@ import { QuoteHandlers } from './quotes/handlers.js';
 import { QuoteConditionPresetHandlers } from './quote-condition-presets/handlers.js';
 import { CatalogHandlers } from './catalog/handlers.js';
 import { IntegrationHandlers } from './integrations/handlers.js';
+import { StripeWebhookRoute } from './integrations/stripe-webhook.js';
 import { BankingHandlers } from './banking/handlers.js';
 import { QuoteLinkHandlers } from './quote-links/handlers.js';
 import { RequestLimiterLive } from './server/request-limiter.js';
@@ -164,6 +165,7 @@ export const makeServerLayer = (options: {
   return HttpRouter.serve(
     Layer.mergeAll(
       ApiRoutes,
+      StripeWebhookRoute,
       ApiDocs,
       FrenchApiDocs,
       EnglishApiDocs,

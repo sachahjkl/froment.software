@@ -1,5 +1,6 @@
 import { webUiText } from './web-ui-text.js';
 import { connectionText } from './connections.js';
+import { checkoutText } from './checkout.js';
 import { teamText } from './team.js';
 import { creditText } from './credit-notes.js';
 import { ledgerText } from './bank-ledger.js';
@@ -12,6 +13,7 @@ import { emailTemplateText } from './email-templates.js';
 export const translations = {
   fr: {
     ...connectionText.fr,
+    ...checkoutText.fr,
     ...webUiText.fr,
     ...teamText.fr,
     ...creditText.fr,
@@ -1526,6 +1528,7 @@ export const translations = {
   },
   en: {
     ...connectionText.en,
+    ...checkoutText.en,
     ...webUiText.en,
     ...teamText.en,
     ...creditText.en,

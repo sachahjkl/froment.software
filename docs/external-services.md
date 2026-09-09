@@ -14,6 +14,7 @@ Les cinq adaptateurs des opérations commerciales fonctionnent en simulation, y 
 
 La page **Simulations** utilise des données fictives.
 Le parcours [Vérifier Resend](resend.md) est distinct et envoie un vrai courriel au destinataire autorisé.
+Le parcours [Stripe Checkout](stripe.md) crée une page en mode test, sans modifier l’historique financier.
 La page signale explicitement les simulations.
 Aucun courriel, signature, encaissement, mouvement bancaire ou dépôt réglementaire ne résulte de ces tests.
 Les adaptateurs ne modifient pas les documents commerciaux.

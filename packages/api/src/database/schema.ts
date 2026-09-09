@@ -1346,3 +1346,55 @@ export const emailTests = sqliteTable(
     check('email_test_attempts_check', sql`${table.attempts} between 0 and 5`),
   ],
 );
+
+export const checkoutOperations = sqliteTable(
+  'checkout_operations',
+  {
+    requestId: text('request_id').notNull().primaryKey(),
+    request: text().notNull(),
+    invoiceId: text('invoice_id')
+      .notNull()
+      .references(() => invoices.id),
+    revisionId: text('revision_id')
+      .notNull()
+      .references(() => invoiceRevisions.id),
+    invoiceNumber: text('invoice_number').notNull(),
+    amountCents: integer('amount_cents').notNull(),
+    createdByUserId: text('created_by_user_id')
+      .notNull()
+      .references(() => users.id),
+    createdAt: text('created_at').notNull(),
+    updatedAt: text('updated_at').notNull(),
+    expiresAt: text('expires_at').notNull(),
+    returnUrl: text('return_url').notNull(),
+    accountKey: text('account_key'),
+    status: text().notNull(),
+    attempts: integer().notNull().default(0),
+    lease: integer().notNull().default(0),
+    nextAttemptAt: integer('next_attempt_at'),
+    sessionId: text('session_id').unique(),
+    checkoutUrl: text('checkout_url'),
+    error: text(),
+  },
+  (table) => [
+    check(
+      'checkout_status_check',
+      sql`${table.status} in ('queued','creating','retrying','open','paid','expired','failed','blocked')`,
+    ),
+    check('checkout_attempts_check', sql`${table.attempts} between 0 and 5`),
+    check('checkout_amount_check', sql`${table.amountCents} between 50 and 99999999`),
+    index('checkout_due_index').on(table.nextAttemptAt),
+    uniqueIndex('checkout_active_invoice_unique')
+      .on(table.invoiceId)
+      .where(sql`${table.status} in ('queued','creating','retrying','open')`),
+  ],
+);
+
+export const checkoutEvents = sqliteTable('checkout_events', {
+  eventId: text('event_id').notNull().primaryKey(),
+  requestId: text('request_id')
+    .notNull()
+    .references(() => checkoutOperations.requestId),
+  eventType: text('event_type').notNull(),
+  receivedAt: integer('received_at').notNull(),
+});

@@ -1,0 +1,197 @@
+<section aria-labelledby="checkout-title">
+  <header>
+    <a class="back-link" routerLink="/backoffice/configuration/services"
+      >{{ i18n.t('connections.back') }}</a
+    >
+    <h2 id="checkout-title">{{ i18n.t('checkout.title') }}</h2>
+    <p>{{ i18n.t('checkout.intro') }}</p>
+  </header>
+  <p appNotice variant="warning">{{ i18n.t('checkout.safety') }}</p>
+  @if (error(); as code) {
+  <p appNotice variant="danger" role="alert">{{ i18n.t(code) }}</p>
+  }
+  <section aria-labelledby="checkout-connection">
+    <h3 id="checkout-connection">{{ i18n.t('checkout.connection') }}</h3>
+    @if (loading()) {
+    <p>{{ i18n.t('checkout.loading') }}</p>
+    } @if (connection(); as state) {
+    <dl>
+      <dt>{{ i18n.t('checkout.key') }}</dt>
+      <dd>
+        {{ i18n.t(state.testKey ? 'checkout.testKey' : state.credentialsPresent ?
+        'checkout.testKeyRequired' : 'checkout.credentialsMissing') }}
+      </dd>
+      <dt>{{ i18n.t('checkout.webhook') }}</dt>
+      <dd>
+        {{ i18n.t(state.webhookConfigured ? 'checkout.webhookPresent' : 'checkout.webhookAbsent') }}
+      </dd>
+    </dl>
+    }
+    <p>{{ i18n.t('checkout.polling') }}</p>
+    <button appButton type="button" [disabled]="loading() || saving()" (click)="load()">
+      {{ i18n.t('checkout.refresh') }}
+    </button>
+  </section>
+  <form novalidate (submit)="create($event)" aria-labelledby="checkout-prepare">
+    <h3 id="checkout-prepare">{{ i18n.t('checkout.prepare') }}</h3>
+    <p id="checkout-invoice-hint">{{ i18n.t('checkout.invoiceHint') }}</p>
+    @if (!loading() && invoices().length === 0) {
+    <p appNotice>{{ i18n.t('checkout.noInvoices') }}</p>
+    }
+    <label class="field">
+      {{ i18n.t('checkout.invoice') }}
+      <select
+        class="select"
+        id="checkout-invoice"
+        #invoiceInput
+        [formField]="checkoutForm.invoiceId"
+        [attr.aria-invalid]="checkoutForm.invoiceId().touched() && checkoutForm.invoiceId().invalid()"
+        aria-describedby="checkout-invoice-hint checkout-invoice-error"
+      >
+        <option value="">{{ i18n.t('checkout.chooseInvoice') }}</option>
+        @for (item of invoices(); track item.id) {
+        <option [value]="item.id">
+          {{ item.invoiceNumber }} — {{ item.clientDisplayName }} — {{ money(balance(item)) }}
+        </option>
+        }
+      </select>
+    </label>
+    <p id="checkout-invoice-error" class="field-error">
+      @if (checkoutForm.invoiceId().touched() && checkoutForm.invoiceId().invalid()) { {{
+      i18n.t('checkout.invoiceRequired') }} }
+    </p>
+    @if (invoice(); as item) {
+    <dl>
+      <dt>{{ i18n.t('checkout.invoice') }}</dt>
+      <dd>{{ item.invoiceNumber }}</dd>
+      <dt>{{ i18n.t('checkout.client') }}</dt>
+      <dd>{{ item.clientDisplayName }}</dd>
+      <dt>{{ i18n.t('checkout.total') }}</dt>
+      <dd>{{ money(item.totalCents) }}</dd>
+      <dt>{{ i18n.t('checkout.recordedPaid') }}</dt>
+      <dd>{{ money(item.recordedPaidCents) }}</dd>
+      <dt>{{ i18n.t('checkout.amount') }}</dt>
+      <dd>{{ money(balance(item)) }}</dd>
+      <dt>{{ i18n.t('checkout.version') }}</dt>
+      <dd>{{ item.version }}</dd>
+    </dl>
+    <a [routerLink]="['/backoffice/invoices', item.id]">{{ i18n.t('checkout.viewInvoice') }}</a>
+    }
+    <p>{{ i18n.t('checkout.transmitted') }}</p>
+    @if (active()) {
+    <p appNotice>{{ i18n.t('checkout.active') }}</p>
+    } @if (pending()) {
+    <p appNotice variant="warning">{{ i18n.t('checkout.pending') }}</p>
+    }
+    <button
+      appButton
+      [variant]="canOpen(current()) ? 'default' : 'primary'"
+      type="submit"
+      [disabled]="saving() || loading() || !ready() || !connection()?.testKey || (active() && !pending())"
+    >
+      {{ i18n.t(saving() ? 'checkout.saving' : pending() ? 'checkout.retryRequest' :
+      'checkout.create') }}
+    </button>
+  </form>
+  <section aria-labelledby="checkout-progress">
+    <h3 id="checkout-progress">{{ i18n.t('checkout.progress') }}</h3>
+    @if (paused()) {
+    <p appNotice variant="warning">{{ i18n.t('checkout.paused') }}</p>
+    }
+    <div appNotice #progress role="status" tabindex="-1">
+      @if (current(); as item) {
+      <strong>{{ item.invoiceNumber }} — {{ i18n.t(labels[item.status]) }}</strong> } @else { {{
+      i18n.t(historyLoaded() ? selected() ? 'checkout.requestNotFound' : 'checkout.noTests' :
+      paused() ? 'checkout.historyUnknown' : 'checkout.historyLoading') }} }
+    </div>
+    @if (current(); as item) { @if (item.error; as code) {
+    <p appNotice variant="warning">{{ i18n.t(code) }}</p>
+    }
+    <dl>
+      <dt>{{ i18n.t('checkout.amount') }}</dt>
+      <dd>{{ money(item.amountCents) }}</dd>
+      <dt>{{ i18n.t('checkout.attempts') }}</dt>
+      <dd>{{ item.attempts }}</dd>
+      <dt>{{ i18n.t('checkout.expiresAt') }}</dt>
+      <dd>
+        {{ item.expiresAt | localizedDate: i18n.language() : { dateStyle: 'medium', timeStyle:
+        'short' } }}
+      </dd>
+      <dt>{{ i18n.t('checkout.updatedAt') }}</dt>
+      <dd>
+        {{ item.updatedAt | localizedDate: i18n.language() : { dateStyle: 'medium', timeStyle:
+        'short' } }}
+      </dd>
+      @if (item.nextAttemptAt; as next) {
+      <dt>{{ i18n.t('checkout.nextAttempt') }}</dt>
+      <dd>
+        {{ next | localizedDate: i18n.language() : { dateStyle: 'medium', timeStyle: 'short' } }}
+      </dd>
+      }
+    </dl>
+    @if (canOpen(item)) {
+    <a
+      appLinkButton
+      variant="primary"
+      [href]="item.checkoutUrl"
+      rel="noreferrer noopener"
+      target="_blank"
+      >{{ i18n.t('checkout.openStripe') }}</a
+    >
+    <p>{{ i18n.t('checkout.testCard') }}</p>
+    }
+    <p>{{ i18n.t('checkout.returnHint') }}</p>
+    <details>
+      <summary>{{ i18n.t('checkout.identifiers') }}</summary>
+      <dl>
+        <dt>{{ i18n.t('checkout.requestId') }}</dt>
+        <dd><code>{{ item.request.requestId }}</code></dd>
+        <dt>{{ i18n.t('checkout.sessionId') }}</dt>
+        <dd><code>{{ item.sessionId ?? '—' }}</code></dd>
+      </dl>
+    </details>
+    }
+  </section>
+  @if (operations().length > 0) {
+  <section aria-labelledby="checkout-history">
+    <h3 id="checkout-history">{{ i18n.t('checkout.history') }}</h3>
+    <p>{{ i18n.t('checkout.historyHint') }}</p>
+    <div appDataTable>
+      <table>
+        <thead>
+          <tr>
+            <th scope="col">{{ i18n.t('checkout.invoice') }}</th>
+            <th scope="col">{{ i18n.t('checkout.createdAt') }}</th>
+            <th scope="col">{{ i18n.t('checkout.amount') }}</th>
+            <th scope="col">{{ i18n.t('checkout.status') }}</th>
+            <th scope="col">{{ i18n.t('checkout.details') }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (item of operations(); track item.request.requestId) {
+          <tr>
+            <th scope="row">{{ item.invoiceNumber }}</th>
+            <td>
+              {{ item.createdAt | localizedDate: i18n.language() : { dateStyle: 'medium', timeStyle:
+              'short' } }}
+            </td>
+            <td>{{ money(item.amountCents) }}</td>
+            <td>{{ i18n.t(labels[item.status]) }}</td>
+            <td>
+              <button
+                appButton
+                type="button"
+                (click)="select(item)"
+                [attr.aria-label]="i18n.tf('checkout.detailsFor', { invoice: item.invoiceNumber })"
+              >
+                {{ i18n.t('checkout.details') }}
+              </button>
+            </td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </section>
+  }
+</section>

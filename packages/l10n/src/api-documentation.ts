@@ -5,6 +5,7 @@ import { ledgerDocumentation } from './bank-ledger.js';
 import { passkeyDocumentation } from './passkeys.js';
 import { emailDraftDocumentation } from './email-drafts.js';
 import { connectionDocumentation } from './connections.js';
+import { checkoutDocumentation } from './checkout.js';
 import { emailTemplateDocumentation } from './email-templates.js';
 import { reminderDocumentation } from './reminders.js';
 import { providerActionDocumentation } from './provider-action-documentation.js';
@@ -103,6 +104,7 @@ export const apiDocumentation = {
       ...passkeyDocumentation.fr.operations,
       ...emailDraftDocumentation.fr.operations,
       ...connectionDocumentation.fr,
+      ...checkoutDocumentation.fr,
       integrationRetryList: {
         summary: 'Lire les reprises automatiques',
         description:
@@ -485,6 +487,7 @@ export const apiDocumentation = {
       ...passkeyDocumentation.en.operations,
       ...emailDraftDocumentation.en.operations,
       ...connectionDocumentation.en,
+      ...checkoutDocumentation.en,
       integrationRetryList: {
         summary: 'Read automatic retries',
         description:

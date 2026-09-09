@@ -20,6 +20,7 @@ Lors du passage en service réel, renseignez ensemble les identifiants liés : c
 Seul le fichier chiffré de production est inclus dans l’image. Aucun déchiffrement ne se produit pendant la construction.
 L’injection des clés n’active pas les opérations commerciales. Elles restent simulées.
 Le parcours [Resend](resend.md) autorise un envoi de test explicite à un destinataire imposé.
+Le parcours [Stripe Checkout](stripe.md) accepte uniquement une clé de test et ne crée aucun encaissement local.
 Une clé Resend permet des envois réels, même dans le profil de développement.
 
 ## Développement

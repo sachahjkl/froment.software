@@ -4,6 +4,8 @@ import { FetchHttpClient } from 'effect/unstable/http';
 import { ConnectionConfigLive } from './integrations/connection-config.js';
 import { ResendEmailTransportLive } from './integrations/resend.js';
 import { EmailTestsLive, EmailTestWorkerLive } from './integrations/email-test-service.js';
+import { CheckoutsLive, CheckoutWorkerLive } from './integrations/checkout-service.js';
+import { StripeCheckoutTransportLive } from './integrations/stripe.js';
 
 import { BootstrapLive } from './bootstrap/bootstrap.js';
 import { AuditLive } from './audit/audit.js';
@@ -53,6 +55,13 @@ const AuthenticationServicesLive = BootstrapLive.pipe(
 );
 
 const ServicesLive = Layer.mergeAll(
+  CheckoutWorkerLive.pipe(
+    Layer.provideMerge(
+      CheckoutsLive.pipe(
+        Layer.provide(StripeCheckoutTransportLive.pipe(Layer.provide(FetchHttpClient.layer))),
+      ),
+    ),
+  ),
   EmailTestWorkerLive.pipe(
     Layer.provideMerge(
       EmailTestsLive.pipe(
