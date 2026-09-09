@@ -92,6 +92,11 @@ export async function checkCheckout(page, testInfo) {
     .click();
   await expect(panel.getByRole("alert")).toContainText(/réponse du serveur|server response/);
   await expect(field).toBeDisabled();
+  page.once("dialog", (dialog) => dialog.accept());
+  await page.reload();
+  await expect(field).toHaveValue(invoiceId);
+  await expect(field).toBeDisabled();
+  expect(writes).toHaveLength(1);
   lostResponse = false;
   await panel
     .getByRole("button", { name: /Reprendre la même demande|Resume the same request/ })

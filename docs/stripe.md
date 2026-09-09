@@ -76,6 +76,15 @@ Un changement bloque la création. Il ne modifie pas une page Stripe déjà cré
 Une seule demande reste active par facture.
 L’installation conserve au maximum 100 demandes de test.
 
+Avant de soumettre, le navigateur conserve l’UUID, l’identifiant de facture et la version dans le stockage de session de l’onglet.
+Cet enregistrement reste séparé par compte administrateur.
+Après rechargement, le formulaire restaure la demande sans réponse et verrouille le choix de facture.
+Il ne soumet jamais cette demande automatiquement. Le suivi la rapproche de l’historique du serveur.
+Une confirmation du serveur retire l’enregistrement de l’onglet.
+
+Si ce stockage est indisponible, le formulaire ne crée aucune nouvelle demande.
+Le choix de facture non soumis n’est pas conservé.
+
 ## Notifications signées
 
 La route lit le corps HTTP brut, dans la limite globale des requêtes.

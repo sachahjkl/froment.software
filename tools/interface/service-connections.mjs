@@ -14,11 +14,15 @@ export async function checkServiceConnections(page, testInfo) {
   let status = "queued";
   let unavailable = false;
   let writes = 0;
+  let loseResponse = false;
+  let hideOperation = false;
+  const requests = [];
   await page.route("**/api/integrations/email-tests", async (route) => {
     if (unavailable) return route.fulfill({ status: 503, json: {} });
     if (route.request().method() === "POST") {
       writes++;
       const request = route.request().postDataJSON();
+      requests.push(request);
       expect(Object.keys(request).sort()).toEqual(["body", "requestId", "subject"]);
       operation = {
         request,
@@ -31,23 +35,26 @@ export async function checkServiceConnections(page, testInfo) {
         providerId: null,
         error: null,
       };
-      return route.fulfill({ json: operation });
+      hideOperation = loseResponse;
+      return loseResponse ? route.abort("failed") : route.fulfill({ json: operation });
     }
     return route.fulfill({
-      json: operation
-        ? [
-            {
-              ...operation,
-              status,
-              attempts: status === "queued" ? 0 : 1,
-              providerId: status === "queued" ? null : "13d1635c-64c8-4078-b0f5-d936fb3791dd",
-              nextAttemptAt: status === "delivered" ? null : operation.nextAttemptAt,
-            },
-          ]
-        : [],
+      json:
+        operation && !hideOperation
+          ? [
+              {
+                ...operation,
+                status,
+                attempts: status === "queued" ? 0 : 1,
+                providerId: status === "queued" ? null : "13d1635c-64c8-4078-b0f5-d936fb3791dd",
+                nextAttemptAt: status === "delivered" ? null : operation.nextAttemptAt,
+              },
+            ]
+          : [],
     });
   });
   await page.getByRole("link", { name: /Vérifier Resend|Check Resend/ }).click();
+  await expect(page.locator("#main-content")).toBeFocused();
   const form = page.locator("app-email-test");
   await expect(form.getByRole("status")).toContainText(/Aucun test|No test/);
   await expect(form).toContainText("sacha@sacha.house");
@@ -106,6 +113,31 @@ export async function checkServiceConnections(page, testInfo) {
     );
     await page.screenshot({ path: testInfo.outputPath(`resend-${theme}.png`), fullPage: true });
   }
+  loseResponse = true;
+  status = "queued";
+  await form.getByRole("button", { name: /Envoyer le test|Send test email/, exact: true }).click();
+  await page
+    .getByRole("alertdialog")
+    .getByRole("button", { name: /Envoyer le test|Send test email/ })
+    .click();
+  await expect(form.getByRole("alert")).toBeVisible();
+  await expect(subject).toHaveAttribute("readonly", "");
+  page.once("dialog", (dialog) => dialog.accept());
+  await page.reload();
+  await expect(subject).toHaveValue("Vérification de la messagerie / Email connection check");
+  await expect(subject).toHaveAttribute("readonly", "");
+  expect(writes).toBe(2);
+  loseResponse = false;
+  await form
+    .getByRole("button", { name: /Reprendre la même demande|Resume the same request/ })
+    .click();
+  await page
+    .getByRole("alertdialog")
+    .getByRole("button", { name: /Envoyer le test|Send test email/ })
+    .click();
+  await expect(form.getByRole("status")).toContainText(/Enregistré|Recorded/);
+  expect(writes).toBe(3);
+  expect(requests[1]).toEqual(requests[2]);
   await form.getByRole("link", { name: /Retour aux connexions|Back to connections/ }).click();
   await expect(page).toHaveURL(/configuration\/services$/);
   await checkCheckout(page, testInfo);

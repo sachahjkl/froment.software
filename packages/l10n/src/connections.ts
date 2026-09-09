@@ -67,7 +67,14 @@ export const connectionText = {
     'emailTest.progress': '3. Suivre le test',
     'emailTest.status': 'État du test',
     'emailTest.pendingRequest':
-      'L’enregistrement reste à confirmer. Actualisez le suivi ou soumettez à nouveau cette même demande. Son contenu reste verrouillé pour éviter les doublons.',
+      'L’enregistrement reste à confirmer. Le contenu est verrouillé. Actualisez le suivi ou reprenez la même demande.',
+    'emailTest.resume': 'Reprendre la même demande',
+    'emailTest.recoveryUnavailable':
+      'La reprise locale est indisponible. Vérifiez la connexion au compte et le stockage de session du navigateur, puis actualisez le suivi. Aucun nouvel envoi ne démarre sans cet enregistrement.',
+    'emailTest.recoveryHint':
+      'Une demande sans réponse reste dans cet onglet après rechargement, avec son contenu. Elle est retirée après confirmation du serveur. Les brouillons non soumis ne sont pas conservés.',
+    'emailTest.historyUnavailable':
+      'Historique indisponible. Actualisez le suivi avant de conclure qu’aucun test n’existe.',
     'emailTest.live':
       'Suivi actualisé toutes les 3 secondes. Le serveur poursuit le test si vous quittez cette page.',
     'emailTest.paused':
@@ -189,7 +196,14 @@ export const connectionText = {
     'emailTest.progress': '3. Track the test',
     'emailTest.status': 'Test status',
     'emailTest.pendingRequest':
-      'Recording is not yet confirmed. Refresh the status or submit this same request again. Its content stays locked to prevent duplicates.',
+      'Recording is not yet confirmed. The content is locked. Refresh the status or resume the same request.',
+    'emailTest.resume': 'Resume the same request',
+    'emailTest.recoveryUnavailable':
+      'Local recovery is unavailable. Check account access and browser session storage, then refresh the status. No new send starts without this record.',
+    'emailTest.recoveryHint':
+      'An unanswered request stays in this tab after a reload, including its content. Server confirmation removes it. Unsubmitted drafts are not retained.',
+    'emailTest.historyUnavailable':
+      'History unavailable. Refresh the status before concluding that no test exists.',
     'emailTest.live':
       'Status refreshes every 3 seconds. The server continues the test when you leave this page.',
     'emailTest.paused':

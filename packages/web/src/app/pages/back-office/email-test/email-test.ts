@@ -30,6 +30,10 @@ import {
 } from '@froment/contracts';
 import { I18nService, type TranslationKey } from '@app/i18n.service';
 import { ConnectionsApi } from '@backoffice/connections-api';
+import {
+  PendingProviderRequests,
+  type PendingRequestStore,
+} from '@backoffice/pending-provider-requests';
 import { Button } from '@shared/button/button';
 import { Notice } from '@shared/notice/notice';
 import { Confirmation } from '@shared/confirmation/confirmation';
@@ -48,10 +52,14 @@ export class EmailTest {
   private readonly api = inject(ConnectionsApi);
   private readonly confirmation = inject(Confirmation);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly requests = inject(PendingProviderRequests);
+  private requestStore: PendingRequestStore<EmailTestRequest> | undefined;
+  protected readonly recoveryReady = signal(false);
   protected readonly addresses = EmailTestAddress;
   protected readonly saving = signal(false);
   protected readonly pending = signal<EmailTestRequest | undefined>(undefined);
   protected readonly loading = signal(true);
+  protected readonly historyLoaded = signal(false);
   protected readonly credentialsPresent = signal(false);
   protected readonly error = signal<TranslationKey | undefined>(undefined);
   protected readonly paused = signal(false);
@@ -70,7 +78,7 @@ export class EmailTest {
     body: this.i18n.t('emailTest.defaultBody'),
   });
   protected readonly messageForm = form(this.model, (path) => {
-    disabled(path, () => this.saving());
+    disabled(path, () => this.saving() || !this.recoveryReady());
     readOnly(path, () => this.pending() !== undefined);
     required(path.subject);
     pattern(path.subject, /\S/);
@@ -94,33 +102,40 @@ export class EmailTest {
   private readonly progress = viewChild('progress', { read: ElementRef<HTMLElement> });
   private readonly subjectInput = viewChild('subjectInput', { read: ElementRef<HTMLInputElement> });
   private readonly bodyInput = viewChild('bodyInput', { read: ElementRef<HTMLTextAreaElement> });
+  private writeVersion = 0;
 
   constructor() {
     afterNextRender(() => {
       void this.loadConnections();
+      void this.restoreRequest();
       timer(0, 3000)
         .pipe(
           filter(() => !this.paused() && !this.saving() && document.visibilityState === 'visible'),
-          exhaustMap(() =>
-            this.api.emailTests().pipe(
+          exhaustMap(() => {
+            const version = this.writeVersion;
+            return this.api.emailTests().pipe(
+              filter(() => version === this.writeVersion),
               catchError(() => {
-                this.paused.set(true);
-                this.loading.set(false);
+                if (version === this.writeVersion) {
+                  this.paused.set(true);
+                  this.loading.set(false);
+                }
                 return EMPTY;
               }),
-            ),
-          ),
+            );
+          }),
           takeUntilDestroyed(this.destroyRef),
         )
         .subscribe((operations) => {
           this.operations.set(operations);
+          this.historyLoaded.set(true);
           this.loading.set(false);
           const pending = this.pending();
           if (
             pending !== undefined &&
             operations.some((item) => item.request.requestId === pending.requestId)
           ) {
-            this.pending.set(undefined);
+            if (!this.clearPending()) return;
             this.selected.set(pending.requestId);
             this.messageForm().reset();
             this.error.set(undefined);
@@ -128,7 +143,34 @@ export class EmailTest {
         });
     });
   }
+  private async restoreRequest(): Promise<void> {
+    this.recoveryReady.set(false);
+    try {
+      this.requestStore = await this.requests.email();
+      const request = this.requestStore.read();
+      if (request !== undefined) {
+        this.pending.set(request);
+        this.model.set({ subject: request.subject, body: request.body });
+        this.selected.set(request.requestId);
+      }
+      this.recoveryReady.set(true);
+    } catch {
+      this.error.set('emailTest.recoveryUnavailable');
+    }
+  }
+  private clearPending(): boolean {
+    try {
+      if (this.requestStore === undefined) throw new Error('pending_request.storage_unavailable');
+      this.requestStore.clear();
+      this.pending.set(undefined);
+      return true;
+    } catch {
+      this.error.set('emailTest.recoveryUnavailable');
+      return false;
+    }
+  }
   private async loadConnections(): Promise<void> {
+    this.credentialsPresent.set(false);
     try {
       this.credentialsPresent.set(
         (await this.api.connections()).some(
@@ -143,6 +185,7 @@ export class EmailTest {
     this.paused.set(false);
     this.error.set(undefined);
     void this.loadConnections();
+    if (!this.recoveryReady()) void this.restoreRequest();
   }
   protected select(operation: EmailTestOperation): void {
     this.selected.set(operation.request.requestId);
@@ -154,17 +197,25 @@ export class EmailTest {
   async canDeactivate(): Promise<boolean> {
     return (
       !this.saving() &&
-      (!this.messageForm().dirty() ||
+      ((!this.messageForm().dirty() && this.pending() === undefined) ||
         (await this.confirmation.request(this.i18n.t('emailTest.unsaved'))))
     );
   }
   @HostListener('window:beforeunload', ['$event'])
   protected beforeUnload(event: BeforeUnloadEvent): void {
-    if (this.messageForm().dirty() || this.saving()) event.preventDefault();
+    if (this.messageForm().dirty() || this.saving() || this.pending() !== undefined)
+      event.preventDefault();
   }
   protected send(event: SubmitEvent): void {
     event.preventDefault();
-    if (this.saving() || this.active() || !this.credentialsPresent() || this.loading()) return;
+    if (
+      this.saving() ||
+      this.active() ||
+      !this.credentialsPresent() ||
+      this.loading() ||
+      !this.recoveryReady()
+    )
+      return;
     if (this.messageForm().invalid()) {
       this.messageForm.subject().markAsTouched();
       this.messageForm.body().markAsTouched();
@@ -176,6 +227,7 @@ export class EmailTest {
     }
     void submit(this.messageForm, async () => {
       this.saving.set(true);
+      this.writeVersion++;
       try {
         if (
           !(await this.confirmation.request(this.i18n.t('emailTest.confirm'), {
@@ -186,14 +238,22 @@ export class EmailTest {
         this.error.set(undefined);
         const model = this.model();
         const request = this.pending() ?? { requestId: crypto.randomUUID(), ...model };
+        try {
+          if (this.requestStore === undefined)
+            throw new Error('pending_request.storage_unavailable');
+          this.requestStore.write(request);
+        } catch {
+          this.error.set('emailTest.recoveryUnavailable');
+          return;
+        }
         this.pending.set(request);
         const outcome = await this.api.sendEmailTest(request);
         if (!outcome.success) {
           this.error.set(outcome.code);
-          if (outcome.code !== 'emailTest.error') this.pending.set(undefined);
+          if (outcome.code !== 'emailTest.error') this.clearPending();
           return;
         }
-        this.pending.set(undefined);
+        this.clearPending();
         this.operations.update((items) => [
           outcome.result,
           ...items.filter((item) => item.request.requestId !== request.requestId),
@@ -203,6 +263,7 @@ export class EmailTest {
         this.paused.set(false);
         this.progress()?.nativeElement.focus();
       } finally {
+        this.writeVersion++;
         this.saving.set(false);
       }
     });

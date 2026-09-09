@@ -2,7 +2,11 @@ import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
 import { of, Subject } from 'rxjs';
 import { vi } from 'vitest';
-import type { CheckoutOperation, CheckoutRequest } from '@froment/contracts';
+import { CheckoutRequest, type CheckoutOperation } from '@froment/contracts';
+import {
+  PendingProviderRequests,
+  pendingRequestStore,
+} from '@backoffice/pending-provider-requests';
 import { CheckoutApi } from '@backoffice/checkout-api';
 import { InvoicesApi } from '@backoffice/invoices-api';
 import { Confirmation } from '@shared/confirmation/confirmation';
@@ -18,6 +22,20 @@ const invoice = {
   creditedCents: 0,
   clientDisplayName: 'Client',
 };
+beforeEach(() => {
+  sessionStorage.clear();
+  TestBed.configureTestingModule({
+    providers: [
+      {
+        provide: PendingProviderRequests,
+        useValue: {
+          checkout: async () =>
+            pendingRequestStore(sessionStorage, 'checkout-test', CheckoutRequest),
+        },
+      },
+    ],
+  });
+});
 const operation = (request: CheckoutRequest): CheckoutOperation => ({
   request,
   revisionId: '01ARZ3NDEKTSV4RRFFQ69G5FAW',

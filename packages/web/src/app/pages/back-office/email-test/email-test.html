@@ -68,10 +68,12 @@
           appButton
           variant="primary"
           type="submit"
-          [disabled]="saving() || loading() || active() || !credentialsPresent()"
+          [disabled]="saving() || loading() || active() || !credentialsPresent() || !recoveryReady()"
         >
-          {{ i18n.t(saving() ? 'emailTest.saving' : 'emailTest.send') }}
+          {{ i18n.t(saving() ? 'emailTest.saving' : pending() ? 'emailTest.resume' :
+          'emailTest.send') }}
         </button>
+        <p class="hint">{{ i18n.t('emailTest.recoveryHint') }}</p>
       </form>
       <aside class="ds-panel" aria-labelledby="email-test-preview">
         <h4 id="email-test-preview">{{ i18n.t('emailTest.preview') }}</h4>
@@ -90,7 +92,8 @@
     <p>{{ i18n.t(paused() ? 'emailTest.paused' : 'emailTest.live') }}</p>
     <p #progress tabindex="-1" role="status" aria-live="polite">
       @if (current(); as item) { {{ i18n.t(statusLabels[item.status]) }} } @else { {{
-      i18n.t(loading() ? 'connections.loading' : 'emailTest.empty') }} }
+      i18n.t(historyLoaded() ? 'emailTest.empty' : paused() ? 'emailTest.historyUnavailable' :
+      'connections.loading') }} }
     </p>
     @if (current(); as item) { @if (item.error; as error) {
     <p appNotice variant="warning">{{ i18n.t(error) }}</p>

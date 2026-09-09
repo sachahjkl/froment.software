@@ -58,6 +58,17 @@ L’installation conserve au maximum 100 demandes de test.
 L’interface actualise les états enregistrés toutes les trois secondes.
 Le serveur continue le traitement lorsque la page est fermée.
 Si la connexion échoue, l’écran conserve les dernières données et indique que le suivi est suspendu.
+Une réponse de lecture antérieure à une soumission ne remplace pas son résultat récent.
+
+Avant de soumettre, le navigateur conserve la demande dans le stockage de session de l’onglet.
+Cet enregistrement contient l’UUID, l’objet et le message. Il reste séparé par compte administrateur.
+Après un rechargement, le formulaire restaure une demande sans réponse et verrouille son contenu.
+Le formulaire ne la renvoie jamais automatiquement. Le suivi la rapproche de l’historique enregistré sur le serveur.
+Une confirmation du serveur retire l’enregistrement de l’onglet.
+
+Si ce stockage est indisponible, le formulaire n’envoie aucune nouvelle demande.
+Les brouillons non soumis ne sont pas conservés. La fermeture de l’onglet termine normalement son stockage de session.
+La protection native contre la fermeture reste active pour les demandes incertaines, même après rechargement.
 
 Une réponse API réussie signifie **Accepté par Resend**, pas **Remise confirmée**.
 Le worker consulte ensuite le statut chez Resend, pendant au maximum 24 heures.

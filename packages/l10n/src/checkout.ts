@@ -41,7 +41,9 @@ export const checkoutText = {
     'checkout.confirm':
       'Créer une page Stripe en mode test avec le solde affiché ? Aucun encaissement réel ne sera enregistré.',
     'checkout.pending':
-      'L’enregistrement reste à confirmer. Le choix de facture est verrouillé. Actualisez le suivi ou reprenez la même demande.',
+      'L’enregistrement reste à confirmer. Le choix de facture est verrouillé et conservé dans cet onglet après rechargement. Actualisez le suivi ou reprenez la même demande.',
+    'checkout.recoveryUnavailable':
+      'La reprise locale est indisponible. Vérifiez la connexion au compte et le stockage de session du navigateur, puis actualisez le suivi. Aucune nouvelle création ne démarre sans cet enregistrement.',
     'checkout.progress': '3. Suivre le test',
     'checkout.paused':
       'Suivi suspendu. Les derniers états restent affichés. Actualisez le suivi pour rétablir la connexion.',
@@ -154,7 +156,9 @@ export const checkoutText = {
     'checkout.confirm':
       'Create a Stripe test page with the displayed balance? No real receipt will be recorded.',
     'checkout.pending':
-      'Recording is not yet confirmed. The invoice choice is locked. Refresh the status or resume the same request.',
+      'Recording is not yet confirmed. The invoice choice is locked and retained in this tab after a reload. Refresh the status or resume the same request.',
+    'checkout.recoveryUnavailable':
+      'Local recovery is unavailable. Check account access and browser session storage, then refresh the status. No new creation starts without this record.',
     'checkout.progress': '3. Track the test',
     'checkout.paused':
       'Status refresh paused. The last states remain visible. Refresh the status to reconnect.',

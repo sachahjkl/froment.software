@@ -87,7 +87,7 @@
       appButton
       [variant]="canOpen(current()) ? 'default' : 'primary'"
       type="submit"
-      [disabled]="saving() || loading() || !ready() || !connection()?.testKey || (active() && !pending())"
+      [disabled]="saving() || loading() || !ready() || !recoveryReady() || !connection()?.testKey || (active() && !pending())"
     >
       {{ i18n.t(saving() ? 'checkout.saving' : pending() ? 'checkout.retryRequest' :
       'checkout.create') }}

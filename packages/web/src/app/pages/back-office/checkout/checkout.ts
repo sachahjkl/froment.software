@@ -24,6 +24,10 @@ import { formatMoney } from '@froment/l10n';
 import { I18nService, type TranslationKey } from '@app/i18n.service';
 import { CheckoutApi } from '@backoffice/checkout-api';
 import { InvoicesApi } from '@backoffice/invoices-api';
+import {
+  PendingProviderRequests,
+  type PendingRequestStore,
+} from '@backoffice/pending-provider-requests';
 import { Button } from '@shared/button/button';
 import { Notice } from '@shared/notice/notice';
 import { Confirmation } from '@shared/confirmation/confirmation';
@@ -43,6 +47,9 @@ export class Checkout {
   private readonly invoicesApi = inject(InvoicesApi);
   private readonly confirmation = inject(Confirmation);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly requests = inject(PendingProviderRequests);
+  private requestStore: PendingRequestStore<CheckoutRequest> | undefined;
+  protected readonly recoveryReady = signal(false);
   protected readonly connection = signal<typeof CheckoutConnection.Type | undefined>(undefined);
   protected readonly invoices = signal<readonly InvoiceSummary[]>([]);
   protected readonly operations = signal<readonly CheckoutOperation[]>([]);
@@ -64,7 +71,10 @@ export class Checkout {
   protected readonly model = signal({ invoiceId: '' });
   protected readonly checkoutForm = form(this.model, (path) => {
     required(path.invoiceId);
-    disabled(path.invoiceId, () => this.saving() || this.pending() !== undefined);
+    disabled(
+      path.invoiceId,
+      () => this.saving() || !this.recoveryReady() || this.pending() !== undefined,
+    );
   });
   protected readonly invoice = computed(() =>
     this.invoices().find((item) => item.id === this.model().invoiceId),
@@ -118,7 +128,7 @@ export class Checkout {
             pending !== undefined &&
             operations.some((item) => item.request.requestId === pending.requestId)
           ) {
-            this.pending.set(undefined);
+            if (!this.clearPending()) return;
             this.selected.set(pending.requestId);
             this.checkoutForm().reset();
             this.error.set(undefined);
@@ -126,11 +136,38 @@ export class Checkout {
         });
     });
   }
+  private async restoreRequest(): Promise<void> {
+    this.recoveryReady.set(false);
+    try {
+      this.requestStore = await this.requests.checkout();
+      const request = this.requestStore.read();
+      if (request !== undefined) {
+        this.pending.set(request);
+        this.model.set({ invoiceId: request.invoiceId });
+        this.selected.set(request.requestId);
+      }
+      this.recoveryReady.set(true);
+    } catch {
+      this.error.set('checkout.recoveryUnavailable');
+    }
+  }
+  private clearPending(): boolean {
+    try {
+      if (this.requestStore === undefined) throw new Error('pending_request.storage_unavailable');
+      this.requestStore.clear();
+      this.pending.set(undefined);
+      return true;
+    } catch {
+      this.error.set('checkout.recoveryUnavailable');
+      return false;
+    }
+  }
   protected async load(): Promise<void> {
     this.loading.set(true);
     this.ready.set(false);
     this.error.set(undefined);
     this.paused.set(false);
+    if (!this.recoveryReady()) await this.restoreRequest();
     try {
       const [connection, invoices] = await Promise.all([
         this.api.connection(),
@@ -173,7 +210,14 @@ export class Checkout {
   }
   protected async create(event: SubmitEvent): Promise<void> {
     event.preventDefault();
-    if (this.saving() || this.loading() || !this.ready() || !this.connection()?.testKey) return;
+    if (
+      this.saving() ||
+      this.loading() ||
+      !this.ready() ||
+      !this.recoveryReady() ||
+      !this.connection()?.testKey
+    )
+      return;
     const invoice = this.invoice();
     if (this.pending() === undefined && (this.checkoutForm().invalid() || invoice === undefined)) {
       this.checkoutForm.invoiceId().markAsTouched();
@@ -200,15 +244,22 @@ export class Checkout {
         }))
       )
         return;
+      try {
+        if (this.requestStore === undefined) throw new Error('pending_request.storage_unavailable');
+        this.requestStore.write(request);
+      } catch {
+        this.error.set('checkout.recoveryUnavailable');
+        return;
+      }
       this.pending.set(request);
       this.error.set(undefined);
       const result = await this.api.create(request);
       if (!result.success) {
         this.error.set(result.code);
-        if (result.code !== 'checkout.error') this.pending.set(undefined);
+        if (result.code !== 'checkout.error') this.clearPending();
         return;
       }
-      this.pending.set(undefined);
+      this.clearPending();
       this.operations.update((items) => [
         result.result,
         ...items.filter((item) => item.request.requestId !== request.requestId),
