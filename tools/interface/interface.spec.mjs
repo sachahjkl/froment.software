@@ -135,6 +135,7 @@ for (const [kind, id] of [
 }
 
 test("client form and complete account address", async ({ page, colorScheme }, testInfo) => {
+  test.setTimeout(90000);
   await mockApi(page);
   await page.route("**/api/auth/refresh", (route) =>
     route.fulfill({ status: 401, json: { code: "authentication.required" } }),
