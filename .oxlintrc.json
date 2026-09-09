@@ -30,6 +30,7 @@
     {
       "files": [
         "packages/**/*.spec.ts",
+        "tools/*.spec.ts",
         "packages/**/*.spec-helper.ts",
         "packages/**/test/**/*.ts"
       ],

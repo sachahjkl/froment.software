@@ -56,6 +56,7 @@
           inherit (packageJson) version;
           pname = packageJson.name;
           runtimeNode = pkgs.nodejs-slim_26;
+          caBundle = "${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt";
           pnpm = pkgs.pnpm.override { nodejs-slim = runtimeNode; };
           cousineFonts = pkgs.google-fonts.override { fonts = [ "Cousine" ]; };
           documentFonts = pkgs.symlinkJoin {
@@ -147,6 +148,8 @@
                 cp -r packages/web/dist/froment-software/browser $out/share/froment-software/web
                 makeWrapper ${runtimeNode}/bin/node $out/bin/${pname} \
                   --add-flags $out/lib/froment-software/server.cjs \
+                  --set SSL_CERT_FILE ${caBundle} \
+                  --set NIX_SSL_CERT_FILE ${caBundle} \
                   --set BUSINESS_TIME_ZONE Europe/Paris \
                   --set TYPST_PATH ${pkgs.typst}/bin/typst \
                   --set DOCUMENT_TEMPLATES_PATH $out/share/froment-software/templates \
@@ -220,6 +223,7 @@
               contents = [
                 imageApplication
                 pkgs.dockerTools.fakeNss
+                pkgs.cacert
                 pkgs.sops
                 secretBundle
                 secretspec
@@ -252,6 +256,8 @@
                 ];
                 Env = [
                   "DATABASE_PATH=/var/lib/froment-software/froment.sqlite"
+                  "SSL_CERT_FILE=${caBundle}"
+                  "NIX_SSL_CERT_FILE=${caBundle}"
                   "HOME=/home/froment"
                   "PATH=${lib.makeBinPath [ pkgs.sops ]}"
                   "TMPDIR=/tmp"
@@ -343,6 +349,20 @@
           };
 
           checks = {
+            runtime-tls =
+              pkgs.runCommand "runtime-tls-check"
+                {
+                  nativeBuildInputs = [
+                    runtimeNode
+                    pkgs.openssl
+                  ];
+                  SSL_CERT_FILE = caBundle;
+                  NIX_SSL_CERT_FILE = caBundle;
+                }
+                ''
+                  node --test ${./tools/runtime-tls.spec.ts}
+                  touch "$out"
+                '';
             node-runtime = pkgs.runCommand "node-runtime-check" { nativeBuildInputs = [ runtimeNode ]; } ''
               node --input-type=module -e '
                 import assert from "node:assert/strict";

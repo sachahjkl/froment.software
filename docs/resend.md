@@ -20,6 +20,16 @@ La clé `RESEND_API_KEY` provient du profil SecretSpec actif.
 L’écran affiche sa présence, jamais sa valeur.
 Une clé présente ne prouve pas sa validité ni la validation du domaine.
 
+Le Node fourni par Nix utilise le magasin de certificats OpenSSL pour les appels HTTPS.
+L’image inclut les certificats publics de `pkgs.cacert`.
+Le lanceur et l’image fixent `SSL_CERT_FILE` et `NIX_SSL_CERT_FILE` sur ce même fichier.
+La validation des certificats TLS reste obligatoire.
+
+Sans ce magasin, l’appel peut échouer avant que Resend reçoive la demande.
+L’absence de message dans le journal Resend est alors normale.
+Le contrôle Nix `runtime-tls` vérifie le chargement des certificats avec le Node de production.
+Il vérifie aussi le refus d’un certificat non reconnu, sans appel à un service externe.
+
 La permission `integration.configure` contrôle le parcours et ses API.
 Seuls les administrateurs reçoivent cette permission.
 Les collaborateurs, les comptables et les jetons API ne la reçoivent pas.
