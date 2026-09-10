@@ -99,7 +99,7 @@
     } @if (state() === 'loading') {
     <p role="status">{{ i18n.t('audit.loading') }}</p>
     } @if (state() === 'ready') { @if (table.results().length === 0) {
-    <p class="ds-panel" role="status">{{ i18n.t('audit.empty') }}</p>
+    <p class="empty-state ds-panel" role="status">{{ i18n.t('audit.empty') }}</p>
     } @else {
     <div appDataTable>
       <table aria-describedby="audit-order audit-page-scope">

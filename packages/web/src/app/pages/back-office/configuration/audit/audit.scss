@@ -25,6 +25,9 @@ form {
 .hint {
   color: var(--color-muted);
 }
+.empty-state {
+  padding: var(--space-2) var(--space-3);
+}
 code {
   overflow-wrap: anywhere;
 }
