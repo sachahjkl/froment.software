@@ -1,4 +1,4 @@
-import { expect } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
 import {
   accountEmail,
@@ -395,6 +395,7 @@ async function checkPublicQuote(page, testInfo) {
   const pdfRequests = [];
   const pattern = /\/api\/public\/quote-link(\/(pdf|signature))?$/;
   const acceptedAt = "2026-09-05T10:45:00.000Z";
+  const failures = [];
   const handler = async (route) => {
     expect(route.request().method()).toBe("POST");
     const path = new URL(route.request().url()).pathname;
@@ -437,7 +438,10 @@ async function checkPublicQuote(page, testInfo) {
   };
   await page.route(pattern, handler);
   try {
-    await page.goto(`/quote/summary#${quoteToken}`);
+    await page.goto(`/quote/summary#${quoteToken}`, {
+      waitUntil: "domcontentloaded",
+      timeout: 15_000,
+    });
     const quote = page.locator("app-public-quote");
     await expect(page.locator("app-global-search")).toHaveCount(0);
     await expect(quote.locator(".state-card h1")).toContainText(/Chargement|Loading/);
@@ -447,11 +451,23 @@ async function checkPublicQuote(page, testInfo) {
     await expect(quote.getByRole("alert")).toBeVisible();
     await capture(page, testInfo, "customer-public-quote-error");
     state = "ready";
-    const response = page.waitForResponse(
-      (response) => new URL(response.url()).pathname === "/api/public/quote-link",
+    consultation = await test.step(
+      "Reload the signable public quote",
+      async () => {
+        const [response] = await Promise.all([
+          page.waitForResponse(
+            (response) =>
+              new URL(response.url()).pathname === "/api/public/quote-link" &&
+              response.request().method() === "POST",
+            { timeout: 10_000 },
+          ),
+          page.reload({ waitUntil: "domcontentloaded", timeout: 15_000 }),
+        ]);
+        expect(response.status()).toBe(200);
+        return response.json();
+      },
+      { timeout: 20_000 },
     );
-    await page.reload();
-    consultation = await (await response).json();
     await expect(quote.locator("h1")).toHaveText(consultation.snapshot.title);
     await expect(quote.locator(".quote-steps a")).toHaveCount(4);
     for (const step of ["summary", "document", "signature", "confirmation"]) {
@@ -479,11 +495,18 @@ async function checkPublicQuote(page, testInfo) {
     const pdf = documentPanel.locator("a[download]");
     const pdfUrl = await pdf.getAttribute("href");
     await expect(pdf).toHaveAttribute("download", `${consultation.snapshot.quoteReference}.pdf`);
-    const [download] = await Promise.all([page.waitForEvent("download"), pdf.click()]);
+    const [download] = await Promise.all([
+      page.waitForEvent("download", { timeout: 10_000 }),
+      pdf.click({ timeout: 10_000 }),
+    ]);
     expect(download.suggestedFilename()).toBe(`${consultation.snapshot.quoteReference}.pdf`);
     expect(await download.failure()).toBeNull();
     await capture(page, testInfo, "customer-public-quote-document");
-    await documentPanel.locator("a[appLinkButton]").click();
+    const signatureLink = documentPanel.locator("a[appLinkButton]");
+    await expect(signatureLink).toHaveAttribute("href", `/quote/signature#${quoteToken}`);
+    await signatureLink.focus();
+    await expect(signatureLink).toBeFocused();
+    await signatureLink.press("Enter");
     await expect(page).toHaveURL(new RegExp(`/quote/signature#${quoteToken}$`));
     const signature = quote.locator("#quote-signature-panel");
     const name = signature.locator("#public-quote-signer-name");
@@ -517,13 +540,19 @@ async function checkPublicQuote(page, testInfo) {
     await expect(name).toHaveValue("Camille Exemple");
     await expect(typedSignature).toHaveValue("Camille Exemple");
     await expect(consent).toBeChecked();
-    await Promise.all([
-      page.waitForEvent("dialog").then(async (dialog) => {
-        expect(dialog.type()).toBe("beforeunload");
-        await dialog.dismiss();
-      }),
-      page.evaluate(() => window.location.reload()),
-    ]);
+    await test.step(
+      "Cancel reload with an unsigned form",
+      async () => {
+        await Promise.all([
+          page.waitForEvent("dialog", { timeout: 10_000 }).then(async (dialog) => {
+            expect(dialog.type()).toBe("beforeunload");
+            await dialog.dismiss();
+          }),
+          page.evaluate(() => window.location.reload()),
+        ]);
+      },
+      { timeout: 15_000 },
+    );
     await expect(name).toHaveValue("Camille Exemple");
     await expect(typedSignature).toHaveValue("Camille Exemple");
     await expect(consent).toBeChecked();
@@ -587,59 +616,87 @@ async function checkPublicQuote(page, testInfo) {
     await expect(page).toHaveURL(new URL("/", page.url()).href);
     await expect(confirmation).toHaveCount(0);
     for (const status of ["expired", "cancelled", "accepted"]) {
-      state = status;
-      const previousPdfCount = pdfRequests.length;
-      const [response] = await Promise.all([
-        page.waitForResponse(
-          (response) =>
-            new URL(response.url()).pathname === "/api/public/quote-link" &&
-            response.request().method() === "POST",
-        ),
-        page.goto(`/quote/signature#${quoteToken}`),
-      ]);
-      if (status === "accepted") {
-        expect(response.status()).toBe(200);
-        expect(await response.json()).toMatchObject({ status: "accepted", canSign: false });
-        await expect(signature.getByRole("status")).toBeVisible();
-        await expect(signature.getByRole("status")).toContainText(
-          /déjà été accepté|already been accepted/,
-        );
-        await expect(quote.locator("h1")).toHaveText(consultation.snapshot.title);
-        expect(pdfRequests).toHaveLength(previousPdfCount + 1);
-      } else {
-        expect(response.status()).toBe(404);
-        expect(await response.json()).toEqual({
-          _tag: "QuoteLinkNotFound",
-          code: "quote_link.not_found",
-        });
-        await expect(quote.locator('.state-card[role="alert"]')).toBeVisible();
-        await expect(quote.getByRole("alert")).toContainText(
-          /Ce lien est indisponible|This link is unavailable/,
-        );
-        await expect(
-          quote.locator(".quote-steps, #quote-signature-panel, iframe, a[download]"),
-        ).toHaveCount(0);
-        expect(pdfRequests).toHaveLength(previousPdfCount);
-      }
-      await expect(quote.locator('form, input, button[type="submit"]')).toHaveCount(0);
-      expect(signatureRequests).toHaveLength(2);
-      await capture(page, testInfo, `customer-public-quote-${status}`);
+      await test.step(
+        `Check the ${status} public quote`,
+        async () => {
+          state = status;
+          const previousPdfCount = pdfRequests.length;
+          const [response] = await Promise.all([
+            page.waitForResponse(
+              (response) =>
+                new URL(response.url()).pathname === "/api/public/quote-link" &&
+                response.request().method() === "POST",
+              { timeout: 10_000 },
+            ),
+            // Repeating goto with the same fragment URL can keep the current document.
+            status === "expired"
+              ? page.goto(`/quote/signature#${quoteToken}`, {
+                  waitUntil: "domcontentloaded",
+                  timeout: 15_000,
+                })
+              : page.reload({ waitUntil: "domcontentloaded", timeout: 15_000 }),
+          ]);
+          if (status === "accepted") {
+            expect(response.status()).toBe(200);
+            expect(await response.json()).toMatchObject({ status: "accepted", canSign: false });
+            await expect(signature.getByRole("status")).toBeVisible();
+            await expect(signature.getByRole("status")).toContainText(
+              /déjà été accepté|already been accepted/,
+            );
+            await expect(quote.locator("h1")).toHaveText(consultation.snapshot.title);
+            await expect.poll(() => pdfRequests.length).toBe(previousPdfCount + 1);
+          } else {
+            expect(response.status()).toBe(404);
+            expect(await response.json()).toEqual({
+              _tag: "QuoteLinkNotFound",
+              code: "quote_link.not_found",
+            });
+            await expect(quote.locator('.state-card[role="alert"]')).toBeVisible();
+            await expect(quote.getByRole("alert")).toContainText(
+              /Ce lien est indisponible|This link is unavailable/,
+            );
+            await expect(
+              quote.locator(".quote-steps, #quote-signature-panel, iframe, a[download]"),
+            ).toHaveCount(0);
+            expect(pdfRequests).toHaveLength(previousPdfCount);
+          }
+          await expect(quote.locator('form, input, button[type="submit"]')).toHaveCount(0);
+          expect(signatureRequests).toHaveLength(2);
+          await capture(page, testInfo, `customer-public-quote-${status}`);
+        },
+        { timeout: 30_000 },
+      );
     }
-    await page.goto("/quote/summary");
+    await page.goto("/quote/summary", { waitUntil: "domcontentloaded", timeout: 15_000 });
     await expect(quote.getByRole("alert")).toBeVisible();
     await expect(quote.locator("form, iframe, .quote-steps")).toHaveCount(0);
     await capture(page, testInfo, "customer-public-quote-missing-token");
     expect(signatureRequests).toHaveLength(2);
     state = "ready";
-    await page.goto(`/quote/signature#${quoteToken}`);
+    await page.goto(`/quote/signature#${quoteToken}`, {
+      waitUntil: "domcontentloaded",
+      timeout: 15_000,
+    });
     await expect(name).toBeVisible();
     await expect(name).toHaveValue("");
+  } catch (error) {
+    failures.push(error);
   } finally {
     state = "error";
     releaseConsultation();
     releaseSignature();
-    await page.unroute(pattern, handler);
+    if (!page.isClosed()) {
+      try {
+        await page.unroute(pattern, handler);
+      } catch (error) {
+        failures.push(error);
+      }
+    }
   }
+  if (failures.length > 1) {
+    testInfo.annotations.push({ type: "cleanup-error", description: String(failures[1]) });
+  }
+  if (failures.length > 0) throw failures[0];
 }
 
 export async function checkCustomerWorkspace(page, testInfo) {
