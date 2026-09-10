@@ -282,7 +282,11 @@ function storyProperties(description: StoryDescriptions) {
     'new-label': [['inputs', description.noInputs, description.sharedCopy]],
     'back-office-header': [
       ['administrator', 'boolean', 'false'],
-      ['Authentication.currentAccount', '() => Promise<CurrentAccountValue | undefined>', description.injectedState],
+      [
+        'Authentication.currentAccount',
+        '() => Promise<CurrentAccountValue | undefined>',
+        description.injectedState,
+      ],
       ['Router', description.provider, 'required'],
     ],
     'back-office-nav': [
@@ -301,13 +305,21 @@ function storyProperties(description: StoryDescriptions) {
       ['issues', 'ReadonlyArray<DocumentIssueValue>', 'required'],
       ['clientId', 'UlidValue', 'required'],
       ['kind', "'quote' | 'invoice'", 'required'],
-      ['DocumentIssueValue', "{ readonly party: 'issuer' | 'client'; readonly field: 'displayName' | 'addressLine1' | 'city' | 'country' | 'email'; readonly reason: 'required' | 'invalid_email' }", '—'],
+      [
+        'DocumentIssueValue',
+        "{ readonly party: 'issuer' | 'client'; readonly field: 'displayName' | 'addressLine1' | 'city' | 'country' | 'email'; readonly reason: 'required' | 'invalid_email' }",
+        '—',
+      ],
     ],
     'mermaid-diagrams': [
       ['inputs', description.noInputs, '—'],
       ['pre.mermaid', description.projectedContent, '—'],
       ['securityLevel', "'strict'", 'strict'],
-      ['theme / startOnLoad / suppressErrors', "'neutral' / false / true", 'neutral / false / true'],
+      [
+        'theme / startOnLoad / suppressErrors',
+        "'neutral' / false / true",
+        'neutral / false / true',
+      ],
     ],
     'copy-notice': [
       ['inputs', description.noInputs, '—'],
@@ -436,12 +448,18 @@ const frenchStories = /* @__PURE__ */ storyDefinitions(
     'language-selector': '<app-language-selector [compact]="true" />',
     'theme-toggle': '<app-theme-toggle />',
     'new-label': '<app-new-label />',
-    'back-office-header': '<!-- Le shell fournit la grille sidebar/header/content. -->\n<app-back-office-header [administrator]="true" />',
-    'back-office-nav': '<!-- L’état actif suit Router.url et NavigationEnd. -->\n<app-back-office-nav />',
-    'global-search': '<!-- Fournissez ClientsApi, QuotesApi, OrdersApi et InvoicesApi dans le contexte administrateur. -->\n<app-global-search />',
-    'document-issues': '<app-document-issues [issues]="[{party: \'client\', field: \'email\', reason: \'invalid_email\'}]" [clientId]="clientId" kind="quote" />',
-    'mermaid-diagrams': '<section appMermaidDiagrams>\n  <pre class="mermaid">flowchart LR\n    A[Aperçu] --> B[Validation locale]</pre>\n</section>\n<!-- Le composant conserve securityLevel: strict. Aucun HTML non fiable n’est injecté. -->',
-    'copy-notice': 'anchorCopy = inject(AnchorCopy);\n\n<button type="button" (click)="anchorCopy.copy(\'example\', \'Lien copié\')">Copier le lien</button>\n<!-- Le shell contient déjà <app-copy-notice />. Ne le dupliquez pas. -->',
+    'back-office-header':
+      '<!-- Le shell fournit la grille sidebar/header/content. -->\n<app-back-office-header [administrator]="true" />',
+    'back-office-nav':
+      '<!-- L’état actif suit Router.url et NavigationEnd. -->\n<app-back-office-nav />',
+    'global-search':
+      '<!-- Fournissez ClientsApi, QuotesApi, OrdersApi et InvoicesApi dans le contexte administrateur. -->\n<app-global-search />',
+    'document-issues':
+      '<app-document-issues [issues]="[{party: \'client\', field: \'email\', reason: \'invalid_email\'}]" [clientId]="clientId" kind="quote" />',
+    'mermaid-diagrams':
+      '<section appMermaidDiagrams>\n  <pre class="mermaid">flowchart LR\n    A[Aperçu] --> B[Validation locale]</pre>\n</section>\n<!-- Le composant conserve securityLevel: strict. Aucun HTML non fiable n’est injecté. -->',
+    'copy-notice':
+      'anchorCopy = inject(AnchorCopy);\n\n<button type="button" (click)="anchorCopy.copy(\'example\', \'Lien copié\')">Copier le lien</button>\n<!-- Le shell contient déjà <app-copy-notice />. Ne le dupliquez pas. -->',
   },
 );
 
@@ -549,12 +567,18 @@ const englishStories = /* @__PURE__ */ storyDefinitions(
     'language-selector': '<app-language-selector [compact]="true" />',
     'theme-toggle': '<app-theme-toggle />',
     'new-label': '<app-new-label />',
-    'back-office-header': '<!-- The shell provides the sidebar/header/content grid. -->\n<app-back-office-header [administrator]="true" />',
-    'back-office-nav': '<!-- The active item follows Router.url and NavigationEnd. -->\n<app-back-office-nav />',
-    'global-search': '<!-- Provide ClientsApi, QuotesApi, OrdersApi and InvoicesApi in the administrator context. -->\n<app-global-search />',
-    'document-issues': '<app-document-issues [issues]="[{party: \'client\', field: \'email\', reason: \'invalid_email\'}]" [clientId]="clientId" kind="quote" />',
-    'mermaid-diagrams': '<section appMermaidDiagrams>\n  <pre class="mermaid">flowchart LR\n    A[Preview] --> B[Local validation]</pre>\n</section>\n<!-- The component keeps securityLevel: strict. No untrusted HTML is injected. -->',
-    'copy-notice': 'anchorCopy = inject(AnchorCopy);\n\n<button type="button" (click)="anchorCopy.copy(\'example\', \'Link copied\')">Copy link</button>\n<!-- The shell already contains <app-copy-notice />. Do not duplicate it. -->',
+    'back-office-header':
+      '<!-- The shell provides the sidebar/header/content grid. -->\n<app-back-office-header [administrator]="true" />',
+    'back-office-nav':
+      '<!-- The active item follows Router.url and NavigationEnd. -->\n<app-back-office-nav />',
+    'global-search':
+      '<!-- Provide ClientsApi, QuotesApi, OrdersApi and InvoicesApi in the administrator context. -->\n<app-global-search />',
+    'document-issues':
+      '<app-document-issues [issues]="[{party: \'client\', field: \'email\', reason: \'invalid_email\'}]" [clientId]="clientId" kind="quote" />',
+    'mermaid-diagrams':
+      '<section appMermaidDiagrams>\n  <pre class="mermaid">flowchart LR\n    A[Preview] --> B[Local validation]</pre>\n</section>\n<!-- The component keeps securityLevel: strict. No untrusted HTML is injected. -->',
+    'copy-notice':
+      'anchorCopy = inject(AnchorCopy);\n\n<button type="button" (click)="anchorCopy.copy(\'example\', \'Link copied\')">Copy link</button>\n<!-- The shell already contains <app-copy-notice />. Do not duplicate it. -->',
   },
 );
 
@@ -569,7 +593,7 @@ const referenceExamples = {
   formulaValue: 'DEMO-3',
   email: 'contact@example.com',
   date: '2026-09-10',
-  datetime: '2026-09-10T09:00:00Z',
+  datetime: '2026-09-10T09:00:00.000Z',
   from: '2026-09-01',
   to: '2026-09-30',
   filename: 'reference-examples.csv',
@@ -582,8 +606,8 @@ const referenceExamples = {
   orderId: '01K00000000000000000000004',
   invoiceId: '01K00000000000000000000005',
   revisionId: '01K00000000000000000000006',
-  quoteReference: 'DEV-2026-001',
-  orderReference: 'CMD-2026-001',
+  quoteReference: 'DE-2026-000001',
+  orderReference: 'CO-2026-000001',
   address: '1 rue des Exemples',
   postalCode: '75001',
   city: 'Paris',
@@ -676,9 +700,11 @@ export const componentReferenceText = {
     preferences: 'Afficher les préférences',
     selectors: 'Sélecteurs associés',
     accountPreview: 'Aperçu du contexte de compte',
-    isolatedAccount: 'Ce compte et ses documents sont fictifs. Les liens affichent leur destination sans quitter la référence.',
+    isolatedAccount:
+      'Ce compte et ses documents sont fictifs. Les liens affichent leur destination sans quitter la référence.',
     completePreview: 'Rétablir les données locales',
-    retryPreview: 'Après rétablissement, utilisez Réessayer dans le composant si une erreur reste affichée.',
+    retryPreview:
+      'Après rétablissement, replacez le focus dans la recherche. Pour le compte, utilisez Réessayer.',
     errorPreview: 'Erreur simulée',
     administrator: 'Compte administrateur',
     destination: 'Destination interceptée',
@@ -692,17 +718,23 @@ export const componentReferenceText = {
     bothParties: 'Émetteur et client',
     issuer: 'Émetteur',
     client: 'Client',
-    searchPreview: 'Recherchez Atlas pour afficher les quatre catégories. Choisissez un état pour examiner le chargement, l’erreur ou une liste vide.',
-    singleBusinessPreview: 'Un seul composant réel est affiché. Les réglages présentent ses états sans dupliquer les identifiants ou les dialogues.',
-    copyNoticePreview: 'Le bouton copie un lien avec AnchorCopy. La notice globale existante affiche le message puis disparaît après 2,4 secondes.',
+    searchPreview:
+      'Recherchez Atlas pour afficher les quatre catégories. Choisissez un état pour examiner le chargement, l’erreur ou une liste vide.',
+    singleBusinessPreview:
+      'Un seul composant réel est affiché. Les réglages présentent ses états sans dupliquer les identifiants ou les dialogues.',
+    copyNoticePreview:
+      'Le bouton copie un lien avec AnchorCopy. La notice globale existante affiche le message puis disparaît après 2,4 secondes.',
     copyNoticeMessage: 'Lien de démonstration copié',
     diagram: 'Diagramme',
     flowchart: 'Flux',
     sequence: 'Séquence',
-    diagramSafety: 'Seuls ces diagrammes prédéfinis sont rendus. Mermaid conserve son mode strict et son chargement différé.',
+    diagramSafety:
+      'Seuls ces diagrammes prédéfinis sont rendus. Mermaid conserve son mode strict et son chargement différé.',
     diagrams: {
-      flowchart: 'flowchart LR\n  accTitle: Flux local\n  accDescr: Un aperçu suivi d’une validation locale.\n  A[Aperçu] --> B[Validation locale]',
-      sequence: 'sequenceDiagram\n  accTitle: Séquence locale\n  accDescr: Une demande et une réponse entre deux acteurs fictifs.\n  participant A as Aperçu\n  participant B as Données locales\n  A->>B: Lire\n  B-->>A: Exemple',
+      flowchart:
+        'flowchart LR\n  accTitle: Flux local\n  accDescr: Un aperçu suivi d’une validation locale.\n  A[Aperçu] --> B[Validation locale]',
+      sequence:
+        'sequenceDiagram\n  accTitle: Séquence locale\n  accDescr: Une demande et une réponse entre deux acteurs fictifs.\n  participant A as Aperçu\n  participant B as Données locales\n  A->>B: Lire\n  B-->>A: Exemple',
     },
     samePreview:
       'L’aperçu ci-dessus présente cette variante. Redimensionnez la fenêtre pour examiner son comportement adaptatif.',
@@ -801,9 +833,10 @@ export const componentReferenceText = {
     preferences: 'Show preferences',
     selectors: 'Related selectors',
     accountPreview: 'Account context preview',
-    isolatedAccount: 'This account and its documents are fictitious. Links show their destination without leaving the reference.',
+    isolatedAccount:
+      'This account and its documents are fictitious. Links show their destination without leaving the reference.',
     completePreview: 'Restore local data',
-    retryPreview: 'After restoring data, use Retry in the component if an error remains visible.',
+    retryPreview: 'After restoring data, focus the search field again. For the account, use Retry.',
     errorPreview: 'Simulated error',
     administrator: 'Administrator account',
     destination: 'Intercepted destination',
@@ -817,17 +850,23 @@ export const componentReferenceText = {
     bothParties: 'Issuer and client',
     issuer: 'Issuer',
     client: 'Client',
-    searchPreview: 'Search for Atlas to show all four categories. Select a state to inspect loading, errors or an empty list.',
-    singleBusinessPreview: 'One real component is displayed. Controls present its states without duplicate identifiers or dialogs.',
-    copyNoticePreview: 'The button copies a link with AnchorCopy. The existing global notice shows the message, then disappears after 2.4 seconds.',
+    searchPreview:
+      'Search for Atlas to show all four categories. Select a state to inspect loading, errors or an empty list.',
+    singleBusinessPreview:
+      'One real component is displayed. Controls present its states without duplicate identifiers or dialogs.',
+    copyNoticePreview:
+      'The button copies a link with AnchorCopy. The existing global notice shows the message, then disappears after 2.4 seconds.',
     copyNoticeMessage: 'Example link copied',
     diagram: 'Diagram',
     flowchart: 'Flowchart',
     sequence: 'Sequence',
-    diagramSafety: 'Only these predefined diagrams are rendered. Mermaid keeps its strict mode and deferred loading.',
+    diagramSafety:
+      'Only these predefined diagrams are rendered. Mermaid keeps its strict mode and deferred loading.',
     diagrams: {
-      flowchart: 'flowchart LR\n  accTitle: Local flow\n  accDescr: A preview followed by local validation.\n  A[Preview] --> B[Local validation]',
-      sequence: 'sequenceDiagram\n  accTitle: Local sequence\n  accDescr: A request and response between two fictitious actors.\n  participant A as Preview\n  participant B as Local data\n  A->>B: Read\n  B-->>A: Example',
+      flowchart:
+        'flowchart LR\n  accTitle: Local flow\n  accDescr: A preview followed by local validation.\n  A[Preview] --> B[Local validation]',
+      sequence:
+        'sequenceDiagram\n  accTitle: Local sequence\n  accDescr: A request and response between two fictitious actors.\n  participant A as Preview\n  participant B as Local data\n  A->>B: Read\n  B-->>A: Example',
     },
     samePreview:
       'The preview above shows this variant. Resize the window to inspect its responsive layout.',

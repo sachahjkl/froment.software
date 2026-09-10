@@ -5,14 +5,26 @@ import { provideRouter, Router, withComponentInputBinding } from '@angular/route
 import { RouterTestingHarness } from '@angular/router/testing';
 import { I18nService } from '@app/i18n.service';
 import { installScrollIntoView } from '@shared/filter-choice/filter-choice.spec-helper';
+import { AnchorCopy } from '@shared/anchor-copy';
+import { CopyNotice } from '@shared/copy-notice/copy-notice';
+import { TextCopy } from '@shared/text-copy';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { DesignComponent } from './design.component';
 import { designRoutes } from './design.routes';
 import { referenceCatalog } from './reference-catalog';
+import { componentReferenceText } from '@froment/l10n/component-reference';
+import mermaid from 'mermaid';
 
 describe('Component reference', () => {
   let scrolling: ReturnType<typeof installScrollIntoView>;
   beforeEach(() => {
+    vi.spyOn(mermaid, 'initialize').mockImplementation(() => undefined);
+    vi.spyOn(mermaid, 'run').mockResolvedValue(undefined);
+    vi.stubGlobal('matchMedia', () => ({
+      matches: false,
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+    }));
     scrolling = installScrollIntoView();
     TestBed.configureTestingModule({
       providers: [
@@ -30,6 +42,8 @@ describe('Component reference', () => {
     TestBed.resetTestingModule();
     scrolling.restore();
     vi.restoreAllMocks();
+    vi.unstubAllGlobals();
+    vi.useRealTimers();
   });
 
   async function setup(path = '/design') {
@@ -41,6 +55,13 @@ describe('Component reference', () => {
   }
 
   it('assigns every entry one lazy durable route without the old catalog tabs', async () => {
+    expect(referenceCatalog).toHaveLength(56);
+    expect(Object.keys(componentReferenceText.fr.stories).sort()).toEqual(
+      referenceCatalog
+        .filter((entry) => entry.id !== 'workflows')
+        .map((entry) => entry.id)
+        .sort(),
+    );
     const paths = designRoutes
       .filter((route) => route.path)
       .map((route) => route.path)
@@ -84,6 +105,25 @@ describe('Component reference', () => {
       expect(fetch).not.toHaveBeenCalled();
     });
   }
+
+  it('projects each full toolbar variant control into its own slot', async () => {
+    const { harness, root } = await setup('/design/list-toolbar');
+    const variants = root.querySelectorAll('[data-variant] app-list-toolbar');
+    expect(variants).toHaveLength(2);
+    expect(variants[0].querySelector('.search app-list-search')).not.toBeNull();
+    expect(variants[0].querySelector('[listFilters], [listActions], [listSummary]')).toBeNull();
+    const full = variants[1];
+    expect(full.querySelector('.search app-list-search')).not.toBeNull();
+    expect(full.querySelector('.filters [listFilters]')).not.toBeNull();
+    expect(full.querySelector('.summary [listSummary]')?.textContent).toBe(
+      componentReferenceText.fr.local,
+    );
+    const action = full.querySelector<HTMLButtonElement>('.actions [listActions]')!;
+    expect(action.textContent?.trim()).toBe(componentReferenceText.fr.execute);
+    action.click();
+    await harness.fixture.whenStable();
+    expect(root.querySelector('[storyPreview] .event')?.textContent).toContain('actionSlot');
+  });
 
   it('searches the inventory with Fuse and keeps singular and plural labels', async () => {
     const { harness, root } = await setup();
@@ -228,5 +268,43 @@ describe('Component reference', () => {
     expect(root.querySelector('#reference-email-error')?.textContent).toContain(
       'Saisissez une adresse courriel valide.',
     );
+  });
+
+  it('updates the new metadata language without changing its API names', async () => {
+    const { harness, root } = await setup('/design/global-search');
+    const properties = root.querySelector('#story-properties')!.parentElement!;
+    expect(properties.textContent).toContain('Aucune propriété d’entrée');
+    expect(properties.textContent).toContain('ClientsApi.list');
+    TestBed.inject(I18nService).setLanguage('en');
+    await harness.fixture.whenStable();
+    expect(properties.textContent).toContain('No input properties');
+    expect(properties.textContent).not.toContain('Aucune propriété d’entrée');
+    expect(properties.textContent).toContain('ClientsApi.list');
+  });
+
+  it('uses the shell copy service without creating another notice', async () => {
+    const { harness, root } = await setup('/design/copy-notice');
+    const shellNotice = TestBed.createComponent(CopyNotice);
+    await shellNotice.whenStable();
+    const copy = vi.spyOn(TestBed.inject(TextCopy), 'copy').mockResolvedValue(true);
+    const message = root.querySelector<HTMLInputElement>('#reference-copy-message')!;
+    message.value = '<script>example</script>';
+    message.dispatchEvent(new Event('input', { bubbles: true }));
+    await harness.fixture.whenStable();
+    expect(root.querySelector('app-copy-notice')).toBeNull();
+    vi.useFakeTimers();
+    root.querySelector<HTMLButtonElement>('[storyPreview] button')!.click();
+    await vi.advanceTimersByTimeAsync(0);
+    shellNotice.detectChanges();
+    expect(copy).toHaveBeenCalledOnce();
+    expect(copy).toHaveBeenCalledWith(expect.stringContaining('#reference-anchor'));
+    expect(TestBed.inject(AnchorCopy).message()).toBe(message.value);
+    const notice: HTMLElement = shellNotice.nativeElement;
+    expect(notice.querySelector('[role="status"]')?.textContent).toContain(message.value);
+    expect(notice.querySelector('script')).toBeNull();
+    await vi.advanceTimersByTimeAsync(2400);
+    shellNotice.detectChanges();
+    expect(TestBed.inject(AnchorCopy).message()).toBeNull();
+    shellNotice.destroy();
   });
 });

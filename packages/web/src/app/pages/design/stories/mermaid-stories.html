@@ -1,1 +1,43 @@
-<p>mermaid-stories works!</p>
+<app-story-page [entry]="entry" [definition]="definition">
+  <div storyControls class="settings">
+    <label
+      >{{ text().diagram }}<select class="select" [formField]="controls">
+        @for (variant of variants; track variant) {
+        <option [value]="variant">{{ text()[variant] }}</option>
+        }
+      </select></label
+    >
+    <p>{{ text().diagramSafety }}</p>
+  </div>
+  <div storyPreview>
+    @for (source of [text().diagrams[diagram()]]; track source) {
+    <section
+      appMermaidDiagrams
+      class="diagram-frame"
+      role="region"
+      tabindex="0"
+      [attr.aria-label]="text()[diagram()]"
+    >
+      <pre class="mermaid" [textContent]="source"></pre>
+    </section>
+    }
+  </div>
+  <div storyVariants class="samples">
+    @for (variant of variants; track variant) {
+    <div class="sample" data-variant>
+      <h3>{{ text()[variant] }}</h3>
+      @for (source of [text().diagrams[variant]]; track source) {
+      <section
+        appMermaidDiagrams
+        class="diagram-frame"
+        role="region"
+        tabindex="0"
+        [attr.aria-label]="text()[variant]"
+      >
+        <pre class="mermaid" [textContent]="source"></pre>
+      </section>
+      }
+    </div>
+    }
+  </div>
+</app-story-page>

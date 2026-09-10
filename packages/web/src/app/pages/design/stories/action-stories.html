@@ -8,7 +8,14 @@
       >{{ text().description }}<input class="input" [formField]="controls.description"
     /></label>
     <label>{{ 'actionLabel' }}<input class="input" [formField]="controls.actionLabel" /></label>
-    } @if (entry.id === 'anchor-link') {
+    } @if (entry.id === 'copy-notice') {
+    <label
+      >{{ 'message' }}<input
+        id="reference-copy-message"
+        class="input"
+        [formField]="controls.noticeMessage"
+    /></label>
+    } @if (entry.id === 'anchor-link' || entry.id === 'copy-notice') {
     <label>{{ 'fragment' }}<input class="input" [formField]="controls.fragment" /></label> } @if
     (entry.id === 'action-menu' || entry.id === 'split-action') {
     <label
@@ -24,7 +31,7 @@
     >
     } @if (entry.id === 'split-action') {
     <label>{{ 'menuLabel' }}<input class="input" [formField]="controls.menuLabel" /></label> } @if
-    (entry.id !== 'copy-field' && entry.id !== 'anchor-link') {
+    (entry.id !== 'copy-field' && entry.id !== 'anchor-link' && entry.id !== 'copy-notice') {
     <label
       >{{ text().variant }}<select class="select" [formField]="controls.variant">
         @for (variant of variants; track variant) {
@@ -91,12 +98,24 @@
       [status]="event()"
       (copy)="event.set(text().copied)"
     />
+    } @case ('copy-notice') {
+    <div data-variant>
+      <p>{{ text().copyNoticePreview }}</p>
+      <button
+        appButton
+        type="button"
+        (click)="anchorCopy.copy(model().fragment, model().noticeMessage)"
+      >
+        {{ model().label }}
+      </button>
+    </div>
     } @case ('anchor-link') {
     <h3 [id]="model().fragment">
       {{ model().label }} <app-anchor-link [fragment]="model().fragment" />
     </h3>
-    } }
+    } } @if (entry.id !== 'copy-notice') {
     <p class="event" role="status">{{ text().events }} : {{ event() }}</p>
+    }
   </div>
   <div storyVariants class="samples">
     @if (entry.id === 'button' || entry.id === 'link-button' || entry.id === 'action-menu' ||
@@ -188,7 +207,9 @@
         (copy)="event.set(text().copied)"
       />
     </div>
-    } } @else {
+    } } @else if (entry.id === 'copy-notice') {
+    <p>{{ text().samePreview }}</p>
+    } @else {
     <div class="sample" data-variant>
       <h3 id="reference-anchor-sample">
         {{ text().content }} <app-anchor-link fragment="reference-anchor-sample" />

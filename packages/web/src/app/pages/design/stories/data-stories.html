@@ -137,10 +137,13 @@
       <app-list-toolbar
         ><app-list-search listSearch [label]="text().search" />@if (full) {
         <button listFilters appButton type="button" (click)="event.set('filterSlot')">
-          {{ text().filters }}</button
-        ><button listActions appButton type="button" (click)="event.set('actionSlot')">
+          {{ text().filters }}
+        </button>
+        } @if (full) {
+        <button listActions appButton type="button" (click)="event.set('actionSlot')">
           {{ text().execute }}
         </button>
+        } @if (full) {
         <p listSummary>{{ text().local }}</p>
         }</app-list-toolbar
       >

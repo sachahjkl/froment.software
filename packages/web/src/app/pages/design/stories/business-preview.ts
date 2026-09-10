@@ -1,6 +1,13 @@
 import {
-  afterEveryRender, ChangeDetectionStrategy, Component, computed, DestroyRef, ElementRef,
-  inject, input, type OnChanges,
+  afterEveryRender,
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  DestroyRef,
+  ElementRef,
+  inject,
+  input,
+  type OnChanges,
 } from '@angular/core';
 import { Router } from '@angular/router';
 import type { DocumentIssueValue } from '@froment/contracts';
@@ -29,7 +36,9 @@ export class BusinessPreview implements OnChanges {
       { party: 'issuer', field: 'addressLine1', reason: 'required' },
       { party: 'client', field: 'email', reason: 'invalid_email' },
     ];
-    return issues.filter((issue) => this.settings().party === 'both' || issue.party === this.settings().party);
+    return issues.filter(
+      (issue) => this.settings().party === 'both' || issue.party === this.settings().party,
+    );
   });
 
   constructor() {
@@ -45,10 +54,11 @@ export class BusinessPreview implements OnChanges {
     const capture = (event: MouseEvent) => {
       if (!(event.target instanceof Element)) return;
       const link = event.target.closest<HTMLAnchorElement>('a[data-reference-destination]');
-      if (!link) return;
+      const destination = link?.dataset['referenceDestination'];
+      if (!destination) return;
       event.preventDefault();
       event.stopPropagation();
-      this.context.navigate(link.dataset['referenceDestination'] ?? '/api/docs');
+      this.context.navigate(destination);
     };
     host.addEventListener('click', capture, true);
     host.addEventListener('auxclick', capture, true);

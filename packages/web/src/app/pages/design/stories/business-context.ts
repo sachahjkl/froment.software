@@ -1,8 +1,12 @@
 import { DestroyRef, Injectable, inject, signal, type Provider } from '@angular/core';
-import { NavigationEnd, Router, type Event as RouterEvent } from '@angular/router';
-import { Subject } from 'rxjs';
+import { NavigationEnd, Router, UrlTree, type Event as RouterEvent } from '@angular/router';
+import { firstValueFrom, ReplaySubject, Subject } from 'rxjs';
 import type {
-  ClientListValue, CurrentAccountValue, InvoiceListValue, OrderListValue, QuoteListValue,
+  ClientListValue,
+  CurrentAccountValue,
+  InvoiceListValue,
+  OrderListValue,
+  QuoteListValue,
 } from '@froment/contracts';
 import { Authentication } from '@backoffice/authentication';
 import { ClientsApi } from '@backoffice/clients-api';
@@ -19,7 +23,8 @@ export interface BusinessSettings {
   party: 'both' | 'issuer' | 'client';
 }
 
-type PreviewRouter = Pick<Router,
+type PreviewRouter = Pick<
+  Router,
   'url' | 'events' | 'currentNavigation' | 'createUrlTree' | 'serializeUrl' | 'navigateByUrl'
 >;
 
@@ -28,7 +33,7 @@ export class BusinessContext {
   readonly text = referenceText();
   readonly destination = signal('');
   readonly events = new Subject<RouterEvent>();
-  private readonly loading = Promise.withResolvers<void>();
+  private readonly loading = new ReplaySubject<void>(1);
   private readonly destroyRef = inject(DestroyRef);
   private navigationId = 0;
   scenario: BusinessSettings['scenario'] = 'ready';
@@ -37,7 +42,8 @@ export class BusinessContext {
 
   constructor() {
     this.destroyRef.onDestroy(() => {
-      this.loading.resolve();
+      this.loading.next();
+      this.loading.complete();
       this.events.complete();
     });
   }
@@ -50,21 +56,22 @@ export class BusinessContext {
 
   complete(): void {
     this.scenario = 'ready';
-    this.loading.resolve();
+    this.loading.next();
   }
 
   async currentAccount(): Promise<CurrentAccountValue | undefined> {
-    if (this.scenario === 'loading') await this.loading.promise;
-    if (this.scenario === 'error' || this.scenario === 'empty') return undefined;
+    if (this.scenario === 'loading') await firstValueFrom(this.loading);
+    if (this.destroyRef.destroyed || this.scenario === 'error' || this.scenario === 'empty')
+      return undefined;
     return {
       userId: this.text().examples.accountId,
       email: this.text().examples.email,
-      mode: this.administrator ? 'admin' : 'client',
+      mode: this.administrator ? 'administrator' : 'client',
     };
   }
 
   private async read(): Promise<boolean> {
-    if (this.scenario === 'loading') await this.loading.promise;
+    if (this.scenario === 'loading') await firstValueFrom(this.loading);
     if (this.scenario === 'error') throw new Error('reference.search_unavailable');
     return this.scenario !== 'empty' && !this.destroyRef.destroyed;
   }
@@ -72,47 +79,85 @@ export class BusinessContext {
   async clients(): Promise<ClientListValue> {
     if (!(await this.read())) return [];
     const example = this.text().examples;
-    return [{
-      id: example.clientId, displayName: example.firstName,
-      addressLine1: example.address, addressLine2: '', postalCode: example.postalCode,
-      city: example.city, country: example.country, email: example.email,
-      archived: false, updatedAt: 0,
-    }];
+    return [
+      {
+        id: example.clientId,
+        displayName: example.firstName,
+        addressLine1: example.address,
+        addressLine2: '',
+        postalCode: example.postalCode,
+        city: example.city,
+        country: example.country,
+        email: example.email,
+        archived: false,
+        updatedAt: 0,
+      },
+    ];
   }
 
   async quotes(): Promise<QuoteListValue> {
     if (!(await this.read())) return [];
     const example = this.text().examples;
-    return [{
-      id: example.quoteId, reference: example.quoteReference, clientId: example.clientId,
-      clientDisplayName: example.firstName, status: 'draft', version: 1,
-      title: this.text().content, currency: 'EUR', totalCents: 26600, updatedAt: example.datetime,
-    }];
+    return [
+      {
+        id: example.quoteId,
+        reference: example.quoteReference,
+        clientId: example.clientId,
+        clientDisplayName: example.firstName,
+        status: 'draft',
+        version: 1,
+        title: this.text().content,
+        currency: 'EUR',
+        totalCents: 26600,
+        updatedAt: example.datetime,
+      },
+    ];
   }
 
   async orders(): Promise<OrderListValue> {
     if (!(await this.read())) return [];
     const example = this.text().examples;
-    return [{
-      id: example.orderId, reference: example.orderReference, quoteId: example.quoteId,
-      quoteReference: example.quoteReference, revisionId: example.revisionId,
-      clientId: example.clientId, clientDisplayName: example.firstName,
-      title: this.text().content, currency: 'EUR', totalCents: 26600,
-      createdAt: example.datetime, invoiceId: example.invoiceId,
-    }];
+    return [
+      {
+        id: example.orderId,
+        reference: example.orderReference,
+        quoteId: example.quoteId,
+        quoteReference: example.quoteReference,
+        revisionId: example.revisionId,
+        clientId: example.clientId,
+        clientDisplayName: example.firstName,
+        title: this.text().content,
+        currency: 'EUR',
+        totalCents: 26600,
+        createdAt: example.datetime,
+        invoiceId: example.invoiceId,
+      },
+    ];
   }
 
   async invoices(): Promise<InvoiceListValue> {
     if (!(await this.read())) return [];
     const example = this.text().examples;
-    return [{
-      creditedCents: 0, recordedPaidCents: 0, id: example.invoiceId,
-      orderId: example.orderId, orderReference: example.orderReference,
-      clientId: example.clientId, clientDisplayName: example.firstName,
-      status: 'draft', version: 1, invoiceNumber: null, title: this.text().content,
-      dueDate: example.date, currency: 'EUR', totalCents: 26600,
-      updatedAt: example.datetime, pdf: null,
-    }];
+    return [
+      {
+        creditedCents: 0,
+        recordedPaidCents: 0,
+        id: example.invoiceId,
+        orderId: example.orderId,
+        orderReference: example.orderReference,
+        clientId: example.clientId,
+        clientDisplayName: example.firstName,
+        status: 'draft',
+        version: 1,
+        invoiceNumber: null,
+        title: this.text().content,
+        dueDate: example.date,
+        currency: 'EUR',
+        totalCents: 26600,
+        updatedAt: example.datetime,
+        pdf: null,
+      },
+    ];
   }
 }
 
@@ -159,14 +204,18 @@ export const businessProviders: Provider[] = [
       const router = inject(Router, { skipSelf: true });
       const context = inject(BusinessContext);
       return {
-        get url() { return context.url; },
+        get url() {
+          return context.url;
+        },
         events: context.events.asObservable(),
         currentNavigation: signal(null),
         createUrlTree: router.createUrlTree.bind(router),
         // Les liens ouverts dans un autre onglet restent dans la référence.
-        serializeUrl: () => router.url,
+        // Le fragment distinct conserve les mises à jour de RouterLink.
+        serializeUrl: (url) =>
+          `${router.url.split('#', 1)[0]}#preview=${encodeURIComponent(router.serializeUrl(url))}`,
         navigateByUrl: (url) => {
-          context.navigate(typeof url === 'string' ? url : router.serializeUrl(url));
+          context.navigate(url instanceof UrlTree ? router.serializeUrl(url) : url);
           return Promise.resolve(true);
         },
       };

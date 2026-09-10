@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { form, FormField } from '@angular/forms/signals';
 import { RouterLink } from '@angular/router';
 import { Button, type ButtonVariant } from '@shared/button/button';
@@ -7,6 +7,7 @@ import { ActionMenu, type MenuAction } from '@shared/action-menu/action-menu';
 import { SplitAction } from '@shared/split-action/split-action';
 import { CopyField } from '@shared/copy-field/copy-field';
 import { AnchorLink } from '@shared/anchor-link/anchor-link';
+import { AnchorCopy } from '@shared/anchor-copy';
 import { currentReference, StoryPage, type StoryDefinition } from '../story-page';
 import { referenceText } from '../reference-text';
 
@@ -20,6 +21,7 @@ interface ActionPreview {
   commandDisabled: boolean;
   commandDanger: boolean;
   fragment: string;
+  noticeMessage: string;
   variant: ButtonVariant;
   disabled: boolean;
   iconOnly: boolean;
@@ -61,8 +63,9 @@ export class ActionStories {
     return this.text().stories[this.entry.id];
   }
   protected readonly variants = buttonVariants;
+  protected readonly anchorCopy = inject(AnchorCopy);
   protected readonly model = signal<ActionPreview>({
-    label: this.text().content,
+    label: this.entry.id === 'copy-notice' ? this.text().copy : this.text().content,
     value: this.text().examples.firstValue,
     description: '',
     actionLabel: this.text().copy,
@@ -71,6 +74,7 @@ export class ActionStories {
     commandDisabled: false,
     commandDanger: false,
     fragment: 'reference-anchor',
+    noticeMessage: this.text().copyNoticeMessage,
     variant: 'primary',
     disabled: false,
     iconOnly: false,

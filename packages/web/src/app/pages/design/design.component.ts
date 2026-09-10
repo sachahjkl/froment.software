@@ -26,7 +26,7 @@ import { Drawer } from '@shared/drawer/drawer';
 import { createFuzzySearch } from '@shared/fuzzy-search';
 import { ListSearch } from '@shared/list-search/list-search';
 import { SiteFooter } from '@shared/site-footer/site-footer';
-import { excludedReferenceControls, referenceCatalog, referenceGroups } from './reference-catalog';
+import { referenceCatalog, referenceGroups } from './reference-catalog';
 import { formatReferenceCount, referenceText } from './reference-text';
 
 @Component({
@@ -53,7 +53,6 @@ export class DesignComponent {
   protected readonly drawerOpen = signal(false);
   protected readonly loading = signal(false);
   protected readonly failedUrl = signal('');
-  protected readonly excluded = excludedReferenceControls;
   private readonly router = inject(Router);
   private readonly element = inject<ElementRef<HTMLElement>>(ElementRef);
   private readonly injector = inject(Injector);

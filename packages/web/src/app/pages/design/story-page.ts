@@ -27,7 +27,10 @@ export function currentReference(): ReferenceEntry {
       </p>
       <p class="muted">{{ text().local }}</p>
     </header>
-    <div class="playground" [class.wide]="entry().group === 'presentation'">
+    <div
+      class="playground"
+      [class.wide]="entry().group === 'presentation' || entry().id === 'back-office-header'"
+    >
       <section class="controls ds-panel" aria-labelledby="story-controls">
         <h2 id="story-controls">{{ text().controls }}</h2>
         <ng-content select="[storyControls]" />

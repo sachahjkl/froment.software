@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { componentReferenceText } from '@froment/l10n';
+import { componentReferenceText } from '@froment/l10n/component-reference';
 import { formatReferenceCount } from './reference-text';
 
 describe('Reference translations', () => {
@@ -10,6 +10,25 @@ describe('Reference translations', () => {
     expect(Object.keys(componentReferenceText.fr.groups).sort()).toEqual(
       Object.keys(componentReferenceText.en.groups).sort(),
     );
+    expect(Object.keys(componentReferenceText.fr.stories).sort()).toEqual(
+      Object.keys(componentReferenceText.en.stories).sort(),
+    );
+    for (const id of [
+      'back-office-header',
+      'back-office-nav',
+      'global-search',
+      'document-issues',
+      'mermaid-diagrams',
+      'copy-notice',
+    ]) {
+      const french = componentReferenceText.fr.stories[id];
+      const english = componentReferenceText.en.stories[id];
+      expect(french.properties.map(([name]) => name)).toEqual(
+        english.properties.map(([name]) => name),
+      );
+      expect(french.usage.trim()).not.toBe('');
+      expect(english.usage.trim()).not.toBe('');
+    }
   });
 
   it('uses locale plural rules for zero, one and multiple items', () => {

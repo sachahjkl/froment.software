@@ -77,14 +77,5 @@
         <p>{{ text().noResults }}</p>
       }
     </nav>
-    <details>
-      <summary>{{ text().excluded }}</summary>
-      <p>{{ text().excludedHint }}</p>
-      <ul>
-        @for (name of excluded; track name) {
-          <li>{{ name }}</li>
-        }
-      </ul>
-    </details>
   </div>
 </ng-template>

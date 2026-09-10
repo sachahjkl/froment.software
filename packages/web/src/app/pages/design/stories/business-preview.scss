@@ -11,7 +11,7 @@
 }
 .account-shell {
   display: grid;
-  grid-template-areas: 'sidebar header' 'sidebar content';
+  grid-template-areas: "sidebar header" "sidebar content";
   grid-template-columns: 18rem minmax(0, 1fr);
   grid-template-rows: auto 1fr;
   min-block-size: 28rem;
@@ -26,7 +26,7 @@
 }
 @media (max-width: 63.999rem) {
   .account-shell {
-    grid-template-areas: 'header' 'content';
+    grid-template-areas: "header" "content";
     grid-template-columns: minmax(0, 1fr);
   }
 }

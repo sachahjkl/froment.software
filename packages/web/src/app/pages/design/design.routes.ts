@@ -11,9 +11,21 @@ const navigation = () =>
   import('./stories/navigation-stories').then((module) => module.NavigationStories);
 const presentation = () =>
   import('./stories/presentation-stories').then((module) => module.PresentationStories);
+const business = () =>
+  import('./stories/business-stories').then((module) => module.BusinessStories);
 
 export const designRoutes: Routes = [
   { path: '', pathMatch: 'full', redirectTo: 'button' },
+  ...['back-office-header', 'back-office-nav', 'global-search', 'document-issues'].map((path) => ({
+    path,
+    loadComponent: business,
+  })),
+  { path: 'copy-notice', loadComponent: action },
+  {
+    path: 'mermaid-diagrams',
+    loadComponent: () =>
+      import('./stories/mermaid-stories').then((module) => module.MermaidStories),
+  },
   ...['button', 'link-button', 'action-menu', 'split-action', 'copy-field', 'anchor-link'].map(
     (path) => ({ path, loadComponent: action }),
   ),
