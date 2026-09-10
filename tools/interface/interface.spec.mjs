@@ -9,6 +9,7 @@ import { checkDashboardShell, openBackOfficeNavigation } from "./dashboard-shell
 import { checkClientsWorkspace } from "./clients-workspace.mjs";
 import { checkCatalogWorkspace } from "./catalog-workspace.mjs";
 import { checkCatalogZoom } from "./catalog-zoom.mjs";
+import { checkDefaultButtonTheme } from "./button-theme.mjs";
 import {
   accountEmail,
   clientId,
@@ -141,6 +142,7 @@ for (const [kind, id] of [
 test("client form and complete account address", async ({ page, colorScheme }, testInfo) => {
   test.setTimeout(150000);
   await mockApi(page);
+  await checkDefaultButtonTheme(page, testInfo);
   await page.route("**/api/auth/refresh", (route) =>
     route.fulfill({ status: 401, json: { code: "authentication.required" } }),
   );

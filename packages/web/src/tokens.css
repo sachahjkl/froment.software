@@ -132,6 +132,9 @@
 
   --color-button-default: #fff;
   --color-button-default-highlight: #e6e6e6;
+  --color-button-default-border: #ccc;
+  --color-button-default-border-bottom: #b3b3b3;
+  --shadow-button-default-label: 0 1px 1px rgb(255 255 255 / 0.75);
   --color-button-primary: #0074ad;
   --color-button-primary-highlight: #0055cc;
   --color-button-info: #5bc0de;
@@ -189,6 +192,13 @@
   --color-focus: #8abfff;
   --color-accent: #45c5cb;
   --color-accent-strong: #79d8da;
+
+  --color-button-default: #3b3b4b;
+  --color-button-default-highlight: #292934;
+  --color-button-default-border: #686577;
+  --color-button-default-border-bottom: #414050;
+  --color-button-on-default: #f2f0f7;
+  --shadow-button-default-label: 0 -1px 0 rgb(0 0 0 / 0.6);
 
   --color-info: #9bd7ea;
   --color-info-soft: #173541;
