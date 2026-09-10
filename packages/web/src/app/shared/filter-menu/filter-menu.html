@@ -1,0 +1,74 @@
+<button
+  #trigger
+  appButton
+  type="button"
+  [disabled]="disabled() || panels().length === 0"
+  aria-haspopup="dialog"
+  [attr.aria-label]="triggerLabel()"
+  [attr.aria-expanded]="opened()"
+  [attr.aria-controls]="opened() ? dialogId : null"
+  (click)="open()"
+>
+  <app-icon name="filter" />
+  <span>{{ label() }}</span>
+  @if (activeCount() > 0) {
+  <span class="count" aria-hidden="true">{{ activeCount() }}</span>
+  }
+</button>
+<ng-template #content>
+  <div class="panel">
+    <div class="heading">
+      @if (activePanel()) {
+      <button
+        #backButton
+        appButton
+        class="back"
+        type="button"
+        [iconOnly]="true"
+        [attr.aria-label]="backLabel()"
+        (click)="back()"
+      >
+        <svg class="direction" viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+          <path d="m6 3 5 5-5 5" />
+        </svg>
+      </button>
+      }
+      <h2 [id]="headingId">{{ activePanel()?.label() ?? label() }}</h2>
+      <button
+        appButton
+        class="close"
+        type="button"
+        [iconOnly]="true"
+        [attr.aria-label]="closeLabel()"
+        (click)="close()"
+      >
+        <app-icon name="close" />
+      </button>
+    </div>
+    @if (activePanel(); as panel) {
+    <div #panelContent class="content">
+      <ng-container [ngTemplateOutlet]="panel.template" />
+    </div>
+    } @else {
+    <div cdkMenu class="categories" [attr.aria-label]="label()">
+      @for (panel of panels(); track panel) {
+      <button
+        cdkMenuItem
+        class="category"
+        type="button"
+        [cdkMenuitemTypeaheadLabel]="panel.label()"
+        (cdkMenuItemTriggered)="showPanel(panel)"
+      >
+        <span class="category-label">{{ panel.label() }}</span>
+        @if (panel.summary()) {
+        <span class="summary">{{ panel.summary() }}</span>
+        }
+        <svg class="direction" viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+          <path d="m6 3 5 5-5 5" />
+        </svg>
+      </button>
+      }
+    </div>
+    }
+  </div>
+</ng-template>

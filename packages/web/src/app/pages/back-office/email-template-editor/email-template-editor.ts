@@ -2,6 +2,7 @@ import {
   afterNextRender,
   ChangeDetectionStrategy,
   Component,
+  computed,
   DestroyRef,
   HostListener,
   inject,
@@ -23,6 +24,7 @@ import { Option, Schema } from 'effect';
 import { EmailTemplatesApi } from '@backoffice/email-templates-api';
 import { I18nService, type TranslationKey } from '@app/i18n.service';
 import { Button } from '@shared/button/button';
+import { ActionMenu } from '@shared/action-menu/action-menu';
 import { Confirmation } from '@shared/confirmation/confirmation';
 import { Notice } from '@shared/notice/notice';
 import { PageHeader } from '@shared/page-header/page-header';
@@ -31,7 +33,7 @@ import { emailQuery } from '../emails/email-workspace';
 @Component({
   host: { class: 'page-container' },
   selector: 'app-email-template-editor',
-  imports: [Button, FormField, Notice, PageHeader, RouterLink],
+  imports: [ActionMenu, Button, FormField, Notice, PageHeader, RouterLink],
   templateUrl: './email-template-editor.html',
   styleUrl: './email-template-editor.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -50,6 +52,9 @@ export class EmailTemplateEditor {
   protected readonly archived = signal(false);
   protected readonly error = signal<TranslationKey | undefined>(undefined);
   protected readonly template = signal<typeof EmailTemplate.Type | undefined>(undefined);
+  protected readonly templateActions = computed(() => [
+    { id: 'archive', label: this.i18n.t('emailDraft.archive'), danger: true },
+  ]);
   protected readonly model = signal({ subject: '', body: '' });
   protected readonly templateForm = form(this.model, (path) => {
     disabled(path, () => this.busy() || this.completed() || this.state() !== 'ready');

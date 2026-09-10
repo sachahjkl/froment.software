@@ -1,0 +1,12 @@
+<ng-content />
+<span
+  #bubble
+  popover="hint"
+  role="tooltip"
+  [id]="id"
+  [style.position-anchor]="anchorName"
+  (beforetoggle)="beforeToggle($event)"
+  (pointerenter)="enter($event)"
+  (pointerleave)="leave()"
+  >{{ text() }}</span
+>

@@ -57,9 +57,12 @@
       <button appButton variant="primary" type="submit" [disabled]="busy()">
         {{ i18n.t(busy() ? 'emailsWorkspace.saving' : 'catalog.save') }}</button
       >@if (template()) {
-      <button appButton type="button" [disabled]="busy()" (click)="archive()">
-        {{ i18n.t('emailDraft.archive') }}
-      </button>
+      <app-action-menu
+        [label]="i18n.t('listControls.moreActions')"
+        [actions]="templateActions()"
+        [disabled]="busy()"
+        (actionSelected)="archive()"
+      />
       }<a routerLink="/backoffice/courriels/templates" [queryParams]="backQuery()"
         >{{ i18n.t('catalogWorkspace.cancel') }}</a
       >

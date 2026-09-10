@@ -17,37 +17,73 @@
   }
   <router-outlet />
   <ng-template appTabPanel="catalog" let-tab="tab">
+    @let tax = query().tax;
     <section
+      appListWorkspace
       id="catalog-panel"
       role="region"
       [attr.aria-labelledby]="'catalog-' + tab + '-tab'"
-      class="catalog-results"
     >
       <app-list-toolbar>
-        <label class="field search" for="catalog-search"
-          >{{ i18n.t('catalog.search') }}
-          <input
-            #search
-            id="catalog-search"
-            class="input"
-            type="search"
-            autocomplete="off"
-            [formField]="filters.search"
-            (input)="setSearch(search.value)"
-          />
-        </label>
+        <app-list-search
+          listSearch
+          [label]="i18n.t('catalog.search')"
+          [formField]="filters.search"
+          (valueChange)="setSearch($event)"
+        />
+        <app-filter-menu
+          listFilters
+          #filterMenu
+          [label]="i18n.t('listWorkspace.filters')"
+          [closeLabel]="i18n.t('listWorkspace.closeFilters')"
+          [backLabel]="i18n.t('listWorkspace.backFilters')"
+          [activeCount]="tax === null ? 0 : 1"
+          [disabled]="state() !== 'ready'"
+        >
+          <ng-template
+            appFilterPanel
+            [label]="i18n.t('catalog.tax')"
+            [summary]="tax === null ? i18n.t('catalogWorkspace.allTaxRates') : decimal(tax, 2) + ' %'"
+          >
+            <app-filter-choice
+              [label]="i18n.t('listWorkspace.searchChoices')"
+              [emptyLabel]="i18n.t('listWorkspace.noChoices')"
+              [options]="taxChoices()"
+              [formField]="filters.tax"
+              (committed)="setTax($event); filterMenu.close()"
+            />
+          </ng-template>
+        </app-filter-menu>
+        <app-table-export
+          listActions
+          [columns]="exportColumns()"
+          [rows]="exportRows(tab)"
+          filename="catalog.csv"
+          [label]="i18n.t('listWorkspace.exportCsv')"
+          [emptyHint]="i18n.t('listWorkspace.exportEmpty')"
+          [pendingHint]="i18n.t('listWorkspace.exportPending')"
+          [pending]="state() !== 'ready'"
+        />
         <span listSummary role="status"
           >@if (state() === 'ready') { {{ i18n.tf('catalogWorkspace.count', { count:
           visibleItems(tab).length }) }} }</span
         >
       </app-list-toolbar>
-      @if (query().q) {
+      @if (filtered()) {
       <div class="active-filters">
+        @if (query().q) {
         <button
           appFilterChip
           [label]="i18n.tf('catalogWorkspace.searchFilter', { query: query().q })"
           (click)="clearSearch()"
         ></button>
+        } @if (tax !== null) {
+        <button
+          appFilterChip
+          [label]="i18n.tf('catalogWorkspace.taxFilter', { rate: decimal(tax, 2) })"
+          (click)="clearTax()"
+        ></button>
+        }
       </div>
       } @switch (state()) { @case ('loading') {
       <p role="status">{{ i18n.t('catalog.loading') }}</p>
@@ -61,15 +97,15 @@
       } @case ('ready') { @if (visibleItems(tab).length === 0) {
       <app-empty-state
         icon="catalog"
-        [title]="i18n.t(query().q ? 'catalogWorkspace.noMatches' : tab === 'archived' ? 'catalogWorkspace.noArchived' : 'catalogWorkspace.empty')"
+        [title]="i18n.t(filtered() ? 'catalogWorkspace.noMatches' : tab === 'archived' ? 'catalogWorkspace.noArchived' : 'catalogWorkspace.empty')"
       >
         <p>
-          {{ i18n.t(query().q ? 'catalogWorkspace.changeSearch' : tab === 'archived' ?
+          {{ i18n.t(filtered() ? 'catalogWorkspace.changeSearch' : tab === 'archived' ?
           'catalogWorkspace.archiveIntro' : 'catalogWorkspace.emptyIntro') }}
         </p>
-        @if (query().q) {
-        <button emptyActions appButton type="button" (click)="clearSearch()">
-          {{ i18n.t('catalogWorkspace.clearSearch') }}
+        @if (filtered()) {
+        <button emptyActions appButton type="button" (click)="resetFilters()">
+          {{ i18n.t('catalogWorkspace.resetFilters') }}
         </button>
         } @else if (tab !== 'archived') {
         <a
@@ -93,7 +129,10 @@
           </colgroup>
           <thead>
             <tr>
-              <th scope="col" [attr.aria-sort]="sortDirection('description')">
+              <th
+                scope="col"
+                [attr.aria-sort]="sortDirection('description') === 'none' ? null : sortDirection('description')"
+              >
                 <button
                   appTableSort
                   [label]="i18n.t('catalog.description')"
@@ -101,8 +140,23 @@
                   (click)="sortBy('description')"
                 ></button>
               </th>
-              <th scope="col" class="numeric">{{ i18n.t('catalog.quantity') }}</th>
-              <th scope="col" class="numeric" [attr.aria-sort]="sortDirection('price')">
+              <th
+                scope="col"
+                class="numeric"
+                [attr.aria-sort]="sortDirection('quantity') === 'none' ? null : sortDirection('quantity')"
+              >
+                <button
+                  appTableSort
+                  [label]="i18n.t('catalog.quantity')"
+                  [direction]="sortDirection('quantity')"
+                  (click)="sortBy('quantity')"
+                ></button>
+              </th>
+              <th
+                scope="col"
+                class="numeric"
+                [attr.aria-sort]="sortDirection('price') === 'none' ? null : sortDirection('price')"
+              >
                 <button
                   appTableSort
                   [label]="i18n.t('catalogWorkspace.price')"
@@ -110,8 +164,29 @@
                   (click)="sortBy('price')"
                 ></button>
               </th>
-              <th scope="col" class="numeric">{{ i18n.t('catalog.tax') }}</th>
-              <th scope="col">{{ i18n.t('catalogWorkspace.status') }}</th>
+              <th
+                scope="col"
+                class="numeric"
+                [attr.aria-sort]="sortDirection('tax') === 'none' ? null : sortDirection('tax')"
+              >
+                <button
+                  appTableSort
+                  [label]="i18n.t('catalog.tax')"
+                  [direction]="sortDirection('tax')"
+                  (click)="sortBy('tax')"
+                ></button>
+              </th>
+              <th
+                scope="col"
+                [attr.aria-sort]="sortDirection('status') === 'none' ? null : sortDirection('status')"
+              >
+                <button
+                  appTableSort
+                  [label]="i18n.t('catalogWorkspace.status')"
+                  [direction]="sortDirection('status')"
+                  (click)="sortBy('status')"
+                ></button>
+              </th>
             </tr>
           </thead>
           <tbody>

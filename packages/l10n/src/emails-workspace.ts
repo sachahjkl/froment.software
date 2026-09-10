@@ -1,5 +1,17 @@
 export const emailsWorkspaceText = {
   fr: {
+    'emailsWorkspace.anyPeriod': 'Toutes les dates',
+    'emailsWorkspace.messageCount': 'Résultats : {count} · 100 derniers messages au plus',
+    'emailsWorkspace.reminderCount': 'Relances : {count} · 100 chargées au plus',
+    'emailsWorkspace.export':
+      'Exporter les métadonnées des résultats chargés et filtrés (CSV). Le texte des messages et des modèles est exclu.',
+    'emailsWorkspace.from': 'À partir du',
+    'emailsWorkspace.to': 'Jusqu’au',
+    'emailsWorkspace.dateRange': 'La date de fin précède la date de début.',
+    'emailsWorkspace.dateFilterHint':
+      'Les dates utilisent le fuseau horaire de votre navigateur et la colonne de date affichée.',
+    'emailsWorkspace.fromFilter': 'À partir du : {date}',
+    'emailsWorkspace.toFilter': 'Jusqu’au : {date}',
     'emailsWorkspace.intro':
       'Consultez les messages enregistrés et préparez les prochains courriels.',
     'emailsWorkspace.messages': 'Messages',
@@ -84,6 +96,18 @@ export const emailsWorkspaceText = {
       'La demande reste incertaine. Cet onglet conserve son identifiant et ses valeurs, même après rechargement. Réessayez sans créer une nouvelle relance.',
   },
   en: {
+    'emailsWorkspace.anyPeriod': 'All dates',
+    'emailsWorkspace.messageCount': 'Results: {count} · up to 100 latest emails',
+    'emailsWorkspace.reminderCount': 'Reminders: {count} · up to 100 loaded',
+    'emailsWorkspace.export':
+      'Export metadata for loaded and filtered results (CSV). Email and template text is excluded.',
+    'emailsWorkspace.from': 'From',
+    'emailsWorkspace.to': 'Through',
+    'emailsWorkspace.dateRange': 'The end date is before the start date.',
+    'emailsWorkspace.dateFilterHint':
+      'Dates use your browser time zone and the displayed date column.',
+    'emailsWorkspace.fromFilter': 'From: {date}',
+    'emailsWorkspace.toFilter': 'Through: {date}',
     'emailsWorkspace.intro': 'Review recorded messages and prepare upcoming emails.',
     'emailsWorkspace.messages': 'Messages',
     'emailsWorkspace.drafts': 'Drafts',

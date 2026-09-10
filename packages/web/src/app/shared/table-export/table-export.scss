@@ -1,0 +1,10 @@
+:host {
+  display: inline-flex;
+}
+
+@media (pointer: coarse) {
+  button {
+    min-inline-size: 2.75rem;
+    min-block-size: 2.75rem;
+  }
+}

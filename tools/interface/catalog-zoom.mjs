@@ -64,11 +64,11 @@ export async function checkCatalogZoom(testInfo) {
       await page.evaluate((value) => {
         document.documentElement.dataset.theme = value;
       }, theme);
-      await page.locator("#catalog-search").fill("Angular");
+      await page.locator("app-catalog app-list-search input").fill("Angular");
       await expect(page.locator("app-catalog tbody tr")).toHaveCount(1);
       await page.locator("[appFilterChip]").focus();
       await page.keyboard.press("Enter");
-      await expect(page.locator("#catalog-search")).toBeFocused();
+      await expect(page.locator("app-catalog app-list-search input")).toBeFocused();
       expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth)).toBe(
         false,
       );
@@ -77,6 +77,21 @@ export async function checkCatalogZoom(testInfo) {
         .analyze();
       expect(audit.violations).toEqual([]);
       await capture(`catalog-zoom-200-${theme}.png`);
+      const filterButton = page.locator("app-catalog app-filter-menu > button");
+      await filterButton.click();
+      await page.getByRole("menuitem", { name: /TVA/ }).click();
+      const filterDialog = page.getByRole("dialog");
+      await expect(filterDialog.getByRole("combobox")).toBeFocused();
+      const bounds = await filterDialog.boundingBox();
+      expect(bounds.x).toBeGreaterThanOrEqual(0);
+      expect(bounds.x + bounds.width).toBeLessThanOrEqual(720);
+      const filterAudit = await new AxeBuilder({ page })
+        .withTags(["wcag2a", "wcag2aa", "wcag21aa"])
+        .analyze();
+      expect(filterAudit.violations).toEqual([]);
+      await capture(`catalog-filter-zoom-200-${theme}.png`);
+      await page.keyboard.press("Escape");
+      await expect(filterButton).toBeFocused();
     }
     await page.locator("app-catalog app-page-header a").click();
     await expect(page.locator(".catalog-form")).toBeVisible();

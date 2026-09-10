@@ -108,7 +108,7 @@
             inherit pname version src;
             inherit pnpm;
             fetcherVersion = 4;
-            hash = "sha256-bybtv4sRgvdF8V2OQErjnn2kbSVUDrusOnAdODfKHDA=";
+            hash = "sha256-t+IMk+PRs3fnXeyoUwbfNFmpYmsFTUwuysI6xwsKfus=";
           };
 
           mkApplication =

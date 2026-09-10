@@ -29,7 +29,13 @@ import { DataTable } from '@shared/data-table/data-table';
 import { EmptyState } from '@shared/empty-state/empty-state';
 import { FilterChip } from '@shared/filter-chip/filter-chip';
 import { ListToolbar } from '@shared/list-toolbar/list-toolbar';
-import { LocalizedDatePipe } from '@shared/localized-date/localized-date-pipe';
+import { ListWorkspace } from '@shared/list-toolbar/list-workspace';
+import { ListSearch } from '@shared/list-search/list-search';
+import { FilterMenu, FilterPanel } from '@shared/filter-menu/filter-menu';
+import { FilterChoice } from '@shared/filter-choice/filter-choice';
+import { TableExport } from '@shared/table-export/table-export';
+import { LocalizedDatePipe, formatLocalizedDate } from '@shared/localized-date/localized-date-pipe';
+import { DateRangeFilter, type DateRange } from '@shared/date-range-filter/date-range-filter';
 import { Notice } from '@shared/notice/notice';
 import { PageHeader } from '@shared/page-header/page-header';
 import { Tabs, type TabItem } from '@shared/tabs/tabs';
@@ -39,12 +45,15 @@ import { SearchHighlight, SearchHighlightRegistry } from '@shared/search-highlig
 import { TableSort, type SortDirection } from '@shared/table-sort/table-sort';
 import {
   emailQuery,
+  emailDateMatches,
+  emailDate,
   emailState,
   emailStateLabels,
   compareEmailRows,
   emailView,
   emailViews,
   type EmailView,
+  type EmailSortColumn,
   messageStatus,
   reminderReasons,
   reminderStatuses,
@@ -60,6 +69,13 @@ import {
     FilterChip,
     FormField,
     ListToolbar,
+    ListWorkspace,
+    ListSearch,
+    FilterMenu,
+    FilterPanel,
+    FilterChoice,
+    DateRangeFilter,
+    TableExport,
     LocalizedDatePipe,
     Notice,
     PageHeader,
@@ -101,6 +117,24 @@ export class Emails {
   protected readonly confirming = signal(false);
   protected readonly actionError = signal<TranslationKey | undefined>(undefined);
   protected readonly query = signal(emailQuery(this.route.snapshot.queryParamMap));
+  protected readonly filterCount = computed(
+    () =>
+      Number(this.query().state !== 'all') +
+      Number(this.query().from !== undefined) +
+      Number(this.query().to !== undefined),
+  );
+  protected readonly periodSummary = computed(() => {
+    const { from, to } = this.query();
+    const format = (value: string) => formatLocalizedDate(value, this.i18n.language());
+    if (from && to) return `${format(from)} – ${format(to)}`;
+    if (from) return this.i18n.tf('emailsWorkspace.fromFilter', { date: format(from) });
+    if (to) return this.i18n.tf('emailsWorkspace.toFilter', { date: format(to) });
+    return this.i18n.t('emailsWorkspace.anyPeriod');
+  });
+  protected readonly invalidRange = computed(() => {
+    const { from, to } = this.query();
+    return from !== undefined && to !== undefined && from > to;
+  });
   private readonly searchModel = signal({ search: this.query().q });
   protected readonly filters = form(this.searchModel);
   protected readonly stateLabels = emailStateLabels;
@@ -124,6 +158,7 @@ export class Emails {
   );
   protected readonly messages = computed(() =>
     this.messageSearch()
+      .filter(({ item }) => emailDateMatches(item.createdAt, this.query()))
       .filter(
         ({ item }) =>
           this.query().state === 'all' ||
@@ -135,14 +170,8 @@ export class Emails {
       }))
       .toSorted((left, right) =>
         compareEmailRows(
-          [
-            left.item.request.kind === 'email' ? left.item.request.subject : '',
-            left.item.createdAt,
-          ],
-          [
-            right.item.request.kind === 'email' ? right.item.request.subject : '',
-            right.item.createdAt,
-          ],
+          this.messageSortRow(left.item),
+          this.messageSortRow(right.item),
           this.query().sort,
           this.i18n.language(),
         ),
@@ -161,6 +190,7 @@ export class Emails {
   );
   protected readonly draftResults = computed(() =>
     this.draftSearch()
+      .filter(({ item }) => emailDateMatches(item.updatedAt, this.query()))
       .filter(
         ({ item }) =>
           this.query().state === 'all' ||
@@ -172,8 +202,20 @@ export class Emails {
       }))
       .toSorted((left, right) =>
         compareEmailRows(
-          [left.item.subject, left.item.updatedAt],
-          [right.item.subject, right.item.updatedAt],
+          {
+            ...left.item,
+            date: left.item.updatedAt,
+            state: this.i18n.t(
+              left.item.reminder ? 'emailsWorkspace.reminderDraft' : 'emailsWorkspace.draft',
+            ),
+          },
+          {
+            ...right.item,
+            date: right.item.updatedAt,
+            state: this.i18n.t(
+              right.item.reminder ? 'emailsWorkspace.reminderDraft' : 'emailsWorkspace.draft',
+            ),
+          },
           this.query().sort,
           this.i18n.language(),
         ),
@@ -192,14 +234,15 @@ export class Emails {
   );
   protected readonly templateResults = computed(() =>
     this.templateSearch()
+      .filter(({ item }) => emailDateMatches(item.updatedAt, this.query()))
       .map((result) => ({
         item: result.item,
         indices: result.matches?.find((match) => match.key === 'subject')?.indices ?? [],
       }))
       .toSorted((left, right) =>
         compareEmailRows(
-          [left.item.subject, left.item.updatedAt],
-          [right.item.subject, right.item.updatedAt],
+          { ...left.item, date: left.item.updatedAt },
+          { ...right.item, date: right.item.updatedAt },
           this.query().sort,
           this.i18n.language(),
         ),
@@ -218,6 +261,7 @@ export class Emails {
   );
   protected readonly reminderResults = computed(() =>
     this.reminderSearch()
+      .filter(({ item }) => emailDateMatches(item.sendAt, this.query()))
       .filter(({ item }) => this.query().state === 'all' || item.status === this.query().state)
       .map((result) => ({
         item: result.item,
@@ -225,8 +269,18 @@ export class Emails {
       }))
       .toSorted((left, right) =>
         compareEmailRows(
-          [left.item.invoiceReference, left.item.sendAt],
-          [right.item.invoiceReference, right.item.sendAt],
+          {
+            id: left.item.id,
+            subject: left.item.invoiceReference,
+            date: left.item.sendAt,
+            state: this.i18n.t(reminderStatuses[left.item.status]),
+          },
+          {
+            id: right.item.id,
+            subject: right.item.invoiceReference,
+            date: right.item.sendAt,
+            state: this.i18n.t(reminderStatuses[right.item.status]),
+          },
           this.query().sort,
           this.i18n.language(),
         ),
@@ -247,6 +301,12 @@ export class Emails {
       this.route.queryParamMap.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((params) => {
         const query = emailQuery(params);
         if (!this.stateOptions(this.currentView()).includes(query.state)) query.state = 'all';
+        if (
+          (this.currentView() === 'templates' &&
+            (query.sort.startsWith('state-') || query.sort.startsWith('recipient-'))) ||
+          (this.currentView() === 'reminders' && query.sort.startsWith('recipient-'))
+        )
+          query.sort = 'date-desc';
         this.query.set(query);
         this.searchModel.set({ search: query.q });
       });
@@ -316,14 +376,94 @@ export class Emails {
     this.setState('all');
     this.filters.search().focusBoundControl();
   }
-  protected sortDirection(column: 'subject' | 'date'): SortDirection {
+  protected setDate(field: 'from' | 'to', value: string): void {
+    this.query.update((current) => ({ ...current, [field]: emailDate(value) }));
+    this.updateQuery();
+  }
+  protected applyPeriod(range: DateRange): void {
+    this.query.update((query) => ({
+      ...query,
+      from: emailDate(range.from),
+      to: emailDate(range.to),
+    }));
+    this.updateQuery();
+  }
+  protected filterChoices(view: EmailView) {
+    return this.stateOptions(view).map((value) => ({
+      value,
+      label: this.i18n.t(emailStateLabels[value]),
+    }));
+  }
+  protected clearDate(field: 'from' | 'to'): void {
+    this.setDate(field, '');
+    this.filters.search().focusBoundControl();
+  }
+  protected exportColumns(view: EmailView): string[] {
+    const date = this.i18n.t(
+      view === 'reminders' ? 'emailsWorkspace.scheduledDate' : 'emailsWorkspace.date',
+    );
+    if (view === 'templates') return [this.i18n.t('emails.subject'), date];
+    if (view === 'reminders')
+      return [this.i18n.t('emailsWorkspace.invoice'), this.i18n.t('emailsWorkspace.status'), date];
+    return [
+      this.i18n.t('emails.subject'),
+      this.i18n.t('emails.reference'),
+      this.i18n.t('emails.recipient'),
+      this.i18n.t('emailsWorkspace.status'),
+      date,
+    ];
+  }
+  protected exportRows(view: EmailView): readonly (readonly string[])[] {
+    switch (view) {
+      case 'messages':
+        return this.messages().flatMap(({ item }) =>
+          item.request.kind === 'email'
+            ? [
+                [
+                  item.request.subject,
+                  item.request.reference,
+                  item.request.recipient,
+                  this.i18n.t(messageStatus(item)),
+                  item.createdAt,
+                ],
+              ]
+            : [],
+        );
+      case 'drafts':
+        return this.draftResults().map(({ item }) => [
+          item.subject,
+          item.reference,
+          item.recipient,
+          this.i18n.t(item.reminder ? 'emailsWorkspace.reminderDraft' : 'emailsWorkspace.draft'),
+          item.updatedAt,
+        ]);
+      case 'templates':
+        return this.templateResults().map(({ item }) => [item.subject, item.updatedAt]);
+      case 'reminders':
+        return this.reminderResults().map(({ item }) => [
+          item.invoiceReference,
+          this.i18n.t(reminderStatuses[item.status]),
+          item.sendAt,
+        ]);
+    }
+  }
+  private messageSortRow(item: IntegrationOperationValue) {
+    return {
+      id: item.id,
+      date: item.createdAt,
+      subject: item.request.kind === 'email' ? item.request.subject : '',
+      recipient: item.request.kind === 'email' ? item.request.recipient : '',
+      state: this.i18n.t(messageStatus(item)),
+    };
+  }
+  protected sortDirection(column: EmailSortColumn): SortDirection {
     return this.query().sort.startsWith(`${column}-`)
       ? this.query().sort.endsWith('-asc')
         ? 'ascending'
         : 'descending'
       : 'none';
   }
-  protected sortBy(column: 'subject' | 'date'): void {
+  protected sortBy(column: EmailSortColumn): void {
     const sort =
       this.sortDirection(column) === 'ascending'
         ? (`${column}-desc` as const)

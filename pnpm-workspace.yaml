@@ -2,6 +2,7 @@ packages:
   - "packages/*"
 
 catalog:
+  "@angular/aria": "22.1.5"
   "@angular/build": "22.1.7"
   "@angular/cli": "22.1.7"
   "@angular/cdk": "22.1.5"

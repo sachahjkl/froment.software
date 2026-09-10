@@ -1,0 +1,132 @@
+:host {
+  display: inline-flex;
+  min-inline-size: 0;
+}
+
+.count {
+  min-inline-size: 1.25rem;
+  padding-inline: var(--space-1);
+  border: 1px solid var(--color-line-strong);
+  border-radius: var(--radius-xs);
+  background: var(--color-surface-raised);
+  color: var(--color-ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.panel {
+  display: grid;
+  min-inline-size: 0;
+  max-block-size: min(26rem, calc(100dvh - 1rem));
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  border: 1px solid var(--color-line-strong);
+  border-radius: var(--radius-sm);
+  background: linear-gradient(var(--color-surface-raised), var(--color-surface));
+  color: var(--color-ink);
+  box-shadow: var(--shadow-page);
+}
+
+.heading {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-block-size: 2.5rem;
+  padding: var(--space-1) var(--space-2);
+  border-block-end: 1px solid var(--color-line);
+}
+
+h2 {
+  flex: 1;
+  min-inline-size: 0;
+  margin: 0;
+  font-size: var(--text-sm);
+  font-weight: 700;
+}
+
+.heading button {
+  flex: none;
+  inline-size: 2rem;
+  min-block-size: 2rem;
+}
+
+.direction {
+  flex: none;
+  inline-size: 1rem;
+  block-size: 1rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.5;
+}
+
+.back .direction {
+  transform: scaleX(-1);
+}
+
+.content {
+  display: grid;
+  gap: var(--space-2);
+  min-inline-size: 0;
+  padding: var(--space-2);
+}
+
+.categories {
+  display: grid;
+  min-inline-size: 0;
+  padding: var(--space-1);
+}
+
+.category {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-inline-size: 0;
+  min-block-size: 2.25rem;
+  padding: var(--space-1) var(--space-2);
+  border: 0;
+  border-radius: var(--radius-xs);
+  background: transparent;
+  color: var(--color-ink);
+  font: inherit;
+  font-size: var(--text-sm);
+  text-align: start;
+  cursor: pointer;
+}
+
+.category-label {
+  flex: 1;
+}
+
+.summary {
+  max-inline-size: 50%;
+  overflow: hidden;
+  color: var(--color-muted);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.category:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: -2px;
+}
+
+@media (hover: hover) {
+  .category:hover {
+    background: var(--color-surface-sunken);
+  }
+}
+
+@media (pointer: coarse) {
+  button,
+  .heading button {
+    min-inline-size: 2.75rem;
+    min-block-size: 2.75rem;
+  }
+}
+
+:host-context([dir="rtl"]) .back .direction {
+  transform: none;
+}
+
+:host-context([dir="rtl"]) .category .direction {
+  transform: scaleX(-1);
+}

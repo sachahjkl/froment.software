@@ -1,0 +1,13 @@
+<app-hint #hint [text]="hintText()">
+  <button
+    appButton
+    type="button"
+    [iconOnly]="true"
+    [attr.aria-label]="label()"
+    [attr.aria-describedby]="hint.id"
+    [attr.aria-disabled]="unavailable()"
+    (click)="download()"
+  >
+    <app-icon name="download" />
+  </button>
+</app-hint>

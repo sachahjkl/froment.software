@@ -1,4 +1,5 @@
 import { expect } from "@playwright/test";
+import { readFile } from "node:fs/promises";
 import AxeBuilder from "@axe-core/playwright";
 import { openBackOfficeNavigation } from "./dashboard-shell.mjs";
 
@@ -88,6 +89,17 @@ export async function checkEmailsWorkspace(page, testInfo) {
   await expect(picker.locator("input")).toBeFocused();
   await picker.locator("input").fill("factur");
   await expect(picker.locator(".option")).toHaveCount(1);
+  const pickerOption = picker.locator(".option");
+  await picker.locator("input").hover();
+  const optionBackground = await pickerOption.evaluate(
+    (node) => getComputedStyle(node).backgroundColor,
+  );
+  await pickerOption.hover();
+  await expect
+    .poll(() => pickerOption.evaluate((node) => getComputedStyle(node).backgroundColor))
+    .not.toBe(optionBackground);
+  await pickerOption.focus();
+  await expect(pickerOption).toBeFocused();
   await page.screenshot({ path: testInfo.outputPath("email-template-picker.png"), fullPage: true });
   await picker.locator(".option").click();
   await page
@@ -151,14 +163,71 @@ export async function checkEmailsWorkspace(page, testInfo) {
     await page.locator('app-emails input[type="search"]').fill("factur");
     await expect(page.locator('app-emails input[type="search"]')).toBeFocused();
     await expect(page).toHaveURL(/q=factur/);
-    await page.locator("app-emails .filters-menu summary").click();
-    await page.locator("app-emails select").selectOption("pending");
+    const filters = page.locator("app-emails app-filter-menu > button");
+    const tablePosition = () =>
+      page
+        .locator("app-emails [appDataTable]")
+        .evaluate((node) => node.getBoundingClientRect().top);
+    const beforeFilters = await tablePosition();
+    await filters.click();
+    const filterDialog = page.getByRole("dialog");
+    await expect(filterDialog.getByRole("menuitem")).toHaveCount(2);
+    expect(await tablePosition()).toBe(beforeFilters);
+    await filterDialog.getByRole("menuitem", { name: /État|Status/ }).click();
+    await expect(filterDialog.getByRole("combobox")).toBeFocused();
+    await filterDialog.getByRole("combobox").fill("confirm");
+    await expect(filterDialog.getByRole("option")).toHaveCount(1);
+    await page.screenshot({
+      path: testInfo.outputPath("emails-filter-options.png"),
+      fullPage: true,
+    });
+    await filterDialog.getByRole("combobox").press("ArrowDown");
+    await filterDialog.getByRole("combobox").press("Enter");
+    await expect(filterDialog).toBeHidden();
+    await expect(filters).toBeFocused();
+    await expect(page).toHaveURL(/state=pending/);
     await expect(page.locator("app-emails app-empty-state")).toBeVisible();
     await page.screenshot({ path: testInfo.outputPath("emails-no-matches.png"), fullPage: true });
-    await page.locator("app-emails select").selectOption("simulated");
+    await filters.click();
+    await filterDialog.getByRole("menuitem", { name: /État|Status/ }).click();
+    await filterDialog.getByRole("option", { name: /Simulé|Simulated/ }).click();
+    await expect(filterDialog).toBeHidden();
     await expect(page.locator("app-emails tbody tr")).toHaveCount(1);
+    await filters.click();
+    await filterDialog.getByRole("menuitem", { name: /Période|Date range/ }).click();
+    await expect(filterDialog.locator('input[type="date"]')).toHaveCount(2);
+    await expect(filterDialog.getByRole("combobox")).toHaveCount(0);
+    await filterDialog.locator('input[type="date"]').first().fill("2026-09-01");
+    await filterDialog.locator('input[type="date"]').last().fill("2026-08-01");
+    await filterDialog.getByRole("button", { name: /Appliquer|Apply/, exact: true }).click();
+    await expect(filterDialog.getByRole("alert")).toBeVisible();
+    await expect(page).not.toHaveURL(/from=/);
+    await page.keyboard.press("Escape");
+    await expect(filters).toBeFocused();
     await page.locator("app-emails thead th [appTableSort]").first().click();
     await expect(page).toHaveURL(/sort=subject-asc/);
+    const exportButton = page.locator("app-emails app-table-export button");
+    await exportButton.hover();
+    await expect(page.getByRole("tooltip")).toBeVisible();
+    await page.keyboard.press("Escape");
+    await expect(page.getByRole("tooltip")).toBeHidden();
+    await exportButton.focus();
+    const [download] = await Promise.all([
+      page.waitForEvent("download"),
+      exportButton.press("Enter"),
+    ]);
+    const csv = await readFile(await download.path(), "utf8");
+    expect(csv).toContain("client@example.test");
+    expect(csv).not.toContain("<b>");
+    expect(download.suggestedFilename()).toBe("courriels-messages.csv");
+    const tableSpacing = await page.locator("app-emails [appDataTable]").evaluate((node) => ({
+      margin: getComputedStyle(node).marginTop,
+      gap:
+        node.getBoundingClientRect().top -
+        node.previousElementSibling.getBoundingClientRect().bottom,
+    }));
+    expect(tableSpacing.margin).toBe("0px");
+    expect(Math.abs(tableSpacing.gap - 16)).toBeLessThan(1);
     await page.locator("app-emails tbody a").click();
     await page.locator("app-email-detail .email-task > a").click();
     await expect(page).toHaveURL(/state=simulated/);

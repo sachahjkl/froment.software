@@ -20,7 +20,7 @@ export type SortDirection = 'none' | 'ascending' | 'descending';
       align-items: center;
       justify-content: inherit;
       gap: var(--space-2);
-      min-block-size: var(--control-height);
+      min-block-size: 2rem;
       max-inline-size: 100%;
       padding: 0;
       border: 0;
@@ -35,6 +35,11 @@ export type SortDirection = 'none' | 'ascending' | 'descending';
     .sort-indicator {
       flex: none;
       font-size: var(--text-base);
+    }
+    @media (pointer: coarse) {
+      :host {
+        min-block-size: 2.75rem;
+      }
     }
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,

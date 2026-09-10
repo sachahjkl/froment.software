@@ -29,7 +29,12 @@ export type IconName =
   | 'user'
   | 'logout'
   | 'plus'
-  | 'search';
+  | 'search'
+  | 'check'
+  | 'arrow-left'
+  | 'chevron-right'
+  | 'download'
+  | 'filter';
 
 @Component({
   selector: 'app-icon',
@@ -67,6 +72,15 @@ export type IconName =
         @case ('close') {
           <path d="m6 6 12 12M6 18 18 6" />
         }
+        @case ('check') {
+          <path d="m20 6-11 11-5-5" />
+        }
+        @case ('arrow-left') {
+          <path d="m12 19-7-7 7-7m-7 7h14" />
+        }
+        @case ('chevron-right') {
+          <path d="m9 18 6-6-6-6" />
+        }
         @case ('chevron') {
           <path d="m8 9 4-4 4 4m-8 6 4 4 4-4" />
         }
@@ -83,6 +97,12 @@ export type IconName =
         @case ('search') {
           <circle cx="10" cy="10" r="7" />
           <path d="m15 15 6 6" />
+        }
+        @case ('download') {
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3" />
+        }
+        @case ('filter') {
+          <path d="M4 7h16M7 12h10M10 17h4" />
         }
         @case ('mail') {
           <g>

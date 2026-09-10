@@ -1,0 +1,30 @@
+:host {
+  display: inline-flex;
+  min-inline-size: 0;
+}
+
+[popover] {
+  position: fixed;
+  position-area: block-end;
+  position-try-fallbacks:
+    flip-block,
+    block-end span-inline-start,
+    block-start span-inline-start,
+    block-end span-inline-end,
+    block-start span-inline-end;
+  inset: auto;
+  inline-size: max-content;
+  max-inline-size: min(24rem, calc(100vw - 2rem));
+  margin: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--color-line-strong);
+  border-radius: var(--radius-sm);
+  background: linear-gradient(var(--color-surface-raised), var(--color-surface));
+  color: var(--color-ink);
+  font-size: var(--text-sm);
+  font-weight: 400;
+  line-height: var(--leading-body);
+  text-align: start;
+  overflow-wrap: anywhere;
+  box-shadow: var(--shadow-page);
+}

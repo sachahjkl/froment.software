@@ -7,9 +7,15 @@ L’espace Courriels sépare les listes et les tâches.
 - Relances affiche au maximum 100 relances. L’API charge les relances programmées en priorité.
 - Modèles affiche les modèles actifs partagés. Un modèle contient un objet et un texte.
 
-Les listes proposent une recherche, un compteur et un tri par objet ou date.
+Les listes proposent une recherche, un compteur et des contrôles de tri sur les colonnes disponibles.
+Le tri couvre l’objet, la date, le destinataire et l’état selon la vue.
 Les messages, brouillons et relances proposent aussi un filtre d’état.
-Les paramètres `q`, `state` et `sort` conservent le contexte lors du retour depuis une tâche.
+Toutes les vues proposent une période, selon la date affichée et le fuseau horaire du navigateur.
+Les paramètres `q`, `state`, `from`, `to` et `sort` conservent le contexte lors du retour depuis une tâche.
+
+L’export CSV contient uniquement les métadonnées des résultats filtrés et chargés, dans l’ordre affiché.
+Il ne contient aucun corps de message ni texte de modèle.
+Les limites de 100 résultats restent applicables aux exports des messages et des relances.
 
 ## Pages dédiées
 

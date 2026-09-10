@@ -12,6 +12,7 @@
     "lint:templates": "node tools/check-template-prose.mjs"
   },
   "dependencies": {
+    "@angular/aria": "catalog:",
     "@angular/cdk": "catalog:",
     "@angular/common": "catalog:",
     "@angular/compiler": "catalog:",

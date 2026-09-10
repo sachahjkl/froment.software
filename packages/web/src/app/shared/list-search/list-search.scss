@@ -1,0 +1,50 @@
+:host {
+  display: block;
+  min-inline-size: 0;
+  inline-size: 100%;
+}
+
+.field {
+  gap: 0;
+}
+
+.sr-only {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+.control {
+  display: grid;
+  align-items: center;
+  min-inline-size: 0;
+}
+
+.input,
+app-icon {
+  grid-area: 1 / 1;
+}
+
+.input {
+  inline-size: 100%;
+  padding-inline-start: calc(var(--space-3) + 1rem + var(--space-2));
+}
+
+app-icon {
+  z-index: 1;
+  margin-inline-start: var(--space-3);
+  color: var(--color-muted);
+  pointer-events: none;
+}
+
+@media (pointer: coarse) {
+  .input {
+    min-block-size: 2.75rem;
+    font-size: var(--text-base);
+  }
+}

@@ -1,0 +1,15 @@
+<label class="field">
+  <span class="sr-only">{{ label() }}</span>
+  <span class="control">
+    <app-icon name="search" />
+    <input
+      #control
+      class="input"
+      type="search"
+      autocomplete="off"
+      [formField]="search"
+      [placeholder]="placeholder() || label()"
+      (blur)="touch.emit()"
+    />
+  </span>
+</label>

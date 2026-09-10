@@ -1,0 +1,48 @@
+<div class="search">
+  <app-icon name="search" />
+  <input
+    ngCombobox
+    #combobox="ngCombobox"
+    class="input"
+    type="text"
+    autocomplete="off"
+    spellcheck="false"
+    [attr.aria-label]="label()"
+    [placeholder]="label()"
+    [alwaysExpanded]="true"
+    [softDisabled]="false"
+    [disabled]="search().disabled()"
+    [(value)]="search().value"
+    (blur)="touch.emit()"
+  />
+</div>
+<ng-template ngComboboxPopup [combobox]="combobox">
+  <div
+    ngListbox
+    ngComboboxWidget
+    #listbox="ngListbox"
+    class="options"
+    [attr.aria-label]="label()"
+    focusMode="activedescendant"
+    selectionMode="explicit"
+    [tabindex]="-1"
+    [activeDescendant]="listbox.activeDescendant()"
+    [disabled]="disabled()"
+    [(value)]="selection"
+    (click)="commitClick($event)"
+    (keydown.enter)="commit()"
+  >
+    @for (option of matches(); track option.value) {
+    <div ngOption class="option" [value]="option.value" [label]="option.label">
+      <span class="option-label">{{ option.label }}</span>
+      @if (option.count !== undefined) {
+      <span class="count">{{ option.count }}</span>
+      }
+      <svg class="check" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <path d="m5 12 4 4L19 6" />
+      </svg>
+    </div>
+    }
+  </div>
+</ng-template>
+<p class="empty" role="status">{{ matches().length === 0 ? emptyLabel() : '' }}</p>

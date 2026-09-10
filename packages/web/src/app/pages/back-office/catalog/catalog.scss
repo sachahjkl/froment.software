@@ -6,11 +6,6 @@
   gap: var(--space-6);
   padding: var(--page-header-y) var(--page-x);
 }
-.catalog-results {
-  display: grid;
-  gap: var(--space-4);
-  min-inline-size: 0;
-}
 .intro {
   color: var(--color-muted);
 }
@@ -18,10 +13,6 @@
   display: grid;
   gap: var(--space-2);
   min-inline-size: 0;
-}
-.search {
-  flex: 1;
-  max-inline-size: 30rem;
 }
 .numeric {
   text-align: end;

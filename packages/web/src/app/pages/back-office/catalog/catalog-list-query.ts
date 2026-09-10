@@ -1,14 +1,29 @@
 import { type ParamMap } from '@angular/router';
+import { CatalogItemCreateRequest } from '@froment/contracts';
 import { Option, Schema } from 'effect';
 
 const CatalogSort = Schema.Literals([
   'description-asc',
   'description-desc',
+  'quantity-asc',
+  'quantity-desc',
   'price-asc',
   'price-desc',
+  'tax-asc',
+  'tax-desc',
+  'status-asc',
+  'status-desc',
 ]);
+export type CatalogSortColumn = 'description' | 'quantity' | 'price' | 'tax' | 'status';
+const CatalogTaxRate = Schema.String.check(Schema.isPattern(/^\d+$/)).pipe(
+  Schema.decodeTo(Schema.NumberFromString),
+  Schema.decodeTo(CatalogItemCreateRequest.fields.vatRateBasisPoints),
+);
 const CatalogView = Schema.Literals(['active', 'archived', 'all']);
 export type CatalogView = typeof CatalogView.Type;
+
+export const catalogTaxRate = (value: string | null): number | null =>
+  Option.getOrNull(Schema.decodeUnknownOption(CatalogTaxRate)(value));
 
 export const catalogListQuery = (params: ParamMap) => ({
   q: (params.get('q') ?? '').slice(0, 120),
@@ -16,6 +31,7 @@ export const catalogListQuery = (params: ParamMap) => ({
     Schema.decodeUnknownOption(CatalogSort)(params.get('sort')),
     () => 'description-asc' as const,
   ),
+  tax: catalogTaxRate(params.get('tax')),
 });
 
 export const catalogView = (value: string | null | undefined): CatalogView =>

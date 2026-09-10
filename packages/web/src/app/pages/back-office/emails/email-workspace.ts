@@ -1,6 +1,6 @@
 import { type ParamMap } from '@angular/router';
 import { Schema, Option } from 'effect';
-import { type IntegrationOperationValue, type Reminder } from '@froment/contracts';
+import { CalendarDate, type IntegrationOperationValue, type Reminder } from '@froment/contracts';
 import { type TranslationKey } from '@app/i18n.service';
 
 export const emailViews = ['messages', 'drafts', 'reminders', 'templates'] as const;
@@ -32,25 +32,69 @@ export const EmailState = Schema.Literals([
   'skipped',
   'queued',
 ]);
-const EmailSort = Schema.Literals(['date-desc', 'date-asc', 'subject-asc', 'subject-desc']);
+const EmailSort = Schema.Literals([
+  'date-desc',
+  'date-asc',
+  'subject-asc',
+  'subject-desc',
+  'recipient-asc',
+  'recipient-desc',
+  'state-asc',
+  'state-desc',
+]);
+export type EmailSortColumn = 'subject' | 'date' | 'recipient' | 'state';
+interface EmailSortRow {
+  readonly id: string;
+  readonly subject: string;
+  readonly date: string;
+  readonly recipient?: string;
+  readonly state?: string;
+}
 export const emailState = (value: string) =>
   Option.getOrElse(Schema.decodeUnknownOption(EmailState)(value), () => 'all' as const);
+export const emailDate = (value: string | null | undefined) =>
+  Option.getOrUndefined(Schema.decodeUnknownOption(CalendarDate)(value));
 export const emailQuery = (params: ParamMap) => ({
   q: (params.get('q') ?? '').slice(0, 120),
   state: emailState(params.get('state') ?? ''),
+  from: emailDate(params.get('from')),
+  to: emailDate(params.get('to')),
   sort: Option.getOrElse(
     Schema.decodeUnknownOption(EmailSort)(params.get('sort')),
     () => 'date-desc' as const,
   ),
 });
+export const emailDateMatches = (
+  timestamp: string,
+  query: ReturnType<typeof emailQuery>,
+): boolean => {
+  const date = new Date(timestamp);
+  const day = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+  return (
+    (query.from === undefined || day >= query.from) && (query.to === undefined || day <= query.to)
+  );
+};
 export const compareEmailRows = (
-  left: readonly [string, string],
-  right: readonly [string, string],
+  left: EmailSortRow,
+  right: EmailSortRow,
   sort: typeof EmailSort.Type,
   language: string,
 ) => {
-  const index = sort.startsWith('date-') ? 1 : 0;
-  return (sort.endsWith('-asc') ? 1 : -1) * left[index].localeCompare(right[index], language);
+  const column = sort.startsWith('date-')
+    ? 'date'
+    : sort.startsWith('recipient-')
+      ? 'recipient'
+      : sort.startsWith('state-')
+        ? 'state'
+        : 'subject';
+  const comparison =
+    column === 'date'
+      ? Date.parse(left.date) - Date.parse(right.date)
+      : new Intl.Collator(language, { sensitivity: 'base', numeric: true }).compare(
+          left[column] ?? '',
+          right[column] ?? '',
+        );
+  return (sort.endsWith('-asc') ? 1 : -1) * comparison || left.id.localeCompare(right.id);
 };
 export const messageStatus = (operation: IntegrationOperationValue): TranslationKey =>
   operation.receipt === null

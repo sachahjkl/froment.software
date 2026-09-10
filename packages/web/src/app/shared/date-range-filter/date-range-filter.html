@@ -1,0 +1,37 @@
+<form novalidate [attr.aria-label]="i18n.t('dateRangeFilter.label')" (submit)="apply($event)">
+  @let fromError = error('from'); @let toError = error('to');
+  <div class="fields">
+    <div class="field">
+      <label [for]="id + '-from'">{{ i18n.t('dateRangeFilter.from') }}</label>
+      <input
+        class="input"
+        type="date"
+        [id]="id + '-from'"
+        [formField]="rangeForm.from"
+        [attr.aria-invalid]="fromError ? 'true' : null"
+        [attr.aria-describedby]="fromError ? id + '-from-error' : null"
+      />
+      @if (fromError) {
+      <p class="field-error" [id]="id + '-from-error'" role="alert">{{ fromError }}</p>
+      }
+    </div>
+    <div class="field">
+      <label [for]="id + '-to'">{{ i18n.t('dateRangeFilter.to') }}</label>
+      <input
+        class="input"
+        type="date"
+        [id]="id + '-to'"
+        [formField]="rangeForm.to"
+        [attr.aria-invalid]="toError ? 'true' : null"
+        [attr.aria-describedby]="toError ? id + '-to-error' : null"
+      />
+      @if (toError) {
+      <p class="field-error" [id]="id + '-to-error'" role="alert">{{ toError }}</p>
+      }
+    </div>
+  </div>
+  <div class="actions">
+    <button appButton type="button" (click)="clear()">{{ i18n.t('dateRangeFilter.clear') }}</button>
+    <button appButton type="submit" variant="primary">{{ i18n.t('dateRangeFilter.apply') }}</button>
+  </div>
+</form>

@@ -44,6 +44,7 @@ export class TabLayout {
 
 @Component({
   selector: 'app-tab-panel-outlet',
+  host: { style: 'display: contents' },
   imports: [NgTemplateOutlet],
   template: `<ng-container *ngTemplateOutlet="panel(); context: context" />`,
   changeDetection: ChangeDetectionStrategy.OnPush,

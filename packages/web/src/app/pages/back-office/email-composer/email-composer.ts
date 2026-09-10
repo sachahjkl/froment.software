@@ -41,6 +41,8 @@ import {
 } from '@backoffice/pending-provider-requests';
 import { I18nService, type TranslationKey } from '@app/i18n.service';
 import { Button } from '@shared/button/button';
+import { ActionMenu } from '@shared/action-menu/action-menu';
+import { FieldGroup } from '@shared/field-group/field-group';
 import { Confirmation } from '@shared/confirmation/confirmation';
 import { Notice } from '@shared/notice/notice';
 import { ObjectPicker } from '@shared/object-picker/object-picker';
@@ -53,7 +55,16 @@ type MessageField = keyof ReturnType<typeof blank>;
 @Component({
   host: { class: 'page-container' },
   selector: 'app-email-composer',
-  imports: [Button, FormField, Notice, ObjectPicker, PageHeader, RouterLink],
+  imports: [
+    ActionMenu,
+    Button,
+    FieldGroup,
+    FormField,
+    Notice,
+    ObjectPicker,
+    PageHeader,
+    RouterLink,
+  ],
   templateUrl: './email-composer.html',
   styleUrl: './email-composer.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -84,6 +95,9 @@ export class EmailComposer {
   protected readonly reminderPrepared = signal(false);
   protected readonly prepared = signal(false);
   protected readonly templates = signal<readonly (typeof EmailTemplate.Type)[]>([]);
+  protected readonly draftActions = computed(() => [
+    { id: 'archive', label: this.i18n.t('emailDraft.archive'), danger: true },
+  ]);
   protected readonly templateOptions = computed(() =>
     this.templates().map((template) => ({ id: template.id, label: template.subject })),
   );

@@ -14,41 +14,67 @@
   <app-tabs [label]="i18n.t('emails.title')" [tabs]="tabs()" [disabled]="busy()" />
   <router-outlet />
   <ng-template appTabPanel="emails" let-tab="tab">
-    <section class="results" [attr.aria-labelledby]="'email-' + tab + '-tab'">
+    <section appListWorkspace class="results" [attr.aria-labelledby]="'email-' + tab + '-tab'">
       <app-list-toolbar
-        ><label class="field search"
-          >{{ i18n.t('emailsWorkspace.search') }}<input
-            #search
-            class="input"
-            type="search"
-            [formField]="filters.search"
-            (input)="setSearch(search.value)" /></label
-        >@if (tab !== 'templates') {
-        <details class="filters-menu">
-          <summary>
-            {{ i18n.tf('emailsWorkspace.filters', { count: query().state === 'all' ? 0 : 1 }) }}
-          </summary>
-          <label class="field"
-            >{{ i18n.t('emailsWorkspace.status') }}<select
-              #state
-              class="input"
-              [value]="query().state"
-              (change)="setState(state.value)"
-            >
-              @for (option of stateOptions(tab); track option) {
-              <option [value]="option" [selected]="option === query().state">
-                {{ i18n.t(stateLabels[option]) }}
-              </option>
-              }
-            </select></label
+        ><app-list-search
+          listSearch
+          [label]="i18n.t('emailsWorkspace.search')"
+          [formField]="filters.search"
+          (valueChange)="setSearch($event)"
+        />
+        <app-filter-menu
+          listFilters
+          #filterMenu
+          [label]="i18n.t('listWorkspace.filters')"
+          [closeLabel]="i18n.t('listWorkspace.closeFilters')"
+          [backLabel]="i18n.t('listWorkspace.backFilters')"
+          [activeCount]="filterCount()"
+        >
+          @if (tab !== 'templates') {
+          <ng-template
+            appFilterPanel
+            [label]="i18n.t('emailsWorkspace.status')"
+            [summary]="i18n.t(stateLabels[query().state])"
           >
-        </details>
-        }<span listSummary role="status"
-          >@if (viewState(tab) === 'ready') { {{ i18n.tf('emailsWorkspace.count', { count:
-          count(tab) }) }} }</span
+            <app-filter-choice
+              [label]="i18n.t('listWorkspace.searchChoices')"
+              [emptyLabel]="i18n.t('listWorkspace.noChoices')"
+              [options]="filterChoices(tab)"
+              [value]="query().state"
+              (committed)="setState($event); filterMenu.close()"
+            />
+          </ng-template>
+          }
+          <ng-template
+            appFilterPanel
+            [label]="i18n.t('dateRangeFilter.label')"
+            [summary]="periodSummary()"
+          >
+            <app-date-range-filter
+              [from]="query().from"
+              [to]="query().to"
+              (rangeApplied)="applyPeriod($event); filterMenu.close()"
+            />
+            <p class="muted">{{ i18n.t('emailsWorkspace.dateFilterHint') }}</p>
+          </ng-template>
+        </app-filter-menu>
+        <app-table-export
+          listActions
+          [columns]="exportColumns(tab)"
+          [rows]="exportRows(tab)"
+          [filename]="'courriels-' + tab + '.csv'"
+          [label]="i18n.t('emailsWorkspace.export')"
+          [emptyHint]="i18n.t('listWorkspace.exportEmpty')"
+          [pendingHint]="i18n.t('listWorkspace.exportPending')"
+          [pending]="viewState(tab) !== 'ready' || busy()"
+        />
+        <span listSummary role="status"
+          >@if (viewState(tab) === 'ready') { {{ i18n.tf(tab === 'messages' ?
+          'emailsWorkspace.messageCount' : tab === 'reminders' ? 'emailsWorkspace.reminderCount' :
+          'emailsWorkspace.count', { count: count(tab) }) }} }</span
         ></app-list-toolbar
       >
-      @if (query().q || query().state !== 'all') {
+      @if (query().q || filterCount()) {
       <div class="active-filters">
         @if (query().q) {
         <button
@@ -62,8 +88,22 @@
           [label]="i18n.t(stateLabels[query().state])"
           (click)="clearState()"
         ></button>
+        } @if (query().from; as date) {
+        <button
+          appFilterChip
+          [label]="i18n.tf('emailsWorkspace.fromFilter', { date })"
+          (click)="clearDate('from')"
+        ></button>
+        } @if (query().to; as date) {
+        <button
+          appFilterChip
+          [label]="i18n.tf('emailsWorkspace.toFilter', { date })"
+          (click)="clearDate('to')"
+        ></button>
         }
       </div>
+      } @if (invalidRange()) {
+      <p appNotice variant="danger" role="alert">{{ i18n.t('emailsWorkspace.dateRange') }}</p>
       } @if (actionError(); as error) {
       <p appNotice variant="danger" role="alert">{{ i18n.t(error) }}</p>
       } @if (viewState(tab) === 'loading') {
@@ -75,16 +115,12 @@
           {{ i18n.t('integrations.reload') }}
         </button>
       </div>
-      } @else { @if (tab === 'messages') {
-      <p class="muted">{{ i18n.t('emails.historyInfo') }}</p>
-      } @else if (tab === 'reminders') {
-      <p class="muted">{{ i18n.t('emailsWorkspace.reminderHistory') }}</p>
-      } @if (count(tab) === 0) {
+      } @else { @if (count(tab) === 0) {
       <app-empty-state
         icon="mail"
-        [title]="i18n.t(query().q || query().state !== 'all' ? 'emailsWorkspace.noMatches' : 'emailsWorkspace.empty')"
+        [title]="i18n.t(query().q || filterCount() ? 'emailsWorkspace.noMatches' : 'emailsWorkspace.empty')"
         ><p>
-          {{ i18n.t(query().q || query().state !== 'all' ? 'emailsWorkspace.changeSearch' :
+          {{ i18n.t(query().q || filterCount() ? 'emailsWorkspace.changeSearch' :
           'emailsWorkspace.emptyHint') }}
         </p></app-empty-state
       >
@@ -102,9 +138,23 @@
                 ></button>
               </th>
               @if (tab === 'messages' || tab === 'drafts') {
-              <th scope="col">{{ i18n.t('emails.recipient') }}</th>
+              <th scope="col" [attr.aria-sort]="sortDirection('recipient')">
+                <button
+                  appTableSort
+                  [label]="i18n.t('emails.recipient')"
+                  [direction]="sortDirection('recipient')"
+                  (click)="sortBy('recipient')"
+                ></button>
+              </th>
               } @if (tab !== 'templates') {
-              <th scope="col">{{ i18n.t('emailsWorkspace.status') }}</th>
+              <th scope="col" [attr.aria-sort]="sortDirection('state')">
+                <button
+                  appTableSort
+                  [label]="i18n.t('emailsWorkspace.status')"
+                  [direction]="sortDirection('state')"
+                  (click)="sortBy('state')"
+                ></button>
+              </th>
               }
               <th scope="col" [attr.aria-sort]="sortDirection('date')">
                 <button

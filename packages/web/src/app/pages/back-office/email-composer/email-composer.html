@@ -41,8 +41,7 @@
   </div>
   }
   <form class="task-form composer" novalidate (submit)="save($event)">
-    <fieldset>
-      <legend>{{ i18n.t('emailsWorkspace.addressing') }}</legend>
+    <fieldset appFieldGroup [legend]="i18n.t('emailsWorkspace.addressing')">
       <div class="fields">
         <label class="field"
           >{{ i18n.t('emails.recipient') }}<input
@@ -131,14 +130,12 @@
       >
         {{ i18n.t('emailDraft.save') }}</button
       >@if (draft()) {
-      <button
-        appButton
-        type="button"
+      <app-action-menu
+        [label]="i18n.t('listControls.moreActions')"
+        [actions]="draftActions()"
         [disabled]="busy() || pending() !== undefined"
-        (click)="archive()"
-      >
-        {{ i18n.t('emailDraft.archive') }}
-      </button>
+        (actionSelected)="archive()"
+      />
       }<a [routerLink]="backLink()" [queryParams]="backQuery()"
         >{{ i18n.t('catalogWorkspace.cancel') }}</a
       >

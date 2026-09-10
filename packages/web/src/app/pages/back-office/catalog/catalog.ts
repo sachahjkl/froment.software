@@ -20,16 +20,27 @@ import { Button } from '@shared/button/button';
 import { DataTable } from '@shared/data-table/data-table';
 import { EmptyState } from '@shared/empty-state/empty-state';
 import { FilterChip } from '@shared/filter-chip/filter-chip';
+import { FilterMenu, FilterPanel } from '@shared/filter-menu/filter-menu';
+import { FilterChoice } from '@shared/filter-choice/filter-choice';
 import { Icon } from '@shared/icon/icon';
+import { ListSearch } from '@shared/list-search/list-search';
 import { ListToolbar } from '@shared/list-toolbar/list-toolbar';
+import { ListWorkspace } from '@shared/list-toolbar/list-workspace';
 import { Notice } from '@shared/notice/notice';
 import { PageHeader } from '@shared/page-header/page-header';
+import { TableExport } from '@shared/table-export/table-export';
 import { TableSort, type SortDirection } from '@shared/table-sort/table-sort';
 import { Tabs, type TabItem } from '@shared/tabs/tabs';
 import { TabLayout, TabPanel } from '@shared/tabs/tab-panel';
 import { createFuzzySearch } from '@shared/fuzzy-search';
 import { SearchHighlight, SearchHighlightRegistry } from '@shared/search-highlight';
-import { catalogListQuery, catalogView, type CatalogView } from './catalog-list-query';
+import {
+  catalogListQuery,
+  catalogTaxRate,
+  catalogView,
+  type CatalogSortColumn,
+  type CatalogView,
+} from './catalog-list-query';
 
 @Component({
   host: { class: 'page-container' },
@@ -39,14 +50,20 @@ import { catalogListQuery, catalogView, type CatalogView } from './catalog-list-
     DataTable,
     EmptyState,
     FilterChip,
+    FilterMenu,
+    FilterPanel,
+    FilterChoice,
     FormField,
     Icon,
+    ListSearch,
     ListToolbar,
+    ListWorkspace,
     Notice,
     PageHeader,
     RouterLink,
     RouterOutlet,
     SearchHighlight,
+    TableExport,
     TableSort,
     TabLayout,
     TabPanel,
@@ -67,8 +84,35 @@ export class Catalog {
   protected readonly state = signal<'loading' | 'ready' | 'error'>('loading');
   protected readonly items = signal<CatalogItemListValue>([]);
   protected readonly query = signal(catalogListQuery(this.route.snapshot.queryParamMap));
-  private readonly searchModel = signal({ search: this.query().q });
-  protected readonly filters = form(this.searchModel);
+  private readonly filterModel = signal({
+    search: this.query().q,
+    tax: this.query().tax?.toString() ?? '',
+  });
+  protected readonly filters = form(this.filterModel);
+  protected readonly filtered = computed(() => this.query().q !== '' || this.query().tax !== null);
+  protected readonly taxRates = computed(() => {
+    const { tax } = this.query();
+    return [
+      ...new Set([
+        ...this.items().map((item) => item.vatRateBasisPoints),
+        ...(tax === null ? [] : [tax]),
+      ]),
+    ].sort((left, right) => left - right);
+  });
+  protected readonly exportColumns = computed(() => [
+    this.i18n.t('catalog.description'),
+    this.i18n.t('catalog.quantity'),
+    this.i18n.t('catalogWorkspace.exportPrice'),
+    this.i18n.t('catalog.tax'),
+    this.i18n.t('catalogWorkspace.status'),
+  ]);
+  protected readonly taxChoices = computed(() => [
+    { value: '', label: this.i18n.t('catalogWorkspace.allTaxRates') },
+    ...this.taxRates().map((rate) => ({
+      value: String(rate),
+      label: `${this.decimal(rate, 2)} %`,
+    })),
+  ]);
   protected readonly saved =
     this.router.currentNavigation()?.extras.state?.['catalogSaved'] === true;
   protected readonly tabs = computed<readonly TabItem[]>(() =>
@@ -98,9 +142,18 @@ export class Catalog {
     });
     return this.searchResults()
       .toSorted((left, right) => {
-        const comparison = sort.startsWith('price')
-          ? left.item.unitPriceCents - right.item.unitPriceCents
-          : collator.compare(left.item.description, right.item.description);
+        let comparison: number;
+        if (sort.startsWith('quantity')) {
+          comparison = left.item.quantityMilli - right.item.quantityMilli;
+        } else if (sort.startsWith('price')) {
+          comparison = left.item.unitPriceCents - right.item.unitPriceCents;
+        } else if (sort.startsWith('tax')) {
+          comparison = left.item.vatRateBasisPoints - right.item.vatRateBasisPoints;
+        } else if (sort.startsWith('status')) {
+          comparison = Number(left.item.archived) - Number(right.item.archived);
+        } else {
+          comparison = collator.compare(left.item.description, right.item.description);
+        }
         return direction * comparison || left.item.id.localeCompare(right.item.id);
       })
       .map((result) => ({
@@ -115,16 +168,30 @@ export class Catalog {
       this.route.queryParamMap.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((params) => {
         const query = catalogListQuery(params);
         this.query.set(query);
-        this.searchModel.set({ search: query.q });
+        this.filterModel.set({ search: query.q, tax: query.tax?.toString() ?? '' });
       });
       void this.load();
     });
   }
 
   protected visibleItems(view: CatalogView) {
+    const { tax } = this.query();
     return this.results().filter(
-      ({ item }) => view === 'all' || item.archived === (view === 'archived'),
+      ({ item }) =>
+        (view === 'all' || item.archived === (view === 'archived')) &&
+        (tax === null || item.vatRateBasisPoints === tax),
     );
+  }
+
+  protected exportRows(view: CatalogView) {
+    if (this.state() !== 'ready') return [];
+    return this.visibleItems(view).map(({ item }) => [
+      item.description,
+      formatFixedDecimal(item.quantityMilli, 3),
+      formatFixedDecimal(item.unitPriceCents, 2),
+      formatFixedDecimal(item.vatRateBasisPoints, 2),
+      this.i18n.t(item.archived ? 'catalog.archived' : 'catalogWorkspace.available'),
+    ]);
   }
 
   protected editorQuery(view: CatalogView) {
@@ -137,13 +204,9 @@ export class Catalog {
 
   protected setSearch(value: string): void {
     const q = value.slice(0, 120);
-    this.searchModel.set({ search: q });
+    this.filterModel.update((model) => ({ ...model, search: q }));
     this.query.update((query) => ({ ...query, q }));
-    void this.router.navigate([], {
-      relativeTo: this.route,
-      queryParams: this.query(),
-      replaceUrl: true,
-    });
+    this.updateQuery();
   }
 
   protected clearSearch(): void {
@@ -151,7 +214,26 @@ export class Catalog {
     this.filters.search().focusBoundControl();
   }
 
-  protected sortDirection(column: 'description' | 'price'): SortDirection {
+  protected setTax(value: string): void {
+    const tax = catalogTaxRate(value);
+    this.filterModel.update((model) => ({ ...model, tax: tax?.toString() ?? '' }));
+    this.query.update((query) => ({ ...query, tax }));
+    this.updateQuery();
+  }
+
+  protected clearTax(): void {
+    this.setTax('');
+    this.filters.search().focusBoundControl();
+  }
+
+  protected resetFilters(): void {
+    this.filterModel.set({ search: '', tax: '' });
+    this.query.update((query) => ({ ...query, q: '', tax: null }));
+    this.updateQuery();
+    this.filters.search().focusBoundControl();
+  }
+
+  protected sortDirection(column: CatalogSortColumn): SortDirection {
     const { sort } = this.query();
     return sort === `${column}-asc`
       ? 'ascending'
@@ -160,12 +242,16 @@ export class Catalog {
         : 'none';
   }
 
-  protected sortBy(column: 'description' | 'price'): void {
+  protected sortBy(column: CatalogSortColumn): void {
     const sort =
       this.sortDirection(column) === 'ascending'
         ? (`${column}-desc` as const)
         : (`${column}-asc` as const);
     this.query.update((query) => ({ ...query, sort }));
+    this.updateQuery();
+  }
+
+  private updateQuery(): void {
     void this.router.navigate([], {
       relativeTo: this.route,
       queryParams: this.query(),
