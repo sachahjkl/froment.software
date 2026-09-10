@@ -399,10 +399,14 @@ export async function checkCommercialWorkspace(page, testInfo) {
       "aria-sort",
       "descending",
     );
+    const stageOrder =
+      (await page.locator("html").getAttribute("lang")) === "en"
+        ? ["DE-2026-000002", quote.reference]
+        : [quote.reference, "DE-2026-000002"];
     for (const [column, first, last] of [
       ["title", quote.reference, "DE-2026-000002"],
       ["client", quote.reference, "DE-2026-000002"],
-      ["stage", quote.reference, "DE-2026-000002"],
+      ["stage", ...stageOrder],
       ["updated", "DE-2026-000002", quote.reference],
       ["amount", "DE-2026-000002", quote.reference],
     ]) {
