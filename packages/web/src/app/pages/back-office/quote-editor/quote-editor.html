@@ -113,7 +113,7 @@
           {{ i18n.t('backOffice.quote.addLine') }}
         </button>
       </div>
-      <div class="condition-preset">
+      <div class="condition-preset spacer-x-3">
         <app-object-picker
           class="catalog-picker"
           [label]="i18n.t('catalog.add')"
@@ -121,7 +121,15 @@
           [disabled]="saveDisabled() || quoteForm.lines.length >= 20"
           (selected)="addCatalogItem($event)"
         />
-        <a routerLink="/backoffice/catalogue">{{ i18n.t('catalog.manage') }}</a>
+        <button
+          appButton
+          type="button"
+          [disabled]="saveDisabled() || quoteForm.lines.length >= 20"
+          (click)="createCatalogItem()"
+          id="quote-create-catalog"
+        >
+          {{ i18n.t('catalog.create') }}
+        </button>
       </div>
       <p class="hint">{{ i18n.t('catalog.snapshotHint') }}</p>
       @for (line of quoteForm.lines; track $index) {
@@ -208,16 +216,22 @@
     </section>
 
     <section class="conditions-section">
-      <div class="condition-preset">
+      <div class="condition-preset spacer-x-3">
         <app-object-picker
           [label]="i18n.t('backOffice.quote.conditionPreset')"
           [options]="presetOptions()"
           [disabled]="saveDisabled()"
           (selected)="selectConditionPreset($event)"
         />
-        <a routerLink="/backoffice/configuration/conditions"
-          >{{ i18n.t('backOffice.quote.manageConditionPresets') }}</a
+        <button
+          appButton
+          type="button"
+          [disabled]="saveDisabled()"
+          (click)="createConditionPreset()"
+          id="quote-create-conditions"
         >
+          {{ i18n.t('configurationWorkspace.newCondition') }}
+        </button>
       </div>
       <label class="field"
         >{{ i18n.t('backOffice.quote.conditions') }}
@@ -235,7 +249,11 @@
         }
       </label>
     </section>
-    @if (error(); as errorKey) {
+    @if (referenceNotice(); as noticeKey) {
+    <p appNotice variant="success" role="status">{{ i18n.t(noticeKey) }}</p>
+    } @if (referenceError(); as errorKey) {
+    <p appNotice variant="danger" role="alert">{{ i18n.t(errorKey) }}</p>
+    } @if (error(); as errorKey) {
     <p appNotice variant="danger" role="alert">{{ i18n.t(errorKey) }}</p>
     @if (detail() && !uncertain()) {
     <button appButton type="button" [disabled]="saving()" (click)="reload()">
@@ -244,7 +262,12 @@
     } } @if (saving()) {
     <p role="status">{{ i18n.t('commercial.pending') }}</p>
     }
-    <button appButton variant="primary" type="submit" [disabled]="saveDisabled()">
+    <button
+      appButton
+      variant="primary"
+      type="submit"
+      [disabled]="saveDisabled() || referenceBusy()"
+    >
       {{ i18n.t(saving() ? 'backOffice.quote.saving' : 'backOffice.quote.save') }}
     </button>
     @if (!isNew()) {

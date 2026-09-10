@@ -1,55 +1,74 @@
-<search [attr.aria-label]="i18n.t('backOffice.search.title')">
-  <label class="field" [for]="id"
-    >{{ i18n.t('backOffice.search.label') }}
-    <input
-      [id]="id"
-      class="input"
-      type="search"
-      autocomplete="off"
-      [formField]="searchForm.query"
-      (focus)="open()"
-      (input)="open()"
-      [attr.aria-controls]="opened() ? id + '-results' : null"
-    />
-  </label>
-  @if (opened()) {
-  <section
-    [id]="id + '-results'"
-    class="results ds-panel"
-    [attr.aria-label]="i18n.t('backOffice.search.result')"
+<button
+  #trigger
+  appButton
+  class="search-trigger"
+  type="button"
+  aria-haspopup="dialog"
+  [attr.aria-label]="i18n.t('backOffice.search.title')"
+  [attr.aria-controls]="opened() ? id + '-dialog' : null"
+  [attr.aria-keyshortcuts]="shortcutEnabled() ? 'Control+k Meta+k' : null"
+  (click)="open()"
+>
+  <app-icon name="search" /><span class="trigger-label"
+    >{{ i18n.t('backOffice.search.title') }}</span
   >
-    <div class="result-heading">
-      @if (state() === 'ready') {
-      <p role="status">{{ i18n.plural('globalSearch.count', { count: displayedCount() }) }}</p>
-      }
-      <button appButton type="button" (click)="close()">{{ i18n.t('globalSearch.close') }}</button>
+  @if (shortcutEnabled()) { <kbd aria-hidden="true">{{ shortcutLabel() }}</kbd> }
+</button>
+
+<ng-template #content>
+  <search class="search-dialog" [attr.aria-labelledby]="id + '-heading'">
+    <div class="heading">
+      <h2 [id]="id + '-heading'">{{ i18n.t('backOffice.search.title') }}</h2>
+      <button
+        appButton
+        [iconOnly]="true"
+        type="button"
+        [attr.aria-label]="i18n.t('globalSearch.close')"
+        (click)="close()"
+      >
+        <app-icon name="close" />
+      </button>
     </div>
-    @switch (state()) { @case ('loading') {
-    <p role="status">{{ i18n.t('backOffice.dashboard.loading') }}</p>
-    } @case ('error') {
-    <p role="alert">{{ i18n.t('backOffice.dashboard.error') }}</p>
-    <button appButton type="button" (click)="retry()">
-      {{ i18n.t('backOffice.dashboard.retry') }}
-    </button>
-    } @case ('ready') { @if (!searchForm.query().value().trim()) {
-    <p>{{ i18n.t('globalSearch.hint') }}</p>
-    } @else { @for (group of groups(); track group.kind) {
-    <section [attr.aria-labelledby]="id + '-' + group.kind">
-      <h2 [id]="id + '-' + group.kind">{{ group.label }}</h2>
-      <ul>
-        @for (result of group.results; track result.id) {
-        <li>
-          <a [routerLink]="result.link"
-            ><strong [appSearchHighlight]="result.referenceMatches">{{ result.reference }}</strong
-            ><span [appSearchHighlight]="result.detailMatches">{{ result.detail }}</span></a
-          >
-        </li>
-        }
-      </ul>
-    </section>
-    } @empty {
-    <p>{{ i18n.t('backOffice.search.empty') }}</p>
-    } } } }
-  </section>
-  }
-</search>
+    <label class="field" [for]="id"
+      >{{ i18n.t('backOffice.search.label') }}
+      <input
+        [id]="id"
+        class="input"
+        type="search"
+        autocomplete="off"
+        [formField]="searchForm.query"
+        [attr.aria-controls]="id + '-results'"
+      />
+    </label>
+    <p class="status" role="status">
+      @if (state() === 'loading') { {{ i18n.t('backOffice.search.loading') }} } @else if (state()
+      === 'ready') { {{ i18n.plural('globalSearch.count', { count: displayedCount() }) }} }
+    </p>
+    <div [id]="id + '-results'" class="results">
+      @switch (state()) { @case ('error') {
+      <p role="alert">{{ i18n.t('backOffice.search.error') }}</p>
+      <button appButton type="button" (click)="retry()">
+        {{ i18n.t('backOffice.dashboard.retry') }}
+      </button>
+      } @case ('ready') { @if (!searchForm.query().value().trim()) {
+      <p>{{ i18n.t('globalSearch.hint') }}</p>
+      } @else { @for (group of groups(); track group.kind) {
+      <section [attr.aria-labelledby]="id + '-' + group.kind">
+        <h3 [id]="id + '-' + group.kind">{{ group.label }}</h3>
+        <ul>
+          @for (result of group.results; track result.id) {
+          <li>
+            <a [routerLink]="result.link"
+              ><strong [appSearchHighlight]="result.referenceMatches">{{ result.reference }}</strong
+              ><span [appSearchHighlight]="result.detailMatches">{{ result.detail }}</span></a
+            >
+          </li>
+          }
+        </ul>
+      </section>
+      } @empty {
+      <p>{{ i18n.t('backOffice.search.empty') }}</p>
+      } } } }
+    </div>
+  </search>
+</ng-template>

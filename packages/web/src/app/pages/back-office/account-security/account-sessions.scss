@@ -2,8 +2,7 @@
   display: block;
   padding: var(--space-6) var(--page-x);
 }
-section,
-header {
+section {
   display: grid;
   gap: var(--space-3);
 }

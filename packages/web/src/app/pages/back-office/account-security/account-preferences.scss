@@ -1,0 +1,14 @@
+:host {
+  display: block;
+  padding: var(--space-6) var(--page-x);
+}
+
+section,
+form {
+  display: grid;
+  gap: var(--space-5);
+}
+
+form {
+  max-inline-size: 36rem;
+}

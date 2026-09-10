@@ -1,8 +1,7 @@
 @use "../quote-detail/commercial-detail";
 .publication > form,
-.publication > .panel,
 app-copy-field {
-  max-width: 52rem;
+  max-inline-size: 52rem;
 }
 .review-check {
   display: flex;

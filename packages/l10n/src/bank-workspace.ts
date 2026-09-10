@@ -38,8 +38,6 @@ export const bankWorkspaceText = {
     'bankWorkspace.noMatches': 'Aucune transaction ne correspond aux filtres.',
     'bankWorkspace.empty': 'Aucune transaction importée.',
     'bankWorkspace.limit': 'La liste contient au maximum les 1 000 transactions les plus récentes.',
-    'bankWorkspace.sortLoaded':
-      'Le tri porte uniquement sur les résultats chargés, pas sur tout l’historique.',
     'bankWorkspace.ledgerSortLoaded':
       'Le tri porte sur les résultats chargés : au maximum 10 000 sources et 10 000 écritures pour la période. Il ne modifie pas l’export CSV.',
     'bankWorkspace.historySortLoaded':
@@ -176,7 +174,6 @@ export const bankWorkspaceText = {
     'bankWorkspace.noMatches': 'No transactions match these filters.',
     'bankWorkspace.empty': 'No imported transactions.',
     'bankWorkspace.limit': 'The list contains up to the 1,000 most recent transactions.',
-    'bankWorkspace.sortLoaded': 'Sorting applies only to loaded results, not to the full history.',
     'bankWorkspace.ledgerSortLoaded':
       'Sorting applies to loaded results: up to 10,000 sources and 10,000 entries for the period. It does not change the CSV export.',
     'bankWorkspace.historySortLoaded': 'Sorting applies to the 100 most recent history events.',

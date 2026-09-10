@@ -10,11 +10,12 @@ import {
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormField, form } from '@angular/forms/signals';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { type InvoiceListValue } from '@froment/contracts';
+import { type InvoiceListValue, type InvoiceSummaryValue } from '@froment/contracts';
 import { formatMoney } from '@froment/l10n';
 import { InvoicesApi } from '@backoffice/invoices-api';
 import { I18nService } from '@app/i18n.service';
 import { Badge } from '@shared/badge/badge';
+import { EntityIcon, type EntityIconVariant } from '@shared/entity-icon/entity-icon';
 import { Button } from '@shared/button/button';
 import { DataTable } from '@shared/data-table/data-table';
 import { Notice } from '@shared/notice/notice';
@@ -49,6 +50,7 @@ import {
   host: { class: 'page-container' },
   selector: 'app-billing',
   imports: [
+    EntityIcon,
     Badge,
     Button,
     DataTable,
@@ -203,6 +205,16 @@ export class Billing {
   protected readonly remaining = remainingCents;
   protected readonly businessDate = businessToday();
   private request = 0;
+
+  protected iconVariant(invoice: InvoiceSummaryValue): EntityIconVariant {
+    if (invoice.status === 'draft') return 'default';
+    if (invoice.status === 'void') return 'danger';
+    if (invoice.creditedCents > 0) return 'default';
+    if (remainingCents(invoice) === 0) return 'success';
+    if (invoice.dueDate < this.businessDate) return 'danger';
+    if (invoice.recordedPaidCents > 0) return 'warning';
+    return 'info';
+  }
 
   constructor() {
     this.route.queryParamMap.pipe(takeUntilDestroyed()).subscribe((params) => {

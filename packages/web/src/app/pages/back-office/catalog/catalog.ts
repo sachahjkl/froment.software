@@ -18,6 +18,7 @@ import { I18nService } from '@app/i18n.service';
 import { Badge } from '@shared/badge/badge';
 import { Button } from '@shared/button/button';
 import { DataTable } from '@shared/data-table/data-table';
+import { EntityIcon, type EntityIconVariant } from '@shared/entity-icon/entity-icon';
 import { EmptyState } from '@shared/empty-state/empty-state';
 import { FilterChip } from '@shared/filter-chip/filter-chip';
 import { FilterMenu, FilterPanel } from '@shared/filter-menu/filter-menu';
@@ -45,6 +46,7 @@ import {
 @Component({
   host: { class: 'page-container' },
   imports: [
+    EntityIcon,
     Badge,
     Button,
     DataTable,
@@ -181,6 +183,11 @@ export class Catalog {
         (view === 'all' || item.archived === (view === 'archived')) &&
         (tax === null || item.vatRateBasisPoints === tax),
     );
+  }
+
+  protected iconVariant(item: CatalogItemListValue[number]): EntityIconVariant {
+    if (item.archived) return 'warning';
+    return 'success';
   }
 
   protected exportRows(view: CatalogView) {

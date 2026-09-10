@@ -1,6 +1,22 @@
 :host {
   display: block;
 }
+:host(.editor-dialog) {
+  max-block-size: calc(100dvh - 2rem);
+  overflow: auto;
+  overscroll-behavior: contain;
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  color: var(--color-ink);
+  box-shadow: var(--shadow-page);
+}
+:host(.editor-dialog) .catalog-editor {
+  padding: var(--space-6);
+}
+:host(.editor-dialog) h2 {
+  margin: 0;
+  font-size: var(--text-xl);
+}
 .catalog-editor {
   display: grid;
   justify-items: start;

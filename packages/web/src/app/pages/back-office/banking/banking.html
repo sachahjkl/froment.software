@@ -90,25 +90,20 @@
         [pendingHint]="i18n.t('listWorkspace.exportPending')"
         [pending]="state() === 'loading'"
       />
-      <span listSummary role="status"
-        >@if (state() === 'ready') { {{ i18n.plural('bankWorkspace.count', { count: visible().length
-        }) }} }</span
-      >
-      @if (chips().length) {
-      <div listSummary class="chips">
-        @for (chip of chips(); track chip.key) {
-        <button
-          appFilterChip
-          [label]="chipLabel(chip.key, chip.value)"
-          (click)="updateFilter(chip.key, '')"
-        ></button>
-        }<button appButton type="button" variant="link" (click)="clear()">
-          {{ i18n.t('bankWorkspace.clear') }}
-        </button>
-      </div>
-      }
     </app-list-toolbar>
-    @if (periodInvalid()) {
+    @if (chips().length) {
+    <div class="chips">
+      @for (chip of chips(); track chip.key) {
+      <button
+        appFilterChip
+        [label]="chipLabel(chip.key, chip.value)"
+        (click)="updateFilter(chip.key, '')"
+      ></button>
+      }<button appButton type="button" variant="link" (click)="clear()">
+        {{ i18n.t('bankWorkspace.clear') }}
+      </button>
+    </div>
+    } @if (periodInvalid()) {
     <p appNotice variant="danger" role="alert">{{ i18n.t('bankWorkspace.periodInvalid') }}</p>
     } @if (state() === 'loading') {
     <p role="status">{{ i18n.t('bank.loading') }}</p>
@@ -144,12 +139,15 @@
           @for (result of visible(); track result.item.id) { @let item = result.item;
           <tr>
             <th scope="row">
-              <a
-                [routerLink]="transactionLink(item.id)"
-                [queryParams]="query()"
-                [appSearchHighlight]="result.referenceMatches"
-                >{{ item.reference }}</a
-              >
+              <div class="entity-label">
+                <app-entity-icon icon="bank" [variant]="iconVariant(item)" />
+                <a
+                  [routerLink]="transactionLink(item.id)"
+                  [queryParams]="query()"
+                  [appSearchHighlight]="result.referenceMatches"
+                  >{{ item.reference }}</a
+                >
+              </div>
             </th>
             <td>
               <span [appSearchHighlight]="result.descriptionMatches">{{ item.description }}</span>
@@ -168,9 +166,11 @@
       </table>
     </div>
     }
-    <p class="muted">
-      {{ i18n.t('bankWorkspace.accountHint') }} {{ i18n.t('bankWorkspace.limit') }}
-    </p>
-    <p class="muted">{{ i18n.t('bankWorkspace.sortLoaded') }}</p>
+    <footer class="list-summary spacer-y-2">
+      @if (state() === 'ready') {
+      <p role="status">{{ i18n.plural('bankWorkspace.count', { count: visible().length }) }}</p>
+      }
+      <p>{{ i18n.t('bankWorkspace.limit') }}</p>
+    </footer>
   </section>
 </section>

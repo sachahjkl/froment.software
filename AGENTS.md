@@ -25,6 +25,16 @@ Push after a meaningful batch of commits, or when the work is ready for CI/revie
 - Gardez les tests proportionnés au risque. Préférez des tests ciblés sur les règles métier, les permissions, la persistance et les contrats.
 - Conservez les tests métier et API, la compilation, le lint et le formatage dans les checks.
 
+## Composition de l’interface
+
+- Réservez `details` et `summary` aux disclosures éditoriaux, comme les FAQ.
+- Utilisez les composants de menu, de modale ou de popover pour les interactions riches.
+- Groupez les boutons et les liens avec un espacement explicite. Utilisez les composants partagés ou les classes `spacer-x-*` et `spacer-y-*`.
+- Placez les compteurs de résultats sous les tableaux, hors des barres de recherche et de filtres.
+- Calculez les valeurs dérivées dans des fonctions typées ou des `computed`. Évitez les ternaires dans les templates.
+- Importez les styles partagés avec les chemins Sass `shared/...`, configurés dans `angular.json`. Évitez les remontées `../../../shared`.
+- Laissez le conteneur principal gérer la hauteur de la page. N’imposez pas une hauteur de viewport à chaque page interne.
+
 ## Learning More About Effect
 
 This repository uses the Effect TypeScript library.

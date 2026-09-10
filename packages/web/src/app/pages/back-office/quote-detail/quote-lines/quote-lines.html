@@ -1,8 +1,5 @@
 <div appDataTable>
-  <table>
-    <caption>
-      {{ i18n.t('commercial.lineOrder') }}
-    </caption>
+  <table [attr.aria-label]="i18n.t('backOffice.quote.lines')">
     <thead>
       <tr>
         <th scope="col">{{ i18n.t('backOffice.quote.description') }}</th>
@@ -34,7 +31,7 @@
     <dt>{{ i18n.t('backOffice.quote.tax') }}</dt>
     <dd>{{ money(revision().vatTotalCents) }}</dd>
   </div>
-  <div>
+  <div class="total">
     <dt>{{ i18n.t('backOffice.quote.total') }}</dt>
     <dd>{{ money(revision().totalCents) }}</dd>
   </div>

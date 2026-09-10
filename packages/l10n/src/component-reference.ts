@@ -47,6 +47,7 @@ function storyProperties(description: StoryDescriptions) {
       ['label', 'string', 'required'],
       ['actions', 'readonly MenuAction[]', 'required'],
       ['disabled / iconOnly', 'boolean', 'false'],
+      ['appearance', "'button' | 'more'", 'button'],
       ['variant', 'ButtonVariant', 'default'],
       ['actionSelected', 'OutputEmitterRef<string>', '—'],
       [
@@ -87,6 +88,10 @@ function storyProperties(description: StoryDescriptions) {
     ],
     'status-block': [['variant', 'StatusBlockVariant', 'primary']],
     icon: [['name', 'IconName', 'required']],
+    'entity-icon': [
+      ['icon', 'IconName', 'required'],
+      ['variant', "'default' | 'info' | 'success' | 'warning' | 'danger'", 'default'],
+    ],
     input: [
       ['formField', 'Field<string> | Field<number> | Field<boolean>', 'required'],
       ['type', `string · ${description.nativeAttribute}`, 'text'],
@@ -282,6 +287,7 @@ function storyProperties(description: StoryDescriptions) {
     'new-label': [['inputs', description.noInputs, description.sharedCopy]],
     'back-office-header': [
       ['administrator', 'boolean', 'false'],
+      ['searchShortcut', 'boolean', 'true'],
       [
         'Authentication.currentAccount',
         '() => Promise<CurrentAccountValue | undefined>',
@@ -294,7 +300,7 @@ function storyProperties(description: StoryDescriptions) {
       ['Router.url / Router.events', 'string / Observable<Event>', description.routeContext],
     ],
     'global-search': [
-      ['inputs', description.noInputs, '—'],
+      ['shortcutEnabled', 'boolean', 'false'],
       ['ClientsApi.list', '() => Promise<ClientListValue>', description.provider],
       ['QuotesApi.list', '() => Promise<QuoteListValue>', description.provider],
       ['OrdersApi.list', '() => Promise<OrderListValue>', description.provider],
@@ -387,6 +393,8 @@ const frenchStories = /* @__PURE__ */ storyDefinitions(
     'status-block':
       '<section appStatusBlock variant="success"><h3>Prêt</h3><p>Exemple local</p></section>',
     icon: '<button appButton type="button" aria-label="Rechercher"><app-icon name="search" /></button>',
+    'entity-icon':
+      '<span class="spacer-x-3"><app-entity-icon icon="invoice" variant="success" />Facture payée</span>',
     input:
       'value = signal(\'\');\nfield = form(this.value, (path) => { required(path); email(path); });\n\n<label>Courriel<input type="email" autocomplete="email" [formField]="field" /></label>',
     'list-search': '<app-list-search label="Rechercher" [formField]="filters.query" />',
@@ -506,6 +514,8 @@ const englishStories = /* @__PURE__ */ storyDefinitions(
     'status-block':
       '<section appStatusBlock variant="success"><h3>Ready</h3><p>Local example</p></section>',
     icon: '<button appButton type="button" aria-label="Search"><app-icon name="search" /></button>',
+    'entity-icon':
+      '<span class="spacer-x-3"><app-entity-icon icon="invoice" variant="success" />Paid invoice</span>',
     input:
       'value = signal(\'\');\nfield = form(this.value, (path) => { required(path); email(path); });\n\n<label>Email<input type="email" autocomplete="email" [formField]="field" /></label>',
     'list-search': '<app-list-search label="Search" [formField]="filters.query" />',
@@ -621,7 +631,7 @@ export const componentReferenceText = {
     language: 'fr',
     componentCount: { one: '{count} composant', other: '{count} composants' },
     variantCount: { one: '{count} variante présentée', other: '{count} variantes présentées' },
-    title: 'Référence des composants',
+    title: 'Bibliothèque de composants',
     back: 'Retour au site',
     search: 'Rechercher un composant',
     navigation: 'Composants',
@@ -755,7 +765,7 @@ export const componentReferenceText = {
     language: 'en',
     componentCount: { one: '{count} component', other: '{count} components' },
     variantCount: { one: '{count} displayed variant', other: '{count} displayed variants' },
-    title: 'Component reference',
+    title: 'Component library',
     back: 'Back to the website',
     search: 'Search components',
     navigation: 'Components',

@@ -59,7 +59,6 @@
         [pendingHint]="i18n.t('listWorkspace.exportPending')"
         [pending]="!historyLoaded() || paused() || error() !== undefined"
       />
-      <p listSummary>{{ i18n.t('configurationWorkspace.loadedScope') }}</p>
     </app-list-toolbar>
     @if (error(); as code) {
     <p appNotice variant="danger" role="alert">{{ i18n.t(code) }}</p>
@@ -126,6 +125,9 @@
         </tbody>
       </table>
     </div>
+    <footer class="list-summary">
+      <p role="status">{{ i18n.plural('entityList.tests', { count: table.results().length }) }}</p>
+    </footer>
     }
   </div>
 </section>

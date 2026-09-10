@@ -23,7 +23,8 @@ import {
 import { I18nService } from '@app/i18n.service';
 import { formatFixedDecimal } from '@backoffice/quote-input';
 import { ActionMenu, type MenuAction } from '@shared/action-menu/action-menu';
-import { Badge } from '@shared/badge/badge';
+import { EntityIcon } from '@shared/entity-icon/entity-icon';
+import { Badge, type BadgeVariant } from '@shared/badge/badge';
 import { Breadcrumbs } from '@shared/breadcrumbs/breadcrumbs';
 import { BulkSelection } from '@shared/bulk-selection/bulk-selection';
 import { Button } from '@shared/button/button';
@@ -96,6 +97,7 @@ const blankDraft = () => ({
 @Component({
   imports: [
     ActionMenu,
+    EntityIcon,
     Badge,
     Breadcrumbs,
     BulkSelection,
@@ -127,6 +129,10 @@ const blankDraft = () => ({
   host: { '(window:beforeunload)': 'beforeUnload($event)' },
 })
 export class DesignWorkspace {
+  protected statusVariant(status: DesignRecord['status']): BadgeVariant {
+    return status === 'ready' ? 'success' : 'default';
+  }
+
   private readonly i18n = inject(I18nService);
   private readonly confirmation = inject(Confirmation);
   private readonly injector = inject(Injector);

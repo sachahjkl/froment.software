@@ -6,6 +6,7 @@ import { EmptyState } from '@shared/empty-state/empty-state';
 import { Hint } from '@shared/hint/hint';
 import { StatusBlock, type StatusBlockVariant } from '@shared/status-block/status-block';
 import { Icon, type IconName } from '@shared/icon/icon';
+import { EntityIcon } from '@shared/entity-icon/entity-icon';
 import { Button } from '@shared/button/button';
 import { StoryPage, currentReference, type StoryDefinition } from '../story-page';
 import { referenceText } from '../reference-text';
@@ -17,6 +18,7 @@ interface FeedbackPreview {
   badge: BadgeVariant;
   notice: NoticeVariant;
   status: StatusBlockVariant;
+  entity: 'default' | 'info' | 'success' | 'warning' | 'danger';
 }
 
 export const iconNames: readonly IconName[] = [
@@ -42,6 +44,7 @@ export const iconNames: readonly IconName[] = [
   'catalog',
   'book',
   'menu',
+  'more',
   'close',
   'chevron',
   'user',
@@ -53,10 +56,22 @@ export const iconNames: readonly IconName[] = [
   'chevron-right',
   'download',
   'filter',
+  'rss',
 ];
 @Component({
   selector: 'app-feedback-stories',
-  imports: [StoryPage, FormField, Badge, Notice, EmptyState, Hint, StatusBlock, Icon, Button],
+  imports: [
+    StoryPage,
+    FormField,
+    Badge,
+    Notice,
+    EmptyState,
+    Hint,
+    StatusBlock,
+    Icon,
+    EntityIcon,
+    Button,
+  ],
   templateUrl: './feedback-stories.html',
   styleUrl: './story.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -71,6 +86,7 @@ export class FeedbackStories {
   protected readonly badges: readonly BadgeVariant[] = ['default', 'success', 'warning', 'danger'];
   protected readonly notices: readonly NoticeVariant[] = ['info', 'success', 'warning', 'danger'];
   protected readonly statuses: readonly StatusBlockVariant[] = ['primary', 'success', 'danger'];
+  protected readonly entityVariants = ['default', 'info', 'success', 'warning', 'danger'] as const;
   protected readonly model = signal<FeedbackPreview>({
     label: this.text().content,
     description: this.text().local,
@@ -78,6 +94,7 @@ export class FeedbackStories {
     badge: 'default',
     notice: 'info',
     status: 'primary',
+    entity: 'info',
   });
   protected readonly controls = form(this.model);
   protected readonly event = signal('');

@@ -1,16 +1,17 @@
 <section aria-labelledby="account-sessions-title">
-  <header>
+  <app-page-header>
     <h2 id="account-sessions-title">{{ i18n.t('account.sessions_title') }}</h2>
-    <p>{{ i18n.t('account.sessions_hint') }}</p>
-  </header>
-  <button
-    appButton
-    type="button"
-    [disabled]="loading() || revoking() !== undefined || disabled()"
-    (click)="reload()"
-  >
-    {{ i18n.t('account.sessions_reload') }}
-  </button>
+    <p class="muted">{{ i18n.t('account.sessions_hint') }}</p>
+    <button
+      pageActions
+      appButton
+      type="button"
+      [disabled]="loading() || revoking() !== undefined || disabled()"
+      (click)="reload()"
+    >
+      {{ i18n.t('account.sessions_reload') }}
+    </button>
+  </app-page-header>
   @if (error(); as message) {
   <p appNotice variant="danger" role="alert">{{ i18n.t(message) }}</p>
   <p>{{ i18n.t('account.sessions_retry') }}</p>

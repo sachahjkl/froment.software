@@ -15,7 +15,8 @@ import { ClientsApi } from '@backoffice/clients-api';
 import { I18nService } from '@app/i18n.service';
 import { Button } from '@shared/button/button';
 import { DataTable } from '@shared/data-table/data-table';
-import { Badge } from '@shared/badge/badge';
+import { EntityIcon } from '@shared/entity-icon/entity-icon';
+import { Badge, type BadgeVariant } from '@shared/badge/badge';
 import { Notice } from '@shared/notice/notice';
 import { Tabs, type TabItem } from '@shared/tabs/tabs';
 import { TabLayout, TabPanel } from '@shared/tabs/tab-panel';
@@ -44,6 +45,7 @@ import {
   host: { class: 'page-container' },
   selector: 'app-clients',
   imports: [
+    EntityIcon,
     Badge,
     Button,
     DataTable,
@@ -224,6 +226,11 @@ export class Clients {
 
   protected detailQuery(view: ClientView) {
     return { ...clientFilterQuery(this.model()), view: view === 'active' ? undefined : view };
+  }
+
+  protected statusVariant(client: ClientSummaryValue): BadgeVariant {
+    if (client.archived) return 'warning';
+    return 'success';
   }
 
   protected exportRows(view: ClientView): readonly (readonly (string | number | null)[])[] {

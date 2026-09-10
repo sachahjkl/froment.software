@@ -26,6 +26,7 @@ import { Button } from '@shared/button/button';
 import { Badge } from '@shared/badge/badge';
 import { Confirmation } from '@shared/confirmation/confirmation';
 import { DataTable } from '@shared/data-table/data-table';
+import { EntityIcon, type EntityIconVariant } from '@shared/entity-icon/entity-icon';
 import { EmptyState } from '@shared/empty-state/empty-state';
 import { FilterChip } from '@shared/filter-chip/filter-chip';
 import { ListToolbar } from '@shared/list-toolbar/list-toolbar';
@@ -62,6 +63,7 @@ import {
 @Component({
   host: { class: 'page-container' },
   imports: [
+    EntityIcon,
     Badge,
     Button,
     DataTable,
@@ -318,6 +320,16 @@ export class Emails {
   }
   protected viewState(view: EmailView) {
     return this.states()[view];
+  }
+  protected iconVariant(operation: IntegrationOperationValue): EntityIconVariant {
+    if (operation.receipt === null) return 'warning';
+    if (operation.receipt.mode === 'simulation') return 'info';
+    return 'success';
+  }
+  protected reminderIconVariant(reminder: typeof Reminder.Type): EntityIconVariant {
+    if (reminder.status === 'cancelled') return 'default';
+    if (reminder.status === 'skipped') return 'warning';
+    return 'info';
   }
   protected createLink() {
     const view = this.currentView();

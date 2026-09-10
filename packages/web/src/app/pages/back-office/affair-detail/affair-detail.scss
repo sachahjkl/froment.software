@@ -1,17 +1,12 @@
 :host {
   display: block;
 }
-caption {
-  padding-block: var(--space-3);
-  color: var(--color-muted);
-  font-size: var(--text-sm);
-  text-align: start;
-}
 .affair-page {
   padding: var(--page-header-y) var(--page-x);
 }
-.affair-page > * + * {
-  margin-top: var(--space-7);
+.affair-panel {
+  min-inline-size: 0;
+  padding: var(--space-4);
 }
 .affair-panel > * + * {
   margin-top: var(--space-6);
@@ -25,28 +20,34 @@ caption {
   color: var(--color-muted);
   font-size: var(--text-sm);
 }
-.overview-links {
+.document-actions.overview-links {
   justify-content: flex-start;
+}
+.document-heading {
+  display: grid;
+  gap: var(--space-2);
+  min-inline-size: 0;
+  justify-items: start;
 }
 header {
   display: flex;
+  flex-wrap: wrap;
   align-items: end;
   justify-content: space-between;
   gap: var(--space-5);
 }
 header h1 {
-  margin-top: var(--space-2);
   font-size: var(--text-2xl);
 }
-header p:last-child {
-  margin-top: var(--space-2);
-  color: var(--color-muted);
+h2 {
+  font-size: var(--text-lg);
 }
 .next-action {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: var(--space-4);
+  gap: var(--space-5);
   padding: var(--space-5);
 }
 .next-action p {
@@ -66,7 +67,7 @@ section > [appDataTable] {
   flex-wrap: wrap;
   align-items: center;
   justify-content: flex-end;
-  gap: var(--space-2);
+  gap: var(--space-3);
 }
 time {
   color: var(--color-muted);
@@ -76,5 +77,11 @@ time {
   .next-action {
     align-items: start;
     flex-direction: column;
+  }
+  .quote-amount {
+    text-align: start;
+  }
+  .next-action .document-actions {
+    justify-content: flex-start;
   }
 }

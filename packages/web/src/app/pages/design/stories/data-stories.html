@@ -143,16 +143,18 @@
         <button listActions appButton type="button" (click)="event.set('actionSlot')">
           {{ text().execute }}
         </button>
-        } @if (full) {
-        <p listSummary>{{ text().local }}</p>
         }</app-list-toolbar
       >
+      @if (full) {
+      <p class="list-summary">{{ text().local }}</p>
+      }
     </div>
     } } @case ('list-workspace') {
     <div class="sample full" data-variant appListWorkspace>
       <ng-container *ngTemplateOutlet="toolbar" /><ng-container
         *ngTemplateOutlet="table; context: { $implicit: 'fluid' }"
       />
+      <p class="list-summary">{{ resultCount() }}</p>
     </div>
     } @case ('search-highlight') { @for (indices of highlightSamples; track $index) {
     <div class="sample" data-variant><span [appSearchHighlight]="indices">{{ 'Atlas' }}</span></div>
@@ -219,6 +221,5 @@
     >
       {{ text().execute }}
     </button>
-    <p listSummary>{{ resultCount() }}</p></app-list-toolbar
-  ></ng-template
+  </app-list-toolbar></ng-template
 >

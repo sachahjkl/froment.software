@@ -4,6 +4,7 @@ import { of } from 'rxjs';
 import { vi } from 'vitest';
 
 import { QuoteConditionPresetsApi } from '@backoffice/quote-condition-presets-api';
+import { Confirmation } from '@shared/confirmation/confirmation';
 import { ConditionEditor } from './condition-editor';
 import { QuoteConditionPresets } from './quote-condition-presets';
 
@@ -28,6 +29,54 @@ describe('QuoteConditionPresets', () => {
     expect(root.querySelector('app-date-range-filter')).toBeNull();
   });
 
+  it('confirms deletion, blocks pending exits and refreshes the list and export', async () => {
+    const preset = {
+      id: '01ARZ3NDEKTSV4RRFFQ69G5FAV',
+      name: 'Payment',
+      conditions: 'Within 30 days',
+    };
+    const list = vi.fn().mockResolvedValue([preset]);
+    let finish!: (result: { success: true; result: typeof preset }) => void;
+    const remove = vi.fn().mockReturnValue(
+      new Promise((resolve) => {
+        finish = resolve;
+      }),
+    );
+    const request = vi.fn().mockResolvedValue(false);
+    TestBed.configureTestingModule({
+      providers: [
+        provideRouter([]),
+        { provide: QuoteConditionPresetsApi, useValue: { list, remove } },
+        { provide: Confirmation, useValue: { request } },
+      ],
+    });
+    TestBed.overrideComponent(QuoteConditionPresets, { set: { template: '', imports: [] } });
+    const fixture = TestBed.createComponent(QuoteConditionPresets);
+    await fixture.whenStable();
+    const component = fixture.componentInstance;
+    const loadedPreset = component['presets']()[0]!;
+    expect(component['conditionExport']()).toEqual([[preset.name, preset.conditions]]);
+    expect(component.canDeactivate()).toBe(true);
+    await component['remove'](loadedPreset);
+    expect(remove).not.toHaveBeenCalled();
+    request.mockResolvedValue(true);
+    const pending = component['remove'](loadedPreset);
+    await vi.waitFor(() => expect(remove).toHaveBeenCalledExactlyOnceWith(preset.id));
+    expect(component.canDeactivate()).toBe(false);
+    const unload = new Event('beforeunload', { cancelable: true });
+    window.dispatchEvent(unload);
+    expect(unload.defaultPrevented).toBe(true);
+    list.mockResolvedValue([]);
+    finish({ success: true, result: preset });
+    await pending;
+    expect(component['presets']()).toEqual([]);
+    expect(component['conditionExport']()).toEqual([]);
+    expect(component.canDeactivate()).toBe(true);
+    const idleUnload = new Event('beforeunload', { cancelable: true });
+    window.dispatchEvent(idleUnload);
+    expect(idleUnload.defaultPrevented).toBe(false);
+  });
+
   it('keeps validated list context after a successful edit', async () => {
     const preset = {
       id: '01ARZ3NDEKTSV4RRFFQ69G5FAV',
@@ -41,7 +90,16 @@ describe('QuoteConditionPresets', () => {
         {
           provide: ActivatedRoute,
           useValue: {
-            snapshot: { paramMap: convertToParamMap({ presetId: preset.id }) },
+            snapshot: {
+              paramMap: convertToParamMap({ presetId: preset.id }),
+              queryParamMap: convertToParamMap({
+                q: 'Payment',
+                sort: 'conditionsDesc',
+                filter: 'invented',
+                unrelated: 'discard',
+              }),
+            },
+            paramMap: of(convertToParamMap({ presetId: preset.id })),
             queryParamMap: of(
               convertToParamMap({
                 q: 'Payment',
@@ -96,7 +154,7 @@ describe('QuoteConditionPresets', () => {
     await fixture.whenStable();
 
     expect(create).toHaveBeenCalled();
-    expect(root.querySelector('[role="alert"]')?.textContent).toMatch(/devis|quote/i);
+    expect(fixture.componentInstance['error']()).toBe('referenceEditor.conditionsUncertain');
     expect(name.value).toBe('Payment');
     expect(conditions.value).toBe('Within 30 days');
   });

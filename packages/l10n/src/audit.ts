@@ -2,8 +2,6 @@ export const auditText = {
   fr: {
     'audit.searchPage': 'Rechercher sur cette page',
     'audit.serverFilters': 'Filtres du journal entier',
-    'audit.pageScope':
-      'La recherche, le tri et l’export portent uniquement sur la page chargée. Les filtres du journal entier restent distincts.',
     'audit.exportPage': 'Exporter cette page filtrée en CSV, sans identifiants d’acteur',
     'audit.visibleCount.one': '{count} événement affiché',
     'audit.visibleCount.other': '{count} événements affichés',
@@ -13,8 +11,6 @@ export const auditText = {
     'audit.intro':
       'Événements enregistrés dans la base locale. Ce journal ne contient pas les journaux externes des fournisseurs.',
     'audit.open': 'Ouvrir le journal d’audit',
-    'audit.order':
-      'La pagination serveur suit les identifiants ULID décroissants. Le tri local ne change pas les limites des pages.',
     'audit.action': 'Action',
     'audit.resourceType': 'Type de ressource',
     'audit.resource': 'Ressource',
@@ -44,8 +40,6 @@ export const auditText = {
   en: {
     'audit.searchPage': 'Search this page',
     'audit.serverFilters': 'Filters for the entire log',
-    'audit.pageScope':
-      'Search, sorting and export apply only to the loaded page. Filters for the entire log remain separate.',
     'audit.exportPage': 'Export this filtered page as CSV, without actor identifiers',
     'audit.visibleCount.one': '{count} event displayed',
     'audit.visibleCount.other': '{count} events displayed',
@@ -55,8 +49,6 @@ export const auditText = {
     'audit.intro':
       'Events recorded in the local database. This log does not include external provider logs.',
     'audit.open': 'Open the audit log',
-    'audit.order':
-      'Server pagination uses descending ULID order. Local sorting does not change page boundaries.',
     'audit.action': 'Action',
     'audit.resourceType': 'Resource type',
     'audit.resource': 'Resource',

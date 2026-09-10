@@ -1,8 +1,8 @@
-# Référence des composants
+# Bibliothèque de composants
 
 La référence expose une URL par entrée de `reference-catalog.ts`.
 Les huit familles de pages se chargent à la demande.
-Le catalogue contient 56 entrées, dont la composition locale `DesignWorkspace`.
+Le catalogue contient 57 entrées, dont `EntityIcon` et la composition locale `DesignWorkspace`.
 
 ## Routes et chargement
 
@@ -38,33 +38,16 @@ Ne réexportez pas ce dictionnaire depuis `@froment/l10n`. Ses métadonnées cal
 Seules les pages différées utilisent cet export.
 Les compteurs locaux utilisent le formateur partagé `formatPluralText`, avec les formes `one` et `other`.
 
-## Contrôles navigateur existants
+## Inspections locales
 
-`checkDesignWorkspace(page, testInfo)` appelle maintenant `checkComponentReference(page, testInfo)`.
-Il conserve ensuite ses huit contrôles de composition.
-Aucune déclaration Playwright `test()` n’est ajoutée.
+Les outils navigateur existants servent uniquement aux inspections visuelles ponctuelles.
+Ils ne font partie ni de la CI ni des critères de livraison.
+Certaines assertions historiques ne suivent plus la bibliothèque actuelle.
+N’ajoutez pas d’assertions exhaustives pour figer les libellés, les styles ou la structure du DOM.
 
-Adaptez le bloc de confirmation dans `tools/interface/interface.spec.mjs` :
-
-```js
-await page.goto("/design/confirmation");
-const trigger = page.locator("[storyPreview] > button");
-const status = page.locator('[storyPreview] [role="status"]');
-```
-
-Remplacez les deux recherches `.confirmation-demo [role="status"]` par `status`.
-Conservez les assertions de focus, d’annulation et de confirmation.
-
-Adaptez le filtre de `tools/interface/workspace-zoom.mjs` :
-
-1. Ouvrez le `FilterMenu`.
-2. Activez son élément `menuitem`.
-3. Vérifiez le focus sur `#workspace-status input`.
-4. Activez l’option portant le libellé `text.draft`.
-5. Vérifiez le retour du focus sur la catégorie.
-6. Fermez le dialogue avec Échap.
-
-Ces deux fichiers restent sous la responsabilité du parent.
+`EntityIcon` présente les cinq variantes de couleur avec leur nom.
+Les pages métier choisissent leur variante dans une fonction typée.
+Les styles utilisent les chemins Sass `shared/...`, résolus depuis `src/app`.
 
 ## Couverture et limites
 

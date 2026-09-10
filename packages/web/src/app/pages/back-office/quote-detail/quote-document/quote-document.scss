@@ -2,21 +2,22 @@
   display: block;
 }
 h2 {
-  font-size: var(--text-xl);
+  font-size: var(--text-lg);
+}
+:host > * + * {
+  margin-block-start: var(--space-4);
 }
 .actions {
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-3);
-  margin-block: var(--space-4);
+  align-items: center;
 }
 iframe {
   display: block;
   width: 100%;
   height: clamp(28rem, 75dvh, 65rem);
-  margin-top: var(--space-4);
   border: 1px solid var(--color-line);
   border-radius: var(--radius-sm);
   background: white;
-  box-shadow: var(--shadow-panel);
 }

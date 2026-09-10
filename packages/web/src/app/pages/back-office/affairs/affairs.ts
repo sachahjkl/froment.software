@@ -55,6 +55,7 @@ import { OrdersApi } from '@backoffice/orders-api';
 import { QuotesApi } from '@backoffice/quotes-api';
 import { I18nService, type TranslationKey } from '@app/i18n.service';
 import { Badge, type BadgeVariant } from '@shared/badge/badge';
+import { EntityIcon } from '@shared/entity-icon/entity-icon';
 import { Button } from '@shared/button/button';
 import { DataTable } from '@shared/data-table/data-table';
 import { Notice } from '@shared/notice/notice';
@@ -76,6 +77,7 @@ interface Affair {
   host: { class: 'page-container' },
   selector: 'app-affairs',
   imports: [
+    EntityIcon,
     Badge,
     Button,
     DataTable,

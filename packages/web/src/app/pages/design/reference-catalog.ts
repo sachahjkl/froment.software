@@ -111,7 +111,15 @@ export const referenceCatalog: readonly ReferenceEntry[] = [
     group: 'feedback',
     selectors: 'app-icon',
     source: 'icon/icon.ts',
-    variants: 33,
+    variants: 35,
+  },
+  {
+    id: 'entity-icon',
+    name: 'EntityIcon',
+    group: 'feedback',
+    selectors: 'app-entity-icon',
+    source: 'entity-icon/entity-icon.ts',
+    variants: 5,
   },
   {
     id: 'input',

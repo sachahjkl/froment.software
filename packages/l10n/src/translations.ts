@@ -22,6 +22,9 @@ import { emailDraftText } from './email-drafts.js';
 import { integrationRetryText } from './integration-retries.js';
 import { reminderText } from './reminders.js';
 import { emailTemplateText } from './email-templates.js';
+import { adminPagesText } from './admin-pages.js';
+import { documentReferenceEditorText } from './document-reference-editor.js';
+import { entityListText } from './entity-list.js';
 
 export const translations = {
   fr: {
@@ -51,6 +54,9 @@ export const translations = {
     ...integrationRetryText.fr,
     ...reminderText.fr,
     ...emailTemplateText.fr,
+    ...adminPagesText.fr,
+    ...documentReferenceEditorText.fr,
+    ...entityListText.fr,
     'backOffice.apiTokens.permission.payment.read': 'Exporter les règlements et leurs corrections.',
     'design.confirmation.title': 'Modales de confirmation',
     'design.confirmation.hint':
@@ -223,7 +229,7 @@ export const translations = {
     'page.service.renovation': 'Audit et rénovation | froment.software',
     'page.service.development': 'Développement tout compris | froment.software',
     'page.products': 'Projets publics | froment.software',
-    'page.design': 'Proposition visuelle | froment.software',
+    'page.design': 'Bibliothèque de composants | froment.software',
     'page.description.design':
       'Proposition de mise en page sobre et directe pour le site de Sacha Froment, ingénieur logiciel indépendant.',
 
@@ -1583,6 +1589,9 @@ export const translations = {
     ...integrationRetryText.en,
     ...reminderText.en,
     ...emailTemplateText.en,
+    ...adminPagesText.en,
+    ...documentReferenceEditorText.en,
+    ...entityListText.en,
     'backOffice.apiTokens.permission.payment.read': 'Export payments and their corrections.',
     'design.confirmation.title': 'Confirmation dialogs',
     'design.confirmation.hint':
@@ -1750,7 +1759,7 @@ export const translations = {
     'page.service.renovation': 'Audit and renovation | froment.software',
     'page.service.development': 'All-inclusive development | froment.software',
     'page.products': 'Public projects | froment.software',
-    'page.design': 'Visual proposal | froment.software',
+    'page.design': 'Component library | froment.software',
     'page.description.design':
       'Plain, direct layout proposal for the website of independent software engineer Sacha Froment.',
 

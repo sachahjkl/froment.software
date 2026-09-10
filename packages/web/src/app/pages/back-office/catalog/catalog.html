@@ -64,10 +64,6 @@
           [pendingHint]="i18n.t('listWorkspace.exportPending')"
           [pending]="state() !== 'ready'"
         />
-        <span listSummary role="status"
-          >@if (state() === 'ready') { {{ i18n.plural('catalogWorkspace.count', { count:
-          visibleItems(tab).length }) }} }</span
-        >
       </app-list-toolbar>
       @if (filtered()) {
       <div class="active-filters">
@@ -193,12 +189,15 @@
             @for (result of visibleItems(tab); track result.item.id) { @let item = result.item;
             <tr>
               <th scope="row">
-                <a
-                  [routerLink]="['/backoffice/catalogue', item.id, 'edit']"
-                  [queryParams]="editorQuery(tab)"
-                  [appSearchHighlight]="result.matches"
-                  >{{ item.description }}</a
-                >
+                <div class="entity-label">
+                  <app-entity-icon icon="catalog" [variant]="iconVariant(item)" />
+                  <a
+                    [routerLink]="['/backoffice/catalogue', item.id, 'edit']"
+                    [queryParams]="editorQuery(tab)"
+                    [appSearchHighlight]="result.matches"
+                    >{{ item.description }}</a
+                  >
+                </div>
               </th>
               <td class="numeric">{{ decimal(item.quantityMilli, 3) }}</td>
               <td class="numeric">{{ money(item.unitPriceCents) }}</td>
@@ -214,7 +213,13 @@
           </tbody>
         </table>
       </div>
-      } } }
+      }
+      <footer class="list-summary">
+        <p role="status">
+          {{ i18n.plural('catalogWorkspace.count', { count: visibleItems(tab).length }) }}
+        </p>
+      </footer>
+      } }
     </section>
   </ng-template>
 </section>

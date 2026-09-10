@@ -1,3 +1,5 @@
+@use "shared/entity-icon/entity-label";
+
 :host {
   display: block;
 }
@@ -9,6 +11,9 @@
 .team-link {
   display: grid;
   gap: var(--space-4);
+}
+.team-link > button {
+  justify-self: start;
 }
 form,
 label,

@@ -6,11 +6,14 @@ form {
 .passkeys {
   padding: var(--space-6) var(--page-x);
 }
+form {
+  max-inline-size: 36rem;
+}
 .key {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: var(--space-3);
 }
 .key span {
   overflow-wrap: anywhere;

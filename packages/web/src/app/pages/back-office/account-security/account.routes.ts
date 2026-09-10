@@ -18,4 +18,10 @@ export const accountRoutes: Routes = [
     loadComponent: () => import('./account-sessions').then((module) => module.AccountSessions),
     canDeactivate: [unsavedChangesGuard],
   },
+  {
+    path: 'preferences',
+    loadComponent: () =>
+      import('./account-preferences').then((module) => module.AccountPreferences),
+    canDeactivate: [unsavedChangesGuard],
+  },
 ];

@@ -29,10 +29,12 @@ export const designRoutes: Routes = [
   ...['button', 'link-button', 'action-menu', 'split-action', 'copy-field', 'anchor-link'].map(
     (path) => ({ path, loadComponent: action }),
   ),
-  ...['badge', 'notice', 'empty-state', 'hint', 'status-block', 'icon'].map((path) => ({
-    path,
-    loadComponent: feedback,
-  })),
+  ...['badge', 'notice', 'empty-state', 'hint', 'status-block', 'icon', 'entity-icon'].map(
+    (path) => ({
+      path,
+      loadComponent: feedback,
+    }),
+  ),
   ...[
     'input',
     'list-search',

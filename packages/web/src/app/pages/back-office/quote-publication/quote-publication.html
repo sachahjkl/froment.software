@@ -1,5 +1,4 @@
 <section class="commercial-page publication" aria-labelledby="publication-title">
-  <h1 id="publication-title">{{ i18n.t('commercial.publicationTitle') }}</h1>
   @if (quoteId(); as id) {
   <a class="back-link" [routerLink]="['/backoffice/quotes', id]" [queryParams]="context()"
     >{{ i18n.t('commercial.backQuote') }}</a
@@ -11,7 +10,9 @@
     [queryParams]="context()"
     >{{ i18n.t('backOffice.backToAffairs') }}</a
   >
-  } @switch (state()) { @case ('loading') {
+  }
+  <h1 id="publication-title">{{ i18n.t('commercial.publicationTitle') }}</h1>
+  @switch (state()) { @case ('loading') {
   <p role="status">{{ i18n.t('backOffice.quotes.loading') }}</p>
   } @case ('error') {
   <p appNotice variant="danger" role="alert">{{ i18n.t(error() ?? 'quote.error') }}</p>
@@ -64,10 +65,7 @@
   @if (quote.status === 'sent') {
   <p>{{ i18n.t('commercial.linkUnavailable') }}</p>
   } } @else {
-  <section class="panel ds-panel" aria-labelledby="parties-title">
-    <h2 id="parties-title">{{ i18n.t('commercial.parties') }}</h2>
-    <p>{{ i18n.t('commercial.partiesHint') }}</p>
-  </section>
+  <p class="hint">{{ i18n.t('commercial.partiesHint') }}</p>
   <app-quote-document
     [quoteId]="quote.id"
     [clientId]="quote.clientId"

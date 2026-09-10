@@ -15,7 +15,7 @@
   <button appButton type="button" (click)="load()">{{ i18n.t('backOffice.affair.retry') }}</button>
   } @case ('ready') { @if (quote(); as quote) {
   <header>
-    <div>
+    <div class="document-heading">
       <p class="eyebrow">{{ quote.reference }}</p>
       <h1 id="affair-title">{{ quote.currentRevision.title }}</h1>
       <a [routerLink]="['/backoffice/clients', quote.clientId, 'profile']"
@@ -45,36 +45,40 @@
           <p>{{ quoteNextAction(quote.status) }}</p>
           }
         </div>
-        @if (invoice(); as invoice) {
-        <a appLinkButton variant="primary" [routerLink]="['/backoffice/invoices', invoice.id]">
-          {{ i18n.t('backOffice.affair.nextAction.openInvoice') }}
-        </a>
-        } @else if (order(); as order) {
-        <a
-          appLinkButton
-          variant="primary"
-          routerLink="/backoffice/invoices/new"
-          [queryParams]="{ orderId: order.id }"
-        >
-          {{ i18n.t('backOffice.affair.nextAction.createInvoiceButton') }}
-        </a>
-        } @else {
-        <a
-          appLinkButton
-          variant="primary"
-          [routerLink]="['/backoffice/quotes', quote.id]"
-          [queryParams]="context()"
-        >
-          {{ i18n.t('backOffice.affair.nextAction.openQuote') }}
-        </a>
-        }
+        <div class="document-actions">
+          @if (invoice(); as invoice) {
+          <a appLinkButton variant="primary" [routerLink]="['/backoffice/invoices', invoice.id]">
+            {{ i18n.t('backOffice.affair.nextAction.openInvoice') }}
+          </a>
+          } @else if (order(); as order) {
+          <a
+            appLinkButton
+            variant="primary"
+            routerLink="/backoffice/invoices/new"
+            [queryParams]="{ orderId: order.id }"
+          >
+            {{ i18n.t('backOffice.affair.nextAction.createInvoiceButton') }}
+          </a>
+          } @else {
+          <a
+            appLinkButton
+            variant="primary"
+            [routerLink]="['/backoffice/quotes', quote.id]"
+            [queryParams]="context()"
+          >
+            {{ i18n.t('backOffice.affair.nextAction.openQuote') }}
+          </a>
+          } @if (invoiceReminderHref(); as reminderHref) {
+          <a appLinkButton [href]="reminderHref"
+            >{{ i18n.t('backOffice.affair.reminder.invoice') }}</a
+          >
+          } @else if (quoteReminderHref(); as reminderHref) {
+          <a appLinkButton [href]="reminderHref"
+            >{{ i18n.t('backOffice.affair.reminder.quote') }}</a
+          >
+          }
+        </div>
       </section>
-
-      @if (invoiceReminderHref(); as reminderHref) {
-      <a appLinkButton [href]="reminderHref">{{ i18n.t('backOffice.affair.reminder.invoice') }}</a>
-      } @else if (quoteReminderHref(); as reminderHref) {
-      <a appLinkButton [href]="reminderHref">{{ i18n.t('backOffice.affair.reminder.quote') }}</a>
-      }
 
       <div class="document-actions overview-links">
         <a [routerLink]="['/backoffice/quotes', quote.id]" [queryParams]="context()"
@@ -94,10 +98,7 @@
       <section aria-labelledby="documents-title">
         <h2 id="documents-title">{{ i18n.t('backOffice.affair.documents') }}</h2>
         <div appDataTable>
-          <table>
-            <caption>
-              {{ i18n.t('commercial.documentOrder') }}
-            </caption>
+          <table aria-labelledby="documents-title">
             <thead>
               <tr>
                 <th>{{ i18n.t('backOffice.affair.document') }}</th>
@@ -190,10 +191,7 @@
       <section aria-labelledby="timeline-title">
         <h2 id="timeline-title">{{ i18n.t('backOffice.affair.timeline') }}</h2>
         <div appDataTable>
-          <table>
-            <caption>
-              {{ i18n.t('commercial.historyOrder') }}
-            </caption>
+          <table aria-labelledby="timeline-title">
             <thead>
               <tr>
                 <th>{{ i18n.t('backOffice.affair.timeline.date') }}</th>
@@ -204,7 +202,7 @@
               @for (item of timeline(); track item.id) {
               <tr>
                 <td><time [attr.datetime]="item.date">{{ date(item.date) }}</time></td>
-                <td><strong>{{ i18n.t(item.label) }}</strong></td>
+                <td>{{ i18n.t(item.label) }}</td>
               </tr>
               }
             </tbody>

@@ -19,12 +19,14 @@ import {
 } from '@angular/forms/signals';
 import { RouterLink } from '@angular/router';
 import { DataTable } from '@shared/data-table/data-table';
+import { EntityIcon, type EntityIconVariant } from '@shared/entity-icon/entity-icon';
 import { TeamInvite, TeamList, TeamMember, TeamProfile } from '@froment/contracts';
 import { Option, Schema } from 'effect';
 import { TeamApi } from '@backoffice/team-api';
 import { I18nService, type TranslationKey } from '@app/i18n.service';
 import { Button } from '@shared/button/button';
 import { Notice } from '@shared/notice/notice';
+import { PageHeader } from '@shared/page-header/page-header';
 import { Confirmation } from '@shared/confirmation/confirmation';
 import { LocalizedDatePipe } from '@shared/localized-date/localized-date-pipe';
 import { TableSort } from '@shared/table-sort/table-sort';
@@ -43,9 +45,11 @@ import { memberTableOptions, invitationTableOptions } from '../configuration/wor
     FormField,
     Button,
     Notice,
+    PageHeader,
     LocalizedDatePipe,
     RouterLink,
     DataTable,
+    EntityIcon,
     TableSort,
     ListToolbar,
     ListWorkspace,
@@ -64,6 +68,19 @@ import { memberTableOptions, invitationTableOptions } from '../configuration/wor
   templateUrl: './team.html',
 })
 export class Team {
+  protected memberIconVariant(member: typeof TeamMember.Type): EntityIconVariant {
+    return member.disabledAt === null ? 'success' : 'default';
+  }
+
+  protected invitationIconVariant(
+    invitation: (typeof TeamList.Type)['invitations'][number],
+  ): EntityIconVariant {
+    if (invitation.acceptedAt !== null) return 'success';
+    if (invitation.cancelledAt !== null) return 'default';
+    if (invitation.expiresAt <= this.now()) return 'warning';
+    return 'info';
+  }
+
   protected readonly i18n = inject(I18nService);
   private readonly api = inject(TeamApi);
   private readonly confirmation = inject(Confirmation);

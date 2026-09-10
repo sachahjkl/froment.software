@@ -2,7 +2,15 @@
   display: grid;
   justify-items: start;
   gap: var(--space-3);
-  padding-block: var(--space-7);
+  padding: var(--space-5) var(--space-4);
+}
+.heading {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+.heading app-icon {
+  flex: none;
 }
 h2 {
   font-size: var(--text-lg);
@@ -14,4 +22,8 @@ h2 {
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-2);
+}
+.description:empty,
+.actions:empty {
+  display: none;
 }

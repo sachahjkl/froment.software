@@ -21,7 +21,7 @@ describe('Emails', () => {
       );
       await page['load']('messages');
       await harness.fixture.whenStable();
-      expect(root.querySelector('app-list-toolbar [role="status"]')?.textContent?.trim()).toContain(
+      expect(root.querySelector('.list-summary [role="status"]')?.textContent?.trim()).toContain(
         labels[count],
       );
     }

@@ -24,6 +24,7 @@ export type IconName =
   | 'catalog'
   | 'book'
   | 'menu'
+  | 'more'
   | 'close'
   | 'chevron'
   | 'user'
@@ -69,6 +70,11 @@ export type IconName =
         }
         @case ('menu') {
           <path d="M4 6h16M4 12h16M4 18h16" />
+        }
+        @case ('more') {
+          <circle cx="5" cy="12" r="1" />
+          <circle cx="12" cy="12" r="1" />
+          <circle cx="19" cy="12" r="1" />
         }
         @case ('close') {
           <path d="m6 6 12 12M6 18 18 6" />

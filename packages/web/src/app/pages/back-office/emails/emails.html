@@ -68,12 +68,7 @@
           [pendingHint]="i18n.t('listWorkspace.exportPending')"
           [pending]="viewState(tab) !== 'ready' || busy()"
         />
-        <span listSummary role="status"
-          >@if (viewState(tab) === 'ready') { {{ i18n.plural(tab === 'messages' ?
-          'emailsWorkspace.messageCount' : tab === 'reminders' ? 'emailsWorkspace.reminderCount' :
-          'emailsWorkspace.count', { count: count(tab) }) }} }</span
-        ></app-list-toolbar
-      >
+      </app-list-toolbar>
       @if (query().q || filterCount()) {
       <div class="active-filters">
         @if (query().q) {
@@ -174,12 +169,17 @@
             @let operation = result.item; @if (operation.request.kind === 'email') {
             <tr>
               <th scope="row">
-                <a
-                  [routerLink]="['/backoffice/courriels/messages', operation.id]"
-                  [queryParams]="returnQuery(tab)"
-                  [appSearchHighlight]="result.indices"
-                  >{{ operation.request.subject }}</a
-                ><small>{{ operation.request.reference }}</small>
+                <div class="entity-label">
+                  <app-entity-icon icon="mail" [variant]="iconVariant(operation)" />
+                  <div>
+                    <a
+                      [routerLink]="['/backoffice/courriels/messages', operation.id]"
+                      [queryParams]="returnQuery(tab)"
+                      [appSearchHighlight]="result.indices"
+                      >{{ operation.request.subject }}</a
+                    ><small>{{ operation.request.reference }}</small>
+                  </div>
+                </div>
               </th>
               <td>{{ operation.request.recipient }}</td>
               <td><span appBadge>{{ i18n.t(status(operation)) }}</span></td>
@@ -192,12 +192,17 @@
             draft = result.item;
             <tr>
               <th scope="row">
-                <a
-                  [routerLink]="['/backoffice/courriels/drafts', draft.id, 'edit']"
-                  [queryParams]="returnQuery(tab)"
-                  [appSearchHighlight]="result.indices"
-                  >{{ draft.subject || i18n.t('emailDraft.unnamed') }}</a
-                ><small>{{ draft.reference }}</small>
+                <div class="entity-label">
+                  <app-entity-icon icon="mail" />
+                  <div>
+                    <a
+                      [routerLink]="['/backoffice/courriels/drafts', draft.id, 'edit']"
+                      [queryParams]="returnQuery(tab)"
+                      [appSearchHighlight]="result.indices"
+                      >{{ draft.subject || i18n.t('emailDraft.unnamed') }}</a
+                    ><small>{{ draft.reference }}</small>
+                  </div>
+                </div>
               </th>
               <td>{{ draft.recipient || '—' }}</td>
               <td>
@@ -215,12 +220,15 @@
             @let template = result.item;
             <tr>
               <th scope="row">
-                <a
-                  [routerLink]="['/backoffice/courriels/templates', template.id, 'edit']"
-                  [queryParams]="returnQuery(tab)"
-                  [appSearchHighlight]="result.indices"
-                  >{{ template.subject }}</a
-                >
+                <div class="entity-label">
+                  <app-entity-icon icon="mail" />
+                  <a
+                    [routerLink]="['/backoffice/courriels/templates', template.id, 'edit']"
+                    [queryParams]="returnQuery(tab)"
+                    [appSearchHighlight]="result.indices"
+                    >{{ template.subject }}</a
+                  >
+                </div>
               </th>
               <td>
                 {{ template.updatedAt | localizedDate: i18n.language() : { dateStyle: 'medium',
@@ -231,14 +239,19 @@
             @let reminder = result.item;
             <tr>
               <th scope="row">
-                <a
-                  [routerLink]="['/backoffice/invoices', reminder.invoiceId]"
-                  [appSearchHighlight]="result.indices"
-                  >{{ reminder.invoiceReference }}</a
-                ><small
-                  >{{ i18n.t(reminder.expectedMode === 'simulation' ? 'emailsWorkspace.simulation' :
-                  'emailsWorkspace.submitted') }}</small
-                >
+                <div class="entity-label">
+                  <app-entity-icon icon="mail" [variant]="reminderIconVariant(reminder)" />
+                  <div>
+                    <a
+                      [routerLink]="['/backoffice/invoices', reminder.invoiceId]"
+                      [appSearchHighlight]="result.indices"
+                      >{{ reminder.invoiceReference }}</a
+                    ><small
+                      >{{ i18n.t(reminder.expectedMode === 'simulation' ?
+                      'emailsWorkspace.simulation' : 'emailsWorkspace.submitted') }}</small
+                    >
+                  </div>
+                </div>
               </th>
               <td>
                 <span appBadge>{{ i18n.t(reminderStatuses[reminder.status]) }}</span>@if
@@ -270,7 +283,14 @@
           </tbody>
         </table>
       </div>
-      } }
+      }
+      <footer class="list-summary">
+        <p role="status">
+          {{ i18n.plural(tab === 'messages' ? 'emailsWorkspace.messageCount' : tab === 'reminders' ?
+          'emailsWorkspace.reminderCount' : 'emailsWorkspace.count', { count: count(tab) }) }}
+        </p>
+      </footer>
+      }
     </section>
   </ng-template>
 </section>

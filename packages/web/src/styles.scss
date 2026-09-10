@@ -44,6 +44,15 @@ html[data-theme="dark"] {
   color-scheme: dark;
 }
 
+html:has(.back-office-shell, app-design) {
+  background-color: var(--color-surface);
+  background-image: none;
+}
+
+.app-shell:has(app-design) {
+  background: var(--color-surface);
+}
+
 body {
   min-height: 100dvh;
   margin: 0;
@@ -64,7 +73,6 @@ body {
 }
 
 .back-office-shell .page-container {
-  min-block-size: calc(100dvh - 3.75rem);
   border: 0;
   border-radius: 0;
   box-shadow: none;
@@ -149,6 +157,43 @@ router-outlet {
   display: none;
 }
 
+[appTabLayout] {
+  display: grid;
+  gap: var(--space-5);
+  min-inline-size: 0;
+}
+
+:where(div, nav, section, span)[pageActions],
+:where(div, nav, section, span)[listActions] {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+  min-inline-size: 0;
+}
+
+@each $step in 2, 3, 4 {
+  .spacer-x-#{$step} {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-#{$step});
+    min-inline-size: 0;
+  }
+
+  .spacer-y-#{$step} {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-#{$step});
+    min-inline-size: 0;
+  }
+}
+
+.list-summary {
+  color: var(--color-muted);
+  font-size: var(--text-sm);
+}
+
 .data-table {
   width: 100%;
   min-width: 0;
@@ -156,6 +201,7 @@ router-outlet {
   margin: 0;
   overflow-x: auto;
   overscroll-behavior-inline: contain;
+  border: 1px solid var(--color-line);
   border-radius: var(--radius-sm);
   background: var(--color-panel);
 }

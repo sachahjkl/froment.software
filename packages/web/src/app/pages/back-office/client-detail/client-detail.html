@@ -24,18 +24,12 @@
       <a appLinkButton [routerLink]="['/backoffice/clients', current.id, 'edit']"
         >{{ i18n.t('clientsWorkspace.edit') }}</a
       >
-      <details class="client-actions">
-        <summary>{{ i18n.t('backOffice.clients.actions') }}</summary>
-        <button
-          appButton
-          type="button"
-          variant="danger"
-          [disabled]="archiving()"
-          (click)="archive()"
-        >
-          {{ i18n.t('backOffice.clients.archive') }}
-        </button>
-      </details>
+      <app-action-menu
+        [label]="i18n.t('backOffice.clients.actions')"
+        [actions]="[{ id: 'archive', label: i18n.t('backOffice.clients.archive'), danger: true }]"
+        [disabled]="archiving()"
+        (actionSelected)="archive()"
+      />
       } }
     </div>
   </app-page-header>

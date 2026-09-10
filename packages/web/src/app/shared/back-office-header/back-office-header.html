@@ -14,7 +14,7 @@
     <app-icon name="menu" />{{ i18n.t('backOfficeShell.navigation') }}
   </button>
   @if (administrator()) {
-  <app-global-search />
+  <app-global-search [shortcutEnabled]="searchShortcut()" />
   } @else {
   <span class="workspace-label">{{ i18n.t('backOffice.client.title') }}</span>
   }
@@ -42,31 +42,41 @@
 
 <ng-template #accountMenu>
   @if (account(); as current) {
-  <details
-    class="account back-office-account"
-    #accountDisclosure
-    (keydown.escape)="closeAccountWithEscape($event, accountDisclosure)"
-  >
-    <summary [attr.aria-label]="current.email" [style.min-block-size]="accountControlHeight">
+  <div class="account">
+    <button
+      appButton
+      class="account-trigger"
+      type="button"
+      [attr.aria-label]="i18n.t('backOffice.header.account') + ' : ' + current.email"
+      [style.min-block-size]="accountControlHeight"
+      [cdkMenuTriggerFor]="accountActions"
+    >
       <img src="/brand/favicon.png" alt="" width="24" height="24" />
       <span
         ><small>{{ i18n.t('backOffice.header.account') }}</small
         ><strong>{{ current.email }}</strong></span
       >
       <app-icon name="chevron" />
-    </summary>
-    <div class="account-details">
-      <p><bdi>{{ current.email }}</bdi></p>
-      <a
-        [routerLink]="administrator() ? '/backoffice/account' : '/backoffice/client/account'"
-        (click)="accountDisclosure.open = false"
-        ><app-icon name="secrets" />{{ i18n.t('account.security_title') }}</a
-      >
-      <button appButton class="sign-out" type="button" (click)="signOut()">
-        <app-icon name="logout" />{{ i18n.t('backOffice.signOut') }}
-      </button>
-    </div>
-  </details>
+    </button>
+    <ng-template #accountActions>
+      <div cdkMenu class="account-menu" [attr.aria-label]="current.email">
+        <a
+          cdkMenuItem
+          class="account-menu-item"
+          [routerLink]="administrator() ? '/backoffice/account' : '/backoffice/client/account'"
+          ><app-icon name="secrets" />{{ i18n.t('account.security_title') }}</a
+        >
+        <button
+          cdkMenuItem
+          class="account-menu-item sign-out"
+          type="button"
+          (cdkMenuItemTriggered)="signOut()"
+        >
+          <app-icon name="logout" />{{ i18n.t('backOffice.signOut') }}
+        </button>
+      </div>
+    </ng-template>
+  </div>
   } @else if (accountLoading()) {
   <p class="account-status" role="status">{{ i18n.t('backOfficeShell.accountLoading') }}</p>
   } @else {

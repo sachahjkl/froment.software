@@ -72,11 +72,6 @@
           [pendingHint]="i18n.t('listWorkspace.exportPending')"
           [pending]="state() === 'loading'"
         />
-        @if (state() === 'ready') {
-        <span listSummary role="status"
-          >{{ i18n.plural('clientsWorkspace.count', { count: visibleClients(tab).length }) }}</span
-        >
-        }
       </app-list-toolbar>
       @if (filtered()) {
       <div class="filter-chips">
@@ -185,12 +180,15 @@
             @for (result of visibleClients(tab); track result.client.id) {
             <tr>
               <th scope="row">
-                <a
-                  [routerLink]="['/backoffice/clients', result.client.id]"
-                  [queryParams]="detailQuery(tab)"
-                  [appSearchHighlight]="result.nameMatches"
-                  >{{ result.client.displayName }}</a
-                >
+                <div class="entity-label">
+                  <app-entity-icon icon="clients" [variant]="statusVariant(result.client)" />
+                  <a
+                    [routerLink]="['/backoffice/clients', result.client.id]"
+                    [queryParams]="detailQuery(tab)"
+                    [appSearchHighlight]="result.nameMatches"
+                    >{{ result.client.displayName }}</a
+                  >
+                </div>
               </th>
               <td>
                 <span [appSearchHighlight]="result.emailMatches"
@@ -205,7 +203,7 @@
                 >
               </td>
               <td>
-                <span appBadge [variant]="result.client.archived ? 'warning' : 'success'"
+                <span appBadge [variant]="statusVariant(result.client)"
                   >{{ i18n.t(result.client.archived ? 'backOffice.clients.archived' :
                   'backOffice.clients.active') }}</span
                 >
@@ -215,7 +213,13 @@
           </tbody>
         </table>
       </div>
-      } } }
+      }
+      <footer class="list-summary">
+        <p role="status">
+          {{ i18n.plural('clientsWorkspace.count', { count: visibleClients(tab).length }) }}
+        </p>
+      </footer>
+      } }
     </section>
   </ng-template>
 </section>

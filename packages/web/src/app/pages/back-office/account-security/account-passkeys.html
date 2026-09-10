@@ -1,6 +1,8 @@
 <section aria-labelledby="passkeys-title" class="passkeys">
-  <h2 id="passkeys-title">{{ i18n.t('passkey.title') }}</h2>
-  <p>{{ i18n.t('passkey.description') }}</p>
+  <app-page-header>
+    <h2 id="passkeys-title">{{ i18n.t('passkey.title') }}</h2>
+    <p class="muted">{{ i18n.t('passkey.description') }}</p>
+  </app-page-header>
   <p appNotice variant="info">{{ i18n.t('passkey.password_notice') }}</p>
   @if (error(); as message) {
   <p appNotice variant="danger" role="alert">{{ i18n.t(message) }}</p>
@@ -24,9 +26,11 @@
         [formField]="fields.password"
     /></label>
     @if (api.supported) {
-    <button appButton type="submit" [disabled]="busy() || disabled() || loading()">
-      {{ i18n.t('passkey.add') }}
-    </button>
+    <div class="spacer-x-3">
+      <button appButton type="submit" [disabled]="busy() || disabled() || loading()">
+        {{ i18n.t('passkey.add') }}
+      </button>
+    </div>
     } @else {
     <p appNotice variant="info">{{ i18n.t('passkey.unavailable') }}</p>
     }
@@ -38,7 +42,7 @@
   } @if (loading()) {
   <p role="status">{{ i18n.t('passkey.loading') }}</p>
   } @else { @for (key of keys(); track key.id) {
-  <div class="key">
+  <div class="key spacer-x-3">
     <span>{{ key.name }}</span
     ><button
       appButton

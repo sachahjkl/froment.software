@@ -1,7 +1,58 @@
-@use "./quote-condition-presets";
+:host {
+  display: block;
+}
+.presets-page {
+  display: grid;
+  gap: var(--space-6);
+  padding: var(--page-header-y) var(--page-x);
+}
+.intro {
+  color: var(--color-muted);
+}
+.field {
+  display: grid;
+  min-inline-size: 0;
+  gap: var(--space-2);
+}
+textarea {
+  resize: vertical;
+}
+.form-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+.preset-conditions {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
 form {
   display: grid;
   gap: var(--space-4);
+  inline-size: 100%;
+  max-inline-size: 56rem;
+}
+:host(.editor-dialog) {
+  max-block-size: calc(100dvh - 2rem);
+  overflow: auto;
+  overscroll-behavior: contain;
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  color: var(--color-ink);
+  box-shadow: var(--shadow-page);
+}
+:host(.editor-dialog) .presets-page {
+  padding: var(--space-6);
+}
+h2,
+h3 {
+  margin: 0;
+}
+h2 {
+  font-size: var(--text-xl);
+}
+h3 {
+  font-size: var(--text-lg);
 }
 form section {
   padding: var(--space-4);

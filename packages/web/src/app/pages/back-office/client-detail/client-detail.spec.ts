@@ -1,3 +1,4 @@
+import { OverlayContainer } from '@angular/cdk/overlay';
 import { TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { provideRouter } from '@angular/router';
@@ -87,12 +88,17 @@ describe('ClientDetail', () => {
 
   it('requires confirmation before archiving and keeps the client record visible', async () => {
     const { root, api, confirmation, fixture } = await configure();
-    root.querySelector<HTMLButtonElement>('.client-actions button')!.click();
-    await fixture.whenStable();
+    const overlay = TestBed.inject(OverlayContainer).getContainerElement();
+    const archive = async () => {
+      root.querySelector<HTMLButtonElement>('app-action-menu button')!.click();
+      await fixture.whenStable();
+      overlay.querySelector<HTMLButtonElement>('[role="menuitem"]')!.click();
+      await fixture.whenStable();
+    };
+    await archive();
     expect(api.archive).not.toHaveBeenCalled();
     confirmation.request.mockResolvedValue(true);
-    root.querySelector<HTMLButtonElement>('.client-actions button')!.click();
-    await fixture.whenStable();
+    await archive();
     expect(api.archive).toHaveBeenCalledWith(client.id);
     expect(root.querySelector('.profile')?.textContent).toContain('Acme');
     expect(root.querySelector('app-page-header a')).toBeNull();

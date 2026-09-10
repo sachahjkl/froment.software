@@ -6,8 +6,7 @@
   gap: var(--space-5);
   padding: var(--page-header-y) var(--page-x);
 }
-[appListWorkspace] > p,
-[listSummary] {
+[appListWorkspace] > p {
   margin-block: 0;
 }
 header,

@@ -71,6 +71,7 @@ describe('Billing lists', () => {
     {
       component: Billing,
       method: 'list',
+      countKey: 'entityList.invoices',
       column: 6,
       sort: 'total',
       filename: 'invoices.csv',
@@ -92,6 +93,7 @@ describe('Billing lists', () => {
     {
       component: ReceiptList,
       method: 'receipts',
+      countKey: 'entityList.receipts',
       reload: (injector: Injector) => injector.get(ReceiptList)['load'](),
       rows: (injector: Injector) => injector.get(ReceiptList)['rows'](),
       column: 6,
@@ -106,6 +108,7 @@ describe('Billing lists', () => {
     {
       component: CreditNotes,
       method: 'credits',
+      countKey: 'entityList.credits',
       reload: (injector: Injector) => injector.get(CreditNotes)['load'](),
       rows: (injector: Injector) => injector.get(CreditNotes)['rows'](),
       column: 4,
@@ -120,6 +123,7 @@ describe('Billing lists', () => {
     {
       component: RefundList,
       method: 'refunds',
+      countKey: 'entityList.refunds',
       reload: (injector: Injector) => injector.get(RefundList)['load'](),
       rows: (injector: Injector) => injector.get(RefundList)['rows'](),
       column: 5,
@@ -207,12 +211,12 @@ describe('Billing lists', () => {
     it(`${item.method}: keeps result and selection labels coupled to their counts in both languages`, async () => {
       const { harness, root, i18n } = await setupFilters(item);
       const search = root.querySelector<HTMLInputElement>('app-list-search input')!;
-      const summary = root.querySelector('[listSummary]')!;
+      const summary = root.querySelector('footer.list-summary [role="status"]')!;
       for (const text of pluralText) {
         i18n.language.set(text.language);
         inputValue(search, 'reparaton');
         await harness.fixture.whenStable();
-        expect(summary.textContent?.trim()).toBe(text.results[2]);
+        expect(summary.textContent?.trim()).toBe(i18n.plural(item.countKey, { count: 2 }));
         if (item.method === 'list') {
           const checkboxes = root.querySelectorAll<HTMLInputElement>(
             'tbody input[type="checkbox"]',
@@ -235,11 +239,11 @@ describe('Billing lists', () => {
         }
         inputValue(search, 'Plomberie');
         await harness.fixture.whenStable();
-        expect(summary.textContent?.trim()).toBe(text.results[1]);
+        expect(summary.textContent?.trim()).toBe(i18n.plural(item.countKey, { count: 1 }));
         expect(root.querySelector('app-bulk-selection')).toBeNull();
         inputValue(search, 'zzzzzzzzzzzz');
         await harness.fixture.whenStable();
-        expect(summary.textContent?.trim()).toBe(text.results[0]);
+        expect(summary.textContent?.trim()).toBe(i18n.plural(item.countKey, { count: 0 }));
         expect(root.querySelector('app-bulk-selection')).toBeNull();
       }
     });
@@ -491,7 +495,7 @@ describe('Billing lists', () => {
           /ne sont pas chargées|is not loaded/,
         );
         expect(root.querySelector('table')).toBeNull();
-        expect(root.querySelector('[listSummary]')?.textContent?.trim()).toBe('');
+        expect(root.querySelector('footer.list-summary')?.textContent?.trim() ?? '').toBe('');
         expect(root.textContent).not.toMatch(
           /Aucun élément enregistré|No recorded entries|\b0 (?:résultats?|results?)\b/,
         );

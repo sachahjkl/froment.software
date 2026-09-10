@@ -106,14 +106,12 @@
         >@if (invalid('body')) { {{ i18n.t('emailsWorkspace.bodyInvalid') }} }</span
       ></label
     >
-    <details>
-      <summary>{{ i18n.t('emailsWorkspace.preview') }}</summary>
-      <div class="message-preview">
-        <strong>{{ model().subject }}</strong>
-        <p class="muted">{{ model().recipient }} — {{ model().reference }}</p>
-        <p class="message-body">{{ model().body }}</p>
-      </div>
-    </details>
+    <section class="message-preview" aria-labelledby="message-preview-title">
+      <h2 id="message-preview-title">{{ i18n.t('emailsWorkspace.preview') }}</h2>
+      <strong>{{ model().subject }}</strong>
+      <p class="muted">{{ model().recipient }} — {{ model().reference }}</p>
+      <p class="message-body">{{ model().body }}</p>
+    </section>
     <div class="actions">
       <button
         appButton

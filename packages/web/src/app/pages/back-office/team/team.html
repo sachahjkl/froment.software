@@ -1,16 +1,16 @@
 <section class="team-page" aria-labelledby="team-title">
-  <header>
+  <app-page-header>
     <h1 id="team-title">{{ i18n.t('team.title') }}</h1>
-    <p>{{ i18n.t('team.intro') }}</p>
-  </header>
-  <div class="actions">
-    <a appLinkButton variant="primary" routerLink="invitations/new" [queryParams]="listParams()"
-      >{{ i18n.t('configurationWorkspace.newInvitation') }}</a
-    >
-    <button appButton type="button" [disabled]="busy() || loading()" (click)="load()">
-      {{ i18n.t('team.reload') }}
-    </button>
-  </div>
+    <p class="muted">{{ i18n.t('team.intro') }}</p>
+    <div pageActions class="spacer-x-3">
+      <a appLinkButton variant="primary" routerLink="invitations/new" [queryParams]="listParams()"
+        >{{ i18n.t('configurationWorkspace.newInvitation') }}</a
+      >
+      <button appButton type="button" [disabled]="busy() || loading()" (click)="load()">
+        {{ i18n.t('team.reload') }}
+      </button>
+    </div>
+  </app-page-header>
   <p appNotice variant="info">{{ i18n.t('team.profiles') }}</p>
   <p #result tabindex="-1" role="status">@if (saved()) { {{ i18n.t('team.saved') }} }</p>
   @if (error(); as code) {
@@ -54,15 +54,11 @@
         [columns]="['profile', 'status', 'version']"
         [rows]="memberExport()"
         filename="team-members.csv"
-        [label]="i18n.t('listWorkspace.exportCsv')"
+        [label]="i18n.t('listWorkspace.exportCsv') + ' — ' + i18n.t('configurationWorkspace.teamExportScope')"
         [emptyHint]="i18n.t('listWorkspace.exportEmpty')"
         [pendingHint]="i18n.t('listWorkspace.exportPending')"
         [pending]="loading() || busy() || error() !== undefined"
       />
-      <p listSummary>
-        {{ i18n.t('configurationWorkspace.loadedScope') }} {{
-        i18n.t('configurationWorkspace.teamExportScope') }}
-      </p>
     </app-list-toolbar>
     <div appDataTable>
       <table>
@@ -107,15 +103,18 @@
           @for (result of members.results(); track result.item.id) { @let member = result.item;
           <tr>
             <th scope="row">
-              <span [appSearchHighlight]="members.match(result, 'displayName')"
-                >{{ member.displayName }}</span
-              >
+              <div class="entity-label">
+                <app-entity-icon icon="user" [variant]="memberIconVariant(member)" />
+                <span [appSearchHighlight]="members.match(result, 'displayName')"
+                  >{{ member.displayName }}</span
+                >
+              </div>
             </th>
             <td>
               <span [appSearchHighlight]="members.match(result, 'email')">{{ member.email }}</span>
             </td>
             <td>
-              <label
+              <label class="field"
                 >{{ i18n.t('configurationWorkspace.memberProfile') }}
                 <select class="select" [formField]="profileForm[member.id]">
                   <option [value]="'accountant'">{{ i18n.t('team.accountant') }}</option>
@@ -124,18 +123,20 @@
               </label>
             </td>
             <td>{{ i18n.t(member.disabledAt === null ? 'team.active' : 'team.disabled') }}</td>
-            <td class="row-actions">
-              <button appButton type="button" [disabled]="busy()" (click)="applyProfile(member)">
-                {{ i18n.t('configurationWorkspace.applyProfile') }}
-              </button>
-              <button
-                appButton
-                type="button"
-                [disabled]="busy()"
-                (click)="update(member, member.profile, member.disabledAt === null)"
-              >
-                {{ i18n.t(member.disabledAt === null ? 'team.disable' : 'team.enable') }}
-              </button>
+            <td>
+              <div class="spacer-x-3">
+                <button appButton type="button" [disabled]="busy()" (click)="applyProfile(member)">
+                  {{ i18n.t('configurationWorkspace.applyProfile') }}
+                </button>
+                <button
+                  appButton
+                  type="button"
+                  [disabled]="busy()"
+                  (click)="update(member, member.profile, member.disabledAt === null)"
+                >
+                  {{ i18n.t(member.disabledAt === null ? 'team.disable' : 'team.enable') }}
+                </button>
+              </div>
             </td>
           </tr>
           } @empty {
@@ -146,6 +147,12 @@
         </tbody>
       </table>
     </div>
+    <footer class="list-summary spacer-y-2">
+      <p role="status">
+        @if (!loading()) { {{ i18n.plural('adminPages.membersCount', { count:
+        members.results().length, total: data().members.length }) }} }
+      </p>
+    </footer>
   </section>
   <section appListWorkspace aria-labelledby="invitations-title">
     <h2 id="invitations-title">{{ i18n.t('team.invitations') }}</h2>
@@ -185,15 +192,11 @@
         [columns]="['profile', 'createdAt', 'expiresAt', 'status']"
         [rows]="invitationExport()"
         filename="team-invitations.csv"
-        [label]="i18n.t('listWorkspace.exportCsv')"
+        [label]="i18n.t('listWorkspace.exportCsv') + ' — ' + i18n.t('configurationWorkspace.teamExportScope')"
         [emptyHint]="i18n.t('listWorkspace.exportEmpty')"
         [pendingHint]="i18n.t('listWorkspace.exportPending')"
         [pending]="loading() || busy() || error() !== undefined"
       />
-      <p listSummary>
-        {{ i18n.t('configurationWorkspace.loadedScope') }} {{
-        i18n.t('configurationWorkspace.teamExportScope') }}
-      </p>
     </app-list-toolbar>
     <div appDataTable>
       <table>
@@ -247,9 +250,12 @@
           result.item;
           <tr>
             <th scope="row">
-              <span [appSearchHighlight]="invitations.match(result, 'displayName')"
-                >{{ invitation.displayName }}</span
-              >
+              <div class="entity-label">
+                <app-entity-icon icon="mail" [variant]="invitationIconVariant(invitation)" />
+                <span [appSearchHighlight]="invitations.match(result, 'displayName')"
+                  >{{ invitation.displayName }}</span
+                >
+              </div>
             </th>
             <td>
               <span [appSearchHighlight]="invitations.match(result, 'email')"
@@ -286,5 +292,11 @@
         </tbody>
       </table>
     </div>
+    <footer class="list-summary spacer-y-2">
+      <p role="status">
+        @if (!loading()) { {{ i18n.plural('adminPages.invitationsCount', { count:
+        invitations.results().length, total: data().invitations.length }) }} }
+      </p>
+    </footer>
   </section>
 </section>

@@ -13,23 +13,28 @@
   <button appButton type="button" (click)="load()">{{ i18n.t('backOffice.affair.retry') }}</button>
   } @case ('ready') { @if (order(); as order) { @if (revision(); as revision) {
   <header>
-    <div>
+    <div class="document-heading">
       <p class="eyebrow">{{ i18n.t('commercial.order') }} · {{ order.reference }}</p>
       <h1 id="order-title">{{ order.title }}</h1>
     </div>
-    @if (order.invoiceId) {
-    <a appLinkButton variant="primary" [routerLink]="['/backoffice/invoices', order.invoiceId]"
-      >{{ i18n.t('backOffice.affairs.openInvoice') }}</a
-    >
-    } @else {
-    <a
-      appLinkButton
-      variant="primary"
-      routerLink="/backoffice/invoices/new"
-      [queryParams]="{ orderId: order.id }"
-      >{{ i18n.t('backOffice.affairs.createInvoice') }}</a
-    >
-    }
+    <div class="actions">
+      @if (order.invoiceId) {
+      <a appLinkButton variant="primary" [routerLink]="['/backoffice/invoices', order.invoiceId]"
+        >{{ i18n.t('backOffice.affairs.openInvoice') }}</a
+      >
+      } @else {
+      <a
+        appLinkButton
+        variant="primary"
+        routerLink="/backoffice/invoices/new"
+        [queryParams]="{ orderId: order.id }"
+        >{{ i18n.t('backOffice.affairs.createInvoice') }}</a
+      >
+      }
+      <a [routerLink]="['/backoffice/affaires', order.quoteId]" [queryParams]="context()"
+        >{{ i18n.t('commercial.backAffair') }}</a
+      >
+    </div>
   </header>
   <p appNotice>{{ i18n.t('commercial.orderImmutable') }}</p>
   <dl class="facts">
@@ -82,8 +87,5 @@
     <p appNotice variant="danger" role="alert">{{ i18n.t('commercial.orderUnavailable') }}</p>
     }
   </section>
-  <a [routerLink]="['/backoffice/affaires', order.quoteId]" [queryParams]="context()"
-    >{{ i18n.t('commercial.backAffair') }}</a
-  >
   } } } }
 </section>

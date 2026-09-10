@@ -43,7 +43,14 @@
     <label><input type="checkbox" [formField]="controls.disabled" />{{ text().disabled }}</label> }
     @if (entry.id !== 'split-action') {
     <label><input type="checkbox" [formField]="controls.iconOnly" />{{ text().iconOnly }}</label> }
-    @if (entry.id === 'split-action') {
+    @if (entry.id === 'action-menu') {
+    <label
+      >{{ 'appearance' }}<select class="select" [formField]="controls.appearance">
+        <option [value]="'button'">{{ 'button' }}</option>
+        <option [value]="'more'">{{ 'more' }}</option>
+      </select></label
+    >
+    } @if (entry.id === 'split-action') {
     <label><input type="checkbox" [formField]="controls.menuDisabled" />{{ 'menuDisabled' }}</label>
     } }
   </div>
@@ -77,6 +84,7 @@
       [disabled]="model().disabled"
       [iconOnly]="model().iconOnly"
       (actionSelected)="event.set($event)"
+      [appearance]="model().appearance"
     />
     } @case ('split-action') {
     <app-split-action

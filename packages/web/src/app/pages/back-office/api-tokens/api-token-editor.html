@@ -44,10 +44,6 @@
           [value]="permissionQuery()"
           (input)="updatePermissionQuery(permissionSearch)"
       /></label>
-      <p>
-        {{ i18n.plural('configurationWorkspace.permissionCount', { count:
-        tokenForm.permissions().value().length }) }}
-      </p>
       <div class="permission-groups">
         @for (group of permissionGroups(); track group.domain) {
         <fieldset>
@@ -71,10 +67,16 @@
         <p>{{ i18n.t('backOffice.apiTokens.permissionEmpty') }}</p>
         }
       </div>
+      <p role="status">
+        {{ i18n.plural('configurationWorkspace.permissionCount', { count:
+        tokenForm.permissions().value().length }) }}
+      </p>
     </fieldset>
-    <button appButton variant="primary" type="submit" [disabled]="createDisabled()">
-      {{ i18n.t('backOffice.apiTokens.create') }}
-    </button>
+    <div class="spacer-x-3">
+      <button appButton variant="primary" type="submit" [disabled]="createDisabled()">
+        {{ i18n.t('backOffice.apiTokens.create') }}
+      </button>
+    </div>
   </form>
   } @if (dialogError(); as code) {
   <p appNotice variant="danger" role="alert">{{ i18n.t(code) }}</p>

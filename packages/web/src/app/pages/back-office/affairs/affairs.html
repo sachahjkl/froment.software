@@ -80,11 +80,6 @@
           [pendingHint]="i18n.t('listWorkspace.exportPending')"
           [pending]="state() === 'loading'"
         />
-        @if (state() === 'ready') {
-        <p listSummary role="status">
-          {{ i18n.plural('commercial.count', { count: visibleAffairs(tab).length }) }}
-        </p>
-        }
       </app-list-toolbar>
       @if (hasFilters()) {
       <div class="filter-summary">
@@ -143,16 +138,20 @@
             </tr>
           </thead>
           <tbody>
-            @for (affair of visibleAffairs(tab); track affair.quote.id) {
+            @for (affair of visibleAffairs(tab); track affair.quote.id) { @let variant =
+            stageVariant(affair.stage);
             <tr>
               <td class="reference">
-                <a
-                  [routerLink]="['/backoffice/affaires', affair.quote.id]"
-                  [queryParams]="returnQuery(tab)"
-                  ><strong [appSearchHighlight]="affair.referenceMatches"
-                    >{{ affair.quote.reference }}</strong
-                  ></a
-                >
+                <div class="entity-label">
+                  <app-entity-icon icon="folder" [variant]="variant" />
+                  <a
+                    [routerLink]="['/backoffice/affaires', affair.quote.id]"
+                    [queryParams]="returnQuery(tab)"
+                    ><strong [appSearchHighlight]="affair.referenceMatches"
+                      >{{ affair.quote.reference }}</strong
+                    ></a
+                  >
+                </div>
               </td>
               <td class="title" [appSearchHighlight]="affair.titleMatches">
                 {{ affair.quote.title }}
@@ -163,9 +162,7 @@
                 >
               </td>
               <td>
-                <span appBadge [variant]="stageVariant(affair.stage)">
-                  {{ affair.stageLabel }}
-                </span>
+                <span appBadge [variant]="variant"> {{ affair.stageLabel }} </span>
               </td>
               <td class="amount">{{ money(affair.quote.totalCents) }}</td>
               <td>
@@ -201,7 +198,13 @@
           </tbody>
         </table>
       </div>
-      } } }
+      }
+      <footer class="list-summary">
+        <p role="status">
+          {{ i18n.plural('commercial.count', { count: visibleAffairs(tab).length }) }}
+        </p>
+      </footer>
+      } }
     </section>
   </ng-template>
 </section>

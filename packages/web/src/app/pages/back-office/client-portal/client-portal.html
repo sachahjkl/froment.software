@@ -56,11 +56,6 @@
         [pendingHint]="i18n.t('listWorkspace.exportPending')"
         [pending]="state() === 'loading'"
       />
-      @if (state() === 'ready') {
-      <span listSummary role="status"
-        >{{ i18n.plural('portalWorkspace.count', { count: documents().length }) }}</span
-      >
-      }
     </app-list-toolbar>
     @if (filtered()) {
     <div class="filter-chips">
@@ -172,12 +167,17 @@
             [attr.tabindex]="isTarget(item) ? -1 : null"
           >
             <th scope="row">
-              <a
-                [routerLink]="['/backoffice/client/documents', item.kind, item.id]"
-                [queryParams]="returnQuery()"
-                [appSearchHighlight]="result.referenceMatches"
-                >{{ item.reference }}</a
-              ><small [appSearchHighlight]="result.titleMatches">{{ item.title }}</small>
+              <div class="entity-label">
+                <app-entity-icon icon="invoice" [variant]="iconVariant(item)" />
+                <div>
+                  <a
+                    [routerLink]="['/backoffice/client/documents', item.kind, item.id]"
+                    [queryParams]="returnQuery()"
+                    [appSearchHighlight]="result.referenceMatches"
+                    >{{ item.reference }}</a
+                  ><small [appSearchHighlight]="result.titleMatches">{{ item.title }}</small>
+                </div>
+              </div>
             </th>
             <td>{{ kindLabel(item.kind) }}</td>
             <td><span appBadge>{{ statusLabel(item) }}</span></td>
@@ -195,6 +195,10 @@
         </tbody>
       </table>
     </div>
-    } } }
+    }
+    <footer class="list-summary">
+      <p role="status">{{ i18n.plural('portalWorkspace.count', { count: documents().length }) }}</p>
+    </footer>
+    } }
   </section>
 </section>

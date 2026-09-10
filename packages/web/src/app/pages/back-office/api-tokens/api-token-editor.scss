@@ -3,6 +3,13 @@ form {
   display: grid;
   gap: var(--space-5);
 }
+.tokens-page > button {
+  justify-self: start;
+}
+
+form > .field {
+  max-inline-size: 36rem;
+}
 .permission-groups {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr));

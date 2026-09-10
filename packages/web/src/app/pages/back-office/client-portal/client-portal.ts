@@ -20,6 +20,7 @@ import { I18nService } from '@app/i18n.service';
 import { Badge } from '@shared/badge/badge';
 import { Button } from '@shared/button/button';
 import { DataTable } from '@shared/data-table/data-table';
+import { EntityIcon, type EntityIconVariant } from '@shared/entity-icon/entity-icon';
 import { EmptyState } from '@shared/empty-state/empty-state';
 import { FilterChip } from '@shared/filter-chip/filter-chip';
 import { ListToolbar } from '@shared/list-toolbar/list-toolbar';
@@ -47,6 +48,7 @@ import {
   host: { class: 'page-container' },
   selector: 'app-client-portal',
   imports: [
+    EntityIcon,
     Badge,
     Button,
     DataTable,
@@ -225,6 +227,12 @@ export class ClientPortal {
     if (item.quote) return this.i18n.t(`backOffice.quote.status.${item.quote.status}`);
     if (item.invoice) return this.i18n.t(`backOffice.invoice.status.${item.invoice.status}`);
     return this.i18n.t('backOffice.client.confirmed');
+  }
+  protected iconVariant(item: PortalDocument): EntityIconVariant {
+    if (item.status === 'void' || item.status === 'rejected') return 'danger';
+    if (item.status === 'expired') return 'warning';
+    if (item.status === 'sent' || item.status === 'issued') return 'info';
+    return 'success';
   }
   protected money(cents: number, currency: string): string {
     return formatMoney(cents, this.i18n.language(), currency);

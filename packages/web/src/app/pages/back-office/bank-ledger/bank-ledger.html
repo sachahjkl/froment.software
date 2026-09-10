@@ -7,7 +7,7 @@
   <p appNotice variant="info">{{ i18n.t('bankWorkspace.ledgerScope') }}</p>
   <p class="muted">{{ i18n.t('bankWorkspace.ledgerSortLoaded') }}</p>
   <section appListWorkspace [attr.aria-label]="i18n.t('bankWorkspace.entries')">
-    <nav class="view-nav" [attr.aria-label]="i18n.t('bankWorkspace.entries')">
+    <nav class="view-nav spacer-x-2" [attr.aria-label]="i18n.t('bankWorkspace.entries')">
       <a
         routerLink="."
         [queryParams]="viewQuery('sources')"
@@ -73,21 +73,12 @@
         </app-hint>
         }
       </div>
-      <span listSummary role="status"
-        >@if (state() === 'ready') { {{ i18n.plural('bankWorkspace.entryCount', { count: count() })
-        }} }</span
-      >
-      <span listSummary
-        >{{ i18n.t('ledger.from') }} : {{ query().from }} · {{ i18n.t('ledger.to') }} : {{
-        query().to }}</span
-      >
-      @if (query().q) {
-      <div listSummary>
-        <button appFilterChip [label]="query().q" (click)="search('')"></button>
-      </div>
-      }
     </app-list-toolbar>
-    @if (error(); as error) {
+    @if (query().q) {
+    <div class="chips">
+      <button appFilterChip [label]="query().q" (click)="search('')"></button>
+    </div>
+    } @if (error(); as error) {
     <p appNotice variant="danger" role="alert">{{ i18n.t(error) }}</p>
     } @if (state() === 'loading') {
     <p role="status">{{ i18n.t('ledger.loading') }}</p>
@@ -192,5 +183,14 @@
       </table>
     </div>
     }
+    <footer class="list-summary spacer-y-2">
+      @if (state() === 'ready') {
+      <p role="status">{{ i18n.plural('bankWorkspace.entryCount', { count: count() }) }}</p>
+      }
+      <p>
+        {{ i18n.t('ledger.from') }} : {{ query().from }} · {{ i18n.t('ledger.to') }} : {{ query().to
+        }}
+      </p>
+    </footer>
   </section>
 </section>

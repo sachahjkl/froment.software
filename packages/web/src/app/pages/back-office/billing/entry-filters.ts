@@ -184,7 +184,6 @@ export class EntryFilterState {
         </ng-template>
       </app-filter-menu>
       <div listActions><ng-content select="[listActions]" /></div>
-      <div listSummary><ng-content select="[listSummary]" /></div>
     </app-list-toolbar>
     @if (state.active().length) {
       <div class="chips">

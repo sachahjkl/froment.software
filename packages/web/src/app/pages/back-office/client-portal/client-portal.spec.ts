@@ -41,7 +41,7 @@ async function returnToPortal(harness: RouterTestingHarness): Promise<void> {
     await harness.fixture.whenStable();
     expect(harness.routeDebugElement?.componentInstance).toBeInstanceOf(ClientPortal);
     expect(
-      harness.routeNativeElement!.querySelector('app-list-toolbar [listSummary][role="status"]'),
+      harness.routeNativeElement!.querySelector('footer.list-summary [role="status"]'),
     ).not.toBeNull();
   });
 }
@@ -85,9 +85,9 @@ describe('ClientPortal', () => {
         await harness.navigateByUrl(`/backoffice/client${query}`);
         await harness.fixture.whenStable();
         expect(root.querySelectorAll('tbody tr')).toHaveLength(count);
-        expect(
-          root.querySelector('app-list-toolbar [listSummary][role="status"]')?.textContent,
-        ).toBe(label);
+        expect(root.querySelector('footer.list-summary [role="status"]')?.textContent?.trim()).toBe(
+          label,
+        );
       }
     },
   );

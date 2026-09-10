@@ -9,7 +9,6 @@ import { ListToolbar } from './list-toolbar';
       <label listSearch>Search<input type="search" /></label>
       <button listFilters type="button">Filters</button>
       <button listActions type="button">Export</button>
-      <p listSummary role="status">3 results</p>
     </app-list-toolbar>
   `,
 })
@@ -29,8 +28,6 @@ describe('ListToolbar', () => {
     expect(toolbar.querySelector('.search [listSearch]')).not.toBeNull();
     expect(toolbar.querySelector('.filters [listFilters]')).not.toBeNull();
     expect(toolbar.querySelector('.actions [listActions]')).not.toBeNull();
-    expect(toolbar.querySelector('.summary [listSummary]')?.textContent).toBe('3 results');
-    expect(toolbar.querySelector('.controls [listSummary]')).not.toBeNull();
     expect(toolbar.children).toHaveLength(1);
   });
 
@@ -41,6 +38,5 @@ describe('ListToolbar', () => {
     expect(toolbar.querySelector('.filters select')).not.toBeNull();
     expect(toolbar.querySelector('.search')?.children).toHaveLength(0);
     expect(toolbar.querySelector('.actions')?.children).toHaveLength(0);
-    expect(toolbar.querySelector('.summary')?.children).toHaveLength(0);
   });
 });

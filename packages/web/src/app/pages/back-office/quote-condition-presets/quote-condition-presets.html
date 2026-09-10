@@ -24,7 +24,6 @@
         [pendingHint]="i18n.t('listWorkspace.exportPending')"
         [pending]="loading() || saving() || error() !== undefined"
       />
-      <p listSummary>{{ i18n.t('configurationWorkspace.conditionsSearchScope') }}</p>
     </app-list-toolbar>
     @if (error(); as code) {
     <p appNotice variant="danger" role="alert">{{ i18n.t(code) }}</p>
@@ -89,5 +88,9 @@
       </table>
     </div>
     }
+    <p class="list-summary" role="status">
+      @if (!loading() && !error()) { {{ i18n.plural('adminPages.conditionsCount', { count:
+      table.results().length }) }} }
+    </p>
   </div>
 </section>

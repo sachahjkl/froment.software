@@ -16,10 +16,11 @@ import { Authentication } from '@backoffice/authentication';
 import { I18nService, type TranslationKey } from '@app/i18n.service';
 import { Button } from '@shared/button/button';
 import { Notice } from '@shared/notice/notice';
+import { PageHeader } from '@shared/page-header/page-header';
 
 @Component({
   selector: 'app-account-sessions',
-  imports: [Button, Notice],
+  imports: [Button, Notice, PageHeader],
   templateUrl: './account-sessions.html',
   styleUrl: './account-sessions.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

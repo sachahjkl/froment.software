@@ -1,6 +1,7 @@
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
-import { TestBed } from '@angular/core/testing';
+import { OverlayContainer } from '@angular/cdk/overlay';
+import { TestBed, type ComponentFixture } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
 import { Schema } from 'effect';
 import { ClientList, CurrentAccount, InvoiceList, OrderList, QuoteList } from '@froment/contracts';
@@ -57,9 +58,15 @@ describe('Isolated business previews', () => {
     return { fixture, root, context, settings };
   }
 
-  function search(root: HTMLElement) {
-    const input = root.querySelector<HTMLInputElement>('app-global-search input')!;
-    input.focus();
+  function overlay(): HTMLElement {
+    return TestBed.inject(OverlayContainer).getContainerElement();
+  }
+
+  async function search(fixture: ComponentFixture<BusinessPreview>) {
+    const root: HTMLElement = fixture.nativeElement;
+    root.querySelector<HTMLButtonElement>('.search-trigger')!.click();
+    await fixture.whenStable();
+    const input = overlay().querySelector<HTMLInputElement>('input[type="search"]')!;
     input.value = 'Atlas';
     input.dispatchEvent(new Event('input', { bubbles: true }));
     return input;
@@ -87,14 +94,14 @@ describe('Isolated business previews', () => {
   });
 
   it('renders four search categories and intercepts the result destination', async () => {
-    const { fixture, root, context } = setup('global-search');
+    const { fixture, context } = setup('global-search');
     const router = TestBed.inject(Router);
     const navigate = vi.spyOn(router, 'navigateByUrl');
     const initialUrl = router.url;
-    search(root);
+    await search(fixture);
     await fixture.whenStable();
-    expect(root.querySelectorAll('.results section')).toHaveLength(4);
-    const links = root.querySelectorAll<HTMLAnchorElement>('.results li a');
+    expect(overlay().querySelectorAll('.results section')).toHaveLength(4);
+    const links = overlay().querySelectorAll<HTMLAnchorElement>('.results li a');
     expect(links).toHaveLength(4);
     for (const link of links)
       expect(link.getAttribute('href')).toMatch(new RegExp(`^${initialUrl}#preview=`));
@@ -102,41 +109,47 @@ describe('Isolated business previews', () => {
     links[0].click();
     await fixture.whenStable();
     expect(context.destination()).toBe(`/backoffice/clients/${context.text().examples.clientId}`);
-    expect(root.querySelector('.results')).toBeNull();
+    expect(overlay().querySelector('.results')).toBeNull();
     expect(navigate).not.toHaveBeenCalled();
     expect(router.url).toBe(initialUrl);
   });
 
   it('keeps loading visible until local data is released', async () => {
-    const { fixture, root } = setup('global-search', 'loading');
-    const input = search(root);
+    const { fixture, root, context } = setup('global-search', 'loading');
+    const trigger = root.querySelector<HTMLButtonElement>('.search-trigger')!;
+    const input = await search(fixture);
     await fixture.whenStable();
-    expect(root.querySelector('.results > [role="status"]')?.textContent).toBe(
-      TestBed.inject(I18nService).t('backOffice.dashboard.loading'),
+    expect(overlay().querySelector('[role="status"]')?.textContent).toContain(
+      TestBed.inject(I18nService).t('backOffice.search.loading'),
     );
-    expect(root.querySelectorAll('.results li')).toHaveLength(0);
-    root.querySelector<HTMLButtonElement>('[data-complete-preview]')!.click();
-    input.focus();
+    expect(overlay().querySelectorAll('.results li')).toHaveLength(0);
+    context.complete();
+    await vi.waitFor(async () => {
+      await fixture.whenStable();
+      expect(overlay().querySelectorAll('.results li')).toHaveLength(4);
+    });
+    input.dispatchEvent(
+      new KeyboardEvent('keydown', { key: 'Escape', keyCode: 27, bubbles: true }),
+    );
     await fixture.whenStable();
-    expect(root.querySelectorAll('.results li')).toHaveLength(4);
-    input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
-    await fixture.whenStable();
-    expect(root.querySelector('.results')).toBeNull();
-    expect(document.activeElement).toBe(input);
+    expect(overlay().querySelector('.results')).toBeNull();
+    expect(document.activeElement).toBe(trigger);
   });
 
   it('shows a search error and retries against restored local data', async () => {
-    const { fixture, root, context } = setup('global-search', 'error');
-    search(root);
+    const { fixture, context } = setup('global-search', 'error');
+    await search(fixture);
     await fixture.whenStable();
-    expect(root.querySelector('.results [role="alert"]')?.textContent).toBe(
-      TestBed.inject(I18nService).t('backOffice.dashboard.error'),
+    expect(overlay().querySelector('.results [role="alert"]')?.textContent).toBe(
+      TestBed.inject(I18nService).t('backOffice.search.error'),
     );
     context.complete();
-    root.querySelector<HTMLButtonElement>('.results > button')!.click();
-    await fixture.whenStable();
-    expect(root.querySelector('.results [role="alert"]')).toBeNull();
-    expect(root.querySelectorAll('.results li')).toHaveLength(4);
+    overlay().querySelector<HTMLButtonElement>('.results > button')!.click();
+    await vi.waitFor(async () => {
+      await fixture.whenStable();
+      expect(overlay().querySelectorAll('.results li')).toHaveLength(4);
+    });
+    expect(overlay().querySelector('.results [role="alert"]')).toBeNull();
   });
 
   it('renders an empty search without reaching the real services', async () => {
@@ -146,14 +159,14 @@ describe('Isolated business previews', () => {
       vi.spyOn(OrdersApi.prototype, 'list'),
       vi.spyOn(InvoicesApi.prototype, 'list'),
     ];
-    const { fixture, root } = setup('global-search', 'empty');
-    search(root);
+    const { fixture } = setup('global-search', 'empty');
+    await search(fixture);
     await fixture.whenStable();
-    expect(root.querySelector('.result-heading [role="status"]')?.textContent).toContain('0');
-    expect(root.querySelector('.results')?.textContent).toContain(
+    expect(overlay().querySelector('[role="status"]')?.textContent).toContain('0');
+    expect(overlay().querySelector('.results')?.textContent).toContain(
       TestBed.inject(I18nService).t('backOffice.search.empty'),
     );
-    expect(root.querySelectorAll('.results li')).toHaveLength(0);
+    expect(overlay().querySelectorAll('.results li')).toHaveLength(0);
     for (const read of reads) expect(read).not.toHaveBeenCalled();
   });
 
@@ -171,18 +184,26 @@ describe('Isolated business previews', () => {
       );
     });
     expect(root.querySelectorAll('app-global-search')).toHaveLength(1);
+    const shortcut = new KeyboardEvent('keydown', { key: 'k', ctrlKey: true, cancelable: true });
+    document.dispatchEvent(shortcut);
+    await fixture.whenStable();
+    expect(shortcut.defaultPrevented).toBe(false);
+    expect(overlay().querySelector('[role="dialog"]')).toBeNull();
     expect(sidebar.querySelector('.account-status')).toBeNull();
-    sidebar.querySelector<HTMLElement>('.account summary')!.click();
-    const securityLink = sidebar.querySelector<HTMLAnchorElement>('.account-details a')!;
+    const accountTrigger = sidebar.querySelector<HTMLButtonElement>('.account-trigger')!;
+    accountTrigger.click();
+    await fixture.whenStable();
+    const securityLink = overlay().querySelector<HTMLAnchorElement>('.account-menu a')!;
     const securityUrl = new URL(securityLink.href);
     expect(securityUrl.pathname).toBe(TestBed.inject(Router).url);
     expect(decodeURIComponent(securityUrl.hash)).toBe('#preview=/backoffice/account');
     securityLink.click();
     await fixture.whenStable();
     expect(context.destination()).toBe('/backoffice/account');
-    expect(sidebar.querySelector<HTMLDetailsElement>('.account')!.open).toBe(false);
-    sidebar.querySelector<HTMLElement>('.account summary')!.click();
-    sidebar.querySelector<HTMLButtonElement>('.sign-out')!.click();
+    expect(overlay().querySelector('.account-menu')).toBeNull();
+    accountTrigger.click();
+    await fixture.whenStable();
+    overlay().querySelector<HTMLButtonElement>('.sign-out')!.click();
     await fixture.whenStable();
     expect(context.destination()).toBe('/backoffice/sign-out');
     const link = root.querySelector<HTMLAnchorElement>('[data-reference-destination]')!;
@@ -218,7 +239,7 @@ describe('Isolated business previews', () => {
     trigger.focus();
     trigger.click();
     await fixture.whenStable();
-    const dialog = document.querySelector<HTMLElement>('[role="dialog"]')!;
+    const dialog = overlay().querySelector<HTMLElement>('[role="dialog"]')!;
     expect(document.activeElement).toBe(dialog.querySelector('[data-drawer-close]'));
     await vi.waitFor(async () => {
       await fixture.whenStable();
@@ -227,11 +248,12 @@ describe('Isolated business previews', () => {
         context.text().examples.email,
       );
     });
-    dialog.querySelector<HTMLElement>('.account summary')!.click();
-    dialog.querySelector<HTMLButtonElement>('.sign-out')!.click();
+    dialog.querySelector<HTMLButtonElement>('.account-trigger')!.click();
+    await fixture.whenStable();
+    overlay().querySelector<HTMLButtonElement>('.account-menu .sign-out')!.click();
     await fixture.whenStable();
     expect(context.destination()).toBe('/backoffice/sign-out');
-    expect(document.querySelector('[role="dialog"]')).toBeNull();
+    expect(overlay().querySelector('[role="dialog"]')).toBeNull();
     expect(document.activeElement).toBe(trigger);
     expect(navigate).not.toHaveBeenCalled();
   });
@@ -272,9 +294,11 @@ describe('Isolated business previews', () => {
           context.text().examples.email,
         );
         expect(sidebar.querySelector('.account-status')).toBeNull();
-        expect(sidebar.querySelector('.account-details a')).not.toBeNull();
-        expect(sidebar.querySelector('.sign-out')).not.toBeNull();
       });
+      sidebar.querySelector<HTMLButtonElement>('.account-trigger')!.click();
+      await fixture.whenStable();
+      expect(overlay().querySelector('.account-menu a')).not.toBeNull();
+      expect(overlay().querySelector('.account-menu .sign-out')).not.toBeNull();
     },
   );
 

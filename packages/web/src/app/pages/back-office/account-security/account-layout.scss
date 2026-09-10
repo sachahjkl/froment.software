@@ -1,23 +1,15 @@
 :host {
   display: block;
 }
-.account-header,
-nav,
-.preferences {
-  padding: var(--space-5) var(--page-x);
+.account-header {
+  padding: var(--page-header-y) var(--page-x) var(--space-3);
 }
-.account-header,
-nav,
-.languages {
+nav {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: var(--space-4);
-}
-.account-header {
-  justify-content: space-between;
-}
-nav {
+  gap: var(--space-2) var(--space-4);
+  padding: var(--space-3) var(--page-x);
   border-bottom: 1px solid var(--color-line-strong);
 }
 nav a {
@@ -26,9 +18,4 @@ nav a {
 }
 nav a.active {
   font-weight: 700;
-}
-.preferences {
-  display: grid;
-  gap: var(--space-4);
-  border-top: 1px solid var(--color-line-strong);
 }

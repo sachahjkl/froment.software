@@ -160,7 +160,7 @@ describe('Affairs', () => {
     const root: HTMLElement = harness.fixture.nativeElement;
     const i18n = TestBed.inject(I18nService);
     const initialLanguage = i18n.language();
-    const count = control<HTMLElement>(root, '[listSummary][role="status"]');
+    const count = control<HTMLElement>(root, 'footer.list-summary [role="status"]');
     try {
       i18n.setLanguage(language);
       await harness.fixture.whenStable();

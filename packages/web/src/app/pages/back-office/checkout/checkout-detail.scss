@@ -1,1 +1,12 @@
 @use "./checkout";
+
+.identifiers {
+  color: var(--color-muted);
+  font-size: var(--text-sm);
+}
+.identifiers h2 {
+  font-size: var(--text-base);
+}
+.identifiers dl {
+  margin-block-start: var(--space-3);
+}

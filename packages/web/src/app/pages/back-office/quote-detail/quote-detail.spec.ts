@@ -95,9 +95,6 @@ describe('Quote detail', () => {
     const harness = await RouterTestingHarness.create(`/backoffice/quotes/${quoteId}/versions`);
     await harness.fixture.whenStable();
     const root: HTMLElement = harness.fixture.nativeElement;
-    expect(root.querySelector('caption')?.textContent).toMatch(
-      /première à la dernière|first to last/,
-    );
     expect(root.querySelector('tbody th')?.textContent).toContain('First version');
     expect(root.querySelector('[appTableSort]')).toBeNull();
     expect(revisions[0]?.version).toBe(2);
@@ -189,7 +186,7 @@ describe('Quote detail', () => {
     control<HTMLButtonElement>(root, '.cancel-quote').click();
     await harness.fixture.whenStable();
     confirm.mockResolvedValue(false);
-    control<HTMLButtonElement>(root, 'button').click();
+    control<HTMLButtonElement>(root, '[role="alert"] + button').click();
     await harness.fixture.whenStable();
     expect(get).toHaveBeenCalledOnce();
     expect(confirm).toHaveBeenCalledTimes(2);

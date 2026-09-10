@@ -44,7 +44,7 @@ export class TabLayout {
 
 @Component({
   selector: 'app-tab-panel-outlet',
-  host: { style: 'display: contents' },
+  host: { style: 'display: grid; gap: var(--space-4); min-inline-size: 0' },
   imports: [NgTemplateOutlet],
   template: `<ng-container *ngTemplateOutlet="panel(); context: context" />`,
   changeDetection: ChangeDetectionStrategy.OnPush,

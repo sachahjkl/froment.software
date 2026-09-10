@@ -20,6 +20,7 @@ import { Button } from '@shared/button/button';
 import { Badge } from '@shared/badge/badge';
 import { DataTable } from '@shared/data-table/data-table';
 import { EmptyState } from '@shared/empty-state/empty-state';
+import { EntityIcon, type EntityIconVariant } from '@shared/entity-icon/entity-icon';
 import { FilterChip } from '@shared/filter-chip/filter-chip';
 import { ListToolbar } from '@shared/list-toolbar/list-toolbar';
 import { ListWorkspace } from '@shared/list-toolbar/list-workspace';
@@ -55,6 +56,7 @@ import {
     Badge,
     DataTable,
     EmptyState,
+    EntityIcon,
     FilterChip,
     ListToolbar,
     ListWorkspace,
@@ -79,6 +81,21 @@ import {
   templateUrl: './banking.html',
 })
 export class Banking {
+  protected iconVariant(transaction: BankTransactionValue): EntityIconVariant {
+    switch (bankStatus(transaction)) {
+      case 'matched':
+        return 'success';
+      case 'partial':
+        return 'warning';
+      case 'cancelledPayment':
+        return 'danger';
+      case 'unmatched':
+        return 'info';
+      case 'notApplicable':
+        return 'default';
+    }
+  }
+
   protected readonly i18n = inject(I18nService);
   private readonly api = inject(BankingApi);
   private readonly route = inject(ActivatedRoute);

@@ -34,8 +34,10 @@ import { I18nService, type TranslationKey } from '@app/i18n.service';
 import { Badge, type BadgeVariant } from '@shared/badge/badge';
 import { Button } from '@shared/button/button';
 import { DataTable } from '@shared/data-table/data-table';
+import { EntityIcon } from '@shared/entity-icon/entity-icon';
 import { LocalizedDatePipe } from '@shared/localized-date/localized-date-pipe';
 import { Notice } from '@shared/notice/notice';
+import { PageHeader } from '@shared/page-header/page-header';
 import { SearchHighlight, SearchHighlightRegistry } from '@shared/search-highlight';
 import { TextCopy } from '@shared/text-copy';
 import { createFuzzySearch } from '@shared/fuzzy-search';
@@ -86,8 +88,10 @@ const emptyModel = (): TokenModel => ({
     Badge,
     Button,
     DataTable,
+    EntityIcon,
     LocalizedDatePipe,
     Notice,
+    PageHeader,
     RouterLink,
     TableSort,
     ListToolbar,

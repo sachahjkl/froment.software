@@ -25,6 +25,7 @@ interface ActionPreview {
   variant: ButtonVariant;
   disabled: boolean;
   iconOnly: boolean;
+  appearance: 'button' | 'more';
   menuDisabled: boolean;
 }
 
@@ -78,6 +79,7 @@ export class ActionStories {
     variant: 'primary',
     disabled: false,
     iconOnly: false,
+    appearance: 'button',
     menuDisabled: false,
   });
   protected readonly controls = form(this.model);

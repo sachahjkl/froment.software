@@ -85,14 +85,6 @@
           [pending]="state() !== 'ready'"
         />
       </div>
-      <div listSummary>
-        <p id="audit-page-scope">
-          {{ i18n.t('audit.pageScope') }} {{ i18n.plural('audit.visibleCount', { count:
-          table.rows().length }) }} {{ i18n.plural('audit.loadedCount', { count: page().items.length
-          }) }}
-        </p>
-        <p id="audit-order" class="hint">{{ i18n.t('audit.order') }}</p>
-      </div>
     </app-list-toolbar>
     @if (error(); as code) {
     <p appNotice variant="danger" role="alert">{{ i18n.t(code) }}</p>
@@ -102,7 +94,7 @@
     <p class="empty-state ds-panel" role="status">{{ i18n.t('audit.empty') }}</p>
     } @else {
     <div appDataTable>
-      <table aria-describedby="audit-order audit-page-scope">
+      <table aria-describedby="audit-page-scope">
         <thead>
           <tr>
             <th scope="col" [attr.aria-sort]="table.direction('date')">
@@ -169,6 +161,12 @@
       </table>
     </div>
     } }
+    <div class="list-summary spacer-y-2">
+      <p id="audit-page-scope">
+        {{ i18n.plural('audit.visibleCount', { count: table.rows().length }) }} {{
+        i18n.plural('audit.loadedCount', { count: page().items.length }) }}
+      </p>
+    </div>
     <app-result-navigation
       [label]="i18n.t('audit.navigation')"
       [rangeLabel]="state() === 'ready' ? i18n.plural('audit.count', { count: page().items.length }) : ''"

@@ -17,10 +17,11 @@ import { I18nService, type TranslationKey } from '@app/i18n.service';
 import { Confirmation } from '@shared/confirmation/confirmation';
 import { Button } from '@shared/button/button';
 import { Notice } from '@shared/notice/notice';
+import { PageHeader } from '@shared/page-header/page-header';
 
 @Component({
   selector: 'app-account-passkeys',
-  imports: [Button, Notice, FormField],
+  imports: [Button, Notice, FormField, PageHeader],
   templateUrl: './account-passkeys.html',
   styleUrl: './account-passkeys.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

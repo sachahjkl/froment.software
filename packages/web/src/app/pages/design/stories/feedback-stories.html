@@ -25,7 +25,15 @@
         }
       </select></label
     >
-    } @if (entry.id === 'icon' || entry.id === 'empty-state') {
+    } @if (entry.id === 'entity-icon') {
+    <label
+      >{{ text().variant }}<select class="select" [formField]="controls.entity">
+        @for (variant of entityVariants; track variant) {
+        <option [value]="variant">{{ variant }}</option>
+        }
+      </select></label
+    >
+    } @if (entry.id === 'icon' || entry.id === 'entity-icon' || entry.id === 'empty-state') {
     <label
       >{{ text().icon }}<select class="select" [formField]="controls.icon">
         @for (icon of icons; track icon) {
@@ -65,7 +73,12 @@
       </button></app-hint
     >
     } @case ('icon') {
-    <span class="row"><app-icon [name]="model().icon" />{{ model().label }}</span> } }
+    <span class="row"><app-icon [name]="model().icon" />{{ model().label }}</span>
+    } @case ('entity-icon') {
+    <span class="row"
+      ><app-entity-icon [icon]="model().icon" [variant]="model().entity" />{{ model().label }}</span
+    >
+    } }
     <p class="event" role="status">{{ event() }}</p>
   </div>
   <div storyVariants class="samples">
@@ -103,6 +116,12 @@
         ><button appButton type="button" [attr.aria-describedby]="hint.id">
           {{ text().details }}
         </button></app-hint
+      >
+    </div>
+    } } @case ('entity-icon') { @for (variant of entityVariants; track variant) {
+    <div class="sample" data-variant>
+      <span class="row"
+        ><app-entity-icon icon="invoice" [variant]="variant" /><code>{{ variant }}</code></span
       >
     </div>
     } } @case ('icon') { @for (icon of icons; track icon) {

@@ -19,6 +19,7 @@ import { I18nService, type TranslationKey } from '@app/i18n.service';
 import { Button } from '@shared/button/button';
 import { Notice } from '@shared/notice/notice';
 import { DataTable } from '@shared/data-table/data-table';
+import { EntityIcon, type EntityIconVariant } from '@shared/entity-icon/entity-icon';
 import { TableSort } from '@shared/table-sort/table-sort';
 import { createFuzzySearch } from '@shared/fuzzy-search';
 import { SearchHighlight, SearchHighlightRegistry } from '@shared/search-highlight';
@@ -40,6 +41,7 @@ import { paymentMethodKey } from '../billing/billing-state';
 @Component({
   selector: 'app-receipt-list',
   imports: [
+    EntityIcon,
     Button,
     Notice,
     DataTable,
@@ -96,6 +98,10 @@ export class ReceiptList {
   });
   protected sortBy(column: EntrySortColumn): void {
     this.filters.updateSort(nextBillingSort(this.sort(), column));
+  }
+  protected iconVariant(entry: (typeof InvoiceReceiptList.Type)[number]): EntityIconVariant {
+    if (entry.cancelledAt === null) return 'success';
+    return 'danger';
   }
   protected readonly clients = computed(() => [
     ...new Map(this.rows().map((entry) => [entry.clientId, entry.clientDisplayName])).entries(),

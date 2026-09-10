@@ -34,11 +34,11 @@
       {{ i18n.t('integrations.test') }}
     </button>
   </form>
-  <details>
-    <summary>{{ i18n.t('connections.mode') }}</summary>
+  <section class="provider-modes" aria-labelledby="provider-modes-title">
+    <h2 id="provider-modes-title">{{ i18n.t('connections.mode') }}</h2>
     <ul class="providers">
       @for (provider of providers(); track provider.kind) {
-      <li class="ds-panel">
+      <li>
         <h3>{{ i18n.t(labels[provider.kind]) }}</h3>
         <p>
           {{ i18n.t(provider.mode === 'simulation' ? 'integrations.simulation' :
@@ -47,7 +47,7 @@
       </li>
       }
     </ul>
-  </details>
+  </section>
   <h2>{{ i18n.t('integrations.history') }}</h2>
   <p>{{ i18n.t('integrations.historyInfo') }}</p>
   @if (operations().length === 0) {

@@ -6,9 +6,11 @@ import {
   inject,
   input,
   signal,
+  viewChildren,
 } from '@angular/core';
+import { CdkMenu, CdkMenuItem, CdkMenuTrigger } from '@angular/cdk/menu';
 import { NavigationEnd, Router, RouterLink } from '@angular/router';
-import { DOCUMENT, NgTemplateOutlet } from '@angular/common';
+import { NgTemplateOutlet } from '@angular/common';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { filter } from 'rxjs';
 import { type CurrentAccountValue } from '@froment/contracts';
@@ -28,6 +30,9 @@ import { GlobalSearch } from '@shared/global-search/global-search';
   imports: [
     BackOfficeNav,
     Button,
+    CdkMenu,
+    CdkMenuItem,
+    CdkMenuTrigger,
     RouterLink,
     Icon,
     Drawer,
@@ -39,37 +44,19 @@ import { GlobalSearch } from '@shared/global-search/global-search';
   templateUrl: './back-office-header.html',
   styleUrl: './back-office-header.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  host: {
-    '(document:click)': 'closeAccountOutside($event)',
-  },
 })
 export class BackOfficeHeader {
   protected readonly accountControlHeight = '3.75rem';
   readonly administrator = input(false);
+  readonly searchShortcut = input(true);
   protected readonly i18n = inject(I18nService);
   private readonly auth = inject(Authentication);
   private readonly router = inject(Router);
   protected readonly account = signal<CurrentAccountValue | undefined>(undefined);
   protected readonly accountLoading = signal(true);
   protected readonly drawerOpen = signal(false);
-  private readonly document = inject(DOCUMENT);
+  private readonly accountMenus = viewChildren(CdkMenuTrigger);
   private readonly destroyRef = inject(DestroyRef);
-
-  protected closeAccountOutside(event: MouseEvent): void {
-    for (const disclosure of this.document.querySelectorAll<HTMLDetailsElement>(
-      '.back-office-account',
-    )) {
-      if (disclosure.open && !event.composedPath().includes(disclosure)) disclosure.open = false;
-    }
-  }
-
-  protected closeAccountWithEscape(event: Event, disclosure: HTMLDetailsElement): void {
-    if (!disclosure.open) return;
-    disclosure.open = false;
-    disclosure.querySelector('summary')?.focus();
-    event.preventDefault();
-    event.stopPropagation();
-  }
 
   constructor() {
     afterNextRender(() => {
@@ -88,10 +75,7 @@ export class BackOfficeHeader {
       )
       .subscribe(() => {
         this.drawerOpen.set(false);
-        for (const disclosure of this.document.querySelectorAll<HTMLDetailsElement>(
-          '.back-office-account[open]',
-        ))
-          disclosure.open = false;
+        for (const menu of this.accountMenus()) menu.close();
       });
   }
 

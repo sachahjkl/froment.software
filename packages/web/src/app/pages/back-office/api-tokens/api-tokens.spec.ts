@@ -362,7 +362,7 @@ describe('API token pages', () => {
         queryParamsHandling: 'merge',
         replaceUrl: false,
       });
-      expect(document.querySelector('[role="dialog"]')).toBeNull();
+      expect(search.isConnected).toBe(false);
       expect(document.activeElement).toBe(trigger);
     } finally {
       fixture.destroy();
@@ -565,13 +565,13 @@ describe('API token pages', () => {
     await fixture.whenStable();
     const root: HTMLElement = fixture.nativeElement;
     vi.mocked(Confirmation.prototype.request).mockResolvedValue(false);
-    root.querySelector<HTMLButtonElement>('tbody button')?.click();
+    root.querySelector<HTMLButtonElement>('tbody button[data-button-variant="danger"]')?.click();
     await fixture.whenStable();
     expect(revoke).not.toHaveBeenCalled();
     vi.mocked(Confirmation.prototype.request).mockResolvedValue(true);
-    root.querySelector<HTMLButtonElement>('tbody button')?.click();
+    root.querySelector<HTMLButtonElement>('tbody button[data-button-variant="danger"]')?.click();
     await fixture.whenStable();
     expect(revoke).toHaveBeenCalledWith(token.id);
-    expect(root.querySelector('tbody button')).toBeNull();
+    expect(root.querySelector('tbody button[data-button-variant="danger"]')).toBeNull();
   });
 });

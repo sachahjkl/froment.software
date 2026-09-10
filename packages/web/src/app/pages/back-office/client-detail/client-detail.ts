@@ -27,6 +27,7 @@ import { OrdersApi } from '@backoffice/orders-api';
 import { QuotesApi } from '@backoffice/quotes-api';
 import { I18nService, type TranslationKey } from '@app/i18n.service';
 import { Badge } from '@shared/badge/badge';
+import { ActionMenu } from '@shared/action-menu/action-menu';
 import { Button } from '@shared/button/button';
 import { DataTable } from '@shared/data-table/data-table';
 import { Notice } from '@shared/notice/notice';
@@ -51,6 +52,7 @@ interface ClientDocument {
   host: { class: 'page-container' },
   selector: 'app-client-detail',
   imports: [
+    ActionMenu,
     Badge,
     Button,
     DataTable,

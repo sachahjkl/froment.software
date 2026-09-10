@@ -7,12 +7,8 @@ export const configurationWorkspaceText = {
     'configurationWorkspace.searchConditions': 'Rechercher dans les noms et les conditions',
     'configurationWorkspace.searchTests': 'Rechercher dans les tests chargés',
     'configurationWorkspace.createdAt': 'Création',
-    'configurationWorkspace.loadedScope':
-      'Recherche, filtres, tri et export limités aux lignes chargées.',
     'configurationWorkspace.teamExportScope':
       'L’export exclut les noms, courriels, identifiants de compte et liens d’invitation.',
-    'configurationWorkspace.conditionsSearchScope':
-      'La recherche filtre les conditions chargées. Les conditions ne possèdent ni état ni date de création.',
     'configurationWorkspace.revokedTokens': 'Jetons révoqués',
     'configurationWorkspace.notRevokedTokens': 'Jetons non révoqués, y compris expirés',
     'configurationWorkspace.overview': 'Entreprise et documents',
@@ -92,12 +88,8 @@ export const configurationWorkspaceText = {
     'configurationWorkspace.searchConditions': 'Search names and conditions',
     'configurationWorkspace.searchTests': 'Search loaded tests',
     'configurationWorkspace.createdAt': 'Created',
-    'configurationWorkspace.loadedScope':
-      'Search, filters, sorting and export apply only to loaded rows.',
     'configurationWorkspace.teamExportScope':
       'Export excludes names, email addresses, account identifiers and invitation links.',
-    'configurationWorkspace.conditionsSearchScope':
-      'Search filters loaded conditions. Conditions have no status or creation date.',
     'configurationWorkspace.revokedTokens': 'Revoked tokens',
     'configurationWorkspace.notRevokedTokens': 'Tokens not revoked, including expired tokens',
     'configurationWorkspace.overview': 'Company and documents',

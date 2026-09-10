@@ -1,1 +1,5 @@
 @use "../email-task";
+
+.message-preview h2 {
+  font-size: var(--text-lg);
+}

@@ -46,13 +46,11 @@
         >@if (invalid('body')) { {{ i18n.t('emailsWorkspace.bodyInvalid') }} }</span
       ></label
     >
-    <details>
-      <summary>{{ i18n.t('emailsWorkspace.preview') }}</summary>
-      <div class="message-preview">
-        <strong>{{ model().subject }}</strong>
-        <p class="message-body">{{ model().body }}</p>
-      </div>
-    </details>
+    <section class="message-preview" aria-labelledby="template-preview-title">
+      <h2 id="template-preview-title">{{ i18n.t('emailsWorkspace.preview') }}</h2>
+      <strong>{{ model().subject }}</strong>
+      <p class="message-body">{{ model().body }}</p>
+    </section>
     <div class="actions">
       <button appButton variant="primary" type="submit" [disabled]="busy()">
         {{ i18n.t(busy() ? 'emailsWorkspace.saving' : 'catalog.save') }}</button

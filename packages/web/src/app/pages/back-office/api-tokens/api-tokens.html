@@ -1,13 +1,11 @@
 <section class="tokens-page" aria-labelledby="api-tokens-title">
-  <header>
-    <div>
-      <h1 id="api-tokens-title">{{ i18n.t('backOffice.apiTokens.title') }}</h1>
-      <p>{{ i18n.t('backOffice.apiTokens.intro') }}</p>
-    </div>
-    <a appLinkButton variant="primary" routerLink="new" [queryParams]="table.params()"
+  <app-page-header>
+    <h1 id="api-tokens-title">{{ i18n.t('backOffice.apiTokens.title') }}</h1>
+    <p class="muted">{{ i18n.t('backOffice.apiTokens.intro') }}</p>
+    <a pageActions appLinkButton variant="primary" routerLink="new" [queryParams]="table.params()"
       >{{ i18n.t('backOffice.apiTokens.create') }}</a
     >
-  </header>
+  </app-page-header>
   <a href="/api/docs" target="_blank" rel="noopener noreferrer"
     >{{ i18n.t('backOffice.apiTokens.documentation') }}</a
   >
@@ -53,7 +51,6 @@
         [pendingHint]="i18n.t('listWorkspace.exportPending')"
         [pending]="loading() || loadingMore() || revoking() || pageError() !== undefined"
       />
-      <p listSummary>{{ i18n.t('configurationWorkspace.loadedScope') }}</p>
     </app-list-toolbar>
     @if (pageError(); as code) {
     <p appNotice variant="danger" role="alert">{{ i18n.t(code) }}</p>
@@ -107,15 +104,46 @@
           @for (result of table.results(); track result.item.id) { @let token = result.item;
           <tr>
             <th scope="row">
-              <span [appSearchHighlight]="table.match(result, 'name')">{{ token.name }}</span>
+              <div class="entity-label">
+                <app-entity-icon icon="secrets" [variant]="statusVariant(token)" />
+                <span [appSearchHighlight]="table.match(result, 'name')">{{ token.name }}</span>
+              </div>
             </th>
-            <td class="permissions">
-              <details>
-                <summary>
-                  {{ i18n.plural('configurationWorkspace.permissionCount', { count:
-                  token.permissions.length }) }}
-                </summary>
-                <ul>
+            <td>
+              <button
+                appButton
+                type="button"
+                aria-haspopup="dialog"
+                [attr.popovertarget]="'token-permissions-' + token.id"
+                [style.anchor-name]="'--token-permissions-' + token.id"
+              >
+                {{ i18n.plural('configurationWorkspace.permissionCount', { count:
+                token.permissions.length }) }}
+              </button>
+              <div
+                class="permissions-popover"
+                popover="auto"
+                role="dialog"
+                tabindex="0"
+                [id]="'token-permissions-' + token.id"
+                [style.position-anchor]="'--token-permissions-' + token.id"
+                [attr.aria-labelledby]="'token-permissions-title-' + token.id"
+              >
+                <div class="permissions-heading spacer-x-3">
+                  <h2 [id]="'token-permissions-title-' + token.id">
+                    {{ i18n.t('backOffice.apiTokens.permissions') }} — {{ token.name }}
+                  </h2>
+                  <button
+                    appButton
+                    type="button"
+                    [attr.popovertarget]="'token-permissions-' + token.id"
+                    popovertargetaction="hide"
+                    autofocus
+                  >
+                    {{ i18n.t('adminPages.closePermissions') }}
+                  </button>
+                </div>
+                <ul class="permissions-list">
                   @for (permission of token.permissions; track permission) {
                   <li>
                     {{ i18n.t(permissionLabel(permission)) }}
@@ -125,7 +153,7 @@
                   </li>
                   }
                 </ul>
-              </details>
+              </div>
             </td>
             <td>
               {{ date(token.createdAt) | localizedDate: i18n.language(): { dateStyle: 'short',
@@ -164,7 +192,14 @@
         </tbody>
       </table>
     </div>
-    } @if (nextCursor() !== null) {
+    }
+    <footer class="list-summary spacer-y-2">
+      <p role="status">
+        @if (!loading()) { {{ i18n.plural('adminPages.tokensCount', { count: table.results().length,
+        total: tokens().length }) }} }
+      </p>
+    </footer>
+    @if (nextCursor() !== null) {
     <button appButton type="button" [disabled]="loadingMore()" (click)="loadMore()">
       {{ i18n.t('backOffice.apiTokens.loadMore') }}
     </button>

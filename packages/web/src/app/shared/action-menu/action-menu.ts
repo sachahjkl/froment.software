@@ -2,12 +2,14 @@ import { CdkMenu, CdkMenuItem, CdkMenuTrigger } from '@angular/cdk/menu';
 import {
   ChangeDetectionStrategy,
   Component,
+  computed,
   ElementRef,
   input,
   output,
   viewChild,
 } from '@angular/core';
 import { Button, type ButtonVariant } from '@shared/button/button';
+import { Icon } from '@shared/icon/icon';
 
 export interface MenuAction {
   readonly id: string;
@@ -18,7 +20,7 @@ export interface MenuAction {
 
 @Component({
   selector: 'app-action-menu',
-  imports: [Button, CdkMenu, CdkMenuItem, CdkMenuTrigger],
+  imports: [Button, CdkMenu, CdkMenuItem, CdkMenuTrigger, Icon],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styles: `
     :host {
@@ -28,6 +30,15 @@ export interface MenuAction {
     .trigger {
       border-start-start-radius: var(--action-menu-start-radius, var(--radius-md));
       border-end-start-radius: var(--action-menu-start-radius, var(--radius-md));
+    }
+    .trigger.more-trigger {
+      --icon-color: var(--color-ink);
+      color: var(--color-ink);
+      text-decoration: none;
+      border-radius: var(--radius-sm);
+    }
+    .trigger.more-trigger:is(:focus-visible, [aria-expanded='true']) {
+      background: var(--color-surface-sunken);
     }
     .menu {
       display: grid;
@@ -63,6 +74,9 @@ export interface MenuAction {
       opacity: 0.6;
     }
     @media (hover: hover) {
+      .trigger.more-trigger:hover:not(:disabled) {
+        background: var(--color-surface-sunken);
+      }
       .item:hover:not([aria-disabled='true']) {
         background: var(--color-surface-sunken);
       }
@@ -73,17 +87,22 @@ export interface MenuAction {
       appButton
       #trigger
       class="trigger"
+      [class.more-trigger]="appearance() === 'more'"
       type="button"
-      [variant]="variant()"
-      [iconOnly]="iconOnly()"
+      [variant]="triggerVariant()"
+      [iconOnly]="iconOnly() || appearance() === 'more'"
       [disabled]="disabled() || actions().length === 0"
       [attr.aria-label]="label()"
       [cdkMenuTriggerFor]="menu"
     >
-      @if (!iconOnly()) {
-        <span>{{ label() }}</span>
+      @if (appearance() === 'more') {
+        <app-icon name="more" />
+      } @else {
+        @if (!iconOnly()) {
+          <span>{{ label() }}</span>
+        }
+        <span aria-hidden="true">▾</span>
       }
-      <span aria-hidden="true">▾</span>
     </button>
     <ng-template #menu>
       <div cdkMenu class="menu" [attr.aria-label]="label()">
@@ -110,7 +129,11 @@ export class ActionMenu {
   readonly actions = input.required<readonly MenuAction[]>();
   readonly disabled = input(false);
   readonly iconOnly = input(false);
+  readonly appearance = input<'button' | 'more'>('button');
   readonly variant = input<ButtonVariant>('default');
+  protected readonly triggerVariant = computed(() =>
+    this.appearance() === 'more' ? 'link' : this.variant(),
+  );
   readonly actionSelected = output<string>();
 
   protected select(action: MenuAction): void {

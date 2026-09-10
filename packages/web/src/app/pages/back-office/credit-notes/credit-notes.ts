@@ -15,6 +15,7 @@ import { I18nService } from '@app/i18n.service';
 import { Button } from '@shared/button/button';
 import { Notice } from '@shared/notice/notice';
 import { DataTable } from '@shared/data-table/data-table';
+import { EntityIcon } from '@shared/entity-icon/entity-icon';
 import { TableSort } from '@shared/table-sort/table-sort';
 import { createFuzzySearch } from '@shared/fuzzy-search';
 import { SearchHighlight, SearchHighlightRegistry } from '@shared/search-highlight';
@@ -30,6 +31,7 @@ import { EntryFilters, EntryFilterState } from '../billing/entry-filters';
 @Component({
   selector: 'app-credit-notes',
   imports: [
+    EntityIcon,
     Button,
     Notice,
     DataTable,

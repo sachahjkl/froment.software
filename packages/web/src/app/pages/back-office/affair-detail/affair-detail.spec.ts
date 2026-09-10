@@ -128,9 +128,6 @@ describe('Affair detail', () => {
       '2026-01-31T08:00:00.000Z',
       '2026-02-01T08:00:00.000Z',
     ]);
-    expect(root.querySelector('caption')?.textContent).toMatch(
-      /ancien au plus récent|oldest to newest/,
-    );
     expect(root.querySelector('[appTableSort]')).toBeNull();
     expect(events[0]?.id).toBe('later');
   });

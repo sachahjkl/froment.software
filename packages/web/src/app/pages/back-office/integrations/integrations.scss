@@ -21,6 +21,17 @@ h3 {
 .providers {
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr));
 }
+.provider-modes h2 {
+  font-size: var(--text-base);
+}
+.providers li {
+  padding: 0;
+}
+.providers p {
+  margin-block-start: var(--space-1);
+  color: var(--color-muted);
+  font-size: var(--text-sm);
+}
 li {
   padding: var(--space-4);
   min-width: 0;

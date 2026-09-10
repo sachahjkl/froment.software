@@ -103,9 +103,9 @@ describe('Clients', () => {
         await harness.navigateByUrl(`/backoffice/clients/all${query}`);
         await fixture.whenStable();
         expect(root.querySelectorAll('tbody tr')).toHaveLength(count);
-        expect(
-          root.querySelector('app-list-toolbar [listSummary][role="status"]')?.textContent,
-        ).toBe(label);
+        expect(root.querySelector('footer.list-summary [role="status"]')?.textContent?.trim()).toBe(
+          label,
+        );
       }
     },
   );

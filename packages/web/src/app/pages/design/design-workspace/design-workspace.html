@@ -72,17 +72,12 @@
         [columns]="exportColumns()"
         [rows]="exportRows()"
         [filename]="'design-workspace.csv'"
-        [label]="selected().length ? text().exportSelection : text().exportResults"
+        [label]="(selected().length ? text().exportSelection : text().exportResults) + ' — ' + text().exportScope"
         [emptyHint]="text().exportEmpty"
         [pendingHint]="text().exportPending"
         [pending]="scenarioModel() === 'loading'"
       />
-      <p listSummary role="status">
-        @if (scenarioModel() === 'ready' || scenarioModel() === 'noMatch') { {{ text().resultCount
-        }} : {{ matches().length }} @if (selected().length) { · {{ text().selected }} : {{
-        selected().length }} } } @else { {{ text().scenarios[scenarioModel()] }} }
-      </p>
-      <app-hint listSummary #selectionHint [text]="text().selectionHint">
+      <app-hint listActions #selectionHint [text]="text().selectionHint">
         <button
           appButton
           type="button"
@@ -93,7 +88,6 @@
           <span aria-hidden="true">?</span>
         </button>
       </app-hint>
-      <p listSummary class="export-scope">{{ text().exportScope }}</p>
     </app-list-toolbar>
 
     @if (filterModel().query || filterModel().status !== 'all') {
@@ -153,13 +147,15 @@
         <thead>
           <tr>
             <th scope="col">
-              <input
-                type="checkbox"
-                [checked]="allSelected()"
-                [indeterminate]="someSelected()"
-                [attr.aria-label]="text().selectPage"
-                (change)="togglePage()"
-              />
+              <label class="row-selection">
+                <input
+                  type="checkbox"
+                  [checked]="allSelected()"
+                  [indeterminate]="someSelected()"
+                  [attr.aria-label]="text().selectPage"
+                  (change)="togglePage()"
+                />
+              </label>
             </th>
             <th scope="col">{{ text().reference }}</th>
             <th scope="col" [attr.aria-sort]="direction()">
@@ -179,33 +175,38 @@
           @for (result of pageRows(); track result.item.id) {
           <tr>
             <td>
-              <input
-                type="checkbox"
-                [checked]="selected().includes(result.item.id)"
-                [attr.aria-label]="text().select + ' ' + result.item.name"
-                (change)="toggleSelection(result.item.id)"
-              />
+              <label class="row-selection">
+                <input
+                  type="checkbox"
+                  [checked]="selected().includes(result.item.id)"
+                  [attr.aria-label]="text().select + ' ' + result.item.name"
+                  (change)="toggleSelection(result.item.id)"
+                />
+              </label>
             </td>
             <td>
               <span [appSearchHighlight]="result.referenceMatches">{{ result.item.id }}</span>
             </td>
             <th scope="row">
-              <button appButton variant="link" type="button" (click)="open(result.item)">
-                <span [appSearchHighlight]="result.nameMatches">{{ result.item.name }}</span>
-              </button>
+              <div class="entity-label">
+                <app-entity-icon icon="catalog" [variant]="statusVariant(result.item.status)" />
+                <button appButton variant="link" type="button" (click)="open(result.item)">
+                  <span [appSearchHighlight]="result.nameMatches">{{ result.item.name }}</span>
+                </button>
+              </div>
             </th>
             <td>
               <span [appSearchHighlight]="result.contactMatches">{{ result.item.contact }}</span>
             </td>
             <td>
-              <span appBadge [variant]="result.item.status === 'ready' ? 'success' : 'default'"
+              <span appBadge [variant]="statusVariant(result.item.status)"
                 >{{ text()[result.item.status] }}</span
               >
             </td>
             <td>
               <app-action-menu
                 [label]="text().rowActions + ' ' + result.item.name"
-                [iconOnly]="true"
+                appearance="more"
                 [actions]="rowActions(result.item)"
                 (actionSelected)="runAction($event, result.item)"
               />
@@ -233,8 +234,14 @@
       (previous)="changePage(-1)"
       (next)="changePage(1)"
     />
-    <p class="hint">{{ text().localScope }}</p>
     } }
+    <div class="list-summary spacer-y-2">
+      <p role="status">
+        @if (scenarioModel() === 'ready' || scenarioModel() === 'noMatch') { {{ text().resultCount
+        }} : {{ matches().length }} @if (selected().length) { · {{ text().selected }} : {{
+        selected().length }} } } @else { {{ text().scenarios[scenarioModel()] }} }
+      </p>
+    </div>
   </div>
   } @case ('detail') { @if (current(); as record) {
   <header class="view-header">
@@ -272,7 +279,7 @@
         <div>
           <dt>{{ text().status }}</dt>
           <dd>
-            <span appBadge [variant]="record.status === 'ready' ? 'success' : 'default'"
+            <span appBadge [variant]="statusVariant(record.status)"
               >{{ text()[record.status] }}</span
             >
           </dd>

@@ -26,10 +26,6 @@
         [pendingHint]="i18n.t('listWorkspace.exportPending')"
         [pending]="state() === 'loading'"
       />
-      <p listSummary role="status">
-        @if (state() === 'ready') { {{ i18n.plural('billingWorkspace.count', { count:
-        visible().length }) }} }
-      </p>
     </app-billing-entry-filters>
     @switch (state()) { @case ('loading') {
     <p role="status">{{ i18n.t('backOffice.invoices.loading') }}</p>
@@ -104,13 +100,16 @@
           @for (result of visible(); track result.item.id) { @let entry = result.item;
           <tr>
             <td>
-              <a
-                [routerLink]="['/backoffice/invoices', entry.invoiceId]"
-                [queryParams]="{ tab: 'receipts' }"
-                [fragment]="entry.id"
-                [appSearchHighlight]="matchIndices(result, 'reference')"
-                >{{ entry.reference }}</a
-              >
+              <div class="entity-label">
+                <app-entity-icon icon="bank" [variant]="iconVariant(entry)" />
+                <a
+                  [routerLink]="['/backoffice/invoices', entry.invoiceId]"
+                  [queryParams]="{ tab: 'receipts' }"
+                  [fragment]="entry.id"
+                  [appSearchHighlight]="matchIndices(result, 'reference')"
+                  >{{ entry.reference }}</a
+                >
+              </div>
             </td>
             <td>
               <span [appSearchHighlight]="matchIndices(result, 'invoiceNumber')"
@@ -144,11 +143,14 @@
         </tbody>
       </table>
     </div>
+    <footer class="list-summary">
+      <p role="status">{{ i18n.plural('entityList.receipts', { count: visible().length }) }}</p>
+    </footer>
     } }
   </section>
   <p class="muted">{{ i18n.t('billingWorkspace.receiptHint') }}</p>
-  <details class="payment-export ds-panel">
-    <summary>{{ i18n.t('payment.export_title') }}</summary>
+  <section class="payment-export ds-panel" aria-labelledby="payment-export-title">
+    <h2 id="payment-export-title">{{ i18n.t('payment.export_title') }}</h2>
     <p>{{ i18n.t('payment.export_hint') }}</p>
     <form class="filters" (submit)="exportPayments($event)">
       <label class="field"
@@ -201,5 +203,5 @@
       <p role="status">{{ i18n.t('payment.export_ready') }}</p>
       }
     </div>
-  </details>
+  </section>
 </section>

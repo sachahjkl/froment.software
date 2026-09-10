@@ -1,0 +1,33 @@
+<section aria-labelledby="account-preferences-title">
+  <app-page-header>
+    <h2 id="account-preferences-title">{{ i18n.t('configurationWorkspace.preferences') }}</h2>
+    <p class="muted">{{ i18n.t('adminPages.preferencesHint') }}</p>
+  </app-page-header>
+  <form (submit)="apply($event)" novalidate>
+    <label class="field">
+      {{ i18n.t('adminPages.theme') }}
+      <select class="select" [formField]="preferencesForm.theme">
+        <option [value]="'light'">{{ i18n.t('adminPages.lightTheme') }}</option>
+        <option [value]="'dark'">{{ i18n.t('adminPages.darkTheme') }}</option>
+      </select>
+    </label>
+    <label class="field">
+      {{ i18n.t('configurationWorkspace.language') }}
+      <select class="select" [formField]="preferencesForm.language">
+        <option [value]="'fr'" lang="fr">{{ i18n.t('lang.fr') }}</option>
+        <option [value]="'en'" lang="en">{{ i18n.t('lang.en') }}</option>
+      </select>
+    </label>
+    @if (preferencesForm().touched() && preferencesForm().invalid()) {
+    <p appNotice variant="danger" role="alert">{{ i18n.t('adminPages.preferencesInvalid') }}</p>
+    }
+    <div class="spacer-x-3">
+      <button appButton variant="primary" type="submit" [disabled]="preferencesForm().submitting()">
+        {{ i18n.t('adminPages.applyPreferences') }}
+      </button>
+    </div>
+    <p role="status">
+      @if (applied() && !hasChanges()) { {{ i18n.t('adminPages.preferencesApplied') }} }
+    </p>
+  </form>
+</section>

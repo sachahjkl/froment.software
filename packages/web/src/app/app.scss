@@ -14,9 +14,10 @@
 .back-office-shell {
   display: grid;
   grid-template-columns: 16rem minmax(0, 1fr);
-  grid-template-rows: auto 1fr;
+  grid-template-rows: auto minmax(0, 1fr);
   grid-template-areas: "sidebar header" "sidebar content";
   align-items: start;
+  background: var(--color-surface);
 }
 .back-office-shell main {
   grid-area: content;

@@ -39,29 +39,33 @@
     </dd>
     }
   </dl>
-  <a [routerLink]="['/backoffice/invoices', item.request.invoiceId]"
-    >{{ i18n.t('checkout.viewInvoice') }}</a
-  >
+  <div class="spacer-x-4">
+    <a [routerLink]="['/backoffice/invoices', item.request.invoiceId]"
+      >{{ i18n.t('checkout.viewInvoice') }}</a
+    >
+    @if (canOpen(item)) {
+    <a
+      appLinkButton
+      variant="primary"
+      [href]="item.checkoutUrl"
+      rel="noreferrer noopener"
+      target="_blank"
+      >{{ i18n.t('checkout.openStripe') }}</a
+    >
+    }
+  </div>
   @if (canOpen(item)) {
-  <a
-    appLinkButton
-    variant="primary"
-    [href]="item.checkoutUrl"
-    rel="noreferrer noopener"
-    target="_blank"
-    >{{ i18n.t('checkout.openStripe') }}</a
-  >
   <p>{{ i18n.t('checkout.testCard') }}</p>
   }
   <p>{{ i18n.t('checkout.returnHint') }}</p>
-  <details>
-    <summary>{{ i18n.t('checkout.identifiers') }}</summary>
+  <section class="identifiers" aria-labelledby="checkout-identifiers-title">
+    <h2 id="checkout-identifiers-title">{{ i18n.t('checkout.identifiers') }}</h2>
     <dl>
       <dt>{{ i18n.t('checkout.requestId') }}</dt>
       <dd><code>{{ item.request.requestId }}</code></dd>
       <dt>{{ i18n.t('checkout.sessionId') }}</dt>
       <dd><code>{{ item.sessionId ?? '—' }}</code></dd>
     </dl>
-  </details>
+  </section>
   }
 </section>

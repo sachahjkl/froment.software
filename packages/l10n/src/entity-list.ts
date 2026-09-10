@@ -1,0 +1,26 @@
+export const entityListText = {
+  fr: {
+    'entityList.invoices.one': '{count} facture',
+    'entityList.invoices.other': '{count} factures',
+    'entityList.credits.one': '{count} avoir',
+    'entityList.credits.other': '{count} avoirs',
+    'entityList.receipts.one': '{count} encaissement',
+    'entityList.receipts.other': '{count} encaissements',
+    'entityList.refunds.one': '{count} remboursement',
+    'entityList.refunds.other': '{count} remboursements',
+    'entityList.tests.one': '{count} test',
+    'entityList.tests.other': '{count} tests',
+  },
+  en: {
+    'entityList.invoices.one': '{count} invoice',
+    'entityList.invoices.other': '{count} invoices',
+    'entityList.credits.one': '{count} credit note',
+    'entityList.credits.other': '{count} credit notes',
+    'entityList.receipts.one': '{count} receipt',
+    'entityList.receipts.other': '{count} receipts',
+    'entityList.refunds.one': '{count} refund',
+    'entityList.refunds.other': '{count} refunds',
+    'entityList.tests.one': '{count} test',
+    'entityList.tests.other': '{count} tests',
+  },
+} as const;

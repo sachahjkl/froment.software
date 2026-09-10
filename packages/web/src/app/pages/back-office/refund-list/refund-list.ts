@@ -15,6 +15,7 @@ import { I18nService } from '@app/i18n.service';
 import { Button } from '@shared/button/button';
 import { Notice } from '@shared/notice/notice';
 import { DataTable } from '@shared/data-table/data-table';
+import { EntityIcon, type EntityIconVariant } from '@shared/entity-icon/entity-icon';
 import { TableSort } from '@shared/table-sort/table-sort';
 import { createFuzzySearch } from '@shared/fuzzy-search';
 import { SearchHighlight, SearchHighlightRegistry } from '@shared/search-highlight';
@@ -28,6 +29,7 @@ import { EntryFilters, EntryFilterState } from '../billing/entry-filters';
 @Component({
   selector: 'app-refund-list',
   imports: [
+    EntityIcon,
     Button,
     Notice,
     DataTable,
@@ -78,6 +80,10 @@ export class RefundList {
   });
   protected sortBy(column: (typeof refundSortColumns)[number]): void {
     this.filters.updateSort(nextBillingSort(this.sort(), column));
+  }
+  protected iconVariant(entry: (typeof InvoiceRefundList.Type)[number]): EntityIconVariant {
+    if (entry.cancelledAt === null) return 'success';
+    return 'danger';
   }
   protected readonly clients = computed(() => [
     ...new Map(this.rows().map((entry) => [entry.clientId, entry.clientDisplayName])).entries(),

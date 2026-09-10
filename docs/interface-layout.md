@@ -126,7 +126,11 @@ Les modifications conservent le contrôle de version et les erreurs détaillées
 Les formulaires protègent les champs modifiés et les requêtes en cours lors d’une sortie de page.
 Les documents publiés restent inchangés.
 
-`ListToolbar` regroupe la recherche, les filtres et le nombre de résultats.
+`ListToolbar` regroupe la recherche, les filtres et les actions de liste.
+Les compteurs et les limites de chargement apparaissent sous les tableaux dans `.list-summary`.
+Les informations d’export apparaissent dans l’infobulle du bouton d’export, sans séparer les contrôles.
+`EntityIcon` place une icône décorative devant la référence ou le titre de chaque entité.
+Les fonctions typées des pages associent les statuts aux couleurs. Les libellés de statut restent visibles.
 `EmptyState` sépare le titre, l’explication et l’action de création.
 `DataTable` propose le mode `fluid` pour répartir les colonnes et autoriser le retour à la ligne.
 La composition `/design/workflows` présente une recherche interactive.
@@ -148,6 +152,11 @@ Une modification de disponibilité exige une confirmation.
 Les requêtes conservent la version chargée et les montants entiers du contrat métier.
 Un conflit conserve les champs saisis.
 Les documents existants restent inchangés.
+
+Le formulaire de devis ouvre aussi les éditeurs Catalogue et Conditions dans des modales.
+La création conserve la saisie du devis et utilise les mêmes API que les pages dédiées.
+L’article enregistré est ajouté au devis. Le remplacement de conditions existantes demande une confirmation.
+Une requête en cours bloque la fermeture. Une création incertaine interdit une nouvelle soumission dans l’éditeur ouvert.
 
 `TableSort` nomme la colonne et le prochain sens de tri.
 La cellule d’en-tête expose le sens actuel avec `aria-sort`.

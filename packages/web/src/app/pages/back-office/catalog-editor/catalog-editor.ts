@@ -1,3 +1,4 @@
+import { DialogRef } from '@angular/cdk/dialog';
 import {
   afterNextRender,
   ChangeDetectionStrategy,
@@ -41,7 +42,7 @@ const emptyItem = () => ({
 type ItemField = 'description' | 'quantity' | 'unitPrice' | 'vatRate';
 
 @Component({
-  host: { class: 'page-container' },
+  host: { '[class.page-container]': '!dialog', '[class.editor-dialog]': '!!dialog' },
   selector: 'app-catalog-editor',
   imports: [Badge, Button, FormField, Notice, PageHeader, RouterLink],
   templateUrl: './catalog-editor.html',
@@ -49,6 +50,7 @@ type ItemField = 'description' | 'quantity' | 'unitPrice' | 'vatRate';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class CatalogEditor {
+  protected readonly dialog = inject<DialogRef<CatalogItemValue>>(DialogRef, { optional: true });
   protected readonly i18n = inject(I18nService);
   private readonly api = inject(CatalogApi);
   private readonly route = inject(ActivatedRoute);
@@ -61,6 +63,7 @@ export class CatalogEditor {
   protected readonly saving = signal(false);
   private readonly confirming = signal(false);
   protected readonly completed = signal(false);
+  protected readonly uncertain = signal(false);
   protected readonly error = signal<TranslationKey | undefined>(undefined);
   private readonly model = signal(emptyItem());
   protected readonly amounts = [
@@ -84,7 +87,10 @@ export class CatalogEditor {
     },
   ] as const;
   protected readonly itemForm = form(this.model, (path) => {
-    disabled(path, () => this.saving() || this.completed() || this.state() !== 'ready');
+    disabled(
+      path,
+      () => this.saving() || this.completed() || this.uncertain() || this.state() !== 'ready',
+    );
     required(path.description);
     maxLength(path.description, 160);
     pattern(path.description, /\S/);
@@ -107,6 +113,19 @@ export class CatalogEditor {
   private loadGeneration = 0;
 
   constructor() {
+    if (this.dialog) {
+      this.state.set('ready');
+      this.dialog.backdropClick
+        .pipe(takeUntilDestroyed(this.destroyRef))
+        .subscribe(() => void this.close());
+      this.dialog.keydownEvents.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((event) => {
+        if (event.key === 'Escape') {
+          event.preventDefault();
+          void this.close();
+        }
+      });
+      return;
+    }
     afterNextRender(() =>
       this.route.paramMap
         .pipe(takeUntilDestroyed(this.destroyRef))
@@ -123,17 +142,27 @@ export class CatalogEditor {
   }
 
   async canDeactivate(): Promise<boolean> {
-    return (
-      !this.saving() &&
-      !this.confirming() &&
-      (!this.itemForm().dirty() ||
-        (await this.confirmation.request(this.i18n.t('catalog.unsavedChanges'))))
-    );
+    if (this.saving() || this.confirming()) return false;
+    if (!this.uncertain() && !this.itemForm().dirty()) return true;
+    this.confirming.set(true);
+    try {
+      return await this.confirmation.request(
+        this.i18n.t(this.uncertain() ? 'referenceEditor.leaveUncertain' : 'catalog.unsavedChanges'),
+      );
+    } finally {
+      this.confirming.set(false);
+    }
+  }
+
+  protected async close(): Promise<void> {
+    if (this.dialog && (await this.canDeactivate()) && !this.destroyRef.destroyed)
+      this.dialog.close();
   }
 
   @HostListener('window:beforeunload', ['$event'])
   protected preventUnsavedUnload(event: BeforeUnloadEvent): void {
-    if (this.saving() || this.confirming() || this.itemForm().dirty()) event.preventDefault();
+    if (this.saving() || this.confirming() || this.uncertain() || this.itemForm().dirty())
+      event.preventDefault();
   }
 
   protected invalid(field: ItemField): boolean {
@@ -141,6 +170,7 @@ export class CatalogEditor {
   }
 
   protected async load(): Promise<void> {
+    if (this.saving() || this.confirming() || this.uncertain()) return;
     const generation = ++this.loadGeneration;
     const id = this.route.snapshot.paramMap.get('itemId');
     this.editing.set(id !== null);
@@ -188,7 +218,14 @@ export class CatalogEditor {
 
   protected save(event: SubmitEvent): void {
     event.preventDefault();
-    if (this.saving() || this.confirming() || this.completed() || this.state() !== 'ready') return;
+    if (
+      this.saving() ||
+      this.confirming() ||
+      this.completed() ||
+      this.uncertain() ||
+      this.state() !== 'ready'
+    )
+      return;
     this.itemForm().markAsTouched();
     if (this.itemForm().invalid()) {
       for (const field of ['description', 'quantity', 'unitPrice', 'vatRate'] as const) {
@@ -237,23 +274,32 @@ export class CatalogEditor {
           : await this.api.create(request.value);
         if (this.destroyRef.destroyed) return;
         if (!outcome.success) {
-          this.error.set(outcome.code);
+          if (!item && outcome.code === 'catalog.error') {
+            this.uncertain.set(true);
+            this.error.set('referenceEditor.catalogUncertain');
+          } else this.error.set(outcome.code);
           return;
         }
         this.item.set(outcome.result);
         this.itemForm().reset();
         this.completed.set(true);
       } catch {
-        if (!this.destroyRef.destroyed) this.error.set('catalog.error');
+        if (!this.destroyRef.destroyed) {
+          this.uncertain.set(!item);
+          this.error.set(item ? 'catalog.error' : 'referenceEditor.catalogUncertain');
+        }
       } finally {
         this.confirming.set(false);
         this.saving.set(false);
       }
-      if (this.completed())
-        await this.router.navigate(this.backLink(), {
-          queryParams: this.backQuery(),
-          state: { catalogSaved: true },
-        });
+      if (this.completed()) {
+        if (this.dialog) this.dialog.close(this.item());
+        else
+          await this.router.navigate(this.backLink(), {
+            queryParams: this.backQuery(),
+            state: { catalogSaved: true },
+          });
+      }
     });
   }
 }

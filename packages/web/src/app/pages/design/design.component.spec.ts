@@ -55,7 +55,7 @@ describe('Component reference', () => {
   }
 
   it('assigns every entry one lazy durable route without the old catalog tabs', async () => {
-    expect(referenceCatalog).toHaveLength(56);
+    expect(referenceCatalog).toHaveLength(57);
     expect(Object.keys(componentReferenceText.fr.stories).sort()).toEqual(
       referenceCatalog
         .filter((entry) => entry.id !== 'workflows')
@@ -111,13 +111,10 @@ describe('Component reference', () => {
     const variants = root.querySelectorAll('[data-variant] app-list-toolbar');
     expect(variants).toHaveLength(2);
     expect(variants[0].querySelector('.search app-list-search')).not.toBeNull();
-    expect(variants[0].querySelector('[listFilters], [listActions], [listSummary]')).toBeNull();
+    expect(variants[0].querySelector('[listFilters], [listActions]')).toBeNull();
     const full = variants[1];
     expect(full.querySelector('.search app-list-search')).not.toBeNull();
     expect(full.querySelector('.filters [listFilters]')).not.toBeNull();
-    expect(full.querySelector('.summary [listSummary]')?.textContent).toBe(
-      componentReferenceText.fr.local,
-    );
     const action = full.querySelector<HTMLButtonElement>('.actions [listActions]')!;
     expect(action.textContent?.trim()).toBe(componentReferenceText.fr.execute);
     action.click();
@@ -273,12 +270,12 @@ describe('Component reference', () => {
   it('updates the new metadata language without changing its API names', async () => {
     const { harness, root } = await setup('/design/global-search');
     const properties = root.querySelector('#story-properties')!.parentElement!;
-    expect(properties.textContent).toContain('Aucune propriété d’entrée');
+    expect(properties.textContent).toContain('Fournisseur Angular du composant appelant');
     expect(properties.textContent).toContain('ClientsApi.list');
     TestBed.inject(I18nService).setLanguage('en');
     await harness.fixture.whenStable();
-    expect(properties.textContent).toContain('No input properties');
-    expect(properties.textContent).not.toContain('Aucune propriété d’entrée');
+    expect(properties.textContent).toContain('Angular provider of the calling component');
+    expect(properties.textContent).not.toContain('Fournisseur Angular du composant appelant');
     expect(properties.textContent).toContain('ClientsApi.list');
   });
 

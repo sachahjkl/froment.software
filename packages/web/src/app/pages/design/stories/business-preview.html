@@ -6,7 +6,7 @@
 } @switch (component()) { @case ('back-office-header') {
 <div class="shell-frame" tabindex="0" role="region" [attr.aria-label]="text().accountPreview">
   <div class="account-shell">
-    <app-back-office-header [administrator]="settings().administrator" />
+    <app-back-office-header [administrator]="settings().administrator" [searchShortcut]="false" />
     <div class="account-content"><p>{{ text().isolatedAccount }}</p></div>
   </div>
 </div>

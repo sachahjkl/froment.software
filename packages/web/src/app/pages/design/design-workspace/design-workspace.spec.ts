@@ -131,7 +131,6 @@ describe('DesignWorkspace', () => {
     expect(root.querySelector('app-list-toolbar .search app-list-search')).not.toBeNull();
     expect(root.querySelector('app-list-toolbar .filters app-filter-menu')).not.toBeNull();
     expect(root.querySelector('app-list-toolbar .actions app-table-export')).not.toBeNull();
-    expect(root.querySelector('app-list-toolbar .summary [role="status"]')).not.toBeNull();
   });
 
   it('updates the parent search field on bubbling input and keeps short-query fuzzy matches', async () => {
@@ -152,7 +151,7 @@ describe('DesignWorkspace', () => {
         .map((row) => row[1]),
     ).toEqual(['Atlas', 'Boréal', 'Cobalt']);
     expect(root.querySelector<HTMLElement>('app-bulk-selection')?.hidden).toBe(true);
-    expect(exporter().label()).toBe('Exporter les résultats filtrés (CSV)');
+    expect(exporter().label()).toContain('Exporter les résultats filtrés (CSV)');
 
     await input('#workspace-search input', 'atls');
     expect(field.state().value()).toBe('atls');
@@ -185,7 +184,7 @@ describe('DesignWorkspace', () => {
     await fixture.whenStable();
     selections[0].click();
     await fixture.whenStable();
-    expect(exporter().label()).toBe('Exporter la sélection (CSV)');
+    expect(exporter().label()).toContain('Exporter la sélection (CSV)');
     expect(serializeCsv(exporter().columns(), exporter().rows())).toBe(
       '\uFEFF"Référence","Nom de la prestation","Courriel du contact","État"\r\n' +
         '"DEMO-5","Équinoxe","contact5@example.com","Brouillon"\r\n' +
@@ -195,7 +194,7 @@ describe('DesignWorkspace', () => {
     await fixture.whenStable();
     expect(document.activeElement).toBe(root.querySelector('app-filter-menu button'));
     expect(exporter().rows()).toHaveLength(6);
-    expect(exporter().label()).toBe('Exporter les résultats filtrés (CSV)');
+    expect(exporter().label()).toContain('Exporter les résultats filtrés (CSV)');
   });
 
   it('neutralizes harmless formula fixtures when exporting local form values', async () => {

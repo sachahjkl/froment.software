@@ -1,4 +1,5 @@
 import { Confirmation } from '@shared/confirmation/confirmation';
+import { Dialog, type DialogRef } from '@angular/cdk/dialog';
 import {
   afterNextRender,
   ChangeDetectionStrategy,
@@ -31,6 +32,8 @@ import {
   type QuoteDetailValue,
   type QuoteLineInputValue,
   type QuoteConditionPresetListValue,
+  type QuoteConditionPresetValue,
+  type CatalogItemValue,
   type QuoteRevisionCreateRequestValue,
   type UlidValue,
 } from '@froment/contracts';
@@ -49,6 +52,8 @@ import { Notice } from '@shared/notice/notice';
 import { OutcomePanel } from '@shared/outcome-panel/outcome-panel';
 import { ObjectPicker } from '@shared/object-picker/object-picker';
 import { affairContext } from '../affairs/affair-filters';
+import { CatalogEditor } from '../catalog-editor/catalog-editor';
+import { ConditionEditor } from '../quote-condition-presets/condition-editor';
 
 interface QuoteLineModel {
   readonly description: string;
@@ -92,6 +97,19 @@ export class QuoteEditor {
   private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
   private readonly pendingTasks = inject(PendingTasks);
+  private readonly dialogs = inject(Dialog);
+  private readonly referenceDialog = signal<
+    | DialogRef<CatalogItemValue, CatalogEditor>
+    | DialogRef<QuoteConditionPresetValue, ConditionEditor>
+    | undefined
+  >(undefined);
+  private referenceRequest = 0;
+  private readonly applyingConditions = signal(false);
+  protected readonly referenceBusy = computed(
+    () => this.referenceDialog() !== undefined || this.applyingConditions(),
+  );
+  protected readonly referenceError = signal<TranslationKey | undefined>(undefined);
+  protected readonly referenceNotice = signal<TranslationKey | undefined>(undefined);
   private readonly quoteId = signal<UlidValue | undefined>(undefined);
   private routeRequest = 0;
   protected readonly isNew = signal(false);
@@ -127,7 +145,12 @@ export class QuoteEditor {
   );
   protected readonly quoteForm = form(this.model, (path) => {
     disabled(path, {
-      when: () => !this.editable() || this.saving() || this.completed() || this.uncertain(),
+      when: () =>
+        !this.editable() ||
+        this.saving() ||
+        this.completed() ||
+        this.uncertain() ||
+        this.referenceBusy(),
     });
     required(path.clientId);
     required(path.title);
@@ -176,6 +199,7 @@ export class QuoteEditor {
   );
 
   constructor() {
+    this.destroyRef.onDestroy(() => this.referenceDialog()?.close());
     afterNextRender(() => {
       this.route.queryParamMap
         .pipe(takeUntilDestroyed(this.destroyRef))
@@ -187,7 +211,7 @@ export class QuoteEditor {
   }
 
   protected addLine(): void {
-    if (this.saveDisabled() || this.model().lines.length >= 20) return;
+    if (this.saveDisabled() || this.referenceBusy() || this.model().lines.length >= 20) return;
     this.model.update((model) => ({ ...model, lines: [...model.lines, emptyLine()] }));
     this.quoteForm().markAsDirty();
   }
@@ -196,6 +220,7 @@ export class QuoteEditor {
     const item = this.catalogItems().find((entry) => entry.id === id);
     if (
       this.saveDisabled() ||
+      this.referenceBusy() ||
       this.model().lines.length >= 20 ||
       item === undefined ||
       item.archived
@@ -217,7 +242,7 @@ export class QuoteEditor {
   }
 
   protected removeLine(index: number): void {
-    if (this.saveDisabled() || this.model().lines.length === 1) return;
+    if (this.saveDisabled() || this.referenceBusy() || this.model().lines.length === 1) return;
     this.model.update((model) => ({
       ...model,
       lines: model.lines.filter((_line, currentIndex) => currentIndex !== index),
@@ -227,22 +252,134 @@ export class QuoteEditor {
 
   protected async selectConditionPreset(presetId: string): Promise<void> {
     const preset = this.conditionPresets().find((candidate) => candidate.id === presetId);
-    if (preset === undefined || this.saveDisabled()) return;
+    if (preset === undefined || this.saveDisabled() || this.referenceBusy()) return;
     const generation = this.routeRequest;
-    if (
-      this.model().conditions &&
-      this.model().conditions !== preset.conditions &&
-      !(await this.confirmation.request(this.i18n.t('commercial.replaceConditions')))
-    )
-      return;
-    if (this.destroyRef.destroyed || generation !== this.routeRequest || this.saveDisabled())
-      return;
-    this.model.update((model) => ({ ...model, conditions: preset.conditions }));
-    this.quoteForm().markAsDirty();
+    this.applyingConditions.set(true);
+    try {
+      if (
+        this.model().conditions &&
+        this.model().conditions !== preset.conditions &&
+        !(await this.confirmation.request(this.i18n.t('commercial.replaceConditions')))
+      )
+        return;
+      if (this.destroyRef.destroyed || generation !== this.routeRequest || this.saveDisabled())
+        return;
+      this.model.update((model) => ({ ...model, conditions: preset.conditions }));
+      this.quoteForm().markAsDirty();
+    } finally {
+      this.applyingConditions.set(false);
+    }
+  }
+
+  protected createCatalogItem(): void {
+    if (this.saveDisabled() || this.referenceBusy() || this.model().lines.length >= 20) return;
+    const generation = this.routeRequest;
+    const request = ++this.referenceRequest;
+    this.referenceError.set(undefined);
+    this.referenceNotice.set(undefined);
+    const dialog = this.dialogs.open<CatalogItemValue, undefined, CatalogEditor>(CatalogEditor, {
+      ariaLabelledBy: 'catalog-editor-title',
+      ariaModal: true,
+      autoFocus: '#catalog-description',
+      restoreFocus: '#quote-create-catalog',
+      disableClose: true,
+      closeOnNavigation: false,
+      disableAnimations: true,
+      width: '48rem',
+      maxWidth: 'calc(100vw - 2rem)',
+    });
+    this.referenceDialog.set(dialog);
+    dialog.closed.subscribe((item) => {
+      this.referenceDialog.set(undefined);
+      if (this.destroyRef.destroyed || generation !== this.routeRequest) return;
+      if (item) {
+        this.catalogItems.update((items) => [
+          ...items.filter((entry) => entry.id !== item.id),
+          item,
+        ]);
+        this.referenceNotice.set('catalog.saved');
+        this.addCatalogItem(item.id);
+      } else void this.refreshCatalog(generation, request);
+    });
+  }
+
+  protected createConditionPreset(): void {
+    if (this.saveDisabled() || this.referenceBusy()) return;
+    const generation = this.routeRequest;
+    const request = ++this.referenceRequest;
+    this.referenceError.set(undefined);
+    this.referenceNotice.set(undefined);
+    const dialog = this.dialogs.open<QuoteConditionPresetValue, undefined, ConditionEditor>(
+      ConditionEditor,
+      {
+        ariaLabelledBy: 'condition-editor-title',
+        ariaModal: true,
+        autoFocus: '#preset-name',
+        restoreFocus: '#quote-create-conditions',
+        disableClose: true,
+        closeOnNavigation: false,
+        disableAnimations: true,
+        width: '56rem',
+        maxWidth: 'calc(100vw - 2rem)',
+      },
+    );
+    this.referenceDialog.set(dialog);
+    dialog.closed.subscribe((preset) => {
+      this.referenceDialog.set(undefined);
+      if (this.destroyRef.destroyed || generation !== this.routeRequest) return;
+      if (preset) {
+        this.conditionPresets.update((presets) => [
+          ...presets.filter((entry) => entry.id !== preset.id),
+          preset,
+        ]);
+        this.referenceNotice.set('referenceEditor.conditionsSaved');
+        void this.selectConditionPreset(preset.id);
+      } else void this.refreshConditionPresets(generation, request);
+    });
+  }
+
+  private async refreshCatalog(generation: number, request: number): Promise<void> {
+    try {
+      const items = await this.catalogApi.list();
+      if (
+        this.destroyRef.destroyed ||
+        generation !== this.routeRequest ||
+        request !== this.referenceRequest
+      )
+        return;
+      this.catalogItems.set(items.filter((item) => !item.archived));
+    } catch {
+      if (
+        !this.destroyRef.destroyed &&
+        generation === this.routeRequest &&
+        request === this.referenceRequest
+      )
+        this.referenceError.set('catalogWorkspace.loadError');
+    }
+  }
+
+  private async refreshConditionPresets(generation: number, request: number): Promise<void> {
+    try {
+      const presets = await this.conditionPresetsApi.list();
+      if (
+        this.destroyRef.destroyed ||
+        generation !== this.routeRequest ||
+        request !== this.referenceRequest
+      )
+        return;
+      this.conditionPresets.set(presets);
+    } catch {
+      if (
+        !this.destroyRef.destroyed &&
+        generation === this.routeRequest &&
+        request === this.referenceRequest
+      )
+        this.referenceError.set('quote.error');
+    }
   }
 
   async canDeactivate(): Promise<boolean> {
-    if (this.saving()) return false;
+    if (this.saving() || this.referenceBusy()) return false;
     if (this.uncertain())
       return this.confirmation.request(this.i18n.t('commercial.leaveUncertain'));
     return (
@@ -254,13 +391,18 @@ export class QuoteEditor {
 
   @HostListener('window:beforeunload', ['$event'])
   protected preventUnsavedUnload(event: BeforeUnloadEvent): void {
-    if (this.saving() || this.uncertain() || (!this.completed() && this.quoteForm().dirty()))
+    if (
+      this.saving() ||
+      this.referenceBusy() ||
+      this.uncertain() ||
+      (!this.completed() && this.quoteForm().dirty())
+    )
       event.preventDefault();
   }
 
   protected save(event: SubmitEvent): void {
     event.preventDefault();
-    if (this.saveDisabled()) return;
+    if (this.saveDisabled() || this.referenceBusy()) return;
     const fields = [
       this.quoteForm.clientId,
       this.quoteForm.title,
@@ -353,14 +495,20 @@ export class QuoteEditor {
   }
 
   protected async reload(): Promise<void> {
-    if (this.saving() || this.uncertain()) return;
+    if (this.saving() || this.uncertain() || this.referenceBusy()) return;
     const generation = this.routeRequest;
     if (
       this.quoteForm().dirty() &&
       !(await this.confirmation.request(this.i18n.t('commercial.reloadConfirm')))
     )
       return;
-    if (this.destroyRef.destroyed || generation !== this.routeRequest || this.saving()) return;
+    if (
+      this.destroyRef.destroyed ||
+      generation !== this.routeRequest ||
+      this.saving() ||
+      this.referenceBusy()
+    )
+      return;
     await this.load(this.route.snapshot.paramMap.get('quoteId'));
   }
 
@@ -370,6 +518,9 @@ export class QuoteEditor {
 
   private async load(parameter: string | null): Promise<void> {
     const request = ++this.routeRequest;
+    this.referenceDialog()?.close();
+    this.referenceError.set(undefined);
+    this.referenceNotice.set(undefined);
     const requestedClientId = this.decodeQuoteId(this.route.snapshot.queryParamMap.get('clientId'));
     const quoteId = this.decodeQuoteId(parameter);
     this.quoteId.set(quoteId);
