@@ -11,6 +11,8 @@
         }
       </select></label
     >
+    <p>{{ text().tableLayouts[model().layout] }}</p>
+    <p>{{ text().wideTable }}</p>
     } @if (entry.id === 'table-sort') {
     <label
       >{{ 'direction' }}<select class="select" [formField]="controls.direction">
@@ -89,8 +91,9 @@
   <div storyVariants class="samples">
     @switch (entry.id) { @case ('data-table') { @for (layout of layouts; track layout) {
     <div class="sample" data-variant>
-      <code>{{ layout }}</code
-      ><ng-container *ngTemplateOutlet="table; context: { $implicit: layout }" />
+      <code>{{ layout }}</code>
+      <p>{{ text().tableLayouts[layout] }}</p>
+      <ng-container *ngTemplateOutlet="table; context: { $implicit: layout }" />
     </div>
     } } @case ('table-sort') { @for (direction of directions; track direction) {
     <div class="sample" data-variant>

@@ -76,7 +76,7 @@
       [title]="i18n.t(query().q ? 'bankWorkspace.ledgerNoMatches' : query().view === 'journal' ? 'bankWorkspace.journalEmpty' : 'bankWorkspace.sourceEmpty')"
     />
     } @else if (query().view === 'sources') {
-    <div appDataTable tableLayout="fluid">
+    <div appDataTable tableLayout="fluid" class="wide-table">
       <table>
         <thead>
           <tr>
@@ -118,7 +118,7 @@
       </table>
     </div>
     } @else {
-    <div appDataTable tableLayout="fluid">
+    <div appDataTable tableLayout="fluid" class="wide-table">
       <table>
         <thead>
           <tr>

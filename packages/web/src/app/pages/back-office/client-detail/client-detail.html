@@ -177,7 +177,7 @@
       </button>
       } @else { @if (affairTable.rows().length === 0) {
       <app-empty-state icon="invoice" [title]="i18n.t(affairEmptyLabel())" /> } @else {
-      <div appDataTable tableLayout="fluid">
+      <div appDataTable tableLayout="fluid" class="wide-table">
         <table>
           <thead>
             <tr>
@@ -330,7 +330,7 @@
       } @else { @if (documentTable.rows().length === 0) {
       <app-empty-state icon="invoice" [title]="i18n.t(documentEmptyLabel())" />
       } @else {
-      <div appDataTable tableLayout="fluid">
+      <div appDataTable tableLayout="fluid" class="wide-table">
         <table>
           <colgroup>
             <col class="document-column" />

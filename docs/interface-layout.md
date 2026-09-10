@@ -214,6 +214,10 @@ Le slot `emptyActions` permet de projeter un groupe d’actions explicite.
 `FilterMenu` aligne son bord de début sur celui du bouton, à gauche en français et en anglais.
 Il change de position uniquement si l’espace disponible ne suffit pas.
 `DataTable` propose le mode `fluid` pour répartir les colonnes et autoriser le retour à la ligne.
+Ce mode ne fixe pas de largeur minimale au-delà du conteneur.
+Le mode `scroll` conserve le texte sur une ligne et défile uniquement lorsque le contenu dépasse le conteneur.
+Sur les tableaux métier à nombreuses colonnes, la classe `.wide-table` conserve une largeur minimale de 40 rem.
+Cette contrainte explicite évite de réduire leurs colonnes à quelques caractères sur mobile.
 La composition `/design/workflows` présente une recherche interactive.
 La référence `/design/data-table` présente le tableau fluide.
 La référence `/design/empty-state` présente l’état vide.

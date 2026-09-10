@@ -155,6 +155,7 @@ function storyProperties(description: StoryDescriptions) {
     ],
     'data-table': [
       ['tableLayout', "'scroll' | 'fluid'", 'scroll'],
+      ['class', "'wide-table' · min-width: 40rem", '—'],
       ['role', `string · ${description.ariaAttribute}`, 'region'],
       ['tabindex', `number · ${description.nativeAttribute}`, '0'],
       ['aria-label', `string · ${description.ariaAttribute}`, "i18n.t('table.scrollRegion')"],
@@ -630,7 +631,18 @@ const referenceExamples = {
 export const componentReferenceText = {
   fr: {
     stories: frenchStories,
-    examples: referenceExamples,
+    examples: {
+      ...referenceExamples,
+      tableName: 'Atlas — étude et développement du système de gestion des interventions',
+    },
+    tableLayouts: {
+      scroll:
+        'Le texte reste sur une ligne. Le tableau défile horizontalement si son contenu dépasse la largeur disponible.',
+      fluid:
+        'Le tableau prend la largeur disponible. Le texte revient à la ligne dans les cellules.',
+    },
+    wideTable:
+      'Pour un tableau métier à nombreuses colonnes, la classe wide-table conserve une largeur minimale de 40 rem.',
     language: 'fr',
     componentCount: { one: '{count} composant', other: '{count} composants' },
     variantCount: { one: '{count} variante présentée', other: '{count} variantes présentées' },
@@ -764,7 +776,17 @@ export const componentReferenceText = {
   },
   en: {
     stories: englishStories,
-    examples: referenceExamples,
+    examples: {
+      ...referenceExamples,
+      tableName: 'Atlas — analysis and development of the intervention management system',
+    },
+    tableLayouts: {
+      scroll:
+        'Text stays on one line. The table scrolls horizontally when its content exceeds the available width.',
+      fluid: 'The table uses the available width. Text wraps inside the cells.',
+    },
+    wideTable:
+      'For a business table with many columns, the wide-table class keeps a minimum width of 40 rem.',
     language: 'en',
     componentCount: { one: '{count} component', other: '{count} components' },
     variantCount: { one: '{count} displayed variant', other: '{count} displayed variants' },

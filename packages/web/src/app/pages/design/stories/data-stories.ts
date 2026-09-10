@@ -76,7 +76,10 @@ export class DataStories {
     pending: false,
     date: this.text().examples.date,
     filename: this.text().examples.filename,
-    firstName: this.text().examples.firstName,
+    firstName:
+      this.entry.id === 'data-table'
+        ? this.text().examples.tableName
+        : this.text().examples.firstName,
     firstValue: this.text().examples.firstValue,
   });
   protected readonly controls = form(this.model, (path) => {

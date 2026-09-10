@@ -245,8 +245,11 @@ app-page-header .muted {
 
 .data-table[data-table-layout="fluid"] table {
   width: 100%;
-  min-width: 40rem;
   table-layout: fixed;
+}
+
+.data-table[data-table-layout="fluid"].wide-table table {
+  min-width: 40rem;
 }
 
 .data-table[data-table-layout="fluid"] th,

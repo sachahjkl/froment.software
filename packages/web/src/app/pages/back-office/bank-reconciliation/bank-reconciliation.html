@@ -184,7 +184,7 @@
         @if (!item.allocations.length) {
         <p>{{ i18n.t('bankWorkspace.noAllocations') }}</p>
         } @else {
-        <div appDataTable tableLayout="fluid">
+        <div appDataTable tableLayout="fluid" class="wide-table">
           <table>
             <thead>
               <tr>
@@ -294,7 +294,7 @@
     } @else if (!history().length) {
     <p>{{ i18n.t('bank.historyEmpty') }}</p>
     } @else {
-    <div appDataTable tableLayout="fluid">
+    <div appDataTable tableLayout="fluid" class="wide-table">
       <table>
         <thead>
           <tr>
