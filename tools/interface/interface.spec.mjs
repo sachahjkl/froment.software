@@ -247,8 +247,11 @@ test("client form and complete account address", async ({ page, colorScheme }, t
   const bounds = await accountDetails.boundingBox();
   expect(bounds.x).toBeGreaterThanOrEqual(0);
   expect(bounds.x + bounds.width).toBeLessThanOrEqual(page.viewportSize().width);
-  await expect(accountDetails.locator("app-language-selector select")).toBeVisible();
-  await expect(accountDetails.locator("app-theme-toggle button")).toBeVisible();
+  await expect(accountDetails.locator("app-language-selector select")).toHaveCount(0);
+  await expect(accountDetails.locator("app-theme-toggle button")).toHaveCount(0);
+  const preferences = page.locator(".sidebar-bottom:visible");
+  await expect(preferences.locator("app-language-selector select")).toBeVisible();
+  await expect(preferences.locator("app-theme-toggle button")).toBeVisible();
   const accountMenuAudit = await new AxeBuilder({ page })
     .withTags(["wcag2a", "wcag2aa", "wcag21aa"])
     .analyze();
