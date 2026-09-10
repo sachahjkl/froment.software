@@ -1,0 +1,82 @@
+:host {
+  display: block;
+}
+.email-task {
+  display: grid;
+  gap: var(--space-6);
+  padding: var(--page-header-y) var(--page-x);
+}
+.task-form {
+  display: grid;
+  gap: var(--space-6);
+  inline-size: 100%;
+  max-inline-size: 52rem;
+}
+.field {
+  display: grid;
+  gap: var(--space-2);
+  min-inline-size: 0;
+}
+.fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-4);
+}
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  align-items: center;
+}
+.muted {
+  color: var(--color-muted);
+}
+.field-error {
+  color: var(--color-danger);
+  font-size: var(--text-sm);
+}
+.field-error:empty {
+  display: none;
+}
+.message-body {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.message-preview {
+  display: grid;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  background: var(--color-surface-raised);
+}
+dl {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  gap: var(--space-3) var(--space-5);
+}
+dt {
+  color: var(--color-muted);
+}
+dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+fieldset {
+  border: 0;
+  padding: 0;
+  margin: 0;
+  min-inline-size: 0;
+}
+legend {
+  padding: 0;
+  margin-block-end: var(--space-4);
+  font-weight: 700;
+}
+@media (max-width: 40rem) {
+  .fields {
+    grid-template-columns: 1fr;
+  }
+  dl {
+    grid-template-columns: 1fr;
+    gap: var(--space-2);
+  }
+}

@@ -52,6 +52,8 @@ it('isolates pending requests by account and provider', async () => {
   const requests = TestBed.inject(PendingProviderRequests);
   (await requests.email()).write(request);
   expect((await requests.checkout()).read()).toBeUndefined();
+  expect((await requests.businessEmail()).read()).toBeUndefined();
+  expect((await requests.reminder()).read()).toBeUndefined();
   userId = '01ARZ3NDEKTSV4RRFFQ69G5FAW';
   expect((await requests.email()).read()).toBeUndefined();
   userId = '01ARZ3NDEKTSV4RRFFQ69G5FAV';

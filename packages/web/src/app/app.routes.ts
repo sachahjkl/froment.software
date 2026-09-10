@@ -414,12 +414,71 @@ export const routes: Routes = [
     ],
   },
   {
+    path: 'backoffice/courriels/new',
+    loadComponent: () =>
+      import('./pages/back-office/email-composer/email-composer').then(
+        (module) => module.EmailComposer,
+      ),
+    canActivate: [administratorGuard],
+    canDeactivate: [unsavedChangesGuard],
+    data: { titleKey: 'emailsWorkspace.newMessage', robots: 'noindex, nofollow' },
+  },
+  {
+    path: 'backoffice/courriels/drafts/:draftId/edit',
+    loadComponent: () =>
+      import('./pages/back-office/email-composer/email-composer').then(
+        (module) => module.EmailComposer,
+      ),
+    canActivate: [administratorGuard],
+    canDeactivate: [unsavedChangesGuard],
+    data: { titleKey: 'emailsWorkspace.editDraft', robots: 'noindex, nofollow' },
+  },
+  {
+    path: 'backoffice/courriels/messages/:operationId',
+    loadComponent: () =>
+      import('./pages/back-office/email-detail/email-detail').then((module) => module.EmailDetail),
+    canActivate: [administratorGuard],
+    canDeactivate: [unsavedChangesGuard],
+    data: { titleKey: 'emailsWorkspace.message', robots: 'noindex, nofollow' },
+  },
+  {
+    path: 'backoffice/courriels/templates/new',
+    loadComponent: () =>
+      import('./pages/back-office/email-template-editor/email-template-editor').then(
+        (module) => module.EmailTemplateEditor,
+      ),
+    canActivate: [administratorGuard],
+    canDeactivate: [unsavedChangesGuard],
+    data: { titleKey: 'emailsWorkspace.newTemplate', robots: 'noindex, nofollow' },
+  },
+  {
+    path: 'backoffice/courriels/templates/:templateId/edit',
+    loadComponent: () =>
+      import('./pages/back-office/email-template-editor/email-template-editor').then(
+        (module) => module.EmailTemplateEditor,
+      ),
+    canActivate: [administratorGuard],
+    canDeactivate: [unsavedChangesGuard],
+    data: { titleKey: 'emailsWorkspace.editTemplate', robots: 'noindex, nofollow' },
+  },
+  {
+    path: 'backoffice/courriels/reminders/new',
+    loadComponent: () =>
+      import('./pages/back-office/reminder-editor/reminder-editor').then(
+        (module) => module.ReminderEditor,
+      ),
+    canActivate: [administratorGuard],
+    canDeactivate: [unsavedChangesGuard],
+    data: { titleKey: 'emailsWorkspace.newReminder', robots: 'noindex, nofollow' },
+  },
+  {
     path: 'backoffice/courriels',
     loadComponent: () =>
       import('./pages/back-office/emails/emails').then((module) => module.Emails),
     canActivate: [administratorGuard],
     canDeactivate: [unsavedChangesGuard],
     data: { titleKey: 'emails.title', descriptionKey: 'emails.intro', robots: 'noindex, nofollow' },
+    children: tabRoutes('messages', 'emails', ['messages', 'drafts', 'reminders', 'templates']),
   },
   {
     path: 'backoffice/banque',

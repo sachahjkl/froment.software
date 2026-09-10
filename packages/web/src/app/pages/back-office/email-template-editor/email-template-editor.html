@@ -1,0 +1,69 @@
+<section class="email-task" aria-labelledby="template-title">
+  <a routerLink="/backoffice/courriels/templates" [queryParams]="backQuery()"
+    >{{ i18n.t('emailsWorkspace.backTemplates') }}</a
+  >
+  <app-page-header
+    ><h1 id="template-title">
+      {{ i18n.t(template() ? 'emailsWorkspace.editTemplate' : 'emailsWorkspace.newTemplate') }}
+    </h1>
+    <p class="muted">{{ i18n.t('emailsWorkspace.templateHint') }}</p></app-page-header
+  >
+  @if (error(); as error) {
+  <p appNotice variant="danger" role="alert">{{ i18n.t(error) }}</p>
+  } @if (state() === 'loading') {
+  <p role="status">{{ i18n.t('integrations.loading') }}</p>
+  } @else if (state() === 'error') {
+  <div>
+    <button appButton type="button" (click)="load()">{{ i18n.t('integrations.reload') }}</button>
+  </div>
+  } @else if (completed()) {
+  <p appNotice variant="success" role="status">
+    {{ i18n.t(archived() ? 'emailsWorkspace.templateArchived' : 'emailsWorkspace.templateSaved') }}
+  </p>
+  } @else {
+  <form class="task-form" novalidate (submit)="save($event)">
+    <label class="field"
+      >{{ i18n.t('emails.subject') }}<input
+        id="template-subject"
+        class="input"
+        [formField]="templateForm.subject"
+        [attr.aria-invalid]="invalid('subject')"
+        aria-describedby="template-subject-error"
+      /><span id="template-subject-error" class="field-error"
+        >@if (invalid('subject')) { {{ i18n.t('emailsWorkspace.shortTextInvalid') }} }</span
+      ></label
+    >
+    <label class="field"
+      >{{ i18n.t('emails.body') }}<textarea
+        id="template-body"
+        class="input"
+        rows="12"
+        [formField]="templateForm.body"
+        [attr.aria-invalid]="invalid('body')"
+        aria-describedby="template-body-error"
+      ></textarea
+      ><span id="template-body-error" class="field-error"
+        >@if (invalid('body')) { {{ i18n.t('emailsWorkspace.bodyInvalid') }} }</span
+      ></label
+    >
+    <details>
+      <summary>{{ i18n.t('emailsWorkspace.preview') }}</summary>
+      <div class="message-preview">
+        <strong>{{ model().subject }}</strong>
+        <p class="message-body">{{ model().body }}</p>
+      </div>
+    </details>
+    <div class="actions">
+      <button appButton variant="primary" type="submit" [disabled]="busy()">
+        {{ i18n.t(busy() ? 'emailsWorkspace.saving' : 'catalog.save') }}</button
+      >@if (template()) {
+      <button appButton type="button" [disabled]="busy()" (click)="archive()">
+        {{ i18n.t('emailDraft.archive') }}
+      </button>
+      }<a routerLink="/backoffice/courriels/templates" [queryParams]="backQuery()"
+        >{{ i18n.t('catalogWorkspace.cancel') }}</a
+      >
+    </div>
+  </form>
+  }
+</section>

@@ -106,6 +106,50 @@ export async function checkCatalogZoom(testInfo) {
     await page.keyboard.press("Escape");
     await expect(page.getByRole("dialog")).toHaveCount(0);
     await expect(page.locator("#catalog-description")).toHaveValue("Prestation non enregistrée");
+    page.once("dialog", (dialog) => dialog.accept());
+    await page.goto("/backoffice/courriels/messages");
+    for (const theme of ["light", "dark"]) {
+      await page.evaluate((value) => {
+        document.documentElement.dataset.theme = value;
+      }, theme);
+      await expect(page.locator("app-emails app-empty-state")).toBeVisible();
+      expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth)).toBe(
+        false,
+      );
+      await capture(`emails-zoom-200-${theme}.png`);
+    }
+    await page.route("**/api/email-templates", (route) =>
+      route.fulfill({
+        json: [
+          {
+            id: "91ff5717-c394-4708-bef2-6b5f5cafbdab",
+            subject: "Présentation du devis",
+            body: "Texte du modèle",
+            version: 1,
+            updatedAt: "2026-09-10T00:00:00.000Z",
+          },
+        ],
+      }),
+    );
+    await page.locator("app-emails app-page-header a").click();
+    await page.locator('app-email-composer [type="submit"]').click();
+    await expect(page.locator("#email-recipient")).toBeFocused();
+    await page.locator("app-object-picker > button").click();
+    await expect(page.getByRole("dialog").locator("input")).toBeFocused();
+    await page.getByRole("dialog").locator("input").fill("devi");
+    await expect(page.getByRole("dialog").locator(".option")).toHaveCount(1);
+    await capture("email-picker-zoom-200.png");
+    const emailPickerAudit = await new AxeBuilder({ page })
+      .withTags(["wcag2a", "wcag2aa", "wcag21aa"])
+      .analyze();
+    expect(emailPickerAudit.violations).toEqual([]);
+    await page.keyboard.press("Escape");
+    await expect(page.locator("app-object-picker > button")).toBeFocused();
+    await page.locator("#email-subject").fill("Message non enregistré");
+    expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth)).toBe(
+      false,
+    );
+    await capture("email-composer-zoom-200.png");
   } finally {
     await context.close();
     await rm(profile, { recursive: true, force: true });

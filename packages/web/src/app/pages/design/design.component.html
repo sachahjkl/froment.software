@@ -558,6 +558,20 @@
     </section>
   </ng-template>
   <ng-template appTabPanel="data">
+    <section class="notice-flow picker-demo" aria-labelledby="picker-demo-title">
+      <h2 id="picker-demo-title">{{ i18n.t("listControls.pickerDemo") }}</h2>
+      <p>{{ i18n.t("listControls.pickerDemoHint") }}</p>
+      <div>
+        <app-object-picker
+          [label]="i18n.t('listControls.chooseOption')"
+          [options]="pickerOptions"
+          (selected)="pickerSelection.set($event)"
+        />
+      </div>
+      <p role="status">
+        {{ i18n.tf("listControls.selectedOption", { value: pickerSelection() || "—" }) }}
+      </p>
+    </section>
     <section
       id="design-data-panel"
       class="component-panel"

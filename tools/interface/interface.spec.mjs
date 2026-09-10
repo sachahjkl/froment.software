@@ -9,12 +9,14 @@ import { checkDashboardShell, openBackOfficeNavigation } from "./dashboard-shell
 import { checkClientsWorkspace } from "./clients-workspace.mjs";
 import { checkCatalogWorkspace } from "./catalog-workspace.mjs";
 import { checkCatalogZoom } from "./catalog-zoom.mjs";
+import { checkEmailsWorkspace } from "./emails-workspace.mjs";
 import { checkDefaultButtonTheme } from "./button-theme.mjs";
 import {
   accountEmail,
   clientId,
   quoteId,
   invoiceId,
+  invoiceSummary,
   issuedInvoice,
   quoteToken,
   mockApi,
@@ -84,6 +86,18 @@ for (const [kind, id] of [
       await page.route(`**/api/invoices/${invoiceId}`, (route) =>
         route.fulfill({ json: issuedInvoice }),
       );
+      await page.route("**/api/invoices", (route) =>
+        route.fulfill({
+          json: [
+            {
+              ...invoiceSummary,
+              status: "issued",
+              invoiceNumber: issuedInvoice.invoiceNumber,
+              recordedPaidCents: 10000,
+            },
+          ],
+        }),
+      );
       await page.reload();
       await page
         .locator(".payment-form")
@@ -98,25 +112,52 @@ for (const [kind, id] of [
         .click();
       await expect(page.locator("#email-reference")).toHaveValue("FA-2026-000001");
       await expect(page.locator("#email-body")).toHaveValue(/3.?500[,.]00/);
-      await page.locator('app-emails .composer button[type="submit"]').click();
-      await expect(page.locator('app-emails [role="status"]')).toContainText(
+      await page.locator('app-email-composer .composer button[type="submit"]').click();
+      await expect(page.locator("app-email-detail [appNotice]")).toContainText(
         /courriel non envoyé|email not sent/,
       );
-      await page.locator("#reminder-date").fill("2026-10-01T10:00");
+      await page.goto(`/backoffice/courriels/reminders/new?invoice=${invoiceId}`);
+      const reminderRequests = [];
+      let reminderUnavailable = true;
+      const reminderPattern = "**/api/reminders/*";
+      await page.route(reminderPattern, (route) => {
+        if (route.request().method() !== "PUT") return route.fallback();
+        reminderRequests.push({
+          url: route.request().url(),
+          request: route.request().postDataJSON(),
+        });
+        return reminderUnavailable ? route.fulfill({ status: 503, json: {} }) : route.fallback();
+      });
+      const reminderDate = await page.evaluate(() =>
+        new Date(Date.now() + 7 * 86400000).toISOString().slice(0, 16),
+      );
+      await page.locator("#reminder-date").fill(reminderDate);
       await page.getByRole("button", { name: /Programmer la relance|Schedule reminder/ }).click();
       await page
         .getByRole("alertdialog")
         .getByRole("button", { name: /^(Confirmer|Confirm)$/ })
         .click();
-      await expect(page.locator('app-reminder-schedules [role="status"]')).toContainText(
-        /Relance enregistrée|Reminder saved/,
-      );
+      await expect(page.locator('app-reminder-editor [role="alert"]')).toBeVisible();
+      await expect(page.locator("#reminder-date")).toBeDisabled();
+      page.once("dialog", (dialog) => dialog.accept());
+      await page.reload();
+      await expect(page.locator("#reminder-date")).toBeDisabled();
+      expect(reminderRequests).toHaveLength(1);
+      reminderUnavailable = false;
+      await page
+        .getByRole("button", { name: /Reprendre cette demande|Resume this request/ })
+        .click();
+      await expect(page).toHaveURL(/courriels\/reminders$/);
+      expect(reminderRequests).toHaveLength(2);
+      expect(reminderRequests[1]).toEqual(reminderRequests[0]);
+      await page.unroute(reminderPattern);
+      await expect(page.locator("app-emails tbody")).toContainText(/Programmée|Scheduled/);
       await page.getByRole("button", { name: /Annuler la programmation|Cancel schedule/ }).click();
       await page
         .getByRole("alertdialog")
         .getByRole("button", { name: /^(Confirmer|Confirm)$/ })
         .click();
-      await expect(page.locator("app-reminder-schedules ol")).toContainText(/Annulée|Cancelled/);
+      await expect(page.locator("app-emails tbody")).toContainText(/Annulée|Cancelled/);
       await page.goto(`/backoffice/invoices/${invoiceId}`);
       await page.getByRole("button", { name: /Annuler cette saisie|Cancel this entry/ }).click();
       const reason = page.getByRole("textbox", {
@@ -290,61 +331,7 @@ test("client form and complete account address", async ({ page, colorScheme }, t
     /Tentatives épuisées|Attempts exhausted/,
   );
   await page.screenshot({ path: testInfo.outputPath("external-services.png"), fullPage: true });
-  await page.goto("/backoffice/courriels");
-  await page.locator("#email-recipient").fill("client@example.test");
-  await page.locator("#email-reference").fill("DE-2026-000001");
-  await page.locator("#email-subject").fill("Votre devis / Your quote");
-  await openBackOfficeNavigation(page);
-  const bankLink = page.locator('a[href="/backoffice/banque"]:visible').first();
-  await bankLink.click();
-  const confirmation = page.getByRole("alertdialog");
-  await expect(confirmation).toBeVisible();
-  await expect(confirmation.locator("[data-confirmation-cancel]")).toBeFocused();
-  const confirmationAudit = await new AxeBuilder({ page })
-    .withTags(["wcag2a", "wcag2aa", "wcag21aa"])
-    .analyze();
-  expect(confirmationAudit.violations).toEqual([]);
-  await page.keyboard.press("Escape");
-  await expect(confirmation).toBeHidden();
-  await expect(bankLink).toBeFocused();
-  if (await page.locator(".navigation-trigger").isVisible()) {
-    await page.keyboard.press("Escape");
-    await expect(page.getByRole("dialog")).toHaveCount(0);
-  }
-  await expect(page.locator("#email-subject")).toHaveValue("Votre devis / Your quote");
-  await page.getByRole("button", { name: /Enregistrer le brouillon|Save draft/ }).click();
-  await expect(page.locator(".drafts li")).toContainText("Votre devis / Your quote");
-  await page.reload();
-  await page
-    .locator(".drafts")
-    .getByRole("button", { name: /Ouvrir|Open/, exact: true })
-    .click();
-  await expect(page.locator("#email-subject")).toHaveValue("Votre devis / Your quote");
-  await expect(page.locator("#email-recipient")).toHaveValue("client@example.test");
-  await page
-    .locator("#email-body")
-    .fill("Bonjour,\nVoici le récapitulatif de notre proposition.\nCordialement.");
-  await page
-    .getByRole("button", { name: /Créer un modèle avec ce texte|Create a template from this text/ })
-    .click();
-  await expect(page.locator(".templates li")).toContainText("Votre devis / Your quote");
-  await page.getByRole("button", { name: /Utiliser ce modèle|Use this template/ }).click();
-  await page.getByRole("alertdialog").locator("button").last().click();
-  await expect(page.locator("#email-recipient")).toHaveValue("client@example.test");
-  await page.locator('app-emails .composer button[type="submit"]').click();
-  await expect(page.locator('app-emails [role="status"]')).toContainText(
-    /courriel non envoyé|email not sent/,
-  );
-  await expect(page.locator('app-emails [role="status"]')).toBeFocused();
-  await expect(page.locator("app-emails .input:user-invalid")).toHaveCount(0);
-  await page.locator("app-emails details summary").first().click();
-  await expect(page.locator("app-emails .message-body").first()).toContainText("Bonjour");
-  expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth)).toBe(false);
-  const emailAudit = await new AxeBuilder({ page })
-    .withTags(["wcag2a", "wcag2aa", "wcag21aa"])
-    .analyze();
-  expect(emailAudit.violations).toEqual([]);
-  await page.screenshot({ path: testInfo.outputPath("emails.png"), fullPage: true });
+  await checkEmailsWorkspace(page, testInfo);
   await checkNoticeSpacing(page);
   await page.goto("/backoffice/banque");
   await page.locator("#bank-account").fill("MAIN");

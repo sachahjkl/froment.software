@@ -240,7 +240,11 @@
       @if (invoiceForm().dirty()) {
       <p class="hint">{{ i18n.t('backOffice.invoice.issueUnsaved') }}</p>
       } } @else if (invoice.status === 'issued') {
-      <a appLinkButton routerLink="/backoffice/courriels" [queryParams]="{ invoice: invoice.id }">
+      <a
+        appLinkButton
+        routerLink="/backoffice/courriels/new"
+        [queryParams]="{ invoice: invoice.id }"
+      >
         {{ i18n.t('emails.prepareReminder') }}
       </a>
       <button

@@ -1,414 +1,407 @@
-import { Confirmation } from '@shared/confirmation/confirmation';
-import { ActivatedRoute } from '@angular/router';
-import { InvoiceReminder } from '@backoffice/invoice-reminder';
 import {
   afterNextRender,
   ChangeDetectionStrategy,
   Component,
-  ElementRef,
+  computed,
+  DestroyRef,
   HostListener,
   inject,
   signal,
-  viewChild,
 } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { FormField, form } from '@angular/forms/signals';
+import { ActivatedRoute, Router, RouterLink, RouterOutlet } from '@angular/router';
 import {
-  FormField,
-  disabled,
-  email,
-  form,
-  maxLength,
-  pattern,
-  required,
-  submit,
-} from '@angular/forms/signals';
-import {
-  EmailSubmission,
-  EmailDraft,
-  EmailTemplate,
-  Ulid,
+  type EmailDraft,
+  type EmailTemplate,
   type IntegrationOperationValue,
+  type Reminder,
 } from '@froment/contracts';
-import { Option, Schema } from 'effect';
 import { IntegrationsApi } from '@backoffice/integrations-api';
-import { I18nService, type TranslationKey } from '@app/i18n.service';
 import { EmailDraftsApi } from '@backoffice/email-drafts-api';
 import { EmailTemplatesApi } from '@backoffice/email-templates-api';
+import { RemindersApi } from '@backoffice/reminders-api';
+import { I18nService, type TranslationKey } from '@app/i18n.service';
 import { Button } from '@shared/button/button';
-import { Notice } from '@shared/notice/notice';
+import { Badge } from '@shared/badge/badge';
+import { Confirmation } from '@shared/confirmation/confirmation';
+import { DataTable } from '@shared/data-table/data-table';
+import { EmptyState } from '@shared/empty-state/empty-state';
+import { FilterChip } from '@shared/filter-chip/filter-chip';
+import { ListToolbar } from '@shared/list-toolbar/list-toolbar';
 import { LocalizedDatePipe } from '@shared/localized-date/localized-date-pipe';
-import { ReminderSchedules } from './reminder-schedules';
-
-const blank = () => ({ recipient: '', reference: '', subject: '', body: '' });
+import { Notice } from '@shared/notice/notice';
+import { PageHeader } from '@shared/page-header/page-header';
+import { Tabs, type TabItem } from '@shared/tabs/tabs';
+import { TabLayout, TabPanel } from '@shared/tabs/tab-panel';
+import { createFuzzySearch } from '@shared/fuzzy-search';
+import { SearchHighlight, SearchHighlightRegistry } from '@shared/search-highlight';
+import { TableSort, type SortDirection } from '@shared/table-sort/table-sort';
+import {
+  emailQuery,
+  emailState,
+  emailStateLabels,
+  compareEmailRows,
+  emailView,
+  emailViews,
+  type EmailView,
+  messageStatus,
+  reminderReasons,
+  reminderStatuses,
+} from './email-workspace';
 
 @Component({
   host: { class: 'page-container' },
-  imports: [Button, Notice, FormField, LocalizedDatePipe, ReminderSchedules],
+  imports: [
+    Badge,
+    Button,
+    DataTable,
+    EmptyState,
+    FilterChip,
+    FormField,
+    ListToolbar,
+    LocalizedDatePipe,
+    Notice,
+    PageHeader,
+    RouterLink,
+    RouterOutlet,
+    SearchHighlight,
+    Tabs,
+    TabLayout,
+    TabPanel,
+    TableSort,
+  ],
+  providers: [SearchHighlightRegistry],
   changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-emails',
   styleUrl: './emails.scss',
   templateUrl: './emails.html',
 })
 export class Emails {
-  private readonly confirmation = inject(Confirmation);
   protected readonly i18n = inject(I18nService);
   private readonly api = inject(IntegrationsApi);
   private readonly draftsApi = inject(EmailDraftsApi);
   private readonly templatesApi = inject(EmailTemplatesApi);
-  protected readonly templates = signal<ReadonlyArray<typeof EmailTemplate.Type>>([]);
-  protected readonly templatesLoading = signal(true);
-  protected readonly templateError = signal<TranslationKey | undefined>(undefined);
-  protected readonly templateSaved = signal(false);
-  protected readonly templateApplied = signal(false);
-  protected readonly activeTemplate = signal<typeof EmailTemplate.Type | undefined>(undefined);
-  private newTemplateId: string | undefined;
-  protected readonly drafts = signal<ReadonlyArray<typeof EmailDraft.Type>>([]);
-  protected readonly draftsLoading = signal(true);
-  protected readonly draftError = signal<TranslationKey | undefined>(undefined);
-  protected readonly draftSaved = signal(false);
-  private readonly draftId = signal<string | undefined>(undefined);
-  private readonly draftVersion = signal(0);
+  private readonly remindersApi = inject(RemindersApi);
+  private readonly confirmation = inject(Confirmation);
   private readonly route = inject(ActivatedRoute);
-  protected readonly reminderInvoiceId =
-    this.route.snapshot.queryParamMap.get('invoice') ?? undefined;
-  private readonly schedules = viewChild(ReminderSchedules);
-  private readonly reminder = inject(InvoiceReminder);
-  protected readonly preparingReminder = signal(false);
-  protected readonly reminderFailed = signal(false);
-  protected readonly reminderPrepared = signal(false);
-  private readonly model = signal(blank());
-  protected readonly mode = signal<'simulation' | 'live' | undefined>(undefined);
-  protected readonly loading = signal(true);
-  protected readonly saving = signal(false);
-  protected readonly failed = signal(false);
-  protected readonly loadFailed = signal(false);
-  protected readonly invalidRequest = signal(false);
-  protected readonly completed = signal<'simulation' | 'live' | undefined>(undefined);
-  protected readonly pending = signal<typeof EmailSubmission.Type | undefined>(undefined);
-  protected readonly operations = signal<ReadonlyArray<IntegrationOperationValue>>([]);
-  private readonly notice = viewChild('notice', { read: ElementRef<HTMLElement> });
-  private readonly composer = viewChild('composer', { read: ElementRef<HTMLFormElement> });
-  protected readonly messageForm = form(this.model, (path) => {
-    disabled(path, () => this.saving() || this.preparingReminder() || this.pending() !== undefined);
-    required(path.recipient);
-    email(path.recipient);
-    maxLength(path.recipient, 254);
-    required(path.reference);
-    pattern(path.reference, /\S/);
-    maxLength(path.reference, 160);
-    required(path.subject);
-    pattern(path.subject, /\S/);
-    maxLength(path.subject, 160);
-    required(path.body);
-    pattern(path.body, /\S/);
-    maxLength(path.body, 20000);
+  private readonly router = inject(Router);
+  private readonly destroyRef = inject(DestroyRef);
+  protected readonly states = signal<Record<EmailView, 'loading' | 'ready' | 'error'>>({
+    messages: 'loading',
+    drafts: 'loading',
+    reminders: 'loading',
+    templates: 'loading',
   });
+  protected readonly operations = signal<readonly IntegrationOperationValue[]>([]);
+  protected readonly drafts = signal<readonly (typeof EmailDraft.Type)[]>([]);
+  protected readonly templates = signal<readonly (typeof EmailTemplate.Type)[]>([]);
+  protected readonly reminders = signal<readonly (typeof Reminder.Type)[]>([]);
+  protected readonly busy = signal(false);
+  protected readonly confirming = signal(false);
+  protected readonly actionError = signal<TranslationKey | undefined>(undefined);
+  protected readonly query = signal(emailQuery(this.route.snapshot.queryParamMap));
+  private readonly searchModel = signal({ search: this.query().q });
+  protected readonly filters = form(this.searchModel);
+  protected readonly stateLabels = emailStateLabels;
+  protected readonly tabs = computed<readonly TabItem[]>(() =>
+    emailViews.map((view) => ({
+      path: view,
+      id: `email-${view}-tab`,
+      label: this.i18n.t(`emailsWorkspace.${view}`),
+    })),
+  );
+  private readonly messageSearch = createFuzzySearch(
+    this.operations,
+    computed(() => this.filters.search().value()),
+    {
+      keys: ['request.subject', 'request.recipient', 'request.reference'],
+      ignoreLocation: true,
+      ignoreDiacritics: true,
+      includeMatches: true,
+      threshold: 0.35,
+    },
+  );
+  protected readonly messages = computed(() =>
+    this.messageSearch()
+      .filter(
+        ({ item }) =>
+          this.query().state === 'all' ||
+          this.query().state === (item.receipt?.status ?? 'pending'),
+      )
+      .map((result) => ({
+        item: result.item,
+        indices: result.matches?.find((match) => match.key === 'request.subject')?.indices ?? [],
+      }))
+      .toSorted((left, right) =>
+        compareEmailRows(
+          [
+            left.item.request.kind === 'email' ? left.item.request.subject : '',
+            left.item.createdAt,
+          ],
+          [
+            right.item.request.kind === 'email' ? right.item.request.subject : '',
+            right.item.createdAt,
+          ],
+          this.query().sort,
+          this.i18n.language(),
+        ),
+      ),
+  );
+  private readonly draftSearch = createFuzzySearch(
+    this.drafts,
+    computed(() => this.filters.search().value()),
+    {
+      keys: ['subject', 'recipient', 'reference'],
+      ignoreLocation: true,
+      ignoreDiacritics: true,
+      threshold: 0.35,
+      includeMatches: true,
+    },
+  );
+  protected readonly draftResults = computed(() =>
+    this.draftSearch()
+      .filter(
+        ({ item }) =>
+          this.query().state === 'all' ||
+          (item.reminder ? 'reminder' : 'draft') === this.query().state,
+      )
+      .map((result) => ({
+        item: result.item,
+        indices: result.matches?.find((match) => match.key === 'subject')?.indices ?? [],
+      }))
+      .toSorted((left, right) =>
+        compareEmailRows(
+          [left.item.subject, left.item.updatedAt],
+          [right.item.subject, right.item.updatedAt],
+          this.query().sort,
+          this.i18n.language(),
+        ),
+      ),
+  );
+  private readonly templateSearch = createFuzzySearch(
+    this.templates,
+    computed(() => this.filters.search().value()),
+    {
+      keys: ['subject'],
+      ignoreLocation: true,
+      ignoreDiacritics: true,
+      threshold: 0.35,
+      includeMatches: true,
+    },
+  );
+  protected readonly templateResults = computed(() =>
+    this.templateSearch()
+      .map((result) => ({
+        item: result.item,
+        indices: result.matches?.find((match) => match.key === 'subject')?.indices ?? [],
+      }))
+      .toSorted((left, right) =>
+        compareEmailRows(
+          [left.item.subject, left.item.updatedAt],
+          [right.item.subject, right.item.updatedAt],
+          this.query().sort,
+          this.i18n.language(),
+        ),
+      ),
+  );
+  private readonly reminderSearch = createFuzzySearch(
+    this.reminders,
+    computed(() => this.filters.search().value()),
+    {
+      keys: ['invoiceReference'],
+      ignoreLocation: true,
+      ignoreDiacritics: true,
+      threshold: 0.35,
+      includeMatches: true,
+    },
+  );
+  protected readonly reminderResults = computed(() =>
+    this.reminderSearch()
+      .filter(({ item }) => this.query().state === 'all' || item.status === this.query().state)
+      .map((result) => ({
+        item: result.item,
+        indices: result.matches?.find((match) => match.key === 'invoiceReference')?.indices ?? [],
+      }))
+      .toSorted((left, right) =>
+        compareEmailRows(
+          [left.item.invoiceReference, left.item.sendAt],
+          [right.item.invoiceReference, right.item.sendAt],
+          this.query().sort,
+          this.i18n.language(),
+        ),
+      ),
+  );
+  protected readonly status = messageStatus;
+  protected readonly reminderStatuses = reminderStatuses;
+  protected readonly reminderReasons = reminderReasons;
+  private readonly generations = {
+    messages: 0,
+    drafts: 0,
+    reminders: 0,
+    templates: 0,
+  } satisfies Record<EmailView, number>;
+
   constructor() {
     afterNextRender(() => {
-      void this.load();
-      void this.prepareReminder();
-      void this.loadDrafts();
-      void this.loadTemplates();
+      this.route.queryParamMap.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((params) => {
+        const query = emailQuery(params);
+        if (!this.stateOptions(this.currentView()).includes(query.state)) query.state = 'all';
+        this.query.set(query);
+        this.searchModel.set({ search: query.q });
+      });
+      for (const view of emailViews) void this.load(view);
     });
   }
-  protected async loadTemplates(): Promise<void> {
-    this.templatesLoading.set(true);
-    this.templateError.set(undefined);
-    const outcome = await this.templatesApi.list();
-    if (outcome.success) this.templates.set(outcome.result);
-    else this.templateError.set(outcome.code);
-    this.templatesLoading.set(false);
+  protected currentView() {
+    return emailView(this.route.firstChild?.snapshot.url[0]?.path);
   }
-  protected async useTemplate(template: typeof EmailTemplate.Type): Promise<void> {
-    if (this.saving() || this.preparingReminder() || this.pending() !== undefined) return;
-    if (
-      this.unsaved() &&
-      !(await this.confirmation.request(this.i18n.t('backOffice.quote.unsavedChanges')))
-    )
-      return;
-    this.model.update((value) => ({ ...value, subject: template.subject, body: template.body }));
-    this.activeTemplate.set(template);
-    this.templateApplied.set(true);
-    this.templateSaved.set(false);
-    this.draftSaved.set(false);
-    this.completed.set(undefined);
-    this.templateError.set(undefined);
+  protected viewState(view: EmailView) {
+    return this.states()[view];
   }
-  protected async saveTemplate(update = false): Promise<void> {
-    if (
-      this.saving() ||
-      this.preparingReminder() ||
-      this.pending() !== undefined ||
-      this.messageForm.subject().invalid() ||
-      this.messageForm.body().invalid()
-    )
-      return;
-    const current = update ? this.activeTemplate() : undefined;
-    if (update && current === undefined) return;
-    if (update && !(await this.confirmation.request(this.i18n.t('emailTemplate.updateConfirm'))))
-      return;
-    const id = current?.id ?? this.newTemplateId ?? crypto.randomUUID();
-    if (!update) this.newTemplateId = id;
-    this.saving.set(true);
-    this.templateError.set(undefined);
-    this.templateSaved.set(false);
-    try {
-      const outcome = await this.templatesApi.save(id, {
-        subject: this.model().subject,
-        body: this.model().body,
-        expectedVersion: current?.version ?? 0,
-      });
-      if (!outcome.success) {
-        this.templateError.set(outcome.code);
-        return;
-      }
-      this.templates.update((items) => [outcome.result, ...items.filter((item) => item.id !== id)]);
-      this.activeTemplate.set(outcome.result);
-      this.newTemplateId = undefined;
-      this.templateSaved.set(true);
-    } finally {
-      this.saving.set(false);
+  protected createLink() {
+    const view = this.currentView();
+    return view === 'templates'
+      ? '/backoffice/courriels/templates/new'
+      : view === 'reminders'
+        ? '/backoffice/courriels/reminders/new'
+        : '/backoffice/courriels/new';
+  }
+  protected createLabel(): TranslationKey {
+    const view = this.currentView();
+    return view === 'templates'
+      ? 'emailsWorkspace.newTemplate'
+      : view === 'reminders'
+        ? 'emailsWorkspace.newReminder'
+        : 'emailsWorkspace.newMessage';
+  }
+  protected returnQuery(view: EmailView) {
+    return { ...this.query(), view };
+  }
+  protected count(view: EmailView): number {
+    switch (view) {
+      case 'messages':
+        return this.messages().length;
+      case 'drafts':
+        return this.draftResults().length;
+      case 'templates':
+        return this.templateResults().length;
+      case 'reminders':
+        return this.reminderResults().length;
     }
   }
-  protected async archiveTemplate(template: typeof EmailTemplate.Type): Promise<void> {
-    if (this.saving() || this.preparingReminder() || this.pending() !== undefined) return;
-    if (!(await this.confirmation.request(this.i18n.t('emailTemplate.archiveConfirm')))) return;
-    this.saving.set(true);
-    this.templateError.set(undefined);
-    try {
-      const outcome = await this.templatesApi.archive(template);
-      if (!outcome.success) {
-        this.templateError.set(outcome.code);
-        return;
-      }
-      this.templates.update((items) => items.filter((item) => item.id !== template.id));
-      if (this.activeTemplate()?.id === template.id) this.activeTemplate.set(undefined);
-    } finally {
-      this.saving.set(false);
+  protected setSearch(value: string): void {
+    const q = value.slice(0, 120);
+    this.searchModel.set({ search: q });
+    this.query.update((query) => ({ ...query, q }));
+    this.updateQuery();
+  }
+  protected stateOptions(view: EmailView): readonly (keyof typeof emailStateLabels)[] {
+    switch (view) {
+      case 'messages':
+        return ['all', 'pending', 'simulated', 'submitted'];
+      case 'drafts':
+        return ['all', 'draft', 'reminder'];
+      case 'reminders':
+        return ['all', 'scheduled', 'cancelled', 'skipped', 'queued'];
+      case 'templates':
+        return ['all'];
     }
   }
-  protected async loadDrafts(): Promise<void> {
-    this.draftsLoading.set(true);
-    this.draftError.set(undefined);
-    const outcome = await this.draftsApi.list();
-    if (outcome.success) this.drafts.set(outcome.result);
-    else this.draftError.set(outcome.code);
-    this.draftsLoading.set(false);
+  protected setState(value: string): void {
+    this.query.update((query) => ({ ...query, state: emailState(value) }));
+    this.updateQuery();
   }
-  protected async saveDraft(): Promise<boolean> {
-    if (this.saving() || this.preparingReminder() || this.pending() !== undefined) return false;
-    const id = this.draftId() ?? crypto.randomUUID();
-    this.draftId.set(id);
-    this.saving.set(true);
-    this.draftError.set(undefined);
-    this.completed.set(undefined);
+  protected clearState(): void {
+    this.setState('all');
+    this.filters.search().focusBoundControl();
+  }
+  protected sortDirection(column: 'subject' | 'date'): SortDirection {
+    return this.query().sort.startsWith(`${column}-`)
+      ? this.query().sort.endsWith('-asc')
+        ? 'ascending'
+        : 'descending'
+      : 'none';
+  }
+  protected sortBy(column: 'subject' | 'date'): void {
+    const sort =
+      this.sortDirection(column) === 'ascending'
+        ? (`${column}-desc` as const)
+        : (`${column}-asc` as const);
+    this.query.update((query) => ({ ...query, sort }));
+    this.updateQuery();
+  }
+  private updateQuery(): void {
+    void this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: this.query(),
+      replaceUrl: true,
+    });
+  }
+  protected clearSearch(): void {
+    this.setSearch('');
+    this.filters.search().focusBoundControl();
+  }
+  protected async load(view: EmailView): Promise<void> {
+    const generation = ++this.generations[view];
+    this.states.update((value) => ({ ...value, [view]: 'loading' }));
     try {
-      const outcome = await this.draftsApi.save(id, {
-        ...this.model(),
-        reminder: this.reminderPrepared(),
-        expectedVersion: this.draftVersion(),
-      });
-      if (!outcome.success) {
-        this.draftError.set(outcome.code);
-        return false;
+      if (view === 'messages') {
+        const result = await this.api.list('email');
+        if (this.destroyRef.destroyed || generation !== this.generations[view]) return;
+        this.operations.set(result.filter((operation) => operation.request.kind === 'email'));
+      } else if (view === 'drafts') {
+        const result = await this.draftsApi.list();
+        if (this.destroyRef.destroyed || generation !== this.generations[view]) return;
+        if (!result.success) throw new Error('email.drafts.unavailable');
+        this.drafts.set(result.result);
+      } else if (view === 'templates') {
+        const result = await this.templatesApi.list();
+        if (this.destroyRef.destroyed || generation !== this.generations[view]) return;
+        if (!result.success) throw new Error('email.templates.unavailable');
+        this.templates.set(result.result);
+      } else {
+        const result = await this.remindersApi.list();
+        if (this.destroyRef.destroyed || generation !== this.generations[view]) return;
+        if (!result.success) throw new Error('email.reminders.unavailable');
+        this.reminders.set(result.result);
       }
-      this.draftVersion.set(outcome.result.version);
-      this.draftSaved.set(true);
-      this.templateApplied.set(false);
-      this.messageForm().reset(this.model());
-      this.notice()?.nativeElement.focus();
-      this.drafts.update((items) => [outcome.result, ...items.filter((item) => item.id !== id)]);
-      return true;
-    } finally {
-      this.saving.set(false);
-    }
-  }
-  private unsaved(): boolean {
-    return (
-      this.messageForm().dirty() ||
-      this.templateApplied() ||
-      (this.reminderPrepared() && !this.draftSaved()) ||
-      this.pending() !== undefined
-    );
-  }
-  protected async openDraft(draft?: typeof EmailDraft.Type): Promise<void> {
-    if (this.saving() || this.preparingReminder() || this.pending() !== undefined) return;
-    if (
-      this.unsaved() &&
-      !(await this.confirmation.request(this.i18n.t('backOffice.quote.unsavedChanges')))
-    )
-      return;
-    this.composer()?.nativeElement.reset();
-    this.templateApplied.set(false);
-    this.activeTemplate.set(undefined);
-    this.templateSaved.set(false);
-    this.model.set(
-      draft === undefined
-        ? blank()
-        : {
-            recipient: draft.recipient,
-            reference: draft.reference,
-            subject: draft.subject,
-            body: draft.body,
-          },
-    );
-    this.draftId.set(draft?.id);
-    this.draftVersion.set(draft?.version ?? 0);
-    this.draftSaved.set(draft !== undefined);
-    this.reminderPrepared.set(draft?.reminder ?? false);
-    this.messageForm().reset(this.model());
-    this.draftError.set(undefined);
-    this.completed.set(undefined);
-  }
-  protected async archiveDraft(draft: typeof EmailDraft.Type): Promise<void> {
-    if (this.saving() || this.pending() !== undefined) return;
-    if (!(await this.confirmation.request(this.i18n.t('emailDraft.archiveConfirm')))) return;
-    this.saving.set(true);
-    this.draftError.set(undefined);
-    try {
-      const outcome = await this.draftsApi.archive(draft);
-      if (!outcome.success) {
-        this.draftError.set(outcome.code);
-        return;
-      }
-      this.drafts.update((items) => items.filter((item) => item.id !== draft.id));
-      if (this.draftId() === draft.id) {
-        this.model.set(blank());
-        this.draftId.set(undefined);
-        this.draftVersion.set(0);
-        this.draftSaved.set(false);
-        this.templateApplied.set(false);
-        this.reminderPrepared.set(false);
-        this.messageForm().reset();
-        this.composer()?.nativeElement.reset();
-      }
-    } finally {
-      this.saving.set(false);
-    }
-  }
-  private async prepareReminder(): Promise<void> {
-    const value = this.route.snapshot.queryParamMap.get('invoice');
-    if (value === null) return;
-    const id = Schema.decodeUnknownOption(Ulid)(value);
-    if (Option.isNone(id)) {
-      this.reminderFailed.set(true);
-      return;
-    }
-    this.preparingReminder.set(true);
-    try {
-      const draft = await this.reminder.prepare(id.value);
-      if (draft === undefined) {
-        this.reminderFailed.set(true);
-        return;
-      }
-      this.model.set(draft);
-      this.reminderPrepared.set(true);
+      this.states.update((value) => ({ ...value, [view]: 'ready' }));
     } catch {
-      this.reminderFailed.set(true);
-    } finally {
-      this.preparingReminder.set(false);
+      if (!this.destroyRef.destroyed && generation === this.generations[view])
+        this.states.update((value) => ({ ...value, [view]: 'error' }));
     }
   }
-  async load(): Promise<void> {
-    if (this.saving()) return;
-    this.loading.set(true);
-    this.loadFailed.set(false);
-    this.mode.set(undefined);
+  protected async cancelReminder(item: typeof Reminder.Type): Promise<void> {
+    if (this.busy() || this.confirming() || item.status !== 'scheduled') return;
+    this.confirming.set(true);
     try {
-      const [statuses, operations] = await Promise.all([this.api.status(), this.api.list('email')]);
-      this.mode.set(statuses.find((provider) => provider.kind === 'email')?.mode);
-      this.operations.set(operations);
-      if (this.mode() === undefined) this.loadFailed.set(true);
-    } catch {
-      this.loadFailed.set(true);
+      if (!(await this.confirmation.request(this.i18n.t('reminder.cancelConfirm')))) return;
     } finally {
-      this.loading.set(false);
+      this.confirming.set(false);
+    }
+    if (this.destroyRef.destroyed) return;
+    this.busy.set(true);
+    this.actionError.set(undefined);
+    try {
+      const outcome = await this.remindersApi.cancel(item.id);
+      if (this.destroyRef.destroyed) return;
+      if (outcome.success)
+        this.reminders.update((items) =>
+          items.map((current) => (current.id === item.id ? outcome.result : current)),
+        );
+      else this.actionError.set(outcome.code);
+    } catch {
+      this.actionError.set('reminder.error');
+    } finally {
+      this.busy.set(false);
     }
   }
-  async canDeactivate(): Promise<boolean> {
-    return (
-      !this.saving() &&
-      !this.schedules()?.busy() &&
-      ((!this.unsaved() && !this.schedules()?.hasChanges()) ||
-        (await this.confirmation.request(this.i18n.t('backOffice.quote.unsavedChanges'))))
-    );
+  canDeactivate(): boolean {
+    return !this.busy() && !this.confirming();
   }
   @HostListener('window:beforeunload', ['$event'])
   protected preventUnload(event: BeforeUnloadEvent): void {
-    if (
-      this.unsaved() ||
-      this.saving() ||
-      this.schedules()?.busy() ||
-      this.schedules()?.hasChanges()
-    )
-      event.preventDefault();
-  }
-  protected save(event: SubmitEvent): void {
-    event.preventDefault();
-    if (
-      this.saving() ||
-      this.preparingReminder() ||
-      this.pending() !== undefined ||
-      this.mode() === undefined
-    )
-      return;
-    void submit(this.messageForm, async () => {
-      if (this.draftId() !== undefined && !(await this.saveDraft())) return;
-      const mode = this.mode();
-      const request = Schema.decodeUnknownOption(EmailSubmission)({
-        ...this.model(),
-        kind: 'email',
-        expectedMode: mode,
-        requestId: this.draftId() ?? crypto.randomUUID(),
-      });
-      if (Option.isNone(request)) {
-        this.invalidRequest.set(true);
-        return;
-      }
-      if (mode === 'live' && !(await this.confirmation.request(this.i18n.t('emails.confirmSend'))))
-        return;
-      this.pending.set(request.value);
-      await this.send(request.value);
-    });
-  }
-  protected async send(request: typeof EmailSubmission.Type): Promise<void> {
-    if (this.saving() || request.expectedMode !== this.mode()) return;
-    this.saving.set(true);
-    this.failed.set(false);
-    this.invalidRequest.set(false);
-    this.completed.set(undefined);
-    try {
-      const outcome = await this.api.submit(request);
-      if (!outcome.success) {
-        this.failed.set(true);
-        return;
-      }
-      this.operations.update((operations) =>
-        [
-          outcome.result,
-          ...operations.filter((operation) => operation.id !== outcome.result.id),
-        ].slice(0, 100),
-      );
-      if (this.pending()?.requestId === request.requestId) {
-        this.pending.set(undefined);
-        this.templateSaved.set(false);
-        this.templateApplied.set(false);
-        this.activeTemplate.set(undefined);
-        this.drafts.update((items) => items.filter((item) => item.id !== request.requestId));
-        this.draftId.set(undefined);
-        this.draftVersion.set(0);
-        this.draftSaved.set(false);
-        this.reminderPrepared.set(false);
-        this.model.set(blank());
-        this.messageForm().reset();
-        this.composer()?.nativeElement.reset();
-      }
-      this.completed.set(outcome.result.receipt?.mode);
-      this.notice()?.nativeElement.focus();
-    } finally {
-      this.saving.set(false);
-    }
-  }
-  protected invalid(field: keyof ReturnType<typeof blank>): boolean {
-    return this.messageForm[field]().invalid() && this.messageForm[field]().touched();
+    if (this.busy() || this.confirming()) event.preventDefault();
   }
 }

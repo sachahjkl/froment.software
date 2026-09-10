@@ -1,0 +1,55 @@
+<section class="email-task" aria-labelledby="email-detail-title">
+  <a routerLink="/backoffice/courriels/messages" [queryParams]="backQuery()"
+    >{{ i18n.t('emailsWorkspace.back') }}</a
+  >
+  <app-page-header
+    ><h1 id="email-detail-title">
+      {{ operation()?.request?.kind === 'email' ? operation()?.request?.reference :
+      i18n.t('emailsWorkspace.message') }}
+    </h1></app-page-header
+  >
+  @if (loading()) {
+  <p role="status">{{ i18n.t('integrations.loading') }}</p>
+  } @if (error(); as error) {
+  <p appNotice variant="danger" role="alert">{{ i18n.t(error) }}</p>
+  } @if (operation(); as operation) { @if (operation.request.kind === 'email') {
+  <div><span appBadge>{{ i18n.t(status(operation)) }}</span></div>
+  <p appNotice>
+    {{ i18n.t(operation.receipt?.mode === 'simulation' ? 'emails.simulated' :
+    'emailsWorkspace.receiptHint') }}
+  </p>
+  <dl>
+    <dt>{{ i18n.t('emails.recipient') }}</dt>
+    <dd>{{ operation.request.recipient }}</dd>
+    <dt>{{ i18n.t('emails.reference') }}</dt>
+    <dd>{{ operation.request.reference }}</dd>
+    <dt>{{ i18n.t('emailsWorkspace.date') }}</dt>
+    <dd>
+      {{ operation.createdAt | localizedDate: i18n.language() : { dateStyle: 'long', timeStyle:
+      'short' } }}
+    </dd>
+    <dt>{{ i18n.t('emailsWorkspace.requestId') }}</dt>
+    <dd>{{ operation.request.requestId }}</dd>
+  </dl>
+  <article>
+    <h2>{{ operation.request.subject }}</h2>
+    <p class="message-body">{{ operation.request.body }}</p>
+  </article>
+  @if (operation.receipt === null) {
+  <p class="muted">{{ i18n.t('integrationRetry.info') }}</p>
+  <div>
+    <button
+      appButton
+      type="button"
+      [disabled]="busy() || !simulation() || operation.request.expectedMode !== 'simulation'"
+      (click)="retry()"
+    >
+      {{ i18n.t('emails.retry') }}
+    </button>
+  </div>
+  } } } @else if (!loading()) {
+  <div>
+    <button appButton type="button" (click)="load()">{{ i18n.t('integrations.reload') }}</button>
+  </div>
+  }
+</section>

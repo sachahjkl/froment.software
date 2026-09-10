@@ -1,0 +1,148 @@
+<section class="email-task" aria-labelledby="composer-title">
+  <a class="back-link" [routerLink]="backLink()" [queryParams]="backQuery()"
+    >{{ i18n.t('emailsWorkspace.back') }}</a
+  >
+  <app-page-header
+    ><h1 id="composer-title">
+      {{ i18n.t(draft() ? 'emailsWorkspace.editDraft' : 'emailsWorkspace.newMessage') }}
+    </h1>
+    <p class="muted">{{ i18n.t('emailsWorkspace.simulationOnly') }}</p></app-page-header
+  >
+  @if (error(); as error) {
+  <p appNotice variant="danger" role="alert">{{ i18n.t(error) }}</p>
+  } @if (state() === 'loading') {
+  <p role="status">{{ i18n.t('integrations.loading') }}</p>
+  } @else if (state() === 'error') {
+  <div>
+    <button appButton type="button" (click)="load()">{{ i18n.t('integrations.reload') }}</button>
+  </div>
+  } @else if (completed()) {
+  <p appNotice variant="success" role="status">
+    {{ i18n.t(operation() ? 'emails.simulated' : archived() ? 'emailsWorkspace.draftArchived' :
+    'emailDraft.saved') }}
+  </p>
+  @if (operation(); as operation) {
+  <a [routerLink]="['/backoffice/courriels/messages', operation.id]"
+    >{{ i18n.t('emailsWorkspace.viewMessage') }}</a
+  >
+  } } @else { @if (reminderPrepared()) {
+  <p appNotice>{{ i18n.t('emails.reminderReview') }}</p>
+  } @if (pending(); as pending) {
+  <p appNotice variant="warning">{{ i18n.t('emailsWorkspace.pending') }}</p>
+  <div>
+    <button
+      appButton
+      type="button"
+      [disabled]="busy() || mode() !== 'simulation' || pending.expectedMode !== 'simulation'"
+      (click)="retry()"
+    >
+      {{ i18n.t('emails.retry') }}
+    </button>
+  </div>
+  }
+  <form class="task-form composer" novalidate (submit)="save($event)">
+    <fieldset>
+      <legend>{{ i18n.t('emailsWorkspace.addressing') }}</legend>
+      <div class="fields">
+        <label class="field"
+          >{{ i18n.t('emails.recipient') }}<input
+            id="email-recipient"
+            class="input"
+            type="email"
+            autocomplete="off"
+            [formField]="messageForm.recipient"
+            [attr.aria-invalid]="invalid('recipient')"
+            aria-describedby="email-recipient-error"
+          /><span class="field-error" id="email-recipient-error"
+            >@if (invalid('recipient')) { {{ i18n.t('emailsWorkspace.recipientInvalid') }} }</span
+          ></label
+        >
+        <label class="field"
+          >{{ i18n.t('emails.reference') }}<input
+            id="email-reference"
+            class="input"
+            [formField]="messageForm.reference"
+            [attr.aria-invalid]="invalid('reference')"
+            aria-describedby="email-reference-error"
+          /><span class="field-error" id="email-reference-error"
+            >@if (invalid('reference')) { {{ i18n.t('emailsWorkspace.shortTextInvalid') }} }</span
+          ></label
+        >
+      </div>
+    </fieldset>
+    <div class="actions">
+      <app-object-picker
+        [label]="i18n.t('emailsWorkspace.chooseTemplate')"
+        [options]="templateOptions()"
+        [disabled]="busy() || pending() !== undefined"
+        (selected)="applyTemplate($event)"
+      /><a routerLink="/backoffice/courriels/templates"
+        >{{ i18n.t('emailsWorkspace.manageTemplates') }}</a
+      >
+    </div>
+    @if (templateError(); as error) {
+    <p appNotice variant="warning">{{ i18n.t(error) }}</p>
+    }
+    <label class="field"
+      >{{ i18n.t('emails.subject') }}<input
+        id="email-subject"
+        class="input"
+        [formField]="messageForm.subject"
+        [attr.aria-invalid]="invalid('subject')"
+        aria-describedby="email-subject-error"
+      /><span class="field-error" id="email-subject-error"
+        >@if (invalid('subject')) { {{ i18n.t('emailsWorkspace.shortTextInvalid') }} }</span
+      ></label
+    >
+    <label class="field"
+      >{{ i18n.t('emails.body') }}<textarea
+        id="email-body"
+        class="input"
+        rows="10"
+        [formField]="messageForm.body"
+        [attr.aria-invalid]="invalid('body')"
+        aria-describedby="email-body-error"
+      ></textarea
+      ><span class="field-error" id="email-body-error"
+        >@if (invalid('body')) { {{ i18n.t('emailsWorkspace.bodyInvalid') }} }</span
+      ></label
+    >
+    <details>
+      <summary>{{ i18n.t('emailsWorkspace.preview') }}</summary>
+      <div class="message-preview">
+        <strong>{{ model().subject }}</strong>
+        <p class="muted">{{ model().recipient }} — {{ model().reference }}</p>
+        <p class="message-body">{{ model().body }}</p>
+      </div>
+    </details>
+    <div class="actions">
+      <button
+        appButton
+        variant="primary"
+        type="submit"
+        [disabled]="busy() || pending() !== undefined"
+      >
+        {{ i18n.t(busy() ? 'emailsWorkspace.saving' : 'emails.recordSimulation') }}</button
+      ><button
+        appButton
+        type="button"
+        [disabled]="busy() || pending() !== undefined"
+        (click)="saveDraft()"
+      >
+        {{ i18n.t('emailDraft.save') }}</button
+      >@if (draft()) {
+      <button
+        appButton
+        type="button"
+        [disabled]="busy() || pending() !== undefined"
+        (click)="archive()"
+      >
+        {{ i18n.t('emailDraft.archive') }}
+      </button>
+      }<a [routerLink]="backLink()" [queryParams]="backQuery()"
+        >{{ i18n.t('catalogWorkspace.cancel') }}</a
+      >
+    </div>
+  </form>
+  }
+</section>

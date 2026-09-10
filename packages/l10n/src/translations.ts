@@ -5,6 +5,7 @@ import { backOfficeShellText } from './back-office-shell.js';
 import { clientsWorkspaceText } from './clients-workspace.js';
 import { catalogWorkspaceText } from './catalog-workspace.js';
 import { listControlsText } from './list-controls.js';
+import { emailsWorkspaceText } from './emails-workspace.js';
 import { teamText } from './team.js';
 import { creditText } from './credit-notes.js';
 import { ledgerText } from './bank-ledger.js';
@@ -23,6 +24,7 @@ export const translations = {
     ...catalogWorkspaceText.fr,
     'design.components.searchFilter': 'Recherche : {query}',
     ...listControlsText.fr,
+    ...emailsWorkspaceText.fr,
     ...webUiText.fr,
     ...teamText.fr,
     ...creditText.fr,
@@ -1543,6 +1545,7 @@ export const translations = {
     ...catalogWorkspaceText.en,
     'design.components.searchFilter': 'Search: {query}',
     ...listControlsText.en,
+    ...emailsWorkspaceText.en,
     ...webUiText.en,
     ...teamText.en,
     ...creditText.en,

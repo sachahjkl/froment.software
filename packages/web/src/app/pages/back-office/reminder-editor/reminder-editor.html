@@ -1,0 +1,65 @@
+<section class="email-task" aria-labelledby="reminder-title">
+  <a routerLink="/backoffice/courriels/reminders">{{ i18n.t('emailsWorkspace.backReminders') }}</a>
+  <app-page-header
+    ><h1 id="reminder-title">{{ i18n.t('emailsWorkspace.newReminder') }}</h1>
+    <p class="muted">{{ i18n.t('emailsWorkspace.simulationOnly') }}</p></app-page-header
+  >
+  @if (error(); as error) {
+  <p appNotice variant="danger" role="alert">{{ i18n.t(error) }}</p>
+  } @if (loading()) {
+  <p role="status">{{ i18n.t('integrations.loading') }}</p>
+  } @else if (loadFailed()) {
+  <div>
+    <button appButton type="button" (click)="load()">{{ i18n.t('integrations.reload') }}</button>
+  </div>
+  } @else if (completed()) {
+  <p appNotice variant="success" role="status">{{ i18n.t('reminder.saved') }}</p>
+  } @else {
+  <form class="task-form" novalidate (submit)="schedule($event)">
+    <div>
+      <app-object-picker
+        [label]="i18n.t('emailsWorkspace.chooseInvoice')"
+        [options]="options()"
+        [disabled]="busy() || confirming() || pending() !== undefined"
+        (selected)="choose($event)"
+      />
+    </div>
+    @if (selected(); as invoice) {
+    <dl>
+      <dt>{{ i18n.t('emailsWorkspace.invoice') }}</dt>
+      <dd>
+        <a [routerLink]="['/backoffice/invoices', invoice.id]">{{ invoice.invoiceNumber }}</a> — {{
+        invoice.title }}
+      </dd>
+      <dt>{{ i18n.t('emailsWorkspace.client') }}</dt>
+      <dd>{{ invoice.clientDisplayName }}</dd>
+      <dt>{{ i18n.t('emailsWorkspace.remaining') }}</dt>
+      <dd>{{ money(invoice.totalCents - invoice.recordedPaidCents) }}</dd>
+      <dt>{{ i18n.t('emailsWorkspace.dueDate') }}</dt>
+      <dd>{{ invoice.dueDate | localizedDate: i18n.language() : { dateStyle: 'long' } }}</dd>
+    </dl>
+    }
+    <p appNotice>{{ i18n.t('reminder.content') }}</p>
+    <label class="field"
+      >{{ i18n.t('reminder.date') }}<input
+        id="reminder-date"
+        class="input"
+        type="datetime-local"
+        [formField]="scheduleForm.date"
+        [attr.aria-invalid]="scheduleForm.date().touched() && scheduleForm.date().invalid()"
+        aria-describedby="reminder-zone"
+    /></label>
+    <p class="muted" id="reminder-zone">
+      {{ i18n.tf('emailsWorkspace.timeZone', { zone: timeZone }) }}
+    </p>
+    @if (pending()) {
+    <p appNotice variant="warning">{{ i18n.t('emailsWorkspace.pendingSchedule') }}</p>
+    }
+    <div class="actions">
+      <button appButton variant="primary" type="submit" [disabled]="busy() || confirming()">
+        {{ i18n.t(pending() ? 'emails.retry' : 'reminder.schedule') }}</button
+      ><a routerLink="/backoffice/courriels/reminders">{{ i18n.t('catalogWorkspace.cancel') }}</a>
+    </div>
+  </form>
+  }
+</section>

@@ -156,7 +156,7 @@ export const issuedInvoice = {
   ],
 };
 
-const invoiceSummary = {
+export const invoiceSummary = {
   creditedCents: 0,
   recordedPaidCents: 0,
   id: invoiceId,
@@ -389,6 +389,15 @@ export async function mockApi(
       return route.fulfill({ json: operation });
     }
     if (responses.has(path)) return route.fulfill({ json: responses.get(path) });
+    if (/^\/api\/email-(drafts|templates)\/[^/]+\/archive$/.test(path)) {
+      const listPath = path.split("/").slice(0, 3).join("/");
+      const id = path.split("/").at(-2);
+      responses.set(
+        listPath,
+        responses.get(listPath).filter((item) => item.id !== id),
+      );
+      return route.fulfill({ status: 204 });
+    }
     if (path.startsWith("/api/email-drafts/") && route.request().method() === "PUT") {
       const request = route.request().postDataJSON();
       const id = path.split("/").at(-1);

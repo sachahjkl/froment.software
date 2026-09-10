@@ -17,6 +17,7 @@ import { ListToolbar } from '@shared/list-toolbar/list-toolbar';
 import { createFuzzySearch } from '@shared/fuzzy-search';
 import { TableSort, type SortDirection } from '@shared/table-sort/table-sort';
 import { FilterChip } from '@shared/filter-chip/filter-chip';
+import { ObjectPicker } from '@shared/object-picker/object-picker';
 
 type ButtonSample = {
   readonly variant: ButtonVariant;
@@ -37,6 +38,7 @@ type ButtonSample = {
     ListToolbar,
     TableSort,
     FilterChip,
+    ObjectPicker,
     Icon,
     Notice,
     RouterOutlet,
@@ -50,6 +52,11 @@ type ButtonSample = {
   styleUrl: './design.component.scss',
 })
 export class DesignComponent {
+  protected readonly pickerOptions = [
+    { id: 'angular', label: 'Angular', detail: 'Web' },
+    { id: 'wpf', label: 'WPF', detail: 'Desktop' },
+  ];
+  protected readonly pickerSelection = signal('');
   protected readonly tableQuery = signal('');
   protected readonly tableDirection = signal<SortDirection>('ascending');
   private readonly tableSearchResults = createFuzzySearch(

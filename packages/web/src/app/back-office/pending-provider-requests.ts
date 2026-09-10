@@ -1,6 +1,12 @@
 import { DOCUMENT } from '@angular/common';
 import { inject, Injectable } from '@angular/core';
-import { CheckoutRequest, EmailTestRequest } from '@froment/contracts';
+import {
+  CheckoutRequest,
+  EmailTestRequest,
+  EmailSubmission,
+  ReminderCreate,
+  ReminderId,
+} from '@froment/contracts';
 import { Schema } from 'effect';
 import { Authentication } from './authentication';
 
@@ -9,6 +15,7 @@ export interface PendingRequestStore<Request> {
   readonly write: (request: Request) => void;
   readonly clear: () => void;
 }
+export const PendingReminder = Schema.Struct({ requestId: ReminderId, request: ReminderCreate });
 
 export const pendingRequestStore = <Request>(
   storage: Storage,
@@ -41,5 +48,11 @@ export class PendingProviderRequests {
   }
   checkout() {
     return this.open('checkout', CheckoutRequest);
+  }
+  businessEmail() {
+    return this.open('email-message', EmailSubmission);
+  }
+  reminder() {
+    return this.open('email-reminder', PendingReminder);
   }
 }

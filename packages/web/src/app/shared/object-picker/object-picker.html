@@ -1,0 +1,45 @@
+<button
+  #trigger
+  appButton
+  type="button"
+  [disabled]="disabled()"
+  aria-haspopup="dialog"
+  (click)="open()"
+>
+  <app-icon name="search" />{{ label() }}
+</button>
+<ng-template #content>
+  <section class="picker">
+    <div class="heading">
+      <h2>{{ label() }}</h2>
+      <button
+        appButton
+        type="button"
+        [attr.aria-label]="i18n.t('listControls.closePicker')"
+        (click)="close()"
+      >
+        <app-icon name="close" />
+      </button>
+    </div>
+    <label class="field"
+      >{{ i18n.t('listControls.searchOptions') }}<input
+        class="input"
+        type="search"
+        [formField]="search"
+        autocomplete="off"
+    /></label>
+    <p role="status">{{ i18n.tf('listControls.optionCount', { count: matches().length }) }}</p>
+    <ul>
+      @for (result of matches(); track result.item.id) {
+      <li>
+        <button type="button" class="option" (click)="choose(result.item.id)">
+          <strong [appSearchHighlight]="result.indices">{{ result.item.label }}</strong>@if
+          (result.item.detail) { <span>{{ result.item.detail }}</span> }
+        </button>
+      </li>
+      } @empty {
+      <li>{{ i18n.t('listControls.noOptions') }}</li>
+      }
+    </ul>
+  </section>
+</ng-template>

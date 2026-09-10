@@ -137,6 +137,12 @@ La cellule d’en-tête expose le sens actuel avec `aria-sort`.
 `FilterChip` montre un filtre actif et son action de retrait.
 L’atelier `/design/data` présente les deux contrôles dans son tableau interactif.
 
+### Parcours Courriels
+
+Les vues Messages, Brouillons, Relances et Modèles séparent les listes des tâches.
+Le [guide Courriels](email-workspace.md) décrit les routes, les contrôles de version et la reprise des demandes incertaines.
+Le sélecteur `ObjectPicker` apparaît dans les tâches et dans l’atelier `/design/data`.
+
 Le scénario navigateur du Catalogue vérifie le zoom Chromium à 200 % dans un profil de test isolé.
 Il utilise le réglage du navigateur, sans zoom CSS ni changement du facteur de pincement.
 Il contrôle la liste, les erreurs de formulaire et les confirmations au-dessus du tiroir de navigation.
