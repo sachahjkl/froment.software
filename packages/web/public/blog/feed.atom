@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom" xml:lang="fr">
+  <id>https://froment.software/blog/feed.atom</id>
+  <title>Froment Software | Blog technique</title>
+  <subtitle>Notes techniques, retours d’expérience et idées.</subtitle>
+  <link rel="self" href="https://froment.software/blog/feed.atom" type="application/atom+xml" />
+  <link rel="alternate" href="https://froment.software/blog" type="text/html" hreflang="fr" />
+  <updated>2026-08-23T00:00:00Z</updated>
+  <author>
+    <name>Sacha Froment</name>
+    <uri>https://froment.software/</uri>
+  </author>
+  <entry>
+    <id>https://froment.software/blog/2026-08-production-observabilite</id>
+    <title>De Nix à Grafana : exploiter Froment Software en production</title>
+    <link rel="alternate" href="https://froment.software/blog/2026-08-production-observabilite" type="text/html" hreflang="fr" />
+    <published>2026-08-23T00:00:00Z</published>
+    <updated>2026-08-23T00:00:00Z</updated>
+    <summary>La construction reproductible, la résolution des secrets et le trajet des journaux et traces en production.</summary>
+    <category term="Nix" />
+    <category term="secrets" />
+    <category term="observabilité" />
+  </entry>
+  <entry>
+    <id>https://froment.software/blog/2026-08-securite-authentification</id>
+    <title>Sessions, jetons et audit : la sécurité de Froment Software</title>
+    <link rel="alternate" href="https://froment.software/blog/2026-08-securite-authentification" type="text/html" hreflang="fr" />
+    <published>2026-08-23T00:00:00Z</published>
+    <updated>2026-08-23T00:00:00Z</updated>
+    <summary>Le parcours complet d’une identité, de la connexion PASETO à la corrélation des événements d’audit.</summary>
+    <category term="sécurité" />
+    <category term="authentification" />
+    <category term="audit" />
+  </entry>
+  <entry>
+    <id>https://froment.software/blog/2026-08-architecture-effect</id>
+    <title>De l’API au PDF : l’architecture de Froment Software</title>
+    <link rel="alternate" href="https://froment.software/blog/2026-08-architecture-effect" type="text/html" hreflang="fr" />
+    <published>2026-08-23T00:00:00Z</published>
+    <updated>2026-08-23T00:00:00Z</updated>
+    <summary>Une visite du monorepo, des contrats Effect, du modèle SQLite et de la chaîne documentaire vérifiable.</summary>
+    <category term="Effect" />
+    <category term="SQLite" />
+    <category term="documents" />
+  </entry>
+  <entry>
+    <id>https://froment.software/blog/2026-08-froment-software-arrive</id>
+    <title>Froment Software arrive sur le marché</title>
+    <link rel="alternate" href="https://froment.software/blog/2026-08-froment-software-arrive" type="text/html" hreflang="fr" />
+    <published>2026-08-12T00:00:00Z</published>
+    <updated>2026-08-12T00:00:00Z</updated>
+    <summary>Présentation de Froment Software, de ses missions et de sa méthode fondée sur des changements mesurables.</summary>
+    <category term="développement logiciel" />
+    <category term="reprise d’applications" />
+    <category term="CI/CD" />
+    <category term="NixOS" />
+    <category term="infrastructure as code" />
+  </entry>
+</feed>

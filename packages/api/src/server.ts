@@ -158,6 +158,7 @@ export const makeServerLayer = (options: {
   const StaticRoutes = HttpStaticServer.layer({
     root: options.staticRoot,
     index: 'index.html',
+    mimeTypes: { atom: 'application/atom+xml; charset=utf-8' },
   });
   const BackOfficeStaticRoutes = HttpStaticServer.layer({
     root: options.staticRoot,
