@@ -4,12 +4,14 @@
 
 .version-page {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   min-height: 100dvh;
   place-items: center;
   padding: var(--space-4);
 }
 
 .version-panel {
+  min-inline-size: 0;
   width: min(100%, 48rem);
   padding: clamp(var(--space-5), 6vw, var(--space-9));
   border: 1px solid var(--color-line);
@@ -73,11 +75,15 @@ h2 {
   text-transform: uppercase;
 }
 
-.commit code {
-  display: block;
+.commit-scroll {
   max-width: 100%;
   margin-block-start: var(--space-2);
   overflow-x: auto;
+  overscroll-behavior-inline: contain;
+  white-space: nowrap;
+}
+
+.commit code {
   color: var(--color-ink-soft);
   font-size: var(--text-sm);
 }

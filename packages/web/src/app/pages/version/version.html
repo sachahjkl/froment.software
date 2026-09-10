@@ -22,10 +22,17 @@
     <div class="deployment-data">
       <section class="commit" aria-labelledby="commit-title">
         <h2 id="commit-title">{{ i18n.t("version.commit") }}</h2>
-        <code>{{ deployment.commit }}</code>
+        <div class="commit-scroll" role="region" aria-labelledby="commit-title" tabindex="0">
+          <code>{{ deployment.commit }}</code>
+        </div>
       </section>
 
-      <div class="package-table">
+      <div
+        class="package-table"
+        role="region"
+        [attr.aria-label]="i18n.t('table.scrollRegion')"
+        tabindex="0"
+      >
         <table>
           <thead>
             <tr>
