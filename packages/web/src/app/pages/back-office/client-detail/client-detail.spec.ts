@@ -10,6 +10,7 @@ import { OrdersApi } from '@backoffice/orders-api';
 import { QuotesApi } from '@backoffice/quotes-api';
 import { Confirmation } from '@shared/confirmation/confirmation';
 import { ClientDetail } from './client-detail';
+import { I18nService } from '@app/i18n.service';
 import { TabPanelOutlet } from '@shared/tabs/tab-panel';
 
 const client = {
@@ -135,6 +136,7 @@ describe('ClientDetail', () => {
 
   it('does not use an order number for an unnumbered invoice or its export', async () => {
     const { component, invoicesApi } = await configure('documents');
+    TestBed.inject(I18nService).setLanguage('fr');
     invoicesApi.list.mockResolvedValueOnce([
       {
         id: access.id,

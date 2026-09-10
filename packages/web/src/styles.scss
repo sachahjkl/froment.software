@@ -388,6 +388,11 @@ code {
   box-shadow: none;
 }
 
+.ds-panel.form-panel {
+  min-inline-size: 0;
+  padding: var(--panel-padding);
+}
+
 .ds-panel.empty {
   padding: var(--panel-padding);
   color: var(--color-muted);
@@ -438,7 +443,7 @@ textarea.input {
   display: grid;
   min-width: 0;
   align-content: start;
-  gap: var(--space-1);
+  gap: var(--space-2);
   font-size: var(--text-sm);
   font-weight: 700;
 }

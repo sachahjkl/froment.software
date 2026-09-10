@@ -9,7 +9,7 @@
   <p appNotice>{{ i18n.t('billingWorkspace.unavailable') }}</p>
   } @else {
   <p><strong>{{ i18n.t('credit.refundable') }} {{ task.money(balance()) }}</strong></p>
-  <form class="task-form" (submit)="save($event)">
+  <form class="task-form ds-panel form-panel" (submit)="save($event)">
     <div class="fields">
       <label class="field"
         >{{ i18n.t('credit.amount') }}<input

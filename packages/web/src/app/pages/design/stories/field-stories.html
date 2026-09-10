@@ -48,9 +48,13 @@
       [placeholder]="model().placeholder"
       [formField]="controls.value"
     /><output>{{ model().value }}</output> } @case ('field-group') {
-    <fieldset appFieldGroup [legend]="model().label" [description]="model().description">
-      <label>{{ text().name }}<input class="input" [formField]="controls.value" /></label>
-    </fieldset>
+    <div class="ds-panel form-panel">
+      <fieldset appFieldGroup [legend]="model().label" [description]="model().description">
+        <label class="field"
+          >{{ text().name }}<input class="input" [formField]="controls.value"
+        /></label>
+      </fieldset>
+    </div>
     } @case ('filter-choice') {
     <app-filter-choice
       [label]="model().label"
@@ -131,7 +135,9 @@
     } @case ('field-group') { @for (description of ['', text().description]; track description) {
     <div class="sample" data-variant>
       <fieldset appFieldGroup [legend]="text().name" [description]="description">
-        <label>{{ text().value }}<input class="input" [formField]="sampleFields.text" /></label>
+        <label class="field"
+          >{{ text().value }}<input class="input" [formField]="sampleFields.text"
+        /></label>
       </fieldset>
     </div>
     } } @case ('date-range') { @for (range of rangeSamples; track $index) {

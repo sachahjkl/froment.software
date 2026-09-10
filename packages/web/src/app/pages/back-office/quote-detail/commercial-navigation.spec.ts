@@ -1,36 +1,32 @@
 import { convertToParamMap } from '@angular/router';
 import { affairContext } from '../affairs/affair-filters';
-import { commercialAffairBack } from '../commercial-header';
-import { quoteIdentifier } from './quote-values';
+import { commercialBreadcrumbs } from '../commercial-header';
 
-describe('Commercial detail back navigation', () => {
-  const quoteId = '01ARZ3NDEKTSV4RRFFQ69G5FAY';
+describe('Commercial breadcrumbs', () => {
+  const affair = { id: '01ARZ3NDEKTSV4RRFFQ69G5FAY', reference: 'DE-2026-000001' };
 
-  it('returns to the loaded quote affair', () => {
-    expect(commercialAffairBack(quoteId, 'active')).toEqual({
-      link: ['/backoffice/affaires', quoteId],
-      label: 'commercial.backAffair',
-    });
-  });
-
-  it('returns to the selected list when the document cannot load', () => {
-    expect(commercialAffairBack(undefined, 'completed')).toEqual({
-      link: ['/backoffice/affaires', 'completed'],
-      label: 'backOffice.backToAffairs',
-    });
-  });
-
-  it('uses the default list for invalid identifiers or views', () => {
-    const context = affairContext(convertToParamMap({ view: 'invalid', version: '4', q: 'Audit' }));
-    expect(commercialAffairBack(quoteIdentifier('invalid'), context.view)).toEqual({
-      link: ['/backoffice/affaires', 'attention'],
-      label: 'backOffice.backToAffairs',
-    });
-    expect(context.q).toBe('Audit');
+  it('preserves only the allowed context on the list and affair links', () => {
+    const context = affairContext(
+      convertToParamMap({
+        view: 'active',
+        q: 'Audit',
+        sort: 'amount-desc',
+        returnUrl: '//outside.example',
+        version: '4',
+      }),
+    );
+    expect(commercialBreadcrumbs(affair, context, 'fr')).toEqual([
+      { path: ['/backoffice/affaires', 'active'], label: 'Affaires', queryParams: context },
+      { path: ['/backoffice/affaires', affair.id], label: affair.reference, queryParams: context },
+    ]);
+    expect(context).not.toHaveProperty('returnUrl');
     expect(context).not.toHaveProperty('version');
-    expect(commercialAffairBack(undefined, undefined).link).toEqual([
-      '/backoffice/affaires',
-      'attention',
+  });
+
+  it('keeps a list link when the document cannot load', () => {
+    const context = affairContext(convertToParamMap({ view: 'invalid' }));
+    expect(commercialBreadcrumbs(undefined, context, 'en')).toEqual([
+      { path: ['/backoffice/affaires', 'attention'], label: 'Engagements', queryParams: context },
     ]);
   });
 });

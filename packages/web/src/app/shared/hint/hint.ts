@@ -17,7 +17,6 @@ import {
   templateUrl: './hint.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: {
-    '[style.anchor-name]': 'anchorName',
     '(pointerenter)': 'enter($event)',
     '(pointerleave)': 'leave()',
     '(focusin)': 'focusIn()',

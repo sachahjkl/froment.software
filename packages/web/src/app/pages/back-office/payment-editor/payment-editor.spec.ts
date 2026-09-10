@@ -45,7 +45,9 @@ describe('PaymentEditor', () => {
       convertToParamMap({ ...query, tab: 'history', returnUrl: '//outside.example' }),
     );
     await fixture.whenStable();
-    const link = fixture.debugElement.query(By.directive(RouterLink)).injector.get(RouterLink);
+    const link = fixture.debugElement
+      .query(By.css('a[href^="/backoffice/invoices/"]'))
+      .injector.get(RouterLink);
     expect(link.queryParams).toEqual({ ...query, tab: 'history' });
     expect(link.queryParams).not.toHaveProperty('returnUrl');
   });

@@ -1,6 +1,11 @@
 @use "../document-editor";
 @use "shared/page-header/detail-page";
 
+.invoice-terms {
+  display: grid;
+  gap: var(--space-4);
+}
+
 .document-editor > form {
   max-inline-size: 60rem;
   inline-size: 100%;

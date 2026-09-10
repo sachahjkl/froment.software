@@ -27,7 +27,7 @@
   } @else { @if (pending() && !busy()) {
   <p appNotice variant="warning">{{ i18n.t('teamInvitation.uncertain') }}</p>
   }
-  <form (submit)="invite($event)" novalidate>
+  <form class="ds-panel form-panel" (submit)="invite($event)" novalidate>
     <label
       >{{ i18n.t('team.name') }}<input
         class="input"

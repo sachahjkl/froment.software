@@ -48,11 +48,12 @@ import { QuoteLines } from './quote-lines/quote-lines';
 import { QuoteDocument } from './quote-document/quote-document';
 import { affairContext } from '../affairs/affair-filters';
 import {
-  commercialAffairBack,
+  commercialBreadcrumbs,
   commercialDocumentTitle,
   quoteStatusBadge,
 } from '../commercial-header';
 import { ClientDescription } from '../client-description/client-description';
+import { Breadcrumbs } from '@shared/breadcrumbs/breadcrumbs';
 import { canCancelQuote, quoteEditAction } from './quote-actions';
 
 @Component({
@@ -62,6 +63,7 @@ import { canCancelQuote, quoteEditAction } from './quote-actions';
     ActionMenu,
     Button,
     ClientDescription,
+    Breadcrumbs,
     DataTable,
     FormField,
     Notice,
@@ -125,8 +127,8 @@ export class QuoteDetail {
     this.i18n.t(this.cancelling() ? 'backOffice.quote.cancelling' : 'backOffice.quote.cancel'),
   );
   protected readonly loadError = computed(() => this.error() ?? 'quote.error');
-  protected readonly back = computed(() =>
-    commercialAffairBack(this.quote()?.id, this.context().view),
+  protected readonly breadcrumbs = computed(() =>
+    commercialBreadcrumbs(this.quote(), this.context(), this.i18n.language()),
   );
   protected readonly secondaryActions = computed<readonly MenuAction[]>(() => {
     const quote = this.quote();

@@ -1,5 +1,13 @@
 :host {
   display: inline-flex;
+  inline-size: fit-content;
+  min-inline-size: 0;
+  max-inline-size: 100%;
+  justify-self: start;
+  align-self: start;
+}
+.trigger {
+  display: inline-flex;
   min-inline-size: 0;
 }
 

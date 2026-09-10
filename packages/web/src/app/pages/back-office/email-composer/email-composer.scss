@@ -1,5 +1,10 @@
 @use "../email-task";
 
+.message-fields {
+  display: grid;
+  gap: var(--space-4);
+}
+
 .message-preview h2 {
   font-size: var(--text-lg);
 }

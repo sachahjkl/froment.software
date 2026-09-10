@@ -54,84 +54,86 @@
   <p appNotice>{{ i18n.t('billingWorkspace.readonly') }}</p>
   } @else {
   <form novalidate (submit)="save($event)">
-    @if (isNew()) {
-    <label class="field"
-      >{{ i18n.t('backOffice.invoice.order') }}<select
-        class="input"
-        [formField]="invoiceForm.orderId"
-        [attr.aria-invalid]="invoiceForm.orderId().invalid() && invoiceForm.orderId().touched()"
-        aria-describedby="invoice-order-error"
-      >
-        <option value="">{{ i18n.t('backOffice.invoice.orderPlaceholder') }}</option>
-        @for (order of orders(); track order.id) {
-        <option [value]="order.id">
-          {{ order.reference }} · {{ order.clientDisplayName }} · {{ order.title }} · {{
-          money(order.totalCents) }}
-        </option>
-        }</select
-      ><span id="invoice-order-error" class="field-error"
-        >@if (invoiceForm.orderId().invalid() && invoiceForm.orderId().touched()) { {{
-        i18n.t('backOffice.invoice.fieldRequired') }} }</span
-      ></label
-    >
-    @if (orders().length === 0) {
-    <p appNotice>{{ i18n.t('backOffice.invoice.noOrder') }}</p>
-    } } @else {
-    <label class="field"
-      >{{ i18n.t('backOffice.invoice.title') }}<input
-        class="input"
-        type="text"
-        [formField]="invoiceForm.title"
-        [attr.aria-invalid]="invoiceForm.title().invalid() && invoiceForm.title().touched()"
-        aria-describedby="invoice-title-error"
-      />
-      <span id="invoice-title-error" class="field-error"
-        >@if (invoiceForm.title().invalid() && invoiceForm.title().touched()) { {{
-        i18n.t('backOffice.invoice.fieldInvalid') }} }</span
-      ></label
-    >
-    }
-    <div class="date-fields">
+    <div class="invoice-terms ds-panel form-panel">
+      @if (isNew()) {
       <label class="field"
-        >{{ i18n.t('backOffice.invoice.serviceDate') }}<input
+        >{{ i18n.t('backOffice.invoice.order') }}<select
           class="input"
-          type="date"
-          [formField]="invoiceForm.serviceDate"
-          [attr.aria-invalid]="invoiceForm.serviceDate().invalid() && invoiceForm.serviceDate().touched()"
-          aria-describedby="invoice-service-date-error"
-        />
-        <span id="invoice-service-date-error" class="field-error"
-          >@if (invoiceForm.serviceDate().invalid() && invoiceForm.serviceDate().touched()) { {{
-          i18n.t('backOffice.invoice.dateInvalid') }} }</span
+          [formField]="invoiceForm.orderId"
+          [attr.aria-invalid]="invoiceForm.orderId().invalid() && invoiceForm.orderId().touched()"
+          aria-describedby="invoice-order-error"
+        >
+          <option value="">{{ i18n.t('backOffice.invoice.orderPlaceholder') }}</option>
+          @for (order of orders(); track order.id) {
+          <option [value]="order.id">
+            {{ order.reference }} · {{ order.clientDisplayName }} · {{ order.title }} · {{
+            money(order.totalCents) }}
+          </option>
+          }</select
+        ><span id="invoice-order-error" class="field-error"
+          >@if (invoiceForm.orderId().invalid() && invoiceForm.orderId().touched()) { {{
+          i18n.t('backOffice.invoice.fieldRequired') }} }</span
         ></label
       >
+      @if (orders().length === 0) {
+      <p appNotice>{{ i18n.t('backOffice.invoice.noOrder') }}</p>
+      } } @else {
       <label class="field"
-        >{{ i18n.t('backOffice.invoice.dueDate') }}<input
+        >{{ i18n.t('backOffice.invoice.title') }}<input
           class="input"
-          type="date"
-          [formField]="invoiceForm.dueDate"
-          [attr.aria-invalid]="invoiceForm.dueDate().invalid() && invoiceForm.dueDate().touched()"
-          aria-describedby="invoice-due-date-error"
+          type="text"
+          [formField]="invoiceForm.title"
+          [attr.aria-invalid]="invoiceForm.title().invalid() && invoiceForm.title().touched()"
+          aria-describedby="invoice-title-error"
         />
-        <span id="invoice-due-date-error" class="field-error"
-          >@if (invoiceForm.dueDate().invalid() && invoiceForm.dueDate().touched()) { {{
-          i18n.t('backOffice.invoice.dueDateInvalid') }} }</span
+        <span id="invoice-title-error" class="field-error"
+          >@if (invoiceForm.title().invalid() && invoiceForm.title().touched()) { {{
+          i18n.t('backOffice.invoice.fieldInvalid') }} }</span
+        ></label
+      >
+      }
+      <div class="date-fields">
+        <label class="field"
+          >{{ i18n.t('backOffice.invoice.serviceDate') }}<input
+            class="input"
+            type="date"
+            [formField]="invoiceForm.serviceDate"
+            [attr.aria-invalid]="invoiceForm.serviceDate().invalid() && invoiceForm.serviceDate().touched()"
+            aria-describedby="invoice-service-date-error"
+          />
+          <span id="invoice-service-date-error" class="field-error"
+            >@if (invoiceForm.serviceDate().invalid() && invoiceForm.serviceDate().touched()) { {{
+            i18n.t('backOffice.invoice.dateInvalid') }} }</span
+          ></label
+        >
+        <label class="field"
+          >{{ i18n.t('backOffice.invoice.dueDate') }}<input
+            class="input"
+            type="date"
+            [formField]="invoiceForm.dueDate"
+            [attr.aria-invalid]="invoiceForm.dueDate().invalid() && invoiceForm.dueDate().touched()"
+            aria-describedby="invoice-due-date-error"
+          />
+          <span id="invoice-due-date-error" class="field-error"
+            >@if (invoiceForm.dueDate().invalid() && invoiceForm.dueDate().touched()) { {{
+            i18n.t('backOffice.invoice.dueDateInvalid') }} }</span
+          ></label
+        >
+      </div>
+      <label class="field"
+        >{{ i18n.t('backOffice.invoice.paymentTerms') }}<textarea
+          class="input"
+          rows="5"
+          [formField]="invoiceForm.paymentTerms"
+          [attr.aria-invalid]="invoiceForm.paymentTerms().invalid() && invoiceForm.paymentTerms().touched()"
+          aria-describedby="invoice-payment-terms-error"
+        ></textarea>
+        <span id="invoice-payment-terms-error" class="field-error"
+          >@if (invoiceForm.paymentTerms().invalid() && invoiceForm.paymentTerms().touched()) { {{
+          i18n.t('backOffice.invoice.fieldInvalid') }} }</span
         ></label
       >
     </div>
-    <label class="field"
-      >{{ i18n.t('backOffice.invoice.paymentTerms') }}<textarea
-        class="input"
-        rows="5"
-        [formField]="invoiceForm.paymentTerms"
-        [attr.aria-invalid]="invoiceForm.paymentTerms().invalid() && invoiceForm.paymentTerms().touched()"
-        aria-describedby="invoice-payment-terms-error"
-      ></textarea>
-      <span id="invoice-payment-terms-error" class="field-error"
-        >@if (invoiceForm.paymentTerms().invalid() && invoiceForm.paymentTerms().touched()) { {{
-        i18n.t('backOffice.invoice.fieldInvalid') }} }</span
-      ></label
-    >
     @if (!isNew()) {
     <section class="lines" aria-labelledby="lines-title">
       <div class="section-heading">

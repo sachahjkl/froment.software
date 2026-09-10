@@ -25,7 +25,7 @@
   <p appNotice>{{ i18n.t('backOffice.clientDetail.accessArchived') }}</p>
   } @else if (client()) {
   <p>{{ i18n.t('clientsWorkspace.accessCreateIntro') }}</p>
-  <form novalidate (submit)="save($event)">
+  <form class="ds-panel form-panel" novalidate (submit)="save($event)">
     <label class="field" for="client-account-email"
       >{{ i18n.t('backOffice.email') }}
       <input

@@ -10,7 +10,7 @@ Cette reprise concerne la disposition, la hiérarchie et la lisibilité, pas les
 - Utilisez toute la largeur disponible dans le backoffice.
 - Limitez localement la largeur des formulaires lorsque leur contenu le nécessite.
 - Utilisez `--panel-padding` pour les sous-groupes qui nécessitent un panneau.
-- Ne placez pas le formulaire principal dans un panneau supplémentaire.
+- Sur un formulaire à plusieurs groupes, appliquez le fond à chaque groupe, pas au formulaire entier.
 - Regroupez les champs liés avec `.field-grid` et réservez `.wide` aux champs occupant toute la ligne.
 - Conservez un seul titre `h1` par page, y compris dans les pages de configuration imbriquées.
 - Rendez la valeur complète accessible lorsqu’un texte est tronqué.
@@ -27,6 +27,14 @@ N’ajoutez pas cette classe à une grille qui possède déjà un `gap`.
 Le conteneur `main` reste transparent et gère uniquement la disposition.
 Chaque page de premier niveau applique `.page-container`.
 Les pages de configuration imbriquées ne répètent pas ce conteneur.
+
+Les groupes de formulaire utilisent `.ds-panel.form-panel` pour leur fond et leur espacement intérieur.
+Un formulaire court peut constituer un seul groupe. Un formulaire composé conserve ses actions générales hors des groupes.
+Les lignes de devis déjà présentées en panneaux ne reçoivent pas un second panneau parent.
+
+La classe `.field` sépare le libellé de son contrôle par 8 px.
+Les classes `.fields` et `.field-grid` séparent les champs entre eux.
+`FieldGroup` regroupe les champs sous un `legend`. Ses libellés projetés utilisent aussi `.field`.
 
 Les pages publiques conservent leur bordure, leur ombre et leur marge extérieure sur la texture.
 Dans le backoffice, la surface de page reste opaque, sans bordure extérieure ni ombre.
@@ -115,7 +123,7 @@ Les pages ne redéfinissent pas ces valeurs localement.
 
 L’en-tête suit cet ordre :
 
-1. Le slot `pageBack` contient un seul retour, en 14 px.
+1. Le slot `pageBack` contient un retour simple ou un fil d’Ariane, en 14 px.
 2. Le titre présente le document ou l’opération, en 26 px.
 3. La description utilise 16 px. Sur une fiche commerciale, elle contient le nom du client cliquable.
 4. Le slot `pageBadges` regroupe les états et la version disponibles.
@@ -125,6 +133,13 @@ Les devis et commandes reviennent à leur affaire. L’affaire revient à la lis
 La facture revient à sa liste d’origine dans Facturation.
 Les retours conservent les critères de navigation autorisés.
 Les actions ne contiennent ni retour supplémentaire, ni nom de client isolé.
+
+Les parcours imbriqués utilisent `Breadcrumbs` à la place du retour simple.
+Les devis et commandes affichent leur liste et leur affaire parentes.
+Les tâches de facturation affichent leur liste d’origine et leur facture parentes.
+L’éditeur de conditions affiche Configuration et Conditions.
+Chaque lien possède ses propres `queryParams`, fournis par les fonctions de navigation validées.
+Le composant ne copie pas les paramètres de l’URL courante.
 
 Une tâche revient à son document parent, lorsqu’il existe.
 Ses boutons Annuler et de retour après succès restent dans le formulaire ou le résultat.
@@ -192,6 +207,12 @@ Les informations d’export apparaissent dans l’infobulle du bouton d’export
 `EntityIcon` place une icône décorative devant la référence ou le titre de chaque entité.
 Les fonctions typées des pages associent les statuts aux couleurs. Les libellés de statut restent visibles.
 `EmptyState` sépare le titre, l’explication et l’action de création.
+Il conserve 16 px entre ces zones. Les boutons et liens-boutons directs rejoignent automatiquement la zone d’actions.
+Le slot `emptyActions` permet de projeter un groupe d’actions explicite.
+
+`Hint` prend la largeur de son bouton. L’ancrage se trouve sur le déclencheur, pas sur la cellule de grille.
+`FilterMenu` aligne son bord de début sur celui du bouton, à gauche en français et en anglais.
+Il change de position uniquement si l’espace disponible ne suffit pas.
 `DataTable` propose le mode `fluid` pour répartir les colonnes et autoriser le retour à la ligne.
 La composition `/design/workflows` présente une recherche interactive.
 La référence `/design/data-table` présente le tableau fluide.

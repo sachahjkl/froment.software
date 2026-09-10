@@ -26,11 +26,12 @@ import { Button } from '@shared/button/button';
 import { Confirmation } from '@shared/confirmation/confirmation';
 import { Notice } from '@shared/notice/notice';
 import { PageHeader } from '@shared/page-header/page-header';
+import { Breadcrumbs, type BreadcrumbItem } from '@shared/breadcrumbs/breadcrumbs';
 import { workspaceTableParams, workspaceTableQuery } from '../configuration/workspace-table';
 import { conditionTableOptions } from '../configuration/workspace-tables';
 
 @Component({
-  imports: [Button, Notice, FormField, RouterLink, PageHeader],
+  imports: [Button, Notice, FormField, RouterLink, PageHeader, Breadcrumbs],
   changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-condition-editor',
   styleUrl: './condition-editor.scss',
@@ -63,6 +64,14 @@ export class ConditionEditor {
   protected readonly title = computed<TranslationKey>(() =>
     this.editing() ? 'configurationWorkspace.editCondition' : 'configurationWorkspace.newCondition',
   );
+  protected readonly breadcrumbs = computed<readonly BreadcrumbItem[]>(() => [
+    { label: this.i18n.t('backOffice.configuration.title'), path: '/backoffice/configuration' },
+    {
+      label: this.i18n.t('backOffice.configuration.conditions'),
+      path: '/backoffice/configuration/conditions',
+      queryParams: this.backQuery(),
+    },
+  ]);
   protected readonly error = signal<TranslationKey | undefined>(undefined);
   protected readonly presetForm = form(this.model, (path) => {
     disabled(

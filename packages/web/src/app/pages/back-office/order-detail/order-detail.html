@@ -1,6 +1,11 @@
 <section class="detail-page" aria-labelledby="order-title">
   <app-page-header layout="stacked">
-    <a pageBack [routerLink]="back().link" [queryParams]="context()">{{ i18n.t(back().label) }}</a>
+    <app-breadcrumbs
+      pageBack
+      [label]="i18n.t('backOfficeShell.breadcrumb')"
+      [items]="breadcrumbs()"
+      [current]="i18n.t('commercial.order')"
+    />
     <h1 id="order-title">{{ headerTitle() }}</h1>
     @if (order(); as order) {
     <p

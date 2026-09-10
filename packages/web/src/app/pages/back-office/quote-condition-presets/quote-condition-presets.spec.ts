@@ -117,7 +117,9 @@ describe('QuoteConditionPresets', () => {
     const fixture = TestBed.createComponent(ConditionEditor);
     await fixture.whenStable();
     const root: HTMLElement = fixture.nativeElement;
-    expect(root.querySelector('a')?.getAttribute('href')).toContain('sort=conditionsDesc');
+    expect(
+      root.querySelector('a[href^="/backoffice/configuration/conditions?"]')?.getAttribute('href'),
+    ).toContain('sort=conditionsDesc');
     fixture.componentInstance['save'](new SubmitEvent('submit'));
     await fixture.whenStable();
     expect(update).toHaveBeenCalledWith(preset.id, {

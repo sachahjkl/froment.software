@@ -39,72 +39,76 @@
   </div>
   }
   <form class="task-form composer" novalidate (submit)="save($event)">
-    <fieldset appFieldGroup [legend]="i18n.t('emailsWorkspace.addressing')">
-      <div class="fields">
-        <label class="field"
-          >{{ i18n.t('emails.recipient') }}<input
-            id="email-recipient"
-            class="input"
-            type="email"
-            autocomplete="off"
-            [formField]="messageForm.recipient"
-            [attr.aria-invalid]="invalid('recipient')"
-            aria-describedby="email-recipient-error"
-          /><span class="field-error" id="email-recipient-error"
-            >@if (invalid('recipient')) { {{ i18n.t('emailsWorkspace.recipientInvalid') }} }</span
-          ></label
-        >
-        <label class="field"
-          >{{ i18n.t('emails.reference') }}<input
-            id="email-reference"
-            class="input"
-            [formField]="messageForm.reference"
-            [attr.aria-invalid]="invalid('reference')"
-            aria-describedby="email-reference-error"
-          /><span class="field-error" id="email-reference-error"
-            >@if (invalid('reference')) { {{ i18n.t('emailsWorkspace.shortTextInvalid') }} }</span
-          ></label
+    <div class="ds-panel form-panel">
+      <fieldset appFieldGroup [legend]="i18n.t('emailsWorkspace.addressing')">
+        <div class="fields">
+          <label class="field"
+            >{{ i18n.t('emails.recipient') }}<input
+              id="email-recipient"
+              class="input"
+              type="email"
+              autocomplete="off"
+              [formField]="messageForm.recipient"
+              [attr.aria-invalid]="invalid('recipient')"
+              aria-describedby="email-recipient-error"
+            /><span class="field-error" id="email-recipient-error"
+              >@if (invalid('recipient')) { {{ i18n.t('emailsWorkspace.recipientInvalid') }} }</span
+            ></label
+          >
+          <label class="field"
+            >{{ i18n.t('emails.reference') }}<input
+              id="email-reference"
+              class="input"
+              [formField]="messageForm.reference"
+              [attr.aria-invalid]="invalid('reference')"
+              aria-describedby="email-reference-error"
+            /><span class="field-error" id="email-reference-error"
+              >@if (invalid('reference')) { {{ i18n.t('emailsWorkspace.shortTextInvalid') }} }</span
+            ></label
+          >
+        </div>
+      </fieldset>
+    </div>
+    <div class="message-fields ds-panel form-panel">
+      <div class="actions">
+        <app-object-picker
+          [label]="i18n.t('emailsWorkspace.chooseTemplate')"
+          [options]="templateOptions()"
+          [disabled]="busy() || pending() !== undefined"
+          (selected)="applyTemplate($event)"
+        /><a routerLink="/backoffice/courriels/templates"
+          >{{ i18n.t('emailsWorkspace.manageTemplates') }}</a
         >
       </div>
-    </fieldset>
-    <div class="actions">
-      <app-object-picker
-        [label]="i18n.t('emailsWorkspace.chooseTemplate')"
-        [options]="templateOptions()"
-        [disabled]="busy() || pending() !== undefined"
-        (selected)="applyTemplate($event)"
-      /><a routerLink="/backoffice/courriels/templates"
-        >{{ i18n.t('emailsWorkspace.manageTemplates') }}</a
+      @if (templateError(); as error) {
+      <p appNotice variant="warning">{{ i18n.t(error) }}</p>
+      }
+      <label class="field"
+        >{{ i18n.t('emails.subject') }}<input
+          id="email-subject"
+          class="input"
+          [formField]="messageForm.subject"
+          [attr.aria-invalid]="invalid('subject')"
+          aria-describedby="email-subject-error"
+        /><span class="field-error" id="email-subject-error"
+          >@if (invalid('subject')) { {{ i18n.t('emailsWorkspace.shortTextInvalid') }} }</span
+        ></label
+      >
+      <label class="field"
+        >{{ i18n.t('emails.body') }}<textarea
+          id="email-body"
+          class="input"
+          rows="10"
+          [formField]="messageForm.body"
+          [attr.aria-invalid]="invalid('body')"
+          aria-describedby="email-body-error"
+        ></textarea
+        ><span class="field-error" id="email-body-error"
+          >@if (invalid('body')) { {{ i18n.t('emailsWorkspace.bodyInvalid') }} }</span
+        ></label
       >
     </div>
-    @if (templateError(); as error) {
-    <p appNotice variant="warning">{{ i18n.t(error) }}</p>
-    }
-    <label class="field"
-      >{{ i18n.t('emails.subject') }}<input
-        id="email-subject"
-        class="input"
-        [formField]="messageForm.subject"
-        [attr.aria-invalid]="invalid('subject')"
-        aria-describedby="email-subject-error"
-      /><span class="field-error" id="email-subject-error"
-        >@if (invalid('subject')) { {{ i18n.t('emailsWorkspace.shortTextInvalid') }} }</span
-      ></label
-    >
-    <label class="field"
-      >{{ i18n.t('emails.body') }}<textarea
-        id="email-body"
-        class="input"
-        rows="10"
-        [formField]="messageForm.body"
-        [attr.aria-invalid]="invalid('body')"
-        aria-describedby="email-body-error"
-      ></textarea
-      ><span class="field-error" id="email-body-error"
-        >@if (invalid('body')) { {{ i18n.t('emailsWorkspace.bodyInvalid') }} }</span
-      ></label
-    >
-    <section class="message-preview" aria-labelledby="message-preview-title">
+    <section class="message-preview ds-panel" aria-labelledby="message-preview-title">
       <h2 id="message-preview-title">{{ i18n.t('emailsWorkspace.preview') }}</h2>
       <strong>{{ model().subject }}</strong>
       <p class="muted">{{ model().recipient }} — {{ model().reference }}</p>

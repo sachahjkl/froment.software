@@ -8,9 +8,12 @@
   <p class="intro">{{ i18n.t('referenceEditor.conditionsIntro') }}</p>
   } @else {
   <app-page-header layout="stacked">
-    <a pageBack routerLink="/backoffice/configuration/conditions" [queryParams]="backQuery()"
-      >{{ i18n.t('configurationWorkspace.backConditions') }}</a
-    >
+    <app-breadcrumbs
+      pageBack
+      [label]="i18n.t('backOfficeShell.breadcrumb')"
+      [items]="breadcrumbs()"
+      [current]="i18n.t(title())"
+    />
     <h1 id="condition-editor-title">{{ i18n.t(title()) }}</h1>
     <p>{{ i18n.t('settingsHeader.conditionDescription') }}</p>
   </app-page-header>

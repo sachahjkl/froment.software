@@ -21,12 +21,22 @@ import { PageHeader } from '@shared/page-header/page-header';
 import { QuoteLines } from '../quote-detail/quote-lines/quote-lines';
 import { quoteIdentifier } from '../quote-detail/quote-values';
 import { affairContext } from '../affairs/affair-filters';
-import { commercialAffairBack, commercialDocumentTitle } from '../commercial-header';
+import { commercialBreadcrumbs, commercialDocumentTitle } from '../commercial-header';
+import { Breadcrumbs } from '@shared/breadcrumbs/breadcrumbs';
 import { ClientDescription } from '../client-description/client-description';
 
 @Component({
   host: { class: 'page-container' },
-  imports: [Badge, Button, ClientDescription, Notice, PageHeader, RouterLink, QuoteLines],
+  imports: [
+    Badge,
+    Button,
+    Breadcrumbs,
+    ClientDescription,
+    Notice,
+    PageHeader,
+    RouterLink,
+    QuoteLines,
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-order-detail',
   styleUrl: './order-detail.scss',
@@ -52,9 +62,14 @@ export class OrderDetail {
       ? commercialDocumentTitle(order.reference, order.title)
       : this.i18n.t('commercial.order');
   });
-  protected readonly back = computed(() =>
-    commercialAffairBack(this.order()?.quoteId, this.context().view),
-  );
+  protected readonly breadcrumbs = computed(() => {
+    const order = this.order();
+    return commercialBreadcrumbs(
+      order && { id: order.quoteId, reference: order.quoteReference },
+      this.context(),
+      this.i18n.language(),
+    );
+  });
   protected readonly generateLabel = computed(() =>
     this.i18n.t(
       this.pending() ? 'backOffice.quote.pdf.generating' : 'backOffice.quote.pdf.generate',

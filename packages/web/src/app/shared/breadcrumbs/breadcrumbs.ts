@@ -1,9 +1,10 @@
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { RouterLink, type Params } from '@angular/router';
 
 export interface BreadcrumbItem {
   readonly label: string;
-  readonly path: string;
+  readonly path: string | readonly string[];
+  readonly queryParams?: Params;
 }
 
 @Component({
@@ -34,9 +35,9 @@ export interface BreadcrumbItem {
   template: `
     <nav [attr.aria-label]="label()">
       <ol>
-        @for (item of items(); track item.path) {
+        @for (item of items(); track $index) {
           <li>
-            <a [routerLink]="item.path">{{ item.label }}</a
+            <a [routerLink]="item.path" [queryParams]="item.queryParams">{{ item.label }}</a
             ><span class="separator" aria-hidden="true">/</span>
           </li>
         }

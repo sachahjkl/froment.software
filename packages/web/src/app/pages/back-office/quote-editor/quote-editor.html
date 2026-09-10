@@ -56,7 +56,7 @@
   >
   } } @else {
   <form (submit)="save($event)" novalidate>
-    <div class="quote-identity">
+    <div class="quote-identity ds-panel form-panel">
       @if (isNew()) {
       <label class="field"
         >{{ i18n.t('backOffice.quote.client') }}
@@ -216,7 +216,7 @@
       }
     </section>
 
-    <section class="conditions-section">
+    <section class="conditions-section ds-panel form-panel">
       <div class="condition-preset spacer-x-3">
         <app-object-picker
           [label]="i18n.t('backOffice.quote.conditionPreset')"

@@ -36,7 +36,10 @@ Push after a meaningful batch of commits, or when the work is ready for CI/revie
 - Laissez le conteneur principal gérer la hauteur de la page. N’imposez pas une hauteur de viewport à chaque page interne.
 - Utilisez `Tabs` pour les onglets. Laissez le conteneur gérer leur espacement, sans marge supérieure dans le composant.
 - Donnez aux listes d’entités un titre fixe et une description avec `PageHeader`, sans surtitre ni répétition de l’onglet actif.
-- Utilisez `PageHeader` avec `layout="stacked"` pour les fiches et tâches du backoffice. Placez leur seul retour dans `pageBack`.
+- Utilisez `PageHeader` avec `layout="stacked"` pour les fiches et tâches du backoffice. Placez leur navigation de contexte dans `pageBack`.
+- Sur un parcours imbriqué, remplacez le retour simple par `Breadcrumbs`. Conservez les paramètres autorisés sur chaque lien parent.
+- Utilisez `.field` pour espacer un libellé et son contrôle. Réservez `.fields` et `.field-grid` aux groupes de champs.
+- Identifiez les groupes de formulaire avec `.ds-panel.form-panel`. Évitez les panneaux imbriqués et les surfaces sur chaque champ.
 - Placez les badges dans `pageBadges` et les actions dans `pageActions`. Excluez les retours et les noms d’entités de ces actions.
 - Rendez le nom du client cliquable dans la description de la fiche. Ne répétez pas ce lien ailleurs dans l’en-tête.
 - Présentez les documents liés avec leur type, leur référence et leurs données disponibles. Évitez les suites de références sans libellé.

@@ -4,7 +4,7 @@
   <app-invoice-task-feedback /> @if (task.invoice() && !task.completed()) { @if (!eligible()) {
   <p appNotice>{{ i18n.t('billingWorkspace.unavailable') }}</p>
   } @else {
-  <form class="task-form" (submit)="save($event)">
+  <form class="task-form ds-panel form-panel" (submit)="save($event)">
     <label
       ><input
         type="checkbox"

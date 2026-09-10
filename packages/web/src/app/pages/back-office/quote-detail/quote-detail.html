@@ -1,6 +1,11 @@
 <section appTabLayout class="detail-page" aria-labelledby="quote-detail-title">
   <app-page-header layout="stacked">
-    <a pageBack [routerLink]="back().link" [queryParams]="context()">{{ i18n.t(back().label) }}</a>
+    <app-breadcrumbs
+      pageBack
+      [label]="i18n.t('backOfficeShell.breadcrumb')"
+      [items]="breadcrumbs()"
+      [current]="i18n.t('commercial.quote')"
+    />
     <h1 id="quote-detail-title">{{ headerTitle() }}</h1>
     @if (quote(); as quote) {
     <p

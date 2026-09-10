@@ -6,7 +6,9 @@ import {
 import { type TranslationKey } from '@app/i18n.service';
 import { type BadgeVariant } from '@shared/badge/badge';
 import { activePaidCents, documentStatusKey, financialStatus } from './billing/billing-state';
-import { type AffairView } from './affairs/affair-filters';
+import { type affairContext } from './affairs/affair-filters';
+import { type BreadcrumbItem } from '@shared/breadcrumbs/breadcrumbs';
+import { translate, type Language } from '@froment/l10n';
 
 export interface DocumentBadge {
   readonly label: TranslationKey;
@@ -17,18 +19,25 @@ export function commercialDocumentTitle(reference: string | null, title: string)
   return reference === null ? title : `${reference} · ${title}`;
 }
 
-export interface CommercialBackLink {
-  readonly link: readonly ['/backoffice/affaires', string];
-  readonly label: 'commercial.backAffair' | 'backOffice.backToAffairs';
-}
-
-export function commercialAffairBack(
-  quoteId: string | undefined,
-  view: AffairView | undefined,
-): CommercialBackLink {
-  return quoteId === undefined
-    ? { link: ['/backoffice/affaires', view ?? 'attention'], label: 'backOffice.backToAffairs' }
-    : { link: ['/backoffice/affaires', quoteId], label: 'commercial.backAffair' };
+export function commercialBreadcrumbs(
+  affair: { readonly id: string; readonly reference: string } | undefined,
+  context: ReturnType<typeof affairContext>,
+  language: Language,
+): readonly BreadcrumbItem[] {
+  const items: BreadcrumbItem[] = [
+    {
+      path: ['/backoffice/affaires', context.view ?? 'attention'],
+      queryParams: context,
+      label: translate(language, 'backOffice.affairs.title'),
+    },
+  ];
+  if (affair)
+    items.push({
+      path: ['/backoffice/affaires', affair.id],
+      queryParams: context,
+      label: affair.reference,
+    });
+  return items;
 }
 
 const quoteVariants = {

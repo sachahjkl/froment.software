@@ -29,57 +29,63 @@
   <p appNotice variant="success" role="status">{{ i18n.t('catalog.saved') }}</p>
   } @else {
   <form class="catalog-form" novalidate (submit)="save($event)">
-    <fieldset>
-      <legend>{{ i18n.t('catalogWorkspace.service') }}</legend>
-      <label class="field" for="catalog-description"
-        >{{ i18n.t('catalog.description') }}
-        <input
-          id="catalog-description"
-          class="input"
-          autocomplete="off"
-          [formField]="itemForm.description"
-          [attr.aria-invalid]="invalid('description')"
-          aria-describedby="catalog-description-error"
-        />
-        <span id="catalog-description-error" class="field-error"
-          >@if (invalid('description')) { {{ i18n.t('catalog.fieldInvalid') }} }</span
-        >
-      </label>
-    </fieldset>
-    <fieldset>
-      <legend>{{ i18n.t('catalogWorkspace.defaultValues') }}</legend>
-      <div class="amounts">
-        @for (amount of amounts; track amount.field) {
-        <label class="field" [for]="amount.id"
-          >{{ i18n.t(amount.label) }}
+    <div class="ds-panel form-panel">
+      <fieldset>
+        <legend>{{ i18n.t('catalogWorkspace.service') }}</legend>
+        <label class="field" for="catalog-description"
+          >{{ i18n.t('catalog.description') }}
           <input
-            [id]="amount.id"
+            id="catalog-description"
             class="input"
-            inputmode="decimal"
-            [formField]="itemForm[amount.field]"
-            [attr.aria-invalid]="invalid(amount.field)"
-            [attr.aria-describedby]="amount.id + '-error'"
+            autocomplete="off"
+            [formField]="itemForm.description"
+            [attr.aria-invalid]="invalid('description')"
+            aria-describedby="catalog-description-error"
           />
-          <span [id]="amount.id + '-error'" class="field-error"
-            >@if (invalid(amount.field)) { {{ i18n.t(amount.error) }} }</span
+          <span id="catalog-description-error" class="field-error"
+            >@if (invalid('description')) { {{ i18n.t('catalog.fieldInvalid') }} }</span
           >
         </label>
-        }
-      </div>
-      <p class="hint">{{ i18n.t('catalogWorkspace.taxHint') }}</p>
-    </fieldset>
+      </fieldset>
+    </div>
+    <div class="ds-panel form-panel">
+      <fieldset>
+        <legend>{{ i18n.t('catalogWorkspace.defaultValues') }}</legend>
+        <div class="amounts">
+          @for (amount of amounts; track amount.field) {
+          <label class="field" [for]="amount.id"
+            >{{ i18n.t(amount.label) }}
+            <input
+              [id]="amount.id"
+              class="input"
+              inputmode="decimal"
+              [formField]="itemForm[amount.field]"
+              [attr.aria-invalid]="invalid(amount.field)"
+              [attr.aria-describedby]="amount.id + '-error'"
+            />
+            <span [id]="amount.id + '-error'" class="field-error"
+              >@if (invalid(amount.field)) { {{ i18n.t(amount.error) }} }</span
+            >
+          </label>
+          }
+        </div>
+        <p class="hint">{{ i18n.t('catalogWorkspace.taxHint') }}</p>
+      </fieldset>
+    </div>
     @if (editing()) {
-    <fieldset>
-      <legend>{{ i18n.t('catalogWorkspace.availability') }}</legend>
-      <label class="choice"
-        ><input
-          type="checkbox"
-          [formField]="itemForm.archived"
-          aria-describedby="catalog-archive-hint"
-        />{{ i18n.t('catalogWorkspace.archive') }}</label
-      >
-      <p id="catalog-archive-hint" class="hint">{{ i18n.t('catalog.archiveHint') }}</p>
-    </fieldset>
+    <div class="ds-panel form-panel">
+      <fieldset>
+        <legend>{{ i18n.t('catalogWorkspace.availability') }}</legend>
+        <label class="choice"
+          ><input
+            type="checkbox"
+            [formField]="itemForm.archived"
+            aria-describedby="catalog-archive-hint"
+          />{{ i18n.t('catalogWorkspace.archive') }}</label
+        >
+        <p id="catalog-archive-hint" class="hint">{{ i18n.t('catalog.archiveHint') }}</p>
+      </fieldset>
+    </div>
     }
     <div class="actions">
       <button appButton variant="primary" type="submit" [disabled]="saving() || uncertain()">

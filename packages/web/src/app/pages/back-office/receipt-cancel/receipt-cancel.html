@@ -11,7 +11,7 @@
   } @else if (!eligible()) {
   <p appNotice>{{ i18n.t('billingWorkspace.unavailable') }}</p>
   } @else {
-  <form class="task-form" (submit)="save($event)">
+  <form class="task-form ds-panel form-panel" (submit)="save($event)">
     <label class="field"
       >{{ i18n.t('payment.cancel_reason') }}<textarea
         class="input"

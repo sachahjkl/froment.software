@@ -212,7 +212,11 @@ function storyProperties(description: StoryDescriptions) {
     breadcrumbs: [
       ['label / current', 'string', 'required'],
       ['items', 'readonly BreadcrumbItem[]', 'required'],
-      ['BreadcrumbItem', '{ readonly label: string; readonly path: string }', '—'],
+      [
+        'BreadcrumbItem',
+        '{ readonly label: string; readonly path: string | readonly string[]; readonly queryParams?: Params }',
+        '—',
+      ],
     ],
     tabs: [
       ['label', 'string', 'required'],
@@ -408,7 +412,7 @@ const frenchStories = /* @__PURE__ */ storyDefinitions(
     'object-picker':
       '<app-object-picker label="Choisir" [options]="[{id: \'angular\', label: \'Angular\', detail: \'Web\'}]" (selected)="selected.set($event)" />',
     'field-group':
-      '<fieldset appFieldGroup legend="Contact" description="Exemple local"><label>Courriel<input type="email" [formField]="contact.email" /></label></fieldset>',
+      '<fieldset appFieldGroup legend="Contact" description="Exemple local"><label class="field">Courriel<input class="input" type="email" [formField]="contact.email" /></label></fieldset>',
     'data-table':
       '<div appDataTable tableLayout="fluid"><table><caption>Exemples</caption><thead><tr><th>Nom</th></tr></thead><tbody><tr><td>Atlas</td></tr></tbody></table></div>',
     'table-sort':
@@ -529,7 +533,7 @@ const englishStories = /* @__PURE__ */ storyDefinitions(
     'object-picker':
       '<app-object-picker label="Choose" [options]="[{id: \'angular\', label: \'Angular\', detail: \'Web\'}]" (selected)="selected.set($event)" />',
     'field-group':
-      '<fieldset appFieldGroup legend="Contact" description="Local example"><label>Email<input type="email" [formField]="contact.email" /></label></fieldset>',
+      '<fieldset appFieldGroup legend="Contact" description="Local example"><label class="field">Email<input class="input" type="email" [formField]="contact.email" /></label></fieldset>',
     'data-table':
       '<div appDataTable tableLayout="fluid"><table><caption>Examples</caption><thead><tr><th>Name</th></tr></thead><tbody><tr><td>Atlas</td></tr></tbody></table></div>',
     'table-sort':
