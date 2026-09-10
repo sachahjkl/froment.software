@@ -14,7 +14,14 @@
 .drawer-heading {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
   gap: var(--space-3);
   margin-block-end: var(--space-5);
+}
+.drawer-title {
+  flex: 1;
+  min-inline-size: 0;
+}
+[data-drawer-close] {
+  flex: none;
 }

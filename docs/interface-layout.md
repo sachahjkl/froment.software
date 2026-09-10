@@ -72,12 +72,15 @@ L’abandon d’un devis reste accessible dans une section dépliable explicitem
 
 Le backoffice possède une navigation latérale avec icônes et un en-tête contenant le lien vers la documentation API.
 La rubrique active couvre aussi ses éditeurs associés.
-Le menu du compte présente le compte actif, sa sécurité et la déconnexion.
+Le menu du compte occupe le haut de la navigation et remplace le titre visible du tiroir.
+Il présente le compte actif, sa sécurité, la langue, le thème et la déconnexion.
+Le tiroir conserve son nom accessible et son bouton de fermeture.
 L’API actuelle ne fournit pas de liste de comptes disponibles ni de permissions au navigateur.
 Les contrôles d’accès serveur restent inchangés.
 
 Sous 64 rem, un tiroir remplace la navigation latérale.
 Le composant `Drawer` utilise Angular CDK pour le focus, Échap, le fond modal et le blocage du défilement.
+Le contenu `[drawerHeading]` remplace son titre visible sans modifier son nom accessible.
 Les confirmations de sortie restent accessibles au-dessus du tiroir.
 Une navigation annulée conserve le tiroir et la saisie.
 

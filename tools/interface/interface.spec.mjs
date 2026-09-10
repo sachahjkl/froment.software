@@ -191,7 +191,7 @@ test("client form and complete account address", async ({ page, colorScheme }, t
   const summary = account.locator("summary");
   const accountDetails = account.locator(".account-details");
   if (page.viewportSize().width >= 1024) {
-    const icon = await summary.locator("svg").first().boundingBox();
+    const icon = await summary.locator("img").boundingBox();
     const label = await summary.locator("span").boundingBox();
     expect(Math.abs(icon.y + icon.height / 2 - label.y - label.height / 2)).toBeLessThan(1);
   }
@@ -202,9 +202,16 @@ test("client form and complete account address", async ({ page, colorScheme }, t
   const bounds = await accountDetails.boundingBox();
   expect(bounds.x).toBeGreaterThanOrEqual(0);
   expect(bounds.x + bounds.width).toBeLessThanOrEqual(page.viewportSize().width);
+  await expect(accountDetails.locator("app-language-selector select")).toBeVisible();
+  await expect(accountDetails.locator("app-theme-toggle button")).toBeVisible();
+  const accountMenuAudit = await new AxeBuilder({ page })
+    .withTags(["wcag2a", "wcag2aa", "wcag21aa"])
+    .analyze();
+  expect(accountMenuAudit.violations).toEqual([]);
+  await page.screenshot({ path: testInfo.outputPath("account-menu.png"), fullPage: true });
   await accountDetails.locator("p").click();
   await expect(accountDetails).toBeVisible();
-  await page.locator(".drawer-heading strong:visible, .workspace-label:visible").click();
+  await page.locator("app-back-office-nav nav:visible").evaluate((element) => element.click());
   await expect(accountDetails).toBeHidden();
   await summary.click();
   await expect(accountDetails).toBeVisible();

@@ -19,6 +19,7 @@ export async function checkDashboardShell(page, testInfo) {
     const bounds = await sidebar.boundingBox();
     expect(Math.abs(main.x - bounds.x - bounds.width)).toBeLessThan(1);
     expect(main.width).toBeGreaterThan(1100);
+    await expect(sidebar.locator(":scope > :first-child")).toHaveClass(/account/);
   } else {
     await expect(sidebar).toBeHidden();
     expect(main.x).toBe(0);
@@ -27,6 +28,10 @@ export async function checkDashboardShell(page, testInfo) {
     await expect(drawer).toBeVisible();
     await expect(drawer.locator("[data-drawer-close]")).toBeFocused();
     await expect(drawer.locator("app-back-office-nav a")).toHaveCount(8);
+    await expect(drawer.locator(".drawer-heading .account")).toBeVisible();
+    await expect(drawer.locator(".drawer-heading")).not.toContainText(
+      /Navigation du back-office|Back-office navigation/,
+    );
     await page.keyboard.press("Shift+Tab");
     expect(await drawer.evaluate((node) => node.contains(document.activeElement))).toBe(true);
     const audit = await new AxeBuilder({ page })

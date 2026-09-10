@@ -50,6 +50,10 @@ describe('BackOfficeHeader', () => {
     expect(root.querySelector('.sign-out')?.textContent).toMatch(/déconnecter|sign out/i);
     expect(root.querySelector('app-language-selector')).not.toBeNull();
     expect(root.querySelector('app-theme-toggle')).not.toBeNull();
+    expect(root.querySelector('.sidebar')?.firstElementChild?.matches('.account')).toBe(true);
+    expect(root.querySelector('.account-details app-language-selector')).not.toBeNull();
+    expect(root.querySelector('.account-details app-theme-toggle')).not.toBeNull();
+    expect(root.querySelector('.brand')).toBeNull();
     expect(root.querySelector('header a[href="/api/docs"]')?.getAttribute('target')).toBe('_blank');
     expect(root.querySelectorAll('app-back-office-nav a svg')).toHaveLength(8);
     expect(root.querySelector<HTMLSelectElement>('app-language-selector select')?.value).toBe('en');

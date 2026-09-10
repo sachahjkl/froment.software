@@ -1,4 +1,5 @@
 <aside class="sidebar" [attr.aria-label]="i18n.t('backOffice.navigation.label')">
+  <ng-container *ngTemplateOutlet="accountMenu" />
   <ng-container *ngTemplateOutlet="navigation" />
 </aside>
 <header class="workspace-header">
@@ -32,14 +33,11 @@
   [closeLabel]="i18n.t('backOfficeShell.closeNavigation')"
   (closed)="drawerOpen.set(false)"
 >
+  <div drawerHeading>@if (drawerOpen()) { <ng-container *ngTemplateOutlet="accountMenu" /> }</div>
   @if (drawerOpen()) { <ng-container *ngTemplateOutlet="navigation" /> }
 </app-drawer>
 
-<ng-template #navigation>
-  <a class="brand" [routerLink]="administrator() ? '/backoffice/dashboard' : '/backoffice/client'">
-    <img src="/brand/favicon.png" alt="" width="28" height="28" />
-    <strong>froment.software</strong>
-  </a>
+<ng-template #accountMenu>
   @if (account(); as current) {
   <details
     class="account back-office-account"
@@ -47,7 +45,7 @@
     (keydown.escape)="closeAccountWithEscape($event, accountDisclosure)"
   >
     <summary [attr.aria-label]="current.email">
-      <app-icon name="user" />
+      <img src="/brand/favicon.png" alt="" width="24" height="24" />
       <span
         ><small>{{ i18n.t('backOffice.header.account') }}</small
         ><strong>{{ current.email }}</strong></span
@@ -61,6 +59,7 @@
         (click)="accountDisclosure.open = false"
         ><app-icon name="secrets" />{{ i18n.t('account.security_title') }}</a
       >
+      <ng-container *ngTemplateOutlet="preferences" />
       <button appButton class="sign-out" type="button" (click)="signOut()">
         <app-icon name="logout" />{{ i18n.t('backOffice.signOut') }}
       </button>
@@ -80,8 +79,17 @@
       ><app-icon name="user" />{{ i18n.t('account.security_title') }}</a
     >
     <button appButton type="button" (click)="signOut()">{{ i18n.t('backOffice.signOut') }}</button>
+    <ng-container *ngTemplateOutlet="preferences" />
   </div>
-  } @if (administrator()) { <app-back-office-nav /> } @else {
+  }
+</ng-template>
+
+<ng-template #preferences>
+  <div class="preferences"><app-language-selector [compact]="true" /><app-theme-toggle /></div>
+</ng-template>
+
+<ng-template #navigation>
+  @if (administrator()) { <app-back-office-nav /> } @else {
   <nav class="client-navigation" [attr.aria-label]="i18n.t('backOffice.navigation.label')">
     <a routerLink="/backoffice/client"
       ><app-icon name="invoice" />{{ i18n.t('page.back_office_client') }}</a
@@ -89,7 +97,6 @@
   </nav>
   }
   <div class="sidebar-bottom">
-    <div class="preferences"><app-language-selector [compact]="true" /><app-theme-toggle /></div>
     <nav class="utility-links" [attr.aria-label]="i18n.t('backOfficeShell.resources')">
       <a routerLink="/">{{ i18n.t('backOfficeShell.website') }}</a>
       <a routerLink="/legal">{{ i18n.t('nav.legal') }}</a>

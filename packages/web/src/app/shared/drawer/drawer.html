@@ -1,7 +1,9 @@
 <ng-template #content>
   <div class="drawer-body">
     <div class="drawer-heading">
-      <strong>{{ label() }}</strong>
+      <div class="drawer-title">
+        <ng-content select="[drawerHeading]"><strong>{{ label() }}</strong></ng-content>
+      </div>
       <button
         appButton
         data-drawer-close

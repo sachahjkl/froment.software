@@ -13,7 +13,28 @@ class DrawerExample {
   readonly open = signal(false);
 }
 
+@Component({
+  imports: [Drawer],
+  template: `<app-drawer [open]="true" label="Navigation" closeLabel="Close">
+    <details drawerHeading>
+      <summary>Connected account</summary>
+      <a href="/account">Account</a>
+    </details>
+    <a href="/example">Example</a>
+  </app-drawer>`,
+})
+class DrawerHeadingExample {}
+
 describe('Drawer', () => {
+  it('replaces its visible title with projected controls while retaining its accessible name', async () => {
+    const fixture = TestBed.createComponent(DrawerHeadingExample);
+    await fixture.whenStable();
+    const dialog = document.querySelector('[role="dialog"]')!;
+    expect(dialog.getAttribute('aria-label')).toBe('Navigation');
+    expect(dialog.querySelector('.drawer-heading summary')?.textContent).toBe('Connected account');
+    expect(dialog.querySelector('.drawer-heading')?.textContent).not.toContain('Navigation');
+    expect(dialog.querySelector('.drawer-body > a')?.textContent).toBe('Example');
+  });
   it('opens a named dialog and closes through its control or backdrop', async () => {
     const fixture = TestBed.createComponent(DrawerExample);
     await fixture.whenStable();
