@@ -118,6 +118,9 @@ app-global-search {
 .account-menu-item:focus-visible {
   outline-offset: -2px;
 }
+.account-menu-item.sign-out {
+  color: var(--color-danger);
+}
 @media (hover: hover) {
   .account-menu-item:hover {
     background: var(--color-surface-sunken);

@@ -11,7 +11,7 @@ export const configurationWorkspaceText = {
       'L’export exclut les noms, courriels, identifiants de compte et liens d’invitation.',
     'configurationWorkspace.revokedTokens': 'Jetons révoqués',
     'configurationWorkspace.notRevokedTokens': 'Jetons non révoqués, y compris expirés',
-    'configurationWorkspace.overview': 'Entreprise et documents',
+    'configurationWorkspace.backConfiguration': 'Retour à la configuration',
     'configurationWorkspace.reload': 'Recharger les données',
     'configurationWorkspace.company': 'Entreprise',
     'configurationWorkspace.companyHint':
@@ -92,7 +92,7 @@ export const configurationWorkspaceText = {
       'Export excludes names, email addresses, account identifiers and invitation links.',
     'configurationWorkspace.revokedTokens': 'Revoked tokens',
     'configurationWorkspace.notRevokedTokens': 'Tokens not revoked, including expired tokens',
-    'configurationWorkspace.overview': 'Company and documents',
+    'configurationWorkspace.backConfiguration': 'Back to settings',
     'configurationWorkspace.reload': 'Reload data',
     'configurationWorkspace.company': 'Company',
     'configurationWorkspace.companyHint': 'Contact details and identifiers used in your documents.',

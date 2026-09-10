@@ -1,5 +1,8 @@
+import { Component } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
+import { RouterTestingHarness } from '@angular/router/testing';
+import { Configuration } from './configuration';
 import { ConfigurationIndex } from './configuration-index';
 import { configurationRoutes } from './configuration.routes';
 import { accountRoutes } from '../account-security/account.routes';
@@ -9,7 +12,33 @@ import { serviceRoutes } from '../connections/service.routes';
 import { auditRoute } from './audit/audit.routes';
 import { administratorGuard } from '@backoffice/authentication-guards';
 
+@Component({ template: '' })
+class SettingsPage {}
+
 describe('ConfigurationIndex', () => {
+  it('offers a return only from a child settings page', async () => {
+    TestBed.configureTestingModule({
+      providers: [
+        provideRouter([
+          {
+            path: 'configuration',
+            component: Configuration,
+            children: [
+              { path: '', component: SettingsPage },
+              { path: 'entreprise', component: SettingsPage },
+            ],
+          },
+        ]),
+      ],
+    });
+    const harness = await RouterTestingHarness.create();
+    const page = await harness.navigateByUrl('/configuration', Configuration);
+    expect(page['showBackLink']()).toBe(false);
+    await harness.navigateByUrl('/configuration/entreprise', Configuration);
+    expect(page['showBackLink']()).toBe(true);
+    await harness.navigateByUrl('/configuration?q=ignored', Configuration);
+    expect(page['showBackLink']()).toBe(false);
+  });
   it('guards every task route and keeps test creation ahead of request details', () => {
     const routes = [...configurationRoutes, ...teamRoutes, ...apiTokenRoutes, ...serviceRoutes];
     const paths = routes.map((route) => route.path);

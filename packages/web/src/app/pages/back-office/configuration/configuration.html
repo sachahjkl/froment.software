@@ -1,4 +1,8 @@
-<nav class="configuration" [attr.aria-label]="i18n.t('backOffice.configuration.tabs')">
-  <a routerLink="/backoffice/configuration">{{ i18n.t('configurationWorkspace.overview') }}</a>
-</nav>
+@if (showBackLink()) {
+<div class="configuration-return">
+  <a routerLink="/backoffice/configuration"
+    >{{ i18n.t('configurationWorkspace.backConfiguration') }}</a
+  >
+</div>
+}
 <router-outlet />
