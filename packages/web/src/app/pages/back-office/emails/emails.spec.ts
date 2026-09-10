@@ -184,7 +184,7 @@ describe('Emails', () => {
     await harness.fixture.whenStable();
     expect(router.url).toContain('sort=recipient-desc');
     expect(router.url).toContain('from=2026-01-01');
-    root.querySelector<HTMLAnchorElement>('.email-task > a')!.click();
+    root.querySelector<HTMLAnchorElement>('a[pageBack]')!.click();
     await harness.fixture.whenStable();
     expect(root.querySelector('thead th:nth-child(2)')?.getAttribute('aria-sort')).toBe(
       'descending',
@@ -225,7 +225,7 @@ describe('Emails', () => {
     await harness.fixture.whenStable();
     expect(root.querySelector('.message-body')?.textContent).toContain('<b>Texte littéral</b>');
     expect(root.querySelector('.message-body b')).toBeNull();
-    root.querySelector<HTMLAnchorElement>('.email-task > a')!.click();
+    root.querySelector<HTMLAnchorElement>('a[pageBack]')!.click();
     await harness.fixture.whenStable();
     expect(router.url).toContain('/messages?q=facture');
     expect(root.querySelector<HTMLInputElement>('input[type="search"]')?.value).toBe('facture');

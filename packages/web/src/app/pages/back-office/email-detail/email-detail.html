@@ -1,19 +1,23 @@
-<section class="email-task" aria-labelledby="email-detail-title">
-  <a routerLink="/backoffice/courriels/messages" [queryParams]="backQuery()"
-    >{{ i18n.t('emailsWorkspace.back') }}</a
-  >
-  <app-page-header
-    ><h1 id="email-detail-title">
-      {{ operation()?.request?.kind === 'email' ? operation()?.request?.reference :
-      i18n.t('emailsWorkspace.message') }}
-    </h1></app-page-header
-  >
+<section class="detail-page" aria-labelledby="email-detail-title">
+  <app-page-header layout="stacked">
+    <a pageBack routerLink="/backoffice/courriels/messages" [queryParams]="backQuery()"
+      >{{ i18n.t('emailsWorkspace.back') }}</a
+    >
+    <h1 id="email-detail-title">{{ title() }}</h1>
+    @if (operation(); as operation) { @if (operation.request.kind === 'email') {
+    <p>{{ operation.request.subject }}</p>
+    } }
+    <ng-container pageBadges>
+      @if (operation(); as operation) { @if (operation.request.kind === 'email') {
+      <span appBadge>{{ i18n.t(status(operation)) }}</span>
+      } }
+    </ng-container>
+  </app-page-header>
   @if (loading()) {
   <p role="status">{{ i18n.t('integrations.loading') }}</p>
   } @if (error(); as error) {
   <p appNotice variant="danger" role="alert">{{ i18n.t(error) }}</p>
   } @if (operation(); as operation) { @if (operation.request.kind === 'email') {
-  <div><span appBadge>{{ i18n.t(status(operation)) }}</span></div>
   <p appNotice>
     {{ i18n.t(operation.receipt?.mode === 'simulation' ? 'emails.simulated' :
     'emailsWorkspace.receiptHint') }}
@@ -31,8 +35,7 @@
     <dt>{{ i18n.t('emailsWorkspace.requestId') }}</dt>
     <dd>{{ operation.request.requestId }}</dd>
   </dl>
-  <article>
-    <h2>{{ operation.request.subject }}</h2>
+  <article aria-labelledby="email-detail-title">
     <p class="message-body">{{ operation.request.body }}</p>
   </article>
   @if (operation.receipt === null) {

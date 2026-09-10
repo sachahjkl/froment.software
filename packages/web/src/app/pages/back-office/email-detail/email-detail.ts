@@ -2,6 +2,7 @@ import {
   afterNextRender,
   ChangeDetectionStrategy,
   Component,
+  computed,
   DestroyRef,
   HostListener,
   PendingTasks,
@@ -35,6 +36,10 @@ export class EmailDetail {
   private readonly destroyRef = inject(DestroyRef);
   private readonly pendingTasks = inject(PendingTasks);
   protected readonly operation = signal<IntegrationOperationValue | undefined>(undefined);
+  protected readonly title = computed(() => {
+    const request = this.operation()?.request;
+    return request?.kind === 'email' ? request.reference : this.i18n.t('emailsWorkspace.message');
+  });
   protected readonly loading = signal(true);
   protected readonly busy = signal(false);
   protected readonly error = signal<TranslationKey | undefined>(undefined);

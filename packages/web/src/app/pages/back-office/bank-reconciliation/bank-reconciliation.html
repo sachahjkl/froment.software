@@ -1,14 +1,11 @@
-<section class="bank-page" aria-labelledby="match-title">
-  <a routerLink="/backoffice/banque" [queryParams]="backQuery"
-    >{{ i18n.t('bankWorkspace.back') }}</a
-  >
-  <app-page-header
-    ><h1 id="match-title">
-      {{ i18n.t((transaction()?.amountCents ?? 0) < 0 ? 'bankWorkspace.context' :
-      'bankWorkspace.reconciliation') }}
-    </h1>
-    <p class="muted">{{ i18n.t('bank.noTransfer') }}</p></app-page-header
-  >
+<section class="detail-page" aria-labelledby="match-title">
+  <app-page-header layout="stacked">
+    <a pageBack routerLink="/backoffice/banque" [queryParams]="backQuery"
+      >{{ i18n.t('bankWorkspace.back') }}</a
+    >
+    <h1 id="match-title">{{ i18n.t(titleLabel()) }}</h1>
+    <p>{{ i18n.t('bank.noTransfer') }}</p>
+  </app-page-header>
   <div #result tabindex="-1" role="status">
     @if (saved()) {
     <p appNotice variant="success">{{ i18n.t('bank.saved') }}</p>

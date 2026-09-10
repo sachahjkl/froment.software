@@ -1,8 +1,11 @@
-<section class="team-page">
-  <a routerLink="/backoffice/equipe" [queryParams]="navigation.params()"
-    >{{ i18n.t('configurationWorkspace.backTeam') }}</a
-  >
-  <h1>{{ i18n.t('configurationWorkspace.newInvitation') }}</h1>
+<section class="detail-page">
+  <app-page-header layout="stacked">
+    <a pageBack routerLink="/backoffice/equipe" [queryParams]="navigation.params()"
+      >{{ i18n.t('configurationWorkspace.backTeam') }}</a
+    >
+    <h1>{{ i18n.t('configurationWorkspace.newInvitation') }}</h1>
+    <p>{{ i18n.t('settingsHeader.invitationDescription') }}</p>
+  </app-page-header>
   <p appNotice>{{ i18n.t('team.profiles') }}</p>
   <p #result tabindex="-1" role="status">@if (saved()) { {{ i18n.t('team.saved') }} }</p>
   @if (error(); as code) {

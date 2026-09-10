@@ -242,7 +242,7 @@ describe('Clients', () => {
     root.querySelector<HTMLAnchorElement>('#client-documents-tab')!.click();
     await fixture.whenStable();
     expect(router.parseUrl(router.url).queryParams).toEqual(query);
-    root.querySelector<HTMLAnchorElement>('.client-page > a')!.click();
+    root.querySelector<HTMLAnchorElement>('a[pageBack]')!.click();
     await fixture.whenStable();
     expect(router.url).toBe(
       '/backoffice/clients/all?q=developement&country=France&contact=incomplete&sort=date-desc',

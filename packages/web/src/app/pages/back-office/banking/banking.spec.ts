@@ -121,7 +121,7 @@ describe('Banking transaction workspace', () => {
     bankRoot(harness).querySelector<HTMLAnchorElement>('tbody a')?.click();
     await harness.fixture.whenStable();
     expect(TestBed.inject(Router).url).toContain('sort=amount-desc');
-    bankRoot(harness).querySelector<HTMLAnchorElement>('.bank-page > a')?.click();
+    bankRoot(harness).querySelector<HTMLAnchorElement>('a[pageBack]')!.click();
     await harness.fixture.whenStable();
     expect(TestBed.inject(Router).url).toContain('sort=amount-desc');
     expect(TestBed.inject(Router).url).toContain('q=reglement');

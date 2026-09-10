@@ -74,7 +74,7 @@ describe('ClientAccessEditor', () => {
     expect(TestBed.inject(Router).url).toBe(back);
   });
 
-  it.each(['.access-editor > a', '.actions a'])(
+  it.each(['a[pageBack]', '.actions a'])(
     'retains only allowed context through the return link %s',
     async (selector) => {
       const { root, harness } = await configure(

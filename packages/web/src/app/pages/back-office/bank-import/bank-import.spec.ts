@@ -132,7 +132,7 @@ describe('Bank import task', () => {
     expect(TestBed.inject(Router).url).toContain('previewSort=amount-asc');
     expect(TestBed.inject(Router).url).toContain('sort=reference-desc');
     expect(api.previewStatement).toHaveBeenCalledTimes(1);
-    expect(root.querySelector('.bank-page > a')?.getAttribute('href')).toContain(
+    expect(root.querySelector('a[pageBack]')?.getAttribute('href')).toContain(
       'sort=reference-desc',
     );
     bankSortHeader(root, 'Montant').querySelector('button')?.click();

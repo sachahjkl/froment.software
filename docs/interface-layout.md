@@ -109,9 +109,52 @@ Les listes d’entités présentent un titre fixe et une description, sans surti
 Facturation conserve son titre dans les vues Factures, Encaissements, Avoirs et Remboursements.
 Les onglets nomment les vues sans répéter leur nom dans le titre principal.
 
-Les fiches commerciales regroupent leurs actions dans l’en-tête.
-Les badges distinguent le statut du document, son état financier et sa version lorsqu’ils sont disponibles.
-Les couleurs complètent les libellés. Elles ne remplacent pas les informations de statut.
+Les fiches et tâches du backoffice utilisent `PageHeader` avec `layout="stacked"`.
+Le module Sass `shared/page-header/detail-page` gère leur composition, leur espacement et la taille du titre.
+Les pages ne redéfinissent pas ces valeurs localement.
+
+L’en-tête suit cet ordre :
+
+1. Le slot `pageBack` contient un seul retour, en 14 px.
+2. Le titre présente le document ou l’opération, en 26 px.
+3. La description utilise 16 px. Sur une fiche commerciale, elle contient le nom du client cliquable.
+4. Le slot `pageBadges` regroupe les états et la version disponibles.
+5. Le slot `pageActions` regroupe les actions, sur une rangée distincte avec retour à la ligne.
+
+Les devis et commandes reviennent à leur affaire. L’affaire revient à la liste Affaires.
+La facture revient à sa liste d’origine dans Facturation.
+Les retours conservent les critères de navigation autorisés.
+Les actions ne contiennent ni retour supplémentaire, ni nom de client isolé.
+
+Une tâche revient à son document parent, lorsqu’il existe.
+Ses boutons Annuler et de retour après succès restent dans le formulaire ou le résultat.
+Les messages de résultat ne possèdent pas le retour principal de la page.
+
+Les listes gardent leur titre principal et la disposition `inline`.
+Les panneaux du compte gardent leur titre `h2`, sous le titre commun du compte.
+Les éditeurs en modale gardent leur titre `h2` et leur commande de fermeture, sans retour de page.
+
+Les couleurs complètent les libellés des badges. Elles ne remplacent pas les informations de statut.
+Les documents liés forment une section distincte, avec type, référence, état, date et montant lorsque ces données sont disponibles.
+Une référence absente reste absente. L’interface n’invente pas de numéro de document.
+
+#### Inventaire des écarts corrigés
+
+Les chemins ci-dessous sont relatifs à `packages/web/src/app/pages/back-office/`.
+
+| Famille                                                           | Écart relevé                                                                              | Règle appliquée                                                      |
+| ----------------------------------------------------------------- | ----------------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
+| `affair-detail`, `quote-detail`, `order-detail`, `invoice-detail` | Retours de 14 ou 16 px, navigation mêlée aux actions, client répété.                      | En-tête commun, retour unique, client cliquable dans la description. |
+| `affair-detail`                                                   | Trois références isolées, dont une facture brouillon portant la référence de sa commande. | Documents identifiés par type et état. Aucun numéro inventé.         |
+| Tâches de facturation                                             | Retour placé après le résumé et les messages dans `TaskFeedback`.                         | Navigation dans l’en-tête. Messages séparés.                         |
+| `quote-editor`, `invoice-editor`, `quote-publication`             | En-têtes locaux et parents de retour différents en modification.                          | Retour vers le document modifié et mêmes zones d’en-tête.            |
+| `client-detail`, `client-editor`, accès client                    | Marges propres autour de `PageHeader` et retours à la taille du corps.                    | Socle de fiche partagé. Critères des tableaux conservés.             |
+| Courriels et banque                                               | Titres et espaces hérités de socles distincts.                                            | Même en-tête, sans modifier les panneaux métier.                     |
+| Catalogue, conditions, équipe et jetons API                       | Titres autonomes, retours et commandes Annuler disparates.                                | Même en-tête de page. Modales et étapes de révélation conservées.    |
+| Connexions et tests fournisseurs                                  | Retours hors de l’en-tête et styles de titre propres.                                     | Même en-tête. Onglets et protections des demandes conservés.         |
+| Configuration                                                     | Retour du conteneur ajouté au retour de la tâche enfant.                                  | Un seul propriétaire du retour : la page affichée.                   |
+
+Le thème, les listes, les panneaux du compte et les mises en page imprimées ne font pas partie de cette harmonisation.
 
 Le composant `Tabs` utilise une surface et une ombre pour l’onglet actif.
 Le composant ne définit aucune marge extérieure.

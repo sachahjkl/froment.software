@@ -1,9 +1,11 @@
-<section class="email-task" aria-labelledby="reminder-title">
-  <a routerLink="/backoffice/courriels/reminders">{{ i18n.t('emailsWorkspace.backReminders') }}</a>
-  <app-page-header
-    ><h1 id="reminder-title">{{ i18n.t('emailsWorkspace.newReminder') }}</h1>
-    <p class="muted">{{ i18n.t('emailsWorkspace.simulationOnly') }}</p></app-page-header
-  >
+<section class="detail-page" aria-labelledby="reminder-title">
+  <app-page-header layout="stacked">
+    <a pageBack routerLink="/backoffice/courriels/reminders"
+      >{{ i18n.t('emailsWorkspace.backReminders') }}</a
+    >
+    <h1 id="reminder-title">{{ i18n.t('emailsWorkspace.newReminder') }}</h1>
+    <p>{{ i18n.t('emailsWorkspace.simulationOnly') }}</p>
+  </app-page-header>
   @if (error(); as error) {
   <p appNotice variant="danger" role="alert">{{ i18n.t(error) }}</p>
   } @if (loading()) {
@@ -58,7 +60,9 @@
     <div class="actions">
       <button appButton variant="primary" type="submit" [disabled]="busy() || confirming()">
         {{ i18n.t(pending() ? 'emails.retry' : 'reminder.schedule') }}</button
-      ><a routerLink="/backoffice/courriels/reminders">{{ i18n.t('catalogWorkspace.cancel') }}</a>
+      ><a appLinkButton routerLink="/backoffice/courriels/reminders"
+        >{{ i18n.t('catalogWorkspace.cancel') }}</a
+      >
     </div>
   </form>
   }

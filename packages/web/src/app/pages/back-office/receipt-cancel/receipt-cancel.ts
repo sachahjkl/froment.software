@@ -21,12 +21,12 @@ import { Button } from '@shared/button/button';
 import { Notice } from '@shared/notice/notice';
 import { InvoiceTask } from '../billing/invoice-task';
 import { TaskFeedback } from '../billing/task-feedback';
-import { TaskSummary } from '../billing/task-summary';
+import { InvoiceTaskHeader } from '../billing/invoice-task-header';
 import { canCancelPayment } from '../billing/receipt-cancellation';
 
 @Component({
   selector: 'app-receipt-cancel',
-  imports: [Button, Notice, FormField, TaskFeedback, TaskSummary],
+  imports: [Button, Notice, FormField, TaskFeedback, InvoiceTaskHeader],
   providers: [InvoiceTask],
   templateUrl: './receipt-cancel.html',
   styleUrl: './receipt-cancel.scss',

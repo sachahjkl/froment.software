@@ -1,8 +1,11 @@
-<section class="issuer-page" aria-labelledby="issuer-title">
-  <header>
+<section class="detail-page" aria-labelledby="issuer-title">
+  <app-page-header layout="stacked">
+    <a pageBack routerLink="/backoffice/configuration"
+      >{{ i18n.t('configurationWorkspace.backConfiguration') }}</a
+    >
     <h1 id="issuer-title">{{ i18n.t('backOffice.issuer.title') }}</h1>
-    <p class="intro">{{ i18n.t('backOffice.issuer.intro') }}</p>
-  </header>
+    <p>{{ i18n.t('backOffice.issuer.intro') }}</p>
+  </app-page-header>
 
   @if (loading()) {
   <p aria-live="polite">{{ i18n.t('backOffice.issuer.loading') }}</p>

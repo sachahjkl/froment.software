@@ -3,6 +3,7 @@ import {
   afterNextRender,
   ChangeDetectionStrategy,
   Component,
+  computed,
   DestroyRef,
   HostListener,
   inject,
@@ -64,6 +65,15 @@ export class CatalogEditor {
   protected readonly state = signal<'loading' | 'ready' | 'error'>('loading');
   protected readonly item = signal<CatalogItemValue | undefined>(undefined);
   protected readonly editing = signal(false);
+  protected readonly title = computed<TranslationKey>(() =>
+    this.editing() ? 'catalogWorkspace.editTitle' : 'catalog.create',
+  );
+  protected readonly availability = computed<TranslationKey>(() =>
+    this.item()?.archived ? 'catalog.archived' : 'catalogWorkspace.available',
+  );
+  protected readonly intro: TranslationKey = this.dialog
+    ? 'referenceEditor.catalogIntro'
+    : 'catalogWorkspace.formIntro';
   protected readonly saving = signal(false);
   private readonly confirming = signal(false);
   protected readonly completed = signal(false);

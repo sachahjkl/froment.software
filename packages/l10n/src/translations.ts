@@ -28,6 +28,7 @@ import { entityListText } from './entity-list.js';
 import { clientTablesText } from './client-tables.js';
 import { commercialHeaderText } from './commercial-header.js';
 import { teamInvitationText } from './team-invitation.js';
+import { settingsHeaderText } from './settings-header.js';
 
 export const translations = {
   fr: {
@@ -63,6 +64,7 @@ export const translations = {
     ...clientTablesText.fr,
     ...commercialHeaderText.fr,
     ...teamInvitationText.fr,
+    ...settingsHeaderText.fr,
     'backOffice.apiTokens.permission.payment.read': 'Exporter les règlements et leurs corrections.',
     'design.confirmation.title': 'Modales de confirmation',
     'design.confirmation.hint':
@@ -1598,6 +1600,7 @@ export const translations = {
     ...clientTablesText.en,
     ...commercialHeaderText.en,
     ...teamInvitationText.en,
+    ...settingsHeaderText.en,
     'backOffice.apiTokens.permission.payment.read': 'Export payments and their corrections.',
     'design.confirmation.title': 'Confirmation dialogs',
     'design.confirmation.hint':

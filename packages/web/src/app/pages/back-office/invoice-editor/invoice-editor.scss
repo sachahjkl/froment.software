@@ -1,8 +1,6 @@
 @use "../document-editor";
+@use "shared/page-header/detail-page";
 
-:host {
-  display: block;
-}
 .document-editor > form {
   max-inline-size: 60rem;
   inline-size: 100%;

@@ -1,6 +1,8 @@
-<section class="billing-page" aria-labelledby="issue-title">
-  <h1 id="issue-title">{{ i18n.t('billingWorkspace.issueTitle') }}</h1>
-  <app-invoice-task-summary />
+<section class="detail-page" aria-labelledby="issue-title">
+  <app-invoice-task-header
+    headingId="issue-title"
+    [heading]="i18n.t('billingWorkspace.issueTitle')"
+  />
   <p appNotice>{{ i18n.t('billingWorkspace.issueHint') }}</p>
   <app-invoice-task-feedback />
   @if (task.invoice()) { @if (!eligible() && !task.completed()) {

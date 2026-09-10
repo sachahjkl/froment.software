@@ -1,10 +1,8 @@
-@use "../billing/billing-workspace";
-@use "../commercial-header";
+@use "shared/page-header/detail-page";
 .invoice-panel {
   display: grid;
   gap: var(--space-5);
   min-inline-size: 0;
-  padding: var(--space-4);
 }
 h2 {
   font-size: var(--text-lg);
@@ -18,6 +16,9 @@ h2 {
 }
 .summary {
   margin: 0;
+  max-inline-size: 52rem;
+}
+.summary.ds-panel {
   padding: var(--space-5);
 }
 section.summary > * + * {
@@ -58,4 +59,53 @@ section.summary > * + * {
 }
 .history-entry dl {
   margin-block-end: 0;
+}
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+}
+.field {
+  display: grid;
+  gap: var(--space-2);
+  min-inline-size: 0;
+}
+.amount {
+  text-align: end;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+td small {
+  display: block;
+  color: var(--color-muted);
+}
+dl {
+  display: grid;
+  gap: var(--space-3);
+}
+dl > div {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: var(--space-2) var(--space-4);
+}
+dt {
+  color: var(--color-muted);
+}
+dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.preview {
+  width: 100%;
+  height: clamp(28rem, 80dvh, 65rem);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-panel);
+  background: white;
+}
+ol {
+  display: grid;
+  gap: var(--space-4);
 }

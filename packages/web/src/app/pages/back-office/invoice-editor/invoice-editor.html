@@ -1,11 +1,34 @@
-<section class="invoice-page document-editor" aria-labelledby="invoice-title">
-  <header>
-    <a class="back-link" [routerLink]="navigation.listLink()" [queryParams]="navigation.listQuery()"
-      >{{ i18n.t('backOffice.backToBilling') }}</a
-    >
+<section class="detail-page document-editor" aria-labelledby="invoice-title">
+  <app-page-header layout="stacked">
+    <div pageBack>
+      @if (detail(); as invoice) {
+      <a
+        class="back-link"
+        [routerLink]="['/backoffice/invoices', invoice.id]"
+        [queryParams]="navigation.detailQuery()"
+        >{{ i18n.t('billingWorkspace.backDetail') }}</a
+      >
+      } @else {
+      <a
+        class="back-link"
+        [routerLink]="navigation.listLink()"
+        [queryParams]="navigation.listQuery()"
+        >{{ i18n.t('backOffice.backToBilling') }}</a
+      >
+      }
+    </div>
     <h1 id="invoice-title">{{ i18n.t(titleKey()) }}</h1>
-    <p class="hint">{{ i18n.t('billingWorkspace.noAutosave') }}</p>
-  </header>
+    @if (detail(); as invoice) {
+    <p>
+      {{ i18n.t('backOffice.affair.invoice') }} {{ invoice.invoiceNumber ??
+      invoice.currentRevision.title }} ·
+      <a [routerLink]="['/backoffice/clients', invoice.clientId, 'profile']"
+        >{{ invoice.currentRevision.clientDisplayName }}</a
+      >
+    </p>
+    }
+    <p>{{ i18n.t('billingWorkspace.noAutosave') }}</p>
+  </app-page-header>
   @if (loading()) {
   <p role="status">{{ i18n.t('backOffice.invoices.loading') }}</p>
   }
@@ -16,7 +39,16 @@
     <p appNotice variant="danger" role="alert">{{ i18n.t(error) }}</p>
     } @if (completed() && !hasUnsavedChanges()) {
     <p appNotice variant="success" role="status">{{ i18n.t('billingWorkspace.completed') }}</p>
-    }
+    @if (detail(); as invoice) {
+    <div class="spacer-x-3">
+      <a
+        appLinkButton
+        [routerLink]="['/backoffice/invoices', invoice.id]"
+        [queryParams]="navigation.detailQuery()"
+        >{{ i18n.t('billingWorkspace.backDetail') }}</a
+      >
+    </div>
+    } }
   </div>
   @if (!loading() && !unavailable()) { @if (!editable()) {
   <p appNotice>{{ i18n.t('billingWorkspace.readonly') }}</p>
@@ -221,9 +253,6 @@
         <dd>{{ money(invoice.currentRevision.totalCents) }}</dd>
       </div>
     </dl>
-    <a [routerLink]="['/backoffice/invoices', invoice.id]" [queryParams]="navigation.detailQuery()"
-      >{{ i18n.t('billingWorkspace.backDetail') }}</a
-    >
   </section>
   } } @if (unavailable() || stale()) {
   <button appButton [disabled]="saving()" (click)="reload()">

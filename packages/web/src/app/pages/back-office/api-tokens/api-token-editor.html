@@ -1,9 +1,13 @@
-<section class="tokens-page">
-  <a routerLink="/backoffice/api" [queryParams]="navigation.params()"
-    >{{ i18n.t('configurationWorkspace.backTokens') }}</a
-  >
+<section class="tokens-page detail-page">
+  <app-page-header layout="stacked">
+    <a pageBack routerLink="/backoffice/api" [queryParams]="navigation.params()"
+      >{{ i18n.t('configurationWorkspace.backTokens') }}</a
+    >
+    <h1>{{ i18n.t('backOffice.apiTokens.createTitle') }}</h1>
+    <p>{{ i18n.t('settingsHeader.tokenDescription') }}</p>
+  </app-page-header>
   @if (secret(); as currentSecret) {
-  <h1 #secretHeading tabindex="-1">{{ i18n.t('backOffice.apiTokens.secretTitle') }}</h1>
+  <h2 #secretHeading tabindex="-1">{{ i18n.t('backOffice.apiTokens.secretTitle') }}</h2>
   <p appNotice variant="warning">{{ i18n.t('backOffice.apiTokens.secretWarning') }}</p>
   <app-copy-field
     [value]="currentSecret"
@@ -15,7 +19,6 @@
     {{ i18n.t('backOffice.apiTokens.secretSaved') }}
   </button>
   } @else {
-  <h1>{{ i18n.t('backOffice.apiTokens.createTitle') }}</h1>
   <form (submit)="create($event)" novalidate>
     <label class="field"
       >{{ i18n.t('backOffice.apiTokens.name') }}<input

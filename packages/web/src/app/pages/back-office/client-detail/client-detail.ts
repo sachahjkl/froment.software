@@ -178,7 +178,7 @@ export class ClientDetail {
           id: `invoice-${invoice.id}`,
           type: 'invoice' as const,
           kind: this.i18n.t('backOffice.clientDetail.invoice'),
-          reference: invoice.invoiceNumber ?? invoice.orderReference,
+          reference: invoice.invoiceNumber ?? this.i18n.t('commercialHeader.draftInvoice'),
           title: invoice.title,
           status: this.i18n.t(`backOffice.invoice.status.${invoice.status}`),
           totalCents: invoice.totalCents,

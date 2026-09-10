@@ -1,0 +1,5 @@
+@for (part of parts(); track $index) { @if (part.kind === 'text') {
+<ng-container>{{ part.value }}</ng-container>
+} @else if (part.name === 'client') {
+<a [routerLink]="['/backoffice/clients', clientId(), 'profile']">{{ clientName() }}</a>
+} }

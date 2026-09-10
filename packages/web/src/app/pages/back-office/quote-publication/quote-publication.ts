@@ -27,6 +27,7 @@ import { Confirmation } from '@shared/confirmation/confirmation';
 import { CopyField } from '@shared/copy-field/copy-field';
 import { DocumentIssues } from '@shared/document-issues/document-issues';
 import { Notice } from '@shared/notice/notice';
+import { PageHeader } from '@shared/page-header/page-header';
 import { TextCopy } from '@shared/text-copy';
 import { QuoteDocument } from '../quote-detail/quote-document/quote-document';
 import { quoteIdentifier } from '../quote-detail/quote-values';
@@ -34,7 +35,16 @@ import { affairContext } from '../affairs/affair-filters';
 
 @Component({
   host: { class: 'page-container' },
-  imports: [Button, CopyField, DocumentIssues, FormField, Notice, RouterLink, QuoteDocument],
+  imports: [
+    Button,
+    CopyField,
+    DocumentIssues,
+    FormField,
+    Notice,
+    PageHeader,
+    RouterLink,
+    QuoteDocument,
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-quote-publication',
   styleUrl: './quote-publication.scss',
@@ -65,6 +75,12 @@ export class QuotePublication {
   protected readonly error = signal<TranslationKey | undefined>(undefined);
   protected readonly issues = signal<readonly DocumentIssueValue[]>([]);
   protected readonly copied = signal(false);
+  protected readonly copyStatus = computed(() =>
+    this.copied() ? this.i18n.t('backOffice.quote.link.copied') : '',
+  );
+  protected readonly publishKey = computed<TranslationKey>(() =>
+    this.pending() ? 'backOffice.quote.sending' : 'commercial.createLink',
+  );
   protected readonly confirming = signal(false);
   protected readonly review = form(signal({ checked: false }), (path) => {
     disabled(path, { when: () => this.pending() || this.uncertain() || !!this.completed() });

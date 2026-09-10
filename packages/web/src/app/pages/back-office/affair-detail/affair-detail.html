@@ -1,31 +1,19 @@
-<section appTabLayout class="affair-page" aria-labelledby="affair-title">
-  <a
-    class="back-link"
-    [routerLink]="['/backoffice/affaires', backView()]"
-    [queryParams]="context()"
-  >
-    {{ i18n.t('backOffice.backToAffairs') }}
-  </a>
-  @if (state() !== 'ready') {
-  <app-page-header><h1 id="affair-title">{{ headerTitle() }}</h1></app-page-header>
-  } @switch (state()) { @case ('loading') {
-  <p class="state" aria-live="polite">{{ i18n.t('backOffice.affair.loading') }}</p>
-  } @case ('error') {
-  <p appNotice variant="danger" role="alert">{{ i18n.t('backOffice.affair.error') }}</p>
-  <button appButton type="button" (click)="load()">{{ i18n.t('backOffice.affair.retry') }}</button>
-  } @case ('ready') { @if (quote(); as quote) {
-  <app-page-header>
+<section appTabLayout class="detail-page" aria-labelledby="affair-title">
+  <app-page-header layout="stacked">
+    <a pageBack [routerLink]="['/backoffice/affaires', backView()]" [queryParams]="context()">
+      {{ i18n.t('backOffice.backToAffairs') }}
+    </a>
     <h1 id="affair-title">{{ headerTitle() }}</h1>
-    <p class="document-description">
-      {{ i18n.tf('commercialHeader.affairDescription', { client:
-      quote.currentRevision.clientDisplayName }) }}
-    </p>
-    <div pageActions class="page-actions">
-      @if (invoice(); as invoice) {
-      <a appLinkButton variant="primary" [routerLink]="['/backoffice/invoices', invoice.id]">
-        {{ i18n.t('backOffice.affair.nextAction.openInvoice') }}
-      </a>
-      } @else if (order(); as order) {
+    @if (quote(); as quote) {
+    <p
+      appClientDescription
+      kind="affair"
+      [clientId]="quote.clientId"
+      [clientName]="quote.currentRevision.clientDisplayName"
+    ></p>
+    }
+    <ng-container pageActions>
+      @if (quote()) { @if (!invoice()) { @if (order(); as order) {
       <a
         appLinkButton
         variant="primary"
@@ -34,26 +22,19 @@
       >
         {{ i18n.t('backOffice.affair.nextAction.createInvoiceButton') }}
       </a>
-      } @else {
-      <a
-        appLinkButton
-        variant="primary"
-        [routerLink]="['/backoffice/quotes', quote.id]"
-        [queryParams]="context()"
-      >
-        {{ i18n.t('backOffice.affair.nextAction.openQuote') }}
-      </a>
-      } @if (invoiceReminderHref(); as reminderHref) {
+      } } @if (invoiceReminderHref(); as reminderHref) {
       <a appLinkButton [href]="reminderHref">{{ i18n.t('backOffice.affair.reminder.invoice') }}</a>
       } @else if (quoteReminderHref(); as reminderHref) {
       <a appLinkButton [href]="reminderHref">{{ i18n.t('backOffice.affair.reminder.quote') }}</a>
-      }
-      <a [routerLink]="['/backoffice/clients', quote.clientId, 'profile']"
-        >{{ quote.currentRevision.clientDisplayName }}</a
-      >
-    </div>
+      } }
+    </ng-container>
   </app-page-header>
-
+  @switch (state()) { @case ('loading') {
+  <p class="state" aria-live="polite">{{ i18n.t('backOffice.affair.loading') }}</p>
+  } @case ('error') {
+  <p appNotice variant="danger" role="alert">{{ i18n.t('backOffice.affair.error') }}</p>
+  <button appButton type="button" (click)="load()">{{ i18n.t('backOffice.affair.retry') }}</button>
+  } @case ('ready') { @if (quote(); as quote) {
   <app-tabs [tabs]="tabs()" [label]="quote.currentRevision.title" [preserveQuery]="true" />
   <router-outlet />
   <ng-template appTabPanel="affair-detail" let-tab="tab">
@@ -77,18 +58,39 @@
         </dl>
       </section>
 
-      <div class="document-actions overview-links">
-        <a [routerLink]="['/backoffice/quotes', quote.id]" [queryParams]="context()"
-          >{{ quote.reference }}</a
-        >
-        @if (order(); as order) {
-        <a [routerLink]="['/backoffice/orders', order.id]" [queryParams]="context()"
-          >{{ order.reference }}</a
-        >
-        } @if (invoice(); as invoice) {
-        <a [routerLink]="['/backoffice/invoices', invoice.id]">{{ invoiceReference() }}</a>
-        }
-      </div>
+      <section class="related-documents" aria-labelledby="related-documents-title">
+        <h2 id="related-documents-title">{{ i18n.t('commercialHeader.relatedDocuments') }}</h2>
+        <ul class="document-list">
+          @for (document of relatedDocuments(); track document.kind) {
+          <li class="document-card ds-panel">
+            <div class="document-identity">
+              <app-entity-icon [icon]="document.icon" />
+              <div>
+                <h3>{{ i18n.t(document.label) }}</h3>
+                <a [routerLink]="document.link" [queryParams]="document.query"
+                  >{{ document.reference }}</a
+                >
+              </div>
+            </div>
+            <div class="spacer-x-2">
+              @for (badge of document.badges; track badge.label) {
+              <span appBadge [variant]="badge.variant">{{ i18n.t(badge.label) }}</span>
+              }
+            </div>
+            <dl class="document-facts">
+              <div>
+                <dt>{{ i18n.t(document.dateLabel) }}</dt>
+                <dd><time [attr.datetime]="document.date">{{ date(document.date) }}</time></dd>
+              </div>
+              <div>
+                <dt>{{ i18n.t('backOffice.invoice.total') }}</dt>
+                <dd class="amount">{{ money(document.totalCents) }}</dd>
+              </div>
+            </dl>
+          </li>
+          }
+        </ul>
+      </section>
       } @if (tab === 'documents') {
       <section aria-labelledby="documents-title">
         <h2 id="documents-title">{{ i18n.t('backOffice.affair.documents') }}</h2>

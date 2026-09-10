@@ -6,7 +6,9 @@ import { InvoicesApi } from '@backoffice/invoices-api';
 import { ClientsApi } from '@backoffice/clients-api';
 import { OrdersApi } from '@backoffice/orders-api';
 import { QuotesApi } from '@backoffice/quotes-api';
-import { AffairDetail, invoiceSummaryBadge } from './affair-detail';
+import { AffairDetail } from './affair-detail';
+import { invoiceSummaryBadge } from './affair-documents';
+import { invoiceFixture } from '../billing/billing.spec-helper';
 import {
   CommercialDestination,
   control,
@@ -69,12 +71,13 @@ describe('Affair detail', () => {
             get: async () => ({
               success: true,
               result: {
+                ...invoiceFixture(),
                 id: '01ARZ3NDEKTSV4RRFFQ69G5FAF',
                 status: 'issued',
                 version: 1,
                 creditedCents,
                 invoiceNumber: 'FA-2020-000001',
-                currentRevision: { dueDate: '2020-01-01' },
+                currentRevision: { ...invoiceFixture().currentRevision, dueDate: '2020-01-01' },
                 revisions: [],
               },
             }),
@@ -92,7 +95,7 @@ describe('Affair detail', () => {
     expect(root.querySelector('form')).toBeNull();
     expect(root.querySelector('#timeline-title')).toBeNull();
     expect(root.querySelector('a[href^="mailto:"]')).not.toBeNull();
-    expect(control<HTMLAnchorElement>(root, '.back-link').getAttribute('href')).toContain(
+    expect(control<HTMLAnchorElement>(root, '[pageBack]').getAttribute('href')).toContain(
       '/backoffice/affaires/all?q=Audit',
     );
     control<HTMLAnchorElement>(root, '#affair-documents-tab').click();

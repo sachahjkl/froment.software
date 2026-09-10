@@ -1,14 +1,17 @@
-<section appTabLayout class="client-page notice-flow" aria-labelledby="client-title">
-  <a [routerLink]="backLink()" [queryParams]="returnQuery()"
-    >{{ i18n.t('backOffice.backToClients') }}</a
-  >
-  <app-page-header>
+<section appTabLayout class="detail-page client-page" aria-labelledby="client-title">
+  <app-page-header layout="stacked">
+    <a pageBack [routerLink]="backLink()" [queryParams]="returnQuery()"
+      >{{ i18n.t('backOffice.backToClients') }}</a
+    >
     <h1 id="client-title">
       {{ client()?.displayName ?? i18n.t('backOffice.clientDetail.title') }}
     </h1>
-    @if (client()) {
-    <span appBadge [variant]="statusVariant()">{{ i18n.t(statusLabel()) }}</span>
-    }
+    <p>{{ i18n.t('clientsWorkspace.documentsIntro') }}</p>
+    <ng-container pageBadges>
+      @if (client()) {
+      <span appBadge [variant]="statusVariant()">{{ i18n.t(statusLabel()) }}</span>
+      }
+    </ng-container>
     <div pageActions class="client-primary-actions">
       @if (client(); as current) { @if (!current.archived) {
       <a

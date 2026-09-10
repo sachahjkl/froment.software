@@ -248,6 +248,9 @@ function storyProperties(description: StoryDescriptions) {
       ['previous / next', 'OutputEmitterRef<void>', '—'],
     ],
     'page-header': [
+      ['layout', "'inline' | 'stacked'", 'inline'],
+      ['[pageBack]', description.projectionSlot, '—'],
+      ['[pageBadges]', description.projectionSlot, '—'],
       ['[pageActions]', description.projectionSlot, '—'],
       ['<ng-content>', description.projectedHeading, '—'],
     ],

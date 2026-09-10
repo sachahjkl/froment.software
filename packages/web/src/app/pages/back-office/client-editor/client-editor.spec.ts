@@ -170,7 +170,7 @@ describe('ClientEditor', () => {
     expect(api.get).toHaveBeenCalledTimes(2);
   });
 
-  it.each(['.client-editor > a', '.actions a'])(
+  it.each(['a[pageBack]', '.actions a'])(
     'retains allowed context through the return link %s',
     async (selector) => {
       const query =

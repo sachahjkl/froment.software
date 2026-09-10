@@ -32,6 +32,7 @@ import { I18nService, type TranslationKey } from '@app/i18n.service';
 import { Badge } from '@shared/badge/badge';
 import { Button } from '@shared/button/button';
 import { DataTable } from '@shared/data-table/data-table';
+import { EntityIcon } from '@shared/entity-icon/entity-icon';
 import { Icon } from '@shared/icon/icon';
 import { Notice } from '@shared/notice/notice';
 import { PageHeader } from '@shared/page-header/page-header';
@@ -39,16 +40,9 @@ import { TextCopy } from '@shared/text-copy';
 import { Tabs, type TabItem } from '@shared/tabs/tabs';
 import { TabLayout, TabPanel } from '@shared/tabs/tab-panel';
 import { affairContext, affairView } from '../affairs/affair-filters';
-import {
-  commercialDocumentTitle,
-  type DocumentBadge,
-  invoiceStatusBadge,
-  quoteStatusBadge,
-} from '../commercial-header';
-
-export function invoiceSummaryBadge(status: InvoiceStatusValue): DocumentBadge {
-  return { ...invoiceStatusBadge(status), label: `backOffice.invoice.status.${status}` };
-}
+import { commercialDocumentTitle, quoteStatusBadge } from '../commercial-header';
+import { ClientDescription } from '../client-description/client-description';
+import { affairDocuments, invoiceReference, invoiceSummaryBadge } from './affair-documents';
 
 interface TimelineItem {
   readonly id: string;
@@ -64,7 +58,9 @@ type PortalDocumentKind = 'quote' | 'order' | 'invoice';
   imports: [
     Badge,
     Button,
+    ClientDescription,
     DataTable,
+    EntityIcon,
     Icon,
     Notice,
     PageHeader,
@@ -116,7 +112,13 @@ export class AffairDetail {
   protected readonly invoiceBadge = invoiceSummaryBadge;
   protected readonly invoiceReference = computed(() => {
     const invoice = this.invoice();
-    return invoice?.invoiceNumber ?? invoice?.orderReference;
+    return invoice ? invoiceReference(invoice.invoiceNumber, this.i18n.language()) : undefined;
+  });
+  protected readonly relatedDocuments = computed(() => {
+    const quote = this.quote();
+    return quote
+      ? affairDocuments(quote, this.order(), this.invoice(), this.context(), this.i18n.language())
+      : [];
   });
 
   constructor() {

@@ -1,13 +1,11 @@
-<section class="email-task" aria-labelledby="template-title">
-  <a routerLink="/backoffice/courriels/templates" [queryParams]="backQuery()"
-    >{{ i18n.t('emailsWorkspace.backTemplates') }}</a
-  >
-  <app-page-header
-    ><h1 id="template-title">
-      {{ i18n.t(template() ? 'emailsWorkspace.editTemplate' : 'emailsWorkspace.newTemplate') }}
-    </h1>
-    <p class="muted">{{ i18n.t('emailsWorkspace.templateHint') }}</p></app-page-header
-  >
+<section class="detail-page" aria-labelledby="template-title">
+  <app-page-header layout="stacked">
+    <a pageBack routerLink="/backoffice/courriels/templates" [queryParams]="backQuery()"
+      >{{ i18n.t('emailsWorkspace.backTemplates') }}</a
+    >
+    <h1 id="template-title">{{ i18n.t(titleLabel()) }}</h1>
+    <p>{{ i18n.t('emailsWorkspace.templateHint') }}</p>
+  </app-page-header>
   @if (error(); as error) {
   <p appNotice variant="danger" role="alert">{{ i18n.t(error) }}</p>
   } @if (state() === 'loading') {
@@ -61,7 +59,7 @@
         [disabled]="busy()"
         (actionSelected)="archive()"
       />
-      }<a routerLink="/backoffice/courriels/templates" [queryParams]="backQuery()"
+      }<a appLinkButton routerLink="/backoffice/courriels/templates" [queryParams]="backQuery()"
         >{{ i18n.t('catalogWorkspace.cancel') }}</a
       >
     </div>

@@ -1,21 +1,7 @@
-:host {
-  display: block;
-}
-
-.issuer-page {
-  display: grid;
-  gap: var(--space-6);
-  padding: var(--page-header-y) var(--page-x);
-}
+@use "shared/page-header/detail-page";
 
 h2 {
   font-size: var(--text-xl);
-}
-
-.intro {
-  max-width: var(--measure);
-  margin-top: var(--space-2);
-  color: var(--color-muted);
 }
 
 form {

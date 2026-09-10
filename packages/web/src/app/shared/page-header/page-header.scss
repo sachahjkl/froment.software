@@ -1,5 +1,15 @@
 :host {
-  display: block;
+  display: grid;
+  gap: var(--space-4);
+  min-inline-size: 0;
+}
+.back {
+  font-size: var(--text-sm);
+  line-height: var(--leading-body);
+}
+.back:empty,
+.badges:empty {
+  display: none;
 }
 header {
   display: flex;
@@ -14,12 +24,19 @@ header {
   flex: 1 1 16rem;
   min-inline-size: 0;
 }
+.badges,
 .actions {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: var(--space-2);
+  gap: var(--space-3);
+  min-inline-size: 0;
 }
 .actions:empty {
   display: none;
+}
+:host([data-header-layout="stacked"]) header {
+  display: grid;
+  justify-content: stretch;
+  gap: var(--space-4);
 }

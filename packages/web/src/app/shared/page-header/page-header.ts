@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -6,5 +6,8 @@ import { ChangeDetectionStrategy, Component } from '@angular/core';
   selector: 'app-page-header',
   styleUrl: './page-header.scss',
   templateUrl: './page-header.html',
+  host: { '[attr.data-header-layout]': 'layout()' },
 })
-export class PageHeader {}
+export class PageHeader {
+  readonly layout = input<'inline' | 'stacked'>('inline');
+}

@@ -1,12 +1,13 @@
+@use "shared/page-header/detail-page";
+
 :host {
   display: block;
+}
+:host > section:not(.detail-page) {
   padding: var(--space-6) var(--page-x);
 }
-section > * + * {
+section:not(.detail-page) > * + * {
   margin-block-start: var(--space-6);
-}
-header > * + * {
-  margin-block-start: var(--space-2);
 }
 h2 {
   font-size: var(--text-xl);

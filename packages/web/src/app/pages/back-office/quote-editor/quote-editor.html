@@ -1,21 +1,31 @@
-<section class="quote-page document-editor" aria-labelledby="quote-title">
-  <header>
+<section class="detail-page document-editor" aria-labelledby="quote-title">
+  <app-page-header layout="stacked">
+    <div pageBack>
+      @if (detail(); as quote) {
+      <a class="back-link" [routerLink]="['/backoffice/quotes', quote.id]" [queryParams]="context()"
+        >{{ i18n.t('commercial.backQuote') }}</a
+      >
+      } @else {
+      <a
+        class="back-link"
+        [routerLink]="['/backoffice/affaires', context().view ?? 'attention']"
+        [queryParams]="context()"
+        >{{ i18n.t('backOffice.backToAffairs') }}</a
+      >
+      }
+    </div>
+    <h1 id="quote-title">{{ i18n.t(titleKey()) }}</h1>
     @if (detail(); as quote) {
-    <a class="back-link" [routerLink]="['/backoffice/quotes', quote.id]" [queryParams]="context()"
-      >{{ i18n.t('commercial.backQuote') }}</a
-    >
-    } @else {
-    <a
-      class="back-link"
-      [routerLink]="['/backoffice/affaires', context().view ?? 'attention']"
-      [queryParams]="context()"
-      >{{ i18n.t('backOffice.backToAffairs') }}</a
-    >
+    <p>
+      {{ quote.reference }} ·
+      <a [routerLink]="['/backoffice/clients', quote.clientId, 'profile']"
+        >{{ quote.currentRevision.clientDisplayName }}</a
+      >
+      · {{ i18n.tf('commercial.revision', { version: quote.version }) }}
+    </p>
     }
-    <h1 id="quote-title">
-      {{ i18n.t(isNew() ? 'backOffice.quote.title.new' : 'backOffice.quote.title.edit') }}
-    </h1>
-  </header>
+    <p>{{ i18n.t('billingWorkspace.noAutosave') }}</p>
+  </app-page-header>
   @if (loading()) {
   <p aria-live="polite">{{ i18n.t('backOffice.quotes.loading') }}</p>
   } @else if (unavailable()) { @if (error(); as errorKey) {
@@ -73,16 +83,7 @@
         {{ i18n.t('backOffice.quote.noClient') }}
         <a routerLink="/backoffice/clients/new">{{ i18n.t('backOffice.quote.manageClients') }}</a>
       </p>
-      } } @else if (detail(); as quote) {
-      <p appDetailRow [label]="i18n.t('backOffice.quote.client')">
-        <a [routerLink]="['/backoffice/clients', quote.clientId, 'profile']"
-          >{{ quote.currentRevision.clientDisplayName }}</a
-        >
-      </p>
-      <p class="hint">
-        {{ quote.reference }} · {{ i18n.tf('commercial.revision', { version: quote.version }) }}
-      </p>
-      }
+      } }
       <label class="field"
         >{{ i18n.t('backOffice.quote.title') }}
         <input
@@ -268,7 +269,7 @@
       type="submit"
       [disabled]="saveDisabled() || referenceBusy()"
     >
-      {{ i18n.t(saving() ? 'backOffice.quote.saving' : 'backOffice.quote.save') }}
+      {{ i18n.t(saveKey()) }}
     </button>
     @if (!isNew()) {
     <p class="hint">{{ i18n.t('document.quote.refreshHint') }}</p>

@@ -1,9 +1,12 @@
 import { TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
 import { vi } from 'vitest';
 import { IssuerSettingsApi } from '@backoffice/issuer-settings-api';
 import { IssuerSettings } from './issuer-settings';
 
 describe('IssuerSettings', () => {
+  beforeEach(() => TestBed.configureTestingModule({ providers: [provideRouter([])] }));
+
   it('blocks updates when the initial settings cannot be loaded', async () => {
     const update = vi.fn();
     TestBed.configureTestingModule({

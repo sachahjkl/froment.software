@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
-import { provideRouter } from '@angular/router';
+import { provideRouter, RouterLink } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
 import { Configuration } from './configuration';
 import { ConfigurationIndex } from './configuration-index';
@@ -11,12 +11,19 @@ import { apiTokenRoutes } from '../api-tokens/api-token.routes';
 import { serviceRoutes } from '../connections/service.routes';
 import { auditRoute } from './audit/audit.routes';
 import { administratorGuard } from '@backoffice/authentication-guards';
+import { PageHeader } from '@shared/page-header/page-header';
 
-@Component({ template: '' })
+@Component({
+  imports: [PageHeader, RouterLink],
+  template: `<app-page-header layout="stacked">
+    <a pageBack routerLink="/configuration">Back to settings</a>
+    <h1>Company</h1>
+  </app-page-header>`,
+})
 class SettingsPage {}
 
 describe('ConfigurationIndex', () => {
-  it('offers a return only from a child settings page', async () => {
+  it('lets each child page own its return without adding an overview self-link', async () => {
     TestBed.configureTestingModule({
       providers: [
         provideRouter([
@@ -24,7 +31,7 @@ describe('ConfigurationIndex', () => {
             path: 'configuration',
             component: Configuration,
             children: [
-              { path: '', component: SettingsPage },
+              { path: '', component: ConfigurationIndex },
               { path: 'entreprise', component: SettingsPage },
             ],
           },
@@ -32,12 +39,14 @@ describe('ConfigurationIndex', () => {
       ],
     });
     const harness = await RouterTestingHarness.create();
-    const page = await harness.navigateByUrl('/configuration', Configuration);
-    expect(page['showBackLink']()).toBe(false);
+    await harness.navigateByUrl('/configuration', Configuration);
+    expect(harness.routeNativeElement?.querySelector('[pageBack]')).toBeNull();
     await harness.navigateByUrl('/configuration/entreprise', Configuration);
-    expect(page['showBackLink']()).toBe(true);
+    const links = harness.routeNativeElement?.querySelectorAll('a');
+    expect(links).toHaveLength(1);
+    expect(links?.[0]?.getAttribute('href')).toBe('/configuration');
     await harness.navigateByUrl('/configuration?q=ignored', Configuration);
-    expect(page['showBackLink']()).toBe(false);
+    expect(harness.routeNativeElement?.querySelector('[pageBack]')).toBeNull();
   });
   it('guards every task route and keeps test creation ahead of request details', () => {
     const routes = [...configurationRoutes, ...teamRoutes, ...apiTokenRoutes, ...serviceRoutes];

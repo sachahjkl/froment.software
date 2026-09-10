@@ -105,6 +105,11 @@ export class BankReconciliation {
   protected readonly error = signal<TranslationKey | undefined>(undefined);
   protected readonly saved = signal(false);
   protected readonly transaction = signal<BankTransactionValue | undefined>(undefined);
+  protected readonly titleLabel = computed<TranslationKey>(() =>
+    (this.transaction()?.amountCents ?? 0) < 0
+      ? 'bankWorkspace.context'
+      : 'bankWorkspace.reconciliation',
+  );
   protected readonly invoices = signal<InvoiceListValue>([]);
   protected readonly invoicesFailed = signal(false);
   protected readonly invoicesLoading = signal(false);

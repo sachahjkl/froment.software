@@ -1,6 +1,14 @@
 <app-story-page [entry]="entry" [definition]="definition">
   <div storyControls class="settings">
-    @if (entry.id === 'language-selector') {
+    @if (entry.id === 'page-header') {
+    <label
+      >{{ 'layout' }}<select class="input" [formField]="controls.headerLayout">
+        @for (layout of headerLayouts; track layout) {
+        <option [value]="layout">{{ layout }}</option>
+        }
+      </select></label
+    >
+    } @if (entry.id === 'language-selector') {
     <label><input type="checkbox" [formField]="controls.compact" />{{ text().compact }}</label> }
     @else if (entry.id === 'site-footer') {
     <label
@@ -27,7 +35,7 @@
   </div>
   <div storyPreview class="sample">
     @switch (entry.id) { @case ('page-header') {
-    <app-page-header
+    <app-page-header [layout]="model().headerLayout"
       ><h3>{{ model().label }}</h3>
       <p>{{ model().description }}</p>
       <button pageActions appButton type="button" (click)="event.set('pageActions')">
@@ -78,17 +86,22 @@
     }
   </div>
   <div storyVariants class="samples">
-    @switch (entry.id) { @case ('page-header') { @for (actions of [false, true]; track actions) {
+    @switch (entry.id) { @case ('page-header') { @for (layout of headerLayouts; track layout) {
     <div class="sample full" data-variant>
-      <app-page-header
+      <app-page-header [layout]="layout"
         ><h3>{{ text().titleField }}</h3>
         <p>{{ text().description }}</p>
-        @if (actions) {
+        @if (layout === 'stacked') {
+        <a pageBack href="/design/page-header" (click)="interceptLink($event)"
+          >{{ text().previous }}</a
+        >
+        } @if (layout === 'stacked') {
+        <div pageBadges><span appBadge>{{ text().status }}</span></div>
+        }
         <button pageActions appButton type="button" (click)="event.set('pageActions')">
           {{ text().execute }}
         </button>
-        }</app-page-header
-      >
+      </app-page-header>
     </div>
     } } @case ('outcome-panel') {
     <div class="sample" data-variant>

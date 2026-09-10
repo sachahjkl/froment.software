@@ -65,6 +65,15 @@ export class ClientEditor {
   protected readonly error = signal<TranslationKey | undefined>(undefined);
   private readonly model = signal(emptyClient());
   protected readonly editing = signal(false);
+  protected readonly titleLabel = computed<TranslationKey>(() =>
+    this.editing() ? 'clientsWorkspace.edit' : 'backOffice.clients.create',
+  );
+  protected readonly descriptionLabel = computed<TranslationKey>(() =>
+    this.editing() ? 'clientsWorkspace.editIntro' : 'clientsWorkspace.formIntro',
+  );
+  protected readonly backLabel = computed<TranslationKey>(() =>
+    this.client() ? 'clientsWorkspace.backToClient' : 'backOffice.backToClients',
+  );
   protected readonly backLink = computed(() => {
     const client = this.client();
     if (client) return ['/backoffice/clients', client.id];

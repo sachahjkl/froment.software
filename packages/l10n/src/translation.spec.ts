@@ -3,10 +3,29 @@ import {
   formatPluralTranslation,
   formatPluralText,
   formatTranslation,
+  translationParts,
   type PluralTranslationKey,
   type PluralTranslationParameters,
   type TranslationParameters,
 } from './translation.js';
+
+describe('translation parts', () => {
+  it.each([
+    ['fr', 'Devis pour '],
+    ['en', 'Quote for '],
+  ] as const)('keeps the client placeholder separate in %s', (language, prefix) => {
+    const parts = translationParts(language, 'commercialHeader.quoteDescription');
+    expect(parts).toEqual([
+      { kind: 'text', value: prefix },
+      { kind: 'parameter', name: 'client' },
+      { kind: 'text', value: '.' },
+    ]);
+    expect(translationParts(language, 'commercialHeader.quoteDescription')).toBe(parts);
+    expect(
+      formatTranslation(language, 'commercialHeader.quoteDescription', { client: '{client}' }),
+    ).toBe(`${prefix}{client}.`);
+  });
+});
 
 describe('plural translations', () => {
   it('uses the same rules and literal renderer for a deferred dictionary', () => {

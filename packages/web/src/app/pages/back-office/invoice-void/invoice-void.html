@@ -1,6 +1,5 @@
-<section class="billing-page" aria-labelledby="void-title">
-  <h1 id="void-title">{{ i18n.t('backOffice.invoice.void') }}</h1>
-  <app-invoice-task-summary />
+<section class="detail-page" aria-labelledby="void-title">
+  <app-invoice-task-header headingId="void-title" [heading]="i18n.t('backOffice.invoice.void')" />
   <p appNotice>{{ i18n.t('billingWorkspace.voidHint') }}</p>
   <app-invoice-task-feedback /> @if (task.invoice() && !task.completed()) { @if (!eligible()) {
   <p appNotice>{{ i18n.t('billingWorkspace.unavailable') }}</p>

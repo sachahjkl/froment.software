@@ -1,22 +1,22 @@
-<section class="billing-page" aria-labelledby="invoice-title">
-  <a [routerLink]="task.navigation.listLink()" [queryParams]="task.navigation.listQuery()"
-    >{{ i18n.t('backOffice.backToBilling') }}</a
-  >
-  @if (!task.invoice()) {
-  <app-page-header><h1 id="invoice-title">{{ headerTitle() }}</h1></app-page-header>
-  } @if (task.loading()) {
-  <p role="status">{{ i18n.t('backOffice.invoices.loading') }}</p>
-  } @if (task.error(); as error) {
-  <p appNotice variant="danger" role="alert">{{ i18n.t(error) }}</p>
-  } @if (task.invoice(); as invoice) {
-  <app-page-header>
+<section class="detail-page" aria-labelledby="invoice-title">
+  <app-page-header layout="stacked">
+    <a
+      pageBack
+      [routerLink]="task.navigation.listLink()"
+      [queryParams]="task.navigation.listQuery()"
+      >{{ i18n.t('backOffice.backToBilling') }}</a
+    >
     <h1 id="invoice-title">{{ headerTitle() }}</h1>
-    <p class="document-description">
-      {{ i18n.tf('commercialHeader.invoiceDescription', { client:
-      invoice.currentRevision.clientDisplayName }) }}
-    </p>
-    <div class="document-badges">
-      @if (statusBadge(); as badge) {
+    @if (task.invoice(); as invoice) {
+    <p
+      appClientDescription
+      kind="invoice"
+      [clientId]="invoice.clientId"
+      [clientName]="invoice.currentRevision.clientDisplayName"
+    ></p>
+    }
+    <ng-container pageBadges>
+      @if (task.invoice(); as invoice) { @if (statusBadge(); as badge) {
       <span appBadge [variant]="badge.variant">{{ i18n.t(badge.label) }}</span>
       } @if (financialBadge(); as badge) {
       <span appBadge [variant]="badge.variant">{{ i18n.t(badge.label) }}</span>
@@ -24,9 +24,10 @@
       <span appBadge variant="default"
         >{{ i18n.tf('commercialHeader.savedVersion', { version: invoice.version }) }}</span
       >
-    </div>
-    <div pageActions class="page-actions">
-      @if (actions().edit) {
+      }
+    </ng-container>
+    <ng-container pageActions>
+      @if (task.invoice(); as invoice) { @if (actions().edit) {
       <a
         appLinkButton
         [routerLink]="['/backoffice/invoices', invoice.id, 'edit']"
@@ -80,8 +81,14 @@
       <button appButton type="button" [disabled]="reloadDisabled()" (click)="task.load()">
         {{ i18n.t('listControls.reload') }}
       </button>
-    </div>
+      }
+    </ng-container>
   </app-page-header>
+  @if (task.loading()) {
+  <p role="status">{{ i18n.t('backOffice.invoices.loading') }}</p>
+  } @if (task.error(); as error) {
+  <p appNotice variant="danger" role="alert">{{ i18n.t(error) }}</p>
+  } @if (task.invoice(); as invoice) {
   <app-tabs [label]="i18n.t('backOffice.billing.tabs')" [tabs]="tabs()" [preserveQuery]="true" />
   <div class="invoice-panel">
     @switch (tab()) { @case ('summary') { @if (invoice.status !== 'draft') {
@@ -89,14 +96,6 @@
     }
     <div class="summary-layout">
       <dl class="summary">
-        <div>
-          <dt>{{ i18n.t('backOffice.invoices.client') }}</dt>
-          <dd>
-            <a [routerLink]="['/backoffice/clients', invoice.clientId]"
-              >{{ invoice.currentRevision.clientDisplayName }}</a
-            >
-          </dd>
-        </div>
         <div>
           <dt>{{ i18n.t('backOffice.invoice.order') }}</dt>
           <dd>

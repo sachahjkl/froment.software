@@ -6,6 +6,7 @@ import {
 import { type TranslationKey } from '@app/i18n.service';
 import { type BadgeVariant } from '@shared/badge/badge';
 import { activePaidCents, documentStatusKey, financialStatus } from './billing/billing-state';
+import { type AffairView } from './affairs/affair-filters';
 
 export interface DocumentBadge {
   readonly label: TranslationKey;
@@ -14,6 +15,20 @@ export interface DocumentBadge {
 
 export function commercialDocumentTitle(reference: string | null, title: string): string {
   return reference === null ? title : `${reference} · ${title}`;
+}
+
+export interface CommercialBackLink {
+  readonly link: readonly ['/backoffice/affaires', string];
+  readonly label: 'commercial.backAffair' | 'backOffice.backToAffairs';
+}
+
+export function commercialAffairBack(
+  quoteId: string | undefined,
+  view: AffairView | undefined,
+): CommercialBackLink {
+  return quoteId === undefined
+    ? { link: ['/backoffice/affaires', view ?? 'attention'], label: 'backOffice.backToAffairs' }
+    : { link: ['/backoffice/affaires', quoteId], label: 'commercial.backAffair' };
 }
 
 const quoteVariants = {

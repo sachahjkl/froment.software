@@ -1,23 +1,18 @@
-<section class="bank-page" aria-labelledby="import-title">
-  <a routerLink="/backoffice/banque" [queryParams]="backQuery"
-    >{{ i18n.t('bankWorkspace.back') }}</a
-  >
-  <app-page-header
-    ><h1 id="import-title">{{ i18n.t('bank.import') }}</h1>
-    <p class="muted">{{ i18n.t('bankWorkspace.accountHint') }}</p></app-page-header
-  >
-  <h2 #stage tabindex="-1">
-    {{ i18n.t(result() ? 'bankWorkspace.doneStep' : preview() ? 'bankWorkspace.reviewStep' :
-    'bankWorkspace.fileStep') }}
-  </h2>
+<section class="detail-page" aria-labelledby="import-title">
+  <app-page-header layout="stacked">
+    <a pageBack routerLink="/backoffice/banque" [queryParams]="backQuery"
+      >{{ i18n.t('bankWorkspace.back') }}</a
+    >
+    <h1 id="import-title">{{ i18n.t('bank.import') }}</h1>
+    <p>{{ i18n.t('bankWorkspace.accountHint') }}</p>
+  </app-page-header>
+  <h2 #stage tabindex="-1">{{ i18n.t(stageLabel()) }}</h2>
   @if (error(); as error) {
   <p appNotice variant="danger" role="alert">{{ i18n.t(error) }}</p>
   } @if (result(); as result) {
   <p appNotice variant="success" role="status">{{ i18n.tf('bankWorkspace.importDone', result) }}</p>
   <div class="actions">
-    <a appLinkButton variant="primary" routerLink="/backoffice/banque" [queryParams]="backQuery"
-      >{{ i18n.t('bankWorkspace.back') }}</a
-    ><button appButton type="button" (click)="again()">
+    <button appButton type="button" (click)="again()">
       {{ i18n.t('bankWorkspace.importAgain') }}
     </button>
   </div>

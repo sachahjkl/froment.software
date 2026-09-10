@@ -1,13 +1,19 @@
-<section class="client-editor notice-flow" aria-labelledby="client-editor-title">
-  <a [routerLink]="backLink()" [queryParams]="returnQuery()" queryParamsHandling="replace"
-    >{{ i18n.t(client() ? 'clientsWorkspace.backToClient' : 'backOffice.backToClients') }}</a
-  >
-  <app-page-header>
-    <h1 id="client-editor-title">
-      {{ i18n.t(editing() ? 'clientsWorkspace.edit' : 'backOffice.clients.create') }}
-    </h1>
-    <p class="intro">
-      {{ i18n.t(editing() ? 'clientsWorkspace.editIntro' : 'clientsWorkspace.formIntro') }}
+<section class="detail-page client-editor" aria-labelledby="client-editor-title">
+  <app-page-header layout="stacked">
+    <a
+      pageBack
+      [routerLink]="backLink()"
+      [queryParams]="returnQuery()"
+      queryParamsHandling="replace"
+      >{{ i18n.t(backLabel()) }}</a
+    >
+    <h1 id="client-editor-title">{{ i18n.t(titleLabel()) }}</h1>
+    <p>
+      @if (client(); as current) {
+      <a [routerLink]="backLink()" [queryParams]="returnQuery()" queryParamsHandling="replace"
+        >{{ current.displayName }}</a
+      >
+      — } {{ i18n.t(descriptionLabel()) }}
     </p>
   </app-page-header>
   @if (state() === 'loading') {

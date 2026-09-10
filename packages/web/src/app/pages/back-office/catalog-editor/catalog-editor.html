@@ -1,27 +1,23 @@
-<section class="catalog-editor" aria-labelledby="catalog-editor-title">
-  @if (!dialog) {
-  <a class="back-link" [routerLink]="backLink()" [queryParams]="backQuery()"
-    >{{ i18n.t('catalogWorkspace.back') }}</a
-  >
-  }
-  <app-page-header>
-    @if (dialog) {
+<section
+  class="catalog-editor"
+  [class.detail-page]="!dialog"
+  aria-labelledby="catalog-editor-title"
+>
+  <app-page-header layout="stacked">
+    @if (!dialog) {
+    <a pageBack class="back-link" [routerLink]="backLink()" [queryParams]="backQuery()"
+      >{{ i18n.t('catalogWorkspace.back') }}</a
+    >
+    } @if (dialog) {
     <h2 id="catalog-editor-title">{{ i18n.t('catalog.create') }}</h2>
     } @else {
-    <h1 id="catalog-editor-title">
-      {{ i18n.t(editing() ? 'catalogWorkspace.editTitle' : 'catalog.create') }}
-    </h1>
+    <h1 id="catalog-editor-title">{{ i18n.t(title()) }}</h1>
     } @if (item(); as current) {
-    <p>
-      {{ current.description }}
-      <span appBadge
-        >{{ i18n.t(current.archived ? 'catalog.archived' : 'catalogWorkspace.available') }}</span
-      >
-    </p>
+    <p>{{ current.description }}</p>
+    } @if (item()) {
+    <span appBadge pageBadges>{{ i18n.t(availability()) }}</span>
     }
-    <p class="intro">
-      {{ i18n.t(dialog ? 'referenceEditor.catalogIntro' : 'catalogWorkspace.formIntro') }}
-    </p>
+    <p class="intro">{{ i18n.t(intro) }}</p>
   </app-page-header>
   @if (state() === 'loading') {
   <p role="status">{{ i18n.t('catalog.loading') }}</p>
@@ -31,9 +27,6 @@
   <button appButton type="button" (click)="load()">{{ i18n.t('catalogWorkspace.retry') }}</button>
   } @else if (state() === 'ready') { @if (completed()) {
   <p appNotice variant="success" role="status">{{ i18n.t('catalog.saved') }}</p>
-  <a appLinkButton [routerLink]="backLink()" [queryParams]="backQuery()"
-    >{{ i18n.t('catalogWorkspace.back') }}</a
-  >
   } @else {
   <form class="catalog-form" novalidate (submit)="save($event)">
     <fieldset>

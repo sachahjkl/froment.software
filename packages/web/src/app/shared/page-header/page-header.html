@@ -1,4 +1,8 @@
+<div class="back"><ng-content select="[pageBack]" /></div>
 <header>
-  <div class="heading"><ng-content /></div>
+  <div class="heading">
+    <ng-content />
+    <div class="badges"><ng-content select="[pageBadges]" /></div>
+  </div>
   <div class="actions"><ng-content select="[pageActions]" /></div>
 </header>

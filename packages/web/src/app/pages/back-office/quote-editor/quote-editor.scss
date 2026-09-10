@@ -1,7 +1,5 @@
 @use "../document-editor";
-:host {
-  display: block;
-}
+@use "shared/page-header/detail-page";
 .quote-identity,
 .conditions-section {
   display: grid;

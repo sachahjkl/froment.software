@@ -32,12 +32,14 @@ import {
 } from '../commercial-header';
 import { canCancelPayment } from '../billing/receipt-cancellation';
 import { invoiceActions, recordedEntryStatus } from './invoice-actions';
+import { ClientDescription } from '../client-description/client-description';
 
 @Component({
   selector: 'app-invoice-detail',
   imports: [
     Button,
     Badge,
+    ClientDescription,
     DataTable,
     Notice,
     PageHeader,

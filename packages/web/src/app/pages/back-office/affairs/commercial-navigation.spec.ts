@@ -113,11 +113,11 @@ describe('Commercial navigation context', () => {
       `/api/quotes/${quoteId}/revisions/1/preview`,
     );
     await follow(`a[href^="/backoffice/quotes/${quoteId}/edit?"]`);
-    await follow('.back-link');
+    await follow('[pageBack] a, a[pageBack]');
     await follow(`a[href^="/backoffice/quotes/${quoteId}/publication?"]`);
-    await follow('.back-link');
+    await follow('[pageBack] a, a[pageBack]');
     await follow(`a[href^="/backoffice/affaires/${quoteId}?"]`);
-    await follow('.back-link');
+    await follow('[pageBack] a, a[pageBack]');
     expect(router.url).toContain('/backoffice/affaires/all?');
     expect(
       labelControl<HTMLInputElement>(root, TestBed.inject(I18nService).t('commercial.search'))

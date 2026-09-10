@@ -25,6 +25,7 @@ import { I18nService, type TranslationKey } from '@app/i18n.service';
 import { Button } from '@shared/button/button';
 import { Confirmation } from '@shared/confirmation/confirmation';
 import { Notice } from '@shared/notice/notice';
+import { PageHeader } from '@shared/page-header/page-header';
 import { TeamNavigation } from './team-navigation';
 
 const rejectedBeforeCreation = (code: TranslationKey): boolean =>
@@ -34,7 +35,7 @@ const rejectedBeforeCreation = (code: TranslationKey): boolean =>
 
 @Component({
   host: { class: 'page-container', '(window:beforeunload)': 'beforeUnload($event)' },
-  imports: [FormField, RouterLink, Button, Notice],
+  imports: [FormField, RouterLink, Button, Notice, PageHeader],
   providers: [TeamNavigation],
   changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-team-invitation',

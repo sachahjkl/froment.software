@@ -1,11 +1,24 @@
-<section class="access-editor notice-flow" aria-labelledby="access-editor-title">
-  <a [routerLink]="backLink()" [queryParams]="returnQuery()" queryParamsHandling="replace"
-    >{{ i18n.t('clientsWorkspace.accessBack') }}</a
-  >
-  <app-page-header
-    ><h1 id="access-editor-title">{{ i18n.t('clientsWorkspace.accessCreateTitle') }}</h1>
-    <p>{{ client()?.displayName }}</p></app-page-header
-  >
+<section class="detail-page access-editor" aria-labelledby="access-editor-title">
+  <app-page-header layout="stacked">
+    <a
+      pageBack
+      [routerLink]="backLink()"
+      [queryParams]="returnQuery()"
+      queryParamsHandling="replace"
+      >{{ i18n.t('clientsWorkspace.accessBack') }}</a
+    >
+    <h1 id="access-editor-title">{{ i18n.t('clientsWorkspace.accessCreateTitle') }}</h1>
+    @if (client(); as current) {
+    <p>
+      <a
+        [routerLink]="['/backoffice/clients', current.id, 'profile']"
+        [queryParams]="returnQuery()"
+        queryParamsHandling="replace"
+        >{{ current.displayName }}</a
+      >
+    </p>
+    }
+  </app-page-header>
   @if (loading()) {
   <p role="status">{{ i18n.t('backOffice.clientDetail.loading') }}</p>
   } @else if (client()?.archived) {

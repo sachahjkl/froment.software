@@ -168,6 +168,7 @@ app-page-header .muted {
 }
 
 :where(div, nav, section, span)[pageActions],
+:where(div, nav, section, span)[pageBadges],
 :where(div, nav, section, span)[listActions] {
   display: flex;
   flex-wrap: wrap;

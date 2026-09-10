@@ -40,6 +40,7 @@ import { I18nService, type TranslationKey } from '@app/i18n.service';
 import { formatMoney } from '@froment/l10n';
 import { Button } from '@shared/button/button';
 import { Notice } from '@shared/notice/notice';
+import { PageHeader } from '@shared/page-header/page-header';
 import { Confirmation } from '@shared/confirmation/confirmation';
 import { BillingNavigation } from '../billing/billing-navigation';
 
@@ -68,7 +69,7 @@ const emptyModel = () => ({
 @Component({
   host: { class: 'page-container', '(window:beforeunload)': 'beforeUnload($event)' },
   selector: 'app-invoice-editor',
-  imports: [Button, FormField, Notice, RouterLink],
+  imports: [Button, FormField, Notice, PageHeader, RouterLink],
   templateUrl: './invoice-editor.html',
   styleUrl: './invoice-editor.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

@@ -1,19 +1,19 @@
-<section aria-labelledby="integrations-title">
-  <a routerLink="/backoffice/services">{{ i18n.t('connections.back') }}</a>
-  <h1 id="integrations-title">{{ i18n.t('configurationWorkspace.simulations') }}</h1>
+<section class="detail-page" aria-labelledby="integrations-title">
+  <app-page-header layout="stacked">
+    <a pageBack routerLink="/backoffice/services">{{ i18n.t('connections.back') }}</a>
+    <h1 id="integrations-title">{{ i18n.t('configurationWorkspace.simulations') }}</h1>
+    <p>{{ i18n.t('settingsHeader.simulationsDescription') }}</p>
+    <button appButton pageActions type="button" [disabled]="loading() || saving()" (click)="load()">
+      {{ i18n.t('integrations.reload') }}
+    </button>
+  </app-page-header>
   <p appNotice variant="info">{{ i18n.t('integrations.info') }}</p>
   <p appNotice variant="info">{{ i18n.t('integrationRetry.info') }}</p>
-  <button appButton type="button" [disabled]="loading() || saving()" (click)="load()">
-    {{ i18n.t('integrations.reload') }}
-  </button>
   <p #result tabindex="-1" role="status">
     @if (completed()) { {{ i18n.t('integrations.completed') }} }
   </p>
   @if (error()) {
   <p appNotice variant="danger" role="alert">{{ i18n.t('integrations.error') }}</p>
-  <button appButton type="button" [disabled]="loading() || saving()" (click)="load()">
-    {{ i18n.t('integrations.reload') }}
-  </button>
   } @if (loading()) {
   <p role="status">{{ i18n.t('integrations.loading') }}</p>
   } @else {

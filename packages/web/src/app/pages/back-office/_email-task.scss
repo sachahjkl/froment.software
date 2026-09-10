@@ -1,11 +1,5 @@
-:host {
-  display: block;
-}
-.email-task {
-  display: grid;
-  gap: var(--space-6);
-  padding: var(--page-header-y) var(--page-x);
-}
+@use "shared/page-header/detail-page";
+
 .task-form {
   display: grid;
   gap: var(--space-6);

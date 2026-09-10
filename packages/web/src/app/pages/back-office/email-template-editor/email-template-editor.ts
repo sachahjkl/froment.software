@@ -52,6 +52,9 @@ export class EmailTemplateEditor {
   protected readonly archived = signal(false);
   protected readonly error = signal<TranslationKey | undefined>(undefined);
   protected readonly template = signal<typeof EmailTemplate.Type | undefined>(undefined);
+  protected readonly titleLabel = computed<TranslationKey>(() =>
+    this.template() ? 'emailsWorkspace.editTemplate' : 'emailsWorkspace.newTemplate',
+  );
   protected readonly templateActions = computed(() => [
     { id: 'archive', label: this.i18n.t('emailDraft.archive'), danger: true },
   ]);

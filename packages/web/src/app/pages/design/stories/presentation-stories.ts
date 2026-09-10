@@ -17,10 +17,12 @@ import { LanguageSelector } from '@shared/language-selector/language-selector';
 import { ThemeToggle } from '@shared/theme-toggle/theme-toggle';
 import { NewLabel } from '@shared/new-label/new-label';
 import { Button } from '@shared/button/button';
+import { Badge } from '@shared/badge/badge';
 import { StoryPage, currentReference, type StoryDefinition } from '../story-page';
 import { referenceText } from '../reference-text';
 
 interface PresentationPreview {
+  headerLayout: 'inline' | 'stacked';
   label: string;
   description: string;
   compact: boolean;
@@ -35,6 +37,7 @@ interface PresentationPreview {
     StoryPage,
     FormField,
     Button,
+    Badge,
     PageHeader,
     OutcomePanel,
     VisualSample,
@@ -60,6 +63,7 @@ export class PresentationStories {
   }
   protected readonly mobileNavigation = inject(MOBILE_NAVIGATION);
   protected readonly model = signal<PresentationPreview>({
+    headerLayout: 'inline',
     label: this.text().content,
     description: this.text().local,
     compact: false,
@@ -67,6 +71,7 @@ export class PresentationStories {
     context: 'examples',
   });
   protected readonly controls = form(this.model);
+  protected readonly headerLayouts = ['inline', 'stacked'] as const;
   protected readonly event = signal('');
   protected readonly steps = computed(() => [
     { title: this.model().label, description: this.model().description },

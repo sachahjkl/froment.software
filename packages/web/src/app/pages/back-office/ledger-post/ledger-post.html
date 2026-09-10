@@ -1,11 +1,11 @@
-<section class="bank-page" aria-labelledby="post-title">
-  <a routerLink="/backoffice/banque/ecritures" [queryParams]="backQuery"
-    >{{ i18n.t('bankWorkspace.backLedger') }}</a
-  >
-  <app-page-header
-    ><h1 id="post-title">{{ i18n.t('bankWorkspace.postTitle') }}</h1>
-    <p class="muted">{{ i18n.t('bankWorkspace.ledgerScope') }}</p></app-page-header
-  >
+<section class="detail-page" aria-labelledby="post-title">
+  <app-page-header layout="stacked">
+    <a pageBack routerLink="/backoffice/banque/ecritures" [queryParams]="backQuery"
+      >{{ i18n.t('bankWorkspace.backLedger') }}</a
+    >
+    <h1 id="post-title">{{ i18n.t('bankWorkspace.postTitle') }}</h1>
+    <p>{{ i18n.t('bankWorkspace.ledgerScope') }}</p>
+  </app-page-header>
   <div #result tabindex="-1" role="status">
     @if (completed()) {
     <p appNotice variant="success">{{ i18n.t('ledger.saved') }}</p>

@@ -131,7 +131,7 @@ describe('Bank ledger workspace', () => {
     await harness.fixture.whenStable();
     expect(TestBed.inject(Router).url).toContain('/comptabiliser/debit/');
     expect(TestBed.inject(Router).url).toContain('sort=amount-desc');
-    bankRoot(harness).querySelector<HTMLAnchorElement>('.bank-page > a')?.click();
+    bankRoot(harness).querySelector<HTMLAnchorElement>('a[pageBack]')!.click();
     await harness.fixture.whenStable();
     expect(bankSortHeader(bankRoot(harness), 'Montant').getAttribute('aria-sort')).toBe(
       'descending',
@@ -186,7 +186,7 @@ describe('Bank ledger workspace', () => {
     await harness.fixture.whenStable();
     expect(TestBed.inject(Router).url).toContain('/contrepasser');
     expect(TestBed.inject(Router).url).toContain('sort=reference-asc');
-    bankRoot(harness).querySelector<HTMLAnchorElement>('.bank-page > a')?.click();
+    bankRoot(harness).querySelector<HTMLAnchorElement>('a[pageBack]')!.click();
     await harness.fixture.whenStable();
     expect(bankSortHeader(bankRoot(harness), 'Référence').getAttribute('aria-sort')).toBe(
       'ascending',

@@ -1,15 +1,19 @@
-<section class="presets-page" aria-labelledby="condition-editor-title">
+<section
+  class="presets-page"
+  [class.detail-page]="!dialog"
+  aria-labelledby="condition-editor-title"
+>
   @if (dialog) {
   <h2 id="condition-editor-title">{{ i18n.t('configurationWorkspace.newCondition') }}</h2>
   <p class="intro">{{ i18n.t('referenceEditor.conditionsIntro') }}</p>
   } @else {
-  <a routerLink="/backoffice/configuration/conditions" [queryParams]="backQuery()"
-    >{{ i18n.t('configurationWorkspace.backConditions') }}</a
-  >
-  <h1 id="condition-editor-title">
-    {{ i18n.t(editing() ? 'configurationWorkspace.editCondition' :
-    'configurationWorkspace.newCondition') }}
-  </h1>
+  <app-page-header layout="stacked">
+    <a pageBack routerLink="/backoffice/configuration/conditions" [queryParams]="backQuery()"
+      >{{ i18n.t('configurationWorkspace.backConditions') }}</a
+    >
+    <h1 id="condition-editor-title">{{ i18n.t(title()) }}</h1>
+    <p>{{ i18n.t('settingsHeader.conditionDescription') }}</p>
+  </app-page-header>
   } @if (error(); as code) {
   <p appNotice variant="danger" role="alert">{{ i18n.t(code) }}</p>
   @if (!ready()) {
@@ -20,9 +24,6 @@
   <p role="status">{{ i18n.t('backOffice.conditionPresets.loading') }}</p>
   } @else if (completed()) {
   <p appNotice variant="success" role="status">{{ i18n.t('referenceEditor.conditionsSaved') }}</p>
-  <a routerLink="/backoffice/configuration/conditions" [queryParams]="backQuery()"
-    >{{ i18n.t('configurationWorkspace.backConditions') }}</a
-  >
   } @else if (ready()) {
   <form (submit)="save($event)" novalidate>
     <label class="field" for="preset-name"
@@ -74,7 +75,7 @@
         {{ i18n.t('backOffice.conditionPresets.cancel') }}
       </button>
       } @else {
-      <a routerLink="/backoffice/configuration/conditions" [queryParams]="backQuery()"
+      <a appLinkButton routerLink="/backoffice/configuration/conditions" [queryParams]="backQuery()"
         >{{ i18n.t('backOffice.conditionPresets.cancel') }}</a
       >
       }

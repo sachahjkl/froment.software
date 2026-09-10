@@ -1,16 +1,24 @@
-<section class="document-page notice-flow" aria-labelledby="document-title">
-  <a routerLink="/backoffice/client" [queryParams]="returnQuery()"
-    >{{ i18n.t('portalWorkspace.back') }}</a
-  >
-  <app-page-header>
+<section class="detail-page" aria-labelledby="document-title">
+  <app-page-header layout="stacked">
+    <a pageBack routerLink="/backoffice/client" [queryParams]="returnQuery()"
+      >{{ i18n.t('portalWorkspace.back') }}</a
+    >
     <h1 id="document-title">{{ document()?.reference ?? i18n.t('portalWorkspace.detail') }}</h1>
     @if (document(); as item) {
     <p>{{ item.title }}</p>
-    <span appBadge>{{ status() }}</span> } @if (pdfUrl(); as url) {
-    <a pageActions appLinkButton variant="primary" [href]="url" download
-      >{{ i18n.t('backOffice.client.pdf') }}</a
-    >
     }
+    <ng-container pageBadges>
+      @if (document()) {
+      <span appBadge>{{ status() }}</span>
+      }
+    </ng-container>
+    <ng-container pageActions>
+      @if (pdfUrl(); as url) {
+      <a appLinkButton variant="primary" [href]="url" download
+        >{{ i18n.t('backOffice.client.pdf') }}</a
+      >
+      }
+    </ng-container>
   </app-page-header>
   @switch (state()) { @case ('loading') {
   <p role="status">{{ i18n.t('backOffice.client.loading') }}</p>

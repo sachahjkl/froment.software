@@ -1,6 +1,6 @@
-<section>
-  <a routerLink="/backoffice/services">{{ i18n.t('connections.back') }}</a>
-  <app-page-header>
+<section class="detail-page">
+  <app-page-header layout="stacked">
+    <a pageBack routerLink="/backoffice/services">{{ i18n.t('connections.back') }}</a>
     <h1>{{ i18n.t(providerName(provider)) }}</h1>
     <p>{{ i18n.t('configurationWorkspace.providerSetup') }}</p>
     <button appButton pageActions type="button" [disabled]="loading()" (click)="load()">

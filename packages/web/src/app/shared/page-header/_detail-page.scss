@@ -1,0 +1,23 @@
+:host {
+  display: block;
+}
+.detail-page {
+  display: grid;
+  gap: var(--space-4);
+  min-inline-size: 0;
+  padding: var(--page-header-y) var(--page-x);
+}
+app-page-header[data-header-layout="stacked"] h1 {
+  margin: 0;
+  font-size: var(--text-2xl);
+  overflow-wrap: anywhere;
+}
+app-page-header[data-header-layout="stacked"] p {
+  margin: 0;
+  font-size: var(--text-base);
+  color: var(--color-muted);
+  overflow-wrap: anywhere;
+}
+.detail-page > button {
+  justify-self: start;
+}

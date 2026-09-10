@@ -1,11 +1,14 @@
 <section class="presets-page" aria-labelledby="presets-title">
-  <header>
+  <app-page-header layout="stacked">
+    <a pageBack routerLink="/backoffice/configuration"
+      >{{ i18n.t('configurationWorkspace.backConfiguration') }}</a
+    >
     <h1 id="presets-title">{{ i18n.t('backOffice.conditionPresets.title') }}</h1>
     <p>{{ i18n.t('backOffice.conditionPresets.intro') }}</p>
-    <a appLinkButton variant="primary" routerLink="new" [queryParams]="table.params()"
+    <a appLinkButton pageActions variant="primary" routerLink="new" [queryParams]="table.params()"
       >{{ i18n.t('configurationWorkspace.newCondition') }}</a
     >
-  </header>
+  </app-page-header>
   <div appListWorkspace>
     <app-list-toolbar>
       <app-list-search

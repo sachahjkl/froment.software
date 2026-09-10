@@ -34,7 +34,7 @@ async function returnToPortal(harness: RouterTestingHarness): Promise<void> {
   const navigation = firstValueFrom(
     TestBed.inject(Router).events.pipe(filter((event) => event instanceof NavigationEnd)),
   );
-  harness.routeNativeElement!.querySelector<HTMLAnchorElement>('.document-page > a')!.click();
+  harness.routeNativeElement!.querySelector<HTMLAnchorElement>('a[pageBack]')!.click();
   await navigation;
   harness.detectChanges();
   await vi.waitFor(async () => {

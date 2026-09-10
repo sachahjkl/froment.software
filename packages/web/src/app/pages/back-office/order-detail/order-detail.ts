@@ -21,11 +21,12 @@ import { PageHeader } from '@shared/page-header/page-header';
 import { QuoteLines } from '../quote-detail/quote-lines/quote-lines';
 import { quoteIdentifier } from '../quote-detail/quote-values';
 import { affairContext } from '../affairs/affair-filters';
-import { commercialDocumentTitle } from '../commercial-header';
+import { commercialAffairBack, commercialDocumentTitle } from '../commercial-header';
+import { ClientDescription } from '../client-description/client-description';
 
 @Component({
   host: { class: 'page-container' },
-  imports: [Badge, Button, Notice, PageHeader, RouterLink, QuoteLines],
+  imports: [Badge, Button, ClientDescription, Notice, PageHeader, RouterLink, QuoteLines],
   changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-order-detail',
   styleUrl: './order-detail.scss',
@@ -51,10 +52,9 @@ export class OrderDetail {
       ? commercialDocumentTitle(order.reference, order.title)
       : this.i18n.t('commercial.order');
   });
-  protected readonly backLink = computed(() => [
-    '/backoffice/affaires',
-    this.context().view ?? 'attention',
-  ]);
+  protected readonly back = computed(() =>
+    commercialAffairBack(this.order()?.quoteId, this.context().view),
+  );
   protected readonly generateLabel = computed(() =>
     this.i18n.t(
       this.pending() ? 'backOffice.quote.pdf.generating' : 'backOffice.quote.pdf.generate',

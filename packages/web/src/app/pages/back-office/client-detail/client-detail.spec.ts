@@ -78,6 +78,7 @@ async function configure(panel = 'profile', archived = false, query = '') {
     confirmation,
     quotesApi,
     ordersApi,
+    invoicesApi,
     fixture: harness.fixture,
     root: harness.fixture.nativeElement as HTMLElement,
     component: harness.fixture.debugElement.query(By.directive(ClientDetail))
@@ -91,10 +92,10 @@ describe('ClientDetail', () => {
     expect(root.querySelector('h1')?.textContent?.trim()).toBe('Acme');
     expect(root.querySelector('form')).toBeNull();
     expect(root.querySelector('.profile')?.textContent).toContain(client.email);
-    expect(root.querySelector('app-page-header a')?.getAttribute('href')).toBe(
+    expect(root.querySelector('[pageActions] a')?.getAttribute('href')).toBe(
       `/backoffice/quotes/new?clientId=${client.id}`,
     );
-    expect(root.querySelectorAll('app-page-header a')[1]?.getAttribute('href')).toBe(
+    expect(root.querySelectorAll('[pageActions] a')[1]?.getAttribute('href')).toBe(
       `/backoffice/clients/${client.id}/edit`,
     );
   });
@@ -114,7 +115,7 @@ describe('ClientDetail', () => {
     await archive();
     expect(api.archive).toHaveBeenCalledWith(client.id);
     expect(root.querySelector('.profile')?.textContent).toContain('Acme');
-    expect(root.querySelector('app-page-header a')).toBeNull();
+    expect(root.querySelector('[pageActions] a')).toBeNull();
     expect(root.querySelector('.archived-notice')).not.toBeNull();
   });
 
@@ -130,6 +131,26 @@ describe('ClientDetail', () => {
     const { root } = await configure('documents');
     expect(root.querySelector('app-empty-state')).not.toBeNull();
     expect(root.querySelector('.profile')).toBeNull();
+  });
+
+  it('does not use an order number for an unnumbered invoice or its export', async () => {
+    const { component, invoicesApi } = await configure('documents');
+    invoicesApi.list.mockResolvedValueOnce([
+      {
+        id: access.id,
+        clientId: client.id,
+        invoiceNumber: null,
+        orderReference: 'CO-2026-000001',
+        title: 'Audit',
+        status: 'draft',
+        totalCents: 1200,
+        updatedAt: '2026-09-01T00:00:00.000Z',
+      },
+    ]);
+    await component['load']();
+    expect(component['documents']()[0]?.reference).toBe('Facture brouillon');
+    expect(component['documentExportRows']()[0]).toContain('Facture brouillon');
+    expect(component['documentExportRows']()[0]).not.toContain('CO-2026-000001');
   });
 
   it('links to a dedicated access task instead of showing a permanent form', async () => {

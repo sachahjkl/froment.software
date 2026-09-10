@@ -1,12 +1,15 @@
-<section aria-labelledby="checkout-title">
-  <a routerLink="/backoffice/services/stripe/tests" [queryParams]="testParams()"
-    >{{ i18n.t('configurationWorkspace.backTests') }}</a
-  >
-  <app-page-header>
+<section class="detail-page" aria-labelledby="checkout-title">
+  <app-page-header layout="stacked">
+    <a pageBack routerLink="/backoffice/services/stripe/tests" [queryParams]="testParams()"
+      >{{ i18n.t('configurationWorkspace.backTests') }}</a
+    >
     <h1 id="checkout-title">
       {{ i18n.t('connections.stripe') }} — {{ i18n.t('configurationWorkspace.newTest') }}
     </h1>
     <p>{{ i18n.t('checkout.invoiceHint') }}</p>
+    <button appButton pageActions type="button" [disabled]="loading() || saving()" (click)="load()">
+      {{ i18n.t('checkout.refresh') }}
+    </button>
   </app-page-header>
   <app-tabs
     [label]="i18n.t('configurationWorkspace.services')"
@@ -86,7 +89,4 @@
   } @if (history.paused()) {
   <p appNotice variant="warning">{{ i18n.t('checkout.paused') }}</p>
   }
-  <button appButton type="button" [disabled]="loading() || saving()" (click)="load()">
-    {{ i18n.t('checkout.refresh') }}
-  </button>
 </section>

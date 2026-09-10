@@ -1,10 +1,13 @@
-<section>
-  <a routerLink="/backoffice/services/resend/tests" [queryParams]="testParams()"
-    >{{ i18n.t('configurationWorkspace.backTests') }}</a
-  >
-  <app-page-header>
+<section class="detail-page">
+  <app-page-header layout="stacked">
+    <a pageBack routerLink="/backoffice/services/resend/tests" [queryParams]="testParams()"
+      >{{ i18n.t('configurationWorkspace.backTests') }}</a
+    >
     <h1>{{ i18n.t('connections.resend') }} — {{ i18n.t('configurationWorkspace.testDetail') }}</h1>
     <p>{{ i18n.t('emailTest.historyHint') }}</p>
+    @if (current(); as item) {
+    <span appBadge pageBadges role="status">{{ i18n.t(statusLabel(item.status)) }}</span>
+    }
     <button
       appButton
       pageActions
@@ -23,12 +26,9 @@
   />
   @if (history.paused()) {
   <p appNotice variant="warning">{{ i18n.t('emailTest.paused') }}</p>
-  }
-  <p role="status">
-    @if (current(); as item) { {{ i18n.t(statusLabel(item.status)) }} } @else { {{
-    i18n.t(historyLabel()) }} }
-  </p>
-  @if (current(); as item) { @if (item.error; as code) {
+  } @if (!current()) {
+  <p role="status">{{ i18n.t(historyLabel()) }}</p>
+  } @if (current(); as item) { @if (item.error; as code) {
   <p appNotice variant="warning">{{ i18n.t(code) }}</p>
   }
   <dl>

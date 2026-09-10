@@ -1,22 +1,21 @@
-:host {
-  display: block;
-  padding: var(--space-6) var(--page-x);
-}
+@use "shared/page-header/detail-page";
 h2 {
   font-size: var(--text-xl);
-}
-section > * + * {
-  margin-top: var(--space-6);
 }
 h3 {
   font-size: var(--text-base);
 }
 .providers,
-.operations {
+.operations,
+.retries {
   display: grid;
   gap: var(--space-4);
   list-style: none;
   padding: 0;
+}
+.provider-modes {
+  display: grid;
+  gap: var(--space-4);
 }
 .providers {
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr));

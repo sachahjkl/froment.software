@@ -266,7 +266,7 @@ describe('Bank reconciliation task', () => {
         expect(api.history).toHaveBeenCalledTimes(1);
         expect(api.match).not.toHaveBeenCalled();
         expect(api.unmatch).not.toHaveBeenCalled();
-        root.querySelector<HTMLAnchorElement>('.bank-page > a')?.focus();
+        root.querySelector<HTMLAnchorElement>('a[pageBack]')?.focus();
         denied.resolve(false);
         await selection;
         await harness.fixture.whenStable();
@@ -472,8 +472,6 @@ describe('Bank reconciliation task', () => {
     expect(api.get).toHaveBeenCalledTimes(1);
     expect(api.history).toHaveBeenCalledTimes(1);
     expect(confirmation.request).not.toHaveBeenCalled();
-    expect(root.querySelector('.bank-page > a')?.getAttribute('href')).toContain(
-      'sort=amount-desc',
-    );
+    expect(root.querySelector('a[pageBack]')?.getAttribute('href')).toContain('sort=amount-desc');
   });
 });

@@ -1,32 +1,25 @@
-<section class="commercial-page" aria-labelledby="order-title">
-  <a [routerLink]="backLink()" [queryParams]="context()"
-    >{{ i18n.t('backOffice.backToAffairs') }}</a
-  >
-  @if (state() !== 'ready') {
-  <app-page-header><h1 id="order-title">{{ headerTitle() }}</h1></app-page-header>
-  } @switch (state()) { @case ('loading') {
-  <p role="status">{{ i18n.t('backOffice.affair.loading') }}</p>
-  } @case ('error') {
-  <p appNotice variant="danger" role="alert">{{ i18n.t('commercial.orderUnavailable') }}</p>
-  <button appButton type="button" (click)="load()">{{ i18n.t('backOffice.affair.retry') }}</button>
-  } @case ('ready') { @if (order(); as order) { @if (revision(); as revision) {
-  <app-page-header>
+<section class="detail-page" aria-labelledby="order-title">
+  <app-page-header layout="stacked">
+    <a pageBack [routerLink]="back().link" [queryParams]="context()">{{ i18n.t(back().label) }}</a>
     <h1 id="order-title">{{ headerTitle() }}</h1>
-    <p class="document-description">
-      {{ i18n.tf('commercialHeader.orderDescription', { client: order.clientDisplayName }) }}
-    </p>
-    <div class="document-badges">
+    @if (order(); as order) {
+    <p
+      appClientDescription
+      kind="order"
+      [clientId]="order.clientId"
+      [clientName]="order.clientDisplayName"
+    ></p>
+    }
+    <ng-container pageBadges>
+      @if (revision(); as revision) {
       <span appBadge variant="success">{{ i18n.t('backOffice.affair.confirmed') }}</span>
       <span appBadge variant="default"
         >{{ i18n.tf('commercialHeader.acceptedVersion', { version: revision.version }) }}</span
       >
-    </div>
-    <div pageActions class="page-actions">
-      @if (order.invoiceId) {
-      <a appLinkButton variant="primary" [routerLink]="['/backoffice/invoices', order.invoiceId]"
-        >{{ i18n.t('backOffice.affairs.openInvoice') }}</a
-      >
-      } @else {
+      }
+    </ng-container>
+    <ng-container pageActions>
+      @if (order(); as order) { @if (!order.invoiceId) {
       <a
         appLinkButton
         variant="primary"
@@ -34,25 +27,20 @@
         [queryParams]="{ orderId: order.id }"
         >{{ i18n.t('backOffice.affairs.createInvoice') }}</a
       >
-      }
-      <a [routerLink]="['/backoffice/affaires', order.quoteId]" [queryParams]="context()"
-        >{{ i18n.t('commercial.backAffair') }}</a
-      >
-    </div>
+      } }
+    </ng-container>
   </app-page-header>
+  @switch (state()) { @case ('loading') {
+  <p role="status">{{ i18n.t('backOffice.affair.loading') }}</p>
+  } @case ('error') {
+  <p appNotice variant="danger" role="alert">{{ i18n.t('commercial.orderUnavailable') }}</p>
+  <button appButton type="button" (click)="load()">{{ i18n.t('backOffice.affair.retry') }}</button>
+  } @case ('ready') { @if (order(); as order) { @if (revision(); as revision) {
   <p appNotice>{{ i18n.t('commercial.orderImmutable') }}</p>
   <dl class="facts">
     <div>
       <dt>{{ i18n.t('commercial.confirmedAt') }}</dt>
       <dd>{{ date(order.createdAt) }}</dd>
-    </div>
-    <div>
-      <dt>{{ i18n.t('backOffice.quote.client') }}</dt>
-      <dd>
-        <a [routerLink]="['/backoffice/clients', order.clientId, 'profile']"
-          >{{ order.clientDisplayName }}</a
-        >
-      </dd>
     </div>
     <div>
       <dt>{{ i18n.t('commercial.acceptedQuote') }}</dt>
@@ -65,6 +53,16 @@
         >
       </dd>
     </div>
+    @if (order.invoiceId) {
+    <div>
+      <dt>{{ i18n.t('backOffice.affair.invoice') }}</dt>
+      <dd>
+        <a [routerLink]="['/backoffice/invoices', order.invoiceId]"
+          >{{ i18n.t('backOffice.affairs.openInvoice') }}</a
+        >
+      </dd>
+    </div>
+    }
   </dl>
   <app-quote-lines [revision]="revision" />
   <section class="section-space" aria-labelledby="order-document-title">

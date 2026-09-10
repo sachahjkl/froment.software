@@ -1,17 +1,29 @@
-<section class="commercial-page publication" aria-labelledby="publication-title">
-  @if (quoteId(); as id) {
-  <a class="back-link" [routerLink]="['/backoffice/quotes', id]" [queryParams]="context()"
-    >{{ i18n.t('commercial.backQuote') }}</a
-  >
-  } @else {
-  <a
-    class="back-link"
-    [routerLink]="['/backoffice/affaires', context().view ?? 'attention']"
-    [queryParams]="context()"
-    >{{ i18n.t('backOffice.backToAffairs') }}</a
-  >
-  }
-  <h1 id="publication-title">{{ i18n.t('commercial.publicationTitle') }}</h1>
+<section class="detail-page publication" aria-labelledby="publication-title">
+  <app-page-header layout="stacked">
+    <div pageBack>
+      @if (quoteId(); as id) {
+      <a class="back-link" [routerLink]="['/backoffice/quotes', id]" [queryParams]="context()"
+        >{{ i18n.t('commercial.backQuote') }}</a
+      >
+      } @else {
+      <a
+        class="back-link"
+        [routerLink]="['/backoffice/affaires', context().view ?? 'attention']"
+        [queryParams]="context()"
+        >{{ i18n.t('backOffice.backToAffairs') }}</a
+      >
+      }
+    </div>
+    <h1 id="publication-title">{{ i18n.t('commercial.publicationTitle') }}</h1>
+    @if (quote(); as quote) {
+    <p>
+      {{ quote.reference }} ·
+      <a [routerLink]="['/backoffice/clients', quote.clientId, 'profile']"
+        >{{ quote.currentRevision.clientDisplayName }}</a
+      >
+    </p>
+    }
+  </app-page-header>
   @switch (state()) { @case ('loading') {
   <p role="status">{{ i18n.t('backOffice.quotes.loading') }}</p>
   } @case ('error') {
@@ -24,20 +36,12 @@
   } } @case ('ready') { @if (quote(); as quote) {
   <dl class="facts">
     <div>
-      <dt>{{ i18n.t('backOffice.quote.reference') }}</dt>
-      <dd>{{ quote.reference }}</dd>
-    </div>
-    <div>
       <dt>{{ i18n.t('commercial.versions') }}</dt>
       <dd>{{ i18n.tf('commercial.revision', { version: quote.version }) }}</dd>
     </div>
     <div>
       <dt>{{ i18n.t('backOffice.quote.title') }}</dt>
       <dd>{{ quote.currentRevision.title }}</dd>
-    </div>
-    <div>
-      <dt>{{ i18n.t('backOffice.quote.client') }}</dt>
-      <dd>{{ quote.currentRevision.clientDisplayName }}</dd>
     </div>
     <div>
       <dt>{{ i18n.t('commercial.quoteAmount') }}</dt>
@@ -55,7 +59,7 @@
     [href]="result.link.url"
     [description]="i18n.tf('backOffice.quote.link.expires', { date: date(result.link.expiresAt) })"
     [actionLabel]="i18n.t('backOffice.quote.link.copy')"
-    [status]="copied() ? i18n.t('backOffice.quote.link.copied') : ''"
+    [status]="copyStatus()"
     [external]="true"
     (copy)="copyLink()"
   />
@@ -111,7 +115,7 @@
       class="publish-quote"
       [disabled]="pending() || uncertain()"
     >
-      {{ i18n.t(pending() ? 'backOffice.quote.sending' : 'commercial.createLink') }}
+      {{ i18n.t(publishKey()) }}
     </button>
   </form>
   } } } }

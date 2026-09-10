@@ -1,6 +1,8 @@
-<section class="billing-page" aria-labelledby="payment-title">
-  <h1 id="payment-title">{{ i18n.t('billingWorkspace.recordReceipt') }}</h1>
-  <app-invoice-task-summary />
+<section class="detail-page" aria-labelledby="payment-title">
+  <app-invoice-task-header
+    headingId="payment-title"
+    [heading]="i18n.t('billingWorkspace.recordReceipt')"
+  />
   <p appNotice>{{ i18n.t('billingWorkspace.receiptHint') }}</p>
   <app-invoice-task-feedback /> @if (task.invoice() && !task.completed()) { @if (!eligible()) {
   <p appNotice>{{ i18n.t('billingWorkspace.unavailable') }}</p>

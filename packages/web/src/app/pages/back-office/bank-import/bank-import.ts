@@ -76,6 +76,10 @@ export class BankImport {
   protected readonly filename = signal('');
   protected readonly preview = signal<typeof BankImportPreview.Type | undefined>(undefined);
   protected readonly result = signal<typeof BankImportResult.Type | undefined>(undefined);
+  protected readonly stageLabel = computed<TranslationKey>(() => {
+    if (this.result()) return 'bankWorkspace.doneStep';
+    return this.preview() ? 'bankWorkspace.reviewStep' : 'bankWorkspace.fileStep';
+  });
   protected readonly columns = previewColumns;
   protected readonly previewSort = computed(() =>
     bankTableSort(this.params().get('previewSort'), previewColumns),

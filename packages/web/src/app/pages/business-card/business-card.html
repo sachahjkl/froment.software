@@ -1,12 +1,14 @@
-<article class="business-card-page">
-  <header class="card-toolbar">
-    <div>
-      <h1>{{ i18n.t('configurationWorkspace.businessCard') }}</h1>
-    </div>
-    <button appButton variant="primary" type="button" (click)="print()">
+<article class="business-card-page detail-page">
+  <app-page-header class="card-toolbar" layout="stacked">
+    <a pageBack routerLink="/backoffice/configuration"
+      >{{ i18n.t('configurationWorkspace.backConfiguration') }}</a
+    >
+    <h1>{{ i18n.t('configurationWorkspace.businessCard') }}</h1>
+    <p>{{ i18n.t('settingsHeader.businessCardDescription') }}</p>
+    <button appButton pageActions variant="primary" type="button" (click)="print()">
       {{ i18n.t("businessCard.print") }}
     </button>
-  </header>
+  </app-page-header>
 
   <div
     class="card-sheet"

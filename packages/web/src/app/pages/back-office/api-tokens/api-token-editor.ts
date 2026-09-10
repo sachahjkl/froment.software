@@ -26,6 +26,7 @@ import { I18nService, type TranslationKey } from '@app/i18n.service';
 import { Button } from '@shared/button/button';
 import { Confirmation } from '@shared/confirmation/confirmation';
 import { Notice } from '@shared/notice/notice';
+import { PageHeader } from '@shared/page-header/page-header';
 import { CopyField } from '@shared/copy-field/copy-field';
 import { TextCopy } from '@shared/text-copy';
 import { createFuzzySearch } from '@shared/fuzzy-search';
@@ -65,7 +66,7 @@ const emptyModel = (): TokenModel => ({
 
 @Component({
   host: { class: 'page-container', '(window:beforeunload)': 'beforeUnload($event)' },
-  imports: [FormField, RouterLink, Button, Notice, CopyField, SearchHighlight],
+  imports: [FormField, RouterLink, Button, Notice, CopyField, SearchHighlight, PageHeader],
   providers: [SearchHighlightRegistry, ApiTokenNavigation],
   changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-api-token-editor',

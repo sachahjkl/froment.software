@@ -25,11 +25,12 @@ import { QuoteConditionPresetsApi } from '@backoffice/quote-condition-presets-ap
 import { Button } from '@shared/button/button';
 import { Confirmation } from '@shared/confirmation/confirmation';
 import { Notice } from '@shared/notice/notice';
+import { PageHeader } from '@shared/page-header/page-header';
 import { workspaceTableParams, workspaceTableQuery } from '../configuration/workspace-table';
 import { conditionTableOptions } from '../configuration/workspace-tables';
 
 @Component({
-  imports: [Button, Notice, FormField, RouterLink],
+  imports: [Button, Notice, FormField, RouterLink, PageHeader],
   changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-condition-editor',
   styleUrl: './condition-editor.scss',
@@ -59,6 +60,9 @@ export class ConditionEditor {
   private readonly confirming = signal(false);
   private readonly preset = signal<QuoteConditionPresetValue | undefined>(undefined);
   protected readonly editing = computed(() => this.preset() !== undefined);
+  protected readonly title = computed<TranslationKey>(() =>
+    this.editing() ? 'configurationWorkspace.editCondition' : 'configurationWorkspace.newCondition',
+  );
   protected readonly error = signal<TranslationKey | undefined>(undefined);
   protected readonly presetForm = form(this.model, (path) => {
     disabled(

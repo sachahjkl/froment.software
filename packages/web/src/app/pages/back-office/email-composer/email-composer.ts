@@ -92,6 +92,9 @@ export class EmailComposer {
   protected readonly archived = signal(false);
   protected readonly operation = signal<IntegrationOperationValue | undefined>(undefined);
   protected readonly draft = signal<typeof EmailDraft.Type | undefined>(undefined);
+  protected readonly titleLabel = computed<TranslationKey>(() =>
+    this.draft() ? 'emailsWorkspace.editDraft' : 'emailsWorkspace.newMessage',
+  );
   protected readonly reminderPrepared = signal(false);
   protected readonly prepared = signal(false);
   protected readonly templates = signal<readonly (typeof EmailTemplate.Type)[]>([]);

@@ -1,12 +1,15 @@
-<section aria-labelledby="email-test-title">
-  <a routerLink="/backoffice/services/resend/tests" [queryParams]="testParams()"
-    >{{ i18n.t('configurationWorkspace.backTests') }}</a
-  >
-  <app-page-header>
+<section class="detail-page" aria-labelledby="email-test-title">
+  <app-page-header layout="stacked">
+    <a pageBack routerLink="/backoffice/services/resend/tests" [queryParams]="testParams()"
+      >{{ i18n.t('configurationWorkspace.backTests') }}</a
+    >
     <h1 id="email-test-title">
       {{ i18n.t('connections.resend') }} — {{ i18n.t('configurationWorkspace.newTest') }}
     </h1>
     <p>{{ i18n.t('emailTest.intro') }}</p>
+    <button appButton pageActions type="button" [disabled]="saving()" (click)="refresh()">
+      {{ i18n.t('emailTest.refresh') }}
+    </button>
   </app-page-header>
   <app-tabs
     [label]="i18n.t('configurationWorkspace.services')"
@@ -96,7 +99,4 @@
   } @if (history.paused()) {
   <p appNotice>{{ i18n.t('emailTest.paused') }}</p>
   }
-  <button appButton type="button" [disabled]="saving()" (click)="refresh()">
-    {{ i18n.t('emailTest.refresh') }}
-  </button>
 </section>

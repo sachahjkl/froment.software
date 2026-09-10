@@ -1,33 +1,26 @@
-<section appTabLayout class="commercial-page" aria-labelledby="quote-detail-title">
-  <a class="back-link" [routerLink]="backLink()" [queryParams]="context()"
-    >{{ i18n.t('backOffice.backToAffairs') }}</a
-  >
-  @if (state() !== 'ready') {
-  <app-page-header><h1 id="quote-detail-title">{{ headerTitle() }}</h1></app-page-header>
-  } @switch (state()) { @case ('loading') {
-  <p role="status">{{ i18n.t('backOffice.quotes.loading') }}</p>
-  } @case ('error') {
-  <p appNotice variant="danger" role="alert">{{ i18n.t(loadError()) }}</p>
-  <button appButton type="button" (click)="reload()">
-    {{ i18n.t('backOffice.affair.retry') }}
-  </button>
-  } @case ('ready') { @if (quote(); as quote) {
-  <app-page-header>
+<section appTabLayout class="detail-page" aria-labelledby="quote-detail-title">
+  <app-page-header layout="stacked">
+    <a pageBack [routerLink]="back().link" [queryParams]="context()">{{ i18n.t(back().label) }}</a>
     <h1 id="quote-detail-title">{{ headerTitle() }}</h1>
-    <p class="document-description">
-      {{ i18n.tf('commercialHeader.quoteDescription', { client:
-      quote.currentRevision.clientDisplayName }) }}
-    </p>
-    <div class="document-badges">
-      @if (statusBadge(); as badge) {
+    @if (quote(); as quote) {
+    <p
+      appClientDescription
+      kind="quote"
+      [clientId]="quote.clientId"
+      [clientName]="quote.currentRevision.clientDisplayName"
+    ></p>
+    }
+    <ng-container pageBadges>
+      @if (quote(); as quote) { @if (statusBadge(); as badge) {
       <span appBadge [variant]="badge.variant">{{ i18n.t(badge.label) }}</span>
       }
       <span appBadge variant="default"
         >{{ i18n.tf('commercialHeader.savedVersion', { version: quote.version }) }}</span
       >
-    </div>
-    <div pageActions class="page-actions">
-      @if (editAction(); as action) {
+      }
+    </ng-container>
+    <ng-container pageActions>
+      @if (quote(); as quote) { @if (editAction(); as action) {
       <a
         appLinkButton
         [variant]="action.variant"
@@ -43,14 +36,6 @@
         [queryParams]="context()"
         >{{ i18n.t('commercial.publish') }}</a
       >
-      } @if (order(); as order) {
-      <a
-        appLinkButton
-        variant="primary"
-        [routerLink]="['/backoffice/orders', order.id]"
-        [queryParams]="context()"
-        >{{ i18n.t('commercial.openOrder') }}</a
-      >
       }
       <app-action-menu
         [label]="i18n.t('commercial.moreActions')"
@@ -58,15 +43,17 @@
         [disabled]="actionsDisabled()"
         (actionSelected)="selectSecondaryAction($event)"
       />
-      <a [routerLink]="['/backoffice/affaires', quote.id]" [queryParams]="context()"
-        >{{ i18n.t('commercial.backAffair') }}</a
-      >
-      <a [routerLink]="['/backoffice/clients', quote.clientId, 'profile']"
-        >{{ quote.currentRevision.clientDisplayName }}</a
-      >
-    </div>
+      }
+    </ng-container>
   </app-page-header>
-  @if (error(); as key) {
+  @switch (state()) { @case ('loading') {
+  <p role="status">{{ i18n.t('backOffice.quotes.loading') }}</p>
+  } @case ('error') {
+  <p appNotice variant="danger" role="alert">{{ i18n.t(loadError()) }}</p>
+  <button appButton type="button" (click)="reload()">
+    {{ i18n.t('backOffice.affair.retry') }}
+  </button>
+  } @case ('ready') { @if (quote(); as quote) { @if (error(); as key) {
   <p appNotice variant="danger" role="alert">{{ i18n.t(key) }}</p>
   <button
     appButton
@@ -140,11 +127,39 @@
     <section class="detail-panel section-space" [attr.aria-labelledby]="'quote-' + tab + '-tab'">
       @switch (tab) { @case ('summary') {
       <p class="muted">
-        {{ i18n.tf('commercial.revision', { version: quote.version }) }} · {{
-        date(quote.currentRevision.createdAt) }}
+        {{ i18n.t('commercial.updated') }} :
+        <time [attr.datetime]="quote.currentRevision.createdAt"
+          >{{ date(quote.currentRevision.createdAt) }}</time
+        >
       </p>
       <app-quote-lines [revision]="quote.currentRevision" />
-      @if (quote.status === 'sent') {
+      @if (order(); as order) {
+      <section class="section-space" aria-labelledby="quote-related-documents-title">
+        <h2 id="quote-related-documents-title">
+          {{ i18n.t('commercialHeader.relatedDocuments') }}
+        </h2>
+        <dl class="facts">
+          <div>
+            <dt>{{ i18n.t('commercial.order') }}</dt>
+            <dd>
+              <a [routerLink]="['/backoffice/orders', order.id]" [queryParams]="context()"
+                >{{ order.reference }}</a
+              >
+            </dd>
+          </div>
+          @if (order.invoiceId) {
+          <div>
+            <dt>{{ i18n.t('backOffice.affair.invoice') }}</dt>
+            <dd>
+              <a [routerLink]="['/backoffice/invoices', order.invoiceId]"
+                >{{ i18n.t('backOffice.affairs.openInvoice') }}</a
+              >
+            </dd>
+          </div>
+          }
+        </dl>
+      </section>
+      } @if (quote.status === 'sent') {
       <p appNotice>{{ i18n.t('commercial.linkUnavailable') }}</p>
       } @if (quote.status !== 'draft') {
       <p class="hint">{{ i18n.t('commercial.portalHint') }}</p>

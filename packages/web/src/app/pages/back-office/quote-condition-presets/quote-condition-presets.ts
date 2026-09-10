@@ -18,6 +18,7 @@ import { I18nService, type TranslationKey } from '@app/i18n.service';
 import { DataTable } from '@shared/data-table/data-table';
 import { Button } from '@shared/button/button';
 import { Notice } from '@shared/notice/notice';
+import { PageHeader } from '@shared/page-header/page-header';
 import { TableSort } from '@shared/table-sort/table-sort';
 import { ListToolbar } from '@shared/list-toolbar/list-toolbar';
 import { ListWorkspace } from '@shared/list-toolbar/list-workspace';
@@ -34,6 +35,7 @@ import { conditionTableOptions } from '../configuration/workspace-tables';
     DataTable,
     RouterLink,
     Notice,
+    PageHeader,
     TableSort,
     ListToolbar,
     ListWorkspace,

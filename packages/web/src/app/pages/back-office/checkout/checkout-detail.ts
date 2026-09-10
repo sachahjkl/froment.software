@@ -11,6 +11,7 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 import { formatMoney } from '@froment/l10n';
 import { I18nService, type TranslationKey } from '@app/i18n.service';
 import { Button } from '@shared/button/button';
+import { Badge } from '@shared/badge/badge';
 import { Notice } from '@shared/notice/notice';
 import { LocalizedDatePipe } from '@shared/localized-date/localized-date-pipe';
 import { CheckoutHistory } from './checkout-history';
@@ -21,7 +22,7 @@ import { providerTabs, providerTestParams } from '../connections/provider-naviga
 
 @Component({
   host: { class: 'page-container' },
-  imports: [Button, Notice, RouterLink, LocalizedDatePipe, PageHeader, Tabs],
+  imports: [Button, Badge, Notice, RouterLink, LocalizedDatePipe, PageHeader, Tabs],
   providers: [CheckoutHistory],
   changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-checkout-detail',

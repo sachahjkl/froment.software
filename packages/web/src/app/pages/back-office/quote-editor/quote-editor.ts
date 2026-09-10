@@ -47,8 +47,8 @@ import { type CatalogItemListValue } from '@froment/contracts';
 import { formatFixedDecimal, parseFixedDecimal } from '@backoffice/quote-input';
 import { I18nService, type TranslationKey } from '@app/i18n.service';
 import { Button } from '@shared/button/button';
-import { DetailRow } from '@shared/detail-row/detail-row';
 import { Notice } from '@shared/notice/notice';
+import { PageHeader } from '@shared/page-header/page-header';
 import { OutcomePanel } from '@shared/outcome-panel/outcome-panel';
 import { ObjectPicker } from '@shared/object-picker/object-picker';
 import { affairContext } from '../affairs/affair-filters';
@@ -79,7 +79,7 @@ const emptyLine = (): QuoteLineModel => ({
 @Component({
   host: { class: 'page-container' },
   selector: 'app-quote-editor',
-  imports: [Button, DetailRow, FormField, ObjectPicker, Notice, OutcomePanel, RouterLink],
+  imports: [Button, FormField, ObjectPicker, Notice, OutcomePanel, PageHeader, RouterLink],
   templateUrl: './quote-editor.html',
   styleUrl: './quote-editor.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -113,6 +113,12 @@ export class QuoteEditor {
   private readonly quoteId = signal<UlidValue | undefined>(undefined);
   private routeRequest = 0;
   protected readonly isNew = signal(false);
+  protected readonly titleKey = computed<TranslationKey>(() =>
+    this.isNew() ? 'backOffice.quote.title.new' : 'backOffice.quote.title.edit',
+  );
+  protected readonly saveKey = computed<TranslationKey>(() =>
+    this.saving() ? 'backOffice.quote.saving' : 'backOffice.quote.save',
+  );
   protected readonly clients = signal<ClientListValue>([]);
   protected readonly conditionPresets = signal<QuoteConditionPresetListValue>([]);
   protected readonly detail = signal<QuoteDetailValue | undefined>(undefined);

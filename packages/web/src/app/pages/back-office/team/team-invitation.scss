@@ -1,1 +1,17 @@
-@use "./team";
+@use "shared/page-header/detail-page";
+
+.team-link {
+  display: grid;
+  gap: var(--space-4);
+}
+.team-link > button {
+  justify-self: start;
+}
+form,
+label {
+  display: grid;
+  gap: var(--space-3);
+}
+form {
+  max-inline-size: 38rem;
+}

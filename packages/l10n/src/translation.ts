@@ -61,6 +61,10 @@ const pluralRules = {
 
 const compiledTranslations = new Map<string, ReturnType<typeof compileTranslationTemplate>>();
 
+export function translationParts(language: Language, key: ParameterizedTranslationKey) {
+  return compiledTemplate(translate(language, key));
+}
+
 export function formatTranslation<Key extends ParameterizedTranslationKey>(
   language: Language,
   key: Key,
@@ -102,10 +106,14 @@ function interpolateTranslation(
   value: string,
   params: Readonly<Record<string, string | number>>,
 ): string {
+  return renderTranslationTemplate(compiledTemplate(value), params);
+}
+
+function compiledTemplate(value: string): ReturnType<typeof compileTranslationTemplate> {
   let template = compiledTranslations.get(value);
   if (template === undefined) {
     template = compileTranslationTemplate(value);
     compiledTranslations.set(value, template);
   }
-  return renderTranslationTemplate(template, params);
+  return template;
 }

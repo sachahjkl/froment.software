@@ -18,11 +18,13 @@ import {
   submit,
 } from '@angular/forms/signals';
 import { type IssuerSettingsValue } from '@froment/contracts';
+import { RouterLink } from '@angular/router';
 
 import { IssuerSettingsApi } from '@backoffice/issuer-settings-api';
 import { I18nService, type TranslationKey } from '@app/i18n.service';
 import { Button } from '@shared/button/button';
 import { Notice } from '@shared/notice/notice';
+import { PageHeader } from '@shared/page-header/page-header';
 
 const emptySettings = (): IssuerSettingsValue => ({
   displayName: '',
@@ -39,7 +41,7 @@ const emptySettings = (): IssuerSettingsValue => ({
 
 @Component({
   selector: 'app-issuer-settings',
-  imports: [Button, FormField, Notice],
+  imports: [Button, FormField, Notice, PageHeader, RouterLink],
   templateUrl: './issuer-settings.html',
   styleUrl: './issuer-settings.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

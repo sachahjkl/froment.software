@@ -1,6 +1,4 @@
-:host {
-  display: block;
-}
+@use "shared/page-header/detail-page";
 :host(.editor-dialog) {
   max-block-size: calc(100dvh - 2rem);
   overflow: auto;
@@ -11,6 +9,8 @@
   box-shadow: var(--shadow-page);
 }
 :host(.editor-dialog) .catalog-editor {
+  display: grid;
+  gap: var(--space-6);
   padding: var(--space-6);
 }
 :host(.editor-dialog) h2 {
@@ -18,10 +18,7 @@
   font-size: var(--text-xl);
 }
 .catalog-editor {
-  display: grid;
   justify-items: start;
-  gap: var(--space-6);
-  padding: var(--page-header-y) var(--page-x);
 }
 app-page-header {
   inline-size: 100%;
