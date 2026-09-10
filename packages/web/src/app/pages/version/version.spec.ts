@@ -33,7 +33,7 @@ describe('Version', () => {
     expect(content).toContain('@froment/api');
     expect(content).toContain('@froment/web');
     expect(content).not.toContain('Date de construction');
-    expect(root.querySelector<HTMLImageElement>('.logo-frame img')?.src).toContain(
+    expect(root.querySelector<HTMLImageElement>('.identity > img')?.src).toContain(
       '/brand/favicon.png',
     );
     expect(root.querySelector<HTMLAnchorElement>('.back-link')?.getAttribute('href')).toBe('/');

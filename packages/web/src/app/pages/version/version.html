@@ -1,64 +1,49 @@
 <section class="version-page" aria-labelledby="version-title">
-  <div class="version-card">
-    <div class="card-bar" aria-hidden="true">
-      <span></span><span></span><span></span>
-      <code>froment.software</code>
-    </div>
+  <div class="version-panel">
+    <a class="back-link" routerLink="/">
+      <span aria-hidden="true">←</span>
+      {{ i18n.t("not_found.cta") }}
+    </a>
 
-    <div class="card-content">
-      <a class="back-link" routerLink="/">
-        <span aria-hidden="true">←</span>
-        {{ i18n.t("not_found.cta") }}
-      </a>
-
-      <header class="identity">
-        <div class="logo-frame" aria-hidden="true">
-          <img src="/brand/favicon.png" alt="" width="72" height="72" />
-        </div>
-        <div>
-          <p class="eyebrow">froment.software / {{ i18n.t("version.packageVersion") }}</p>
-          <h1 id="version-title">{{ i18n.t("version.title") }}</h1>
-          <p class="intro">{{ i18n.t("version.intro") }}</p>
-        </div>
-      </header>
-
-      @switch (state()) { @case ('loading') {
-      <div class="state-panel loading-state" aria-live="polite">
-        <span class="status-light" aria-hidden="true"></span>
-        <p>{{ i18n.t("version.loading") }}</p>
+    <header class="identity">
+      <img src="/brand/favicon.png" alt="" width="72" height="72" />
+      <div class="identity-copy">
+        <p class="site-name">froment.software</p>
+        <h1 id="version-title">{{ i18n.t("version.title") }}</h1>
+        <p class="intro">{{ i18n.t("version.intro") }}</p>
       </div>
-      } @case ('error') {
-      <p class="notice danger state-panel" role="alert">{{ i18n.t("version.error") }}</p>
-      } @case ('ready') { @if (metadata(); as deployment) {
-      <div class="deployment-data">
-        <section class="commit" aria-labelledby="commit-title">
-          <div class="section-heading">
-            <h2 id="commit-title">{{ i18n.t("version.commit") }}</h2>
-            <span class="status-light" aria-hidden="true"></span>
-          </div>
-          <code>{{ deployment.commit }}</code>
-        </section>
+    </header>
 
-        <div class="package-table">
-          <table>
-            <thead>
-              <tr>
-                <th>{{ i18n.t("version.package") }}</th>
-                <th>{{ i18n.t("version.packageVersion") }}</th>
-              </tr>
-            </thead>
-            <tbody>
-              @for (item of deployment.packages; track item.name) {
-              <tr>
-                <td><code>{{ item.name }}</code></td>
-                <td><code>{{ item.version }}</code></td>
-              </tr>
-              }
-            </tbody>
-          </table>
-        </div>
+    @switch (state()) { @case ('loading') {
+    <p class="state" aria-live="polite">{{ i18n.t("version.loading") }}</p>
+    } @case ('error') {
+    <p class="notice danger state" role="alert">{{ i18n.t("version.error") }}</p>
+    } @case ('ready') { @if (metadata(); as deployment) {
+    <div class="deployment-data">
+      <section class="commit" aria-labelledby="commit-title">
+        <h2 id="commit-title">{{ i18n.t("version.commit") }}</h2>
+        <code>{{ deployment.commit }}</code>
+      </section>
+
+      <div class="package-table">
+        <table>
+          <thead>
+            <tr>
+              <th>{{ i18n.t("version.package") }}</th>
+              <th>{{ i18n.t("version.packageVersion") }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (item of deployment.packages; track item.name) {
+            <tr>
+              <td><code>{{ item.name }}</code></td>
+              <td><code>{{ item.version }}</code></td>
+            </tr>
+            }
+          </tbody>
+        </table>
       </div>
-      } } }
     </div>
+    } } }
   </div>
 </section>
