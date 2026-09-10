@@ -140,7 +140,7 @@
           [attr.aria-busy]="pdf.pending()"
           (click)="exportSelected()"
         >
-          {{ i18n.tf('backOffice.billing.bulkExport', { count: exportCount() }) }}
+          {{ i18n.plural('backOffice.billing.bulkExport', { count: exportCount() }) }}
         </button>
         <button
           appButton
@@ -151,7 +151,9 @@
         </button>
       </app-bulk-selection>
       @if (pdf.failed()) {
-      <p appNotice variant="danger" role="alert">{{ i18n.t('invoice.error') }}</p>
+      <p appNotice variant="danger" role="alert">
+        {{ i18n.t('billingWorkspace.pdfDownloadFailed') }}
+      </p>
       } @if (preparingReminders()) {
       <p>{{ i18n.t('billingWorkspace.remindersHint') }}</p>
       <ul>

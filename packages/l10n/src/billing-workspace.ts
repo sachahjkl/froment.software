@@ -96,6 +96,8 @@ export const billingWorkspaceText = {
     'billingWorkspace.historyHint':
       'Cet historique présente les événements du journal. Les versions enregistrées figurent dans Document.',
     'billingWorkspace.prepareReminders': 'Préparer les rappels éligibles',
+    'billingWorkspace.pdfDownloadFailed':
+      'Le téléchargement des PDF a échoué. Vérifiez les fichiers déjà téléchargés avant de réessayer.',
     'billingWorkspace.remindersHint':
       'Préparez chaque rappel séparément. Aucun courriel réel n’est envoyé.',
     'billingWorkspace.reminder': 'Préparer un rappel',
@@ -203,6 +205,8 @@ export const billingWorkspaceText = {
     'billingWorkspace.historyHint':
       'This history shows journal events. Recorded versions are available in Document.',
     'billingWorkspace.prepareReminders': 'Prepare eligible reminders',
+    'billingWorkspace.pdfDownloadFailed':
+      'The PDF download failed. Check the files already downloaded before trying again.',
     'billingWorkspace.remindersHint': 'Prepare each reminder separately. No real email is sent.',
     'billingWorkspace.reminder': 'Prepare a reminder',
     'billingWorkspace.email': 'Prepare an email',

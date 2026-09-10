@@ -11,6 +11,7 @@ import { TableExport } from '@shared/table-export/table-export';
 import { SearchHighlight } from '@shared/search-highlight';
 import { BulkSelection } from '@shared/bulk-selection/bulk-selection';
 import { Billing } from './billing';
+import { BillingPdf } from './billing-pdf';
 import { ReceiptList } from '../receipt-list/receipt-list';
 import { CreditNotes } from '../credit-notes/credit-notes';
 import { RefundList } from '../refund-list/refund-list';
@@ -36,11 +37,13 @@ describe('Billing lists', () => {
       language: 'fr',
       results: ['0 résultat', '1 résultat', '2 résultats'],
       selections: ['0 facture sélectionnée', '1 facture sélectionnée', '2 factures sélectionnées'],
+      downloads: ['Télécharger le PDF (0)', 'Télécharger le PDF (1)', 'Télécharger les PDF (2)'],
     },
     {
       language: 'en',
       results: ['0 results', '1 result', '2 results'],
       selections: ['0 invoices selected', '1 invoice selected', '2 invoices selected'],
+      downloads: ['Download PDFs (0)', 'Download PDF (1)', 'Download PDFs (2)'],
     },
   ] as const;
   for (const text of pluralText) {
@@ -50,6 +53,7 @@ describe('Billing lists', () => {
         i18n.language.set(text.language);
         expect(i18n.plural('billingWorkspace.count', { count })).toBe(text.results[count]);
         expect(i18n.plural('billingWorkspace.selection', { count })).toBe(text.selections[count]);
+        expect(i18n.plural('backOffice.billing.bulkExport', { count })).toBe(text.downloads[count]);
       });
     }
   }
@@ -175,6 +179,30 @@ describe('Billing lists', () => {
     };
     return { harness, root, trigger, openMenu, openPanel, i18n, router: TestBed.inject(Router) };
   }
+
+  it('locks pending PDF downloads and reports a download-specific failure in both languages', async () => {
+    const { harness, root, i18n } = await setupFilters(cases[0]);
+    root.querySelector<HTMLInputElement>('tbody input[type="checkbox"]')!.click();
+    await harness.fixture.whenStable();
+    const pdf = harness.routeDebugElement!.injector.get(BillingPdf);
+    const button = root.querySelector<HTMLButtonElement>('app-bulk-selection button[aria-busy]')!;
+    expect(button.disabled).toBe(false);
+    pdf.pending.set(true);
+    await harness.fixture.whenStable();
+    expect(button.disabled).toBe(true);
+    expect(button.getAttribute('aria-busy')).toBe('true');
+    pdf.pending.set(false);
+    pdf.failed.set(true);
+    for (const text of pluralText) {
+      i18n.language.set(text.language);
+      await harness.fixture.whenStable();
+      expect(button.disabled).toBe(false);
+      expect(root.querySelector('[role="alert"]')?.textContent?.trim()).toBe(
+        i18n.t('billingWorkspace.pdfDownloadFailed'),
+      );
+    }
+  });
+
   for (const item of cases) {
     it(`${item.method}: keeps result and selection labels coupled to their counts in both languages`, async () => {
       const { harness, root, i18n } = await setupFilters(item);
@@ -197,6 +225,9 @@ describe('Billing lists', () => {
               .injector.get(BulkSelection);
             expect(selection.count()).toBe(count);
             expect(selection.selectionLabel()).toBe(text.selections[count]);
+            expect(
+              root.querySelector('app-bulk-selection button[aria-busy]')?.textContent?.trim(),
+            ).toBe(text.downloads[count]);
             expect(root.querySelector('app-bulk-selection > p')?.textContent?.trim()).toBe(
               text.selections[count],
             );

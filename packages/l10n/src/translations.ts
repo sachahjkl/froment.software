@@ -432,7 +432,8 @@ export const translations = {
     'backOffice.billing.bulkReminder.subject': 'Relance de factures échues',
     'backOffice.billing.bulkReminder.body':
       'Bonjour,\n\nUne ou plusieurs factures échues restent en attente de règlement.\n\nCordialement,',
-    'backOffice.billing.bulkExport': 'Télécharger les PDF ({count})',
+    'backOffice.billing.bulkExport.one': 'Télécharger le PDF ({count})',
+    'backOffice.billing.bulkExport.other': 'Télécharger les PDF ({count})',
     'backOffice.billing.selectAll': 'Sélectionner les factures visibles',
     'backOffice.billing.selectInvoice': 'Sélectionner la facture {reference}',
     'backOffice.billing.empty': 'Aucune facture dans cet onglet.',
@@ -1955,7 +1956,8 @@ export const translations = {
     'backOffice.billing.bulkReminder.subject': 'Overdue invoice reminder',
     'backOffice.billing.bulkReminder.body':
       'Hello,\n\nOne or more overdue invoices are still awaiting payment.\n\nRegards,',
-    'backOffice.billing.bulkExport': 'Download PDFs ({count})',
+    'backOffice.billing.bulkExport.one': 'Download PDF ({count})',
+    'backOffice.billing.bulkExport.other': 'Download PDFs ({count})',
     'backOffice.billing.selectAll': 'Select visible invoices',
     'backOffice.billing.selectInvoice': 'Select invoice {reference}',
     'backOffice.billing.empty': 'No invoice in this tab.',
