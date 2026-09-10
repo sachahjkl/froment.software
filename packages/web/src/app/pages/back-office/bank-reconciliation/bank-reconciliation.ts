@@ -1,3 +1,4 @@
+import { DOCUMENT } from '@angular/common';
 import {
   afterNextRender,
   afterRenderEffect,
@@ -7,6 +8,7 @@ import {
   DestroyRef,
   ElementRef,
   inject,
+  Injector,
   PendingTasks,
   signal,
   viewChild,
@@ -91,6 +93,8 @@ export class BankReconciliation {
     initialValue: this.route.snapshot.queryParamMap,
   });
   private readonly confirmation = inject(Confirmation);
+  private readonly document = inject(DOCUMENT);
+  private readonly injector = inject(Injector);
   private readonly destroyRef = inject(DestroyRef);
   private readonly pendingTasks = inject(PendingTasks);
   private readonly result = viewChild<ElementRef<HTMLElement>>('result');
@@ -373,13 +377,26 @@ export class BankReconciliation {
   }
   protected async selectCancellation(allocation: typeof BankAllocation.Type): Promise<void> {
     if (this.busy() || this.pendingMatch() || this.pendingCancellation()) return;
+    // L’état dirty exclut les champs désactivés par busy.
+    const needsConfirmation = this.cancelForm().dirty() || this.matchForm().dirty();
+    const focusTarget = this.document.activeElement;
     this.busy.set(true);
     try {
       if (
-        (this.cancelForm().dirty() || this.matchForm().dirty()) &&
+        needsConfirmation &&
         !(await this.confirmation.request(this.i18n.t('bankWorkspace.unsaved')))
-      )
+      ) {
+        if (!this.destroyRef.destroyed) {
+          afterNextRender(
+            () => {
+              if (!this.busy() && focusTarget instanceof HTMLElement && focusTarget.isConnected)
+                focusTarget.focus();
+            },
+            { injector: this.injector },
+          );
+        }
         return;
+      }
       if (
         this.destroyRef.destroyed ||
         !this.transaction()?.allocations.some((item) => item.matchId === allocation.matchId)

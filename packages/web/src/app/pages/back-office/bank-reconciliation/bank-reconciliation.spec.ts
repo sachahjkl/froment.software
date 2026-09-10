@@ -1,6 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { Router } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
+import { I18nService } from '@app/i18n.service';
 import { type BankPaymentList } from '@froment/contracts';
 import { BankReconciliation } from './bank-reconciliation';
 import {
@@ -14,6 +15,26 @@ import {
   otherBankId,
   setupBankWorkspace,
 } from '../banking/bank-workspace.spec-helper';
+
+function deferredConfirmation() {
+  let resolve: ((accepted: boolean) => void) | undefined;
+  const promise = new Promise<boolean>((complete) => {
+    resolve = complete;
+  });
+  return {
+    promise,
+    resolve(accepted: boolean): void {
+      if (!resolve) throw new Error('bank.test.confirmation_resolver_missing');
+      resolve(accepted);
+    },
+  };
+}
+
+function unloadIsBlocked(): boolean {
+  const event = new Event('beforeunload', { cancelable: true });
+  window.dispatchEvent(event);
+  return event.defaultPrevented;
+}
 
 describe('Bank reconciliation task', () => {
   it('keeps the transaction context and prepares its remaining amount after a partial allocation', async () => {
@@ -150,6 +171,165 @@ describe('Bank reconciliation task', () => {
     expect(api.unmatch).toHaveBeenCalledWith(bankId, otherBankId, 'Encaissement annulé');
     expect(root.querySelector('textarea')).toBeNull();
   });
+  it.each(['cancellation reason', 'match form'])(
+    'locks allocation selection while confirming a dirty %s and preserves declined changes',
+    async (draft) => {
+      const { api, confirmation } = setupBankWorkspace();
+      const first = {
+        matchId: bankId,
+        paymentId: bankId,
+        invoiceId: bankId,
+        invoiceNumber: 'FA-2026-000001',
+        amountCents: 2000,
+        feeCents: 100,
+        paymentCancelled: false,
+      };
+      const second = {
+        ...first,
+        matchId: otherBankId,
+        paymentId: otherBankId,
+        amountCents: 1000,
+        feeCents: 0,
+      };
+      const transaction = {
+        ...bankTransaction,
+        matchedCents: 2900,
+        allocations: [first, second],
+      };
+      const source = structuredClone(transaction);
+      api.get.mockResolvedValue({ success: true, result: transaction });
+      const harness = await RouterTestingHarness.create();
+      const path = `/backoffice/banque/transactions/${bankId}?sort=amount-desc`;
+      const component = await harness.navigateByUrl(path, BankReconciliation);
+      await harness.fixture.whenStable();
+      const root = bankRoot(harness);
+      const history = structuredClone(component['history']());
+      const denied = deferredConfirmation();
+      const accepted = deferredConfirmation();
+      let selection: Promise<void> | undefined;
+      try {
+        if (draft === 'cancellation reason') {
+          await component['selectCancellation'](first);
+          await harness.fixture.whenStable();
+          bankField(root, 'textarea', 'Motif de la première allocation');
+        } else {
+          bankField(root, 'form select', bankId);
+          await harness.fixture.whenStable();
+          bankField(root, 'select[aria-describedby="payment-error"]', bankId);
+          bankField(root, 'input[aria-describedby="amount-error net-error"]', '12.34');
+          bankField(root, 'input[aria-describedby="fee-error fee-hint"]', '0.35');
+        }
+        await harness.fixture.whenStable();
+        const matchDraft = { ...component['matchForm']().value() };
+        const cancelDraft = { ...component['cancelForm']().value() };
+        const originalAllocation = component['cancelling']();
+        const focusTarget = root.querySelector<HTMLInputElement | HTMLTextAreaElement>(
+          draft === 'cancellation reason'
+            ? 'textarea'
+            : 'input[aria-describedby="amount-error net-error"]',
+        );
+        if (!focusTarget) throw new Error('bank.test.draft_focus_missing');
+        focusTarget.focus();
+        expect(unloadIsBlocked()).toBe(true);
+        expect(confirmation.request).not.toHaveBeenCalled();
+        confirmation.request.mockImplementationOnce(() => denied.promise);
+        selection = component['selectCancellation'](second);
+        expect(confirmation.request).toHaveBeenCalledExactlyOnceWith(
+          TestBed.inject(I18nService).t('bankWorkspace.unsaved'),
+        );
+        expect(component['busy']()).toBe(true);
+        await harness.fixture.whenStable();
+        expect(focusTarget.disabled).toBe(true);
+        expect(component['matchForm']().disabled()).toBe(true);
+        expect(component['cancelForm']().disabled()).toBe(true);
+        expect(
+          [...root.querySelectorAll<HTMLButtonElement>('tbody button')].every(
+            (button) => button.disabled,
+          ),
+        ).toBe(true);
+        expect(component['cancelling']()).toBe(originalAllocation);
+        expect(component['matchForm']().value()).toEqual(matchDraft);
+        expect(component['cancelForm']().value()).toEqual(cancelDraft);
+        expect(unloadIsBlocked()).toBe(true);
+        expect(await component.canDeactivate()).toBe(false);
+        await component['selectCancellation'](first);
+        await component['closeCancellation']();
+        await component['selectInvoice'](otherBankId);
+        await component['refresh']();
+        await component['load']();
+        bankSubmit(root, 'section[aria-labelledby="allocation-title"] form');
+        if (originalAllocation) bankSubmit(root, 'form.ds-panel');
+        await harness.navigateByUrl('/backoffice/banque');
+        expect(TestBed.inject(Router).url).toBe(path);
+        expect(confirmation.request).toHaveBeenCalledTimes(1);
+        expect(api.get).toHaveBeenCalledTimes(1);
+        expect(api.history).toHaveBeenCalledTimes(1);
+        expect(api.match).not.toHaveBeenCalled();
+        expect(api.unmatch).not.toHaveBeenCalled();
+        root.querySelector<HTMLAnchorElement>('.bank-page > a')?.focus();
+        denied.resolve(false);
+        await selection;
+        await harness.fixture.whenStable();
+        expect(component['busy']()).toBe(false);
+        expect(focusTarget.disabled).toBe(false);
+        expect(document.activeElement).toBe(focusTarget);
+        expect(component['cancelling']()).toBe(originalAllocation);
+        expect(component['matchForm']().value()).toEqual(matchDraft);
+        expect(component['cancelForm']().value()).toEqual(cancelDraft);
+        expect(component['transaction']()).toEqual(source);
+        expect(component['history']()).toEqual(history);
+        expect(unloadIsBlocked()).toBe(true);
+        confirmation.request.mockResolvedValue(false);
+        await component['refresh']();
+        await harness.navigateByUrl('/backoffice/banque');
+        expect(TestBed.inject(Router).url).toBe(path);
+        expect(api.get).toHaveBeenCalledTimes(1);
+        expect(component['matchForm']().value()).toEqual(matchDraft);
+        expect(component['cancelForm']().value()).toEqual(cancelDraft);
+        expect(confirmation.request).toHaveBeenCalledTimes(3);
+        confirmation.request.mockImplementationOnce(() => accepted.promise);
+        selection = component['selectCancellation'](second);
+        await harness.fixture.whenStable();
+        expect(confirmation.request).toHaveBeenCalledTimes(4);
+        expect(component['busy']()).toBe(true);
+        expect(component['cancelling']()).toBe(originalAllocation);
+        expect(component['matchForm']().value()).toEqual(matchDraft);
+        expect(component['cancelForm']().value()).toEqual(cancelDraft);
+        expect(unloadIsBlocked()).toBe(true);
+        accepted.resolve(true);
+        await selection;
+        await harness.fixture.whenStable();
+        expect(component['busy']()).toBe(false);
+        expect(component['cancelling']()).toEqual(second);
+        expect(component['cancelForm']().value()).toEqual({ reason: '' });
+        expect(component['cancelForm']().disabled()).toBe(false);
+        expect(component['matchForm']().value()).toEqual({
+          invoiceId: '',
+          paymentId: '',
+          amount: '71.00',
+          fee: '0.00',
+        });
+        expect(component['payments']()).toEqual([]);
+        expect(document.activeElement).toBe(root.querySelector('textarea'));
+        expect(root.querySelector('form.ds-panel')?.textContent).toContain(second.paymentId);
+        expect(component['transaction']()).toEqual(source);
+        expect(component['history']()).toEqual(history);
+        expect(api.get).toHaveBeenCalledTimes(1);
+        expect(api.history).toHaveBeenCalledTimes(1);
+        expect(api.match).not.toHaveBeenCalled();
+        expect(api.unmatch).not.toHaveBeenCalled();
+        expect(unloadIsBlocked()).toBe(false);
+        expect(await component.canDeactivate()).toBe(true);
+        await harness.navigateByUrl('/backoffice/banque');
+        expect(TestBed.inject(Router).url).toBe('/backoffice/banque');
+        expect(confirmation.request).toHaveBeenCalledTimes(4);
+      } finally {
+        denied.resolve(false);
+        accepted.resolve(false);
+        await selection;
+      }
+    },
+  );
   it('discards stale payment lists after an invoice change', async () => {
     const { api } = setupBankWorkspace();
     type PaymentOutcome = { success: true; result: typeof BankPaymentList.Type };
