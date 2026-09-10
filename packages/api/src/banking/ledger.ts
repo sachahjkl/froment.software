@@ -1,11 +1,14 @@
 import {
   LedgerConflict,
   LedgerEntry,
+  LedgerJournalEntry,
   LedgerList,
   LedgerPeriod,
   LedgerRequest,
   LedgerReverse,
   LedgerSource,
+  LedgerSourceDetail,
+  LedgerSourceKind,
 } from '@froment/contracts';
 import { Clock, Context, DateTime, Effect, Layer, Schema } from 'effect';
 import { ulid } from 'ulid';
@@ -17,7 +20,10 @@ import { invoiceIssueDate } from '../invoices/invoices.js';
 const entryQuery = `select e.id, e.request_id as requestId, e.source_kind as sourceKind, e.source_id as sourceId,
   e.debit_account as debitAccount, e.credit_account as creditAccount, e.label, e.amount_cents as amountCents,
   e.booked_on as bookedOn, e.recorded_at as recordedAt, e.recorded_by_user_id as recordedByUserId,
-  e.reverses_id as reversesId, (select id from bank_ledger_entries where reverses_id = e.id) as reversalId
+  e.reverses_id as reversesId, (select id from bank_ledger_entries where reverses_id = e.id) as reversalId,
+  case when e.source_kind = 'debit' then (select t.reference from bank_transactions t where t.id = e.source_id)
+    else (select t.reference from bank_matches m join bank_transactions t on t.id = m.transaction_id where m.id = e.source_id)
+    end as sourceReference
   from bank_ledger_entries e`;
 const sourceQuery = `select s.*, (select e.id from bank_ledger_entries e where e.source_kind = s.sourceKind
   and e.source_id = s.sourceId and e.reverses_id is null
@@ -43,7 +49,7 @@ const make = Effect.gen(function* () {
   };
   const readPeriod = (period: typeof LedgerPeriod.Type) => {
     if (!Schema.is(LedgerPeriod)(period)) throw conflict();
-    const entries = Schema.decodeUnknownSync(Schema.Array(LedgerEntry))(
+    const entries = Schema.decodeUnknownSync(Schema.Array(LedgerJournalEntry))(
       sqlite
         .prepare(
           `${entryQuery} where e.booked_on between ? and ? order by e.booked_on, e.recorded_at, e.id limit 10001`,
@@ -68,6 +74,42 @@ const make = Effect.gen(function* () {
           ? cause
           : new DatabaseError({ operation: 'ledger.list', cause }),
     }),
+  );
+  const getEntry = Effect.fn('BankLedger.getEntry')((id: string) =>
+    Effect.try({
+      try: () => readEntry(id),
+      catch: (cause) =>
+        cause instanceof LedgerConflict
+          ? cause
+          : new DatabaseError({ operation: 'ledger.getEntry', cause }),
+    }),
+  );
+  const getSource = Effect.fn('BankLedger.getSource')(
+    (kind: typeof LedgerSourceKind.Type, id: string) =>
+      Effect.try({
+        try: () =>
+          sqlite
+            .transaction(() => {
+              const row = sqlite
+                .prepare(`${sourceQuery} where s.sourceKind = ? and s.sourceId = ?`)
+                .get(kind, id);
+              if (row === undefined) throw conflict();
+              const source = Schema.decodeUnknownSync(LedgerSource)(row);
+              const transactionId =
+                kind === 'debit'
+                  ? id
+                  : sqlite
+                      .prepare('select transaction_id from bank_matches where id = ?')
+                      .pluck()
+                      .get(id);
+              return Schema.decodeUnknownSync(LedgerSourceDetail)({ source, transactionId });
+            })
+            .deferred(),
+        catch: (cause) =>
+          cause instanceof LedgerConflict
+            ? cause
+            : new DatabaseError({ operation: 'ledger.getSource', cause }),
+      }),
   );
   const insert = (entry: typeof LedgerEntry.Type) => {
     sqlite
@@ -222,7 +264,7 @@ const make = Effect.gen(function* () {
           : new DatabaseError({ operation: 'ledger.reverse', cause }),
     });
   });
-  return { list, post, reverse };
+  return { list, getEntry, getSource, post, reverse };
 });
 
 export class BankLedger extends Context.Service<BankLedger, Effect.Success<typeof make>>()(

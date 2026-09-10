@@ -24,6 +24,7 @@ import { Notice } from '@shared/notice/notice';
   templateUrl: './account-passkeys.html',
   styleUrl: './account-passkeys.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
+  host: { '(window:beforeunload)': 'beforeUnload($event)' },
 })
 export class AccountPasskeys {
   readonly busy = model(false);
@@ -64,7 +65,12 @@ export class AccountPasskeys {
 
   protected async add(event: SubmitEvent): Promise<void> {
     event.preventDefault();
-    if (this.busy() || this.disabled() || this.fields().invalid()) return;
+    if (this.busy() || this.disabled() || this.loading()) return;
+    if (this.fields().invalid()) {
+      this.fields().markAsTouched();
+      this.fields().errorSummary()[0]?.fieldTree().focusBoundControl();
+      return;
+    }
     this.busy.set(true);
     this.error.set(undefined);
     this.status.set(undefined);
@@ -86,7 +92,12 @@ export class AccountPasskeys {
   }
 
   protected async remove(key: typeof Passkey.Type): Promise<void> {
-    if (this.busy() || this.disabled() || this.fields.password().invalid()) return;
+    if (this.busy() || this.disabled()) return;
+    if (this.fields.password().invalid()) {
+      this.fields.password().markAsTouched();
+      this.fields.password().focusBoundControl();
+      return;
+    }
     if (
       !(await this.confirmation.request(this.i18n.t('passkey.remove_confirm'), {
         variant: 'danger',
@@ -109,5 +120,15 @@ export class AccountPasskeys {
       this.values.update((value) => ({ ...value, password: '' }));
       this.busy.set(false);
     }
+  }
+  canDeactivate(): boolean | Promise<boolean> {
+    if (this.busy()) return false;
+    return (
+      !this.fields().dirty() ||
+      this.confirmation.request(this.i18n.t('configurationWorkspace.unsaved'))
+    );
+  }
+  protected beforeUnload(event: BeforeUnloadEvent): void {
+    if (this.busy() || this.fields().dirty()) event.preventDefault();
   }
 }

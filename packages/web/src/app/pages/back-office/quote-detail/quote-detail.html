@@ -1,0 +1,191 @@
+<section appTabLayout class="commercial-page" aria-labelledby="quote-detail-title">
+  <a
+    class="back-link"
+    [routerLink]="['/backoffice/affaires', context().view ?? 'attention']"
+    [queryParams]="context()"
+    >{{ i18n.t('backOffice.backToAffairs') }}</a
+  >
+  @if (state() !== 'ready') {
+  <h1 id="quote-detail-title">{{ i18n.t('commercial.quote') }}</h1>
+  } @switch (state()) { @case ('loading') {
+  <p role="status">{{ i18n.t('backOffice.quotes.loading') }}</p>
+  } @case ('error') {
+  <p appNotice variant="danger" role="alert">{{ i18n.t(error() ?? 'quote.error') }}</p>
+  <button appButton type="button" (click)="reload()">
+    {{ i18n.t('backOffice.affair.retry') }}
+  </button>
+  } @case ('ready') { @if (quote(); as quote) {
+  <header>
+    <div>
+      <p class="eyebrow">{{ i18n.t('commercial.quote') }} · {{ quote.reference }}</p>
+      <h1 id="quote-detail-title">{{ quote.currentRevision.title }}</h1>
+      <a [routerLink]="['/backoffice/clients', quote.clientId, 'profile']"
+        >{{ quote.currentRevision.clientDisplayName }}</a
+      >
+    </div>
+    <span appBadge>{{ statusLabel(quote.status) }}</span>
+  </header>
+  <div class="actions">
+    @if (quote.status === 'draft' || quote.status === 'expired') {
+    <a
+      appLinkButton
+      [variant]="quote.status === 'expired' ? 'primary' : 'default'"
+      [routerLink]="['/backoffice/quotes', quote.id, 'edit']"
+      [queryParams]="context()"
+      >{{ i18n.t(quote.status === 'expired' ? 'commercial.revise' : 'commercial.edit') }}</a
+    >
+    } @if (quote.status === 'draft') {
+    <a
+      appLinkButton
+      variant="primary"
+      [routerLink]="['/backoffice/quotes', quote.id, 'publication']"
+      [queryParams]="context()"
+      >{{ i18n.t('commercial.publish') }}</a
+    >
+    } @if (order(); as order) {
+    <a
+      appLinkButton
+      variant="primary"
+      [routerLink]="['/backoffice/orders', order.id]"
+      [queryParams]="context()"
+      >{{ i18n.t('commercial.openOrder') }}</a
+    >
+    }
+    <a [routerLink]="['/backoffice/affaires', quote.id]" [queryParams]="context()"
+      >{{ i18n.t('commercial.backAffair') }}</a
+    >
+  </div>
+  @if (error(); as key) {
+  <p appNotice variant="danger" role="alert">{{ i18n.t(key) }}</p>
+  <button
+    appButton
+    type="button"
+    [disabled]="cancelling()"
+    [attr.aria-disabled]="confirming()"
+    (click)="reload()"
+  >
+    {{ i18n.t('commercial.loadLatest') }}
+  </button>
+  } @if (cancelling()) {
+  <p appNotice role="status">{{ i18n.t('commercial.pending') }}</p>
+  }
+  <app-tabs
+    [tabs]="tabs()"
+    [label]="i18n.t('commercial.quote')"
+    [preserveQuery]="true"
+    [disabled]="confirming() || cancelling()"
+  />
+  <router-outlet />
+  <ng-template appTabPanel="quote-detail" let-tab="tab">
+    <section class="section-space" [attr.aria-labelledby]="'quote-' + tab + '-tab'">
+      @switch (tab) { @case ('summary') {
+      <p class="muted">
+        {{ i18n.tf('commercial.revision', { version: quote.version }) }} · {{
+        date(quote.currentRevision.createdAt) }}
+      </p>
+      <app-quote-lines [revision]="quote.currentRevision" />
+      @if (quote.status === 'sent') {
+      <p appNotice>{{ i18n.t('commercial.linkUnavailable') }}</p>
+      }
+      <app-action-menu
+        [label]="i18n.t('commercial.moreActions')"
+        [actions]="secondaryActions()"
+        [disabled]="cancelling() || confirming()"
+        (actionSelected)="selectSecondaryAction($event)"
+      />
+      @if (quote.status !== 'draft') {
+      <p class="hint">{{ i18n.t('commercial.portalHint') }}</p>
+      } @if (quote.status === 'draft' || quote.status === 'sent' || quote.status === 'expired') {
+      @if (cancellationOpen() || hasCancellationInput()) {
+      <section class="document-cancellation" aria-labelledby="cancellation-title">
+        <h2 id="cancellation-title">{{ i18n.t('backOffice.quote.cancel') }}</h2>
+        <form (submit)="cancel($event)" class="section-space" novalidate>
+          <label class="field"
+            >{{ i18n.t('backOffice.quote.cancelReason') }}
+            <select
+              class="input"
+              [formField]="cancellation.reason"
+              aria-describedby="cancel-reason-error"
+              [attr.aria-invalid]="cancellation.reason().touched() && cancellation.reason().invalid()"
+            >
+              <option value="">{{ i18n.t('backOffice.quote.cancelReason.select') }}</option>
+              @for (reason of reasons; track reason) {
+              <option [value]="reason">{{ reasonLabel(reason) }}</option>
+              }
+            </select>
+          </label>
+          @if (cancellation.reason().touched() && cancellation.reason().invalid()) {
+          <p id="cancel-reason-error" class="field-error">
+            {{ i18n.t('backOffice.quote.fieldRequired') }}
+          </p>
+          }
+          <label class="field"
+            >{{ i18n.t('backOffice.quote.cancelNote') }}<textarea
+              class="input"
+              rows="3"
+              [formField]="cancellation.note"
+              aria-describedby="cancel-note-error"
+              [attr.aria-invalid]="cancellation.note().touched() && cancellation.note().invalid()"
+            ></textarea>
+          </label>
+          @if (cancellation.note().touched() && cancellation.note().invalid()) {
+          <p id="cancel-note-error" class="field-error">
+            {{ i18n.t('backOffice.quote.fieldInvalid') }}
+          </p>
+          }
+          <button
+            appButton
+            type="submit"
+            variant="danger"
+            class="cancel-quote"
+            [disabled]="cancelling()"
+            [attr.aria-disabled]="confirming()"
+          >
+            {{ i18n.t(cancelling() ? 'backOffice.quote.cancelling' : 'backOffice.quote.cancel') }}
+          </button>
+        </form>
+      </section>
+      } } } @case ('document') { @if (revision(); as revision) {
+      <app-quote-document [quoteId]="quote.id" [clientId]="quote.clientId" [revision]="revision" />
+      } @else {
+      <p appNotice variant="danger" role="alert">{{ i18n.t('quote.not_found') }}</p>
+      } } @case ('versions') {
+      <div appDataTable>
+        <table>
+          <caption>
+            {{ i18n.t('commercial.versionOrder') }}
+          </caption>
+          <thead>
+            <tr>
+              <th scope="col">{{ i18n.t('commercial.versions') }}</th>
+              <th scope="col">{{ i18n.t('backOffice.affair.timeline.date') }}</th>
+              <th scope="col" class="amount">{{ i18n.t('commercial.quoteAmount') }}</th>
+              <th scope="col">{{ i18n.t('commercial.document') }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (revision of revisions(); track revision.id) {
+            <tr>
+              <th scope="row">
+                {{ i18n.tf('commercial.revision', { version: revision.version }) }} · {{
+                revision.title }}
+              </th>
+              <td>{{ date(revision.createdAt) }}</td>
+              <td class="amount">{{ money(revision.totalCents) }}</td>
+              <td>
+                <a
+                  [routerLink]="['/backoffice/quotes', quote.id, 'document']"
+                  [queryParams]="revisionQuery(revision.version)"
+                  >{{ i18n.t('backOffice.quote.preview.show') }}</a
+                >
+              </td>
+            </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      } }
+    </section>
+  </ng-template>
+  } } }
+</section>

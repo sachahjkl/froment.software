@@ -1,8 +1,31 @@
 import { operation, setupEmailPage } from './email-workspace.spec-helper';
 import { Emails } from './emails';
 import { installScrollIntoView } from '@shared/filter-choice/filter-choice.spec-helper';
+import { TestBed } from '@angular/core/testing';
+import { I18nService } from '@app/i18n.service';
 
 describe('Emails', () => {
+  it.each([
+    ['fr', ['0 résultat ·', '1 résultat ·', '2 résultats ·']],
+    ['en', ['0 results ·', '1 result ·', '2 results ·']],
+  ] as const)('agrees the displayed result count in %s', async (language, labels) => {
+    const { root, harness, api } = await setupEmailPage('/backoffice/courriels/messages');
+    TestBed.inject(I18nService).setLanguage(language);
+    const page = harness.routeDebugElement!.componentInstance as Emails;
+    for (const count of [0, 1, 2]) {
+      api.list.mockResolvedValue(
+        Array.from({ length: count }, (_, index) => ({
+          ...operation,
+          id: `${operation.id.slice(0, -1)}${index}`,
+        })),
+      );
+      await page['load']('messages');
+      await harness.fixture.whenStable();
+      expect(root.querySelector('app-list-toolbar [role="status"]')?.textContent?.trim()).toContain(
+        labels[count],
+      );
+    }
+  });
   it('opens one filter panel at a time and commits only a selected state', async () => {
     const scrolling = installScrollIntoView();
     try {

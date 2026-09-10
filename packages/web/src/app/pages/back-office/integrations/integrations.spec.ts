@@ -57,7 +57,8 @@ describe('Integrations', () => {
     await fixture.whenStable();
     const root: HTMLElement = fixture.nativeElement;
     expect(root.textContent).toMatch(/production/);
-    root.querySelector<HTMLButtonElement>('.providers button')?.click();
+    fixture.componentInstance['domainForm'].kind().value.set('email');
+    root.querySelector<HTMLButtonElement>('form button')?.click();
     await fixture.whenStable();
     expect(api.requests).toHaveLength(1);
     expect(api.requests[0]).toMatchObject({
@@ -80,11 +81,12 @@ describe('Integrations', () => {
     await fixture.componentInstance.load();
     await fixture.whenStable();
     const root: HTMLElement = fixture.nativeElement;
-    root.querySelector<HTMLButtonElement>('.providers button')?.click();
+    fixture.componentInstance['domainForm'].kind().value.set('email');
+    root.querySelector<HTMLButtonElement>('form button')?.click();
     await fixture.whenStable();
     expect(root.querySelector('[role="alert"]')).not.toBeNull();
     api.failSubmission = false;
-    root.querySelector<HTMLButtonElement>('.providers button')?.click();
+    root.querySelector<HTMLButtonElement>('form button')?.click();
     await fixture.whenStable();
     expect(api.requests).toHaveLength(2);
     expect(api.requests[1]).toEqual(api.requests[0]);

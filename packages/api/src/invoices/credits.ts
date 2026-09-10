@@ -52,7 +52,8 @@ const make = Effect.gen(function* () {
     return InvoiceCredits.make({
       creditNote,
       refunds,
-      refundableCents: creditNote === null ? 0 : Number(BigInt(paid) - refunded),
+      refundableCents:
+        creditNote === null ? 0 : Number(BigInt(Math.min(paid, creditNote.totalCents)) - refunded),
     });
   };
   const get = Effect.fn('InvoiceCredits.get')((invoiceId: string) =>

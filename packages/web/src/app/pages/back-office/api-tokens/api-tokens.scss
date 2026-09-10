@@ -16,8 +16,7 @@ header h2 + p {
   margin-top: var(--space-2);
 }
 
-header,
-.dialog-heading {
+header {
   display: flex;
   align-items: start;
   justify-content: space-between;
@@ -33,25 +32,6 @@ header p {
   min-width: 18rem;
   max-width: 32rem;
   overflow-wrap: anywhere;
-}
-
-dialog {
-  width: min(68rem, calc(100% - 2rem));
-  max-height: calc(100dvh - 2rem);
-  padding: 0;
-  border: 1px solid var(--color-line-strong);
-  background: var(--color-surface);
-  color: inherit;
-}
-
-dialog::backdrop {
-  background: rgb(0 0 0 / 55%);
-}
-
-.dialog-content {
-  display: grid;
-  gap: var(--space-5);
-  padding: var(--space-6);
 }
 
 .field {
@@ -94,8 +74,7 @@ fieldset {
 }
 
 @media (max-width: 42rem) {
-  header,
-  .dialog-heading {
+  header {
     align-items: stretch;
     flex-direction: column;
   }

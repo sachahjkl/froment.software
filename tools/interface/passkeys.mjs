@@ -69,26 +69,30 @@ export async function checkPasskeys(page, testInfo) {
     return route.fulfill({ json: keys });
   });
   try {
-    await page.goto(page.url().replace("127.0.0.1", "localhost"));
+    const origin = new URL(page.url().replace("127.0.0.1", "localhost")).origin;
+    await page.goto(`${origin}/backoffice/account/passkeys`);
     const panel = page.locator("app-account-passkeys");
+    await expect(page.locator("app-account-layout")).toHaveClass(/page-container/);
+    await expect(page.locator("app-account-security")).toHaveCount(0);
+    await expect(page.locator("app-account-sessions")).toHaveCount(0);
     await panel.getByLabel(/Nom de la clé|Passkey name/).fill("Laptop");
     await panel.getByLabel(/Mot de passe actuel|Current password/).fill("administrator-password");
     await panel.getByRole("button", { name: /Ajouter une clé|Add a passkey/ }).click();
     await expect(panel.getByText("Laptop", { exact: true })).toBeVisible();
     expect(registration.response.attestationObject).toBeTruthy();
     expect(registration.response.clientDataJSON).toBeTruthy();
-    await page.goto("http://localhost:4300/backoffice/login");
+    await page.goto(`${origin}/backoffice/login`);
     await page
       .getByRole("button", { name: /Se connecter avec une clé|Sign in with a passkey/ })
       .click();
     await expect(page).toHaveURL(/\/backoffice\/dashboard$/);
     expect(assertion.id).toBe(registration.id);
     expect(assertion.response.signature).toBeTruthy();
-    const navigation = page.locator(".navigation-trigger");
-    await expect(page.locator(".workspace-header")).toBeVisible();
-    if (await navigation.isVisible()) await navigation.click();
-    await page.locator(".account summary:visible").click();
-    await page.getByRole("link", { name: /Sécurité du compte|Account security/ }).click();
+    await page.goto(`${origin}/backoffice/account/security`);
+    await expect(page.locator("app-account-security")).toBeVisible();
+    await expect(panel).toHaveCount(0);
+    await page.locator('app-account-layout a[href$="/passkeys"]').click();
+    await expect(page).toHaveURL(/\/backoffice\/account\/passkeys$/);
     await panel.getByLabel(/Mot de passe actuel|Current password/).fill("administrator-password");
     await panel.getByRole("button", { name: /Retirer Laptop|Remove Laptop/ }).click();
     await page

@@ -5,6 +5,40 @@ import { TestBed } from '@angular/core/testing';
 import { InvoicesApi } from './invoices-api';
 
 describe('InvoicesApi', () => {
+  it('decodes the workspace limit only for the four bounded reads', async () => {
+    TestBed.configureTestingModule({
+      providers: [provideHttpClient(), provideHttpClientTesting()],
+    });
+    const api = TestBed.inject(InvoicesApi);
+    const http = TestBed.inject(HttpTestingController);
+    const invoiceId = '01ARZ3NDEKTSV4RRFFQ69G5FAY';
+    const failure = { _tag: 'InvoiceWorkspaceLimitExceeded', code: 'invoice.workspace_limit' };
+    const responses = [
+      { path: '/api/invoice-payments', request: () => api.receipts() },
+      { path: '/api/credit-notes', request: () => api.credits() },
+      { path: '/api/invoice-refunds', request: () => api.refunds() },
+      { path: `/api/invoices/${invoiceId}/history`, request: () => api.history(invoiceId) },
+    ];
+    for (const response of responses) {
+      const result = response.request();
+      http
+        .expectOne(response.path)
+        .flush(failure, { status: 413, statusText: 'Content Too Large' });
+      await expect(result).resolves.toMatchObject({
+        success: false,
+        status: 413,
+        code: 'invoice.workspace_limit',
+        failure,
+      });
+    }
+    const detail = api.get(invoiceId);
+    http.expectOne(`/api/invoices/${invoiceId}`).flush(failure, {
+      status: 413,
+      statusText: 'Content Too Large',
+    });
+    await expect(detail).resolves.toMatchObject({ success: false, code: 'invoice.error' });
+    http.verify();
+  });
   it('downloads CSV text and decodes export failures returned as text', async () => {
     TestBed.configureTestingModule({
       providers: [provideHttpClient(), provideHttpClientTesting()],

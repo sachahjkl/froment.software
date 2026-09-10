@@ -321,6 +321,13 @@ export {
   InvoiceVersionConflict,
 } from './invoices/contracts.js';
 export {
+  InvoiceReceiptList,
+  CreditNoteList,
+  InvoiceRefundList,
+  InvoiceHistory,
+  InvoiceWorkspaceLimitExceeded,
+} from './invoices/workspace.js';
+export {
   CatalogItem,
   CatalogItemCreateRequest,
   CatalogItemList,
@@ -395,6 +402,7 @@ export {
   BankUnmatchRequest,
   BankImportRequest,
   BankImportResult,
+  BankImportPreview,
   BankFailure,
   BankImportInvalid,
   BankMatchConflict,

@@ -1,0 +1,96 @@
+:host {
+  display: block;
+}
+.bank-page {
+  display: grid;
+  gap: var(--space-6);
+  padding: var(--page-header-y) var(--page-x);
+  min-inline-size: 0;
+}
+.bank-section {
+  display: grid;
+  gap: var(--space-4);
+  min-inline-size: 0;
+}
+.actions,
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  align-items: end;
+}
+.field {
+  display: grid;
+  gap: var(--space-2);
+  min-inline-size: 0;
+}
+.muted,
+small {
+  color: var(--color-muted);
+}
+small {
+  display: block;
+  font-size: var(--text-sm);
+  font-weight: normal;
+}
+.amount {
+  text-align: end;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+.field-error {
+  color: var(--color-danger);
+  font-size: var(--text-sm);
+}
+.task-form {
+  display: grid;
+  gap: var(--space-4);
+  max-inline-size: 42rem;
+}
+.task-panel {
+  padding: var(--space-5);
+  display: grid;
+  gap: var(--space-4);
+  min-inline-size: 0;
+}
+.context {
+  display: grid;
+  grid-template-columns: minmax(16rem, 1fr) minmax(0, 2fr);
+  gap: var(--space-6);
+  align-items: start;
+}
+dl {
+  display: grid;
+  gap: var(--space-3);
+}
+dt {
+  color: var(--color-muted);
+  font-size: var(--text-sm);
+}
+dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+input,
+select,
+textarea {
+  min-inline-size: 0;
+  max-inline-size: 100%;
+}
+.pre-wrap {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+button {
+  max-inline-size: 100%;
+  white-space: normal;
+}
+[tabindex="-1"]:focus {
+  outline: 2px solid var(--color-button-primary-highlight);
+  outline-offset: var(--space-1);
+}
+@media (max-width: 60rem) {
+  .context {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

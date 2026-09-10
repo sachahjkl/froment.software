@@ -1,0 +1,67 @@
+<section>
+  <a routerLink="/backoffice/services/stripe/tests" [queryParams]="table.params()"
+    >{{ i18n.t('configurationWorkspace.backTests') }}</a
+  >
+  <h1>{{ i18n.t('connections.stripe') }} — {{ i18n.t('configurationWorkspace.testDetail') }}</h1>
+  <button appButton type="button" [disabled]="loading()" (click)="load()">
+    {{ i18n.t('checkout.refresh') }}
+  </button>
+  @if (paused()) {
+  <p appNotice variant="warning">{{ i18n.t('checkout.paused') }}</p>
+  }
+  <p #progress role="status" tabindex="-1">
+    @if (current(); as item) { {{ item.invoiceNumber }} — {{ i18n.t(labels[item.status]) }} } @else
+    { {{ i18n.t(historyLoaded() ? 'checkout.requestNotFound' : paused() ? 'checkout.historyUnknown'
+    : 'checkout.historyLoading') }} }
+  </p>
+  @if (current(); as item) { @if (item.error; as code) {
+  <p appNotice variant="warning">{{ i18n.t(code) }}</p>
+  }
+  <dl>
+    <dt>{{ i18n.t('checkout.amount') }}</dt>
+    <dd>{{ money(item.amountCents) }}</dd>
+    <dt>{{ i18n.t('checkout.attempts') }}</dt>
+    <dd>{{ item.attempts }}</dd>
+    <dt>{{ i18n.t('checkout.expiresAt') }}</dt>
+    <dd>
+      {{ item.expiresAt | localizedDate: i18n.language(): { dateStyle: 'medium', timeStyle: 'short'
+      } }}
+    </dd>
+    <dt>{{ i18n.t('checkout.updatedAt') }}</dt>
+    <dd>
+      {{ item.updatedAt | localizedDate: i18n.language(): { dateStyle: 'medium', timeStyle: 'short'
+      } }}
+    </dd>
+    @if (item.nextAttemptAt; as next) {
+    <dt>{{ i18n.t('checkout.nextAttempt') }}</dt>
+    <dd>
+      {{ next | localizedDate: i18n.language(): { dateStyle: 'medium', timeStyle: 'short' } }}
+    </dd>
+    }
+  </dl>
+  <a [routerLink]="['/backoffice/invoices', item.request.invoiceId]"
+    >{{ i18n.t('checkout.viewInvoice') }}</a
+  >
+  @if (canOpen(item)) {
+  <a
+    appLinkButton
+    variant="primary"
+    [href]="item.checkoutUrl"
+    rel="noreferrer noopener"
+    target="_blank"
+    >{{ i18n.t('checkout.openStripe') }}</a
+  >
+  <p>{{ i18n.t('checkout.testCard') }}</p>
+  }
+  <p>{{ i18n.t('checkout.returnHint') }}</p>
+  <details>
+    <summary>{{ i18n.t('checkout.identifiers') }}</summary>
+    <dl>
+      <dt>{{ i18n.t('checkout.requestId') }}</dt>
+      <dd><code>{{ item.request.requestId }}</code></dd>
+      <dt>{{ i18n.t('checkout.sessionId') }}</dt>
+      <dd><code>{{ item.sessionId ?? '—' }}</code></dd>
+    </dl>
+  </details>
+  }
+</section>

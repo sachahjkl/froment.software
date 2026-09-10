@@ -1,0 +1,350 @@
+<section class="bank-page" aria-labelledby="match-title">
+  <a routerLink="/backoffice/banque" [queryParams]="backQuery"
+    >{{ i18n.t('bankWorkspace.back') }}</a
+  >
+  <app-page-header
+    ><h1 id="match-title">
+      {{ i18n.t((transaction()?.amountCents ?? 0) < 0 ? 'bankWorkspace.context' :
+      'bankWorkspace.reconciliation') }}
+    </h1>
+    <p class="muted">{{ i18n.t('bank.noTransfer') }}</p></app-page-header
+  >
+  <div #result tabindex="-1" role="status">
+    @if (saved()) {
+    <p appNotice variant="success">{{ i18n.t('bank.saved') }}</p>
+    }
+  </div>
+  @if (error(); as error) {
+  <p appNotice variant="danger" role="alert">{{ i18n.t(error) }}</p>
+  @if (state() === 'ready' && !pendingMatch() && !pendingCancellation()) {
+  <div>
+    <button appButton type="button" [disabled]="busy()" (click)="refresh()">
+      {{ i18n.t('bank.reload') }}
+    </button>
+  </div>
+  } } @if (state() === 'loading') {
+  <p role="status">{{ i18n.t('bank.loading') }}</p>
+  } @else if (state() === 'error') {
+  <div><button appButton type="button" (click)="load()">{{ i18n.t('bank.reload') }}</button></div>
+  } @else if (transaction(); as item) {
+  <div class="context">
+    <aside class="ds-panel task-panel" aria-labelledby="transaction-title">
+      <h2 id="transaction-title">{{ item.reference }}</h2>
+      <p class="pre-wrap">{{ item.description }}</p>
+      <dl>
+        <div>
+          <dt>{{ i18n.t('bankWorkspace.account') }}</dt>
+          <dd>{{ item.account }}</dd>
+        </div>
+        <div>
+          <dt>{{ i18n.t('bankWorkspace.date') }}</dt>
+          <dd>{{ item.bookedOn | localizedDate: i18n.language() }}</dd>
+        </div>
+        <div>
+          <dt>{{ i18n.t('bankWorkspace.amount') }}</dt>
+          <dd>{{ money(item.amountCents) }}</dd>
+        </div>
+        <div>
+          <dt>{{ i18n.t('bankWorkspace.status') }}</dt>
+          <dd><span appBadge>{{ i18n.t(status()) }}</span></dd>
+        </div>
+        @if (item.amountCents > 0) {
+        <div>
+          <dt>{{ i18n.t('bank.allocated') }}</dt>
+          <dd>{{ money(item.matchedCents) }}</dd>
+        </div>
+        <div>
+          <dt>{{ i18n.t('bank.remaining') }}</dt>
+          <dd>{{ money(remaining()) }}</dd>
+        </div>
+        }
+      </dl>
+      <p class="muted">{{ i18n.t('bankWorkspace.accountHint') }}</p>
+      <a routerLink="/backoffice/banque/ecritures" [queryParams]="ledgerQuery()"
+        >{{ i18n.t('bankWorkspace.entries') }}</a
+      >
+    </aside>
+    <div class="bank-section">
+      @if (item.amountCents > 0 && remaining() > 0) {
+      <section class="bank-section" aria-labelledby="allocation-title">
+        <h2 id="allocation-title">{{ i18n.t('bankWorkspace.allocate') }}</h2>
+        <p>{{ i18n.t('bankWorkspace.groupHint') }}</p>
+        <p class="muted">{{ i18n.t('bankWorkspace.paymentHint') }}</p>
+        @if (invoicesFailed()) {
+        <p appNotice variant="danger" role="alert">{{ i18n.t('bank.error') }}</p>
+        <div>
+          <button appButton type="button" (click)="loadInvoices()">
+            {{ i18n.t('bank.reload') }}
+          </button>
+        </div>
+        } @else if (invoicesLoading()) {
+        <p role="status">{{ i18n.t('bank.loading') }}</p>
+        } @else if (!invoices().length) {
+        <p>{{ i18n.t('bankWorkspace.noInvoices') }}</p>
+        }
+        <form class="task-form" novalidate (submit)="reconcile($event)">
+          <label class="field"
+            >{{ i18n.t('bank.invoice') }}<select
+              #invoice
+              class="select"
+              [formField]="matchForm.invoiceId"
+              (change)="selectInvoice(invoice.value)"
+              aria-describedby="invoice-error"
+              [attr.aria-invalid]="invalid('invoiceId')"
+            >
+              <option value="">{{ i18n.t('bank.chooseInvoice') }}</option>
+              @for (invoice of invoices(); track invoice.id) {
+              <option [value]="invoice.id">
+                {{ invoice.invoiceNumber }} — {{ invoice.title }}
+              </option>
+              }</select
+            ><span id="invoice-error" class="field-error"
+              >@if (invalid('invoiceId')) { {{ i18n.t('bankWorkspace.invoiceInvalid') }} }</span
+            ></label
+          >
+          @if (matchForm.invoiceId().value()) {
+          <a [routerLink]="['/backoffice/invoices', matchForm.invoiceId().value()]"
+            >{{ i18n.t('bankWorkspace.viewInvoice') }}</a
+          >
+          } @if (paymentState() === 'loading') {
+          <p role="status">{{ i18n.t('bank.loading') }}</p>
+          } @else if (paymentState() === 'error') {
+          <p appNotice variant="danger" role="alert">{{ i18n.t('bank.error') }}</p>
+          <div>
+            <button appButton type="button" (click)="selectInvoice(matchForm.invoiceId().value())">
+              {{ i18n.t('bank.reload') }}
+            </button>
+          </div>
+          } @else if (paymentState() === 'ready' && !payments().length) {
+          <p>{{ i18n.t('bankWorkspace.noPayments') }}</p>
+          }
+          <label class="field"
+            >{{ i18n.t('bankWorkspace.payment') }}<select
+              class="select"
+              [formField]="matchForm.paymentId"
+              aria-describedby="payment-error"
+              [attr.aria-invalid]="invalid('paymentId')"
+            >
+              <option value="">{{ i18n.t('bankWorkspace.choosePayment') }}</option>
+              @for (payment of payments(); track payment.id) {
+              <option [value]="payment.id">
+                {{ payment.reference }} — {{ payment.paidOn | localizedDate: i18n.language() }} — {{
+                money(payment.availableCents) }}
+              </option>
+              }</select
+            ><span id="payment-error" class="field-error"
+              >@if (invalid('paymentId')) { {{ i18n.t('bankWorkspace.paymentInvalid') }} }</span
+            ></label
+          >
+          <label class="field"
+            >{{ i18n.t('bank.allocationAmount') }}<input
+              class="input"
+              inputmode="decimal"
+              [formField]="matchForm.amount"
+              aria-describedby="amount-error net-error"
+              [attr.aria-invalid]="invalid('amount') || netInvalid()"
+            /><span id="amount-error" class="field-error"
+              >@if (invalid('amount')) { {{ i18n.t('bankWorkspace.amountInvalid') }} }</span
+            ></label
+          >
+          <label class="field"
+            >{{ i18n.t('bank.feeAmount') }}<input
+              class="input"
+              inputmode="decimal"
+              [formField]="matchForm.fee"
+              aria-describedby="fee-error fee-hint"
+              [attr.aria-invalid]="invalid('fee')"
+            /><span id="fee-error" class="field-error"
+              >@if (invalid('fee')) { {{ i18n.t('bankWorkspace.feeInvalid') }} }</span
+            ></label
+          >
+          <p id="fee-hint">{{ i18n.t('bank.feeHint') }}</p>
+          @if (net() !== undefined) {
+          <p>{{ i18n.t('bankWorkspace.net') }} : {{ money(net() ?? 0) }}</p>
+          }
+          <p id="net-error" class="field-error">
+            @if (netInvalid()) { {{ i18n.t('bankWorkspace.netInvalid') }} }
+          </p>
+          @if (pendingMatch()) {
+          <p appNotice variant="warning">{{ i18n.t('bankWorkspace.retryHint') }}</p>
+          }
+          <div>
+            <button
+              appButton
+              type="submit"
+              variant="primary"
+              [disabled]="busy() || !!cancelling() || invoicesLoading() || paymentState() === 'loading'"
+            >
+              {{ i18n.t(pendingMatch() ? 'bankWorkspace.retry' : 'bank.reconcile') }}
+            </button>
+          </div>
+        </form>
+      </section>
+      }
+      <section class="bank-section" aria-labelledby="allocations-title">
+        <h2 id="allocations-title">{{ i18n.t('bankWorkspace.allocations') }}</h2>
+        <p class="muted">{{ i18n.t('bankWorkspace.immutable') }}</p>
+        @if (!item.allocations.length) {
+        <p>{{ i18n.t('bankWorkspace.noAllocations') }}</p>
+        } @else {
+        <div appDataTable tableLayout="fluid">
+          <table>
+            <thead>
+              <tr>
+                @for (column of allocationColumns; track column.key) {
+                <th
+                  scope="col"
+                  [class.amount]="column.kind === 'number'"
+                  [attr.aria-sort]="sortDirection('allocation', column.key)"
+                >
+                  <button
+                    appTableSort
+                    [label]="i18n.t(column.label)"
+                    [direction]="sortDirection('allocation', column.key)"
+                    (click)="sortBy('allocation', column.key)"
+                  ></button>
+                </th>
+                }
+                <th scope="col">{{ i18n.t('bank.allocation') }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (allocation of sortedAllocations(); track allocation.matchId) {
+              <tr>
+                <th scope="row">
+                  <a [routerLink]="['/backoffice/invoices', allocation.invoiceId]"
+                    >{{ allocation.invoiceNumber }}</a
+                  >@if (allocation.paymentCancelled) {
+                  <small>{{ i18n.t('bank.paymentCancelled') }}</small> }
+                </th>
+                <td>{{ allocation.paymentId }}</td>
+                <td class="amount">{{ money(allocation.amountCents) }}</td>
+                <td class="amount">{{ money(allocation.feeCents) }}</td>
+                <td>
+                  <button
+                    appButton
+                    type="button"
+                    variant="warning"
+                    [disabled]="busy() || !!pendingMatch() || !!pendingCancellation()"
+                    (click)="selectCancellation(allocation)"
+                  >
+                    {{ i18n.t('bankWorkspace.cancelAllocation') }}
+                  </button>
+                </td>
+              </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+        } @if (cancelling(); as allocation) {
+        <form class="ds-panel task-panel task-form" novalidate (submit)="cancelAllocation($event)">
+          <h3>{{ i18n.t('bankWorkspace.cancelContext') }}</h3>
+          <p>
+            {{ allocation.invoiceNumber }} · {{ allocation.paymentId }} · {{
+            money(allocation.amountCents) }} · {{ i18n.t('bank.fees') }} {{
+            money(allocation.feeCents) }}
+          </p>
+          <p>{{ i18n.t('bankWorkspace.feePosted') }}</p>
+          <a routerLink="/backoffice/banque/ecritures" [queryParams]="ledgerQuery()"
+            >{{ i18n.t('bankWorkspace.viewFees') }}</a
+          >
+          <label class="field"
+            >{{ i18n.t('bank.reason') }}<textarea
+              #cancelReason
+              class="input"
+              rows="3"
+              [formField]="cancelForm.reason"
+              aria-describedby="reason-error"
+              [attr.aria-invalid]="cancelForm.reason().touched() && cancelForm.reason().invalid()"
+            ></textarea
+            ><span id="reason-error" class="field-error"
+              >@if (cancelForm.reason().touched() && cancelForm.reason().invalid()) { {{
+              i18n.t('bankWorkspace.reasonInvalid') }} }</span
+            ></label
+          >
+          @if (pendingCancellation()) {
+          <p appNotice variant="warning">{{ i18n.t('bankWorkspace.retryHint') }}</p>
+          }
+          <div class="actions">
+            <button appButton type="submit" variant="warning" [disabled]="busy()">
+              {{ i18n.t(pendingCancellation() ? 'bankWorkspace.retry' :
+              'bankWorkspace.cancelAllocation') }}</button
+            ><button
+              appButton
+              type="button"
+              [disabled]="busy() || !!pendingCancellation()"
+              (click)="closeCancellation()"
+            >
+              {{ i18n.t('bankWorkspace.cancelClose') }}
+            </button>
+          </div>
+        </form>
+        }
+      </section>
+    </div>
+  </div>
+  <section class="bank-section" aria-labelledby="history-title">
+    <h2 id="history-title">{{ i18n.t('bank.history') }}</h2>
+    <p class="muted">{{ i18n.t('bank.historyHint') }}</p>
+    <p class="muted">{{ i18n.t('bankWorkspace.historySortLoaded') }}</p>
+    @if (historyState() === 'loading') {
+    <p role="status">{{ i18n.t('bank.loading') }}</p>
+    } @else if (historyState() === 'error') {
+    <p appNotice variant="danger" role="alert">{{ i18n.t('bank.error') }}</p>
+    <div>
+      <button appButton type="button" (click)="loadHistory()">{{ i18n.t('bank.reload') }}</button>
+    </div>
+    } @else if (!history().length) {
+    <p>{{ i18n.t('bank.historyEmpty') }}</p>
+    } @else {
+    <div appDataTable tableLayout="fluid">
+      <table>
+        <thead>
+          <tr>
+            @for (column of historyColumns; track column.key) {
+            <th
+              scope="col"
+              [class.amount]="column.kind === 'number'"
+              [attr.aria-sort]="sortDirection('history', column.key)"
+            >
+              <button
+                appTableSort
+                [label]="i18n.t(column.label)"
+                [direction]="sortDirection('history', column.key)"
+                (click)="sortBy('history', column.key)"
+              ></button>
+            </th>
+            }
+          </tr>
+        </thead>
+        <tbody>
+          @for (entry of sortedHistory(); track entry.id) {
+          <tr>
+            <th scope="row">
+              <a [routerLink]="['/backoffice/invoices', entry.invoiceId]"
+                >{{ entry.invoiceNumber }}</a
+              ><small>{{ entry.paymentId }}</small>
+            </th>
+            <td>
+              {{ entry.matchedAt | localizedDate: i18n.language(): { dateStyle: 'medium', timeStyle:
+              'short' } }}<small>{{ entry.matchedByUserId }}</small>
+            </td>
+            <td class="amount">{{ money(entry.amountCents) }}</td>
+            <td class="amount">{{ money(entry.feeCents) }}</td>
+            <td>
+              @if (entry.cancelledAt !== null) { {{ entry.cancelledAt | localizedDate:
+              i18n.language(): { dateStyle: 'medium', timeStyle: 'short' } }}<small
+                >{{ entry.cancelledByUserId }}</small
+              >
+              <p class="pre-wrap">{{ entry.cancellationReason }}</p>
+              } @else { — }
+            </td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    }
+  </section>
+  }
+</section>

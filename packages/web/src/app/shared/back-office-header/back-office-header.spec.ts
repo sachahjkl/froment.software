@@ -1,4 +1,5 @@
 import { TestBed } from '@angular/core/testing';
+import { provideHttpClient } from '@angular/common/http';
 import { provideRouter, Router } from '@angular/router';
 import { afterEach, beforeEach, vi } from 'vitest';
 
@@ -20,6 +21,7 @@ describe('BackOfficeHeader', () => {
     TestBed.configureTestingModule({
       providers: [
         provideRouter([]),
+        provideHttpClient(),
         {
           provide: Authentication,
           useValue: {
@@ -57,7 +59,8 @@ describe('BackOfficeHeader', () => {
     expect(root.querySelector('.sidebar-bottom app-theme-toggle')).not.toBeNull();
     expect(root.querySelector('.brand')).toBeNull();
     expect(root.querySelector('header a[href="/api/docs"]')?.getAttribute('target')).toBe('_blank');
-    expect(root.querySelectorAll('app-back-office-nav a svg')).toHaveLength(8);
+    expect(root.querySelectorAll('app-back-office-nav a svg')).toHaveLength(12);
+    expect(root.querySelector('app-global-search')).not.toBeNull();
     expect(root.querySelector<HTMLSelectElement>('app-language-selector select')?.value).toBe('en');
     expect(root.querySelector('a[href="/services"]')).toBeNull();
     const navigate = vi.spyOn(TestBed.inject(Router), 'navigateByUrl').mockResolvedValue(false);
@@ -65,5 +68,32 @@ describe('BackOfficeHeader', () => {
     await fixture.whenStable();
     expect(navigate).toHaveBeenCalledWith('/backoffice/sign-out');
     expect(signOut).not.toHaveBeenCalled();
+  });
+  it('keeps business search and administrative subjects out of the customer shell', async () => {
+    TestBed.configureTestingModule({
+      providers: [
+        provideRouter([]),
+        {
+          provide: Authentication,
+          useValue: {
+            currentAccount: () =>
+              Promise.resolve({
+                userId: '01ARZ3NDEKTSV4RRFFQ69G5FAV',
+                email: 'client@example.test',
+                mode: 'client',
+              }),
+          },
+        },
+      ],
+    });
+    const fixture = TestBed.createComponent(BackOfficeHeader);
+    await fixture.whenStable();
+    const root: HTMLElement = fixture.nativeElement;
+    expect(root.querySelector('app-global-search')).toBeNull();
+    expect(root.querySelector('app-back-office-nav')).toBeNull();
+    expect(root.querySelector('a[href="/backoffice/equipe"]')).toBeNull();
+    expect(root.querySelector('a[href="/backoffice/api"]')).toBeNull();
+    expect(root.querySelector('.client-navigation a')?.textContent?.trim()).toBe('Documents');
+    expect(root.querySelector('.workspace-label')?.textContent?.trim()).toBe('Documents');
   });
 });

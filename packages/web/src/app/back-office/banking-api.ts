@@ -6,7 +6,9 @@ import {
   BankMatchRequest,
   BankPaymentList,
   BankImportResult,
+  BankImportPreview,
   BankTransactionList,
+  BankTransaction,
   type BankImportRequestValue,
 } from '@froment/contracts';
 import { Schema } from 'effect';
@@ -37,10 +39,26 @@ export class BankingApi {
       await firstValueFrom(this.http.get<unknown>('/api/banking/transactions')),
     );
   }
+  get(id: string) {
+    return requestOutcome(
+      this.http.get<unknown>(`/api/banking/transactions/${id}`),
+      BankTransaction,
+      BankFailure,
+      'bank.error',
+    );
+  }
   importStatement(request: BankImportRequestValue) {
     return requestOutcome(
       this.http.post<unknown>('/api/banking/import', request),
       BankImportResult,
+      BankFailure,
+      'bank.error',
+    );
+  }
+  previewStatement(request: BankImportRequestValue) {
+    return requestOutcome(
+      this.http.post<unknown>('/api/banking/import/preview', request),
+      BankImportPreview,
       BankFailure,
       'bank.error',
     );

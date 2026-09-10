@@ -40,6 +40,13 @@ import { requirePermissions } from '../api-policy/permissions.js';
 import { rateLimit, RateLimits } from '../api-policy/rate-limit.js';
 import { frontendSpecific } from '../api-policy/visibility.js';
 import { Permissions } from '../permissions.js';
+import {
+  InvoiceReceiptList,
+  CreditNoteList,
+  InvoiceRefundList,
+  InvoiceHistory,
+  InvoiceWorkspaceLimitExceeded,
+} from './workspace.js';
 
 const invoiceReadErrors = [
   AuthenticationRequired.pipe(HttpApiSchema.status(401)),
@@ -61,6 +68,27 @@ const InvoiceRevisionCreatePayload = Schema.Struct({
 }).annotate({ identifier: 'InvoiceRevisionCreateRequest' });
 
 export class InvoicesApi extends HttpApiGroup.make('invoices', { topLevel: true }).add(
+  HttpApiEndpoint.get('invoiceReceiptList', '/api/invoice-payments', {
+    success: InvoiceReceiptList,
+    error: [...invoiceReadErrors, InvoiceWorkspaceLimitExceeded],
+  }).pipe(requirePermissions([Permissions.paymentRead, Permissions.invoiceRead]), authenticate),
+  HttpApiEndpoint.get('creditNoteList', '/api/credit-notes', {
+    success: CreditNoteList,
+    error: [...invoiceReadErrors, InvoiceWorkspaceLimitExceeded],
+  }).pipe(requirePermissions([Permissions.invoiceRead]), authenticate),
+  HttpApiEndpoint.get('invoiceRefundList', '/api/invoice-refunds', {
+    success: InvoiceRefundList,
+    error: [...invoiceReadErrors, InvoiceWorkspaceLimitExceeded],
+  }).pipe(requirePermissions([Permissions.paymentRead, Permissions.invoiceRead]), authenticate),
+  HttpApiEndpoint.get('invoiceHistory', '/api/invoices/:invoiceId/history', {
+    params: { invoiceId: Ulid },
+    success: InvoiceHistory,
+    error: [...invoiceReadErrors, InvoiceNotFound, InvoiceWorkspaceLimitExceeded],
+  }).pipe(
+    requirePermissions([Permissions.invoiceRead, Permissions.auditRead]),
+    authenticate,
+    frontendSpecific,
+  ),
   HttpApiEndpoint.get('invoicePaymentExport', '/api/invoice-payments/export', {
     query: PaymentExportQuery,
     success: Schema.Uint8Array.pipe(

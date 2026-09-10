@@ -69,7 +69,7 @@
           [pending]="viewState(tab) !== 'ready' || busy()"
         />
         <span listSummary role="status"
-          >@if (viewState(tab) === 'ready') { {{ i18n.tf(tab === 'messages' ?
+          >@if (viewState(tab) === 'ready') { {{ i18n.plural(tab === 'messages' ?
           'emailsWorkspace.messageCount' : tab === 'reminders' ? 'emailsWorkspace.reminderCount' :
           'emailsWorkspace.count', { count: count(tab) }) }} }</span
         ></app-list-toolbar

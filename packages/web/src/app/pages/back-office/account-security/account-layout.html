@@ -1,0 +1,40 @@
+<header class="account-header">
+  <h1>{{ i18n.t('configurationWorkspace.account') }}</h1>
+  <a routerLink="/backoffice/sign-out">{{ i18n.t('backOffice.signOut') }}</a>
+</header>
+<nav [attr.aria-label]="i18n.t('configurationWorkspace.account')">
+  <a routerLink="security" routerLinkActive="active" ariaCurrentWhenActive="page"
+    >{{ i18n.t('configurationWorkspace.security') }}</a
+  >
+  <a routerLink="passkeys" routerLinkActive="active" ariaCurrentWhenActive="page"
+    >{{ i18n.t('configurationWorkspace.passkeys') }}</a
+  >
+  <a routerLink="sessions" routerLinkActive="active" ariaCurrentWhenActive="page"
+    >{{ i18n.t('configurationWorkspace.sessions') }}</a
+  >
+</nav>
+<router-outlet />
+<section class="preferences" aria-labelledby="account-preferences">
+  <h2 id="account-preferences">{{ i18n.t('configurationWorkspace.preferences') }}</h2>
+  <app-theme-toggle />
+  <div class="languages" [attr.aria-label]="i18n.t('configurationWorkspace.language')">
+    <button
+      appButton
+      type="button"
+      [attr.aria-pressed]="i18n.language() === 'fr'"
+      (click)="i18n.setLanguage('fr')"
+      lang="fr"
+    >
+      {{ i18n.t('lang.fr') }}
+    </button>
+    <button
+      appButton
+      type="button"
+      [attr.aria-pressed]="i18n.language() === 'en'"
+      (click)="i18n.setLanguage('en')"
+      lang="en"
+    >
+      {{ i18n.t('lang.en') }}
+    </button>
+  </div>
+</section>

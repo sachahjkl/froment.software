@@ -1,0 +1,199 @@
+<app-story-page [entry]="entry" [definition]="definition">
+  <div storyControls class="settings">
+    <label>{{ text().label }}<input class="input" [formField]="controls.label" /></label>
+    @if (entry.id === 'copy-field') {
+    <label>{{ text().value }}<input class="input" [formField]="controls.value" /></label> } @if
+    (entry.id === 'copy-field') {
+    <label
+      >{{ text().description }}<input class="input" [formField]="controls.description"
+    /></label>
+    <label>{{ 'actionLabel' }}<input class="input" [formField]="controls.actionLabel" /></label>
+    } @if (entry.id === 'anchor-link') {
+    <label>{{ 'fragment' }}<input class="input" [formField]="controls.fragment" /></label> } @if
+    (entry.id === 'action-menu' || entry.id === 'split-action') {
+    <label
+      >{{ 'actions[0].label' }}<input class="input" [formField]="controls.commandLabel"
+    /></label>
+    <label
+      ><input type="checkbox" [formField]="controls.commandDisabled" />{{ 'actions[0].disabled'
+      }}</label
+    >
+    <label
+      ><input type="checkbox" [formField]="controls.commandDanger" />{{ 'actions[0].danger'
+      }}</label
+    >
+    } @if (entry.id === 'split-action') {
+    <label>{{ 'menuLabel' }}<input class="input" [formField]="controls.menuLabel" /></label> } @if
+    (entry.id !== 'copy-field' && entry.id !== 'anchor-link') {
+    <label
+      >{{ text().variant }}<select class="select" [formField]="controls.variant">
+        @for (variant of variants; track variant) {
+        <option [value]="variant">{{ variant }}</option>
+        }
+      </select></label
+    >
+    @if (entry.id !== 'link-button') {
+    <label><input type="checkbox" [formField]="controls.disabled" />{{ text().disabled }}</label> }
+    @if (entry.id !== 'split-action') {
+    <label><input type="checkbox" [formField]="controls.iconOnly" />{{ text().iconOnly }}</label> }
+    @if (entry.id === 'split-action') {
+    <label><input type="checkbox" [formField]="controls.menuDisabled" />{{ 'menuDisabled' }}</label>
+    } }
+  </div>
+  <div storyPreview class="sample">
+    @switch (entry.id) { @case ('button') {
+    <button
+      appButton
+      type="button"
+      [variant]="model().variant"
+      [iconOnly]="model().iconOnly"
+      [disabled]="model().disabled"
+      [attr.aria-label]="model().label"
+      (click)="event.set('click')"
+    >
+      <app-icon name="check" />@if (!model().iconOnly) { {{ model().label }} }
+    </button>
+    } @case ('link-button') {
+    <a
+      appLinkButton
+      routerLink="/design/button"
+      [variant]="model().variant"
+      [iconOnly]="model().iconOnly"
+      [attr.aria-label]="model().label"
+      ><app-icon name="arrow-left" />@if (!model().iconOnly) { {{ model().label }} }</a
+    >
+    } @case ('action-menu') {
+    <app-action-menu
+      [label]="model().label"
+      [actions]="actions()"
+      [variant]="model().variant"
+      [disabled]="model().disabled"
+      [iconOnly]="model().iconOnly"
+      (actionSelected)="event.set($event)"
+    />
+    } @case ('split-action') {
+    <app-split-action
+      [primaryLabel]="model().label"
+      [menuLabel]="model().menuLabel"
+      [actions]="actions()"
+      [variant]="model().variant"
+      [primaryDisabled]="model().disabled"
+      [menuDisabled]="model().menuDisabled"
+      (primaryAction)="event.set('primaryAction')"
+      (actionSelected)="event.set($event)"
+    />
+    } @case ('copy-field') {
+    <app-copy-field
+      [label]="model().label"
+      [value]="model().value"
+      [description]="model().description"
+      [actionLabel]="model().actionLabel"
+      [status]="event()"
+      (copy)="event.set(text().copied)"
+    />
+    } @case ('anchor-link') {
+    <h3 [id]="model().fragment">
+      {{ model().label }} <app-anchor-link [fragment]="model().fragment" />
+    </h3>
+    } }
+    <p class="event" role="status">{{ text().events }} : {{ event() }}</p>
+  </div>
+  <div storyVariants class="samples">
+    @if (entry.id === 'button' || entry.id === 'link-button' || entry.id === 'action-menu' ||
+    entry.id === 'split-action') { @for (variant of variants; track variant) {
+    <div class="sample" data-variant>
+      <code>{{ variant }}</code> @switch (entry.id) { @case ('button') {
+      <button appButton type="button" [variant]="variant" (click)="event.set(variant)">
+        {{ text().execute }}
+      </button>
+      } @case ('link-button') {
+      <a appLinkButton [variant]="variant" routerLink="/design/button">{{ 'Button' }}</a> } @case
+      ('action-menu') {
+      <app-action-menu
+        [label]="text().details"
+        [variant]="variant"
+        [actions]="actions()"
+        (actionSelected)="event.set($event)"
+      />
+      } @case ('split-action') {
+      <app-split-action
+        [primaryLabel]="text().execute"
+        [menuLabel]="text().details"
+        [variant]="variant"
+        [actions]="actions()"
+        (primaryAction)="event.set(variant)"
+        (actionSelected)="event.set($event)"
+      />
+      } }
+    </div>
+    }
+    <div class="sample" data-variant>
+      <code>{{ entry.id === 'split-action' ? 'primaryDisabled' : 'iconOnly' }}</code> @switch
+      (entry.id) { @case ('button') {
+      <button
+        appButton
+        type="button"
+        [iconOnly]="true"
+        [attr.aria-label]="text().execute"
+        (click)="event.set('iconOnly')"
+      >
+        <app-icon name="check" />
+      </button>
+      } @case ('link-button') {
+      <a appLinkButton routerLink="/design/button" [iconOnly]="true" [attr.aria-label]="'Button'"
+        ><app-icon name="arrow-left"
+      /></a>
+      } @case ('action-menu') {
+      <app-action-menu
+        [label]="text().details"
+        [iconOnly]="true"
+        [actions]="actions()"
+        (actionSelected)="event.set($event)"
+      />
+      } @case ('split-action') {
+      <app-split-action
+        [primaryLabel]="text().execute"
+        [menuLabel]="text().details"
+        [primaryDisabled]="true"
+        [actions]="actions()"
+        (actionSelected)="event.set($event)"
+      />
+      } }
+    </div>
+    @if (entry.id !== 'link-button') {
+    <div class="sample" data-variant>
+      <code>{{ text().disabled }}</code> @switch (entry.id) { @case ('button') {
+      <button appButton type="button" disabled>{{ text().execute }}</button> } @case ('action-menu')
+      { <app-action-menu [label]="text().details" [disabled]="true" [actions]="actions()" /> } @case
+      ('split-action') {
+      <app-split-action
+        [primaryLabel]="text().execute"
+        [menuLabel]="text().details"
+        [menuDisabled]="true"
+        [actions]="actions()"
+        (primaryAction)="event.set('primaryAction')"
+      />
+      } }
+    </div>
+    } } @else if (entry.id === 'copy-field') { @for (mode of ['value', 'description', 'link']; track
+    mode) {
+    <div class="sample" data-variant>
+      <code>{{ mode }}</code
+      ><app-copy-field
+        [label]="text().content"
+        [value]="'DEMO-1'"
+        [actionLabel]="text().copy"
+        [description]="mode === 'description' ? text().description : ''"
+        [href]="mode === 'link' ? '/design/copy-field' : undefined"
+        (copy)="event.set(text().copied)"
+      />
+    </div>
+    } } @else {
+    <div class="sample" data-variant>
+      <h3 id="reference-anchor-sample">
+        {{ text().content }} <app-anchor-link fragment="reference-anchor-sample" />
+      </h3>
+    </div>
+    }
+  </div>
+</app-story-page>

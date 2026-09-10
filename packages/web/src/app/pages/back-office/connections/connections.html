@@ -1,6 +1,6 @@
 <section aria-labelledby="connections-title">
   <header>
-    <h2 id="connections-title">{{ i18n.t('connections.title') }}</h2>
+    <h1 id="connections-title">{{ i18n.t('connections.title') }}</h1>
     <p>{{ i18n.t('connections.intro') }}</p>
   </header>
   <p appNotice variant="info">{{ i18n.t('connections.safety') }}</p>
@@ -16,6 +16,7 @@
   <p role="status">{{ i18n.t('connections.loading') }}</p>
   }
   <p id="connections-hint">{{ i18n.t('connections.credentialsHint') }}</p>
+  <p appNotice>{{ i18n.t('configurationWorkspace.notVerified') }}</p>
   @if (connections().length > 0) {
   <div appDataTable>
     <table aria-describedby="connections-hint">
@@ -44,11 +45,9 @@
             'connections.notConnected') }}
           </td>
           <td>
-            @if (connection.provider === 'resend') {
-            <a routerLink="resend">{{ i18n.t('connections.openResend') }}</a> } @else if
-            (connection.provider === 'stripe') {
-            <a routerLink="stripe">{{ i18n.t('checkout.openSettings') }}</a> } @else { {{
-            i18n.t('connections.pending') }} }
+            <a [routerLink]="[connection.provider]"
+              >{{ i18n.t('configurationWorkspace.connection') }}</a
+            >
           </td>
         </tr>
         }

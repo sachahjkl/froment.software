@@ -3,7 +3,8 @@ export const clientsWorkspaceText = {
     'clientsWorkspace.listIntro':
       'Retrouvez les coordonnées, les documents et les accès de chaque client.',
     'clientsWorkspace.search': 'Rechercher un client',
-    'clientsWorkspace.count': 'Résultats : {count}',
+    'clientsWorkspace.count.one': '{count} client',
+    'clientsWorkspace.count.other': '{count} clients',
     'clientsWorkspace.cancel': 'Annuler',
     'clientsWorkspace.noMatches': 'Aucun client ne correspond à la recherche',
     'clientsWorkspace.changeSearch': 'Modifiez la recherche ou consultez un autre onglet.',
@@ -24,7 +25,8 @@ export const clientsWorkspaceText = {
     'clientsWorkspace.listIntro':
       'Find each client’s contact details, documents, and access accounts.',
     'clientsWorkspace.search': 'Search clients',
-    'clientsWorkspace.count': 'Results: {count}',
+    'clientsWorkspace.count.one': '{count} client',
+    'clientsWorkspace.count.other': '{count} clients',
     'clientsWorkspace.cancel': 'Cancel',
     'clientsWorkspace.noMatches': 'No clients match the search',
     'clientsWorkspace.changeSearch': 'Change the search or select another tab.',

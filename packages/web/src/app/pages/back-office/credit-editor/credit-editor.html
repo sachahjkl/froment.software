@@ -1,0 +1,45 @@
+<section class="billing-page" aria-labelledby="credit-title">
+  <h1 id="credit-title">{{ i18n.t('credit.issue') }}</h1>
+  <app-invoice-task-summary />
+  <p appNotice>{{ i18n.t('billingWorkspace.creditHint') }}</p>
+  <app-invoice-task-feedback /> @if (credits.isLoading()) {
+  <p role="status">{{ i18n.t('backOffice.invoices.loading') }}</p>
+  } @else if (task.invoice() && !creditState()) {
+  <p appNotice variant="danger" role="alert">{{ i18n.t('credit.error') }}</p>
+  } @else if (!task.completed() && task.invoice()) { @if (!eligible()) {
+  <p appNotice>{{ i18n.t('billingWorkspace.unavailable') }}</p>
+  } @else {
+  <form class="task-form" (submit)="save($event)">
+    <label class="field"
+      >{{ i18n.t('credit.reason') }}<textarea
+        class="input"
+        rows="5"
+        [formField]="creditForm.reason"
+        [attr.aria-invalid]="creditForm.reason().invalid() && creditForm.reason().touched()"
+        aria-describedby="credit-reason-hint credit-reason-error"
+      ></textarea>
+      <small id="credit-reason-hint"
+        >{{ i18n.tf('billingWorkspace.limit', { count: 1000 }) }}</small
+      >
+      <span id="credit-reason-error" class="field-error"
+        >@if (creditForm.reason().invalid() && creditForm.reason().touched()) { {{
+        i18n.t('billingWorkspace.reasonInvalid') }} }</span
+      >
+    </label>
+    <div class="actions">
+      <button appButton type="submit" variant="primary" [disabled]="task.locked()">
+        {{ i18n.t('credit.issue') }}
+      </button>
+      @if (task.uncertain()) {
+      <button appButton type="button" [disabled]="task.busy()" (click)="retry()">
+        {{ i18n.t('billingWorkspace.retrySame') }}
+      </button>
+      }
+    </div>
+  </form>
+  } } @if (!task.completed() && !task.uncertain()) {
+  <button appButton [disabled]="task.busy() || task.loading()" (click)="reload()">
+    {{ i18n.t('credit.reload') }}
+  </button>
+  }
+</section>

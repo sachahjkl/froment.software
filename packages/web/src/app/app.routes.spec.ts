@@ -1,0 +1,72 @@
+import { type Routes } from '@angular/router';
+import { routes } from './app.routes';
+import { administratorGuard, clientGuard } from './back-office/authentication-guards';
+import { unsavedChangesGuard } from './back-office/unsaved-changes-guard';
+
+const fullPaths = (entries: Routes, parent = ''): string[] =>
+  entries.flatMap((route) => {
+    const path = [parent, route.path].filter(Boolean).join('/');
+    return [path, ...fullPaths(route.children ?? [], path)];
+  });
+
+describe('back-office route organization', () => {
+  it('keeps administrative subjects separate from company configuration', () => {
+    const paths = fullPaths(routes);
+    for (const subject of ['equipe', 'api', 'services', 'audit', 'configuration']) {
+      const route = routes.find((entry) => entry.path === `backoffice/${subject}`);
+      expect(route, subject).toBeDefined();
+      expect(route?.canActivate, subject).toContain(administratorGuard);
+    }
+    expect(
+      paths.some((path) =>
+        /^backoffice\/configuration\/(equipe|api|services|audit)(\/|$)/.test(path),
+      ),
+    ).toBe(false);
+    expect(paths).toContain('backoffice/configuration/conditions/:presetId/edit');
+    expect(paths).toContain('backoffice/configuration/carte-de-visite');
+    expect(paths).not.toContain('backoffice/configuration/identite');
+  });
+
+  it('keeps document detail pages distinct from guarded tasks', () => {
+    for (const path of [
+      'backoffice/quotes/:quoteId/edit',
+      'backoffice/quotes/:quoteId/publication',
+      'backoffice/invoices/:invoiceId/edit',
+      'backoffice/invoices/:invoiceId/issue',
+      'backoffice/invoices/:invoiceId/payments/new',
+      'backoffice/invoices/:invoiceId/credits/new',
+      'backoffice/invoices/:invoiceId/refunds/new',
+      'backoffice/courriels/new',
+      'backoffice/courriels/reminders/new',
+    ]) {
+      const route = routes.find((entry) => entry.path === path);
+      expect(route?.canActivate, path).toContain(administratorGuard);
+      expect(route?.canDeactivate, path).toContain(unsavedChangesGuard);
+    }
+    for (const path of [
+      'backoffice/quotes/:quoteId',
+      'backoffice/invoices/:invoiceId',
+      'backoffice/orders/:orderId',
+    ]) {
+      expect(routes.find((entry) => entry.path === path)?.loadComponent, path).toBeDefined();
+    }
+  });
+
+  it('keeps customer pages protected separately and public signature exits guarded', () => {
+    for (const path of [
+      'backoffice/client',
+      'backoffice/client/account',
+      'backoffice/client/documents/:kind/:documentId',
+    ]) {
+      expect(routes.find((entry) => entry.path === path)?.canActivate, path).toContain(clientGuard);
+    }
+    expect(routes.find((entry) => entry.path === 'quote')?.canDeactivate).toContain(
+      unsavedChangesGuard,
+    );
+  });
+
+  it('defines each top-level path once', () => {
+    const paths = routes.map((route) => route.path);
+    expect(new Set(paths).size).toBe(paths.length);
+  });
+});

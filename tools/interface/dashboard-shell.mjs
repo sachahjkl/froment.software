@@ -28,7 +28,7 @@ export async function checkDashboardShell(page, testInfo) {
     const drawer = page.getByRole("dialog");
     await expect(drawer).toBeVisible();
     await expect(drawer.locator("[data-drawer-close]")).toBeFocused();
-    await expect(drawer.locator("app-back-office-nav a")).toHaveCount(8);
+    await expect(drawer.locator("app-back-office-nav a")).toHaveCount(12);
     await expect(drawer.locator('app-back-office-nav a[aria-current="page"]')).toHaveCSS(
       "box-shadow",
       "none",

@@ -18,6 +18,24 @@ export const BankLedgerHandlers = HttpApiBuilder.group(Api, 'bankLedger', (handl
         }),
       )
       .handle(
+        'bankLedgerEntryGet',
+        Effect.fn('bankLedgerEntryGet')(function* ({ params }) {
+          yield* setPrivateResponseHeaders;
+          return yield* ledger
+            .getEntry(params.entryId)
+            .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
+        }),
+      )
+      .handle(
+        'bankLedgerSourceGet',
+        Effect.fn('bankLedgerSourceGet')(function* ({ params }) {
+          yield* setPrivateResponseHeaders;
+          return yield* ledger
+            .getSource(params.sourceKind, params.sourceId)
+            .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
+        }),
+      )
+      .handle(
         'bankLedgerPost',
         Effect.fn('bankLedgerPost')(function* ({ payload }) {
           yield* setPrivateResponseHeaders;

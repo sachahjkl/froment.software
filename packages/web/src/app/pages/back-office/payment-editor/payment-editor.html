@@ -1,0 +1,75 @@
+<section class="billing-page" aria-labelledby="payment-title">
+  <h1 id="payment-title">{{ i18n.t('billingWorkspace.recordReceipt') }}</h1>
+  <app-invoice-task-summary />
+  <p appNotice>{{ i18n.t('billingWorkspace.receiptHint') }}</p>
+  <app-invoice-task-feedback /> @if (task.invoice() && !task.completed()) { @if (!eligible()) {
+  <p appNotice>{{ i18n.t('billingWorkspace.unavailable') }}</p>
+  } @else {
+  <p><strong>{{ i18n.t('payment.remaining') }} : {{ task.money(balance()) }}</strong></p>
+  <form class="task-form" (submit)="save($event)">
+    <div class="fields">
+      <label class="field"
+        >{{ i18n.t('payment.amount') }}<input
+          class="input"
+          inputmode="decimal"
+          [formField]="paymentForm.amount"
+          [attr.aria-invalid]="paymentForm.amount().touched() && paymentForm.amount().invalid()"
+          aria-describedby="payment-amount-error"
+        />
+        <span id="payment-amount-error" class="field-error"
+          >@if (paymentForm.amount().touched() && paymentForm.amount().invalid()) { {{
+          i18n.t('billingWorkspace.amountInvalid') }} }</span
+        ></label
+      >
+      <label class="field"
+        >{{ i18n.t('payment.date') }}<input
+          class="input"
+          type="date"
+          [formField]="paymentForm.paidOn"
+          [attr.aria-invalid]="paymentForm.paidOn().touched() && paymentForm.paidOn().invalid()"
+          aria-describedby="payment-date-error"
+        />
+        <span id="payment-date-error" class="field-error"
+          >@if (paymentForm.paidOn().touched() && paymentForm.paidOn().invalid()) { {{
+          i18n.t('billingWorkspace.dateInvalid') }} }</span
+        ></label
+      >
+      <label class="field"
+        >{{ i18n.t('payment.method') }}<select class="input" [formField]="paymentForm.method">
+          <option [value]="'transfer'">{{ i18n.t('payment.transfer') }}</option>
+          <option [value]="'card'">{{ i18n.t('payment.card') }}</option>
+          <option [value]="'cash'">{{ i18n.t('payment.cash') }}</option>
+          <option [value]="'cheque'">{{ i18n.t('payment.cheque') }}</option>
+          <option [value]="'other'">{{ i18n.t('payment.other') }}</option>
+        </select></label
+      >
+      <label class="field"
+        >{{ i18n.t('payment.reference') }}<input
+          class="input"
+          [formField]="paymentForm.reference"
+          [attr.aria-invalid]="paymentForm.reference().touched() && paymentForm.reference().invalid()"
+          aria-describedby="payment-reference-error"
+        />
+        <span id="payment-reference-error" class="field-error"
+          >@if (paymentForm.reference().touched() && paymentForm.reference().invalid()) { {{
+          i18n.t('billingWorkspace.referenceInvalid') }} }</span
+        ></label
+      >
+    </div>
+    <div class="actions">
+      <button appButton type="submit" variant="primary" [disabled]="task.locked()">
+        {{ i18n.t('payment.save') }}
+      </button>
+      @if (task.uncertain()) {
+      <button appButton type="button" [disabled]="task.busy()" (click)="retry()">
+        {{ i18n.t('billingWorkspace.retrySame') }}
+      </button>
+      }
+    </div>
+  </form>
+  } } @if (!task.completed() && !task.uncertain()) {
+  <button appButton [disabled]="task.busy() || task.loading()" (click)="reload()">
+    {{ i18n.t('credit.reload') }}
+  </button>
+  }
+</section>

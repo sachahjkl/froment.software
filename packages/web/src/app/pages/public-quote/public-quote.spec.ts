@@ -1,5 +1,8 @@
 import { TestBed } from '@angular/core/testing';
-import { provideRouter } from '@angular/router';
+import { provideHttpClient } from '@angular/common/http';
+import { HttpTestingController, provideHttpClientTesting, type TestRequest } from '@angular/common/http/testing';
+import { Component } from '@angular/core';
+import { provideRouter, Router } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -7,6 +10,11 @@ import { PublicQuoteApi } from '../../public-quote/public-quote-api';
 import { PublicQuote } from './public-quote';
 import { I18nService } from '@app/i18n.service';
 import { TabPanelOutlet } from '@shared/tabs/tab-panel';
+import { Confirmation } from '@shared/confirmation/confirmation';
+import { unsavedChangesGuard } from '@backoffice/unsaved-changes-guard';
+
+@Component({ template: '' })
+class OutsidePage {}
 
 const token = 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA';
 const quote = {
@@ -48,7 +56,19 @@ const quote = {
     netTotalCents: 10_000,
     vatTotalCents: 2_000,
     totalCents: 12_000,
-    lines: [],
+    lines: [
+      {
+        id: '01ARZ3NDEKTSV4RRFFQ69G5FAX',
+        position: 0,
+        description: 'Software audit',
+        quantityMilli: 1_000,
+        unitPriceCents: 10_000,
+        vatRateBasisPoints: 2_000,
+        netTotalCents: 10_000,
+        vatTotalCents: 2_000,
+        totalCents: 12_000,
+      },
+    ],
   },
 };
 
@@ -69,11 +89,13 @@ describe('PublicQuote', () => {
       evidenceSha256: 'a'.repeat(64),
     },
   });
+  const confirmation = { request: vi.fn().mockResolvedValue(false) };
 
   beforeEach(() => {
     get.mockClear();
     getPdf.mockClear();
     sign.mockClear();
+    confirmation.request.mockClear();
     globalThis.location.hash = token;
     Object.defineProperty(URL, 'createObjectURL', {
       configurable: true,
@@ -89,20 +111,121 @@ describe('PublicQuote', () => {
           {
             path: '',
             component: PublicQuote,
+            canDeactivate: [unsavedChangesGuard],
             children: [
               { path: 'summary', component: TabPanelOutlet, data: { panel: 'summary' } },
               { path: 'document', component: TabPanelOutlet, data: { panel: 'document' } },
               { path: 'signature', component: TabPanelOutlet, data: { panel: 'signature' } },
+              { path: 'confirmation', component: TabPanelOutlet, data: { panel: 'confirmation' } },
             ],
           },
+          { path: 'outside', component: OutsidePage },
         ]),
         { provide: PublicQuoteApi, useValue: { get, getPdf, sign } },
+        { provide: Confirmation, useValue: confirmation },
       ],
     });
   });
 
   afterEach(() => {
     globalThis.history.replaceState(null, '', globalThis.location.pathname);
+  });
+
+  describe('decoded public access', () => {
+    async function consult(body: Parameters<TestRequest['flush']>[0], status = 200) {
+      TestBed.configureTestingModule({
+        providers: [provideHttpClient(), provideHttpClientTesting()],
+      });
+      TestBed.overrideProvider(PublicQuoteApi, { useFactory: () => new PublicQuoteApi() });
+      const api = TestBed.inject(PublicQuoteApi);
+      const download = vi
+        .spyOn(api, 'getPdf')
+        .mockResolvedValue(new Blob(['%PDF-1.7'], { type: 'application/pdf' }));
+      const signature = vi.spyOn(api, 'sign');
+      const http = TestBed.inject(HttpTestingController);
+      const harness = await RouterTestingHarness.create(`/signature#${token}`);
+      const request = http.expectOne('/api/public/quote-link');
+      expect(request.request.method).toBe('POST');
+      expect(request.request.body).toEqual({ token });
+      request.flush(body, { status, statusText: status === 200 ? 'OK' : 'Not Found' });
+      await harness.fixture.whenStable();
+      return { harness, root: harness.routeNativeElement!, download, signature, http };
+    }
+
+    it.each(['sent', 'accepted'] as const)(
+      'blocks signature for a decoded %s quote with canSign false',
+      async (status) => {
+        const { root, harness, download, signature, http } = await consult({
+          ...quote,
+          status,
+          canSign: false,
+        });
+        const i18n = TestBed.inject(I18nService);
+        await vi.waitFor(() =>
+          expect(root.querySelector('#quote-signature-panel [role="status"]')).not.toBeNull(),
+        );
+        expect(root.querySelector('#quote-signature-panel [role="status"]')?.textContent).toContain(
+          i18n.t(
+            status === 'accepted'
+              ? 'publicQuote.alreadyAccepted'
+              : 'publicQuoteWorkspace.notSignable',
+          ),
+        );
+        expect(root.querySelector('form, input, button[type="submit"]')).toBeNull();
+        expect(root.querySelector('[role="alert"]')).toBeNull();
+        expect(download).toHaveBeenCalledExactlyOnceWith(token);
+        root.querySelector<HTMLAnchorElement>('#quote-document-tab')!.click();
+        await harness.fixture.whenStable();
+        expect(root.querySelector('#quote-document-panel a[download]')).not.toBeNull();
+        expect(root.querySelector('#quote-document-panel a[appLinkButton]')).toBeNull();
+        expect(signature).not.toHaveBeenCalled();
+        http.expectNone('/api/public/quote-link/signature');
+        http.verify();
+      },
+    );
+
+    it('renders the unavailable response used for expired and cancelled links without a PDF or signature', async () => {
+      const { root, download, signature, http } = await consult(
+        { _tag: 'QuoteLinkNotFound', code: 'quote_link.not_found' },
+        404,
+      );
+      await vi.waitFor(() =>
+        expect(root.querySelector('.state-card[role="alert"]')).not.toBeNull(),
+      );
+      expect(root.querySelector('[role="alert"]')?.textContent).toContain(
+        TestBed.inject(I18nService).t('quote_link.not_found'),
+      );
+      expect(
+        root.querySelector(
+          'form, input, .quote-steps, #quote-signature-panel, iframe, a[download]',
+        ),
+      ).toBeNull();
+      expect(download).not.toHaveBeenCalled();
+      expect(signature).not.toHaveBeenCalled();
+      http.expectNone('/api/public/quote-link/signature');
+      http.verify();
+    });
+
+    it.each(['expired', 'cancelled'])(
+      'rejects a successful response with the unsupported public status %s',
+      async (status) => {
+        const { root, download, signature, http } = await consult({
+          ...quote,
+          status,
+          canSign: false,
+        });
+        await vi.waitFor(() =>
+          expect(root.querySelector('.state-card[role="alert"]')).not.toBeNull(),
+        );
+        expect(root.querySelector('[role="alert"]')?.textContent).toContain(
+          TestBed.inject(I18nService).t('publicQuote.error'),
+        );
+        expect(root.querySelector('form, input, .quote-steps, #quote-signature-panel')).toBeNull();
+        expect(download).not.toHaveBeenCalled();
+        expect(signature).not.toHaveBeenCalled();
+        http.verify();
+      },
+    );
   });
 
   it('keeps the permalink and presents the immutable quote', async () => {
@@ -116,7 +239,7 @@ describe('PublicQuote', () => {
     expect(globalThis.location.hash).toBe(`#${token}`);
     expect(root.textContent).toContain('Software audit');
     expect(root.textContent).toContain('DE-2026-000001');
-    expect(root.querySelectorAll('app-tabs a')).toHaveLength(3);
+    expect(root.querySelectorAll('.quote-steps a')).toHaveLength(4);
     expect(root.querySelector('#quote-signature-panel')).toBeNull();
     root.querySelector<HTMLAnchorElement>('#quote-document-tab')?.click();
     await fixture.whenStable();
@@ -152,6 +275,19 @@ describe('PublicQuote', () => {
       signature: { kind: 'typed', value: 'Ada Lovelace' },
     });
     expect(root.textContent).toMatch(/accepté|accepted/i);
+    expect(root.querySelector('#quote-confirmation-panel')).not.toBeNull();
+    expect(root.querySelector('form')).toBeNull();
+    expect(root.textContent).toContain('CO-2026-000001');
+  });
+
+  it('preserves the personal fragment between consultation steps', async () => {
+    const harness = await RouterTestingHarness.create(`/summary#${token}`);
+    await harness.fixture.whenStable();
+    harness.routeNativeElement!.querySelector<HTMLAnchorElement>('#quote-document-tab')!.click();
+    await harness.fixture.whenStable();
+    expect(TestBed.inject(Router).url).toBe(`/document#${token}`);
+    expect(get).toHaveBeenCalledOnce();
+    expect(getPdf).toHaveBeenCalledOnce();
   });
 
   it('uses one main landmark, translates its summary, and describes invalid fields', async () => {
@@ -173,5 +309,28 @@ describe('PublicQuote', () => {
     expect(name.getAttribute('aria-invalid')).toBe('true');
     expect(name.getAttribute('aria-describedby')).toBe('public-quote-signer-name-error');
     expect(root.querySelector('#public-quote-signer-name-error')).not.toBeNull();
+  });
+
+  it('focuses invalid fields and protects an unfinished signature when leaving', async () => {
+    const harness = await RouterTestingHarness.create('/signature');
+    const fixture = harness.fixture;
+    const root = harness.routeNativeElement!;
+    await fixture.whenStable();
+    const button = root.querySelector<HTMLButtonElement>('button[type="submit"]')!;
+    expect(button.disabled).toBe(false);
+    button.click();
+    await fixture.whenStable();
+    expect(document.activeElement?.id).toBe('public-quote-signer-name');
+    expect(sign).not.toHaveBeenCalled();
+    const name = root.querySelector<HTMLInputElement>('#public-quote-signer-name')!;
+    name.value = 'Ada';
+    name.dispatchEvent(new Event('input'));
+    await fixture.whenStable();
+    const unload = new Event('beforeunload', { cancelable: true });
+    window.dispatchEvent(unload);
+    expect(unload.defaultPrevented).toBe(true);
+    await harness.navigateByUrl('/outside');
+    expect(confirmation.request).toHaveBeenCalledOnce();
+    expect(root.querySelector('form')).not.toBeNull();
   });
 });

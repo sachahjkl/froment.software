@@ -1,0 +1,120 @@
+<section class="commercial-page publication" aria-labelledby="publication-title">
+  <h1 id="publication-title">{{ i18n.t('commercial.publicationTitle') }}</h1>
+  @if (quoteId(); as id) {
+  <a class="back-link" [routerLink]="['/backoffice/quotes', id]" [queryParams]="context()"
+    >{{ i18n.t('commercial.backQuote') }}</a
+  >
+  } @else {
+  <a
+    class="back-link"
+    [routerLink]="['/backoffice/affaires', context().view ?? 'attention']"
+    [queryParams]="context()"
+    >{{ i18n.t('backOffice.backToAffairs') }}</a
+  >
+  } @switch (state()) { @case ('loading') {
+  <p role="status">{{ i18n.t('backOffice.quotes.loading') }}</p>
+  } @case ('error') {
+  <p appNotice variant="danger" role="alert">{{ i18n.t(error() ?? 'quote.error') }}</p>
+  <button appButton type="button" (click)="reload()">
+    {{ i18n.t('backOffice.affair.retry') }}
+  </button>
+  @if (uncertain()) {
+  <p appNotice variant="warning">{{ i18n.t('commercial.publicationUncertain') }}</p>
+  } } @case ('ready') { @if (quote(); as quote) {
+  <dl class="facts">
+    <div>
+      <dt>{{ i18n.t('backOffice.quote.reference') }}</dt>
+      <dd>{{ quote.reference }}</dd>
+    </div>
+    <div>
+      <dt>{{ i18n.t('commercial.versions') }}</dt>
+      <dd>{{ i18n.tf('commercial.revision', { version: quote.version }) }}</dd>
+    </div>
+    <div>
+      <dt>{{ i18n.t('backOffice.quote.title') }}</dt>
+      <dd>{{ quote.currentRevision.title }}</dd>
+    </div>
+    <div>
+      <dt>{{ i18n.t('backOffice.quote.client') }}</dt>
+      <dd>{{ quote.currentRevision.clientDisplayName }}</dd>
+    </div>
+    <div>
+      <dt>{{ i18n.t('commercial.quoteAmount') }}</dt>
+      <dd>{{ money(quote.currentRevision.totalCents) }}</dd>
+    </div>
+  </dl>
+  <p appNotice>{{ i18n.t('commercial.noEmail') }}</p>
+  @if (completed(); as result) {
+  <p appNotice variant="success" role="status">{{ i18n.t('commercial.linkCreated') }}</p>
+  <app-copy-field
+    class="sent-link"
+    headingId="signature-link-title"
+    [label]="i18n.t('backOffice.quote.link.title')"
+    [value]="result.link.url"
+    [href]="result.link.url"
+    [description]="i18n.tf('backOffice.quote.link.expires', { date: date(result.link.expiresAt) })"
+    [actionLabel]="i18n.t('backOffice.quote.link.copy')"
+    [status]="copied() ? i18n.t('backOffice.quote.link.copied') : ''"
+    [external]="true"
+    (copy)="copyLink()"
+  />
+  <p class="hint">{{ i18n.t('commercial.linkUnavailable') }}</p>
+  } @else if (quote.status !== 'draft') {
+  <p appNotice variant="warning">{{ i18n.t('commercial.publicationUnavailable') }}</p>
+  @if (quote.status === 'sent') {
+  <p>{{ i18n.t('commercial.linkUnavailable') }}</p>
+  } } @else {
+  <section class="panel ds-panel" aria-labelledby="parties-title">
+    <h2 id="parties-title">{{ i18n.t('commercial.parties') }}</h2>
+    <p>{{ i18n.t('commercial.partiesHint') }}</p>
+  </section>
+  <app-quote-document
+    [quoteId]="quote.id"
+    [clientId]="quote.clientId"
+    [revision]="quote.currentRevision"
+    (prepared)="prepared($event)"
+  />
+  <form (submit)="publish($event)" class="panel ds-panel" novalidate>
+    <p>{{ i18n.t('commercial.publicationEffect') }}</p>
+    @if (!pdfReady()) {
+    <p appNotice>{{ i18n.t('commercial.pdfRequired') }}</p>
+    }
+    <label class="review-check"
+      ><input
+        type="checkbox"
+        [formField]="review.checked"
+        aria-describedby="review-error"
+        [attr.aria-invalid]="review.checked().touched() && review.checked().invalid()"
+      />{{ i18n.t('commercial.confirmDocument') }}</label
+    >
+    @if (review.checked().invalid() && review.checked().touched()) {
+    <p id="review-error" class="field-error">{{ i18n.t('commercial.confirmRequired') }}</p>
+    } @if (issues().length) {
+    <app-document-issues [issues]="issues()" [clientId]="quote.clientId" kind="quote" /> } @if
+    (error(); as key) {
+    <p appNotice variant="danger" role="alert">{{ i18n.t(key) }}</p>
+    @if (key !== 'commercial.pdfRequired') {
+    <button
+      appButton
+      type="button"
+      [disabled]="pending()"
+      [attr.aria-disabled]="confirming()"
+      (click)="reload()"
+    >
+      {{ i18n.t('commercial.loadLatest') }}
+    </button>
+    } } @if (pending()) {
+    <p role="status">{{ i18n.t('commercial.pending') }}</p>
+    }
+    <button
+      appButton
+      variant="primary"
+      type="submit"
+      class="publish-quote"
+      [disabled]="pending() || uncertain()"
+    >
+      {{ i18n.t(pending() ? 'backOffice.quote.sending' : 'commercial.createLink') }}
+    </button>
+  </form>
+  } } } }
+</section>

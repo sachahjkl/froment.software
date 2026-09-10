@@ -1,4 +1,4 @@
-import { TestBed } from '@angular/core/testing';
+import { type ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
 import { of, Subject } from 'rxjs';
 import { vi } from 'vitest';
@@ -11,6 +11,7 @@ import { CheckoutApi } from '@backoffice/checkout-api';
 import { InvoicesApi } from '@backoffice/invoices-api';
 import { Confirmation } from '@shared/confirmation/confirmation';
 import { Checkout } from './checkout';
+import { CheckoutDetail } from './checkout-detail';
 
 const invoice = {
   id: '01ARZ3NDEKTSV4RRFFQ69G5FAV',
@@ -54,12 +55,8 @@ const operation = (request: CheckoutRequest): CheckoutOperation => ({
   checkoutUrl: null,
   error: null,
 });
-const choose = (root: HTMLElement) => {
-  const select = root.querySelector<HTMLSelectElement>('#checkout-invoice');
-  if (select === null) throw new Error('Missing invoice selector');
-  select.value = invoice.id;
-  select.dispatchEvent(new Event('input', { bubbles: true }));
-  select.dispatchEvent(new Event('change', { bubbles: true }));
+const choose = (fixture: ComponentFixture<Checkout>) => {
+  fixture.componentInstance['chooseInvoice'](invoice.id);
 };
 
 it('confirms creation, preserves ambiguous request identities, and never marks test payments as receipts', async () => {
@@ -96,17 +93,20 @@ it('confirms creation, preserves ambiguous request identities, and never marks t
   root.querySelector<HTMLButtonElement>('button[type="submit"]')?.click();
   await fixture.whenStable();
   expect(create).not.toHaveBeenCalled();
-  choose(root);
+  choose(fixture);
   await fixture.whenStable();
   root.querySelector<HTMLButtonElement>('button[type="submit"]')?.click();
   await fixture.whenStable();
   expect(calls).toHaveLength(1);
-  expect(root.querySelector<HTMLSelectElement>('select')?.disabled).toBe(true);
+  expect(root.querySelector<HTMLButtonElement>('app-object-picker button')?.disabled).toBe(true);
   expect(fixture.componentInstance.canDeactivate()).toBeInstanceOf(Promise);
   root.querySelector<HTMLButtonElement>('button[type="submit"]')?.click();
   await fixture.whenStable();
   expect(calls).toHaveLength(2);
   expect(calls[0]).toEqual(calls[1]);
+  expect(root.querySelector('form')).toBeNull();
+  await fixture.componentInstance['create'](new SubmitEvent('submit'));
+  expect(calls).toHaveLength(2);
   expect(Object.keys(calls[0] ?? {}).sort()).toEqual(['expectedVersion', 'invoiceId', 'requestId']);
   expect(root.querySelector('[role="status"]')?.textContent).toMatch(
     /Demande enregistrée|Request recorded/,
@@ -145,7 +145,7 @@ it('does not overwrite a completed submission with an older polling response', a
   await fixture.whenStable();
   await vi.waitFor(() => expect(list).toHaveBeenCalled());
   const root: HTMLElement = fixture.nativeElement;
-  choose(root);
+  choose(fixture);
   await fixture.whenStable();
   root.querySelector<HTMLButtonElement>('button[type="submit"]')?.click();
   await fixture.whenStable();
@@ -170,6 +170,8 @@ it('does not replace an unknown return request with another invoice test', async
         provide: ActivatedRoute,
         useValue: {
           snapshot: { queryParamMap: convertToParamMap({ request: 'another-request' }) },
+          paramMap: of(convertToParamMap({ requestId: 'another-request' })),
+          queryParamMap: of(convertToParamMap({})),
         },
       },
       {
@@ -186,7 +188,7 @@ it('does not replace an unknown return request with another invoice test', async
       { provide: InvoicesApi, useValue: { list: async () => [invoice] } },
     ],
   });
-  const fixture = TestBed.createComponent(Checkout);
+  const fixture = TestBed.createComponent(CheckoutDetail);
   await fixture.whenStable();
   const root: HTMLElement = fixture.nativeElement;
   await vi.waitFor(() =>

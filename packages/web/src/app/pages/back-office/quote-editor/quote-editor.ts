@@ -7,6 +7,7 @@ import {
   DestroyRef,
   HostListener,
   inject,
+  PendingTasks,
   signal,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -23,19 +24,14 @@ import {
   validate,
 } from '@angular/forms/signals';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { DomSanitizer, type SafeResourceUrl } from '@angular/platform-browser';
 import {
   Ulid,
-  type DocumentIssueValue,
   type ClientListValue,
   type QuoteCreateRequestValue,
-  type QuoteCancellationReasonValue,
   type QuoteDetailValue,
   type QuoteLineInputValue,
   type QuoteConditionPresetListValue,
   type QuoteRevisionCreateRequestValue,
-  type QuoteSendResultValue,
-  type QuoteStatusValue,
   type UlidValue,
 } from '@froment/contracts';
 import { Option, Schema } from 'effect';
@@ -48,13 +44,11 @@ import { type CatalogItemListValue } from '@froment/contracts';
 import { formatFixedDecimal, parseFixedDecimal } from '@backoffice/quote-input';
 import { I18nService, type TranslationKey } from '@app/i18n.service';
 import { Button } from '@shared/button/button';
-import { CopyField } from '@shared/copy-field/copy-field';
 import { DetailRow } from '@shared/detail-row/detail-row';
 import { Notice } from '@shared/notice/notice';
-import { DocumentIssues } from '@shared/document-issues/document-issues';
 import { OutcomePanel } from '@shared/outcome-panel/outcome-panel';
-import { Icon } from '@shared/icon/icon';
-import { TextCopy } from '@shared/text-copy';
+import { ObjectPicker } from '@shared/object-picker/object-picker';
+import { affairContext } from '../affairs/affair-filters';
 
 interface QuoteLineModel {
   readonly description: string;
@@ -77,29 +71,10 @@ const emptyLine = (): QuoteLineModel => ({
   vatRate: '20.00',
 });
 
-const statusKeys = {
-  draft: 'backOffice.quote.status.draft',
-  sent: 'backOffice.quote.status.sent',
-  accepted: 'backOffice.quote.status.accepted',
-  rejected: 'backOffice.quote.status.rejected',
-  expired: 'backOffice.quote.status.expired',
-  cancelled: 'backOffice.quote.status.cancelled',
-} as const satisfies Record<QuoteStatusValue, TranslationKey>;
-
 @Component({
   host: { class: 'page-container' },
   selector: 'app-quote-editor',
-  imports: [
-    Button,
-    CopyField,
-    DetailRow,
-    DocumentIssues,
-    FormField,
-    Icon,
-    Notice,
-    OutcomePanel,
-    RouterLink,
-  ],
+  imports: [Button, DetailRow, FormField, ObjectPicker, Notice, OutcomePanel, RouterLink],
   templateUrl: './quote-editor.html',
   styleUrl: './quote-editor.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -113,45 +88,47 @@ export class QuoteEditor {
   private readonly quotesApi = inject(QuotesApi);
   private readonly conditionPresetsApi = inject(QuoteConditionPresetsApi);
   private readonly route = inject(ActivatedRoute);
+  protected readonly context = signal(affairContext(this.route.snapshot.queryParamMap));
   private readonly router = inject(Router);
-  private readonly textCopy = inject(TextCopy);
-  private readonly sanitizer = inject(DomSanitizer);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly pendingTasks = inject(PendingTasks);
   private readonly quoteId = signal<UlidValue | undefined>(undefined);
   private routeRequest = 0;
   protected readonly isNew = signal(false);
   protected readonly clients = signal<ClientListValue>([]);
   protected readonly conditionPresets = signal<QuoteConditionPresetListValue>([]);
   protected readonly detail = signal<QuoteDetailValue | undefined>(undefined);
-  protected readonly previewVersion = signal<number | undefined>(undefined);
-  protected readonly previewUrl = computed(() => {
-    const quoteId = this.quoteId();
-    const version = this.previewVersion();
-    return quoteId === undefined || version === undefined
-      ? undefined
-      : `/api/quotes/${quoteId}/revisions/${version}/preview`;
-  });
-  protected readonly pdfPendingVersion = signal<number | undefined>(undefined);
-  protected readonly generatedPdfVersions = signal<ReadonlySet<number>>(new Set());
   protected readonly loading = signal(true);
   protected readonly unavailable = signal(false);
   protected readonly saving = signal(false);
-  protected readonly sending = signal(false);
-  protected readonly cancelling = signal(false);
-  protected readonly cancellationReason = signal<QuoteCancellationReasonValue | ''>('');
-  protected readonly cancellationNote = signal('');
-  protected readonly sentLink = signal<QuoteSendResultValue['link'] | undefined>(undefined);
-  protected readonly linkCopied = signal(false);
+  protected readonly completed = signal(false);
+  protected readonly uncertain = signal(false);
   protected readonly error = signal<TranslationKey | undefined>(undefined);
-  protected readonly documentIssues = signal<ReadonlyArray<DocumentIssueValue>>([]);
+  protected readonly presetOptions = computed(() =>
+    this.conditionPresets().map((preset) => ({
+      id: preset.id,
+      label: preset.name,
+      detail:
+        preset.conditions.length > 160 ? `${preset.conditions.slice(0, 159)}…` : preset.conditions,
+    })),
+  );
   private readonly model = signal<QuoteModel>({
     clientId: '',
     conditions: '',
     lines: [emptyLine()],
     title: '',
   });
+  protected readonly catalogOptions = computed(() =>
+    this.catalogItems().map((item) => ({
+      id: item.id,
+      label: item.description,
+      detail: this.money(item.unitPriceCents),
+    })),
+  );
   protected readonly quoteForm = form(this.model, (path) => {
-    disabled(path, { when: () => !this.editable() });
+    disabled(path, {
+      when: () => !this.editable() || this.saving() || this.completed() || this.uncertain(),
+    });
     required(path.clientId);
     required(path.title);
     maxLength(path.title, 120);
@@ -189,29 +166,20 @@ export class QuoteEditor {
     () => this.isNew() || ['draft', 'expired'].includes(this.detail()?.status ?? ''),
   );
   protected readonly saveDisabled = computed(
-    () => this.saving() || this.loading() || !this.editable() || this.quoteForm().invalid(),
+    () =>
+      this.saving() || this.loading() || !this.editable() || this.completed() || this.uncertain(),
   );
-  protected readonly sendDisabled = computed(() => {
-    const quote = this.detail();
-    return (
-      quote === undefined ||
-      quote.status !== 'draft' ||
-      this.quoteForm().dirty() ||
-      this.saving() ||
-      this.sending() ||
-      this.cancelling()
-    );
-  });
   protected readonly totalsAreStale = computed(
-    () => this.detail() !== undefined && this.quoteForm().dirty(),
+    () =>
+      this.detail() !== undefined &&
+      (this.quoteForm().dirty() || this.saving() || this.uncertain()),
   );
-  protected readonly previewFrameUrl = computed<SafeResourceUrl | undefined>(() => {
-    const url = this.previewUrl();
-    return url === undefined ? undefined : this.sanitizer.bypassSecurityTrustResourceUrl(url);
-  });
 
   constructor() {
     afterNextRender(() => {
+      this.route.queryParamMap
+        .pipe(takeUntilDestroyed(this.destroyRef))
+        .subscribe((params) => this.context.set(affairContext(params)));
       this.route.paramMap.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((params) => {
         void this.load(params.get('quoteId'));
       });
@@ -219,14 +187,19 @@ export class QuoteEditor {
   }
 
   protected addLine(): void {
-    if (!this.editable() || this.model().lines.length >= 20) return;
+    if (this.saveDisabled() || this.model().lines.length >= 20) return;
     this.model.update((model) => ({ ...model, lines: [...model.lines, emptyLine()] }));
     this.quoteForm().markAsDirty();
   }
 
-  protected addCatalogItem(select: HTMLSelectElement): void {
-    const item = this.catalogItems().find((entry) => entry.id === select.value);
-    if (!this.editable() || this.model().lines.length >= 20 || item === undefined || item.archived)
+  protected addCatalogItem(id: string): void {
+    const item = this.catalogItems().find((entry) => entry.id === id);
+    if (
+      this.saveDisabled() ||
+      this.model().lines.length >= 20 ||
+      item === undefined ||
+      item.archived
+    )
       return;
     this.model.update((model) => ({
       ...model,
@@ -241,11 +214,10 @@ export class QuoteEditor {
       ],
     }));
     this.quoteForm().markAsDirty();
-    select.value = '';
   }
 
   protected removeLine(index: number): void {
-    if (!this.editable() || this.model().lines.length === 1) return;
+    if (this.saveDisabled() || this.model().lines.length === 1) return;
     this.model.update((model) => ({
       ...model,
       lines: model.lines.filter((_line, currentIndex) => currentIndex !== index),
@@ -253,17 +225,28 @@ export class QuoteEditor {
     this.quoteForm().markAsDirty();
   }
 
-  protected selectConditionPreset(select: HTMLSelectElement): void {
-    const presetId = select.value;
+  protected async selectConditionPreset(presetId: string): Promise<void> {
     const preset = this.conditionPresets().find((candidate) => candidate.id === presetId);
-    if (preset === undefined || !this.editable()) return;
+    if (preset === undefined || this.saveDisabled()) return;
+    const generation = this.routeRequest;
+    if (
+      this.model().conditions &&
+      this.model().conditions !== preset.conditions &&
+      !(await this.confirmation.request(this.i18n.t('commercial.replaceConditions')))
+    )
+      return;
+    if (this.destroyRef.destroyed || generation !== this.routeRequest || this.saveDisabled())
+      return;
     this.model.update((model) => ({ ...model, conditions: preset.conditions }));
     this.quoteForm().markAsDirty();
-    select.value = '';
   }
 
   async canDeactivate(): Promise<boolean> {
+    if (this.saving()) return false;
+    if (this.uncertain())
+      return this.confirmation.request(this.i18n.t('commercial.leaveUncertain'));
     return (
+      this.completed() ||
       !this.quoteForm().dirty() ||
       (await this.confirmation.request(this.i18n.t('backOffice.quote.unsavedChanges')))
     );
@@ -271,11 +254,30 @@ export class QuoteEditor {
 
   @HostListener('window:beforeunload', ['$event'])
   protected preventUnsavedUnload(event: BeforeUnloadEvent): void {
-    if (this.quoteForm().dirty()) event.preventDefault();
+    if (this.saving() || this.uncertain() || (!this.completed() && this.quoteForm().dirty()))
+      event.preventDefault();
   }
 
   protected save(event: SubmitEvent): void {
     event.preventDefault();
+    if (this.saveDisabled()) return;
+    const fields = [
+      this.quoteForm.clientId,
+      this.quoteForm.title,
+      ...Array.from(this.quoteForm.lines).flatMap((line) => [
+        line.description,
+        line.quantity,
+        line.unitPrice,
+        line.vatRate,
+      ]),
+      this.quoteForm.conditions,
+    ];
+    for (const field of fields) field().markAsTouched();
+    const invalid = fields.find((field) => field().invalid());
+    if (invalid) {
+      invalid().focusBoundControl();
+      return;
+    }
     void submit(this.quoteForm, async () => {
       const lines = this.parseLines();
       if (lines === undefined) {
@@ -284,170 +286,100 @@ export class QuoteEditor {
       }
       this.saving.set(true);
       this.error.set(undefined);
-      const model = this.model();
-      const common = { conditions: model.conditions, lines, title: model.title.trim() };
-      const quoteId = this.quoteId();
-      if (quoteId === undefined) {
-        const clientId = this.decodeQuoteId(model.clientId);
-        if (clientId === undefined) {
-          this.error.set('backOffice.quote.validation');
+      const generation = this.routeRequest;
+      try {
+        const model = this.model();
+        const common = { conditions: model.conditions, lines, title: model.title.trim() };
+        const quoteId = this.quoteId();
+        if (quoteId === undefined) {
+          const clientId = this.decodeQuoteId(model.clientId);
+          if (clientId === undefined) {
+            this.error.set('backOffice.quote.validation');
+            this.saving.set(false);
+            return;
+          }
+          const request: QuoteCreateRequestValue = { ...common, clientId };
+          const outcome = await this.quotesApi.create(request);
+          if (this.destroyRef.destroyed || generation !== this.routeRequest) return;
+          if (!outcome.success) {
+            if (outcome.code === 'quote.error') {
+              this.uncertain.set(true);
+              this.error.set('commercial.saveUncertain');
+              return;
+            }
+            return this.setError(outcome.code);
+          }
+          this.detail.set(outcome.result);
+          this.completed.set(true);
+          this.quoteForm().reset();
+          this.saving.set(false);
+          await this.router.navigate(['/backoffice/quotes', outcome.result.id], {
+            replaceUrl: true,
+            queryParams: this.context(),
+          });
+          return;
+        }
+        const current = this.detail();
+        if (current === undefined) {
+          this.error.set('quote.error');
           this.saving.set(false);
           return;
         }
-        const request: QuoteCreateRequestValue = { ...common, clientId };
-        const outcome = await this.quotesApi.create(request);
-        this.saving.set(false);
+        const request: QuoteRevisionCreateRequestValue = {
+          ...common,
+          expectedVersion: current.version,
+        };
+        const outcome = await this.quotesApi.createRevision(quoteId, request);
+        if (this.destroyRef.destroyed || generation !== this.routeRequest) return;
         if (!outcome.success) return this.setError(outcome.code);
         this.detail.set(outcome.result);
-        void this.showPreview(outcome.result.version);
+        this.model.set(this.modelFromDetail(outcome.result));
         this.quoteForm().reset();
-        await this.router.navigate(['/backoffice/quotes', outcome.result.id], { replaceUrl: true });
-        return;
-      }
-      const current = this.detail();
-      if (current === undefined) {
-        this.error.set('quote.error');
+        this.completed.set(true);
         this.saving.set(false);
-        return;
+        await this.router.navigate(['/backoffice/quotes', outcome.result.id], {
+          queryParams: this.context(),
+        });
+      } catch {
+        if (this.destroyRef.destroyed || generation !== this.routeRequest) return;
+        if (this.quoteId() === undefined) {
+          this.uncertain.set(true);
+          this.error.set('commercial.saveUncertain');
+        } else this.error.set('quote.error');
+      } finally {
+        if (generation === this.routeRequest) this.saving.set(false);
       }
-      const request: QuoteRevisionCreateRequestValue = {
-        ...common,
-        expectedVersion: current.version,
-      };
-      const outcome = await this.quotesApi.createRevision(quoteId, request);
-      this.saving.set(false);
-      if (!outcome.success) return this.setError(outcome.code);
-      this.detail.set(outcome.result);
-      this.documentIssues.set([]);
-      void this.showPreview(outcome.result.version);
-      this.model.set(this.modelFromDetail(outcome.result));
-      this.quoteForm().reset();
     });
+  }
+
+  protected async reload(): Promise<void> {
+    if (this.saving() || this.uncertain()) return;
+    const generation = this.routeRequest;
+    if (
+      this.quoteForm().dirty() &&
+      !(await this.confirmation.request(this.i18n.t('commercial.reloadConfirm')))
+    )
+      return;
+    if (this.destroyRef.destroyed || generation !== this.routeRequest || this.saving()) return;
+    await this.load(this.route.snapshot.paramMap.get('quoteId'));
   }
 
   protected money(cents: number): string {
     return formatMoney(cents, this.i18n.language(), 'EUR');
   }
 
-  protected date(value: string): string {
-    return new Intl.DateTimeFormat(this.i18n.language(), {
-      dateStyle: 'medium',
-      timeStyle: 'short',
-    }).format(new Date(value));
-  }
-
-  protected showPreview(version: number): void {
-    this.previewVersion.set(version);
-  }
-
-  protected async generatePdf(version: number): Promise<void> {
-    const quoteId = this.quoteId();
-    if (quoteId === undefined) return;
-    this.pdfPendingVersion.set(version);
-    this.error.set(undefined);
-    const outcome = await this.quotesApi.renderPdf(quoteId, version);
-    this.pdfPendingVersion.set(undefined);
-    if (!outcome.success) return this.setError(outcome.code);
-    this.generatedPdfVersions.update((versions) => new Set([...versions, version]));
-  }
-
-  protected async sendQuote(): Promise<void> {
-    const quoteId = this.quoteId();
-    if (quoteId === undefined || this.sendDisabled()) return;
-    const quote = this.detail();
-    if (quote === undefined) return;
-    this.sending.set(true);
-    this.documentIssues.set([]);
-    this.error.set(undefined);
-    this.linkCopied.set(false);
-    const outcome = await this.quotesApi.send(quoteId, { expectedVersion: quote.version });
-    this.sending.set(false);
-    if (!outcome.success && outcome.failure?._tag === 'DocumentIncomplete') {
-      this.documentIssues.set(outcome.failure.issues);
-      return;
-    }
-    if (!outcome.success) return this.setError(outcome.code);
-    this.detail.set({ ...quote, status: outcome.result.status });
-    this.sentLink.set(outcome.result.link);
-  }
-
-  protected async cancelQuote(): Promise<void> {
-    const quoteId = this.quoteId();
-    const quote = this.detail();
-    if (
-      quoteId === undefined ||
-      quote === undefined ||
-      !['draft', 'sent', 'expired'].includes(quote.status) ||
-      this.cancelling() ||
-      this.cancellationReason() === '' ||
-      !(await this.confirmation.request(this.i18n.t('backOffice.quote.cancelConfirm')))
-    ) {
-      return;
-    }
-    this.cancelling.set(true);
-    this.error.set(undefined);
-    const reason = this.cancellationReason();
-    if (reason === '') return;
-    const outcome = await this.quotesApi.cancel(quoteId, {
-      expectedVersion: quote.version,
-      reason,
-      note: this.cancellationNote().trim(),
-    });
-    this.cancelling.set(false);
-    if (!outcome.success) return this.setError(outcome.code);
-    this.detail.set(outcome.result);
-    this.sentLink.set(undefined);
-    this.quoteForm().reset();
-  }
-
-  protected setCancellationReason(select: HTMLSelectElement): void {
-    const reason = Schema.decodeUnknownOption(
-      Schema.Literals([
-        'client-declined',
-        'scope-changed',
-        'budget-unavailable',
-        'duplicate',
-        'replaced',
-        'other',
-      ]),
-    )(select.value);
-    this.cancellationReason.set(Option.getOrElse(reason, () => ''));
-  }
-
-  protected setCancellationNote(textarea: HTMLTextAreaElement): void {
-    this.cancellationNote.set(textarea.value.slice(0, 500));
-  }
-
-  protected async copySentLink(): Promise<void> {
-    const link = this.sentLink();
-    if (link === undefined) return;
-    this.linkCopied.set(await this.textCopy.copy(link.url));
-  }
-
-  protected statusKey(status: QuoteStatusValue): TranslationKey {
-    return statusKeys[status];
-  }
-
-  protected pdfUrl(version: number): string | undefined {
-    const quoteId = this.quoteId();
-    if (quoteId === undefined || !this.generatedPdfVersions().has(version)) return undefined;
-    return `/api/quotes/${quoteId}/revisions/${version}/pdf`;
-  }
-
   private async load(parameter: string | null): Promise<void> {
     const request = ++this.routeRequest;
+    const requestedClientId = this.decodeQuoteId(this.route.snapshot.queryParamMap.get('clientId'));
     const quoteId = this.decodeQuoteId(parameter);
     this.quoteId.set(quoteId);
     this.isNew.set(parameter === null);
     this.detail.set(undefined);
-    this.previewVersion.set(undefined);
-    this.pdfPendingVersion.set(undefined);
-    this.generatedPdfVersions.set(new Set());
-    this.sentLink.set(undefined);
-    this.linkCopied.set(false);
+    this.saving.set(false);
+    this.completed.set(false);
+    this.uncertain.set(false);
     this.error.set(undefined);
     this.unavailable.set(false);
-    this.documentIssues.set([]);
     this.loading.set(true);
     this.model.set({ clientId: '', conditions: '', lines: [emptyLine()], title: '' });
     this.quoteForm().reset();
@@ -457,6 +389,7 @@ export class QuoteEditor {
       this.loading.set(false);
       return;
     }
+    const finishLoading = this.pendingTasks.add();
     try {
       if (quoteId === undefined) {
         const [conditionPresets, clients, catalogItems] = await Promise.all([
@@ -464,9 +397,13 @@ export class QuoteEditor {
           this.clientsApi.list(),
           this.catalogApi.list(),
         ]);
-        if (request !== this.routeRequest) return;
+        if (this.destroyRef.destroyed || request !== this.routeRequest) return;
         this.conditionPresets.set(conditionPresets);
         this.clients.set(clients.filter((client) => !client.archived));
+        if (requestedClientId && this.clients().some((client) => client.id === requestedClientId)) {
+          this.model.update((model) => ({ ...model, clientId: requestedClientId }));
+          this.quoteForm().reset();
+        }
         this.catalogItems.set(catalogItems.filter((item) => !item.archived));
       } else {
         const [conditionPresets, outcome, catalogItems] = await Promise.all([
@@ -474,7 +411,7 @@ export class QuoteEditor {
           this.quotesApi.get(quoteId),
           this.catalogApi.list(),
         ]);
-        if (request !== this.routeRequest) return;
+        if (this.destroyRef.destroyed || request !== this.routeRequest) return;
         this.conditionPresets.set(conditionPresets);
         if (!outcome.success) {
           this.setError(outcome.code);
@@ -483,16 +420,16 @@ export class QuoteEditor {
         }
         this.detail.set(outcome.result);
         this.catalogItems.set(catalogItems.filter((item) => !item.archived));
-        this.showPreview(outcome.result.version);
         this.model.set(this.modelFromDetail(outcome.result));
         this.quoteForm().reset();
       }
     } catch {
-      if (request !== this.routeRequest) return;
+      if (this.destroyRef.destroyed || request !== this.routeRequest) return;
       this.error.set('quote.error');
       this.unavailable.set(true);
     } finally {
       if (request === this.routeRequest) this.loading.set(false);
+      finishLoading();
     }
   }
 

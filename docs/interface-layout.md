@@ -52,7 +52,7 @@ Les prestations, secteurs clients, projets et articles utilisent des panneaux di
 La FAQ conserve les éléments natifs `details` et `summary`.
 Un signe moins indique une réponse ouverte ; un signe plus indique une réponse fermée.
 La navigation publique donne à la rubrique active une forme d’onglet et une bordure inférieure renforcée.
-Le tableau de bord distingue les indicateurs, les actions requises et l’activité par des panneaux.
+Le tableau de bord sépare les indicateurs, les actions requises et les documents récemment modifiés.
 
 Ces choix appliquent le regroupement de `better-layout` et la séparation des surfaces de `better-ui`.
 Ils conservent les polices, les petits rayons et les dégradés des contrôles existants.
@@ -73,10 +73,25 @@ L’abandon d’un devis reste accessible dans une section dépliable explicitem
 Le backoffice possède une navigation latérale avec icônes et un en-tête contenant le lien vers la documentation API.
 La rubrique active couvre aussi ses éditeurs associés.
 Le menu du compte occupe le haut de la navigation et remplace le titre visible du tiroir.
-Il présente le compte actif, sa sécurité, la langue, le thème et la déconnexion.
+Il présente le compte actif, sa sécurité et la déconnexion.
+La langue et le thème restent dans le pied de la navigation.
 Le tiroir conserve son nom accessible et son bouton de fermeture.
 L’API actuelle ne fournit pas de liste de comptes disponibles ni de permissions au navigateur.
 Les contrôles d’accès serveur restent inchangés.
+
+La navigation regroupe les sujets sans fusionner leurs actions :
+
+- Activité : Tableau de bord, Clients, Affaires, Facturation, Banque, Courriels et Catalogue.
+- Administration : Équipe, API, Services externes, Journal d’audit et Configuration.
+
+Configuration contient seulement les réglages de l’entreprise, les conditions des documents et la carte de visite.
+Équipe gère les membres et les invitations.
+API gère les jetons et leurs permissions.
+Services externes sépare les connexions, les tests et les simulations des opérations commerciales.
+Le menu du compte conserve les réglages personnels de sécurité.
+
+Les routes Équipe, API, Services externes et Journal d’audit sont indépendantes de Configuration.
+Leurs anciens chemins sous Configuration ne sont plus définis.
 
 Sous 64 rem, un tiroir remplace la navigation latérale.
 Le composant `Drawer` utilise Angular CDK pour le focus, Échap, le fond modal et le blocage du défilement.
@@ -89,7 +104,8 @@ Une sortie refusée ne modifie pas la session.
 Un échec de déconnexion affiche une erreur et une action de nouvelle tentative.
 
 Le composant `PageHeader` sépare le titre des actions avec retour à la ligne.
-L’atelier `/design/navigation` présente ce composant et le tiroir interactif.
+La référence `/design/page-header` présente ce composant.
+La référence `/design/drawer` présente le tiroir interactif.
 
 ### Parcours Clients
 
@@ -113,8 +129,9 @@ Les documents publiés restent inchangés.
 `ListToolbar` regroupe la recherche, les filtres et le nombre de résultats.
 `EmptyState` sépare le titre, l’explication et l’action de création.
 `DataTable` propose le mode `fluid` pour répartir les colonnes et autoriser le retour à la ligne.
-L’atelier `/design/data` présente une recherche interactive et le tableau fluide.
-L’atelier `/design/feedback` présente l’état vide.
+La composition `/design/workflows` présente une recherche interactive.
+La référence `/design/data-table` présente le tableau fluide.
+La référence `/design/empty-state` présente l’état vide.
 
 ### Parcours Catalogue
 
@@ -135,13 +152,13 @@ Les documents existants restent inchangés.
 `TableSort` nomme la colonne et le prochain sens de tri.
 La cellule d’en-tête expose le sens actuel avec `aria-sort`.
 `FilterChip` montre un filtre actif et son action de retrait.
-L’atelier `/design/data` présente les deux contrôles dans son tableau interactif.
+La composition `/design/workflows` présente les deux contrôles dans son tableau interactif.
 
 ### Parcours Courriels
 
 Les vues Messages, Brouillons, Relances et Modèles séparent les listes des tâches.
 Le [guide Courriels](email-workspace.md) décrit les routes, les contrôles de version et la reprise des demandes incertaines.
-Le sélecteur `ObjectPicker` apparaît dans les tâches et dans l’atelier `/design/data`.
+Le sélecteur `ObjectPicker` apparaît dans les tâches et dans la référence `/design/object-picker`.
 
 Le scénario navigateur du Catalogue vérifie le zoom Chromium à 200 % dans un profil de test isolé.
 Il utilise le réglage du navigateur, sans zoom CSS ni changement du facteur de pincement.
@@ -152,7 +169,7 @@ Les indicateurs utilisent deux colonnes sur mobile.
 Le menu du compte affiche l’adresse complète sans imposer sa largeur à l’en-tête.
 Les champs du devis public restent contenus dans le panneau de signature.
 Les formulaires de connexion ont une largeur limitée sur grand écran.
-L’atelier `/design/inputs` présente la grille de champs partagée.
+La référence `/design/field-group` présente la grille de champs partagée.
 
 ## Vérification
 

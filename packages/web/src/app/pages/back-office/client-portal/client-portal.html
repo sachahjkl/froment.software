@@ -1,193 +1,200 @@
 <section class="client-page" aria-labelledby="client-title">
-  <header>
-    <div>
-      <p class="eyebrow">{{ i18n.t('backOffice.client.eyebrow') }}</p>
-      <h1 id="client-title">{{ i18n.t('backOffice.client.title') }}</h1>
+  <app-page-header
+    ><h1 id="client-title">{{ i18n.t('backOffice.client.title') }}</h1></app-page-header
+  >
+  <section appListWorkspace>
+    <app-list-toolbar>
+      <app-list-search
+        listSearch
+        [label]="i18n.t('portalWorkspace.search')"
+        [formField]="filters.search"
+        (valueChange)="setFilter('search', $event)"
+      />
+      <app-filter-menu
+        #menu
+        listFilters
+        [label]="i18n.t('listWorkspace.filters')"
+        [closeLabel]="i18n.t('listWorkspace.closeFilters')"
+        [backLabel]="i18n.t('listWorkspace.backFilters')"
+        [activeCount]="activeFilterCount()"
+        [disabled]="state() !== 'ready'"
+      >
+        <ng-template
+          appFilterPanel
+          [label]="i18n.t('portalWorkspace.kind')"
+          [summary]="kindFilterLabel()"
+        >
+          <app-filter-choice
+            [label]="i18n.t('listWorkspace.searchChoices')"
+            [emptyLabel]="i18n.t('listWorkspace.noChoices')"
+            [options]="kindOptions()"
+            [value]="filters.kind().value()"
+            (committed)="setFilter('kind', $event); menu.close()"
+          />
+        </ng-template>
+        <ng-template
+          appFilterPanel
+          [label]="i18n.t('portalWorkspace.status')"
+          [summary]="statusFilterLabel()"
+        >
+          <app-filter-choice
+            [label]="i18n.t('listWorkspace.searchChoices')"
+            [emptyLabel]="i18n.t('listWorkspace.noChoices')"
+            [options]="statusOptions()"
+            [value]="filters.status().value()"
+            (committed)="setFilter('status', $event); menu.close()"
+          />
+        </ng-template>
+      </app-filter-menu>
+      <app-table-export
+        listActions
+        [columns]="exportColumns()"
+        [rows]="exportRows()"
+        filename="documents.csv"
+        [label]="i18n.t('listWorkspace.exportCsv')"
+        [emptyHint]="i18n.t('listWorkspace.exportEmpty')"
+        [pendingHint]="i18n.t('listWorkspace.exportPending')"
+        [pending]="state() === 'loading'"
+      />
+      @if (state() === 'ready') {
+      <span listSummary role="status"
+        >{{ i18n.plural('portalWorkspace.count', { count: documents().length }) }}</span
+      >
+      }
+    </app-list-toolbar>
+    @if (filtered()) {
+    <div class="filter-chips">
+      @if (filters.search().value()) {
+      <button
+        appFilterChip
+        [label]="filters.search().value()"
+        (click)="setFilter('search', '')"
+      ></button>
+      } @if (filters.kind().value() !== 'all') {
+      <button appFilterChip [label]="kindFilterLabel()" (click)="setFilter('kind', 'all')"></button>
+      } @if (filters.status().value() !== 'all') {
+      <button
+        appFilterChip
+        [label]="statusFilterLabel()"
+        (click)="setFilter('status', 'all')"
+      ></button>
+      }
+      <button appButton type="button" (click)="resetFilters()">
+        {{ i18n.t('clientsWorkspace.resetFilters') }}
+      </button>
     </div>
-  </header>
-
-  @switch (state()) { @case ('loading') {
-  <p class="state" aria-live="polite">{{ i18n.t('backOffice.client.loading') }}</p>
-  } @case ('error') {
-  <div class="state">
-    <p appNotice variant="danger" role="alert">{{ i18n.t('backOffice.client.error') }}</p>
-    <button appButton type="button" (click)="load()">
-      {{ i18n.t('backOffice.client.retry') }}
-    </button>
-  </div>
-  } @case ('ready') {
-  <div class="document-groups">
-    <section aria-labelledby="client-quotes-title">
-      <h2 id="client-quotes-title">{{ i18n.t('backOffice.client.quotes') }}</h2>
-      @if (quotes().length === 0) {
-      <p class="empty ds-panel">{{ i18n.t('backOffice.client.quotes.empty') }}</p>
-      } @else {
-      <div appDataTable>
-        <table>
-          <thead>
-            <tr>
-              <th>{{ i18n.t('backOffice.client.quoteReference') }}</th>
-              <th>{{ i18n.t('backOffice.client.document') }}</th>
-              <th>{{ i18n.t('backOffice.client.status') }}</th>
-              <th>{{ i18n.t('backOffice.client.date') }}</th>
-              <th>{{ i18n.t('backOffice.client.amount') }}</th>
-              <th>{{ i18n.t('backOffice.client.download') }}</th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (quote of quotes(); track quote.id) {
-            <tr
-              [id]="rowId('quote', quote.id)"
-              [class.target-document]="isTarget('quote', quote.id)"
-              [attr.tabindex]="isTarget('quote', quote.id) ? -1 : null"
+    } @switch (state()) { @case ('loading') {
+    <p class="state" role="status">{{ i18n.t('backOffice.client.loading') }}</p>
+    } @case ('error') {
+    <div class="state">
+      <p appNotice variant="danger" role="alert">{{ i18n.t('backOffice.client.error') }}</p>
+      <button appButton type="button" (click)="load()">
+        {{ i18n.t('backOffice.client.retry') }}
+      </button>
+    </div>
+    } @case ('ready') { @if (!documents().length) {
+    <app-empty-state icon="invoice" [title]="i18n.t('portalWorkspace.empty')"
+      >@if (filtered()) {
+      <button emptyActions appButton type="button" (click)="resetFilters()">
+        {{ i18n.t('clientsWorkspace.resetFilters') }}
+      </button>
+      }</app-empty-state
+    >
+    } @else {
+    <div appDataTable tableLayout="fluid">
+      <table>
+        <thead>
+          <tr>
+            <th
+              scope="col"
+              [attr.aria-sort]="sortDirection('reference') === 'none' ? null : sortDirection('reference')"
             >
-              <td><strong>{{ quote.reference }}</strong></td>
-              <td><strong>{{ quote.title }}</strong></td>
-              <td><span appBadge>{{ quoteStatus(quote.status) }}</span></td>
-              <td>{{ date(quote.updatedAt) }}</td>
-              <td>{{ money(quote.totalCents, quote.currency) }}</td>
-              <td>
-                @if (quote.pdfAvailable) {
-                <a [href]="quotePdfUrl(quote.id)">{{ i18n.t('backOffice.client.pdf') }}</a>
-                } @else {
-                <span class="unavailable">{{ i18n.t('backOffice.client.unavailable') }}</span>
-                }
-              </td>
-            </tr>
-            }
-          </tbody>
-        </table>
-      </div>
-      }
-    </section>
-
-    <section aria-labelledby="client-orders-title">
-      <h2 id="client-orders-title">{{ i18n.t('backOffice.client.orders') }}</h2>
-      @if (orders().length === 0) {
-      <p class="empty ds-panel">{{ i18n.t('backOffice.client.orders.empty') }}</p>
-      } @else {
-      <div appDataTable>
-        <table>
-          <thead>
-            <tr>
-              <th>{{ i18n.t('backOffice.client.orderReference') }}</th>
-              <th>{{ i18n.t('backOffice.client.quoteReference') }}</th>
-              <th>{{ i18n.t('backOffice.client.document') }}</th>
-              <th>{{ i18n.t('backOffice.client.status') }}</th>
-              <th>{{ i18n.t('backOffice.client.date') }}</th>
-              <th>{{ i18n.t('backOffice.client.amount') }}</th>
-              <th>{{ i18n.t('backOffice.client.download') }}</th>
-              <th>{{ i18n.t('backOffice.client.invoice') }}</th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (order of orders(); track order.id) {
-            <tr
-              [id]="rowId('order', order.id)"
-              [class.target-document]="isTarget('order', order.id)"
-              [attr.tabindex]="isTarget('order', order.id) ? -1 : null"
+              <button
+                appTableSort
+                [label]="i18n.t('backOffice.client.document')"
+                [direction]="sortDirection('reference')"
+                (click)="sortBy('reference')"
+              ></button>
+            </th>
+            <th
+              scope="col"
+              [attr.aria-sort]="sortDirection('kind') === 'none' ? null : sortDirection('kind')"
             >
-              <td><strong>{{ order.reference }}</strong></td>
-              <td>{{ order.quoteReference }}</td>
-              <td><strong>{{ order.title }}</strong></td>
-              <td>
-                <span appBadge variant="success">{{ i18n.t('backOffice.client.confirmed') }}</span>
-              </td>
-              <td>{{ date(order.createdAt) }}</td>
-              <td>{{ money(order.totalCents, order.currency) }}</td>
-              <td>
-                @if (order.pdfAvailable) {
-                <a [href]="orderPdfUrl(order.id)">{{ i18n.t('backOffice.client.pdf') }}</a>
-                } @else {
-                <span class="unavailable">{{ i18n.t('backOffice.client.unavailable') }}</span>
-                }
-              </td>
-              <td>
-                {{ order.invoiceId === null ? i18n.t('backOffice.client.invoice.pending') :
-                i18n.t('backOffice.client.invoice.available') }}
-              </td>
-            </tr>
-            }
-          </tbody>
-        </table>
-      </div>
-      }
-    </section>
-
-    <section aria-labelledby="client-invoices-title">
-      <h2 id="client-invoices-title">{{ i18n.t('backOffice.client.invoices') }}</h2>
-      @if (invoices().length === 0) {
-      <p class="empty ds-panel">{{ i18n.t('backOffice.client.invoices.empty') }}</p>
-      } @else {
-      <div appDataTable>
-        <table>
-          <thead>
-            <tr>
-              <th>{{ i18n.t('backOffice.client.number') }}</th>
-              <th>{{ i18n.t('backOffice.client.orderReference') }}</th>
-              <th>{{ i18n.t('backOffice.client.document') }}</th>
-              <th>{{ i18n.t('backOffice.client.status') }}</th>
-              <th>{{ i18n.t('backOffice.client.dueDate') }}</th>
-              <th>{{ i18n.t('backOffice.client.amount') }}</th>
-              <th>{{ i18n.t('backOffice.client.download') }}</th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (invoice of invoices(); track invoice.id) {
-            <tr
-              [id]="rowId('invoice', invoice.id)"
-              [class.target-document]="isTarget('invoice', invoice.id)"
-              [attr.tabindex]="isTarget('invoice', invoice.id) ? -1 : null"
+              <button
+                appTableSort
+                [label]="i18n.t('portalWorkspace.kind')"
+                [direction]="sortDirection('kind')"
+                (click)="sortBy('kind')"
+              ></button>
+            </th>
+            <th
+              scope="col"
+              [attr.aria-sort]="sortDirection('status') === 'none' ? null : sortDirection('status')"
             >
-              <td><strong>{{ invoice.invoiceNumber }}</strong></td>
-              <td>{{ invoice.orderReference }}</td>
-              <td><strong>{{ invoice.title }}</strong></td>
-              <td><span appBadge>{{ invoiceStatus(invoice.status) }}</span></td>
-              <td>{{ date(invoice.dueDate) }}</td>
-              <td>
-                <dl class="invoice-balance">
-                  <div>
-                    <dt>{{ i18n.t('backOffice.client.invoice.total') }}</dt>
-                    <dd>{{ money(invoice.totalCents, invoice.currency) }}</dd>
-                  </div>
-                  <div>
-                    <dt>{{ i18n.t('backOffice.client.invoice.recordedPaid') }}</dt>
-                    <dd>{{ money(invoice.recordedPaidCents, invoice.currency) }}</dd>
-                  </div>
-                  <div>
-                    <dt>{{ i18n.t('backOffice.client.invoice.remaining') }}</dt>
-                    <dd><strong>{{ money(invoice.remainingCents, invoice.currency) }}</strong></dd>
-                  </div>
-                </dl>
-                @if (invoice.creditedCents > 0) {
-                <p>
-                  {{ i18n.t('credit.credited') }} {{ money(invoice.creditedCents, invoice.currency)
-                  }}
-                </p>
-                <a [href]="'/api/client/invoices/' + invoice.id + '/credit-note/pdf'" download
-                  >{{ i18n.t('credit.pdf') }}</a
-                >
-                } @if (invoice.status === 'paid' && invoice.recordedPaidCents < invoice.totalCents)
-                {
-                <p class="payment-note">{{ i18n.t('backOffice.client.invoice.historicalPaid') }}</p>
-                } @if (invoice.status === 'void') {
-                <p class="payment-note">{{ i18n.t('backOffice.client.invoice.voidBalance') }}</p>
-                }
-              </td>
-              <td>
-                @if (invoice.pdfAvailable) {
-                <a [href]="invoicePdfUrl(invoice.id)">{{ i18n.t('backOffice.client.pdf') }}</a>
-                } @else {
-                <span class="unavailable">{{ i18n.t('backOffice.client.unavailable') }}</span>
-                }
-              </td>
-            </tr>
-            }
-          </tbody>
-        </table>
-      </div>
-      }
-    </section>
-  </div>
-  } }
+              <button
+                appTableSort
+                [label]="i18n.t('backOffice.client.status')"
+                [direction]="sortDirection('status')"
+                (click)="sortBy('status')"
+              ></button>
+            </th>
+            <th
+              scope="col"
+              [attr.aria-sort]="sortDirection('date') === 'none' ? null : sortDirection('date')"
+            >
+              <button
+                appTableSort
+                [label]="i18n.t('backOffice.client.date')"
+                [direction]="sortDirection('date')"
+                (click)="sortBy('date')"
+              ></button>
+            </th>
+            <th
+              scope="col"
+              class="amount"
+              [attr.aria-sort]="sortDirection('amount') === 'none' ? null : sortDirection('amount')"
+            >
+              <button
+                appTableSort
+                [label]="i18n.t('backOffice.client.amount')"
+                [direction]="sortDirection('amount')"
+                (click)="sortBy('amount')"
+              ></button>
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (result of documents(); track result.item.kind + result.item.id) { @let item =
+          result.item;
+          <tr
+            [id]="rowId(item)"
+            [class.target-document]="isTarget(item)"
+            [attr.tabindex]="isTarget(item) ? -1 : null"
+          >
+            <th scope="row">
+              <a
+                [routerLink]="['/backoffice/client/documents', item.kind, item.id]"
+                [queryParams]="returnQuery()"
+                [appSearchHighlight]="result.referenceMatches"
+                >{{ item.reference }}</a
+              ><small [appSearchHighlight]="result.titleMatches">{{ item.title }}</small>
+            </th>
+            <td>{{ kindLabel(item.kind) }}</td>
+            <td><span appBadge>{{ statusLabel(item) }}</span></td>
+            <td><time [dateTime]="item.date">{{ date(item.date) }}</time></td>
+            <td class="amount">
+              {{ money(item.totalCents, item.currency) }}@if (item.invoice; as invoice) {
+              <small
+                >{{ i18n.t('backOffice.client.invoice.remaining') }} {{
+                money(invoice.remainingCents, invoice.currency) }}</small
+              >
+              }
+            </td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    } } }
+  </section>
 </section>

@@ -1,12 +1,15 @@
 import { DOCUMENT } from '@angular/common';
 import { afterNextRender, effect, inject, Injectable, signal } from '@angular/core';
 import {
+  formatPluralTranslation,
   formatTranslation,
   isSupportedLanguage,
   languages,
   translate,
   type Language,
   type ParameterizedTranslationKey,
+  type PluralTranslationKey,
+  type PluralTranslationParameters,
   type TranslationParameters,
   type TranslationKey,
 } from '@froment/l10n';
@@ -44,6 +47,13 @@ export class I18nService {
     params: TranslationParameters<Key>,
   ): string {
     return formatTranslation(this.language(), key, params);
+  }
+
+  plural<Key extends PluralTranslationKey>(
+    key: Key,
+    params: PluralTranslationParameters<Key>,
+  ): string {
+    return formatPluralTranslation(this.language(), key, params);
   }
 
   setLanguage(language: string): void {

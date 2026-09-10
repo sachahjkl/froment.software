@@ -34,6 +34,11 @@
   align-items: center;
   gap: var(--space-4);
 }
+app-global-search {
+  flex: 1 1 20rem;
+  min-inline-size: 0;
+  max-inline-size: 36rem;
+}
 .workspace-header a,
 .account-details a,
 .client-navigation a,
@@ -148,6 +153,11 @@
   }
   .workspace-label {
     display: none;
+  }
+  app-global-search {
+    order: 1;
+    flex-basis: 100%;
+    max-inline-size: none;
   }
 }
 @media (max-width: 26rem) {

@@ -7,6 +7,7 @@ import { emailDraftDocumentation } from './email-drafts.js';
 import { connectionDocumentation } from './connections.js';
 import { checkoutDocumentation } from './checkout.js';
 import { auditDocumentation } from './audit.js';
+import { workspaceApiDocumentation } from './workspace-api-documentation.js';
 import { emailTemplateDocumentation } from './email-templates.js';
 import { reminderDocumentation } from './reminders.js';
 import { providerActionDocumentation } from './provider-action-documentation.js';
@@ -104,6 +105,7 @@ export const apiDocumentation = {
     },
     operations: {
       ...auditDocumentation.fr.operations,
+      ...workspaceApiDocumentation.fr,
       ...passkeyDocumentation.fr.operations,
       ...emailDraftDocumentation.fr.operations,
       ...connectionDocumentation.fr,
@@ -488,6 +490,7 @@ export const apiDocumentation = {
     },
     operations: {
       ...auditDocumentation.en.operations,
+      ...workspaceApiDocumentation.en,
       catalogList: { summary: 'List services', description: 'Lists active and archived services.' },
       ...passkeyDocumentation.en.operations,
       ...emailDraftDocumentation.en.operations,

@@ -1,0 +1,45 @@
+<div appDataTable>
+  <table>
+    <caption>
+      {{ i18n.t('commercial.lineOrder') }}
+    </caption>
+    <thead>
+      <tr>
+        <th scope="col">{{ i18n.t('backOffice.quote.description') }}</th>
+        <th scope="col" class="amount">{{ i18n.t('backOffice.quote.quantity') }}</th>
+        <th scope="col" class="amount">{{ i18n.t('backOffice.quote.unitPrice') }}</th>
+        <th scope="col" class="amount">{{ i18n.t('backOffice.quote.vatRate') }}</th>
+        <th scope="col" class="amount">{{ i18n.t('backOffice.quote.lineTotal') }}</th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (line of revision().lines; track line.id) {
+      <tr>
+        <th scope="row">{{ line.description }}</th>
+        <td class="amount">{{ decimal(line.quantityMilli, 3) }}</td>
+        <td class="amount">{{ money(line.unitPriceCents) }}</td>
+        <td class="amount">{{ decimal(line.vatRateBasisPoints, 2) }} %</td>
+        <td class="amount">{{ money(line.totalCents) }}</td>
+      </tr>
+      }
+    </tbody>
+  </table>
+</div>
+<dl>
+  <div>
+    <dt>{{ i18n.t('backOffice.quote.subtotal') }}</dt>
+    <dd>{{ money(revision().netTotalCents) }}</dd>
+  </div>
+  <div>
+    <dt>{{ i18n.t('backOffice.quote.tax') }}</dt>
+    <dd>{{ money(revision().vatTotalCents) }}</dd>
+  </div>
+  <div>
+    <dt>{{ i18n.t('backOffice.quote.total') }}</dt>
+    <dd>{{ money(revision().totalCents) }}</dd>
+  </div>
+</dl>
+@if (revision().conditions) {
+<h3>{{ i18n.t('backOffice.quote.conditions') }}</h3>
+<p class="conditions">{{ revision().conditions }}</p>
+}

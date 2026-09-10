@@ -1,0 +1,221 @@
+<app-story-page [entry]="entry" [definition]="definition">
+  <div storyControls class="settings">
+    @if (entry.id !== 'filter-chip' && entry.id !== 'search-highlight' && entry.id !==
+    'localized-date') {
+    <label>{{ text().label }}<input class="input" [formField]="controls.label" /></label> } @if
+    (entry.id === 'data-table') {
+    <label
+      >{{ 'tableLayout' }}<select class="select" [formField]="controls.layout">
+        @for (layout of layouts; track layout) {
+        <option [value]="layout">{{ layout }}</option>
+        }
+      </select></label
+    >
+    } @if (entry.id === 'table-sort') {
+    <label
+      >{{ 'direction' }}<select class="select" [formField]="controls.direction">
+        @for (direction of directions; track direction) {
+        <option [value]="direction">{{ direction }}</option>
+        }
+      </select></label
+    >
+    } @if (entry.id === 'bulk-selection') {
+    <label
+      >{{ text().count }}<input class="input" type="number" [formField]="controls.count"
+    /></label>
+    } @if (entry.id === 'localized-date') {
+    <label>{{ text().value }}<input class="input" type="date" [formField]="controls.date" /></label>
+    } @if (entry.id === 'search-highlight' || entry.id === 'filter-chip' || entry.id ===
+    'list-workspace' || entry.id === 'list-toolbar') {
+    <label>{{ text().search }}<input class="input" [formField]="controls.query" /></label> } @if
+    (entry.id === 'event-history' || entry.id === 'data-table' || entry.id === 'table-export') {
+    <label><input type="checkbox" [formField]="controls.empty" />{{ text().empty }}</label> } @if
+    (entry.id === 'table-export') {
+    <label><input type="checkbox" [formField]="controls.pending" />{{ text().pending }}</label> }
+    @if (entry.id === 'table-export' || entry.id === 'data-table') {
+    <label>{{ text().name }}<input class="input" [formField]="controls.firstName" /></label>
+    <label>{{ text().value }}<input class="input" [formField]="controls.firstValue" /></label>
+    } @if (entry.id === 'table-export') {
+    <label>{{ 'filename' }}<input class="input" [formField]="controls.filename" /></label> }
+  </div>
+  <div storyPreview class="sample">
+    @switch (entry.id) { @case ('data-table') {
+    <ng-container *ngTemplateOutlet="table; context: { $implicit: model().layout }" /> } @case
+    ('table-sort') { <ng-container *ngTemplateOutlet="table; context: { $implicit: 'fluid' }" /> }
+    @case ('table-export') {
+    <app-table-export
+      [columns]="[text().name, text().value]"
+      [rows]="csvRows()"
+      [filename]="model().filename"
+      [label]="model().label"
+      [emptyHint]="text().exportEmpty"
+      [pendingHint]="text().exportPending"
+      [pending]="model().pending"
+    />
+    } @case ('filter-chip') { @if (model().query) {
+    <button appFilterChip [label]="model().query" (click)="clear()"></button> } @else {
+    <p>{{ text().none }}</p>
+    } } @case ('bulk-selection') {
+    <p>{{ text().count }} : {{ model().count }}</p>
+    <app-bulk-selection
+      [count]="model().count"
+      [selectionLabel]="model().label"
+      [clearLabel]="text().clearSelection"
+      (clearSelection)="clear()"
+      ><button appButton type="button" (click)="event.set('bulkAction')">
+        {{ text().execute }}
+      </button></app-bulk-selection
+    >
+    } @case ('list-toolbar') { <ng-container *ngTemplateOutlet="toolbar" /> } @case
+    ('list-workspace') {
+    <div appListWorkspace>
+      <ng-container *ngTemplateOutlet="toolbar" /><ng-container
+        *ngTemplateOutlet="table; context: { $implicit: 'fluid' }"
+      />
+    </div>
+    } @case ('search-highlight') { @for (result of rows(); track result.refIndex) {
+    <p [appSearchHighlight]="result.matches?.[0]?.indices ?? []">{{ result.item.name }}</p>
+    } } @case ('event-history') {
+    <app-event-history [label]="model().label" [events]="history()" /> } @case ('localized-date') {
+    @if (model().date) {
+    <time [attr.datetime]="model().date"
+      >{{ model().date | localizedDate: i18n.language(): {dateStyle: 'long'} }}</time
+    >
+    } } @case ('detail-row') {
+    <p appDetailRow [label]="model().label">{{ 'DEMO-1' }}</p>
+    } }
+    <p class="event" role="status">{{ text().events }} : {{ event() }}</p>
+  </div>
+  <div storyVariants class="samples">
+    @switch (entry.id) { @case ('data-table') { @for (layout of layouts; track layout) {
+    <div class="sample" data-variant>
+      <code>{{ layout }}</code
+      ><ng-container *ngTemplateOutlet="table; context: { $implicit: layout }" />
+    </div>
+    } } @case ('table-sort') { @for (direction of directions; track direction) {
+    <div class="sample" data-variant>
+      <code>{{ direction }}</code
+      ><button
+        appTableSort
+        [label]="text().name"
+        [direction]="direction"
+        (click)="event.set(direction)"
+      ></button>
+    </div>
+    } } @case ('table-export') { @for (state of ['ready', 'empty', 'pending']; track state) {
+    <div class="sample" data-variant>
+      <code>{{ state }}</code
+      ><app-table-export
+        [columns]="['Example']"
+        [rows]="state === 'empty' ? [] : [['=1+1']]"
+        [pending]="state === 'pending'"
+        filename="reference-variant.csv"
+        [label]="text().export"
+        [emptyHint]="text().exportEmpty"
+        [pendingHint]="text().exportPending"
+      />
+    </div>
+    } } @case ('filter-chip') { @for (label of [text().draft, text().local]; track label) {
+    <div class="sample" data-variant>
+      <button appFilterChip [label]="label" (click)="event.set(label)"></button>
+    </div>
+    } } @case ('bulk-selection') { @for (count of [0, 1, 3]; track count) {
+    <div class="sample" data-variant>
+      <code>{{ 'count' }} = {{ count }}</code
+      ><app-bulk-selection
+        [count]="count"
+        [selectionLabel]="text().count + ' : ' + count"
+        [clearLabel]="text().clearSelection"
+        (clearSelection)="event.set('clearSelection')"
+        ><button appButton type="button" (click)="event.set('bulkAction')">
+          {{ text().execute }}
+        </button></app-bulk-selection
+      >
+    </div>
+    } } @case ('list-toolbar') { @for (full of [false, true]; track full) {
+    <div class="sample full" data-variant>
+      <app-list-toolbar
+        ><app-list-search listSearch [label]="text().search" />@if (full) {
+        <button listFilters appButton type="button" (click)="event.set('filterSlot')">
+          {{ text().filters }}</button
+        ><button listActions appButton type="button" (click)="event.set('actionSlot')">
+          {{ text().execute }}
+        </button>
+        <p listSummary>{{ text().local }}</p>
+        }</app-list-toolbar
+      >
+    </div>
+    } } @case ('list-workspace') {
+    <div class="sample full" data-variant appListWorkspace>
+      <ng-container *ngTemplateOutlet="toolbar" /><ng-container
+        *ngTemplateOutlet="table; context: { $implicit: 'fluid' }"
+      />
+    </div>
+    } @case ('search-highlight') { @for (indices of highlightSamples; track $index) {
+    <div class="sample" data-variant><span [appSearchHighlight]="indices">{{ 'Atlas' }}</span></div>
+    } } @case ('event-history') { @for (empty of [false, true]; track empty) {
+    <div class="sample" data-variant>
+      <code>{{ empty ? 'empty' : 'events' }}</code
+      ><app-event-history [label]="text().content" [events]="empty ? [] : history()" />
+    </div>
+    } } @case ('localized-date') { @for (style of dateStyles; track style) {
+    <div class="sample" data-variant>
+      <code>{{ style }}</code
+      ><time datetime="2026-09-10"
+        >{{ '2026-09-10' | localizedDate: i18n.language(): {dateStyle: style} }}</time
+      >
+    </div>
+    } } @case ('detail-row') { @for (value of ['DEMO-1', text().local]; track value) {
+    <div class="sample" data-variant><p appDetailRow [label]="text().value">{{ value }}</p></div>
+    } } }
+  </div>
+</app-story-page>
+<ng-template #table let-layout>
+  <div appDataTable [tableLayout]="layout">
+    <table>
+      <caption>
+        {{ model().label }}
+      </caption>
+      <thead>
+        <tr>
+          <th [attr.aria-sort]="entry.id === 'table-sort' ? model().direction : null">
+            @if (entry.id === 'table-sort') {
+            <button
+              appTableSort
+              [label]="model().label"
+              [direction]="model().direction"
+              (click)="sort()"
+            ></button>
+            } @else { {{ text().name }} }
+          </th>
+          <th>{{ text().value }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (result of rows(); track result.refIndex) {
+        <tr>
+          <th scope="row">{{ result.item.name }}</th>
+          <td>{{ result.item.value }}</td>
+        </tr>
+        } @empty {
+        <tr>
+          <td colspan="2">{{ text().empty }}</td>
+        </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</ng-template>
+<ng-template #toolbar
+  ><app-list-toolbar
+    ><app-list-search listSearch [label]="model().label" [formField]="controls.query" /><button
+      listActions
+      appButton
+      type="button"
+      (click)="event.set('localAction')"
+    >
+      {{ text().execute }}
+    </button>
+    <p listSummary>{{ resultCount() }}</p></app-list-toolbar
+  ></ng-template
+>

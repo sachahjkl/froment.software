@@ -1,0 +1,19 @@
+:host {
+  display: block;
+  padding: var(--page-header-y) var(--page-x);
+}
+.groups {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr));
+  gap: var(--space-5);
+  margin-top: var(--space-6);
+}
+.groups section {
+  display: grid;
+  align-content: start;
+  gap: var(--space-3);
+  padding: var(--space-5);
+}
+h2 {
+  font-size: var(--text-xl);
+}

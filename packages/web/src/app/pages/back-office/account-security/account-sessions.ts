@@ -23,6 +23,7 @@ import { Notice } from '@shared/notice/notice';
   templateUrl: './account-sessions.html',
   styleUrl: './account-sessions.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
+  host: { '(window:beforeunload)': 'beforeUnload($event)' },
 })
 export class AccountSessions {
   private readonly confirmation = inject(Confirmation);
@@ -97,5 +98,11 @@ export class AccountSessions {
       dateStyle: 'medium',
       timeStyle: 'medium',
     }).format(new Date(value));
+  }
+  canDeactivate(): boolean {
+    return this.revoking() === undefined;
+  }
+  protected beforeUnload(event: BeforeUnloadEvent): void {
+    if (this.revoking() !== undefined) event.preventDefault();
   }
 }

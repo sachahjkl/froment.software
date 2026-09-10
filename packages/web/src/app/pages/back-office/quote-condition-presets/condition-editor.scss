@@ -1,0 +1,8 @@
+@use "./quote-condition-presets";
+form {
+  display: grid;
+  gap: var(--space-4);
+}
+form section {
+  padding: var(--space-4);
+}

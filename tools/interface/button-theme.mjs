@@ -15,11 +15,11 @@ const contrast = (left, right) => {
 };
 
 export async function checkDefaultButtonTheme(page, testInfo) {
-  await page.goto("/design/actions");
+  await page.goto("/design/button");
   await page.waitForLoadState("networkidle");
-  const button = page
-    .locator('button[appButton][data-button-variant="default"]:not(:disabled)')
-    .first();
+  const button = page.locator(
+    '[storyVariants] button[appButton][data-button-variant="default"]:not(:disabled):not([data-button-icon-only])',
+  );
   await expect(button).toBeVisible();
   const originalTheme = await page.locator("html").getAttribute("data-theme");
   const measurements = [];

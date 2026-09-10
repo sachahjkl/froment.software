@@ -1,284 +1,136 @@
-import { Component } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
-import { ActivatedRoute, convertToParamMap, provideRouter, Router } from '@angular/router';
-import type { InvoiceDetailValue } from '@froment/contracts';
-import { of, Subject } from 'rxjs';
+import { Router } from '@angular/router';
 import { vi } from 'vitest';
-
-import { InvoicesApi } from '@backoffice/invoices-api';
-import { OrdersApi } from '@backoffice/orders-api';
+import { Confirmation } from '@shared/confirmation/confirmation';
 import { InvoiceEditor } from './invoice-editor';
-
-const invoiceId = '01ARZ3NDEKTSV4RRFFQ69G5FAY';
-const orderId = '01ARZ3NDEKTSV4RRFFQ69G5FAZ';
-
-const revision = {
-  id: '01ARZ3NDEKTSV4RRFFQ69G5FAW',
-  version: 1,
-  clientDisplayName: 'Acme',
-  invoiceNumber: null,
-  issuedAt: null,
-  title: 'Audit',
-  serviceDate: '2026-08-20',
-  dueDate: '2026-09-20',
-  paymentTerms: '30 days',
-  currency: 'EUR' as const,
-  netTotalCents: 1_000,
-  vatTotalCents: 200,
-  totalCents: 1_200,
-  createdAt: '2026-08-20T06:00:00.000Z',
-  createdByUserId: '01ARZ3NDEKTSV4RRFFQ69G5FAX',
-  lines: [
-    {
-      id: '01ARZ3NDEKTSV4RRFFQ69G5FAT',
-      position: 0,
-      description: 'Audit',
-      quantityMilli: 1_000,
-      unitPriceCents: 1_000,
-      vatRateBasisPoints: 2_000,
-      netTotalCents: 1_000,
-      vatTotalCents: 200,
-      totalCents: 1_200,
-    },
-  ],
-};
-
-const detail = (status: InvoiceDetailValue['status'] = 'draft'): InvoiceDetailValue => ({
-  payments: [],
-  creditedCents: 0,
-  id: invoiceId,
+import {
+  field,
+  inputValue,
+  invoiceFixture,
+  invoiceId,
   orderId,
-  orderReference: 'CO-2026-000001',
-  clientId: '01ARZ3NDEKTSV4RRFFQ69G5FAV',
-  status,
-  version: 1,
-  invoiceNumber: status === 'draft' ? null : 'FA-2026-000001',
-  issuedAt: status === 'draft' ? null : '2026-08-20T06:00:00.000Z',
-  paidAt: status === 'paid' ? '2026-08-21T06:00:00.000Z' : null,
-  voidedAt: status === 'void' ? '2026-08-21T06:00:00.000Z' : null,
-  currentRevision: {
-    ...revision,
-    invoiceNumber: status === 'draft' ? null : 'FA-2026-000001',
-    issuedAt: status === 'draft' ? null : '2026-08-20T06:00:00.000Z',
-  },
-  revisions: [revision],
-  pdf: status === 'draft' ? null : { status: 'ready', attempts: 1, error: null },
-});
-
-const order = {
-  id: orderId,
-  reference: 'CO-2026-000001' as const,
-  quoteId: '01ARZ3NDEKTSV4RRFFQ69G5FAS',
-  quoteReference: 'DE-2026-000001' as const,
-  revisionId: '01ARZ3NDEKTSV4RRFFQ69G5FAR',
-  clientId: '01ARZ3NDEKTSV4RRFFQ69G5FAV',
-  clientDisplayName: 'Acme',
-  title: 'Audit',
-  currency: 'EUR' as const,
-  totalCents: 1_200,
-  createdAt: '2026-08-20T06:00:00.000Z',
-  invoiceId: null,
-};
-
-@Component({ template: '' })
-class NavigationTarget {}
-
-interface ApiStub {
-  get: ReturnType<typeof vi.fn>;
-  create: ReturnType<typeof vi.fn>;
-  createRevision: ReturnType<typeof vi.fn>;
-  issue: ReturnType<typeof vi.fn>;
-  recordPayment: ReturnType<typeof vi.fn>;
-  cancelPayment: ReturnType<typeof vi.fn>;
-  void: ReturnType<typeof vi.fn>;
-  renderPdf: ReturnType<typeof vi.fn>;
-}
-
-const input = (element: HTMLInputElement | HTMLSelectElement, value: string): void => {
-  element.value = value;
-  element.dispatchEvent(new Event('input', { bubbles: true }));
-  element.dispatchEvent(new Event('change', { bubbles: true }));
-};
-
-const button = (root: HTMLElement, text: RegExp): HTMLButtonElement => {
-  const result = [...root.querySelectorAll<HTMLButtonElement>('button')].find((candidate) =>
-    text.test(candidate.textContent ?? ''),
-  );
-  if (result === undefined) throw new Error(`Button ${text} is unavailable.`);
-  return result;
-};
-
-const setup = async (status?: InvoiceDetailValue['status']) => {
-  const api: ApiStub = {
-    get: vi.fn().mockResolvedValue({ success: true, result: detail(status) }),
-    create: vi.fn(),
-    createRevision: vi.fn(),
-    issue: vi.fn(),
-    recordPayment: vi.fn(),
-    cancelPayment: vi.fn(),
-    void: vi.fn(),
-    renderPdf: vi.fn(),
-  };
-  TestBed.configureTestingModule({
-    providers: [
-      provideRouter([{ path: 'backoffice/invoices/:invoiceId', component: NavigationTarget }]),
-      {
-        provide: ActivatedRoute,
-        useValue: {
-          snapshot: { paramMap: convertToParamMap(status === undefined ? {} : { invoiceId }) },
-          paramMap: of(convertToParamMap(status === undefined ? {} : { invoiceId })),
-        },
-      },
-      { provide: OrdersApi, useValue: { list: vi.fn().mockResolvedValue([order]) } },
-      { provide: InvoicesApi, useValue: api },
-    ],
-  });
-  const fixture = TestBed.createComponent(InvoiceEditor);
-  await fixture.whenStable();
-  const root: HTMLElement = fixture.nativeElement;
-  return { api, fixture, root };
-};
+  setupInvoicePage,
+  submitForm,
+} from '../billing/billing.spec-helper';
 
 describe('InvoiceEditor', () => {
   afterEach(() => vi.restoreAllMocks());
-  it('requires confirmation and a reason before cancelling a paid entry', async () => {
-    const { api, fixture, root } = await setup('paid');
-    const invoice = detail('paid');
-    const payment = {
-      id: '01ARZ3NDEKTSV4RRFFQ69G5FB9',
-      requestId: crypto.randomUUID(),
-      expectedVersion: invoice.version,
-      amountCents: invoice.currentRevision.totalCents,
-      paidOn: '2026-08-20',
-      method: 'transfer' as const,
-      reference: 'WRONG',
-      recordedAt: '2026-08-20T12:00:00.000Z',
-      recordedByUserId: '01ARZ3NDEKTSV4RRFFQ69G5FAV',
-      cancelledAt: null,
-      cancelledByUserId: null,
-      cancellationReason: null,
-    };
-    fixture.componentInstance['detail'].set({ ...invoice, payments: [payment] });
-    fixture.detectChanges();
-    button(root, /Annuler cette saisie|Cancel this entry/).click();
-    fixture.detectChanges();
-    const field = root.querySelector<HTMLTextAreaElement>('form.payment-form textarea');
-    if (field === null) throw new Error('correction.reason.missing');
-    field.value = 'Wrong amount';
-    field.dispatchEvent(new Event('input', { bubbles: true }));
-    const confirm = vi.spyOn(Confirmation.prototype, 'request').mockResolvedValue(false);
-    field.form?.dispatchEvent(new SubmitEvent('submit', { bubbles: true, cancelable: true }));
-    await fixture.whenStable();
-    expect(api.cancelPayment).not.toHaveBeenCalled();
-    confirm.mockResolvedValue(true);
-    api.cancelPayment.mockRejectedValueOnce(new Error('offline'));
-    field.form?.dispatchEvent(new SubmitEvent('submit', { bubbles: true, cancelable: true }));
-    await fixture.whenStable();
-    expect(field.value).toBe('Wrong amount');
-    api.cancelPayment.mockResolvedValueOnce({
-      success: true,
-      result: {
-        ...invoice,
-        status: 'issued',
-        paidAt: null,
-        payments: [
-          {
-            ...payment,
-            cancelledAt: '2026-08-21T12:00:00.000Z',
-            cancelledByUserId: payment.recordedByUserId,
-            cancellationReason: 'Wrong amount',
-          },
-        ],
-      },
-    });
-    field.form?.dispatchEvent(new SubmitEvent('submit', { bubbles: true, cancelable: true }));
-    await fixture.whenStable();
-    expect(api.cancelPayment).toHaveBeenLastCalledWith(invoice.id, payment.id, {
-      expectedVersion: invoice.version,
-      reason: 'Wrong amount',
-    });
-    expect(fixture.componentInstance['recordedPaid']()).toBe(0);
-    expect(fixture.componentInstance['remaining']()).toBe(invoice.currentRevision.totalCents);
-    expect(root.textContent).toMatch(/Saisie annulée|Entry cancelled/);
-    expect(root.textContent).toContain('Wrong amount');
+  it('keeps issued invoices read-only and moves financial tasks out of the editor', async () => {
+    const { root } = await setupInvoicePage(InvoiceEditor);
+    expect(root.querySelector('form')).toBeNull();
+    expect(root.querySelector(`a[href="/backoffice/invoices/${invoiceId}"]`)).not.toBeNull();
+    expect(root.querySelector('.payment-form')).toBeNull();
   });
-
-  it('loads the PDF preview directly without a sandbox', async () => {
-    const { fixture, root } = await setup('draft');
-    fixture.detectChanges();
-    const frame = await vi.waitFor(() => {
-      const result = root.querySelector('iframe');
-      if (result === null) throw new Error('The invoice preview frame is unavailable.');
-      return result;
+  it('saves a version and keeps refreshParties explicit', async () => {
+    const { root, api, fixture } = await setupInvoicePage(InvoiceEditor, {
+      invoice: invoiceFixture('draft'),
     });
-    expect(frame.getAttribute('src')).toBe(`/api/invoices/${invoiceId}/revisions/1/preview`);
-    expect(frame.hasAttribute('sandbox')).toBe(false);
+    const revised = { ...invoiceFixture('draft'), version: 3 };
+    api.createRevision.mockResolvedValue({ success: true, result: revised });
+    inputValue(field(root, 'input[type="text"]'), 'Changed title');
+    submitForm(root);
+    await fixture.whenStable();
+    expect(api.createRevision).toHaveBeenCalledWith(
+      invoiceId,
+      expect.objectContaining({
+        expectedVersion: 2,
+        refreshParties: false,
+        title: 'Changed title',
+      }),
+    );
+    const refresh = field(root, 'input[type="checkbox"]');
+    refresh.click();
+    await fixture.whenStable();
+    submitForm(root);
+    await fixture.whenStable();
+    expect(api.createRevision).toHaveBeenLastCalledWith(
+      invoiceId,
+      expect.objectContaining({ expectedVersion: 3, refreshParties: true }),
+    );
   });
-
-  it('keeps the newest invoice when route responses finish out of order', async () => {
-    type InvoiceOutcome = { readonly success: true; readonly result: InvoiceDetailValue };
-    const secondInvoiceId = '01ARZ3NDEKTSV4RRFFQ69G5FB0';
-    const params = new Subject<ReturnType<typeof convertToParamMap>>();
-    let resolveFirst!: (value: InvoiceOutcome) => void;
-    let resolveSecond!: (value: InvoiceOutcome) => void;
-    const first = new Promise<InvoiceOutcome>((resolve) => (resolveFirst = resolve));
-    const second = new Promise<InvoiceOutcome>((resolve) => (resolveSecond = resolve));
-    const get = vi.fn((id: string) => (id === invoiceId ? first : second));
-    TestBed.configureTestingModule({
-      providers: [
-        provideRouter([]),
+  it('retains edited values on conflict and requires reload before another save', async () => {
+    const { root, api, fixture } = await setupInvoicePage(InvoiceEditor, {
+      invoice: invoiceFixture('draft'),
+    });
+    api.createRevision.mockResolvedValue({ success: false, code: 'invoice.version_conflict' });
+    inputValue(field(root, 'input[type="text"]'), 'Unsaved title');
+    submitForm(root);
+    await fixture.whenStable();
+    expect(field(root, 'input[type="text"]').value).toBe('Unsaved title');
+    expect(fixture.componentInstance['stale']()).toBe(true);
+    submitForm(root);
+    await fixture.whenStable();
+    expect(api.createRevision).toHaveBeenCalledTimes(1);
+    const confirmation = vi.spyOn(TestBed.inject(Confirmation), 'request').mockResolvedValue(false);
+    await fixture.componentInstance['reload']();
+    await fixture.whenStable();
+    expect(field(root, 'input[type="text"]').value).toBe('Unsaved title');
+    expect(fixture.componentInstance['invoiceForm'].title().value()).toBe('Unsaved title');
+    expect(confirmation).toHaveBeenCalledTimes(1);
+    expect(api.get).toHaveBeenCalledTimes(1);
+    expect(fixture.componentInstance['stale']()).toBe(true);
+    expect(fixture.componentInstance['totalsAreStale']()).toBe(true);
+    expect(await fixture.componentInstance.canDeactivate()).toBe(false);
+    expect(confirmation).toHaveBeenCalledTimes(2);
+    const event = new Event('beforeunload', { cancelable: true });
+    window.dispatchEvent(event);
+    expect(event.defaultPrevented).toBe(true);
+    expect(field(root, 'input[type="text"]').value).toBe('Unsaved title');
+    confirmation.mockResolvedValue(true);
+    await fixture.componentInstance['reload']();
+    await fixture.whenStable();
+    expect(api.get).toHaveBeenCalledTimes(2);
+    expect(field(root, 'input[type="text"]').value).toBe('Audit');
+    expect(fixture.componentInstance['stale']()).toBe(false);
+    expect(await fixture.componentInstance.canDeactivate()).toBe(true);
+  });
+  it('validates dates and lines, then focuses the first invalid field', async () => {
+    const { root, api, fixture } = await setupInvoicePage(InvoiceEditor, {
+      invoice: invoiceFixture('draft'),
+    });
+    const dates = root.querySelectorAll<HTMLInputElement>('input[type="date"]');
+    const from = dates.item(0);
+    const to = dates.item(1);
+    inputValue(from, '2026-10-20');
+    inputValue(to, '2026-09-20');
+    inputValue(field(root, 'fieldset input'), ' ');
+    submitForm(root);
+    await fixture.whenStable();
+    expect(api.createRevision).not.toHaveBeenCalled();
+    expect(document.activeElement).toBe(to);
+    expect(to.getAttribute('aria-describedby')).toBe('invoice-due-date-error');
+  });
+  it('creates from an order and navigates to the read-only detail', async () => {
+    const invoice = invoiceFixture('draft');
+    const { root, api, fixture } = await setupInvoicePage(InvoiceEditor, {
+      params: {},
+      query: { orderId },
+      orders: [
         {
-          provide: ActivatedRoute,
-          useValue: {
-            snapshot: { paramMap: convertToParamMap({ invoiceId }) },
-            paramMap: params,
-          },
+          id: orderId,
+          reference: 'CO-2026-000001',
+          quoteId: '01ARZ3NDEKTSV4RRFFQ69G5FAS',
+          quoteReference: 'DE-2026-000001',
+          revisionId: '01ARZ3NDEKTSV4RRFFQ69G5FAW',
+          clientId: invoice.clientId,
+          clientDisplayName: 'Acme',
+          title: 'Audit',
+          currency: 'EUR',
+          totalCents: 1200,
+          createdAt: '2026-08-20T06:00:00.000Z',
+          invoiceId: null,
         },
-        { provide: OrdersApi, useValue: { list: () => Promise.resolve([]) } },
-        { provide: InvoicesApi, useValue: { get } },
       ],
     });
-    const fixture = TestBed.createComponent(InvoiceEditor);
-    const root: HTMLElement = fixture.nativeElement;
     await fixture.whenStable();
-
-    params.next(convertToParamMap({ invoiceId }));
-    params.next(convertToParamMap({ invoiceId: secondInvoiceId }));
-    resolveSecond({
-      success: true,
-      result: {
-        ...detail(),
-        id: secondInvoiceId,
-        currentRevision: { ...detail().currentRevision, title: 'Newest invoice' },
-      },
-    });
-    await vi.waitFor(() =>
-      expect(root.querySelector<HTMLInputElement>('input[type="text"]')?.value).toBe(
-        'Newest invoice',
-      ),
-    );
-    resolveFirst({ success: true, result: detail() });
-    await fixture.whenStable();
-
-    expect(root.querySelector<HTMLInputElement>('input[type="text"]')?.value).toBe(
-      'Newest invoice',
-    );
-  });
-
-  it('creates an invoice from an order and replaces the current navigation', async () => {
-    const { api, fixture, root } = await setup();
-    api.create.mockResolvedValue({ success: true, result: detail() });
+    api.create.mockResolvedValue({ success: true, result: invoice });
     const navigate = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
-
-    expect(root.querySelector('select')?.textContent).toContain('CO-2026-000001');
-
-    input(root.querySelector('select')!, orderId);
+    expect(field(root, 'select').value).toBe(orderId);
     const dates = root.querySelectorAll<HTMLInputElement>('input[type="date"]');
-    input(dates[0]!, '2026-08-20');
-    input(dates[1]!, '2026-09-20');
-    root.querySelector('form')!.dispatchEvent(new SubmitEvent('submit', { bubbles: true }));
+    inputValue(dates.item(0), '2026-08-20');
+    inputValue(dates.item(1), '2026-09-20');
+    submitForm(root);
     await fixture.whenStable();
-
     expect(api.create).toHaveBeenCalledWith({
       orderId,
       serviceDate: '2026-08-20',
@@ -288,227 +140,19 @@ describe('InvoiceEditor', () => {
     expect(navigate).toHaveBeenCalledWith(['/backoffice/invoices', invoiceId], {
       replaceUrl: true,
     });
-    expect(button(root, /Enregistrer|Save/).disabled).toBe(false);
   });
-
-  it('creates a revision with the edited public field values', async () => {
-    const revised = {
-      ...detail(),
-      version: 2,
-      currentRevision: { ...detail().currentRevision, title: 'Updated audit', version: 2 },
-    };
-    const { api, fixture, root } = await setup('draft');
-    api.createRevision.mockResolvedValue({ success: true, result: revised });
-
-    input(root.querySelector<HTMLInputElement>('input[type="text"]')!, '  Updated audit  ');
-    root.querySelector('form')!.dispatchEvent(new SubmitEvent('submit', { bubbles: true }));
-    await fixture.whenStable();
-
-    expect(api.createRevision).toHaveBeenCalledWith(
-      invoiceId,
-      expect.objectContaining({ expectedVersion: 1, title: 'Updated audit' }),
-    );
-    expect(root.querySelector<HTMLInputElement>('input[type="text"]')?.value).toBe('Updated audit');
-  });
-
-  it('issues a saved draft and reloads its issued state', async () => {
-    const { api, fixture, root } = await setup('draft');
-    vi.spyOn(Confirmation.prototype, 'request').mockResolvedValue(true);
-    api.issue.mockResolvedValue({ success: true, result: { status: 'issued' } });
-    api.get.mockResolvedValueOnce({ success: true, result: detail('issued') });
-
-    button(root, /Émettre|Issue/).click();
-    await fixture.whenStable();
-
-    expect(api.issue).toHaveBeenCalledWith(invoiceId, 1);
-    expect(root.textContent).toMatch(/Émise|Issued/);
-    expect(root.querySelector('.payment-form')).not.toBeNull();
-  });
-
-  it('disables issuance while the draft contains unsaved changes', async () => {
-    const { api, fixture, root } = await setup('draft');
-
-    input(root.querySelector<HTMLInputElement>('input[type="text"]')!, 'Unsaved title');
-    await fixture.whenStable();
-    button(root, /Émettre|Issue/).click();
-
-    expect(button(root, /Émettre|Issue/).disabled).toBe(true);
-    expect(api.issue).not.toHaveBeenCalled();
-  });
-
-  it('disables revision saving after issuance', async () => {
-    const { root } = await setup('issued');
-
-    expect(button(root, /Enregistrer|Save/).disabled).toBe(true);
-  });
-
-  it.each([['void', /Annuler la facture|Void invoice/i, 'void']] as const)(
-    'transitions an issued invoice to %s',
-    async (status, label, method) => {
-      const { api, fixture, root } = await setup('issued');
-      vi.spyOn(Confirmation.prototype, 'request').mockResolvedValue(true);
-      api[method].mockResolvedValue({ success: true, result: detail(status) });
-
-      button(root, label).click();
-      await fixture.whenStable();
-
-      expect(api[method]).toHaveBeenCalledWith(invoiceId, { expectedVersion: 1 });
-      expect(root.textContent).toMatch(/Annulée|Void/);
-    },
-  );
-
-  it('generates a revision PDF and exposes its download URL', async () => {
-    const { api, fixture, root } = await setup('draft');
-    api.renderPdf.mockResolvedValue({ success: true, result: {} });
-
-    button(root, /Générer|Generate/).click();
-    await fixture.whenStable();
-
-    expect(api.renderPdf).toHaveBeenCalledWith(invoiceId, 1);
-    expect(
-      root.querySelector<HTMLAnchorElement>(`a[href="/api/invoices/${invoiceId}/revisions/1/pdf"]`),
-    ).not.toBeNull();
-  });
-
-  it('shows a version conflict and restores saving', async () => {
-    const { api, fixture, root } = await setup('draft');
-    api.createRevision.mockResolvedValue({ success: false, code: 'invoice.version_conflict' });
-    input(root.querySelector<HTMLInputElement>('input[type="text"]')!, 'Updated');
-
-    root.querySelector('form')!.dispatchEvent(new SubmitEvent('submit', { bubbles: true }));
-    await fixture.whenStable();
-
-    expect(root.querySelector('[role="alert"]')?.textContent).toMatch(
-      /changed elsewhere|version|révision/i,
-    );
-    expect(button(root, /Enregistrer|Save/).disabled).toBe(false);
-  });
-
-  it('restores saving after a revision network error', async () => {
-    const { api, fixture, root } = await setup('draft');
-    api.createRevision.mockRejectedValue(new Error('offline'));
-    input(root.querySelector<HTMLInputElement>('input[type="text"]')!, 'Updated');
-
-    root.querySelector('form')!.dispatchEvent(new SubmitEvent('submit', { bubbles: true }));
-    await fixture.whenStable();
-
-    expect(root.querySelector('[role="alert"]')?.textContent).toMatch(/facture|invoice/i);
-    expect(button(root, /Enregistrer|Save/).disabled).toBe(false);
-  });
-
-  it('restores action pending after a transition network error', async () => {
-    const { api, fixture, root } = await setup('issued');
-    vi.spyOn(Confirmation.prototype, 'request').mockResolvedValue(true);
-    api.void.mockRejectedValue(new Error('offline'));
-
-    button(root, /Annuler la facture|Void invoice/i).click();
-    await fixture.whenStable();
-
-    expect(button(root, /Annuler la facture|Void invoice/i).disabled).toBe(false);
-  });
-
-  it('retries a payment with the same request identifier after a network error', async () => {
-    const { api, fixture, root } = await setup('issued');
-    vi.spyOn(Confirmation.prototype, 'request').mockResolvedValue(true);
-    const form = root.querySelector<HTMLFormElement>('.payment-form');
-    if (form === null) throw new Error('payment.form.missing');
-    const fields = form.querySelectorAll<HTMLInputElement>('input');
-    input(fields[0]!, '4.00');
-    input(fields[1]!, '2026-08-20');
-    input(fields[2]!, 'BANK-456');
-    api.recordPayment.mockRejectedValueOnce(new Error('offline'));
-    form.dispatchEvent(new SubmitEvent('submit', { bubbles: true, cancelable: true }));
-    await fixture.whenStable();
-    const request = api.recordPayment.mock.calls[0]?.[1];
-    expect(request).toMatchObject({
-      amountCents: 400,
-      expectedVersion: 1,
-      paidOn: '2026-08-20',
-      method: 'transfer',
-      reference: 'BANK-456',
+  it('protects pending saves and dirty forms from navigation and reload', async () => {
+    const { root, fixture } = await setupInvoicePage(InvoiceEditor, {
+      invoice: invoiceFixture('draft'),
     });
-    api.recordPayment.mockResolvedValueOnce({
-      success: true,
-      result: {
-        ...detail('issued'),
-        payments: [
-          {
-            ...request,
-            id: '01ARZ3NDEKTSV4RRFFQ69G5FB9',
-            recordedAt: '2026-08-20T12:00:00.000Z',
-            recordedByUserId: '01ARZ3NDEKTSV4RRFFQ69G5FAV',
-            cancelledAt: null,
-            cancelledByUserId: null,
-            cancellationReason: null,
-          },
-        ],
-      },
-    });
-    form.dispatchEvent(new SubmitEvent('submit', { bubbles: true, cancelable: true }));
+    vi.spyOn(Confirmation.prototype, 'request').mockResolvedValue(false);
+    inputValue(field(root, 'input[type="text"]'), 'Unsaved');
     await fixture.whenStable();
-    expect(api.recordPayment.mock.calls[1]?.[1]).toEqual(request);
-    expect(root.textContent).toContain('BANK-456');
-    expect(root.querySelector('.payment-form')).not.toBeNull();
-  });
-
-  it('restores PDF pending after a network error', async () => {
-    const { api, fixture, root } = await setup('draft');
-    api.renderPdf.mockRejectedValue(new Error('offline'));
-
-    button(root, /Générer|Generate/).click();
-    await fixture.whenStable();
-
-    expect(button(root, /Générer|Generate/).disabled).toBe(false);
-    expect(root.querySelector('[role="alert"]')?.textContent).toMatch(/facture|invoice/i);
-  });
-
-  it('marks invalid dates and lines, describes local errors, and focuses the first field', async () => {
-    const { api, fixture, root } = await setup('draft');
-    const dates = root.querySelectorAll<HTMLInputElement>('input[type="date"]');
-    const lineInputs = root.querySelectorAll<HTMLInputElement>('fieldset input');
-    input(dates[0]!, '2026-10-20');
-    input(dates[1]!, '2026-09-20');
-    input(lineInputs[0]!, ' ');
-    input(lineInputs[1]!, '0');
-
-    const save = button(root, /Enregistrer|Save/);
-    expect(save.disabled).toBe(false);
-    root.querySelector('form')!.dispatchEvent(new SubmitEvent('submit', { bubbles: true }));
-    await fixture.whenStable();
-
-    expect(api.createRevision).not.toHaveBeenCalled();
-    expect(dates[1]!.getAttribute('aria-invalid')).toBe('true');
-    expect(dates[1]!.getAttribute('aria-describedby')).toBe('invoice-due-date-error');
-    expect(root.querySelector('#invoice-due-date-error')).not.toBeNull();
-    expect(lineInputs[0]!.getAttribute('aria-describedby')).toBe(
-      'invoice-line-description-error-0',
-    );
-    expect(root.querySelector('#invoice-line-description-error-0')).not.toBeNull();
-    expect(lineInputs[1]!.getAttribute('aria-invalid')).toBe('true');
-    expect(document.activeElement).toBe(dates[1]);
-  });
-
-  it('rejects an invalid invoice identifier', async () => {
-    TestBed.configureTestingModule({
-      providers: [
-        provideRouter([]),
-        {
-          provide: ActivatedRoute,
-          useValue: {
-            snapshot: { paramMap: convertToParamMap({ invoiceId: 'invalid' }) },
-            paramMap: of(convertToParamMap({ invoiceId: 'invalid' })),
-          },
-        },
-        { provide: OrdersApi, useValue: {} },
-        { provide: InvoicesApi, useValue: {} },
-      ],
-    });
-    const fixture = TestBed.createComponent(InvoiceEditor);
-    await fixture.whenStable();
-    expect(fixture.nativeElement.querySelector('form')).toBeNull();
-    expect(fixture.nativeElement.querySelector('[role="alert"]')?.textContent).toMatch(
-      /introuvable|not found/,
-    );
+    expect(await fixture.componentInstance.canDeactivate()).toBe(false);
+    const event = new Event('beforeunload', { cancelable: true });
+    window.dispatchEvent(event);
+    expect(event.defaultPrevented).toBe(true);
+    fixture.componentInstance['saving'].set(true);
+    expect(await fixture.componentInstance.canDeactivate()).toBe(false);
   });
 });
-import { Confirmation } from '@shared/confirmation/confirmation';

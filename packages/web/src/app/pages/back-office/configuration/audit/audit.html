@@ -1,0 +1,183 @@
+<section aria-labelledby="audit-title">
+  <header>
+    <h1 id="audit-title">{{ i18n.t('audit.title') }}</h1>
+    <p>{{ i18n.t('audit.intro') }}</p>
+  </header>
+  <div appListWorkspace>
+    <app-list-toolbar>
+      <app-list-search
+        listSearch
+        [label]="i18n.t('audit.searchPage')"
+        [value]="table.query().q"
+        (valueChange)="table.search($event)"
+        [disabled]="state() === 'loading'"
+      />
+      <app-filter-menu
+        listFilters
+        [label]="i18n.t('audit.serverFilters')"
+        [closeLabel]="i18n.t('listWorkspace.closeFilters')"
+        [backLabel]="i18n.t('listWorkspace.backFilters')"
+        [activeCount]="(query()?.action ? 1 : 0) + (query()?.resourceType ? 1 : 0)"
+        [disabled]="state() === 'loading'"
+      >
+        <ng-template
+          appFilterPanel
+          [label]="i18n.t('audit.action')"
+          [summary]="query()?.action || i18n.t('audit.allActions')"
+        >
+          <app-filter-choice
+            [label]="i18n.t('listWorkspace.searchChoices')"
+            [emptyLabel]="i18n.t('listWorkspace.noChoices')"
+            [options]="actionOptions()"
+            [value]="query()?.action ?? ''"
+            [disabled]="state() === 'loading'"
+            (committed)="setAction($event)"
+          />
+        </ng-template>
+        <ng-template
+          appFilterPanel
+          [label]="i18n.t('audit.resourceType')"
+          [summary]="query()?.resourceType || i18n.t('audit.allResources')"
+        >
+          <form (submit)="apply($event)" novalidate>
+            <label
+              >{{ i18n.t('audit.resourceType') }}
+              <input
+                id="audit-resource-type"
+                class="input"
+                [formField]="filters.resourceType"
+                [attr.aria-describedby]="filters().touched() && filters().invalid() ? 'audit-resource-hint audit-filter-error' : 'audit-resource-hint'"
+              />
+            </label>
+            <div class="actions">
+              <button appButton type="submit" [disabled]="state() === 'loading'">
+                {{ i18n.t('audit.apply') }}
+              </button>
+              <button appButton type="button" [disabled]="state() === 'loading'" (click)="reset()">
+                {{ i18n.t('audit.reset') }}
+              </button>
+            </div>
+          </form>
+          <p id="audit-resource-hint" class="hint">{{ i18n.t('audit.resourceHint') }}</p>
+          @if (filters().touched() && filters().invalid()) {
+          <p id="audit-filter-error" appNotice variant="danger" role="alert">
+            {{ i18n.t('audit.filterInvalid') }}
+          </p>
+          }
+        </ng-template>
+      </app-filter-menu>
+      <div listActions class="actions">
+        <button
+          appButton
+          type="button"
+          [disabled]="state() === 'loading' || query() === undefined"
+          (click)="reload()"
+        >
+          {{ i18n.t('audit.reload') }}
+        </button>
+        <app-table-export
+          [columns]="['id', 'action', 'resourceType', 'resourceId', 'occurredAt']"
+          [rows]="auditExport()"
+          filename="audit-page.csv"
+          [label]="i18n.t('audit.exportPage')"
+          [emptyHint]="i18n.t('listWorkspace.exportEmpty')"
+          [pendingHint]="i18n.t('listWorkspace.exportPending')"
+          [pending]="state() !== 'ready'"
+        />
+      </div>
+      <div listSummary>
+        <p id="audit-page-scope">
+          {{ i18n.t('audit.pageScope') }} {{ i18n.plural('audit.visibleCount', { count:
+          table.rows().length }) }} {{ i18n.plural('audit.loadedCount', { count: page().items.length
+          }) }}
+        </p>
+        <p id="audit-order" class="hint">{{ i18n.t('audit.order') }}</p>
+      </div>
+    </app-list-toolbar>
+    @if (error(); as code) {
+    <p appNotice variant="danger" role="alert">{{ i18n.t(code) }}</p>
+    } @if (state() === 'loading') {
+    <p role="status">{{ i18n.t('audit.loading') }}</p>
+    } @if (state() === 'ready') { @if (table.results().length === 0) {
+    <p class="ds-panel" role="status">{{ i18n.t('audit.empty') }}</p>
+    } @else {
+    <div appDataTable>
+      <table aria-describedby="audit-order audit-page-scope">
+        <thead>
+          <tr>
+            <th scope="col" [attr.aria-sort]="table.direction('date')">
+              <button
+                appTableSort
+                [label]="i18n.t('audit.date')"
+                [direction]="table.direction('date')"
+                (click)="table.sort('date')"
+              ></button>
+            </th>
+            <th scope="col" [attr.aria-sort]="table.direction('action')">
+              <button
+                appTableSort
+                [label]="i18n.t('audit.action')"
+                [direction]="table.direction('action')"
+                (click)="table.sort('action')"
+              ></button>
+            </th>
+            <th scope="col" [attr.aria-sort]="table.direction('resource')">
+              <button
+                appTableSort
+                [label]="i18n.t('audit.resource')"
+                [direction]="table.direction('resource')"
+                (click)="table.sort('resource')"
+              ></button>
+            </th>
+            <th scope="col" [attr.aria-sort]="table.direction('actor')">
+              <button
+                appTableSort
+                [label]="i18n.t('audit.actor')"
+                [direction]="table.direction('actor')"
+                (click)="table.sort('actor')"
+              ></button>
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (result of table.results(); track result.item.id) { @let event = result.item;
+          <tr>
+            <td>
+              <time [attr.datetime]="event.occurredAt"
+                >{{ event.occurredAt | localizedDate: i18n.language(): { dateStyle: 'medium',
+                timeStyle: 'medium' } }}</time
+              >
+            </td>
+            <th scope="row">
+              <code [appSearchHighlight]="table.match(result, 'action')">{{ event.action }}</code>
+            </th>
+            <td>
+              <code [appSearchHighlight]="table.match(result, 'resourceType')"
+                >{{ event.resourceType }}</code
+              ><code class="resource-id" [appSearchHighlight]="table.match(result, 'resourceId')"
+                >{{ event.resourceId }}</code
+              >
+            </td>
+            <td>
+              @if (event.actorUserId; as actor) {
+              <code [appSearchHighlight]="table.match(result, 'actorUserId')">{{ actor }}</code> }
+              @else { {{ i18n.t('audit.actorUnknown') }} }
+            </td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    } }
+    <app-result-navigation
+      [label]="i18n.t('audit.navigation')"
+      [rangeLabel]="state() === 'ready' ? i18n.plural('audit.count', { count: page().items.length }) : ''"
+      [previousLabel]="i18n.t('audit.previous')"
+      [nextLabel]="i18n.t('audit.next')"
+      [previousDisabled]="state() !== 'ready' || page().previousCursor === null"
+      [nextDisabled]="state() !== 'ready' || page().nextCursor === null"
+      (previous)="move('newer')"
+      (next)="move('older')"
+    />
+  </div>
+</section>

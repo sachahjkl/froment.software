@@ -45,7 +45,7 @@ async function configure(panel = 'profile', archived = false) {
         {
           path: ':clientId',
           component: ClientDetail,
-          children: ['profile', 'access', 'documents'].map((path) => ({
+          children: ['profile', 'affairs', 'access', 'documents'].map((path) => ({
             path,
             component: TabPanelOutlet,
             data: { panel: path },
@@ -78,6 +78,9 @@ describe('ClientDetail', () => {
     expect(root.querySelector('form')).toBeNull();
     expect(root.querySelector('.profile')?.textContent).toContain(client.email);
     expect(root.querySelector('app-page-header a')?.getAttribute('href')).toBe(
+      `/backoffice/quotes/new?clientId=${client.id}`,
+    );
+    expect(root.querySelectorAll('app-page-header a')[1]?.getAttribute('href')).toBe(
       `/backoffice/clients/${client.id}/edit`,
     );
   });
@@ -110,18 +113,12 @@ describe('ClientDetail', () => {
     expect(root.querySelector('.profile')).toBeNull();
   });
 
-  it('explains password requirements and protects unsubmitted access fields', async () => {
-    const { root, component, fixture, confirmation } = await configure('access');
-    const password = root.querySelector<HTMLInputElement>('#client-account-password')!;
-    expect(root.querySelector('#client-account-password-requirements')?.textContent).toMatch(
-      /12.*256/,
+  it('links to a dedicated access task instead of showing a permanent form', async () => {
+    const { root } = await configure('access');
+    expect(root.querySelector('form')).toBeNull();
+    expect(root.querySelector('#client-access-panel a')?.getAttribute('href')).toBe(
+      `/backoffice/clients/${client.id}/access/new`,
     );
-    password.value = 'court';
-    password.dispatchEvent(new Event('input'));
-    await fixture.whenStable();
-    expect(root.querySelector('#client-account-password-error')?.textContent).toMatch(/5.*12/);
-    expect(await component.canDeactivate()).toBe(false);
-    expect(confirmation.request).toHaveBeenCalledOnce();
   });
 
   it('lists and revokes one access account without changing the client', async () => {

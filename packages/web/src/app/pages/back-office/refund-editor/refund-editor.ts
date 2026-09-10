@@ -1,0 +1,122 @@
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  inject,
+  resource,
+  signal,
+} from '@angular/core';
+import {
+  disabled,
+  form,
+  FormField,
+  maxLength,
+  pattern,
+  required,
+  submit,
+  validate,
+} from '@angular/forms/signals';
+import { CalendarDate, InvoiceRefundRequest } from '@froment/contracts';
+import { Option, Schema } from 'effect';
+import { InvoiceCreditsApi } from '@backoffice/invoice-credits-api';
+import { parseFixedDecimal } from '@backoffice/quote-input';
+import { Button } from '@shared/button/button';
+import { Notice } from '@shared/notice/notice';
+import { InvoiceTask } from '../billing/invoice-task';
+import { TaskFeedback } from '../billing/task-feedback';
+import { TaskSummary } from '../billing/task-summary';
+import { businessDate, businessToday } from '../billing/billing-state';
+
+@Component({
+  selector: 'app-refund-editor',
+  imports: [Button, Notice, FormField, TaskFeedback, TaskSummary],
+  providers: [InvoiceTask],
+  templateUrl: './refund-editor.html',
+  styleUrl: './refund-editor.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  host: {
+    class: 'page-container',
+    '(window:beforeunload)': 'task.beforeUnload($event, refundForm().dirty())',
+  },
+})
+export class RefundEditor {
+  protected readonly task = inject(InvoiceTask);
+  protected readonly i18n = this.task.i18n;
+  private readonly api = inject(InvoiceCreditsApi);
+  protected readonly credits = resource({
+    params: () => this.task.invoice()?.id,
+    loader: ({ params }) => this.api.get(params),
+  });
+  protected readonly creditState = computed(() => {
+    const value = this.credits.hasValue() ? this.credits.value() : undefined;
+    return value?.success ? value.result : undefined;
+  });
+  protected readonly balance = computed(() => this.creditState()?.refundableCents ?? 0);
+  protected readonly refundForm = form(
+    signal({ amount: '', refundedOn: '', reference: '' }),
+    (path) => {
+      disabled(path, () => this.task.locked() || this.balance() <= 0);
+      required(path.amount);
+      validate(path.amount, ({ value }) => {
+        const amount = parseFixedDecimal(value(), 2);
+        return amount === undefined || amount <= 0 || amount > this.balance()
+          ? { kind: 'amount' }
+          : undefined;
+      });
+      required(path.refundedOn);
+      validate(path.refundedOn, ({ value }) => {
+        const issuedAt = this.creditState()?.creditNote?.issuedAt;
+        return !Schema.is(CalendarDate)(value()) ||
+          value() > businessToday() ||
+          (issuedAt !== undefined && value() < businessDate(issuedAt))
+          ? { kind: 'date' }
+          : undefined;
+      });
+      required(path.reference);
+      pattern(path.reference, /\S/);
+      maxLength(path.reference, 160);
+    },
+  );
+  private attempt: typeof InvoiceRefundRequest.Type | undefined;
+  protected save(event: Event): void {
+    event.preventDefault();
+    if (this.task.locked() || this.balance() <= 0) return;
+    void submit(this.refundForm, {
+      action: async () => {
+        const model = this.refundForm().value();
+        const parsed = Schema.decodeUnknownOption(InvoiceRefundRequest)({
+          amountCents: parseFixedDecimal(model.amount, 2),
+          refundedOn: model.refundedOn,
+          reference: model.reference.trim(),
+          requestId: crypto.randomUUID(),
+        });
+        if (Option.isNone(parsed)) {
+          this.task.error.set('invoice.credit_conflict');
+          return;
+        }
+        this.attempt = parsed.value;
+        await this.retry();
+      },
+      onInvalid: () => this.task.focusInvalid(),
+    });
+  }
+  protected async retry(): Promise<void> {
+    const invoice = this.task.invoice();
+    const request = this.attempt;
+    if (!invoice || !request) return;
+    await this.task.run(() => this.api.refund(invoice.id, request), 'credit.confirmRefund');
+    if (!this.task.uncertain()) this.attempt = undefined;
+  }
+  protected async reload(): Promise<void> {
+    if (this.task.uncertain() || this.task.busy()) return;
+    if (!(await this.task.confirmation.request(this.i18n.t('billingWorkspace.reloadConfirm'))))
+      return;
+    this.attempt = undefined;
+    this.refundForm().reset({ amount: '', refundedOn: '', reference: '' });
+    await this.task.load();
+    this.credits.reload();
+  }
+  canDeactivate(): Promise<boolean> {
+    return this.task.canDeactivate(this.refundForm().dirty());
+  }
+}

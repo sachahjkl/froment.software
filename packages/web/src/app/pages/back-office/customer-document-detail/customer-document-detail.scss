@@ -1,0 +1,43 @@
+:host {
+  display: block;
+}
+.document-page {
+  padding: var(--page-header-y) var(--page-x);
+}
+app-page-header {
+  margin-block: var(--space-5);
+}
+h1 {
+  font-size: var(--text-2xl);
+}
+h2 {
+  font-size: var(--text-lg);
+}
+.document-facts,
+.invoice-balance {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+  gap: var(--space-5);
+  max-inline-size: 58rem;
+  margin-block: var(--space-5);
+}
+dt,
+.snapshot-note {
+  color: var(--color-muted);
+  font-size: var(--text-sm);
+}
+dd {
+  margin: var(--space-1) 0 0;
+  font-variant-numeric: tabular-nums;
+}
+.related,
+.invoice-details {
+  margin-block-start: var(--space-6);
+}
+.related {
+  display: grid;
+  gap: var(--space-3);
+}
+.payment-note {
+  margin-block: var(--space-4);
+}

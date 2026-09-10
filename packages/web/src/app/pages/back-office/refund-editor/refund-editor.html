@@ -1,0 +1,70 @@
+<section class="billing-page" aria-labelledby="refund-title">
+  <h1 id="refund-title">{{ i18n.t('credit.recordRefund') }}</h1>
+  <app-invoice-task-summary />
+  <p appNotice>{{ i18n.t('billingWorkspace.refundHint') }}</p>
+  <app-invoice-task-feedback /> @if (credits.isLoading()) {
+  <p role="status">{{ i18n.t('backOffice.invoices.loading') }}</p>
+  } @else if (task.invoice() && !creditState()) {
+  <p appNotice variant="danger" role="alert">{{ i18n.t('credit.error') }}</p>
+  } @else if (task.invoice() && !task.completed()) { @if (balance() <= 0) {
+  <p appNotice>{{ i18n.t('billingWorkspace.unavailable') }}</p>
+  } @else {
+  <p><strong>{{ i18n.t('credit.refundable') }} {{ task.money(balance()) }}</strong></p>
+  <form class="task-form" (submit)="save($event)">
+    <div class="fields">
+      <label class="field"
+        >{{ i18n.t('credit.amount') }}<input
+          class="input"
+          inputmode="decimal"
+          [formField]="refundForm.amount"
+          [attr.aria-invalid]="refundForm.amount().touched() && refundForm.amount().invalid()"
+          aria-describedby="refund-amount-error"
+        />
+        <span id="refund-amount-error" class="field-error"
+          >@if (refundForm.amount().touched() && refundForm.amount().invalid()) { {{
+          i18n.t('billingWorkspace.amountInvalid') }} }</span
+        ></label
+      >
+      <label class="field"
+        >{{ i18n.t('credit.refundedOn') }}<input
+          class="input"
+          type="date"
+          [formField]="refundForm.refundedOn"
+          [attr.aria-invalid]="refundForm.refundedOn().touched() && refundForm.refundedOn().invalid()"
+          aria-describedby="refund-date-error"
+        />
+        <span id="refund-date-error" class="field-error"
+          >@if (refundForm.refundedOn().touched() && refundForm.refundedOn().invalid()) { {{
+          i18n.t('billingWorkspace.dateInvalid') }} }</span
+        ></label
+      >
+    </div>
+    <label class="field"
+      >{{ i18n.t('credit.reference') }}<input
+        class="input"
+        [formField]="refundForm.reference"
+        [attr.aria-invalid]="refundForm.reference().touched() && refundForm.reference().invalid()"
+        aria-describedby="refund-reference-error"
+      />
+      <span id="refund-reference-error" class="field-error"
+        >@if (refundForm.reference().touched() && refundForm.reference().invalid()) { {{
+        i18n.t('billingWorkspace.referenceInvalid') }} }</span
+      ></label
+    >
+    <div class="actions">
+      <button appButton type="submit" variant="primary" [disabled]="task.locked()">
+        {{ i18n.t('credit.recordRefund') }}
+      </button>
+      @if (task.uncertain()) {
+      <button appButton type="button" [disabled]="task.busy()" (click)="retry()">
+        {{ i18n.t('billingWorkspace.retrySame') }}
+      </button>
+      }
+    </div>
+  </form>
+  } } @if (!task.completed() && !task.uncertain()) {
+  <button appButton [disabled]="task.busy() || task.loading()" (click)="reload()">
+    {{ i18n.t('credit.reload') }}
+  </button>
+  }
+</section>

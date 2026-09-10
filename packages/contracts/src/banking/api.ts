@@ -12,7 +12,9 @@ import {
   BankPaymentList,
   BankImportRequest,
   BankImportResult,
+  BankImportPreview,
   BankTransactionList,
+  BankTransaction,
   BankMatchRequest,
   BankUnmatchRequest,
 } from './contracts.js';
@@ -36,6 +38,24 @@ export class BankingApi extends HttpApiGroup.make('banking', { topLevel: true })
     success: BankTransactionList,
     error: BankFailure.members,
   }).pipe(requirePermissions([Permissions.bankRead]), authenticate, frontendSpecific),
+  HttpApiEndpoint.get('bankTransactionGet', '/api/banking/transactions/:transactionId', {
+    params: { transactionId: Ulid },
+    success: BankTransaction,
+    error: BankFailure.members,
+  }).pipe(requirePermissions([Permissions.bankRead]), authenticate, frontendSpecific),
+  HttpApiEndpoint.post('bankImportPreview', '/api/banking/import/preview', {
+    payload: BankImportRequest,
+    success: BankImportPreview,
+    error: BankFailure.members,
+  })
+    .middleware(ApiRequestBody)
+    .middleware(ApiBrowserRequest)
+    .pipe(
+      requirePermissions([Permissions.bankImport]),
+      authenticate,
+      rateLimit(RateLimits.sixtyPerMinute),
+      frontendSpecific,
+    ),
   HttpApiEndpoint.post('bankImport', '/api/banking/import', {
     payload: BankImportRequest,
     success: BankImportResult,

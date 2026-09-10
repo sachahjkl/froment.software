@@ -1,7 +1,7 @@
 <article class="business-card-page">
   <header class="card-toolbar">
     <div>
-      <h2>{{ i18n.t("businessCard.title") }}</h2>
+      <h1>{{ i18n.t('configurationWorkspace.businessCard') }}</h1>
     </div>
     <button appButton variant="primary" type="button" (click)="print()">
       {{ i18n.t("businessCard.print") }}
@@ -36,7 +36,7 @@
   </div>
 
   <div class="card-editor">
-    <form class="editor-form ds-panel" (submit)="saveVersion(); $event.preventDefault()">
+    <form class="editor-form ds-panel" (submit)="saveVersion(); $event.preventDefault()" novalidate>
       <header>
         <h2>{{ i18n.t("businessCard.edit") }}</h2>
         <p>{{ i18n.t("businessCard.editIntro") }}</p>
@@ -105,8 +105,8 @@
           <button class="version-select" type="button" (click)="restoreVersion(version)">
             <strong>{{ version.name }}</strong>
             <span
-              >{{ version.createdAt | localizedDate: "fr-FR" : { dateStyle: "medium", timeStyle:
-              "short" } }}</span
+              >{{ version.createdAt | localizedDate: i18n.language() : { dateStyle: "medium",
+              timeStyle: "short" } }}</span
             >
           </button>
           <button

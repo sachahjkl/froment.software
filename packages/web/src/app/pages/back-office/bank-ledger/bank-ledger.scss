@@ -1,36 +1,14 @@
-:host {
-  display: block;
-}
-.ledger-page {
-  display: grid;
-  gap: var(--space-5);
-  padding: var(--page-header-y) var(--page-x);
-}
-form,
-label,
-ul {
-  display: grid;
-  gap: var(--space-3);
-}
-form {
-  max-width: 42rem;
-}
-ul {
-  list-style: none;
-  padding: 0;
-}
-li {
-  padding: var(--panel-padding);
-  overflow-wrap: anywhere;
-}
-p {
-  overflow-wrap: anywhere;
-}
-dl {
+@use "../banking/bank-workspace";
+.view-nav {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--space-5);
+  border-block-end: 1px solid var(--color-line-strong);
 }
-dd {
-  margin: 0;
+.view-nav a {
+  padding: var(--space-3) var(--space-4);
+  border-block-end: 3px solid transparent;
+}
+.view-nav a[aria-current="page"] {
+  border-color: var(--color-button-primary-highlight);
+  font-weight: 700;
 }

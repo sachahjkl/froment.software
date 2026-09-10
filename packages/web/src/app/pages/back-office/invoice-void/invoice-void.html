@@ -1,0 +1,38 @@
+<section class="billing-page" aria-labelledby="void-title">
+  <h1 id="void-title">{{ i18n.t('backOffice.invoice.void') }}</h1>
+  <app-invoice-task-summary />
+  <p appNotice>{{ i18n.t('billingWorkspace.voidHint') }}</p>
+  <app-invoice-task-feedback /> @if (task.invoice() && !task.completed()) { @if (!eligible()) {
+  <p appNotice>{{ i18n.t('billingWorkspace.unavailable') }}</p>
+  } @else {
+  <form class="task-form" (submit)="save($event)">
+    <label
+      ><input
+        type="checkbox"
+        [formField]="voidForm.confirmed"
+        [attr.aria-invalid]="voidForm.confirmed().touched() && voidForm.confirmed().invalid()"
+        aria-describedby="void-error"
+      />
+      {{ i18n.t('billingWorkspace.confirmDocument') }}</label
+    >
+    <span id="void-error" class="field-error"
+      >@if (voidForm.confirmed().touched() && voidForm.confirmed().invalid()) { {{
+      i18n.t('billingWorkspace.confirmDocument') }} }</span
+    >
+    <div class="actions">
+      <button appButton variant="danger" type="submit" [disabled]="task.locked()">
+        {{ i18n.t('backOffice.invoice.void') }}
+      </button>
+      @if (task.uncertain()) {
+      <button appButton type="button" [disabled]="task.busy()" (click)="retry()">
+        {{ i18n.t('billingWorkspace.retrySame') }}
+      </button>
+      }
+    </div>
+  </form>
+  } } @if (!task.completed() && !task.uncertain()) {
+  <button appButton [disabled]="task.busy() || task.loading()" (click)="reload()">
+    {{ i18n.t('credit.reload') }}
+  </button>
+  }
+</section>

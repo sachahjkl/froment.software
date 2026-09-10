@@ -1,0 +1,337 @@
+<section class="billing-page" aria-labelledby="invoice-title">
+  <a routerLink="/backoffice/facturation">{{ i18n.t('backOffice.backToBilling') }}</a>
+  @if (!task.invoice()) {
+  <h1 id="invoice-title">{{ i18n.t('billingWorkspace.invoices') }}</h1>
+  } @if (task.loading()) {
+  <p role="status">{{ i18n.t('backOffice.invoices.loading') }}</p>
+  } @if (task.error(); as error) {
+  <p appNotice variant="danger" role="alert">{{ i18n.t(error) }}</p>
+  } @if (task.invoice(); as invoice) {
+  <header>
+    <div>
+      <h1 id="invoice-title">{{ invoice.invoiceNumber ?? invoice.currentRevision.title }}</h1>
+      <p>{{ invoice.currentRevision.title }} · {{ invoice.currentRevision.clientDisplayName }}</p>
+    </div>
+    <div class="actions">
+      @if (invoice.status === 'draft') {
+      <a appLinkButton [routerLink]="['/backoffice/invoices', invoice.id, 'edit']"
+        >{{ i18n.t('billingWorkspace.edit') }}</a
+      >
+      <a
+        appLinkButton
+        variant="primary"
+        [routerLink]="['/backoffice/invoices', invoice.id, 'issue']"
+        >{{ i18n.t('backOffice.invoice.issue') }}</a
+      >
+      } @else if (invoice.status === 'issued' && invoice.creditedCents === 0 && balance() > 0) {
+      <a
+        appLinkButton
+        variant="primary"
+        [routerLink]="['/backoffice/invoices', invoice.id, 'payments', 'new']"
+        >{{ i18n.t('billingWorkspace.recordReceipt') }}</a
+      >
+      }
+    </div>
+  </header>
+  <div class="actions">
+    <span appBadge>{{ i18n.t(documentStatusKey(invoice.status)) }}</span
+    ><span>{{ i18n.t(financialStatus()) }}</span
+    ><span class="muted"
+      >{{ i18n.tf('billingWorkspace.version', { version: invoice.version }) }}</span
+    >
+  </div>
+  <nav class="detail-tabs" [attr.aria-label]="i18n.t('backOffice.billing.tabs')">
+    @for (item of tabs; track item.value) {
+    <a
+      [routerLink]="[]"
+      [queryParams]="{ tab: item.value }"
+      queryParamsHandling="merge"
+      [attr.aria-current]="tab() === item.value ? 'page' : null"
+      >{{ i18n.t(item.label) }}</a
+    >
+    }
+  </nav>
+  @switch (tab()) { @case ('summary') { @if (invoice.status !== 'draft') {
+  <p appNotice>{{ i18n.t('billingWorkspace.readonly') }}</p>
+  }
+  <dl class="summary ds-panel">
+    <div>
+      <dt>{{ i18n.t('backOffice.invoices.client') }}</dt>
+      <dd>
+        <a [routerLink]="['/backoffice/clients', invoice.clientId]"
+          >{{ invoice.currentRevision.clientDisplayName }}</a
+        >
+      </dd>
+    </div>
+    <div>
+      <dt>{{ i18n.t('backOffice.invoice.order') }}</dt>
+      <dd>
+        <a [routerLink]="['/backoffice/orders', invoice.orderId]">{{ invoice.orderReference }}</a>
+      </dd>
+    </div>
+    @if (order(); as order) {
+    <div>
+      <dt>{{ i18n.t('billingWorkspace.quote') }}</dt>
+      <dd>
+        <a [routerLink]="['/backoffice/quotes', order.quoteId]">{{ order.quoteReference }}</a>
+      </dd>
+    </div>
+    }
+    <div>
+      <dt>{{ i18n.t('backOffice.invoice.serviceDate') }}</dt>
+      <dd>
+        {{ invoice.currentRevision.serviceDate | localizedDate: i18n.language(): { dateStyle:
+        'medium' } }}
+      </dd>
+    </div>
+    <div>
+      <dt>{{ i18n.t('backOffice.invoice.dueDate') }}</dt>
+      <dd>
+        {{ invoice.currentRevision.dueDate | localizedDate: i18n.language(): { dateStyle: 'medium' }
+        }}
+      </dd>
+    </div>
+    <div>
+      <dt>{{ i18n.t('backOffice.invoice.subtotal') }}</dt>
+      <dd class="amount">{{ task.money(invoice.currentRevision.netTotalCents) }}</dd>
+    </div>
+    <div>
+      <dt>{{ i18n.t('backOffice.invoice.tax') }}</dt>
+      <dd class="amount">{{ task.money(invoice.currentRevision.vatTotalCents) }}</dd>
+    </div>
+    <div>
+      <dt>{{ i18n.t('backOffice.invoice.total') }}</dt>
+      <dd class="amount">{{ task.money(invoice.currentRevision.totalCents) }}</dd>
+    </div>
+    <div>
+      <dt>{{ i18n.t('payment.recorded') }}</dt>
+      <dd class="amount">{{ task.money(paid()) }}</dd>
+    </div>
+    <div>
+      <dt>{{ i18n.t('credit.credited') }}</dt>
+      <dd class="amount">{{ task.money(invoice.creditedCents) }}</dd>
+    </div>
+    <div>
+      <dt>{{ i18n.t('payment.remaining') }}</dt>
+      <dd class="amount">{{ task.money(balance()) }}</dd>
+    </div>
+  </dl>
+  <section>
+    <h2>{{ i18n.t('backOffice.invoice.paymentTerms') }}</h2>
+    <p class="terms">{{ invoice.currentRevision.paymentTerms }}</p>
+  </section>
+  <div class="actions">
+    @if (invoice.status === 'issued' && invoice.creditedCents === 0 && balance() > 0) {
+    <a appLinkButton routerLink="/backoffice/courriels/new" [queryParams]="{ invoice: invoice.id }"
+      >{{ i18n.t('billingWorkspace.email') }}</a
+    >
+    <a
+      appLinkButton
+      routerLink="/backoffice/courriels/reminders/new"
+      [queryParams]="{ invoice: invoice.id }"
+      >{{ i18n.t('billingWorkspace.reminder') }}</a
+    >
+    } @if ((invoice.status === 'issued' || invoice.status === 'paid') && invoice.creditedCents === 0
+    && invoice.currentRevision.totalCents > 0) {
+    <a appLinkButton [routerLink]="['/backoffice/invoices', invoice.id, 'credits', 'new']"
+      >{{ i18n.t('credit.issue') }}</a
+    >
+    } @if (invoice.status === 'issued' && invoice.creditedCents === 0 && invoice.payments.length ===
+    0) {
+    <a appLinkButton variant="danger" [routerLink]="['/backoffice/invoices', invoice.id, 'void']"
+      >{{ i18n.t('backOffice.invoice.void') }}</a
+    >
+    }
+  </div>
+  } @case ('document') {
+  <label class="field version"
+    >{{ i18n.t('backOffice.invoice.history') }}<select class="input" [formField]="versionForm">
+      @for (revision of invoice.revisions; track revision.id) {
+      <option [value]="'' + revision.version">
+        {{ i18n.tf('billingWorkspace.version', { version: revision.version }) }} · {{
+        revision.createdAt | localizedDate: i18n.language(): { dateStyle: 'medium' } }}
+      </option>
+      }
+    </select></label
+  >
+  <div class="actions">
+    @if (previewUrl(); as url) {
+    <a appLinkButton [href]="url" target="_blank" rel="noopener noreferrer"
+      >{{ i18n.t('backOffice.invoice.preview.open') }}</a
+    >
+    } @if (pdfUrl(); as url) {
+    <a appLinkButton [href]="url" download>{{ i18n.t('backOffice.invoice.pdf.download') }}</a> }
+    @else if (revision()?.invoiceNumber) {
+    <button appButton [disabled]="pdfPending()" (click)="generatePdf()">
+      {{ i18n.t(pdfPending() ? 'backOffice.invoice.pdf.generating' :
+      'backOffice.invoice.pdf.generate') }}
+    </button>
+    }
+  </div>
+  @if (invoice.pdf?.status === 'pending' || invoice.pdf?.status === 'processing') {
+  <p role="status">{{ i18n.t('billingWorkspace.pdfPending') }}</p>
+  } @if (invoice.pdf?.status === 'failed') {
+  <p appNotice variant="warning">{{ i18n.t('billingWorkspace.pdfFailed') }}</p>
+  } @if (preview(); as url) {
+  <iframe
+    class="preview"
+    [src]="url"
+    [title]="i18n.t('backOffice.invoice.preview.frameTitle')"
+  ></iframe>
+  } } @case ('receipts') {
+  <p appNotice>{{ i18n.t('billingWorkspace.receiptHint') }}</p>
+  <p>{{ i18n.t('payment.recorded') }} : {{ task.money(paid()) }}</p>
+  <div appDataTable>
+    <table>
+      <thead>
+        <tr>
+          <th>{{ i18n.t('payment.reference') }}</th>
+          <th>{{ i18n.t('payment.date') }}</th>
+          <th>{{ i18n.t('payment.method') }}</th>
+          <th>{{ i18n.t('billingWorkspace.financialStatus') }}</th>
+          <th class="amount">{{ i18n.t('payment.amount') }}</th>
+          <th>{{ i18n.t('backOffice.invoices.actions') }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (payment of invoice.payments; track payment.id) {
+        <tr [id]="payment.id">
+          <td>
+            <strong>{{ payment.reference }}</strong
+            ><small
+              >{{ payment.recordedAt | localizedDate: i18n.language(): { dateStyle: 'medium',
+              timeStyle: 'short' } }}</small
+            >
+          </td>
+          <td>{{ payment.paidOn }}</td>
+          <td>{{ i18n.t(paymentMethodKey(payment.method)) }}</td>
+          <td>
+            {{ i18n.t(payment.cancelledAt === null ? 'billingWorkspace.active' :
+            'billingWorkspace.cancelled') }} @if (payment.cancelledAt !== null) {
+            <small>{{ payment.cancellationReason }}</small> }
+          </td>
+          <td class="amount">{{ task.money(payment.amountCents) }}</td>
+          <td>
+            @if (payment.cancelledAt === null && (invoice.status === 'issued' || invoice.status ===
+            'paid')) {
+            <a [routerLink]="['/backoffice/invoices', invoice.id, 'payments', payment.id, 'cancel']"
+              >{{ i18n.t('payment.cancel') }}</a
+            >
+            }
+          </td>
+        </tr>
+        } @empty {
+        <tr>
+          <td colspan="6">{{ i18n.t('payment.empty') }}</td>
+        </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+  } @case ('credit') { @if (credits.isLoading()) {
+  <p role="status">{{ i18n.t('backOffice.invoices.loading') }}</p>
+  } @else if (creditState(); as state) { @if (state.creditNote; as note) {
+  <section class="summary ds-panel">
+    <h2>{{ note.number }}</h2>
+    <p>{{ note.reason }}</p>
+    <p>
+      {{ note.issuedAt | localizedDate: i18n.language(): { dateStyle: 'medium' } }} · {{
+      task.money(note.totalCents) }}
+    </p>
+    <a [href]="'/api/invoices/' + invoice.id + '/credit-note/pdf'" download
+      >{{ i18n.t('credit.pdf') }}</a
+    >
+  </section>
+  <p>{{ i18n.t('credit.refundable') }} {{ task.money(state.refundableCents) }}</p>
+  @if (state.refundableCents > 0) {
+  <a appLinkButton [routerLink]="['/backoffice/invoices', invoice.id, 'refunds', 'new']"
+    >{{ i18n.t('credit.recordRefund') }}</a
+  >
+  }
+  <h2>{{ i18n.t('billingWorkspace.refunds') }}</h2>
+  <p appNotice>{{ i18n.t('billingWorkspace.refundHint') }}</p>
+  <div appDataTable>
+    <table>
+      <thead>
+        <tr>
+          <th>{{ i18n.t('credit.reference') }}</th>
+          <th>{{ i18n.t('credit.refundedOn') }}</th>
+          <th>{{ i18n.t('billingWorkspace.financialStatus') }}</th>
+          <th class="amount">{{ i18n.t('credit.amount') }}</th>
+          <th>{{ i18n.t('backOffice.invoices.actions') }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (refund of state.refunds; track refund.id) {
+        <tr [id]="refund.id">
+          <td>{{ refund.reference }}</td>
+          <td>{{ refund.refundedOn }}</td>
+          <td>
+            {{ i18n.t(refund.cancelledAt === null ? 'billingWorkspace.active' :
+            'billingWorkspace.cancelled') }} @if (refund.cancelledAt !== null) {
+            <small>{{ refund.cancellationReason }}</small> }
+          </td>
+          <td class="amount">{{ task.money(refund.amountCents) }}</td>
+          <td>
+            @if (refund.cancelledAt === null) {
+            <a [routerLink]="['/backoffice/invoices', invoice.id, 'refunds', refund.id, 'cancel']"
+              >{{ i18n.t('credit.cancelRefund') }}</a
+            >
+            }
+          </td>
+        </tr>
+        } @empty {
+        <tr>
+          <td colspan="5">{{ i18n.t('billingWorkspace.empty') }}</td>
+        </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+  } @else {
+  <p>{{ i18n.t('billingWorkspace.noCreditNote') }}</p>
+  @if ((invoice.status === 'issued' || invoice.status === 'paid') &&
+  invoice.currentRevision.totalCents > 0) {
+  <a appLinkButton [routerLink]="['/backoffice/invoices', invoice.id, 'credits', 'new']"
+    >{{ i18n.t('credit.issue') }}</a
+  >
+  } } } @else {
+  <p appNotice variant="danger" role="alert">{{ i18n.t('credit.error') }}</p>
+  <button appButton (click)="credits.reload()">{{ i18n.t('credit.reload') }}</button> } } @case
+  ('history') {
+  <p>{{ i18n.t('billingWorkspace.historyHint') }}</p>
+  @if (history.isLoading()) {
+  <p role="status">{{ i18n.t('backOffice.invoices.loading') }}</p>
+  } @else if (events(); as events) {
+  <ol>
+    @for (event of events; track event.id) {
+    <li class="history-entry ds-panel">
+      <strong>{{ eventLabel(event) }}</strong>
+      <p>
+        {{ event.occurredAt | localizedDate: i18n.language(): { dateStyle: 'medium', timeStyle:
+        'short' } }}
+      </p>
+      @if (event.actorUserId) {
+      <p>{{ i18n.t('billingWorkspace.actor') }} : {{ event.actorUserId }}</p>
+      }
+      <dl>
+        @for (entry of metadata(event); track entry[0]) {
+        <div>
+          <dt>{{ entry[0] }}</dt>
+          <dd>{{ entry[1] }}</dd>
+        </div>
+        }
+      </dl>
+    </li>
+    } @empty {
+    <li>{{ i18n.t('billingWorkspace.noHistory') }}</li>
+    }
+  </ol>
+  } @else {
+  <p appNotice variant="danger" role="alert">{{ i18n.t(historyError()) }}</p>
+  <button appButton (click)="history.reload()">{{ i18n.t('credit.reload') }}</button>
+  } } } }
+  <button appButton type="button" [disabled]="task.loading() || pdfPending()" (click)="task.load()">
+    {{ i18n.t('credit.reload') }}
+  </button>
+</section>

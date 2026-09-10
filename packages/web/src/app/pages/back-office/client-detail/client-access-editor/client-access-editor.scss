@@ -1,0 +1,30 @@
+:host {
+  display: block;
+}
+.access-editor {
+  padding: var(--page-header-y) var(--page-x);
+}
+app-page-header {
+  margin-block: var(--space-5);
+}
+h1 {
+  font-size: var(--text-2xl);
+}
+form {
+  display: grid;
+  gap: var(--space-5);
+  max-inline-size: 36rem;
+  margin-block-start: var(--space-5);
+}
+.input {
+  inline-size: 100%;
+}
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+.field-error {
+  color: var(--color-danger);
+  font-size: var(--text-sm);
+}

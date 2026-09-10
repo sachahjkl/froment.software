@@ -26,10 +26,28 @@ export const BankingHandlers = HttpApiBuilder.group(Api, 'banking', (handlers) =
         }),
       )
       .handle(
+        'bankTransactionGet',
+        Effect.fn('bankTransactionGet')(function* ({ params }) {
+          yield* setPrivateResponseHeaders;
+          return yield* (yield* Banking)
+            .get(params.transactionId)
+            .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
+        }),
+      )
+      .handle(
         'bankTransactionList',
         Effect.fn('bankTransactionList')(function* () {
           yield* setPrivateResponseHeaders;
           return yield* (yield* Banking).list.pipe(Effect.catchTag('DatabaseError', Effect.orDie));
+        }),
+      )
+      .handle(
+        'bankImportPreview',
+        Effect.fn('bankImportPreview')(function* ({ payload }) {
+          yield* setPrivateResponseHeaders;
+          return yield* (yield* Banking)
+            .previewStatement(payload)
+            .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
         }),
       )
       .handle(

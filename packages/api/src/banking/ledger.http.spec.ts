@@ -83,10 +83,11 @@ it('posts balanced immutable debit entries once, reverses without deletion, and 
       reversesId: null,
     });
     expect(current.sources[0]?.entryId).toBe(entry.id);
+    expect(entry.sourceReference).toBe('D');
     const retry = { ...request, requestId: entry.requestId };
     expect(
       Schema.decodeUnknownSync(LedgerEntry)(await (await post(ledgerPath, retry)).json()),
-    ).toEqual(entry);
+    ).toEqual(Schema.decodeUnknownSync(LedgerEntry)(entry));
     expect((await post(ledgerPath, { ...retry, label: 'Changed' })).status).toBe(409);
     const reversePath = `${ledgerPath}/${entry.id}/reverse`;
     const reverse = { requestId: randomUUID(), bookedOn: '2026-09-06', reason: 'Wrong account' };

@@ -21,6 +21,7 @@ import { Icon } from '@shared/icon/icon';
 import { Drawer } from '@shared/drawer/drawer';
 import { LanguageSelector } from '@shared/language-selector/language-selector';
 import { ThemeToggle } from '@shared/theme-toggle/theme-toggle';
+import { GlobalSearch } from '@shared/global-search/global-search';
 
 @Component({
   selector: 'app-back-office-header',
@@ -33,6 +34,7 @@ import { ThemeToggle } from '@shared/theme-toggle/theme-toggle';
     NgTemplateOutlet,
     LanguageSelector,
     ThemeToggle,
+    GlobalSearch,
   ],
   templateUrl: './back-office-header.html',
   styleUrl: './back-office-header.scss',

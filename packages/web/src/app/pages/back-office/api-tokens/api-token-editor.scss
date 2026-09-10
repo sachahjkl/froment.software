@@ -1,0 +1,24 @@
+@use "./api-tokens";
+form {
+  display: grid;
+  gap: var(--space-5);
+}
+.permission-groups {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr));
+  gap: var(--space-4);
+}
+.permission-option {
+  display: flex;
+  align-items: start;
+  gap: var(--space-3);
+  padding-block: var(--space-2);
+}
+.permission-option input {
+  margin-top: 0.25rem;
+}
+.permission-option code {
+  display: block;
+  overflow-wrap: anywhere;
+  color: var(--color-muted);
+}

@@ -1,6 +1,16 @@
 import { DOCUMENT } from '@angular/common';
-import { afterNextRender, ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import {
+  afterNextRender,
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  DestroyRef,
+  inject,
+  PendingTasks,
+  signal,
+} from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { ActivatedRoute, RouterLink, RouterOutlet } from '@angular/router';
 import {
   Ulid,
   type ClientSummaryValue,
@@ -24,6 +34,9 @@ import { DataTable } from '@shared/data-table/data-table';
 import { Icon } from '@shared/icon/icon';
 import { Notice } from '@shared/notice/notice';
 import { TextCopy } from '@shared/text-copy';
+import { Tabs, type TabItem } from '@shared/tabs/tabs';
+import { TabLayout, TabPanel } from '@shared/tabs/tab-panel';
+import { affairContext, affairView } from '../affairs/affair-filters';
 
 interface TimelineItem {
   readonly id: string;
@@ -36,7 +49,18 @@ type PortalDocumentKind = 'quote' | 'order' | 'invoice';
 @Component({
   host: { class: 'page-container' },
   selector: 'app-affair-detail',
-  imports: [Badge, Button, DataTable, Icon, Notice, RouterLink],
+  imports: [
+    Badge,
+    Button,
+    DataTable,
+    Icon,
+    Notice,
+    RouterLink,
+    RouterOutlet,
+    Tabs,
+    TabLayout,
+    TabPanel,
+  ],
   templateUrl: './affair-detail.html',
   styleUrl: './affair-detail.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -50,6 +74,18 @@ export class AffairDetail {
   private readonly invoicesApi = inject(InvoicesApi);
   private readonly clientsApi = inject(ClientsApi);
   private readonly textCopy = inject(TextCopy);
+  private readonly destroyRef = inject(DestroyRef);
+  private readonly pendingTasks = inject(PendingTasks);
+  private generation = 0;
+  protected readonly backView = signal(affairView(this.route.snapshot.queryParamMap));
+  protected readonly context = signal(affairContext(this.route.snapshot.queryParamMap));
+  protected readonly tabs = computed<readonly TabItem[]>(() =>
+    (['overview', 'documents', 'history'] as const).map((tab) => ({
+      path: tab,
+      id: `affair-${tab}-tab`,
+      label: this.i18n.t(`commercial.${tab}`),
+    })),
+  );
   protected readonly state = signal<'loading' | 'ready' | 'error'>('loading');
   protected readonly quote = signal<QuoteDetailValue | undefined>(undefined);
   protected readonly order = signal<OrderSummaryValue | undefined>(undefined);
@@ -59,7 +95,15 @@ export class AffairDetail {
   protected readonly copiedPortalLink = signal('');
 
   constructor() {
-    afterNextRender(() => void this.load());
+    afterNextRender(() => {
+      this.route.paramMap
+        .pipe(takeUntilDestroyed(this.destroyRef))
+        .subscribe(() => void this.load());
+      this.route.queryParamMap.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((params) => {
+        this.backView.set(affairView(params));
+        this.context.set(affairContext(params));
+      });
+    });
   }
 
   protected money(cents: number): string {
@@ -149,18 +193,27 @@ export class AffairDetail {
   }
 
   protected async load(): Promise<void> {
+    const generation = ++this.generation;
+    this.quote.set(undefined);
+    this.order.set(undefined);
+    this.invoice.set(undefined);
+    this.client.set(undefined);
+    this.timeline.set([]);
+    this.copiedPortalLink.set('');
     const quoteId = Schema.decodeUnknownOption(Ulid)(this.route.snapshot.paramMap.get('quoteId'));
     if (Option.isNone(quoteId)) {
       this.state.set('error');
       return;
     }
     this.state.set('loading');
+    const finishLoading = this.pendingTasks.add();
     try {
       const [quoteOutcome, orders, events] = await Promise.all([
         this.quotesApi.get(quoteId.value),
         this.ordersApi.list(),
         this.quotesApi.listAffairEvents(quoteId.value),
       ]);
+      if (this.destroyRef.destroyed || generation !== this.generation) return;
       if (!quoteOutcome.success) {
         this.state.set('error');
         return;
@@ -171,20 +224,30 @@ export class AffairDetail {
       let invoice: InvoiceDetailValue | undefined;
       if (order?.invoiceId) {
         const invoiceOutcome = await this.invoicesApi.get(order.invoiceId);
-        if (invoiceOutcome.success) invoice = invoiceOutcome.result;
+        if (!invoiceOutcome.success) throw new Error('affair.invoice.unavailable');
+        invoice = invoiceOutcome.result;
       }
+      if (this.destroyRef.destroyed || generation !== this.generation) return;
       this.quote.set(quote);
       this.order.set(order);
       this.invoice.set(invoice);
       if (clientOutcome.success) this.client.set(clientOutcome.result);
-      this.timeline.set(
+      const timeline =
         events.length === 0
           ? this.makeTimeline(quote, order, invoice)
-          : events.map((event) => this.eventTimelineItem(event)),
+          : events.map((event) => this.eventTimelineItem(event));
+      this.timeline.set(
+        timeline.toSorted(
+          (left, right) =>
+            Date.parse(left.date) - Date.parse(right.date) ||
+            (left.id < right.id ? -1 : left.id > right.id ? 1 : 0),
+        ),
       );
       this.state.set('ready');
     } catch {
-      this.state.set('error');
+      if (!this.destroyRef.destroyed && generation === this.generation) this.state.set('error');
+    } finally {
+      finishLoading();
     }
   }
 
@@ -241,7 +304,7 @@ export class AffairDetail {
         });
       }
     }
-    return items.sort((left, right) => left.date.localeCompare(right.date));
+    return items;
   }
 
   private mailto(email: string, subject: string, body: string): string {

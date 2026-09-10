@@ -1,7 +1,6 @@
 import { Confirmation } from '@shared/confirmation/confirmation';
 import {
   afterNextRender,
-  afterRenderEffect,
   ChangeDetectionStrategy,
   Component,
   computed,
@@ -12,7 +11,7 @@ import {
   viewChild,
 } from '@angular/core';
 import {
-  FormField,
+  disabled,
   form,
   maxLength,
   minLength,
@@ -30,16 +29,25 @@ import {
 import type { FuseResultMatch } from 'fuse.js';
 
 import { ApiTokensApi } from '@backoffice/api-tokens-api';
+import { Router, RouterLink } from '@angular/router';
 import { I18nService, type TranslationKey } from '@app/i18n.service';
 import { Badge, type BadgeVariant } from '@shared/badge/badge';
 import { Button } from '@shared/button/button';
-import { CopyField } from '@shared/copy-field/copy-field';
 import { DataTable } from '@shared/data-table/data-table';
 import { LocalizedDatePipe } from '@shared/localized-date/localized-date-pipe';
 import { Notice } from '@shared/notice/notice';
 import { SearchHighlight, SearchHighlightRegistry } from '@shared/search-highlight';
 import { TextCopy } from '@shared/text-copy';
 import { createFuzzySearch } from '@shared/fuzzy-search';
+import { TableSort } from '@shared/table-sort/table-sort';
+import { ListToolbar } from '@shared/list-toolbar/list-toolbar';
+import { ListWorkspace } from '@shared/list-toolbar/list-workspace';
+import { ListSearch } from '@shared/list-search/list-search';
+import { FilterMenu, FilterPanel } from '@shared/filter-menu/filter-menu';
+import { FilterChoice } from '@shared/filter-choice/filter-choice';
+import { TableExport } from '@shared/table-export/table-export';
+import { createWorkspaceTable } from '../configuration/workspace-table';
+import { tokenTableOptions } from '../configuration/workspace-tables';
 
 interface TokenModel {
   readonly name: string;
@@ -77,18 +85,25 @@ const emptyModel = (): TokenModel => ({
   imports: [
     Badge,
     Button,
-    CopyField,
     DataTable,
-    FormField,
     LocalizedDatePipe,
     Notice,
+    RouterLink,
+    TableSort,
+    ListToolbar,
+    ListWorkspace,
+    ListSearch,
+    FilterMenu,
+    FilterPanel,
+    FilterChoice,
+    TableExport,
     SearchHighlight,
   ],
   providers: [SearchHighlightRegistry],
   templateUrl: './api-tokens.html',
   styleUrl: './api-tokens.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  host: { '(window:beforeunload)': 'beforeUnload($event)' },
+  host: { class: 'page-container', '(window:beforeunload)': 'beforeUnload($event)' },
 })
 export class ApiTokens {
   private readonly confirmation = inject(Confirmation);
@@ -96,8 +111,20 @@ export class ApiTokens {
   private readonly api = inject(ApiTokensApi);
   private readonly textCopy = inject(TextCopy);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly router = inject(Router);
+  private readonly permissionInput = viewChild('permissionSearch', {
+    read: ElementRef<HTMLInputElement>,
+  });
+  protected readonly editor: boolean = false;
   private readonly model = signal<TokenModel>(emptyModel());
+  protected readonly tokenConfirmation = computed(() =>
+    this.i18n.plural('configurationWorkspace.tokenConfirm', {
+      name: this.model().name.trim(),
+      count: this.model().permissions.length,
+    }),
+  );
   protected readonly tokenForm = form(this.model, (path) => {
+    disabled(path, () => this.saving() || this.secret() !== undefined);
     required(path.name);
     maxLength(path.name, 120);
     pattern(path.name, /\S/);
@@ -132,11 +159,33 @@ export class ApiTokens {
       labelMatches: matches.find(({ key }) => key === 'label')?.indices ?? noMatches,
     })),
   );
+  protected readonly permissionGroups = computed(() =>
+    ['client', 'quote', 'order', 'invoice', 'payment', 'document']
+      .map((domain) => ({
+        domain,
+        permissions: this.filteredPermissions().filter(({ item }) =>
+          item.code.startsWith(`${domain}.`),
+        ),
+      }))
+      .filter((group) => group.permissions.length > 0),
+  );
   protected readonly tokens = signal<ApiTokenListValue>([]);
+  protected readonly table = createWorkspaceTable(this.tokens, tokenTableOptions);
+  protected readonly tokenExport = computed(() =>
+    this.table
+      .rows()
+      .map((item) => [
+        item.name,
+        item.permissions.join(', '),
+        new Date(item.createdAt).toISOString(),
+        new Date(item.expiresAt).toISOString(),
+        item.lastUsedAt === null ? null : new Date(item.lastUsedAt).toISOString(),
+        this.status(item),
+      ]),
+  );
   protected readonly nextCursor = signal<UlidValue | null>(null);
   protected readonly loading = signal(true);
   protected readonly loadingMore = signal(false);
-  protected readonly createOpen = signal(false);
   protected readonly saving = signal(false);
   protected readonly revoking = signal(false);
   protected readonly pageError = signal<TranslationKey | undefined>(undefined);
@@ -144,53 +193,21 @@ export class ApiTokens {
   protected readonly secret = signal<string | undefined>(undefined);
   protected readonly copied = signal(false);
   private readonly now = signal(Date.now());
-  private readonly createButton = viewChild.required('createButton', { read: ElementRef });
-  private readonly createDialog = viewChild.required<ElementRef<HTMLDialogElement>>('createDialog');
-  private createWasOpen = false;
   private expirationTimer: ReturnType<typeof setTimeout> | undefined;
 
   constructor() {
-    afterNextRender(() => void this.load());
+    afterNextRender(() => {
+      if (!this.editor) void this.load();
+    });
     this.destroyRef.onDestroy(() => {
       if (this.expirationTimer !== undefined) clearTimeout(this.expirationTimer);
     });
-    afterRenderEffect({
-      write: () => {
-        const open = this.createOpen();
-        const dialog = this.createDialog().nativeElement;
-        if (open && !this.createWasOpen) {
-          if (!dialog.open) dialog.showModal();
-          dialog.querySelector<HTMLInputElement>('input')?.focus();
-        } else if (!open && this.createWasOpen) {
-          if (dialog.open) dialog.close();
-          this.createButton().nativeElement.focus();
-        }
-        this.createWasOpen = open;
-      },
-    });
-  }
-
-  protected openCreate(): void {
-    this.dialogError.set(undefined);
-    this.createOpen.set(true);
-  }
-
-  protected closeCreate(): void {
-    if (this.saving() || this.secret() !== undefined) return;
-    this.resetCreate();
   }
 
   protected acknowledgeSecret(): void {
     this.secret.set(undefined);
     this.resetCreate();
-  }
-
-  protected cancelCreate(event: Event): void {
-    if (this.saving() || this.secret() !== undefined) {
-      event.preventDefault();
-      return;
-    }
-    this.closeCreate();
+    void this.router.navigate(['/backoffice/api'], { queryParams: this.table.params() });
   }
 
   private resetCreate(): void {
@@ -199,10 +216,11 @@ export class ApiTokens {
     this.dialogError.set(undefined);
     this.model.set(emptyModel());
     this.tokenForm().reset();
-    this.createOpen.set(false);
   }
 
   protected togglePermission(permission: ApiTokenPermissionCodeValue, selected: boolean): void {
+    if (this.saving() || this.secret()) return;
+    this.tokenForm.permissions().markAsDirty();
     this.model.update((model) => ({
       ...model,
       permissions: selected
@@ -225,9 +243,21 @@ export class ApiTokens {
 
   protected create(event: SubmitEvent): void {
     event.preventDefault();
-    if (!this.expirationValid()) return;
+    if (this.saving() || this.secret()) return;
+    if (this.tokenForm().invalid() || !this.expirationValid()) {
+      this.tokenForm().markAsTouched();
+      this.dialogError.set('configurationWorkspace.tokenInvalid');
+      if (this.tokenForm.name().invalid()) this.tokenForm.name().focusBoundControl();
+      else if (!this.expirationValid()) this.tokenForm.expiresAt().focusBoundControl();
+      else this.permissionInput()?.nativeElement.focus();
+      return;
+    }
     void submit(this.tokenForm, async () => {
       this.saving.set(true);
+      if (!(await this.confirmation.request(this.tokenConfirmation()))) {
+        this.saving.set(false);
+        return;
+      }
       this.dialogError.set(undefined);
       const outcome = await this.api.create({
         name: this.model().name.trim(),
@@ -283,7 +313,7 @@ export class ApiTokens {
   }
 
   protected createDisabled(): boolean {
-    return this.saving() || this.tokenForm().invalid() || !this.expirationValid();
+    return this.saving() || this.secret() !== undefined;
   }
 
   protected statusLabel(token: ApiTokenValue): TranslationKey {
@@ -319,25 +349,20 @@ export class ApiTokens {
   }
 
   async canDeactivate(): Promise<boolean> {
-    if (this.saving()) return false;
-    if (this.secret() === undefined) return true;
-    // Native modal dialogs occupy the top layer above CDK overlays.
-    const dialog = this.createDialog().nativeElement;
-    const wasOpen = dialog.open;
-    const focused = dialog.ownerDocument.activeElement;
-    if (wasOpen) dialog.close();
-    const leave = await this.confirmation.request(
-      this.i18n.t('backOffice.apiTokens.leaveConfirmation'),
+    if (this.saving() || this.revoking()) return false;
+    if (this.secret() === undefined && !this.tokenForm().dirty()) return true;
+    return this.confirmation.request(
+      this.i18n.t(
+        this.secret() === undefined
+          ? 'configurationWorkspace.unsaved'
+          : 'backOffice.apiTokens.leaveConfirmation',
+      ),
     );
-    if (!leave && wasOpen && !this.destroyRef.destroyed) {
-      dialog.showModal();
-      if (focused instanceof HTMLElement && dialog.contains(focused)) focused.focus();
-    }
-    return leave;
   }
 
   protected beforeUnload(event: BeforeUnloadEvent): void {
-    if (this.saving() || this.secret() !== undefined) event.preventDefault();
+    if (this.saving() || this.revoking() || this.secret() !== undefined || this.tokenForm().dirty())
+      event.preventDefault();
   }
 
   private async load(): Promise<void> {

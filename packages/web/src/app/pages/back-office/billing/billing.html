@@ -1,145 +1,299 @@
-<section appTabLayout class="billing-page" aria-labelledby="billing-title">
+<section class="billing-page" aria-labelledby="billing-title">
   <header>
     <div>
       <p class="eyebrow">{{ i18n.t('backOffice.billing.eyebrow') }}</p>
-      <h1 id="billing-title">{{ i18n.t('backOffice.billing.title') }}</h1>
-      <p class="intro">{{ i18n.t('backOffice.billing.intro') }}</p>
+      <h1 id="billing-title">{{ i18n.t('billingWorkspace.invoices') }}</h1>
     </div>
-    <a appLinkButton variant="primary" routerLink="/backoffice/invoices/new">
-      {{ i18n.t('backOffice.invoices.new') }}
-    </a>
-  </header>
-
-  <section class="billing-summary" [attr.aria-label]="i18n.t('backOffice.billing.summary')">
-    <span>{{ i18n.t('backOffice.billing.outstanding') }}</span>
-    <strong>{{ money(outstandingCents()) }}</strong>
-  </section>
-
-  <app-tabs [label]="i18n.t('backOffice.billing.tabs')" [tabs]="tabs()" />
-  <details class="payment-export ds-panel">
-    <summary>{{ i18n.t('payment.export_title') }}</summary>
-    <p class="intro">{{ i18n.t('payment.export_hint') }}</p>
-    <form (submit)="exportPayments($event)">
-      <label class="field"
-        >{{ i18n.t('payment.export_from') }}<input
-          class="input"
-          type="date"
-          [formField]="exportForm.from"
-      /></label>
-      <label class="field"
-        >{{ i18n.t('payment.export_to') }}<input
-          class="input"
-          type="date"
-          [formField]="exportForm.to"
-      /></label>
-      <button appButton type="submit" [disabled]="exportingPayments() || exportForm().invalid()">
-        {{ i18n.t(exportingPayments() ? 'payment.export_pending' : 'payment.export_download') }}
-      </button>
-    </form>
-    @if (exportError(); as error) {
-    <p appNotice variant="danger" role="alert">{{ i18n.t(error) }}</p>
-    } @if (exportReady()) {
-    <p role="status">{{ i18n.t('payment.export_ready') }}</p>
-    }
-  </details>
-  <router-outlet />
-  @if (selectedInvoices().length > 0) {
-  <section
-    class="bulk-actions ds-panel"
-    [attr.aria-label]="i18n.t('backOffice.billing.bulkActions')"
-  >
-    <strong>
-      {{ i18n.tf('backOffice.billing.selected', { count: selectedInvoices().length }) }}
-    </strong>
-    @if (bulkReminderHref(); as reminderHref) {
-    <a appLinkButton [href]="reminderHref">{{ i18n.t('backOffice.billing.bulkReminder') }}</a>
-    }
-    <button appButton type="button" [disabled]="exportCount() === 0" (click)="exportSelected()">
-      {{ i18n.tf('backOffice.billing.bulkExport', { count: exportCount() }) }}
-    </button>
-  </section>
-  }
-  <ng-template appTabPanel="billing" let-tab="tab">
-    <section
-      id="billing-panel"
-      role="region"
-      [attr.aria-labelledby]="'billing-' + tab + '-tab'"
-      tabindex="0"
+    <a appLinkButton variant="primary" routerLink="/backoffice/invoices/new"
+      >{{ i18n.t('backOffice.invoices.new') }}</a
     >
-      @switch (state()) { @case ('loading') {
-      <p class="state" aria-live="polite">{{ i18n.t('backOffice.invoices.loading') }}</p>
-      } @case ('error') {
-      <p appNotice variant="danger" role="alert">{{ i18n.t('invoice.error') }}</p>
-      <button appButton type="button" (click)="load()">
-        {{ i18n.t('backOffice.invoices.retry') }}
+  </header>
+  <app-billing-nav />
+  <section appListWorkspace>
+    <app-list-toolbar>
+      <app-list-search
+        listSearch
+        [label]="i18n.t('billingWorkspace.search')"
+        [value]="filters.q().value()"
+        (valueChange)="setSearch($event)"
+      />
+      <app-filter-menu
+        #menu
+        listFilters
+        [label]="i18n.t('listWorkspace.filters')"
+        [closeLabel]="i18n.t('listWorkspace.closeFilters')"
+        [backLabel]="i18n.t('listWorkspace.backFilters')"
+        [activeCount]="filterCount()"
+        [disabled]="state() !== 'ready'"
+      >
+        <ng-template
+          appFilterPanel
+          [label]="i18n.t('billingWorkspace.documentStatus')"
+          [summary]="filterLabel('status', filters.status().value())"
+        >
+          <app-filter-choice
+            [label]="i18n.t('listWorkspace.searchChoices')"
+            [emptyLabel]="i18n.t('listWorkspace.noChoices')"
+            [options]="statusOptions()"
+            [formField]="filters.status"
+            (committed)="updateFilters(); menu.close()"
+          />
+        </ng-template>
+        <ng-template
+          appFilterPanel
+          [label]="i18n.t('backOffice.invoices.client')"
+          [summary]="filterLabel('client', filters.client().value())"
+        >
+          <app-filter-choice
+            [label]="i18n.t('listWorkspace.searchChoices')"
+            [emptyLabel]="i18n.t('listWorkspace.noChoices')"
+            [options]="clientOptions()"
+            [formField]="filters.client"
+            (committed)="updateFilters(); menu.close()"
+          />
+        </ng-template>
+        <ng-template
+          appFilterPanel
+          [label]="i18n.t('billingWorkspace.due')"
+          [summary]="filterLabel('due', filters.due().value())"
+        >
+          <app-filter-choice
+            [label]="i18n.t('listWorkspace.searchChoices')"
+            [emptyLabel]="i18n.t('listWorkspace.noChoices')"
+            [options]="dueOptions()"
+            [formField]="filters.due"
+            (committed)="updateFilters(); menu.close()"
+          />
+        </ng-template>
+        <ng-template
+          appFilterPanel
+          [label]="i18n.t('credit.title')"
+          [summary]="filterLabel('credit', filters.credit().value())"
+        >
+          <app-filter-choice
+            [label]="i18n.t('listWorkspace.searchChoices')"
+            [emptyLabel]="i18n.t('listWorkspace.noChoices')"
+            [options]="creditOptions()"
+            [formField]="filters.credit"
+            (committed)="updateFilters(); menu.close()"
+          />
+        </ng-template>
+        <ng-template
+          appFilterPanel
+          [label]="i18n.t('billingWorkspace.duePeriod')"
+          [summary]="periodSummary()"
+        >
+          <app-date-range-filter
+            [from]="filters.from().value() || undefined"
+            [to]="filters.to().value() || undefined"
+            (rangeApplied)="applyPeriod($event); menu.close()"
+          />
+        </ng-template>
+      </app-filter-menu>
+      <app-table-export
+        listActions
+        [columns]="csvColumns()"
+        [rows]="csvRows()"
+        filename="invoices.csv"
+        [label]="i18n.t('listWorkspace.exportCsv')"
+        [emptyHint]="i18n.t('listWorkspace.exportEmpty')"
+        [pendingHint]="i18n.t('listWorkspace.exportPending')"
+        [pending]="state() === 'loading'"
+      />
+      <p listSummary role="status">
+        @if (state() === 'ready') { {{ i18n.plural('billingWorkspace.count', { count:
+        visible().length }) }} }
+      </p>
+    </app-list-toolbar>
+    @if (activeFilters().length) {
+    <div class="chips">
+      @for (filter of activeFilters(); track filter[0]) {
+      <button
+        appButton
+        type="button"
+        [attr.aria-label]="i18n.t('billingWorkspace.removeFilter') + ' : ' + filterLabel(filter[0], filter[1])"
+        (click)="clearFilter(filter[0])"
+      >
+        {{ filterLabel(filter[0], filter[1]) }} ×
       </button>
-      } @case ('ready') { @if (visibleInvoices(tab).length === 0) {
-      <p class="empty ds-panel">{{ i18n.t('backOffice.billing.empty') }}</p>
-      } @else {
-      <div appDataTable>
-        <table>
-          <thead>
-            <tr>
-              <th>
-                <input
-                  #selectAll
-                  type="checkbox"
-                  [attr.aria-label]="i18n.t('backOffice.billing.selectAll')"
-                  (change)="selectVisible(tab, selectAll.checked)"
-                />
-              </th>
-              <th>{{ i18n.t('backOffice.invoices.number') }}</th>
-              <th>{{ i18n.t('backOffice.invoices.client') }}</th>
-              <th>{{ i18n.t('backOffice.invoices.status') }}</th>
-              <th>{{ i18n.t('backOffice.invoices.total') }}</th>
-              <th>{{ i18n.t('backOffice.billing.dueDate') }}</th>
-              <th>{{ i18n.t('backOffice.invoices.updated') }}</th>
-              <th class="actions-column">{{ i18n.t('backOffice.invoices.actions') }}</th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (invoice of visibleInvoices(tab); track invoice.id) {
-            <tr>
-              <td>
-                <input
-                  #invoiceSelection
-                  type="checkbox"
-                  [checked]="selectedIds().has(invoice.id)"
-                  [attr.aria-label]="i18n.tf('backOffice.billing.selectInvoice', { reference: invoice.invoiceNumber ?? invoice.orderReference })"
-                  (change)="toggle(invoice.id, invoiceSelection.checked)"
-                />
-              </td>
-              <td>
-                <strong>{{ invoice.invoiceNumber ?? i18n.t('backOffice.invoice.draft') }}</strong>
-                <small>{{ invoice.orderReference }}</small>
-              </td>
-              <td>{{ invoice.clientDisplayName }}</td>
-              <td>
-                <span appBadge [variant]="statusVariant(invoice.status)">
-                  {{ statusLabel(invoice.status) }}
-                </span>
-              </td>
-              <td>{{ money(invoice.totalCents) }}</td>
-              <td>
-                @if (invoice.creditedCents > 0) {
-                <span appBadge>{{ i18n.t('credit.title') }}</span> } @else {
-                <span appBadge [variant]="dueVariant(invoice.status, invoice.dueDate)">
-                  {{ dueLabel(invoice.status, invoice.dueDate) }}
-                </span>
-                }
-              </td>
-              <td>{{ date(invoice.updatedAt) }}</td>
-              <td class="actions-column">
-                <a appLinkButton [routerLink]="['/backoffice/invoices', invoice.id]">
-                  {{ i18n.t('backOffice.invoices.open') }}
-                </a>
-              </td>
-            </tr>
-            }
-          </tbody>
-        </table>
-      </div>
-      } } }
+      }
+      <button appButton type="button" (click)="clearFilter()">
+        {{ i18n.t('billingWorkspace.clear') }}
+      </button>
+    </div>
+    } @switch (state()) { @case ('loading') {
+    <p role="status">{{ i18n.t('backOffice.invoices.loading') }}</p>
+    } @case ('error') {
+    <p appNotice variant="danger" role="alert">{{ i18n.t('billingWorkspace.loadError') }}</p>
+    <button appButton (click)="load()">{{ i18n.t('backOffice.invoices.retry') }}</button> } @case
+    ('ready') { @if (selected().length) {
+    <section class="bulk-actions ds-panel">
+      <app-bulk-selection
+        [count]="selected().length"
+        [selectionLabel]="i18n.plural('billingWorkspace.selection', { count: selected().length })"
+        [clearLabel]="i18n.t('billingWorkspace.clearSelection')"
+        (clearSelection)="clearSelection()"
+      >
+        <button
+          appButton
+          [disabled]="exportCount() === 0 || pdf.pending()"
+          [attr.aria-busy]="pdf.pending()"
+          (click)="exportSelected()"
+        >
+          {{ i18n.tf('backOffice.billing.bulkExport', { count: exportCount() }) }}
+        </button>
+        <button
+          appButton
+          [disabled]="reminders().length === 0"
+          (click)="preparingReminders.set(true)"
+        >
+          {{ i18n.t('billingWorkspace.prepareReminders') }} ({{ reminders().length }})
+        </button>
+      </app-bulk-selection>
+      @if (pdf.failed()) {
+      <p appNotice variant="danger" role="alert">{{ i18n.t('invoice.error') }}</p>
+      } @if (preparingReminders()) {
+      <p>{{ i18n.t('billingWorkspace.remindersHint') }}</p>
+      <ul>
+        @for (invoice of reminders(); track invoice.id) {
+        <li>
+          <a routerLink="/backoffice/courriels/new" [queryParams]="{ invoice: invoice.id }"
+            >{{ invoice.invoiceNumber }} · {{ invoice.clientDisplayName }}</a
+          >
+        </li>
+        }
+      </ul>
+      }
     </section>
-  </ng-template>
+    } @if (visible().length === 0) {
+    <p class="empty ds-panel">
+      {{ i18n.t(invoices().length === 0 ? 'billingWorkspace.empty' : 'billingWorkspace.noMatches')
+      }}
+    </p>
+    } @else {
+    <div appDataTable>
+      <table>
+        <thead>
+          <tr>
+            <th>
+              <input
+                #all
+                type="checkbox"
+                [checked]="allSelected()"
+                [indeterminate]="selected().length > 0 && !allSelected()"
+                [attr.aria-label]="i18n.t('backOffice.billing.selectAll')"
+                (change)="selectVisible(all.checked)"
+              />
+            </th>
+            <th scope="col" [attr.aria-sort]="sortDirection(sort(), 'number')">
+              <button
+                appTableSort
+                [label]="i18n.t('backOffice.invoices.number')"
+                [direction]="sortDirection(sort(), 'number')"
+                (click)="sortBy('number')"
+              ></button>
+            </th>
+            <th scope="col" [attr.aria-sort]="sortDirection(sort(), 'client')">
+              <button
+                appTableSort
+                [label]="i18n.t('backOffice.invoices.client')"
+                [direction]="sortDirection(sort(), 'client')"
+                (click)="sortBy('client')"
+              ></button>
+            </th>
+            <th scope="col" [attr.aria-sort]="sortDirection(sort(), 'status')">
+              <button
+                appTableSort
+                [label]="i18n.t('billingWorkspace.documentStatus')"
+                [direction]="sortDirection(sort(), 'status')"
+                (click)="sortBy('status')"
+              ></button>
+            </th>
+            <th scope="col" [attr.aria-sort]="sortDirection(sort(), 'financial')">
+              <button
+                appTableSort
+                [label]="i18n.t('billingWorkspace.financialStatus')"
+                [direction]="sortDirection(sort(), 'financial')"
+                (click)="sortBy('financial')"
+              ></button>
+            </th>
+            <th scope="col" [attr.aria-sort]="sortDirection(sort(), 'due')">
+              <button
+                appTableSort
+                [label]="i18n.t('billingWorkspace.due')"
+                [direction]="sortDirection(sort(), 'due')"
+                (click)="sortBy('due')"
+              ></button>
+            </th>
+            <th scope="col" class="amount" [attr.aria-sort]="sortDirection(sort(), 'total')">
+              <button
+                appTableSort
+                [label]="i18n.t('backOffice.invoices.total')"
+                [direction]="sortDirection(sort(), 'total')"
+                (click)="sortBy('total')"
+              ></button>
+            </th>
+            <th scope="col" class="amount" [attr.aria-sort]="sortDirection(sort(), 'remaining')">
+              <button
+                appTableSort
+                [label]="i18n.t('payment.remaining')"
+                [direction]="sortDirection(sort(), 'remaining')"
+                (click)="sortBy('remaining')"
+              ></button>
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (result of results(); track result.item.id) { @let invoice = result.item;
+          <tr>
+            <td>
+              <input
+                #selected
+                type="checkbox"
+                [checked]="selectedIds().has(invoice.id)"
+                [attr.aria-label]="i18n.tf('backOffice.billing.selectInvoice', { reference: invoice.invoiceNumber ?? invoice.orderReference })"
+                (change)="toggle(invoice.id, selected.checked)"
+              />
+            </td>
+            <td>
+              <a [routerLink]="['/backoffice/invoices', invoice.id]"
+                ><strong
+                  [appSearchHighlight]="matchIndices(result, invoice.invoiceNumber === null ? 'title' : 'invoiceNumber')"
+                  >{{ invoice.invoiceNumber ?? invoice.title }}</strong
+                ></a
+              ><small
+                ><span [appSearchHighlight]="matchIndices(result, 'title')"
+                  >{{ invoice.title }}</span
+                >
+                ·
+                <span [appSearchHighlight]="matchIndices(result, 'orderReference')"
+                  >{{ invoice.orderReference }}</span
+                ></small
+              >
+            </td>
+            <td [appSearchHighlight]="matchIndices(result, 'clientDisplayName')">
+              {{ invoice.clientDisplayName }}
+            </td>
+            <td>
+              <span appBadge>{{ filterLabel('status', documentStatus(invoice.status)) }}</span>
+            </td>
+            <td>{{ i18n.t(financialStatus(invoice)) }}</td>
+            <td>
+              {{ invoice.dueDate }} @if (invoice.status === 'issued' && remaining(invoice) > 0 &&
+              invoice.creditedCents === 0) {
+              <small
+                >{{ filterLabel('due', invoice.dueDate < businessDate ? 'overdue' : 'upcoming')
+                }}</small
+              >
+              }
+            </td>
+            <td class="amount">{{ money(invoice.totalCents) }}</td>
+            <td class="amount">{{ money(remaining(invoice)) }}</td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    } } }
+  </section>
 </section>

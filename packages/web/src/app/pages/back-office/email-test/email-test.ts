@@ -1,5 +1,6 @@
 import {
   afterNextRender,
+  afterRenderEffect,
   ChangeDetectionStrategy,
   Component,
   computed,
@@ -20,7 +21,7 @@ import {
   readonly as readOnly,
   submit,
 } from '@angular/forms/signals';
-import { RouterLink } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { catchError, EMPTY, exhaustMap, filter, timer } from 'rxjs';
 import {
@@ -37,12 +38,13 @@ import {
 import { Button } from '@shared/button/button';
 import { Notice } from '@shared/notice/notice';
 import { Confirmation } from '@shared/confirmation/confirmation';
-import { DataTable } from '@shared/data-table/data-table';
-import { LocalizedDatePipe } from '@shared/localized-date/localized-date-pipe';
+import { createWorkspaceTable } from '../configuration/workspace-table';
+import { emailTableOptions } from '../configuration/workspace-tables';
 
 @Component({
+  host: { class: 'page-container' },
   selector: 'app-email-test',
-  imports: [RouterLink, Button, Notice, FormField, DataTable, LocalizedDatePipe],
+  imports: [RouterLink, Button, Notice, FormField],
   templateUrl: './email-test.html',
   styleUrl: './email-test.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -53,6 +55,9 @@ export class EmailTest {
   private readonly confirmation = inject(Confirmation);
   private readonly destroyRef = inject(DestroyRef);
   private readonly requests = inject(PendingProviderRequests);
+  private readonly route = inject(ActivatedRoute);
+  protected readonly task: boolean = true;
+  protected readonly completed = signal(false);
   private requestStore: PendingRequestStore<EmailTestRequest> | undefined;
   protected readonly recoveryReady = signal(false);
   protected readonly addresses = EmailTestAddress;
@@ -64,11 +69,12 @@ export class EmailTest {
   protected readonly error = signal<TranslationKey | undefined>(undefined);
   protected readonly paused = signal(false);
   protected readonly operations = signal<ReadonlyArray<EmailTestOperation>>([]);
+  protected readonly table = createWorkspaceTable(this.operations, emailTableOptions);
   protected readonly selected = signal<string | undefined>(undefined);
-  protected readonly current = computed(
-    () =>
-      this.operations().find((item) => item.request.requestId === this.selected()) ??
-      this.operations()[0],
+  protected readonly current = computed(() =>
+    this.selected() === undefined
+      ? this.operations()[0]
+      : this.operations().find((item) => item.request.requestId === this.selected()),
   );
   protected readonly active = computed(() =>
     this.operations().some((item) => ['queued', 'sending', 'retrying'].includes(item.status)),
@@ -78,7 +84,7 @@ export class EmailTest {
     body: this.i18n.t('emailTest.defaultBody'),
   });
   protected readonly messageForm = form(this.model, (path) => {
-    disabled(path, () => this.saving() || !this.recoveryReady());
+    disabled(path, () => this.saving() || !this.recoveryReady() || this.completed());
     readOnly(path, () => this.pending() !== undefined);
     required(path.subject);
     pattern(path.subject, /\S/);
@@ -105,9 +111,15 @@ export class EmailTest {
   private writeVersion = 0;
 
   constructor() {
+    afterRenderEffect(() => {
+      if (this.completed()) this.progress()?.nativeElement.focus();
+    });
+    this.route.paramMap.pipe(takeUntilDestroyed()).subscribe((params) => {
+      this.selected.set(params.get('requestId') ?? undefined);
+    });
     afterNextRender(() => {
       void this.loadConnections();
-      void this.restoreRequest();
+      if (this.task) void this.restoreRequest();
       timer(0, 3000)
         .pipe(
           filter(() => !this.paused() && !this.saving() && document.visibilityState === 'visible'),
@@ -137,6 +149,7 @@ export class EmailTest {
           ) {
             if (!this.clearPending()) return;
             this.selected.set(pending.requestId);
+            this.completed.set(true);
             this.messageForm().reset();
             this.error.set(undefined);
           }
@@ -185,7 +198,7 @@ export class EmailTest {
     this.paused.set(false);
     this.error.set(undefined);
     void this.loadConnections();
-    if (!this.recoveryReady()) void this.restoreRequest();
+    if (this.task && !this.recoveryReady()) void this.restoreRequest();
   }
   protected select(operation: EmailTestOperation): void {
     this.selected.set(operation.request.requestId);
@@ -210,6 +223,8 @@ export class EmailTest {
     event.preventDefault();
     if (
       this.saving() ||
+      !this.task ||
+      this.completed() ||
       this.active() ||
       !this.credentialsPresent() ||
       this.loading() ||
@@ -259,6 +274,7 @@ export class EmailTest {
           ...items.filter((item) => item.request.requestId !== request.requestId),
         ]);
         this.selected.set(request.requestId);
+        this.completed.set(true);
         this.messageForm().reset();
         this.paused.set(false);
         this.progress()?.nativeElement.focus();

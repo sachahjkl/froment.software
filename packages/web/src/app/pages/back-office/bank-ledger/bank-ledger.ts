@@ -1,241 +1,310 @@
 import {
   afterNextRender,
+  afterRenderEffect,
   ChangeDetectionStrategy,
   Component,
   computed,
+  DestroyRef,
   ElementRef,
   inject,
+  PendingTasks,
   signal,
   viewChild,
 } from '@angular/core';
-import {
-  disabled,
-  form,
-  FormField,
-  maxLength,
-  pattern,
-  required,
-  submit,
-} from '@angular/forms/signals';
-import { RouterLink } from '@angular/router';
-import {
-  LedgerEntry,
-  LedgerList,
-  LedgerPeriod,
-  LedgerRequest,
-  LedgerReverse,
-  LedgerSource,
-} from '@froment/contracts';
-import { Option, Schema } from 'effect';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { form, FormField } from '@angular/forms/signals';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { LedgerPeriod, type LedgerList } from '@froment/contracts';
+import { Schema } from 'effect';
 import { formatMoney } from '@froment/l10n';
 import { BankLedgerApi } from '@backoffice/bank-ledger-api';
 import { I18nService, type TranslationKey } from '@app/i18n.service';
+import { Badge } from '@shared/badge/badge';
 import { Button } from '@shared/button/button';
-import { Notice } from '@shared/notice/notice';
-import { Confirmation } from '@shared/confirmation/confirmation';
+import { DataTable } from '@shared/data-table/data-table';
+import { EmptyState } from '@shared/empty-state/empty-state';
+import { FilterChip } from '@shared/filter-chip/filter-chip';
+import { ListToolbar } from '@shared/list-toolbar/list-toolbar';
+import { ListWorkspace } from '@shared/list-toolbar/list-workspace';
+import { ListSearch } from '@shared/list-search/list-search';
+import { FilterMenu, FilterPanel } from '@shared/filter-menu/filter-menu';
+import { DateRangeFilter, type DateRange } from '@shared/date-range-filter/date-range-filter';
+import { TableExport } from '@shared/table-export/table-export';
+import { Hint } from '@shared/hint/hint';
+import { Icon } from '@shared/icon/icon';
 import { LocalizedDatePipe } from '@shared/localized-date/localized-date-pipe';
+import { Notice } from '@shared/notice/notice';
+import { PageHeader } from '@shared/page-header/page-header';
+import { Tabs } from '@shared/tabs/tabs';
+import { TableSort } from '@shared/table-sort/table-sort';
+import {
+  bankTableSort,
+  bankSortDirection,
+  compareBankRows,
+  nextBankSort,
+} from '../banking/bank-table-sort';
+import { createFuzzySearch } from '@shared/fuzzy-search';
+import { SearchHighlight, SearchHighlightRegistry } from '@shared/search-highlight';
+import {
+  bankTabs,
+  ledgerEntryColumns,
+  ledgerSourceColumns,
+  ledgerEntryLink,
+  ledgerQuery,
+  ledgerSourceLink,
+} from '../banking/bank-workspace';
 
 @Component({
   selector: 'app-bank-ledger',
-  imports: [Button, FormField, Notice, RouterLink, LocalizedDatePipe],
+  host: { class: 'page-container' },
+  imports: [
+    Badge,
+    Button,
+    DataTable,
+    EmptyState,
+    FilterChip,
+    FormField,
+    ListToolbar,
+    ListWorkspace,
+    ListSearch,
+    FilterMenu,
+    FilterPanel,
+    DateRangeFilter,
+    TableExport,
+    Hint,
+    Icon,
+    LocalizedDatePipe,
+    Notice,
+    PageHeader,
+    RouterLink,
+    SearchHighlight,
+    Tabs,
+    TableSort,
+  ],
+  providers: [SearchHighlightRegistry],
   templateUrl: './bank-ledger.html',
   styleUrl: './bank-ledger.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  host: { class: 'page-container', '(window:beforeunload)': 'beforeUnload($event)' },
 })
 export class BankLedger {
   protected readonly i18n = inject(I18nService);
   private readonly api = inject(BankLedgerApi);
-  private readonly confirmation = inject(Confirmation);
-  private readonly result = viewChild<ElementRef<HTMLElement>>('result');
-  protected readonly busy = signal(false);
-  protected readonly loading = signal(false);
+  private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
+  private readonly destroyRef = inject(DestroyRef);
+  private readonly pendingTasks = inject(PendingTasks);
+  protected readonly state = signal<'loading' | 'ready' | 'error'>('loading');
   protected readonly error = signal<TranslationKey | undefined>(undefined);
-  protected readonly saved = signal(false);
-  protected readonly records = signal<typeof LedgerList.Type | undefined>(undefined);
-  protected readonly selected = signal<typeof LedgerSource.Type | undefined>(undefined);
-  protected readonly reversing = signal<typeof LedgerEntry.Type | undefined>(undefined);
-  private requestId: string | undefined;
-  protected readonly period = form(signal({ from: '', to: '' }), (path) => {
-    required(path.from);
-    required(path.to);
-    disabled(path, () => this.busy() || this.loading());
-  });
-  protected readonly entryForm = form(
-    signal({ debitAccount: '', creditAccount: '', label: '' }),
-    (path) => {
-      required(path.debitAccount);
-      required(path.creditAccount);
-      required(path.label);
-      pattern(path.debitAccount, /^[A-Za-z0-9][A-Za-z0-9._-]{0,31}$/);
-      pattern(path.creditAccount, /^[A-Za-z0-9][A-Za-z0-9._-]{0,31}$/);
-      maxLength(path.label, 160);
-      pattern(path.label, /\S/);
-      disabled(path, () => this.busy() || this.loading());
+  protected readonly records = signal<typeof LedgerList.Type>({ entries: [], sources: [] });
+  protected readonly query = signal(ledgerQuery(this.route.snapshot.queryParamMap));
+  protected readonly periodRequired = signal(false);
+  private readonly periodError = viewChild('periodError', { read: ElementRef<HTMLElement> });
+  protected readonly searchForm = form(signal({ q: this.query().q }));
+  protected readonly activeFilterCount = computed(() =>
+    Number(this.query().from !== '' || this.query().to !== ''),
+  );
+  private readonly filterMenu = viewChild(FilterMenu);
+  private readonly searchControl = viewChild(ListSearch);
+  protected readonly tabs = computed(() => bankTabs(this.i18n));
+  protected readonly sourceLink = ledgerSourceLink;
+  protected readonly entryLink = ledgerEntryLink;
+  protected readonly sourceColumns = ledgerSourceColumns;
+  protected readonly entryColumns = ledgerEntryColumns;
+  private readonly sources = computed(() =>
+    this.records().sources.filter((source) => source.entryId === null),
+  );
+  private readonly sourceSearch = createFuzzySearch(
+    this.sources,
+    computed(() => this.query().q),
+    {
+      keys: ['reference', 'account'],
+      includeMatches: true,
+      ignoreLocation: true,
+      ignoreDiacritics: true,
+      threshold: 0.35,
     },
   );
-  protected readonly reversalForm = form(signal({ reason: '', bookedOn: '' }), (path) => {
-    required(path.reason);
-    required(path.bookedOn);
-    maxLength(path.reason, 160);
-    pattern(path.reason, /\S/);
-    disabled(path, () => this.busy() || this.loading());
+  protected readonly sourceResults = computed(() => {
+    const compare = compareBankRows(
+      bankTableSort(this.query().sort, ledgerSourceColumns),
+      ledgerSourceColumns,
+      this.i18n.language(),
+      (row) => `${row.sourceId}/${row.sourceKind}`,
+    );
+    return this.sourceSearch()
+      .toSorted((left, right) => compare(left.item, right.item))
+      .map((result) => ({
+        item: result.item,
+        indices: result.matches?.find((match) => match.key === 'reference')?.indices ?? [],
+      }));
   });
-  private readonly loadedPeriod = signal<typeof LedgerPeriod.Type | undefined>(undefined);
-  protected readonly exportUrl = computed(() => {
-    const period = this.loadedPeriod();
-    return period === undefined
-      ? undefined
-      : `/api/banking/ledger/export?${new URLSearchParams(period)}`;
+  private readonly entrySearch = createFuzzySearch(
+    computed(() => this.records().entries),
+    computed(() => this.query().q),
+    {
+      keys: ['label', 'id', 'sourceReference'],
+      includeMatches: true,
+      ignoreLocation: true,
+      ignoreDiacritics: true,
+      threshold: 0.35,
+    },
+  );
+  protected readonly entryResults = computed(() => {
+    const compare = compareBankRows(
+      bankTableSort(this.query().sort, ledgerEntryColumns),
+      ledgerEntryColumns,
+      this.i18n.language(),
+      (row) => row.id,
+    );
+    return this.entrySearch()
+      .toSorted((left, right) => compare(left.item, right.item))
+      .map((result) => ({
+        item: result.item,
+        indices: result.matches?.find((match) => match.key === 'label')?.indices ?? [],
+        referenceIndices:
+          result.matches?.find((match) => match.key === 'sourceReference')?.indices ?? [],
+      }));
   });
+  protected readonly count = computed(() =>
+    this.query().view === 'journal' ? this.entryResults().length : this.sourceResults().length,
+  );
+  protected readonly exportColumns = computed(() =>
+    this.query().view === 'journal'
+      ? [
+          'entry_id',
+          'label',
+          'source_reference',
+          'booked_on',
+          'debit_account',
+          'credit_account',
+          'status',
+          'amount_cents',
+          'currency',
+        ]
+      : [
+          'source_kind',
+          'source_id',
+          'reference',
+          'account',
+          'booked_on',
+          'amount_cents',
+          'currency',
+        ],
+  );
+  protected readonly exportRows = computed(() => {
+    if (this.state() !== 'ready') return [];
+    return this.query().view === 'journal'
+      ? this.entryResults().map(({ item }) => [
+          item.id,
+          item.label,
+          item.sourceReference,
+          item.bookedOn,
+          item.debitAccount,
+          item.creditAccount,
+          item.reversesId ? 'reversal' : item.reversalId ? 'reversed' : 'active',
+          item.amountCents,
+          'EUR',
+        ])
+      : this.sourceResults().map(({ item }) => [
+          item.sourceKind,
+          item.sourceId,
+          item.reference,
+          item.account,
+          item.bookedOn,
+          item.amountCents,
+          'EUR',
+        ]);
+  });
+  protected readonly exportUrl = computed(() =>
+    this.state() === 'ready'
+      ? `/api/banking/ledger/export?${new URLSearchParams({ from: this.query().from, to: this.query().to })}`
+      : undefined,
+  );
+  private loadedKey = '';
+  private generation = 0;
   constructor() {
-    afterNextRender(() => {
-      const year = new Date().getFullYear();
-      this.period().reset({ from: `${year}-01-01`, to: `${year}-12-31` });
-      void this.load();
+    afterRenderEffect(() => {
+      if (this.periodRequired()) this.periodError()?.nativeElement.focus();
     });
+    afterNextRender(() =>
+      this.route.queryParamMap.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((params) => {
+        const query = ledgerQuery(params);
+        this.query.set(query);
+        this.searchForm().reset({ q: query.q });
+        const key = `${query.from}/${query.to}`;
+        if (key !== this.loadedKey) {
+          this.loadedKey = key;
+          void this.pendingTasks.run(() => this.load());
+        }
+      }),
+    );
   }
-  protected async load(event?: Event): Promise<void> {
-    event?.preventDefault();
-    if (this.busy() || this.loading()) return;
-    const period = Schema.decodeUnknownOption(LedgerPeriod)(this.period().value());
-    if (Option.isNone(period)) {
-      this.error.set('ledger.conflict');
+  protected async load(): Promise<void> {
+    const generation = ++this.generation;
+    const period = { from: this.query().from, to: this.query().to };
+    if (!Schema.is(LedgerPeriod)(period)) {
+      this.state.set('error');
+      this.error.set('bankWorkspace.periodInvalid');
       return;
     }
-    this.loading.set(true);
+    this.state.set('loading');
+    this.error.set(undefined);
     try {
-      const outcome = await this.api.list(period.value);
+      const outcome = await this.api.list(period);
+      if (generation !== this.generation || this.destroyRef.destroyed) return;
       if (!outcome.success) {
         this.error.set(outcome.code);
-        this.records.set(undefined);
-        this.loadedPeriod.set(undefined);
+        this.state.set('error');
         return;
       }
       this.records.set(outcome.result);
-      this.loadedPeriod.set(period.value);
-      this.error.set(undefined);
-    } finally {
-      this.loading.set(false);
+      this.state.set('ready');
+    } catch {
+      if (generation === this.generation && !this.destroyRef.destroyed) {
+        this.error.set('ledger.error');
+        this.state.set('error');
+      }
     }
   }
-  protected async select(source: typeof LedgerSource.Type): Promise<void> {
-    if (this.busy() || this.loading() || !(await this.canDeactivate())) return;
-    this.reset();
-    this.selected.set(source);
-  }
-  protected async selectReversal(entry: typeof LedgerEntry.Type): Promise<void> {
-    if (this.busy() || this.loading() || !(await this.canDeactivate())) return;
-    this.reset();
-    this.reversing.set(entry);
-  }
-  protected async cancel(): Promise<void> {
-    if (await this.canDeactivate()) this.reset();
-  }
-  private reset(): void {
-    this.selected.set(undefined);
-    this.reversing.set(undefined);
-    this.requestId = undefined;
-    this.entryForm().reset({ debitAccount: '', creditAccount: '', label: '' });
-    this.reversalForm().reset({ reason: '', bookedOn: '' });
-  }
-  protected post(event: Event): void {
-    event.preventDefault();
-    if (this.busy() || this.loading()) return;
-    void submit(this.entryForm, {
-      action: async () => {
-        const source = this.selected();
-        if (source === undefined) return;
-        this.requestId ??= crypto.randomUUID();
-        const request = Schema.decodeUnknownOption(LedgerRequest)({
-          ...this.entryForm().value(),
-          requestId: this.requestId,
-          sourceId: source.sourceId,
-          sourceKind: source.sourceKind,
-        });
-        if (Option.isNone(request)) {
-          this.error.set('ledger.conflict');
-          return;
-        }
-        this.busy.set(true);
-        try {
-          if (
-            !(await this.confirmation.request(
-              this.i18n.tf('ledger.confirmPost', {
-                debit: request.value.debitAccount,
-                credit: request.value.creditAccount,
-                amount: this.money(source.amountCents),
-              }),
-            ))
-          )
-            return;
-          const outcome = await this.api.post(request.value);
-          if (!outcome.success) {
-            this.error.set(outcome.code);
-            return;
-          }
-          this.reset();
-          this.saved.set(true);
-          this.error.set(undefined);
-          this.result()?.nativeElement.focus();
-        } finally {
-          this.busy.set(false);
-        }
-        await this.load();
-      },
-    });
-  }
-  protected reverse(event: Event): void {
-    event.preventDefault();
-    if (this.busy() || this.loading()) return;
-    void submit(this.reversalForm, {
-      action: async () => {
-        const original = this.reversing();
-        if (original === undefined) return;
-        this.requestId ??= crypto.randomUUID();
-        const request = Schema.decodeUnknownOption(LedgerReverse)({
-          ...this.reversalForm().value(),
-          requestId: this.requestId,
-        });
-        if (Option.isNone(request)) {
-          this.error.set('ledger.conflict');
-          return;
-        }
-        this.busy.set(true);
-        try {
-          if (!(await this.confirmation.request(this.i18n.t('ledger.confirmReverse')))) return;
-          const outcome = await this.api.reverse(original.id, request.value);
-          if (!outcome.success) {
-            this.error.set(outcome.code);
-            return;
-          }
-          this.reset();
-          this.saved.set(true);
-          this.error.set(undefined);
-          this.result()?.nativeElement.focus();
-        } finally {
-          this.busy.set(false);
-        }
-        await this.load();
-      },
-    });
-  }
-  protected money(value: number): string {
-    return formatMoney(value, this.i18n.language(), 'EUR');
-  }
-  private dirty(): boolean {
-    return this.entryForm().dirty() || this.reversalForm().dirty();
-  }
-  canDeactivate(): boolean | Promise<boolean> {
-    return (
-      !this.busy() &&
-      (!this.dirty() || this.confirmation.request(this.i18n.t('backOffice.invoice.unsavedChanges')))
-    );
-  }
-  protected beforeUnload(event: BeforeUnloadEvent): void {
-    if (this.busy() || this.dirty()) {
-      event.preventDefault();
-      event.returnValue = '';
+  protected applyPeriod(range: DateRange): void {
+    const period = { from: range.from ?? '', to: range.to ?? '' };
+    if (!Schema.is(LedgerPeriod)(period)) {
+      this.periodRequired.set(true);
+      return;
     }
+    this.periodRequired.set(false);
+    void this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { ...this.query(), ...period },
+    });
+    this.filterMenu()?.close();
+  }
+  protected search(value: string): void {
+    void this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { ...this.query(), q: value },
+      replaceUrl: true,
+    });
+    if (value === '') this.searchControl()?.focus();
+  }
+  protected viewQuery(view: string) {
+    const sort =
+      view === 'journal'
+        ? bankTableSort(this.query().sort, ledgerEntryColumns)
+        : bankTableSort(this.query().sort, ledgerSourceColumns);
+    return { ...this.query(), view, sort };
+  }
+  protected sortDirection(column: string) {
+    return bankSortDirection(this.query().sort, column);
+  }
+  protected sortBy(column: string): void {
+    void this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { ...this.query(), sort: nextBankSort(this.query().sort, column) },
+      replaceUrl: true,
+    });
+  }
+  protected money(cents: number): string {
+    return formatMoney(cents, this.i18n.language(), 'EUR');
   }
 }

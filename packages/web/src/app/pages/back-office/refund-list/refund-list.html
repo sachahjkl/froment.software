@@ -1,0 +1,141 @@
+<section class="billing-page" aria-labelledby="refunds-title">
+  <header>
+    <h1 id="refunds-title">{{ i18n.t('billingWorkspace.refunds') }}</h1>
+    <a
+      appLinkButton
+      variant="primary"
+      routerLink="/backoffice/facturation"
+      [queryParams]="{ credit: 'with' }"
+      >{{ i18n.t('billingWorkspace.chooseInvoice') }}</a
+    >
+  </header>
+  <app-billing-nav />
+  <section appListWorkspace>
+    <app-billing-entry-filters
+      [clients]="clients()"
+      [disabled]="state() !== 'ready'"
+      [periodLabel]="i18n.t('billingWorkspace.refundPeriod')"
+    >
+      <app-table-export
+        listActions
+        [columns]="csvColumns()"
+        [rows]="csvRows()"
+        filename="refunds.csv"
+        [label]="i18n.t('listWorkspace.exportCsv')"
+        [emptyHint]="i18n.t(state() === 'limit' ? 'billingWorkspace.limitExceeded' : 'listWorkspace.exportEmpty')"
+        [pendingHint]="i18n.t('listWorkspace.exportPending')"
+        [pending]="state() === 'loading'"
+      />
+      <p listSummary role="status">
+        @if (state() === 'ready') { {{ i18n.plural('billingWorkspace.count', { count:
+        visible().length }) }} }
+      </p>
+    </app-billing-entry-filters>
+    @switch (state()) { @case ('loading') {
+    <p role="status">{{ i18n.t('backOffice.invoices.loading') }}</p>
+    } @case ('error') {
+    <p appNotice variant="danger" role="alert">{{ i18n.t('billingWorkspace.loadError') }}</p>
+    <button appButton (click)="load()">{{ i18n.t('credit.reload') }}</button> } @case ('limit') {
+    <p appNotice variant="danger" role="alert">{{ i18n.t('billingWorkspace.limitExceeded') }}</p>
+    <button appButton (click)="load()">{{ i18n.t('credit.reload') }}</button> } @case ('ready') {
+    <div appDataTable>
+      <table>
+        <thead>
+          <tr>
+            <th scope="col" [attr.aria-sort]="sortDirection(sort(), 'reference')">
+              <button
+                appTableSort
+                [label]="i18n.t('credit.reference')"
+                [direction]="sortDirection(sort(), 'reference')"
+                (click)="sortBy('reference')"
+              ></button>
+            </th>
+            <th scope="col" [attr.aria-sort]="sortDirection(sort(), 'invoice')">
+              <button
+                appTableSort
+                [label]="i18n.t('backOffice.invoices.number')"
+                [direction]="sortDirection(sort(), 'invoice')"
+                (click)="sortBy('invoice')"
+              ></button>
+            </th>
+            <th scope="col" [attr.aria-sort]="sortDirection(sort(), 'client')">
+              <button
+                appTableSort
+                [label]="i18n.t('backOffice.invoices.client')"
+                [direction]="sortDirection(sort(), 'client')"
+                (click)="sortBy('client')"
+              ></button>
+            </th>
+            <th scope="col" [attr.aria-sort]="sortDirection(sort(), 'date')">
+              <button
+                appTableSort
+                [label]="i18n.t('credit.refundedOn')"
+                [direction]="sortDirection(sort(), 'date')"
+                (click)="sortBy('date')"
+              ></button>
+            </th>
+            <th scope="col" [attr.aria-sort]="sortDirection(sort(), 'status')">
+              <button
+                appTableSort
+                [label]="i18n.t('billingWorkspace.financialStatus')"
+                [direction]="sortDirection(sort(), 'status')"
+                (click)="sortBy('status')"
+              ></button>
+            </th>
+            <th scope="col" class="amount" [attr.aria-sort]="sortDirection(sort(), 'amount')">
+              <button
+                appTableSort
+                [label]="i18n.t('credit.amount')"
+                [direction]="sortDirection(sort(), 'amount')"
+                (click)="sortBy('amount')"
+              ></button>
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (result of visible(); track result.item.id) { @let entry = result.item;
+          <tr>
+            <td>
+              <a
+                [routerLink]="['/backoffice/invoices', entry.invoiceId]"
+                [queryParams]="{ tab: 'credit' }"
+                [fragment]="entry.id"
+                [appSearchHighlight]="matchIndices(result, 'reference')"
+                >{{ entry.reference }}</a
+              >
+            </td>
+            <td>
+              <span [appSearchHighlight]="matchIndices(result, 'invoiceNumber')"
+                >{{ entry.invoiceNumber }}</span
+              ><small
+                ><span [appSearchHighlight]="matchIndices(result, 'title')">{{ entry.title }}</span>
+                ·
+                <span [appSearchHighlight]="matchIndices(result, 'orderReference')"
+                  >{{ entry.orderReference }}</span
+                ></small
+              >
+            </td>
+            <td [appSearchHighlight]="matchIndices(result, 'clientDisplayName')">
+              {{ entry.clientDisplayName }}
+            </td>
+            <td>{{ entry.refundedOn }}</td>
+            <td>
+              {{ i18n.t(entry.cancelledAt === null ? 'billingWorkspace.active' :
+              'billingWorkspace.cancelled') }}
+            </td>
+            <td class="amount">{{ money(entry.amountCents) }}</td>
+          </tr>
+          } @empty {
+          <tr>
+            <td colspan="6">
+              {{ i18n.t(rows().length ? 'billingWorkspace.noMatches' : 'billingWorkspace.empty') }}
+            </td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    } }
+  </section>
+  <p class="muted">{{ i18n.t('billingWorkspace.refundHint') }}</p>
+</section>

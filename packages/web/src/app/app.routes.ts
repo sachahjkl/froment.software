@@ -3,8 +3,15 @@ import { HomeComponent } from './pages/home/home.component';
 import { policies } from './pages/policy/policy-documents';
 import { administratorGuard, clientGuard } from './back-office/authentication-guards';
 import { unsavedChangesGuard } from './back-office/unsaved-changes-guard';
-import { pendingApiTokenGuard } from './back-office/pending-api-token-guard';
 import { TabPanelOutlet } from './shared/tabs/tab-panel';
+import { billingRoutes } from './pages/back-office/billing/billing.routes';
+import { bankWorkspaceRoutes } from './pages/back-office/banking/bank-workspace.routes';
+import { configurationRoutes } from './pages/back-office/configuration/configuration.routes';
+import { accountRoutes } from './pages/back-office/account-security/account.routes';
+import { teamRoutes } from './pages/back-office/team/team.routes';
+import { apiTokenRoutes } from './pages/back-office/api-tokens/api-token.routes';
+import { serviceRoutes } from './pages/back-office/connections/service.routes';
+import { auditRoute } from './pages/back-office/configuration/audit/audit.routes';
 
 const tabRoutes = (defaultPath: string, panel: string, paths: readonly string[]): Routes => [
   { path: '', redirectTo: defaultPath, pathMatch: 'full' },
@@ -12,22 +19,12 @@ const tabRoutes = (defaultPath: string, panel: string, paths: readonly string[])
 ];
 
 export const routes: Routes = [
-  {
-    path: 'backoffice/banque/ecritures',
-    loadComponent: () =>
-      import('./pages/back-office/bank-ledger/bank-ledger').then((module) => module.BankLedger),
-    canActivate: [administratorGuard],
-    canDeactivate: [unsavedChangesGuard],
-    data: { titleKey: 'ledger.title', robots: 'noindex, nofollow' },
-  },
-  {
-    path: 'backoffice/invoices/:invoiceId/credits',
-    loadComponent: () =>
-      import('./pages/back-office/credit-notes/credit-notes').then((module) => module.CreditNotes),
-    canActivate: [administratorGuard],
-    canDeactivate: [unsavedChangesGuard],
-    data: { titleKey: 'credit.title', robots: 'noindex, nofollow' },
-  },
+  ...billingRoutes,
+  ...bankWorkspaceRoutes,
+  ...teamRoutes,
+  ...apiTokenRoutes,
+  ...serviceRoutes,
+  auditRoute,
   {
     path: 'backoffice/join',
     loadComponent: () =>
@@ -95,6 +92,7 @@ export const routes: Routes = [
   },
   {
     path: 'quote',
+    canDeactivate: [unsavedChangesGuard],
     loadComponent: () =>
       import('./pages/public-quote/public-quote').then((module) => module.PublicQuote),
     data: {
@@ -107,6 +105,7 @@ export const routes: Routes = [
       { path: 'summary', component: TabPanelOutlet, data: { panel: 'summary' } },
       { path: 'document', component: TabPanelOutlet, data: { panel: 'document' } },
       { path: 'signature', component: TabPanelOutlet, data: { panel: 'signature' } },
+      { path: 'confirmation', component: TabPanelOutlet, data: { panel: 'confirmation' } },
     ],
   },
   {
@@ -153,11 +152,11 @@ export const routes: Routes = [
   },
   {
     path: 'backoffice/account',
-    canDeactivate: [unsavedChangesGuard],
     loadComponent: () =>
-      import('./pages/back-office/account-security/account-security').then(
-        (module) => module.AccountSecurity,
+      import('./pages/back-office/account-security/account-layout').then(
+        (module) => module.AccountLayout,
       ),
+    children: accountRoutes,
     canActivate: [administratorGuard],
     data: {
       titleKey: 'account.security_title',
@@ -167,17 +166,26 @@ export const routes: Routes = [
   },
   {
     path: 'backoffice/client/account',
-    canDeactivate: [unsavedChangesGuard],
     loadComponent: () =>
-      import('./pages/back-office/account-security/account-security').then(
-        (module) => module.AccountSecurity,
+      import('./pages/back-office/account-security/account-layout').then(
+        (module) => module.AccountLayout,
       ),
+    children: accountRoutes,
     canActivate: [clientGuard],
     data: {
       titleKey: 'account.security_title',
       descriptionKey: 'page.description.back_office',
       robots: 'noindex, nofollow',
     },
+  },
+  {
+    path: 'backoffice/client/documents/:kind/:documentId',
+    loadComponent: () =>
+      import('./pages/back-office/customer-document-detail/customer-document-detail').then(
+        (module) => module.CustomerDocumentDetail,
+      ),
+    canActivate: [clientGuard],
+    data: { titleKey: 'page.back_office_client', robots: 'noindex, nofollow' },
   },
   {
     path: 'backoffice/client',
@@ -225,6 +233,16 @@ export const routes: Routes = [
     data: { titleKey: 'clientsWorkspace.edit', robots: 'noindex, nofollow' },
   },
   {
+    path: 'backoffice/clients/:clientId/access/new',
+    loadComponent: () =>
+      import('./pages/back-office/client-detail/client-access-editor/client-access-editor').then(
+        (module) => module.ClientAccessEditor,
+      ),
+    canActivate: [administratorGuard],
+    canDeactivate: [unsavedChangesGuard],
+    data: { titleKey: 'page.back_office_client_detail', robots: 'noindex, nofollow' },
+  },
+  {
     path: 'backoffice/clients/:clientId',
     loadComponent: () =>
       import('./pages/back-office/client-detail/client-detail').then(
@@ -240,6 +258,7 @@ export const routes: Routes = [
     children: [
       { path: '', redirectTo: 'profile', pathMatch: 'full' },
       { path: 'profile', component: TabPanelOutlet, data: { panel: 'profile' } },
+      { path: 'affairs', component: TabPanelOutlet, data: { panel: 'affairs' } },
       { path: 'documents', component: TabPanelOutlet, data: { panel: 'documents' } },
       { path: 'access', component: TabPanelOutlet, data: { panel: 'access' } },
     ],
@@ -263,6 +282,7 @@ export const routes: Routes = [
         (module) => module.AffairDetail,
       ),
     canActivate: [administratorGuard],
+    children: tabRoutes('overview', 'affair-detail', ['overview', 'documents', 'history']),
     data: {
       titleKey: 'page.back_office_affair_detail',
       descriptionKey: 'page.description.back_office_affair_detail',
@@ -282,7 +302,7 @@ export const routes: Routes = [
     },
   },
   {
-    path: 'backoffice/quotes/:quoteId',
+    path: 'backoffice/quotes/:quoteId/edit',
     loadComponent: () =>
       import('./pages/back-office/quote-editor/quote-editor').then((module) => module.QuoteEditor),
     canActivate: [administratorGuard],
@@ -294,16 +314,30 @@ export const routes: Routes = [
     },
   },
   {
-    path: 'backoffice/facturation',
+    path: 'backoffice/quotes/:quoteId/publication',
     loadComponent: () =>
-      import('./pages/back-office/billing/billing').then((module) => module.Billing),
+      import('./pages/back-office/quote-publication/quote-publication').then(
+        (module) => module.QuotePublication,
+      ),
     canActivate: [administratorGuard],
-    data: {
-      titleKey: 'page.back_office_invoices',
-      descriptionKey: 'page.description.back_office_invoices',
-      robots: 'noindex, nofollow',
-    },
-    children: tabRoutes('issued', 'billing', ['draft', 'issued', 'paid', 'void', 'all']),
+    canDeactivate: [unsavedChangesGuard],
+    data: { titleKey: 'commercial.publicationTitle', robots: 'noindex, nofollow' },
+  },
+  {
+    path: 'backoffice/quotes/:quoteId',
+    loadComponent: () =>
+      import('./pages/back-office/quote-detail/quote-detail').then((module) => module.QuoteDetail),
+    canActivate: [administratorGuard],
+    canDeactivate: [unsavedChangesGuard],
+    children: tabRoutes('summary', 'quote-detail', ['summary', 'document', 'versions']),
+    data: { titleKey: 'commercial.quote', robots: 'noindex, nofollow' },
+  },
+  {
+    path: 'backoffice/orders/:orderId',
+    loadComponent: () =>
+      import('./pages/back-office/order-detail/order-detail').then((module) => module.OrderDetail),
+    canActivate: [administratorGuard],
+    data: { titleKey: 'commercial.order', robots: 'noindex, nofollow' },
   },
   {
     path: 'backoffice/catalogue/new',
@@ -345,73 +379,7 @@ export const routes: Routes = [
       descriptionKey: 'page.description.back_office_issuer_settings',
       robots: 'noindex, nofollow',
     },
-    children: [
-      { path: '', redirectTo: 'entreprise', pathMatch: 'full' },
-      {
-        path: 'equipe',
-        loadComponent: () => import('./pages/back-office/team/team').then((module) => module.Team),
-        canDeactivate: [unsavedChangesGuard],
-      },
-      {
-        path: 'services',
-        pathMatch: 'full',
-        loadComponent: () =>
-          import('./pages/back-office/connections/connections').then(
-            (module) => module.Connections,
-          ),
-      },
-      {
-        path: 'services/resend',
-        loadComponent: () =>
-          import('./pages/back-office/email-test/email-test').then((module) => module.EmailTest),
-        canDeactivate: [unsavedChangesGuard],
-      },
-      {
-        path: 'services/stripe',
-        canDeactivate: [unsavedChangesGuard],
-        loadComponent: () =>
-          import('./pages/back-office/checkout/checkout').then((module) => module.Checkout),
-      },
-      {
-        path: 'services/simulations',
-        loadComponent: () =>
-          import('./pages/back-office/integrations/integrations').then(
-            (module) => module.Integrations,
-          ),
-      },
-      {
-        path: 'entreprise',
-        loadComponent: () =>
-          import('./pages/back-office/issuer-settings/issuer-settings').then(
-            (module) => module.IssuerSettings,
-          ),
-        canDeactivate: [unsavedChangesGuard],
-      },
-      {
-        path: 'conditions',
-        loadComponent: () =>
-          import('./pages/back-office/quote-condition-presets/quote-condition-presets').then(
-            (module) => module.QuoteConditionPresets,
-          ),
-        canDeactivate: [unsavedChangesGuard],
-      },
-      {
-        path: 'identite',
-        loadComponent: () =>
-          import('./pages/business-card/business-card').then((module) => module.BusinessCard),
-      },
-      {
-        path: 'api',
-        loadComponent: () =>
-          import('./pages/back-office/api-tokens/api-tokens').then((module) => module.ApiTokens),
-        canDeactivate: [pendingApiTokenGuard],
-        data: {
-          titleKey: 'page.back_office_issuer_settings',
-          descriptionKey: 'page.description.back_office_issuer_settings',
-          robots: 'noindex, nofollow',
-        },
-      },
-    ],
+    children: configurationRoutes,
   },
   {
     path: 'backoffice/courriels/new',
@@ -481,42 +449,6 @@ export const routes: Routes = [
     children: tabRoutes('messages', 'emails', ['messages', 'drafts', 'reminders', 'templates']),
   },
   {
-    path: 'backoffice/banque',
-    loadComponent: () =>
-      import('./pages/back-office/banking/banking').then((module) => module.Banking),
-    canActivate: [administratorGuard],
-    canDeactivate: [unsavedChangesGuard],
-    data: { titleKey: 'bank.title', descriptionKey: 'bank.intro', robots: 'noindex, nofollow' },
-  },
-  {
-    path: 'backoffice/invoices/new',
-    loadComponent: () =>
-      import('./pages/back-office/invoice-editor/invoice-editor').then(
-        (module) => module.InvoiceEditor,
-      ),
-    canActivate: [administratorGuard],
-    canDeactivate: [unsavedChangesGuard],
-    data: {
-      titleKey: 'page.back_office_invoice_editor',
-      descriptionKey: 'page.description.back_office_invoice_editor',
-      robots: 'noindex, nofollow',
-    },
-  },
-  {
-    path: 'backoffice/invoices/:invoiceId',
-    loadComponent: () =>
-      import('./pages/back-office/invoice-editor/invoice-editor').then(
-        (module) => module.InvoiceEditor,
-      ),
-    canActivate: [administratorGuard],
-    canDeactivate: [unsavedChangesGuard],
-    data: {
-      titleKey: 'page.back_office_invoice_editor',
-      descriptionKey: 'page.description.back_office_invoice_editor',
-      robots: 'noindex, nofollow',
-    },
-  },
-  {
     path: 'design',
     loadComponent: () =>
       import('./pages/design/design.component').then((module) => module.DesignComponent),
@@ -525,52 +457,8 @@ export const routes: Routes = [
       descriptionKey: 'page.description.design',
       robots: 'noindex, follow',
     },
-    children: [
-      { path: '', redirectTo: 'demo', pathMatch: 'full' },
-      ...['demo', 'actions', 'inputs', 'feedback', 'data', 'documents'].map((path) => ({
-        path,
-        component: TabPanelOutlet,
-        data: { panel: path },
-      })),
-      {
-        path: 'navigation',
-        loadComponent: () =>
-          import('./pages/design/design-navigation').then((module) => module.DesignNavigation),
-        children: [
-          { path: '', redirectTo: 'first', pathMatch: 'full' },
-          {
-            path: 'first',
-            component: TabPanelOutlet,
-            data: {
-              panel: 'nested',
-              labelKey: 'design.demo.tabProposal',
-              id: 'sample-first-panel',
-              tabId: 'sample-first-tab',
-            },
-          },
-          {
-            path: 'second',
-            component: TabPanelOutlet,
-            data: {
-              panel: 'nested',
-              labelKey: 'design.demo.tabDocument',
-              id: 'sample-second-panel',
-              tabId: 'sample-second-tab',
-            },
-          },
-          {
-            path: 'third',
-            component: TabPanelOutlet,
-            data: {
-              panel: 'nested',
-              labelKey: 'design.demo.tabAcceptance',
-              id: 'sample-third-panel',
-              tabId: 'sample-third-tab',
-            },
-          },
-        ],
-      },
-    ],
+    loadChildren: () =>
+      import('./pages/design/design.routes').then((module) => module.designRoutes),
   },
   {
     path: 'legal',

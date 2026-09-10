@@ -1,0 +1,52 @@
+<app-story-page [entry]="entry" [definition]="definition">
+  <div storyControls class="settings">
+    <p>{{ text().isolatedAccount }}</p>
+    @if (entry.id === 'back-office-header' || entry.id === 'global-search') {
+      <label>{{ text().status }}<select class="select" [formField]="controls.scenario">
+        <option value="ready">{{ text().ready }}</option>
+        <option value="loading">{{ text().pending }}</option>
+        <option value="error">{{ text().errorPreview }}</option>
+        @if (entry.id === 'global-search') { <option value="empty">{{ text().empty }}</option> }
+      </select></label>
+    }
+    @if (entry.id === 'back-office-header') {
+      <label><input type="checkbox" [formField]="controls.administrator" />{{ text().administrator }}</label>
+    }
+    @if (entry.id === 'back-office-nav' || entry.id === 'back-office-header') {
+      <label>{{ text().current }}<select class="select" [formField]="controls.path">
+        <option value="/backoffice/affaires">{{ text().affairs }}</option>
+        <option value="/backoffice/quotes/example">{{ text().quoteDetail }}</option>
+        <option value="/backoffice/facturation">{{ text().billing }}</option>
+        <option value="/backoffice/configuration/entreprise">{{ text().company }}</option>
+        <option value="/design/back-office-nav">{{ text().noActivePage }}</option>
+      </select></label>
+    }
+    @if (entry.id === 'document-issues') {
+      <label>{{ 'kind' }}<select class="select" [formField]="controls.kind">
+        <option value="quote">{{ text().quote }}</option>
+        <option value="invoice">{{ text().invoice }}</option>
+      </select></label>
+      <label>{{ 'issues[].party' }}<select class="select" [formField]="controls.party">
+        <option value="both">{{ text().bothParties }}</option>
+        <option value="issuer">{{ text().issuer }}</option>
+        <option value="client">{{ text().client }}</option>
+      </select></label>
+    }
+    @if (entry.id === 'global-search') { <p>{{ text().searchPreview }}</p> }
+  </div>
+  <div storyPreview>
+    @for (settings of [model()]; track settings.scenario + ':' + settings.administrator) {
+      <app-business-preview [component]="entry.id" [settings]="settings" [attr.data-variant]="entry.id === 'document-issues' ? null : ''" />
+    }
+  </div>
+  <div storyVariants class="samples">
+    @if (entry.id === 'document-issues') {
+      @for (settings of documentVariants; track settings.kind) {
+        <div class="sample" data-variant>
+          <code>{{ settings.kind }}</code>
+          <app-business-preview component="document-issues" [settings]="settings" />
+        </div>
+      }
+    } @else { <p>{{ text().singleBusinessPreview }}</p> }
+  </div>
+</app-story-page>

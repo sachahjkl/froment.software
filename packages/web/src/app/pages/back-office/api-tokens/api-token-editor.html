@@ -1,0 +1,82 @@
+<section class="tokens-page">
+  <a routerLink="/backoffice/api" [queryParams]="table.params()"
+    >{{ i18n.t('configurationWorkspace.backTokens') }}</a
+  >
+  @if (secret(); as currentSecret) {
+  <h1 #secretHeading tabindex="-1">{{ i18n.t('backOffice.apiTokens.secretTitle') }}</h1>
+  <p appNotice variant="warning">{{ i18n.t('backOffice.apiTokens.secretWarning') }}</p>
+  <app-copy-field
+    [value]="currentSecret"
+    [actionLabel]="i18n.t('backOffice.apiTokens.copy')"
+    [status]="copied() ? i18n.t('backOffice.apiTokens.copied') : ''"
+    (copy)="copySecret(currentSecret)"
+  />
+  <button appButton variant="primary" type="button" (click)="acknowledgeSecret()">
+    {{ i18n.t('backOffice.apiTokens.secretSaved') }}
+  </button>
+  } @else {
+  <h1>{{ i18n.t('backOffice.apiTokens.createTitle') }}</h1>
+  <form (submit)="create($event)" novalidate>
+    <label class="field"
+      >{{ i18n.t('backOffice.apiTokens.name') }}<input
+        class="input"
+        id="api-token-name"
+        [formField]="tokenForm.name"
+    /></label>
+    <label class="field"
+      >{{ i18n.t('backOffice.apiTokens.expiresAt') }}<input
+        class="input"
+        id="api-token-expiration"
+        type="datetime-local"
+        [formField]="tokenForm.expiresAt"
+    /></label>
+    @if (tokenForm.expiresAt().touched() && !expirationValid()) {
+    <p class="field-error">{{ i18n.t('backOffice.apiTokens.expirationInvalid') }}</p>
+    }
+    <fieldset class="ds-panel" [disabled]="saving()">
+      <legend>{{ i18n.t('backOffice.apiTokens.permissions') }}</legend>
+      <label class="field"
+        >{{ i18n.t('backOffice.apiTokens.permissionSearch') }}<input
+          #permissionSearch
+          class="input"
+          type="search"
+          id="api-token-permission-search"
+          [value]="permissionQuery()"
+          (input)="updatePermissionQuery(permissionSearch)"
+      /></label>
+      <p>
+        {{ i18n.plural('configurationWorkspace.permissionCount', { count:
+        tokenForm.permissions().value().length }) }}
+      </p>
+      <div class="permission-groups">
+        @for (group of permissionGroups(); track group.domain) {
+        <fieldset>
+          <legend><code>{{ group.domain }}</code></legend>
+          @for (result of group.permissions; track result.item.code) {
+          <label class="permission-option">
+            <input
+              #permission
+              type="checkbox"
+              [checked]="selected(result.item.code)"
+              (change)="togglePermission(result.item.code, permission.checked)"
+            />
+            <span
+              ><span [appSearchHighlight]="result.labelMatches">{{ result.item.label }}</span
+              ><code [appSearchHighlight]="result.codeMatches">{{ result.item.code }}</code></span
+            >
+          </label>
+          }
+        </fieldset>
+        } @empty {
+        <p>{{ i18n.t('backOffice.apiTokens.permissionEmpty') }}</p>
+        }
+      </div>
+    </fieldset>
+    <button appButton variant="primary" type="submit" [disabled]="createDisabled()">
+      {{ i18n.t('backOffice.apiTokens.create') }}
+    </button>
+  </form>
+  } @if (dialogError(); as code) {
+  <p appNotice variant="danger" role="alert">{{ i18n.t(code) }}</p>
+  }
+</section>
