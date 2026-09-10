@@ -1,95 +1,157 @@
 import { TestBed } from '@angular/core/testing';
-import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
+import { provideRouter, Router } from '@angular/router';
+import { RouterTestingHarness } from '@angular/router/testing';
 import { vi } from 'vitest';
-import { of, Subject } from 'rxjs';
-
 import { ClientsApi } from '@backoffice/clients-api';
 import { QuotesApi } from '@backoffice/quotes-api';
+import { OrdersApi } from '@backoffice/orders-api';
 import { QuoteConditionPresetsApi } from '@backoffice/quote-condition-presets-api';
 import { CatalogApi } from '@backoffice/catalog-api';
-import { TextCopy } from '@shared/text-copy';
-import { QuoteEditor } from './quote-editor';
+import { Confirmation } from '@shared/confirmation/confirmation';
+import {
+  commercialTestRoutes,
+  control,
+  inputValue,
+  quoteFixture,
+  quoteId,
+  selectValue,
+} from '../quote-detail/commercial.spec-helper';
 
-const quoteId = '01ARZ3NDEKTSV4RRFFQ69G5FAY';
-const revisionId = '01ARZ3NDEKTSV4RRFFQ69G5FAZ';
-const quoteDetail = {
-  id: quoteId,
-  reference: 'DE-2026-000001' as const,
-  clientId: '01ARZ3NDEKTSV4RRFFQ69G5FAV',
-  status: 'draft' as const,
-  version: 2,
-  currentRevision: {
-    id: revisionId,
-    version: 2,
-    clientDisplayName: 'Acme',
-    title: 'Audit',
-    conditions: '',
-    currency: 'EUR' as const,
-    netTotalCents: 1_000,
-    vatTotalCents: 200,
-    totalCents: 1_200,
-    createdAt: '2026-08-20T06:00:00.000Z',
-    createdByUserId: '01ARZ3NDEKTSV4RRFFQ69G5FAW',
-    lines: [
-      {
-        id: '01ARZ3NDEKTSV4RRFFQ69G5FAX',
-        position: 0,
-        description: 'Audit',
-        quantityMilli: 1_000,
-        unitPriceCents: 1_000,
-        vatRateBasisPoints: 2_000,
-        netTotalCents: 1_000,
-        vatTotalCents: 200,
-        totalCents: 1_200,
-      },
-    ],
-  },
-  revisions: [],
-};
-
-describe('QuoteEditor', () => {
+describe('Quote editor navigation', () => {
+  const get = vi.fn();
+  const create = vi.fn();
+  const createRevision = vi.fn();
+  const confirm = vi.fn();
   beforeEach(() => {
-    TestBed.configureTestingModule({
-      providers: [{ provide: CatalogApi, useValue: { list: async () => [] } }],
-    });
-  });
-  it('copies catalog values into an independent quote line', async () => {
-    const item = {
-      id: '01ARZ3NDEKTSV4RRFFQ69G5FA0',
-      description: 'Catalog service',
-      quantityMilli: 1500,
-      unitPriceCents: 12500,
-      vatRateBasisPoints: 550,
-      currency: 'EUR',
-      version: 1,
-      archived: false,
-    };
+    get.mockReset().mockResolvedValue({ success: true, result: quoteFixture });
+    create.mockReset();
+    createRevision.mockReset();
+    confirm.mockReset().mockResolvedValue(false);
     TestBed.configureTestingModule({
       providers: [
-        provideRouter([]),
-        { provide: ActivatedRoute, useValue: { paramMap: of(convertToParamMap({ quoteId })) } },
-        { provide: ClientsApi, useValue: { list: async () => [] } },
-        { provide: QuoteConditionPresetsApi, useValue: { list: async () => [] } },
+        provideRouter(commercialTestRoutes),
+        { provide: QuotesApi, useValue: { get, create, createRevision } },
+        { provide: OrdersApi, useValue: { list: async () => [] } },
         {
-          provide: QuotesApi,
-          useValue: { get: async () => ({ success: true, result: quoteDetail }) },
+          provide: ClientsApi,
+          useValue: {
+            list: async () => [{ id: quoteFixture.clientId, displayName: 'Acme', archived: false }],
+          },
         },
+        {
+          provide: CatalogApi,
+          useValue: {
+            list: async () => [
+              {
+                id: 'catalog',
+                description: 'Catalog service',
+                quantityMilli: 1500,
+                unitPriceCents: 12500,
+                vatRateBasisPoints: 550,
+                archived: false,
+              },
+            ],
+          },
+        },
+        {
+          provide: QuoteConditionPresetsApi,
+          useValue: {
+            list: async () => [
+              { id: 'preset', name: 'Standard payment', conditions: 'Payment within 30 days.' },
+            ],
+          },
+        },
+        { provide: Confirmation, useValue: { request: confirm } },
       ],
     });
-    TestBed.overrideProvider(CatalogApi, { useValue: { list: async () => [item] } });
-    const fixture = TestBed.createComponent(QuoteEditor);
-    fixture.detectChanges();
-    const root: HTMLElement = fixture.nativeElement;
-    const select = await vi.waitFor(() => {
-      const result = root.querySelector<HTMLSelectElement>('.lines select');
-      if (result === null) throw new Error('catalog.selector.missing');
-      return result;
+  });
+  async function open(path = `/backoffice/quotes/${quoteId}/edit`) {
+    const harness = await RouterTestingHarness.create(path);
+    await harness.fixture.whenStable();
+    return { harness, root: harness.fixture.nativeElement as HTMLElement };
+  }
+  it('keeps submit available and focuses the first invalid field', async () => {
+    const { harness, root } = await open('/backoffice/quotes/new');
+    const save = control<HTMLButtonElement>(root, 'button[type="submit"]');
+    expect(save.disabled).toBe(false);
+    save.click();
+    await harness.fixture.whenStable();
+    expect(document.activeElement).toBe(root.querySelector('#quote-client'));
+    expect(create).not.toHaveBeenCalled();
+    expect(root.textContent).toMatch(/obligatoire|required/i);
+  });
+  it('uses the saved version and keeps input on a conflict', async () => {
+    createRevision.mockResolvedValue({ success: false, code: 'quote.version_conflict' });
+    const { harness, root } = await open();
+    inputValue(root, '#quote-name', 'Changed title');
+    control<HTMLButtonElement>(root, 'button[type="submit"]').click();
+    await harness.fixture.whenStable();
+    expect(createRevision).toHaveBeenCalledWith(
+      quoteId,
+      expect.objectContaining({ expectedVersion: 2, title: 'Changed title' }),
+    );
+    expect(control<HTMLInputElement>(root, '#quote-name').value).toBe('Changed title');
+    expect(root.querySelector('[role="alert"]')).not.toBeNull();
+    expect(root.querySelector('iframe')).toBeNull();
+    expect(root.querySelector('.send-quote')).toBeNull();
+  });
+  it('blocks pending navigation and sends one save request', async () => {
+    let resolve!: (value: { success: true; result: typeof quoteFixture }) => void;
+    createRevision.mockReturnValue(
+      new Promise((done) => {
+        resolve = done;
+      }),
+    );
+    const { harness, root } = await open();
+    const button = control<HTMLButtonElement>(root, 'button[type="submit"]');
+    button.click();
+    button.click();
+    await vi.waitFor(() => expect(createRevision).toHaveBeenCalledTimes(1));
+    await TestBed.inject(Router).navigateByUrl('/backoffice/affaires');
+    expect(TestBed.inject(Router).url).toContain('/edit');
+    const event = new Event('beforeunload', { cancelable: true });
+    window.dispatchEvent(event);
+    expect(event.defaultPrevented).toBe(true);
+    resolve({ success: true, result: quoteFixture });
+    await harness.fixture.whenStable();
+    expect(TestBed.inject(Router).url).toBe(`/backoffice/quotes/${quoteId}/summary`);
+  });
+  it('asks before leaving a dirty editor through the real guard', async () => {
+    const { harness, root } = await open();
+    inputValue(root, '#quote-name', 'Unsaved title');
+    await TestBed.inject(Router).navigateByUrl('/backoffice/affaires');
+    expect(confirm).toHaveBeenCalledOnce();
+    expect(TestBed.inject(Router).url).toContain('/edit');
+    confirm.mockResolvedValue(true);
+    await TestBed.inject(Router).navigateByUrl('/backoffice/affaires');
+    await harness.fixture.whenStable();
+    expect(TestBed.inject(Router).url).toBe('/backoffice/affaires');
+  });
+  it('keeps the validated list context after saving a revision', async () => {
+    createRevision.mockResolvedValue({ success: true, result: quoteFixture });
+    const { harness, root } = await open(
+      `/backoffice/quotes/${quoteId}/edit?q=Audit&stage=draft&client=${quoteFixture.clientId}&view=active&sort=amount-desc&returnUrl=https://invalid.test`,
+    );
+    control<HTMLButtonElement>(root, 'button[type="submit"]').click();
+    await harness.fixture.whenStable();
+    const router = TestBed.inject(Router);
+    expect(router.url).toContain(`/backoffice/quotes/${quoteId}/summary?`);
+    expect(router.parseUrl(router.url).queryParams).toEqual({
+      q: 'Audit',
+      stage: 'draft',
+      client: quoteFixture.clientId,
+      view: 'active',
+      sort: 'amount-desc',
     });
-    select.value = item.id;
-    select.dispatchEvent(new Event('change', { bubbles: true }));
-    await fixture.whenStable();
-    item.unitPriceCents = 99999;
-    fixture.detectChanges();
+  });
+  it('copies catalog values and selects conditions through the searchable picker', async () => {
+    const { harness, root } = await open();
+    control<HTMLButtonElement>(root, '.catalog-picker button').click();
+    await harness.fixture.whenStable();
+    inputValue(document, '[role="dialog"] input[type="search"]', 'service');
+    await harness.fixture.whenStable();
+    control<HTMLButtonElement>(document, '[role="dialog"] button.option').click();
+    await harness.fixture.whenStable();
     const lines = root.querySelectorAll('.document-line');
     expect(lines).toHaveLength(2);
     expect(Array.from(lines[1]?.querySelectorAll('input') ?? [], (input) => input.value)).toEqual([
@@ -98,277 +160,131 @@ describe('QuoteEditor', () => {
       '125.00',
       '5.50',
     ]);
+    control<HTMLButtonElement>(root, '.conditions-section app-object-picker button').click();
+    await harness.fixture.whenStable();
+    inputValue(document, '[role="dialog"] input[type="search"]', 'standard');
+    await harness.fixture.whenStable();
+    control<HTMLButtonElement>(document, '[role="dialog"] button.option').click();
+    await harness.fixture.whenStable();
+    expect(control<HTMLTextAreaElement>(root, 'textarea').value).toBe('Payment within 30 days.');
   });
-  it('loads the PDF preview directly without a sandbox', async () => {
-    TestBed.configureTestingModule({
-      providers: [
-        provideRouter([]),
-        {
-          provide: ActivatedRoute,
-          useValue: {
-            snapshot: { paramMap: convertToParamMap({ quoteId }) },
-            paramMap: of(convertToParamMap({ quoteId })),
-          },
-        },
-        { provide: ClientsApi, useValue: { list: () => Promise.resolve([]) } },
-        { provide: QuoteConditionPresetsApi, useValue: { list: () => Promise.resolve([]) } },
-        {
-          provide: QuotesApi,
-          useValue: {
-            get: () =>
-              Promise.resolve({
-                success: true,
-                result: {
-                  ...quoteDetail,
-                  revisions: [{ ...quoteDetail.currentRevision, previewAvailable: true }],
-                },
-              }),
-          },
-        },
-      ],
+  it('limits preset descriptions without truncating the copied conditions', async () => {
+    const conditions = 'Payment conditions. '.repeat(100);
+    TestBed.overrideProvider(QuoteConditionPresetsApi, {
+      useValue: { list: async () => [{ id: 'preset', name: 'Long conditions', conditions }] },
     });
-    const fixture = TestBed.createComponent(QuoteEditor);
-    fixture.detectChanges();
-    const root: HTMLElement = fixture.nativeElement;
-    const frame = await vi.waitFor(() => {
-      const result = root.querySelector('iframe');
-      if (result === null) throw new Error('The quote preview frame is unavailable.');
-      return result;
-    });
-    expect(frame.getAttribute('src')).toBe(`/api/quotes/${quoteId}/revisions/2/preview`);
-    expect(frame.hasAttribute('sandbox')).toBe(false);
+    const { harness, root } = await open();
+    control<HTMLButtonElement>(root, '.conditions-section app-object-picker button').click();
+    await harness.fixture.whenStable();
+    const option = control<HTMLButtonElement>(document, '[role="dialog"] button.option');
+    expect(control<HTMLSpanElement>(option, 'span').textContent?.length).toBe(160);
+    option.click();
+    await harness.fixture.whenStable();
+    expect(control<HTMLTextAreaElement>(root, 'textarea').value).toBe(conditions);
   });
-
-  it('keeps the newest quote when route responses finish out of order', async () => {
-    type QuoteOutcome = { readonly success: true; readonly result: typeof quoteDetail };
-    const secondQuoteId = '01ARZ3NDEKTSV4RRFFQ69G5FB0';
-    const params = new Subject<ReturnType<typeof convertToParamMap>>();
-    let resolveFirst!: (value: QuoteOutcome) => void;
-    let resolveSecond!: (value: QuoteOutcome) => void;
-    const first = new Promise<QuoteOutcome>((resolve) => (resolveFirst = resolve));
-    const second = new Promise<QuoteOutcome>((resolve) => (resolveSecond = resolve));
-    const get = vi.fn((id: string) => (id === quoteId ? first : second));
-    TestBed.configureTestingModule({
-      providers: [
-        provideRouter([]),
-        {
-          provide: ActivatedRoute,
-          useValue: {
-            snapshot: { paramMap: convertToParamMap({ quoteId }) },
-            paramMap: params,
-          },
-        },
-        { provide: ClientsApi, useValue: { list: () => Promise.resolve([]) } },
-        { provide: QuoteConditionPresetsApi, useValue: { list: () => Promise.resolve([]) } },
-        { provide: QuotesApi, useValue: { get } },
-      ],
-    });
-    const fixture = TestBed.createComponent(QuoteEditor);
-    const root: HTMLElement = fixture.nativeElement;
-    await fixture.whenStable();
-
-    params.next(convertToParamMap({ quoteId }));
-    params.next(convertToParamMap({ quoteId: secondQuoteId }));
-    resolveSecond({
-      success: true,
-      result: {
-        ...quoteDetail,
-        id: secondQuoteId,
-        currentRevision: { ...quoteDetail.currentRevision, title: 'Newest quote' },
-      },
-    });
-    await vi.waitFor(() =>
-      expect(root.querySelector<HTMLInputElement>('#quote-name')?.value).toBe('Newest quote'),
+  it('preselects an active client from the client profile link without making the form dirty', async () => {
+    const { harness, root } = await open(
+      `/backoffice/quotes/new?clientId=${quoteFixture.clientId}`,
     );
-    resolveFirst({ success: true, result: quoteDetail });
-    await fixture.whenStable();
-
-    expect(root.querySelector<HTMLInputElement>('#quote-name')?.value).toBe('Newest quote');
+    expect(control<HTMLSelectElement>(root, '#quote-client').value).toBe(quoteFixture.clientId);
+    await TestBed.inject(Router).navigateByUrl('/backoffice/affaires');
+    await harness.fixture.whenStable();
+    expect(confirm).not.toHaveBeenCalled();
   });
-
-  it('adds a quote line without calculating totals in the browser', async () => {
-    TestBed.configureTestingModule({
-      providers: [
-        provideRouter([]),
-        { provide: ClientsApi, useValue: { list: () => Promise.resolve([]) } },
-        {
-          provide: QuoteConditionPresetsApi,
-          useValue: {
-            list: () =>
-              Promise.resolve([
-                {
-                  id: '01ARZ3NDEKTSV4RRFFQ69G5FAS',
-                  name: 'Standard payment',
-                  conditions: 'Payment is due within 30 days.',
-                },
-              ]),
-          },
+  it.each(['invalid', '01ARZ3NDEKTSV4RRFFQ69G5FB2', quoteFixture.clientId])(
+    'does not preselect an invalid, missing or archived client: %s',
+    async (id) => {
+      TestBed.overrideProvider(ClientsApi, {
+        useValue: {
+          list: async () => [
+            { id: quoteFixture.clientId, displayName: 'Archived client', archived: true },
+          ],
         },
-        { provide: QuotesApi, useValue: {} },
-      ],
-    });
-    const fixture = TestBed.createComponent(QuoteEditor);
-    fixture.detectChanges();
-    await fixture.whenStable();
-    await vi.waitFor(() => {
-      fixture.detectChanges();
-      expect(fixture.nativeElement.querySelector('form')).not.toBeNull();
-    });
-    fixture.detectChanges();
-    const root: HTMLElement = fixture.nativeElement;
-    const before = root.querySelectorAll('fieldset').length;
-    const addButton = root.querySelector<HTMLButtonElement>('.section-heading button');
-    if (addButton === null)
-      throw new Error(`The add line button is unavailable: ${root.textContent}`);
-
-    addButton.click();
-    fixture.detectChanges();
-
-    expect(before).toBe(1);
-    expect(root.querySelectorAll('fieldset')).toHaveLength(2);
-    expect(root.textContent).not.toContain('Total HT');
-
-    const presetSelect = root.querySelector<HTMLSelectElement>('.condition-preset select');
-    const conditions = root.querySelector<HTMLTextAreaElement>('textarea');
-    if (presetSelect === null || conditions === null) {
-      throw new Error('The preset conditions controls are unavailable.');
-    }
-    presetSelect.value = '01ARZ3NDEKTSV4RRFFQ69G5FAS';
-    presetSelect.dispatchEvent(new Event('change'));
-    fixture.detectChanges();
-
-    expect(conditions.value).toBe('Payment is due within 30 days.');
-    expect(presetSelect.value).toBe('');
-  });
-
-  it('does not turn an invalid quote URL into a creation form', async () => {
-    TestBed.configureTestingModule({
-      providers: [
-        provideRouter([]),
-        {
-          provide: ActivatedRoute,
-          useValue: {
-            snapshot: { paramMap: convertToParamMap({ quoteId: 'invalid' }) },
-            paramMap: of(convertToParamMap({ quoteId: 'invalid' })),
-          },
-        },
-        { provide: ClientsApi, useValue: { list: () => Promise.resolve([]) } },
-        {
-          provide: QuoteConditionPresetsApi,
-          useValue: { list: () => Promise.resolve([]) },
-        },
-        { provide: QuotesApi, useValue: {} },
-      ],
-    });
-    const fixture = TestBed.createComponent(QuoteEditor);
-    fixture.detectChanges();
-    await fixture.whenStable();
-    fixture.detectChanges();
-    const root: HTMLElement = fixture.nativeElement;
-
-    expect(root.querySelector('form')).toBeNull();
-    expect(root.querySelector('[role="alert"]')?.textContent).toMatch(/introuvable|not found/);
-  });
-
-  it('explains an invalid quantity on its line', async () => {
-    TestBed.configureTestingModule({
-      providers: [
-        provideRouter([]),
-        { provide: ClientsApi, useValue: { list: () => Promise.resolve([]) } },
-        {
-          provide: QuoteConditionPresetsApi,
-          useValue: { list: () => Promise.resolve([]) },
-        },
-        { provide: QuotesApi, useValue: {} },
-      ],
-    });
-    const fixture = TestBed.createComponent(QuoteEditor);
-    fixture.detectChanges();
-    await fixture.whenStable();
-    await vi.waitFor(() => {
-      fixture.detectChanges();
-      expect(fixture.nativeElement.querySelector('form')).not.toBeNull();
-    });
-    fixture.detectChanges();
-    const root: HTMLElement = fixture.nativeElement;
-    const quantity = root.querySelector<HTMLInputElement>('input[inputmode="decimal"]');
-    if (quantity === null) throw new Error('The quantity input is unavailable.');
-
-    quantity.value = '0';
-    quantity.dispatchEvent(new Event('input'));
-    quantity.dispatchEvent(new Event('blur'));
-    fixture.detectChanges();
-
+      });
+      const { root } = await open(`/backoffice/quotes/new?clientId=${id}`);
+      expect(control<HTMLSelectElement>(root, '#quote-client').value).toBe('');
+    },
+  );
+  it('shows a field error for a zero quantity', async () => {
+    const { harness, root } = await open();
+    inputValue(root, 'input[inputmode="decimal"]', '0');
+    await harness.fixture.whenStable();
     expect(root.textContent).toMatch(/quantité positive|positive quantity/);
   });
-
-  it('sends a saved draft, displays its permalink, and disables editing', async () => {
-    const linkUrl = 'https://froment.software/quote#AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA';
-    const copy = vi.fn().mockResolvedValue(true);
-    const send = vi.fn().mockResolvedValue({
-      success: true,
-      result: {
-        quoteId,
-        revisionId,
-        status: 'sent',
-        version: 2,
-        link: {
-          id: '01ARZ3NDEKTSV4RRFFQ69G5FAT',
-          url: linkUrl,
-          expiresAt: '2026-09-19T06:00:00.000Z',
-        },
-      },
-    });
-    TestBed.configureTestingModule({
-      providers: [
-        provideRouter([]),
-        {
-          provide: ActivatedRoute,
-          useValue: {
-            snapshot: { paramMap: convertToParamMap({ quoteId }) },
-            paramMap: of(convertToParamMap({ quoteId })),
-          },
-        },
-        { provide: ClientsApi, useValue: { list: () => Promise.resolve([]) } },
-        {
-          provide: QuoteConditionPresetsApi,
-          useValue: { list: () => Promise.resolve([]) },
-        },
-        { provide: TextCopy, useValue: { copy } },
-        {
-          provide: QuotesApi,
-          useValue: { get: () => Promise.resolve({ success: true, result: quoteDetail }), send },
-        },
+  it('rejects malformed URLs instead of opening a creation form', async () => {
+    const { root } = await open('/backoffice/quotes/invalid/edit');
+    expect(root.querySelector('form')).toBeNull();
+    expect(get).not.toHaveBeenCalled();
+  });
+  it('does not submit a second creation after an uncertain response', async () => {
+    create.mockResolvedValue({ success: false, code: 'quote.error' });
+    const { harness, root } = await open('/backoffice/quotes/new');
+    const client = control<HTMLSelectElement>(root, '#quote-client');
+    selectValue(client, quoteFixture.clientId);
+    inputValue(root, '#quote-name', 'New quote');
+    inputValue(root, '.document-line input', 'Audit');
+    await harness.fixture.whenStable();
+    control<HTMLButtonElement>(root, 'button[type="submit"]').click();
+    await harness.fixture.whenStable();
+    expect(create).toHaveBeenCalledOnce();
+    expect(create).toHaveBeenCalledWith({
+      clientId: quoteFixture.clientId,
+      title: 'New quote',
+      conditions: '',
+      lines: [
+        { description: 'Audit', quantityMilli: 1000, unitPriceCents: 0, vatRateBasisPoints: 2000 },
       ],
     });
-    const fixture = TestBed.createComponent(QuoteEditor);
-    fixture.detectChanges();
-    await fixture.whenStable();
-    await vi.waitFor(() => {
-      fixture.detectChanges();
-      expect(fixture.nativeElement.querySelector('form')).not.toBeNull();
+    expect(control<HTMLButtonElement>(root, 'button[type="submit"]').disabled).toBe(true);
+    expect(control<HTMLInputElement>(root, '#quote-name').value).toBe('New quote');
+    expect(root.querySelector('[role="alert"]')).not.toBeNull();
+    const event = new Event('beforeunload', { cancelable: true });
+    window.dispatchEvent(event);
+    expect(event.defaultPrevented).toBe(true);
+    control<HTMLFormElement>(root, 'form').dispatchEvent(
+      new Event('submit', {
+        bubbles: true,
+        cancelable: true,
+      }),
+    );
+    await harness.fixture.whenStable();
+    expect(create).toHaveBeenCalledOnce();
+    await TestBed.inject(Router).navigateByUrl('/backoffice/affaires');
+    expect(confirm).toHaveBeenCalledOnce();
+    expect(TestBed.inject(Router).url).toBe('/backoffice/quotes/new');
+  });
+  it('ignores a late response after the route changes', async () => {
+    let resolve!: (value: { success: true; result: typeof quoteFixture }) => void;
+    get.mockImplementationOnce(
+      () =>
+        new Promise((done) => {
+          resolve = done;
+        }),
+    );
+    const harness = await RouterTestingHarness.create(`/backoffice/quotes/${quoteId}/edit`);
+    await vi.waitFor(() => expect(get).toHaveBeenCalledOnce());
+    const otherId = '01ARZ3NDEKTSV4RRFFQ69G5FB2';
+    get.mockResolvedValue({
+      success: true,
+      result: {
+        ...quoteFixture,
+        id: otherId,
+        currentRevision: { ...quoteFixture.currentRevision, title: 'Newest quote' },
+      },
     });
-    fixture.detectChanges();
-    const root: HTMLElement = fixture.nativeElement;
-    const sendButton = root.querySelector<HTMLButtonElement>('.send-quote');
-    if (sendButton === null) throw new Error('The send button is unavailable.');
-
-    sendButton.click();
-    await fixture.whenStable();
-
-    expect(send).toHaveBeenCalledWith(quoteId, { expectedVersion: 2 });
-    expect(root.querySelector<HTMLAnchorElement>('.sent-link a')?.href).toContain('/quote#');
-    expect(root.textContent).toMatch(/Signature attendue|Signature pending/);
-    expect(root.textContent).toMatch(/aucun email envoyé|no email sent/);
-    expect(root.textContent).toContain('DE-2026-000001');
-    expect(root.querySelector<HTMLInputElement>('#quote-name')?.disabled).toBe(true);
-    expect(root.querySelector('.send-quote')).toBeNull();
-
-    root.querySelector<HTMLButtonElement>('.sent-link button')?.click();
-    await fixture.whenStable();
-    expect(copy).toHaveBeenCalledWith(linkUrl);
-    expect(root.querySelector('app-copy-field [role="status"]')?.textContent).toMatch(
-      /copié|copied/i,
+    await harness.navigateByUrl(`/backoffice/quotes/${otherId}/edit`);
+    try {
+      await vi.waitFor(() =>
+        expect(control<HTMLInputElement>(harness.fixture.nativeElement, '#quote-name').value).toBe(
+          'Newest quote',
+        ),
+      );
+    } finally {
+      resolve({ success: true, result: quoteFixture });
+    }
+    await harness.fixture.whenStable();
+    expect(control<HTMLInputElement>(harness.fixture.nativeElement, '#quote-name').value).toBe(
+      'Newest quote',
     );
   });
 });

@@ -1,0 +1,23 @@
+@if (settings().scenario === 'loading' || settings().scenario === 'error') {
+<button appButton type="button" data-complete-preview (click)="context.complete()">
+  {{ text().completePreview }}
+</button>
+<p>{{ text().retryPreview }}</p>
+} @switch (component()) { @case ('back-office-header') {
+<div class="shell-frame" tabindex="0" role="region" [attr.aria-label]="text().accountPreview">
+  <div class="account-shell">
+    <app-back-office-header [administrator]="settings().administrator" />
+    <div class="account-content"><p>{{ text().isolatedAccount }}</p></div>
+  </div>
+</div>
+} @case ('back-office-nav') { <app-back-office-nav /> } @case ('global-search') {
+<app-global-search /> } @case ('document-issues') {
+<app-document-issues
+  [kind]="settings().kind"
+  [issues]="issues()"
+  [clientId]="text().examples.clientId"
+/>
+} }
+<p role="status" data-preview-destination>
+  {{ text().destination }} : {{ context.destination() || text().none }}
+</p>

@@ -38,10 +38,15 @@ export const LedgerSource = Schema.Struct({
   amountCents: PositiveSafeInteger,
   entryId: Schema.NullOr(Ulid),
 });
+export const LedgerJournalEntry = Schema.Struct({
+  ...LedgerEntry.fields,
+  sourceReference: Schema.String,
+});
 export const LedgerList = Schema.Struct({
-  entries: Schema.Array(LedgerEntry),
+  entries: Schema.Array(LedgerJournalEntry),
   sources: Schema.Array(LedgerSource),
 });
+export const LedgerSourceDetail = Schema.Struct({ source: LedgerSource, transactionId: Ulid });
 export const LedgerReverse = Schema.Struct({
   requestId: LedgerRequest.fields.requestId,
   reason: LedgerRequest.fields.label,

@@ -4,6 +4,7 @@ import { email, form, FormField, required } from '@angular/forms/signals';
 import { translate } from '@froment/l10n';
 import { I18nService } from '@app/i18n.service';
 import { Button } from '@shared/button/button';
+import { Confirmation } from '@shared/confirmation/confirmation';
 import { formatLocalizedDate, LocalizedDatePipe } from '@shared/localized-date/localized-date-pipe';
 import {
   BusinessCardContent,
@@ -25,11 +26,13 @@ const defaultContent: BusinessCardContent = {
   styleUrl: './business-card.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   providers: [BusinessCardVersionStorage],
+  host: { '(window:beforeunload)': 'beforeUnload($event)' },
 })
 export class BusinessCard {
   protected readonly i18n = inject(I18nService);
   private readonly isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
   private readonly versionStorage = inject(BusinessCardVersionStorage);
+  private readonly confirmation = inject(Confirmation);
   private versionNameEdited = false;
   protected readonly content = signal<BusinessCardContent>({ ...defaultContent });
   protected readonly contentForm = form(this.content, (fields) => {
@@ -57,6 +60,9 @@ export class BusinessCard {
     if (this.contentForm().invalid() || this.versionForm().invalid()) {
       this.contentForm().markAsTouched();
       this.versionForm().markAsTouched();
+      (this.contentForm().errorSummary()[0] ?? this.versionForm().errorSummary()[0])
+        ?.fieldTree()
+        .focusBoundControl();
       return;
     }
 
@@ -67,6 +73,8 @@ export class BusinessCard {
       content: { ...this.content() },
     };
     if (this.versionStorage.save(version)) {
+      this.contentForm().reset();
+      this.versionForm().reset();
       this.versionNameEdited = false;
       this.versionModel.set({ name: this.createVersionName() });
       this.storageMessage.set(this.i18n.tf('businessCard.saved', { name: version.name }));
@@ -110,5 +118,14 @@ export class BusinessCard {
       minute: '2-digit',
     });
     return `${name} - ${date}`;
+  }
+  canDeactivate(): boolean | Promise<boolean> {
+    return (
+      (!this.contentForm().dirty() && !this.versionForm().dirty()) ||
+      this.confirmation.request(this.i18n.t('configurationWorkspace.unsaved'))
+    );
+  }
+  protected beforeUnload(event: BeforeUnloadEvent): void {
+    if (this.contentForm().dirty() || this.versionForm().dirty()) event.preventDefault();
   }
 }

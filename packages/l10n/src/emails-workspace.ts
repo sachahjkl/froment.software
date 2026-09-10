@@ -1,8 +1,10 @@
 export const emailsWorkspaceText = {
   fr: {
     'emailsWorkspace.anyPeriod': 'Toutes les dates',
-    'emailsWorkspace.messageCount': 'Résultats : {count} · 100 derniers messages au plus',
-    'emailsWorkspace.reminderCount': 'Relances : {count} · 100 chargées au plus',
+    'emailsWorkspace.messageCount.one': '{count} résultat · 100 derniers messages au plus',
+    'emailsWorkspace.messageCount.other': '{count} résultats · 100 derniers messages au plus',
+    'emailsWorkspace.reminderCount.one': '{count} relance · 100 chargées au plus',
+    'emailsWorkspace.reminderCount.other': '{count} relances · 100 chargées au plus',
     'emailsWorkspace.export':
       'Exporter les métadonnées des résultats chargés et filtrés (CSV). Le texte des messages et des modèles est exclu.',
     'emailsWorkspace.from': 'À partir du',
@@ -29,7 +31,8 @@ export const emailsWorkspaceText = {
     'emailsWorkspace.newReminder': 'Nouvelle relance',
     'emailsWorkspace.search': 'Rechercher dans cette vue',
     'emailsWorkspace.searchFilter': 'Recherche : {query}',
-    'emailsWorkspace.count': 'Résultats : {count}',
+    'emailsWorkspace.count.one': '{count} résultat',
+    'emailsWorkspace.count.other': '{count} résultats',
     'emailsWorkspace.loadError': 'Cette liste est indisponible. Réessayez le chargement.',
     'emailsWorkspace.noMatches': 'Aucun résultat pour cette recherche',
     'emailsWorkspace.empty': 'Aucun élément dans cette vue',
@@ -97,8 +100,10 @@ export const emailsWorkspaceText = {
   },
   en: {
     'emailsWorkspace.anyPeriod': 'All dates',
-    'emailsWorkspace.messageCount': 'Results: {count} · up to 100 latest emails',
-    'emailsWorkspace.reminderCount': 'Reminders: {count} · up to 100 loaded',
+    'emailsWorkspace.messageCount.one': '{count} result · up to 100 latest emails',
+    'emailsWorkspace.messageCount.other': '{count} results · up to 100 latest emails',
+    'emailsWorkspace.reminderCount.one': '{count} reminder · up to 100 loaded',
+    'emailsWorkspace.reminderCount.other': '{count} reminders · up to 100 loaded',
     'emailsWorkspace.export':
       'Export metadata for loaded and filtered results (CSV). Email and template text is excluded.',
     'emailsWorkspace.from': 'From',
@@ -123,7 +128,8 @@ export const emailsWorkspaceText = {
     'emailsWorkspace.newReminder': 'New reminder',
     'emailsWorkspace.search': 'Search this view',
     'emailsWorkspace.searchFilter': 'Search: {query}',
-    'emailsWorkspace.count': 'Results: {count}',
+    'emailsWorkspace.count.one': '{count} result',
+    'emailsWorkspace.count.other': '{count} results',
     'emailsWorkspace.loadError': 'This list is unavailable. Try loading it again.',
     'emailsWorkspace.noMatches': 'No results for this search',
     'emailsWorkspace.empty': 'No items in this view',

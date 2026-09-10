@@ -6,26 +6,104 @@
       ><app-icon name="plus" />{{ i18n.t('backOffice.clients.create') }}</a
     >
   </app-page-header>
-  <app-tabs [label]="i18n.t('backOffice.clients.tabs')" [tabs]="tabs()" />
+  <app-tabs [label]="i18n.t('backOffice.clients.tabs')" [tabs]="tabs()" [preserveQuery]="true" />
   <router-outlet />
   <ng-template appTabPanel="clients" let-tab="tab" let-id="id" let-tabId="tabId">
-    <section [id]="id" role="region" [attr.aria-labelledby]="tabId" tabindex="0">
+    <section appListWorkspace [id]="id" role="region" [attr.aria-labelledby]="tabId" tabindex="0">
       <app-list-toolbar>
-        <label class="field search" for="clients-search"
-          >{{ i18n.t('clientsWorkspace.search') }}<input
-            class="input"
-            id="clients-search"
-            type="search"
-            [formField]="filters.search"
-            autocomplete="off"
-        /></label>
+        <app-list-search
+          listSearch
+          [label]="i18n.t('clientsWorkspace.search')"
+          [formField]="filters.search"
+          (valueChange)="setFilter('search', $event)"
+        />
+        <app-filter-menu
+          #menu
+          listFilters
+          [label]="i18n.t('listWorkspace.filters')"
+          [closeLabel]="i18n.t('listWorkspace.closeFilters')"
+          [backLabel]="i18n.t('listWorkspace.backFilters')"
+          [activeCount]="activeFilterCount()"
+          [disabled]="state() !== 'ready'"
+        >
+          <ng-template
+            appFilterPanel
+            [label]="i18n.t('backOffice.clients.country')"
+            [summary]="filters.country().value() || i18n.t('clientsWorkspace.countryFilter')"
+          >
+            <app-filter-choice
+              [label]="i18n.t('listWorkspace.searchChoices')"
+              [emptyLabel]="i18n.t('listWorkspace.noChoices')"
+              [options]="countryOptions()"
+              [value]="filters.country().value()"
+              (committed)="setFilter('country', $event); menu.close()"
+            />
+          </ng-template>
+          <ng-template
+            appFilterPanel
+            [label]="i18n.t('clientsWorkspace.contactFilter')"
+            [summary]="contactFilterLabel()"
+          >
+            <div
+              role="group"
+              [attr.aria-label]="i18n.t('clientsWorkspace.contactFilter')"
+              aria-describedby="clients-contact-hint"
+            >
+              <app-filter-choice
+                [label]="i18n.t('listWorkspace.searchChoices')"
+                [emptyLabel]="i18n.t('listWorkspace.noChoices')"
+                [options]="contactOptions()"
+                [value]="filters.contact().value()"
+                (committed)="setFilter('contact', $event); menu.close()"
+              />
+              <p id="clients-contact-hint" class="filter-hint">
+                {{ i18n.t('clientsWorkspace.contactHint') }}
+              </p>
+            </div>
+          </ng-template>
+        </app-filter-menu>
+        <app-table-export
+          listActions
+          [columns]="exportColumns()"
+          [rows]="exportRows(tab)"
+          filename="clients.csv"
+          [label]="i18n.t('listWorkspace.exportCsv')"
+          [emptyHint]="i18n.t('listWorkspace.exportEmpty')"
+          [pendingHint]="i18n.t('listWorkspace.exportPending')"
+          [pending]="state() === 'loading'"
+        />
         @if (state() === 'ready') {
         <span listSummary role="status"
-          >{{ i18n.tf('clientsWorkspace.count', { count: visibleClients(tab).length }) }}</span
+          >{{ i18n.plural('clientsWorkspace.count', { count: visibleClients(tab).length }) }}</span
         >
         }
       </app-list-toolbar>
-      @switch (state()) { @case ('loading') {
+      @if (filtered()) {
+      <div class="filter-chips">
+        @if (filters.search().value()) {
+        <button
+          appFilterChip
+          [label]="filters.search().value()"
+          (click)="setFilter('search', '')"
+        ></button>
+        } @if (filters.country().value()) {
+        <button
+          appFilterChip
+          [label]="filters.country().value()"
+          (click)="setFilter('country', '')"
+        ></button>
+        } @if (filters.contact().value() === 'incomplete') {
+        <button
+          appFilterChip
+          [label]="i18n.t('clientsWorkspace.contactIncomplete')"
+          (click)="setFilter('contact', 'all')"
+        ></button>
+        }
+        <button appButton type="button" (click)="resetFilters()">
+          {{ i18n.t('clientsWorkspace.resetFilters') }}
+        </button>
+      </div>
+      } @switch (state()) { @case ('loading') {
       <p role="status">{{ i18n.t('backOffice.clients.loading') }}</p>
       } @case ('error') {
       <div class="notice-flow">
@@ -37,15 +115,14 @@
       } @case ('ready') { @if (visibleClients(tab).length === 0) {
       <app-empty-state
         icon="clients"
-        [title]="i18n.t(filters.search().value().trim() ? 'clientsWorkspace.noMatches' : 'backOffice.clients.empty')"
+        [title]="i18n.t(filtered() ? 'clientsWorkspace.noMatches' : 'backOffice.clients.empty')"
       >
         <p>
-          {{ i18n.t(filters.search().value().trim() ? 'clientsWorkspace.changeSearch' :
-          'clientsWorkspace.emptyIntro') }}
+          {{ i18n.t(filtered() ? 'clientsWorkspace.changeSearch' : 'clientsWorkspace.emptyIntro') }}
         </p>
-        @if (filters.search().value().trim()) {
-        <button emptyActions appButton type="button" (click)="filters.search().value.set('')">
-          {{ i18n.t('clientsWorkspace.clearSearch') }}
+        @if (filtered()) {
+        <button emptyActions appButton type="button" (click)="resetFilters()">
+          {{ i18n.t('clientsWorkspace.resetFilters') }}
         </button>
         } @else {
         <a emptyActions appLinkButton routerLink="/backoffice/clients/new"
@@ -61,12 +138,46 @@
             <col class="email-column" />
             <col />
             <col />
+            <col />
+            <col />
           </colgroup>
           <thead>
             <tr>
-              <th scope="col">{{ i18n.t('backOffice.clients.displayName') }}</th>
+              <th
+                scope="col"
+                [attr.aria-sort]="sortDirection('name') === 'none' ? null : sortDirection('name')"
+              >
+                <button
+                  appTableSort
+                  [label]="i18n.t('backOffice.clients.displayName')"
+                  [direction]="sortDirection('name')"
+                  (click)="sortBy('name')"
+                ></button>
+              </th>
               <th scope="col">{{ i18n.t('backOffice.clients.email') }}</th>
               <th scope="col">{{ i18n.t('backOffice.clients.city') }}</th>
+              <th
+                scope="col"
+                [attr.aria-sort]="sortDirection('country') === 'none' ? null : sortDirection('country')"
+              >
+                <button
+                  appTableSort
+                  [label]="i18n.t('backOffice.clients.country')"
+                  [direction]="sortDirection('country')"
+                  (click)="sortBy('country')"
+                ></button>
+              </th>
+              <th
+                scope="col"
+                [attr.aria-sort]="sortDirection('date') === 'none' ? null : sortDirection('date')"
+              >
+                <button
+                  appTableSort
+                  [label]="i18n.t('clientsWorkspace.updatedAt')"
+                  [direction]="sortDirection('date')"
+                  (click)="sortBy('date')"
+                ></button>
+              </th>
               <th scope="col">{{ i18n.t('backOffice.clients.status') }}</th>
             </tr>
           </thead>
@@ -76,6 +187,7 @@
               <th scope="row">
                 <a
                   [routerLink]="['/backoffice/clients', result.client.id]"
+                  [queryParams]="detailQuery(tab)"
                   [appSearchHighlight]="result.nameMatches"
                   >{{ result.client.displayName }}</a
                 >
@@ -86,6 +198,12 @@
                 >
               </td>
               <td>{{ result.client.city || i18n.t('clientsWorkspace.notProvided') }}</td>
+              <td>{{ result.client.country || i18n.t('clientsWorkspace.notProvided') }}</td>
+              <td>
+                <time [dateTime]="dateTime(result.client.updatedAt)"
+                  >{{ date(result.client.updatedAt) }}</time
+                >
+              </td>
               <td>
                 <span appBadge [variant]="result.client.archived ? 'warning' : 'success'"
                   >{{ i18n.t(result.client.archived ? 'backOffice.clients.archived' :

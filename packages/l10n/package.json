@@ -4,7 +4,9 @@
   "private": true,
   "type": "module",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./blog-posts": "./src/blog-posts.ts",
+    "./component-reference": "./src/component-reference.ts"
   },
   "scripts": {
     "build": "tsc --noEmit",

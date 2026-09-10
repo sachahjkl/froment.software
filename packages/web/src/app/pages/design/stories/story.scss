@@ -1,0 +1,81 @@
+:host {
+  display: block;
+  min-inline-size: 0;
+}
+.settings,
+.samples,
+.sample {
+  display: grid;
+  gap: var(--space-4);
+  min-inline-size: 0;
+  align-content: start;
+}
+.settings {
+  max-inline-size: 44rem;
+}
+.settings label {
+  display: grid;
+  gap: var(--space-2);
+}
+.settings label:has([type="checkbox"]) {
+  display: flex;
+  align-items: center;
+}
+.settings input:not([type="checkbox"]),
+.settings select,
+.settings textarea {
+  inline-size: 100%;
+  min-inline-size: 0;
+}
+.samples {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr));
+}
+.sample {
+  padding: var(--space-4);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-sm);
+}
+.sample > code {
+  font-size: var(--text-sm);
+  color: var(--color-ink-soft);
+  overflow-wrap: anywhere;
+}
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  align-items: center;
+}
+.event {
+  overflow-wrap: anywhere;
+  min-block-size: 1.5em;
+}
+.sample form,
+.preview-form {
+  display: grid;
+  gap: var(--space-4);
+  max-inline-size: 44rem;
+}
+.preview-form label {
+  display: grid;
+  gap: var(--space-2);
+}
+.preview-form input,
+.preview-form textarea,
+.preview-form select {
+  min-inline-size: 0;
+  max-inline-size: 100%;
+}
+.full {
+  grid-column: 1 / -1;
+}
+.sample input,
+.sample select,
+.sample textarea {
+  min-inline-size: 0;
+  max-inline-size: 100%;
+}
+.site-frame {
+  max-inline-size: 100%;
+  overflow: auto;
+}

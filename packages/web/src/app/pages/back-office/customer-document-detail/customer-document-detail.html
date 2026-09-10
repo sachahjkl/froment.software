@@ -1,0 +1,98 @@
+<section class="document-page notice-flow" aria-labelledby="document-title">
+  <a routerLink="/backoffice/client" [queryParams]="returnQuery()"
+    >{{ i18n.t('portalWorkspace.back') }}</a
+  >
+  <app-page-header>
+    <h1 id="document-title">{{ document()?.reference ?? i18n.t('portalWorkspace.detail') }}</h1>
+    @if (document(); as item) {
+    <p>{{ item.title }}</p>
+    <span appBadge>{{ status() }}</span> } @if (pdfUrl(); as url) {
+    <a pageActions appLinkButton variant="primary" [href]="url" download
+      >{{ i18n.t('backOffice.client.pdf') }}</a
+    >
+    }
+  </app-page-header>
+  @switch (state()) { @case ('loading') {
+  <p role="status">{{ i18n.t('backOffice.client.loading') }}</p>
+  } @case ('missing') {
+  <p appNotice variant="danger" role="alert">{{ i18n.t('portalWorkspace.notFound') }}</p>
+  } @case ('error') {
+  <p appNotice variant="danger" role="alert">{{ i18n.t('backOffice.client.error') }}</p>
+  <button appButton type="button" (click)="load()">{{ i18n.t('backOffice.client.retry') }}</button>
+  } @case ('ready') { @if (document(); as item) {
+  <dl class="document-facts">
+    <div>
+      <dt>{{ i18n.t('backOffice.client.amount') }}</dt>
+      <dd>{{ money(item.totalCents, item.currency) }}</dd>
+    </div>
+    <div>
+      <dt>{{ i18n.t(item.order ? 'portalWorkspace.created' : 'portalWorkspace.updated') }}</dt>
+      <dd><time [dateTime]="item.date">{{ date(item.date) }}</time></dd>
+    </div>
+  </dl>
+  <p class="snapshot-note">{{ i18n.t('portalWorkspace.snapshot') }}</p>
+  @if (!item.pdfAvailable) {
+  <p appNotice>{{ i18n.t('backOffice.client.unavailable') }}</p>
+  } @if (item.quote?.status === 'sent') {
+  <p appNotice>{{ i18n.t('portalWorkspace.signatureLink') }}</p>
+  } @if (item.order; as order) {
+  <section class="related">
+    <h2>{{ i18n.t('backOffice.client.quotes') }}</h2>
+    <a
+      [routerLink]="['/backoffice/client/documents/quote', order.quoteId]"
+      [queryParams]="returnQuery()"
+      >{{ order.quoteReference }}</a
+    >
+    <h2>{{ i18n.t('backOffice.client.invoice') }}</h2>
+    @if (order.invoiceId) {
+    <a
+      [routerLink]="['/backoffice/client/documents/invoice', order.invoiceId]"
+      [queryParams]="returnQuery()"
+      >{{ i18n.t('backOffice.client.invoice.available') }}</a
+    >
+    } @else {
+    <p>{{ i18n.t('backOffice.client.invoice.pending') }}</p>
+    }
+  </section>
+  } @if (item.invoice; as invoice) {
+  <section class="invoice-details" aria-labelledby="invoice-balance-title">
+    <h2 id="invoice-balance-title">{{ i18n.t('backOffice.client.invoice.remaining') }}</h2>
+    <dl class="invoice-balance">
+      <div>
+        <dt>{{ i18n.t('backOffice.client.invoice.total') }}</dt>
+        <dd>{{ money(invoice.totalCents, invoice.currency) }}</dd>
+      </div>
+      <div>
+        <dt>{{ i18n.t('backOffice.client.invoice.recordedPaid') }}</dt>
+        <dd>{{ money(invoice.recordedPaidCents, invoice.currency) }}</dd>
+      </div>
+      <div>
+        <dt>{{ i18n.t('backOffice.client.invoice.remaining') }}</dt>
+        <dd><strong>{{ money(invoice.remainingCents, invoice.currency) }}</strong></dd>
+      </div>
+      <div>
+        <dt>{{ i18n.t('backOffice.client.dueDate') }}</dt>
+        <dd>{{ date(invoice.dueDate) }}</dd>
+      </div>
+    </dl>
+    @if (invoice.creditedCents > 0) {
+    <p>{{ i18n.t('credit.credited') }} {{ money(invoice.creditedCents, invoice.currency) }}</p>
+    <a [href]="'/api/client/invoices/' + invoice.id + '/credit-note/pdf'" download
+      >{{ i18n.t('credit.pdf') }}</a
+    >
+    } @if (invoice.status === 'paid' && invoice.recordedPaidCents < invoice.totalCents) {
+    <p class="payment-note" appNotice>{{ i18n.t('backOffice.client.invoice.historicalPaid') }}</p>
+    } @if (invoice.status === 'void') {
+    <p class="payment-note" appNotice>{{ i18n.t('backOffice.client.invoice.voidBalance') }}</p>
+    }
+  </section>
+  <section class="related">
+    <h2>{{ i18n.t('backOffice.client.orders') }}</h2>
+    <a
+      [routerLink]="['/backoffice/client/documents/order', invoice.orderId]"
+      [queryParams]="returnQuery()"
+      >{{ invoice.orderReference }}</a
+    >
+  </section>
+  } } } }
+</section>

@@ -1,0 +1,436 @@
+<section aria-labelledby="workspace-title">
+  <header class="workspace-header">
+    <h1 id="workspace-title" tabindex="-1" data-reference-heading>{{ text().title }}</h1>
+    <p>{{ text().intro }}</p>
+  </header>
+
+  <app-breadcrumbs
+    [label]="text().breadcrumb"
+    [items]="breadcrumbs()"
+    [current]="mode() === 'list' ? text().list : mode() === 'editor' ? text().editor : text().detail"
+  />
+
+  <p class="feedback" role="status">@if (notice(); as message) { {{ text()[message] }} }</p>
+
+  @switch (mode()) { @case ('list') {
+  <header class="view-header">
+    <h2 #viewHeading tabindex="-1">{{ text().list }}</h2>
+    <app-split-action
+      [primaryLabel]="text().create"
+      [menuLabel]="text().createVariants"
+      [actions]="creationActions()"
+      (primaryAction)="create()"
+      (actionSelected)="create(true)"
+    />
+  </header>
+
+  <div appListWorkspace class="list-workspace">
+    <div class="scenario">
+      <label for="workspace-scenario">{{ text().scenario }}</label>
+      <select
+        class="select"
+        id="workspace-scenario"
+        [formField]="scenario"
+        aria-describedby="workspace-scenario-hint"
+      >
+        @for (state of scenarios; track state) {
+        <option [value]="state">{{ text().scenarios[state] }}</option>
+        }
+      </select>
+      <p id="workspace-scenario-hint" class="hint">{{ text().scenarioHint }}</p>
+    </div>
+
+    <app-list-toolbar>
+      <app-list-search
+        listSearch
+        id="workspace-search"
+        [label]="text().search"
+        [formField]="filters.query"
+      />
+      <app-filter-menu
+        #workspaceFilters
+        listFilters
+        [label]="text().filters"
+        [closeLabel]="text().closeFilters"
+        [backLabel]="filterLabels().back"
+        [activeCount]="filterModel().status === 'all' ? 0 : 1"
+        [disabled]="scenarioModel() === 'loading'"
+      >
+        <ng-template appFilterPanel [label]="text().status" [summary]="statusLabel()">
+          <app-filter-choice
+            id="workspace-status"
+            [label]="filterLabels().search"
+            [emptyLabel]="filterLabels().empty"
+            [options]="statusOptions()"
+            [formField]="filters.status"
+            (committed)="workspaceFilters.back()"
+          />
+        </ng-template>
+      </app-filter-menu>
+      <app-table-export
+        listActions
+        [columns]="exportColumns()"
+        [rows]="exportRows()"
+        [filename]="'design-workspace.csv'"
+        [label]="selected().length ? text().exportSelection : text().exportResults"
+        [emptyHint]="text().exportEmpty"
+        [pendingHint]="text().exportPending"
+        [pending]="scenarioModel() === 'loading'"
+      />
+      <p listSummary role="status">
+        @if (scenarioModel() === 'ready' || scenarioModel() === 'noMatch') { {{ text().resultCount
+        }} : {{ matches().length }} @if (selected().length) { · {{ text().selected }} : {{
+        selected().length }} } } @else { {{ text().scenarios[scenarioModel()] }} }
+      </p>
+      <app-hint listSummary #selectionHint [text]="text().selectionHint">
+        <button
+          appButton
+          type="button"
+          [iconOnly]="true"
+          [attr.aria-label]="text().selectionHelp"
+          [attr.aria-describedby]="selectionHint.id"
+        >
+          <span aria-hidden="true">?</span>
+        </button>
+      </app-hint>
+      <p listSummary class="export-scope">{{ text().exportScope }}</p>
+    </app-list-toolbar>
+
+    @if (filterModel().query || filterModel().status !== 'all') {
+    <div class="chips">
+      @if (filterModel().query) {
+      <button
+        appFilterChip
+        [label]="text().searchFilter + ' : ' + filterModel().query"
+        (click)="clearQuery()"
+      ></button>
+      } @if (filterModel().status !== 'all') {
+      <button
+        appFilterChip
+        [label]="filterModel().status === 'draft' ? text().draft : text().ready"
+        (click)="clearStatus()"
+      ></button>
+      }
+    </div>
+    } @switch (scenarioModel()) { @case ('loading') {
+    <p class="state" role="status">{{ text().loading }}</p>
+    } @case ('error') {
+    <app-empty-state [title]="text().error">
+      <p>{{ text().errorHint }}</p>
+      <button appButton type="button" (click)="scenarioModel.set('ready')">
+        {{ text().retry }}
+      </button>
+    </app-empty-state>
+    } @case ('empty') {
+    <app-empty-state [title]="text().empty"
+      ><p>{{ text().emptyHint }}</p>
+      <button appButton type="button" (click)="create()">{{ text().create }}</button>
+    </app-empty-state>
+    } @default { @if (matches().length) {
+    <app-bulk-selection
+      [count]="selected().length"
+      [selectionLabel]="text().selected + ' : ' + selected().length"
+      [clearLabel]="text().clearSelection"
+      (clearSelection)="clearSelected()"
+    >
+      <button
+        appButton
+        type="button"
+        [disabled]="!canMarkSelectedReady()"
+        (click)="markReady(selected())"
+      >
+        {{ text().bulkReady }}
+      </button>
+      <button appButton type="button" variant="danger" (click)="removeRecords(selected())">
+        {{ text().bulkRemove }}
+      </button>
+    </app-bulk-selection>
+    <div appDataTable>
+      <table>
+        <caption class="visually-hidden">
+          {{ text().list }}
+        </caption>
+        <thead>
+          <tr>
+            <th scope="col">
+              <input
+                type="checkbox"
+                [checked]="allSelected()"
+                [indeterminate]="someSelected()"
+                [attr.aria-label]="text().selectPage"
+                (change)="togglePage()"
+              />
+            </th>
+            <th scope="col">{{ text().reference }}</th>
+            <th scope="col" [attr.aria-sort]="direction()">
+              <button
+                appTableSort
+                [label]="text().name"
+                [direction]="direction()"
+                (click)="direction.set(direction() === 'ascending' ? 'descending' : 'ascending')"
+              ></button>
+            </th>
+            <th scope="col">{{ text().contact }}</th>
+            <th scope="col">{{ text().status }}</th>
+            <th scope="col">{{ text().actions }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (result of pageRows(); track result.item.id) {
+          <tr>
+            <td>
+              <input
+                type="checkbox"
+                [checked]="selected().includes(result.item.id)"
+                [attr.aria-label]="text().select + ' ' + result.item.name"
+                (change)="toggleSelection(result.item.id)"
+              />
+            </td>
+            <td>
+              <span [appSearchHighlight]="result.referenceMatches">{{ result.item.id }}</span>
+            </td>
+            <th scope="row">
+              <button appButton variant="link" type="button" (click)="open(result.item)">
+                <span [appSearchHighlight]="result.nameMatches">{{ result.item.name }}</span>
+              </button>
+            </th>
+            <td>
+              <span [appSearchHighlight]="result.contactMatches">{{ result.item.contact }}</span>
+            </td>
+            <td>
+              <span appBadge [variant]="result.item.status === 'ready' ? 'success' : 'default'"
+                >{{ text()[result.item.status] }}</span
+              >
+            </td>
+            <td>
+              <app-action-menu
+                [label]="text().rowActions + ' ' + result.item.name"
+                [iconOnly]="true"
+                [actions]="rowActions(result.item)"
+                (actionSelected)="runAction($event, result.item)"
+              />
+            </td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    } @else {
+    <app-empty-state
+      [title]="scenarioModel() === 'ready' && !filterModel().query && filterModel().status === 'all' ? text().empty : text().noMatch"
+    >
+      <p>{{ text().noMatchHint }}</p>
+      <button appButton type="button" (click)="resetFilters()">{{ text().resetFilters }}</button>
+    </app-empty-state>
+    }
+    <app-result-navigation
+      [label]="text().pagination"
+      [rangeLabel]="range()"
+      [previousLabel]="text().previous"
+      [nextLabel]="text().next"
+      [previousDisabled]="page() === 0"
+      [nextDisabled]="lastPage()"
+      (previous)="changePage(-1)"
+      (next)="changePage(1)"
+    />
+    <p class="hint">{{ text().localScope }}</p>
+    } }
+  </div>
+  } @case ('detail') { @if (current(); as record) {
+  <header class="view-header">
+    <div>
+      <h2 #viewHeading tabindex="-1">{{ record.name }}</h2>
+      <p>{{ text().readonlyHint }}</p>
+    </div>
+    <div class="actions">
+      <button appButton type="button" (click)="showList()">{{ text().back }}</button>
+      <button appButton variant="primary" type="button" (click)="edit(record)">
+        {{ text().edit }}
+      </button>
+      <app-action-menu
+        [label]="text().rowActions + ' ' + record.name"
+        [actions]="rowActions(record)"
+        (actionSelected)="runAction($event, record)"
+      />
+    </div>
+  </header>
+  <div class="detail-layout">
+    <section class="detail-values">
+      <dl>
+        <div>
+          <dt>{{ text().reference }}</dt>
+          <dd>{{ record.id }}</dd>
+        </div>
+        <div>
+          <dt>{{ text().name }}</dt>
+          <dd>{{ record.name }}</dd>
+        </div>
+        <div>
+          <dt>{{ text().contact }}</dt>
+          <dd>{{ record.contact }}</dd>
+        </div>
+        <div>
+          <dt>{{ text().status }}</dt>
+          <dd>
+            <span appBadge [variant]="record.status === 'ready' ? 'success' : 'default'"
+              >{{ text()[record.status] }}</span
+            >
+          </dd>
+        </div>
+      </dl>
+      <h3>{{ text().lines }}</h3>
+      <ul class="record-lines">
+        @for (line of record.lines; track line.id) {
+        <li>
+          <strong>{{ line.name }}</strong
+          ><span
+            >{{ text().quantity }} : {{ line.quantity }} · {{ text().unitPrice }} : {{
+            line.unitPrice }}</span
+          >
+        </li>
+        }
+      </ul>
+    </section>
+    <section aria-labelledby="workspace-history">
+      <h3 id="workspace-history">{{ text().history }}</h3>
+      <p class="hint">{{ text().historyHint }}</p>
+      <app-event-history [label]="text().history" [events]="history()" />
+    </section>
+  </div>
+  } } @case ('editor') {
+  <header class="view-header">
+    <h2 #viewHeading tabindex="-1">{{ current() ? text().editor : text().create }}</h2>
+  </header>
+  <form class="editor" novalidate (submit)="save(); $event.preventDefault()">
+    <fieldset appFieldGroup [legend]="text().identity" [description]="text().identityHint">
+      <label for="workspace-name"
+        >{{ text().name }}
+        <input
+          class="input"
+          id="workspace-name"
+          type="text"
+          autocomplete="off"
+          [formField]="editor.name"
+          [attr.aria-invalid]="submitted() && editor.name().invalid()"
+          [attr.aria-describedby]="submitted() && editor.name().invalid() ? 'workspace-name-error' : null"
+        />
+      </label>
+      @if (submitted() && editor.name().invalid()) {
+      <p id="workspace-name-error" class="field-error">{{ text().nameError }}</p>
+      }
+      <label for="workspace-contact"
+        >{{ text().contact }}
+        <input
+          class="input"
+          id="workspace-contact"
+          type="email"
+          autocomplete="email"
+          [formField]="editor.contact"
+          [attr.aria-invalid]="submitted() && editor.contact().invalid()"
+          [attr.aria-describedby]="submitted() && editor.contact().invalid() ? 'workspace-contact-error' : null"
+        />
+      </label>
+      @if (submitted() && editor.contact().invalid()) {
+      <p id="workspace-contact-error" class="field-error">{{ text().emailError }}</p>
+      }
+    </fieldset>
+
+    <fieldset appFieldGroup [legend]="text().lines" [description]="text().linesHint">
+      @for (line of editor.lines; track line; let index = $index) {
+      <fieldset class="line-editor">
+        <legend>{{ text().line }} {{ index + 1 }}</legend>
+        <label [for]="'workspace-line-name-' + index"
+          >{{ text().lineName }}
+          <input
+            class="input"
+            [id]="'workspace-line-name-' + index"
+            type="text"
+            autocomplete="off"
+            [formField]="line.name"
+            [attr.aria-invalid]="submitted() && line.name().invalid()"
+            [attr.aria-describedby]="submitted() && line.name().invalid() ? 'workspace-line-name-error-' + index : null"
+          />
+        </label>
+        @if (submitted() && line.name().invalid()) {
+        <p [id]="'workspace-line-name-error-' + index" class="field-error">
+          {{ text().nameError }}
+        </p>
+        }
+        <div class="line-numbers">
+          <div>
+            <label [for]="'workspace-quantity-' + index"
+              >{{ text().quantity }}
+              <input
+                class="input"
+                [id]="'workspace-quantity-' + index"
+                type="text"
+                inputmode="decimal"
+                autocomplete="off"
+                [formField]="line.quantity"
+                [attr.aria-invalid]="submitted() && line.quantity().invalid()"
+                [attr.aria-describedby]="submitted() && line.quantity().invalid() ? 'workspace-quantity-error-' + index : null"
+              />
+            </label>
+            @if (submitted() && line.quantity().invalid()) {
+            <p [id]="'workspace-quantity-error-' + index" class="field-error">
+              {{ text().quantityError }}
+            </p>
+            }
+          </div>
+          <div>
+            <label [for]="'workspace-price-' + index"
+              >{{ text().unitPrice }}
+              <input
+                class="input"
+                [id]="'workspace-price-' + index"
+                type="text"
+                inputmode="decimal"
+                autocomplete="off"
+                [formField]="line.unitPrice"
+                [attr.aria-invalid]="submitted() && line.unitPrice().invalid()"
+                [attr.aria-describedby]="submitted() && line.unitPrice().invalid() ? 'workspace-price-error-' + index : null"
+              />
+            </label>
+            @if (submitted() && line.unitPrice().invalid()) {
+            <p [id]="'workspace-price-error-' + index" class="field-error">
+              {{ text().priceError }}
+            </p>
+            }
+          </div>
+        </div>
+        <p class="line-total">{{ text().lineTotal }} : {{ money(amount(draft().lines[index])) }}</p>
+        <button
+          appButton
+          type="button"
+          [disabled]="draft().lines.length === 1"
+          [attr.aria-label]="text().removeLine + ' ' + (index + 1)"
+          (click)="removeLine(draft().lines[index].id)"
+        >
+          {{ text().removeLine }}
+        </button>
+      </fieldset>
+      }
+      <div><button appButton type="button" (click)="addLine()">{{ text().addLine }}</button></div>
+    </fieldset>
+
+    <section class="summary" aria-labelledby="workspace-summary">
+      <h3 id="workspace-summary">{{ text().preview }}</h3>
+      <p class="hint">{{ text().previewHint }}</p>
+      @if (total() !== undefined) {
+      <p class="sum">{{ text().total }} <strong>{{ money(total()) }}</strong></p>
+      } @else {
+      <p>{{ text().previewInvalid }}</p>
+      }
+    </section>
+    @if (submitted() && editor().invalid()) {
+    <p class="field-error">{{ text().invalid }}</p>
+    }
+    <div class="actions">
+      <button appButton variant="primary" type="submit" [disabled]="editor().submitting()">
+        {{ text().save }}
+      </button>
+      <button appButton type="button" (click)="showList()">{{ text().cancel }}</button>
+    </div>
+  </form>
+  } }
+</section>

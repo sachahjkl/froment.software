@@ -1,68 +1,254 @@
+import { RouterTestingHarness } from '@angular/router/testing';
 import { TestBed } from '@angular/core/testing';
-import { provideRouter } from '@angular/router';
-import { vi } from 'vitest';
-import { BankLedgerApi } from '@backoffice/bank-ledger-api';
-import { Confirmation } from '@shared/confirmation/confirmation';
+import { Router } from '@angular/router';
+import { pressKey } from '@shared/filter-choice/filter-choice.spec-helper';
 import { BankLedger } from './bank-ledger';
+import {
+  bankRoot,
+  bankExport,
+  bankField,
+  bankFilterPanel,
+  bankNamedInput,
+  bankSubmit,
+  bankSortHeader,
+  ledgerEntry,
+  ledgerSource,
+  otherBankId,
+  setupBankWorkspace,
+} from '../banking/bank-workspace.spec-helper';
 
-const source = {
-  sourceId: '01ARZ3NDEKTSV4RRFFQ69G5FAV',
-  sourceKind: 'debit' as const,
-  reference: 'D-1',
-  account: 'BANK',
-  bookedOn: '2026-09-01',
-  amountCents: 1234,
-  entryId: null,
-};
-describe('BankLedger', () => {
-  afterEach(() => vi.restoreAllMocks());
-  it('preserves inputs and the request key after failure and guards unsaved changes', async () => {
-    const post = vi.fn(async () => ({ success: false, code: 'ledger.conflict' }));
-    const confirmation = vi.spyOn(Confirmation.prototype, 'request').mockResolvedValue(true);
-    TestBed.configureTestingModule({
-      providers: [
-        provideRouter([]),
-        {
-          provide: BankLedgerApi,
-          useValue: {
-            list: async () => ({ success: true, result: { entries: [], sources: [source] } }),
-            post,
-          },
-        },
-      ],
+describe('Bank ledger workspace', () => {
+  it('searches preserved bank references even when a source is no longer available to post', async () => {
+    const { ledger } = setupBankWorkspace();
+    ledger.list.mockResolvedValue({
+      success: true,
+      result: {
+        sources: [],
+        entries: [{ ...ledgerEntry, sourceReference: 'REFERENCE-CONSERVEE' }],
+      },
     });
-    const fixture = TestBed.createComponent(BankLedger);
-    await fixture.whenStable();
-    await fixture.componentInstance['select'](source);
-    await fixture.whenStable();
-    const root: HTMLElement = fixture.nativeElement;
-    const fields = root.querySelectorAll<HTMLInputElement>('.entry-form input');
-    for (const [index, value] of ['627', '512', '<script>Fee</script>'].entries()) {
-      const field = fields[index];
-      if (!field) throw new Error('ledger.test.field_missing');
-      field.value = value;
-      field.dispatchEvent(new Event('input', { bubbles: true }));
-    }
-    await fixture.whenStable();
-    confirmation.mockResolvedValue(false);
-    expect(await fixture.componentInstance.canDeactivate()).toBe(false);
-    const unload = new Event('beforeunload', { cancelable: true });
-    window.dispatchEvent(unload);
-    expect(unload.defaultPrevented).toBe(true);
-    const send = async () => {
-      root
-        .querySelector('.entry-form')
-        ?.dispatchEvent(new SubmitEvent('submit', { bubbles: true, cancelable: true }));
-      await fixture.whenStable();
-    };
-    await send();
-    expect(post).not.toHaveBeenCalled();
-    confirmation.mockResolvedValue(true);
-    await send();
-    await send();
-    expect(post).toHaveBeenCalledTimes(2);
-    expect(post.mock.calls[0]).toEqual(post.mock.calls[1]);
-    expect(fields[2]?.value).toBe('<script>Fee</script>');
-    expect(root.querySelector('[role="alert"]')).not.toBeNull();
+    const harness = await RouterTestingHarness.create();
+    await harness.navigateByUrl(
+      '/backoffice/banque/ecritures?from=2026-09-01&to=2026-09-30&view=journal&q=REFERENCE-CONSERVEE',
+      BankLedger,
+    );
+    await harness.fixture.whenStable();
+    expect(bankRoot(harness).querySelectorAll('tbody tr')).toHaveLength(1);
+    expect(bankRoot(harness).querySelector('tbody')?.textContent).toContain('REFERENCE-CONSERVEE');
+    expect(bankRoot(harness).textContent).toContain('1 élément affiché');
+  });
+  it('lists only unposted sources and opens dedicated posting tasks', async () => {
+    const { ledger } = setupBankWorkspace();
+    ledger.list.mockResolvedValue({
+      success: true,
+      result: {
+        entries: [],
+        sources: [ledgerSource, { ...ledgerSource, sourceId: otherBankId, entryId: otherBankId }],
+      },
+    });
+    const harness = await RouterTestingHarness.create();
+    await harness.navigateByUrl(
+      '/backoffice/banque/ecritures?from=2026-09-01&to=2026-09-30',
+      BankLedger,
+    );
+    await harness.fixture.whenStable();
+    expect(ledger.list).toHaveBeenCalledWith({ from: '2026-09-01', to: '2026-09-30' });
+    expect(bankRoot(harness).querySelectorAll('tbody tr')).toHaveLength(1);
+    expect(bankRoot(harness).querySelector('tbody a')?.getAttribute('href')).toContain(
+      '/comptabiliser/debit/',
+    );
+    expect(bankRoot(harness).querySelector('textarea')).toBeNull();
+  });
+  it('restores the journal view without loading the same period twice', async () => {
+    const { ledger } = setupBankWorkspace();
+    const harness = await RouterTestingHarness.create();
+    await harness.navigateByUrl(
+      '/backoffice/banque/ecritures?from=2026-09-01&to=2026-09-30',
+      BankLedger,
+    );
+    await harness.fixture.whenStable();
+    await harness.navigateByUrl(
+      '/backoffice/banque/ecritures?from=2026-09-01&to=2026-09-30&view=journal',
+      BankLedger,
+    );
+    await harness.fixture.whenStable();
+    expect(ledger.list).toHaveBeenCalledTimes(1);
+    expect(bankRoot(harness).querySelector('tbody a')?.textContent).toContain('Frais septembre');
+    expect(bankRoot(harness).querySelector('a[download]')?.getAttribute('href')).toBe(
+      '/api/banking/ledger/export?from=2026-09-01&to=2026-09-30',
+    );
+    expect(bankRoot(harness).textContent).toContain('ni un FEC');
+  });
+  it('sorts source kinds and cents, exports sorted sources and preserves sorting through posting', async () => {
+    const { ledger } = setupBankWorkspace();
+    ledger.list.mockResolvedValue({
+      success: true,
+      result: {
+        entries: [],
+        sources: [
+          { ...ledgerSource, amountCents: 10000 },
+          {
+            ...ledgerSource,
+            sourceId: otherBankId,
+            sourceKind: 'fee',
+            amountCents: 900,
+            reference: 'FEES',
+            bookedOn: '2026-09-02',
+          },
+        ],
+      },
+    });
+    const harness = await RouterTestingHarness.create();
+    await harness.navigateByUrl(
+      '/backoffice/banque/ecritures?from=2026-09-01&to=2026-09-30',
+      BankLedger,
+    );
+    await harness.fixture.whenStable();
+    expect(bankRoot(harness).querySelector('tbody a')?.textContent).toContain('FEES');
+    expect(bankRoot(harness).textContent).toContain('2 éléments affichés');
+    bankSortHeader(bankRoot(harness), 'Type de source').querySelector('button')?.click();
+    await harness.fixture.whenStable();
+    expect(bankRoot(harness).querySelector('tbody a')?.textContent).toContain('DEBIT-1');
+    const amount = bankSortHeader(bankRoot(harness), 'Montant');
+    amount.querySelector('button')?.click();
+    await harness.fixture.whenStable();
+    expect(
+      bankExport(harness)
+        .rows()
+        .map((row) => row[5]),
+    ).toEqual([900, 10000]);
+    amount.querySelector('button')?.click();
+    await harness.fixture.whenStable();
+    expect(
+      bankExport(harness)
+        .rows()
+        .map((row) => row[5]),
+    ).toEqual([10000, 900]);
+    expect(bankExport(harness).filename()).toBe('bank-source-results.csv');
+    expect(ledger.list).toHaveBeenCalledTimes(1);
+    bankRoot(harness).querySelector<HTMLAnchorElement>('tbody a')?.click();
+    await harness.fixture.whenStable();
+    expect(TestBed.inject(Router).url).toContain('/comptabiliser/debit/');
+    expect(TestBed.inject(Router).url).toContain('sort=amount-desc');
+    bankRoot(harness).querySelector<HTMLAnchorElement>('.bank-page > a')?.click();
+    await harness.fixture.whenStable();
+    expect(bankSortHeader(bankRoot(harness), 'Montant').getAttribute('aria-sort')).toBe(
+      'descending',
+    );
+    expect(TestBed.inject(Router).url).toContain('sort=amount-desc');
+  });
+  it('keeps the period export separate from displayed journal rows and restores sorting after a reversal detail', async () => {
+    const { ledger } = setupBankWorkspace();
+    ledger.list.mockResolvedValue({
+      success: true,
+      result: {
+        sources: [],
+        entries: [
+          { ...ledgerEntry, sourceReference: 'BANK-2', label: 'Écriture 2', amountCents: 900 },
+          {
+            ...ledgerEntry,
+            id: ledgerSource.sourceId,
+            sourceReference: 'BANK-10',
+            label: 'Écriture 10',
+            amountCents: 10000,
+          },
+        ],
+      },
+    });
+    const harness = await RouterTestingHarness.create();
+    await harness.navigateByUrl(
+      '/backoffice/banque/ecritures?view=journal&from=2026-09-01&to=2026-09-30&sort=reference-asc',
+      BankLedger,
+    );
+    await harness.fixture.whenStable();
+    expect(
+      bankExport(harness)
+        .rows()
+        .map((row) => row[2]),
+    ).toEqual(['BANK-2', 'BANK-10']);
+    expect(bankRoot(harness).querySelectorAll('thead button[appTableSort]')).toHaveLength(7);
+    bankRoot(harness).querySelector<HTMLAnchorElement>('tbody a')?.click();
+    await harness.fixture.whenStable();
+    expect(TestBed.inject(Router).url).toContain('/contrepasser');
+    expect(TestBed.inject(Router).url).toContain('sort=reference-asc');
+    bankRoot(harness).querySelector<HTMLAnchorElement>('.bank-page > a')?.click();
+    await harness.fixture.whenStable();
+    expect(bankSortHeader(bankRoot(harness), 'Référence').getAttribute('aria-sort')).toBe(
+      'ascending',
+    );
+    const localExport = bankExport(harness);
+    expect(localExport.filename()).toBe('bank-journal-results.csv');
+    bankField(bankRoot(harness), 'app-list-search input', 'absent-zzzz');
+    await harness.fixture.whenStable();
+    expect(localExport.rows()).toEqual([]);
+    expect(bankRoot(harness).textContent).toContain('0 élément affiché');
+    const periodExport = bankRoot(harness).querySelector('a[download]');
+    expect(periodExport?.getAttribute('href')).toBe(
+      '/api/banking/ledger/export?from=2026-09-01&to=2026-09-30',
+    );
+    expect(periodExport?.textContent).toContain('Journal de la période (CSV)');
+    const hintId = periodExport?.getAttribute('aria-describedby');
+    expect(hintId ? document.getElementById(hintId)?.textContent : '').toContain('Export serveur');
+    expect(ledger.list).toHaveBeenCalledTimes(2);
+  });
+  it('keeps the applied server period when a date is missing and preserves the rejected draft', async () => {
+    const { ledger } = setupBankWorkspace();
+    const harness = await RouterTestingHarness.create();
+    await harness.navigateByUrl(
+      '/backoffice/banque/ecritures?view=journal&from=2026-09-01&to=2026-09-30&q=DEBIT-1&sort=reference-asc',
+      BankLedger,
+    );
+    await harness.fixture.whenStable();
+    const originalUrl = TestBed.inject(Router).url;
+    const originalExport = bankRoot(harness).querySelector('a[download]')?.getAttribute('href');
+    const panel = await bankFilterPanel(harness, 'Période');
+    const from = bankNamedInput(panel, 'Début');
+    const to = bankNamedInput(panel, 'Fin');
+    expect(from.value).toBe('2026-09-01');
+    expect(to.value).toBe('2026-09-30');
+    to.value = '';
+    to.dispatchEvent(new Event('input', { bubbles: true }));
+    await harness.fixture.whenStable();
+    bankSubmit(panel);
+    await harness.fixture.whenStable();
+    expect(panel.querySelector('[role="alert"]')?.textContent).toContain(
+      'Saisissez les deux dates',
+    );
+    expect(document.activeElement).toBe(panel.querySelector('[role="alert"]'));
+    expect(from.value).toBe('2026-09-01');
+    expect(to.value).toBe('');
+    expect(TestBed.inject(Router).url).toBe(originalUrl);
+    expect(bankRoot(harness).querySelector('a[download]')?.getAttribute('href')).toBe(
+      originalExport,
+    );
+    expect(ledger.list).toHaveBeenCalledTimes(1);
+    to.focus();
+    to.value = '2026-09-20';
+    to.dispatchEvent(new Event('input', { bubbles: true }));
+    await harness.fixture.whenStable();
+    bankSubmit(panel);
+    await harness.fixture.whenStable();
+    expect(document.querySelector('[role="dialog"]')).toBeNull();
+    expect(ledger.list).toHaveBeenLastCalledWith({ from: '2026-09-01', to: '2026-09-20' });
+    expect(TestBed.inject(Router).url).toContain('q=DEBIT-1');
+    expect(TestBed.inject(Router).url).toContain('sort=reference-asc');
+    expect(TestBed.inject(Router).url).toContain('view=journal');
+    expect(bankRoot(harness).querySelector('a[download]')?.getAttribute('href')).toBe(
+      '/api/banking/ledger/export?from=2026-09-01&to=2026-09-20',
+    );
+    const reopened = await bankFilterPanel(harness, 'Période');
+    reopened.querySelector<HTMLButtonElement>('form button[type="button"]')?.click();
+    await harness.fixture.whenStable();
+    expect(bankNamedInput(reopened, 'Début').value).toBe('');
+    expect(bankNamedInput(reopened, 'Fin').value).toBe('');
+    expect(ledger.list).toHaveBeenCalledTimes(2);
+    const error = reopened.querySelector<HTMLElement>('[role="alert"]');
+    if (!error) throw new Error('bank.test.period_error_missing');
+    pressKey(error, 'Escape', 27);
+    await harness.fixture.whenStable();
+    const restored = await bankFilterPanel(harness, 'Période');
+    expect(bankNamedInput(restored, 'Début').value).toBe('2026-09-01');
+    expect(bankNamedInput(restored, 'Fin').value).toBe('2026-09-20');
+    expect(restored.querySelector('[role="alert"]')).toBeNull();
   });
 });

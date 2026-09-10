@@ -45,7 +45,9 @@ export class App {
       path !== '/backoffice/sign-out' &&
       path !== '/backoffice/bootstrap';
     this.backOffice.set(authenticated);
-    this.standalonePage.set(path === '/version');
+    this.standalonePage.set(
+      path === '/version' || path === '/design' || path.startsWith('/design/'),
+    );
     this.administrator.set(
       authenticated && path !== '/backoffice/client' && !path.startsWith('/backoffice/client/'),
     );

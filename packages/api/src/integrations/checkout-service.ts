@@ -143,7 +143,7 @@ const makeCheckouts = Effect.gen(function* () {
             )
               throw new CheckoutConflict({ code: 'checkout.invoiceIneligible' });
             const expiresAt = Math.floor(now / 1000) * 1000 + 23 * 3600000;
-            const returnUrl = `${transport.publicOrigin}/backoffice/configuration/services/stripe?request=${request.requestId}`;
+            const returnUrl = `${transport.publicOrigin}/backoffice/services/stripe/tests/${request.requestId}`;
             sqlite
               .prepare(`insert into checkout_operations (request_id, request, invoice_id, revision_id, invoice_number, amount_cents,
         created_by_user_id, created_at, updated_at, expires_at, return_url, account_key, status, next_attempt_at)

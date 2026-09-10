@@ -386,14 +386,21 @@ export async function checkCatalogWorkspace(page, testInfo) {
     await page.reload();
     await expect(search).toHaveValue("Angular");
     await expect(page.locator("th[aria-sort='descending']")).toBeVisible();
-    await page.goto("/design/data");
+    await page.goto("/design/workflows");
     await page.waitForLoadState("networkidle");
-    await page.locator("[appTableSort]").click();
-    await expect(page.locator("#design-data-panel tbody tr").first()).toContainText("Web");
-    await page.locator('app-list-toolbar input[type="search"]').fill("Angular");
-    await expect(page.locator("#design-data-panel tbody tr")).toHaveCount(1);
-    await page.locator("[appFilterChip]").click();
-    await expect(page.locator("#design-data-panel tbody tr")).toHaveCount(2);
+    const reference = page.locator("app-design-workspace");
+    await reference.locator("[appTableSort]").click();
+    await expect(reference.locator("thead th[aria-sort]")).toHaveAttribute(
+      "aria-sort",
+      "descending",
+    );
+    await expect(reference.locator("tbody tr").first()).toContainText("Orion");
+    await reference.locator('app-list-toolbar input[type="search"]').fill("Atlas");
+    await expect(reference.locator("tbody tr")).toHaveCount(1);
+    await expect(reference.locator("tbody th")).toHaveText("Atlas");
+    await reference.locator("[appFilterChip]").click();
+    await expect(reference.locator('app-list-toolbar input[type="search"]')).toHaveValue("");
+    await expect(reference.locator("tbody tr")).toHaveCount(3);
     await page.screenshot({
       path: testInfo.outputPath("catalog-controls-demo.png"),
       fullPage: true,

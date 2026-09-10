@@ -1,6 +1,6 @@
 <section aria-labelledby="integrations-title">
-  <a routerLink="/backoffice/configuration/services">{{ i18n.t('connections.back') }}</a>
-  <h2 id="integrations-title">{{ i18n.t('integrations.title') }}</h2>
+  <a routerLink="/backoffice/services">{{ i18n.t('connections.back') }}</a>
+  <h1 id="integrations-title">{{ i18n.t('configurationWorkspace.simulations') }}</h1>
   <p appNotice variant="info">{{ i18n.t('integrations.info') }}</p>
   <p appNotice variant="info">{{ i18n.t('integrationRetry.info') }}</p>
   <button appButton type="button" [disabled]="loading() || saving()" (click)="load()">
@@ -17,22 +17,37 @@
   } @if (loading()) {
   <p role="status">{{ i18n.t('integrations.loading') }}</p>
   } @else {
-  <ul class="providers">
-    @for (provider of providers(); track provider.kind) {
-    <li class="ds-panel">
-      <h3>{{ i18n.t(labels[provider.kind]) }}</h3>
-      <p>
-        {{ i18n.t(provider.mode === 'simulation' ? 'integrations.simulation' : 'integrations.live')
-        }}
-      </p>
-      @if (provider.mode === 'simulation') {
-      <button appButton type="button" [disabled]="saving()" (click)="simulate(provider.kind)">
-        {{ i18n.t('integrations.test') }} — {{ i18n.t(labels[provider.kind]) }}
-      </button>
-      }
-    </li>
+  <form (submit)="run($event)" novalidate>
+    <label
+      >{{ i18n.t('configurationWorkspace.simulationDomain') }}
+      <select class="select" [formField]="domainForm.kind">
+        <option value="">{{ i18n.t('configurationWorkspace.chooseDomain') }}</option>
+        @for (provider of providers(); track provider.kind) { @if (provider.mode === 'simulation') {
+        <option [value]="provider.kind">{{ i18n.t(labels[provider.kind]) }}</option>
+        } }
+      </select>
+    </label>
+    @if (domainForm.kind().touched() && domainForm.kind().invalid()) {
+    <p class="field-error" role="alert">{{ i18n.t('configurationWorkspace.domainRequired') }}</p>
     }
-  </ul>
+    <button appButton type="submit" [disabled]="saving() || loading()">
+      {{ i18n.t('integrations.test') }}
+    </button>
+  </form>
+  <details>
+    <summary>{{ i18n.t('connections.mode') }}</summary>
+    <ul class="providers">
+      @for (provider of providers(); track provider.kind) {
+      <li class="ds-panel">
+        <h3>{{ i18n.t(labels[provider.kind]) }}</h3>
+        <p>
+          {{ i18n.t(provider.mode === 'simulation' ? 'integrations.simulation' :
+          'integrations.live') }}
+        </p>
+      </li>
+      }
+    </ul>
+  </details>
   <h2>{{ i18n.t('integrations.history') }}</h2>
   <p>{{ i18n.t('integrations.historyInfo') }}</p>
   @if (operations().length === 0) {

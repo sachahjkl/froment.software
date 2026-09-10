@@ -39,12 +39,24 @@
       </div>
       <div>
         <span>{{ i18n.t('publicQuote.expires') }}</span>
-        <strong>{{ currentQuote.expiresAt.slice(0, 10) }}</strong>
+        <strong>{{ date(currentQuote.expiresAt) }}</strong>
       </div>
     </section>
   </article>
 
-  <app-tabs [label]="i18n.t('publicQuote.tabs')" [tabs]="quoteTabs()" />
+  <nav class="quote-steps" [attr.aria-label]="i18n.t('publicQuote.tabs')">
+    @for (step of quoteTabs(); track step.id) {
+    <a
+      [id]="step.id"
+      [routerLink]="step.path"
+      [preserveFragment]="true"
+      routerLinkActive="active"
+      ariaCurrentWhenActive="page"
+      [routerLinkActiveOptions]="{ paths: 'exact', queryParams: 'ignored', fragment: 'ignored', matrixParams: 'ignored' }"
+      >{{ step.label }}</a
+    >
+    }
+  </nav>
   <router-outlet />
 
   <ng-template appTabPanel="summary">
@@ -76,6 +88,9 @@
         <p>{{ currentQuote.snapshot.conditions }}</p>
       </div>
       }
+      <a appLinkButton variant="primary" routerLink="document" [preserveFragment]="true"
+        >{{ i18n.t('publicQuoteWorkspace.documentNext') }}</a
+      >
     </section>
   </ng-template>
 
@@ -100,6 +115,10 @@
       </div>
       @if (pdfFrameUrl(); as frameUrl) {
       <iframe [src]="frameUrl" [title]="i18n.t('publicQuote.frameTitle')"></iframe>
+      } @if (currentQuote.canSign && !acceptance()) {
+      <a appLinkButton variant="primary" routerLink="signature" [preserveFragment]="true"
+        >{{ i18n.t('publicQuoteWorkspace.signatureNext') }}</a
+      >
       }
     </section>
   </ng-template>
@@ -124,7 +143,7 @@
         <h2 id="signature-title">{{ i18n.t('publicQuote.signatureTitle') }}</h2>
         <p>{{ i18n.t('publicQuote.signatureIntro') }}</p>
       </div>
-      <form (submit)="sign($event)">
+      <form novalidate (submit)="sign($event)">
         <label class="field" for="public-quote-signer-name">
           {{ i18n.t('publicQuote.signerName') }}
           <input
@@ -182,9 +201,57 @@
         <p class="legal-note">{{ i18n.t('publicQuote.legal') }}</p>
       </form>
       } @else {
-      <div appStatusBlock class="accepted" variant="success" role="status">
-        <h2 id="signature-title">{{ i18n.t('publicQuote.alreadyAccepted') }}</h2>
+      <div
+        appStatusBlock
+        [variant]="currentQuote.status === 'accepted' ? 'success' : 'danger'"
+        role="status"
+      >
+        <h2 id="signature-title">
+          {{ i18n.t(currentQuote.status === 'accepted' ? 'publicQuote.alreadyAccepted' :
+          'publicQuoteWorkspace.notSignable') }}
+        </h2>
       </div>
+      }
+    </section>
+  </ng-template>
+  <ng-template appTabPanel="confirmation">
+    <section
+      id="quote-confirmation-panel"
+      class="confirmation-panel"
+      role="region"
+      aria-labelledby="quote-confirmation-tab"
+      tabindex="0"
+    >
+      @if (acceptance(); as result) {
+      <div appStatusBlock variant="success" role="status">
+        <h2>{{ i18n.t('publicQuote.accepted') }}</h2>
+        <p>{{ i18n.t('publicQuote.acceptedDetail') }}</p>
+      </div>
+      <dl>
+        <div>
+          <dt>{{ i18n.t('publicQuote.reference') }}</dt>
+          <dd>{{ result.quoteReference }}</dd>
+        </div>
+        <div>
+          <dt>{{ i18n.t('publicQuoteWorkspace.order') }}</dt>
+          <dd>{{ result.orderReference }}</dd>
+        </div>
+        <div>
+          <dt>{{ i18n.t('publicQuoteWorkspace.acceptedAt') }}</dt>
+          <dd><time [dateTime]="result.acceptedAt">{{ date(result.acceptedAt) }}</time></dd>
+        </div>
+      </dl>
+      } @else if (currentQuote.status === 'accepted') {
+      <p appNotice variant="success">{{ i18n.t('publicQuote.alreadyAccepted') }}</p>
+      } @else {
+      <p appNotice>{{ i18n.t('publicQuoteWorkspace.confirmationPending') }}</p>
+      } @if (pdfUrl(); as documentUrl) {
+      <a
+        appLinkButton
+        [href]="documentUrl"
+        [download]="currentQuote.snapshot.quoteReference + '.pdf'"
+        >{{ i18n.t('publicQuote.download') }}</a
+      >
       }
     </section>
   </ng-template>

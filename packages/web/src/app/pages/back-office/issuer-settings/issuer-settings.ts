@@ -8,7 +8,15 @@ import {
   inject,
   signal,
 } from '@angular/core';
-import { FormField, form, maxLength, pattern, required, submit } from '@angular/forms/signals';
+import {
+  FormField,
+  disabled,
+  form,
+  maxLength,
+  pattern,
+  required,
+  submit,
+} from '@angular/forms/signals';
 import { type IssuerSettingsValue } from '@froment/contracts';
 
 import { IssuerSettingsApi } from '@backoffice/issuer-settings-api';
@@ -42,6 +50,7 @@ export class IssuerSettings {
   private readonly api = inject(IssuerSettingsApi);
   private readonly model = signal(emptySettings());
   protected readonly settingsForm = form(this.model, (path) => {
+    disabled(path, () => this.loading() || this.saving() || !this.loaded());
     required(path.displayName);
     pattern(path.displayName, /\S/);
     maxLength(path.displayName, 160);
@@ -56,15 +65,12 @@ export class IssuerSettings {
     maxLength(path.vatNumber, 64);
   });
   protected readonly loading = signal(true);
+  protected readonly loaded = signal(false);
   protected readonly saving = signal(false);
   protected readonly saved = signal(false);
   protected readonly error = signal<TranslationKey | undefined>(undefined);
   protected readonly saveDisabled = computed(
-    () =>
-      this.loading() ||
-      this.saving() ||
-      this.settingsForm().invalid() ||
-      !this.settingsForm().dirty(),
+    () => this.loading() || this.saving() || !this.loaded(),
   );
 
   protected invalid(field: keyof IssuerSettingsValue): boolean {
@@ -76,6 +82,7 @@ export class IssuerSettings {
   }
 
   async canDeactivate(): Promise<boolean> {
+    if (this.saving()) return false;
     return (
       !this.settingsForm().dirty() ||
       (await this.confirmation.request(this.i18n.t('backOffice.quote.unsavedChanges')))
@@ -84,11 +91,17 @@ export class IssuerSettings {
 
   @HostListener('window:beforeunload', ['$event'])
   protected preventUnsavedUnload(event: BeforeUnloadEvent): void {
-    if (this.settingsForm().dirty()) event.preventDefault();
+    if (this.saving() || this.settingsForm().dirty()) event.preventDefault();
   }
 
   protected save(event: SubmitEvent): void {
     event.preventDefault();
+    if (this.loading() || this.saving() || !this.loaded()) return;
+    if (this.settingsForm().invalid()) {
+      this.settingsForm().markAsTouched();
+      this.settingsForm().errorSummary()[0]?.fieldTree().focusBoundControl();
+      return;
+    }
     void submit(this.settingsForm, async () => {
       this.saving.set(true);
       this.saved.set(false);
@@ -107,10 +120,14 @@ export class IssuerSettings {
     });
   }
 
-  private async load(): Promise<void> {
+  protected async load(): Promise<void> {
+    this.loading.set(true);
+    this.loaded.set(false);
+    this.error.set(undefined);
     try {
       this.model.set(await this.api.get());
       this.settingsForm().reset();
+      this.loaded.set(true);
     } catch {
       this.error.set('issuer.error');
     } finally {

@@ -65,6 +65,7 @@ export class ReminderEditor {
     invoiceId: this.route.snapshot.queryParamMap.get('invoice') ?? '',
     date: '',
   });
+  private readonly baseline = signal(JSON.stringify(this.model()));
   protected readonly scheduleForm = form(this.model, (path) => {
     required(path.invoiceId);
     required(path.date);
@@ -73,6 +74,15 @@ export class ReminderEditor {
       () => this.busy() || this.confirming() || this.pending() !== undefined || this.completed(),
     );
   });
+  // Native validity animations can mark unchanged values dirty. Keep incomplete native input guarded.
+  protected readonly hasUnsavedChanges = computed(
+    () =>
+      JSON.stringify(this.model()) !== this.baseline() ||
+      this.scheduleForm
+        .date()
+        .errors()
+        .some((error) => error.kind === 'parse'),
+  );
   protected readonly selected = computed(() =>
     this.invoices().find((invoice) => invoice.id === this.model().invoiceId),
   );
@@ -99,13 +109,13 @@ export class ReminderEditor {
     return (
       !this.busy() &&
       !this.confirming() &&
-      ((!this.scheduleForm().dirty() && !this.pending()) ||
+      ((!this.hasUnsavedChanges() && !this.pending()) ||
         (await this.confirmation.request(this.i18n.t('emailsWorkspace.unsavedReminder'))))
     );
   }
   @HostListener('window:beforeunload', ['$event'])
   protected preventUnload(event: BeforeUnloadEvent): void {
-    if (this.busy() || this.confirming() || this.pending() || this.scheduleForm().dirty())
+    if (this.busy() || this.confirming() || this.pending() || this.hasUnsavedChanges())
       event.preventDefault();
   }
   protected async load(): Promise<void> {
@@ -123,6 +133,7 @@ export class ReminderEditor {
           .toISOString()
           .slice(0, 16);
         this.model.set({ invoiceId: pending.request.invoiceId, date: localDate });
+        this.baseline.set(JSON.stringify(this.model()));
       }
       const [invoices, providers] = await Promise.all([
         this.invoicesApi.list(),
@@ -188,6 +199,7 @@ export class ReminderEditor {
     }
     const date = new Date(this.model().date);
     if (
+      this.scheduleForm.date().invalid() ||
       !Number.isFinite(date.getTime()) ||
       date.getTime() <= Date.now() ||
       date.getTime() > Date.now() + 366 * 86400000 ||
@@ -251,6 +263,7 @@ export class ReminderEditor {
       this.store.clear();
       this.completed.set(true);
       this.pending.set(undefined);
+      this.baseline.set(JSON.stringify(this.model()));
       this.scheduleForm().reset();
     } catch {
       this.error.set('reminder.error');

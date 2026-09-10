@@ -1,0 +1,46 @@
+:host {
+  display: block;
+  padding: var(--page-header-y) var(--page-x);
+}
+section {
+  display: grid;
+  gap: var(--space-5);
+}
+header,
+label {
+  display: grid;
+  gap: var(--space-2);
+}
+form {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr));
+  gap: var(--space-4);
+  align-items: end;
+}
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+.hint {
+  color: var(--color-muted);
+}
+.empty-state {
+  padding: var(--space-2) var(--space-3);
+}
+code {
+  overflow-wrap: anywhere;
+}
+.resource-id {
+  display: block;
+}
+th,
+td {
+  vertical-align: top;
+}
+tbody th {
+  background: inherit;
+  color: inherit;
+  font-size: inherit;
+  text-transform: none;
+}

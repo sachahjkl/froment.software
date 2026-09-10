@@ -12,6 +12,8 @@
     ".pi/**",
     ".roo/**",
     ".windsurf/**",
-    "tools/oxlint/anti-slop/**"
+    "tools/oxlint/anti-slop/**",
+    "secrets/froment-software/development.yaml",
+    "secrets/froment-software/production.yaml"
   ]
 }

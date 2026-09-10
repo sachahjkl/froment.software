@@ -1,0 +1,16 @@
+<section aria-labelledby="configuration-title">
+  <h1 id="configuration-title">{{ i18n.t('backOffice.configuration.title') }}</h1>
+  <div class="groups">
+    <section class="ds-panel">
+      <h2>{{ i18n.t('configurationWorkspace.company') }}</h2>
+      <p>{{ i18n.t('configurationWorkspace.companyHint') }}</p>
+      <a routerLink="entreprise">{{ i18n.t('backOffice.configuration.company') }}</a>
+    </section>
+    <section class="ds-panel">
+      <h2>{{ i18n.t('configurationWorkspace.documents') }}</h2>
+      <p>{{ i18n.t('configurationWorkspace.documentsHint') }}</p>
+      <a routerLink="conditions">{{ i18n.t('backOffice.configuration.conditions') }}</a>
+      <a routerLink="carte-de-visite">{{ i18n.t('configurationWorkspace.businessCard') }}</a>
+    </section>
+  </div>
+</section>

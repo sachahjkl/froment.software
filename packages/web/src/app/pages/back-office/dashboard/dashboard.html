@@ -1,136 +1,123 @@
 <section class="dashboard" aria-labelledby="dashboard-title">
   <header>
     <div>
-      <p class="eyebrow">{{ i18n.t('backOffice.dashboard.eyebrow') }}</p>
       <h1 id="dashboard-title">{{ i18n.t('backOffice.dashboard.title') }}</h1>
       <p class="intro">{{ i18n.t('backOffice.dashboard.intro') }}</p>
     </div>
     <nav class="quick-actions" [attr.aria-label]="i18n.t('backOffice.dashboard.quickActions')">
-      <a appLinkButton variant="primary" routerLink="/backoffice/clients/new">
-        {{ i18n.t('backOffice.dashboard.createClient') }}
-      </a>
-      <a appLinkButton routerLink="/backoffice/quotes/new">
-        {{ i18n.t('backOffice.dashboard.createQuote') }}
-      </a>
+      <a appLinkButton variant="primary" routerLink="/backoffice/quotes/new"
+        >{{ i18n.t('backOffice.dashboard.createQuote') }}</a
+      >
+      <a appLinkButton routerLink="/backoffice/clients/new"
+        >{{ i18n.t('backOffice.dashboard.createClient') }}</a
+      >
     </nav>
   </header>
-
-  <section class="dashboard-search ds-panel" aria-labelledby="dashboard-search-title">
-    <h2 id="dashboard-search-title">{{ i18n.t('backOffice.search.title') }}</h2>
-    <label class="field" for="global-search"
-      >{{ i18n.t('backOffice.search.label') }}<input
-        #searchInput
-        id="global-search"
-        class="input"
-        type="search"
-        maxlength="120"
-        autocomplete="off"
-        [value]="query()"
-        (input)="updateQuery(searchInput)"
-    /></label>
-    @if (query().trim() !== '') { @if (searchResults().length === 0) {
-    <p>{{ i18n.t('backOffice.search.empty') }}</p>
-    } @else {
-    <div class="search-results" role="table">
-      <div class="search-row search-header" role="row">
-        <span role="columnheader">{{ i18n.t('backOffice.search.kind') }}</span>
-        <span role="columnheader">{{ i18n.t('backOffice.search.result') }}</span>
-        <span role="columnheader">{{ i18n.t('backOffice.search.action') }}</span>
-      </div>
-      <cdk-virtual-scroll-viewport class="search-viewport" role="rowgroup" itemSize="72">
-        <div
-          *cdkVirtualFor="let result of searchResults(); trackBy: resultTrackBy"
-          class="search-row"
-          role="row"
-        >
-          <span role="cell"><span appBadge>{{ kindLabel(result.kind) }}</span></span>
-          <span class="search-detail" role="cell"
-            ><strong [appSearchHighlight]="result.referenceMatches">{{ result.reference }}</strong
-            ><small [appSearchHighlight]="result.detailMatches">{{ result.detail }}</small></span
-          >
-          <span class="search-action" role="cell">
-            <a appLinkButton [routerLink]="result.link">{{ i18n.t('backOffice.open') }}</a>
-          </span>
-        </div>
-      </cdk-virtual-scroll-viewport>
-    </div>
-    } }
-  </section>
-
   @switch (state()) { @case ('loading') {
-  <p class="state" aria-live="polite">{{ i18n.t('backOffice.dashboard.loading') }}</p>
+  <p class="state" role="status">{{ i18n.t('backOffice.dashboard.loading') }}</p>
   } @case ('error') {
   <p appNotice variant="danger" role="alert">{{ i18n.t('backOffice.dashboard.error') }}</p>
   <button appButton type="button" (click)="load()">
     {{ i18n.t('backOffice.dashboard.retry') }}
   </button>
-  } @case ('ready') {
-  <section class="metrics" [attr.aria-label]="i18n.t('backOffice.dashboard.summary')">
-    <article class="ds-panel">
-      <span>{{ i18n.t('backOffice.dashboard.draftQuotes') }}</span
-      ><strong>{{ draftQuotes() }}</strong>
-    </article>
-    <article class="ds-panel">
-      <span>{{ i18n.t('backOffice.dashboard.awaitingSignature') }}</span
-      ><strong>{{ sentQuotes() }}</strong>
-    </article>
-    <article class="ds-panel">
-      <span>{{ i18n.t('backOffice.dashboard.toInvoice') }}</span
-      ><strong>{{ ordersToInvoice() }}</strong>
-    </article>
-    <article class="ds-panel">
-      <span>{{ i18n.t('backOffice.dashboard.outstanding') }}</span
-      ><strong>{{ money(outstandingCents()) }}</strong>
-    </article>
-    <article class="ds-panel">
-      <span>{{ i18n.t('backOffice.dashboard.overdueInvoices') }}</span
-      ><strong>{{ overdueInvoices() }}</strong>
-    </article>
+  } @case ('ready') { @if (loadedAt(); as timestamp) {
+  <p id="dashboard-loaded-at" class="intro">
+    {{ i18n.t('dashboardWorkspace.loadedAt') }}
+    <time [dateTime]="timestamp">{{ date(timestamp) }}</time>
+  </p>
+  }
+  <nav
+    class="metrics"
+    [attr.aria-label]="i18n.t('backOffice.dashboard.summary')"
+    aria-describedby="dashboard-loaded-at"
+  >
+    <a
+      class="ds-panel"
+      routerLink="/backoffice/affaires/attention"
+      [queryParams]="{ stage: 'draft' }"
+      aria-describedby="dashboard-loaded-at"
+      ><span>{{ i18n.t('backOffice.dashboard.draftQuotes') }}</span
+      ><strong>{{ draftQuotes() }}</strong></a
+    >
+    <a
+      class="ds-panel"
+      routerLink="/backoffice/affaires/active"
+      [queryParams]="{ stage: 'sent' }"
+      aria-describedby="dashboard-loaded-at"
+      ><span>{{ i18n.t('backOffice.dashboard.awaitingSignature') }}</span
+      ><strong>{{ sentQuotes() }}</strong></a
+    >
+    <a
+      class="ds-panel"
+      routerLink="/backoffice/affaires/attention"
+      [queryParams]="{ stage: 'ordered' }"
+      aria-describedby="dashboard-loaded-at"
+      ><span>{{ i18n.t('backOffice.dashboard.toInvoice') }}</span
+      ><strong>{{ ordersToInvoice() }}</strong></a
+    >
+    <a
+      class="ds-panel"
+      routerLink="/backoffice/facturation"
+      [queryParams]="{ status: 'issued' }"
+      aria-describedby="dashboard-loaded-at"
+      ><span>{{ i18n.t('backOffice.dashboard.outstanding') }}</span
+      ><strong>{{ money(outstandingCents()) }}</strong></a
+    >
+    <a
+      class="ds-panel"
+      routerLink="/backoffice/facturation"
+      [queryParams]="{ status: 'issued', due: 'overdue' }"
+      aria-describedby="dashboard-loaded-at"
+      ><span>{{ i18n.t('backOffice.dashboard.overdueInvoices') }}</span
+      ><strong>{{ overdueInvoices() }}</strong></a
+    >
+  </nav>
+  <section class="action-section" aria-labelledby="actions-title">
+    <div class="section-heading">
+      <h2 id="actions-title">{{ i18n.t('backOffice.dashboard.actions') }}</h2>
+      <a routerLink="/backoffice/affaires">{{ i18n.t('backOffice.dashboard.openAffairs') }}</a>
+    </div>
+    @if (actions().length === 0) {
+    <p class="empty">{{ i18n.t('backOffice.dashboard.noActions') }}</p>
+    } @else {
+    <div appDataTable tableLayout="fluid">
+      <table>
+        <thead>
+          <tr>
+            <th scope="col">{{ i18n.t('backOffice.clientDetail.document') }}</th>
+            <th scope="col">{{ i18n.t('backOffice.clientDetail.status') }}</th>
+            <th scope="col">{{ i18n.t('dashboardWorkspace.task') }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (action of actions(); track action.id) {
+          <tr>
+            <th scope="row">{{ action.title }}<small>{{ action.client }}</small></th>
+            <td><span appBadge [variant]="action.variant">{{ action.label }}</span></td>
+            <td>
+              <a [routerLink]="action.link" [queryParams]="action.query">{{ action.task }}</a>
+            </td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    }
   </section>
-
-  <div class="dashboard-grid">
-    <section class="ds-panel" aria-labelledby="actions-title">
-      <div class="section-heading">
-        <div>
-          <p class="eyebrow">{{ i18n.t('backOffice.dashboard.priority') }}</p>
-          <h2 id="actions-title">{{ i18n.t('backOffice.dashboard.actions') }}</h2>
-        </div>
-        <a routerLink="/backoffice/affaires">{{ i18n.t('backOffice.dashboard.openAffairs') }}</a>
-      </div>
-      @if (actions().length === 0) {
-      <p class="empty">{{ i18n.t('backOffice.dashboard.noActions') }}</p>
-      } @else {
-      <ol class="work-list">
-        @for (action of actions(); track action.id) {
-        <li>
-          <div>
-            <span appBadge [variant]="action.variant">{{ action.label }}</span
-            ><strong>{{ action.title }}</strong><small>{{ action.client }}</small>
-          </div>
-          <a appLinkButton [routerLink]="action.link">{{ i18n.t('backOffice.open') }}</a>
-        </li>
-        }
-      </ol>
+  <section class="recent-section" aria-labelledby="activity-title">
+    <h2 id="activity-title">{{ i18n.t('dashboardWorkspace.recent') }}</h2>
+    <p class="intro">{{ i18n.t('dashboardWorkspace.recentHint') }}</p>
+    <ol class="activity-list">
+      @for (item of activity(); track item.id) {
+      <li>
+        <a [routerLink]="item.link"
+          ><strong>{{ item.title }}</strong><small>{{ item.client }}</small></a
+        ><time [dateTime]="item.date">{{ date(item.date) }}</time>
+      </li>
+      } @empty {
+      <li>{{ i18n.t('dashboardWorkspace.noRecent') }}</li>
       }
-    </section>
-
-    <section class="ds-panel" aria-labelledby="activity-title">
-      <div class="section-heading">
-        <div>
-          <p class="eyebrow">{{ i18n.t('backOffice.dashboard.latest') }}</p>
-          <h2 id="activity-title">{{ i18n.t('backOffice.dashboard.activity') }}</h2>
-        </div>
-      </div>
-      <ol class="activity-list">
-        @for (item of activity(); track item.id) {
-        <li>
-          <a [routerLink]="item.link"
-            ><strong>{{ item.title }}</strong><small>{{ item.client }}</small></a
-          ><time [dateTime]="item.date">{{ date(item.date) }}</time>
-        </li>
-        }
-      </ol>
-    </section>
-  </div>
+    </ol>
+  </section>
   } }
 </section>

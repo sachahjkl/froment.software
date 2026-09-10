@@ -3,6 +3,7 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
+  DestroyRef,
   inject,
   signal,
 } from '@angular/core';
@@ -13,8 +14,7 @@ import {
   type OrderSummaryValue,
   type QuoteSummaryValue,
 } from '@froment/contracts';
-import { ScrollingModule } from '@angular/cdk/scrolling';
-import { type FuseResultMatch } from 'fuse.js';
+import { formatMoney } from '@froment/l10n';
 
 import { ClientsApi } from '@backoffice/clients-api';
 import { InvoicesApi } from '@backoffice/invoices-api';
@@ -24,8 +24,9 @@ import { I18nService } from '@app/i18n.service';
 import { Badge, type BadgeVariant } from '@shared/badge/badge';
 import { Button } from '@shared/button/button';
 import { Notice } from '@shared/notice/notice';
-import { createFuzzySearch } from '@shared/fuzzy-search';
-import { SearchHighlight, SearchHighlightRegistry } from '@shared/search-highlight';
+import { DataTable } from '@shared/data-table/data-table';
+import { formatLocalizedDate } from '@shared/localized-date/localized-date-pipe';
+import { clientContactIncomplete } from '../clients/client-contact';
 
 type PageState = 'loading' | 'ready' | 'error';
 
@@ -37,6 +38,8 @@ interface DashboardAction {
   readonly link: readonly string[];
   readonly variant: BadgeVariant;
   readonly priority: number;
+  readonly task: string;
+  readonly query?: Readonly<Record<string, string>>;
 }
 
 interface ActivityItem {
@@ -47,27 +50,10 @@ interface ActivityItem {
   readonly link: readonly string[];
 }
 
-interface SearchItem {
-  readonly id: string;
-  readonly kind: 'client' | 'quote' | 'order' | 'invoice';
-  readonly reference: string;
-  readonly detail: string;
-  readonly aliases: string;
-  readonly link: readonly string[];
-}
-
-interface SearchResult extends SearchItem {
-  readonly referenceMatches: FuseResultMatch['indices'];
-  readonly detailMatches: FuseResultMatch['indices'];
-}
-
-const noMatches: FuseResultMatch['indices'] = [];
-
 @Component({
   host: { class: 'page-container' },
   selector: 'app-dashboard',
-  imports: [Badge, Button, Notice, RouterLink, ScrollingModule, SearchHighlight],
-  providers: [SearchHighlightRegistry],
+  imports: [Badge, Button, DataTable, Notice, RouterLink],
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -79,65 +65,14 @@ export class Dashboard {
   private readonly ordersApi = inject(OrdersApi);
   private readonly invoicesApi = inject(InvoicesApi);
   protected readonly state = signal<PageState>('loading');
-  protected readonly query = signal('');
+  private readonly destroyRef = inject(DestroyRef);
+  private loadGeneration = 0;
+  private readonly today = signal(this.businessToday());
+  protected readonly loadedAt = signal<string | undefined>(undefined);
   private readonly clients = signal<ReadonlyArray<ClientSummaryValue>>([]);
   private readonly quotes = signal<ReadonlyArray<QuoteSummaryValue>>([]);
   private readonly orders = signal<ReadonlyArray<OrderSummaryValue>>([]);
   private readonly invoices = signal<ReadonlyArray<InvoiceSummaryValue>>([]);
-  private readonly searchItems = computed<readonly SearchItem[]>(() => [
-    ...this.clients().map((client) => ({
-      id: client.id,
-      kind: 'client' as const,
-      reference: client.displayName,
-      detail: client.email,
-      aliases: '',
-      link: ['/backoffice/clients', client.id] as const,
-    })),
-    ...this.quotes().map((quote) => ({
-      id: quote.id,
-      kind: 'quote' as const,
-      reference: quote.reference,
-      detail: `${quote.clientDisplayName} · ${quote.title}`,
-      aliases: '',
-      link: ['/backoffice/affaires', quote.id] as const,
-    })),
-    ...this.orders().map((order) => ({
-      id: order.id,
-      kind: 'order' as const,
-      reference: order.reference,
-      detail: `${order.clientDisplayName} · ${order.title}`,
-      aliases: order.quoteReference,
-      link: ['/backoffice/affaires', order.quoteId] as const,
-    })),
-    ...this.invoices().map((invoice) => ({
-      id: invoice.id,
-      kind: 'invoice' as const,
-      reference: invoice.invoiceNumber ?? invoice.orderReference,
-      detail: `${invoice.clientDisplayName} · ${invoice.title}`,
-      aliases: invoice.orderReference,
-      link: ['/backoffice/invoices', invoice.id] as const,
-    })),
-  ]);
-  private readonly fuzzyResults = createFuzzySearch(this.searchItems, this.query, {
-    keys: [
-      { name: 'reference', weight: 0.55 },
-      { name: 'detail', weight: 0.35 },
-      { name: 'aliases', weight: 0.1 },
-    ],
-    findAllMatches: true,
-    ignoreDiacritics: true,
-    ignoreLocation: true,
-    includeMatches: true,
-    threshold: 0.35,
-  });
-  protected readonly searchResults = computed<readonly SearchResult[]>(() => {
-    if (this.query().trim() === '') return [];
-    return this.fuzzyResults().map(({ item, matches = [] }) => ({
-      ...item,
-      referenceMatches: matches.find(({ key }) => key === 'reference')?.indices ?? noMatches,
-      detailMatches: matches.find(({ key }) => key === 'detail')?.indices ?? noMatches,
-    }));
-  });
   protected readonly draftQuotes = computed(
     () => this.quotes().filter(({ status }) => status === 'draft').length,
   );
@@ -157,30 +92,49 @@ export class Dashboard {
         0,
       ),
   );
-  protected readonly overdueInvoices = computed(() => {
-    const today = new Date().toISOString().slice(0, 10);
-    return this.invoices().filter(
-      ({ status, dueDate, creditedCents }) =>
-        status === 'issued' && creditedCents === 0 && dueDate < today,
-    ).length;
-  });
+  protected readonly overdueInvoices = computed(
+    () => this.invoices().filter((invoice) => this.overdue(invoice)).length,
+  );
   protected readonly actions = computed<readonly DashboardAction[]>(() => {
-    const today = new Date().toISOString().slice(0, 10);
+    const clientById = new Map(this.clients().map((client) => [client.id, client]));
     return [
       ...this.quotes()
         .filter(({ status }) => status === 'draft' || status === 'sent')
-        .map((quote) => ({
-          id: `quote-${quote.id}`,
-          label:
-            quote.status === 'sent'
-              ? this.i18n.t('backOffice.affairs.stage.sent')
-              : this.i18n.t('backOffice.affairs.stage.draft'),
-          title: quote.title,
-          client: quote.clientDisplayName,
-          link: ['/backoffice/affaires', quote.id] as const,
-          variant: quote.status === 'sent' ? ('warning' as const) : ('default' as const),
-          priority: quote.status === 'sent' ? 2 : 4,
-        })),
+        .map((quote): DashboardAction => {
+          const client = clientById.get(quote.clientId);
+          const archived = client?.archived === true;
+          const incomplete =
+            quote.status === 'draft' && client !== undefined && clientContactIncomplete(client);
+          const blocked = archived || incomplete;
+          return {
+            id: `quote-${quote.id}`,
+            label: blocked
+              ? this.i18n.t(
+                  archived ? 'dashboardWorkspace.blocked' : 'dashboardWorkspace.contactBlocked',
+                )
+              : quote.status === 'sent'
+                ? this.i18n.t('dashboardWorkspace.waiting')
+                : this.i18n.t('backOffice.affairs.stage.draft'),
+            title: quote.title,
+            client: quote.clientDisplayName,
+            link: blocked
+              ? ['/backoffice/clients', quote.clientId, archived ? 'profile' : 'edit']
+              : quote.status === 'draft'
+                ? ['/backoffice/quotes', quote.id, 'edit']
+                : ['/backoffice/quotes', quote.id],
+            task: this.i18n.t(
+              blocked
+                ? archived
+                  ? 'dashboardWorkspace.reviewClient'
+                  : 'dashboardWorkspace.completeClient'
+                : quote.status === 'draft'
+                  ? 'dashboardWorkspace.editQuote'
+                  : 'dashboardWorkspace.followQuote',
+            ),
+            variant: blocked ? 'danger' : 'default',
+            priority: blocked ? 0 : quote.status === 'sent' ? 5 : 3,
+          };
+        }),
       ...this.orders()
         .filter(({ invoiceId }) => invoiceId === null)
         .map((order) => ({
@@ -188,38 +142,61 @@ export class Dashboard {
           label: this.i18n.t('backOffice.affairs.stage.ordered'),
           title: order.title,
           client: order.clientDisplayName,
-          link: ['/backoffice/affaires', order.quoteId] as const,
-          variant: 'warning' as const,
-          priority: 3,
+          link: ['/backoffice/invoices/new'] as const,
+          query: { orderId: order.id },
+          task: this.i18n.t('backOffice.affairs.createInvoice'),
+          variant: 'default' as const,
+          priority: 2,
         })),
       ...this.invoices()
         .filter(
-          ({ status, creditedCents }) =>
-            status === 'draft' || (status === 'issued' && creditedCents === 0),
+          (invoice) =>
+            invoice.status === 'draft' ||
+            invoice.pdf?.status === 'failed' ||
+            (invoice.status === 'issued' && this.remaining(invoice) > 0),
         )
         .map((invoice) => ({
           id: `invoice-${invoice.id}`,
           label:
-            invoice.status === 'draft'
-              ? this.i18n.t('backOffice.affairs.stage.invoiceDraft')
-              : invoice.dueDate < today
-                ? this.i18n.t('backOffice.dashboard.overdue')
-                : this.i18n.t('backOffice.affairs.stage.issued'),
+            invoice.pdf?.status === 'failed'
+              ? this.i18n.t('dashboardWorkspace.pdfBlocked')
+              : invoice.status === 'draft'
+                ? this.i18n.t('backOffice.affairs.stage.invoiceDraft')
+                : this.overdue(invoice)
+                  ? this.i18n.t('backOffice.dashboard.overdue')
+                  : this.i18n.t('dashboardWorkspace.waiting'),
           title: invoice.title,
           client: invoice.clientDisplayName,
-          link: ['/backoffice/invoices', invoice.id] as const,
+          link:
+            invoice.pdf?.status === 'failed'
+              ? ['/backoffice/invoices', invoice.id]
+              : this.canRemind(invoice)
+                ? ['/backoffice/courriels/new']
+                : invoice.status === 'draft'
+                  ? ['/backoffice/invoices', invoice.id, 'edit']
+                  : ['/backoffice/invoices', invoice.id],
+          query: this.canRemind(invoice) ? { invoice: invoice.id } : undefined,
+          task: this.i18n.t(
+            invoice.pdf?.status === 'failed'
+              ? 'dashboardWorkspace.followInvoice'
+              : this.canRemind(invoice)
+                ? 'dashboardWorkspace.remindInvoice'
+                : invoice.status === 'draft'
+                  ? 'dashboardWorkspace.issueInvoice'
+                  : 'dashboardWorkspace.followInvoice',
+          ),
           variant:
-            invoice.status === 'issued' && invoice.dueDate < today
+            invoice.pdf?.status === 'failed' || this.overdue(invoice)
               ? ('danger' as const)
-              : invoice.status === 'issued'
-                ? ('warning' as const)
-                : ('default' as const),
+              : ('default' as const),
           priority:
-            invoice.status === 'issued' && invoice.dueDate < today
-              ? 1
-              : invoice.status === 'issued'
-                ? 2
-                : 4,
+            invoice.pdf?.status === 'failed'
+              ? 0
+              : this.overdue(invoice)
+                ? 1
+                : invoice.status === 'issued'
+                  ? 5
+                  : 3,
         })),
     ]
       .sort((left, right) => left.priority - right.priority)
@@ -232,7 +209,7 @@ export class Dashboard {
         title: quote.reference,
         client: quote.clientDisplayName,
         date: quote.updatedAt,
-        link: ['/backoffice/affaires', quote.id] as const,
+        link: ['/backoffice/quotes', quote.id] as const,
       })),
       ...this.invoices().map((invoice) => ({
         id: `invoice-${invoice.id}`,
@@ -255,21 +232,37 @@ export class Dashboard {
   }
 
   protected date(value: string): string {
-    return formatLocalizedDate(value, this.i18n.language(), { dateStyle: 'medium' });
+    return formatLocalizedDate(value, this.i18n.language(), {
+      dateStyle: 'medium',
+      timeStyle: 'short',
+    });
   }
 
-  protected updateQuery(input: HTMLInputElement): void {
-    this.query.set(input.value.slice(0, 120));
+  private remaining(invoice: InvoiceSummaryValue): number {
+    return Math.max(0, invoice.totalCents - invoice.creditedCents - invoice.recordedPaidCents);
   }
 
-  protected kindLabel(kind: SearchItem['kind']): string {
-    return this.i18n.t(`backOffice.search.kind.${kind}`);
+  private overdue(invoice: InvoiceSummaryValue): boolean {
+    return (
+      invoice.status === 'issued' && this.remaining(invoice) > 0 && invoice.dueDate < this.today()
+    );
   }
 
-  protected readonly resultTrackBy = (_index: number, result: SearchResult): string =>
-    `${result.kind}-${result.id}`;
+  private canRemind(invoice: InvoiceSummaryValue): boolean {
+    return invoice.pdf?.status !== 'failed' && invoice.creditedCents === 0 && this.overdue(invoice);
+  }
+
+  private businessToday(): string {
+    return new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'Europe/Paris',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    }).format(new Date());
+  }
 
   protected async load(): Promise<void> {
+    const generation = ++this.loadGeneration;
     this.state.set('loading');
     try {
       const [clients, quotes, orders, invoices] = await Promise.all([
@@ -278,15 +271,16 @@ export class Dashboard {
         this.ordersApi.list(),
         this.invoicesApi.list(),
       ]);
+      if (generation !== this.loadGeneration || this.destroyRef.destroyed) return;
+      this.today.set(this.businessToday());
       this.clients.set(clients);
       this.quotes.set(quotes);
       this.orders.set(orders);
       this.invoices.set(invoices);
+      this.loadedAt.set(new Date().toISOString());
       this.state.set('ready');
     } catch {
-      this.state.set('error');
+      if (generation === this.loadGeneration && !this.destroyRef.destroyed) this.state.set('error');
     }
   }
 }
-import { formatMoney } from '@froment/l10n';
-import { formatLocalizedDate } from '@shared/localized-date/localized-date-pipe';

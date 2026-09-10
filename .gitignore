@@ -33,8 +33,8 @@ test-results/
 # Nix / direnv
 .direnv/
 .pre-commit-config.yaml
-result
-result-*
+/result
+/result-*
 
 # Environment
 .env

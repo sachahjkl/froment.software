@@ -1,0 +1,108 @@
+<section class="bank-page" aria-labelledby="post-title">
+  <a routerLink="/backoffice/banque/ecritures" [queryParams]="backQuery"
+    >{{ i18n.t('bankWorkspace.backLedger') }}</a
+  >
+  <app-page-header
+    ><h1 id="post-title">{{ i18n.t('bankWorkspace.postTitle') }}</h1>
+    <p class="muted">{{ i18n.t('bankWorkspace.ledgerScope') }}</p></app-page-header
+  >
+  <div #result tabindex="-1" role="status">
+    @if (completed()) {
+    <p appNotice variant="success">{{ i18n.t('ledger.saved') }}</p>
+    }
+  </div>
+  @if (error(); as error) {
+  <p appNotice variant="danger" role="alert">{{ i18n.t(error) }}</p>
+  @if (state() === 'ready' && !pending()) {
+  <div>
+    <button appButton type="button" [disabled]="busy()" (click)="refresh()">
+      {{ i18n.t('bank.reload') }}
+    </button>
+  </div>
+  } } @if (state() === 'loading') {
+  <p role="status">{{ i18n.t('ledger.loading') }}</p>
+  } @else if (state() === 'error') {
+  <div><button appButton type="button" (click)="load()">{{ i18n.t('bank.reload') }}</button></div>
+  } @else if (detail(); as detail) {
+  <div class="context">
+    <aside class="ds-panel task-panel">
+      <h2>{{ detail.source.reference }}</h2>
+      <dl>
+        <div>
+          <dt>{{ i18n.t('bankWorkspace.account') }}</dt>
+          <dd>{{ detail.source.account }}</dd>
+        </div>
+        <div>
+          <dt>{{ i18n.t('bankWorkspace.sourceType') }}</dt>
+          <dd>{{ i18n.t(detail.source.sourceKind === 'fee' ? 'ledger.fee' : 'ledger.debit') }}</dd>
+        </div>
+        <div>
+          <dt>{{ i18n.t('bankWorkspace.date') }}</dt>
+          <dd>{{ detail.source.bookedOn | localizedDate: i18n.language() }}</dd>
+        </div>
+        <div>
+          <dt>{{ i18n.t('bankWorkspace.amount') }}</dt>
+          <dd>{{ money(detail.source.amountCents) }}</dd>
+        </div>
+      </dl>
+      <a [routerLink]="transactionLink(detail.transactionId)"
+        >{{ i18n.t('bankWorkspace.viewTransaction') }}</a
+      >
+    </aside>
+    <div class="bank-section">
+      @if (completed(); as entry) {
+      <a [routerLink]="entryLink(entry.id)" [queryParams]="backQuery"
+        >{{ i18n.t('ledger.entryId') }} {{ entry.id }}</a
+      >
+      } @else if (detail.source.entryId; as entryId) {
+      <p appNotice>{{ i18n.t('ledger.posted') }}</p>
+      <a [routerLink]="entryLink(entryId)" [queryParams]="backQuery">{{ entryId }}</a> } @else {
+      <p>{{ i18n.t('bankWorkspace.sourceSnapshot') }}</p>
+      <form class="task-form" novalidate (submit)="post($event)">
+        <label class="field"
+          >{{ i18n.t('ledger.debitAccount') }}<input
+            class="input"
+            [formField]="entryForm.debitAccount"
+            aria-describedby="debit-error"
+            [attr.aria-invalid]="invalid('debitAccount')"
+          /><span id="debit-error" class="field-error"
+            >@if (invalid('debitAccount')) { {{ i18n.t('bankWorkspace.accountCodeInvalid') }}
+            }</span
+          ></label
+        >
+        <label class="field"
+          >{{ i18n.t('ledger.creditAccount') }}<input
+            class="input"
+            [formField]="entryForm.creditAccount"
+            aria-describedby="credit-error"
+            [attr.aria-invalid]="invalid('creditAccount')"
+          /><span id="credit-error" class="field-error"
+            >@if (invalid('creditAccount')) { {{ i18n.t(entryForm.creditAccount().value() ===
+            entryForm.debitAccount().value() && entryForm.creditAccount().value() ?
+            'bankWorkspace.accountsDistinct' : 'bankWorkspace.accountCodeInvalid') }} }</span
+          ></label
+        >
+        <label class="field"
+          >{{ i18n.t('ledger.label') }}<input
+            class="input"
+            [formField]="entryForm.label"
+            aria-describedby="label-error"
+            [attr.aria-invalid]="invalid('label')"
+          /><span id="label-error" class="field-error"
+            >@if (invalid('label')) { {{ i18n.t('bankWorkspace.labelInvalid') }} }</span
+          ></label
+        >
+        @if (pending()) {
+        <p appNotice variant="warning">{{ i18n.t('bankWorkspace.retryHint') }}</p>
+        }
+        <div>
+          <button appButton variant="primary" type="submit" [disabled]="busy()">
+            {{ i18n.t(pending() ? 'bankWorkspace.retry' : 'ledger.post') }}
+          </button>
+        </div>
+      </form>
+      }
+    </div>
+  </div>
+  }
+</section>

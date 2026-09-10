@@ -13,10 +13,46 @@ import {
 import { Invoices } from './invoices.js';
 import { issueInvoice } from './issue.js';
 import { exportInvoicePayments } from './payment-export.js';
+import {
+  listInvoiceReceipts,
+  listCreditNotes,
+  listInvoiceRefunds,
+  readInvoiceHistory,
+} from './workspace.js';
 
 export const InvoiceHandlers = HttpApiBuilder.group(Api, 'invoices', (handlers) =>
   Effect.succeed(
     handlers
+      .handle(
+        'invoiceReceiptList',
+        Effect.fn('invoiceReceiptList')(function* () {
+          yield* setPrivateResponseHeaders;
+          return yield* listInvoiceReceipts().pipe(Effect.catchTag('DatabaseError', Effect.orDie));
+        }),
+      )
+      .handle(
+        'creditNoteList',
+        Effect.fn('creditNoteList')(function* () {
+          yield* setPrivateResponseHeaders;
+          return yield* listCreditNotes().pipe(Effect.catchTag('DatabaseError', Effect.orDie));
+        }),
+      )
+      .handle(
+        'invoiceRefundList',
+        Effect.fn('invoiceRefundList')(function* () {
+          yield* setPrivateResponseHeaders;
+          return yield* listInvoiceRefunds().pipe(Effect.catchTag('DatabaseError', Effect.orDie));
+        }),
+      )
+      .handle(
+        'invoiceHistory',
+        Effect.fn('invoiceHistory')(function* ({ params }) {
+          yield* setPrivateResponseHeaders;
+          return yield* readInvoiceHistory(params.invoiceId).pipe(
+            Effect.catchTag('DatabaseError', Effect.orDie),
+          );
+        }),
+      )
       .handle(
         'invoicePaymentCancel',
         Effect.fn('invoicePaymentCancel')(function* ({ params, payload }) {

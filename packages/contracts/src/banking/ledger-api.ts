@@ -13,6 +13,8 @@ import {
   LedgerPeriod,
   LedgerRequest,
   LedgerReverse,
+  LedgerSourceDetail,
+  LedgerSourceKind,
 } from './ledger.js';
 
 export class BankLedgerApi extends HttpApiGroup.make('bankLedger', { topLevel: true }).add(
@@ -24,6 +26,16 @@ export class BankLedgerApi extends HttpApiGroup.make('bankLedger', { topLevel: t
   HttpApiEndpoint.get('bankLedgerExport', '/api/banking/ledger/export', {
     query: LedgerPeriod,
     success: Schema.String.pipe(HttpApiSchema.asText({ contentType: 'text/csv' })),
+    error: [LedgerConflict],
+  }).pipe(requirePermissions([Permissions.ledgerRead]), authenticate, frontendSpecific),
+  HttpApiEndpoint.get('bankLedgerEntryGet', '/api/banking/ledger/entries/:entryId', {
+    params: { entryId: Ulid },
+    success: LedgerEntry,
+    error: [LedgerConflict],
+  }).pipe(requirePermissions([Permissions.ledgerRead]), authenticate, frontendSpecific),
+  HttpApiEndpoint.get('bankLedgerSourceGet', '/api/banking/ledger/sources/:sourceKind/:sourceId', {
+    params: { sourceKind: LedgerSourceKind, sourceId: Ulid },
+    success: LedgerSourceDetail,
     error: [LedgerConflict],
   }).pipe(requirePermissions([Permissions.ledgerRead]), authenticate, frontendSpecific),
   HttpApiEndpoint.post('bankLedgerPost', '/api/banking/ledger', {

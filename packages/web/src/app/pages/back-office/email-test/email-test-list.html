@@ -1,0 +1,131 @@
+<section>
+  <h1>{{ i18n.t('connections.resend') }} — {{ i18n.t('configurationWorkspace.tests') }}</h1>
+  <nav class="actions" [attr.aria-label]="i18n.t('configurationWorkspace.services')">
+    <a routerLink="/backoffice/services/resend" [queryParams]="table.params()"
+      >{{ i18n.t('configurationWorkspace.connection') }}</a
+    >
+    <a
+      routerLink="/backoffice/services/resend/tests"
+      [queryParams]="table.params()"
+      aria-current="page"
+      >{{ i18n.t('configurationWorkspace.tests') }}</a
+    >
+  </nav>
+  <div class="actions">
+    <a appLinkButton variant="primary" routerLink="new" [queryParams]="table.params()"
+      >{{ i18n.t('configurationWorkspace.newTest') }}</a
+    ><button appButton type="button" (click)="refresh()">{{ i18n.t('emailTest.refresh') }}</button>
+  </div>
+  <p>{{ i18n.t('emailTest.historyHint') }}</p>
+  <div appListWorkspace>
+    <app-list-toolbar>
+      <app-list-search
+        listSearch
+        [label]="i18n.t('configurationWorkspace.searchTests')"
+        [value]="table.query().q"
+        (valueChange)="table.search($event)"
+      />
+      <app-filter-menu
+        #testMenu
+        listFilters
+        [label]="i18n.t('listWorkspace.filters')"
+        [closeLabel]="i18n.t('listWorkspace.closeFilters')"
+        [backLabel]="i18n.t('listWorkspace.backFilters')"
+        [activeCount]="table.query().filter === 'all' ? 0 : 1"
+        [disabled]="loading()"
+      >
+        <ng-template
+          appFilterPanel
+          [label]="i18n.t('emailTest.status')"
+          [summary]="table.filterSummary()"
+        >
+          <app-filter-choice
+            [label]="i18n.t('listWorkspace.searchChoices')"
+            [emptyLabel]="i18n.t('listWorkspace.noChoices')"
+            [options]="table.filterOptions()"
+            [value]="table.query().filter"
+            [disabled]="loading()"
+            (committed)="table.filter($event); testMenu.close()"
+          />
+        </ng-template>
+      </app-filter-menu>
+      <app-table-export
+        listActions
+        [columns]="['createdAt', 'subject', 'status']"
+        [rows]="testExport()"
+        filename="resend-tests.csv"
+        [label]="i18n.t('listWorkspace.exportCsv')"
+        [emptyHint]="i18n.t('listWorkspace.exportEmpty')"
+        [pendingHint]="i18n.t('listWorkspace.exportPending')"
+        [pending]="!historyLoaded() || paused() || error() !== undefined"
+      />
+      <p listSummary>{{ i18n.t('configurationWorkspace.loadedScope') }}</p>
+    </app-list-toolbar>
+    @if (error(); as code) {
+    <p appNotice variant="danger" role="alert">{{ i18n.t(code) }}</p>
+    } @if (paused()) {
+    <p appNotice variant="warning">{{ i18n.t('emailTest.paused') }}</p>
+    } @if (!historyLoaded()) {
+    <p role="status">
+      {{ i18n.t(paused() ? 'emailTest.historyUnavailable' : 'connections.loading') }}
+    </p>
+    } @else {
+    <div appDataTable>
+      <table>
+        <thead>
+          <tr>
+            <th scope="col" [attr.aria-sort]="table.direction('date')">
+              <button
+                appTableSort
+                [label]="i18n.t('emailTest.createdAt')"
+                [direction]="table.direction('date')"
+                (click)="table.sort('date')"
+              ></button>
+            </th>
+            <th scope="col" [attr.aria-sort]="table.direction('subject')">
+              <button
+                appTableSort
+                [label]="i18n.t('emailTest.subject')"
+                [direction]="table.direction('subject')"
+                (click)="table.sort('subject')"
+              ></button>
+            </th>
+            <th scope="col" [attr.aria-sort]="table.direction('status')">
+              <button
+                appTableSort
+                [label]="i18n.t('emailTest.status')"
+                [direction]="table.direction('status')"
+                (click)="table.sort('status')"
+              ></button>
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (result of table.results(); track result.item.request.requestId) { @let item =
+          result.item;
+          <tr>
+            <td>
+              {{ item.createdAt | localizedDate: i18n.language(): { dateStyle: 'medium', timeStyle:
+              'short' } }}
+            </td>
+            <th scope="row">
+              <a
+                [routerLink]="[item.request.requestId]"
+                [queryParams]="table.params()"
+                [appSearchHighlight]="table.match(result, 'request.subject')"
+                >{{ item.request.subject }}</a
+              >
+            </th>
+            <td>{{ i18n.t(statusLabels[item.status]) }}</td>
+          </tr>
+          } @empty {
+          <tr>
+            <td colspan="3">{{ i18n.t('emailTest.empty') }}</td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    }
+  </div>
+</section>

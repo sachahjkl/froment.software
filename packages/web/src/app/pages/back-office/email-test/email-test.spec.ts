@@ -77,6 +77,9 @@ it('restores an uncertain request after reload and resubmits only after confirma
   expect(send).toHaveBeenCalledTimes(2);
   expect(send.mock.calls[0]?.[0]).toEqual(send.mock.calls[1]?.[0]);
   expect(store().read()).toBeUndefined();
+  expect(restoredRoot.querySelector('form')).toBeNull();
+  restored.componentInstance['send'](new SubmitEvent('submit'));
+  expect(send).toHaveBeenCalledTimes(2);
   expect(restoredRoot.querySelector('[role="status"]')?.textContent).toMatch(
     /Accepté par Resend|Accepted by Resend/,
   );
@@ -103,6 +106,8 @@ it('reconciles a restored request from server history without sending it again',
   await vi.waitFor(() => expect(store().read()).toBeUndefined());
   expect(send).not.toHaveBeenCalled();
   expect(fixture.componentInstance['pending']()).toBeUndefined();
+  fixture.componentInstance['send'](new SubmitEvent('submit'));
+  expect(send).not.toHaveBeenCalled();
 });
 
 it('rejects polling data started before a new submission', async () => {

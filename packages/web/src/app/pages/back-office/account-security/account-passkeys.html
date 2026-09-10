@@ -9,7 +9,7 @@
     {{ i18n.t(message) }}
   </p>
   }
-  <form (submit)="add($event)">
+  <form (submit)="add($event)" novalidate>
     <label class="field"
       >{{ i18n.t('passkey.name') }}<input
         class="input"
@@ -24,18 +24,18 @@
         [formField]="fields.password"
     /></label>
     @if (api.supported) {
-    <button
-      appButton
-      type="submit"
-      [disabled]="busy() || disabled() || loading() || fields().invalid()"
-    >
+    <button appButton type="submit" [disabled]="busy() || disabled() || loading()">
       {{ i18n.t('passkey.add') }}
     </button>
     } @else {
     <p appNotice variant="info">{{ i18n.t('passkey.unavailable') }}</p>
     }
   </form>
-  @if (loading()) {
+  @if (fields().touched() && fields().invalid()) {
+  <p appNotice variant="danger" role="alert">
+    {{ i18n.t('configurationWorkspace.passwordInvalid') }}
+  </p>
+  } @if (loading()) {
   <p role="status">{{ i18n.t('passkey.loading') }}</p>
   } @else { @for (key of keys(); track key.id) {
   <div class="key">
@@ -44,7 +44,7 @@
       appButton
       type="button"
       [attr.aria-label]="i18n.t('passkey.remove') + ' ' + key.name"
-      [disabled]="busy() || disabled() || fields.password().invalid()"
+      [disabled]="busy() || disabled()"
       (click)="remove(key)"
     >
       {{ i18n.t('passkey.remove') }}

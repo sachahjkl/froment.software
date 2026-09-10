@@ -1,0 +1,203 @@
+<app-story-page [entry]="entry" [definition]="definition">
+  <div storyControls class="settings">
+    @if (entry.id !== 'date-range') {
+    <label>{{ text().label }}<input class="input" [formField]="controls.label" /></label> } @if
+    (entry.id === 'filter-choice' || entry.id === 'object-picker') {
+    <label
+      >{{ entry.id === 'filter-choice' ? 'options[1].label' : 'options[0].label' }}<input
+        class="input"
+        [formField]="controls.optionLabel"
+    /></label>
+    } @if (entry.id === 'date-range') {
+    <label>{{ text().from }}<input class="input" type="date" [formField]="controls.from" /></label
+    ><label>{{ text().to }}<input class="input" type="date" [formField]="controls.to" /></label>
+    <button appButton type="button" (click)="applyRangeInputs()">{{ text().apply }}</button>
+    } @else {
+    <label><input type="checkbox" [formField]="controls.disabled" />{{ text().disabled }}</label>
+    @if (entry.id === 'list-search') {
+    <label
+      >{{ text().placeholder }}<input class="input" [formField]="controls.placeholder"
+    /></label>
+    } @if (entry.id === 'field-group' || entry.id === 'filter-panel') {
+    <label
+      >{{ text().description }}<input class="input" [formField]="controls.description"
+    /></label>
+    } @if (entry.id === 'filter-choice' || entry.id === 'object-picker') {
+    <label><input type="checkbox" [formField]="controls.empty" />{{ text().empty }}</label> } }
+  </div>
+  <div storyPreview class="sample">
+    @switch (entry.id) { @case ('input') {
+    <form class="preview-form" (submit)="validate($event)" novalidate>
+      <label
+        >{{ model().label }}<input
+          class="input"
+          type="email"
+          autocomplete="email"
+          [formField]="emailField"
+          aria-describedby="reference-email-error"
+          [attr.aria-invalid]="emailField().touched() && emailField().invalid()"
+      /></label>
+      <p id="reference-email-error">
+        @if (emailField().touched() && emailField().invalid()) { {{ text().invalid }} }
+      </p>
+      <button appButton type="submit">{{ text().validate }}</button>
+    </form>
+    } @case ('list-search') {
+    <app-list-search
+      [label]="model().label"
+      [placeholder]="model().placeholder"
+      [formField]="controls.value"
+    /><output>{{ model().value }}</output> } @case ('field-group') {
+    <fieldset appFieldGroup [legend]="model().label" [description]="model().description">
+      <label>{{ text().name }}<input class="input" [formField]="controls.value" /></label>
+    </fieldset>
+    } @case ('filter-choice') {
+    <app-filter-choice
+      [label]="model().label"
+      [emptyLabel]="text().noChoices"
+      [options]="options()"
+      [formField]="controls.choice"
+      (committed)="event.set($event)"
+    />
+    } @case ('object-picker') {
+    <app-object-picker
+      [label]="model().label"
+      [options]="model().empty ? [] : pickerOptions()"
+      [disabled]="model().disabled"
+      (selected)="event.set($event)"
+    />
+    } @case ('date-range') { @for (revision of [rangeRevision()]; track revision) {
+    <app-date-range-filter
+      [from]="range().from"
+      [to]="range().to"
+      (rangeApplied)="rangeApplied($event)"
+    />
+    } } @default {
+    <app-filter-menu
+      #menu
+      [label]="model().label"
+      [closeLabel]="text().closeFilters"
+      [backLabel]="text().backFilters"
+      [disabled]="model().disabled"
+      [activeCount]="model().choice === 'all' ? 0 : 1"
+    >
+      <ng-template
+        appFilterPanel
+        [label]="text().status"
+        [summary]="entry.id === 'filter-panel' ? model().description : selectedLabel()"
+        ><app-filter-choice
+          [label]="text().searchChoices"
+          [emptyLabel]="text().noChoices"
+          [options]="options()"
+          [formField]="controls.choice"
+          (committed)="menu.back()"
+      /></ng-template>
+      <ng-template appFilterPanel [label]="text().period"
+        ><app-date-range-filter (rangeApplied)="rangeApplied($event); menu.back()"
+      /></ng-template>
+    </app-filter-menu>
+    } }
+    <p role="status" class="event">{{ text().events }} : {{ event() }}</p>
+  </div>
+  <div storyVariants class="samples">
+    @switch (entry.id) { @case ('input') {
+    <label class="sample" data-variant
+      >{{ 'text' }}<input class="input" [formField]="sampleFields.text"
+    /></label>
+    <label class="sample" data-variant
+      >{{ 'email' }}<input class="input" type="email" [formField]="sampleFields.email"
+    /></label>
+    <label class="sample" data-variant
+      >{{ 'number' }}<input class="input" type="number" [formField]="sampleFields.number"
+    /></label>
+    <label class="sample" data-variant
+      >{{ 'date' }}<input class="input" type="date" [formField]="sampleFields.date"
+    /></label>
+    <label class="sample" data-variant
+      >{{ 'search' }}<input class="input" type="search" [formField]="sampleFields.search"
+    /></label>
+    <label class="sample" data-variant
+      >{{ 'checkbox' }}<input type="checkbox" [formField]="sampleFields.checked"
+    /></label>
+    <label class="sample" data-variant
+      >{{ 'select' }}<select class="select" [formField]="sampleFields.select">
+        <option [value]="'draft'">{{ text().draft }}</option>
+        <option [value]="'ready'">{{ text().ready }}</option>
+      </select></label
+    >
+    <label class="sample" data-variant
+      >{{ 'textarea' }}<textarea class="input" [formField]="sampleFields.note"></textarea>
+    </label>
+    } @case ('field-group') { @for (description of ['', text().description]; track description) {
+    <div class="sample" data-variant>
+      <fieldset appFieldGroup [legend]="text().name" [description]="description">
+        <label>{{ text().value }}<input class="input" [formField]="sampleFields.text" /></label>
+      </fieldset>
+    </div>
+    } } @case ('date-range') { @for (range of rangeSamples; track $index) {
+    <div class="sample" data-variant>
+      <code>{{ $index === 0 ? 'empty' : $index === 1 ? 'valid' : 'invalid order' }}</code
+      ><app-date-range-filter
+        [from]="range.from"
+        [to]="range.to"
+        (rangeApplied)="rangeApplied($event)"
+      />
+    </div>
+    } } @case ('filter-panel') { @for (summary of ['', text().ready]; track summary) {
+    <div class="sample" data-variant>
+      <app-filter-menu
+        [label]="text().filters"
+        [closeLabel]="text().closeFilters"
+        [backLabel]="text().backFilters"
+        ><ng-template appFilterPanel [label]="text().status" [summary]="summary"
+          ><p>{{ text().content }}</p></ng-template
+        ></app-filter-menu
+      >
+    </div>
+    } } @default { @for (state of ['ready', 'empty', 'disabled']; track state) {
+    <div class="sample" data-variant>
+      <code>{{ state }}</code> @switch (entry.id) { @case ('list-search') {
+      <app-list-search
+        [label]="text().search"
+        [value]="state === 'ready' ? 'Atlas' : ''"
+        [disabled]="state === 'disabled'"
+        (valueChange)="event.set($event)"
+      />
+      } @case ('filter-choice') {
+      <app-filter-choice
+        [label]="text().searchChoices"
+        [emptyLabel]="text().noChoices"
+        [options]="state === 'empty' ? [] : options()"
+        [disabled]="state === 'disabled'"
+        [value]="'draft'"
+        (committed)="event.set($event)"
+      />
+      } @case ('object-picker') {
+      <app-object-picker
+        [label]="text().choose"
+        [options]="state === 'empty' ? [] : pickerOptions()"
+        [disabled]="state === 'disabled'"
+        (selected)="event.set($event)"
+      />
+      } @case ('filter-menu') {
+      <app-filter-menu
+        [label]="text().filters"
+        [closeLabel]="text().closeFilters"
+        [backLabel]="text().backFilters"
+        [disabled]="state === 'disabled'"
+        [activeCount]="state === 'ready' ? 1 : 0"
+        ><ng-template
+          appFilterPanel
+          [label]="text().status"
+          [summary]="state === 'ready' ? text().draft : ''"
+          ><app-filter-choice
+            [label]="text().searchChoices"
+            [emptyLabel]="text().noChoices"
+            [options]="options()"
+            (committed)="event.set($event)" /></ng-template
+      ></app-filter-menu>
+      } }
+    </div>
+    } } }
+  </div>
+</app-story-page>

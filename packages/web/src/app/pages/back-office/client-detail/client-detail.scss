@@ -19,18 +19,9 @@ h1 {
   font-size: var(--text-2xl);
 }
 
-form,
 .notice,
 .status {
   margin-top: var(--space-6);
-}
-
-form {
-  min-width: 0;
-}
-
-form:not(.field-grid) > * + * {
-  margin-top: var(--space-4);
 }
 
 .profile {
@@ -91,12 +82,6 @@ th small {
   color: var(--color-muted);
 }
 
-.field-error {
-  color: var(--color-danger);
-  font-size: var(--text-xs);
-  font-weight: 400;
-}
-
 .actions {
   display: flex;
   flex-wrap: wrap;
@@ -133,16 +118,6 @@ td small {
   gap: var(--space-5);
   margin-block-start: var(--space-5);
 }
-.access-panel form {
-  max-inline-size: 36rem;
-}
-
-.access-panel form,
-.access-panel .field,
-.access-panel .input {
-  width: 100%;
-}
-
 .access-panel p {
   margin-top: var(--space-2);
 }

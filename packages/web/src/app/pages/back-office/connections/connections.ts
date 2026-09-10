@@ -8,6 +8,7 @@ import { Notice } from '@shared/notice/notice';
 import { DataTable } from '@shared/data-table/data-table';
 
 @Component({
+  host: { class: 'page-container' },
   selector: 'app-connections',
   imports: [RouterLink, Button, Notice, DataTable],
   templateUrl: './connections.html',

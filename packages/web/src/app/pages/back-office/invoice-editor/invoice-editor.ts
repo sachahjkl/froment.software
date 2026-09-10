@@ -1,12 +1,11 @@
-import { Confirmation } from '@shared/confirmation/confirmation';
 import {
   afterNextRender,
+  afterRenderEffect,
   ChangeDetectionStrategy,
   Component,
   computed,
   DestroyRef,
   ElementRef,
-  HostListener,
   inject,
   signal,
 } from '@angular/core';
@@ -24,186 +23,100 @@ import {
   submit,
   validate,
 } from '@angular/forms/signals';
-import { DomSanitizer, type SafeResourceUrl } from '@angular/platform-browser';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import {
+  CalendarDate,
   Ulid,
-  InvoicePaymentRequest,
-  type InvoicePaymentRequestValue,
-  type DocumentIssueValue,
-  type InvoiceCreateRequestValue,
   type InvoiceDetailValue,
   type InvoiceRevisionCreateRequestValue,
-  type InvoiceStatusValue,
   type OrderListValue,
   type QuoteLineInputValue,
-  type UlidValue,
 } from '@froment/contracts';
-import { Option, Schema } from 'effect';
-
-import { InvoicesApi, type InvoiceErrorCode } from '@backoffice/invoices-api';
+import { Schema } from 'effect';
+import { InvoicesApi } from '@backoffice/invoices-api';
 import { OrdersApi } from '@backoffice/orders-api';
 import { formatFixedDecimal, parseFixedDecimal } from '@backoffice/quote-input';
 import { I18nService, type TranslationKey } from '@app/i18n.service';
+import { formatMoney } from '@froment/l10n';
 import { Button } from '@shared/button/button';
-import { DetailRow } from '@shared/detail-row/detail-row';
 import { Notice } from '@shared/notice/notice';
-import { DocumentIssues } from '@shared/document-issues/document-issues';
-import { OutcomePanel } from '@shared/outcome-panel/outcome-panel';
-import { Icon } from '@shared/icon/icon';
+import { Confirmation } from '@shared/confirmation/confirmation';
 
 interface InvoiceLineModel {
-  readonly description: string;
-  readonly quantity: string;
-  readonly unitPrice: string;
-  readonly vatRate: string;
+  description: string;
+  quantity: string;
+  unitPrice: string;
+  vatRate: string;
 }
-
-interface InvoiceModel {
-  readonly refreshParties: boolean;
-  readonly orderId: string;
-  readonly title: string;
-  readonly serviceDate: string;
-  readonly dueDate: string;
-  readonly paymentTerms: string;
-  readonly lines: Array<InvoiceLineModel>;
-}
-
 const emptyLine = (): InvoiceLineModel => ({
   description: '',
   quantity: '1.000',
   unitPrice: '0.00',
   vatRate: '20.00',
 });
-
-const statusKeys = {
-  draft: 'backOffice.invoice.status.draft',
-  issued: 'backOffice.invoice.status.issued',
-  paid: 'backOffice.invoice.status.paid',
-  void: 'backOffice.invoice.status.void',
-} as const satisfies Record<InvoiceStatusValue, TranslationKey>;
-
-const errorKeys = {
-  'invoice.payment_invalid': 'invoice.payment_invalid',
-  'authentication.required': 'authentication.required',
-  'authentication.permission_denied': 'authentication.permission_denied',
-  'request.rate_limited': 'request.rate_limited',
-  'invoice.not_found': 'invoice.not_found',
-  'invoice.order_not_found': 'invoice.order_not_found',
-  'invoice.already_exists': 'invoice.already_exists',
-  'invoice.not_editable': 'invoice.not_editable',
-  'invoice.version_conflict': 'invoice.version_conflict',
-  'invoice.amount_too_large': 'invoice.amount_too_large',
-  'invoice.invalid_dates': 'invoice.invalid_dates',
-  'invoice.invalid_transition': 'invoice.invalid_transition',
-  'document.not_found': 'document.not_found',
-  'document.incomplete': 'document.incomplete',
-  'invoice.error': 'invoice.error',
-} as const satisfies Record<InvoiceErrorCode, TranslationKey>;
+const emptyModel = () => ({
+  refreshParties: false,
+  orderId: '',
+  title: '',
+  serviceDate: '',
+  dueDate: '',
+  paymentTerms: '',
+  lines: [emptyLine()],
+});
 
 @Component({
-  host: { class: 'page-container' },
+  host: { class: 'page-container', '(window:beforeunload)': 'beforeUnload($event)' },
   selector: 'app-invoice-editor',
-  imports: [Button, DetailRow, DocumentIssues, FormField, Icon, Notice, OutcomePanel, RouterLink],
+  imports: [Button, FormField, Notice, RouterLink],
   templateUrl: './invoice-editor.html',
   styleUrl: './invoice-editor.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class InvoiceEditor {
-  private readonly confirmation = inject(Confirmation);
   protected readonly i18n = inject(I18nService);
-  private readonly invoicesApi = inject(InvoicesApi);
+  private readonly api = inject(InvoicesApi);
   private readonly ordersApi = inject(OrdersApi);
+  private readonly confirmation = inject(Confirmation);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
-  private readonly sanitizer = inject(DomSanitizer);
   private readonly element = inject<ElementRef<HTMLElement>>(ElementRef);
   private readonly destroyRef = inject(DestroyRef);
-  private readonly invoiceId = signal<UlidValue | undefined>(undefined);
-  private routeRequest = 0;
+  private request = 0;
+  private readonly focusInvalid = signal(false);
   protected readonly isNew = signal(false);
   protected readonly orders = signal<OrderListValue>([]);
   protected readonly detail = signal<InvoiceDetailValue | undefined>(undefined);
   protected readonly loading = signal(true);
-  protected readonly unavailable = signal(false);
   protected readonly saving = signal(false);
-  protected readonly actionPending = signal(false);
-  protected readonly cancellationPaymentId = signal<UlidValue | undefined>(undefined);
-  private readonly cancellationModel = signal({ reason: '' });
-  protected readonly cancellationForm = form(this.cancellationModel, (path) => {
-    disabled(path, () => this.actionPending());
-    required(path.reason);
-    pattern(path.reason, /\S/);
-    maxLength(path.reason, 500);
-  });
-  protected readonly cancellationPayment = computed(() =>
-    this.detail()?.payments.find((payment) => payment.id === this.cancellationPaymentId()),
-  );
-  private readonly paymentModel = signal({
-    amount: '',
-    paidOn: '',
-    method: 'transfer',
-    reference: '',
-  });
-  protected readonly paymentForm = form(this.paymentModel, (path) => {
-    disabled(path, () => this.actionPending());
-    required(path.amount);
-    pattern(path.amount, /^\d+(?:[.,]\d{1,2})?$/);
-    required(path.paidOn);
-    required(path.reference);
-    pattern(path.reference, /\S/);
-    maxLength(path.reference, 160);
-  });
-  private paymentAttempt: InvoicePaymentRequestValue | undefined;
-  protected readonly recordedPaid = computed(
-    () =>
-      this.detail()?.payments.reduce(
-        (sum, payment) => sum + (payment.cancelledAt === null ? payment.amountCents : 0),
-        0,
-      ) ?? 0,
-  );
-  protected readonly remaining = computed(() =>
-    Math.max(
-      0,
-      (this.detail()?.currentRevision.totalCents ?? 0) -
-        (this.detail()?.creditedCents ?? 0) -
-        this.recordedPaid(),
-    ),
-  );
-  protected readonly pdfPendingVersion = signal<number | undefined>(undefined);
-  protected readonly generatedPdfVersions = signal<ReadonlySet<number>>(new Set());
-  protected readonly previewVersion = signal<number | undefined>(undefined);
-  protected readonly previewUrl = computed(() => {
-    const invoiceId = this.invoiceId();
-    const version = this.previewVersion();
-    return invoiceId === undefined || version === undefined
-      ? undefined
-      : `/api/invoices/${invoiceId}/revisions/${version}/preview`;
-  });
+  protected readonly unavailable = signal(false);
+  protected readonly stale = signal(false);
+  protected readonly completed = signal(false);
   protected readonly error = signal<TranslationKey | undefined>(undefined);
-  protected readonly documentIssues = signal<ReadonlyArray<DocumentIssueValue>>([]);
-  private readonly model = signal<InvoiceModel>({
-    refreshParties: false,
-    orderId: '',
-    title: '',
-    serviceDate: '',
-    dueDate: '',
-    paymentTerms: '',
-    lines: [emptyLine()],
-  });
+  private readonly model = signal(emptyModel());
+  private readonly baseline = signal(JSON.stringify(this.model()));
+  protected readonly editable = computed(() => this.isNew() || this.detail()?.status === 'draft');
+  protected readonly saveDisabled = computed(
+    () =>
+      !this.editable() ||
+      this.saving() ||
+      this.loading() ||
+      this.stale() ||
+      (this.isNew() && this.completed()),
+  );
   protected readonly invoiceForm = form(this.model, (path) => {
-    disabled(path, { when: () => !this.editable() });
+    disabled(path, () => this.saveDisabled());
     required(path.orderId, { when: () => this.isNew() });
     required(path.serviceDate);
-    pattern(path.serviceDate, /^\d{4}-\d{2}-\d{2}$/);
+    validate(path.serviceDate, ({ value }) =>
+      Schema.is(CalendarDate)(value()) ? undefined : { kind: 'date' },
+    );
     required(path.dueDate);
-    pattern(path.dueDate, /^\d{4}-\d{2}-\d{2}$/);
     validate(path.dueDate, ({ value, valueOf }) =>
-      value() < valueOf(path.serviceDate)
-        ? { kind: 'dates', message: 'due_date_precedes_service_date' }
+      !Schema.is(CalendarDate)(value()) || value() < valueOf(path.serviceDate)
+        ? { kind: 'date' }
         : undefined,
     );
-    maxLength(path.paymentTerms, 2_000);
+    maxLength(path.paymentTerms, 2000);
     applyWhen(
       path.title,
       () => !this.isNew(),
@@ -223,9 +136,6 @@ export class InvoiceEditor {
           required(line.description);
           maxLength(line.description, 160);
           pattern(line.description, /\S/);
-          pattern(line.quantity, /^\d+(?:[.,]\d{1,3})?$/);
-          pattern(line.unitPrice, /^\d+(?:[.,]\d{1,2})?$/);
-          pattern(line.vatRate, /^\d+(?:[.,]\d{1,2})?$/);
           validate(line.quantity, ({ value }) => {
             const parsed = parseFixedDecimal(value(), 3);
             return parsed === undefined || parsed === 0 ? { kind: 'quantity' } : undefined;
@@ -235,106 +145,116 @@ export class InvoiceEditor {
           );
           validate(line.vatRate, ({ value }) => {
             const parsed = parseFixedDecimal(value(), 2);
-            return parsed === undefined || parsed > 10_000 ? { kind: 'vatRate' } : undefined;
+            return parsed === undefined || parsed > 10000 ? { kind: 'vatRate' } : undefined;
           });
         });
       },
     );
   });
-  protected readonly editable = computed(() => this.isNew() || this.detail()?.status === 'draft');
-  protected readonly saveDisabled = computed(
-    () => !this.editable() || this.saving() || this.actionPending(),
-  );
-  protected readonly issueDisabled = computed(
-    () => this.saving() || this.actionPending() || this.invoiceForm().dirty(),
+  // Les animations de validité des dates peuvent marquer des valeurs inchangées comme dirty.
+  // Comparez les valeurs chargées. Conservez aussi les saisies natives incomplètes et les conflits.
+  protected readonly hasUnsavedChanges = computed(
+    () =>
+      this.stale() ||
+      JSON.stringify(this.model()) !== this.baseline() ||
+      this.invoiceForm()
+        .errorSummary()
+        .some((error) => error.kind === 'parse'),
   );
   protected readonly totalsAreStale = computed(
-    () => this.detail() !== undefined && this.invoiceForm().dirty(),
+    () => this.detail() !== undefined && this.hasUnsavedChanges(),
   );
-  protected readonly previewFrameUrl = computed<SafeResourceUrl | undefined>(() => {
-    const url = this.previewUrl();
-    return url === undefined ? undefined : this.sanitizer.bypassSecurityTrustResourceUrl(url);
-  });
 
   constructor() {
-    afterNextRender(() => {
-      this.route.paramMap.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((params) => {
-        void this.load(params.get('invoiceId'));
-      });
+    afterNextRender(() =>
+      this.route.paramMap
+        .pipe(takeUntilDestroyed(this.destroyRef))
+        .subscribe((params) => void this.load(params.get('invoiceId'))),
+    );
+    afterRenderEffect(() => {
+      if (this.focusInvalid()) {
+        this.element.nativeElement.querySelector<HTMLElement>('[aria-invalid="true"]')?.focus();
+        this.focusInvalid.set(false);
+      } else if (this.error() || this.completed())
+        this.element.nativeElement.querySelector<HTMLElement>('[data-editor-feedback]')?.focus();
     });
   }
-
   protected addLine(): void {
-    if (!this.editable() || this.model().lines.length >= 20) return;
+    if (this.saveDisabled() || this.model().lines.length >= 20) return;
     this.model.update((model) => ({ ...model, lines: [...model.lines, emptyLine()] }));
     this.invoiceForm().markAsDirty();
+    this.completed.set(false);
   }
-
   protected removeLine(index: number): void {
-    if (!this.editable() || this.model().lines.length === 1) return;
-    this.model.update((model) => ({
-      ...model,
-      lines: model.lines.filter((_line, i) => i !== index),
-    }));
+    if (this.saveDisabled() || this.model().lines.length === 1) return;
+    this.model.update((model) => ({ ...model, lines: model.lines.filter((_, i) => i !== index) }));
     this.invoiceForm().markAsDirty();
+    this.completed.set(false);
   }
-
   async canDeactivate(): Promise<boolean> {
-    if (this.actionPending()) return false;
+    if (this.completed() && !this.hasUnsavedChanges()) return true;
+    if (this.saving()) return false;
     return (
-      (!this.invoiceForm().dirty() &&
-        !this.paymentForm().dirty() &&
-        !this.cancellationForm().dirty()) ||
-      (await this.confirmation.request(this.i18n.t('backOffice.invoice.unsavedChanges')))
+      !this.hasUnsavedChanges() ||
+      this.confirmation.request(this.i18n.t('backOffice.invoice.unsavedChanges'))
     );
   }
-
-  @HostListener('window:beforeunload', ['$event'])
-  protected preventUnsavedUnload(event: BeforeUnloadEvent): void {
-    if (this.invoiceForm().dirty() || this.paymentForm().dirty() || this.cancellationForm().dirty())
+  protected beforeUnload(event: BeforeUnloadEvent): void {
+    if (this.saving() || this.hasUnsavedChanges()) {
       event.preventDefault();
+      event.returnValue = '';
+    }
   }
-
-  protected save(event: SubmitEvent): void {
+  protected save(event: Event): void {
     event.preventDefault();
+    if (this.saveDisabled() || (this.completed() && !this.hasUnsavedChanges())) return;
     void submit(this.invoiceForm, {
       action: async () => {
+        if (!this.isNew() && !this.hasUnsavedChanges()) return;
         this.saving.set(true);
         this.error.set(undefined);
+        this.completed.set(false);
         try {
           const model = this.model();
-          const invoiceId = this.invoiceId();
-          if (invoiceId === undefined) {
-            const orderId = this.decodeId(model.orderId);
-            if (orderId === undefined) return this.setError('invoice.order_not_found');
-            const request: InvoiceCreateRequestValue = {
-              orderId,
+          const detail = this.detail();
+          if (this.isNew()) {
+            if (!Schema.is(Ulid)(model.orderId)) {
+              this.error.set('invoice.order_not_found');
+              return;
+            }
+            const outcome = await this.api.create({
+              orderId: model.orderId,
               serviceDate: model.serviceDate,
               dueDate: model.dueDate,
               paymentTerms: model.paymentTerms,
-            };
-            const outcome = await this.invoicesApi.create(request);
+            });
+            if (this.destroyRef.destroyed) return;
             if (!outcome.success) {
               if (outcome.failure?._tag === 'InvoiceAlreadyExists') {
-                this.invoiceForm().reset();
+                this.resetForm();
+                this.completed.set(true);
                 await this.router.navigate(['/backoffice/invoices', outcome.failure.invoiceId], {
                   replaceUrl: true,
                 });
                 return;
               }
-              return this.setError(outcome.code);
+              this.error.set(outcome.code);
+              return;
             }
-            this.invoiceForm().reset();
+            this.resetForm();
+            this.completed.set(true);
             await this.router.navigate(['/backoffice/invoices', outcome.result.id], {
               replaceUrl: true,
             });
             return;
           }
-          const current = this.detail();
           const lines = this.parseLines();
-          if (current === undefined || lines === undefined) return this.setError('invoice.error');
+          if (!detail || !lines) {
+            this.error.set('invoice.error');
+            return;
+          }
           const request: InvoiceRevisionCreateRequestValue = {
-            expectedVersion: current.version,
+            expectedVersion: detail.version,
             refreshParties: model.refreshParties,
             title: model.title.trim(),
             serviceDate: model.serviceDate,
@@ -342,292 +262,86 @@ export class InvoiceEditor {
             paymentTerms: model.paymentTerms,
             lines,
           };
-          const outcome = await this.invoicesApi.createRevision(invoiceId, request);
-          if (!outcome.success) return this.setError(outcome.code);
+          const outcome = await this.api.createRevision(detail.id, request);
+          if (this.destroyRef.destroyed) return;
+          if (!outcome.success) {
+            this.error.set(outcome.code);
+            this.stale.set(
+              outcome.code === 'invoice.version_conflict' ||
+                outcome.code === 'invoice.not_editable',
+            );
+            return;
+          }
           this.applyDetail(outcome.result);
+          this.completed.set(true);
         } catch {
-          this.setError('invoice.error');
+          if (!this.destroyRef.destroyed) this.error.set('invoice.error');
         } finally {
-          this.saving.set(false);
+          if (!this.destroyRef.destroyed) this.saving.set(false);
         }
       },
-      onInvalid: () => this.focusFirstInvalid(),
+      onInvalid: () => this.focusInvalid.set(true),
     });
   }
-
-  protected async issue(): Promise<void> {
-    const invoice = this.detail();
+  protected async reload(): Promise<void> {
+    if (this.saving()) return;
     if (
-      this.invoiceId() === undefined ||
-      invoice === undefined ||
-      invoice.status !== 'draft' ||
-      this.invoiceForm().dirty() ||
-      this.issueDisabled()
+      this.hasUnsavedChanges() &&
+      !(await this.confirmation.request(this.i18n.t('billingWorkspace.reloadConfirm')))
     )
       return;
-    if (!(await this.confirmation.request(this.i18n.t('backOffice.invoice.issueConfirm')))) return;
-    this.actionPending.set(true);
-    this.error.set(undefined);
-    this.documentIssues.set([]);
-    try {
-      const outcome = await this.invoicesApi.issue(this.invoiceId()!, invoice.version);
-      if (!outcome.success && outcome.failure?._tag === 'DocumentIncomplete') {
-        this.documentIssues.set(outcome.failure.issues);
-        return;
-      }
-      if (!outcome.success) return this.setError(outcome.code);
-      await this.reload();
-    } catch {
-      this.setError('invoice.error');
-    } finally {
-      this.actionPending.set(false);
-    }
+    await this.load(this.route.snapshot.paramMap.get('invoiceId'));
   }
-
-  protected recordPayment(event: SubmitEvent): void {
-    event.preventDefault();
-    if (this.actionPending()) return;
-    void submit(this.paymentForm, async () => {
-      const invoice = this.detail();
-      if (invoice === undefined || invoice.status !== 'issued') return;
-      const model = this.paymentModel();
-      const parsed = Schema.decodeUnknownOption(InvoicePaymentRequest)({
-        requestId: this.paymentAttempt?.requestId ?? crypto.randomUUID(),
-        expectedVersion: invoice.version,
-        amountCents: parseFixedDecimal(model.amount, 2),
-        paidOn: model.paidOn,
-        method: model.method,
-        reference: model.reference.trim(),
-      });
-      if (Option.isNone(parsed)) return this.setError('invoice.payment_invalid');
-      const prior = this.paymentAttempt;
-      const request = parsed.value;
-      if (prior !== undefined && JSON.stringify(prior) !== JSON.stringify(request)) {
-        this.setError('invoice.payment_invalid');
-        return;
-      }
-      if (!(await this.confirmation.request(this.i18n.t('payment.confirm')))) return;
-      this.paymentAttempt = request;
-      this.actionPending.set(true);
-      this.error.set(undefined);
-      try {
-        const outcome = await this.invoicesApi.recordPayment(invoice.id, request);
-        if (!outcome.success) {
-          if (outcome.failure !== undefined) this.paymentAttempt = undefined;
-          return this.setError(outcome.code);
-        }
-        this.applyDetail(outcome.result);
-        this.paymentAttempt = undefined;
-        this.paymentModel.set({ amount: '', paidOn: '', method: 'transfer', reference: '' });
-        this.paymentForm().reset();
-      } catch {
-        this.setError('invoice.error');
-      } finally {
-        this.actionPending.set(false);
-      }
-    });
-  }
-
-  protected async voidInvoice(): Promise<void> {
-    await this.transition();
-  }
-
-  protected startCancellation(paymentId: UlidValue): void {
-    if (this.actionPending() || this.cancellationPaymentId() !== undefined) return;
-    this.cancellationPaymentId.set(paymentId);
-  }
-
-  protected cancelPayment(event: SubmitEvent): void {
-    event.preventDefault();
-    if (this.actionPending()) return;
-    void submit(this.cancellationForm, async () => {
-      const invoice = this.detail();
-      const paymentId = this.cancellationPaymentId();
-      if (invoice === undefined || paymentId === undefined) return;
-      if (!(await this.confirmation.request(this.i18n.t('payment.cancel_confirm')))) return;
-      this.actionPending.set(true);
-      this.error.set(undefined);
-      try {
-        const outcome = await this.invoicesApi.cancelPayment(invoice.id, paymentId, {
-          expectedVersion: invoice.version,
-          reason: this.cancellationModel().reason.trim(),
-        });
-        if (!outcome.success) return this.setError(outcome.code);
-        this.applyDetail(outcome.result);
-        this.cancellationPaymentId.set(undefined);
-        this.cancellationModel.set({ reason: '' });
-        this.cancellationForm().reset();
-      } catch {
-        this.setError('invoice.error');
-      } finally {
-        this.actionPending.set(false);
-      }
-    });
-  }
-
-  protected async dismissCancellation(): Promise<void> {
-    if (this.actionPending()) return;
-    if (
-      this.cancellationForm().dirty() &&
-      !(await this.confirmation.request(this.i18n.t('payment.cancel_discard_confirm')))
-    )
-      return;
-    this.cancellationPaymentId.set(undefined);
-    this.cancellationModel.set({ reason: '' });
-    this.cancellationForm().reset();
-  }
-
-  protected showPreview(version: number): void {
-    this.previewVersion.set(version);
-  }
-
-  protected async generatePdf(version: number): Promise<void> {
-    const invoiceId = this.invoiceId();
-    if (invoiceId === undefined) return;
-    this.pdfPendingVersion.set(version);
-    this.error.set(undefined);
-    try {
-      const outcome = await this.invoicesApi.renderPdf(invoiceId, version);
-      if (!outcome.success) return this.setError(outcome.code);
-      this.generatedPdfVersions.update((versions) => new Set([...versions, version]));
-    } catch {
-      this.setError('invoice.error');
-    } finally {
-      this.pdfPendingVersion.set(undefined);
-    }
-  }
-
-  protected pdfUrl(version: number): string | undefined {
-    const invoiceId = this.invoiceId();
-    return invoiceId === undefined || !this.generatedPdfVersions().has(version)
-      ? undefined
-      : `/api/invoices/${invoiceId}/revisions/${version}/pdf`;
-  }
-
-  protected money(cents: number): string {
-    return formatMoney(cents, this.i18n.language(), 'EUR');
-  }
-
-  protected paymentMethod(method: InvoicePaymentRequestValue['method']): TranslationKey {
-    return `payment.${method}`;
-  }
-
-  protected date(value: string): string {
-    return new Intl.DateTimeFormat(this.i18n.language(), {
-      dateStyle: 'medium',
-      timeStyle: 'short',
-    }).format(new Date(value));
-  }
-
-  protected statusKey(status: InvoiceStatusValue): TranslationKey {
-    return statusKeys[status];
-  }
-
   private async load(parameter: string | null): Promise<void> {
-    this.cancellationPaymentId.set(undefined);
-    this.cancellationModel.set({ reason: '' });
-    this.cancellationForm().reset();
-    this.paymentAttempt = undefined;
-    this.paymentModel.set({ amount: '', paidOn: '', method: 'transfer', reference: '' });
-    this.paymentForm().reset();
-    const request = ++this.routeRequest;
-    const invoiceId = this.decodeId(parameter);
-    this.invoiceId.set(invoiceId);
+    const request = ++this.request;
     this.isNew.set(parameter === null);
     this.detail.set(undefined);
-    this.orders.set([]);
-    this.previewVersion.set(undefined);
-    this.pdfPendingVersion.set(undefined);
-    this.generatedPdfVersions.set(new Set());
-    this.error.set(undefined);
-    this.unavailable.set(false);
-    this.documentIssues.set([]);
     this.loading.set(true);
-    this.model.set({
-      refreshParties: false,
-      orderId: '',
-      title: '',
-      serviceDate: '',
-      dueDate: '',
-      paymentTerms: '',
-      lines: [emptyLine()],
-    });
-    this.invoiceForm().reset();
-    if (parameter !== null && invoiceId === undefined) {
-      this.setError('invoice.not_found');
+    this.unavailable.set(false);
+    this.error.set(undefined);
+    this.stale.set(false);
+    this.completed.set(false);
+    this.model.set(emptyModel());
+    this.resetForm();
+    if (parameter !== null && !Schema.is(Ulid)(parameter)) {
       this.unavailable.set(true);
+      this.error.set('invoice.not_found');
       this.loading.set(false);
       return;
     }
     try {
-      if (invoiceId === undefined) {
+      if (parameter === null) {
         const orders = await this.ordersApi.list();
-        if (request !== this.routeRequest) return;
+        if (request !== this.request || this.destroyRef.destroyed) return;
         this.orders.set(orders.filter((order) => order.invoiceId === null));
+        const selected = this.route.snapshot.queryParamMap.get('orderId');
+        if (selected && this.orders().some((order) => order.id === selected))
+          this.model.update((model) => ({ ...model, orderId: selected }));
+        this.resetForm();
       } else {
-        const outcome = await this.invoicesApi.get(invoiceId);
-        if (request !== this.routeRequest) return;
+        const outcome = await this.api.get(parameter);
+        if (request !== this.request || this.destroyRef.destroyed) return;
         if (!outcome.success) {
-          this.setError(outcome.code);
+          this.error.set(outcome.code);
           this.unavailable.set(true);
           return;
         }
         this.applyDetail(outcome.result);
       }
     } catch {
-      if (request !== this.routeRequest) return;
-      this.setError('invoice.error');
-      this.unavailable.set(true);
+      if (request === this.request && !this.destroyRef.destroyed) {
+        this.error.set('invoice.error');
+        this.unavailable.set(true);
+      }
     } finally {
-      if (request === this.routeRequest) this.loading.set(false);
+      if (request === this.request && !this.destroyRef.destroyed) this.loading.set(false);
     }
   }
-
-  private async reload(): Promise<void> {
-    const invoiceId = this.invoiceId();
-    if (invoiceId === undefined) return;
-    const outcome = await this.invoicesApi.get(invoiceId);
-    if (!outcome.success) return this.setError(outcome.code);
-    this.applyDetail(outcome.result);
-  }
-
-  private async transition(): Promise<void> {
-    const invoice = this.detail();
-    if (
-      this.invoiceId() === undefined ||
-      invoice === undefined ||
-      invoice.status !== 'issued' ||
-      this.actionPending()
-    )
-      return;
-    if (!(await this.confirmation.request(this.i18n.t('backOffice.invoice.voidConfirm')))) return;
-    this.actionPending.set(true);
-    this.error.set(undefined);
-    try {
-      const outcome = await this.invoicesApi.void(this.invoiceId()!, {
-        expectedVersion: invoice.version,
-      });
-      if (!outcome.success) return this.setError(outcome.code);
-      this.applyDetail(outcome.result);
-    } catch {
-      this.setError('invoice.error');
-    } finally {
-      this.actionPending.set(false);
-    }
-  }
-
   private applyDetail(detail: InvoiceDetailValue): void {
     this.detail.set(detail);
-    this.documentIssues.set([]);
-    this.showPreview(detail.version);
-    this.model.set(this.modelFromDetail(detail));
-    this.invoiceForm().reset();
-  }
-
-  private modelFromDetail(detail: InvoiceDetailValue): InvoiceModel {
-    const separator = this.i18n.language() === 'fr' ? ',' : '.';
     const revision = detail.currentRevision;
-    return {
+    const separator = this.i18n.language() === 'fr' ? ',' : '.';
+    this.model.set({
       orderId: detail.orderId,
       refreshParties: false,
       title: revision.title,
@@ -640,11 +354,15 @@ export class InvoiceEditor {
         unitPrice: formatFixedDecimal(line.unitPriceCents, 2, separator),
         vatRate: formatFixedDecimal(line.vatRateBasisPoints, 2, separator),
       })),
-    };
+    });
+    this.resetForm();
   }
-
+  private resetForm(): void {
+    this.baseline.set(JSON.stringify(this.model()));
+    this.invoiceForm().reset();
+  }
   private parseLines(): ReadonlyArray<QuoteLineInputValue> | undefined {
-    const result: Array<QuoteLineInputValue> = [];
+    const result: QuoteLineInputValue[] = [];
     for (const line of this.model().lines) {
       const quantityMilli = parseFixedDecimal(line.quantity, 3);
       const unitPriceCents = parseFixedDecimal(line.unitPrice, 2);
@@ -654,7 +372,7 @@ export class InvoiceEditor {
         quantityMilli === 0 ||
         unitPriceCents === undefined ||
         vatRateBasisPoints === undefined ||
-        vatRateBasisPoints > 10_000
+        vatRateBasisPoints > 10000
       )
         return undefined;
       result.push({
@@ -666,37 +384,7 @@ export class InvoiceEditor {
     }
     return result;
   }
-
-  private decodeId(value: string | null): UlidValue | undefined {
-    return value === null
-      ? undefined
-      : Option.getOrUndefined(Schema.decodeUnknownOption(Ulid)(value));
-  }
-
-  private focusFirstInvalid(): void {
-    let errorId: string | undefined;
-    if (this.invoiceForm.orderId().invalid()) errorId = 'invoice-order-error';
-    else if (this.invoiceForm.title().invalid()) errorId = 'invoice-title-error';
-    else if (this.invoiceForm.serviceDate().invalid()) errorId = 'invoice-service-date-error';
-    else if (this.invoiceForm.dueDate().invalid()) errorId = 'invoice-due-date-error';
-    else {
-      for (let index = 0; index < this.invoiceForm.lines.length; index++) {
-        const line = this.invoiceForm.lines[index]!;
-        if (line.description().invalid()) errorId = `invoice-line-description-error-${index}`;
-        else if (line.quantity().invalid()) errorId = `invoice-line-quantity-error-${index}`;
-        else if (line.unitPrice().invalid()) errorId = `invoice-line-price-error-${index}`;
-        else if (line.vatRate().invalid()) errorId = `invoice-line-vat-error-${index}`;
-        if (errorId !== undefined) break;
-      }
-    }
-    if (errorId === undefined) return;
-    this.element.nativeElement
-      .querySelector<HTMLElement>(`[aria-describedby="${errorId}"]`)
-      ?.focus();
-  }
-
-  private setError(code: InvoiceErrorCode): void {
-    this.error.set(errorKeys[code]);
+  protected money(cents: number): string {
+    return formatMoney(cents, this.i18n.language(), 'EUR');
   }
 }
-import { formatMoney } from '@froment/l10n';

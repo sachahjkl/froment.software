@@ -65,7 +65,7 @@
           [pending]="state() !== 'ready'"
         />
         <span listSummary role="status"
-          >@if (state() === 'ready') { {{ i18n.tf('catalogWorkspace.count', { count:
+          >@if (state() === 'ready') { {{ i18n.plural('catalogWorkspace.count', { count:
           visibleItems(tab).length }) }} }</span
         >
       </app-list-toolbar>

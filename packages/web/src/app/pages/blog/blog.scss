@@ -12,6 +12,20 @@
   color: var(--color-ink-soft);
   font-size: var(--text-lg);
 }
+.feed-link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-top: var(--space-4);
+  color: var(--color-ink-soft);
+  font-size: var(--text-sm);
+}
+.feed-link:hover {
+  color: var(--color-ink);
+}
+.feed-link app-icon {
+  --icon-color: currentColor;
+}
 .post-list {
   display: grid;
   gap: var(--space-5);

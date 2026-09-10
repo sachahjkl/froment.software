@@ -1,4 +1,7 @@
 @use "../provider-settings";
+p {
+  max-inline-size: none;
+}
 .compose-grid {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);

@@ -9,20 +9,9 @@ import {
   inject,
   signal,
 } from '@angular/core';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import {
-  disabled,
-  FormField,
-  form,
-  maxLength,
-  minLength,
-  pattern,
-  required,
-  submit,
-} from '@angular/forms/signals';
+import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router, RouterLink, RouterOutlet } from '@angular/router';
 import {
-  accountPasswordConfig,
   Ulid,
   type ClientAccessValue,
   type ClientSummaryValue,
@@ -45,6 +34,7 @@ import { Tabs, type TabItem } from '@shared/tabs/tabs';
 import { TabLayout, TabPanel } from '@shared/tabs/tab-panel';
 import { PageHeader } from '@shared/page-header/page-header';
 import { EmptyState } from '@shared/empty-state/empty-state';
+import { clientFilters, clientFilterQuery, clientView } from '../clients/client-filters';
 
 interface ClientDocument {
   readonly id: string;
@@ -64,7 +54,6 @@ interface ClientDocument {
     Badge,
     Button,
     DataTable,
-    FormField,
     Notice,
     RouterLink,
     RouterOutlet,
@@ -88,20 +77,35 @@ export class ClientDetail {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly queryParams = toSignal(this.route.queryParamMap, {
+    initialValue: this.route.snapshot.queryParamMap,
+  });
+  protected readonly backLink = computed(() => [
+    '/backoffice/clients',
+    clientView(this.queryParams().get('view')),
+  ]);
+  protected readonly returnQuery = computed(() =>
+    clientFilterQuery(clientFilters(this.queryParams())),
+  );
   private loadGeneration = 0;
   protected readonly client = signal<ClientSummaryValue | undefined>(undefined);
   protected readonly archiving = signal(false);
   protected readonly documentsError = signal(false);
   protected readonly tabs = computed<readonly TabItem[]>(() =>
-    (['profile', 'documents', 'access'] as const).map((value) => ({
+    (['profile', 'affairs', 'documents', 'access'] as const).map((value) => ({
       path: value,
       id: `client-${value}-tab`,
-      label: this.i18n.t(`backOffice.clientDetail.tab.${value}`),
+      label: this.i18n.t(
+        value === 'affairs' ? 'clientsWorkspace.affairs' : `backOffice.clientDetail.tab.${value}`,
+      ),
     })),
   );
   private readonly quotes = signal<ReadonlyArray<QuoteSummaryValue>>([]);
   private readonly orders = signal<ReadonlyArray<OrderSummaryValue>>([]);
   private readonly invoices = signal<ReadonlyArray<InvoiceSummaryValue>>([]);
+  protected readonly affairs = computed(() =>
+    this.quotes().filter(({ clientId }) => clientId === this.client()?.id),
+  );
   protected readonly documentsLoading = signal(true);
   protected readonly documents = computed<readonly ClientDocument[]>(() => {
     const id = this.client()?.id;
@@ -128,7 +132,7 @@ export class ClientDetail {
           title: order.title,
           status: this.i18n.t('backOffice.clientDetail.confirmed'),
           totalCents: order.totalCents,
-          link: ['/backoffice/affaires', order.quoteId] as const,
+          link: ['/backoffice/orders', order.id] as const,
           updatedAt: order.createdAt,
         })),
       ...this.invoices()
@@ -145,22 +149,9 @@ export class ClientDetail {
         })),
     ].sort((left, right) => right.updatedAt.localeCompare(left.updatedAt));
   });
-  protected readonly accessPending = signal(false);
   protected readonly accessesLoading = signal(true);
   protected readonly accesses = signal<ReadonlyArray<ClientAccessValue>>([]);
   protected readonly revokingAccessId = signal<string | undefined>(undefined);
-  private readonly accessModel = signal({ email: '', password: '' });
-  protected readonly accessForm = form(this.accessModel, (path) => {
-    disabled(path, () => this.accessPending() || this.accessesLoading() || this.archived());
-    required(path.email);
-    pattern(path.email, /^[^\s@]+@[^\s@]+\.[^\s@]+$/);
-    required(path.password);
-    minLength(path.password, accountPasswordConfig.minLength);
-    maxLength(path.password, accountPasswordConfig.maxLength);
-  });
-  protected readonly accessPasswordLength = computed(() => this.accessModel().password.length);
-  protected readonly accessPasswordConfig = accountPasswordConfig;
-  protected readonly accountEmail = signal<string | undefined>(undefined);
   protected readonly loading = signal(true);
   protected readonly reactivating = signal(false);
   protected readonly archived = computed(() => this.client()?.archived ?? false);
@@ -175,52 +166,20 @@ export class ClientDetail {
   }
 
   async canDeactivate(): Promise<boolean> {
-    return (
-      !this.accessPending() &&
-      !this.revokingAccessId() &&
-      !this.archiving() &&
-      !this.reactivating() &&
-      (!this.accessForm().dirty() ||
-        (await this.confirmation.request(this.i18n.t('backOffice.clientDetail.unsavedChanges'))))
-    );
+    return !this.revokingAccessId() && !this.archiving() && !this.reactivating();
   }
 
   @HostListener('window:beforeunload', ['$event'])
   protected preventUnsavedUnload(event: BeforeUnloadEvent): void {
-    if (
-      this.accessForm().dirty() ||
-      this.accessPending() ||
-      this.revokingAccessId() ||
-      this.archiving() ||
-      this.reactivating()
-    )
-      event.preventDefault();
+    if (this.revokingAccessId() || this.archiving() || this.reactivating()) event.preventDefault();
   }
 
   protected money(cents: number): string {
     return formatMoney(cents, this.i18n.language(), 'EUR');
   }
 
-  protected createAccess(event: SubmitEvent): void {
-    event.preventDefault();
-    const client = this.client();
-    if (!client || client.archived || this.accessPending()) return;
-    void submit(this.accessForm, async () => {
-      this.accessPending.set(true);
-      this.error.set(undefined);
-      const outcome = await this.api.createAccess(client.id, this.accessModel());
-      this.accessPending.set(false);
-      if (!outcome.success) {
-        this.setError(outcome.code);
-        return;
-      }
-      this.accesses.update((accesses) =>
-        [...accesses, outcome.result].sort((left, right) => left.email.localeCompare(right.email)),
-      );
-      this.accountEmail.set(outcome.result.email);
-      this.accessModel.set({ email: '', password: '' });
-      this.accessForm().reset();
-    });
+  protected quoteStatus(status: QuoteSummaryValue['status']): string {
+    return this.i18n.t(`backOffice.quote.status.${status}`);
   }
 
   protected formatDate(timestamp: number): string {
@@ -260,7 +219,10 @@ export class ClientDetail {
     this.reactivating.set(false);
     if (!outcome.success) return this.setError(outcome.code);
     this.client.set(outcome.result);
-    void this.router.navigate(['access'], { relativeTo: this.route });
+    void this.router.navigate(['access'], {
+      relativeTo: this.route,
+      queryParamsHandling: 'preserve',
+    });
   }
 
   protected async archive(): Promise<void> {
@@ -285,6 +247,11 @@ export class ClientDetail {
     this.loading.set(true);
     this.client.set(undefined);
     this.documentsLoading.set(true);
+    this.documentsError.set(false);
+    this.quotes.set([]);
+    this.orders.set([]);
+    this.invoices.set([]);
+    this.accesses.set([]);
     this.accessesLoading.set(true);
     this.error.set(undefined);
     const clientId = Schema.decodeUnknownOption(Ulid)(this.route.snapshot.paramMap.get('clientId'));

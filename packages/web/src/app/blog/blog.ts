@@ -2,7 +2,8 @@ import { computed, inject, Injectable } from '@angular/core';
 import { SecurityContext } from '@angular/core';
 import { DomSanitizer } from '@angular/platform-browser';
 import { marked } from 'marked';
-import { I18nService, Language, TranslationKey } from '@app/i18n.service';
+import { I18nService, Language } from '@app/i18n.service';
+import { blogPosts, type BlogPostMetadata } from '@froment/l10n/blog-posts';
 import { blogHeadingId } from '@shared/blog-heading-id';
 import architectureEn from './posts/2026-08-architecture-effect.en.md';
 import architectureFr from './posts/2026-08-architecture-effect.fr.md';
@@ -20,13 +21,7 @@ const escapeHtml = (value: string): string =>
     .replaceAll('>', '&gt;')
     .replaceAll('"', '&quot;');
 
-export type BlogPost = {
-  slug: string;
-  published: string;
-  updated: string;
-  titleKey: TranslationKey;
-  descriptionKey: TranslationKey;
-  topicKeys: readonly TranslationKey[];
+export type BlogPost = BlogPostMetadata & {
   body: Record<Language, string>;
 };
 
@@ -40,50 +35,14 @@ export type RenderedBlogPost = Omit<
   html: string;
 };
 
-const posts: BlogPost[] = [
-  {
-    slug: '2026-08-production-observabilite',
-    published: '2026-08-23',
-    updated: '2026-08-23',
-    titleKey: 'blog.operations.title',
-    descriptionKey: 'blog.operations.description',
-    topicKeys: ['blog.topic.nix', 'blog.topic.secrets', 'blog.topic.observability'],
-    body: { fr: operationsFr, en: operationsEn },
-  },
-  {
-    slug: '2026-08-securite-authentification',
-    published: '2026-08-23',
-    updated: '2026-08-23',
-    titleKey: 'blog.security.title',
-    descriptionKey: 'blog.security.description',
-    topicKeys: ['blog.topic.security', 'blog.topic.authentication', 'blog.topic.audit'],
-    body: { fr: securityFr, en: securityEn },
-  },
-  {
-    slug: '2026-08-architecture-effect',
-    published: '2026-08-23',
-    updated: '2026-08-23',
-    titleKey: 'blog.architecture.title',
-    descriptionKey: 'blog.architecture.description',
-    topicKeys: ['blog.topic.effect', 'blog.topic.sqlite', 'blog.topic.documents'],
-    body: { fr: architectureFr, en: architectureEn },
-  },
-  {
-    slug: '2026-08-froment-software-arrive',
-    published: '2026-08-12',
-    updated: '2026-08-12',
-    titleKey: 'blog.launch.title',
-    descriptionKey: 'blog.launch.description',
-    topicKeys: [
-      'blog.launch.topic.development',
-      'blog.launch.topic.takeover',
-      'blog.launch.topic.ci',
-      'blog.launch.topic.nixos',
-      'blog.launch.topic.infrastructure',
-    ],
-    body: { fr: launchFr, en: launchEn },
-  },
-];
+const bodies = {
+  '2026-08-production-observabilite': { fr: operationsFr, en: operationsEn },
+  '2026-08-securite-authentification': { fr: securityFr, en: securityEn },
+  '2026-08-architecture-effect': { fr: architectureFr, en: architectureEn },
+  '2026-08-froment-software-arrive': { fr: launchFr, en: launchEn },
+} satisfies Record<(typeof blogPosts)[number]['slug'], Record<Language, string>>;
+
+const posts: BlogPost[] = blogPosts.map((post) => ({ ...post, body: bodies[post.slug] }));
 
 export const blogPostSlugs = posts.map(({ slug }) => slug);
 

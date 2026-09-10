@@ -1,156 +1,121 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
-import { Confirmation } from '@shared/confirmation/confirmation';
-import { RouterOutlet } from '@angular/router';
-import { I18nService } from '@app/i18n.service';
-import { Button, type ButtonVariant } from '@shared/button/button';
-import { Badge } from '@shared/badge/badge';
-import { ContactActions } from '@shared/contact-actions/contact-actions';
-import { DataTable } from '@shared/data-table/data-table';
-import { Icon, type IconName } from '@shared/icon/icon';
-import { Notice } from '@shared/notice/notice';
-import { Tabs, type TabItem } from '@shared/tabs/tabs';
-import { TabLayout, TabPanel } from '@shared/tabs/tab-panel';
-import { VisualSample } from '@shared/visual-sample/visual-sample';
-import { DesignDocuments } from './design-documents';
-import { EmptyState } from '@shared/empty-state/empty-state';
-import { ListToolbar } from '@shared/list-toolbar/list-toolbar';
+import { NgTemplateOutlet } from '@angular/common';
+import {
+  afterNextRender,
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  ElementRef,
+  inject,
+  Injector,
+  signal,
+} from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { form, FormField } from '@angular/forms/signals';
+import {
+  NavigationCancel,
+  NavigationEnd,
+  NavigationError,
+  NavigationStart,
+  Router,
+  RouterLink,
+  RouterLinkActive,
+  RouterOutlet,
+} from '@angular/router';
+import { Button } from '@shared/button/button';
+import { Drawer } from '@shared/drawer/drawer';
 import { createFuzzySearch } from '@shared/fuzzy-search';
-import { TableSort, type SortDirection } from '@shared/table-sort/table-sort';
-import { FilterChip } from '@shared/filter-chip/filter-chip';
-import { ObjectPicker } from '@shared/object-picker/object-picker';
-
-type ButtonSample = {
-  readonly variant: ButtonVariant;
-  readonly icon: IconName;
-};
+import { ListSearch } from '@shared/list-search/list-search';
+import { SiteFooter } from '@shared/site-footer/site-footer';
+import { referenceCatalog, referenceGroups } from './reference-catalog';
+import { formatReferenceCount, referenceText } from './reference-text';
 
 @Component({
-  host: { class: 'page-container' },
   selector: 'app-design',
-  standalone: true,
   imports: [
-    Badge,
+    NgTemplateOutlet,
     Button,
-    ContactActions,
-    DataTable,
-    DesignDocuments,
-    EmptyState,
-    ListToolbar,
-    TableSort,
-    FilterChip,
-    ObjectPicker,
-    Icon,
-    Notice,
+    Drawer,
+    FormField,
+    ListSearch,
+    RouterLink,
+    RouterLinkActive,
     RouterOutlet,
-    TabLayout,
-    TabPanel,
-    Tabs,
-    VisualSample,
+    SiteFooter,
   ],
   templateUrl: './design.component.html',
-  changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrl: './design.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class DesignComponent {
-  protected readonly pickerOptions = [
-    { id: 'angular', label: 'Angular', detail: 'Web' },
-    { id: 'wpf', label: 'WPF', detail: 'Desktop' },
-  ];
-  protected readonly pickerSelection = signal('');
-  protected readonly tableQuery = signal('');
-  protected readonly tableDirection = signal<SortDirection>('ascending');
-  private readonly tableSearchResults = createFuzzySearch(
-    signal([
-      { service: 'Web', subject: 'Angular' },
-      { service: 'Desktop', subject: 'WPF' },
-    ]),
-    this.tableQuery,
-    { keys: ['service', 'subject'], threshold: 0.35 },
+  protected readonly text = referenceText();
+  protected readonly query = signal('');
+  protected readonly search = form(this.query);
+  protected readonly drawerOpen = signal(false);
+  protected readonly loading = signal(false);
+  protected readonly failedUrl = signal('');
+  private readonly router = inject(Router);
+  private readonly element = inject<ElementRef<HTMLElement>>(ElementRef);
+  private readonly injector = inject(Injector);
+  private readonly matches = createFuzzySearch(signal(referenceCatalog), this.query, {
+    keys: ['name', 'id', 'selectors'],
+    ignoreLocation: true,
+    ignoreDiacritics: true,
+    threshold: 0.3,
+  });
+  protected readonly groups = computed(() =>
+    referenceGroups
+      .map((id) => ({
+        id,
+        entries: this.matches()
+          .filter(({ item }) => item.group === id)
+          .map(({ item }) => item),
+      }))
+      .filter((group) => group.entries.length),
   );
-  protected readonly tableRows = computed(() =>
-    this.tableSearchResults().toSorted(
-      (left, right) =>
-        (this.tableDirection() === 'ascending' ? 1 : -1) *
-        left.item.service.localeCompare(right.item.service, this.i18n.language()),
-    ),
+  protected readonly count = computed(() => this.matches().length);
+  protected readonly countLabel = computed(() =>
+    formatReferenceCount(this.count(), this.text().language, this.text().componentCount),
   );
-  private readonly confirmation = inject(Confirmation);
-  protected readonly confirmationResult = signal<'accepted' | 'cancelled' | undefined>(undefined);
-  protected async demonstrateConfirmation(destructive: boolean): Promise<void> {
-    this.confirmationResult.set(undefined);
-    let message = this.i18n.t('design.confirmation.message');
-    let variant: 'primary' | 'danger' = 'primary';
-    let acceptLabel = this.i18n.t('confirmation.accept');
-    if (destructive) {
-      message = this.i18n.t('design.confirmation.discardMessage');
-      variant = 'danger';
-      acceptLabel = this.i18n.t('design.confirmation.discardLabel');
-    }
-    const accepted = await this.confirmation.request(message, { variant, acceptLabel });
-    if (accepted) this.confirmationResult.set('accepted');
-    else this.confirmationResult.set('cancelled');
+
+  constructor() {
+    this.router.events.pipe(takeUntilDestroyed()).subscribe((event) => {
+      if (event instanceof NavigationStart) {
+        this.loading.set(true);
+        this.failedUrl.set('');
+      }
+      if (event instanceof NavigationError) this.failedUrl.set(event.url);
+      if (
+        event instanceof NavigationEnd ||
+        event instanceof NavigationCancel ||
+        event instanceof NavigationError
+      )
+        this.loading.set(false);
+      if (event instanceof NavigationEnd) {
+        this.drawerOpen.set(false);
+        this.focusPage();
+      }
+    });
   }
-  protected readonly i18n = inject(I18nService);
-  protected readonly buttonSamples: readonly ButtonSample[] = [
-    { variant: 'default', icon: 'mail' },
-    { variant: 'primary', icon: 'calendar' },
-    { variant: 'info', icon: 'ai' },
-    { variant: 'success', icon: 'tests' },
-    { variant: 'warning', icon: 'upgrade' },
-    { variant: 'danger', icon: 'secrets' },
-    { variant: 'dark', icon: 'infrastructure' },
-    { variant: 'link', icon: 'build' },
-  ];
-  protected readonly iconNames: readonly IconName[] = [
-    'ai',
-    'build',
-    'calendar',
-    'ci',
-    'development',
-    'environment',
-    'infrastructure',
-    'mail',
-    'metrics',
-    'secrets',
-    'tests',
-    'upgrade',
-  ];
-  protected readonly componentTabs = computed<readonly TabItem[]>(() => [
-    {
-      path: 'demo',
-      id: 'design-demo-tab',
-      label: this.i18n.t('design.components.demo'),
-    },
-    {
-      path: 'actions',
-      id: 'design-actions-tab',
-      label: this.i18n.t('design.components.actions'),
-    },
-    {
-      path: 'inputs',
-      id: 'design-inputs-tab',
-      label: this.i18n.t('design.components.inputs'),
-    },
-    {
-      path: 'feedback',
-      id: 'design-feedback-tab',
-      label: this.i18n.t('design.components.feedback'),
-    },
-    {
-      path: 'data',
-      id: 'design-data-tab',
-      label: this.i18n.t('design.components.dataGroup'),
-    },
-    {
-      path: 'documents',
-      id: 'design-documents-tab',
-      label: this.i18n.t('design.components.documents'),
-    },
-    {
-      path: 'navigation',
-      id: 'design-navigation-tab',
-      label: this.i18n.t('design.components.navigation'),
-      exact: false,
-    },
-  ]);
+  protected focusPage(): void {
+    afterNextRender(
+      () =>
+        this.element.nativeElement
+          .querySelector<HTMLElement>('[data-reference-heading], #workspace-title')
+          ?.focus(),
+      { injector: this.injector },
+    );
+  }
+  protected selectReference(id: string): void {
+    const path = this.router.url.split(/[?#]/, 1)[0];
+    if (path === `/design/${id}`) this.drawerOpen.set(false);
+  }
+  protected variantLabel(count: number): string {
+    return formatReferenceCount(count, this.text().language, this.text().variantCount);
+  }
+  protected retry(): void {
+    const url = this.failedUrl();
+    void this.router
+      .navigateByUrl(url, { onSameUrlNavigation: 'reload' })
+      .catch(() => this.failedUrl.set(url));
+  }
 }

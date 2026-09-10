@@ -1,135 +1,196 @@
-<section class="ledger-page" aria-labelledby="ledger-title">
-  <header>
-    <a routerLink="/backoffice/banque">{{ i18n.t('bank.title') }}</a>
-    <h1 id="ledger-title">{{ i18n.t('ledger.title') }}</h1>
-  </header>
-  <p appNotice variant="info">{{ i18n.t('ledger.hint') }}</p>
-  <p #result tabindex="-1" role="status">@if (saved()) { {{ i18n.t('ledger.saved') }} }</p>
-  @if (error(); as error) {
-  <p appNotice variant="danger" role="alert">{{ i18n.t(error) }}</p>
-  }
-  <form class="period-form" (submit)="load($event)">
-    <label
-      >{{ i18n.t('ledger.from') }}<input class="input" type="date" [formField]="period.from"
-    /></label>
-    <label
-      >{{ i18n.t('ledger.to') }}<input class="input" type="date" [formField]="period.to"
-    /></label>
-    <button appButton type="submit" [disabled]="busy() || loading() || period().invalid()">
-      {{ i18n.t('ledger.load') }}
-    </button>
-  </form>
-  @if (exportUrl(); as url) { <a [href]="url" download>{{ i18n.t('ledger.export') }}</a> } @if
-  (loading()) {
-  <p role="status">{{ i18n.t('ledger.loading') }}</p>
-  } @if (selected(); as source) {
-  <h2>{{ i18n.t('ledger.post') }} — {{ source.reference }} — {{ money(source.amountCents) }}</h2>
-  <form class="entry-form" (submit)="post($event)">
-    <label
-      >{{ i18n.t('ledger.debitAccount') }}<input class="input" [formField]="entryForm.debitAccount"
-    /></label>
-    <label
-      >{{ i18n.t('ledger.creditAccount') }}<input
-        class="input"
-        [formField]="entryForm.creditAccount"
-    /></label>
-    <label>{{ i18n.t('ledger.label') }}<input class="input" [formField]="entryForm.label" /></label>
-    <button
-      appButton
-      variant="primary"
-      type="submit"
-      [disabled]="busy() || loading() || entryForm().invalid()"
-    >
-      {{ i18n.t('ledger.post') }}
-    </button>
-    <button appButton type="button" [disabled]="busy()" (click)="cancel()">
-      {{ i18n.t('ledger.close') }}
-    </button>
-  </form>
-  } @if (reversing(); as entry) {
-  <h2>{{ i18n.t('ledger.reverse') }} — {{ entry.label }} — {{ money(entry.amountCents) }}</h2>
-  <form class="reversal-form" (submit)="reverse($event)">
-    <label
-      >{{ i18n.t('ledger.reason') }}<input class="input" [formField]="reversalForm.reason"
-    /></label>
-    <label
-      >{{ i18n.t('ledger.date') }}<input
-        class="input"
-        type="date"
-        [formField]="reversalForm.bookedOn"
-    /></label>
-    <button appButton type="submit" [disabled]="busy() || loading() || reversalForm().invalid()">
-      {{ i18n.t('ledger.reverse') }}
-    </button>
-    <button appButton type="button" [disabled]="busy()" (click)="cancel()">
-      {{ i18n.t('ledger.close') }}
-    </button>
-  </form>
-  } @if (records(); as records) {
-  <h2>{{ i18n.t('ledger.sources') }}</h2>
-  <ul class="sources">
-    @for (source of records.sources; track source.sourceKind + source.sourceId) {
-    <li class="ds-panel">
-      <p>
-        {{ source.bookedOn | localizedDate: i18n.language(): { dateStyle: 'medium' } }} — {{
-        i18n.t(source.sourceKind === 'fee' ? 'ledger.fee' : 'ledger.debit') }} — {{
-        money(source.amountCents) }}
-      </p>
-      <p>{{ source.account }} — {{ source.reference }}</p>
-      @if (source.entryId !== null) {
-      <p>{{ i18n.t('ledger.posted') }} {{ source.entryId }}</p>
-      } @else {
-      <button appButton type="button" [disabled]="busy() || loading()" (click)="select(source)">
-        {{ i18n.t('ledger.select') }}
-      </button>
-      }
-    </li>
-    } @empty {
-    <li>{{ i18n.t('ledger.empty') }}</li>
-    }
-  </ul>
-  <h2>{{ i18n.t('ledger.entries') }}</h2>
-  <ul class="entries">
-    @for (entry of records.entries; track entry.id) {
-    <li class="ds-panel">
-      <h3>{{ entry.label }}</h3>
-      <p>
-        {{ entry.bookedOn | localizedDate: i18n.language(): { dateStyle: 'medium' } }} — {{
-        money(entry.amountCents) }}
-      </p>
-      <dl>
-        <div>
-          <dt>{{ i18n.t('ledger.debitAccount') }}</dt>
-          <dd>{{ entry.debitAccount }}</dd>
-        </div>
-        <div>
-          <dt>{{ i18n.t('ledger.creditAccount') }}</dt>
-          <dd>{{ entry.creditAccount }}</dd>
-        </div>
-      </dl>
-      <p>{{ i18n.t('ledger.entryId') }} {{ entry.id }}</p>
-      <p>
-        {{ i18n.t('ledger.actor') }} {{ entry.recordedByUserId }} — {{ entry.recordedAt |
-        localizedDate: i18n.language(): { dateStyle: 'medium', timeStyle: 'short' } }}
-      </p>
-      @if (entry.reversesId !== null) {
-      <p>{{ i18n.t('ledger.reverses') }} {{ entry.reversesId }}</p>
-      } @else if (entry.reversalId !== null) {
-      <p>{{ i18n.t('ledger.reversed') }} {{ entry.reversalId }}</p>
-      } @else {
-      <button
-        appButton
-        type="button"
-        [disabled]="busy() || loading()"
-        (click)="selectReversal(entry)"
+<section class="bank-page" aria-labelledby="ledger-title">
+  <app-page-header
+    ><h1 id="ledger-title">{{ i18n.t('bankWorkspace.entries') }}</h1>
+    <p class="muted">{{ i18n.t('ledger.hint') }}</p></app-page-header
+  >
+  <app-tabs [label]="i18n.t('bank.title')" [tabs]="tabs()" />
+  <p appNotice variant="info">{{ i18n.t('bankWorkspace.ledgerScope') }}</p>
+  <p class="muted">{{ i18n.t('bankWorkspace.ledgerSortLoaded') }}</p>
+  <section appListWorkspace [attr.aria-label]="i18n.t('bankWorkspace.entries')">
+    <nav class="view-nav" [attr.aria-label]="i18n.t('bankWorkspace.entries')">
+      <a
+        routerLink="."
+        [queryParams]="viewQuery('sources')"
+        [attr.aria-current]="query().view === 'sources' ? 'page' : null"
+        >{{ i18n.t('bankWorkspace.sources') }}</a
       >
-        {{ i18n.t('ledger.reverse') }}
-      </button>
+      <a
+        routerLink="."
+        [queryParams]="viewQuery('journal')"
+        [attr.aria-current]="query().view === 'journal' ? 'page' : null"
+        >{{ i18n.t('bankWorkspace.journal') }}</a
+      >
+    </nav>
+    <app-list-toolbar>
+      <app-list-search
+        listSearch
+        [label]="i18n.t('bankWorkspace.ledgerSearch')"
+        [formField]="searchForm.q"
+        (valueChange)="search($event)"
+      />
+      <app-filter-menu
+        listFilters
+        [label]="i18n.t('listWorkspace.filters')"
+        [closeLabel]="i18n.t('listWorkspace.closeFilters')"
+        [backLabel]="i18n.t('listWorkspace.backFilters')"
+        [activeCount]="activeFilterCount()"
+        [disabled]="state() === 'loading'"
+      >
+        <ng-template
+          appFilterPanel
+          [label]="i18n.t('dateRangeFilter.label')"
+          [summary]="(query().from || '…') + ' → ' + (query().to || '…')"
+        >
+          <p class="muted">{{ i18n.t('bankWorkspace.ledgerPeriodRequired') }}</p>
+          <app-date-range-filter
+            [from]="query().from || undefined"
+            [to]="query().to || undefined"
+            (focusin)="periodRequired.set(false)"
+            (rangeApplied)="applyPeriod($event)"
+          />
+          @if (periodRequired()) {
+          <p #periodError appNotice variant="danger" role="alert" tabindex="-1">
+            {{ i18n.t('bankWorkspace.ledgerPeriodRequired') }}
+          </p>
+          }
+        </ng-template>
+      </app-filter-menu>
+      <div listActions class="actions">
+        <app-table-export
+          [columns]="exportColumns()"
+          [rows]="exportRows()"
+          [filename]="query().view === 'journal' ? 'bank-journal-results.csv' : 'bank-source-results.csv'"
+          [label]="i18n.t('listWorkspace.exportCsv')"
+          [emptyHint]="i18n.t('listWorkspace.exportEmpty')"
+          [pendingHint]="i18n.t('listWorkspace.exportPending')"
+          [pending]="state() === 'loading'"
+        />
+        @if (exportUrl(); as url) {
+        <app-hint #periodExportHint [text]="i18n.t('bankWorkspace.periodExportHint')">
+          <a appLinkButton [href]="url" download [attr.aria-describedby]="periodExportHint.id"
+            ><app-icon name="download" />{{ i18n.t('bankWorkspace.periodExport') }}</a
+          >
+        </app-hint>
+        }
+      </div>
+      <span listSummary role="status"
+        >@if (state() === 'ready') { {{ i18n.plural('bankWorkspace.entryCount', { count: count() })
+        }} }</span
+      >
+      <span listSummary
+        >{{ i18n.t('ledger.from') }} : {{ query().from }} · {{ i18n.t('ledger.to') }} : {{
+        query().to }}</span
+      >
+      @if (query().q) {
+      <div listSummary>
+        <button appFilterChip [label]="query().q" (click)="search('')"></button>
+      </div>
       }
-    </li>
-    } @empty {
-    <li>{{ i18n.t('ledger.empty') }}</li>
+    </app-list-toolbar>
+    @if (error(); as error) {
+    <p appNotice variant="danger" role="alert">{{ i18n.t(error) }}</p>
+    } @if (state() === 'loading') {
+    <p role="status">{{ i18n.t('ledger.loading') }}</p>
+    } @else if (state() === 'error') {
+    <div><button appButton type="button" (click)="load()">{{ i18n.t('bank.reload') }}</button></div>
+    } @else if (!count()) {
+    <app-empty-state
+      [title]="i18n.t(query().q ? 'bankWorkspace.ledgerNoMatches' : query().view === 'journal' ? 'bankWorkspace.journalEmpty' : 'bankWorkspace.sourceEmpty')"
+    />
+    } @else if (query().view === 'sources') {
+    <div appDataTable tableLayout="fluid">
+      <table>
+        <thead>
+          <tr>
+            @for (column of sourceColumns; track column.key) {
+            <th
+              scope="col"
+              [class.amount]="column.kind === 'number'"
+              [attr.aria-sort]="sortDirection(column.key)"
+            >
+              <button
+                appTableSort
+                [label]="i18n.t(column.label)"
+                [direction]="sortDirection(column.key)"
+                (click)="sortBy(column.key)"
+              ></button>
+            </th>
+            }
+          </tr>
+        </thead>
+        <tbody>
+          @for (result of sourceResults(); track result.item.sourceKind + result.item.sourceId) {
+          @let source = result.item;
+          <tr>
+            <th scope="row">
+              <a
+                [routerLink]="sourceLink(source.sourceKind, source.sourceId)"
+                [queryParams]="query()"
+                [appSearchHighlight]="result.indices"
+                >{{ source.reference }}</a
+              >
+            </th>
+            <td>{{ source.account }}</td>
+            <td>{{ i18n.t(source.sourceKind === 'fee' ? 'ledger.fee' : 'ledger.debit') }}</td>
+            <td>{{ source.bookedOn | localizedDate: i18n.language() }}</td>
+            <td class="amount">{{ money(source.amountCents) }}</td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    } @else {
+    <div appDataTable tableLayout="fluid">
+      <table>
+        <thead>
+          <tr>
+            @for (column of entryColumns; track column.key) {
+            <th
+              scope="col"
+              [class.amount]="column.kind === 'number'"
+              [attr.aria-sort]="sortDirection(column.key)"
+            >
+              <button
+                appTableSort
+                [label]="i18n.t(column.label)"
+                [direction]="sortDirection(column.key)"
+                (click)="sortBy(column.key)"
+              ></button>
+            </th>
+            }
+          </tr>
+        </thead>
+        <tbody>
+          @for (result of entryResults(); track result.item.id) { @let entry = result.item;
+          <tr>
+            <th scope="row">
+              <a
+                [routerLink]="entryLink(entry.id)"
+                [queryParams]="query()"
+                [appSearchHighlight]="result.indices"
+                >{{ entry.label }}</a
+              ><small>{{ entry.id }}</small>
+            </th>
+            <td>
+              <span [appSearchHighlight]="result.referenceIndices"
+                >{{ entry.sourceReference }}</span
+              >
+            </td>
+            <td>{{ entry.bookedOn | localizedDate: i18n.language() }}</td>
+            <td>{{ entry.debitAccount }}</td>
+            <td>{{ entry.creditAccount }}</td>
+            <td>
+              <span appBadge
+                >{{ i18n.t(entry.reversesId ? 'bankWorkspace.reversalEntry' : entry.reversalId ?
+                'bankWorkspace.reversedEntry' : 'bankWorkspace.activeEntry') }}</span
+              >
+            </td>
+            <td class="amount">{{ money(entry.amountCents) }}</td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
     }
-  </ul>
-  }
+  </section>
 </section>

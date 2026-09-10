@@ -6,6 +6,11 @@ import {
   InvoiceFailure,
   InvoiceIssueResult,
   InvoiceList,
+  InvoiceReceiptList,
+  CreditNoteList,
+  InvoiceRefundList,
+  InvoiceHistory,
+  InvoiceWorkspaceLimitExceeded,
   PaymentExportFailure,
   type PaymentExportQueryValue,
   type InvoiceCreateRequestValue,
@@ -27,9 +32,43 @@ import { requestOutcome, type ApiOutcome } from '@shared/api-outcome';
 export type InvoiceErrorCode = InvoiceFailureValue['code'] | 'invoice.error';
 export type InvoiceOutcome<T> = ApiOutcome<T, InvoiceFailureValue, 'invoice.error'>;
 
+const invoiceWorkspaceFailure = Schema.Union([InvoiceFailure, InvoiceWorkspaceLimitExceeded]);
+
 @Injectable({ providedIn: 'root' })
 export class InvoicesApi {
   private readonly http = inject(HttpClient);
+  receipts() {
+    return requestOutcome(
+      this.http.get('/api/invoice-payments'),
+      InvoiceReceiptList,
+      invoiceWorkspaceFailure,
+      'invoice.error',
+    );
+  }
+  credits() {
+    return requestOutcome(
+      this.http.get('/api/credit-notes'),
+      CreditNoteList,
+      invoiceWorkspaceFailure,
+      'invoice.error',
+    );
+  }
+  refunds() {
+    return requestOutcome(
+      this.http.get('/api/invoice-refunds'),
+      InvoiceRefundList,
+      invoiceWorkspaceFailure,
+      'invoice.error',
+    );
+  }
+  history(invoiceId: string) {
+    return requestOutcome(
+      this.http.get(`/api/invoices/${invoiceId}/history`),
+      InvoiceHistory,
+      invoiceWorkspaceFailure,
+      'invoice.error',
+    );
+  }
   async cancelPayment(
     invoiceId: UlidValue,
     paymentId: UlidValue,

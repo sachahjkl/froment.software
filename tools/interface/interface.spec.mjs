@@ -4,23 +4,24 @@ import AxeBuilder from "@axe-core/playwright";
 import { checkTeam } from "./team.mjs";
 import { checkServiceConnections } from "./service-connections.mjs";
 import { checkCreditNotes } from "./credit-notes.mjs";
-import { checkBankLedger } from "./bank-ledger.mjs";
+import { checkBankingWorkspace } from "./banking-workspace.mjs";
+import { checkBillingWorkspace } from "./billing-workspace.mjs";
+import { checkCommercialWorkspace } from "./commercial-workspace.mjs";
+import { checkCustomerWorkspace } from "./customer-workspace.mjs";
+import { checkDesignWorkspace } from "./design-workspace.mjs";
+import {
+  checkConfigurationWorkspace,
+  checkApiTokenWorkspace,
+  checkAuditWorkspace,
+} from "./configuration-workspace.mjs";
 import { checkDashboardShell, openBackOfficeNavigation } from "./dashboard-shell.mjs";
 import { checkClientsWorkspace } from "./clients-workspace.mjs";
 import { checkCatalogWorkspace } from "./catalog-workspace.mjs";
 import { checkCatalogZoom } from "./catalog-zoom.mjs";
+import { checkWorkspaceZoom } from "./workspace-zoom.mjs";
 import { checkEmailsWorkspace } from "./emails-workspace.mjs";
 import { checkDefaultButtonTheme } from "./button-theme.mjs";
-import {
-  accountEmail,
-  clientId,
-  quoteId,
-  invoiceId,
-  invoiceSummary,
-  issuedInvoice,
-  quoteToken,
-  mockApi,
-} from "./fixtures.mjs";
+import { accountEmail, clientId, quoteId, invoiceId, quoteToken, mockApi } from "./fixtures.mjs";
 
 async function openPage(page, route, colorScheme) {
   await mockApi(page);
@@ -55,133 +56,18 @@ for (const [kind, id] of [
   ["invoices", invoiceId],
 ]) {
   test(`${kind}: responsive editor and summary`, async ({ page, colorScheme }, testInfo) => {
+    test.setTimeout(300_000);
     await openPage(page, `/backoffice/${kind}/${id}`, colorScheme);
-    await expect(page.locator(".document-line")).toHaveCount(3);
-    const conditionsSpacing = await page
-      .locator(".document-editor > form > label")
-      .filter({
-        has: page.locator("textarea"),
-      })
-      .evaluate((field) => {
-        let previous = field.previousElementSibling;
-        while (previous && previous.getClientRects().length === 0) {
-          previous = previous.previousElementSibling;
-        }
-        return {
-          actual: field.getBoundingClientRect().top - previous.getBoundingClientRect().bottom,
-          expected: Number.parseFloat(getComputedStyle(field.parentElement).rowGap),
-        };
-      });
-    expect(conditionsSpacing.expected).toBeGreaterThan(0);
-    expect(Math.abs(conditionsSpacing.actual - conditionsSpacing.expected)).toBeLessThan(1);
-    const form = await page.locator(".document-editor > form").boundingBox();
-    const summary = await page.locator("[appOutcomePanel]").boundingBox();
-    if (page.viewportSize().width >= 1024) {
-      expect(Math.abs(form.y - summary.y)).toBeLessThan(2);
-      expect(summary.x).toBeGreaterThan(form.x + form.width);
-    } else {
-      expect(summary.y).toBeGreaterThanOrEqual(form.y + form.height);
-    }
     if (kind === "invoices") {
-      await page.route(`**/api/invoices/${invoiceId}`, (route) =>
-        route.fulfill({ json: issuedInvoice }),
-      );
-      await page.route("**/api/invoices", (route) =>
-        route.fulfill({
-          json: [
-            {
-              ...invoiceSummary,
-              status: "issued",
-              invoiceNumber: issuedInvoice.invoiceNumber,
-              recordedPaidCents: 10000,
-            },
-          ],
-        }),
-      );
-      await page.reload();
-      await page
-        .locator(".payment-form")
-        .getByRole("textbox", { name: /Référence|Reference/ })
-        .fill("Unsubmitted payment reference");
-      await page
-        .getByRole("link", { name: /Préparer un rappel de paiement|Prepare a payment reminder/ })
-        .click();
-      await page
-        .getByRole("alertdialog")
-        .getByRole("button", { name: /^(Confirmer|Confirm)$/ })
-        .click();
-      await expect(page.locator("#email-reference")).toHaveValue("FA-2026-000001");
-      await expect(page.locator("#email-body")).toHaveValue(/3.?500[,.]00/);
-      await page.locator('app-email-composer .composer button[type="submit"]').click();
-      await expect(page.locator("app-email-detail [appNotice]")).toContainText(
-        /courriel non envoyé|email not sent/,
-      );
-      await page.goto(`/backoffice/courriels/reminders/new?invoice=${invoiceId}`);
-      const reminderRequests = [];
-      let reminderUnavailable = true;
-      const reminderPattern = "**/api/reminders/*";
-      await page.route(reminderPattern, (route) => {
-        if (route.request().method() !== "PUT") return route.fallback();
-        reminderRequests.push({
-          url: route.request().url(),
-          request: route.request().postDataJSON(),
-        });
-        return reminderUnavailable ? route.fulfill({ status: 503, json: {} }) : route.fallback();
-      });
-      const reminderDate = await page.evaluate(() =>
-        new Date(Date.now() + 7 * 86400000).toISOString().slice(0, 16),
-      );
-      await page.locator("#reminder-date").fill(reminderDate);
-      await page.getByRole("button", { name: /Programmer la relance|Schedule reminder/ }).click();
-      await page
-        .getByRole("alertdialog")
-        .getByRole("button", { name: /^(Confirmer|Confirm)$/ })
-        .click();
-      await expect(page.locator('app-reminder-editor [role="alert"]')).toBeVisible();
-      await expect(page.locator("#reminder-date")).toBeDisabled();
-      page.once("dialog", (dialog) => dialog.accept());
-      await page.reload();
-      await expect(page.locator("#reminder-date")).toBeDisabled();
-      expect(reminderRequests).toHaveLength(1);
-      reminderUnavailable = false;
-      await page
-        .getByRole("button", { name: /Reprendre cette demande|Resume this request/ })
-        .click();
-      await expect(page).toHaveURL(/courriels\/reminders$/);
-      expect(reminderRequests).toHaveLength(2);
-      expect(reminderRequests[1]).toEqual(reminderRequests[0]);
-      await page.unroute(reminderPattern);
-      await expect(page.locator("app-emails tbody")).toContainText(/Programmée|Scheduled/);
-      await page.getByRole("button", { name: /Annuler la programmation|Cancel schedule/ }).click();
-      await page
-        .getByRole("alertdialog")
-        .getByRole("button", { name: /^(Confirmer|Confirm)$/ })
-        .click();
-      await expect(page.locator("app-emails tbody")).toContainText(/Annulée|Cancelled/);
-      await page.goto(`/backoffice/invoices/${invoiceId}`);
-      await page.getByRole("button", { name: /Annuler cette saisie|Cancel this entry/ }).click();
-      const reason = page.getByRole("textbox", {
-        name: /Motif de la correction|Correction reason/,
-      });
-      await expect(reason).toBeVisible();
-      await reason.fill("Montant saisi par erreur");
-      expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth)).toBe(
-        false,
-      );
-      const audit = await new AxeBuilder({ page })
-        .withTags(["wcag2a", "wcag2aa", "wcag21aa"])
-        .analyze();
-      expect(audit.violations).toEqual([]);
-      await page.screenshot({
-        path: testInfo.outputPath("payment-correction.png"),
-        fullPage: true,
-      });
-    }
+      await checkBillingWorkspace(page, testInfo);
+      await checkCreditNotes(page, testInfo);
+      await checkBankingWorkspace(page, testInfo);
+    } else await checkCommercialWorkspace(page, testInfo);
   });
 }
 
 test("client form and complete account address", async ({ page, colorScheme }, testInfo) => {
-  test.setTimeout(150000);
+  test.setTimeout(300_000);
   await mockApi(page);
   await checkDefaultButtonTheme(page, testInfo);
   await page.route("**/api/auth/refresh", (route) =>
@@ -268,7 +154,7 @@ test("client form and complete account address", async ({ page, colorScheme }, t
   await expect(summary).toBeFocused();
   await summary.click();
   await page.getByRole("link", { name: /Sécurité du compte|Account security/ }).click();
-  await expect(page.locator('.account-security input[type="password"]')).toHaveCount(4);
+  await expect(page.locator('.account-security input[type="password"]')).toHaveCount(3);
   expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth)).toBe(false);
   const audit = await new AxeBuilder({ page })
     .withTags(["wcag2a", "wcag2aa", "wcag21aa"])
@@ -277,133 +163,18 @@ test("client form and complete account address", async ({ page, colorScheme }, t
   await page.screenshot({ path: testInfo.outputPath("account-security.png"), fullPage: true });
   await checkPasskeys(page, testInfo);
   await checkCatalogWorkspace(page, testInfo);
-  if (testInfo.project.name === "desktop") await checkCatalogZoom(testInfo);
-  for (const [tab, selector] of [
-    ["entreprise", ".issuer-page"],
-    ["conditions", ".presets-page"],
-  ]) {
-    await page.goto(`/backoffice/configuration/${tab}`);
-    await page.waitForLoadState("networkidle");
-    await expect(page.locator(`${selector} form`)).toBeVisible();
-    for (const surface of [selector, `${selector} form`]) {
-      const style = await page.locator(surface).evaluate((element) => {
-        const computed = getComputedStyle(element);
-        return {
-          background: computed.backgroundColor,
-          border: computed.borderTopWidth,
-          shadow: computed.boxShadow,
-          padding: computed.paddingLeft,
-        };
-      });
-      expect(style.background).toBe("rgba(0, 0, 0, 0)");
-      expect(style.border).toBe("0px");
-      expect(style.shadow).toBe("none");
-      if (surface.endsWith("form")) expect(style.padding).toBe("0px");
-    }
-    expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth)).toBe(
-      false,
-    );
-    await page.screenshot({ path: testInfo.outputPath(`${tab}.png`), fullPage: true });
+  if (testInfo.project.name === "desktop") {
+    await checkCatalogZoom(testInfo);
+    await checkWorkspaceZoom(testInfo);
   }
-  await checkServiceConnections(page, testInfo);
-  const serviceSpacing = await page
-    .locator("app-integrations section > [appNotice]")
-    .first()
-    .evaluate(
-      (notice) =>
-        notice.getBoundingClientRect().top -
-        notice.previousElementSibling.getBoundingClientRect().bottom,
-    );
-  expect(serviceSpacing).toBeGreaterThanOrEqual(16);
-  await expect(page.locator(".providers li")).toHaveCount(5);
-  await expect(page.locator(".operations li")).toHaveCount(0);
-  await page.locator(".providers button").first().focus();
-  await page.keyboard.press("Enter");
-  await expect(page.locator(".operations li")).toHaveCount(1);
-  await expect(page.locator(".operations li")).toContainText(
-    /aucune opération réelle|no real operation/,
-  );
-  await expect(page.locator(".operations time")).not.toBeEmpty();
-  await expect(page.locator('app-integrations [role="status"]')).toBeFocused();
-  expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth)).toBe(false);
-  const integrationAudit = await new AxeBuilder({ page })
-    .withTags(["wcag2a", "wcag2aa", "wcag21aa"])
-    .analyze();
-  expect(integrationAudit.violations).toEqual([]);
-  await expect(page.locator("app-integrations .retries")).toContainText(
-    /Tentatives épuisées|Attempts exhausted/,
-  );
-  await page.screenshot({ path: testInfo.outputPath("external-services.png"), fullPage: true });
   await checkEmailsWorkspace(page, testInfo);
   await checkNoticeSpacing(page);
-  await page.goto("/backoffice/banque");
-  await page.locator("#bank-account").fill("MAIN");
-  await page.locator("#bank-file").setInputFiles({
-    name: "statement.csv",
-    mimeType: "text/csv",
-    buffer: Buffer.from(
-      "transaction_id,booked_on,amount,currency,description\nBANK-001,2026-09-01,100.00,EUR,Client payment",
-    ),
-  });
-  await page.locator('app-banking button[type="submit"]').click();
-  await expect(page.locator("app-banking li")).toHaveCount(1);
-  const bankChoice = page.locator("app-banking .filters .choice");
-  await expect(bankChoice).toHaveCSS("display", "flex");
-  await expect(bankChoice).toHaveCSS("align-items", "flex-start");
-  await expect(bankChoice.locator("input")).toHaveCSS("width", "16px");
-  await expect(bankChoice.locator("input")).toHaveCSS("flex-shrink", "0");
-  await expect(page.locator('app-banking [role="status"]')).toBeFocused();
-  await page
-    .getByRole("button", { name: /Historique des rapprochements|Reconciliation history/ })
-    .click();
-  await expect(page.locator(`#bank-history-${quoteId}`)).toContainText("Incorrect association");
-  expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth)).toBe(false);
-  const bankingAudit = await new AxeBuilder({ page })
-    .withTags(["wcag2a", "wcag2aa", "wcag21aa"])
-    .analyze();
-  expect(bankingAudit.violations).toEqual([]);
-  await page.screenshot({ path: testInfo.outputPath("banking.png"), fullPage: true });
-  await checkNoticeSpacing(page);
-  await page.reload();
-  await page.getByRole("button", { name: /^(Rapprocher|Reconcile)$/ }).click();
-  await page.locator(".editor select").first().selectOption(invoiceId);
-  await page.locator(".editor select").nth(1).selectOption(clientId);
-  await page.locator("#bank-allocation-amount").fill("40.00");
-  await page
-    .locator(".editor")
-    .getByRole("button", { name: /^(Rapprocher|Reconcile)$/ })
-    .click();
-  await page.getByRole("alertdialog").locator("button").last().click();
-  await page.getByRole("button", { name: /Gérer les affectations|Manage allocations/ }).click();
-  await expect(page.locator("#bank-allocation-amount")).toHaveValue("60.00");
-  await page.locator("#bank-allocation-amount").fill("63.00");
-  await page.locator("#bank-fee-amount").fill("3.00");
-  await page.locator(".editor select").first().selectOption(invoiceId);
-  await page.locator(".editor select").nth(1).selectOption(clientId);
-  const allocationAudit = await new AxeBuilder({ page })
-    .withTags(["wcag2a", "wcag2aa", "wcag21aa"])
-    .analyze();
-  expect(allocationAudit.violations).toEqual([]);
-  await page
-    .locator(".editor")
-    .getByRole("button", { name: /^(Rapprocher|Reconcile)$/ })
-    .click();
-  await page.getByRole("alertdialog").locator("button").last().click();
-  await expect(page.locator("app-banking > section > ol > li")).toHaveCount(0);
-  await mockApi(page, { mode: "client" });
-  await page.goto("/backoffice/client");
-  await expect(page.locator(".invoice-balance dd")).toHaveCount(3);
-  await expect(page.locator(".invoice-balance dd").last()).toContainText(/3.?500[,.]00/);
-  expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth)).toBe(false);
-  const portalAudit = await new AxeBuilder({ page })
-    .withTags(["wcag2a", "wcag2aa", "wcag21aa"])
-    .analyze();
-  expect(portalAudit.violations).toEqual([]);
-  await page.screenshot({ path: testInfo.outputPath("client-payments.png"), fullPage: true });
 });
 
 test("client signing form stays inside its panel", async ({ page, colorScheme }, testInfo) => {
+  test.setTimeout(360_000);
   await openPage(page, `/quote/signature#${quoteToken}`, colorScheme);
+  await checkCustomerWorkspace(page, testInfo);
   await expect(page.locator("#public-quote-signer-name")).toBeVisible();
   const panel = await page.locator(".signature-panel").boundingBox();
   for (const input of await page.locator(".signature-panel input").all()) {
@@ -414,8 +185,8 @@ test("client signing form stays inside its panel", async ({ page, colorScheme },
     .withTags(["wcag2a", "wcag2aa", "wcag21aa"])
     .analyze();
   expect(audit.violations).toEqual([]);
-  await page.goto("/design/feedback");
-  const trigger = page.getByRole("button", { name: /Ouvrir une confirmation|Open a confirmation/ });
+  await page.goto("/design/confirmation");
+  const trigger = page.locator("[storyPreview] > button");
   await trigger.click();
   const dialog = page.getByRole("alertdialog");
   await expect(dialog.locator("[data-confirmation-cancel]")).toBeFocused();
@@ -428,14 +199,33 @@ test("client signing form stays inside its panel", async ({ page, colorScheme },
   await page.screenshot({ path: testInfo.outputPath("design-confirmation.png"), fullPage: true });
   await page.keyboard.press("Escape");
   await expect(trigger).toBeFocused();
-  await expect(page.locator('.confirmation-demo [role="status"]')).toContainText(
-    /annulée|cancelled/,
-  );
+  await expect(page.locator('[storyPreview] [role="status"]')).toContainText(/annulée|cancelled/);
   await trigger.click();
   await dialog.locator("button").last().click();
-  await expect(page.locator('.confirmation-demo [role="status"]')).toContainText(
-    /confirmée|confirmed/,
+  await expect(page.locator('[storyPreview] [role="status"]')).toContainText(/confirmée|confirmed/);
+  await checkDesignWorkspace(page, testInfo);
+  await checkConfigurationWorkspace(page, testInfo);
+  await checkApiTokenWorkspace(page, testInfo);
+  await checkAuditWorkspace(page, testInfo);
+  await checkServiceConnections(page, testInfo);
+  await page.locator("app-integrations form select").selectOption("email");
+  await page.locator('app-integrations form button[type="submit"]').click();
+  await expect(page.locator(".operations li")).toHaveCount(1);
+  await expect(page.locator(".operations li")).toContainText(
+    /aucune opération réelle|no real operation/,
   );
+  await expect(page.locator(".operations time")).not.toBeEmpty();
+  await expect(page.locator('app-integrations [role="status"]')).toBeFocused();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth)).toBe(false);
+  expect(
+    (await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21aa"]).analyze())
+      .violations,
+  ).toEqual([]);
+  await expect(page.locator("app-integrations .retries")).toContainText(
+    /Tentatives épuisées|Attempts exhausted/,
+  );
+  await page.screenshot({ path: testInfo.outputPath("external-services.png"), fullPage: true });
+  await checkTeam(page, testInfo);
   const locales = { light: "fr", dark: "en" };
   const language = locales[colorScheme];
   await page.route(`**/api/docs/${language}`, (route) =>
@@ -467,8 +257,5 @@ test("client signing form stays inside its panel", async ({ page, colorScheme },
   await expect(page.getByRole("main")).toHaveCount(1);
   await expect(page.locator(".markdown-alert-note")).toContainText("bank.read");
   await page.screenshot({ path: testInfo.outputPath("scalar.png"), fullPage: true });
-  await checkTeam(page, testInfo);
-  await checkCreditNotes(page, testInfo);
-  await checkBankLedger(page, testInfo);
 });
 import { checkPasskeys } from "./passkeys.mjs";

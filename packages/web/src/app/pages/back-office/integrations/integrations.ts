@@ -7,6 +7,8 @@ import {
   signal,
   viewChild,
 } from '@angular/core';
+import { FormField, disabled, form, required } from '@angular/forms/signals';
+import { Confirmation } from '@shared/confirmation/confirmation';
 import { LocalizedDatePipe } from '@shared/localized-date/localized-date-pipe';
 import {
   IntegrationStatusList,
@@ -30,15 +32,21 @@ const labels = {
 } satisfies Record<Kind, TranslationKey>;
 
 @Component({
-  imports: [Button, Notice, LocalizedDatePipe, RouterLink],
+  imports: [Button, Notice, LocalizedDatePipe, RouterLink, FormField],
   changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-integrations',
   styleUrl: './integrations.scss',
   templateUrl: './integrations.html',
+  host: { class: 'page-container', '(window:beforeunload)': 'beforeUnload($event)' },
 })
 export class Integrations {
   protected readonly i18n = inject(I18nService);
   private readonly api = inject(IntegrationsApi);
+  private readonly confirmation = inject(Confirmation);
+  protected readonly domainForm = form(signal({ kind: '' }), (path) => {
+    required(path.kind);
+    disabled(path, () => this.loading() || this.saving());
+  });
   protected readonly labels = labels;
   protected readonly providers = signal<typeof IntegrationStatusList.Type>([]);
   protected readonly operations = signal<ReadonlyArray<IntegrationOperationValue>>([]);
@@ -136,7 +144,7 @@ export class Integrations {
   }
 
   protected async send(request: IntegrationSubmissionValue): Promise<void> {
-    if (this.saving()) return;
+    if (this.saving() || request.expectedMode !== 'simulation') return;
     this.saving.set(true);
     this.error.set(false);
     this.completed.set(false);
@@ -158,5 +166,26 @@ export class Integrations {
     } finally {
       this.saving.set(false);
     }
+  }
+  protected async run(event: SubmitEvent): Promise<void> {
+    event.preventDefault();
+    if (this.saving() || this.loading()) return;
+    if (this.domainForm().invalid()) {
+      this.domainForm().markAsTouched();
+      this.domainForm.kind().focusBoundControl();
+      return;
+    }
+    const provider = this.providers().find((item) => item.kind === this.domainForm.kind().value());
+    if (provider !== undefined) await this.simulate(provider.kind);
+  }
+  canDeactivate(): boolean | Promise<boolean> {
+    if (this.saving()) return false;
+    return (
+      this.pending.size === 0 ||
+      this.confirmation.request(this.i18n.t('configurationWorkspace.unsaved'))
+    );
+  }
+  protected beforeUnload(event: BeforeUnloadEvent): void {
+    if (this.saving() || this.pending.size > 0) event.preventDefault();
   }
 }

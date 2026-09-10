@@ -1,13 +1,13 @@
 <section class="account-security notice-flow" aria-labelledby="password-title">
   <header class="page-intro">
-    <h1 id="password-title">{{ i18n.t('account.security_title') }}</h1>
+    <h2 id="password-title">{{ i18n.t('account.security_title') }}</h2>
     <p>{{ i18n.t('account.security_hint') }}</p>
   </header>
   @if (complete()) {
   <p appNotice variant="success" role="status">{{ i18n.t('account.password_complete') }}</p>
   <a appLinkButton routerLink="/backoffice/login">{{ i18n.t('account.password_login') }}</a>
   } @else {
-  <form (submit)="changePassword($event)">
+  <form (submit)="changePassword($event)" novalidate>
     <h2>{{ i18n.t('account.password_title') }}</h2>
     <p>{{ i18n.t('account.password_hint') }}</p>
     <label class="field"
@@ -39,16 +39,9 @@
     <p appNotice variant="danger" role="alert">{{ i18n.t(message) }}</p>
     <p>{{ i18n.t('account.password_retry') }}</p>
     <a routerLink="/backoffice/login">{{ i18n.t('account.password_login') }}</a> }
-    <button
-      appButton
-      variant="primary"
-      type="submit"
-      [disabled]="pending() || passkeyPending() || passwordForm().invalid()"
-    >
+    <button appButton variant="primary" type="submit" [disabled]="pending()">
       {{ i18n.t(pending() ? 'account.password_pending' : 'account.password_save') }}
     </button>
   </form>
-  <app-account-passkeys [disabled]="pending()" [(busy)]="passkeyPending" />
-  <app-account-sessions [disabled]="pending() || passkeyPending()" />
   }
 </section>

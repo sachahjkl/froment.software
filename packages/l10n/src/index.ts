@@ -1,6 +1,7 @@
 export * from './api-documentation.js';
 export * from './cross-language-text.js';
 export * from './document-text.js';
+export * from './design-workspace.js';
 export * from './language.js';
 export * from './api-schema-documentation.js';
 export * from './api-request-examples.js';

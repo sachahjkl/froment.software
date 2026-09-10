@@ -13,7 +13,28 @@
     <loc>https://froment.software/services</loc>
   </url>
   <url>
+    <loc>https://froment.software/services/audit-renovation</loc>
+  </url>
+  <url>
+    <loc>https://froment.software/services/developpement</loc>
+  </url>
+  <url>
     <loc>https://froment.software/tools</loc>
+  </url>
+  <url>
+    <loc>https://froment.software/blog</loc>
+  </url>
+  <url>
+    <loc>https://froment.software/blog/2026-08-production-observabilite</loc>
+  </url>
+  <url>
+    <loc>https://froment.software/blog/2026-08-securite-authentification</loc>
+  </url>
+  <url>
+    <loc>https://froment.software/blog/2026-08-architecture-effect</loc>
+  </url>
+  <url>
+    <loc>https://froment.software/blog/2026-08-froment-software-arrive</loc>
   </url>
   <url>
     <loc>https://froment.software/legal</loc>

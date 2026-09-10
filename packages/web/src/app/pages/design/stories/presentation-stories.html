@@ -1,0 +1,150 @@
+<app-story-page [entry]="entry" [definition]="definition">
+  <div storyControls class="settings">
+    @if (entry.id === 'language-selector') {
+    <label><input type="checkbox" [formField]="controls.compact" />{{ text().compact }}</label> }
+    @else if (entry.id === 'site-footer') {
+    <label
+      ><input type="checkbox" [formField]="controls.preferences" />{{ text().preferences }}</label
+    >
+    } @else if (entry.id === 'concrete-examples') {
+    <label
+      >{{ 'context' }}<select class="select" [formField]="controls.context">
+        <option [value]="'examples'">{{ 'examples' }}</option>
+        <option [value]="'expertise'">{{ 'expertise' }}</option>
+      </select></label
+    >
+    } @else if (entry.id === 'site-header' || entry.id === 'theme-toggle' || entry.id ===
+    'new-label' || entry.id === 'mobile-navigation') {
+    <p>{{ text().none }} · {{ 'inputs' }}</p>
+    } @else { <label>{{ text().label }}<input class="input" [formField]="controls.label" /></label
+    ><label
+      >{{ text().description }}<textarea
+        class="input"
+        [formField]="controls.description"
+      ></textarea>
+    </label>
+    }
+  </div>
+  <div storyPreview class="sample">
+    @switch (entry.id) { @case ('page-header') {
+    <app-page-header
+      ><h3>{{ model().label }}</h3>
+      <p>{{ model().description }}</p>
+      <button pageActions appButton type="button" (click)="event.set('pageActions')">
+        {{ text().execute }}
+      </button></app-page-header
+    >
+    } @case ('outcome-panel') {
+    <aside appOutcomePanel>
+      <h3>{{ model().label }}</h3>
+      <p>{{ model().description }}</p>
+    </aside>
+    } @case ('visual-sample') {
+    <app-visual-sample [name]="model().label"><p>{{ model().description }}</p></app-visual-sample> }
+    @case ('process-timeline') { <app-process-timeline [steps]="steps()" /> } @case
+    ('concrete-examples') {
+    <app-concrete-examples anchor="reference-concrete-preview" [context]="model().context" /> }
+    @case ('contact-actions') {
+    <app-contact-actions
+      [mailLabel]="model().label"
+      [bookLabel]="text().details"
+      [subject]="model().label"
+      [body]="model().description"
+      (click)="interceptLink($event)"
+    />
+    } @case ('site-header') {
+    <div class="site-frame" tabindex="0" [attr.aria-label]="text().preview" data-variant>
+      <app-site-header />
+    </div>
+    } @case ('mobile-navigation') {
+    <button
+      appButton
+      type="button"
+      [attr.aria-expanded]="mobileNavigation.open()"
+      aria-haspopup="dialog"
+      (click)="toggleNavigation($event)"
+      data-variant
+    >
+      {{ text().open }}</button
+    >@if (mobileNavigation.open()) { <app-mobile-navigation /> } } @case ('site-footer') {
+    <div class="site-frame" tabindex="0" [attr.aria-label]="text().preview">
+      <app-site-footer [showPreferences]="model().preferences" />
+    </div>
+    } @case ('language-selector') { <app-language-selector [compact]="model().compact" /> } @case
+    ('theme-toggle') { <app-theme-toggle /> } @case ('new-label') { <app-new-label /> } }
+    <p class="event" role="status">{{ text().events }} : {{ event() }}</p>
+    @if (entry.id === 'contact-actions') {
+    <p>{{ text().local }}</p>
+    }
+  </div>
+  <div storyVariants class="samples">
+    @switch (entry.id) { @case ('page-header') { @for (actions of [false, true]; track actions) {
+    <div class="sample full" data-variant>
+      <app-page-header
+        ><h3>{{ text().titleField }}</h3>
+        <p>{{ text().description }}</p>
+        @if (actions) {
+        <button pageActions appButton type="button" (click)="event.set('pageActions')">
+          {{ text().execute }}
+        </button>
+        }</app-page-header
+      >
+    </div>
+    } } @case ('outcome-panel') {
+    <div class="sample" data-variant>
+      <aside appOutcomePanel>
+        <h3>{{ text().content }}</h3>
+        <p>{{ text().local }}</p>
+      </aside>
+    </div>
+    } @case ('visual-sample') {
+    <div class="sample" data-variant>
+      <app-visual-sample name="Button"
+        ><button appButton type="button" (click)="event.set('click')">
+          {{ text().execute }}
+        </button></app-visual-sample
+      >
+    </div>
+    } @case ('process-timeline') { @for (items of [[], steps()]; track $index) {
+    <div class="sample" data-variant>
+      <code>{{ $index === 0 ? 'empty' : 'steps' }}</code><app-process-timeline [steps]="items" />
+    </div>
+    } } @case ('concrete-examples') { @for (context of ['examples', 'expertise']; track context) {
+    <div class="sample full" data-variant>
+      <app-concrete-examples
+        [anchor]="'reference-concrete-' + context"
+        [context]="context === 'examples' ? 'examples' : 'expertise'"
+      />
+    </div>
+    } } @case ('contact-actions') { @for (subject of ['', 'Example']; track subject) {
+    <div class="sample" data-variant>
+      <code>{{ subject || 'default' }}</code
+      ><app-contact-actions
+        [mailLabel]="text().email"
+        [bookLabel]="text().details"
+        [subject]="subject"
+        (click)="interceptLink($event)"
+      />
+    </div>
+    } } @case ('site-header') {
+    <p>{{ text().samePreview }}</p>
+    } @case ('mobile-navigation') {
+    <p>{{ text().samePreview }}</p>
+    } @case ('site-footer') { @for (preferences of [false, true]; track preferences) {
+    <div class="sample full" data-variant>
+      <div class="site-frame" tabindex="0" [attr.aria-label]="text().variants">
+        <app-site-footer [showPreferences]="preferences" />
+      </div>
+    </div>
+    } } @case ('language-selector') { @for (compact of [false, true]; track compact) {
+    <div class="sample" data-variant>
+      <code>{{ compact ? 'compact' : 'default' }}</code
+      ><app-language-selector [compact]="compact" />
+    </div>
+    } } @case ('theme-toggle') {
+    <div class="sample" data-variant><app-theme-toggle /></div>
+    } @case ('new-label') {
+    <div class="sample" data-variant><app-new-label /></div>
+    } }
+  </div>
+</app-story-page>

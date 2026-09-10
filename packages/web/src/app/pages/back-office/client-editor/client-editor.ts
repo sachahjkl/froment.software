@@ -85,7 +85,11 @@ export class ClientEditor {
   protected readonly clientForm = form(this.model, (path) => {
     disabled(
       path,
-      () => this.saving() || this.state() !== 'ready' || this.client()?.archived === true,
+      () =>
+        this.saving() ||
+        this.completed() ||
+        this.state() !== 'ready' ||
+        this.client()?.archived === true,
     );
     required(path.displayName);
     pattern(path.displayName, /\S/);
@@ -173,6 +177,11 @@ export class ClientEditor {
     event.preventDefault();
     if (this.saving() || this.completed() || this.state() !== 'ready' || this.client()?.archived)
       return;
+    this.clientForm().markAsTouched();
+    if (this.clientForm().invalid()) {
+      this.clientForm().errorSummary()[0]?.fieldTree().focusBoundControl();
+      return;
+    }
     void submit(this.clientForm, async () => {
       this.saving.set(true);
       this.error.set(undefined);

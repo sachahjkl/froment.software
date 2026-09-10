@@ -2,6 +2,11 @@ import { Schema } from 'effect';
 import { Ulid } from '../identifiers.js';
 import { PositiveSafeInteger, SafeInteger } from '../documents/lines.js';
 import { CalendarDate, IsoUtc } from '../temporal.js';
+import {
+  AuthenticationRequired,
+  PermissionDenied,
+  RequestRateLimited,
+} from '../authentication/contracts.js';
 
 export const CreditNoteRequest = Schema.Struct({
   requestId: Schema.String.check(Schema.isUUID(4)),
@@ -50,3 +55,9 @@ export class InvoiceCreditConflict extends Schema.TaggedError<InvoiceCreditConfl
   { code: Schema.Literal('invoice.credit_conflict') },
   { httpApiStatus: 409 },
 ) {}
+export const InvoiceCreditFailure = Schema.Union([
+  InvoiceCreditConflict,
+  AuthenticationRequired,
+  PermissionDenied,
+  RequestRateLimited,
+]);

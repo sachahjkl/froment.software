@@ -5,21 +5,109 @@
       <h1 id="affairs-title">{{ i18n.t('backOffice.affairs.title') }}</h1>
       <p class="intro">{{ i18n.t('backOffice.affairs.intro') }}</p>
     </div>
-    <a appLinkButton variant="primary" routerLink="/backoffice/quotes/new">
+    <a
+      appLinkButton
+      variant="primary"
+      routerLink="/backoffice/quotes/new"
+      [queryParams]="returnQuery(currentView())"
+    >
       {{ i18n.t('backOffice.quotes.new') }}
     </a>
   </header>
 
-  <app-tabs [label]="i18n.t('backOffice.affairs.tabs')" [tabs]="tabs()" />
+  <app-tabs [label]="i18n.t('backOffice.affairs.tabs')" [tabs]="tabs()" [preserveQuery]="true" />
   <router-outlet />
   <ng-template appTabPanel="affairs" let-tab="tab">
     <section
+      appListWorkspace
       id="affairs-panel"
       role="region"
       [attr.aria-labelledby]="'affairs-' + tab + '-tab'"
       tabindex="0"
     >
-      @switch (state()) { @case ('loading') {
+      <app-list-toolbar>
+        <app-list-search
+          listSearch
+          [label]="i18n.t('commercial.search')"
+          [formField]="filters.q"
+          (valueChange)="setFilter('q', $event)"
+        />
+        <app-filter-menu
+          #menu
+          listFilters
+          [label]="i18n.t('listWorkspace.filters')"
+          [closeLabel]="i18n.t('listWorkspace.closeFilters')"
+          [backLabel]="i18n.t('listWorkspace.backFilters')"
+          [activeCount]="activeFilterCount()"
+          [disabled]="state() !== 'ready'"
+        >
+          <ng-template
+            appFilterPanel
+            [label]="i18n.t('backOffice.affairs.progress')"
+            [summary]="stageSummary()"
+          >
+            <app-filter-choice
+              [label]="i18n.t('listWorkspace.searchChoices')"
+              [emptyLabel]="i18n.t('listWorkspace.noChoices')"
+              [options]="stageOptions()"
+              [value]="filters.stage().value()"
+              [disabled]="filters.stage().disabled()"
+              (committed)="setFilter('stage', $event); menu.close()"
+            />
+          </ng-template>
+          <ng-template
+            appFilterPanel
+            [label]="i18n.t('backOffice.affairs.client')"
+            [summary]="clientSummary()"
+          >
+            <app-filter-choice
+              [label]="i18n.t('listWorkspace.searchChoices')"
+              [emptyLabel]="i18n.t('listWorkspace.noChoices')"
+              [options]="clientOptions()"
+              [value]="filters.client().value()"
+              [disabled]="filters.client().disabled()"
+              (committed)="setFilter('client', $event); menu.close()"
+            />
+          </ng-template>
+        </app-filter-menu>
+        <app-table-export
+          listActions
+          [columns]="exportColumns()"
+          [rows]="exportRows(tab)"
+          filename="affairs.csv"
+          [label]="i18n.t('listWorkspace.exportCsv')"
+          [emptyHint]="i18n.t('listWorkspace.exportEmpty')"
+          [pendingHint]="i18n.t('listWorkspace.exportPending')"
+          [pending]="state() === 'loading'"
+        />
+        @if (state() === 'ready') {
+        <p listSummary role="status">
+          {{ i18n.plural('commercial.count', { count: visibleAffairs(tab).length }) }}
+        </p>
+        }
+      </app-list-toolbar>
+      @if (hasFilters()) {
+      <div class="filter-summary">
+        @if (filters.q().value()) {
+        <button
+          appFilterChip
+          [label]="i18n.tf('commercial.searchFilter', { query: filters.q().value() })"
+          (click)="setFilter('q', '')"
+        ></button>
+        } @if (filters.stage().value(); as stage) {
+        <button appFilterChip [label]="stageLabel(stage)" (click)="setFilter('stage', '')"></button>
+        } @if (filters.client().value(); as client) {
+        <button
+          appFilterChip
+          [label]="clientLabel(client)"
+          (click)="setFilter('client', '')"
+        ></button>
+        }
+        <button appButton type="button" variant="link" (click)="clearFilters()">
+          {{ i18n.t('commercial.clearFilters') }}
+        </button>
+      </div>
+      } @switch (state()) { @case ('loading') {
       <p class="state" aria-live="polite">{{ i18n.t('backOffice.affairs.loading') }}</p>
       } @case ('error') {
       <p appNotice variant="danger" role="alert">{{ i18n.t('backOffice.affairs.error') }}</p>
@@ -27,34 +115,64 @@
         {{ i18n.t('backOffice.affairs.retry') }}
       </button>
       } @case ('ready') { @if (visibleAffairs(tab).length === 0) {
-      <p class="empty ds-panel">{{ i18n.t('backOffice.affairs.empty') }}</p>
+      <p class="empty ds-panel">
+        {{ i18n.t(hasFilters() ? 'commercial.noMatches' : 'backOffice.affairs.empty') }}
+      </p>
       } @else {
+      <p id="affairs-sort-hint" class="sort-hint">{{ i18n.t('commercial.sortHint') }}</p>
       <div appDataTable>
-        <table>
+        <table aria-describedby="affairs-sort-hint">
           <thead>
             <tr>
-              <th>{{ i18n.t('backOffice.affairs.reference') }}</th>
-              <th>{{ i18n.t('backOffice.affairs.client') }}</th>
-              <th>{{ i18n.t('backOffice.affairs.progress') }}</th>
-              <th>{{ i18n.t('backOffice.affairs.amount') }}</th>
-              <th class="actions-column">{{ i18n.t('backOffice.affairs.action') }}</th>
+              @for (column of columns; track column.key) {
+              <th
+                scope="col"
+                [id]="'affairs-column-' + column.key"
+                [class.amount]="column.key === 'amount'"
+                [attr.aria-sort]="sortDirection(column.key) === 'none' ? null : sortDirection(column.key)"
+              >
+                <button
+                  appTableSort
+                  [label]="i18n.t(column.label)"
+                  [direction]="sortDirection(column.key)"
+                  (click)="setSort(column.key)"
+                ></button>
+              </th>
+              }
+              <th scope="col" class="actions-column">{{ i18n.t('backOffice.affairs.action') }}</th>
             </tr>
           </thead>
           <tbody>
             @for (affair of visibleAffairs(tab); track affair.quote.id) {
             <tr>
-              <td>
-                <a [routerLink]="['/backoffice/affaires', affair.quote.id]"
-                  ><strong>{{ affair.quote.reference }}</strong></a
-                ><small>{{ affair.quote.title }}</small>
+              <td class="reference">
+                <a
+                  [routerLink]="['/backoffice/affaires', affair.quote.id]"
+                  [queryParams]="returnQuery(tab)"
+                  ><strong [appSearchHighlight]="affair.referenceMatches"
+                    >{{ affair.quote.reference }}</strong
+                  ></a
+                >
               </td>
-              <td>{{ affair.quote.clientDisplayName }}</td>
+              <td class="title" [appSearchHighlight]="affair.titleMatches">
+                {{ affair.quote.title }}
+              </td>
+              <td>
+                <span [appSearchHighlight]="affair.clientMatches"
+                  >{{ affair.quote.clientDisplayName }}</span
+                >
+              </td>
               <td>
                 <span appBadge [variant]="stageVariant(affair.stage)">
-                  {{ stageLabel(affair.stage) }}
+                  {{ affair.stageLabel }}
                 </span>
               </td>
-              <td>{{ money(affair.quote.totalCents) }}</td>
+              <td class="amount">{{ money(affair.quote.totalCents) }}</td>
+              <td>
+                <time [attr.datetime]="affair.quote.updatedAt"
+                  >{{ date(affair.quote.updatedAt) }}</time
+                >
+              </td>
               <td class="actions-column">
                 @if (affair.invoice) {
                 <a appLinkButton [routerLink]="['/backoffice/invoices', affair.invoice.id]">
@@ -69,7 +187,11 @@
                   {{ actionLabel(affair) }}
                 </a>
                 } @else {
-                <a appLinkButton [routerLink]="['/backoffice/quotes', affair.quote.id]">
+                <a
+                  appLinkButton
+                  [routerLink]="['/backoffice/quotes', affair.quote.id]"
+                  [queryParams]="returnQuery(tab)"
+                >
                   {{ actionLabel(affair) }}
                 </a>
                 }

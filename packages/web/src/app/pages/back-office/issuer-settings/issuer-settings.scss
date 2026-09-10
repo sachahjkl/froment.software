@@ -19,7 +19,14 @@ h2 {
 }
 
 form {
-  max-width: 56rem;
+  display: grid;
+  gap: var(--space-5);
+}
+
+fieldset {
+  min-inline-size: 0;
+  margin: 0;
+  padding: var(--space-5);
 }
 
 .actions {

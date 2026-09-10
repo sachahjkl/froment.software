@@ -1,0 +1,5 @@
+@use "./email-test";
+
+[appListWorkspace] > * {
+  margin-block-start: 0;
+}

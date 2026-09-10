@@ -63,7 +63,7 @@ La réception d’une demande par un prestataire ne prouve ni sa livraison ni sa
 Le sélecteur partagé `ObjectPicker` utilise une fenêtre CDK et une recherche Fuse.
 Le clavier permet de choisir un résultat ou de fermer la fenêtre avec Échap.
 La fenêtre restaure le focus sur son bouton.
-La page `/design/data` contient une démonstration interactive de ce sélecteur.
+La page `/design/object-picker` contient une démonstration interactive de ce sélecteur.
 
 Les scénarios navigateur couvrent les listes, formulaires, conflits, confirmations et reprises sans doublon.
 Le scénario existant de zoom Chromium vérifie aussi Courriels avec un zoom navigateur réel de 200 %.

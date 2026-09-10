@@ -1,0 +1,89 @@
+<section class="commercial-page" aria-labelledby="order-title">
+  <a
+    [routerLink]="['/backoffice/affaires', context().view ?? 'attention']"
+    [queryParams]="context()"
+    >{{ i18n.t('backOffice.backToAffairs') }}</a
+  >
+  @if (state() !== 'ready') {
+  <h1 id="order-title">{{ i18n.t('commercial.order') }}</h1>
+  } @switch (state()) { @case ('loading') {
+  <p role="status">{{ i18n.t('backOffice.affair.loading') }}</p>
+  } @case ('error') {
+  <p appNotice variant="danger" role="alert">{{ i18n.t('commercial.orderUnavailable') }}</p>
+  <button appButton type="button" (click)="load()">{{ i18n.t('backOffice.affair.retry') }}</button>
+  } @case ('ready') { @if (order(); as order) { @if (revision(); as revision) {
+  <header>
+    <div>
+      <p class="eyebrow">{{ i18n.t('commercial.order') }} · {{ order.reference }}</p>
+      <h1 id="order-title">{{ order.title }}</h1>
+    </div>
+    @if (order.invoiceId) {
+    <a appLinkButton variant="primary" [routerLink]="['/backoffice/invoices', order.invoiceId]"
+      >{{ i18n.t('backOffice.affairs.openInvoice') }}</a
+    >
+    } @else {
+    <a
+      appLinkButton
+      variant="primary"
+      routerLink="/backoffice/invoices/new"
+      [queryParams]="{ orderId: order.id }"
+      >{{ i18n.t('backOffice.affairs.createInvoice') }}</a
+    >
+    }
+  </header>
+  <p appNotice>{{ i18n.t('commercial.orderImmutable') }}</p>
+  <dl class="facts">
+    <div>
+      <dt>{{ i18n.t('commercial.confirmedAt') }}</dt>
+      <dd>{{ date(order.createdAt) }}</dd>
+    </div>
+    <div>
+      <dt>{{ i18n.t('backOffice.quote.client') }}</dt>
+      <dd>
+        <a [routerLink]="['/backoffice/clients', order.clientId, 'profile']"
+          >{{ order.clientDisplayName }}</a
+        >
+      </dd>
+    </div>
+    <div>
+      <dt>{{ i18n.t('commercial.acceptedQuote') }}</dt>
+      <dd>
+        <a
+          [routerLink]="['/backoffice/quotes', order.quoteId, 'document']"
+          [queryParams]="revisionQuery(revision.version)"
+          >{{ order.quoteReference }} · {{ i18n.tf('commercial.revision', { version:
+          revision.version }) }}</a
+        >
+      </dd>
+    </div>
+  </dl>
+  <app-quote-lines [revision]="revision" />
+  <section class="section-space" aria-labelledby="order-document-title">
+    <h2 id="order-document-title">{{ i18n.t('commercial.orderPdf') }}</h2>
+    <div class="actions">
+      <a
+        appLinkButton
+        [href]="'/api/orders/' + order.id + '/preview'"
+        target="_blank"
+        rel="noopener noreferrer"
+        >{{ i18n.t('backOffice.quote.preview.open') }}</a
+      >
+      <button appButton type="button" [disabled]="pending()" (click)="generate()">
+        {{ i18n.t(pending() ? 'backOffice.quote.pdf.generating' : 'backOffice.quote.pdf.generate')
+        }}
+      </button>
+      @if (pdfReady()) {
+      <a appLinkButton [href]="'/api/orders/' + order.id + '/pdf'"
+        >{{ i18n.t('backOffice.quote.pdf.download') }}</a
+      >
+      }
+    </div>
+    @if (pdfError()) {
+    <p appNotice variant="danger" role="alert">{{ i18n.t('commercial.orderUnavailable') }}</p>
+    }
+  </section>
+  <a [routerLink]="['/backoffice/affaires', order.quoteId]" [queryParams]="context()"
+    >{{ i18n.t('commercial.backAffair') }}</a
+  >
+  } } } }
+</section>

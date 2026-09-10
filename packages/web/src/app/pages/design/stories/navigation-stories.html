@@ -1,0 +1,146 @@
+<app-story-page [entry]="entry" [definition]="definition">
+  <div storyControls class="settings">
+    <label>{{ text().label }}<input class="input" [formField]="controls.label" /></label>
+    @if (entry.id === 'breadcrumbs') {
+    <label>{{ text().current }}<input class="input" [formField]="controls.current" /></label> } @if
+    (entry.id === 'tabs' || entry.id === 'tab-layout') {
+    <label><input type="checkbox" [formField]="controls.disabled" />{{ text().disabled }}</label
+    ><label
+      ><input type="checkbox" [formField]="controls.preserveQuery" />{{ 'preserveQuery' }}</label
+    >
+    } @if (entry.id === 'result-navigation') {
+    <label
+      >{{ text().current }}<input class="input" type="number" [formField]="controls.page"
+    /></label>
+    } @if (entry.id === 'confirmation') {
+    <label
+      >{{ text().description }}<textarea
+        class="input"
+        [formField]="controls.message"
+      ></textarea></label
+    ><label><input type="checkbox" [formField]="controls.danger" />{{ 'danger' }}</label>
+    <p>{{ text().local }}</p>
+    }
+  </div>
+  <div storyPreview class="sample">
+    @switch (entry.id) { @case ('breadcrumbs') {
+    <app-breadcrumbs [label]="model().label" [items]="parents()" [current]="model().current" /> }
+    @case ('drawer') {
+    <button appButton type="button" (click)="drawerMode.set('preview')">{{ model().label }}</button>
+    } @case ('confirmation') {
+    <button appButton type="button" (click)="confirm(model().danger)">{{ model().label }}</button> }
+    @case ('result-navigation') {
+    <app-result-navigation
+      [label]="model().label"
+      [rangeLabel]="model().page + ' / 3'"
+      [previousLabel]="text().previous"
+      [nextLabel]="text().next"
+      [previousDisabled]="model().page <= 1"
+      [nextDisabled]="model().page >= 3"
+      (previous)="move(-1)"
+      (next)="move(1)"
+    />
+    } @default {
+    <section appTabLayout>
+      <app-tabs
+        [label]="model().label"
+        [tabs]="tabs()"
+        [disabled]="model().disabled"
+        [preserveQuery]="model().preserveQuery"
+      /><router-outlet /><ng-template appTabPanel="reference-tabs" let-tab="tab"
+        ><section
+          [attr.aria-labelledby]="tab === 'first' ? 'reference-first-tab' : 'reference-second-tab'"
+        >
+          <h3>{{ tab === 'first' ? text().preview : text().details }}</h3>
+          <p>{{ text().content }}</p>
+        </section></ng-template
+      >
+    </section>
+    } }
+    <p class="event" role="status">{{ text().events }} : {{ event() }}</p>
+  </div>
+  <div storyVariants class="samples">
+    @switch (entry.id) { @case ('breadcrumbs') { @for (items of [[], parents()]; track $index) {
+    <div class="sample" data-variant>
+      <app-breadcrumbs [label]="text().navigation" [items]="items" [current]="text().current" />
+    </div>
+    } } @case ('drawer') { @for (mode of ['simple', 'heading']; track mode) {
+    <div class="sample" data-variant>
+      <code>{{ mode }}</code
+      ><button
+        appButton
+        type="button"
+        (click)="drawerMode.set(mode === 'simple' ? 'simple' : 'heading')"
+      >
+        {{ text().open }}
+      </button>
+    </div>
+    } } @case ('confirmation') { @for (danger of [false, true]; track danger) {
+    <div class="sample" data-variant>
+      <code>{{ danger ? 'danger' : 'primary' }}</code
+      ><button
+        appButton
+        type="button"
+        [variant]="danger ? 'danger' : 'primary'"
+        (click)="confirm(danger)"
+      >
+        {{ text().confirm }}
+      </button>
+    </div>
+    } } @case ('result-navigation') { @for (page of [1, 2, 3]; track page) {
+    <div class="sample" data-variant>
+      <app-result-navigation
+        [label]="text().navigation"
+        [rangeLabel]="page + ' / 3'"
+        [previousLabel]="text().previous"
+        [nextLabel]="text().next"
+        [previousDisabled]="page === 1"
+        [nextDisabled]="page === 3"
+        (previous)="event.set('previous')"
+        (next)="event.set('next')"
+      />
+    </div>
+    } } @case ('tabs') {
+    <div class="sample full" data-variant>
+      <code>{{ 'disabled = false' }}</code
+      ><app-tabs [label]="text().navigation" [tabs]="galleryTabs()" />
+    </div>
+    <div class="sample full" data-variant>
+      <code>{{ 'disabled = true' }}</code
+      ><app-tabs [label]="text().navigation" [tabs]="disabledTabs()" [disabled]="true" />
+    </div>
+    } @case ('tab-layout') {
+    <section class="sample" data-variant appTabLayout>
+      <ng-template appTabPanel="reference-gallery"
+        ><h3>{{ text().content }}</h3>
+        <p>{{ 'TabLayout → TabPanel → TabPanelOutlet' }}</p></ng-template
+      ><app-tab-panel-outlet />
+    </section>
+    } }
+  </div>
+</app-story-page>
+<app-drawer
+  [open]="drawerMode() === 'preview' || drawerMode() === 'simple'"
+  [label]="model().label"
+  [closeLabel]="text().close"
+  (closed)="drawerMode.set(undefined)"
+>
+  @if (drawerMode() === 'preview' || drawerMode() === 'simple') {
+  <p>{{ text().local }}</p>
+  <button appButton type="button" (click)="confirm()">{{ text().confirm }}</button>
+  <p role="status">{{ event() }}</p>
+  }
+</app-drawer>
+<app-drawer
+  [open]="drawerMode() === 'heading'"
+  [label]="model().label"
+  [closeLabel]="text().close"
+  (closed)="drawerMode.set(undefined)"
+>
+  <strong drawerHeading>{{ text().content }}</strong>
+  @if (drawerMode() === 'heading') {
+  <p>{{ text().local }}</p>
+  <button appButton type="button" (click)="confirm()">{{ text().confirm }}</button>
+  <p role="status">{{ event() }}</p>
+  }
+</app-drawer>

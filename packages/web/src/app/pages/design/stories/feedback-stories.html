@@ -1,0 +1,114 @@
+<app-story-page [entry]="entry" [definition]="definition">
+  <div storyControls class="settings">
+    <label>{{ text().label }}<input class="input" [formField]="controls.label" /></label>
+    @if (entry.id === 'badge') {
+    <label
+      >{{ text().variant }}<select class="select" [formField]="controls.badge">
+        @for (variant of badges; track variant) {
+        <option [value]="variant">{{ variant }}</option>
+        }
+      </select></label
+    >
+    } @if (entry.id === 'notice') {
+    <label
+      >{{ text().variant }}<select class="select" [formField]="controls.notice">
+        @for (variant of notices; track variant) {
+        <option [value]="variant">{{ variant }}</option>
+        }
+      </select></label
+    >
+    } @if (entry.id === 'status-block') {
+    <label
+      >{{ text().variant }}<select class="select" [formField]="controls.status">
+        @for (variant of statuses; track variant) {
+        <option [value]="variant">{{ variant }}</option>
+        }
+      </select></label
+    >
+    } @if (entry.id === 'icon' || entry.id === 'empty-state') {
+    <label
+      >{{ text().icon }}<select class="select" [formField]="controls.icon">
+        @for (icon of icons; track icon) {
+        <option [value]="icon">{{ icon }}</option>
+        }
+      </select></label
+    >
+    } @if (entry.id === 'hint' || entry.id === 'empty-state' || entry.id === 'status-block') {
+    <label
+      >{{ text().description }}<textarea
+        class="input"
+        [formField]="controls.description"
+      ></textarea>
+    </label>
+    }
+  </div>
+  <div storyPreview class="sample">
+    @switch (entry.id) { @case ('badge') {
+    <span appBadge [variant]="model().badge">{{ model().label }}</span> } @case ('notice') {
+    <p appNotice [variant]="model().notice">{{ model().label }}</p>
+    } @case ('status-block') {
+    <section appStatusBlock [variant]="model().status">
+      <h3>{{ model().label }}</h3>
+      <p>{{ model().description }}</p>
+    </section>
+    } @case ('empty-state') {
+    <app-empty-state [title]="model().label" [icon]="model().icon"
+      ><p>{{ model().description }}</p>
+      <button appButton type="button" (click)="event.set('reset')">
+        {{ text().reset }}
+      </button></app-empty-state
+    >
+    } @case ('hint') {
+    <app-hint #previewHint [text]="model().description"
+      ><button appButton type="button" [attr.aria-describedby]="previewHint.id">
+        {{ model().label }}
+      </button></app-hint
+    >
+    } @case ('icon') {
+    <span class="row"><app-icon [name]="model().icon" />{{ model().label }}</span> } }
+    <p class="event" role="status">{{ event() }}</p>
+  </div>
+  <div storyVariants class="samples">
+    @switch (entry.id) { @case ('badge') { @for (variant of badges; track variant) {
+    <div class="sample" data-variant>
+      <code>{{ variant }}</code><span appBadge [variant]="variant">{{ variant }}</span>
+    </div>
+    } } @case ('notice') { @for (variant of notices; track variant) {
+    <div class="sample" data-variant>
+      <code>{{ variant }}</code>
+      <p appNotice [variant]="variant">{{ text().content }}</p>
+    </div>
+    } } @case ('status-block') { @for (variant of statuses; track variant) {
+    <div class="sample" data-variant>
+      <code>{{ variant }}</code>
+      <section appStatusBlock [variant]="variant">
+        <h3>{{ variant }}</h3>
+        <p>{{ text().content }}</p>
+      </section>
+    </div>
+    } } @case ('empty-state') { @for (state of ['empty', 'search', 'error']; track state) {
+    <div class="sample" data-variant>
+      <code>{{ state }}</code
+      ><app-empty-state
+        [title]="state === 'error' ? text().failed : state === 'search' ? text().noResults : text().empty"
+        [icon]="state === 'search' ? 'search' : 'folder'"
+        ><button appButton type="button" (click)="event.set(state)">
+          {{ state === 'error' ? text().retry : text().reset }}
+        </button></app-empty-state
+      >
+    </div>
+    } } @case ('hint') { @for (message of [text().content, text().local]; track message) {
+    <div class="sample" data-variant>
+      <app-hint #hint [text]="message"
+        ><button appButton type="button" [attr.aria-describedby]="hint.id">
+          {{ text().details }}
+        </button></app-hint
+      >
+    </div>
+    } } @case ('icon') { @for (icon of icons; track icon) {
+    <div class="sample" data-variant>
+      <span class="row"><app-icon [name]="icon" /><code>{{ icon }}</code></span>
+    </div>
+    } } }
+  </div>
+</app-story-page>

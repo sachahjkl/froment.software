@@ -1,0 +1,55 @@
+<search [attr.aria-label]="i18n.t('backOffice.search.title')">
+  <label class="field" [for]="id"
+    >{{ i18n.t('backOffice.search.label') }}
+    <input
+      [id]="id"
+      class="input"
+      type="search"
+      autocomplete="off"
+      [formField]="searchForm.query"
+      (focus)="open()"
+      (input)="open()"
+      [attr.aria-controls]="opened() ? id + '-results' : null"
+    />
+  </label>
+  @if (opened()) {
+  <section
+    [id]="id + '-results'"
+    class="results ds-panel"
+    [attr.aria-label]="i18n.t('backOffice.search.result')"
+  >
+    <div class="result-heading">
+      @if (state() === 'ready') {
+      <p role="status">{{ i18n.plural('globalSearch.count', { count: displayedCount() }) }}</p>
+      }
+      <button appButton type="button" (click)="close()">{{ i18n.t('globalSearch.close') }}</button>
+    </div>
+    @switch (state()) { @case ('loading') {
+    <p role="status">{{ i18n.t('backOffice.dashboard.loading') }}</p>
+    } @case ('error') {
+    <p role="alert">{{ i18n.t('backOffice.dashboard.error') }}</p>
+    <button appButton type="button" (click)="retry()">
+      {{ i18n.t('backOffice.dashboard.retry') }}
+    </button>
+    } @case ('ready') { @if (!searchForm.query().value().trim()) {
+    <p>{{ i18n.t('globalSearch.hint') }}</p>
+    } @else { @for (group of groups(); track group.kind) {
+    <section [attr.aria-labelledby]="id + '-' + group.kind">
+      <h2 [id]="id + '-' + group.kind">{{ group.label }}</h2>
+      <ul>
+        @for (result of group.results; track result.id) {
+        <li>
+          <a [routerLink]="result.link"
+            ><strong [appSearchHighlight]="result.referenceMatches">{{ result.reference }}</strong
+            ><span [appSearchHighlight]="result.detailMatches">{{ result.detail }}</span></a
+          >
+        </li>
+        }
+      </ul>
+    </section>
+    } @empty {
+    <p>{{ i18n.t('backOffice.search.empty') }}</p>
+    } } } }
+  </section>
+  }
+</search>

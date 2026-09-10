@@ -1,0 +1,47 @@
+<section class="billing-page" aria-labelledby="cancel-title">
+  <h1 id="cancel-title">{{ i18n.t('payment.cancel') }}</h1>
+  <app-invoice-task-summary />
+  <p appNotice>{{ i18n.t('billingWorkspace.cancelReceiptHint') }}</p>
+  <app-invoice-task-feedback /> @if (payment(); as payment) {
+  <p>
+    <strong>{{ payment.reference }}</strong> · {{ task.money(payment.amountCents) }} · {{
+    payment.paidOn }}
+  </p>
+  } @if (task.invoice() && !task.completed() && !credits.isLoading()) { @if (!credits.hasValue() ||
+  !credits.value().success) {
+  <p appNotice variant="danger" role="alert">{{ i18n.t('credit.error') }}</p>
+  } @else if (!eligible()) {
+  <p appNotice>{{ i18n.t('billingWorkspace.unavailable') }}</p>
+  } @else {
+  <form class="task-form" (submit)="save($event)">
+    <label class="field"
+      >{{ i18n.t('payment.cancel_reason') }}<textarea
+        class="input"
+        rows="4"
+        [formField]="cancelForm.reason"
+        [attr.aria-invalid]="cancelForm.reason().invalid() && cancelForm.reason().touched()"
+        aria-describedby="cancel-reason-hint cancel-reason-error"
+      ></textarea>
+      <small id="cancel-reason-hint">{{ i18n.tf('billingWorkspace.limit', { count: 500 }) }}</small>
+      <span id="cancel-reason-error" class="field-error"
+        >@if (cancelForm.reason().invalid() && cancelForm.reason().touched()) { {{
+        i18n.t('billingWorkspace.reasonInvalid') }} }</span
+      >
+    </label>
+    <div class="actions">
+      <button appButton variant="danger" type="submit" [disabled]="task.locked()">
+        {{ i18n.t('payment.cancel') }}
+      </button>
+      @if (task.uncertain()) {
+      <button appButton type="button" [disabled]="task.busy()" (click)="retry()">
+        {{ i18n.t('billingWorkspace.retrySame') }}
+      </button>
+      }
+    </div>
+  </form>
+  } } @if (!task.completed() && !task.uncertain()) {
+  <button appButton [disabled]="task.busy() || task.loading()" (click)="reload()">
+    {{ i18n.t('credit.reload') }}
+  </button>
+  }
+</section>

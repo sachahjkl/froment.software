@@ -1,0 +1,15 @@
+@use "../quote-detail/commercial-detail";
+.publication > form,
+.publication > .panel,
+app-copy-field {
+  max-width: 52rem;
+}
+.review-check {
+  display: flex;
+  align-items: start;
+  gap: var(--space-3);
+}
+.review-check input {
+  margin-top: 0.3em;
+  flex: none;
+}

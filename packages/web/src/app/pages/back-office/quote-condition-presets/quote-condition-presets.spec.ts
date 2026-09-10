@@ -1,20 +1,80 @@
 import { TestBed } from '@angular/core/testing';
-import { provideRouter } from '@angular/router';
+import { ActivatedRoute, convertToParamMap, provideRouter, Router } from '@angular/router';
+import { of } from 'rxjs';
 import { vi } from 'vitest';
 
 import { QuoteConditionPresetsApi } from '@backoffice/quote-condition-presets-api';
+import { ConditionEditor } from './condition-editor';
 import { QuoteConditionPresets } from './quote-condition-presets';
 
 describe('QuoteConditionPresets', () => {
-  it('keeps the reload error and edited values when saving succeeds but reload fails', async () => {
-    const list = vi.fn().mockResolvedValueOnce([]).mockRejectedValueOnce(new Error('offline'));
+  afterEach(() => vi.restoreAllMocks());
+
+  it('keeps conditions searchable without inventing status or date filters', async () => {
+    TestBed.configureTestingModule({
+      providers: [
+        provideRouter([]),
+        {
+          provide: QuoteConditionPresetsApi,
+          useValue: { list: async () => [] },
+        },
+      ],
+    });
+    const fixture = TestBed.createComponent(QuoteConditionPresets);
+    await fixture.whenStable();
+    const root: HTMLElement = fixture.nativeElement;
+    expect(root.querySelector('app-list-search')).not.toBeNull();
+    expect(root.querySelector('app-filter-menu')).toBeNull();
+    expect(root.querySelector('app-date-range-filter')).toBeNull();
+  });
+
+  it('keeps validated list context after a successful edit', async () => {
+    const preset = {
+      id: '01ARZ3NDEKTSV4RRFFQ69G5FAV',
+      name: 'Payment',
+      conditions: 'Within 30 days',
+    };
+    const update = vi.fn().mockResolvedValue({ success: true, result: preset });
+    TestBed.configureTestingModule({
+      providers: [
+        provideRouter([]),
+        {
+          provide: ActivatedRoute,
+          useValue: {
+            snapshot: { paramMap: convertToParamMap({ presetId: preset.id }) },
+            queryParamMap: of(
+              convertToParamMap({
+                q: 'Payment',
+                sort: 'conditionsDesc',
+                filter: 'invented',
+                unrelated: 'discard',
+              }),
+            ),
+          },
+        },
+        { provide: QuoteConditionPresetsApi, useValue: { list: async () => [preset], update } },
+      ],
+    });
+    const navigate = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
+    const fixture = TestBed.createComponent(ConditionEditor);
+    await fixture.whenStable();
+    const root: HTMLElement = fixture.nativeElement;
+    expect(root.querySelector('a')?.getAttribute('href')).toContain('sort=conditionsDesc');
+    fixture.componentInstance['save'](new SubmitEvent('submit'));
+    await fixture.whenStable();
+    expect(update).toHaveBeenCalledWith(preset.id, {
+      name: preset.name,
+      conditions: preset.conditions,
+    });
+    expect(navigate).toHaveBeenLastCalledWith(['/backoffice/configuration/conditions'], {
+      queryParams: { q: 'Payment', sort: 'conditionsDesc' },
+    });
+  });
+  it('keeps the error and edited values when saving fails', async () => {
+    const list = vi.fn().mockResolvedValue([]);
     const create = vi.fn().mockResolvedValue({
-      success: true,
-      result: {
-        id: '01ARZ3NDEKTSV4RRFFQ69G5FAV',
-        name: 'Payment',
-        conditions: 'Within 30 days',
-      },
+      success: false,
+      code: 'quote.error',
     });
     TestBed.configureTestingModule({
       providers: [
@@ -22,7 +82,7 @@ describe('QuoteConditionPresets', () => {
         { provide: QuoteConditionPresetsApi, useValue: { list, create } },
       ],
     });
-    const fixture = TestBed.createComponent(QuoteConditionPresets);
+    const fixture = TestBed.createComponent(ConditionEditor);
     await fixture.whenStable();
     const root: HTMLElement = fixture.nativeElement;
     const name = root.querySelector<HTMLInputElement>('#preset-name')!;
@@ -48,7 +108,7 @@ describe('QuoteConditionPresets', () => {
         { provide: QuoteConditionPresetsApi, useValue: { list: () => Promise.resolve([]) } },
       ],
     });
-    const fixture = TestBed.createComponent(QuoteConditionPresets);
+    const fixture = TestBed.createComponent(ConditionEditor);
     await fixture.whenStable();
     const root: HTMLElement = fixture.nativeElement;
     const name = root.querySelector<HTMLInputElement>('#preset-name')!;

@@ -65,6 +65,20 @@ describe('App shell', () => {
     expect(element.querySelector('main#main-content app-version')).not.toBeNull();
   });
 
+  it('uses the standalone shell for the component reference and restores the public shell on exit', async () => {
+    await navigate(fixture, router, '/design');
+    expect(element.querySelector('.app-shell')?.classList).toContain('standalone-shell');
+    expect(element.querySelector('app-site-header')).toBeNull();
+    expect(element.querySelector(':scope > .app-shell > app-site-footer')).toBeNull();
+    expect(element.querySelector('app-design app-site-footer')).not.toBeNull();
+    expect(element.querySelector('app-back-office-header')).toBeNull();
+    expect(element.querySelector('main#main-content app-design')).not.toBeNull();
+    await navigate(fixture, router, '/about');
+    expect(element.querySelector('.app-shell')?.classList).not.toContain('standalone-shell');
+    expect(element.querySelector('app-site-header')).not.toBeNull();
+    expect(element.querySelector('app-site-footer')).not.toBeNull();
+  });
+
   it('updates canonical, robots, and social metadata for route and language changes', async () => {
     await navigate(fixture, router, '/about');
 
@@ -89,12 +103,12 @@ describe('App shell', () => {
       meta('meta[property="og:image:alt"]').content,
     );
 
-    await navigate(fixture, router, '/design?preview=true#profile-sample');
+    await navigate(fixture, router, '/design?preview=true');
 
     expect(meta('meta[name="robots"]').content).toBe('noindex, follow');
-    expect(meta('meta[property="og:url"]').content).toBe('https://froment.software/design/demo');
+    expect(meta('meta[property="og:url"]').content).toBe('https://froment.software/design/button');
     expect(document.head.querySelector<HTMLLinkElement>('link[rel="canonical"]')?.href).toBe(
-      'https://froment.software/design/demo',
+      'https://froment.software/design/button',
     );
     expect(element.querySelector('app-design')).not.toBeNull();
   });
@@ -113,13 +127,12 @@ describe('App shell', () => {
   });
 
   it('focuses a fragment heading without overriding anchor scroll on same-route navigation', async () => {
-    await navigate(fixture, router, '/design');
+    await navigate(fixture, router, '/about');
 
     const main = element.querySelector<HTMLElement>('main#main-content')!;
-    const target = element.querySelector<HTMLElement>('#profile-sample')!;
-    const heading = target.querySelector<HTMLElement>('h2')!;
+    const heading = element.querySelector<HTMLElement>('h2#contact')!;
 
-    await navigate(fixture, router, '/design#profile-sample');
+    await navigate(fixture, router, '/about#contact');
 
     expect(document.activeElement).toBe(heading);
     expect(document.activeElement).not.toBe(main);
@@ -130,11 +143,10 @@ describe('App shell', () => {
   });
 
   it('focuses the fragment heading when navigating to a fragment on another path', async () => {
-    await navigate(fixture, router, '/about');
-    await navigate(fixture, router, '/design#profile-sample');
+    await navigate(fixture, router, '/services');
+    await navigate(fixture, router, '/about#contact');
 
-    const target = element.querySelector<HTMLElement>('#profile-sample')!;
-    expect(document.activeElement).toBe(target.querySelector('h2'));
+    expect(document.activeElement).toBe(element.querySelector('h2#contact'));
   });
 
   it('opens the mobile navigation and closes it after navigation', async () => {

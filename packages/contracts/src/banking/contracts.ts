@@ -60,6 +60,18 @@ export const BankMatchHistory = Schema.Array(
 );
 export type BankTransaction = typeof BankTransaction.Type;
 export const BankImportResult = Schema.Struct({ added: Schema.Int, existing: Schema.Int });
+export const BankImportPreview = Schema.Struct({
+  ...BankImportResult.fields,
+  rows: Schema.Array(
+    Schema.Struct({
+      reference: Schema.String,
+      bookedOn: CalendarDate,
+      amountCents: Schema.Int,
+      description: Schema.String,
+      existing: Schema.Boolean,
+    }),
+  ),
+});
 export const BankMatchRequest = Schema.Struct({
   feeCents: SafeInteger,
   requestId: Schema.String.check(Schema.isUUID(4)),

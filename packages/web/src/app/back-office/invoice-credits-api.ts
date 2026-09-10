@@ -2,7 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import {
   CreditNoteRequest,
-  InvoiceCreditConflict,
+  InvoiceCreditFailure,
   InvoiceCredits,
   InvoiceRefundRequest,
 } from '@froment/contracts';
@@ -15,7 +15,7 @@ export class InvoiceCreditsApi {
     return requestOutcome(
       this.http.get(`/api/invoices/${id}/credits`),
       InvoiceCredits,
-      InvoiceCreditConflict,
+      InvoiceCreditFailure,
       'credit.error',
     );
   }
@@ -23,7 +23,7 @@ export class InvoiceCreditsApi {
     return requestOutcome(
       this.http.post(`/api/invoices/${id}/credits`, request),
       InvoiceCredits,
-      InvoiceCreditConflict,
+      InvoiceCreditFailure,
       'credit.error',
     );
   }
@@ -31,7 +31,7 @@ export class InvoiceCreditsApi {
     return requestOutcome(
       this.http.post(`/api/invoices/${id}/refunds`, request),
       InvoiceCredits,
-      InvoiceCreditConflict,
+      InvoiceCreditFailure,
       'credit.error',
     );
   }
@@ -39,7 +39,7 @@ export class InvoiceCreditsApi {
     return requestOutcome(
       this.http.post(`/api/invoices/${id}/refunds/${refundId}/cancel`, { reason }),
       InvoiceCredits,
-      InvoiceCreditConflict,
+      InvoiceCreditFailure,
       'credit.error',
     );
   }

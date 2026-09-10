@@ -1,344 +1,277 @@
-import { Confirmation } from '@shared/confirmation/confirmation';
 import {
   afterNextRender,
   ChangeDetectionStrategy,
   Component,
   computed,
-  ElementRef,
-  HostListener,
+  DestroyRef,
   inject,
+  PendingTasks,
   signal,
   viewChild,
 } from '@angular/core';
-import { RouterLink } from '@angular/router';
-import {
-  FormField,
-  disabled,
-  form,
-  maxLength,
-  pattern,
-  required,
-  submit,
-} from '@angular/forms/signals';
-import {
-  type BankTransactionValue,
-  type BankMatchHistory,
-  type InvoiceListValue,
-  type BankPaymentList,
-} from '@froment/contracts';
-import { BankingApi } from '@backoffice/banking-api';
-import { InvoicesApi } from '@backoffice/invoices-api';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { FormField, form } from '@angular/forms/signals';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { type BankTransactionValue } from '@froment/contracts';
 import { formatMoney } from '@froment/l10n';
-import { formatFixedDecimal, parseFixedDecimal } from '@backoffice/quote-input';
-import { I18nService, type TranslationKey } from '@app/i18n.service';
+import { BankingApi } from '@backoffice/banking-api';
+import { I18nService } from '@app/i18n.service';
 import { Button } from '@shared/button/button';
+import { Badge } from '@shared/badge/badge';
+import { DataTable } from '@shared/data-table/data-table';
+import { EmptyState } from '@shared/empty-state/empty-state';
+import { FilterChip } from '@shared/filter-chip/filter-chip';
+import { ListToolbar } from '@shared/list-toolbar/list-toolbar';
+import { ListWorkspace } from '@shared/list-toolbar/list-workspace';
+import { ListSearch } from '@shared/list-search/list-search';
+import { FilterMenu, FilterPanel } from '@shared/filter-menu/filter-menu';
+import { FilterChoice, type FilterChoiceOption } from '@shared/filter-choice/filter-choice';
+import { DateRangeFilter, type DateRange } from '@shared/date-range-filter/date-range-filter';
+import { TableExport } from '@shared/table-export/table-export';
 import { Notice } from '@shared/notice/notice';
+import { PageHeader } from '@shared/page-header/page-header';
 import { LocalizedDatePipe } from '@shared/localized-date/localized-date-pipe';
+import { Tabs } from '@shared/tabs/tabs';
+import { TableSort } from '@shared/table-sort/table-sort';
+import { bankSortDirection, compareBankRows, nextBankSort } from './bank-table-sort';
+import { createFuzzySearch } from '@shared/fuzzy-search';
+import { SearchHighlight, SearchHighlightRegistry } from '@shared/search-highlight';
+import {
+  bankQuery,
+  bankColumns,
+  bankStatus,
+  bankStatusLabel,
+  bankStatuses,
+  bankTabs,
+  transactionLink,
+  validBankPeriod,
+} from './bank-workspace';
 
 @Component({
   host: { class: 'page-container' },
-  imports: [Button, Notice, FormField, LocalizedDatePipe, RouterLink],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-banking',
+  imports: [
+    Button,
+    Badge,
+    DataTable,
+    EmptyState,
+    FilterChip,
+    ListToolbar,
+    ListWorkspace,
+    ListSearch,
+    FilterMenu,
+    FilterPanel,
+    FilterChoice,
+    DateRangeFilter,
+    TableExport,
+    Notice,
+    PageHeader,
+    FormField,
+    LocalizedDatePipe,
+    RouterLink,
+    Tabs,
+    TableSort,
+    SearchHighlight,
+  ],
+  providers: [SearchHighlightRegistry],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrl: './banking.scss',
   templateUrl: './banking.html',
 })
 export class Banking {
-  private readonly confirmation = inject(Confirmation);
   protected readonly i18n = inject(I18nService);
   private readonly api = inject(BankingApi);
-  private readonly invoicesApi = inject(InvoicesApi);
-  protected readonly loading = signal(true);
-  protected readonly saving = signal(false);
-  protected readonly error = signal<TranslationKey | undefined>(undefined);
-  protected readonly saved = signal(false);
+  private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
+  private readonly destroyRef = inject(DestroyRef);
+  private readonly pendingTasks = inject(PendingTasks);
+  protected readonly state = signal<'loading' | 'ready' | 'error'>('loading');
   protected readonly transactions = signal<ReadonlyArray<BankTransactionValue>>([]);
-  protected readonly historyId = signal<string | undefined>(undefined);
-  protected readonly history = signal<typeof BankMatchHistory.Type>([]);
-  protected readonly historyLoading = signal(false);
-  protected readonly historyFailed = signal(false);
-  private historyVersion = 0;
-  protected readonly invoices = signal<InvoiceListValue>([]);
-  protected readonly selected = signal<BankTransactionValue | undefined>(undefined);
-  protected readonly payments = signal<typeof BankPaymentList.Type>([]);
-  private matchRequestId: string | undefined;
-  protected readonly paymentLoading = signal(false);
-  protected readonly csv = signal('');
-  protected readonly filename = signal('');
-  protected readonly importResult = signal<{ added: number; existing: number } | undefined>(
-    undefined,
+  protected readonly query = signal(bankQuery(this.route.snapshot.queryParamMap));
+  private readonly model = signal(this.query());
+  protected readonly filters = form(this.model);
+  private readonly searchControl = viewChild(ListSearch);
+  private readonly filterMenu = viewChild(FilterMenu);
+  protected readonly tabs = computed(() => bankTabs(this.i18n));
+  protected readonly columns = bankColumns;
+  protected readonly statusLabel = bankStatusLabel;
+  protected readonly status = bankStatus;
+  protected readonly transactionLink = transactionLink;
+  protected readonly periodInvalid = computed(
+    () => !validBankPeriod(this.model().from, this.model().to),
   );
-  private readonly importModel = signal({ account: '' });
-  protected readonly importForm = form(this.importModel, (path) => {
-    required(path.account);
-    pattern(path.account, /\S/);
-    maxLength(path.account, 100);
-    disabled(path, () => this.saving());
+  private readonly accounts = computed(() =>
+    [...new Set(this.transactions().map((item) => item.account))].toSorted(
+      new Intl.Collator(this.i18n.language(), { numeric: true, sensitivity: 'base' }).compare,
+    ),
+  );
+  protected readonly accountOptions = computed<readonly FilterChoiceOption[]>(() => [
+    { value: '', label: this.i18n.t('bankWorkspace.allAccounts') },
+    ...this.accounts().map((account) => ({ value: account, label: account })),
+  ]);
+  protected readonly flowOptions = computed<readonly FilterChoiceOption[]>(() => [
+    { value: '', label: this.i18n.t('bankWorkspace.all') },
+    { value: 'credit', label: this.i18n.t('bankWorkspace.credit') },
+    { value: 'debit', label: this.i18n.t('bankWorkspace.debit') },
+  ]);
+  protected readonly statusOptions = computed<readonly FilterChoiceOption[]>(() => [
+    { value: '', label: this.i18n.t('bankWorkspace.all') },
+    ...bankStatuses.map((status) => ({
+      value: status,
+      label: this.i18n.t(bankStatusLabel(status)),
+    })),
+  ]);
+  protected readonly periodSummary = computed(() => {
+    const { from, to } = this.query();
+    return from || to ? `${from || '…'} → ${to || '…'}` : this.i18n.t('bankWorkspace.allDates');
   });
-  protected readonly filters = form(signal({ search: '', unmatched: true }));
-  protected readonly matchForm = form(
-    signal({ paymentId: '', amount: '', fee: '0.00', matchId: '', reason: '' }),
-    (path) => {
-      maxLength(path.reason, 500);
-      disabled(path, () => this.saving());
+  protected readonly chips = computed(() =>
+    Object.entries(this.query())
+      .filter(([key, value]) => key !== 'sort' && value !== '')
+      .map(([key, value]) => ({ key, value })),
+  );
+  protected readonly activeFilterCount = computed(
+    () =>
+      Number(this.query().account !== '') +
+      Number(this.query().flow !== '') +
+      Number(this.query().status !== '') +
+      Number(this.query().from !== '' || this.query().to !== ''),
+  );
+  protected readonly exportColumns = [
+    'transaction_id',
+    'reference',
+    'description',
+    'account',
+    'booked_on',
+    'status',
+    'amount_cents',
+    'currency',
+  ];
+  protected readonly exportRows = computed(() =>
+    this.state() === 'ready'
+      ? this.visible().map(({ item }) => [
+          item.id,
+          item.reference,
+          item.description,
+          item.account,
+          item.bookedOn,
+          bankStatus(item),
+          item.amountCents,
+          'EUR',
+        ])
+      : [],
+  );
+  private readonly filtered = computed(() => {
+    const query = this.query();
+    if (!validBankPeriod(query.from, query.to)) return [];
+    return this.transactions().filter(
+      (item) =>
+        (!query.account || item.account === query.account) &&
+        (!query.from || item.bookedOn >= query.from) &&
+        (!query.to || item.bookedOn <= query.to) &&
+        (!query.flow || (query.flow === 'credit' ? item.amountCents > 0 : item.amountCents < 0)) &&
+        (!query.status || bankStatus(item) === query.status),
+    );
+  });
+  private readonly search = createFuzzySearch(
+    this.filtered,
+    computed(() => this.query().q),
+    {
+      keys: ['reference', 'description'],
+      includeMatches: true,
+      ignoreLocation: true,
+      ignoreDiacritics: true,
+      threshold: 0.35,
     },
   );
   protected readonly visible = computed(() => {
-    const filter = this.filters().value();
-    return this.transactions().filter(
-      (transaction) =>
-        (!filter.unmatched ||
-          transaction.matchedCents === 0 ||
-          transaction.matchedCents < transaction.amountCents ||
-          transaction.allocations.some((allocation) => allocation.paymentCancelled)) &&
-        `${transaction.account} ${transaction.reference} ${transaction.description}`
-          .toLocaleLowerCase()
-          .includes(filter.search.toLocaleLowerCase()),
+    const compare = compareBankRows(
+      this.query().sort,
+      bankColumns,
+      this.i18n.language(),
+      (row) => row.id,
     );
+    return this.search()
+      .toSorted((left, right) => compare(left.item, right.item))
+      .map((result) => ({
+        item: result.item,
+        referenceMatches: result.matches?.find((match) => match.key === 'reference')?.indices ?? [],
+        descriptionMatches:
+          result.matches?.find((match) => match.key === 'description')?.indices ?? [],
+      }));
   });
-  private readonly result = viewChild('result', { read: ElementRef<HTMLElement> });
-  private readonly editor = viewChild('editor', { read: ElementRef<HTMLElement> });
-  private readonly fileInput = viewChild('statementFile', { read: ElementRef<HTMLInputElement> });
-  private selectionVersion = 0;
-  private fileVersion = 0;
+  private generation = 0;
   constructor() {
     afterNextRender(() => {
-      void this.load();
+      this.route.queryParamMap.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((params) => {
+        const query = bankQuery(params);
+        this.query.set(query);
+        this.model.set(query);
+      });
+      void this.pendingTasks.run(() => this.load());
     });
   }
   async load(): Promise<void> {
-    if (this.saving()) return;
-    this.loading.set(true);
-    this.error.set(undefined);
+    const generation = ++this.generation;
+    this.state.set('loading');
     try {
-      const [transactions, invoices] = await Promise.all([
-        this.api.list(),
-        this.invoicesApi.list(),
-      ]);
+      const transactions = await this.api.list();
+      if (generation !== this.generation || this.destroyRef.destroyed) return;
       this.transactions.set(transactions);
-      this.invoices.set(
-        invoices.filter((invoice) => invoice.status === 'issued' || invoice.status === 'paid'),
-      );
+      this.state.set('ready');
     } catch {
-      this.error.set('bank.error');
-    } finally {
-      this.loading.set(false);
+      if (generation === this.generation && !this.destroyRef.destroyed) this.state.set('error');
     }
   }
-  async canDeactivate(): Promise<boolean> {
-    return (
-      !this.saving() &&
-      ((this.csv() === '' && !this.matchForm().dirty()) ||
-        (await this.confirmation.request(this.i18n.t('backOffice.quote.unsavedChanges'))))
-    );
-  }
-  @HostListener('window:beforeunload', ['$event'])
-  protected preventUnload(event: BeforeUnloadEvent): void {
-    if (this.csv() !== '' || this.saving() || this.matchForm().dirty()) event.preventDefault();
-  }
-  protected async readFile(input: HTMLInputElement): Promise<void> {
-    const version = ++this.fileVersion;
-    this.csv.set('');
-    this.filename.set('');
-    this.error.set(undefined);
-    this.importResult.set(undefined);
-    const file = input.files?.[0];
-    if (file === undefined) return;
-    if (file.size > 500000) {
-      this.error.set('bank.import_invalid');
-      return;
-    }
-    try {
-      const text = new TextDecoder('utf-8', { fatal: true }).decode(await file.arrayBuffer());
-      if (version !== this.fileVersion) return;
-      this.csv.set(text);
-      this.filename.set(file.name);
-    } catch {
-      if (version === this.fileVersion) this.error.set('bank.import_invalid');
-    }
-  }
-  protected importStatement(event: SubmitEvent): void {
-    event.preventDefault();
-    if (this.saving() || this.csv() === '') return;
-    void submit(this.importForm, async () => {
-      this.saving.set(true);
-      this.error.set(undefined);
-      this.saved.set(false);
-      try {
-        const outcome = await this.api.importStatement({
-          account: this.importModel().account.trim(),
-          csv: this.csv(),
-        });
-        if (!outcome.success) {
-          this.error.set(outcome.code);
-          return;
-        }
-        this.importResult.set(outcome.result);
-        this.csv.set('');
-        this.filename.set('');
-        const input = this.fileInput();
-        if (input !== undefined) input.nativeElement.value = '';
-        this.importForm().reset();
-        this.transactions.set(await this.api.list());
-        this.saved.set(true);
-        this.result()?.nativeElement.focus();
-      } catch {
-        this.error.set('bank.error');
-      } finally {
-        this.saving.set(false);
-      }
+  protected updateFilter(key: string, value: string): void {
+    this.model.update((model) => ({ ...model, [key]: value }));
+    void this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: this.model(),
+      replaceUrl: key === 'q',
     });
   }
-  protected async select(transaction: BankTransactionValue): Promise<void> {
-    if (this.saving()) return;
-    if (
-      this.matchForm().dirty() &&
-      !(await this.confirmation.request(this.i18n.t('backOffice.quote.unsavedChanges')))
-    )
-      return;
-    this.selected.set(transaction);
-    this.payments.set([]);
-    this.matchRequestId = undefined;
-    this.matchForm().reset({
-      paymentId: '',
-      fee: '0.00',
-      amount: formatFixedDecimal(
-        Math.max(0, transaction.amountCents - transaction.matchedCents),
-        2,
-        '.',
-      ),
-      matchId: transaction.allocations[0]?.matchId ?? '',
-      reason: '',
+  protected applyPeriod(range: DateRange): void {
+    const from = range.from ?? '';
+    const to = range.to ?? '';
+    if (!validBankPeriod(from, to)) return;
+    this.model.update((model) => ({ ...model, from, to }));
+    void this.router.navigate([], { relativeTo: this.route, queryParams: this.model() });
+    this.filterMenu()?.close();
+  }
+  protected clear(): void {
+    void this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { sort: this.query().sort },
     });
-    this.selectionVersion++;
-    this.paymentLoading.set(false);
-    this.editor()?.nativeElement.focus();
+    this.searchControl()?.focus();
   }
-  protected async loadPayments(invoiceId: string): Promise<void> {
-    const version = ++this.selectionVersion;
-    this.payments.set([]);
-    this.matchForm.paymentId().value.set('');
-    if (invoiceId === '') {
-      this.paymentLoading.set(false);
-      return;
-    }
-    this.paymentLoading.set(true);
-    try {
-      const outcome = await this.api.payments(invoiceId);
-      if (version !== this.selectionVersion) return;
-      if (!outcome.success) {
-        this.error.set('bank.error');
-        return;
-      }
-      this.payments.set(outcome.result.filter((payment) => payment.availableCents > 0));
-    } finally {
-      if (version === this.selectionVersion) this.paymentLoading.set(false);
-    }
+  protected sortDirection(column: string) {
+    return bankSortDirection(this.query().sort, column);
   }
-  protected async reconcile(): Promise<void> {
-    const selected = this.selected();
-    const paymentId = this.matchForm().value().paymentId;
-    const amountCents = parseFixedDecimal(this.matchForm().value().amount, 2);
-    const feeCents = parseFixedDecimal(this.matchForm().value().fee, 2);
-    if (
-      this.saving() ||
-      selected === undefined ||
-      amountCents === undefined ||
-      amountCents <= 0 ||
-      feeCents === undefined ||
-      feeCents < 0 ||
-      feeCents >= amountCents ||
-      amountCents - feeCents > selected.amountCents - selected.matchedCents ||
-      !this.payments().some(
-        (payment) => payment.id === paymentId && payment.availableCents >= amountCents,
-      )
-    ) {
-      this.error.set('bank.match_conflict');
-      return;
-    }
-    if (!(await this.confirmation.request(this.i18n.t('bank.confirmMatch')))) return;
-    this.saving.set(true);
-    this.error.set(undefined);
-    this.saved.set(false);
-    try {
-      this.matchRequestId ??= crypto.randomUUID();
-      const outcome = await this.api.match(selected.id, {
-        paymentId,
-        amountCents,
-        feeCents,
-        requestId: this.matchRequestId,
-      });
-      if (!outcome.success) {
-        this.error.set(outcome.code);
-        return;
-      }
-      this.complete(outcome.result);
-    } finally {
-      this.saving.set(false);
-    }
+  protected sortBy(column: string): void {
+    void this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { ...this.query(), sort: nextBankSort(this.query().sort, column) },
+      replaceUrl: true,
+    });
   }
-  protected async unmatch(): Promise<void> {
-    const selected = this.selected();
-    const reason = this.matchForm().value().reason.trim();
-    const matchId = this.matchForm().value().matchId;
-    if (
-      this.saving() ||
-      selected === undefined ||
-      !selected.allocations.some((allocation) => allocation.matchId === matchId) ||
-      reason === '' ||
-      this.matchForm().invalid()
-    )
-      return;
-    if (!(await this.confirmation.request(this.i18n.t('bank.confirmUnmatch')))) return;
-    this.saving.set(true);
-    this.error.set(undefined);
-    this.saved.set(false);
-    try {
-      const outcome = await this.api.unmatch(selected.id, matchId, reason);
-      if (!outcome.success) {
-        this.error.set(outcome.code);
-        return;
-      }
-      this.complete(outcome.result);
-    } finally {
-      this.saving.set(false);
-    }
+  protected chipLabel(key: string, value: string): string {
+    if (key === 'flow')
+      return this.i18n.t(value === 'credit' ? 'bankWorkspace.credit' : 'bankWorkspace.debit');
+    const status = bankStatuses.find((status) => status === value);
+    if (key === 'status' && status) return this.i18n.t(bankStatusLabel(status));
+    const label =
+      key === 'from'
+        ? 'ledger.from'
+        : key === 'to'
+          ? 'ledger.to'
+          : key === 'account'
+            ? 'bankWorkspace.account'
+            : 'bankWorkspace.search';
+    return `${this.i18n.t(label)} : ${value}`;
   }
-  private complete(transactions: ReadonlyArray<BankTransactionValue>): void {
-    this.historyVersion++;
-    this.historyId.set(undefined);
-    this.transactions.set(transactions);
-    this.selected.set(undefined);
-    this.matchRequestId = undefined;
-    this.matchForm().reset({ paymentId: '', amount: '', fee: '0.00', matchId: '', reason: '' });
-    this.saved.set(true);
-    this.result()?.nativeElement.focus();
-  }
-  protected amount(cents: number): string {
+  protected money(cents: number): string {
     return formatMoney(cents, this.i18n.language(), 'EUR');
-  }
-  protected async showHistory(id: string): Promise<void> {
-    const version = ++this.historyVersion;
-    if (this.historyId() === id) {
-      this.historyId.set(undefined);
-      return;
-    }
-    this.historyId.set(id);
-    this.history.set([]);
-    this.historyFailed.set(false);
-    this.historyLoading.set(true);
-    try {
-      const result = await this.api.history(id);
-      if (version !== this.historyVersion) return;
-      if (!result.success) {
-        this.historyFailed.set(true);
-        return;
-      }
-      this.history.set(result.result);
-    } catch {
-      if (version === this.historyVersion) this.historyFailed.set(true);
-    } finally {
-      if (version === this.historyVersion) this.historyLoading.set(false);
-    }
   }
 }

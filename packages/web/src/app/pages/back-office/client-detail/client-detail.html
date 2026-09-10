@@ -1,5 +1,7 @@
 <section appTabLayout class="client-page notice-flow" aria-labelledby="client-title">
-  <a routerLink="/backoffice/clients">{{ i18n.t('backOffice.backToClients') }}</a>
+  <a [routerLink]="backLink()" [queryParams]="returnQuery()"
+    >{{ i18n.t('backOffice.backToClients') }}</a
+  >
   <app-page-header>
     <h1 id="client-title">
       {{ client()?.displayName ?? i18n.t('backOffice.clientDetail.title') }}
@@ -12,7 +14,14 @@
     }
     <div pageActions class="client-primary-actions">
       @if (client(); as current) { @if (!current.archived) {
-      <a appLinkButton variant="primary" [routerLink]="['/backoffice/clients', current.id, 'edit']"
+      <a
+        appLinkButton
+        variant="primary"
+        routerLink="/backoffice/quotes/new"
+        [queryParams]="{ clientId: current.id }"
+        >{{ i18n.t('backOffice.dashboard.createQuote') }}</a
+      >
+      <a appLinkButton [routerLink]="['/backoffice/clients', current.id, 'edit']"
         >{{ i18n.t('clientsWorkspace.edit') }}</a
       >
       <details class="client-actions">
@@ -41,7 +50,11 @@
     </button>
   </div>
   }
-  <app-tabs [label]="i18n.t('backOffice.clientDetail.tabs')" [tabs]="tabs()" />
+  <app-tabs
+    [label]="i18n.t('backOffice.clientDetail.tabs')"
+    [tabs]="tabs()"
+    [preserveQuery]="true"
+  />
   <router-outlet />
   <ng-template appTabPanel="profile">
     <section
@@ -91,6 +104,46 @@
           </div>
         </dl>
       </div>
+    </section>
+  </ng-template>
+  <ng-template appTabPanel="affairs">
+    <section
+      id="client-affairs-panel"
+      class="documents"
+      role="region"
+      aria-labelledby="client-affairs-tab"
+      tabindex="0"
+    >
+      @if (documentsLoading()) {
+      <p role="status">{{ i18n.t('backOffice.clientDetail.documentsLoading') }}</p>
+      } @else if (documentsError()) {
+      <p appNotice variant="danger" role="alert">{{ i18n.t('client.error') }}</p>
+      } @else if (affairs().length === 0) {
+      <app-empty-state icon="invoice" [title]="i18n.t('clientsWorkspace.affairsEmpty')" /> } @else {
+      <div appDataTable tableLayout="fluid">
+        <table>
+          <thead>
+            <tr>
+              <th scope="col">{{ i18n.t('backOffice.clientDetail.document') }}</th>
+              <th scope="col">{{ i18n.t('backOffice.clientDetail.status') }}</th>
+              <th scope="col" class="amount">{{ i18n.t('backOffice.clientDetail.total') }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (quote of affairs(); track quote.id) {
+            <tr>
+              <th scope="row">
+                <a [routerLink]="['/backoffice/affaires', quote.id]">{{ quote.reference }}</a
+                ><small>{{ quote.title }}</small>
+              </th>
+              <td><span appBadge>{{ quoteStatus(quote.status) }}</span></td>
+              <td class="amount">{{ money(quote.totalCents) }}</td>
+            </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      }
     </section>
   </ng-template>
   <ng-template appTabPanel="documents">
@@ -192,57 +245,14 @@
         </table>
       </div>
       } @if (!archived()) {
-      <form (submit)="createAccess($event)">
-        <label class="field" for="client-account-email"
-          >{{ i18n.t('backOffice.email') }}<input
-            id="client-account-email"
-            class="input"
-            type="email"
-            autocomplete="username"
-            [formField]="accessForm.email"
-        /></label>
-        <label class="field" for="client-account-password"
-          >{{ i18n.t('backOffice.password') }}
-          <input
-            id="client-account-password"
-            class="input"
-            type="password"
-            autocomplete="new-password"
-            [formField]="accessForm.password"
-            [attr.aria-invalid]="accessPasswordLength() > 0 && accessForm.password().invalid()"
-            aria-describedby="client-account-password-requirements client-account-password-error"
-          />
-          <span id="client-account-password-requirements" class="field-hint"
-            >{{ i18n.tf('backOffice.clientDetail.passwordRequirements', { min:
-            accessPasswordConfig.minLength, max: accessPasswordConfig.maxLength }) }}</span
-          >
-          @if (accessPasswordLength() > 0 && accessPasswordLength() <
-          accessPasswordConfig.minLength) {
-          <span id="client-account-password-error" class="field-error" aria-live="polite"
-            >{{ i18n.tf('backOffice.clientDetail.passwordTooShort', { count: accessPasswordLength(),
-            min: accessPasswordConfig.minLength }) }}</span
-          >
-          } @else if (accessPasswordLength() > accessPasswordConfig.maxLength) {
-          <span id="client-account-password-error" class="field-error" aria-live="polite"
-            >{{ i18n.tf('backOffice.clientDetail.passwordTooLong', { max:
-            accessPasswordConfig.maxLength }) }}</span
-          >
-          }
-        </label>
-        <button
-          appButton
-          variant="primary"
-          type="submit"
-          [disabled]="accessPending() || accessForm().invalid()"
-        >
-          {{ i18n.t(accessPending() ? 'backOffice.clientDetail.accessCreating' :
-          'backOffice.clientDetail.accessCreate') }}
-        </button>
-      </form>
+      <a
+        appLinkButton
+        variant="primary"
+        [routerLink]="['/backoffice/clients', current.id, 'access', 'new']"
+        >{{ i18n.t('backOffice.clientDetail.accessCreate') }}</a
+      >
       } @else {
       <p appNotice>{{ i18n.t('backOffice.clientDetail.accessArchived') }}</p>
-      } @if (accountEmail(); as email) {
-      <p role="status">{{ i18n.tf('backOffice.clientDetail.accessReady', { email }) }}</p>
       }
     </section>
   </ng-template>

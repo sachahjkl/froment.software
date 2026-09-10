@@ -1,0 +1,113 @@
+<section class="bank-page" aria-labelledby="import-title">
+  <a routerLink="/backoffice/banque" [queryParams]="backQuery"
+    >{{ i18n.t('bankWorkspace.back') }}</a
+  >
+  <app-page-header
+    ><h1 id="import-title">{{ i18n.t('bank.import') }}</h1>
+    <p class="muted">{{ i18n.t('bankWorkspace.accountHint') }}</p></app-page-header
+  >
+  <h2 #stage tabindex="-1">
+    {{ i18n.t(result() ? 'bankWorkspace.doneStep' : preview() ? 'bankWorkspace.reviewStep' :
+    'bankWorkspace.fileStep') }}
+  </h2>
+  @if (error(); as error) {
+  <p appNotice variant="danger" role="alert">{{ i18n.t(error) }}</p>
+  } @if (result(); as result) {
+  <p appNotice variant="success" role="status">{{ i18n.tf('bankWorkspace.importDone', result) }}</p>
+  <div class="actions">
+    <a appLinkButton variant="primary" routerLink="/backoffice/banque" [queryParams]="backQuery"
+      >{{ i18n.t('bankWorkspace.back') }}</a
+    ><button appButton type="button" (click)="again()">
+      {{ i18n.t('bankWorkspace.importAgain') }}
+    </button>
+  </div>
+  } @else if (preview(); as preview) {
+  <p>{{ filename() }} · {{ importForm.account().value() }}</p>
+  <p appNotice variant="info">{{ i18n.t('bankWorkspace.validationHint') }}</p>
+  <p role="status">
+    {{ i18n.tf('bankWorkspace.importCounts', { added: preview.added, existing: preview.existing })
+    }}
+  </p>
+  <div class="actions">
+    <button appButton variant="primary" type="button" [disabled]="busy()" (click)="confirm()">
+      {{ i18n.t('bankWorkspace.confirmImport') }}</button
+    ><button appButton type="button" [disabled]="busy()" (click)="edit()">
+      {{ i18n.t('bankWorkspace.changeFile') }}
+    </button>
+  </div>
+  <div appDataTable tableLayout="fluid">
+    <table>
+      <caption>
+        {{ i18n.t('bankWorkspace.preview') }}
+      </caption>
+      <thead>
+        <tr>
+          @for (column of columns; track column.key) {
+          <th
+            scope="col"
+            [class.amount]="column.kind === 'number'"
+            [attr.aria-sort]="sortDirection(column.key)"
+          >
+            <button
+              appTableSort
+              [label]="i18n.t(column.label)"
+              [direction]="sortDirection(column.key)"
+              (click)="sortBy(column.key)"
+            ></button>
+          </th>
+          }
+        </tr>
+      </thead>
+      <tbody>
+        @for (row of previewRows(); track row.reference) {
+        <tr>
+          <th scope="row">{{ row.reference }}</th>
+          <td class="pre-wrap">{{ row.description }}</td>
+          <td>{{ row.bookedOn | localizedDate: i18n.language() }}</td>
+          <td class="amount">{{ money(row.amountCents) }}</td>
+          <td>{{ i18n.t(row.existing ? 'bankWorkspace.existing' : 'bankWorkspace.new') }}</td>
+        </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+  } @else {
+  <form class="task-form" novalidate (submit)="validate($event)">
+    <p id="csv-hint">{{ i18n.t('bankWorkspace.csvHint') }}</p>
+    <p>{{ i18n.t('bankWorkspace.csvColumns') }}</p>
+    <a href="/bank-statement-template.csv" download>{{ i18n.t('bank.template') }}</a>
+    <label class="field"
+      >{{ i18n.t('bankWorkspace.account') }}<input
+        id="bank-account"
+        class="input"
+        [formField]="importForm.account"
+        aria-describedby="account-error"
+        [attr.aria-invalid]="importForm.account().touched() && importForm.account().invalid()"
+      /><span id="account-error" class="field-error"
+        >@if (importForm.account().touched() && importForm.account().invalid()) { {{
+        i18n.t('bankWorkspace.accountInvalid') }} }</span
+      ></label
+    >
+    <label class="field"
+      >{{ i18n.t('bank.file') }}<input
+        #statementFile
+        id="bank-file"
+        type="file"
+        accept=".csv,text/csv"
+        [disabled]="busy()"
+        aria-describedby="csv-hint"
+        (change)="readFile(statementFile)"
+    /></label>
+    @if (filename()) {
+    <p>{{ filename() }}</p>
+    }
+    <div>
+      <button appButton variant="primary" type="submit" [disabled]="busy() || reading()">
+        {{ i18n.t('bankWorkspace.validate') }}
+      </button>
+    </div>
+  </form>
+  } @if (busy() || reading()) {
+  <p role="status">{{ i18n.t('bank.loading') }}</p>
+  }
+</section>

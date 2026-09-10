@@ -4,7 +4,7 @@ form {
   gap: var(--space-4);
 }
 .passkeys {
-  margin-block: var(--space-6);
+  padding: var(--space-6) var(--page-x);
 }
 .key {
   display: flex;

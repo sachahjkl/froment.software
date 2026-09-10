@@ -1,5 +1,10 @@
 export const backOfficeShellText = {
   fr: {
+    'backOfficeShell.activity': 'Activité',
+    'backOfficeShell.administration': 'Administration',
+    'backOfficeShell.apiAccess': 'API',
+    'backOfficeShell.externalServices': 'Services externes',
+    'backOfficeShell.audit': 'Journal d’audit',
     'backOfficeShell.navigation': 'Navigation',
     'backOfficeShell.accountLoading': 'Chargement du compte…',
     'backOfficeShell.signingOut': 'Déconnexion en cours…',
@@ -16,6 +21,11 @@ export const backOfficeShellText = {
       'Le tiroir conserve le focus et se ferme avec Échap. La navigation reste disponible sur les écrans étroits.',
   },
   en: {
+    'backOfficeShell.activity': 'Business',
+    'backOfficeShell.administration': 'Administration',
+    'backOfficeShell.apiAccess': 'API',
+    'backOfficeShell.externalServices': 'External services',
+    'backOfficeShell.audit': 'Audit log',
     'backOfficeShell.navigation': 'Navigation',
     'backOfficeShell.accountLoading': 'Loading account…',
     'backOfficeShell.signingOut': 'Signing out…',

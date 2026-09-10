@@ -1,9 +1,11 @@
 @use "../provider-settings";
+p {
+  max-inline-size: none;
+}
 
 form {
   display: grid;
   gap: var(--space-4);
-  max-inline-size: 56rem;
   justify-items: start;
 }
 .field {

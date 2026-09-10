@@ -1,0 +1,32 @@
+:host {
+  display: grid;
+  gap: var(--space-4);
+  min-inline-size: 0;
+}
+.shell-frame {
+  max-block-size: 38rem;
+  overflow: auto;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-sm);
+}
+.account-shell {
+  display: grid;
+  grid-template-areas: "sidebar header" "sidebar content";
+  grid-template-columns: 18rem minmax(0, 1fr);
+  grid-template-rows: auto 1fr;
+  min-block-size: 28rem;
+}
+.account-content {
+  grid-area: content;
+  min-inline-size: 0;
+  padding: var(--space-4);
+}
+[data-preview-destination] {
+  overflow-wrap: anywhere;
+}
+@media (max-width: 63.999rem) {
+  .account-shell {
+    grid-template-areas: "header" "content";
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

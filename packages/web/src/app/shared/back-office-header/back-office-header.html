@@ -13,9 +13,11 @@
   >
     <app-icon name="menu" />{{ i18n.t('backOfficeShell.navigation') }}
   </button>
-  <span class="workspace-label"
-    >{{ i18n.t(administrator() ? 'backOffice.header.name' : 'page.back_office_client') }}</span
-  >
+  @if (administrator()) {
+  <app-global-search />
+  } @else {
+  <span class="workspace-label">{{ i18n.t('backOffice.client.title') }}</span>
+  }
   <nav [attr.aria-label]="i18n.t('backOfficeShell.resources')">
     <a
       href="/api/docs"
@@ -91,7 +93,7 @@
   @if (administrator()) { <app-back-office-nav /> } @else {
   <nav class="client-navigation" [attr.aria-label]="i18n.t('backOffice.navigation.label')">
     <a routerLink="/backoffice/client"
-      ><app-icon name="invoice" />{{ i18n.t('page.back_office_client') }}</a
+      ><app-icon name="invoice" />{{ i18n.t('backOffice.client.title') }}</a
     >
   </nav>
   }

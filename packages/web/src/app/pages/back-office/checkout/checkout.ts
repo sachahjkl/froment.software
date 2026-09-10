@@ -1,5 +1,6 @@
 import {
   afterNextRender,
+  afterRenderEffect,
   ChangeDetectionStrategy,
   Component,
   computed,
@@ -11,7 +12,7 @@ import {
   viewChild,
 } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
-import { FormField, disabled, form, required } from '@angular/forms/signals';
+import { disabled, form, required } from '@angular/forms/signals';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { catchError, EMPTY, exhaustMap, filter, timer } from 'rxjs';
 import {
@@ -31,11 +32,13 @@ import {
 import { Button } from '@shared/button/button';
 import { Notice } from '@shared/notice/notice';
 import { Confirmation } from '@shared/confirmation/confirmation';
-import { DataTable } from '@shared/data-table/data-table';
-import { LocalizedDatePipe } from '@shared/localized-date/localized-date-pipe';
+import { ObjectPicker } from '@shared/object-picker/object-picker';
+import { createWorkspaceTable } from '../configuration/workspace-table';
+import { checkoutTableOptions } from '../configuration/workspace-tables';
 
 @Component({
-  imports: [RouterLink, FormField, Button, Notice, DataTable, LocalizedDatePipe],
+  host: { class: 'page-container' },
+  imports: [RouterLink, Button, Notice, ObjectPicker],
   selector: 'app-checkout',
   styleUrl: './checkout.scss',
   templateUrl: './checkout.html',
@@ -48,11 +51,15 @@ export class Checkout {
   private readonly confirmation = inject(Confirmation);
   private readonly destroyRef = inject(DestroyRef);
   private readonly requests = inject(PendingProviderRequests);
+  private readonly route = inject(ActivatedRoute);
+  protected readonly task: boolean = true;
+  protected readonly completed = signal(false);
   private requestStore: PendingRequestStore<CheckoutRequest> | undefined;
   protected readonly recoveryReady = signal(false);
   protected readonly connection = signal<typeof CheckoutConnection.Type | undefined>(undefined);
   protected readonly invoices = signal<readonly InvoiceSummary[]>([]);
   protected readonly operations = signal<readonly CheckoutOperation[]>([]);
+  protected readonly table = createWorkspaceTable(this.operations, checkoutTableOptions);
   protected readonly loading = signal(true);
   protected readonly ready = signal(false);
   protected readonly historyLoaded = signal(false);
@@ -73,11 +80,19 @@ export class Checkout {
     required(path.invoiceId);
     disabled(
       path.invoiceId,
-      () => this.saving() || !this.recoveryReady() || this.pending() !== undefined,
+      () =>
+        this.saving() || !this.recoveryReady() || this.pending() !== undefined || this.completed(),
     );
   });
   protected readonly invoice = computed(() =>
     this.invoices().find((item) => item.id === this.model().invoiceId),
+  );
+  protected readonly invoiceOptions = computed(() =>
+    this.invoices().map((item) => ({
+      id: item.id,
+      label: `${item.invoiceNumber} — ${item.clientDisplayName}`,
+      detail: this.money(this.balance(item)),
+    })),
   );
   protected readonly active = computed(() =>
     this.operations().some(
@@ -97,12 +112,18 @@ export class Checkout {
     blocked: 'checkout.blocked',
   } satisfies Record<CheckoutOperation['status'], TranslationKey>;
   private readonly progress = viewChild('progress', { read: ElementRef<HTMLElement> });
-  private readonly invoiceInput = viewChild('invoiceInput', {
-    read: ElementRef<HTMLSelectElement>,
-  });
+  private readonly invoiceInput = viewChild(ObjectPicker);
   private writeVersion = 0;
 
   constructor() {
+    afterRenderEffect(() => {
+      if (this.completed()) this.progress()?.nativeElement.focus();
+    });
+    this.route.paramMap.pipe(takeUntilDestroyed()).subscribe((params) => {
+      this.selected.set(
+        params.get('requestId') ?? this.route.snapshot.queryParamMap.get('request') ?? '',
+      );
+    });
     afterNextRender(() => {
       void this.load();
       timer(0, 3000)
@@ -130,6 +151,7 @@ export class Checkout {
           ) {
             if (!this.clearPending()) return;
             this.selected.set(pending.requestId);
+            this.completed.set(true);
             this.checkoutForm().reset();
             this.error.set(undefined);
           }
@@ -167,11 +189,11 @@ export class Checkout {
     this.ready.set(false);
     this.error.set(undefined);
     this.paused.set(false);
-    if (!this.recoveryReady()) await this.restoreRequest();
+    if (this.task && !this.recoveryReady()) await this.restoreRequest();
     try {
       const [connection, invoices] = await Promise.all([
         this.api.connection(),
-        this.invoicesApi.list(),
+        this.task ? this.invoicesApi.list() : Promise.resolve([]),
       ]);
       this.connection.set(connection);
       this.ready.set(true);
@@ -200,6 +222,12 @@ export class Checkout {
     this.selected.set(operation.request.requestId);
     this.progress()?.nativeElement.focus();
   }
+  protected chooseInvoice(id: string): void {
+    if (this.saving() || this.pending() || this.completed() || !this.recoveryReady()) return;
+    if (!this.invoices().some((invoice) => invoice.id === id)) return;
+    this.model.set({ invoiceId: id });
+    this.checkoutForm.invoiceId().markAsDirty();
+  }
   protected canOpen(operation: CheckoutOperation | undefined): boolean {
     return (
       operation !== undefined &&
@@ -212,6 +240,8 @@ export class Checkout {
     event.preventDefault();
     if (
       this.saving() ||
+      !this.task ||
+      this.completed() ||
       this.loading() ||
       !this.ready() ||
       !this.recoveryReady() ||
@@ -221,7 +251,7 @@ export class Checkout {
     const invoice = this.invoice();
     if (this.pending() === undefined && (this.checkoutForm().invalid() || invoice === undefined)) {
       this.checkoutForm.invoiceId().markAsTouched();
-      this.invoiceInput()?.nativeElement.focus();
+      this.invoiceInput()?.focus();
       return;
     }
     if (this.pending() === undefined && this.active()) return;
@@ -265,6 +295,7 @@ export class Checkout {
         ...items.filter((item) => item.request.requestId !== request.requestId),
       ]);
       this.selected.set(request.requestId);
+      this.completed.set(true);
       this.checkoutForm().reset();
       this.paused.set(false);
       this.progress()?.nativeElement.focus();

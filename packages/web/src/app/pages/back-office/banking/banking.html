@@ -1,229 +1,176 @@
-<section class="notice-flow" aria-labelledby="bank-title">
-  <h1 id="bank-title">{{ i18n.t('bank.title') }}</h1>
-  <a routerLink="/backoffice/banque/ecritures">{{ i18n.t('ledger.title') }}</a>
-  <p>{{ i18n.t('bank.intro') }}</p>
-  <p appNotice variant="info">{{ i18n.t('bank.noTransfer') }}</p>
-  <p #result tabindex="-1" role="status">
-    @if (saved()) { {{ i18n.t('bank.saved') }} } @if (importResult(); as result) { {{
-    i18n.t('bank.added') }} {{ result.added }} — {{ i18n.t('bank.existing') }} {{ result.existing }}
-    }
-  </p>
-  @if (error(); as error) {
-  <p appNotice variant="danger" role="alert">{{ i18n.t(error) }}</p>
-  <button appButton type="button" [disabled]="saving() || loading()" (click)="load()">
-    {{ i18n.t('bank.reload') }}
-  </button>
-  }
-  <form class="ds-panel import-form" (submit)="importStatement($event)">
-    <h2>{{ i18n.t('bank.import') }}</h2>
-    <p id="csv-hint">{{ i18n.t('bank.csvHint') }}</p>
-    <a href="/bank-statement-template.csv" download>{{ i18n.t('bank.template') }}</a>
-    <label
-      >{{ i18n.t('bank.account') }}<input
-        id="bank-account"
-        class="input"
-        [formField]="importForm.account"
-    /></label>
-    <label
-      >{{ i18n.t('bank.file') }}<input
-        #statementFile
-        id="bank-file"
-        type="file"
-        accept=".csv,text/csv"
-        aria-describedby="csv-hint"
-        [disabled]="saving()"
-        (change)="readFile(statementFile)"
-    /></label>
-    @if (filename()) {
-    <p>{{ filename() }}</p>
-    }
-    <button
-      appButton
-      type="submit"
+<section class="bank-page" aria-labelledby="bank-title">
+  <app-page-header>
+    <h1 id="bank-title">{{ i18n.t('bank.title') }}</h1>
+    <p class="muted">{{ i18n.t('bankWorkspace.intro') }}</p>
+    <a
+      pageActions
+      appLinkButton
       variant="primary"
-      [disabled]="saving() || importForm().invalid() || csv() === ''"
+      routerLink="/backoffice/banque/importer"
+      [queryParams]="query()"
+      >{{ i18n.t('bank.import') }}</a
     >
-      {{ i18n.t('bank.import') }}
-    </button>
-  </form>
-  <div #editor tabindex="-1">
-    @if (selected(); as selected) {
-    <section class="ds-panel editor" aria-labelledby="match-title">
-      <h2 id="match-title">{{ i18n.t('bank.reconcile') }} — {{ selected.reference }}</h2>
-      <p>{{ selected.description }} — {{ amount(selected.amountCents) }}</p>
-      <p>
-        {{ i18n.t('bank.allocated') }} {{ amount(selected.matchedCents) }} — {{
-        i18n.t('bank.remaining') }} {{ amount(selected.amountCents - selected.matchedCents) }}
-      </p>
-      @if (selected.matchedCents < selected.amountCents) {
-      <p>{{ i18n.t('bank.matchHint') }}</p>
-      <label
-        >{{ i18n.t('bank.invoice') }}<select
-          #invoice
-          class="select"
-          [disabled]="saving()"
-          (change)="loadPayments(invoice.value)"
+  </app-page-header>
+  <app-tabs [label]="i18n.t('bank.title')" [tabs]="tabs()" />
+  <section appListWorkspace [attr.aria-label]="i18n.t('bankWorkspace.transactions')">
+    <app-list-toolbar>
+      <app-list-search
+        listSearch
+        [label]="i18n.t('bankWorkspace.search')"
+        [formField]="filters.q"
+        (valueChange)="updateFilter('q', $event)"
+      />
+      <app-filter-menu
+        #bankFilters
+        listFilters
+        [label]="i18n.t('listWorkspace.filters')"
+        [closeLabel]="i18n.t('listWorkspace.closeFilters')"
+        [backLabel]="i18n.t('listWorkspace.backFilters')"
+        [activeCount]="activeFilterCount()"
+        [disabled]="state() === 'loading'"
+      >
+        <ng-template
+          appFilterPanel
+          [label]="i18n.t('bankWorkspace.account')"
+          [summary]="query().account || i18n.t('bankWorkspace.allAccounts')"
         >
-          <option value="">{{ i18n.t('bank.chooseInvoice') }}</option>
-          @for (invoice of invoices(); track invoice.id) {
-          <option [value]="invoice.id">{{ invoice.invoiceNumber }} — {{ invoice.title }}</option>
-          }
-        </select></label
-      >
-      @if (paymentLoading()) {
-      <p role="status">{{ i18n.t('bank.loading') }}</p>
-      }
-      <label
-        >{{ i18n.t('bank.payment') }}<select class="select" [formField]="matchForm.paymentId">
-          <option value="">{{ i18n.t('bank.choosePayment') }}</option>
-          @for (payment of payments(); track payment.id) {
-          <option [value]="payment.id">
-            {{ payment.paidOn }} — {{ payment.reference }} — {{ amount(payment.availableCents) }}
-          </option>
-          }
-        </select></label
-      >
-      <label
-        >{{ i18n.t('bank.allocationAmount') }}<input
-          class="input"
-          id="bank-allocation-amount"
-          inputmode="decimal"
-          [formField]="matchForm.amount"
-      /></label>
-      <label
-        >{{ i18n.t('bank.feeAmount') }}<input
-          class="input"
-          id="bank-fee-amount"
-          inputmode="decimal"
-          [formField]="matchForm.fee"
-          aria-describedby="bank-fee-hint"
-      /></label>
-      <p id="bank-fee-hint">{{ i18n.t('bank.feeHint') }}</p>
-      <button
-        appButton
-        type="button"
-        [disabled]="saving() || paymentLoading() || matchForm().value().paymentId === ''"
-        (click)="reconcile()"
-      >
-        {{ i18n.t('bank.reconcile') }}
-      </button>
-      } @if (selected.allocations.length > 0) {
-      <p>{{ i18n.t('bank.unmatchHint') }}</p>
-      <label
-        >{{ i18n.t('bank.allocation') }}<select class="select" [formField]="matchForm.matchId">
-          @for (allocation of selected.allocations; track allocation.matchId) {
-          <option [value]="allocation.matchId">
-            {{ allocation.invoiceNumber }} — {{ amount(allocation.amountCents) }} — {{
-            i18n.t('bank.fees') }} {{ amount(allocation.feeCents) }}
-          </option>
-          }
-        </select></label
-      >
-      <label
-        >{{ i18n.t('bank.reason') }}<textarea
-          class="input"
-          [formField]="matchForm.reason"
-        ></textarea>
-      </label>
-      <button
-        appButton
-        variant="warning"
-        type="button"
-        [disabled]="saving() || matchForm().value().reason.trim() === '' || matchForm().invalid()"
-        (click)="unmatch()"
-      >
-        {{ i18n.t('bank.unmatch') }}
-      </button>
-      }
-    </section>
-    }
-  </div>
-  <h2>{{ i18n.t('bank.transactions') }}</h2>
-  <p>{{ i18n.t('bank.listHint') }}</p>
-  <div class="filters">
-    <label>{{ i18n.t('bank.search') }}<input class="input" [formField]="filters.search" /></label
-    ><label class="choice"
-      ><input type="checkbox" [formField]="filters.unmatched" /> {{ i18n.t('bank.unmatchedOnly')
-      }}</label
-    >
-  </div>
-  @if (loading()) {
-  <p role="status">{{ i18n.t('bank.loading') }}</p>
-  } @else if (visible().length === 0) {
-  <p>{{ i18n.t('bank.empty') }}</p>
-  }
-  <ol>
-    @for (transaction of visible(); track transaction.id) {
-    <li class="ds-panel notice-flow">
-      <h3>{{ transaction.account }} — {{ transaction.reference }}</h3>
-      <p>
-        <time [attr.datetime]="transaction.bookedOn"
-          >{{ transaction.bookedOn | localizedDate: i18n.language() }}</time
+          <app-filter-choice
+            [label]="i18n.t('listWorkspace.searchChoices')"
+            [emptyLabel]="i18n.t('listWorkspace.noChoices')"
+            [options]="accountOptions()"
+            [formField]="filters.account"
+            (committed)="updateFilter('account', $event); bankFilters.close()"
+          />
+        </ng-template>
+        <ng-template
+          appFilterPanel
+          [label]="i18n.t('dateRangeFilter.label')"
+          [summary]="periodSummary()"
         >
-        — {{ amount(transaction.amountCents) }}
-      </p>
-      <p>{{ transaction.description }}</p>
-      @for (allocation of transaction.allocations; track allocation.matchId) { @if
-      (allocation.paymentCancelled) {
-      <p appNotice variant="warning">{{ i18n.t('bank.paymentCancelled') }}</p>
-      }
-      <a [routerLink]="['/backoffice/invoices', allocation.invoiceId]"
-        >{{ allocation.invoiceNumber }} — {{ amount(allocation.amountCents) }}</a
+          <app-date-range-filter
+            [from]="query().from || undefined"
+            [to]="query().to || undefined"
+            (rangeApplied)="applyPeriod($event)"
+          />
+        </ng-template>
+        <ng-template
+          appFilterPanel
+          [label]="i18n.t('bankWorkspace.flow')"
+          [summary]="query().flow ? chipLabel('flow', query().flow) : i18n.t('bankWorkspace.all')"
+        >
+          <app-filter-choice
+            [label]="i18n.t('listWorkspace.searchChoices')"
+            [emptyLabel]="i18n.t('listWorkspace.noChoices')"
+            [options]="flowOptions()"
+            [formField]="filters.flow"
+            (committed)="updateFilter('flow', $event); bankFilters.close()"
+          />
+        </ng-template>
+        <ng-template
+          appFilterPanel
+          [label]="i18n.t('bankWorkspace.status')"
+          [summary]="query().status ? chipLabel('status', query().status) : i18n.t('bankWorkspace.all')"
+        >
+          <app-filter-choice
+            [label]="i18n.t('listWorkspace.searchChoices')"
+            [emptyLabel]="i18n.t('listWorkspace.noChoices')"
+            [options]="statusOptions()"
+            [formField]="filters.status"
+            (committed)="updateFilter('status', $event); bankFilters.close()"
+          />
+        </ng-template>
+      </app-filter-menu>
+      <app-table-export
+        listActions
+        [columns]="exportColumns"
+        [rows]="exportRows()"
+        filename="bank-transactions.csv"
+        [label]="i18n.t('listWorkspace.exportCsv')"
+        [emptyHint]="i18n.t('listWorkspace.exportEmpty')"
+        [pendingHint]="i18n.t('listWorkspace.exportPending')"
+        [pending]="state() === 'loading'"
+      />
+      <span listSummary role="status"
+        >@if (state() === 'ready') { {{ i18n.plural('bankWorkspace.count', { count: visible().length
+        }) }} }</span
       >
-      @if (allocation.feeCents > 0) {
-      <p>{{ i18n.t('bank.fees') }} {{ amount(allocation.feeCents) }}</p>
-      } }
-      <p>{{ i18n.t('bank.allocated') }} {{ amount(transaction.matchedCents) }}</p>
-      @if (transaction.amountCents > 0) {
-      <button appButton type="button" [disabled]="saving()" (click)="select(transaction)">
-        {{ i18n.t(transaction.allocations.length === 0 ? 'bank.reconcile' :
-        'bank.manageAllocations') }}
-      </button>
-      }
-      <button
-        appButton
-        type="button"
-        [attr.aria-expanded]="historyId() === transaction.id"
-        [attr.aria-controls]="'bank-history-' + transaction.id"
-        (click)="showHistory(transaction.id)"
-      >
-        {{ i18n.t('bank.history') }}
-      </button>
-      <div [id]="'bank-history-' + transaction.id" [hidden]="historyId() !== transaction.id">
-        @if (historyId() === transaction.id) {
-        <p>{{ i18n.t('bank.historyHint') }}</p>
-        @if (historyLoading()) {
-        <p role="status">{{ i18n.t('bank.loading') }}</p>
-        } @else if (historyFailed()) {
-        <p appNotice variant="danger" role="alert">{{ i18n.t('bank.error') }}</p>
-        } @else if (history().length === 0) {
-        <p>{{ i18n.t('bank.historyEmpty') }}</p>
-        } @else {
-        <ul>
-          @for (entry of history(); track entry.id) {
-          <li>
-            <a [routerLink]="['/backoffice/invoices', entry.invoiceId]"
-              >{{ entry.invoiceNumber }}</a
-            >
-            <p>
-              {{ i18n.t('bank.matched') }} · {{ entry.matchedAt | localizedDate: i18n.language(): {
-              dateStyle: 'medium', timeStyle: 'short' } }} · {{ entry.matchedByUserId }} · {{
-              amount(entry.amountCents) }} — {{ i18n.t('bank.fees') }} {{ amount(entry.feeCents) }}
-            </p>
-            @if (entry.cancelledAt !== null) {
-            <p>
-              {{ i18n.t('bank.unmatched') }} · {{ entry.cancelledAt | localizedDate:
-              i18n.language(): { dateStyle: 'medium', timeStyle: 'short' } }} · {{
-              entry.cancelledByUserId }}
-            </p>
-            <p>{{ entry.cancellationReason }}</p>
-            }
-          </li>
-          }
-        </ul>
-        } }
+      @if (chips().length) {
+      <div listSummary class="chips">
+        @for (chip of chips(); track chip.key) {
+        <button
+          appFilterChip
+          [label]="chipLabel(chip.key, chip.value)"
+          (click)="updateFilter(chip.key, '')"
+        ></button>
+        }<button appButton type="button" variant="link" (click)="clear()">
+          {{ i18n.t('bankWorkspace.clear') }}
+        </button>
       </div>
-    </li>
+      }
+    </app-list-toolbar>
+    @if (periodInvalid()) {
+    <p appNotice variant="danger" role="alert">{{ i18n.t('bankWorkspace.periodInvalid') }}</p>
+    } @if (state() === 'loading') {
+    <p role="status">{{ i18n.t('bank.loading') }}</p>
+    } @else if (state() === 'error') {
+    <p appNotice variant="danger" role="alert">{{ i18n.t('bank.error') }}</p>
+    <div><button appButton type="button" (click)="load()">{{ i18n.t('bank.reload') }}</button></div>
+    } @else if (!visible().length) {
+    <app-empty-state
+      [title]="i18n.t(transactions().length ? 'bankWorkspace.noMatches' : 'bankWorkspace.empty')"
+    />
+    } @else {
+    <div appDataTable tableLayout="fluid">
+      <table>
+        <thead>
+          <tr>
+            @for (column of columns; track column.key) {
+            <th
+              scope="col"
+              [class.amount]="column.kind === 'number'"
+              [attr.aria-sort]="sortDirection(column.key)"
+            >
+              <button
+                appTableSort
+                [label]="i18n.t(column.label)"
+                [direction]="sortDirection(column.key)"
+                (click)="sortBy(column.key)"
+              ></button>
+            </th>
+            }
+          </tr>
+        </thead>
+        <tbody>
+          @for (result of visible(); track result.item.id) { @let item = result.item;
+          <tr>
+            <th scope="row">
+              <a
+                [routerLink]="transactionLink(item.id)"
+                [queryParams]="query()"
+                [appSearchHighlight]="result.referenceMatches"
+                >{{ item.reference }}</a
+              >
+            </th>
+            <td>
+              <span [appSearchHighlight]="result.descriptionMatches">{{ item.description }}</span>
+            </td>
+            <td>{{ item.account }}</td>
+            <td>{{ item.bookedOn | localizedDate: i18n.language() }}</td>
+            <td>
+              <span appBadge>{{ i18n.t(statusLabel(status(item))) }}</span>@if (item.amountCents > 0
+              && item.matchedCents > 0) {
+              <small>{{ money(item.matchedCents) }} / {{ money(item.amountCents) }}</small> }
+            </td>
+            <td class="amount">{{ money(item.amountCents) }}</td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
     }
-  </ol>
+    <p class="muted">
+      {{ i18n.t('bankWorkspace.accountHint') }} {{ i18n.t('bankWorkspace.limit') }}
+    </p>
+    <p class="muted">{{ i18n.t('bankWorkspace.sortLoaded') }}</p>
+  </section>
 </section>

@@ -1,0 +1,11 @@
+@use "./story";
+
+.diagram-frame {
+  min-inline-size: 0;
+  overflow: auto;
+}
+.mermaid {
+  margin: 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}

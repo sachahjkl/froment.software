@@ -33,3 +33,14 @@ button {
 [role="status"]:empty {
   margin: 0;
 }
+form,
+form label {
+  display: grid;
+  gap: var(--space-3);
+}
+form {
+  justify-items: start;
+}
+p {
+  max-inline-size: none;
+}

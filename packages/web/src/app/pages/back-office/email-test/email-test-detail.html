@@ -1,0 +1,54 @@
+<section>
+  <a routerLink="/backoffice/services/resend/tests" [queryParams]="table.params()"
+    >{{ i18n.t('configurationWorkspace.backTests') }}</a
+  >
+  <h1>{{ i18n.t('connections.resend') }} — {{ i18n.t('configurationWorkspace.testDetail') }}</h1>
+  <button appButton type="button" (click)="refresh()">{{ i18n.t('emailTest.refresh') }}</button>
+  @if (paused()) {
+  <p appNotice variant="warning">{{ i18n.t('emailTest.paused') }}</p>
+  }
+  <p #progress role="status" tabindex="-1">
+    @if (current(); as item) { {{ i18n.t(statusLabels[item.status]) }} } @else { {{
+    i18n.t(historyLoaded() ? 'configurationWorkspace.notFound' : paused() ?
+    'emailTest.historyUnavailable' : 'connections.loading') }} }
+  </p>
+  @if (current(); as item) { @if (item.error; as code) {
+  <p appNotice variant="warning">{{ i18n.t(code) }}</p>
+  }
+  <dl>
+    <dt>{{ i18n.t('emailTest.subject') }}</dt>
+    <dd>{{ '[Test] ' + item.request.subject }}</dd>
+    <dt>{{ i18n.t('emailTest.attempts') }}</dt>
+    <dd>{{ item.attempts }} / 5</dd>
+    <dt>{{ i18n.t('emailTest.createdAt') }}</dt>
+    <dd>
+      {{ item.createdAt | localizedDate: i18n.language(): { dateStyle: 'medium', timeStyle: 'medium'
+      } }}
+    </dd>
+    <dt>{{ i18n.t('emailTest.updatedAt') }}</dt>
+    <dd>
+      {{ item.updatedAt | localizedDate: i18n.language(): { dateStyle: 'medium', timeStyle: 'medium'
+      } }}
+    </dd>
+    @if (item.nextAttemptAt; as next) {
+    <dt>{{ i18n.t('emailTest.nextAttempt') }}</dt>
+    <dd>
+      {{ next | localizedDate: i18n.language(): { dateStyle: 'medium', timeStyle: 'medium' } }}
+    </dd>
+    } @if (item.providerId; as id) {
+    <dt>{{ i18n.t('emailTest.providerId') }}</dt>
+    <dd><code>{{ id }}</code></dd>
+    }
+    <dt>{{ i18n.t('emailTest.requestId') }}</dt>
+    <dd><code>{{ item.request.requestId }}</code></dd>
+  </dl>
+  <section class="ds-panel">
+    <h2>{{ i18n.t('emailTest.body') }}</h2>
+    <p class="message-preview">{{ item.request.body }}</p>
+  </section>
+  <p>
+    {{ i18n.t(item.status === 'failed' || item.status === 'blocked' ? 'emailTest.failureHint' :
+    'emailTest.acceptedHint') }}
+  </p>
+  }
+</section>

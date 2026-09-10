@@ -1,0 +1,11 @@
+@use "../billing/billing-workspace";
+.payment-export {
+  padding: var(--space-4);
+}
+.payment-export summary {
+  cursor: pointer;
+  font-weight: 700;
+}
+.payment-export form {
+  margin-block-start: var(--space-4);
+}

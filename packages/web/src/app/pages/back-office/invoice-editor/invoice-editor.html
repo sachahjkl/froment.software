@@ -1,28 +1,36 @@
 <section class="invoice-page document-editor" aria-labelledby="invoice-title">
   <header>
-    <a class="back-link" routerLink="/backoffice/facturation">
-      {{ i18n.t('backOffice.backToBilling') }}
-    </a>
+    <a class="back-link" routerLink="/backoffice/facturation"
+      >{{ i18n.t('backOffice.backToBilling') }}</a
+    >
     <h1 id="invoice-title">
-      @if (isNew()) { {{ i18n.t('backOffice.invoice.title.new') }} } @else { {{
-      i18n.t('backOffice.invoice.title.edit') }} }
+      {{ i18n.t(isNew() ? 'backOffice.invoice.title.new' : 'billingWorkspace.edit') }}
     </h1>
+    <p class="hint">{{ i18n.t('billingWorkspace.noAutosave') }}</p>
   </header>
-
   @if (loading()) {
-  <p aria-live="polite">{{ i18n.t('backOffice.invoices.loading') }}</p>
-  } @else if (unavailable()) { @if (error(); as errorKey) {
-  <p appNotice variant="danger" role="alert">{{ i18n.t(errorKey) }}</p>
-  } } @else {
-  <form (submit)="save($event)">
+  <p role="status">{{ i18n.t('backOffice.invoices.loading') }}</p>
+  }
+  <div data-editor-feedback tabindex="-1">
+    @if (error(); as error) {
+    <p appNotice variant="danger" role="alert">{{ i18n.t(error) }}</p>
+    } @if (stale()) {
+    <p appNotice variant="warning">{{ i18n.t('billingWorkspace.stale') }}</p>
+    } @if (completed() && !hasUnsavedChanges()) {
+    <p appNotice variant="success" role="status">{{ i18n.t('billingWorkspace.completed') }}</p>
+    }
+  </div>
+  @if (!loading() && !unavailable()) { @if (!editable()) {
+  <p appNotice>{{ i18n.t('billingWorkspace.readonly') }}</p>
+  } @else {
+  <form novalidate (submit)="save($event)">
     @if (isNew()) {
-    <label class="field">
-      {{ i18n.t('backOffice.invoice.order') }}
-      <select
+    <label class="field"
+      >{{ i18n.t('backOffice.invoice.order') }}<select
         class="input"
-        aria-describedby="invoice-order-error"
-        [attr.aria-invalid]="invoiceForm.orderId().invalid() && invoiceForm.orderId().touched()"
         [formField]="invoiceForm.orderId"
+        [attr.aria-invalid]="invoiceForm.orderId().invalid() && invoiceForm.orderId().touched()"
+        aria-describedby="invoice-order-error"
       >
         <option value="">{{ i18n.t('backOffice.invoice.orderPlaceholder') }}</option>
         @for (order of orders(); track order.id) {
@@ -30,81 +38,70 @@
           {{ order.reference }} · {{ order.clientDisplayName }} · {{ order.title }} · {{
           money(order.totalCents) }}
         </option>
-        }
-      </select>
-      @if (invoiceForm.orderId().invalid() && invoiceForm.orderId().touched()) {
-      <span id="invoice-order-error" class="field-error"
-        >{{ i18n.t('backOffice.invoice.fieldRequired') }}</span
-      >
-      }
-    </label>
+        }</select
+      ><span id="invoice-order-error" class="field-error"
+        >@if (invoiceForm.orderId().invalid() && invoiceForm.orderId().touched()) { {{
+        i18n.t('backOffice.invoice.fieldRequired') }} }</span
+      ></label
+    >
     @if (orders().length === 0) {
     <p appNotice>{{ i18n.t('backOffice.invoice.noOrder') }}</p>
     } } @else {
-    <label class="field">
-      {{ i18n.t('backOffice.invoice.title') }}
-      <input
+    <label class="field"
+      >{{ i18n.t('backOffice.invoice.title') }}<input
         class="input"
         type="text"
-        aria-describedby="invoice-title-error"
-        [attr.aria-invalid]="invoiceForm.title().invalid() && invoiceForm.title().touched()"
         [formField]="invoiceForm.title"
+        [attr.aria-invalid]="invoiceForm.title().invalid() && invoiceForm.title().touched()"
+        aria-describedby="invoice-title-error"
       />
-      @if (invoiceForm.title().invalid() && invoiceForm.title().touched()) {
       <span id="invoice-title-error" class="field-error"
-        >{{ i18n.t('backOffice.invoice.fieldInvalid') }}</span
-      >
-      }
-    </label>
+        >@if (invoiceForm.title().invalid() && invoiceForm.title().touched()) { {{
+        i18n.t('backOffice.invoice.fieldInvalid') }} }</span
+      ></label
+    >
     }
     <div class="date-fields">
-      <label class="field">
-        {{ i18n.t('backOffice.invoice.serviceDate') }}
-        <input
+      <label class="field"
+        >{{ i18n.t('backOffice.invoice.serviceDate') }}<input
           class="input"
           type="date"
-          aria-describedby="invoice-service-date-error"
-          [attr.aria-invalid]="invoiceForm.serviceDate().invalid() && invoiceForm.serviceDate().touched()"
           [formField]="invoiceForm.serviceDate"
+          [attr.aria-invalid]="invoiceForm.serviceDate().invalid() && invoiceForm.serviceDate().touched()"
+          aria-describedby="invoice-service-date-error"
         />
-        @if (invoiceForm.serviceDate().invalid() && invoiceForm.serviceDate().touched()) {
         <span id="invoice-service-date-error" class="field-error"
-          >{{ i18n.t('backOffice.invoice.dateInvalid') }}</span
-        >
-        }
-      </label>
-      <label class="field">
-        {{ i18n.t('backOffice.invoice.dueDate') }}
-        <input
+          >@if (invoiceForm.serviceDate().invalid() && invoiceForm.serviceDate().touched()) { {{
+          i18n.t('backOffice.invoice.dateInvalid') }} }</span
+        ></label
+      >
+      <label class="field"
+        >{{ i18n.t('backOffice.invoice.dueDate') }}<input
           class="input"
           type="date"
-          aria-describedby="invoice-due-date-error"
-          [attr.aria-invalid]="invoiceForm.dueDate().invalid() && invoiceForm.dueDate().touched()"
           [formField]="invoiceForm.dueDate"
+          [attr.aria-invalid]="invoiceForm.dueDate().invalid() && invoiceForm.dueDate().touched()"
+          aria-describedby="invoice-due-date-error"
         />
-        @if (invoiceForm.dueDate().invalid() && invoiceForm.dueDate().touched()) {
         <span id="invoice-due-date-error" class="field-error"
-          >{{ i18n.t('backOffice.invoice.dueDateInvalid') }}</span
-        >
-        }
-      </label>
+          >@if (invoiceForm.dueDate().invalid() && invoiceForm.dueDate().touched()) { {{
+          i18n.t('backOffice.invoice.dueDateInvalid') }} }</span
+        ></label
+      >
     </div>
-    <label class="field">
-      {{ i18n.t('backOffice.invoice.paymentTerms') }}
-      <textarea
+    <label class="field"
+      >{{ i18n.t('backOffice.invoice.paymentTerms') }}<textarea
         class="input"
         rows="5"
-        aria-describedby="invoice-payment-terms-error"
-        [attr.aria-invalid]="invoiceForm.paymentTerms().invalid() && invoiceForm.paymentTerms().touched()"
         [formField]="invoiceForm.paymentTerms"
+        [attr.aria-invalid]="invoiceForm.paymentTerms().invalid() && invoiceForm.paymentTerms().touched()"
+        aria-describedby="invoice-payment-terms-error"
       ></textarea>
-      @if (invoiceForm.paymentTerms().invalid() && invoiceForm.paymentTerms().touched()) {
       <span id="invoice-payment-terms-error" class="field-error"
-        >{{ i18n.t('backOffice.invoice.fieldInvalid') }}</span
-      >
-      }
-    </label>
-
+        >@if (invoiceForm.paymentTerms().invalid() && invoiceForm.paymentTerms().touched()) { {{
+        i18n.t('backOffice.invoice.fieldInvalid') }} }</span
+      ></label
+    >
     @if (!isNew()) {
     <section class="lines" aria-labelledby="lines-title">
       <div class="section-heading">
@@ -112,7 +109,7 @@
         <button
           appButton
           type="button"
-          [disabled]="!editable() || invoiceForm.lines.length >= 20"
+          [disabled]="saveDisabled() || invoiceForm.lines.length >= 20"
           (click)="addLine()"
         >
           {{ i18n.t('backOffice.invoice.addLine') }}
@@ -121,143 +118,93 @@
       @for (line of invoiceForm.lines; track $index) {
       <fieldset class="document-line ds-panel">
         <legend>{{ i18n.tf('backOffice.invoice.lineNumber', { number: $index + 1 }) }}</legend>
-        <label class="field description">
-          {{ i18n.t('backOffice.invoice.description') }}
-          <input
+        <label class="field description"
+          >{{ i18n.t('backOffice.invoice.description') }}<input
             class="input"
             type="text"
-            [attr.aria-describedby]="'invoice-line-description-error-' + $index"
-            [attr.aria-invalid]="line.description().invalid() && line.description().touched()"
             [formField]="line.description"
+            [attr.aria-invalid]="line.description().invalid() && line.description().touched()"
+            [attr.aria-describedby]="'invoice-line-description-error-' + $index"
           />
-          @if (line.description().invalid() && line.description().touched()) {
           <span [id]="'invoice-line-description-error-' + $index" class="field-error"
-            >{{ i18n.t('backOffice.invoice.fieldInvalid') }}</span
-          >
-          }
-        </label>
-        <label class="field">
-          {{ i18n.t('backOffice.invoice.quantity') }}
-          <input
+            >@if (line.description().invalid() && line.description().touched()) { {{
+            i18n.t('backOffice.invoice.fieldInvalid') }} }</span
+          ></label
+        >
+        <label class="field"
+          >{{ i18n.t('backOffice.invoice.quantity') }}<input
             class="input"
             inputmode="decimal"
-            [attr.aria-describedby]="'invoice-line-quantity-error-' + $index"
-            [attr.aria-invalid]="line.quantity().invalid() && line.quantity().touched()"
             [formField]="line.quantity"
+            [attr.aria-invalid]="line.quantity().invalid() && line.quantity().touched()"
+            [attr.aria-describedby]="'invoice-line-quantity-error-' + $index"
           />
-          @if (line.quantity().invalid() && line.quantity().touched()) {
           <span [id]="'invoice-line-quantity-error-' + $index" class="field-error"
-            >{{ i18n.t('backOffice.invoice.quantityInvalid') }}</span
-          >
-          }
-        </label>
-        <label class="field">
-          {{ i18n.t('backOffice.invoice.unitPrice') }}
-          <input
+            >@if (line.quantity().invalid() && line.quantity().touched()) { {{
+            i18n.t('backOffice.invoice.quantityInvalid') }} }</span
+          ></label
+        >
+        <label class="field"
+          >{{ i18n.t('backOffice.invoice.unitPrice') }}<input
             class="input"
             inputmode="decimal"
-            [attr.aria-describedby]="'invoice-line-price-error-' + $index"
-            [attr.aria-invalid]="line.unitPrice().invalid() && line.unitPrice().touched()"
             [formField]="line.unitPrice"
+            [attr.aria-invalid]="line.unitPrice().invalid() && line.unitPrice().touched()"
+            [attr.aria-describedby]="'invoice-line-price-error-' + $index"
           />
-          @if (line.unitPrice().invalid() && line.unitPrice().touched()) {
           <span [id]="'invoice-line-price-error-' + $index" class="field-error"
-            >{{ i18n.t('backOffice.invoice.priceInvalid') }}</span
-          >
-          }
-        </label>
-        <label class="field">
-          {{ i18n.t('backOffice.invoice.vatRate') }}
-          <input
+            >@if (line.unitPrice().invalid() && line.unitPrice().touched()) { {{
+            i18n.t('backOffice.invoice.priceInvalid') }} }</span
+          ></label
+        >
+        <label class="field"
+          >{{ i18n.t('backOffice.invoice.vatRate') }}<input
             class="input"
             inputmode="decimal"
-            [attr.aria-describedby]="'invoice-line-vat-error-' + $index"
-            [attr.aria-invalid]="line.vatRate().invalid() && line.vatRate().touched()"
             [formField]="line.vatRate"
+            [attr.aria-invalid]="line.vatRate().invalid() && line.vatRate().touched()"
+            [attr.aria-describedby]="'invoice-line-vat-error-' + $index"
           />
-          @if (line.vatRate().invalid() && line.vatRate().touched()) {
           <span [id]="'invoice-line-vat-error-' + $index" class="field-error"
-            >{{ i18n.t('backOffice.invoice.vatInvalid') }}</span
-          >
-          }
-        </label>
+            >@if (line.vatRate().invalid() && line.vatRate().touched()) { {{
+            i18n.t('backOffice.invoice.vatInvalid') }} }</span
+          ></label
+        >
         <button
           appButton
           variant="danger"
           type="button"
-          [disabled]="!editable() || invoiceForm.lines.length === 1"
+          [disabled]="saveDisabled() || invoiceForm.lines.length === 1"
           (click)="removeLine($index)"
         >
           {{ i18n.t('backOffice.invoice.removeLine') }}
         </button>
-        @if (!totalsAreStale() && detail()?.currentRevision?.lines?.[$index]; as savedLine) {
+        @if (!totalsAreStale() && detail()?.currentRevision?.lines?.[$index]; as line) {
         <p class="line-total">
-          {{ i18n.t('backOffice.invoice.lineTotal') }}
-          <strong>{{ money(savedLine.totalCents) }}</strong>
+          {{ i18n.t('backOffice.invoice.lineTotal') }} <strong>{{ money(line.totalCents) }}</strong>
         </p>
         }
       </fieldset>
       }
     </section>
-    } @if (error(); as errorKey) {
-    <p appNotice variant="danger" role="alert">{{ i18n.t(errorKey) }}</p>
-    } @else if (invoiceForm().invalid() && invoiceForm().touched()) {
+    <label class="choice"
+      ><input type="checkbox" [formField]="invoiceForm.refreshParties" /> {{
+      i18n.t('document.refreshParties') }}</label
+    >
+    } @if (invoiceForm().invalid() && invoiceForm().touched()) {
     <p appNotice variant="danger" role="alert">{{ i18n.t('backOffice.invoice.validation') }}</p>
-    } @if (!isNew() && editable()) {
-    <label class="choice">
-      <input type="checkbox" [formField]="invoiceForm.refreshParties" />
-      {{ i18n.t('document.refreshParties') }}
-    </label>
     }
-    <button appButton variant="primary" type="submit" [disabled]="saveDisabled()">
-      @if (saving()) { {{ i18n.t('backOffice.invoice.saving') }} } @else { {{
-      i18n.t('backOffice.invoice.save') }} }
+    <button
+      appButton
+      variant="primary"
+      type="submit"
+      [disabled]="saveDisabled() || (completed() && !hasUnsavedChanges())"
+    >
+      {{ i18n.t(saving() ? 'backOffice.invoice.saving' : 'backOffice.invoice.save') }}
     </button>
   </form>
-
-  @if (detail(); as invoice) {
-  <aside appOutcomePanel class="ds-panel notice-flow">
-    @if (invoice.status === 'draft' && documentIssues().length > 0) {
-    <app-document-issues [issues]="documentIssues()" [clientId]="invoice.clientId" kind="invoice" />
-    }
-    <p appDetailRow [label]="i18n.t('backOffice.invoices.number')">
-      <strong>{{ invoice.invoiceNumber ?? i18n.t('backOffice.invoice.draft') }}</strong>
-    </p>
-    <p appDetailRow [label]="i18n.t('backOffice.invoices.status')">
-      <strong>{{ i18n.t(statusKey(invoice.status)) }}</strong>
-    </p>
-    <div class="actions">
-      @if (invoice.status === 'draft') {
-      <button
-        appButton
-        variant="primary"
-        type="button"
-        [disabled]="issueDisabled()"
-        (click)="issue()"
-      >
-        {{ i18n.t('backOffice.invoice.issue') }}
-      </button>
-      @if (invoiceForm().dirty()) {
-      <p class="hint">{{ i18n.t('backOffice.invoice.issueUnsaved') }}</p>
-      } } @else if (invoice.status === 'issued') {
-      <a
-        appLinkButton
-        routerLink="/backoffice/courriels/new"
-        [queryParams]="{ invoice: invoice.id }"
-      >
-        {{ i18n.t('emails.prepareReminder') }}
-      </a>
-      <button
-        appButton
-        variant="danger"
-        type="button"
-        [disabled]="actionPending()"
-        (click)="voidInvoice()"
-      >
-        {{ i18n.t('backOffice.invoice.void') }}
-      </button>
-      }
-    </div>
+  } @if (detail(); as invoice) {
+  <section class="saved-summary ds-panel">
     <h2>{{ i18n.t('backOffice.invoice.total') }}</h2>
     @if (totalsAreStale()) {
     <p appNotice>{{ i18n.t('backOffice.invoice.dirtyTotals') }}</p>
@@ -276,150 +223,11 @@
         <dd>{{ money(invoice.currentRevision.totalCents) }}</dd>
       </div>
     </dl>
-    @if (invoice.status === 'issued' || invoice.status === 'paid') {
-    <a [routerLink]="['/backoffice/invoices', invoice.id, 'credits']"
-      >{{ i18n.t('credit.title') }}</a
+    <a [routerLink]="['/backoffice/invoices', invoice.id]"
+      >{{ i18n.t('billingWorkspace.backDetail') }}</a
     >
-    @if (invoice.creditedCents > 0) {
-    <p appNotice variant="info">
-      {{ i18n.t('credit.credited') }} {{ money(invoice.creditedCents) }}
-    </p>
-    }
-    <h2>{{ i18n.t('payment.title') }}</h2>
-    <p>{{ i18n.t('payment.recorded') }} : {{ money(recordedPaid()) }}</p>
-    @if (invoice.status === 'issued' && invoice.creditedCents === 0) {
-    <p><strong>{{ i18n.t('payment.remaining') }} : {{ money(remaining()) }}</strong></p>
-    <form class="payment-form" (submit)="recordPayment($event)">
-      <label class="field"
-        >{{ i18n.t('payment.amount') }}<input
-          class="input"
-          inputmode="decimal"
-          [formField]="paymentForm.amount"
-      /></label>
-      <label class="field"
-        >{{ i18n.t('payment.date') }}<input
-          class="input"
-          type="date"
-          [formField]="paymentForm.paidOn"
-      /></label>
-      <label class="field"
-        >{{ i18n.t('payment.method') }}
-        <select class="input" [formField]="paymentForm.method">
-          <option value="transfer">{{ i18n.t('payment.transfer') }}</option>
-          <option value="card">{{ i18n.t('payment.card') }}</option>
-          <option value="cash">{{ i18n.t('payment.cash') }}</option>
-          <option value="cheque">{{ i18n.t('payment.cheque') }}</option>
-          <option value="other">{{ i18n.t('payment.other') }}</option>
-        </select>
-      </label>
-      <label class="field"
-        >{{ i18n.t('payment.reference') }}<input class="input" [formField]="paymentForm.reference"
-      /></label>
-      <p class="hint">{{ i18n.t('payment.hint') }}</p>
-      <button
-        appButton
-        variant="primary"
-        type="submit"
-        [disabled]="actionPending() || paymentForm().invalid()"
-      >
-        {{ i18n.t('payment.save') }}
-      </button>
-    </form>
-    }
-    <ol>
-      @for (payment of invoice.payments; track payment.id) {
-      <li>
-        <strong>{{ money(payment.amountCents) }}</strong> · {{ payment.paidOn }} · {{
-        i18n.t(paymentMethod(payment.method)) }}<br />{{ payment.reference }} @if
-        (payment.cancelledAt !== null) {
-        <p>
-          {{ i18n.t('payment.cancelled') }} · {{ date(payment.cancelledAt) }}<br />{{
-          payment.cancellationReason }}
-        </p>
-        } @else if (invoice.status === 'issued' || invoice.status === 'paid') {
-        <button
-          appButton
-          type="button"
-          [disabled]="actionPending() || cancellationPaymentId() !== undefined"
-          (click)="startCancellation(payment.id)"
-        >
-          {{ i18n.t('payment.cancel') }}
-        </button>
-        }
-      </li>
-      } @empty {
-      <li>{{ i18n.t('payment.empty') }}</li>
-      }
-    </ol>
-    } @if (cancellationPayment(); as payment) {
-    <form class="payment-form" (submit)="cancelPayment($event)">
-      <h2>{{ i18n.t('payment.cancel') }}</h2>
-      <p>{{ money(payment.amountCents) }} · {{ payment.reference }}</p>
-      <p>{{ i18n.t('payment.cancel_hint') }}</p>
-      <label class="field"
-        >{{ i18n.t('payment.cancel_reason') }}<textarea
-          class="input"
-          [formField]="cancellationForm.reason"
-        ></textarea>
-      </label>
-      <button
-        appButton
-        variant="danger"
-        type="submit"
-        [disabled]="actionPending() || cancellationForm().invalid()"
-      >
-        {{ i18n.t('payment.cancel') }}
-      </button>
-      <button appButton type="button" [disabled]="actionPending()" (click)="dismissCancellation()">
-        {{ i18n.t('payment.cancel_dismiss') }}
-      </button>
-    </form>
-    }
-    <h2>{{ i18n.t('backOffice.invoice.history') }}</h2>
-    <ol>
-      @for (revision of invoice.revisions; track revision.id) {
-      <li>
-        <span
-          ><strong>#{{ revision.version }}</strong> · {{ revision.invoiceNumber ??
-          i18n.t('backOffice.invoice.draft') }}</span
-        >
-        <span>{{ date(revision.createdAt) }} · {{ money(revision.totalCents) }}</span>
-        <div class="revision-actions">
-          <button appButton type="button" (click)="showPreview(revision.version)">
-            {{ i18n.t('backOffice.invoice.preview.show') }}
-          </button>
-          <button
-            appButton
-            type="button"
-            [disabled]="pdfPendingVersion() !== undefined"
-            (click)="generatePdf(revision.version)"
-          >
-            @if (pdfPendingVersion() === revision.version) { {{
-            i18n.t('backOffice.invoice.pdf.generating') }} } @else { {{
-            i18n.t('backOffice.invoice.pdf.generate') }} }
-          </button>
-          @if (pdfUrl(revision.version); as pdf) {
-          <a [href]="pdf">{{ i18n.t('backOffice.invoice.pdf.download') }}</a> }
-        </div>
-      </li>
-      }
-    </ol>
-  </aside>
-  @if (previewVersion() !== undefined) {
-  <section class="preview">
-    <div class="section-heading">
-      <h2>
-        {{ i18n.tf('backOffice.invoice.preview.title', { version: previewVersion() ?? '' }) }}
-      </h2>
-      @if (previewUrl(); as url) {
-      <a class="external-link" [href]="url" target="_blank" rel="noopener noreferrer"
-        >{{ i18n.t('backOffice.invoice.preview.open') }}<app-icon name="external"
-      /></a>
-      }
-    </div>
-    @if (previewFrameUrl(); as frameUrl) {
-    <iframe [src]="frameUrl" [title]="i18n.t('backOffice.invoice.preview.frameTitle')"></iframe>
-    }
   </section>
-  } } }
+  } } @if (unavailable() || stale()) {
+  <button appButton [disabled]="saving()" (click)="reload()">{{ i18n.t('credit.reload') }}</button>
+  }
 </section>

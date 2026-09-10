@@ -28,7 +28,7 @@
         [formField]="search"
         autocomplete="off"
     /></label>
-    <p role="status">{{ i18n.tf('listControls.optionCount', { count: matches().length }) }}</p>
+    <p role="status">{{ i18n.plural('listControls.optionCount', { count: matches().length }) }}</p>
     <ul>
       @for (result of matches(); track result.item.id) {
       <li>

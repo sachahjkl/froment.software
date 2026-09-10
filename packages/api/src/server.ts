@@ -45,8 +45,10 @@ import { StripeWebhookRoute } from './integrations/stripe-webhook.js';
 import { BankingHandlers } from './banking/handlers.js';
 import { QuoteLinkHandlers } from './quote-links/handlers.js';
 import { RequestLimiterLive } from './server/request-limiter.js';
+import { apiCatalog, apiCatalogContentType } from './server/api-catalog.js';
 import { StatusHandlers } from './status/handlers.js';
 import { RuntimeConfiguration } from './runtime-config.js';
+import { blogHandlers } from './blog/handlers.js';
 
 const FrenchApi = apiForLanguage('fr');
 const EnglishApi = apiForLanguage('en');
@@ -55,39 +57,43 @@ const openApiSpecifications = {
   en: OpenApi.fromApi(EnglishApi),
 };
 
-const ApiRoutes = HttpApiBuilder.layer(FrenchApi).pipe(
-  Layer.provide(
-    Layer.mergeAll(
-      StatusHandlers,
-      BootstrapHandlers,
-      AuthenticationHandlers,
-      PasskeyHandlers,
-      TeamHandlers,
-      CreditNoteHandlers,
-      BankLedgerHandlers,
-      EmailDraftHandlers,
-      EmailTemplateHandlers,
-      ReminderHandlers,
-      ProviderActionHandlers,
-      ClientHandlers,
-      OrderHandlers,
-      QuoteConditionPresetHandlers,
-      CatalogHandlers,
-      IntegrationHandlers,
-      BankingHandlers,
-      IssuerSettingsHandlers,
-      AffairHandlers,
-      AuditHandlers,
-      QuoteHandlers,
-      QuoteLinkHandlers,
-      InvoiceHandlers,
-      ClientPortalHandlers,
-      ApiTokenHandlers,
+const apiRoutes = (publicOrigin: string) =>
+  HttpApiBuilder.layer(FrenchApi).pipe(
+    Layer.provide(
+      Layer.mergeAll(
+        StatusHandlers,
+        blogHandlers(publicOrigin),
+        BootstrapHandlers,
+        AuthenticationHandlers,
+        PasskeyHandlers,
+        TeamHandlers,
+        CreditNoteHandlers,
+        BankLedgerHandlers,
+        EmailDraftHandlers,
+        EmailTemplateHandlers,
+        ReminderHandlers,
+        ProviderActionHandlers,
+        ClientHandlers,
+        OrderHandlers,
+        QuoteConditionPresetHandlers,
+        CatalogHandlers,
+        IntegrationHandlers,
+        BankingHandlers,
+        IssuerSettingsHandlers,
+        AffairHandlers,
+        AuditHandlers,
+        QuoteHandlers,
+        QuoteLinkHandlers,
+        InvoiceHandlers,
+        ClientPortalHandlers,
+        ApiTokenHandlers,
+      ),
     ),
-  ),
-  Layer.provide(Layer.mergeAll(AuthenticationHttpLive, ApiBrowserRequestLive, ApiRequestBodyLive)),
-  Layer.provide(ApiTelemetryLive),
-);
+    Layer.provide(
+      Layer.mergeAll(AuthenticationHttpLive, ApiBrowserRequestLive, ApiRequestBodyLive),
+    ),
+    Layer.provide(ApiTelemetryLive),
+  );
 
 const ApiDocs = HttpRouter.add(
   'GET',
@@ -147,6 +153,13 @@ export const makeServerLayer = (options: {
   readonly publicOrigin: string;
   readonly staticRoot: string;
 }) => {
+  const ApiCatalogRoute = HttpRouter.add(
+    'GET',
+    '/.well-known/api-catalog',
+    HttpServerResponse.jsonUnsafe(apiCatalog(options.publicOrigin), {
+      contentType: apiCatalogContentType,
+    }),
+  );
   const StaticRoutes = HttpStaticServer.layer({
     root: options.staticRoot,
     index: 'index.html',
@@ -166,12 +179,13 @@ export const makeServerLayer = (options: {
 
   return HttpRouter.serve(
     Layer.mergeAll(
-      ApiRoutes,
+      apiRoutes(options.publicOrigin),
       StripeWebhookRoute,
       ApiDocs,
       FrenchApiDocs,
       EnglishApiDocs,
       LocalizedOpenApiRoutes,
+      ApiCatalogRoute,
       BackOfficeStaticRoutes,
       PublicQuoteStaticRoutes,
       StaticRoutes,

@@ -14,6 +14,17 @@ Each commit should be:
 
 Push after a meaningful batch of commits, or when the work is ready for CI/review.
 
+## Tests de l’interface
+
+- Ne lancez pas les tests d’intégration navigateur ou Playwright dans les checks Nix, la CI ou les étapes de publication.
+- Ne conditionnez pas une livraison à la réussite des scénarios navigateur ou d’une matrice visuelle.
+- N’ajoutez pas de tests d’intégration de l’IHM sans demande explicite de l’utilisateur.
+- Utilisez les outils navigateur existants uniquement pour des vérifications visuelles locales et ponctuelles.
+- Ne figez pas la structure du DOM, les libellés, l’ordre des contrôles ou les détails visuels par des assertions exhaustives.
+- Ne modifiez pas le produit uniquement pour satisfaire un scénario navigateur fragile.
+- Gardez les tests proportionnés au risque. Préférez des tests ciblés sur les règles métier, les permissions, la persistance et les contrats.
+- Conservez les tests métier et API, la compilation, le lint et le formatage dans les checks.
+
 ## Learning More About Effect
 
 This repository uses the Effect TypeScript library.

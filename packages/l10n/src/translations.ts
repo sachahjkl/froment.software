@@ -5,9 +5,15 @@ import { backOfficeShellText } from './back-office-shell.js';
 import { clientsWorkspaceText } from './clients-workspace.js';
 import { catalogWorkspaceText } from './catalog-workspace.js';
 import { listControlsText } from './list-controls.js';
+import { emailsWorkspaceText } from './emails-workspace.js';
+import { commercialWorkspaceText } from './commercial-workspace.js';
+import { billingWorkspaceText } from './billing-workspace.js';
+import { bankWorkspaceText } from './bank-workspace.js';
+import { clientExperienceText } from './client-experience.js';
+import { configurationWorkspaceText } from './configuration-workspace.js';
+import { auditText } from './audit.js';
 import { listWorkspaceText } from './list-workspace.js';
 import { dateRangeFilterText } from './date-range-filter.js';
-import { emailsWorkspaceText } from './emails-workspace.js';
 import { teamText } from './team.js';
 import { creditText } from './credit-notes.js';
 import { ledgerText } from './bank-ledger.js';
@@ -26,9 +32,16 @@ export const translations = {
     ...catalogWorkspaceText.fr,
     'design.components.searchFilter': 'Recherche : {query}',
     ...listControlsText.fr,
+    ...emailsWorkspaceText.fr,
+    ...commercialWorkspaceText.fr,
+    ...billingWorkspaceText.fr,
+    ...bankWorkspaceText.fr,
+    ...clientExperienceText.fr,
+    ...configurationWorkspaceText.fr,
+    ...auditText.fr,
     ...listWorkspaceText.fr,
     ...dateRangeFilterText.fr,
-    ...emailsWorkspaceText.fr,
+    'design.components.workflows': 'Parcours complets',
     ...webUiText.fr,
     ...teamText.fr,
     ...creditText.fr,
@@ -415,12 +428,12 @@ export const translations = {
     'backOffice.billing.due.soon': 'Échéance proche · {date}',
     'backOffice.billing.due.upcoming': 'Échéance {date}',
     'backOffice.billing.bulkActions': 'Actions groupées',
-    'backOffice.billing.selected': '{count} facture(s) sélectionnée(s)',
     'backOffice.billing.bulkReminder': 'Préparer les relances en retard',
     'backOffice.billing.bulkReminder.subject': 'Relance de factures échues',
     'backOffice.billing.bulkReminder.body':
       'Bonjour,\n\nUne ou plusieurs factures échues restent en attente de règlement.\n\nCordialement,',
-    'backOffice.billing.bulkExport': 'Télécharger les PDF ({count})',
+    'backOffice.billing.bulkExport.one': 'Télécharger le PDF ({count})',
+    'backOffice.billing.bulkExport.other': 'Télécharger les PDF ({count})',
     'backOffice.billing.selectAll': 'Sélectionner les factures visibles',
     'backOffice.billing.selectInvoice': 'Sélectionner la facture {reference}',
     'backOffice.billing.empty': 'Aucune facture dans cet onglet.',
@@ -965,8 +978,10 @@ export const translations = {
     'backOffice.clientDetail.accessRevokeConfirmation':
       'Supprimer l’accès au portail pour {email} ?',
     'backOffice.clientDetail.passwordRequirements': 'Utilisez entre {min} et {max} caractères.',
-    'backOffice.clientDetail.passwordTooShort':
-      'Le mot de passe contient {count} caractères sur les {min} requis.',
+    'backOffice.clientDetail.passwordTooShort.one':
+      'Le mot de passe contient {count} caractère. Minimum requis : {min}.',
+    'backOffice.clientDetail.passwordTooShort.other':
+      'Le mot de passe contient {count} caractères. Minimum requis : {min}.',
     'backOffice.clientDetail.passwordTooLong':
       'Le mot de passe dépasse la limite de {max} caractères.',
     'backOffice.clientDetail.loading': 'Chargement du client…',
@@ -1549,9 +1564,16 @@ export const translations = {
     ...catalogWorkspaceText.en,
     'design.components.searchFilter': 'Search: {query}',
     ...listControlsText.en,
+    ...emailsWorkspaceText.en,
+    ...commercialWorkspaceText.en,
+    ...billingWorkspaceText.en,
+    ...bankWorkspaceText.en,
+    ...clientExperienceText.en,
+    ...configurationWorkspaceText.en,
+    ...auditText.en,
     ...listWorkspaceText.en,
     ...dateRangeFilterText.en,
-    ...emailsWorkspaceText.en,
+    'design.components.workflows': 'Complete workflows',
     ...webUiText.en,
     ...teamText.en,
     ...creditText.en,
@@ -1930,12 +1952,12 @@ export const translations = {
     'backOffice.billing.due.soon': 'Due soon · {date}',
     'backOffice.billing.due.upcoming': 'Due {date}',
     'backOffice.billing.bulkActions': 'Bulk actions',
-    'backOffice.billing.selected': '{count} invoice(s) selected',
     'backOffice.billing.bulkReminder': 'Prepare overdue reminders',
     'backOffice.billing.bulkReminder.subject': 'Overdue invoice reminder',
     'backOffice.billing.bulkReminder.body':
       'Hello,\n\nOne or more overdue invoices are still awaiting payment.\n\nRegards,',
-    'backOffice.billing.bulkExport': 'Download PDFs ({count})',
+    'backOffice.billing.bulkExport.one': 'Download PDF ({count})',
+    'backOffice.billing.bulkExport.other': 'Download PDFs ({count})',
     'backOffice.billing.selectAll': 'Select visible invoices',
     'backOffice.billing.selectInvoice': 'Select invoice {reference}',
     'backOffice.billing.empty': 'No invoice in this tab.',
@@ -2462,8 +2484,10 @@ export const translations = {
     'backOffice.clientDetail.accessRevoking': 'Removing…',
     'backOffice.clientDetail.accessRevokeConfirmation': 'Remove portal access for {email}?',
     'backOffice.clientDetail.passwordRequirements': 'Use between {min} and {max} characters.',
-    'backOffice.clientDetail.passwordTooShort':
-      'The password contains {count} of the required {min} characters.',
+    'backOffice.clientDetail.passwordTooShort.one':
+      'The password contains {count} character. Minimum required: {min}.',
+    'backOffice.clientDetail.passwordTooShort.other':
+      'The password contains {count} characters. Minimum required: {min}.',
     'backOffice.clientDetail.passwordTooLong': 'The password exceeds the {max}-character limit.',
     'backOffice.clientDetail.loading': 'Loading client…',
     'backOffice.clientDetail.save': 'Save',

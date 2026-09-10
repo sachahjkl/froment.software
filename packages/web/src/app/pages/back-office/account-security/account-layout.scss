@@ -1,0 +1,34 @@
+:host {
+  display: block;
+}
+.account-header,
+nav,
+.preferences {
+  padding: var(--space-5) var(--page-x);
+}
+.account-header,
+nav,
+.languages {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+}
+.account-header {
+  justify-content: space-between;
+}
+nav {
+  border-bottom: 1px solid var(--color-line-strong);
+}
+nav a {
+  padding-block: var(--space-2);
+  text-underline-offset: 0.4em;
+}
+nav a.active {
+  font-weight: 700;
+}
+.preferences {
+  display: grid;
+  gap: var(--space-4);
+  border-top: 1px solid var(--color-line-strong);
+}

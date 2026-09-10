@@ -1,0 +1,65 @@
+<section class="access-editor notice-flow" aria-labelledby="access-editor-title">
+  <a [routerLink]="backLink()">{{ i18n.t('clientsWorkspace.accessBack') }}</a>
+  <app-page-header
+    ><h1 id="access-editor-title">{{ i18n.t('clientsWorkspace.accessCreateTitle') }}</h1>
+    <p>{{ client()?.displayName }}</p></app-page-header
+  >
+  @if (loading()) {
+  <p role="status">{{ i18n.t('backOffice.clientDetail.loading') }}</p>
+  } @else if (client()?.archived) {
+  <p appNotice>{{ i18n.t('backOffice.clientDetail.accessArchived') }}</p>
+  } @else if (client()) {
+  <p>{{ i18n.t('clientsWorkspace.accessCreateIntro') }}</p>
+  <form novalidate (submit)="save($event)">
+    <label class="field" for="client-account-email"
+      >{{ i18n.t('backOffice.email') }}
+      <input
+        id="client-account-email"
+        class="input"
+        type="email"
+        autocomplete="username"
+        [formField]="accessForm.email"
+        [attr.aria-invalid]="invalid('email')"
+        [attr.aria-describedby]="invalid('email') ? 'client-account-email-error' : null"
+      />
+      @if (invalid('email')) {
+      <span id="client-account-email-error" class="field-error"
+        >{{ i18n.t('backOffice.clientDetail.emailInvalid') }}</span
+      >
+      }
+    </label>
+    <label class="field" for="client-account-password"
+      >{{ i18n.t('backOffice.password') }}
+      <input
+        id="client-account-password"
+        class="input"
+        type="password"
+        autocomplete="new-password"
+        [formField]="accessForm.password"
+        [attr.aria-invalid]="invalid('password')"
+        aria-describedby="client-account-password-requirements client-account-password-error"
+      />
+      <span id="client-account-password-requirements" class="field-hint"
+        >{{ i18n.tf('backOffice.clientDetail.passwordRequirements', { min: passwordConfig.minLength,
+        max: passwordConfig.maxLength }) }}</span
+      >
+      @if (invalid('password')) {
+      <span id="client-account-password-error" class="field-error"
+        >{{ passwordLength() > passwordConfig.maxLength ?
+        i18n.tf('backOffice.clientDetail.passwordTooLong', { max: passwordConfig.maxLength }) :
+        i18n.plural('backOffice.clientDetail.passwordTooShort', { count: passwordLength(), min:
+        passwordConfig.minLength }) }}</span
+      >
+      }
+    </label>
+    <div class="actions">
+      <button appButton variant="primary" type="submit" [disabled]="pending() || completed()">
+        {{ i18n.t(pending() ? 'backOffice.clientDetail.accessCreating' :
+        'backOffice.clientDetail.accessCreate') }}</button
+      ><a appLinkButton [routerLink]="backLink()">{{ i18n.t('clientsWorkspace.cancel') }}</a>
+    </div>
+  </form>
+  } @if (error(); as code) {
+  <p appNotice variant="danger" role="alert">{{ i18n.t(code) }}</p>
+  }
+</section>
