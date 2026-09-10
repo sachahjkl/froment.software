@@ -1,7 +1,6 @@
 import { isPlatformBrowser } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable, PLATFORM_ID } from '@angular/core';
-import { type CanActivateFn, Router } from '@angular/router';
 import {
   AuthenticationFailure,
   BrowserSession,
@@ -135,19 +134,3 @@ export class Authentication {
     }
   }
 }
-
-export const administratorGuard = async () => {
-  const auth = inject(Authentication);
-  const router = inject(Router);
-  if ((await auth.sessionMode()) === 'administrator') return true;
-  return router.createUrlTree(['/backoffice/login']);
-};
-
-export const clientGuard: CanActivateFn = async (_route, state) => {
-  const auth = inject(Authentication);
-  const router = inject(Router);
-  if ((await auth.sessionMode()) === 'client') return true;
-  return router.createUrlTree(['/backoffice/login'], {
-    queryParams: { returnUrl: state.url },
-  });
-};

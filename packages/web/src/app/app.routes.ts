@@ -1,7 +1,7 @@
 import { Routes } from '@angular/router';
 import { HomeComponent } from './pages/home/home.component';
 import { policies } from './pages/policy/policy-documents';
-import { administratorGuard, clientGuard } from './back-office/authentication';
+import { administratorGuard, clientGuard } from './back-office/authentication-guards';
 import { unsavedChangesGuard } from './back-office/unsaved-changes-guard';
 import { pendingApiTokenGuard } from './back-office/pending-api-token-guard';
 import { TabPanelOutlet } from './shared/tabs/tab-panel';

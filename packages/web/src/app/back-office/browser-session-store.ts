@@ -1,8 +1,7 @@
 import { DOCUMENT } from '@angular/common';
 import { HttpBackend, HttpClient } from '@angular/common/http';
 import { DestroyRef, inject, Injectable, signal } from '@angular/core';
-import { BrowserSession, type BrowserSessionValue, type LoginModeValue } from '@froment/contracts';
-import { Schema } from 'effect';
+import type { BrowserSessionValue, LoginModeValue } from '@froment/contracts';
 import { firstValueFrom } from 'rxjs';
 
 import { AuthCookieLock } from './auth-cookie-lock';
@@ -71,7 +70,8 @@ export class BrowserSessionStore {
           const response = await firstValueFrom(
             this.http.post<unknown>('/api/auth/refresh', undefined),
           );
-          const session = Schema.decodeUnknownSync(BrowserSession)(response);
+          const { decodeBrowserSession } = await import('./browser-session-decoder');
+          const session = decodeBrowserSession(response);
           if (this.generation !== generation) return this.mode();
           return this.set(session).mode;
         } catch {

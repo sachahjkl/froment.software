@@ -6,7 +6,8 @@ import { type LoginModeValue } from '@froment/contracts';
 
 import { BrowserSessionStore } from './browser-session-store';
 import { AUTH_COOKIE_LOCK_MANAGER } from './auth-cookie-lock';
-import { Authentication, administratorGuard, clientGuard } from './authentication';
+import { Authentication } from './authentication';
+import { administratorGuard, clientGuard } from './authentication-guards';
 import { BootstrapApi } from './bootstrap-api';
 import { authenticationInterceptor } from './authentication-interceptor';
 
@@ -97,8 +98,11 @@ describe('Authentication', () => {
     });
     const router = TestBed.inject(Router);
 
-    const administratorRedirect = await TestBed.runInInjectionContext(() => administratorGuard());
-    if (administratorRedirect === true) throw new Error('The administrator route was allowed.');
+    const administratorRedirect = await TestBed.runInInjectionContext(() =>
+      administratorGuard({} as never, { url: '/backoffice/dashboard' } as never),
+    );
+    if (!(administratorRedirect instanceof UrlTree))
+      throw new Error('The administrator redirect is missing.');
     expect(router.serializeUrl(administratorRedirect)).toBe('/backoffice/login');
     await expect(
       TestBed.runInInjectionContext(() =>
@@ -107,10 +111,15 @@ describe('Authentication', () => {
     ).resolves.toBe(true);
 
     mode = 'administrator';
-    await expect(TestBed.runInInjectionContext(() => administratorGuard())).resolves.toBe(true);
-    const clientRedirect = (await TestBed.runInInjectionContext(() =>
+    await expect(
+      TestBed.runInInjectionContext(() =>
+        administratorGuard({} as never, { url: '/backoffice/dashboard' } as never),
+      ),
+    ).resolves.toBe(true);
+    const clientRedirect = await TestBed.runInInjectionContext(() =>
       clientGuard({} as never, { url: '/backoffice/client?quote=document-id' } as never),
-    )) as UrlTree;
+    );
+    if (!(clientRedirect instanceof UrlTree)) throw new Error('The client redirect is missing.');
     expect(router.serializeUrl(clientRedirect)).toBe(
       '/backoffice/login?returnUrl=%2Fbackoffice%2Fclient%3Fquote%3Ddocument-id',
     );
