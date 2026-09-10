@@ -6,6 +6,7 @@ import { passkeyDocumentation } from './passkeys.js';
 import { emailDraftDocumentation } from './email-drafts.js';
 import { connectionDocumentation } from './connections.js';
 import { checkoutDocumentation } from './checkout.js';
+import { auditDocumentation } from './audit.js';
 import { emailTemplateDocumentation } from './email-templates.js';
 import { reminderDocumentation } from './reminders.js';
 import { providerActionDocumentation } from './provider-action-documentation.js';
@@ -40,6 +41,7 @@ export const apiDocumentation = {
       bearer: 'Jeton d’API transmis avec le schéma Bearer.',
     },
     groups: {
+      audit: auditDocumentation.fr.group,
       passkeys: passkeyDocumentation.fr.group,
       team: teamDocumentation.fr.group,
       creditNotes: creditDocumentation.fr.group,
@@ -101,6 +103,7 @@ export const apiDocumentation = {
       },
     },
     operations: {
+      ...auditDocumentation.fr.operations,
       ...passkeyDocumentation.fr.operations,
       ...emailDraftDocumentation.fr.operations,
       ...connectionDocumentation.fr,
@@ -425,6 +428,7 @@ export const apiDocumentation = {
       bearer: 'API token sent with the Bearer scheme.',
     },
     groups: {
+      audit: auditDocumentation.en.group,
       clients: { title: 'Clients', description: 'Client records and lifecycle.' },
       passkeys: passkeyDocumentation.en.group,
       team: teamDocumentation.en.group,
@@ -483,6 +487,7 @@ export const apiDocumentation = {
       integrations: { title: 'External services', description: 'Adapters and request history.' },
     },
     operations: {
+      ...auditDocumentation.en.operations,
       catalogList: { summary: 'List services', description: 'Lists active and archived services.' },
       ...passkeyDocumentation.en.operations,
       ...emailDraftDocumentation.en.operations,

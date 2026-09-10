@@ -21,3 +21,11 @@ This repository uses the Effect TypeScript library.
 Before writing Effect code, read `node_modules/effect/AGENTS.md` completely.
 
 If the guide does not cover an API, search `node_modules/effect/src`.
+
+## Runtime Configuration
+
+- Declare runtime settings in `packages/api/src/runtime-config.ts` with Effect `Config`.
+- Read runtime settings through the injected `RuntimeConfiguration`.
+- Do not store runtime settings in standalone constants or shared contracts.
+- Validate runtime-dependent limits with the injected configuration.
+- Use `ConfigProvider` or a configuration layer in tests instead of changing the global environment.

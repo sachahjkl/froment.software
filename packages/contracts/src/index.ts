@@ -77,6 +77,15 @@ export {
   AuditResourceType,
   type AuditResourceType as AuditResourceTypeValue,
 } from './audit/contracts.js';
+export { AuditApi } from './audit/api.js';
+export {
+  GlobalAuditEvent,
+  GlobalAuditPage,
+  GlobalAuditQuery,
+  GlobalAuditFailure,
+  AuditUnavailable,
+  InvalidAuditQuery,
+} from './audit/global.js';
 export { accountPasswordConfig } from './authentication/config.js';
 export {
   AccountEmail,

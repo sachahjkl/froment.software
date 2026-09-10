@@ -9,6 +9,7 @@ import { StripeCheckoutTransportLive } from './integrations/stripe.js';
 
 import { BootstrapLive } from './bootstrap/bootstrap.js';
 import { AuditLive } from './audit/audit.js';
+import { AuditReaderLive } from './audit/reader.js';
 import { BusinessConfigLive } from './business/business-config.js';
 import { AuthenticationLive } from './authentication/authentication.js';
 import { AuthenticationConfigLive } from './authentication/authentication-config.js';
@@ -78,6 +79,7 @@ const ServicesLive = Layer.mergeAll(
   ),
   AuthenticationServicesLive,
   ApiTokensLive,
+  AuditReaderLive,
   ClientsLive,
   InvoicePdfRuntimeLive,
   QuoteLinksLive.pipe(Layer.provide(BusinessConfigLive)),

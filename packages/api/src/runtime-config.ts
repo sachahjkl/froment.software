@@ -27,6 +27,29 @@ export const defaultAuthenticationRuntimeConfig = {
   bootstrapConcurrency: 1,
 } as const;
 
+export const defaultRuntimeConfig = {
+  authentication: defaultAuthenticationRuntimeConfig,
+  requestLimiter: { capacity: 10_000, cacheLifetimeMillis: 120_000, windowMillis: 60_000 },
+  publicQuote: {
+    readPerMinute: 60,
+    downloadPerMinute: 20,
+    signaturePerMinute: 10,
+    linkLifetimeMillis: 2_592_000_000,
+  },
+  apiToken: {
+    maximumLifetimeMillis: 31_536_000_000,
+    defaultRateLimitPerMinute: 120,
+    defaultPageSize: 50,
+    lastUsedUpdateIntervalMillis: 60_000,
+  },
+  audit: { pageSize: 50 },
+  password: { memoryCost: 19_456, timeCost: 2, parallelism: 1, hashLength: 32 },
+  documentRenderer: { concurrency: 2, maximumOutputBytes: 1_048_576 },
+  invoicePdfWorker: { concurrency: 1, intervalMillis: 1_000 },
+  database: { busyTimeoutMillis: 5_000 },
+  http: { maximumRequestBodyBytes: 32_768 },
+} as const;
+
 export const RuntimeConfig = {
   authentication: Config.all({
     accessTokenLifetimeMillis: positiveInt(
@@ -123,6 +146,9 @@ export const RuntimeConfig = {
     defaultPageSize: positiveInt('API_TOKEN_DEFAULT_PAGE_SIZE', 50),
     lastUsedUpdateIntervalMillis: positiveInt('API_TOKEN_LAST_USED_UPDATE_INTERVAL_MILLIS', 60_000),
   }),
+  audit: Config.all({
+    pageSize: positiveInt('AUDIT_PAGE_SIZE', defaultRuntimeConfig.audit.pageSize),
+  }),
   password: Config.all({
     memoryCost: positiveInt('ARGON2_MEMORY_COST', 19_456),
     timeCost: positiveInt('ARGON2_TIME_COST', 2),
@@ -143,28 +169,6 @@ export const RuntimeConfig = {
   http: Config.all({
     maximumRequestBodyBytes: positiveInt('HTTP_MAXIMUM_REQUEST_BODY_BYTES', 32_768),
   }),
-} as const;
-
-export const defaultRuntimeConfig = {
-  authentication: defaultAuthenticationRuntimeConfig,
-  requestLimiter: { capacity: 10_000, cacheLifetimeMillis: 120_000, windowMillis: 60_000 },
-  publicQuote: {
-    readPerMinute: 60,
-    downloadPerMinute: 20,
-    signaturePerMinute: 10,
-    linkLifetimeMillis: 2_592_000_000,
-  },
-  apiToken: {
-    maximumLifetimeMillis: 31_536_000_000,
-    defaultRateLimitPerMinute: 120,
-    defaultPageSize: 50,
-    lastUsedUpdateIntervalMillis: 60_000,
-  },
-  password: { memoryCost: 19_456, timeCost: 2, parallelism: 1, hashLength: 32 },
-  documentRenderer: { concurrency: 2, maximumOutputBytes: 1_048_576 },
-  invoicePdfWorker: { concurrency: 1, intervalMillis: 1_000 },
-  database: { busyTimeoutMillis: 5_000 },
-  http: { maximumRequestBodyBytes: 32_768 },
 } as const;
 
 export const runtimeConfig = Config.all(RuntimeConfig);

@@ -59,7 +59,7 @@ export interface HttpTestServer {
 }
 
 export const startHttpTestServer = async (
-  options: { readonly stripeWebhookSecret?: string } = {},
+  options: { readonly stripeWebhookSecret?: string; readonly auditPageSize?: number } = {},
 ): Promise<HttpTestServer> => {
   const staticRoot = await mkdtemp(join(tmpdir(), 'froment-api-'));
   await cp(join(import.meta.dirname, '../../../web/dist/froment-software/browser'), staticRoot, {
@@ -68,6 +68,7 @@ export const startHttpTestServer = async (
   const databaseFilename = join(staticRoot, 'database.sqlite');
   const baseEnv = {
     ...process.env,
+    AUDIT_PAGE_SIZE: options.auditPageSize === undefined ? '' : String(options.auditPageSize),
     RESEND_API_KEY: '',
     STRIPE_SECRET_KEY: '',
     STRIPE_WEBHOOK_SECRET: options.stripeWebhookSecret ?? '',

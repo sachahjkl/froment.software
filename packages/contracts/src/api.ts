@@ -9,6 +9,7 @@ import { CreditNotesApi } from './invoices/credit-notes-api.js';
 import { BankLedgerApi } from './banking/ledger-api.js';
 
 import { AffairsApi } from './affairs/api.js';
+import { AuditApi } from './audit/api.js';
 import { AuthenticationApi } from './authentication/api.js';
 import { PasskeysApi } from './authentication/passkeys-api.js';
 import { EmailDraftsApi } from './integrations/email-drafts-api.js';
@@ -62,6 +63,7 @@ export class Api extends HttpApi.make('froment-api')
   .add(QuoteConditionPresetsApi)
   .add(IssuerSettingsApi)
   .add(AffairsApi)
+  .add(AuditApi)
   .add(QuotesApi)
   .add(QuoteLinksApi)
   .add(InvoicesApi)

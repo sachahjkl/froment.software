@@ -21,6 +21,7 @@ import { EmailTemplateHandlers } from './integrations/email-template-handlers.js
 import { ReminderHandlers } from './integrations/reminder-handlers.js';
 import { ProviderActionHandlers } from './integrations/provider-action-handlers.js';
 import { AffairHandlers } from './affairs/handlers.js';
+import { AuditHandlers } from './audit/handlers.js';
 import { BootstrapHandlers } from './bootstrap/handlers.js';
 import { ClientPortalHandlers } from './client-portal/handlers.js';
 import { ClientHandlers } from './clients/handlers.js';
@@ -76,6 +77,7 @@ const ApiRoutes = HttpApiBuilder.layer(FrenchApi).pipe(
       BankingHandlers,
       IssuerSettingsHandlers,
       AffairHandlers,
+      AuditHandlers,
       QuoteHandlers,
       QuoteLinkHandlers,
       InvoiceHandlers,
