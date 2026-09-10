@@ -45,6 +45,7 @@ import { StripeWebhookRoute } from './integrations/stripe-webhook.js';
 import { BankingHandlers } from './banking/handlers.js';
 import { QuoteLinkHandlers } from './quote-links/handlers.js';
 import { RequestLimiterLive } from './server/request-limiter.js';
+import { apiCatalog, apiCatalogContentType } from './server/api-catalog.js';
 import { StatusHandlers } from './status/handlers.js';
 import { RuntimeConfiguration } from './runtime-config.js';
 
@@ -147,6 +148,13 @@ export const makeServerLayer = (options: {
   readonly publicOrigin: string;
   readonly staticRoot: string;
 }) => {
+  const ApiCatalogRoute = HttpRouter.add(
+    'GET',
+    '/.well-known/api-catalog',
+    HttpServerResponse.jsonUnsafe(apiCatalog(options.publicOrigin), {
+      contentType: apiCatalogContentType,
+    }),
+  );
   const StaticRoutes = HttpStaticServer.layer({
     root: options.staticRoot,
     index: 'index.html',
@@ -172,6 +180,7 @@ export const makeServerLayer = (options: {
       FrenchApiDocs,
       EnglishApiDocs,
       LocalizedOpenApiRoutes,
+      ApiCatalogRoute,
       BackOfficeStaticRoutes,
       PublicQuoteStaticRoutes,
       StaticRoutes,

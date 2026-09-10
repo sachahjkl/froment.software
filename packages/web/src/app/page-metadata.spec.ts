@@ -1,6 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
-import { PageMetadata } from './page-metadata';
+import { PageMetadata, siteIdentityGraph } from './page-metadata';
 
 describe('PageMetadata', () => {
   it('sets article metadata and structured data without duplication', () => {
@@ -22,6 +22,25 @@ describe('PageMetadata', () => {
       'article',
     );
     expect(document.head.querySelectorAll('script[data-blog-post]')).toHaveLength(1);
+    expect(document.head.querySelector('script[data-blog-post]')?.textContent).toContain(
+      '"sameAs":["https://sacha.house"]',
+    );
+  });
+
+  it('describes the publisher and the founder in one identity graph', () => {
+    const graph = JSON.stringify(
+      siteIdentityGraph({
+        publisher: 'Froment Software',
+        author: 'Sacha Froment',
+        description: 'Description',
+        language: 'fr',
+      }),
+    );
+    expect(graph).toContain('"@type":"Organization"');
+    expect(graph).toContain('"@type":"WebSite"');
+    expect(graph).toContain('"@type":"Person"');
+    expect(graph).toContain('"sameAs":["https://sacha.house"]');
+    expect(graph).toContain('"inLanguage":"fr"');
   });
 
   it('clears article metadata when a blog post is absent', () => {

@@ -1,0 +1,4 @@
+Contact: mailto:contact@froment.software
+Expires: 2027-09-01T00:00:00.000Z
+Canonical: https://froment.software/.well-known/security.txt
+Preferred-Languages: fr, en

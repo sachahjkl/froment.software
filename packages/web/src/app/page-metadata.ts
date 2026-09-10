@@ -10,6 +10,49 @@ import { I18nService, TranslationKey } from './i18n.service';
 const origin = 'https://froment.software';
 const socialImage = `${origin}/social-card-v4.png`;
 
+export interface SiteIdentity {
+  readonly publisher: string;
+  readonly author: string;
+  readonly description: string;
+  readonly language: string;
+}
+
+export function siteIdentityGraph(identity: SiteIdentity) {
+  const organizationId = `${origin}/#organization`;
+  const websiteId = `${origin}/#website`;
+  const founderId = `${origin}/#founder`;
+  return {
+    '@context': 'https://schema.org',
+    '@graph': [
+      {
+        '@type': 'Organization',
+        '@id': organizationId,
+        name: identity.publisher,
+        url: origin,
+        email: 'contact@froment.software',
+        logo: `${origin}/brand/icon-512.png`,
+        description: identity.description,
+        founder: { '@id': founderId },
+      },
+      {
+        '@type': 'WebSite',
+        '@id': websiteId,
+        name: identity.publisher,
+        url: origin,
+        inLanguage: identity.language,
+        publisher: { '@id': organizationId },
+      },
+      {
+        '@type': 'Person',
+        '@id': founderId,
+        name: identity.author,
+        url: 'https://sacha.house',
+        sameAs: ['https://sacha.house'],
+      },
+    ],
+  };
+}
+
 @Injectable({ providedIn: 'root' })
 export class PageMetadata {
   private readonly router = inject(Router);
@@ -66,6 +109,7 @@ export class PageMetadata {
         '@type': 'Person',
         name: this.i18n.t('metadata.author'),
         url: 'https://sacha.house',
+        sameAs: ['https://sacha.house'],
       },
       publisher: { '@type': 'Organization', name: this.i18n.t('metadata.publisher'), url: origin },
       keywords: post.topics,
@@ -104,6 +148,24 @@ export class PageMetadata {
     this.meta.updateTag({ property: 'og:image:alt', content: alt });
     this.meta.updateTag({ name: 'twitter:image:alt', content: alt });
     this.updateCanonicalLink(url);
+    this.updateSiteGraph();
+  }
+
+  private updateSiteGraph(): void {
+    const graph = siteIdentityGraph({
+      publisher: this.i18n.t('metadata.publisher'),
+      author: this.i18n.t('metadata.author'),
+      description: this.i18n.t('page.description.home'),
+      language: this.i18n.language(),
+    });
+    let script = this.document.head.querySelector<HTMLScriptElement>('script[data-site-graph]');
+    if (!script) {
+      script = this.document.createElement('script');
+      script.type = 'application/ld+json';
+      script.setAttribute('data-site-graph', '');
+      this.document.head.appendChild(script);
+    }
+    script.textContent = JSON.stringify(graph);
   }
 
   clearBlogPost(): void {
