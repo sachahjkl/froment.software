@@ -25,6 +25,7 @@ export class Drawer {
   readonly open = input(false);
   readonly label = input.required<string>();
   readonly closeLabel = input.required<string>();
+  readonly closeButtonHeight = input<string>();
   readonly closed = output<void>();
   private readonly dialogs = inject(Dialog);
   private readonly overlay = inject(Overlay);

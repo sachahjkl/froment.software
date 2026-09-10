@@ -93,6 +93,9 @@ export async function checkCatalogZoom(testInfo) {
     await capture("catalog-form-zoom-200.png");
     await page.locator(".navigation-trigger").click();
     await expect(page.getByRole("dialog").locator(".drawer-heading .account")).toBeVisible();
+    const accountBounds = await page.getByRole("dialog").locator(".account summary").boundingBox();
+    const closeBounds = await page.getByRole("dialog").locator("[data-drawer-close]").boundingBox();
+    expect(Math.abs(accountBounds.height - closeBounds.height)).toBeLessThan(1);
     await page.getByRole("dialog").locator('a[href="/backoffice/catalogue"]').click();
     await expect(page.getByRole("alertdialog")).toBeVisible();
     await expect(page.getByRole("alertdialog").locator("[data-confirmation-cancel]")).toBeFocused();

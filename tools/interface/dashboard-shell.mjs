@@ -29,6 +29,10 @@ export async function checkDashboardShell(page, testInfo) {
     await expect(drawer.locator("[data-drawer-close]")).toBeFocused();
     await expect(drawer.locator("app-back-office-nav a")).toHaveCount(8);
     await expect(drawer.locator(".drawer-heading .account")).toBeVisible();
+    const accountBounds = await drawer.locator(".account summary").boundingBox();
+    const closeBounds = await drawer.locator("[data-drawer-close]").boundingBox();
+    expect(Math.abs(accountBounds.height - closeBounds.height)).toBeLessThan(1);
+    expect(Math.abs(accountBounds.y - closeBounds.y)).toBeLessThan(1);
     await expect(drawer.locator(".drawer-heading")).not.toContainText(
       /Navigation du back-office|Back-office navigation/,
     );

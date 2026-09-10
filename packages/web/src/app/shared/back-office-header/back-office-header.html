@@ -31,6 +31,7 @@
   [open]="drawerOpen()"
   [label]="i18n.t('backOffice.navigation.label')"
   [closeLabel]="i18n.t('backOfficeShell.closeNavigation')"
+  [closeButtonHeight]="accountControlHeight"
   (closed)="drawerOpen.set(false)"
 >
   <div drawerHeading>@if (drawerOpen()) { <ng-container *ngTemplateOutlet="accountMenu" /> }</div>
@@ -44,7 +45,7 @@
     #accountDisclosure
     (keydown.escape)="closeAccountWithEscape($event, accountDisclosure)"
   >
-    <summary [attr.aria-label]="current.email">
+    <summary [attr.aria-label]="current.email" [style.min-block-size]="accountControlHeight">
       <img src="/brand/favicon.png" alt="" width="24" height="24" />
       <span
         ><small>{{ i18n.t('backOffice.header.account') }}</small

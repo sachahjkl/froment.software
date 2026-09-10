@@ -42,6 +42,7 @@ import { ThemeToggle } from '@shared/theme-toggle/theme-toggle';
   },
 })
 export class BackOfficeHeader {
+  protected readonly accountControlHeight = '3.75rem';
   readonly administrator = input(false);
   protected readonly i18n = inject(I18nService);
   private readonly auth = inject(Authentication);

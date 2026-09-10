@@ -9,6 +9,7 @@
         data-drawer-close
         type="button"
         [attr.aria-label]="closeLabel()"
+        [style.min-block-size]="closeButtonHeight()"
         (click)="closed.emit()"
       >
         <app-icon name="close" />
