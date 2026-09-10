@@ -27,6 +27,8 @@ import { TaskFeedback } from '../billing/task-feedback';
 import { TaskSummary } from '../billing/task-summary';
 import { businessDate, businessToday } from '../billing/billing-state';
 
+const emptyModel = () => ({ amount: '', refundedOn: '', reference: '' });
+
 @Component({
   selector: 'app-refund-editor',
   imports: [Button, Notice, FormField, TaskFeedback, TaskSummary],
@@ -36,7 +38,7 @@ import { businessDate, businessToday } from '../billing/billing-state';
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: {
     class: 'page-container',
-    '(window:beforeunload)': 'task.beforeUnload($event, refundForm().dirty())',
+    '(window:beforeunload)': 'task.beforeUnload($event, hasUnsavedChanges())',
   },
 })
 export class RefundEditor {
@@ -52,30 +54,37 @@ export class RefundEditor {
     return value?.success ? value.result : undefined;
   });
   protected readonly balance = computed(() => this.creditState()?.refundableCents ?? 0);
-  protected readonly refundForm = form(
-    signal({ amount: '', refundedOn: '', reference: '' }),
-    (path) => {
-      disabled(path, () => this.task.locked() || this.balance() <= 0);
-      required(path.amount);
-      validate(path.amount, ({ value }) => {
-        const amount = parseFixedDecimal(value(), 2);
-        return amount === undefined || amount <= 0 || amount > this.balance()
-          ? { kind: 'amount' }
-          : undefined;
-      });
-      required(path.refundedOn);
-      validate(path.refundedOn, ({ value }) => {
-        const issuedAt = this.creditState()?.creditNote?.issuedAt;
-        return !Schema.is(CalendarDate)(value()) ||
-          value() > businessToday() ||
-          (issuedAt !== undefined && value() < businessDate(issuedAt))
-          ? { kind: 'date' }
-          : undefined;
-      });
-      required(path.reference);
-      pattern(path.reference, /\S/);
-      maxLength(path.reference, 160);
-    },
+  private readonly model = signal(emptyModel());
+  private readonly baseline = JSON.stringify(this.model());
+  protected readonly refundForm = form(this.model, (path) => {
+    disabled(path, () => this.task.locked() || this.balance() <= 0);
+    required(path.amount);
+    validate(path.amount, ({ value }) => {
+      const amount = parseFixedDecimal(value(), 2);
+      return amount === undefined || amount <= 0 || amount > this.balance()
+        ? { kind: 'amount' }
+        : undefined;
+    });
+    required(path.refundedOn);
+    validate(path.refundedOn, ({ value }) => {
+      const issuedAt = this.creditState()?.creditNote?.issuedAt;
+      return !Schema.is(CalendarDate)(value()) ||
+        value() > businessToday() ||
+        (issuedAt !== undefined && value() < businessDate(issuedAt))
+        ? { kind: 'date' }
+        : undefined;
+    });
+    required(path.reference);
+    pattern(path.reference, /\S/);
+    maxLength(path.reference, 160);
+  });
+  // Date-validity animations can mark unchanged values as dirty. Keep native parse errors protected.
+  protected readonly hasUnsavedChanges = computed(
+    () =>
+      JSON.stringify(this.model()) !== this.baseline ||
+      this.refundForm()
+        .errorSummary()
+        .some((error) => error.kind === 'parse'),
   );
   private attempt: typeof InvoiceRefundRequest.Type | undefined;
   protected save(event: Event): void {
@@ -112,11 +121,11 @@ export class RefundEditor {
     if (!(await this.task.confirmation.request(this.i18n.t('billingWorkspace.reloadConfirm'))))
       return;
     this.attempt = undefined;
-    this.refundForm().reset({ amount: '', refundedOn: '', reference: '' });
+    this.refundForm().reset(emptyModel());
     await this.task.load();
     this.credits.reload();
   }
   canDeactivate(): Promise<boolean> {
-    return this.task.canDeactivate(this.refundForm().dirty());
+    return this.task.canDeactivate(this.hasUnsavedChanges());
   }
 }

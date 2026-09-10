@@ -117,16 +117,19 @@ export class InvoiceTask {
       if (!this.destroyRef.destroyed) this.busy.set(false);
     }
   }
-  async canDeactivate(dirty: boolean): Promise<boolean> {
+  async canDeactivate(hasUnsavedChanges: boolean): Promise<boolean> {
     if (this.busy() || this.uncertain()) return false;
     if (this.completed()) return true;
     return (
-      (!dirty && !this.uncertain()) ||
+      (!hasUnsavedChanges && !this.stale()) ||
       this.confirmation.request(this.i18n.t('backOffice.invoice.unsavedChanges'))
     );
   }
-  beforeUnload(event: BeforeUnloadEvent, dirty: boolean): void {
-    if (!this.completed() && (dirty || this.busy() || this.uncertain())) {
+  beforeUnload(event: BeforeUnloadEvent, hasUnsavedChanges: boolean): void {
+    if (
+      !this.completed() &&
+      (hasUnsavedChanges || this.busy() || this.uncertain() || this.stale())
+    ) {
       event.preventDefault();
       event.returnValue = '';
     }

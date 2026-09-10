@@ -16,14 +16,14 @@
     <p appNotice variant="danger" role="alert">{{ i18n.t(error) }}</p>
     } @if (stale()) {
     <p appNotice variant="warning">{{ i18n.t('billingWorkspace.stale') }}</p>
-    } @if (completed() && !invoiceForm().dirty()) {
+    } @if (completed() && !hasUnsavedChanges()) {
     <p appNotice variant="success" role="status">{{ i18n.t('billingWorkspace.completed') }}</p>
     }
   </div>
   @if (!loading() && !unavailable()) { @if (!editable()) {
   <p appNotice>{{ i18n.t('billingWorkspace.readonly') }}</p>
   } @else {
-  <form (submit)="save($event)">
+  <form novalidate (submit)="save($event)">
     @if (isNew()) {
     <label class="field"
       >{{ i18n.t('backOffice.invoice.order') }}<select
@@ -198,7 +198,7 @@
       appButton
       variant="primary"
       type="submit"
-      [disabled]="saveDisabled() || (!isNew() && !invoiceForm().dirty())"
+      [disabled]="saveDisabled() || (completed() && !hasUnsavedChanges())"
     >
       {{ i18n.t(saving() ? 'backOffice.invoice.saving' : 'backOffice.invoice.save') }}
     </button>

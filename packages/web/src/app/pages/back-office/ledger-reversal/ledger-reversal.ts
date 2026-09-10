@@ -3,6 +3,7 @@ import {
   afterRenderEffect,
   ChangeDetectionStrategy,
   Component,
+  computed,
   DestroyRef,
   ElementRef,
   inject,
@@ -59,6 +60,7 @@ export class LedgerReversal {
   protected readonly completed = signal<typeof LedgerEntry.Type | undefined>(undefined);
   protected readonly pending = signal<typeof LedgerReverse.Type | undefined>(undefined);
   private readonly model = signal(blank());
+  private readonly baseline = JSON.stringify(this.model());
   protected readonly reversalForm = form(this.model, (path) => {
     required(path.reason);
     pattern(path.reason, /\S/);
@@ -85,6 +87,14 @@ export class LedgerReversal {
       () => this.busy() || this.state() !== 'ready' || !!this.pending() || !!this.completed(),
     );
   });
+  // Date-validity animations can mark unchanged values as dirty. Keep native parse errors protected.
+  private readonly hasUnsavedChanges = computed(
+    () =>
+      JSON.stringify(this.model()) !== this.baseline ||
+      this.reversalForm()
+        .errorSummary()
+        .some((error) => error.kind === 'parse'),
+  );
   protected readonly backQuery = ledgerQuery(this.route.snapshot.queryParamMap);
   protected readonly entryLink = ledgerEntryLink;
   protected readonly sourceLink = ledgerSourceLink;
@@ -204,16 +214,16 @@ export class LedgerReversal {
   protected money(cents: number): string {
     return formatMoney(cents, this.i18n.language(), 'EUR');
   }
-  private dirty(): boolean {
-    return !this.completed() && (this.reversalForm().dirty() || !!this.pending());
-  }
   async canDeactivate(): Promise<boolean> {
+    if (this.busy()) return false;
+    if (this.completed()) return true;
     return (
-      !this.busy() &&
-      (!this.dirty() || (await this.confirmation.request(this.i18n.t('bankWorkspace.unsaved'))))
+      (!this.hasUnsavedChanges() && !this.pending()) ||
+      this.confirmation.request(this.i18n.t('bankWorkspace.unsaved'))
     );
   }
   protected beforeUnload(event: BeforeUnloadEvent): void {
-    if (this.busy() || this.dirty()) event.preventDefault();
+    if (this.busy() || (!this.completed() && (this.hasUnsavedChanges() || this.pending())))
+      event.preventDefault();
   }
 }

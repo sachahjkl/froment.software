@@ -34,6 +34,12 @@ const fill = (root: HTMLElement) => {
   permission.dispatchEvent(new Event('change'));
 };
 
+function notifyDateValidity(input: HTMLInputElement): void {
+  const event = new Event('animationstart');
+  Object.defineProperty(event, 'animationName', { value: 'ng-valid' });
+  input.dispatchEvent(event);
+}
+
 describe('API token pages', () => {
   it('exports only explicit token-list columns and never exports a secret', async () => {
     const withSecret = { ...token, secret };
@@ -67,6 +73,171 @@ describe('API token pages', () => {
     vi.spyOn(Confirmation.prototype, 'request').mockResolvedValue(true);
   });
   afterEach(() => vi.restoreAllMocks());
+
+  it('allows leaving unchanged values after native expiration validity animations', async () => {
+    const create = vi.fn();
+    TestBed.configureTestingModule({
+      providers: [{ provide: ApiTokensApi, useValue: { create } }],
+    });
+    const fixture = TestBed.createComponent(ApiTokenEditor);
+    await fixture.whenStable();
+    const root: HTMLElement = fixture.nativeElement;
+    const component = fixture.componentInstance;
+    const form = component['tokenForm'];
+    const initial = structuredClone(form().value());
+    expect(initial.expiresAt).not.toBe('');
+    notifyDateValidity(root.querySelector<HTMLInputElement>('#api-token-expiration')!);
+    const search = root.querySelector<HTMLInputElement>('#api-token-permission-search')!;
+    search.value = 'invoice';
+    search.dispatchEvent(new Event('input', { bubbles: true }));
+    await fixture.whenStable();
+    expect(form.expiresAt().dirty()).toBe(true);
+    expect(form().touched()).toBe(false);
+    expect(form().value()).toEqual(initial);
+    expect(component['hasUnsavedChanges']()).toBe(false);
+    expect(await component.canDeactivate()).toBe(true);
+    const event = new Event('beforeunload', { cancelable: true });
+    window.dispatchEvent(event);
+    expect(event.defaultPrevented).toBe(false);
+    expect(Confirmation.prototype.request).not.toHaveBeenCalled();
+    expect(create).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    { selector: '#api-token-name', value: 'ERP' },
+    { selector: '#api-token-expiration', value: '2030-10-01T10:00' },
+  ])(
+    'guards changes to $selector until the initial value is restored',
+    async ({ selector, value }) => {
+      TestBed.configureTestingModule({ providers: [{ provide: ApiTokensApi, useValue: {} }] });
+      vi.mocked(Confirmation.prototype.request).mockResolvedValue(false);
+      const fixture = TestBed.createComponent(ApiTokenEditor);
+      await fixture.whenStable();
+      const root: HTMLElement = fixture.nativeElement;
+      const component = fixture.componentInstance;
+      const input = root.querySelector<HTMLInputElement>(selector)!;
+      const initial = input.value;
+      input.value = value;
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+      await fixture.whenStable();
+      expect(component['hasUnsavedChanges']()).toBe(true);
+      expect(await component.canDeactivate()).toBe(false);
+      const event = new Event('beforeunload', { cancelable: true });
+      window.dispatchEvent(event);
+      expect(event.defaultPrevented).toBe(true);
+      input.value = initial;
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+      await fixture.whenStable();
+      expect(component['hasUnsavedChanges']()).toBe(false);
+      expect(await component.canDeactivate()).toBe(true);
+      const restored = new Event('beforeunload', { cancelable: true });
+      window.dispatchEvent(restored);
+      expect(restored.defaultPrevented).toBe(false);
+      expect(Confirmation.prototype.request).toHaveBeenCalledOnce();
+    },
+  );
+
+  it('guards changed permissions until the initial selection is restored', async () => {
+    TestBed.configureTestingModule({ providers: [{ provide: ApiTokensApi, useValue: {} }] });
+    vi.mocked(Confirmation.prototype.request).mockResolvedValue(false);
+    const fixture = TestBed.createComponent(ApiTokenEditor);
+    await fixture.whenStable();
+    const root: HTMLElement = fixture.nativeElement;
+    const component = fixture.componentInstance;
+    const permission = root.querySelector<HTMLInputElement>('.permission-option input')!;
+    permission.click();
+    await fixture.whenStable();
+    expect(component['hasUnsavedChanges']()).toBe(true);
+    expect(await component.canDeactivate()).toBe(false);
+    const event = new Event('beforeunload', { cancelable: true });
+    window.dispatchEvent(event);
+    expect(event.defaultPrevented).toBe(true);
+    permission.click();
+    await fixture.whenStable();
+    expect(component['hasUnsavedChanges']()).toBe(false);
+    expect(await component.canDeactivate()).toBe(true);
+    const restored = new Event('beforeunload', { cancelable: true });
+    window.dispatchEvent(restored);
+    expect(restored.defaultPrevented).toBe(false);
+    expect(Confirmation.prototype.request).toHaveBeenCalledOnce();
+  });
+
+  it('guards incomplete native expiration input when the model remains unchanged', async () => {
+    TestBed.configureTestingModule({ providers: [{ provide: ApiTokensApi, useValue: {} }] });
+    vi.mocked(Confirmation.prototype.request).mockResolvedValue(false);
+    const fixture = TestBed.createComponent(ApiTokenEditor);
+    await fixture.whenStable();
+    const root: HTMLElement = fixture.nativeElement;
+    const component = fixture.componentInstance;
+    const form = component['tokenForm'];
+    const initial = structuredClone(form().value());
+    const expiration = root.querySelector<HTMLInputElement>('#api-token-expiration')!;
+    const badInput = vi.spyOn(expiration.validity, 'badInput', 'get').mockReturnValue(true);
+    expiration.dispatchEvent(new Event('input', { bubbles: true }));
+    await fixture.whenStable();
+    expect(form().value()).toEqual(initial);
+    expect(form.expiresAt().errors()).toEqual(
+      expect.arrayContaining([expect.objectContaining({ kind: 'parse' })]),
+    );
+    expect(component['hasUnsavedChanges']()).toBe(true);
+    expect(await component.canDeactivate()).toBe(false);
+    const event = new Event('beforeunload', { cancelable: true });
+    window.dispatchEvent(event);
+    expect(event.defaultPrevented).toBe(true);
+    badInput.mockRestore();
+    notifyDateValidity(expiration);
+    await fixture.whenStable();
+    expect(component['hasUnsavedChanges']()).toBe(false);
+    expect(await component.canDeactivate()).toBe(true);
+    const restored = new Event('beforeunload', { cancelable: true });
+    window.dispatchEvent(restored);
+    expect(restored.defaultPrevented).toBe(false);
+    expect(Confirmation.prototype.request).toHaveBeenCalledOnce();
+  });
+
+  it('focuses incomplete native expiration input before confirmation or API calls', async () => {
+    const create = vi.fn();
+    TestBed.configureTestingModule({
+      providers: [{ provide: ApiTokensApi, useValue: { create } }],
+    });
+    const fixture = TestBed.createComponent(ApiTokenEditor);
+    await fixture.whenStable();
+    const root: HTMLElement = fixture.nativeElement;
+    const component = fixture.componentInstance;
+    fill(root);
+    const expiration = root.querySelector<HTMLInputElement>('#api-token-expiration')!;
+    const initial = expiration.value;
+    vi.spyOn(expiration.validity, 'badInput', 'get').mockReturnValue(true);
+    expiration.value = '';
+    expiration.dispatchEvent(new Event('input', { bubbles: true }));
+    await fixture.whenStable();
+    expect(component['tokenForm'].expiresAt().value()).toBe(initial);
+    expect(component['tokenForm'].expiresAt().invalid()).toBe(true);
+    root.querySelector<HTMLButtonElement>('button[type="submit"]')!.click();
+    await fixture.whenStable();
+    expect(document.activeElement).toBe(expiration);
+    expect(root.querySelector('.field-error')).not.toBeNull();
+    expect(Confirmation.prototype.request).not.toHaveBeenCalled();
+    expect(create).not.toHaveBeenCalled();
+  });
+
+  it.each(['saving', 'revoking'] as const)(
+    'blocks exits while %s even without value changes',
+    async (state) => {
+      TestBed.configureTestingModule({ providers: [{ provide: ApiTokensApi, useValue: {} }] });
+      const fixture = TestBed.createComponent(ApiTokenEditor);
+      await fixture.whenStable();
+      const component = fixture.componentInstance;
+      component[state].set(true);
+      await fixture.whenStable();
+      expect(component['hasUnsavedChanges']()).toBe(false);
+      expect(await component.canDeactivate()).toBe(false);
+      const event = new Event('beforeunload', { cancelable: true });
+      window.dispatchEvent(event);
+      expect(event.defaultPrevented).toBe(true);
+      expect(Confirmation.prototype.request).not.toHaveBeenCalled();
+    },
+  );
 
   it.each([
     {
@@ -272,6 +443,13 @@ describe('API token pages', () => {
     );
     expect(root.textContent).toContain(secret);
     expect(root.querySelector('form')).toBeNull();
+    expect(fixture.componentInstance['hasUnsavedChanges']()).toBe(false);
+    expect(fixture.componentInstance['tokenForm']().disabled()).toBe(true);
+    const saved = structuredClone(fixture.componentInstance['tokenForm']().value());
+    fixture.componentInstance['togglePermission']('client.read', false);
+    fixture.componentInstance['create'](new SubmitEvent('submit'));
+    expect(fixture.componentInstance['tokenForm']().value()).toEqual(saved);
+    expect(create).toHaveBeenCalledOnce();
     const copyButton = root.querySelector<HTMLButtonElement>('app-copy-field button');
     copyButton?.click();
     await fixture.whenStable();
@@ -281,13 +459,22 @@ describe('API token pages', () => {
     expect(root.querySelector('[role="alert"]')).toBeNull();
     vi.mocked(Confirmation.prototype.request).mockResolvedValue(false);
     expect(await fixture.componentInstance.canDeactivate()).toBe(false);
+    expect(Confirmation.prototype.request).toHaveBeenLastCalledWith(
+      TestBed.inject(I18nService).t('backOffice.apiTokens.leaveConfirmation'),
+    );
     const unload = new Event('beforeunload', { cancelable: true });
-    fixture.componentInstance['beforeUnload'](unload);
+    window.dispatchEvent(unload);
     expect(unload.defaultPrevented).toBe(true);
     root.querySelector<HTMLButtonElement>('.tokens-page > button')?.click();
     await fixture.whenStable();
     expect(root.textContent).not.toContain(secret);
+    notifyDateValidity(root.querySelector<HTMLInputElement>('#api-token-expiration')!);
+    await fixture.whenStable();
+    expect(fixture.componentInstance['hasUnsavedChanges']()).toBe(false);
     expect(await fixture.componentInstance.canDeactivate()).toBe(true);
+    const acknowledged = new Event('beforeunload', { cancelable: true });
+    window.dispatchEvent(acknowledged);
+    expect(acknowledged.defaultPrevented).toBe(false);
     expect(create).toHaveBeenCalledOnce();
     expect(Router.prototype.navigate).toHaveBeenLastCalledWith(['/backoffice/api'], {
       queryParams: { q: 'ERP', sort: 'nameDesc', filter: 'notRevoked' },
@@ -314,6 +501,9 @@ describe('API token pages', () => {
     root.querySelector<HTMLFormElement>('form')?.dispatchEvent(new SubmitEvent('submit'));
     await vi.waitFor(() => expect(create).toHaveBeenCalledOnce());
     expect(await fixture.componentInstance.canDeactivate()).toBe(false);
+    const event = new Event('beforeunload', { cancelable: true });
+    window.dispatchEvent(event);
+    expect(event.defaultPrevented).toBe(true);
     root.querySelector<HTMLFormElement>('form')?.dispatchEvent(new SubmitEvent('submit'));
     expect(create).toHaveBeenCalledOnce();
     if (!resolve) throw new Error('Missing pending response');

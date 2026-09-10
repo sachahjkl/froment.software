@@ -117,6 +117,7 @@ export class ApiTokens {
   });
   protected readonly editor: boolean = false;
   private readonly model = signal<TokenModel>(emptyModel());
+  private readonly baseline = signal(JSON.stringify(this.model()));
   protected readonly tokenConfirmation = computed(() =>
     this.i18n.plural('configurationWorkspace.tokenConfirm', {
       name: this.model().name.trim(),
@@ -131,6 +132,15 @@ export class ApiTokens {
     required(path.expiresAt);
     minLength(path.permissions, 1);
   });
+  // Native validity animations can mark unchanged values dirty. Keep incomplete native input guarded.
+  protected readonly hasUnsavedChanges = computed(
+    () =>
+      JSON.stringify(this.model()) !== this.baseline() ||
+      this.tokenForm
+        .expiresAt()
+        .errors()
+        .some((error) => error.kind === 'parse'),
+  );
   protected readonly permissionQuery = signal('');
   private readonly permissionOptions = computed<ReadonlyArray<PermissionOption>>(() =>
     ApiTokenPermissionCodes.map((code) => ({
@@ -215,6 +225,7 @@ export class ApiTokens {
     this.copied.set(false);
     this.dialogError.set(undefined);
     this.model.set(emptyModel());
+    this.baseline.set(JSON.stringify(this.model()));
     this.tokenForm().reset();
   }
 
@@ -270,6 +281,7 @@ export class ApiTokens {
         return;
       }
       this.tokens.update((tokens) => [outcome.result.token, ...tokens]);
+      this.baseline.set(JSON.stringify(this.model()));
       this.secret.set(outcome.result.secret);
       this.scheduleExpiration();
     });
@@ -309,7 +321,7 @@ export class ApiTokens {
   }
 
   protected expirationValid(): boolean {
-    return Date.parse(this.model().expiresAt) > Date.now();
+    return !this.tokenForm.expiresAt().invalid() && Date.parse(this.model().expiresAt) > Date.now();
   }
 
   protected createDisabled(): boolean {
@@ -350,7 +362,7 @@ export class ApiTokens {
 
   async canDeactivate(): Promise<boolean> {
     if (this.saving() || this.revoking()) return false;
-    if (this.secret() === undefined && !this.tokenForm().dirty()) return true;
+    if (this.secret() === undefined && !this.hasUnsavedChanges()) return true;
     return this.confirmation.request(
       this.i18n.t(
         this.secret() === undefined
@@ -361,7 +373,7 @@ export class ApiTokens {
   }
 
   protected beforeUnload(event: BeforeUnloadEvent): void {
-    if (this.saving() || this.revoking() || this.secret() !== undefined || this.tokenForm().dirty())
+    if (this.saving() || this.revoking() || this.secret() !== undefined || this.hasUnsavedChanges())
       event.preventDefault();
   }
 

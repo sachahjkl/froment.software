@@ -13,6 +13,12 @@ import {
   submitForm,
 } from '../billing/billing.spec-helper';
 
+function notifyDateValidity(input: HTMLInputElement): void {
+  const event = new Event('animationstart');
+  Object.defineProperty(event, 'animationName', { value: 'ng-valid' });
+  input.dispatchEvent(event);
+}
+
 describe('InvoiceEditor', () => {
   afterEach(() => vi.restoreAllMocks());
   it('keeps issued invoices read-only and moves financial tasks out of the editor', async () => {
@@ -20,6 +26,104 @@ describe('InvoiceEditor', () => {
     expect(root.querySelector('form')).toBeNull();
     expect(root.querySelector(`a[href="/backoffice/invoices/${invoiceId}"]`)).not.toBeNull();
     expect(root.querySelector('.payment-form')).toBeNull();
+  });
+  it('keeps loaded values pristine through date-validity animations, submission and reload', async () => {
+    const { root, api, fixture } = await setupInvoicePage(InvoiceEditor, {
+      invoice: invoiceFixture('draft'),
+    });
+    const editor = fixture.componentInstance;
+    const form = editor['invoiceForm'];
+    const loaded = structuredClone(form().value());
+    const confirmation = vi.spyOn(TestBed.inject(Confirmation), 'request').mockResolvedValue(false);
+    expect(form().dirty()).toBe(false);
+    for (const date of root.querySelectorAll<HTMLInputElement>('input[type="date"]')) {
+      notifyDateValidity(date);
+    }
+    await fixture.whenStable();
+    // Chromium déclenche ces animations sans saisie. Angular marque les deux dates comme dirty.
+    expect(form.serviceDate().dirty()).toBe(true);
+    expect(form.dueDate().dirty()).toBe(true);
+    expect(form.title().dirty()).toBe(false);
+    expect(form().touched()).toBe(false);
+    expect(structuredClone(form().value())).toEqual(loaded);
+    expect(editor['hasUnsavedChanges']()).toBe(false);
+    expect(editor['totalsAreStale']()).toBe(false);
+    expect(root.querySelector('.saved-summary [appNotice]')).toBeNull();
+    const save = root.querySelector<HTMLButtonElement>('button[type="submit"]')!;
+    expect(save.disabled).toBe(false);
+    save.click();
+    await fixture.whenStable();
+    expect(api.createRevision).not.toHaveBeenCalled();
+    expect(editor['completed']()).toBe(false);
+    expect(await editor.canDeactivate()).toBe(true);
+    const event = new Event('beforeunload', { cancelable: true });
+    window.dispatchEvent(event);
+    expect(event.defaultPrevented).toBe(false);
+    await editor['reload']();
+    await fixture.whenStable();
+    for (const date of root.querySelectorAll<HTMLInputElement>('input[type="date"]')) {
+      notifyDateValidity(date);
+    }
+    await fixture.whenStable();
+    expect(structuredClone(form().value())).toEqual(loaded);
+    expect(editor['hasUnsavedChanges']()).toBe(false);
+    expect(editor['totalsAreStale']()).toBe(false);
+    expect(await editor.canDeactivate()).toBe(true);
+    expect(api.get).toHaveBeenCalledTimes(2);
+    expect(api.createRevision).not.toHaveBeenCalled();
+    expect(confirmation).not.toHaveBeenCalled();
+  });
+  it('protects incomplete native date input even when parsing leaves the model unchanged', async () => {
+    const { root, api, fixture } = await setupInvoicePage(InvoiceEditor, {
+      invoice: invoiceFixture('draft'),
+    });
+    const editor = fixture.componentInstance;
+    const form = editor['invoiceForm'];
+    const loaded = form().value();
+    const date = field(root, 'input[aria-describedby="invoice-service-date-error"]');
+    const badInput = vi.spyOn(date.validity, 'badInput', 'get').mockReturnValue(true);
+    date.dispatchEvent(new Event('input', { bubbles: true }));
+    await fixture.whenStable();
+    expect(form().value()).toEqual(loaded);
+    expect(form.serviceDate().invalid()).toBe(true);
+    expect(editor['hasUnsavedChanges']()).toBe(true);
+    expect(editor['totalsAreStale']()).toBe(true);
+    const confirmation = vi.spyOn(TestBed.inject(Confirmation), 'request').mockResolvedValue(false);
+    expect(await editor.canDeactivate()).toBe(false);
+    const event = new Event('beforeunload', { cancelable: true });
+    window.dispatchEvent(event);
+    expect(event.defaultPrevented).toBe(true);
+    const save = root.querySelector<HTMLButtonElement>('button[type="submit"]')!;
+    expect(save.disabled).toBe(false);
+    save.click();
+    await fixture.whenStable();
+    expect(document.activeElement).toBe(date);
+    expect(api.createRevision).not.toHaveBeenCalled();
+    badInput.mockRestore();
+    notifyDateValidity(date);
+    await fixture.whenStable();
+    expect(editor['hasUnsavedChanges']()).toBe(false);
+    expect(editor['totalsAreStale']()).toBe(false);
+    expect(await editor.canDeactivate()).toBe(true);
+    expect(confirmation).toHaveBeenCalledTimes(1);
+  });
+  it('validates an unchanged invalid draft before skipping revision creation', async () => {
+    const invoice = invoiceFixture('draft');
+    const { root, api, fixture } = await setupInvoicePage(InvoiceEditor, {
+      invoice: {
+        ...invoice,
+        currentRevision: { ...invoice.currentRevision, dueDate: '2026-08-19' },
+      },
+    });
+    expect(fixture.componentInstance['hasUnsavedChanges']()).toBe(false);
+    const save = root.querySelector<HTMLButtonElement>('button[type="submit"]')!;
+    expect(save.disabled).toBe(false);
+    save.click();
+    await fixture.whenStable();
+    expect(document.activeElement).toBe(
+      field(root, 'input[aria-describedby="invoice-due-date-error"]'),
+    );
+    expect(api.createRevision).not.toHaveBeenCalled();
   });
   it('saves a version and keeps refreshParties explicit', async () => {
     const { root, api, fixture } = await setupInvoicePage(InvoiceEditor, {
@@ -38,9 +142,20 @@ describe('InvoiceEditor', () => {
         title: 'Changed title',
       }),
     );
+    for (const date of root.querySelectorAll<HTMLInputElement>('input[type="date"]')) {
+      notifyDateValidity(date);
+    }
+    await fixture.whenStable();
+    expect(fixture.componentInstance['hasUnsavedChanges']()).toBe(false);
+    expect(fixture.componentInstance['totalsAreStale']()).toBe(false);
+    expect(root.querySelector<HTMLButtonElement>('button[type="submit"]')!.disabled).toBe(true);
+    submitForm(root);
+    await fixture.whenStable();
+    expect(api.createRevision).toHaveBeenCalledTimes(1);
     const refresh = field(root, 'input[type="checkbox"]');
     refresh.click();
     await fixture.whenStable();
+    expect(root.querySelector<HTMLButtonElement>('button[type="submit"]')!.disabled).toBe(false);
     submitForm(root);
     await fixture.whenStable();
     expect(api.createRevision).toHaveBeenLastCalledWith(
@@ -94,7 +209,11 @@ describe('InvoiceEditor', () => {
     inputValue(from, '2026-10-20');
     inputValue(to, '2026-09-20');
     inputValue(field(root, 'fieldset input'), ' ');
-    submitForm(root);
+    await fixture.whenStable();
+    const save = root.querySelector<HTMLButtonElement>('button[type="submit"]')!;
+    expect(save.disabled).toBe(false);
+    expect(root.querySelector('form')!.noValidate).toBe(true);
+    save.click();
     await fixture.whenStable();
     expect(api.createRevision).not.toHaveBeenCalled();
     expect(document.activeElement).toBe(to);
@@ -140,9 +259,15 @@ describe('InvoiceEditor', () => {
     expect(navigate).toHaveBeenCalledWith(['/backoffice/invoices', invoiceId], {
       replaceUrl: true,
     });
+    expect(fixture.componentInstance['hasUnsavedChanges']()).toBe(false);
+    expect(await fixture.componentInstance.canDeactivate()).toBe(true);
+    expect(root.querySelector<HTMLButtonElement>('button[type="submit"]')!.disabled).toBe(true);
+    submitForm(root);
+    await fixture.whenStable();
+    expect(api.create).toHaveBeenCalledTimes(1);
   });
   it('protects pending saves and dirty forms from navigation and reload', async () => {
-    const { root, fixture } = await setupInvoicePage(InvoiceEditor, {
+    const { root, fixture, api } = await setupInvoicePage(InvoiceEditor, {
       invoice: invoiceFixture('draft'),
     });
     vi.spyOn(Confirmation.prototype, 'request').mockResolvedValue(false);
@@ -153,6 +278,11 @@ describe('InvoiceEditor', () => {
     window.dispatchEvent(event);
     expect(event.defaultPrevented).toBe(true);
     fixture.componentInstance['saving'].set(true);
+    await fixture.whenStable();
+    expect(root.querySelector<HTMLButtonElement>('button[type="submit"]')!.disabled).toBe(true);
+    submitForm(root);
+    await fixture.whenStable();
+    expect(api.createRevision).not.toHaveBeenCalled();
     expect(await fixture.componentInstance.canDeactivate()).toBe(false);
   });
 });

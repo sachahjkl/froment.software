@@ -93,9 +93,15 @@ export class InvoiceEditor {
   protected readonly completed = signal(false);
   protected readonly error = signal<TranslationKey | undefined>(undefined);
   private readonly model = signal(emptyModel());
+  private readonly baseline = signal(JSON.stringify(this.model()));
   protected readonly editable = computed(() => this.isNew() || this.detail()?.status === 'draft');
   protected readonly saveDisabled = computed(
-    () => !this.editable() || this.saving() || this.loading() || this.stale(),
+    () =>
+      !this.editable() ||
+      this.saving() ||
+      this.loading() ||
+      this.stale() ||
+      (this.isNew() && this.completed()),
   );
   protected readonly invoiceForm = form(this.model, (path) => {
     disabled(path, () => this.saveDisabled());
@@ -145,8 +151,16 @@ export class InvoiceEditor {
       },
     );
   });
-  // Signal Forms exclut les champs désactivés de dirty(). Un conflit conserve les modifications.
-  private readonly hasUnsavedChanges = computed(() => this.stale() || this.invoiceForm().dirty());
+  // Les animations de validité des dates peuvent marquer des valeurs inchangées comme dirty.
+  // Comparez les valeurs chargées. Conservez aussi les saisies natives incomplètes et les conflits.
+  protected readonly hasUnsavedChanges = computed(
+    () =>
+      this.stale() ||
+      JSON.stringify(this.model()) !== this.baseline() ||
+      this.invoiceForm()
+        .errorSummary()
+        .some((error) => error.kind === 'parse'),
+  );
   protected readonly totalsAreStale = computed(
     () => this.detail() !== undefined && this.hasUnsavedChanges(),
   );
@@ -193,9 +207,10 @@ export class InvoiceEditor {
   }
   protected save(event: Event): void {
     event.preventDefault();
-    if (this.saveDisabled() || (!this.isNew() && !this.invoiceForm().dirty())) return;
+    if (this.saveDisabled() || (this.completed() && !this.hasUnsavedChanges())) return;
     void submit(this.invoiceForm, {
       action: async () => {
+        if (!this.isNew() && !this.hasUnsavedChanges()) return;
         this.saving.set(true);
         this.error.set(undefined);
         this.completed.set(false);
@@ -216,7 +231,7 @@ export class InvoiceEditor {
             if (this.destroyRef.destroyed) return;
             if (!outcome.success) {
               if (outcome.failure?._tag === 'InvoiceAlreadyExists') {
-                this.invoiceForm().reset();
+                this.resetForm();
                 this.completed.set(true);
                 await this.router.navigate(['/backoffice/invoices', outcome.failure.invoiceId], {
                   replaceUrl: true,
@@ -226,7 +241,7 @@ export class InvoiceEditor {
               this.error.set(outcome.code);
               return;
             }
-            this.invoiceForm().reset();
+            this.resetForm();
             this.completed.set(true);
             await this.router.navigate(['/backoffice/invoices', outcome.result.id], {
               replaceUrl: true,
@@ -287,7 +302,7 @@ export class InvoiceEditor {
     this.stale.set(false);
     this.completed.set(false);
     this.model.set(emptyModel());
-    this.invoiceForm().reset();
+    this.resetForm();
     if (parameter !== null && !Schema.is(Ulid)(parameter)) {
       this.unavailable.set(true);
       this.error.set('invoice.not_found');
@@ -302,6 +317,7 @@ export class InvoiceEditor {
         const selected = this.route.snapshot.queryParamMap.get('orderId');
         if (selected && this.orders().some((order) => order.id === selected))
           this.model.update((model) => ({ ...model, orderId: selected }));
+        this.resetForm();
       } else {
         const outcome = await this.api.get(parameter);
         if (request !== this.request || this.destroyRef.destroyed) return;
@@ -339,6 +355,10 @@ export class InvoiceEditor {
         vatRate: formatFixedDecimal(line.vatRateBasisPoints, 2, separator),
       })),
     });
+    this.resetForm();
+  }
+  private resetForm(): void {
+    this.baseline.set(JSON.stringify(this.model()));
     this.invoiceForm().reset();
   }
   private parseLines(): ReadonlyArray<QuoteLineInputValue> | undefined {
