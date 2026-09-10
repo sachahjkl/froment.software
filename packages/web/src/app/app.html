@@ -1,4 +1,8 @@
-<div class="app-shell" [class.back-office-shell]="backOffice()">
+<div
+  class="app-shell"
+  [class.back-office-shell]="backOffice()"
+  [class.standalone-shell]="standalonePage()"
+>
   <a
     class="skip-link"
     href="#main-content"
@@ -7,12 +11,12 @@
   >
   @if (backOffice()) { @defer (when backOffice()) {
   <app-back-office-header [administrator]="administrator()" />
-  } } @else {
+  } } @else if (!standalonePage()) {
   <app-site-header />
   }
   <main #mainContent id="main-content" tabindex="-1">
     <router-outlet />
   </main>
-  @if (!backOffice()) { <app-site-footer /> }
+  @if (!backOffice() && !standalonePage()) { <app-site-footer /> }
   <app-copy-notice />
 </div>

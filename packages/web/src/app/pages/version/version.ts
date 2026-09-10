@@ -1,5 +1,6 @@
 import { afterNextRender, ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { type DeploymentMetadataValue } from '@froment/contracts';
+import { RouterLink } from '@angular/router';
 
 import { I18nService } from '@app/i18n.service';
 import { VersionApi } from './version-api';
@@ -7,8 +8,8 @@ import { VersionApi } from './version-api';
 type VersionState = 'loading' | 'ready' | 'error';
 
 @Component({
-  host: { class: 'page-container' },
   selector: 'app-version',
+  imports: [RouterLink],
   templateUrl: './version.html',
   styleUrl: './version.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

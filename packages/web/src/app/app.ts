@@ -23,6 +23,7 @@ export class App {
   private readonly router = inject(Router);
   protected readonly backOffice = signal(false);
   protected readonly administrator = signal(false);
+  protected readonly standalonePage = signal(false);
 
   constructor() {
     inject(NavigationFocus);
@@ -44,6 +45,7 @@ export class App {
       path !== '/backoffice/sign-out' &&
       path !== '/backoffice/bootstrap';
     this.backOffice.set(authenticated);
+    this.standalonePage.set(path === '/version');
     this.administrator.set(
       authenticated && path !== '/backoffice/client' && !path.startsWith('/backoffice/client/'),
     );

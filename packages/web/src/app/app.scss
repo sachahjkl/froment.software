@@ -63,6 +63,12 @@ main {
   outline: none;
 }
 
+.standalone-shell main {
+  width: 100%;
+  max-width: none;
+  margin: 0;
+}
+
 #main-content:focus-visible {
   outline: 2px solid var(--color-focus);
   outline-offset: -2px;

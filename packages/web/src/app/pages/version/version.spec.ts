@@ -1,4 +1,5 @@
 import { TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
 
 import { Version } from './version';
 import { VersionApi } from './version-api';
@@ -7,6 +8,7 @@ describe('Version', () => {
   it('displays the exact commit and all package versions', async () => {
     TestBed.configureTestingModule({
       providers: [
+        provideRouter([]),
         {
           provide: VersionApi,
           useValue: {
@@ -31,5 +33,9 @@ describe('Version', () => {
     expect(content).toContain('@froment/api');
     expect(content).toContain('@froment/web');
     expect(content).not.toContain('Date de construction');
+    expect(root.querySelector<HTMLImageElement>('.logo-frame img')?.src).toContain(
+      '/brand/favicon.png',
+    );
+    expect(root.querySelector<HTMLAnchorElement>('.back-link')?.getAttribute('href')).toBe('/');
   });
 });

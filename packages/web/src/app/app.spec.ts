@@ -1,4 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { provideHttpClient } from '@angular/common/http';
 import { provideRouter, Router } from '@angular/router';
 import { App } from './app';
 import { routes } from './app.routes';
@@ -29,7 +30,7 @@ describe('App shell', () => {
     localStorage.clear();
     await TestBed.configureTestingModule({
       imports: [App],
-      providers: [provideRouter(routes)],
+      providers: [provideHttpClient(), provideRouter(routes)],
     }).compileComponents();
     router = TestBed.inject(Router);
     i18n = TestBed.inject(I18nService);
@@ -53,6 +54,15 @@ describe('App shell', () => {
     const current = element.querySelector<HTMLAnchorElement>('nav a[aria-current="page"]');
     expect(current?.getAttribute('href')).toBe('/about');
     expect(element.querySelector('app-about')).not.toBeNull();
+  });
+
+  it('uses the standalone shell for the version page', async () => {
+    await navigate(fixture, router, '/version');
+
+    expect(element.querySelector('.app-shell')?.classList).toContain('standalone-shell');
+    expect(element.querySelector('app-site-header')).toBeNull();
+    expect(element.querySelector('app-site-footer')).toBeNull();
+    expect(element.querySelector('main#main-content app-version')).not.toBeNull();
   });
 
   it('updates canonical, robots, and social metadata for route and language changes', async () => {
