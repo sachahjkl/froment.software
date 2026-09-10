@@ -1,20 +1,20 @@
 <search [attr.aria-label]="i18n.t('backOffice.search.title')">
-  <label class="field" for="global-search"
+  <label class="field" [for]="id"
     >{{ i18n.t('backOffice.search.label') }}
     <input
-      id="global-search"
+      [id]="id"
       class="input"
       type="search"
       autocomplete="off"
       [formField]="searchForm.query"
       (focus)="open()"
       (input)="open()"
-      [attr.aria-controls]="opened() ? 'global-search-results' : null"
+      [attr.aria-controls]="opened() ? id + '-results' : null"
     />
   </label>
   @if (opened()) {
   <section
-    id="global-search-results"
+    [id]="id + '-results'"
     class="results ds-panel"
     [attr.aria-label]="i18n.t('backOffice.search.result')"
   >
@@ -28,14 +28,14 @@
     <p role="status">{{ i18n.t('backOffice.dashboard.loading') }}</p>
     } @case ('error') {
     <p role="alert">{{ i18n.t('backOffice.dashboard.error') }}</p>
-    <button appButton type="button" (click)="load()">
+    <button appButton type="button" (click)="retry()">
       {{ i18n.t('backOffice.dashboard.retry') }}
     </button>
     } @case ('ready') { @if (!searchForm.query().value().trim()) {
     <p>{{ i18n.t('globalSearch.hint') }}</p>
     } @else { @for (group of groups(); track group.kind) {
-    <section [attr.aria-labelledby]="'global-search-' + group.kind">
-      <h2 [id]="'global-search-' + group.kind">{{ group.label }}</h2>
+    <section [attr.aria-labelledby]="id + '-' + group.kind">
+      <h2 [id]="id + '-' + group.kind">{{ group.label }}</h2>
       <ul>
         @for (result of group.results; track result.id) {
         <li>

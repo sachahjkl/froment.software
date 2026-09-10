@@ -175,11 +175,23 @@ async function checkDashboardAndSearch(page, testInfo) {
     await expect(rows.filter({ hasText: "Devis en attente" })).toContainText(
       /Attente normale|Normal waiting/,
     );
-    await expect(page.locator(".activity-list time")).toHaveCount(6);
-    for (const timestamp of await page.locator(".activity-list time").all()) {
-      await expect(timestamp).toHaveAttribute("datetime", invoiceSummary.updatedAt);
-      await expect(timestamp).not.toBeEmpty();
+    const activity = page.locator("app-dashboard .activity-list");
+    await expect(activity.locator("li")).toHaveCount(5);
+    await expect(activity.locator("time")).toHaveCount(5);
+    for (const kind of ["quotes", "invoices"]) {
+      for (const document of responses.get(kind)) {
+        const item = activity.locator("li").filter({
+          has: page.locator(`a[href="/backoffice/${kind}/${document.id}"]`),
+        });
+        await expect(item.locator("strong")).toHaveText(
+          kind === "quotes" ? document.reference : document.invoiceNumber,
+        );
+        await expect(item.locator("time")).toHaveAttribute("datetime", document.updatedAt);
+        await expect(item.locator("time")).not.toBeEmpty();
+      }
     }
+    // Orders have a creation date, not a modification date.
+    await expect(activity.locator(`a[href="/backoffice/orders/${order.id}"]`)).toHaveCount(0);
     await capture(page, testInfo, "dashboard-metrics");
 
     state = "loading";
@@ -187,7 +199,9 @@ async function checkDashboardAndSearch(page, testInfo) {
       release = resolve;
     });
     const search = page.locator(".workspace-header app-global-search");
-    const input = search.locator("#global-search");
+    const input = search.getByRole("searchbox", {
+      name: /Client, référence ou titre|Client, reference, or title/,
+    });
     await input.fill("developement");
     await expect(search.getByRole("status")).toContainText(/Loading|Chargement/);
     await capture(page, testInfo, "global-search-loading");
@@ -206,11 +220,20 @@ async function checkDashboardAndSearch(page, testInfo) {
     }
     state = "ready";
     await search.getByRole("button", { name: /Retry|Réessayer/ }).click();
-    for (const kind of ["client", "quote", "order", "invoice"]) {
-      await expect(
-        search.locator(`section[aria-labelledby="global-search-${kind}"] li`),
-      ).toHaveCount(5);
+    await expect(input).toBeFocused();
+    await expect(search.locator(".results")).toBeVisible();
+    await expect(search.locator(".results section")).toHaveCount(4);
+    for (const [kind, label] of [
+      ["clients", /^Client$/],
+      ["quotes", /^(Devis|Quote)$/],
+      ["orders", /^(Commande|Order)$/],
+      ["invoices", /^(Facture|Invoice)$/],
+    ]) {
+      const group = search.getByRole("region", { name: label });
+      await expect(group.locator("li")).toHaveCount(5);
+      await expect(group.locator(`li a[href^="/backoffice/${kind}/"]`)).toHaveCount(5);
     }
+    await expect(search.locator(".results li")).toHaveCount(20);
     await expect(search.locator('.result-heading [role="status"]')).toHaveText(
       /^(20 résultats affichés · Maximum : 5 par catégorie\.|20 displayed results · Maximum: 5 per category\.)$/,
     );
@@ -226,6 +249,7 @@ async function checkDashboardAndSearch(page, testInfo) {
     await input.press("Escape");
     await expect(search.locator(".results")).toHaveCount(0);
     await expect(input).toBeFocused();
+    await expect(input).toHaveValue("developement");
     await input.fill("développement");
     const result = search.locator(`a[href="/backoffice/clients/${clientId}"]`);
     await result.focus();
@@ -530,7 +554,7 @@ export async function checkClientsWorkspace(page, testInfo) {
     await expect(page.locator("#client-displayName")).toHaveValue("Client de démonstration");
     await expect(page.locator("app-client-editor .actions a")).toBeFocused();
     const search = page.locator(".workspace-header app-global-search");
-    const searchInput = search.locator("#global-search");
+    const searchInput = search.locator('input[type="search"]');
     await searchInput.fill("developement");
     const result = search.locator(`a[href="/backoffice/clients/${clientId}"]`);
     await result.focus();

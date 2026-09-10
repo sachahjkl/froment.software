@@ -8,6 +8,7 @@ import {
   signal,
 } from '@angular/core';
 import { FormField, form, maxLength } from '@angular/forms/signals';
+import { _IdGenerator } from '@angular/cdk/a11y';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router, RouterLink } from '@angular/router';
 import { ClientsApi } from '@backoffice/clients-api';
@@ -34,10 +35,11 @@ interface SearchItem {
   providers: [SearchHighlightRegistry],
   templateUrl: './global-search.html',
   styleUrl: './global-search.scss',
-  host: { '(keydown.escape)': 'close()', '(focusout)': 'leave($event)' },
+  host: { '(keydown.escape)': 'escape($event)', '(focusout)': 'leave($event)' },
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class GlobalSearch {
+  protected readonly id = inject(_IdGenerator).getId('global-search-');
   protected readonly i18n = inject(I18nService);
   private readonly clientsApi = inject(ClientsApi);
   private readonly quotesApi = inject(QuotesApi);
@@ -101,6 +103,18 @@ export class GlobalSearch {
   protected close(): void {
     this.searchForm.query().focusBoundControl();
     this.opened.set(false);
+  }
+
+  protected escape(event: Event): void {
+    // Prevent the native search clear action from reopening the panel through an input event.
+    event.preventDefault();
+    this.close();
+  }
+
+  protected retry(): void {
+    // Keep focus inside the search before loading removes the retry button.
+    this.searchForm.query().focusBoundControl();
+    void this.load();
   }
 
   protected leave(event: FocusEvent): void {

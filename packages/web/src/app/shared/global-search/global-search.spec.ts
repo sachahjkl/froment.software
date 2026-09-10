@@ -24,6 +24,57 @@ class DetailPage {}
 class SearchLayout {}
 
 describe('GlobalSearch', () => {
+  it('keeps labels and result references local to each search instance', async () => {
+    TestBed.configureTestingModule({
+      providers: [
+        provideRouter([{ path: '', component: SearchPage }]),
+        {
+          provide: ClientsApi,
+          useValue: {
+            list: () =>
+              Promise.resolve([
+                { id: 'client-1', displayName: 'Froment', email: '', city: '', country: '' },
+              ]),
+          },
+        },
+        { provide: QuotesApi, useValue: { list: () => Promise.resolve([]) } },
+        { provide: OrdersApi, useValue: { list: () => Promise.resolve([]) } },
+        { provide: InvoicesApi, useValue: { list: () => Promise.resolve([]) } },
+      ],
+    });
+    TestBed.overrideComponent(SearchPage, {
+      set: { template: '<app-global-search /><app-global-search />' },
+    });
+    const harness = await RouterTestingHarness.create('/');
+    await harness.fixture.whenStable();
+    const root = harness.routeNativeElement!;
+    const searches = root.querySelectorAll('app-global-search');
+    expect(searches).toHaveLength(2);
+    for (const search of searches) {
+      const input = search.querySelector<HTMLInputElement>('input')!;
+      expect(search.querySelector('label')?.control).toBe(input);
+      expect(input.hasAttribute('aria-controls')).toBe(false);
+      input.value = 'Froment';
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+    }
+    await vi.waitFor(async () => {
+      await harness.fixture.whenStable();
+      expect(root.querySelectorAll('.results li')).toHaveLength(2);
+    });
+    const ids = Array.from(root.querySelectorAll('[id]'), (element) => element.id);
+    expect(new Set(ids).size).toBe(ids.length);
+    for (const search of searches) {
+      const input = search.querySelector<HTMLInputElement>('input')!;
+      expect(document.getElementById(input.getAttribute('aria-controls')!)).toBe(
+        search.querySelector('.results'),
+      );
+      const group = search.querySelector('section[aria-labelledby]')!;
+      expect(document.getElementById(group.getAttribute('aria-labelledby')!)).toBe(
+        group.querySelector('h2'),
+      );
+    }
+  });
+
   it.each(['results', 'empty', 'error'] as const)(
     'keeps ARIA references valid when closed, loading, and showing %s',
     async (state) => {
@@ -56,10 +107,10 @@ describe('GlobalSearch', () => {
       const fixture = harness.fixture;
       await fixture.whenStable();
       const root = harness.routeNativeElement!;
-      const input = root.querySelector<HTMLInputElement>('#global-search')!;
+      const input = root.querySelector<HTMLInputElement>('input[type="search"]')!;
       const expectReferences = (opened: boolean): void => {
-        expect(input.getAttribute('aria-controls')).toBe(opened ? 'global-search-results' : null);
-        expect(root.querySelectorAll('#global-search-results')).toHaveLength(opened ? 1 : 0);
+        expect(input.getAttribute('aria-controls')).toBe(opened ? `${input.id}-results` : null);
+        expect(root.querySelectorAll('.results')).toHaveLength(opened ? 1 : 0);
         for (const element of root.querySelectorAll(
           '[aria-controls], [aria-labelledby], [aria-describedby]',
         )) {
@@ -78,7 +129,7 @@ describe('GlobalSearch', () => {
       input.value = 'Froment';
       input.dispatchEvent(new Event('input'));
       await fixture.whenStable();
-      expect(root.querySelector('#global-search-results > [role="status"]')?.textContent).toBe(
+      expect(root.querySelector('.results > [role="status"]')?.textContent).toBe(
         TestBed.inject(I18nService).t('backOffice.dashboard.loading'),
       );
       expectReferences(true);
@@ -111,6 +162,159 @@ describe('GlobalSearch', () => {
       expect(document.activeElement).toBe(input);
     },
   );
+
+  it.each(['loading', 'error', 'empty', 'results'] as const)(
+    'keeps the query and focus when Escape closes the %s panel',
+    async (state) => {
+      const clients = [
+        {
+          id: 'client-1',
+          displayName: 'Froment Software',
+          email: 'hello@example.test',
+          city: 'Lyon',
+          country: 'France',
+        },
+      ];
+      let finish!: (value: typeof clients) => void;
+      const pending = new Promise<typeof clients>((resolve) => {
+        finish = resolve;
+      });
+      const list = vi.fn(() => {
+        if (state === 'loading') return pending;
+        if (state === 'error') return Promise.reject(new Error('Unavailable'));
+        return Promise.resolve(state === 'empty' ? [] : clients);
+      });
+      TestBed.configureTestingModule({
+        providers: [
+          provideRouter([{ path: '', component: SearchPage }]),
+          { provide: ClientsApi, useValue: { list } },
+          { provide: QuotesApi, useValue: { list: () => Promise.resolve([]) } },
+          { provide: OrdersApi, useValue: { list: () => Promise.resolve([]) } },
+          { provide: InvoicesApi, useValue: { list: () => Promise.resolve([]) } },
+        ],
+      });
+      const harness = await RouterTestingHarness.create('/');
+      await harness.fixture.whenStable();
+      const root = harness.routeNativeElement!;
+      const input = root.querySelector<HTMLInputElement>('input')!;
+      const i18n = TestBed.inject(I18nService);
+      const origins = [
+        'input',
+        '.result-heading button',
+        ...(state === 'results' ? ['.results a'] : []),
+      ];
+      for (const origin of origins) {
+        input.focus();
+        input.value = 'Froment';
+        input.dispatchEvent(new Event('input', { bubbles: true }));
+        await harness.fixture.whenStable();
+        expect(root.querySelector('.results')).not.toBeNull();
+        expect(root.querySelectorAll('.results li')).toHaveLength(state === 'results' ? 1 : 0);
+        if (state === 'loading')
+          expect(root.querySelector('.results > [role="status"]')?.textContent).toBe(
+            i18n.t('backOffice.dashboard.loading'),
+          );
+        if (state === 'error')
+          expect(root.querySelector('.results [role="alert"]')?.textContent).toBe(
+            i18n.t('backOffice.dashboard.error'),
+          );
+        if (state === 'empty')
+          expect(root.querySelector('.result-heading [role="status"]')?.textContent).toBe(
+            i18n.plural('globalSearch.count', { count: 0 }),
+          );
+        for (const key of ['Tab', 'ArrowDown', 'Enter']) {
+          const event = new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true });
+          input.dispatchEvent(event);
+          expect(event.defaultPrevented).toBe(false);
+        }
+        const target = root.querySelector<HTMLElement>(origin)!;
+        target.focus();
+        const calls = list.mock.calls.length;
+        const escape = new KeyboardEvent('keydown', {
+          key: 'Escape',
+          bubbles: true,
+          cancelable: true,
+        });
+        target.dispatchEvent(escape);
+        // JSDOM does not implement the native search input clear action.
+        expect(escape.defaultPrevented).toBe(true);
+        await harness.fixture.whenStable();
+        expect(root.querySelector('.results')).toBeNull();
+        expect(input.value).toBe('Froment');
+        expect(input.hasAttribute('aria-controls')).toBe(false);
+        expect(document.activeElement).toBe(input);
+        expect(list).toHaveBeenCalledTimes(calls);
+      }
+      finish(clients);
+      await harness.fixture.whenStable();
+      expect(root.querySelector('.results')).toBeNull();
+      expect(input.value).toBe('Froment');
+      expect(document.activeElement).toBe(input);
+    },
+  );
+
+  it('moves focus before retry removes its button and keeps delayed results open', async () => {
+    const clients = [
+      {
+        id: 'client-1',
+        displayName: 'Froment Software',
+        email: 'hello@example.test',
+        city: 'Lyon',
+        country: 'France',
+      },
+    ];
+    let finish!: (value: typeof clients) => void;
+    const pending = new Promise<typeof clients>((resolve) => {
+      finish = resolve;
+    });
+    const list = vi.fn().mockRejectedValueOnce(new Error('Unavailable')).mockReturnValue(pending);
+    TestBed.configureTestingModule({
+      providers: [
+        provideRouter([{ path: '', component: SearchPage }]),
+        { provide: ClientsApi, useValue: { list } },
+        { provide: QuotesApi, useValue: { list: () => Promise.resolve([]) } },
+        { provide: OrdersApi, useValue: { list: () => Promise.resolve([]) } },
+        { provide: InvoicesApi, useValue: { list: () => Promise.resolve([]) } },
+      ],
+    });
+    const harness = await RouterTestingHarness.create('/');
+    await harness.fixture.whenStable();
+    const root = harness.routeNativeElement!;
+    const input = root.querySelector<HTMLInputElement>('input')!;
+    input.focus();
+    input.value = 'Froment';
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    await harness.fixture.whenStable();
+    expect(root.querySelector('.results [role="alert"]')).not.toBeNull();
+    const retry = root.querySelector<HTMLButtonElement>('.results > button')!;
+    retry.focus();
+    expect(document.activeElement).toBe(retry);
+    retry.click();
+    expect(document.activeElement).toBe(input);
+    await harness.fixture.whenStable();
+    expect(retry.isConnected).toBe(false);
+    expect(root.querySelector('.results > [role="status"]')?.textContent).toBe(
+      TestBed.inject(I18nService).t('backOffice.dashboard.loading'),
+    );
+    expect(document.activeElement).toBe(input);
+    expect(input.value).toBe('Froment');
+    finish(clients);
+    await vi.waitFor(async () => {
+      await harness.fixture.whenStable();
+      expect(root.querySelectorAll('.results li')).toHaveLength(1);
+    });
+    expect(root.querySelector('.results a')?.getAttribute('href')).toBe(
+      '/backoffice/clients/client-1',
+    );
+    expect(root.querySelector('.result-heading [role="status"]')?.textContent).toBe(
+      TestBed.inject(I18nService).plural('globalSearch.count', { count: 1 }),
+    );
+    expect(document.activeElement).toBe(input);
+    expect(list).toHaveBeenCalledTimes(2);
+    input.blur();
+    await harness.fixture.whenStable();
+    expect(root.querySelector('.results')).toBeNull();
+  });
 
   it.each([
     {
@@ -170,7 +374,7 @@ describe('GlobalSearch', () => {
       await harness.fixture.whenStable();
       TestBed.inject(I18nService).setLanguage(language);
       const root = harness.routeNativeElement!;
-      const input = root.querySelector<HTMLInputElement>('#global-search')!;
+      const input = root.querySelector<HTMLInputElement>('input[type="search"]')!;
       input.focus();
       for (const [query, count, label] of [
         ['Froment', 2, other],
@@ -228,7 +432,7 @@ describe('GlobalSearch', () => {
     name.value = 'Unsaved client';
     name.dispatchEvent(new Event('input'));
     await harness.fixture.whenStable();
-    const input = root.querySelector<HTMLInputElement>('#global-search')!;
+    const input = root.querySelector<HTMLInputElement>('input[type="search"]')!;
     input.focus();
     input.value = 'Froment';
     input.dispatchEvent(new Event('input'));
@@ -262,59 +466,99 @@ describe('GlobalSearch', () => {
     expect(root.querySelector('.results')).toBeNull();
   });
 
-  it('labels a limited display count and keeps at most five results in each category', async () => {
-    TestBed.configureTestingModule({
-      providers: [
-        provideRouter([{ path: '', component: SearchPage }]),
-        {
-          provide: ClientsApi,
-          useValue: {
-            list: () =>
-              Promise.resolve(
-                Array.from({ length: 7 }, (_, index) => ({
-                  id: `client-${index}`,
-                  displayName: `Froment ${index}`,
-                  email: 'hello@example.test',
-                  city: 'Lyon',
-                  country: 'France',
-                })),
-              ),
+  it.each(['fr', 'en'] as const)(
+    'counts twenty displayed results with five per category in %s',
+    async (language) => {
+      TestBed.configureTestingModule({
+        providers: [
+          provideRouter([{ path: '', component: SearchPage }]),
+          {
+            provide: ClientsApi,
+            useValue: {
+              list: () =>
+                Promise.resolve(
+                  Array.from({ length: 7 }, (_, index) => ({
+                    id: `client-${index}`,
+                    displayName: `Froment ${index}`,
+                    email: 'hello@example.test',
+                    city: 'Lyon',
+                    country: 'France',
+                  })),
+                ),
+            },
           },
-        },
-        {
-          provide: QuotesApi,
-          useValue: {
-            list: () =>
-              Promise.resolve(
-                Array.from({ length: 7 }, (_, index) => ({
-                  id: `quote-${index}`,
-                  reference: `DE-${index}`,
-                  title: 'Audit',
-                  clientDisplayName: 'Froment Software',
-                })),
-              ),
+          {
+            provide: QuotesApi,
+            useValue: {
+              list: () =>
+                Promise.resolve(
+                  Array.from({ length: 7 }, (_, index) => ({
+                    id: `quote-${index}`,
+                    reference: `DE-${index}`,
+                    title: 'Audit',
+                    clientDisplayName: 'Froment Software',
+                  })),
+                ),
+            },
           },
-        },
-        { provide: OrdersApi, useValue: { list: () => Promise.resolve([]) } },
-        { provide: InvoicesApi, useValue: { list: () => Promise.resolve([]) } },
-      ],
-    });
-    const harness = await RouterTestingHarness.create('/');
-    await harness.fixture.whenStable();
-    TestBed.inject(I18nService).setLanguage('fr');
-    const root = harness.routeNativeElement!;
-    const input = root.querySelector<HTMLInputElement>('input')!;
-    input.focus();
-    input.value = 'Froment';
-    input.dispatchEvent(new Event('input'));
-    await harness.fixture.whenStable();
-    const groups = root.querySelectorAll('.results section');
-    expect(groups).toHaveLength(2);
-    for (const group of groups) expect(group.querySelectorAll('li')).toHaveLength(5);
-    expect(root.querySelector('.result-heading [role="status"]')?.textContent).toBe(
-      '10 résultats affichés · Maximum : 5 par catégorie.',
-    );
-  });
+          {
+            provide: OrdersApi,
+            useValue: {
+              list: () =>
+                Promise.resolve(
+                  Array.from({ length: 7 }, (_, index) => ({
+                    id: `order-${index}`,
+                    reference: `CO-${index}`,
+                    quoteReference: `DE-${index}`,
+                    title: 'Audit',
+                    clientDisplayName: 'Froment Software',
+                  })),
+                ),
+            },
+          },
+          {
+            provide: InvoicesApi,
+            useValue: {
+              list: () =>
+                Promise.resolve(
+                  Array.from({ length: 7 }, (_, index) => ({
+                    id: `invoice-${index}`,
+                    invoiceNumber: `FA-${index}`,
+                    orderReference: `CO-${index}`,
+                    title: 'Audit',
+                    clientDisplayName: 'Froment Software',
+                  })),
+                ),
+            },
+          },
+        ],
+      });
+      const harness = await RouterTestingHarness.create('/');
+      await harness.fixture.whenStable();
+      TestBed.inject(I18nService).setLanguage(language);
+      const root = harness.routeNativeElement!;
+      const input = root.querySelector<HTMLInputElement>('input')!;
+      input.focus();
+      input.value = 'Froment';
+      input.dispatchEvent(new Event('input'));
+      await harness.fixture.whenStable();
+      const groups = root.querySelectorAll('.results section');
+      expect(groups).toHaveLength(4);
+      for (const [index, kind] of (['client', 'quote', 'order', 'invoice'] as const).entries()) {
+        const group = groups[index]!;
+        expect(group.querySelector('h2')?.textContent).toBe(
+          TestBed.inject(I18nService).t(`backOffice.search.kind.${kind}`),
+        );
+        expect(group.querySelectorAll('li')).toHaveLength(5);
+      }
+      expect(root.querySelectorAll('.results li')).toHaveLength(20);
+      expect(root.querySelector('.result-heading [role="status"]')?.textContent).toBe(
+        language === 'fr'
+          ? '20 résultats affichés · Maximum : 5 par catégorie.'
+          : '20 displayed results · Maximum: 5 per category.',
+      );
+    },
+  );
 
   it('loads on demand, groups fuzzy results, closes with Escape, and opens a detail route', async () => {
     const list = vi.fn().mockResolvedValue([
@@ -361,7 +605,7 @@ describe('GlobalSearch', () => {
     input.dispatchEvent(new Event('input'));
     await harness.fixture.whenStable();
     expect(root.querySelectorAll('.results section')).toHaveLength(2);
-    expect(root.querySelector('#global-search-client + ul a')?.textContent).toContain('Froment');
+    expect(root.querySelector('h2[id$="-client"] + ul a')?.textContent).toContain('Froment');
     input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
     await harness.fixture.whenStable();
     expect(root.querySelector('.results')).toBeNull();
