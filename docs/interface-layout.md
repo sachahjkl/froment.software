@@ -177,13 +177,18 @@ La référence `/design/field-group` présente la grille de champs partagée.
 nix develop --command pnpm lint
 nix develop --command pnpm --filter @froment/web build
 nix develop --command pnpm --filter @froment/web test
+```
+
+Les scénarios navigateur existants restent disponibles pour une inspection locale ponctuelle :
+
+```sh
 nix develop --command pnpm test:interface
 ```
 
-La suite navigateur conserve huit contrôles ciblés : quatre parcours en configuration mobile et desktop.
-Elle utilise des données fictives et des réponses HTTP simulées.
-Elle vérifie les éditeurs, le formulaire client, l’adresse du compte et le panneau de signature.
-Elle ne certifie pas les parcours métier serveur ni toute l’accessibilité du site.
+Cette commande est facultative. Elle ne fait partie ni des checks Nix, ni de la CI, ni des critères de livraison.
+Les scénarios utilisent des données fictives et des réponses HTTP simulées. Certaines assertions ne suivent plus l’interface actuelle.
+N’ajoutez pas de scénarios ou d’assertions exhaustives pour figer une interface qui change régulièrement.
+Préférez une inspection visuelle ciblée au besoin. Ne modifiez pas le produit pour satisfaire un scénario fragile.
 
-Le check Nix `interface` fournit Chromium uniquement pour les tests.
+Le shell de développement fournit Chromium pour ces inspections locales.
 L’image de production conserve le contrôle qui interdit Chromium et Playwright dans sa closure.

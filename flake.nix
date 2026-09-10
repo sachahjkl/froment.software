@@ -194,14 +194,7 @@
                 pkgs.liberation_ttf
                 pkgs.poppler-utils
                 pkgs.typst
-              ]
-              ++ lib.optionals (name == "interface") [ pkgs.chromium ];
-              PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH = lib.optionalString (
-                name == "interface"
-              ) "${pkgs.chromium}/bin/chromium";
-              FONTCONFIG_FILE = lib.optionalString (name == "interface") (
-                pkgs.makeFontsConf { fontDirectories = [ pkgs.liberation_ttf ]; }
-              );
+              ];
               TYPST_PATH = lib.optionalString (name == "test") "${pkgs.typst}/bin/typst";
               DOCUMENT_TEMPLATES_PATH = lib.optionalString (name == "test") "${./packages/documents/templates}";
               DOCUMENT_FONTS_PATH = lib.optionalString (name == "test") "${documentFonts}/share/fonts";
@@ -378,7 +371,6 @@
             pre-commit = preCommitCheck;
             secret-contract = secretContract;
             test = mkCheck "test" "pnpm test";
-            interface = mkCheck "interface" "pnpm test:interface";
           };
 
           devShells.default = pkgs.mkShell {
