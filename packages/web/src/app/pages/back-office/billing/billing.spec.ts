@@ -176,7 +176,7 @@ describe('Billing', () => {
     const root: HTMLElement = harness.fixture.nativeElement;
     expect(root.querySelector<HTMLInputElement>('input[type="search"]')?.value).toBe('Acme');
     expect(root.querySelector('tbody a')?.getAttribute('href')).toBe(
-      '/backoffice/invoices/01ARZ3NDEKTSV4RRFFQ69G5FAY',
+      '/backoffice/invoices/01ARZ3NDEKTSV4RRFFQ69G5FAY?billingList=invoices&billingQ=Acme&billingStatus=issued',
     );
     expect(root.querySelector('.payment-export')).toBeNull();
     expect(root.querySelector('tbody button')).toBeNull();

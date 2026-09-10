@@ -80,8 +80,7 @@ export const connectionText = {
     'emailTest.paused':
       'Suivi suspendu. Les dernières données restent affichées ; le serveur poursuit le test. Actualisez pour reprendre.',
     'emailTest.refresh': 'Actualiser le suivi',
-    'emailTest.empty':
-      'Aucun test enregistré. Préparez le message ci-dessus pour vérifier cette connexion.',
+    'emailTest.empty': 'Aucun test enregistré.',
     'emailTest.queued': 'Enregistré — en attente d’envoi',
     'emailTest.sending': 'Envoi en cours',
     'emailTest.retrying': 'Nouvelle tentative programmée',
@@ -209,7 +208,7 @@ export const connectionText = {
     'emailTest.paused':
       'Status refresh paused. The last data remains visible; the server continues the test. Refresh to resume.',
     'emailTest.refresh': 'Refresh test status',
-    'emailTest.empty': 'No test recorded. Prepare the message above to check this connection.',
+    'emailTest.empty': 'No test recorded.',
     'emailTest.queued': 'Recorded — waiting to send',
     'emailTest.sending': 'Sending',
     'emailTest.retrying': 'Retry scheduled',

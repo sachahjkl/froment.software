@@ -36,7 +36,7 @@ describe('Provider read pages', () => {
     });
     const fixture = TestBed.createComponent(EmailTestList);
     await fixture.whenStable();
-    fixture.componentInstance['operations'].set([
+    fixture.componentInstance['history'].operations.set([
       {
         ...operation,
         createdAt: '2025-12-31T00:00:00.000Z',
@@ -94,7 +94,7 @@ describe('Provider read pages', () => {
     });
     const fixture = TestBed.createComponent(CheckoutList);
     await fixture.whenStable();
-    fixture.componentInstance['operations'].set([
+    fixture.componentInstance['history'].operations.set([
       operation,
       {
         ...operation,
@@ -165,7 +165,7 @@ describe('Provider read pages', () => {
     });
     const fixture = TestBed.createComponent(EmailTestDetail);
     await fixture.whenStable();
-    await vi.waitFor(() => expect(fixture.componentInstance['historyLoaded']()).toBe(true));
+    await vi.waitFor(() => expect(fixture.componentInstance['history'].loaded()).toBe(true));
     const root: HTMLElement = fixture.nativeElement;
     expect(fixture.componentInstance['current']()).toBeUndefined();
     expect(root.textContent).not.toContain('Other message');

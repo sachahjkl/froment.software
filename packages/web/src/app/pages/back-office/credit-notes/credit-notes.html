@@ -25,7 +25,7 @@
         [rows]="csvRows()"
         filename="credit-notes.csv"
         [label]="i18n.t('listWorkspace.exportCsv')"
-        [emptyHint]="i18n.t(state() === 'limit' ? 'billingWorkspace.limitExceeded' : 'listWorkspace.exportEmpty')"
+        [emptyHint]="i18n.t(exportEmptyKey())"
         [pendingHint]="i18n.t('listWorkspace.exportPending')"
         [pending]="state() === 'loading'"
       />
@@ -34,9 +34,11 @@
     <p role="status">{{ i18n.t('backOffice.invoices.loading') }}</p>
     } @case ('error') {
     <p appNotice variant="danger" role="alert">{{ i18n.t('billingWorkspace.loadError') }}</p>
-    <button appButton (click)="load()">{{ i18n.t('credit.reload') }}</button> } @case ('limit') {
+    <button appButton (click)="load()">{{ i18n.t('listControls.reload') }}</button> } @case
+    ('limit') {
     <p appNotice variant="danger" role="alert">{{ i18n.t('billingWorkspace.limitExceeded') }}</p>
-    <button appButton (click)="load()">{{ i18n.t('credit.reload') }}</button> } @case ('ready') {
+    <button appButton (click)="load()">{{ i18n.t('listControls.reload') }}</button> } @case
+    ('ready') {
     <div appDataTable>
       <table>
         <thead>
@@ -93,7 +95,7 @@
                 <div>
                   <a
                     [routerLink]="['/backoffice/invoices', entry.invoiceId]"
-                    [queryParams]="{ tab: 'credit' }"
+                    [queryParams]="detailQuery()"
                     [appSearchHighlight]="matchIndices(result, 'number')"
                     >{{ entry.number }}</a
                   ><small [appSearchHighlight]="matchIndices(result, 'reason')"
@@ -126,9 +128,7 @@
           </tr>
           } @empty {
           <tr>
-            <td colspan="6">
-              {{ i18n.t(rows().length ? 'billingWorkspace.noMatches' : 'billingWorkspace.empty') }}
-            </td>
+            <td colspan="6">{{ i18n.t(emptyKey()) }}</td>
           </tr>
           }
         </tbody>

@@ -8,7 +8,7 @@ import {
   inject,
   signal,
 } from '@angular/core';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import {
   disabled,
   FormField,
@@ -27,6 +27,7 @@ import { Button } from '@shared/button/button';
 import { Confirmation } from '@shared/confirmation/confirmation';
 import { Notice } from '@shared/notice/notice';
 import { PageHeader } from '@shared/page-header/page-header';
+import { clientNavigationQuery } from '../client-detail/client-navigation';
 
 const emptyClient = (): ClientCreateRequestValue => ({
   displayName: '',
@@ -53,6 +54,10 @@ export class ClientEditor {
   private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
   private readonly confirmation = inject(Confirmation);
+  private readonly queryParams = toSignal(this.route.queryParamMap, {
+    initialValue: this.route.snapshot.queryParamMap,
+  });
+  protected readonly returnQuery = computed(() => clientNavigationQuery(this.queryParams()));
   protected readonly client = signal<ClientSummaryValue | undefined>(undefined);
   protected readonly state = signal<'loading' | 'ready' | 'error'>('loading');
   protected readonly saving = signal(false);
@@ -60,9 +65,11 @@ export class ClientEditor {
   protected readonly error = signal<TranslationKey | undefined>(undefined);
   private readonly model = signal(emptyClient());
   protected readonly editing = signal(false);
-  protected readonly backLink = computed(() =>
-    this.client() ? ['/backoffice/clients', this.client()!.id] : ['/backoffice/clients'],
-  );
+  protected readonly backLink = computed(() => {
+    const client = this.client();
+    if (client) return ['/backoffice/clients', client.id];
+    return ['/backoffice/clients', this.returnQuery().view ?? 'active'];
+  });
   protected readonly groups = [
     {
       title: 'clientsWorkspace.identity',
@@ -200,7 +207,10 @@ export class ClientEditor {
       this.client.set(outcome.result);
       this.completed.set(true);
       this.clientForm().reset();
-      await this.router.navigate(['/backoffice/clients', outcome.result.id]);
+      await this.router.navigate(['/backoffice/clients', outcome.result.id], {
+        queryParams: this.returnQuery(),
+        queryParamsHandling: 'replace',
+      });
     });
   }
 }

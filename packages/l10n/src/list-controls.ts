@@ -1,5 +1,6 @@
 export const listControlsText = {
   fr: {
+    'listControls.reload': 'Recharger',
     'listControls.moreActions': 'Autres actions',
     'listControls.pickerDemo': 'Sélection avec recherche',
     'listControls.pickerDemoHint':
@@ -17,6 +18,7 @@ export const listControlsText = {
     'listControls.removeFilter': 'Retirer le filtre {filter}',
   },
   en: {
+    'listControls.reload': 'Reload',
     'listControls.moreActions': 'More actions',
     'listControls.pickerDemo': 'Searchable selection',
     'listControls.pickerDemoHint':

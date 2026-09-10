@@ -1,7 +1,8 @@
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
-import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
+import { ActivatedRoute, convertToParamMap, provideRouter, RouterLink } from '@angular/router';
+import { By } from '@angular/platform-browser';
 import { of } from 'rxjs';
 import { vi } from 'vitest';
 import { InvoicesApi } from '@backoffice/invoices-api';
@@ -24,6 +25,30 @@ function notifyDateValidity(input: HTMLInputElement, animationName = 'ng-invalid
 
 describe('PaymentEditor', () => {
   afterEach(() => vi.restoreAllMocks());
+  it('keeps the allowed list context and follows the current tab on its detail return link', async () => {
+    const query = {
+      billingList: 'receipts',
+      billingQ: 'BANK',
+      billingStatus: 'active',
+      billingSort: 'amount-desc',
+      tab: 'receipts',
+    };
+    const { fixture, queryParams } = await setupInvoicePage(PaymentEditor, { query });
+    const task = fixture.componentInstance['task'];
+    expect(task.navigation.listLink()).toBe('/backoffice/facturation/encaissements');
+    expect(task.navigation.listQuery()).toEqual({
+      q: 'BANK',
+      status: 'active',
+      sort: 'amount-desc',
+    });
+    queryParams.next(
+      convertToParamMap({ ...query, tab: 'history', returnUrl: '//outside.example' }),
+    );
+    await fixture.whenStable();
+    const link = fixture.debugElement.query(By.directive(RouterLink)).injector.get(RouterLink);
+    expect(link.queryParams).toEqual({ ...query, tab: 'history' });
+    expect(link.queryParams).not.toHaveProperty('returnUrl');
+  });
   it.each(['ng-valid', 'ng-invalid'])(
     'ignores unchanged %s dates but protects actual edits',
     async (animationName) => {
@@ -126,6 +151,7 @@ describe('PaymentEditor', () => {
       reference: 'BANK-456',
     });
     expect(field(root, 'input[inputmode="decimal"]').disabled).toBe(true);
+    expect(root.querySelectorAll('[data-task-feedback] [role="alert"]')).toHaveLength(1);
     expect(fixture.componentInstance['paymentForm']().dirty()).toBe(false);
     expect(await fixture.componentInstance.canDeactivate()).toBe(false);
     const uncertainUnload = new Event('beforeunload', { cancelable: true });
@@ -175,7 +201,11 @@ describe('PaymentEditor', () => {
         provideRouter([]),
         {
           provide: ActivatedRoute,
-          useValue: { paramMap: of(params), snapshot: { paramMap: params } },
+          useValue: {
+            paramMap: of(params),
+            queryParamMap: of(convertToParamMap({})),
+            snapshot: { paramMap: params, queryParamMap: convertToParamMap({}) },
+          },
         },
       ],
     });
@@ -219,6 +249,7 @@ describe('PaymentEditor', () => {
       code: 'invoice.version_conflict',
     });
     expect(task.stale()).toBe(true);
+    expect(root.querySelectorAll('[data-task-feedback] [role="alert"]')).toHaveLength(1);
     expect(task.busy()).toBe(false);
     expect(task.uncertain()).toBe(false);
     expect(editor['paymentForm']().disabled()).toBe(true);

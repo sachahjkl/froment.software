@@ -1,4 +1,5 @@
 import { vi } from 'vitest';
+import { DocumentIncomplete } from '@froment/contracts';
 import { Confirmation } from '@shared/confirmation/confirmation';
 import { InvoiceIssue } from './invoice-issue';
 import {
@@ -48,11 +49,23 @@ describe('InvoiceIssue', () => {
     vi.spyOn(Confirmation.prototype, 'request').mockResolvedValue(true);
     field(root, 'input[type="checkbox"]').click();
     await fixture.whenStable();
-    api.issue.mockResolvedValue({ success: false, code: 'document.incomplete' });
+    api.issue.mockResolvedValue({
+      success: false,
+      code: 'document.incomplete',
+      failure: new DocumentIncomplete({
+        code: 'document.incomplete',
+        issues: [{ party: 'client', field: 'addressLine1', reason: 'required' }],
+      }),
+    });
     submitForm(root);
     await fixture.whenStable();
     expect(fixture.componentInstance['task'].completed()).toBe(false);
     expect(fixture.componentInstance['task'].invoice()?.status).toBe('draft');
     expect(root.querySelector('[role="alert"]')).not.toBeNull();
+    expect(root.querySelectorAll('[data-task-feedback] [role="alert"]')).toHaveLength(1);
+    expect(fixture.componentInstance['task'].issues()).toEqual([
+      { party: 'client', field: 'addressLine1', reason: 'required' },
+    ]);
+    expect(root.querySelector('app-document-issues')).not.toBeNull();
   });
 });

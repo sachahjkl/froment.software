@@ -1,5 +1,5 @@
 <section class="client-editor notice-flow" aria-labelledby="client-editor-title">
-  <a [routerLink]="backLink()"
+  <a [routerLink]="backLink()" [queryParams]="returnQuery()" queryParamsHandling="replace"
     >{{ i18n.t(client() ? 'clientsWorkspace.backToClient' : 'backOffice.backToClients') }}</a
   >
   <app-page-header>
@@ -59,7 +59,13 @@
         {{ i18n.t(saving() ? 'backOffice.clientDetail.saving' : editing() ?
         'backOffice.clientDetail.save' : 'backOffice.clients.create') }}
       </button>
-      <a appLinkButton [routerLink]="backLink()">{{ i18n.t('clientsWorkspace.cancel') }}</a>
+      <a
+        appLinkButton
+        [routerLink]="backLink()"
+        [queryParams]="returnQuery()"
+        queryParamsHandling="replace"
+        >{{ i18n.t('clientsWorkspace.cancel') }}</a
+      >
     </div>
   </form>
   }

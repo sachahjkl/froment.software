@@ -3,7 +3,11 @@
     <h1 id="team-title">{{ i18n.t('team.title') }}</h1>
     <p class="muted">{{ i18n.t('team.intro') }}</p>
     <div pageActions class="spacer-x-3">
-      <a appLinkButton variant="primary" routerLink="invitations/new" [queryParams]="listParams()"
+      <a
+        appLinkButton
+        variant="primary"
+        routerLink="invitations/new"
+        [queryParams]="navigation.params()"
         >{{ i18n.t('configurationWorkspace.newInvitation') }}</a
       >
       <button appButton type="button" [disabled]="busy() || loading()" (click)="load()">
@@ -20,6 +24,7 @@
     <h2 id="members-title">{{ i18n.t('team.members') }}</h2>
     <app-list-toolbar>
       <app-list-search
+        #memberSearch
         listSearch
         [label]="i18n.t('configurationWorkspace.searchMembers')"
         [value]="members.query().q"
@@ -31,7 +36,7 @@
         [label]="i18n.t('listWorkspace.filters')"
         [closeLabel]="i18n.t('listWorkspace.closeFilters')"
         [backLabel]="i18n.t('listWorkspace.backFilters')"
-        [activeCount]="members.query().filter === 'all' ? 0 : 1"
+        [activeCount]="memberFilterCount()"
         [disabled]="loading() || busy()"
       >
         <ng-template
@@ -60,6 +65,16 @@
         [pending]="loading() || busy() || error() !== undefined"
       />
     </app-list-toolbar>
+    @if (memberFilterCount()) {
+    <div class="spacer-x-3">
+      <button
+        appFilterChip
+        [label]="members.filterSummary()"
+        [disabled]="loading() || busy()"
+        (click)="members.filter('all'); memberSearch.focus()"
+      ></button>
+    </div>
+    }
     <div appDataTable>
       <table>
         <thead>
@@ -158,6 +173,7 @@
     <h2 id="invitations-title">{{ i18n.t('team.invitations') }}</h2>
     <app-list-toolbar>
       <app-list-search
+        #invitationSearch
         listSearch
         [label]="i18n.t('configurationWorkspace.searchInvitations')"
         [value]="invitations.query().q"
@@ -169,7 +185,7 @@
         [label]="i18n.t('listWorkspace.filters')"
         [closeLabel]="i18n.t('listWorkspace.closeFilters')"
         [backLabel]="i18n.t('listWorkspace.backFilters')"
-        [activeCount]="invitations.query().filter === 'all' ? 0 : 1"
+        [activeCount]="invitationFilterCount()"
         [disabled]="loading() || busy()"
       >
         <ng-template
@@ -198,6 +214,16 @@
         [pending]="loading() || busy() || error() !== undefined"
       />
     </app-list-toolbar>
+    @if (invitationFilterCount()) {
+    <div class="spacer-x-3">
+      <button
+        appFilterChip
+        [label]="invitations.filterSummary()"
+        [disabled]="loading() || busy()"
+        (click)="invitations.filter('all'); invitationSearch.focus()"
+      ></button>
+    </div>
+    }
     <div appDataTable>
       <table>
         <thead>

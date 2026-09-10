@@ -33,6 +33,20 @@ export type FinancialEntry =
   | (typeof CreditNoteList.Type)[number]
   | (typeof InvoiceRefundList.Type)[number];
 
+export function entryStatusKey(entry: { readonly cancelledAt: string | null }): TranslationKey {
+  return entry.cancelledAt === null ? 'billingWorkspace.active' : 'billingWorkspace.cancelled';
+}
+
+export function entryExportEmptyKey(
+  state: 'loading' | 'ready' | 'error' | 'limit',
+): TranslationKey {
+  return state === 'limit' ? 'billingWorkspace.limitExceeded' : 'listWorkspace.exportEmpty';
+}
+
+export function entryEmptyKey(count: number): TranslationKey {
+  return count === 0 ? 'billingWorkspace.empty' : 'billingWorkspace.noMatches';
+}
+
 export const entrySort = (params: ParamMap, columns: readonly EntrySortColumn[]): EntrySort =>
   readBillingSort<EntrySortColumn>(params, columns);
 

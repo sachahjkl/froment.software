@@ -1,5 +1,5 @@
 <section class="tokens-page">
-  <a routerLink="/backoffice/api" [queryParams]="table.params()"
+  <a routerLink="/backoffice/api" [queryParams]="navigation.params()"
     >{{ i18n.t('configurationWorkspace.backTokens') }}</a
   >
   @if (secret(); as currentSecret) {

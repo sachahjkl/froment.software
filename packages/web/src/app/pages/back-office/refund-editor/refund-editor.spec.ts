@@ -169,7 +169,11 @@ describe('RefundEditor', () => {
         provideRouter([]),
         {
           provide: ActivatedRoute,
-          useValue: { paramMap: of(params), snapshot: { paramMap: params } },
+          useValue: {
+            paramMap: of(params),
+            queryParamMap: of(convertToParamMap({})),
+            snapshot: { paramMap: params, queryParamMap: convertToParamMap({}) },
+          },
         },
       ],
     });

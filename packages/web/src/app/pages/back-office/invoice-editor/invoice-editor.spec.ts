@@ -223,7 +223,13 @@ describe('InvoiceEditor', () => {
     const invoice = invoiceFixture('draft');
     const { root, api, fixture } = await setupInvoicePage(InvoiceEditor, {
       params: {},
-      query: { orderId },
+      query: {
+        orderId,
+        billingList: 'invoices',
+        billingQ: 'Audit',
+        billingSort: 'total-desc',
+        returnUrl: '//outside.example',
+      },
       orders: [
         {
           id: orderId,
@@ -258,7 +264,14 @@ describe('InvoiceEditor', () => {
     });
     expect(navigate).toHaveBeenCalledWith(['/backoffice/invoices', invoiceId], {
       replaceUrl: true,
+      queryParams: expect.objectContaining({
+        billingList: 'invoices',
+        billingQ: 'Audit',
+        billingSort: 'total-desc',
+      }),
     });
+    expect(navigate.mock.calls[0]?.[1]?.queryParams).not.toHaveProperty('orderId');
+    expect(navigate.mock.calls[0]?.[1]?.queryParams).not.toHaveProperty('returnUrl');
     expect(fixture.componentInstance['hasUnsavedChanges']()).toBe(false);
     expect(await fixture.componentInstance.canDeactivate()).toBe(true);
     expect(root.querySelector<HTMLButtonElement>('button[type="submit"]')!.disabled).toBe(true);

@@ -2,7 +2,12 @@
   <app-page-header>
     <h1 id="api-tokens-title">{{ i18n.t('backOffice.apiTokens.title') }}</h1>
     <p class="muted">{{ i18n.t('backOffice.apiTokens.intro') }}</p>
-    <a pageActions appLinkButton variant="primary" routerLink="new" [queryParams]="table.params()"
+    <a
+      pageActions
+      appLinkButton
+      variant="primary"
+      routerLink="new"
+      [queryParams]="navigation.params()"
       >{{ i18n.t('backOffice.apiTokens.create') }}</a
     >
   </app-page-header>
@@ -12,6 +17,7 @@
   <div appListWorkspace>
     <app-list-toolbar>
       <app-list-search
+        #tokenSearch
         listSearch
         [label]="i18n.t('configurationWorkspace.searchTokens')"
         [value]="table.query().q"
@@ -23,7 +29,7 @@
         [label]="i18n.t('listWorkspace.filters')"
         [closeLabel]="i18n.t('listWorkspace.closeFilters')"
         [backLabel]="i18n.t('listWorkspace.backFilters')"
-        [activeCount]="table.query().filter === 'all' ? 0 : 1"
+        [activeCount]="filterCount()"
         [disabled]="loading()"
       >
         <ng-template
@@ -52,7 +58,16 @@
         [pending]="loading() || loadingMore() || revoking() || pageError() !== undefined"
       />
     </app-list-toolbar>
-    @if (pageError(); as code) {
+    @if (filterCount()) {
+    <div class="spacer-x-3">
+      <button
+        appFilterChip
+        [label]="table.filterSummary()"
+        [disabled]="loading()"
+        (click)="table.filter('all'); tokenSearch.focus()"
+      ></button>
+    </div>
+    } @if (pageError(); as code) {
     <p appNotice variant="danger" role="alert">{{ i18n.t(code) }}</p>
     } @if (loading()) {
     <p role="status">{{ i18n.t('backOffice.apiTokens.loading') }}</p>

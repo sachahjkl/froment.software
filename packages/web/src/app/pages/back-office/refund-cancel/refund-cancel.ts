@@ -42,24 +42,26 @@ export class RefundCancel {
     params: () => this.task.invoice()?.id,
     loader: ({ params }) => this.api.get(params),
   });
-  protected readonly refund = computed(() => {
-    const credits = this.credits.hasValue() ? this.credits.value() : undefined;
-    return credits?.success
-      ? credits.result.refunds.find(
-          (refund) => refund.id === this.task.route.snapshot.paramMap.get('refundId'),
-        )
-      : undefined;
+  protected readonly creditState = computed(() => {
+    const value = this.credits.hasValue() ? this.credits.value() : undefined;
+    return value?.success ? value.result : undefined;
   });
+  protected readonly refund = computed(() =>
+    this.creditState()?.refunds.find(
+      (refund) => refund.id === this.task.route.snapshot.paramMap.get('refundId'),
+    ),
+  );
+  protected readonly eligible = computed(() => this.refund()?.cancelledAt === null);
   protected readonly cancelForm = form(signal({ reason: '' }), (path) => {
     required(path.reason);
     pattern(path.reason, /\S/);
     maxLength(path.reason, 500);
-    disabled(path, () => this.task.locked() || this.refund()?.cancelledAt !== null);
+    disabled(path, () => this.task.locked() || !this.eligible());
   });
   private attempt: string | undefined;
   protected save(event: Event): void {
     event.preventDefault();
-    if (this.task.locked() || this.refund()?.cancelledAt !== null) return;
+    if (this.task.locked() || !this.eligible()) return;
     void submit(this.cancelForm, {
       action: async () => {
         this.attempt = this.cancelForm().value().reason.trim();

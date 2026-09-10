@@ -24,7 +24,7 @@
         [rows]="csvRows()"
         filename="receipts.csv"
         [label]="i18n.t('listWorkspace.exportCsv')"
-        [emptyHint]="i18n.t(state() === 'limit' ? 'billingWorkspace.limitExceeded' : 'listWorkspace.exportEmpty')"
+        [emptyHint]="i18n.t(exportEmptyKey())"
         [pendingHint]="i18n.t('listWorkspace.exportPending')"
         [pending]="state() === 'loading'"
       />
@@ -33,9 +33,11 @@
     <p role="status">{{ i18n.t('backOffice.invoices.loading') }}</p>
     } @case ('error') {
     <p appNotice variant="danger" role="alert">{{ i18n.t('billingWorkspace.loadError') }}</p>
-    <button appButton (click)="load()">{{ i18n.t('credit.reload') }}</button> } @case ('limit') {
+    <button appButton (click)="load()">{{ i18n.t('listControls.reload') }}</button> } @case
+    ('limit') {
     <p appNotice variant="danger" role="alert">{{ i18n.t('billingWorkspace.limitExceeded') }}</p>
-    <button appButton (click)="load()">{{ i18n.t('credit.reload') }}</button> } @case ('ready') {
+    <button appButton (click)="load()">{{ i18n.t('listControls.reload') }}</button> } @case
+    ('ready') {
     <div appDataTable>
       <table>
         <thead>
@@ -106,7 +108,7 @@
                 <app-entity-icon icon="bank" [variant]="iconVariant(entry)" />
                 <a
                   [routerLink]="['/backoffice/invoices', entry.invoiceId]"
-                  [queryParams]="{ tab: 'receipts' }"
+                  [queryParams]="detailQuery()"
                   [fragment]="entry.id"
                   [appSearchHighlight]="matchIndices(result, 'reference')"
                   >{{ entry.reference }}</a
@@ -129,17 +131,12 @@
             </td>
             <td>{{ entry.paidOn }}</td>
             <td>{{ i18n.t(paymentMethodKey(entry.method)) }}</td>
-            <td>
-              {{ i18n.t(entry.cancelledAt === null ? 'billingWorkspace.active' :
-              'billingWorkspace.cancelled') }}
-            </td>
+            <td>{{ i18n.t(entryStatusKey(entry)) }}</td>
             <td class="amount">{{ money(entry.amountCents) }}</td>
           </tr>
           } @empty {
           <tr>
-            <td colspan="7">
-              {{ i18n.t(rows().length ? 'billingWorkspace.noMatches' : 'billingWorkspace.empty') }}
-            </td>
+            <td colspan="7">{{ i18n.t(emptyKey()) }}</td>
           </tr>
           }
         </tbody>
@@ -181,10 +178,7 @@
           i18n.t('billingWorkspace.dateInvalid') }} }</span
         >
       </label>
-      <app-hint
-        #exportHint
-        [text]="i18n.t(exporting() ? 'payment.export_pending' : 'payment.export_hint')"
-      >
+      <app-hint #exportHint [text]="i18n.t(exportHintKey())">
         <button
           appButton
           [disabled]="exporting()"
@@ -192,7 +186,7 @@
           [attr.aria-describedby]="exportHint.id"
         >
           <app-icon name="download" />
-          {{ i18n.t(exporting() ? 'payment.export_pending' : 'payment.export_download') }}
+          {{ i18n.t(exportButtonKey()) }}
         </button>
       </app-hint>
     </form>

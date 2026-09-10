@@ -7,7 +7,7 @@ import {
   type OrderListValue,
   InvoiceCredits,
 } from '@froment/contracts';
-import { of } from 'rxjs';
+import { BehaviorSubject, of } from 'rxjs';
 import { vi } from 'vitest';
 import { InvoicesApi } from '@backoffice/invoices-api';
 import { InvoiceCreditsApi } from '@backoffice/invoice-credits-api';
@@ -149,6 +149,7 @@ export async function setupInvoicePage<T>(
   };
   const params = convertToParamMap(options.params ?? { invoiceId });
   const query = convertToParamMap(options.query ?? {});
+  const queryParams = new BehaviorSubject(query);
   TestBed.configureTestingModule({
     providers: [
       provideRouter([]),
@@ -157,7 +158,7 @@ export async function setupInvoicePage<T>(
         useValue: {
           snapshot: { paramMap: params, queryParamMap: query },
           paramMap: of(params),
-          queryParamMap: of(query),
+          queryParamMap: queryParams,
         },
       },
       { provide: InvoicesApi, useValue: api },
@@ -168,5 +169,5 @@ export async function setupInvoicePage<T>(
   const fixture = TestBed.createComponent(component);
   await fixture.whenStable();
   const root: HTMLElement = fixture.nativeElement;
-  return { api, credits, fixture, root };
+  return { api, credits, fixture, root, queryParams };
 }

@@ -25,7 +25,6 @@ import { ActivatedRoute, RouterLink, RouterOutlet } from '@angular/router';
 import {
   QuoteCancellationReason,
   type QuoteCancellationReasonValue,
-  type QuoteStatusValue,
   type OrderSummaryValue,
   type QuoteDetailValue,
 } from '@froment/contracts';
@@ -40,6 +39,7 @@ import { Confirmation } from '@shared/confirmation/confirmation';
 import { DataTable } from '@shared/data-table/data-table';
 import { ActionMenu, type MenuAction } from '@shared/action-menu/action-menu';
 import { Notice } from '@shared/notice/notice';
+import { PageHeader } from '@shared/page-header/page-header';
 import { TextCopy } from '@shared/text-copy';
 import { Tabs, type TabItem } from '@shared/tabs/tabs';
 import { TabLayout, TabPanel } from '@shared/tabs/tab-panel';
@@ -47,6 +47,8 @@ import { quoteIdentifier } from './quote-values';
 import { QuoteLines } from './quote-lines/quote-lines';
 import { QuoteDocument } from './quote-document/quote-document';
 import { affairContext } from '../affairs/affair-filters';
+import { commercialDocumentTitle, quoteStatusBadge } from '../commercial-header';
+import { canCancelQuote, quoteEditAction } from './quote-actions';
 
 @Component({
   host: { class: 'page-container' },
@@ -57,6 +59,7 @@ import { affairContext } from '../affairs/affair-filters';
     DataTable,
     FormField,
     Notice,
+    PageHeader,
     RouterLink,
     RouterOutlet,
     Tabs,
@@ -90,6 +93,36 @@ export class QuoteDetail {
   protected readonly confirming = signal(false);
   protected readonly cancellationOpen = signal(false);
   protected readonly copied = signal(false);
+  protected readonly headerTitle = computed(() => {
+    const quote = this.quote();
+    return quote
+      ? commercialDocumentTitle(quote.reference, quote.currentRevision.title)
+      : this.i18n.t('commercial.quote');
+  });
+  protected readonly statusBadge = computed(() => {
+    const quote = this.quote();
+    return quote ? quoteStatusBadge(quote.status) : undefined;
+  });
+  protected readonly editAction = computed(() => {
+    const quote = this.quote();
+    return quote ? quoteEditAction(quote.status) : undefined;
+  });
+  protected readonly canCancel = computed(() => {
+    const quote = this.quote();
+    return quote !== undefined && canCancelQuote(quote.status);
+  });
+  protected readonly actionsDisabled = computed(() => this.cancelling() || this.confirming());
+  protected readonly cancellationVisible = computed(
+    () => this.canCancel() && (this.cancellationOpen() || this.hasCancellationInput()),
+  );
+  protected readonly cancellationLabel = computed(() =>
+    this.i18n.t(this.cancelling() ? 'backOffice.quote.cancelling' : 'backOffice.quote.cancel'),
+  );
+  protected readonly loadError = computed(() => this.error() ?? 'quote.error');
+  protected readonly backLink = computed(() => [
+    '/backoffice/affaires',
+    this.context().view ?? 'attention',
+  ]);
   protected readonly secondaryActions = computed<readonly MenuAction[]>(() => {
     const quote = this.quote();
     if (!quote) return [];
@@ -101,7 +134,7 @@ export class QuoteDetail {
           this.copied() ? 'backOffice.affair.portalLinkCopied' : 'backOffice.affair.copyPortalLink',
         ),
       });
-    if (['draft', 'sent', 'expired'].includes(quote.status))
+    if (canCancelQuote(quote.status))
       actions.push({
         id: 'cancel',
         label: this.i18n.t('backOffice.quote.cancel'),
@@ -152,6 +185,12 @@ export class QuoteDetail {
     );
     maxLength(path.note, 500);
   });
+  protected readonly reasonInvalid = computed(
+    () => this.cancellation.reason().touched() && this.cancellation.reason().invalid(),
+  );
+  protected readonly noteInvalid = computed(
+    () => this.cancellation.note().touched() && this.cancellation.note().invalid(),
+  );
   protected readonly reasons = QuoteCancellationReason.literals;
   protected readonly tabs = computed<readonly TabItem[]>(() =>
     ['summary', 'document', 'versions'].map((tab) => ({
@@ -181,9 +220,6 @@ export class QuoteDetail {
   }
   protected money(cents: number): string {
     return formatMoney(cents, this.i18n.language(), 'EUR');
-  }
-  protected statusLabel(status: QuoteStatusValue): string {
-    return this.i18n.t(`backOffice.quote.status.${status}`);
   }
   protected reasonLabel(reason: QuoteCancellationReasonValue): string {
     return this.i18n.t(`backOffice.quote.cancelReason.${reason}`);
@@ -254,8 +290,7 @@ export class QuoteDetail {
       const reason = Schema.decodeUnknownOption(QuoteCancellationReason)(
         this.cancellation.reason().value(),
       );
-      if (!quote || !['draft', 'sent', 'expired'].includes(quote.status) || Option.isNone(reason))
-        return;
+      if (!quote || !canCancelQuote(quote.status) || Option.isNone(reason)) return;
       const generation = this.generation;
       const note = this.cancellation.note().value().trim();
       if (!(await this.requestConfirmation('backOffice.quote.cancelConfirm'))) return;

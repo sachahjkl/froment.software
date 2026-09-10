@@ -1,51 +1,61 @@
 <section class="billing-page" aria-labelledby="invoice-title">
-  <a routerLink="/backoffice/facturation">{{ i18n.t('backOffice.backToBilling') }}</a>
+  <a [routerLink]="task.navigation.listLink()" [queryParams]="task.navigation.listQuery()"
+    >{{ i18n.t('backOffice.backToBilling') }}</a
+  >
   @if (!task.invoice()) {
-  <h1 id="invoice-title">{{ i18n.t('billingWorkspace.invoices') }}</h1>
+  <app-page-header><h1 id="invoice-title">{{ headerTitle() }}</h1></app-page-header>
   } @if (task.loading()) {
   <p role="status">{{ i18n.t('backOffice.invoices.loading') }}</p>
   } @if (task.error(); as error) {
   <p appNotice variant="danger" role="alert">{{ i18n.t(error) }}</p>
   } @if (task.invoice(); as invoice) {
-  <header>
-    <div class="document-heading">
-      <h1 id="invoice-title">{{ invoice.invoiceNumber ?? invoice.currentRevision.title }}</h1>
-      <p>
-        @if (invoice.invoiceNumber) { {{ invoice.currentRevision.title }} · } {{
-        invoice.currentRevision.clientDisplayName }}
-      </p>
+  <app-page-header>
+    <h1 id="invoice-title">{{ headerTitle() }}</h1>
+    <p class="document-description">
+      {{ i18n.tf('commercialHeader.invoiceDescription', { client:
+      invoice.currentRevision.clientDisplayName }) }}
+    </p>
+    <div class="document-badges">
+      @if (statusBadge(); as badge) {
+      <span appBadge [variant]="badge.variant">{{ i18n.t(badge.label) }}</span>
+      } @if (financialBadge(); as badge) {
+      <span appBadge [variant]="badge.variant">{{ i18n.t(badge.label) }}</span>
+      }
+      <span appBadge variant="default"
+        >{{ i18n.tf('commercialHeader.savedVersion', { version: invoice.version }) }}</span
+      >
     </div>
-    <div class="actions">
-      @if (invoice.status === 'draft') {
-      <a appLinkButton [routerLink]="['/backoffice/invoices', invoice.id, 'edit']"
+    <div pageActions class="page-actions">
+      @if (actions().edit) {
+      <a
+        appLinkButton
+        [routerLink]="['/backoffice/invoices', invoice.id, 'edit']"
+        [queryParams]="task.navigation.detailQuery()"
         >{{ i18n.t('billingWorkspace.edit') }}</a
       >
       <a
         appLinkButton
         variant="primary"
         [routerLink]="['/backoffice/invoices', invoice.id, 'issue']"
+        [queryParams]="task.navigation.detailQuery()"
         >{{ i18n.t('backOffice.invoice.issue') }}</a
       >
-      } @else if (invoice.status === 'issued' && invoice.creditedCents === 0 && balance() > 0) {
+      } @else if (actions().recordPayment) {
       <a
         appLinkButton
         variant="primary"
         [routerLink]="['/backoffice/invoices', invoice.id, 'payments', 'new']"
+        [queryParams]="task.navigation.detailQuery()"
         >{{ i18n.t('billingWorkspace.recordReceipt') }}</a
       >
-      }
-      <button
-        appButton
-        type="button"
-        [disabled]="task.loading() || pdfPending()"
-        (click)="task.load()"
+      } @if (actions().credit) {
+      <a
+        appLinkButton
+        [routerLink]="['/backoffice/invoices', invoice.id, 'credits', 'new']"
+        [queryParams]="task.navigation.detailQuery()"
+        >{{ i18n.t('credit.issue') }}</a
       >
-        {{ i18n.t('credit.reload') }}
-      </button>
-    </div>
-    @if (invoice.status === 'issued' || invoice.status === 'paid') {
-    <div class="actions header-actions">
-      @if (invoice.status === 'issued' && invoice.creditedCents === 0 && balance() > 0) {
+      } @if (actions().recordPayment) {
       <a
         appLinkButton
         routerLink="/backoffice/courriels/new"
@@ -58,26 +68,20 @@
         [queryParams]="{ invoice: invoice.id }"
         >{{ i18n.t('billingWorkspace.reminder') }}</a
       >
-      } @if (invoice.creditedCents === 0 && invoice.currentRevision.totalCents > 0) {
-      <a appLinkButton [routerLink]="['/backoffice/invoices', invoice.id, 'credits', 'new']"
-        >{{ i18n.t('credit.issue') }}</a
-      >
-      } @if (invoice.status === 'issued' && invoice.creditedCents === 0 && invoice.payments.length
-      === 0) {
-      <a appLinkButton variant="danger" [routerLink]="['/backoffice/invoices', invoice.id, 'void']"
+      } @if (actions().void) {
+      <a
+        appLinkButton
+        variant="danger"
+        [routerLink]="['/backoffice/invoices', invoice.id, 'void']"
+        [queryParams]="task.navigation.detailQuery()"
         >{{ i18n.t('backOffice.invoice.void') }}</a
       >
       }
+      <button appButton type="button" [disabled]="reloadDisabled()" (click)="task.load()">
+        {{ i18n.t('listControls.reload') }}
+      </button>
     </div>
-    }
-  </header>
-  <div class="actions">
-    <span appBadge>{{ i18n.t(documentStatusKey(invoice.status)) }}</span
-    ><span>{{ i18n.t(financialStatus()) }}</span
-    ><span class="muted"
-      >{{ i18n.tf('billingWorkspace.version', { version: invoice.version }) }}</span
-    >
-  </div>
+  </app-page-header>
   <app-tabs [label]="i18n.t('backOffice.billing.tabs')" [tabs]="tabs()" [preserveQuery]="true" />
   <div class="invoice-panel">
     @switch (tab()) { @case ('summary') { @if (invoice.status !== 'draft') {
@@ -176,13 +180,12 @@
         <a appLinkButton [href]="url" download>{{ i18n.t('backOffice.invoice.pdf.download') }}</a> }
         @else if (revision()?.invoiceNumber) {
         <button appButton [disabled]="pdfPending()" (click)="generatePdf()">
-          {{ i18n.t(pdfPending() ? 'backOffice.invoice.pdf.generating' :
-          'backOffice.invoice.pdf.generate') }}
+          {{ generateLabel() }}
         </button>
         }
       </div>
     </div>
-    @if (invoice.pdf?.status === 'pending' || invoice.pdf?.status === 'processing') {
+    @if (pdfProcessing()) {
     <p role="status">{{ i18n.t('billingWorkspace.pdfPending') }}</p>
     } @if (invoice.pdf?.status === 'failed') {
     <p appNotice variant="warning">{{ i18n.t('billingWorkspace.pdfFailed') }}</p>
@@ -195,6 +198,14 @@
     } } @case ('receipts') {
     <p appNotice>{{ i18n.t('billingWorkspace.receiptHint') }}</p>
     <p>{{ i18n.t('payment.recorded') }} : {{ task.money(paid()) }}</p>
+    @if (receiptCreditsRequired()) { @if (credits.isLoading()) {
+    <p role="status">{{ i18n.t('backOffice.invoices.loading') }}</p>
+    } @else if (!creditState()) {
+    <p appNotice variant="danger" role="alert">{{ i18n.t('credit.error') }}</p>
+    <button appButton type="button" (click)="credits.reload()">
+      {{ i18n.t('listControls.reload') }}
+    </button>
+    } }
     <div appDataTable>
       <table>
         <thead>
@@ -220,16 +231,16 @@
             <td>{{ payment.paidOn }}</td>
             <td>{{ i18n.t(paymentMethodKey(payment.method)) }}</td>
             <td>
-              {{ i18n.t(payment.cancelledAt === null ? 'billingWorkspace.active' :
-              'billingWorkspace.cancelled') }} @if (payment.cancelledAt !== null) {
+              {{ i18n.t(recordedEntryStatus(payment.cancelledAt)) }} @if (payment.cancelledAt !==
+              null) {
               <small>{{ payment.cancellationReason }}</small> }
             </td>
             <td class="amount">{{ task.money(payment.amountCents) }}</td>
             <td>
-              @if (payment.cancelledAt === null && (invoice.status === 'issued' || invoice.status
-              === 'paid')) {
+              @if (canCancelPayment(invoice, payment, creditState())) {
               <a
                 [routerLink]="['/backoffice/invoices', invoice.id, 'payments', payment.id, 'cancel']"
+                [queryParams]="task.navigation.detailQuery()"
                 >{{ i18n.t('payment.cancel') }}</a
               >
               }
@@ -259,7 +270,10 @@
     </section>
     <p>{{ i18n.t('credit.refundable') }} {{ task.money(state.refundableCents) }}</p>
     @if (state.refundableCents > 0) {
-    <a appLinkButton [routerLink]="['/backoffice/invoices', invoice.id, 'refunds', 'new']"
+    <a
+      appLinkButton
+      [routerLink]="['/backoffice/invoices', invoice.id, 'refunds', 'new']"
+      [queryParams]="task.navigation.detailQuery()"
       >{{ i18n.t('credit.recordRefund') }}</a
     >
     }
@@ -282,14 +296,16 @@
             <td>{{ refund.reference }}</td>
             <td>{{ refund.refundedOn }}</td>
             <td>
-              {{ i18n.t(refund.cancelledAt === null ? 'billingWorkspace.active' :
-              'billingWorkspace.cancelled') }} @if (refund.cancelledAt !== null) {
+              {{ i18n.t(recordedEntryStatus(refund.cancelledAt)) }} @if (refund.cancelledAt !==
+              null) {
               <small>{{ refund.cancellationReason }}</small> }
             </td>
             <td class="amount">{{ task.money(refund.amountCents) }}</td>
             <td>
               @if (refund.cancelledAt === null) {
-              <a [routerLink]="['/backoffice/invoices', invoice.id, 'refunds', refund.id, 'cancel']"
+              <a
+                [routerLink]="['/backoffice/invoices', invoice.id, 'refunds', refund.id, 'cancel']"
+                [queryParams]="task.navigation.detailQuery()"
                 >{{ i18n.t('credit.cancelRefund') }}</a
               >
               }
@@ -305,12 +321,7 @@
     </div>
     } @else {
     <p>{{ i18n.t('billingWorkspace.noCreditNote') }}</p>
-    @if ((invoice.status === 'issued' || invoice.status === 'paid') &&
-    invoice.currentRevision.totalCents > 0) {
-    <a appLinkButton [routerLink]="['/backoffice/invoices', invoice.id, 'credits', 'new']"
-      >{{ i18n.t('credit.issue') }}</a
-    >
-    } } } @else {
+    } } @else {
     <p appNotice variant="danger" role="alert">{{ i18n.t('credit.error') }}</p>
     <button appButton (click)="credits.reload()">{{ i18n.t('credit.reload') }}</button> } } @case
     ('history') { @if (history.isLoading()) {
@@ -342,12 +353,12 @@
     </ol>
     } @else {
     <p appNotice variant="danger" role="alert">{{ i18n.t(historyError()) }}</p>
-    <button appButton (click)="history.reload()">{{ i18n.t('credit.reload') }}</button>
+    <button appButton (click)="history.reload()">{{ i18n.t('listControls.reload') }}</button>
     } } }
   </div>
   } @else {
-  <button appButton type="button" [disabled]="task.loading() || pdfPending()" (click)="task.load()">
-    {{ i18n.t('credit.reload') }}
+  <button appButton type="button" [disabled]="reloadDisabled()" (click)="task.load()">
+    {{ i18n.t('listControls.reload') }}
   </button>
   }
 </section>

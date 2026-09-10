@@ -1,12 +1,13 @@
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { EmailTestRequest, type EmailTestOperation } from '@froment/contracts';
-import { of, Subject } from 'rxjs';
+import { firstValueFrom, of, Subject } from 'rxjs';
 import { vi } from 'vitest';
 import { ConnectionsApi } from '@backoffice/connections-api';
 import {
   PendingProviderRequests,
   pendingRequestStore,
+  type PendingRequestStore,
 } from '@backoffice/pending-provider-requests';
 import { Confirmation } from '@shared/confirmation/confirmation';
 import { EmailTest } from './email-test';
@@ -53,7 +54,7 @@ it('restores an uncertain request after reload and resubmits only after confirma
   });
   const first = TestBed.createComponent(EmailTest);
   await first.whenStable();
-  await vi.waitFor(() => expect(first.componentInstance['loading']()).toBe(false));
+  await vi.waitFor(() => expect(first.componentInstance['history'].loading()).toBe(false));
   const root: HTMLElement = first.nativeElement;
   root.querySelector<HTMLButtonElement>('button[type="submit"]')?.click();
   await first.whenStable();
@@ -71,7 +72,7 @@ it('restores an uncertain request after reload and resubmits only after confirma
   const unload = new Event('beforeunload', { cancelable: true });
   restored.componentInstance['beforeUnload'](unload);
   expect(unload.defaultPrevented).toBe(true);
-  await vi.waitFor(() => expect(restored.componentInstance['loading']()).toBe(false));
+  await vi.waitFor(() => expect(restored.componentInstance['history'].loading()).toBe(false));
   restoredRoot.querySelector<HTMLButtonElement>('button[type="submit"]')?.click();
   await restored.whenStable();
   expect(send).toHaveBeenCalledTimes(2);
@@ -167,7 +168,7 @@ it('does not send when the pending request cannot be persisted', async () => {
   });
   const fixture = TestBed.createComponent(EmailTest);
   await fixture.whenStable();
-  await vi.waitFor(() => expect(fixture.componentInstance['loading']()).toBe(false));
+  await vi.waitFor(() => expect(fixture.componentInstance['history'].loading()).toBe(false));
   const root: HTMLElement = fixture.nativeElement;
   root.querySelector<HTMLButtonElement>('button[type="submit"]')?.click();
   await fixture.whenStable();
@@ -175,4 +176,38 @@ it('does not send when the pending request cannot be persisted', async () => {
   expect(root.querySelector('[role="alert"]')?.textContent).toMatch(
     /reprise locale est indisponible|Local recovery is unavailable/,
   );
+});
+
+it('reconciles durable requests when history arrives before recovery', async () => {
+  const request: EmailTestRequest = {
+    requestId: '65b77a72-e172-42f3-94bb-e0c72e733c91',
+    subject: 'Saved subject',
+    body: 'Saved content',
+  };
+  store().write(request);
+  const recovery = new Subject<PendingRequestStore<EmailTestRequest>>();
+  const sendEmailTest = vi.fn();
+  TestBed.configureTestingModule({
+    providers: [
+      { provide: PendingProviderRequests, useValue: { email: () => firstValueFrom(recovery) } },
+      {
+        provide: ConnectionsApi,
+        useValue: {
+          connections,
+          emailTests: () => of([operation(request)]),
+          sendEmailTest,
+        },
+      },
+    ],
+  });
+  const fixture = TestBed.createComponent(EmailTest);
+  await fixture.whenStable();
+  await vi.waitFor(() => expect(fixture.componentInstance['history'].loaded()).toBe(true));
+  recovery.next(store());
+  await vi.waitFor(() => expect(fixture.componentInstance['completed']()).toBe(true));
+  expect(store().read()).toBeUndefined();
+  expect(fixture.componentInstance['pending']()).toBeUndefined();
+  expect(await fixture.componentInstance.canDeactivate()).toBe(true);
+  fixture.componentInstance['send'](new SubmitEvent('submit'));
+  expect(sendEmailTest).not.toHaveBeenCalled();
 });

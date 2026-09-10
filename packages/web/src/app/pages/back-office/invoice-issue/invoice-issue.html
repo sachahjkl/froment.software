@@ -3,9 +3,7 @@
   <app-invoice-task-summary />
   <p appNotice>{{ i18n.t('billingWorkspace.issueHint') }}</p>
   <app-invoice-task-feedback />
-  @if (task.invoice(); as invoice) { @if (task.issues().length) {
-  <app-document-issues [issues]="task.issues()" [clientId]="invoice.clientId" kind="invoice" /> }
-  @if (invoice.status !== 'draft' && !task.completed()) {
+  @if (task.invoice()) { @if (!eligible() && !task.completed()) {
   <p appNotice>{{ i18n.t('billingWorkspace.unavailable') }}</p>
   } @else if (!task.completed()) { @if (preview(); as previewUrl) {
   <iframe
@@ -42,7 +40,7 @@
   </form>
   } } @if (!task.completed() && !task.uncertain()) {
   <button appButton [disabled]="task.busy() || task.loading()" (click)="reload()">
-    {{ i18n.t('credit.reload') }}
+    {{ i18n.t('listControls.reload') }}
   </button>
   }
 </section>

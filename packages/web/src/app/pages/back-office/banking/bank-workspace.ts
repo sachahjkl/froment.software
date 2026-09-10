@@ -6,7 +6,9 @@ import {
   type BankMatchHistory,
   type BankTransactionValue,
   type LedgerJournalEntry,
+  type LedgerEntry,
   type LedgerSource,
+  type LedgerSourceKind,
 } from '@froment/contracts';
 import { Schema } from 'effect';
 import { type I18nService, type TranslationKey } from '@app/i18n.service';
@@ -36,6 +38,16 @@ const bankStatusRank = {
   notApplicable: 4,
 } satisfies Record<BankStatus, number>;
 export const ledgerSourceRank = { debit: 0, fee: 1 } as const;
+export function ledgerSourceLabel(kind: typeof LedgerSourceKind.Type): TranslationKey {
+  return kind === 'fee' ? 'ledger.fee' : 'ledger.debit';
+}
+export function ledgerEntryStatusLabel(
+  entry: Pick<typeof LedgerEntry.Type, 'reversesId' | 'reversalId'>,
+): TranslationKey {
+  if (entry.reversesId) return 'bankWorkspace.reversalEntry';
+  if (entry.reversalId) return 'bankWorkspace.reversedEntry';
+  return 'bankWorkspace.activeEntry';
+}
 
 export const bankColumns: readonly BankTableColumn<BankTransactionValue>[] = [
   {

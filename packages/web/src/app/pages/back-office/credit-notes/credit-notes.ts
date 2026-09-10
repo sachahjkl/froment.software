@@ -23,7 +23,14 @@ import { SearchHighlight, SearchHighlightRegistry } from '@shared/search-highlig
 import { ListWorkspace } from '@shared/list-toolbar/list-workspace';
 import { TableExport } from '@shared/table-export/table-export';
 import { matchIndices, nextBillingSort, sortDirection } from '../billing/billing-list';
-import { compareEntries, entrySort, creditSortColumns } from '../billing/entry-list';
+import {
+  compareEntries,
+  entrySort,
+  creditSortColumns,
+  entryExportEmptyKey,
+  entryEmptyKey,
+} from '../billing/entry-list';
+import { billingDetailQuery } from '../billing/billing-navigation';
 import { LocalizedDatePipe } from '@shared/localized-date/localized-date-pipe';
 import { BillingNav } from '../billing/billing-nav';
 import { businessDate } from '../billing/billing-state';
@@ -57,6 +64,11 @@ export class CreditNotes {
   private readonly api = inject(InvoicesApi);
   private readonly destroyRef = inject(DestroyRef);
   protected readonly filters = inject(EntryFilterState);
+  protected readonly detailQuery = computed(() =>
+    billingDetailQuery('credits', this.filters.params(), 'credit'),
+  );
+  protected readonly emptyKey = computed(() => entryEmptyKey(this.rows().length));
+  protected readonly exportEmptyKey = computed(() => entryExportEmptyKey(this.state()));
   protected readonly rows = signal<typeof CreditNoteList.Type>([]);
   protected readonly sort = computed(() => entrySort(this.filters.params(), creditSortColumns));
   protected readonly sortDirection = sortDirection;

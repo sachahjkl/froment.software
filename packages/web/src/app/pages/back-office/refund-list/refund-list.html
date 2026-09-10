@@ -24,7 +24,7 @@
         [rows]="csvRows()"
         filename="refunds.csv"
         [label]="i18n.t('listWorkspace.exportCsv')"
-        [emptyHint]="i18n.t(state() === 'limit' ? 'billingWorkspace.limitExceeded' : 'listWorkspace.exportEmpty')"
+        [emptyHint]="i18n.t(exportEmptyKey())"
         [pendingHint]="i18n.t('listWorkspace.exportPending')"
         [pending]="state() === 'loading'"
       />
@@ -33,9 +33,11 @@
     <p role="status">{{ i18n.t('backOffice.invoices.loading') }}</p>
     } @case ('error') {
     <p appNotice variant="danger" role="alert">{{ i18n.t('billingWorkspace.loadError') }}</p>
-    <button appButton (click)="load()">{{ i18n.t('credit.reload') }}</button> } @case ('limit') {
+    <button appButton (click)="load()">{{ i18n.t('listControls.reload') }}</button> } @case
+    ('limit') {
     <p appNotice variant="danger" role="alert">{{ i18n.t('billingWorkspace.limitExceeded') }}</p>
-    <button appButton (click)="load()">{{ i18n.t('credit.reload') }}</button> } @case ('ready') {
+    <button appButton (click)="load()">{{ i18n.t('listControls.reload') }}</button> } @case
+    ('ready') {
     <div appDataTable>
       <table>
         <thead>
@@ -98,7 +100,7 @@
                 <app-entity-icon icon="bank" [variant]="iconVariant(entry)" />
                 <a
                   [routerLink]="['/backoffice/invoices', entry.invoiceId]"
-                  [queryParams]="{ tab: 'credit' }"
+                  [queryParams]="detailQuery()"
                   [fragment]="entry.id"
                   [appSearchHighlight]="matchIndices(result, 'reference')"
                   >{{ entry.reference }}</a
@@ -120,17 +122,12 @@
               {{ entry.clientDisplayName }}
             </td>
             <td>{{ entry.refundedOn }}</td>
-            <td>
-              {{ i18n.t(entry.cancelledAt === null ? 'billingWorkspace.active' :
-              'billingWorkspace.cancelled') }}
-            </td>
+            <td>{{ i18n.t(entryStatusKey(entry)) }}</td>
             <td class="amount">{{ money(entry.amountCents) }}</td>
           </tr>
           } @empty {
           <tr>
-            <td colspan="6">
-              {{ i18n.t(rows().length ? 'billingWorkspace.noMatches' : 'billingWorkspace.empty') }}
-            </td>
+            <td colspan="6">{{ i18n.t(emptyKey()) }}</td>
           </tr>
           }
         </tbody>

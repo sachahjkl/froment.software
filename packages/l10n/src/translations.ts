@@ -25,6 +25,9 @@ import { emailTemplateText } from './email-templates.js';
 import { adminPagesText } from './admin-pages.js';
 import { documentReferenceEditorText } from './document-reference-editor.js';
 import { entityListText } from './entity-list.js';
+import { clientTablesText } from './client-tables.js';
+import { commercialHeaderText } from './commercial-header.js';
+import { teamInvitationText } from './team-invitation.js';
 
 export const translations = {
   fr: {
@@ -57,6 +60,9 @@ export const translations = {
     ...adminPagesText.fr,
     ...documentReferenceEditorText.fr,
     ...entityListText.fr,
+    ...clientTablesText.fr,
+    ...commercialHeaderText.fr,
+    ...teamInvitationText.fr,
     'backOffice.apiTokens.permission.payment.read': 'Exporter les règlements et leurs corrections.',
     'design.confirmation.title': 'Modales de confirmation',
     'design.confirmation.hint':
@@ -1589,6 +1595,9 @@ export const translations = {
     ...adminPagesText.en,
     ...documentReferenceEditorText.en,
     ...entityListText.en,
+    ...clientTablesText.en,
+    ...commercialHeaderText.en,
+    ...teamInvitationText.en,
     'backOffice.apiTokens.permission.payment.read': 'Export payments and their corrections.',
     'design.confirmation.title': 'Confirmation dialogs',
     'design.confirmation.hint':

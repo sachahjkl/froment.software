@@ -56,13 +56,9 @@
           </dd>
         </div>
       </dl>
-      <span appBadge
-        >{{ i18n.t(entry.reversesId ? 'bankWorkspace.reversalEntry' : entry.reversalId ?
-        'bankWorkspace.reversedEntry' : 'bankWorkspace.activeEntry') }}</span
-      >
+      <span appBadge>{{ i18n.t(statusLabel(entry)) }}</span>
       <a [routerLink]="sourceLink(entry.sourceKind, entry.sourceId)" [queryParams]="backQuery"
-        >{{ i18n.t('bankWorkspace.sourceType') }} : {{ i18n.t(entry.sourceKind === 'fee' ?
-        'ledger.fee' : 'ledger.debit') }}</a
+        >{{ i18n.t('bankWorkspace.sourceType') }} : {{ i18n.t(sourceLabel(entry.sourceKind)) }}</a
       >
     </aside>
     <div class="bank-section">
@@ -107,7 +103,7 @@
         }
         <div>
           <button appButton type="submit" variant="warning" [disabled]="busy()">
-            {{ i18n.t(pending() ? 'bankWorkspace.retry' : 'ledger.reverse') }}
+            {{ i18n.t(submitLabel()) }}
           </button>
         </div>
       </form>

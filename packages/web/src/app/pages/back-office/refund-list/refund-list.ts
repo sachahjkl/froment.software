@@ -23,7 +23,15 @@ import { SearchHighlight, SearchHighlightRegistry } from '@shared/search-highlig
 import { ListWorkspace } from '@shared/list-toolbar/list-workspace';
 import { TableExport } from '@shared/table-export/table-export';
 import { matchIndices, nextBillingSort, sortDirection } from '../billing/billing-list';
-import { compareEntries, entrySort, refundSortColumns } from '../billing/entry-list';
+import {
+  compareEntries,
+  entrySort,
+  refundSortColumns,
+  entryStatusKey,
+  entryExportEmptyKey,
+  entryEmptyKey,
+} from '../billing/entry-list';
+import { billingDetailQuery } from '../billing/billing-navigation';
 import { BillingNav } from '../billing/billing-nav';
 import { EntryFilters, EntryFilterState } from '../billing/entry-filters';
 
@@ -54,6 +62,12 @@ export class RefundList {
   private readonly api = inject(InvoicesApi);
   private readonly destroyRef = inject(DestroyRef);
   protected readonly filters = inject(EntryFilterState);
+  protected readonly detailQuery = computed(() =>
+    billingDetailQuery('refunds', this.filters.params(), 'credit'),
+  );
+  protected readonly entryStatusKey = entryStatusKey;
+  protected readonly emptyKey = computed(() => entryEmptyKey(this.rows().length));
+  protected readonly exportEmptyKey = computed(() => entryExportEmptyKey(this.state()));
   protected readonly rows = signal<typeof InvoiceRefundList.Type>([]);
   protected readonly sort = computed(() => entrySort(this.filters.params(), refundSortColumns));
   protected readonly sortDirection = sortDirection;
@@ -111,9 +125,7 @@ export class RefundList {
           entry.orderReference,
           entry.clientDisplayName,
           entry.refundedOn,
-          this.i18n.t(
-            entry.cancelledAt === null ? 'billingWorkspace.active' : 'billingWorkspace.cancelled',
-          ),
+          this.i18n.t(entryStatusKey(entry)),
           entry.amountCents / 100,
         ]),
   );

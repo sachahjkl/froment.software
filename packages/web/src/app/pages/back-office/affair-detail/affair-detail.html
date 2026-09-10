@@ -7,26 +7,52 @@
     {{ i18n.t('backOffice.backToAffairs') }}
   </a>
   @if (state() !== 'ready') {
-  <h1 id="affair-title">{{ i18n.t('backOffice.affairs.title') }}</h1>
+  <app-page-header><h1 id="affair-title">{{ headerTitle() }}</h1></app-page-header>
   } @switch (state()) { @case ('loading') {
   <p class="state" aria-live="polite">{{ i18n.t('backOffice.affair.loading') }}</p>
   } @case ('error') {
   <p appNotice variant="danger" role="alert">{{ i18n.t('backOffice.affair.error') }}</p>
   <button appButton type="button" (click)="load()">{{ i18n.t('backOffice.affair.retry') }}</button>
   } @case ('ready') { @if (quote(); as quote) {
-  <header>
-    <div class="document-heading">
-      <p class="eyebrow">{{ quote.reference }}</p>
-      <h1 id="affair-title">{{ quote.currentRevision.title }}</h1>
+  <app-page-header>
+    <h1 id="affair-title">{{ headerTitle() }}</h1>
+    <p class="document-description">
+      {{ i18n.tf('commercialHeader.affairDescription', { client:
+      quote.currentRevision.clientDisplayName }) }}
+    </p>
+    <div pageActions class="page-actions">
+      @if (invoice(); as invoice) {
+      <a appLinkButton variant="primary" [routerLink]="['/backoffice/invoices', invoice.id]">
+        {{ i18n.t('backOffice.affair.nextAction.openInvoice') }}
+      </a>
+      } @else if (order(); as order) {
+      <a
+        appLinkButton
+        variant="primary"
+        routerLink="/backoffice/invoices/new"
+        [queryParams]="{ orderId: order.id }"
+      >
+        {{ i18n.t('backOffice.affair.nextAction.createInvoiceButton') }}
+      </a>
+      } @else {
+      <a
+        appLinkButton
+        variant="primary"
+        [routerLink]="['/backoffice/quotes', quote.id]"
+        [queryParams]="context()"
+      >
+        {{ i18n.t('backOffice.affair.nextAction.openQuote') }}
+      </a>
+      } @if (invoiceReminderHref(); as reminderHref) {
+      <a appLinkButton [href]="reminderHref">{{ i18n.t('backOffice.affair.reminder.invoice') }}</a>
+      } @else if (quoteReminderHref(); as reminderHref) {
+      <a appLinkButton [href]="reminderHref">{{ i18n.t('backOffice.affair.reminder.quote') }}</a>
+      }
       <a [routerLink]="['/backoffice/clients', quote.clientId, 'profile']"
         >{{ quote.currentRevision.clientDisplayName }}</a
       >
     </div>
-    <div class="quote-amount">
-      <p>{{ i18n.t('commercial.quoteAmount') }}</p>
-      <strong>{{ money(quote.currentRevision.totalCents) }}</strong>
-    </div>
-  </header>
+  </app-page-header>
 
   <app-tabs [tabs]="tabs()" [label]="quote.currentRevision.title" [preserveQuery]="true" />
   <router-outlet />
@@ -45,39 +71,10 @@
           <p>{{ quoteNextAction(quote.status) }}</p>
           }
         </div>
-        <div class="document-actions">
-          @if (invoice(); as invoice) {
-          <a appLinkButton variant="primary" [routerLink]="['/backoffice/invoices', invoice.id]">
-            {{ i18n.t('backOffice.affair.nextAction.openInvoice') }}
-          </a>
-          } @else if (order(); as order) {
-          <a
-            appLinkButton
-            variant="primary"
-            routerLink="/backoffice/invoices/new"
-            [queryParams]="{ orderId: order.id }"
-          >
-            {{ i18n.t('backOffice.affair.nextAction.createInvoiceButton') }}
-          </a>
-          } @else {
-          <a
-            appLinkButton
-            variant="primary"
-            [routerLink]="['/backoffice/quotes', quote.id]"
-            [queryParams]="context()"
-          >
-            {{ i18n.t('backOffice.affair.nextAction.openQuote') }}
-          </a>
-          } @if (invoiceReminderHref(); as reminderHref) {
-          <a appLinkButton [href]="reminderHref"
-            >{{ i18n.t('backOffice.affair.reminder.invoice') }}</a
-          >
-          } @else if (quoteReminderHref(); as reminderHref) {
-          <a appLinkButton [href]="reminderHref"
-            >{{ i18n.t('backOffice.affair.reminder.quote') }}</a
-          >
-          }
-        </div>
+        <dl class="quote-amount">
+          <dt>{{ i18n.t('commercial.quoteAmount') }}</dt>
+          <dd>{{ money(quote.currentRevision.totalCents) }}</dd>
+        </dl>
       </section>
 
       <div class="document-actions overview-links">
@@ -89,9 +86,7 @@
           >{{ order.reference }}</a
         >
         } @if (invoice(); as invoice) {
-        <a [routerLink]="['/backoffice/invoices', invoice.id]"
-          >{{ invoice.invoiceNumber ?? invoice.orderReference }}</a
-        >
+        <a [routerLink]="['/backoffice/invoices', invoice.id]">{{ invoiceReference() }}</a>
         }
       </div>
       } @if (tab === 'documents') {
@@ -115,7 +110,10 @@
                     >{{ quote.reference }}</a
                   >
                 </td>
-                <td><span appBadge>{{ quoteStatus(quote.status) }}</span></td>
+                <td>
+                  @let badge = quoteBadge(quote.status);
+                  <span appBadge [variant]="badge.variant">{{ i18n.t(badge.label) }}</span>
+                </td>
                 <td class="actions-column">
                   <div class="document-actions">
                     <a
@@ -139,7 +137,11 @@
                     >{{ order.reference }}</a
                   >
                 </td>
-                <td><span appBadge>{{ i18n.t('backOffice.affair.confirmed') }}</span></td>
+                <td>
+                  <span appBadge variant="success"
+                    >{{ i18n.t('backOffice.affair.confirmed') }}</span
+                  >
+                </td>
                 <td class="actions-column">
                   <div class="document-actions">
                     <a
@@ -160,11 +162,12 @@
                 <td>{{ i18n.t('backOffice.affair.invoice') }}</td>
                 <td>
                   <a [routerLink]="['/backoffice/invoices', invoice.id]"
-                    >{{ invoice.invoiceNumber ?? invoice.orderReference }}</a
+                    >{{ invoiceReference() }}</a
                   >
                 </td>
                 <td>
-                  <span appBadge>{{ invoiceStatus(invoice.status) }}</span>
+                  @let badge = invoiceBadge(invoice.status);
+                  <span appBadge [variant]="badge.variant">{{ i18n.t(badge.label) }}</span>
                 </td>
                 <td class="actions-column">
                   <div class="document-actions">

@@ -8,19 +8,11 @@ import {
   signal,
   viewChild,
 } from '@angular/core';
-import {
-  disabled,
-  email,
-  form,
-  FormField,
-  maxLength,
-  pattern,
-  required,
-} from '@angular/forms/signals';
+import { disabled, form, FormField } from '@angular/forms/signals';
 import { RouterLink } from '@angular/router';
 import { DataTable } from '@shared/data-table/data-table';
 import { EntityIcon, type EntityIconVariant } from '@shared/entity-icon/entity-icon';
-import { TeamInvite, TeamList, TeamMember, TeamProfile } from '@froment/contracts';
+import { TeamList, TeamMember, TeamProfile } from '@froment/contracts';
 import { Option, Schema } from 'effect';
 import { TeamApi } from '@backoffice/team-api';
 import { I18nService, type TranslationKey } from '@app/i18n.service';
@@ -35,10 +27,12 @@ import { ListWorkspace } from '@shared/list-toolbar/list-workspace';
 import { ListSearch } from '@shared/list-search/list-search';
 import { FilterMenu, FilterPanel } from '@shared/filter-menu/filter-menu';
 import { FilterChoice } from '@shared/filter-choice/filter-choice';
+import { FilterChip } from '@shared/filter-chip/filter-chip';
 import { TableExport } from '@shared/table-export/table-export';
 import { SearchHighlight, SearchHighlightRegistry } from '@shared/search-highlight';
 import { createWorkspaceTable } from '../configuration/workspace-table';
 import { memberTableOptions, invitationTableOptions } from '../configuration/workspace-tables';
+import { TeamNavigation } from './team-navigation';
 
 @Component({
   imports: [
@@ -57,10 +51,11 @@ import { memberTableOptions, invitationTableOptions } from '../configuration/wor
     FilterMenu,
     FilterPanel,
     FilterChoice,
+    FilterChip,
     TableExport,
     SearchHighlight,
   ],
-  providers: [SearchHighlightRegistry],
+  providers: [SearchHighlightRegistry, TeamNavigation],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'page-container', '(window:beforeunload)': 'beforeUnload($event)' },
   selector: 'app-team',
@@ -82,6 +77,7 @@ export class Team {
   }
 
   protected readonly i18n = inject(I18nService);
+  protected readonly navigation = inject(TeamNavigation);
   private readonly api = inject(TeamApi);
   private readonly confirmation = inject(Confirmation);
   private readonly result = viewChild<ElementRef<HTMLElement>>('result');
@@ -94,10 +90,12 @@ export class Team {
     computed(() => this.data().invitations),
     invitationTableOptions,
   );
-  protected readonly listParams = computed(() => ({
-    ...this.members.params(),
-    ...this.invitations.params(),
-  }));
+  protected readonly memberFilterCount = computed(() =>
+    Number(this.members.query().filter !== 'all'),
+  );
+  protected readonly invitationFilterCount = computed(() =>
+    Number(this.invitations.query().filter !== 'all'),
+  );
   protected readonly memberExport = computed(() =>
     this.members
       .rows()
@@ -126,30 +124,12 @@ export class Team {
   protected readonly busy = signal(false);
   protected readonly loading = signal(true);
   protected readonly error = signal<TranslationKey | undefined>(undefined);
-  protected readonly link = signal('');
   protected readonly saved = signal(false);
   protected readonly now = signal(Date.now());
-  protected readonly pending = signal<typeof TeamInvite.Type | undefined>(undefined);
   private readonly profiles = signal<Record<string, string>>({});
   protected readonly profileForm = form(this.profiles, (path) => {
     disabled(path, () => this.busy() || this.loading());
   });
-  protected readonly invitationForm = form(
-    signal({ displayName: '', email: '', profile: '' }),
-    (path) => {
-      required(path.displayName);
-      pattern(path.displayName, /\S/);
-      maxLength(path.displayName, 160);
-      required(path.email);
-      email(path.email);
-      maxLength(path.email, 254);
-      required(path.profile);
-      disabled(
-        path,
-        () => this.busy() || this.loading() || this.link() !== '' || this.pending() !== undefined,
-      );
-    },
-  );
   constructor() {
     afterNextRender(() => {
       void this.load();
@@ -169,54 +149,6 @@ export class Team {
     } else this.error.set(outcome.code);
     this.loading.set(false);
   }
-  protected async invite(event: Event): Promise<void> {
-    event.preventDefault();
-    if (this.busy() || this.loading() || this.link() !== '') return;
-    if (this.invitationForm().invalid()) {
-      this.invitationForm().markAsTouched();
-      this.invitationForm().errorSummary()[0]?.fieldTree().focusBoundControl();
-      return;
-    }
-    const request = Schema.decodeUnknownOption(TeamInvite)({
-      ...this.invitationForm().value(),
-      requestId: this.pending()?.requestId ?? crypto.randomUUID(),
-    });
-    if (Option.isNone(request)) {
-      this.error.set('team.conflict');
-      return;
-    }
-    this.busy.set(true);
-    this.saved.set(false);
-    this.error.set(undefined);
-    try {
-      if (
-        !(await this.confirmation.request(
-          this.i18n.tf('configurationWorkspace.inviteConfirm', {
-            name: request.value.displayName,
-            email: request.value.email,
-            profile: this.i18n.t(
-              request.value.profile === 'accountant' ? 'team.accountant' : 'team.collaborator',
-            ),
-          }),
-        ))
-      )
-        return;
-      this.pending.set(this.pending() ?? request.value);
-      const outcome = await this.api.invite(this.pending() ?? request.value);
-      if (!outcome.success) {
-        this.error.set(outcome.code);
-        return;
-      }
-      this.link.set(outcome.result.url);
-      this.pending.set(undefined);
-      this.invitationForm().reset({ displayName: '', email: '', profile: '' });
-      await this.load();
-      this.saved.set(true);
-      this.result()?.nativeElement.focus();
-    } finally {
-      this.busy.set(false);
-    }
-  }
   protected async cancel(id: string): Promise<void> {
     if (this.busy() || !(await this.confirmation.request(this.i18n.t('team.confirmCancel'))))
       return;
@@ -227,7 +159,6 @@ export class Team {
         this.error.set(outcome.code);
         return;
       }
-      this.link.set('');
       await this.load();
       this.saved.set(true);
       this.result()?.nativeElement.focus();
@@ -260,9 +191,6 @@ export class Team {
       this.busy.set(false);
     }
   }
-  protected dismissLink(): void {
-    this.link.set('');
-  }
   protected async applyProfile(member: typeof TeamMember.Type): Promise<void> {
     const profile = Schema.decodeUnknownOption(TeamProfile)(this.profiles()[member.id]);
     if (Option.isSome(profile))
@@ -273,22 +201,10 @@ export class Team {
   }
   canDeactivate(): boolean | Promise<boolean> {
     if (this.busy()) return false;
-    return (
-      (!this.invitationForm().dirty() &&
-        this.link() === '' &&
-        !this.pending() &&
-        !this.profileForm().dirty()) ||
-      this.confirmation.request(this.i18n.t('team.leave'))
-    );
+    return !this.profileForm().dirty() || this.confirmation.request(this.i18n.t('team.leave'));
   }
   protected beforeUnload(event: BeforeUnloadEvent): void {
-    if (
-      this.busy() ||
-      this.invitationForm().dirty() ||
-      this.link() !== '' ||
-      this.pending() ||
-      this.profileForm().dirty()
-    ) {
+    if (this.busy() || this.profileForm().dirty()) {
       event.preventDefault();
       event.returnValue = '';
     }

@@ -109,6 +109,10 @@ Les listes d’entités présentent un titre fixe et une description, sans surti
 Facturation conserve son titre dans les vues Factures, Encaissements, Avoirs et Remboursements.
 Les onglets nomment les vues sans répéter leur nom dans le titre principal.
 
+Les fiches commerciales regroupent leurs actions dans l’en-tête.
+Les badges distinguent le statut du document, son état financier et sa version lorsqu’ils sont disponibles.
+Les couleurs complètent les libellés. Elles ne remplacent pas les informations de statut.
+
 Le composant `Tabs` utilise une surface et une ombre pour l’onglet actif.
 Le composant ne définit aucune marge extérieure.
 Le conteneur de page gère l’espacement avec `gap`, sans ajouter de marge sur les onglets.
@@ -128,6 +132,9 @@ La création utilise `/backoffice/clients/new`.
 La fiche `/backoffice/clients/:clientId/profile` présente les coordonnées sans formulaire.
 La modification utilise `/backoffice/clients/:clientId/edit`.
 Les onglets Documents et Accès restent associés à la fiche.
+Les tableaux Affaires, Documents et Accès utilisent les contrôles de liste partagés.
+Chaque tableau conserve sa recherche, ses filtres et son tri dans des paramètres d’URL distincts.
+Leurs paramètres ne remplacent pas ceux de la liste Clients.
 L’archivage se trouve dans les actions de la fiche et nécessite une confirmation.
 
 Le formulaire sépare l’identité de l’adresse de facturation.
@@ -175,6 +182,31 @@ La réinitialisation retire le paramètre de tri de l’URL sans effacer la rech
 L’ordre initial reste celui du module, même lorsque sa colonne ne porte aucune flèche de tri actif.
 `FilterChip` montre un filtre actif et son action de retrait.
 La composition `/design/workflows` présente les deux contrôles dans son tableau interactif.
+
+### Parcours Facturation
+
+Les liens entre listes, fiches et tâches transportent uniquement le contexte de navigation autorisé.
+Le retour restaure la liste d’origine, ses critères et l’onglet de la fiche.
+Les URL de retour libres et les paramètres inconnus ne font pas partie de ce contexte.
+
+Une tâche affiche une seule alerte principale pour un conflit ou un résultat incertain.
+Les erreurs de validation restent associées à leurs champs.
+Les actions de rechargement nomment la ressource concernée ou utilisent le libellé partagé « Recharger ».
+
+### Formulaires administratifs
+
+Un refus définitif d’invitation conserve la saisie et rend les champs modifiables.
+Un résultat incertain conserve la demande et son identifiant pour éviter une nouvelle opération involontaire.
+Les composants de liste et d’éditeur n’héritent pas les uns des autres.
+Les services locaux partagent seulement les données et les opérations nécessaires aux écrans concernés.
+
+Les pages Stripe et Resend utilisent les onglets partagés pour la configuration et les tests.
+Les autres connexions ne présentent pas d’onglet de test sans écran correspondant.
+
+La page Configuration ne contient pas de lien vers elle-même.
+Ses sous-pages présentent un lien « Retour à la configuration ».
+
+Le menu du compte affiche la déconnexion avec la couleur de danger.
 
 ### Parcours Courriels
 

@@ -34,7 +34,7 @@
         </div>
         <div>
           <dt>{{ i18n.t('bankWorkspace.sourceType') }}</dt>
-          <dd>{{ i18n.t(detail.source.sourceKind === 'fee' ? 'ledger.fee' : 'ledger.debit') }}</dd>
+          <dd>{{ i18n.t(sourceLabel(detail.source.sourceKind)) }}</dd>
         </div>
         <div>
           <dt>{{ i18n.t('bankWorkspace.date') }}</dt>
@@ -77,9 +77,7 @@
             aria-describedby="credit-error"
             [attr.aria-invalid]="invalid('creditAccount')"
           /><span id="credit-error" class="field-error"
-            >@if (invalid('creditAccount')) { {{ i18n.t(entryForm.creditAccount().value() ===
-            entryForm.debitAccount().value() && entryForm.creditAccount().value() ?
-            'bankWorkspace.accountsDistinct' : 'bankWorkspace.accountCodeInvalid') }} }</span
+            >@if (invalid('creditAccount')) { {{ i18n.t(creditAccountError()) }} }</span
           ></label
         >
         <label class="field"
@@ -97,7 +95,7 @@
         }
         <div>
           <button appButton variant="primary" type="submit" [disabled]="busy()">
-            {{ i18n.t(pending() ? 'bankWorkspace.retry' : 'ledger.post') }}
+            {{ i18n.t(submitLabel()) }}
           </button>
         </div>
       </form>

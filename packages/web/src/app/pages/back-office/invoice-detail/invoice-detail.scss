@@ -1,18 +1,5 @@
 @use "../billing/billing-workspace";
-.document-heading {
-  display: grid;
-  gap: var(--space-2);
-  min-inline-size: 0;
-}
-.document-heading h1 {
-  margin: 0;
-}
-.header-actions {
-  flex-basis: 100%;
-}
-.header-actions:empty {
-  display: none;
-}
+@use "../commercial-header";
 .invoice-panel {
   display: grid;
   gap: var(--space-5);

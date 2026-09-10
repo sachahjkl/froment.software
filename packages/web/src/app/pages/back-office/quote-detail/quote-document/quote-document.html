@@ -5,7 +5,7 @@
     >{{ i18n.t('backOffice.quote.preview.open') }}</a
   >
   <button #prepare appButton type="button" [disabled]="pending()" (click)="generate()">
-    {{ i18n.t(pending() ? 'backOffice.quote.pdf.generating' : 'commercial.preparePdf') }}
+    {{ prepareLabel() }}
   </button>
   @if (artifact()) {
   <a appLinkButton [href]="pdf()">{{ i18n.t('backOffice.quote.pdf.download') }}</a> }

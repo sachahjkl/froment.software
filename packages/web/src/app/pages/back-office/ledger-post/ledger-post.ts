@@ -3,6 +3,7 @@ import {
   afterRenderEffect,
   ChangeDetectionStrategy,
   Component,
+  computed,
   DestroyRef,
   ElementRef,
   inject,
@@ -42,6 +43,7 @@ import {
   bankQueryParams,
   ledgerEntryLink,
   ledgerQuery,
+  ledgerSourceLabel,
   transactionLink,
 } from '../banking/bank-workspace';
 
@@ -88,6 +90,16 @@ export class LedgerPost {
   });
   protected readonly backQuery = bankQueryParams(ledgerQuery(this.route.snapshot.queryParamMap));
   protected readonly entryLink = ledgerEntryLink;
+  protected readonly sourceLabel = ledgerSourceLabel;
+  protected readonly submitLabel = computed<TranslationKey>(() =>
+    this.pending() ? 'bankWorkspace.retry' : 'ledger.post',
+  );
+  protected readonly creditAccountError = computed<TranslationKey>(() => {
+    const { creditAccount, debitAccount } = this.model();
+    if (creditAccount !== '' && creditAccount === debitAccount)
+      return 'bankWorkspace.accountsDistinct';
+    return 'bankWorkspace.accountCodeInvalid';
+  });
   protected readonly transactionLink = transactionLink;
   private generation = 0;
   private requestKey: { fingerprint: string; id: string } | undefined;

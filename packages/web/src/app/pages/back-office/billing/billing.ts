@@ -9,11 +9,11 @@ import {
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormField, form } from '@angular/forms/signals';
-import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, convertToParamMap, Router, RouterLink } from '@angular/router';
 import { type InvoiceListValue, type InvoiceSummaryValue } from '@froment/contracts';
 import { formatMoney } from '@froment/l10n';
 import { InvoicesApi } from '@backoffice/invoices-api';
-import { I18nService } from '@app/i18n.service';
+import { I18nService, type TranslationKey } from '@app/i18n.service';
 import { Badge } from '@shared/badge/badge';
 import { EntityIcon, type EntityIconVariant } from '@shared/entity-icon/entity-icon';
 import { Button } from '@shared/button/button';
@@ -34,6 +34,7 @@ import { TableExport } from '@shared/table-export/table-export';
 import { matchIndices, nextBillingSort, sortDirection } from './billing-list';
 import { BillingNav } from './billing-nav';
 import { BillingPdf } from './billing-pdf';
+import { billingDetailQuery } from './billing-navigation';
 import {
   billingFilters,
   billingSort,
@@ -88,6 +89,15 @@ export class Billing {
   protected readonly invoices = signal<InvoiceListValue>([]);
   protected readonly filters = form(signal(billingFilters(this.route.snapshot.queryParamMap)));
   protected readonly sort = signal(billingSort(this.route.snapshot.queryParamMap));
+  protected readonly detailQuery = computed(() =>
+    billingDetailQuery(
+      'invoices',
+      convertToParamMap({ ...this.filters().value(), sort: this.sort() }),
+    ),
+  );
+  protected readonly emptyKey = computed<TranslationKey>(() =>
+    this.invoices().length === 0 ? 'billingWorkspace.empty' : 'billingWorkspace.noMatches',
+  );
   protected readonly sortDirection = sortDirection;
   protected readonly matchIndices = matchIndices;
   protected readonly selectedIds = signal<ReadonlySet<string>>(new Set());
@@ -216,6 +226,16 @@ export class Billing {
     if (invoice.dueDate < this.businessDate) return 'danger';
     if (invoice.recordedPaidCents > 0) return 'warning';
     return 'info';
+  }
+
+  protected invoiceMatchKey(invoice: InvoiceSummaryValue): 'title' | 'invoiceNumber' {
+    return invoice.invoiceNumber === null ? 'title' : 'invoiceNumber';
+  }
+
+  protected dueLabel(invoice: InvoiceSummaryValue): string {
+    if (invoice.status !== 'issued' || remainingCents(invoice) <= 0 || invoice.creditedCents !== 0)
+      return '';
+    return this.filterLabel('due', invoice.dueDate < this.businessDate ? 'overdue' : 'upcoming');
   }
 
   constructor() {

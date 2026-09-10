@@ -1,21 +1,19 @@
 <section class="invoice-page document-editor" aria-labelledby="invoice-title">
   <header>
-    <a class="back-link" routerLink="/backoffice/facturation"
+    <a class="back-link" [routerLink]="navigation.listLink()" [queryParams]="navigation.listQuery()"
       >{{ i18n.t('backOffice.backToBilling') }}</a
     >
-    <h1 id="invoice-title">
-      {{ i18n.t(isNew() ? 'backOffice.invoice.title.new' : 'billingWorkspace.edit') }}
-    </h1>
+    <h1 id="invoice-title">{{ i18n.t(titleKey()) }}</h1>
     <p class="hint">{{ i18n.t('billingWorkspace.noAutosave') }}</p>
   </header>
   @if (loading()) {
   <p role="status">{{ i18n.t('backOffice.invoices.loading') }}</p>
   }
   <div data-editor-feedback tabindex="-1">
-    @if (error(); as error) {
+    @if (stale()) {
+    <p appNotice variant="warning" role="alert">{{ i18n.t('billingWorkspace.stale') }}</p>
+    } @else if (error(); as error) {
     <p appNotice variant="danger" role="alert">{{ i18n.t(error) }}</p>
-    } @if (stale()) {
-    <p appNotice variant="warning">{{ i18n.t('billingWorkspace.stale') }}</p>
     } @if (completed() && !hasUnsavedChanges()) {
     <p appNotice variant="success" role="status">{{ i18n.t('billingWorkspace.completed') }}</p>
     }
@@ -200,7 +198,7 @@
       type="submit"
       [disabled]="saveDisabled() || (completed() && !hasUnsavedChanges())"
     >
-      {{ i18n.t(saving() ? 'backOffice.invoice.saving' : 'backOffice.invoice.save') }}
+      {{ i18n.t(saveKey()) }}
     </button>
   </form>
   } @if (detail(); as invoice) {
@@ -223,11 +221,13 @@
         <dd>{{ money(invoice.currentRevision.totalCents) }}</dd>
       </div>
     </dl>
-    <a [routerLink]="['/backoffice/invoices', invoice.id]"
+    <a [routerLink]="['/backoffice/invoices', invoice.id]" [queryParams]="navigation.detailQuery()"
       >{{ i18n.t('billingWorkspace.backDetail') }}</a
     >
   </section>
   } } @if (unavailable() || stale()) {
-  <button appButton [disabled]="saving()" (click)="reload()">{{ i18n.t('credit.reload') }}</button>
+  <button appButton [disabled]="saving()" (click)="reload()">
+    {{ i18n.t('listControls.reload') }}
+  </button>
   }
 </section>

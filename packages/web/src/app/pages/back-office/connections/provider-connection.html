@@ -1,39 +1,29 @@
 <section>
   <a routerLink="/backoffice/services">{{ i18n.t('connections.back') }}</a>
-  @if (!current()) {
-  <h1>{{ i18n.t('configurationWorkspace.connection') }}</h1>
+  <app-page-header>
+    <h1>{{ i18n.t(providerName(provider)) }}</h1>
+    <p>{{ i18n.t('configurationWorkspace.providerSetup') }}</p>
+    <button appButton pageActions type="button" [disabled]="loading()" (click)="load()">
+      {{ i18n.t('connections.reload') }}
+    </button>
+  </app-page-header>
+  @if (tabs().length > 0) {
+  <app-tabs
+    [label]="i18n.t('configurationWorkspace.services')"
+    [tabs]="tabs()"
+    [preserveQuery]="true"
+    [preserveFragment]="true"
+  />
   } @if (current(); as connection) {
-  <h1>{{ i18n.t(names[connection.provider]) }}</h1>
-  <nav class="actions" [attr.aria-label]="i18n.t('configurationWorkspace.services')">
-    <a
-      [routerLink]="['/backoffice/services', connection.provider]"
-      [queryParams]="testParams()"
-      aria-current="page"
-      >{{ i18n.t('configurationWorkspace.connection') }}</a
-    >
-    @if (connection.provider === 'resend' || connection.provider === 'stripe') {
-    <a
-      [routerLink]="['/backoffice/services', connection.provider, 'tests']"
-      [queryParams]="testParams()"
-      >{{ i18n.t('configurationWorkspace.tests') }}</a
-    >
-    }
-  </nav>
   <p appNotice>{{ i18n.t('configurationWorkspace.notVerified') }}</p>
   <dl>
     <dt>{{ i18n.t('connections.credentials') }}</dt>
-    <dd>
-      {{ i18n.t(connection.credentialsPresent ? 'connections.present' : 'connections.missing') }}
-    </dd>
+    <dd>{{ i18n.t(credentialsLabel(connection)) }}</dd>
     <dt>{{ i18n.t('connections.mode') }}</dt>
-    <dd>
-      {{ i18n.t(connection.mode === 'restricted-test' ? 'connections.restricted' :
-      'connections.notConnected') }}
-    </dd>
+    <dd>{{ i18n.t(modeLabel(connection)) }}</dd>
   </dl>
-  @for (name of connection.missingSecrets; track name) { <code>{{ name }}</code> }
-  <p>{{ i18n.t('configurationWorkspace.providerSetup') }}</p>
-  @if (connection.provider === 'resend') {
+  @for (name of connection.missingSecrets; track name) { <code>{{ name }}</code> } @if
+  (connection.provider === 'resend') {
   <h2>{{ i18n.t('emailTest.routing') }}</h2>
   <dl>
     <dt>{{ i18n.t('emailTest.from') }}</dt>
@@ -49,31 +39,23 @@
   @if (stripeConnection(); as state) {
   <dl>
     <dt>{{ i18n.t('checkout.key') }}</dt>
-    <dd>
-      {{ i18n.t(state.testKey ? 'checkout.testKey' : state.credentialsPresent ?
-      'checkout.testKeyRequired' : 'checkout.credentialsMissing') }}
-    </dd>
+    <dd>{{ i18n.t(keyLabel(state)) }}</dd>
     <dt>{{ i18n.t('checkout.webhook') }}</dt>
-    <dd>
-      {{ i18n.t(state.webhookConfigured ? 'checkout.webhookPresent' : 'checkout.webhookAbsent') }}
-    </dd>
+    <dd>{{ i18n.t(webhookLabel(state)) }}</dd>
   </dl>
-  } @if (returnRequest) {
+  } } @else {
+  <p appNotice>{{ i18n.t('connections.pending') }}</p>
+  } @if (tabs().length > 0 && returnRequest(); as requestId) {
   <a
     appLinkButton
     variant="primary"
-    [routerLink]="['/backoffice/services/stripe/tests', returnRequest]"
+    [routerLink]="['/backoffice/services', provider, 'tests', requestId]"
     [queryParams]="testParams()"
     >{{ i18n.t('configurationWorkspace.testDetail') }}</a
   >
-  } } @else {
-  <p appNotice>{{ i18n.t('connections.pending') }}</p>
   } } @if (error()) {
   <p appNotice variant="danger" role="alert">{{ i18n.t('connections.error') }}</p>
   } @if (loading()) {
   <p role="status">{{ i18n.t('connections.loading') }}</p>
   }
-  <button appButton type="button" [disabled]="loading()" (click)="load()">
-    {{ i18n.t('connections.reload') }}
-  </button>
 </section>

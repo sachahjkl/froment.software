@@ -6,7 +6,7 @@
   <p role="status">{{ i18n.t('backOffice.invoices.loading') }}</p>
   } @else if (task.invoice() && !creditState()) {
   <p appNotice variant="danger" role="alert">{{ i18n.t('credit.error') }}</p>
-  } @else if (task.invoice() && !task.completed()) { @if (balance() <= 0) {
+  } @else if (task.invoice() && !task.completed()) { @if (!eligible()) {
   <p appNotice>{{ i18n.t('billingWorkspace.unavailable') }}</p>
   } @else {
   <p><strong>{{ i18n.t('credit.refundable') }} {{ task.money(balance()) }}</strong></p>
@@ -64,7 +64,7 @@
   </form>
   } } @if (!task.completed() && !task.uncertain()) {
   <button appButton [disabled]="task.busy() || task.loading()" (click)="reload()">
-    {{ i18n.t('credit.reload') }}
+    {{ i18n.t('listControls.reload') }}
   </button>
   }
 </section>

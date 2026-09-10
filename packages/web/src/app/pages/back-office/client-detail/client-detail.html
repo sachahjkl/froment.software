@@ -6,11 +6,8 @@
     <h1 id="client-title">
       {{ client()?.displayName ?? i18n.t('backOffice.clientDetail.title') }}
     </h1>
-    @if (client(); as current) {
-    <span appBadge [variant]="current.archived ? 'warning' : 'success'"
-      >{{ i18n.t(current.archived ? 'backOffice.clients.archived' : 'backOffice.clients.active')
-      }}</span
-    >
+    @if (client()) {
+    <span appBadge [variant]="statusVariant()">{{ i18n.t(statusLabel()) }}</span>
     }
     <div pageActions class="client-primary-actions">
       @if (client(); as current) { @if (!current.archived) {
@@ -21,7 +18,10 @@
         [queryParams]="{ clientId: current.id }"
         >{{ i18n.t('backOffice.dashboard.createQuote') }}</a
       >
-      <a appLinkButton [routerLink]="['/backoffice/clients', current.id, 'edit']"
+      <a
+        appLinkButton
+        [routerLink]="['/backoffice/clients', current.id, 'edit']"
+        queryParamsHandling="preserve"
         >{{ i18n.t('clientsWorkspace.edit') }}</a
       >
       <app-action-menu
@@ -39,8 +39,7 @@
   <div class="archived-notice" appNotice role="status">
     <p>{{ i18n.t('backOffice.clientDetail.archived') }}</p>
     <button appButton type="button" [disabled]="reactivating()" (click)="reactivate()">
-      {{ i18n.t(reactivating() ? 'backOffice.clientDetail.reactivating' :
-      'backOffice.clientDetail.reactivate') }}
+      {{ i18n.t(reactivateLabel()) }}
     </button>
   </div>
   }
@@ -102,35 +101,141 @@
   </ng-template>
   <ng-template appTabPanel="affairs">
     <section
+      appListWorkspace
       id="client-affairs-panel"
-      class="documents"
+      class="client-table"
       role="region"
       aria-labelledby="client-affairs-tab"
       tabindex="0"
     >
-      @if (documentsLoading()) {
+      <app-list-toolbar>
+        <app-list-search
+          listSearch
+          [label]="i18n.t('clientTables.affairSearch')"
+          [value]="affairTable.query().q"
+          (valueChange)="affairTable.search($event)"
+        />
+        <app-filter-menu
+          #affairMenu
+          listFilters
+          [label]="i18n.t('listWorkspace.filters')"
+          [closeLabel]="i18n.t('listWorkspace.closeFilters')"
+          [backLabel]="i18n.t('listWorkspace.backFilters')"
+          [activeCount]="affairFilterCount()"
+          [disabled]="documentsLoading() || affairsError()"
+        >
+          <ng-template
+            appFilterPanel
+            [label]="i18n.t('clientTables.affairStatus')"
+            [summary]="affairTable.filterSummary()"
+          >
+            <app-filter-choice
+              [label]="i18n.t('listWorkspace.searchChoices')"
+              [emptyLabel]="i18n.t('listWorkspace.noChoices')"
+              [options]="affairTable.filterOptions()"
+              [value]="affairTable.query().filter"
+              (committed)="affairTable.filter($event); affairMenu.close()"
+            />
+          </ng-template>
+        </app-filter-menu>
+        <app-table-export
+          listActions
+          [columns]="affairExportColumns()"
+          [rows]="affairExportRows()"
+          filename="client-affairs.csv"
+          [label]="i18n.t('listWorkspace.exportCsv')"
+          [emptyHint]="i18n.t('listWorkspace.exportEmpty')"
+          [pendingHint]="i18n.t('listWorkspace.exportPending')"
+          [pending]="documentsLoading()"
+        />
+      </app-list-toolbar>
+      @if (affairTable.query().q || affairFilterCount()) {
+      <div class="filter-chips">
+        @if (affairTable.query().q) {
+        <button
+          appFilterChip
+          [label]="affairTable.query().q"
+          (click)="affairTable.search('')"
+        ></button>
+        } @if (affairFilterCount()) {
+        <button
+          appFilterChip
+          [label]="affairTable.filterSummary()"
+          (click)="affairTable.filter('all')"
+        ></button>
+        }
+      </div>
+      } @if (documentsLoading()) {
       <p role="status">{{ i18n.t('backOffice.clientDetail.documentsLoading') }}</p>
-      } @else if (documentsError()) {
+      } @else if (affairsError()) {
       <p appNotice variant="danger" role="alert">{{ i18n.t('client.error') }}</p>
-      } @else if (affairs().length === 0) {
-      <app-empty-state icon="invoice" [title]="i18n.t('clientsWorkspace.affairsEmpty')" /> } @else {
+      <button appButton type="button" (click)="load()">
+        {{ i18n.t('backOffice.dashboard.retry') }}
+      </button>
+      } @else { @if (affairTable.rows().length === 0) {
+      <app-empty-state icon="invoice" [title]="i18n.t(affairEmptyLabel())" /> } @else {
       <div appDataTable tableLayout="fluid">
         <table>
           <thead>
             <tr>
-              <th scope="col">{{ i18n.t('backOffice.clientDetail.document') }}</th>
-              <th scope="col">{{ i18n.t('backOffice.clientDetail.status') }}</th>
-              <th scope="col" class="amount">{{ i18n.t('backOffice.clientDetail.total') }}</th>
+              <th scope="col" [attr.aria-sort]="ariaSort(affairTable.direction('reference'))">
+                <button
+                  appTableSort
+                  [label]="i18n.t('backOffice.clientDetail.document')"
+                  [direction]="affairTable.direction('reference')"
+                  (click)="affairTable.sort('reference')"
+                ></button>
+              </th>
+              <th scope="col" [attr.aria-sort]="ariaSort(affairTable.direction('status'))">
+                <button
+                  appTableSort
+                  [label]="i18n.t('clientTables.affairStatus')"
+                  [direction]="affairTable.direction('status')"
+                  (click)="affairTable.sort('status')"
+                ></button>
+              </th>
+              <th scope="col" [attr.aria-sort]="ariaSort(affairTable.direction('date'))">
+                <button
+                  appTableSort
+                  [label]="i18n.t('clientTables.updatedAt')"
+                  [direction]="affairTable.direction('date')"
+                  (click)="affairTable.sort('date')"
+                ></button>
+              </th>
+              <th
+                scope="col"
+                class="amount"
+                [attr.aria-sort]="ariaSort(affairTable.direction('amount'))"
+              >
+                <button
+                  appTableSort
+                  [label]="i18n.t('backOffice.clientDetail.total')"
+                  [direction]="affairTable.direction('amount')"
+                  (click)="affairTable.sort('amount')"
+                ></button>
+              </th>
             </tr>
           </thead>
           <tbody>
-            @for (quote of affairs(); track quote.id) {
+            @for (result of affairTable.results(); track result.item.id) { @let quote = result.item;
             <tr>
               <th scope="row">
-                <a [routerLink]="['/backoffice/affaires', quote.id]">{{ quote.reference }}</a
-                ><small>{{ quote.title }}</small>
+                <div class="entity-label">
+                  <app-entity-icon icon="invoice" />
+                  <div>
+                    <a
+                      [routerLink]="['/backoffice/affaires', quote.id]"
+                      [appSearchHighlight]="affairTable.match(result, 'reference')"
+                      >{{ quote.reference }}</a
+                    >
+                    <small [appSearchHighlight]="affairTable.match(result, 'title')"
+                      >{{ quote.title }}</small
+                    >
+                  </div>
+                </div>
               </th>
               <td><span appBadge>{{ quoteStatus(quote.status) }}</span></td>
+              <td><time [dateTime]="quote.updatedAt">{{ formatDate(quote.updatedAt) }}</time></td>
               <td class="amount">{{ money(quote.totalCents) }}</td>
             </tr>
             }
@@ -138,23 +243,89 @@
         </table>
       </div>
       }
+      <footer class="list-summary">
+        <p role="status">
+          {{ i18n.plural('clientTables.affairCount', { count: affairTable.rows().length }) }}
+        </p>
+      </footer>
+      }
     </section>
   </ng-template>
   <ng-template appTabPanel="documents">
     <section
+      appListWorkspace
       id="client-documents-panel"
       role="region"
       aria-labelledby="client-documents-tab"
       tabindex="0"
-      class="documents notice-flow"
+      class="client-table"
     >
-      <p>{{ i18n.t('clientsWorkspace.documentsIntro') }}</p>
-      @if (documentsLoading()) {
+      <app-list-toolbar>
+        <app-list-search
+          listSearch
+          [label]="i18n.t('clientTables.documentSearch')"
+          [value]="documentTable.query().q"
+          (valueChange)="documentTable.search($event)"
+        />
+        <app-filter-menu
+          #documentMenu
+          listFilters
+          [label]="i18n.t('listWorkspace.filters')"
+          [closeLabel]="i18n.t('listWorkspace.closeFilters')"
+          [backLabel]="i18n.t('listWorkspace.backFilters')"
+          [activeCount]="documentFilterCount()"
+          [disabled]="documentsLoading() || documentsError()"
+        >
+          <ng-template
+            appFilterPanel
+            [label]="i18n.t('clientTables.documentType')"
+            [summary]="documentTable.filterSummary()"
+          >
+            <app-filter-choice
+              [label]="i18n.t('listWorkspace.searchChoices')"
+              [emptyLabel]="i18n.t('listWorkspace.noChoices')"
+              [options]="documentTable.filterOptions()"
+              [value]="documentTable.query().filter"
+              (committed)="documentTable.filter($event); documentMenu.close()"
+            />
+          </ng-template>
+        </app-filter-menu>
+        <app-table-export
+          listActions
+          [columns]="documentExportColumns()"
+          [rows]="documentExportRows()"
+          filename="client-documents.csv"
+          [label]="i18n.t('listWorkspace.exportCsv')"
+          [emptyHint]="i18n.t('listWorkspace.exportEmpty')"
+          [pendingHint]="i18n.t('listWorkspace.exportPending')"
+          [pending]="documentsLoading()"
+        />
+      </app-list-toolbar>
+      @if (documentTable.query().q || documentFilterCount()) {
+      <div class="filter-chips">
+        @if (documentTable.query().q) {
+        <button
+          appFilterChip
+          [label]="documentTable.query().q"
+          (click)="documentTable.search('')"
+        ></button>
+        } @if (documentFilterCount()) {
+        <button
+          appFilterChip
+          [label]="documentTable.filterSummary()"
+          (click)="documentTable.filter('all')"
+        ></button>
+        }
+      </div>
+      } @if (documentsLoading()) {
       <p role="status">{{ i18n.t('backOffice.clientDetail.documentsLoading') }}</p>
       } @else if (documentsError()) {
       <p appNotice variant="danger" role="alert">{{ i18n.t('client.error') }}</p>
-      } @else if (documents().length === 0) {
-      <app-empty-state icon="invoice" [title]="i18n.t('backOffice.clientDetail.documentsEmpty')" />
+      <button appButton type="button" (click)="load()">
+        {{ i18n.t('backOffice.dashboard.retry') }}
+      </button>
+      } @else { @if (documentTable.rows().length === 0) {
+      <app-empty-state icon="invoice" [title]="i18n.t(documentEmptyLabel())" />
       } @else {
       <div appDataTable tableLayout="fluid">
         <table>
@@ -162,22 +333,72 @@
             <col class="document-column" />
             <col />
             <col />
+            <col />
           </colgroup>
           <thead>
             <tr>
-              <th scope="col">{{ i18n.t('backOffice.clientDetail.document') }}</th>
-              <th scope="col">{{ i18n.t('backOffice.clientDetail.status') }}</th>
-              <th scope="col" class="amount">{{ i18n.t('backOffice.clientDetail.total') }}</th>
+              <th scope="col" [attr.aria-sort]="ariaSort(documentTable.direction('reference'))">
+                <button
+                  appTableSort
+                  [label]="i18n.t('backOffice.clientDetail.document')"
+                  [direction]="documentTable.direction('reference')"
+                  (click)="documentTable.sort('reference')"
+                ></button>
+              </th>
+              <th scope="col" [attr.aria-sort]="ariaSort(documentTable.direction('status'))">
+                <button
+                  appTableSort
+                  [label]="i18n.t('backOffice.clientDetail.status')"
+                  [direction]="documentTable.direction('status')"
+                  (click)="documentTable.sort('status')"
+                ></button>
+              </th>
+              <th scope="col" [attr.aria-sort]="ariaSort(documentTable.direction('date'))">
+                <button
+                  appTableSort
+                  [label]="i18n.t('clientTables.date')"
+                  [direction]="documentTable.direction('date')"
+                  (click)="documentTable.sort('date')"
+                ></button>
+              </th>
+              <th
+                scope="col"
+                class="amount"
+                [attr.aria-sort]="ariaSort(documentTable.direction('amount'))"
+              >
+                <button
+                  appTableSort
+                  [label]="i18n.t('backOffice.clientDetail.total')"
+                  [direction]="documentTable.direction('amount')"
+                  (click)="documentTable.sort('amount')"
+                ></button>
+              </th>
             </tr>
           </thead>
           <tbody>
-            @for (document of documents(); track document.id) {
+            @for (result of documentTable.results(); track result.item.id) { @let document =
+            result.item;
             <tr>
               <th scope="row">
-                <a [routerLink]="document.link">{{ document.kind }} — {{ document.reference }}</a
-                ><small>{{ document.title }}</small>
+                <div class="entity-label">
+                  <app-entity-icon icon="invoice" />
+                  <div>
+                    <a [routerLink]="document.link"
+                      >{{ document.kind }} —
+                      <span [appSearchHighlight]="documentTable.match(result, 'reference')"
+                        >{{ document.reference }}</span
+                      ></a
+                    >
+                    <small [appSearchHighlight]="documentTable.match(result, 'title')"
+                      >{{ document.title }}</small
+                    >
+                  </div>
+                </div>
               </th>
               <td><span appBadge>{{ document.status }}</span></td>
+              <td>
+                <time [dateTime]="document.updatedAt">{{ formatDate(document.updatedAt) }}</time>
+              </td>
               <td class="amount">{{ money(document.totalCents) }}</td>
             </tr>
             }
@@ -185,41 +406,131 @@
         </table>
       </div>
       }
+      <footer class="list-summary">
+        <p role="status">
+          {{ i18n.plural('clientTables.documentCount', { count: documentTable.rows().length }) }}
+        </p>
+      </footer>
+      }
     </section>
   </ng-template>
   <ng-template appTabPanel="access">
     <section
+      appListWorkspace
       id="client-access-panel"
       role="region"
       aria-labelledby="client-access-tab"
       tabindex="0"
-      class="access-panel"
+      class="client-table"
     >
       <div>
         <h2>{{ i18n.t('backOffice.clientDetail.accessTitle') }}</h2>
         <p>{{ i18n.t('backOffice.clientDetail.accessIntro') }}</p>
       </div>
-      @if (accessesLoading()) {
+      <app-list-toolbar>
+        <app-list-search
+          listSearch
+          [label]="i18n.t('clientTables.accessSearch')"
+          [value]="accessTable.query().q"
+          (valueChange)="accessTable.search($event)"
+        />
+        <app-filter-menu
+          #accessMenu
+          listFilters
+          [label]="i18n.t('listWorkspace.filters')"
+          [closeLabel]="i18n.t('listWorkspace.closeFilters')"
+          [backLabel]="i18n.t('listWorkspace.backFilters')"
+          [activeCount]="accessFilterCount()"
+          [disabled]="accessesLoading() || accessesError() !== undefined"
+        >
+          <ng-template
+            appFilterPanel
+            [label]="i18n.t('backOffice.clientDetail.accessCreatedAt')"
+            [summary]="accessPeriodSummary()"
+          >
+            <app-date-range-filter
+              [from]="accessPeriod().from"
+              [to]="accessPeriod().to"
+              (rangeApplied)="applyAccessPeriod($event); accessMenu.close()"
+            />
+          </ng-template>
+        </app-filter-menu>
+        <app-table-export
+          listActions
+          [columns]="accessExportColumns()"
+          [rows]="accessExportRows()"
+          filename="client-access.csv"
+          [label]="i18n.t('listWorkspace.exportCsv')"
+          [emptyHint]="i18n.t('listWorkspace.exportEmpty')"
+          [pendingHint]="i18n.t('listWorkspace.exportPending')"
+          [pending]="accessExportPending()"
+        />
+      </app-list-toolbar>
+      @if (accessTable.query().q || accessFilterCount()) {
+      <div class="filter-chips">
+        @if (accessTable.query().q) {
+        <button
+          appFilterChip
+          [label]="accessTable.query().q"
+          (click)="accessTable.search('')"
+        ></button>
+        } @if (accessFilterCount()) {
+        <button
+          appFilterChip
+          [label]="accessPeriodSummary()"
+          (click)="applyAccessPeriod({})"
+        ></button>
+        }
+      </div>
+      } @if (accessesLoading()) {
       <p role="status">{{ i18n.t('backOffice.clientDetail.accessListLoading') }}</p>
-      } @else if (accesses().length === 0) {
-      <p>{{ i18n.t('backOffice.clientDetail.accessListEmpty') }}</p>
+      } @else if (accessesError(); as code) {
+      <p appNotice variant="danger" role="alert">{{ i18n.t(code) }}</p>
+      <button appButton type="button" (click)="load()">
+        {{ i18n.t('backOffice.dashboard.retry') }}
+      </button>
+      } @else { @if (accessTable.rows().length === 0) {
+      <app-empty-state icon="clients" [title]="i18n.t(accessEmptyLabel())" />
       } @else {
       <div appDataTable>
         <table>
           <thead>
             <tr>
-              <th scope="col">{{ i18n.t('backOffice.clientDetail.accessEmail') }}</th>
-              <th scope="col">{{ i18n.t('backOffice.clientDetail.accessCreatedAt') }}</th>
+              <th scope="col" [attr.aria-sort]="ariaSort(accessTable.direction('email'))">
+                <button
+                  appTableSort
+                  [label]="i18n.t('backOffice.clientDetail.accessEmail')"
+                  [direction]="accessTable.direction('email')"
+                  (click)="accessTable.sort('email')"
+                ></button>
+              </th>
+              <th scope="col" [attr.aria-sort]="ariaSort(accessTable.direction('date'))">
+                <button
+                  appTableSort
+                  [label]="i18n.t('backOffice.clientDetail.accessCreatedAt')"
+                  [direction]="accessTable.direction('date')"
+                  (click)="accessTable.sort('date')"
+                ></button>
+              </th>
               <th scope="col" class="actions-column">
                 {{ i18n.t('backOffice.clientDetail.actions') }}
               </th>
             </tr>
           </thead>
           <tbody>
-            @for (access of accesses(); track access.id) {
+            @for (result of accessTable.results(); track result.item.id) { @let access =
+            result.item;
             <tr>
-              <th scope="row">{{ access.email }}</th>
-              <td>{{ formatDate(access.createdAt) }}</td>
+              <th scope="row">
+                <span [appSearchHighlight]="accessTable.match(result, 'email')"
+                  >{{ access.email }}</span
+                >
+              </th>
+              <td>
+                <time [dateTime]="dateTime(access.createdAt)"
+                  >{{ formatDate(access.createdAt) }}</time
+                >
+              </td>
               <td class="actions-column">
                 <button
                   appButton
@@ -228,9 +539,7 @@
                   [disabled]="revokingAccessId() !== undefined"
                   (click)="revokeAccess(access)"
                 >
-                  {{ i18n.t(revokingAccessId() === access.id ?
-                  'backOffice.clientDetail.accessRevoking' : 'backOffice.clientDetail.accessRevoke')
-                  }}
+                  {{ i18n.t(revokeLabel(access)) }}
                 </button>
               </td>
             </tr>
@@ -238,11 +547,18 @@
           </tbody>
         </table>
       </div>
+      }
+      <footer class="list-summary">
+        <p role="status">
+          {{ i18n.plural('clientTables.accessCount', { count: accessTable.rows().length }) }}
+        </p>
+      </footer>
       } @if (!archived()) {
       <a
         appLinkButton
         variant="primary"
         [routerLink]="['/backoffice/clients', current.id, 'access', 'new']"
+        queryParamsHandling="preserve"
         >{{ i18n.t('backOffice.clientDetail.accessCreate') }}</a
       >
       } @else {

@@ -1,36 +1,40 @@
 <section aria-labelledby="checkout-title">
-  <a routerLink="/backoffice/services/stripe/tests" [queryParams]="table.params()"
+  <a routerLink="/backoffice/services/stripe/tests" [queryParams]="testParams()"
     >{{ i18n.t('configurationWorkspace.backTests') }}</a
   >
-  <h1 id="checkout-title">
-    {{ i18n.t('connections.stripe') }} — {{ i18n.t('configurationWorkspace.newTest') }}
-  </h1>
+  <app-page-header>
+    <h1 id="checkout-title">
+      {{ i18n.t('connections.stripe') }} — {{ i18n.t('configurationWorkspace.newTest') }}
+    </h1>
+    <p>{{ i18n.t('checkout.invoiceHint') }}</p>
+  </app-page-header>
+  <app-tabs
+    [label]="i18n.t('configurationWorkspace.services')"
+    [tabs]="tabs()"
+    [preserveQuery]="true"
+    [preserveFragment]="true"
+    [disabled]="saving()"
+  />
   <p appNotice variant="warning">{{ i18n.t('checkout.safety') }}</p>
   @if (error(); as code) {
   <p appNotice variant="danger" role="alert">{{ i18n.t(code) }}</p>
   } @if (connection(); as state) {
-  <p>
-    {{ i18n.t(state.testKey ? 'checkout.testKey' : state.credentialsPresent ?
-    'checkout.testKeyRequired' : 'checkout.credentialsMissing') }}
-  </p>
-  <p>
-    {{ i18n.t(state.webhookConfigured ? 'checkout.webhookPresent' : 'checkout.webhookAbsent') }}
-  </p>
+  <p>{{ i18n.t(keyLabel(state)) }}</p>
+  <p>{{ i18n.t(webhookLabel(state)) }}</p>
   } @if (completed()) {
   <p appNotice variant="success">{{ i18n.t('configurationWorkspace.testComplete') }}</p>
   <p #progress role="status" tabindex="-1">
-    @if (current(); as item) { {{ item.invoiceNumber }} — {{ i18n.t(labels[item.status]) }} }
+    @if (current(); as item) { {{ item.invoiceNumber }} — {{ i18n.t(statusLabel(item.status)) }} }
   </p>
   <a
     appLinkButton
     variant="primary"
     [routerLink]="['/backoffice/services/stripe/tests', selected()]"
-    [queryParams]="table.params()"
+    [queryParams]="testParams()"
     >{{ i18n.t('configurationWorkspace.testDetail') }}</a
   >
   } @else {
   <form novalidate (submit)="create($event)">
-    <p>{{ i18n.t('checkout.invoiceHint') }}</p>
     <app-object-picker
       [label]="i18n.t('checkout.chooseInvoice')"
       [options]="invoiceOptions()"
@@ -76,11 +80,10 @@
       type="submit"
       [disabled]="saving() || loading() || !ready() || !recoveryReady() || !connection()?.testKey || (active() && !pending())"
     >
-      {{ i18n.t(saving() ? 'checkout.saving' : pending() ? 'checkout.retryRequest' :
-      'checkout.create') }}
+      {{ i18n.t(submitLabel()) }}
     </button>
   </form>
-  } @if (paused()) {
+  } @if (history.paused()) {
   <p appNotice variant="warning">{{ i18n.t('checkout.paused') }}</p>
   }
   <button appButton type="button" [disabled]="loading() || saving()" (click)="load()">

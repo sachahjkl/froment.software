@@ -2,6 +2,7 @@ import {
   afterNextRender,
   ChangeDetectionStrategy,
   Component,
+  computed,
   DestroyRef,
   inject,
   PendingTasks,
@@ -14,14 +15,17 @@ import { OrdersApi } from '@backoffice/orders-api';
 import { QuotesApi } from '@backoffice/quotes-api';
 import { I18nService } from '@app/i18n.service';
 import { Button } from '@shared/button/button';
+import { Badge } from '@shared/badge/badge';
 import { Notice } from '@shared/notice/notice';
+import { PageHeader } from '@shared/page-header/page-header';
 import { QuoteLines } from '../quote-detail/quote-lines/quote-lines';
 import { quoteIdentifier } from '../quote-detail/quote-values';
 import { affairContext } from '../affairs/affair-filters';
+import { commercialDocumentTitle } from '../commercial-header';
 
 @Component({
   host: { class: 'page-container' },
-  imports: [Button, Notice, RouterLink, QuoteLines],
+  imports: [Badge, Button, Notice, PageHeader, RouterLink, QuoteLines],
   changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-order-detail',
   styleUrl: './order-detail.scss',
@@ -41,6 +45,21 @@ export class OrderDetail {
   protected readonly pdfReady = signal(false);
   protected readonly pending = signal(false);
   protected readonly pdfError = signal(false);
+  protected readonly headerTitle = computed(() => {
+    const order = this.order();
+    return order
+      ? commercialDocumentTitle(order.reference, order.title)
+      : this.i18n.t('commercial.order');
+  });
+  protected readonly backLink = computed(() => [
+    '/backoffice/affaires',
+    this.context().view ?? 'attention',
+  ]);
+  protected readonly generateLabel = computed(() =>
+    this.i18n.t(
+      this.pending() ? 'backOffice.quote.pdf.generating' : 'backOffice.quote.pdf.generate',
+    ),
+  );
   private generation = 0;
   constructor() {
     afterNextRender(() => {

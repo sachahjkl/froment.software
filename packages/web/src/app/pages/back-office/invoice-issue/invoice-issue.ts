@@ -3,14 +3,13 @@ import { disabled, form, FormField, submit, validate } from '@angular/forms/sign
 import { DomSanitizer } from '@angular/platform-browser';
 import { Button } from '@shared/button/button';
 import { Notice } from '@shared/notice/notice';
-import { DocumentIssues } from '@shared/document-issues/document-issues';
 import { InvoiceTask } from '../billing/invoice-task';
 import { TaskFeedback } from '../billing/task-feedback';
 import { TaskSummary } from '../billing/task-summary';
 
 @Component({
   selector: 'app-invoice-issue',
-  imports: [Button, Notice, DocumentIssues, FormField, TaskFeedback, TaskSummary],
+  imports: [Button, Notice, FormField, TaskFeedback, TaskSummary],
   providers: [InvoiceTask],
   templateUrl: './invoice-issue.html',
   styleUrl: './invoice-issue.scss',
@@ -24,8 +23,9 @@ export class InvoiceIssue {
   protected readonly task = inject(InvoiceTask);
   protected readonly i18n = this.task.i18n;
   private readonly sanitizer = inject(DomSanitizer);
+  protected readonly eligible = computed(() => this.task.invoice()?.status === 'draft');
   protected readonly issueForm = form(signal({ confirmed: false }), (path) => {
-    disabled(path, () => this.task.locked() || this.task.invoice()?.status !== 'draft');
+    disabled(path, () => this.task.locked() || !this.eligible());
     validate(path.confirmed, ({ value }) => (value() ? undefined : { kind: 'required' }));
   });
   protected readonly preview = computed(() => {

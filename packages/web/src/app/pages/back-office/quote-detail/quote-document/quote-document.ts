@@ -46,6 +46,9 @@ export class QuoteDocument {
   private readonly sanitizer = inject(DomSanitizer);
   private readonly destroyRef = inject(DestroyRef);
   protected readonly pending = signal(false);
+  protected readonly prepareLabel = computed(() =>
+    this.i18n.t(this.pending() ? 'backOffice.quote.pdf.generating' : 'commercial.preparePdf'),
+  );
   protected readonly error = linkedSignal<TranslationKey | undefined>(() => {
     this.revision();
     return undefined;

@@ -1,6 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap, provideRouter, Router } from '@angular/router';
-import { of } from 'rxjs';
+import { BehaviorSubject, of } from 'rxjs';
 import { ApiTokenPermissionCodes } from '@froment/contracts';
 import { vi } from 'vitest';
 import { ApiTokensApi } from '@backoffice/api-tokens-api';
@@ -221,23 +221,75 @@ describe('API token pages', () => {
     expect(create).not.toHaveBeenCalled();
   });
 
-  it.each(['saving', 'revoking'] as const)(
-    'blocks exits while %s even without value changes',
-    async (state) => {
-      TestBed.configureTestingModule({ providers: [{ provide: ApiTokensApi, useValue: {} }] });
-      const fixture = TestBed.createComponent(ApiTokenEditor);
-      await fixture.whenStable();
-      const component = fixture.componentInstance;
-      component[state].set(true);
-      await fixture.whenStable();
-      expect(component['hasUnsavedChanges']()).toBe(false);
-      expect(await component.canDeactivate()).toBe(false);
-      const event = new Event('beforeunload', { cancelable: true });
-      window.dispatchEvent(event);
-      expect(event.defaultPrevented).toBe(true);
-      expect(Confirmation.prototype.request).not.toHaveBeenCalled();
-    },
-  );
+  it('blocks editor exits while saving even without value changes', async () => {
+    TestBed.configureTestingModule({ providers: [{ provide: ApiTokensApi, useValue: {} }] });
+    const fixture = TestBed.createComponent(ApiTokenEditor);
+    await fixture.whenStable();
+    const component = fixture.componentInstance;
+    component['saving'].set(true);
+    await fixture.whenStable();
+    expect(component['hasUnsavedChanges']()).toBe(false);
+    expect(await component.canDeactivate()).toBe(false);
+    const event = new Event('beforeunload', { cancelable: true });
+    window.dispatchEvent(event);
+    expect(event.defaultPrevented).toBe(true);
+    expect(Confirmation.prototype.request).not.toHaveBeenCalled();
+  });
+
+  it('blocks list exits while revoking without inheriting an editor form', async () => {
+    TestBed.configureTestingModule({
+      providers: [
+        {
+          provide: ApiTokensApi,
+          useValue: { list: async () => ({ items: [], nextCursor: null }) },
+        },
+      ],
+    });
+    const fixture = TestBed.createComponent(ApiTokens);
+    await fixture.whenStable();
+    const component = fixture.componentInstance;
+    expect(component.canDeactivate()).toBe(true);
+    component['revoking'].set(true);
+    expect(component.canDeactivate()).toBe(false);
+    const event = new Event('beforeunload', { cancelable: true });
+    window.dispatchEvent(event);
+    expect(event.defaultPrevented).toBe(true);
+    expect(Confirmation.prototype.request).not.toHaveBeenCalled();
+  });
+
+  it('removes the token chip while preserving search, sort and focus', async () => {
+    const queryParamMap = new BehaviorSubject(
+      convertToParamMap({ q: 'ERP', sort: 'nameDesc', filter: 'notRevoked' }),
+    );
+    TestBed.configureTestingModule({
+      providers: [
+        { provide: ActivatedRoute, useValue: { queryParamMap } },
+        {
+          provide: ApiTokensApi,
+          useValue: { list: async () => ({ items: [token], nextCursor: null }) },
+        },
+      ],
+    });
+    const fixture = TestBed.createComponent(ApiTokens);
+    await fixture.whenStable();
+    const root: HTMLElement = fixture.nativeElement;
+    const chip = root.querySelector<HTMLButtonElement>('[appFilterChip]');
+    const search = root.querySelector<HTMLInputElement>('app-list-search input');
+    expect(chip).toBeTruthy();
+    chip?.focus();
+    chip?.click();
+    await fixture.whenStable();
+    expect(Router.prototype.navigate).toHaveBeenCalledExactlyOnceWith([], {
+      relativeTo: TestBed.inject(ActivatedRoute),
+      queryParams: { q: 'ERP', sort: 'nameDesc', filter: null },
+      queryParamsHandling: 'merge',
+      replaceUrl: false,
+    });
+    queryParamMap.next(convertToParamMap({ q: 'ERP', sort: 'nameDesc' }));
+    await fixture.whenStable();
+    expect(root.querySelector('[appFilterChip]')).toBeNull();
+    expect(document.activeElement).toBe(search);
+  });
 
   it.each([
     {

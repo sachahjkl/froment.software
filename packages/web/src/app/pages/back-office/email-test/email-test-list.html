@@ -1,22 +1,25 @@
 <section>
-  <h1>{{ i18n.t('connections.resend') }} — {{ i18n.t('configurationWorkspace.tests') }}</h1>
-  <nav class="actions" [attr.aria-label]="i18n.t('configurationWorkspace.services')">
-    <a routerLink="/backoffice/services/resend" [queryParams]="table.params()"
-      >{{ i18n.t('configurationWorkspace.connection') }}</a
-    >
-    <a
-      routerLink="/backoffice/services/resend/tests"
-      [queryParams]="table.params()"
-      aria-current="page"
-      >{{ i18n.t('configurationWorkspace.tests') }}</a
-    >
-  </nav>
-  <div class="actions">
-    <a appLinkButton variant="primary" routerLink="new" [queryParams]="table.params()"
-      >{{ i18n.t('configurationWorkspace.newTest') }}</a
-    ><button appButton type="button" (click)="refresh()">{{ i18n.t('emailTest.refresh') }}</button>
-  </div>
-  <p>{{ i18n.t('emailTest.historyHint') }}</p>
+  <app-page-header>
+    <h1>{{ i18n.t('connections.resend') }}</h1>
+    <p>{{ i18n.t('emailTest.historyHint') }}</p>
+    <div pageActions class="spacer-x-3">
+      <a
+        appLinkButton
+        variant="primary"
+        routerLink="/backoffice/services/resend/tests/new"
+        [queryParams]="table.params()"
+        >{{ i18n.t('configurationWorkspace.newTest') }}</a
+      ><button appButton type="button" [disabled]="history.loading()" (click)="history.refresh()">
+        {{ i18n.t('emailTest.refresh') }}
+      </button>
+    </div>
+  </app-page-header>
+  <app-tabs
+    [label]="i18n.t('configurationWorkspace.services')"
+    [tabs]="tabs()"
+    [preserveQuery]="true"
+    [preserveFragment]="true"
+  />
   <div appListWorkspace>
     <app-list-toolbar>
       <app-list-search
@@ -31,8 +34,8 @@
         [label]="i18n.t('listWorkspace.filters')"
         [closeLabel]="i18n.t('listWorkspace.closeFilters')"
         [backLabel]="i18n.t('listWorkspace.backFilters')"
-        [activeCount]="table.query().filter === 'all' ? 0 : 1"
-        [disabled]="loading()"
+        [activeCount]="activeFilterCount()"
+        [disabled]="history.loading()"
       >
         <ng-template
           appFilterPanel
@@ -44,11 +47,19 @@
             [emptyLabel]="i18n.t('listWorkspace.noChoices')"
             [options]="table.filterOptions()"
             [value]="table.query().filter"
-            [disabled]="loading()"
+            [disabled]="history.loading()"
             (committed)="table.filter($event); testMenu.close()"
           />
         </ng-template>
       </app-filter-menu>
+      @if (activeFilterCount() > 0) {
+      <button
+        appFilterChip
+        listFilters
+        [label]="table.filterSummary()"
+        (click)="removeFilter()"
+      ></button>
+      }
       <app-table-export
         listActions
         [columns]="['createdAt', 'subject', 'status']"
@@ -57,17 +68,13 @@
         [label]="i18n.t('listWorkspace.exportCsv')"
         [emptyHint]="i18n.t('listWorkspace.exportEmpty')"
         [pendingHint]="i18n.t('listWorkspace.exportPending')"
-        [pending]="!historyLoaded() || paused() || error() !== undefined"
+        [pending]="exportPending()"
       />
     </app-list-toolbar>
-    @if (error(); as code) {
-    <p appNotice variant="danger" role="alert">{{ i18n.t(code) }}</p>
-    } @if (paused()) {
+    @if (history.paused()) {
     <p appNotice variant="warning">{{ i18n.t('emailTest.paused') }}</p>
-    } @if (!historyLoaded()) {
-    <p role="status">
-      {{ i18n.t(paused() ? 'emailTest.historyUnavailable' : 'connections.loading') }}
-    </p>
+    } @if (!history.loaded()) {
+    <p role="status">{{ i18n.t(historyLabel()) }}</p>
     } @else {
     <div appDataTable>
       <table>
@@ -109,13 +116,13 @@
             </td>
             <th scope="row">
               <a
-                [routerLink]="[item.request.requestId]"
+                [routerLink]="['/backoffice/services/resend/tests', item.request.requestId]"
                 [queryParams]="table.params()"
                 [appSearchHighlight]="table.match(result, 'request.subject')"
                 >{{ item.request.subject }}</a
               >
             </th>
-            <td>{{ i18n.t(statusLabels[item.status]) }}</td>
+            <td>{{ i18n.t(statusLabel(item.status)) }}</td>
           </tr>
           } @empty {
           <tr>

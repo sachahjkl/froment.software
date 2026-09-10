@@ -34,7 +34,11 @@ import {
   entrySort,
   receiptSortColumns,
   type EntrySortColumn,
+  entryStatusKey,
+  entryExportEmptyKey,
+  entryEmptyKey,
 } from '../billing/entry-list';
+import { billingDetailQuery } from '../billing/billing-navigation';
 import { BillingNav } from '../billing/billing-nav';
 import { EntryFilters, EntryFilterState } from '../billing/entry-filters';
 import { paymentMethodKey } from '../billing/billing-state';
@@ -72,6 +76,12 @@ export class ReceiptList {
   private readonly element = inject<ElementRef<HTMLElement>>(ElementRef);
   private readonly focusInvalid = signal(false);
   protected readonly filters = inject(EntryFilterState);
+  protected readonly detailQuery = computed(() =>
+    billingDetailQuery('receipts', this.filters.params(), 'receipts'),
+  );
+  protected readonly entryStatusKey = entryStatusKey;
+  protected readonly emptyKey = computed(() => entryEmptyKey(this.rows().length));
+  protected readonly exportEmptyKey = computed(() => entryExportEmptyKey(this.state()));
   protected readonly rows = signal<typeof InvoiceReceiptList.Type>([]);
   protected readonly sort = computed(() => entrySort(this.filters.params(), receiptSortColumns));
   protected readonly sortDirection = sortDirection;
@@ -131,14 +141,18 @@ export class ReceiptList {
           entry.clientDisplayName,
           entry.paidOn,
           this.i18n.t(paymentMethodKey(entry.method)),
-          this.i18n.t(
-            entry.cancelledAt === null ? 'billingWorkspace.active' : 'billingWorkspace.cancelled',
-          ),
+          this.i18n.t(entryStatusKey(entry)),
           entry.amountCents / 100,
         ]),
   );
   protected readonly error = signal<TranslationKey | undefined>(undefined);
   protected readonly exporting = signal(false);
+  protected readonly exportHintKey = computed<TranslationKey>(() =>
+    this.exporting() ? 'payment.export_pending' : 'payment.export_hint',
+  );
+  protected readonly exportButtonKey = computed<TranslationKey>(() =>
+    this.exporting() ? 'payment.export_pending' : 'payment.export_download',
+  );
   protected readonly exported = signal(false);
   protected readonly exportForm = form(signal({ from: '', to: '' }), (path) => {
     disabled(path, () => this.exporting());

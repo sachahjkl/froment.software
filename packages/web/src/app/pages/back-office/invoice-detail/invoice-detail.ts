@@ -20,20 +20,32 @@ import { Button } from '@shared/button/button';
 import { Badge } from '@shared/badge/badge';
 import { DataTable } from '@shared/data-table/data-table';
 import { Notice } from '@shared/notice/notice';
+import { PageHeader } from '@shared/page-header/page-header';
 import { LocalizedDatePipe } from '@shared/localized-date/localized-date-pipe';
 import { Tabs, type TabItem } from '@shared/tabs/tabs';
 import { InvoiceTask } from '../billing/invoice-task';
+import { activePaidCents, detailBalance, paymentMethodKey } from '../billing/billing-state';
 import {
-  activePaidCents,
-  detailBalance,
-  documentStatusKey,
-  financialStatus,
-  paymentMethodKey,
-} from '../billing/billing-state';
+  commercialDocumentTitle,
+  invoiceFinancialBadge,
+  invoiceStatusBadge,
+} from '../commercial-header';
+import { canCancelPayment } from '../billing/receipt-cancellation';
+import { invoiceActions, recordedEntryStatus } from './invoice-actions';
 
 @Component({
   selector: 'app-invoice-detail',
-  imports: [Button, Badge, DataTable, Notice, RouterLink, FormField, LocalizedDatePipe, Tabs],
+  imports: [
+    Button,
+    Badge,
+    DataTable,
+    Notice,
+    PageHeader,
+    RouterLink,
+    FormField,
+    LocalizedDatePipe,
+    Tabs,
+  ],
   providers: [InvoiceTask],
   templateUrl: './invoice-detail.html',
   styleUrl: './invoice-detail.scss',
@@ -71,7 +83,19 @@ export class InvoiceDetail {
       active: this.tab() === section.value,
     })),
   );
-  protected readonly documentStatusKey = documentStatusKey;
+  protected readonly headerTitle = computed(() => {
+    const invoice = this.task.invoice();
+    return invoice
+      ? commercialDocumentTitle(invoice.invoiceNumber, invoice.currentRevision.title)
+      : this.i18n.t('billingWorkspace.invoices');
+  });
+  protected readonly statusBadge = computed(() => {
+    const invoice = this.task.invoice();
+    return invoice ? invoiceStatusBadge(invoice.status) : undefined;
+  });
+  protected readonly actions = computed(() => invoiceActions(this.task.invoice()));
+  protected readonly canCancelPayment = canCancelPayment;
+  protected readonly recordedEntryStatus = recordedEntryStatus;
   protected readonly paymentMethodKey = paymentMethodKey;
   protected readonly paid = computed(() => {
     const invoice = this.task.invoice();
@@ -81,15 +105,9 @@ export class InvoiceDetail {
     const invoice = this.task.invoice();
     return invoice ? detailBalance(invoice) : 0;
   });
-  protected readonly financialStatus = computed(() => {
+  protected readonly financialBadge = computed(() => {
     const invoice = this.task.invoice();
-    return invoice
-      ? financialStatus({
-          ...invoice,
-          recordedPaidCents: this.paid(),
-          totalCents: invoice.currentRevision.totalCents,
-        })
-      : 'billingWorkspace.notApplicable';
+    return invoice ? invoiceFinancialBadge(invoice) : undefined;
   });
   protected readonly history = resource({
     params: () => (this.tab() === 'history' ? this.task.invoice()?.id : undefined),
@@ -105,11 +123,25 @@ export class InvoiceDetail {
       ? 'billingWorkspace.limitExceeded'
       : 'billingWorkspace.loadError';
   });
+  protected readonly receiptCreditsRequired = computed(() => {
+    const invoice = this.task.invoice();
+    return (
+      this.tab() === 'receipts' &&
+      invoice !== undefined &&
+      (invoice.status === 'issued' || invoice.status === 'paid') &&
+      invoice.payments.some((payment) => payment.cancelledAt === null)
+    );
+  });
   protected readonly credits = resource({
-    params: () => (this.tab() === 'credit' ? this.task.invoice()?.id : undefined),
-    loader: ({ params }) => this.creditsApi.get(params),
+    params: () => {
+      const invoice = this.task.invoice();
+      if (!invoice || (this.tab() !== 'credit' && !this.receiptCreditsRequired())) return undefined;
+      return { invoiceId: invoice.id, version: invoice.version };
+    },
+    loader: ({ params }) => this.creditsApi.get(params.invoiceId),
   });
   protected readonly creditState = computed(() => {
+    if (this.credits.isLoading()) return undefined;
     const result = this.credits.hasValue() ? this.credits.value() : undefined;
     return result?.success ? result.result : undefined;
   });
@@ -140,6 +172,16 @@ export class InvoiceDetail {
   });
   protected readonly generated = signal<ReadonlySet<string>>(new Set());
   protected readonly pdfPending = signal(false);
+  protected readonly reloadDisabled = computed(() => this.task.loading() || this.pdfPending());
+  protected readonly generateLabel = computed(() =>
+    this.i18n.t(
+      this.pdfPending() ? 'backOffice.invoice.pdf.generating' : 'backOffice.invoice.pdf.generate',
+    ),
+  );
+  protected readonly pdfProcessing = computed(() => {
+    const status = this.task.invoice()?.pdf?.status;
+    return status === 'pending' || status === 'processing';
+  });
   protected readonly pdfUrl = computed(() => {
     const invoice = this.task.invoice();
     const revision = this.revision();

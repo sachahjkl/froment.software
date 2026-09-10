@@ -14,6 +14,10 @@
 .field-error:empty {
   display: none;
 }
+[data-editor-feedback] {
+  display: grid;
+  gap: var(--space-3);
+}
 
 .date-fields {
   display: grid;

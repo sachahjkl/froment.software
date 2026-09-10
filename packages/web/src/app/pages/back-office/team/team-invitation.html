@@ -1,5 +1,5 @@
 <section class="team-page">
-  <a routerLink="/backoffice/equipe" [queryParams]="listParams()"
+  <a routerLink="/backoffice/equipe" [queryParams]="navigation.params()"
     >{{ i18n.t('configurationWorkspace.backTeam') }}</a
   >
   <h1>{{ i18n.t('configurationWorkspace.newInvitation') }}</h1>
@@ -21,7 +21,9 @@
     /></label>
     <button appButton type="button" (click)="dismissLink()">{{ i18n.t('team.linkSaved') }}</button>
   </section>
-  } @else {
+  } @else { @if (pending() && !busy()) {
+  <p appNotice variant="warning">{{ i18n.t('teamInvitation.uncertain') }}</p>
+  }
   <form (submit)="invite($event)" novalidate>
     <label
       >{{ i18n.t('team.name') }}<input
@@ -51,8 +53,8 @@
     <p class="field-error" role="alert">{{ i18n.t('configurationWorkspace.profileRequired') }}</p>
     }
     <div class="spacer-x-3">
-      <button appButton variant="primary" type="submit" [disabled]="busy() || loading()">
-        {{ i18n.t('team.invite') }}
+      <button appButton variant="primary" type="submit" [disabled]="busy()">
+        {{ submitLabel() }}
       </button>
     </div>
   </form>

@@ -37,8 +37,10 @@ import { PageHeader } from '@shared/page-header/page-header';
 import {
   bankQueryParams,
   ledgerEntryLink,
+  ledgerEntryStatusLabel,
   ledgerQuery,
   ledgerSourceLink,
+  ledgerSourceLabel,
 } from '../banking/bank-workspace';
 
 const blank = () => ({ reason: '', bookedOn: '' });
@@ -103,6 +105,11 @@ export class LedgerReversal {
   protected readonly backQuery = bankQueryParams(ledgerQuery(this.route.snapshot.queryParamMap));
   protected readonly entryLink = ledgerEntryLink;
   protected readonly sourceLink = ledgerSourceLink;
+  protected readonly sourceLabel = ledgerSourceLabel;
+  protected readonly statusLabel = ledgerEntryStatusLabel;
+  protected readonly submitLabel = computed<TranslationKey>(() =>
+    this.pending() ? 'bankWorkspace.retry' : 'ledger.reverse',
+  );
   private generation = 0;
   private requestKey: { fingerprint: string; id: string } | undefined;
   constructor() {

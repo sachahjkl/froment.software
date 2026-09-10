@@ -1,23 +1,23 @@
 <section aria-labelledby="connections-title">
-  <header>
+  <app-page-header>
     <h1 id="connections-title">{{ i18n.t('connections.title') }}</h1>
     <p>{{ i18n.t('connections.intro') }}</p>
-  </header>
+    <div pageActions class="spacer-x-3">
+      <button appButton type="button" [disabled]="data.loading()" (click)="data.load()">
+        {{ i18n.t('connections.reload') }}
+      </button>
+      <a routerLink="/backoffice/services/simulations">{{ i18n.t('connections.simulations') }}</a>
+    </div>
+  </app-page-header>
   <p appNotice variant="info">{{ i18n.t('connections.safety') }}</p>
-  <div class="actions">
-    <button appButton type="button" [disabled]="loading()" (click)="load()">
-      {{ i18n.t('connections.reload') }}
-    </button>
-    <a routerLink="simulations">{{ i18n.t('connections.simulations') }}</a>
-  </div>
-  @if (error()) {
+  @if (data.error()) {
   <p appNotice variant="danger" role="alert">{{ i18n.t('connections.error') }}</p>
-  } @if (loading()) {
+  } @if (data.loading()) {
   <p role="status">{{ i18n.t('connections.loading') }}</p>
   }
   <p id="connections-hint">{{ i18n.t('connections.credentialsHint') }}</p>
   <p appNotice>{{ i18n.t('configurationWorkspace.notVerified') }}</p>
-  @if (connections().length > 0) {
+  @if (data.connections().length > 0) {
   <div appDataTable>
     <table aria-describedby="connections-hint">
       <thead>
@@ -29,23 +29,20 @@
         </tr>
       </thead>
       <tbody>
-        @for (connection of connections(); track connection.provider) {
+        @for (connection of data.connections(); track connection.provider) {
         <tr>
           <th scope="row">
-            <strong>{{ i18n.t(names[connection.provider]) }}</strong
-            ><span class="detail">{{ i18n.t(usages[connection.provider]) }}</span>
+            <strong>{{ i18n.t(providerName(connection.provider)) }}</strong
+            ><span class="detail">{{ i18n.t(providerUsage(connection.provider)) }}</span>
           </th>
           <td>
-            {{ i18n.t(connection.credentialsPresent ? 'connections.present' : 'connections.missing')
-            }} @for (name of connection.missingSecrets; track name) {
+            {{ i18n.t(credentialsLabel(connection)) }} @for (name of connection.missingSecrets;
+            track name) {
             <code class="detail">{{ name }}</code> }
           </td>
+          <td>{{ i18n.t(modeLabel(connection)) }}</td>
           <td>
-            {{ i18n.t(connection.mode === 'restricted-test' ? 'connections.restricted' :
-            'connections.notConnected') }}
-          </td>
-          <td>
-            <a [routerLink]="[connection.provider]"
+            <a [routerLink]="['/backoffice/services', connection.provider]"
               >{{ i18n.t('configurationWorkspace.connection') }}</a
             >
           </td>

@@ -23,7 +23,7 @@ const client = {
 @Component({ template: '<h1>Client</h1>' })
 class ClientDestination {}
 
-async function configure(editing = false, value = client, loadError = false) {
+async function configure(editing = false, value = client, loadError = false, query = '') {
   const api = {
     get: vi
       .fn()
@@ -55,10 +55,8 @@ async function configure(editing = false, value = client, loadError = false) {
     ],
   });
   const harness = await RouterTestingHarness.create();
-  const component = await harness.navigateByUrl(
-    editing ? `/backoffice/clients/${client.id}/edit` : '/backoffice/clients/new',
-    ClientEditor,
-  );
+  const path = editing ? `/backoffice/clients/${client.id}/edit` : '/backoffice/clients/new';
+  const component = await harness.navigateByUrl(`${path}${query}`, ClientEditor);
   await harness.fixture.whenStable();
   const root = harness.fixture.nativeElement as HTMLElement;
   const fill = async (field: string, text: string) => {
@@ -170,5 +168,56 @@ describe('ClientEditor', () => {
     await fixture.whenStable();
     expect(root.querySelector<HTMLInputElement>('#client-displayName')?.value).toBe('Acme');
     expect(api.get).toHaveBeenCalledTimes(2);
+  });
+
+  it.each(['.client-editor > a', '.actions a'])(
+    'retains allowed context through the return link %s',
+    async (selector) => {
+      const query =
+        '?q=Acme&view=archived&country=France&contact=incomplete&sort=name-desc&clientAffairStatus=accepted&clientDocumentType=invoice&clientAccessQ=portal&clientAccessFrom=2026-09-01&returnUrl=https://example.test&token=secret';
+      const { root, fixture, router } = await configure(true, client, false, query);
+      root.querySelector<HTMLAnchorElement>(selector)!.click();
+      await fixture.whenStable();
+      const destination = router.parseUrl(router.url);
+      expect(destination.root.children['primary']?.segments.map(({ path }) => path)).toEqual([
+        'backoffice',
+        'clients',
+        client.id,
+      ]);
+      expect(destination.queryParams).toEqual({
+        q: 'Acme',
+        view: 'archived',
+        country: 'France',
+        contact: 'incomplete',
+        sort: 'name-desc',
+        clientAffairStatus: 'accepted',
+        clientDocumentType: 'invoice',
+        clientAccessQ: 'portal',
+        clientAccessFrom: '2026-09-01',
+      });
+    },
+  );
+
+  it('retains allowed context after saving without adding a leave confirmation', async () => {
+    const query =
+      '?q=Acme&view=all&clientAffairSort=amountDesc&clientDocumentSort=dateAsc&clientAccessSort=emailDesc&clientAccessTo=2026-09-30&returnUrl=/backoffice/team';
+    const { fill, save, router, confirmation } = await configure(true, client, false, query);
+    await fill('displayName', 'Acme Conseil');
+    await save();
+    const destination = router.parseUrl(router.url);
+    expect(destination.root.children['primary']?.segments.map(({ path }) => path)).toEqual([
+      'backoffice',
+      'clients',
+      client.id,
+    ]);
+    expect(destination.queryParams).toEqual({
+      q: 'Acme',
+      view: 'all',
+      clientAffairSort: 'amountDesc',
+      clientDocumentSort: 'dateAsc',
+      clientAccessSort: 'emailDesc',
+      clientAccessTo: '2026-09-30',
+    });
+    expect(confirmation.request).not.toHaveBeenCalled();
   });
 });

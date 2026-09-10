@@ -6,7 +6,7 @@ import { InvoicesApi } from '@backoffice/invoices-api';
 import { ClientsApi } from '@backoffice/clients-api';
 import { OrdersApi } from '@backoffice/orders-api';
 import { QuotesApi } from '@backoffice/quotes-api';
-import { AffairDetail } from './affair-detail';
+import { AffairDetail, invoiceSummaryBadge } from './affair-detail';
 import {
   CommercialDestination,
   control,
@@ -17,6 +17,13 @@ import {
 } from '../quote-detail/commercial.spec-helper';
 
 describe('Affair detail', () => {
+  it('distinguishes paid invoices from issued invoices in the document summary', () => {
+    expect(invoiceSummaryBadge('paid')).toEqual({
+      label: 'backOffice.invoice.status.paid',
+      variant: 'success',
+    });
+    expect(invoiceSummaryBadge('issued').label).toBe('backOffice.invoice.status.issued');
+  });
   let creditedCents = 0;
   const get = vi.fn();
   beforeEach(() => {

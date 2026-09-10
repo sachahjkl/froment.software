@@ -1,16 +1,32 @@
 <section>
-  <a routerLink="/backoffice/services/resend/tests" [queryParams]="table.params()"
+  <a routerLink="/backoffice/services/resend/tests" [queryParams]="testParams()"
     >{{ i18n.t('configurationWorkspace.backTests') }}</a
   >
-  <h1>{{ i18n.t('connections.resend') }} — {{ i18n.t('configurationWorkspace.testDetail') }}</h1>
-  <button appButton type="button" (click)="refresh()">{{ i18n.t('emailTest.refresh') }}</button>
-  @if (paused()) {
+  <app-page-header>
+    <h1>{{ i18n.t('connections.resend') }} — {{ i18n.t('configurationWorkspace.testDetail') }}</h1>
+    <p>{{ i18n.t('emailTest.historyHint') }}</p>
+    <button
+      appButton
+      pageActions
+      type="button"
+      [disabled]="history.loading()"
+      (click)="history.refresh()"
+    >
+      {{ i18n.t('emailTest.refresh') }}
+    </button>
+  </app-page-header>
+  <app-tabs
+    [label]="i18n.t('configurationWorkspace.services')"
+    [tabs]="tabs()"
+    [preserveQuery]="true"
+    [preserveFragment]="true"
+  />
+  @if (history.paused()) {
   <p appNotice variant="warning">{{ i18n.t('emailTest.paused') }}</p>
   }
-  <p #progress role="status" tabindex="-1">
-    @if (current(); as item) { {{ i18n.t(statusLabels[item.status]) }} } @else { {{
-    i18n.t(historyLoaded() ? 'configurationWorkspace.notFound' : paused() ?
-    'emailTest.historyUnavailable' : 'connections.loading') }} }
+  <p role="status">
+    @if (current(); as item) { {{ i18n.t(statusLabel(item.status)) }} } @else { {{
+    i18n.t(historyLabel()) }} }
   </p>
   @if (current(); as item) { @if (item.error; as code) {
   <p appNotice variant="warning">{{ i18n.t(code) }}</p>
@@ -46,9 +62,6 @@
     <h2>{{ i18n.t('emailTest.body') }}</h2>
     <p class="message-preview">{{ item.request.body }}</p>
   </section>
-  <p>
-    {{ i18n.t(item.status === 'failed' || item.status === 'blocked' ? 'emailTest.failureHint' :
-    'emailTest.acceptedHint') }}
-  </p>
+  <p>{{ i18n.t(outcomeHint(item.status)) }}</p>
   }
 </section>

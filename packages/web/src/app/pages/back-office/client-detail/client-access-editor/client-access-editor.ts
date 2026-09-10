@@ -8,7 +8,7 @@ import {
   inject,
   signal,
 } from '@angular/core';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import {
   disabled,
   email,
@@ -28,6 +28,7 @@ import { Button } from '@shared/button/button';
 import { Confirmation } from '@shared/confirmation/confirmation';
 import { Notice } from '@shared/notice/notice';
 import { PageHeader } from '@shared/page-header/page-header';
+import { clientNavigationQuery } from '../client-navigation';
 
 @Component({
   selector: 'app-client-access-editor',
@@ -44,6 +45,10 @@ export class ClientAccessEditor {
   private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
   private readonly confirmation = inject(Confirmation);
+  private readonly queryParams = toSignal(this.route.queryParamMap, {
+    initialValue: this.route.snapshot.queryParamMap,
+  });
+  protected readonly returnQuery = computed(() => clientNavigationQuery(this.queryParams()));
   protected readonly client = signal<ClientSummaryValue | undefined>(undefined);
   protected readonly loading = signal(true);
   protected readonly pending = signal(false);
@@ -52,9 +57,11 @@ export class ClientAccessEditor {
   protected readonly passwordConfig = accountPasswordConfig;
   private readonly model = signal({ email: '', password: '' });
   protected readonly passwordLength = computed(() => this.model().password.length);
-  protected readonly backLink = computed(() =>
-    this.client() ? ['/backoffice/clients', this.client()!.id, 'access'] : ['/backoffice/clients'],
-  );
+  protected readonly backLink = computed(() => {
+    const client = this.client();
+    if (client) return ['/backoffice/clients', client.id, 'access'];
+    return ['/backoffice/clients', this.returnQuery().view ?? 'active'];
+  });
   protected readonly accessForm = form(this.model, (path) => {
     disabled(
       path,
@@ -154,7 +161,11 @@ export class ClientAccessEditor {
       } finally {
         this.pending.set(false);
       }
-      if (this.completed()) await this.router.navigate(this.backLink());
+      if (this.completed())
+        await this.router.navigate(this.backLink(), {
+          queryParams: this.returnQuery(),
+          queryParamsHandling: 'replace',
+        });
     });
   }
 }

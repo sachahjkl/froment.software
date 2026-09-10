@@ -54,10 +54,11 @@ export class RefundEditor {
     return value?.success ? value.result : undefined;
   });
   protected readonly balance = computed(() => this.creditState()?.refundableCents ?? 0);
+  protected readonly eligible = computed(() => this.balance() > 0);
   private readonly model = signal(emptyModel());
   private readonly baseline = JSON.stringify(this.model());
   protected readonly refundForm = form(this.model, (path) => {
-    disabled(path, () => this.task.locked() || this.balance() <= 0);
+    disabled(path, () => this.task.locked() || !this.eligible());
     required(path.amount);
     validate(path.amount, ({ value }) => {
       const amount = parseFixedDecimal(value(), 2);
@@ -89,7 +90,7 @@ export class RefundEditor {
   private attempt: typeof InvoiceRefundRequest.Type | undefined;
   protected save(event: Event): void {
     event.preventDefault();
-    if (this.task.locked() || this.balance() <= 0) return;
+    if (this.task.locked() || !this.eligible()) return;
     void submit(this.refundForm, {
       action: async () => {
         const model = this.refundForm().value();

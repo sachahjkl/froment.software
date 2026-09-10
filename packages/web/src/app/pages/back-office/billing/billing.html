@@ -2,7 +2,12 @@
   <app-page-header>
     <h1 id="billing-title">{{ i18n.t('backOffice.billing.title') }}</h1>
     <p class="muted">{{ i18n.t('backOffice.billing.intro') }}</p>
-    <a pageActions appLinkButton variant="primary" routerLink="/backoffice/invoices/new"
+    <a
+      pageActions
+      appLinkButton
+      variant="primary"
+      routerLink="/backoffice/invoices/new"
+      [queryParams]="detailQuery()"
       >{{ i18n.t('backOffice.invoices.new') }}</a
     >
   </app-page-header>
@@ -162,10 +167,7 @@
       }
     </section>
     } @if (visible().length === 0) {
-    <p class="empty ds-panel">
-      {{ i18n.t(invoices().length === 0 ? 'billingWorkspace.empty' : 'billingWorkspace.noMatches')
-      }}
-    </p>
+    <p class="empty ds-panel">{{ i18n.t(emptyKey()) }}</p>
     } @else {
     <div appDataTable>
       <table>
@@ -255,9 +257,10 @@
               <div class="entity-label">
                 <app-entity-icon icon="invoice" [variant]="iconVariant(invoice)" />
                 <div>
-                  <a [routerLink]="['/backoffice/invoices', invoice.id]"
-                    ><strong
-                      [appSearchHighlight]="matchIndices(result, invoice.invoiceNumber === null ? 'title' : 'invoiceNumber')"
+                  <a
+                    [routerLink]="['/backoffice/invoices', invoice.id]"
+                    [queryParams]="detailQuery()"
+                    ><strong [appSearchHighlight]="matchIndices(result, invoiceMatchKey(invoice))"
                       >{{ invoice.invoiceNumber ?? invoice.title }}</strong
                     ></a
                   ><small
@@ -280,12 +283,8 @@
             </td>
             <td>{{ i18n.t(financialStatus(invoice)) }}</td>
             <td>
-              {{ invoice.dueDate }} @if (invoice.status === 'issued' && remaining(invoice) > 0 &&
-              invoice.creditedCents === 0) {
-              <small
-                >{{ filterLabel('due', invoice.dueDate < businessDate ? 'overdue' : 'upcoming')
-                }}</small
-              >
+              {{ invoice.dueDate }} @if (dueLabel(invoice); as due) {
+              <small>{{ due }}</small>
               }
             </td>
             <td class="amount">{{ money(invoice.totalCents) }}</td>

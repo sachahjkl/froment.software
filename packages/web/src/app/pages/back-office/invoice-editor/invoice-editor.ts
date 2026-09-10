@@ -41,6 +41,7 @@ import { formatMoney } from '@froment/l10n';
 import { Button } from '@shared/button/button';
 import { Notice } from '@shared/notice/notice';
 import { Confirmation } from '@shared/confirmation/confirmation';
+import { BillingNavigation } from '../billing/billing-navigation';
 
 interface InvoiceLineModel {
   description: string;
@@ -78,12 +79,19 @@ export class InvoiceEditor {
   private readonly ordersApi = inject(OrdersApi);
   private readonly confirmation = inject(Confirmation);
   private readonly route = inject(ActivatedRoute);
+  protected readonly navigation = new BillingNavigation(this.route);
   private readonly router = inject(Router);
   private readonly element = inject<ElementRef<HTMLElement>>(ElementRef);
   private readonly destroyRef = inject(DestroyRef);
   private request = 0;
   private readonly focusInvalid = signal(false);
   protected readonly isNew = signal(false);
+  protected readonly titleKey = computed<TranslationKey>(() =>
+    this.isNew() ? 'backOffice.invoice.title.new' : 'billingWorkspace.edit',
+  );
+  protected readonly saveKey = computed<TranslationKey>(() =>
+    this.saving() ? 'backOffice.invoice.saving' : 'backOffice.invoice.save',
+  );
   protected readonly orders = signal<OrderListValue>([]);
   protected readonly detail = signal<InvoiceDetailValue | undefined>(undefined);
   protected readonly loading = signal(true);
@@ -235,6 +243,7 @@ export class InvoiceEditor {
                 this.completed.set(true);
                 await this.router.navigate(['/backoffice/invoices', outcome.failure.invoiceId], {
                   replaceUrl: true,
+                  queryParams: this.navigation.detailQuery(),
                 });
                 return;
               }
@@ -245,6 +254,7 @@ export class InvoiceEditor {
             this.completed.set(true);
             await this.router.navigate(['/backoffice/invoices', outcome.result.id], {
               replaceUrl: true,
+              queryParams: this.navigation.detailQuery(),
             });
             return;
           }

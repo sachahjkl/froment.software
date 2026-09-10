@@ -26,7 +26,7 @@ import { InvoicesApi } from '@backoffice/invoices-api';
 import { OrdersApi } from '@backoffice/orders-api';
 import { QuotesApi } from '@backoffice/quotes-api';
 import { I18nService, type TranslationKey } from '@app/i18n.service';
-import { Badge } from '@shared/badge/badge';
+import { Badge, type BadgeVariant } from '@shared/badge/badge';
 import { ActionMenu } from '@shared/action-menu/action-menu';
 import { Button } from '@shared/button/button';
 import { DataTable } from '@shared/data-table/data-table';
@@ -35,18 +35,35 @@ import { Tabs, type TabItem } from '@shared/tabs/tabs';
 import { TabLayout, TabPanel } from '@shared/tabs/tab-panel';
 import { PageHeader } from '@shared/page-header/page-header';
 import { EmptyState } from '@shared/empty-state/empty-state';
+import { EntityIcon } from '@shared/entity-icon/entity-icon';
+import { ListToolbar } from '@shared/list-toolbar/list-toolbar';
+import { ListWorkspace } from '@shared/list-toolbar/list-workspace';
+import { ListSearch } from '@shared/list-search/list-search';
+import { FilterMenu, FilterPanel } from '@shared/filter-menu/filter-menu';
+import { FilterChoice } from '@shared/filter-choice/filter-choice';
+import { FilterChip } from '@shared/filter-chip/filter-chip';
+import { DateRangeFilter, type DateRange } from '@shared/date-range-filter/date-range-filter';
+import { formatLocalizedDate } from '@shared/localized-date/localized-date-pipe';
+import { TableSort, type SortDirection } from '@shared/table-sort/table-sort';
+import { TableExport } from '@shared/table-export/table-export';
+import { SearchHighlight, SearchHighlightRegistry } from '@shared/search-highlight';
+import { createWorkspaceTable } from '../configuration/workspace-table';
 import { clientFilters, clientFilterQuery, clientView } from '../clients/client-filters';
-
-interface ClientDocument {
-  readonly id: string;
-  readonly kind: string;
-  readonly reference: string;
-  readonly title: string;
-  readonly status: string;
-  readonly totalCents: number;
-  readonly link: readonly string[];
-  readonly updatedAt: string;
-}
+import {
+  clientAffairTableOptions,
+  clientDocumentTableOptions,
+  clientAccessTableOptions,
+  clientAffairExport,
+  clientDocumentExport,
+  clientAccessExport,
+  type ClientDocument,
+} from './client-tables';
+import {
+  ClientAccessPeriod,
+  clientAccessPeriod,
+  clientAccessPeriodParams,
+  clientAccessMatchesPeriod,
+} from './client-access-period';
 
 @Component({
   host: { class: 'page-container' },
@@ -64,7 +81,20 @@ interface ClientDocument {
     Tabs,
     PageHeader,
     EmptyState,
+    EntityIcon,
+    ListToolbar,
+    ListWorkspace,
+    ListSearch,
+    FilterMenu,
+    FilterPanel,
+    FilterChoice,
+    FilterChip,
+    DateRangeFilter,
+    TableSort,
+    TableExport,
+    SearchHighlight,
   ],
+  providers: [SearchHighlightRegistry],
   templateUrl: './client-detail.html',
   styleUrl: './client-detail.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -93,6 +123,7 @@ export class ClientDetail {
   protected readonly client = signal<ClientSummaryValue | undefined>(undefined);
   protected readonly archiving = signal(false);
   protected readonly documentsError = signal(false);
+  protected readonly affairsError = signal(false);
   protected readonly tabs = computed<readonly TabItem[]>(() =>
     (['profile', 'affairs', 'documents', 'access'] as const).map((value) => ({
       path: value,
@@ -106,7 +137,9 @@ export class ClientDetail {
   private readonly orders = signal<ReadonlyArray<OrderSummaryValue>>([]);
   private readonly invoices = signal<ReadonlyArray<InvoiceSummaryValue>>([]);
   protected readonly affairs = computed(() =>
-    this.quotes().filter(({ clientId }) => clientId === this.client()?.id),
+    this.quotes()
+      .filter(({ clientId }) => clientId === this.client()?.id)
+      .map((quote, position) => ({ ...quote, position })),
   );
   protected readonly documentsLoading = signal(true);
   protected readonly documents = computed<readonly ClientDocument[]>(() => {
@@ -117,6 +150,7 @@ export class ClientDetail {
         .filter(({ clientId }) => clientId === id)
         .map((quote) => ({
           id: `quote-${quote.id}`,
+          type: 'quote' as const,
           kind: this.i18n.t('backOffice.clientDetail.quote'),
           reference: quote.reference,
           title: quote.title,
@@ -129,6 +163,7 @@ export class ClientDetail {
         .filter(({ clientId }) => clientId === id)
         .map((order) => ({
           id: `order-${order.id}`,
+          type: 'order' as const,
           kind: this.i18n.t('backOffice.clientDetail.order'),
           reference: order.reference,
           title: order.title,
@@ -141,6 +176,7 @@ export class ClientDetail {
         .filter(({ clientId }) => clientId === id)
         .map((invoice) => ({
           id: `invoice-${invoice.id}`,
+          type: 'invoice' as const,
           kind: this.i18n.t('backOffice.clientDetail.invoice'),
           reference: invoice.invoiceNumber ?? invoice.orderReference,
           title: invoice.title,
@@ -149,15 +185,110 @@ export class ClientDetail {
           link: ['/backoffice/invoices', invoice.id] as const,
           updatedAt: invoice.updatedAt,
         })),
-    ].sort((left, right) => right.updatedAt.localeCompare(left.updatedAt));
+    ];
   });
   protected readonly accessesLoading = signal(true);
+  protected readonly accessesError = signal<TranslationKey | undefined>(undefined);
   protected readonly accesses = signal<ReadonlyArray<ClientAccessValue>>([]);
   protected readonly revokingAccessId = signal<string | undefined>(undefined);
   protected readonly loading = signal(true);
   protected readonly reactivating = signal(false);
   protected readonly archived = computed(() => this.client()?.archived ?? false);
   protected readonly error = signal<TranslationKey | undefined>(undefined);
+  protected readonly statusVariant = computed<BadgeVariant>(() =>
+    this.archived() ? 'warning' : 'success',
+  );
+  protected readonly statusLabel = computed<TranslationKey>(() =>
+    this.archived() ? 'backOffice.clients.archived' : 'backOffice.clients.active',
+  );
+  protected readonly reactivateLabel = computed<TranslationKey>(() =>
+    this.reactivating()
+      ? 'backOffice.clientDetail.reactivating'
+      : 'backOffice.clientDetail.reactivate',
+  );
+  protected readonly affairTable = createWorkspaceTable(this.affairs, clientAffairTableOptions);
+  protected readonly documentTable = createWorkspaceTable(
+    this.documents,
+    clientDocumentTableOptions,
+  );
+  protected readonly accessPeriod = computed(() => clientAccessPeriod(this.queryParams()));
+  protected readonly accessFilterCount = computed(() =>
+    Number(this.accessPeriod().from !== undefined || this.accessPeriod().to !== undefined),
+  );
+  protected readonly accessPeriodSummary = computed(() => {
+    const { from, to } = this.accessPeriod();
+    const labels: string[] = [];
+    if (from)
+      labels.push(
+        `${this.i18n.t('dateRangeFilter.from')} : ${formatLocalizedDate(from, this.i18n.language())}`,
+      );
+    if (to)
+      labels.push(
+        `${this.i18n.t('dateRangeFilter.to')} : ${formatLocalizedDate(to, this.i18n.language())}`,
+      );
+    return labels.join(' · ') || this.i18n.t('configurationWorkspace.allRows');
+  });
+  protected readonly accessTable = createWorkspaceTable(
+    computed(() =>
+      this.accesses()
+        .map((access, position) => ({ ...access, position }))
+        .filter((access) => clientAccessMatchesPeriod(access, this.accessPeriod())),
+    ),
+    clientAccessTableOptions,
+  );
+  protected readonly affairFilterCount = computed(() =>
+    Number(this.affairTable.query().filter !== 'all'),
+  );
+  protected readonly documentFilterCount = computed(() =>
+    Number(this.documentTable.query().filter !== 'all'),
+  );
+  protected readonly affairEmptyLabel = computed<TranslationKey>(() =>
+    this.affairs().length === 0 ? 'clientsWorkspace.affairsEmpty' : 'clientTables.affairNoMatches',
+  );
+  protected readonly documentEmptyLabel = computed<TranslationKey>(() =>
+    this.documents().length === 0
+      ? 'backOffice.clientDetail.documentsEmpty'
+      : 'clientTables.documentNoMatches',
+  );
+  protected readonly accessEmptyLabel = computed<TranslationKey>(() =>
+    this.accesses().length === 0
+      ? 'backOffice.clientDetail.accessListEmpty'
+      : 'clientTables.accessNoMatches',
+  );
+  protected readonly affairExportColumns = computed(() => [
+    this.i18n.t('clientTables.reference'),
+    this.i18n.t('clientTables.title'),
+    this.i18n.t('clientTables.affairStatus'),
+    this.i18n.t('backOffice.clientDetail.total'),
+    this.i18n.t('clientTables.updatedAt'),
+  ]);
+  protected readonly documentExportColumns = computed(() => [
+    this.i18n.t('clientTables.documentType'),
+    this.i18n.t('clientTables.reference'),
+    this.i18n.t('clientTables.title'),
+    this.i18n.t('backOffice.clientDetail.status'),
+    this.i18n.t('backOffice.clientDetail.total'),
+    this.i18n.t('clientTables.date'),
+  ]);
+  protected readonly accessExportColumns = computed(() => [
+    this.i18n.t('backOffice.clientDetail.accessEmail'),
+    this.i18n.t('backOffice.clientDetail.accessCreatedAt'),
+  ]);
+  protected readonly affairExportRows = computed(() => {
+    if (this.documentsLoading() || this.affairsError()) return [];
+    return clientAffairExport(this.affairTable.rows(), this.i18n.language());
+  });
+  protected readonly documentExportRows = computed(() => {
+    if (this.documentsLoading() || this.documentsError()) return [];
+    return clientDocumentExport(this.documentTable.rows(), this.i18n.language());
+  });
+  protected readonly accessExportPending = computed(
+    () => this.accessesLoading() || this.revokingAccessId() !== undefined,
+  );
+  protected readonly accessExportRows = computed(() => {
+    if (this.accessExportPending() || this.accessesError()) return [];
+    return clientAccessExport(this.accessTable.rows());
+  });
 
   constructor() {
     afterNextRender(() =>
@@ -184,8 +315,32 @@ export class ClientDetail {
     return this.i18n.t(`backOffice.quote.status.${status}`);
   }
 
-  protected formatDate(timestamp: number): string {
-    return new Intl.DateTimeFormat(this.i18n.language(), { dateStyle: 'medium' }).format(timestamp);
+  protected formatDate(timestamp: number | string): string {
+    return formatLocalizedDate(new Date(timestamp), this.i18n.language(), { dateStyle: 'medium' });
+  }
+
+  protected dateTime(timestamp: number): string {
+    return new Date(timestamp).toISOString();
+  }
+
+  protected ariaSort(direction: SortDirection): Exclude<SortDirection, 'none'> | null {
+    return direction === 'none' ? null : direction;
+  }
+
+  protected revokeLabel(access: ClientAccessValue): TranslationKey {
+    return this.revokingAccessId() === access.id
+      ? 'backOffice.clientDetail.accessRevoking'
+      : 'backOffice.clientDetail.accessRevoke';
+  }
+
+  protected applyAccessPeriod(range: DateRange): void {
+    const period = Schema.decodeUnknownOption(ClientAccessPeriod)(range);
+    if (Option.isNone(period)) return;
+    void this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: clientAccessPeriodParams(period.value),
+      queryParamsHandling: 'merge',
+    });
   }
 
   protected async revokeAccess(access: ClientAccessValue): Promise<void> {
@@ -250,6 +405,8 @@ export class ClientDetail {
     this.client.set(undefined);
     this.documentsLoading.set(true);
     this.documentsError.set(false);
+    this.affairsError.set(false);
+    this.accessesError.set(undefined);
     this.quotes.set([]);
     this.orders.set([]);
     this.invoices.set([]);
@@ -283,12 +440,13 @@ export class ClientDetail {
     if (invoices.status === 'fulfilled') this.invoices.set(invoices.value);
     if (accesses.status === 'fulfilled') {
       if (accesses.value.success) this.accesses.set(accesses.value.result);
-      else this.setError(accesses.value.code);
+      else this.accessesError.set(accesses.value.code);
     } else {
-      this.error.set('client.error');
+      this.accessesError.set('client.error');
     }
     this.accessesLoading.set(false);
     this.documentsError.set([quotes, orders, invoices].some(({ status }) => status === 'rejected'));
+    this.affairsError.set(quotes.status === 'rejected');
     this.documentsLoading.set(false);
   }
 

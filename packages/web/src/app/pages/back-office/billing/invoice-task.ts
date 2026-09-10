@@ -16,6 +16,7 @@ import { InvoicesApi } from '@backoffice/invoices-api';
 import { I18nService, type TranslationKey } from '@app/i18n.service';
 import { Confirmation } from '@shared/confirmation/confirmation';
 import { formatMoney } from '@froment/l10n';
+import { BillingNavigation } from './billing-navigation';
 
 interface TaskOutcome {
   readonly success: boolean;
@@ -28,6 +29,7 @@ export class InvoiceTask {
   readonly i18n = inject(I18nService);
   readonly api = inject(InvoicesApi);
   readonly route = inject(ActivatedRoute);
+  readonly navigation = new BillingNavigation(this.route);
   readonly confirmation = inject(Confirmation);
   private readonly destroyRef = inject(DestroyRef);
   private readonly element = inject<ElementRef<HTMLElement>>(ElementRef);
@@ -66,6 +68,7 @@ export class InvoiceTask {
     this.loading.set(true);
     this.invoice.set(undefined);
     this.error.set(undefined);
+    this.issues.set([]);
     this.stale.set(false);
     this.completed.set(false);
     const id = this.route.snapshot.paramMap.get('invoiceId');

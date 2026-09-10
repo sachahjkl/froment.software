@@ -1,23 +1,27 @@
 <section class="commercial-page" aria-labelledby="order-title">
-  <a
-    [routerLink]="['/backoffice/affaires', context().view ?? 'attention']"
-    [queryParams]="context()"
+  <a [routerLink]="backLink()" [queryParams]="context()"
     >{{ i18n.t('backOffice.backToAffairs') }}</a
   >
   @if (state() !== 'ready') {
-  <h1 id="order-title">{{ i18n.t('commercial.order') }}</h1>
+  <app-page-header><h1 id="order-title">{{ headerTitle() }}</h1></app-page-header>
   } @switch (state()) { @case ('loading') {
   <p role="status">{{ i18n.t('backOffice.affair.loading') }}</p>
   } @case ('error') {
   <p appNotice variant="danger" role="alert">{{ i18n.t('commercial.orderUnavailable') }}</p>
   <button appButton type="button" (click)="load()">{{ i18n.t('backOffice.affair.retry') }}</button>
   } @case ('ready') { @if (order(); as order) { @if (revision(); as revision) {
-  <header>
-    <div class="document-heading">
-      <p class="eyebrow">{{ i18n.t('commercial.order') }} · {{ order.reference }}</p>
-      <h1 id="order-title">{{ order.title }}</h1>
+  <app-page-header>
+    <h1 id="order-title">{{ headerTitle() }}</h1>
+    <p class="document-description">
+      {{ i18n.tf('commercialHeader.orderDescription', { client: order.clientDisplayName }) }}
+    </p>
+    <div class="document-badges">
+      <span appBadge variant="success">{{ i18n.t('backOffice.affair.confirmed') }}</span>
+      <span appBadge variant="default"
+        >{{ i18n.tf('commercialHeader.acceptedVersion', { version: revision.version }) }}</span
+      >
     </div>
-    <div class="actions">
+    <div pageActions class="page-actions">
       @if (order.invoiceId) {
       <a appLinkButton variant="primary" [routerLink]="['/backoffice/invoices', order.invoiceId]"
         >{{ i18n.t('backOffice.affairs.openInvoice') }}</a
@@ -35,7 +39,7 @@
         >{{ i18n.t('commercial.backAffair') }}</a
       >
     </div>
-  </header>
+  </app-page-header>
   <p appNotice>{{ i18n.t('commercial.orderImmutable') }}</p>
   <dl class="facts">
     <div>
@@ -74,8 +78,7 @@
         >{{ i18n.t('backOffice.quote.preview.open') }}</a
       >
       <button appButton type="button" [disabled]="pending()" (click)="generate()">
-        {{ i18n.t(pending() ? 'backOffice.quote.pdf.generating' : 'backOffice.quote.pdf.generate')
-        }}
+        {{ generateLabel() }}
       </button>
       @if (pdfReady()) {
       <a appLinkButton [href]="'/api/orders/' + order.id + '/pdf'"

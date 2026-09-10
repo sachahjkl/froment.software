@@ -22,7 +22,7 @@ import { Notice } from '@shared/notice/notice';
 import { InvoiceTask } from '../billing/invoice-task';
 import { TaskFeedback } from '../billing/task-feedback';
 import { TaskSummary } from '../billing/task-summary';
-import { activePaidCents } from '../billing/billing-state';
+import { canCancelPayment } from '../billing/receipt-cancellation';
 
 @Component({
   selector: 'app-receipt-cancel',
@@ -41,8 +41,17 @@ export class ReceiptCancel {
   protected readonly i18n = this.task.i18n;
   private readonly creditsApi = inject(InvoiceCreditsApi);
   protected readonly credits = resource({
-    params: () => this.task.invoice()?.id,
-    loader: ({ params }) => this.creditsApi.get(params),
+    params: () => {
+      const invoice = this.task.invoice();
+      if (!invoice) return undefined;
+      return { invoiceId: invoice.id, version: invoice.version };
+    },
+    loader: ({ params }) => this.creditsApi.get(params.invoiceId),
+  });
+  protected readonly creditState = computed(() => {
+    if (this.credits.isLoading()) return undefined;
+    const value = this.credits.hasValue() ? this.credits.value() : undefined;
+    return value?.success ? value.result : undefined;
   });
   protected readonly payment = computed(() =>
     this.task
@@ -51,24 +60,9 @@ export class ReceiptCancel {
         (payment) => payment.id === this.task.route.snapshot.paramMap.get('paymentId'),
       ),
   );
-  protected readonly eligible = computed(() => {
-    const invoice = this.task.invoice();
-    const payment = this.payment();
-    const credits = this.credits.hasValue() ? this.credits.value() : undefined;
-    if (
-      !invoice ||
-      !payment ||
-      !credits?.success ||
-      payment.cancelledAt !== null ||
-      !['issued', 'paid'].includes(invoice.status)
-    )
-      return false;
-    const refunded = credits.result.refunds.reduce(
-      (sum, refund) => sum + (refund.cancelledAt === null ? refund.amountCents : 0),
-      0,
-    );
-    return activePaidCents(invoice) - payment.amountCents >= refunded;
-  });
+  protected readonly eligible = computed(() =>
+    canCancelPayment(this.task.invoice(), this.payment(), this.creditState()),
+  );
   protected readonly cancelForm = form(signal({ reason: '' }), (path) => {
     required(path.reason);
     pattern(path.reason, /\S/);

@@ -12,7 +12,7 @@ import { ClientAccessEditor } from './client-access-editor';
 class AccessList {}
 const client = { id: '01ARZ3NDEKTSV4RRFFQ69G5FAV', displayName: 'Acme', archived: false };
 
-async function configure() {
+async function configure(query = '') {
   const api = {
     get: vi.fn().mockResolvedValue({ success: true, result: client }),
     createAccess: vi
@@ -34,7 +34,9 @@ async function configure() {
       { provide: Confirmation, useValue: confirmation },
     ],
   });
-  const harness = await RouterTestingHarness.create(`/backoffice/clients/${client.id}/access/new`);
+  const harness = await RouterTestingHarness.create(
+    `/backoffice/clients/${client.id}/access/new${query}`,
+  );
   await harness.fixture.whenStable();
   return { harness, root: harness.routeNativeElement!, api, confirmation };
 }
@@ -70,5 +72,63 @@ describe('ClientAccessEditor', () => {
       password: 'secure-password-for-client',
     });
     expect(TestBed.inject(Router).url).toBe(back);
+  });
+
+  it.each(['.access-editor > a', '.actions a'])(
+    'retains only allowed context through the return link %s',
+    async (selector) => {
+      const { root, harness } = await configure(
+        '?q=Acme&view=archived&clientDocumentType=invoice&clientAccessQ=portal&clientAccessFrom=2026-09-01&token=secret&returnUrl=/backoffice/team',
+      );
+      root.querySelector<HTMLAnchorElement>(selector)!.click();
+      await harness.fixture.whenStable();
+      const router = TestBed.inject(Router);
+      const destination = router.parseUrl(router.url);
+      expect(destination.root.children['primary']?.segments.map(({ path }) => path)).toEqual([
+        'backoffice',
+        'clients',
+        client.id,
+        'access',
+      ]);
+      expect(destination.queryParams).toEqual({
+        q: 'Acme',
+        view: 'archived',
+        clientDocumentType: 'invoice',
+        clientAccessQ: 'portal',
+        clientAccessFrom: '2026-09-01',
+      });
+    },
+  );
+
+  it('retains only allowed context after access creation', async () => {
+    const { root, harness, confirmation } = await configure(
+      '?q=Acme&view=all&clientAffairStatus=sent&clientDocumentSort=dateAsc&clientAccessSort=emailDesc&clientAccessTo=2026-09-30&password=secret',
+    );
+    const email = root.querySelector<HTMLInputElement>('#client-account-email')!;
+    const password = root.querySelector<HTMLInputElement>('#client-account-password')!;
+    email.value = 'portal@acme.test';
+    email.dispatchEvent(new Event('input'));
+    password.value = 'secure-password-for-client';
+    password.dispatchEvent(new Event('input'));
+    await harness.fixture.whenStable();
+    root.querySelector<HTMLButtonElement>('[type="submit"]')!.click();
+    await harness.fixture.whenStable();
+    const router = TestBed.inject(Router);
+    const destination = router.parseUrl(router.url);
+    expect(destination.root.children['primary']?.segments.map(({ path }) => path)).toEqual([
+      'backoffice',
+      'clients',
+      client.id,
+      'access',
+    ]);
+    expect(destination.queryParams).toEqual({
+      q: 'Acme',
+      view: 'all',
+      clientAffairStatus: 'sent',
+      clientDocumentSort: 'dateAsc',
+      clientAccessSort: 'emailDesc',
+      clientAccessTo: '2026-09-30',
+    });
+    expect(confirmation.request).not.toHaveBeenCalled();
   });
 });

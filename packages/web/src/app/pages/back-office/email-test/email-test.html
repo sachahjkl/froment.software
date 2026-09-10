@@ -1,23 +1,33 @@
 <section aria-labelledby="email-test-title">
-  <a routerLink="/backoffice/services/resend/tests" [queryParams]="table.params()"
+  <a routerLink="/backoffice/services/resend/tests" [queryParams]="testParams()"
     >{{ i18n.t('configurationWorkspace.backTests') }}</a
   >
-  <h1 id="email-test-title">
-    {{ i18n.t('connections.resend') }} — {{ i18n.t('configurationWorkspace.newTest') }}
-  </h1>
+  <app-page-header>
+    <h1 id="email-test-title">
+      {{ i18n.t('connections.resend') }} — {{ i18n.t('configurationWorkspace.newTest') }}
+    </h1>
+    <p>{{ i18n.t('emailTest.intro') }}</p>
+  </app-page-header>
+  <app-tabs
+    [label]="i18n.t('configurationWorkspace.services')"
+    [tabs]="tabs()"
+    [preserveQuery]="true"
+    [preserveFragment]="true"
+    [disabled]="saving()"
+  />
   <p appNotice variant="warning">{{ i18n.t('emailTest.safety') }}</p>
   @if (error(); as code) {
   <p appNotice variant="danger" role="alert">{{ i18n.t(code) }}</p>
   } @if (completed()) {
   <p appNotice variant="success">{{ i18n.t('configurationWorkspace.testComplete') }}</p>
   <p #progress role="status" tabindex="-1">
-    @if (current(); as item) { {{ i18n.t(statusLabels[item.status]) }} }
+    @if (current(); as item) { {{ i18n.t(statusLabel(item.status)) }} }
   </p>
   <a
     appLinkButton
     variant="primary"
     [routerLink]="['/backoffice/services/resend/tests', selected()]"
-    [queryParams]="table.params()"
+    [queryParams]="testParams()"
     >{{ i18n.t('configurationWorkspace.testDetail') }}</a
   >
   } @else {
@@ -60,7 +70,7 @@
       <p id="email-test-body-error" class="field-error">
         @if (invalid('body')) { {{ i18n.t('emailTest.bodyInvalid') }} }
       </p>
-      @if (!credentialsPresent() && !loading()) {
+      @if (!credentialsPresent() && !history.loading()) {
       <p appNotice variant="warning">{{ i18n.t('emailTest.credentialsMissing') }}</p>
       } @if (active()) {
       <p appNotice>{{ i18n.t('emailTest.active') }}</p>
@@ -71,10 +81,9 @@
         appButton
         variant="primary"
         type="submit"
-        [disabled]="saving() || loading() || active() || !credentialsPresent() || !recoveryReady()"
+        [disabled]="saving() || history.loading() || active() || !credentialsPresent() || !recoveryReady()"
       >
-        {{ i18n.t(saving() ? 'emailTest.saving' : pending() ? 'emailTest.resume' : 'emailTest.send')
-        }}
+        {{ i18n.t(submitLabel()) }}
       </button>
       <p>{{ i18n.t('emailTest.recoveryHint') }}</p>
     </form>
@@ -84,7 +93,7 @@
       <p class="message-preview">{{ model().body }}</p>
     </aside>
   </div>
-  } @if (paused()) {
+  } @if (history.paused()) {
   <p appNotice>{{ i18n.t('emailTest.paused') }}</p>
   }
   <button appButton type="button" [disabled]="saving()" (click)="refresh()">

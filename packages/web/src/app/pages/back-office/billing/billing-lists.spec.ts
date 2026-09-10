@@ -2,7 +2,7 @@ import { provideHttpClient } from '@angular/common/http';
 import { type Injector } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
-import { Router, provideRouter } from '@angular/router';
+import { Router, RouterLink, provideRouter } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
 import { InvoicesApi } from '@backoffice/invoices-api';
 import { I18nService } from '@app/i18n.service';
@@ -208,6 +208,23 @@ describe('Billing lists', () => {
   });
 
   for (const item of cases) {
+    it(`${item.component.name}: includes only the current list context in invoice links`, async () => {
+      const { harness } = await setupFilters(item);
+      const link = harness.routeDebugElement?.query(By.css('tbody a'))?.injector.get(RouterLink);
+      const sources = {
+        list: 'invoices',
+        receipts: 'receipts',
+        credits: 'credits',
+        refunds: 'refunds',
+      };
+      expect(link?.queryParams).toMatchObject({
+        billingList: sources[item.method],
+        billingQ: 'reparaton',
+        billingSort: `${item.sort}-desc`,
+      });
+      expect(link?.queryParams).not.toHaveProperty('source');
+      expect(link?.queryParams).not.toHaveProperty('q');
+    });
     it(`${item.method}: keeps result and selection labels coupled to their counts in both languages`, async () => {
       const { harness, root, i18n } = await setupFilters(item);
       const search = root.querySelector<HTMLInputElement>('app-list-search input')!;

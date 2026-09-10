@@ -1,3 +1,5 @@
+@use "shared/entity-icon/entity-label";
+
 :host {
   display: block;
 }
@@ -57,13 +59,23 @@ app-page-header {
   gap: var(--space-3);
 }
 .document-column {
-  width: 60%;
+  width: 45%;
 }
-.documents {
+.client-table {
   margin-block-start: var(--space-5);
 }
-.documents [appDataTable] {
-  margin-block-start: var(--space-5);
+.filter-chips {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+.list-summary {
+  color: var(--color-muted);
+  font-size: var(--text-sm);
+}
+.client-table > :is(a, button) {
+  justify-self: start;
 }
 .amount {
   text-align: end;
@@ -100,13 +112,4 @@ td small {
 .empty {
   padding: var(--space-5);
   color: var(--color-muted);
-}
-
-.access-panel {
-  display: grid;
-  gap: var(--space-5);
-  margin-block-start: var(--space-5);
-}
-.access-panel p {
-  margin-top: var(--space-2);
 }

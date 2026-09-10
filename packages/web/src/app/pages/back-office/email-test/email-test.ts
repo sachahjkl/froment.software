@@ -22,8 +22,7 @@ import {
   submit,
 } from '@angular/forms/signals';
 import { ActivatedRoute, RouterLink } from '@angular/router';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { catchError, EMPTY, exhaustMap, filter, timer } from 'rxjs';
+import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import {
   EmailTestAddress,
   type EmailTestOperation,
@@ -38,13 +37,17 @@ import {
 import { Button } from '@shared/button/button';
 import { Notice } from '@shared/notice/notice';
 import { Confirmation } from '@shared/confirmation/confirmation';
-import { createWorkspaceTable } from '../configuration/workspace-table';
-import { emailTableOptions } from '../configuration/workspace-tables';
+import { PageHeader } from '@shared/page-header/page-header';
+import { Tabs } from '@shared/tabs/tabs';
+import { providerTabs, providerTestParams } from '../connections/provider-navigation';
+import { EmailTestHistory } from './email-test-history';
+import { emailTestStatusLabel } from './email-test-view';
 
 @Component({
   host: { class: 'page-container' },
   selector: 'app-email-test',
-  imports: [RouterLink, Button, Notice, FormField],
+  imports: [RouterLink, Button, Notice, FormField, PageHeader, Tabs],
+  providers: [EmailTestHistory],
   templateUrl: './email-test.html',
   styleUrl: './email-test.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -56,28 +59,26 @@ export class EmailTest {
   private readonly destroyRef = inject(DestroyRef);
   private readonly requests = inject(PendingProviderRequests);
   private readonly route = inject(ActivatedRoute);
-  protected readonly task: boolean = true;
+  protected readonly history = inject(EmailTestHistory);
   protected readonly completed = signal(false);
   private requestStore: PendingRequestStore<EmailTestRequest> | undefined;
   protected readonly recoveryReady = signal(false);
   protected readonly addresses = EmailTestAddress;
   protected readonly saving = signal(false);
   protected readonly pending = signal<EmailTestRequest | undefined>(undefined);
-  protected readonly loading = signal(true);
-  protected readonly historyLoaded = signal(false);
   protected readonly credentialsPresent = signal(false);
   protected readonly error = signal<TranslationKey | undefined>(undefined);
-  protected readonly paused = signal(false);
-  protected readonly operations = signal<ReadonlyArray<EmailTestOperation>>([]);
-  protected readonly table = createWorkspaceTable(this.operations, emailTableOptions);
+  private readonly queryParams = toSignal(this.route.queryParamMap, { requireSync: true });
+  protected readonly testParams = computed(() => providerTestParams('resend', this.queryParams()));
+  protected readonly tabs = computed(() => providerTabs('resend', this.i18n, this.selected()));
   protected readonly selected = signal<string | undefined>(undefined);
   protected readonly current = computed(() =>
-    this.selected() === undefined
-      ? this.operations()[0]
-      : this.operations().find((item) => item.request.requestId === this.selected()),
+    this.history.operations().find((item) => item.request.requestId === this.selected()),
   );
   protected readonly active = computed(() =>
-    this.operations().some((item) => ['queued', 'sending', 'retrying'].includes(item.status)),
+    this.history
+      .operations()
+      .some((item) => ['queued', 'sending', 'retrying'].includes(item.status)),
   );
   protected readonly model = signal({
     subject: this.i18n.t('emailTest.defaultSubject'),
@@ -94,65 +95,28 @@ export class EmailTest {
     pattern(path.body, /\S/);
     maxLength(path.body, 20000);
   });
-  protected readonly statusLabels = {
-    queued: 'emailTest.queued',
-    sending: 'emailTest.sending',
-    retrying: 'emailTest.retrying',
-    accepted: 'emailTest.accepted',
-    delivered: 'emailTest.delivered',
-    bounced: 'emailTest.bounced',
-    complained: 'emailTest.complained',
-    failed: 'emailTest.failed',
-    blocked: 'emailTest.blocked',
-  } satisfies Record<EmailTestOperation['status'], TranslationKey>;
+  protected readonly statusLabel = emailTestStatusLabel;
+  protected readonly submitLabel = computed<TranslationKey>(() => {
+    if (this.saving()) return 'emailTest.saving';
+    if (this.pending()) return 'emailTest.resume';
+    return 'emailTest.send';
+  });
   private readonly progress = viewChild('progress', { read: ElementRef<HTMLElement> });
   private readonly subjectInput = viewChild('subjectInput', { read: ElementRef<HTMLInputElement> });
   private readonly bodyInput = viewChild('bodyInput', { read: ElementRef<HTMLTextAreaElement> });
-  private writeVersion = 0;
 
   constructor() {
     afterRenderEffect(() => {
       if (this.completed()) this.progress()?.nativeElement.focus();
     });
-    this.route.paramMap.pipe(takeUntilDestroyed()).subscribe((params) => {
-      this.selected.set(params.get('requestId') ?? undefined);
-    });
     afterNextRender(() => {
       void this.loadConnections();
-      if (this.task) void this.restoreRequest();
-      timer(0, 3000)
-        .pipe(
-          filter(() => !this.paused() && !this.saving() && document.visibilityState === 'visible'),
-          exhaustMap(() => {
-            const version = this.writeVersion;
-            return this.api.emailTests().pipe(
-              filter(() => version === this.writeVersion),
-              catchError(() => {
-                if (version === this.writeVersion) {
-                  this.paused.set(true);
-                  this.loading.set(false);
-                }
-                return EMPTY;
-              }),
-            );
-          }),
-          takeUntilDestroyed(this.destroyRef),
-        )
+      void this.restoreRequest();
+      this.history
+        .watch(() => this.saving())
+        .pipe(takeUntilDestroyed(this.destroyRef))
         .subscribe((operations) => {
-          this.operations.set(operations);
-          this.historyLoaded.set(true);
-          this.loading.set(false);
-          const pending = this.pending();
-          if (
-            pending !== undefined &&
-            operations.some((item) => item.request.requestId === pending.requestId)
-          ) {
-            if (!this.clearPending()) return;
-            this.selected.set(pending.requestId);
-            this.completed.set(true);
-            this.messageForm().reset();
-            this.error.set(undefined);
-          }
+          this.reconcileRequest(operations);
         });
     });
   }
@@ -167,9 +131,23 @@ export class EmailTest {
         this.selected.set(request.requestId);
       }
       this.recoveryReady.set(true);
+      this.reconcileRequest(this.history.operations());
     } catch {
       this.error.set('emailTest.recoveryUnavailable');
     }
+  }
+  private reconcileRequest(operations: readonly EmailTestOperation[]): void {
+    const pending = this.pending();
+    if (
+      pending === undefined ||
+      !operations.some((item) => item.request.requestId === pending.requestId) ||
+      !this.clearPending()
+    )
+      return;
+    this.selected.set(pending.requestId);
+    this.completed.set(true);
+    this.messageForm().reset();
+    this.error.set(undefined);
   }
   private clearPending(): boolean {
     try {
@@ -195,14 +173,10 @@ export class EmailTest {
     }
   }
   protected refresh(): void {
-    this.paused.set(false);
+    this.history.refresh();
     this.error.set(undefined);
     void this.loadConnections();
-    if (this.task && !this.recoveryReady()) void this.restoreRequest();
-  }
-  protected select(operation: EmailTestOperation): void {
-    this.selected.set(operation.request.requestId);
-    this.progress()?.nativeElement.focus();
+    if (!this.recoveryReady()) void this.restoreRequest();
   }
   protected invalid(field: 'subject' | 'body'): boolean {
     return this.messageForm[field]().invalid() && this.messageForm[field]().touched();
@@ -223,11 +197,10 @@ export class EmailTest {
     event.preventDefault();
     if (
       this.saving() ||
-      !this.task ||
       this.completed() ||
       this.active() ||
       !this.credentialsPresent() ||
-      this.loading() ||
+      this.history.loading() ||
       !this.recoveryReady()
     )
       return;
@@ -242,7 +215,7 @@ export class EmailTest {
     }
     void submit(this.messageForm, async () => {
       this.saving.set(true);
-      this.writeVersion++;
+      this.history.invalidate();
       try {
         if (
           !(await this.confirmation.request(this.i18n.t('emailTest.confirm'), {
@@ -269,17 +242,14 @@ export class EmailTest {
           return;
         }
         this.clearPending();
-        this.operations.update((items) => [
-          outcome.result,
-          ...items.filter((item) => item.request.requestId !== request.requestId),
-        ]);
+        this.history.record(outcome.result);
         this.selected.set(request.requestId);
         this.completed.set(true);
         this.messageForm().reset();
-        this.paused.set(false);
+        this.history.refresh();
         this.progress()?.nativeElement.focus();
       } finally {
-        this.writeVersion++;
+        this.history.invalidate();
         this.saving.set(false);
       }
     });

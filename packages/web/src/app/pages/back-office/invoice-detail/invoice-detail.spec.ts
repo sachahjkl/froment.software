@@ -7,6 +7,38 @@ import {
 } from '../billing/billing.spec-helper';
 
 describe('InvoiceDetail', () => {
+  it('loads refunds only when the receipts tab has active payments to cancel', async () => {
+    const { credits, fixture } = await setupInvoicePage(InvoiceDetail, {
+      query: { tab: 'receipts' },
+    });
+    expect(credits.get).not.toHaveBeenCalled();
+    fixture.componentInstance['task'].invoice.set({
+      ...invoiceFixture(),
+      payments: [paymentFixture()],
+    });
+    await fixture.whenStable();
+    expect(credits.get).toHaveBeenCalledWith(invoiceId);
+  });
+
+  it('reloads refund eligibility for a new invoice version and blocks failed refund loads', async () => {
+    const payment = paymentFixture();
+    const invoice = { ...invoiceFixture(), payments: [payment] };
+    const { credits, fixture } = await setupInvoicePage(InvoiceDetail, {
+      invoice,
+      query: { tab: 'receipts' },
+    });
+    const component = fixture.componentInstance;
+    expect(component['canCancelPayment'](invoice, payment, component['creditState']())).toBe(true);
+    credits.get.mockRejectedValueOnce(new Error('refunds.unavailable'));
+    component['task'].invoice.set({ ...invoice, version: invoice.version + 1 });
+    expect(component['creditState']()).toBeUndefined();
+    await fixture.whenStable();
+    expect(credits.get).toHaveBeenCalledTimes(2);
+    expect(component['canCancelPayment'](invoice, payment, component['creditState']())).toBe(false);
+    component['credits'].reload();
+    await fixture.whenStable();
+    expect(component['canCancelPayment'](invoice, payment, component['creditState']())).toBe(true);
+  });
   it('keeps the summary read-only and links to dedicated tasks', async () => {
     const { root } = await setupInvoicePage(InvoiceDetail);
     expect(root.querySelector('form')).toBeNull();

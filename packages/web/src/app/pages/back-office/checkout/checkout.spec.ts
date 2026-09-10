@@ -1,11 +1,12 @@
 import { type ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
-import { of, Subject } from 'rxjs';
+import { firstValueFrom, of, Subject } from 'rxjs';
 import { vi } from 'vitest';
 import { CheckoutRequest, type CheckoutOperation } from '@froment/contracts';
 import {
   PendingProviderRequests,
   pendingRequestStore,
+  type PendingRequestStore,
 } from '@backoffice/pending-provider-requests';
 import { CheckoutApi } from '@backoffice/checkout-api';
 import { InvoicesApi } from '@backoffice/invoices-api';
@@ -197,4 +198,86 @@ it('does not replace an unknown return request with another invoice test', async
     ),
   );
   expect(root.querySelector('[role="status"]')?.textContent).not.toContain(invoice.invoiceNumber);
+});
+
+it('reconciles durable requests even when history arrives before recovery', async () => {
+  const request: CheckoutRequest = {
+    requestId: '7345c34c-320b-49a4-ae23-ec993e570e8b',
+    invoiceId: invoice.id,
+    expectedVersion: 2,
+  };
+  const store = pendingRequestStore(sessionStorage, 'checkout-test', CheckoutRequest);
+  store.write(request);
+  const recovery = new Subject<PendingRequestStore<CheckoutRequest>>();
+  const create = vi.fn();
+  TestBed.configureTestingModule({
+    providers: [
+      provideRouter([]),
+      { provide: PendingProviderRequests, useValue: { checkout: () => firstValueFrom(recovery) } },
+      {
+        provide: CheckoutApi,
+        useValue: {
+          connection: async () => ({
+            credentialsPresent: true,
+            testKey: true,
+            webhookConfigured: false,
+          }),
+          list: () => of([operation(request)]),
+          create,
+        },
+      },
+      { provide: InvoicesApi, useValue: { list: async () => [invoice] } },
+    ],
+  });
+  const fixture = TestBed.createComponent(Checkout);
+  await fixture.whenStable();
+  await vi.waitFor(() => expect(fixture.componentInstance['history'].loaded()).toBe(true));
+  recovery.next(store);
+  await vi.waitFor(() => expect(fixture.componentInstance['completed']()).toBe(true));
+  expect(store.read()).toBeUndefined();
+  expect(fixture.componentInstance['pending']()).toBeUndefined();
+  expect(fixture.componentInstance.canDeactivate()).toBe(true);
+  await fixture.componentInstance['create'](new SubmitEvent('submit'));
+  expect(create).not.toHaveBeenCalled();
+});
+
+it('does not create a Stripe session without durable storage', async () => {
+  const create = vi.fn();
+  TestBed.configureTestingModule({
+    providers: [
+      provideRouter([]),
+      {
+        provide: PendingProviderRequests,
+        useValue: {
+          checkout: async () => ({
+            read: () => undefined,
+            write: () => {
+              throw new Error('Storage is full');
+            },
+            clear: () => undefined,
+          }),
+        },
+      },
+      {
+        provide: CheckoutApi,
+        useValue: {
+          connection: async () => ({
+            credentialsPresent: true,
+            testKey: true,
+            webhookConfigured: false,
+          }),
+          list: () => of([]),
+          create,
+        },
+      },
+      { provide: InvoicesApi, useValue: { list: async () => [invoice] } },
+      { provide: Confirmation, useValue: { request: async () => true } },
+    ],
+  });
+  const fixture = TestBed.createComponent(Checkout);
+  await fixture.whenStable();
+  choose(fixture);
+  await fixture.componentInstance['create'](new SubmitEvent('submit'));
+  expect(create).not.toHaveBeenCalled();
+  expect(fixture.componentInstance['error']()).toBe('checkout.recoveryUnavailable');
 });

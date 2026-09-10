@@ -21,6 +21,7 @@ import {
   type QuoteDetailValue,
   type QuoteStatusValue,
 } from '@froment/contracts';
+import { formatMoney } from '@froment/l10n';
 import { Option, Schema } from 'effect';
 
 import { InvoicesApi } from '@backoffice/invoices-api';
@@ -33,10 +34,21 @@ import { Button } from '@shared/button/button';
 import { DataTable } from '@shared/data-table/data-table';
 import { Icon } from '@shared/icon/icon';
 import { Notice } from '@shared/notice/notice';
+import { PageHeader } from '@shared/page-header/page-header';
 import { TextCopy } from '@shared/text-copy';
 import { Tabs, type TabItem } from '@shared/tabs/tabs';
 import { TabLayout, TabPanel } from '@shared/tabs/tab-panel';
 import { affairContext, affairView } from '../affairs/affair-filters';
+import {
+  commercialDocumentTitle,
+  type DocumentBadge,
+  invoiceStatusBadge,
+  quoteStatusBadge,
+} from '../commercial-header';
+
+export function invoiceSummaryBadge(status: InvoiceStatusValue): DocumentBadge {
+  return { ...invoiceStatusBadge(status), label: `backOffice.invoice.status.${status}` };
+}
 
 interface TimelineItem {
   readonly id: string;
@@ -55,6 +67,7 @@ type PortalDocumentKind = 'quote' | 'order' | 'invoice';
     DataTable,
     Icon,
     Notice,
+    PageHeader,
     RouterLink,
     RouterOutlet,
     Tabs,
@@ -93,6 +106,18 @@ export class AffairDetail {
   protected readonly client = signal<ClientSummaryValue | undefined>(undefined);
   protected readonly timeline = signal<readonly TimelineItem[]>([]);
   protected readonly copiedPortalLink = signal('');
+  protected readonly headerTitle = computed(() => {
+    const quote = this.quote();
+    return quote
+      ? commercialDocumentTitle(quote.reference, quote.currentRevision.title)
+      : this.i18n.t('backOffice.affairs.title');
+  });
+  protected readonly quoteBadge = quoteStatusBadge;
+  protected readonly invoiceBadge = invoiceSummaryBadge;
+  protected readonly invoiceReference = computed(() => {
+    const invoice = this.invoice();
+    return invoice?.invoiceNumber ?? invoice?.orderReference;
+  });
 
   constructor() {
     afterNextRender(() => {
@@ -115,14 +140,6 @@ export class AffairDetail {
       dateStyle: 'medium',
       timeStyle: 'short',
     }).format(new Date(value));
-  }
-
-  protected quoteStatus(status: QuoteStatusValue): string {
-    return this.i18n.t(`backOffice.quote.status.${status}`);
-  }
-
-  protected invoiceStatus(status: InvoiceStatusValue): string {
-    return this.i18n.t(`backOffice.invoice.status.${status}`);
   }
 
   protected quoteNextAction(status: QuoteStatusValue): string {
@@ -331,4 +348,3 @@ export class AffairDetail {
     };
   }
 }
-import { formatMoney } from '@froment/l10n';
