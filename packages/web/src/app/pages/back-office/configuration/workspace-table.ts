@@ -6,6 +6,7 @@ import { type FuseResult, type IFuseOptions } from 'fuse.js';
 import { I18nService, type Language, type TranslationKey } from '@app/i18n.service';
 import { createFuzzySearch } from '@shared/fuzzy-search';
 import { type SortDirection } from '@shared/table-sort/table-sort';
+import { nextTableSort } from '@shared/table-sort/sort-state';
 
 export type WorkspaceTableColumn<Item> =
   | {
@@ -53,7 +54,7 @@ export const workspaceTableQuery = <Item>(
       : Option.getOrElse(Schema.decodeUnknownOption(schema)(params.get(key)), () => defaultValue);
   return {
     q: read(keys.q, SearchQuery, ''),
-    sort: read(keys.sort, Sort, options.defaultSort),
+    sort: read(keys.sort, Sort, 'none'),
     filter: read(keys.filter, Filter, 'all'),
   };
 };
@@ -65,7 +66,7 @@ export const workspaceTableParams = <Item>(
   const keys = options.parameters ?? defaultParameters;
   const params: WorkspaceTableParams = {};
   if (query.q !== '') params[keys.q] = query.q;
-  if (query.sort !== options.defaultSort) params[keys.sort] = query.sort;
+  if (query.sort !== 'none') params[keys.sort] = query.sort;
   if (query.filter !== 'all') params[keys.filter] = query.filter;
   return params;
 };
@@ -76,6 +77,7 @@ export const sortWorkspaceRows = <Item>(
   sort: string,
   language: Language,
 ): readonly FuseResult<Item>[] => {
+  if (sort === 'none') sort = options.defaultSort;
   const column = options.columns.find(({ key }) => sort === `${key}Asc` || sort === `${key}Desc`);
   if (column === undefined) throw new Error('workspace.invalid_sort');
   const collator = new Intl.Collator(language, { numeric: true, sensitivity: 'base' });
@@ -173,7 +175,7 @@ export const createWorkspaceTable = <Item>(
           : 'none',
     sort: (column: string) => {
       if (options.columns.some(({ key }) => key === column))
-        navigate({ sort: `${column}${query().sort === `${column}Asc` ? 'Desc' : 'Asc'}` });
+        navigate({ sort: nextTableSort(query().sort, `${column}Asc`, `${column}Desc`) });
     },
     search: (q: string) => navigate({ q: q.slice(0, 120) }, true),
     filter: (value: string) => {

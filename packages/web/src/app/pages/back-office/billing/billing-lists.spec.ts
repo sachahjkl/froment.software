@@ -401,7 +401,7 @@ describe('Billing lists', () => {
       expect(root.querySelectorAll('tbody tr')).toHaveLength(1);
       expect(root.querySelector('tbody')?.textContent).toContain('Plomberie');
     });
-    it(`${item.method}: uses Fuse, table sort and an explicit filtered CSV`, async () => {
+    it(`${item.method}: resets table sort without changing search, filters or CSV rows`, async () => {
       const entries = [
         item.entry,
         {
@@ -411,6 +411,11 @@ describe('Billing lists', () => {
           title: 'Inspection pompe',
           totalCents: 12000,
           amountCents: 12000,
+        },
+        {
+          ...item.entry,
+          id: '01ARZ3NDEKTSV4RRFFQ69G5FC2',
+          clientId: '01ARZ3NDEKTSV4RRFFQ69G5FC3',
         },
       ];
       TestBed.configureTestingModule({
@@ -426,9 +431,16 @@ describe('Billing lists', () => {
           },
         ],
       });
-      const harness = await RouterTestingHarness.create('/list');
+      const harness = await RouterTestingHarness.create(
+        `/list?q=equipe&client=${context.clientId}&from=2026-01-01&source=invoice`,
+      );
       await harness.fixture.whenStable();
       const root = harness.routeNativeElement!;
+      const router = TestBed.inject(Router);
+      const csv = harness.routeDebugElement!.query(By.directive(TableExport))
+        .componentInstance as TableExport;
+      const initialRows = csv.rows();
+      expect(initialRows).toHaveLength(2);
       expect(root.querySelectorAll('button[appTableSort]')).toHaveLength(item.headings);
       const button = root
         .querySelectorAll<HTMLTableCellElement>('thead th')
@@ -440,9 +452,20 @@ describe('Billing lists', () => {
       button.click();
       await harness.fixture.whenStable();
       expect(TestBed.inject(Router).url).toContain(`sort=${item.sort}-desc`);
-      const csv = harness.routeDebugElement!.query(By.directive(TableExport))
-        .componentInstance as TableExport;
       expect(csv.rows()[0]).toContain('Inspection pompe');
+      button.click();
+      await harness.fixture.whenStable();
+      expect(csv.rows()).toEqual(initialRows);
+      expect(router.parseUrl(router.url).queryParams).toMatchObject({
+        q: 'equipe',
+        client: context.clientId,
+        from: '2026-01-01',
+        source: 'invoice',
+      });
+      expect(router.parseUrl(router.url).queryParams['sort']).toBeUndefined();
+      expect(
+        root.querySelector('thead [aria-sort="ascending"], thead [aria-sort="descending"]'),
+      ).toBeNull();
       const search = root.querySelector<HTMLInputElement>('app-list-search input')!;
       inputValue(search, 'reparaton');
       await harness.fixture.whenStable();

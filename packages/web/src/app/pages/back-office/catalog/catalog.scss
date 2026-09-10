@@ -4,12 +4,7 @@
   display: block;
 }
 .catalog-page {
-  display: grid;
-  gap: var(--space-6);
   padding: var(--page-header-y) var(--page-x);
-}
-.intro {
-  color: var(--color-muted);
 }
 .field {
   display: grid;

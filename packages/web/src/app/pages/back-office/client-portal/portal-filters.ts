@@ -4,6 +4,7 @@ import { Option, Schema } from 'effect';
 export const PortalFilterKind = Schema.Literals(['all', 'quote', 'order', 'invoice']);
 export const PortalFilterStatus = Schema.Literals(['all', 'open', 'completed']);
 const PortalSort = Schema.Literals([
+  'none',
   'reference-asc',
   'reference-desc',
   'kind-asc',
@@ -29,7 +30,7 @@ export const portalFilters = (params: ParamMap) => ({
   ),
   sort: Option.getOrElse(
     Schema.decodeUnknownOption(PortalSort)(params.get('sort')),
-    () => 'date-desc' as const,
+    () => 'none' as const,
   ),
 });
 
@@ -42,5 +43,5 @@ export const portalFilterQuery = ({
   q: search || undefined,
   kind: kind === 'all' ? undefined : kind,
   status: status === 'all' ? undefined : status,
-  sort: sort === 'date-desc' ? undefined : sort,
+  sort: sort === 'none' ? undefined : sort,
 });

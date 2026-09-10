@@ -13,6 +13,7 @@ export const listControlsText = {
     'listControls.noOptions': 'Aucun résultat. Modifiez la recherche.',
     'listControls.sortAscending': '{column} : trier par ordre croissant',
     'listControls.sortDescending': '{column} : trier par ordre décroissant',
+    'listControls.resetSort': '{column} : rétablir l’ordre initial',
     'listControls.removeFilter': 'Retirer le filtre {filter}',
   },
   en: {
@@ -29,6 +30,7 @@ export const listControlsText = {
     'listControls.noOptions': 'No results. Change the search.',
     'listControls.sortAscending': '{column}: sort ascending',
     'listControls.sortDescending': '{column}: sort descending',
+    'listControls.resetSort': '{column}: restore initial order',
     'listControls.removeFilter': 'Remove filter {filter}',
   },
 } as const;

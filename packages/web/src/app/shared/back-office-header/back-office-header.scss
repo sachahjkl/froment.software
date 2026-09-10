@@ -35,8 +35,9 @@
   gap: var(--space-4);
 }
 app-global-search {
-  flex: 0 1 auto;
+  flex: 1 1 20rem;
   min-inline-size: 0;
+  max-inline-size: 32rem;
 }
 .workspace-header a,
 .account-menu-item,
@@ -161,6 +162,12 @@ app-global-search {
   }
   .workspace-label {
     display: none;
+  }
+}
+@media (max-width: 40rem) {
+  app-global-search {
+    flex-basis: 100%;
+    max-inline-size: none;
   }
 }
 @media (max-width: 26rem) {

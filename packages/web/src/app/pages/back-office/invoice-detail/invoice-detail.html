@@ -78,17 +78,7 @@
       >{{ i18n.tf('billingWorkspace.version', { version: invoice.version }) }}</span
     >
   </div>
-  <nav class="detail-tabs" [attr.aria-label]="i18n.t('backOffice.billing.tabs')">
-    @for (item of tabs; track item.value) {
-    <a
-      [routerLink]="[]"
-      [queryParams]="{ tab: item.value }"
-      queryParamsHandling="merge"
-      [attr.aria-current]="tab() === item.value ? 'page' : null"
-      >{{ i18n.t(item.label) }}</a
-    >
-    }
-  </nav>
+  <app-tabs [label]="i18n.t('backOffice.billing.tabs')" [tabs]="tabs()" [preserveQuery]="true" />
   <div class="invoice-panel">
     @switch (tab()) { @case ('summary') { @if (invoice.status !== 'draft') {
     <p appNotice>{{ i18n.t('billingWorkspace.readonly') }}</p>

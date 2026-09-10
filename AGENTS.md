@@ -34,6 +34,8 @@ Push after a meaningful batch of commits, or when the work is ready for CI/revie
 - Calculez les valeurs dérivées dans des fonctions typées ou des `computed`. Évitez les ternaires dans les templates.
 - Importez les styles partagés avec les chemins Sass `shared/...`, configurés dans `angular.json`. Évitez les remontées `../../../shared`.
 - Laissez le conteneur principal gérer la hauteur de la page. N’imposez pas une hauteur de viewport à chaque page interne.
+- Utilisez `Tabs` pour les onglets. Laissez le conteneur gérer leur espacement, sans marge supérieure dans le composant.
+- Donnez aux listes d’entités un titre fixe et une description avec `PageHeader`, sans surtitre ni répétition de l’onglet actif.
 
 ## Learning More About Effect
 

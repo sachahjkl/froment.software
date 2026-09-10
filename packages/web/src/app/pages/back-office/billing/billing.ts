@@ -21,6 +21,7 @@ import { DataTable } from '@shared/data-table/data-table';
 import { Notice } from '@shared/notice/notice';
 import { BulkSelection } from '@shared/bulk-selection/bulk-selection';
 import { TableSort } from '@shared/table-sort/table-sort';
+import { PageHeader } from '@shared/page-header/page-header';
 import { createFuzzySearch } from '@shared/fuzzy-search';
 import { SearchHighlight, SearchHighlightRegistry } from '@shared/search-highlight';
 import { ListToolbar } from '@shared/list-toolbar/list-toolbar';
@@ -56,6 +57,7 @@ import {
     DataTable,
     FormField,
     Notice,
+    PageHeader,
     RouterLink,
     BillingNav,
     BulkSelection,
@@ -226,9 +228,10 @@ export class Billing {
     afterNextRender(() => void this.load());
   }
   protected updateFilters(): void {
+    const sort = this.sort();
     void this.router.navigate([], {
       relativeTo: this.route,
-      queryParams: { ...this.filters().value(), sort: this.sort() },
+      queryParams: { ...this.filters().value(), sort: sort === 'none' ? null : sort },
       queryParamsHandling: 'merge',
       replaceUrl: true,
     });

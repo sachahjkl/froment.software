@@ -21,6 +21,7 @@ import { Notice } from '@shared/notice/notice';
 import { DataTable } from '@shared/data-table/data-table';
 import { EntityIcon, type EntityIconVariant } from '@shared/entity-icon/entity-icon';
 import { TableSort } from '@shared/table-sort/table-sort';
+import { PageHeader } from '@shared/page-header/page-header';
 import { createFuzzySearch } from '@shared/fuzzy-search';
 import { SearchHighlight, SearchHighlightRegistry } from '@shared/search-highlight';
 import { ListWorkspace } from '@shared/list-toolbar/list-workspace';
@@ -44,6 +45,7 @@ import { paymentMethodKey } from '../billing/billing-state';
     EntityIcon,
     Button,
     Notice,
+    PageHeader,
     DataTable,
     RouterLink,
     FormField,

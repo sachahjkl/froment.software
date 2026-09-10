@@ -1,11 +1,9 @@
 <section appTabLayout class="affairs-page" aria-labelledby="affairs-title">
-  <header>
-    <div>
-      <p class="eyebrow">{{ i18n.t('backOffice.affairs.eyebrow') }}</p>
-      <h1 id="affairs-title">{{ i18n.t('backOffice.affairs.title') }}</h1>
-      <p class="intro">{{ i18n.t('backOffice.affairs.intro') }}</p>
-    </div>
+  <app-page-header>
+    <h1 id="affairs-title">{{ i18n.t('backOffice.affairs.title') }}</h1>
+    <p class="muted">{{ i18n.t('backOffice.affairs.intro') }}</p>
     <a
+      pageActions
       appLinkButton
       variant="primary"
       routerLink="/backoffice/quotes/new"
@@ -13,7 +11,7 @@
     >
       {{ i18n.t('backOffice.quotes.new') }}
     </a>
-  </header>
+  </app-page-header>
 
   <app-tabs [label]="i18n.t('backOffice.affairs.tabs')" [tabs]="tabs()" [preserveQuery]="true" />
   <router-outlet />
@@ -114,9 +112,8 @@
         {{ i18n.t(hasFilters() ? 'commercial.noMatches' : 'backOffice.affairs.empty') }}
       </p>
       } @else {
-      <p id="affairs-sort-hint" class="sort-hint">{{ i18n.t('commercial.sortHint') }}</p>
       <div appDataTable>
-        <table aria-describedby="affairs-sort-hint">
+        <table>
           <thead>
             <tr>
               @for (column of columns; track column.key) {

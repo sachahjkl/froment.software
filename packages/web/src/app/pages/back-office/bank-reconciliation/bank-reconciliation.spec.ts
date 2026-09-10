@@ -401,8 +401,8 @@ describe('Bank reconciliation task', () => {
       ],
     });
     const harness = await RouterTestingHarness.create();
-    await harness.navigateByUrl(
-      `/backoffice/banque/transactions/${bankId}?sort=amount-desc`,
+    const component = await harness.navigateByUrl(
+      `/backoffice/banque/transactions/${bankId}?sort=amount-desc&q=reglement&account=MAIN`,
       BankReconciliation,
     );
     await harness.fixture.whenStable();
@@ -412,6 +412,15 @@ describe('Bank reconciliation task', () => {
     );
     const history = root.querySelector<HTMLElement>('section[aria-labelledby="history-title"]');
     if (!allocations || !history) throw new Error('bank.test.table_missing');
+    const transaction = structuredClone(component['transaction']());
+    const historyRows = structuredClone(component['history']());
+    expect(component['allocationSort']()).toBe('none');
+    expect(component['historySort']()).toBe('none');
+    expect(component['sortedAllocations']().map((row) => row.matchId)).toEqual([
+      bankId,
+      otherBankId,
+    ]);
+    expect(component['sortedHistory']().map((row) => row.id)).toEqual([otherBankId, bankId]);
     expect(allocations.querySelectorAll('thead button[appTableSort]')).toHaveLength(4);
     expect(allocations.querySelector('thead th:last-child')?.hasAttribute('aria-sort')).toBe(false);
     allocations.querySelector<HTMLButtonElement>('tbody button')?.click();
@@ -430,6 +439,36 @@ describe('Bank reconciliation task', () => {
     expect(TestBed.inject(Router).url).toContain('historySort=date-asc');
     expect(TestBed.inject(Router).url).toContain('allocationSort=fee-desc');
     expect(TestBed.inject(Router).url).toContain('sort=amount-desc');
+    bankSortHeader(allocations, 'Commission :').querySelector('button')?.click();
+    await harness.fixture.whenStable();
+    expect(TestBed.inject(Router).parseUrl(TestBed.inject(Router).url).queryParams).toEqual({
+      sort: 'amount-desc',
+      q: 'reglement',
+      account: 'MAIN',
+      historySort: 'date-asc',
+    });
+    expect(bankSortHeader(allocations, 'Commission :').getAttribute('aria-sort')).toBe('none');
+    expect(component['sortedAllocations']().map((row) => row.matchId)).toEqual([
+      bankId,
+      otherBankId,
+    ]);
+    bankSortHeader(history, 'Règlement associé').querySelector('button')?.click();
+    await harness.fixture.whenStable();
+    expect(TestBed.inject(Router).url).toContain('historySort=date-desc');
+    bankSortHeader(history, 'Règlement associé').querySelector('button')?.click();
+    await harness.fixture.whenStable();
+    expect(TestBed.inject(Router).parseUrl(TestBed.inject(Router).url).queryParams).toEqual({
+      sort: 'amount-desc',
+      q: 'reglement',
+      account: 'MAIN',
+    });
+    expect(bankSortHeader(history, 'Règlement associé').getAttribute('aria-sort')).toBe('none');
+    expect(component['sortedHistory']().map((row) => row.id)).toEqual([otherBankId, bankId]);
+    expect(component['transaction']()).toEqual(transaction);
+    expect(component['history']()).toEqual(historyRows);
+    expect(allocations.querySelector<HTMLTextAreaElement>('textarea')?.value).toBe(
+      'Motif conservé',
+    );
     expect(api.get).toHaveBeenCalledTimes(1);
     expect(api.history).toHaveBeenCalledTimes(1);
     expect(confirmation.request).not.toHaveBeenCalled();

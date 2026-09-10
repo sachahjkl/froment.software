@@ -34,7 +34,7 @@ export type FinancialEntry =
   | (typeof InvoiceRefundList.Type)[number];
 
 export const entrySort = (params: ParamMap, columns: readonly EntrySortColumn[]): EntrySort =>
-  readBillingSort<EntrySortColumn>(params, columns, 'date-desc');
+  readBillingSort<EntrySortColumn>(params, columns);
 
 export function compareEntries(
   left: FinancialEntry,
@@ -43,12 +43,13 @@ export function compareEntries(
   collator: Intl.Collator,
   translate: (key: TranslationKey) => string,
 ): number {
+  const order = sort === 'none' ? 'date-desc' : sort;
   let comparison: number;
-  if (sort.startsWith('amount-')) {
+  if (order.startsWith('amount-')) {
     const amount = (entry: FinancialEntry): number =>
       'amountCents' in entry ? entry.amountCents : entry.totalCents;
     comparison = amount(left) - amount(right);
-  } else if (sort.startsWith('date-')) {
+  } else if (order.startsWith('date-')) {
     const date = (entry: FinancialEntry): number =>
       Date.parse(
         'paidOn' in entry
@@ -60,11 +61,11 @@ export function compareEntries(
     comparison = date(left) - date(right);
   } else {
     const value = (entry: FinancialEntry): string => {
-      if (sort.startsWith('invoice-')) return entry.invoiceNumber ?? entry.title;
-      if (sort.startsWith('client-')) return entry.clientDisplayName;
-      if (sort.startsWith('method-'))
+      if (order.startsWith('invoice-')) return entry.invoiceNumber ?? entry.title;
+      if (order.startsWith('client-')) return entry.clientDisplayName;
+      if (order.startsWith('method-'))
         return 'method' in entry ? translate(paymentMethodKey(entry.method)) : '';
-      if (sort.startsWith('status-'))
+      if (order.startsWith('status-'))
         return translate(
           'cancelledAt' in entry && entry.cancelledAt !== null
             ? 'billingWorkspace.cancelled'
@@ -74,5 +75,5 @@ export function compareEntries(
     };
     comparison = collator.compare(value(left), value(right));
   }
-  return (sort.endsWith('-desc') ? -comparison : comparison) || left.id.localeCompare(right.id);
+  return (order.endsWith('-desc') ? -comparison : comparison) || left.id.localeCompare(right.id);
 }

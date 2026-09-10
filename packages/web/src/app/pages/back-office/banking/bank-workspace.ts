@@ -164,6 +164,11 @@ export const bankQuery = (params: ParamMap) => ({
     : '',
   sort: bankTableSort(params.get('sort'), bankColumns),
 });
+export function bankQueryParams<Query extends { readonly sort: string }>(
+  query: Query,
+): Omit<Query, 'sort'> & { readonly sort: string | null } {
+  return { ...query, sort: query.sort === 'none' ? null : query.sort };
+}
 export const validBankPeriod = (from: string, to: string): boolean =>
   (from === '' || Schema.is(CalendarDate)(from)) &&
   (to === '' || Schema.is(CalendarDate)(to)) &&

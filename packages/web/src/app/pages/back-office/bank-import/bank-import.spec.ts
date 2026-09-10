@@ -115,7 +115,7 @@ describe('Bank import task', () => {
     });
     const harness = await RouterTestingHarness.create();
     await harness.navigateByUrl(
-      '/backoffice/banque/importer?sort=reference-desc&previewSort=invalid',
+      '/backoffice/banque/importer?sort=reference-desc&previewSort=invalid&q=reglement&account=MAIN',
       BankImport,
     );
     await harness.fixture.whenStable();
@@ -126,7 +126,7 @@ describe('Bank import task', () => {
     bankSubmit(root);
     await harness.fixture.whenStable();
     expect(root.querySelector('tbody th')?.textContent).toContain('BANK-2');
-    expect(bankSortHeader(root, 'Date').getAttribute('aria-sort')).toBe('descending');
+    expect(bankSortHeader(root, 'Date').getAttribute('aria-sort')).toBe('none');
     bankSortHeader(root, 'Montant').querySelector('button')?.click();
     await harness.fixture.whenStable();
     expect(TestBed.inject(Router).url).toContain('previewSort=amount-asc');
@@ -135,6 +135,21 @@ describe('Bank import task', () => {
     expect(root.querySelector('.bank-page > a')?.getAttribute('href')).toContain(
       'sort=reference-desc',
     );
+    bankSortHeader(root, 'Montant').querySelector('button')?.click();
+    await harness.fixture.whenStable();
+    expect(root.querySelector('tbody th')?.textContent).toContain('BANK-1');
+    expect(TestBed.inject(Router).url).toContain('previewSort=amount-desc');
+    bankSortHeader(root, 'Montant').querySelector('button')?.click();
+    await harness.fixture.whenStable();
+    expect(TestBed.inject(Router).parseUrl(TestBed.inject(Router).url).queryParams).toEqual({
+      sort: 'reference-desc',
+      q: 'reglement',
+      account: 'MAIN',
+    });
+    expect(bankSortHeader(root, 'Montant').getAttribute('aria-sort')).toBe('none');
+    expect(bankSortHeader(root, 'Date').getAttribute('aria-sort')).toBe('none');
+    expect(root.querySelector('tbody th')?.textContent).toContain('BANK-2');
+    expect(api.previewStatement).toHaveBeenCalledTimes(1);
     root.querySelector<HTMLButtonElement>('.actions button[variant="primary"]')?.click();
     await harness.fixture.whenStable();
     expect(api.importStatement).toHaveBeenCalledWith({ account: 'MAIN', csv: csv.slice(1) });

@@ -2,6 +2,7 @@ import { type ParamMap } from '@angular/router';
 import { Option, Schema } from 'effect';
 
 const ClientSort = Schema.Literals([
+  'none',
   'name-asc',
   'name-desc',
   'country-asc',
@@ -26,7 +27,7 @@ export const clientFilters = (params: ParamMap) => ({
   ),
   sort: Option.getOrElse(
     Schema.decodeUnknownOption(ClientSort)(params.get('sort')),
-    () => 'name-asc' as const,
+    () => 'none' as const,
   ),
 });
 
@@ -39,5 +40,5 @@ export const clientFilterQuery = ({
   q: search || undefined,
   country: country || undefined,
   contact: contact === 'all' ? undefined : contact,
-  sort: sort === 'name-asc' ? undefined : sort,
+  sort: sort === 'none' ? undefined : sort,
 });

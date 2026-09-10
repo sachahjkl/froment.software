@@ -63,7 +63,7 @@ describe('Workspace table queries and sorting', () => {
     ]) {
       expect(workspaceTableQuery(convertToParamMap(params), options)).toEqual({
         q: '',
-        sort: 'dateDesc',
+        sort: 'none',
         filter: 'all',
       });
     }
@@ -131,10 +131,10 @@ describe('Workspace table queries and sorting', () => {
     });
     const defaults = convertToParamMap({
       memberQ: '',
-      memberSort: 'nameAsc',
+      memberSort: 'none',
       memberFilter: 'all',
       invitationQ: '',
-      invitationSort: 'dateDesc',
+      invitationSort: 'none',
       invitationFilter: 'all',
     });
     expect(
@@ -160,7 +160,7 @@ describe('Workspace table queries and sorting', () => {
     ).toEqual({ q: 'Terms', sort: 'conditionsDesc' });
     expect(
       workspaceTableParams({ q: 'Test', sort: 'dateDesc', filter: 'delivered' }, emailTableOptions),
-    ).toEqual({ q: 'Test', filter: 'delivered' });
+    ).toEqual({ q: 'Test', sort: 'dateDesc', filter: 'delivered' });
     expect(
       workspaceTableParams({ q: 'INV-2', sort: 'amountAsc', filter: 'paid' }, checkoutTableOptions),
     ).toEqual({ q: 'INV-2', sort: 'amountAsc', filter: 'paid' });
@@ -290,9 +290,55 @@ describe('Workspace table queries and sorting', () => {
     queryParamMap.next(convertToParamMap({ q: 'Etge 10', sort: 'nameDesc' }));
     expect(table.direction('name')).toBe('descending');
     expect(table.params()).toEqual({ q: 'Etge 10', sort: 'nameDesc' });
+    table.sort('name');
+    expect(navigate).toHaveBeenLastCalledWith(
+      [],
+      expect.objectContaining({
+        queryParams: { q: 'Etge 10', sort: null, filter: null },
+        queryParamsHandling: 'merge',
+      }),
+    );
     queryParamMap.next(convertToParamMap({}));
-    expect(table.direction('date')).toBe('descending');
+    expect(table.direction('date')).toBe('none');
     expect(table.params()).toEqual({});
+    expect(table.results()).toEqual(sortWorkspaceRows(results, options, 'dateDesc', 'fr'));
+  });
+
+  it('resets the default column without clearing filters or another table state', () => {
+    const queryParamMap = new BehaviorSubject(
+      convertToParamMap({
+        memberQ: 'Camille',
+        memberFilter: 'active',
+        memberSort: 'nameDesc',
+        invitationSort: 'dateAsc',
+        invitationQ: 'Comptabilité',
+      }),
+    );
+    TestBed.configureTestingModule({
+      providers: [provideRouter([]), { provide: ActivatedRoute, useValue: { queryParamMap } }],
+    });
+    const navigate = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
+    const table = TestBed.runInInjectionContext(() =>
+      createWorkspaceTable(signal<readonly (typeof TeamMember.Type)[]>([]), memberTableOptions),
+    );
+    table.sort('name');
+    expect(navigate).toHaveBeenCalledWith(
+      [],
+      expect.objectContaining({
+        queryParams: { memberQ: 'Camille', memberFilter: 'active', memberSort: null },
+        queryParamsHandling: 'merge',
+      }),
+    );
+    queryParamMap.next(convertToParamMap({ memberQ: 'Camille', memberFilter: 'active' }));
+    expect(table.query().sort).toBe('none');
+    table.sort('name');
+    expect(navigate).toHaveBeenLastCalledWith(
+      [],
+      expect.objectContaining({
+        queryParams: { memberQ: 'Camille', memberFilter: 'active', memberSort: 'nameAsc' },
+        queryParamsHandling: 'merge',
+      }),
+    );
   });
 
   it('sorts translated profiles in the selected language', () => {

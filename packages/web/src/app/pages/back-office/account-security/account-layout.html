@@ -4,18 +4,5 @@
     >{{ i18n.t('backOffice.signOut') }}</a
   >
 </app-page-header>
-<nav [attr.aria-label]="i18n.t('configurationWorkspace.account')">
-  <a routerLink="security" routerLinkActive="active" ariaCurrentWhenActive="page"
-    >{{ i18n.t('configurationWorkspace.security') }}</a
-  >
-  <a routerLink="passkeys" routerLinkActive="active" ariaCurrentWhenActive="page"
-    >{{ i18n.t('configurationWorkspace.passkeys') }}</a
-  >
-  <a routerLink="sessions" routerLinkActive="active" ariaCurrentWhenActive="page"
-    >{{ i18n.t('configurationWorkspace.sessions') }}</a
-  >
-  <a routerLink="preferences" routerLinkActive="active" ariaCurrentWhenActive="page"
-    >{{ i18n.t('configurationWorkspace.preferences') }}</a
-  >
-</nav>
+<app-tabs [label]="i18n.t('configurationWorkspace.account')" [tabs]="tabs()" />
 <router-outlet />

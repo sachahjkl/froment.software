@@ -18,7 +18,7 @@ import { Badge } from '@shared/badge/badge';
 import { LocalizedDatePipe } from '@shared/localized-date/localized-date-pipe';
 import { Notice } from '@shared/notice/notice';
 import { PageHeader } from '@shared/page-header/page-header';
-import { emailQuery, messageStatus } from '../emails/email-workspace';
+import { emailFilterQuery, emailQuery, messageStatus } from '../emails/email-workspace';
 
 @Component({
   host: { class: 'page-container' },
@@ -41,7 +41,7 @@ export class EmailDetail {
   protected readonly simulation = signal(false);
   protected readonly status = messageStatus;
   protected backQuery() {
-    return emailQuery(this.route.snapshot.queryParamMap);
+    return emailFilterQuery(emailQuery(this.route.snapshot.queryParamMap));
   }
   private generation = 0;
   constructor() {

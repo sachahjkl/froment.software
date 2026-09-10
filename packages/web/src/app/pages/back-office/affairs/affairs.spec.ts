@@ -227,7 +227,7 @@ describe('Affairs', () => {
     expect(TestBed.inject(Router).url).toContain('stage=draft');
     expect(root.querySelectorAll('tbody tr')).toHaveLength(1);
   });
-  it('sorts numeric amounts in both directions and restores sort from the URL', async () => {
+  it('cycles numeric amounts to the initial order and restores sort from the URL', async () => {
     TestBed.overrideProvider(QuotesApi, {
       useValue: {
         list: async () => [
@@ -236,12 +236,15 @@ describe('Affairs', () => {
         ],
       },
     });
-    const harness = await RouterTestingHarness.create('/all?q=Acme');
+    const harness = await RouterTestingHarness.create(
+      `/all?q=Acme&client=${draftQuote.clientId}&source=invoice`,
+    );
     await harness.fixture.whenStable();
     const root: HTMLElement = harness.fixture.nativeElement;
     const router = TestBed.inject(Router);
     const references = () =>
       Array.from(root.querySelectorAll('tbody td.reference'), (cell) => cell.textContent?.trim());
+    const initialOrder = references();
     const amount = control<HTMLButtonElement>(root, '#affairs-column-amount button');
     amount.focus();
     amount.click();
@@ -260,19 +263,33 @@ describe('Affairs', () => {
     await harness.fixture.whenStable();
     expect(router.parseUrl(router.url).queryParams['sort']).toBe('amount-desc');
     expect(references()).toEqual([acceptedQuote.reference, draftQuote.reference]);
+    amount.click();
+    await harness.fixture.whenStable();
+    expect(references()).toEqual(initialOrder);
+    expect(router.parseUrl(router.url).queryParams).toMatchObject({
+      q: 'Acme',
+      client: draftQuote.clientId,
+      source: 'invoice',
+      view: 'all',
+    });
+    expect(router.parseUrl(router.url).queryParams['sort']).toBeUndefined();
+    expect(root.querySelector('thead [aria-sort]')).toBeNull();
+    expect(
+      control<HTMLAnchorElement>(root, 'tbody td.reference a').getAttribute('href'),
+    ).not.toContain('sort=');
     await harness.navigateByUrl(ascendingUrl);
     await harness.fixture.whenStable();
     expect(references()).toEqual([draftQuote.reference, acceptedQuote.reference]);
     control<HTMLButtonElement>(root, '[appFilterChip]').click();
     await harness.fixture.whenStable();
     expect(router.parseUrl(router.url).queryParams['sort']).toBe('amount-asc');
-    expect(root.querySelectorAll('[appFilterChip]')).toHaveLength(0);
+    expect(root.querySelectorAll('[appFilterChip]')).toHaveLength(1);
     expect(control<HTMLAnchorElement>(root, 'tbody td.reference a').getAttribute('href')).toContain(
       'sort=amount-asc',
     );
   });
-  it.each(['', '?sort=unknown', '?sort=nextAction-asc', '?sort=amount-ascending'])(
-    'uses updated-desc for an absent or invalid URL sort: %s',
+  it.each(['', '?sort=none', '?sort=unknown', '?sort=nextAction-asc', '?sort=amount-ascending'])(
+    'keeps the initial order without an active arrow for URL sort: %s',
     async (query) => {
       TestBed.overrideProvider(QuotesApi, {
         useValue: {
@@ -288,12 +305,10 @@ describe('Affairs', () => {
       expect(root.querySelector('tbody td.reference')?.textContent).toContain(
         acceptedQuote.reference,
       );
-      expect(root.querySelector('#affairs-column-updated')?.getAttribute('aria-sort')).toBe(
-        'descending',
-      );
+      expect(root.querySelector('thead [aria-sort]')).toBeNull();
       expect(
         control<HTMLAnchorElement>(root, 'tbody td.reference a').getAttribute('href'),
-      ).toContain('sort=updated-desc');
+      ).not.toContain('sort=');
       control<HTMLButtonElement>(root, '#affairs-column-updated button').click();
       await harness.fixture.whenStable();
       expect(root.querySelector('tbody td.reference')?.textContent).toContain(draftQuote.reference);

@@ -20,31 +20,6 @@
 .document-panel > a {
   margin-block-start: var(--space-5);
 }
-.quote-steps {
-  display: flex;
-  overflow-x: auto;
-  border-bottom: 1px solid var(--color-line-strong);
-}
-.quote-steps a {
-  display: inline-flex;
-  align-items: center;
-  flex: none;
-  min-block-size: var(--control-height);
-  padding: var(--space-2) var(--space-4);
-  border-bottom: 3px solid transparent;
-  color: var(--color-muted);
-  font-size: var(--text-sm);
-}
-.quote-steps a:hover {
-  color: var(--color-ink);
-  background: var(--color-surface-sunken);
-}
-.quote-steps a[aria-current="page"] {
-  color: var(--color-ink);
-  border-bottom-color: var(--color-button-primary-highlight);
-  font-weight: 700;
-}
-
 .public-quote {
   padding: var(--page-header-y) var(--page-x);
 }
@@ -138,14 +113,6 @@
   padding: var(--panel-padding);
   border-top: 0;
   border-radius: 0 0 var(--radius-sm) var(--radius-sm);
-}
-
-.quote-steps {
-  margin-top: var(--space-6);
-  border: 1px solid var(--color-line);
-  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
-  background: var(--color-surface-raised);
-  box-shadow: var(--shadow-panel);
 }
 
 .line-summary ol {

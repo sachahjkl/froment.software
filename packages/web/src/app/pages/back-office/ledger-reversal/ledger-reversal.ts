@@ -34,7 +34,12 @@ import { Confirmation } from '@shared/confirmation/confirmation';
 import { LocalizedDatePipe } from '@shared/localized-date/localized-date-pipe';
 import { Notice } from '@shared/notice/notice';
 import { PageHeader } from '@shared/page-header/page-header';
-import { ledgerEntryLink, ledgerQuery, ledgerSourceLink } from '../banking/bank-workspace';
+import {
+  bankQueryParams,
+  ledgerEntryLink,
+  ledgerQuery,
+  ledgerSourceLink,
+} from '../banking/bank-workspace';
 
 const blank = () => ({ reason: '', bookedOn: '' });
 @Component({
@@ -95,7 +100,7 @@ export class LedgerReversal {
         .errorSummary()
         .some((error) => error.kind === 'parse'),
   );
-  protected readonly backQuery = ledgerQuery(this.route.snapshot.queryParamMap);
+  protected readonly backQuery = bankQueryParams(ledgerQuery(this.route.snapshot.queryParamMap));
   protected readonly entryLink = ledgerEntryLink;
   protected readonly sourceLink = ledgerSourceLink;
   private generation = 0;

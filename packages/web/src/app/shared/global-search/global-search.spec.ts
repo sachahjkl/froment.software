@@ -112,6 +112,9 @@ describe('GlobalSearch', () => {
       harness.routeNativeElement!.querySelectorAll<HTMLButtonElement>('.search-trigger');
     const ids: string[] = [];
     for (const trigger of triggers) {
+      expect(trigger).toBeInstanceOf(HTMLButtonElement);
+      expect(trigger.type).toBe('button');
+      expect(trigger.getAttribute('aria-haspopup')).toBe('dialog');
       expect(trigger.hasAttribute('aria-controls')).toBe(false);
       trigger.click();
       await harness.fixture.whenStable();

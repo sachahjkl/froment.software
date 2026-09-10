@@ -16,7 +16,7 @@ describe('client filters', () => {
       search: 'x'.repeat(120),
       country: 'y'.repeat(120),
       contact: 'all',
-      sort: 'name-asc',
+      sort: 'none',
     });
     expect(clientFilterQuery(filters)).toEqual({
       q: 'x'.repeat(120),
@@ -30,14 +30,32 @@ describe('client filters', () => {
     expect(clientView('all')).toBe('all');
   });
 
-  it.each(['name-asc', 'name-desc', 'country-asc', 'country-desc', 'date-asc', 'date-desc'])(
-    'preserves the validated sort %s with filters',
-    (sort) => {
-      const filters = clientFilters(
-        convertToParamMap({ q: 'Audit', country: 'France', contact: 'incomplete', sort }),
-      );
-      expect(filters.sort).toBe(sort);
-      expect(clientFilters(convertToParamMap(clientFilterQuery(filters)))).toEqual(filters);
-    },
-  );
+  it.each([
+    'none',
+    'name-asc',
+    'name-desc',
+    'country-asc',
+    'country-desc',
+    'date-asc',
+    'date-desc',
+  ])('preserves the validated sort %s with filters', (sort) => {
+    const filters = clientFilters(
+      convertToParamMap({ q: 'Audit', country: 'France', contact: 'incomplete', sort }),
+    );
+    expect(filters.sort).toBe(sort);
+    expect(clientFilters(convertToParamMap(clientFilterQuery(filters)))).toEqual(filters);
+  });
+
+  it.each([undefined, null, '', 'invalid', 'none'])('uses the initial sort for %s', (sort) => {
+    const filters = clientFilters(
+      convertToParamMap({ q: 'Audit', country: 'France', contact: 'incomplete', sort }),
+    );
+    expect(filters.sort).toBe('none');
+    expect(clientFilterQuery(filters)).toEqual({
+      q: 'Audit',
+      country: 'France',
+      contact: 'incomplete',
+      sort: undefined,
+    });
+  });
 });

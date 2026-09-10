@@ -35,6 +35,7 @@ import { createFuzzySearch } from '@shared/fuzzy-search';
 import { SearchHighlight, SearchHighlightRegistry } from '@shared/search-highlight';
 import { formatLocalizedDate } from '@shared/localized-date/localized-date-pipe';
 import { TableSort, type SortDirection } from '@shared/table-sort/table-sort';
+import { nextTableSort } from '@shared/table-sort/sort-state';
 import { portalDocuments, type PortalDocument, PortalDocumentKind } from './portal-documents';
 import {
   portalFilters,
@@ -140,7 +141,7 @@ export class ClientPortal {
     },
   );
   protected readonly documents = computed(() => {
-    const { sort } = this.model();
+    const sort = this.model().sort === 'none' ? 'date-desc' : this.model().sort;
     const direction = sort.endsWith('-desc') ? -1 : 1;
     const collator = new Intl.Collator(this.i18n.language(), {
       numeric: true,
@@ -277,12 +278,14 @@ export class ClientPortal {
         : 'none';
   }
   protected sortBy(column: PortalSortColumn): void {
-    const sort =
-      this.sortDirection(column) === 'ascending'
-        ? (`${column}-desc` as const)
-        : (`${column}-asc` as const);
+    const sort = nextTableSort(this.model().sort, `${column}-asc`, `${column}-desc`);
     this.model.update((model) => ({ ...model, sort }));
-    this.writeQuery();
+    void this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { sort: sort === 'none' ? null : sort },
+      queryParamsHandling: 'merge',
+      replaceUrl: true,
+    });
   }
   private writeQuery(): void {
     void this.router.navigate([], {

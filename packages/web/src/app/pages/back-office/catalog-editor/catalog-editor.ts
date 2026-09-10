@@ -30,7 +30,11 @@ import { Button } from '@shared/button/button';
 import { Confirmation } from '@shared/confirmation/confirmation';
 import { Notice } from '@shared/notice/notice';
 import { PageHeader } from '@shared/page-header/page-header';
-import { catalogListQuery, catalogReturnView } from '../catalog/catalog-list-query';
+import {
+  catalogFilterQuery,
+  catalogListQuery,
+  catalogReturnView,
+} from '../catalog/catalog-list-query';
 
 const emptyItem = () => ({
   description: '',
@@ -138,7 +142,7 @@ export class CatalogEditor {
   }
 
   protected backQuery() {
-    return catalogListQuery(this.route.snapshot.queryParamMap);
+    return catalogFilterQuery(catalogListQuery(this.route.snapshot.queryParamMap));
   }
 
   async canDeactivate(): Promise<boolean> {

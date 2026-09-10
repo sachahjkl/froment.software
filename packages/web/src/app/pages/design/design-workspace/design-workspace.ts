@@ -45,6 +45,7 @@ import { ResultNavigation } from '@shared/result-navigation/result-navigation';
 import { SearchHighlight, SearchHighlightRegistry } from '@shared/search-highlight';
 import { SplitAction } from '@shared/split-action/split-action';
 import { TableSort, type SortDirection } from '@shared/table-sort/table-sort';
+import { nextTableSort } from '@shared/table-sort/sort-state';
 import { TableExport } from '@shared/table-export/table-export';
 import { designWorkspaceText } from '@froment/l10n';
 import {
@@ -180,7 +181,7 @@ export class DesignWorkspace {
       this.statusOptions().find((option) => option.value === this.filterModel().status)?.label ??
       this.text().allStates,
   );
-  protected readonly direction = signal<SortDirection>('ascending');
+  protected readonly direction = signal<SortDirection>('none');
   private readonly query = computed(() => this.filterModel().query);
   private readonly searchResults = createFuzzySearch(this.records, this.query, {
     keys: ['name', 'id', 'contact'],
@@ -198,7 +199,7 @@ export class DesignWorkspace {
       )
       .toSorted(
         (left, right) =>
-          (this.direction() === 'ascending' ? 1 : -1) *
+          (this.direction() === 'descending' ? -1 : 1) *
           left.item.name.localeCompare(right.item.name, this.i18n.language()),
       )
       .map((result) => ({
@@ -209,6 +210,9 @@ export class DesignWorkspace {
       }));
   });
   private readonly pageSize = 3;
+  protected sort(): void {
+    this.direction.update((direction) => nextTableSort(direction, 'ascending', 'descending'));
+  }
   protected readonly page = linkedSignal({
     source: () =>
       [this.filterModel(), this.direction(), this.scenarioModel(), this.records()] as const,

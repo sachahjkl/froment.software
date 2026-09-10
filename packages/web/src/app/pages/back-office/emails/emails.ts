@@ -44,7 +44,9 @@ import { TabLayout, TabPanel } from '@shared/tabs/tab-panel';
 import { createFuzzySearch } from '@shared/fuzzy-search';
 import { SearchHighlight, SearchHighlightRegistry } from '@shared/search-highlight';
 import { TableSort, type SortDirection } from '@shared/table-sort/table-sort';
+import { nextTableSort } from '@shared/table-sort/sort-state';
 import {
+  emailFilterQuery,
   emailQuery,
   emailDateMatches,
   emailDate,
@@ -308,7 +310,7 @@ export class Emails {
             (query.sort.startsWith('state-') || query.sort.startsWith('recipient-'))) ||
           (this.currentView() === 'reminders' && query.sort.startsWith('recipient-'))
         )
-          query.sort = 'date-desc';
+          query.sort = 'none';
         this.query.set(query);
         this.searchModel.set({ search: query.q });
       });
@@ -348,7 +350,7 @@ export class Emails {
         : 'emailsWorkspace.newMessage';
   }
   protected returnQuery(view: EmailView) {
-    return { ...this.query(), view };
+    return { ...emailFilterQuery(this.query()), view };
   }
   protected count(view: EmailView): number {
     switch (view) {
@@ -476,17 +478,19 @@ export class Emails {
       : 'none';
   }
   protected sortBy(column: EmailSortColumn): void {
-    const sort =
-      this.sortDirection(column) === 'ascending'
-        ? (`${column}-desc` as const)
-        : (`${column}-asc` as const);
+    const sort = nextTableSort(this.query().sort, `${column}-asc`, `${column}-desc`);
     this.query.update((query) => ({ ...query, sort }));
-    this.updateQuery();
+    void this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { sort: sort === 'none' ? null : sort },
+      queryParamsHandling: 'merge',
+      replaceUrl: true,
+    });
   }
   private updateQuery(): void {
     void this.router.navigate([], {
       relativeTo: this.route,
-      queryParams: this.query(),
+      queryParams: emailFilterQuery(this.query()),
       replaceUrl: true,
     });
   }

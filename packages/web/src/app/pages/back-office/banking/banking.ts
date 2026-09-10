@@ -39,6 +39,7 @@ import { createFuzzySearch } from '@shared/fuzzy-search';
 import { SearchHighlight, SearchHighlightRegistry } from '@shared/search-highlight';
 import {
   bankQuery,
+  bankQueryParams,
   bankColumns,
   bankStatus,
   bankStatusLabel,
@@ -105,6 +106,7 @@ export class Banking {
   protected readonly state = signal<'loading' | 'ready' | 'error'>('loading');
   protected readonly transactions = signal<ReadonlyArray<BankTransactionValue>>([]);
   protected readonly query = signal(bankQuery(this.route.snapshot.queryParamMap));
+  protected readonly queryParams = computed(() => bankQueryParams(this.query()));
   private readonly model = signal(this.query());
   protected readonly filters = form(this.model);
   private readonly searchControl = viewChild(ListSearch);
@@ -244,7 +246,8 @@ export class Banking {
     this.model.update((model) => ({ ...model, [key]: value }));
     void this.router.navigate([], {
       relativeTo: this.route,
-      queryParams: this.model(),
+      queryParams: bankQueryParams(this.model()),
+      queryParamsHandling: 'merge',
       replaceUrl: key === 'q',
     });
   }
@@ -253,13 +256,17 @@ export class Banking {
     const to = range.to ?? '';
     if (!validBankPeriod(from, to)) return;
     this.model.update((model) => ({ ...model, from, to }));
-    void this.router.navigate([], { relativeTo: this.route, queryParams: this.model() });
+    void this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: bankQueryParams(this.model()),
+      queryParamsHandling: 'merge',
+    });
     this.filterMenu()?.close();
   }
   protected clear(): void {
     void this.router.navigate([], {
       relativeTo: this.route,
-      queryParams: { sort: this.query().sort },
+      queryParams: bankQueryParams({ sort: this.query().sort }),
     });
     this.searchControl()?.focus();
   }
@@ -269,7 +276,8 @@ export class Banking {
   protected sortBy(column: string): void {
     void this.router.navigate([], {
       relativeTo: this.route,
-      queryParams: { ...this.query(), sort: nextBankSort(this.query().sort, column) },
+      queryParams: bankQueryParams({ sort: nextBankSort(this.query().sort, column) }),
+      queryParamsHandling: 'merge',
       replaceUrl: true,
     });
   }

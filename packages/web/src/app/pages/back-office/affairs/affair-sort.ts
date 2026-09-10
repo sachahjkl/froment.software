@@ -1,6 +1,7 @@
 import { type QuoteSummaryValue } from '@froment/contracts';
 import { type TranslationKey } from '@app/i18n.service';
 import { type SortDirection } from '@shared/table-sort/table-sort';
+import { nextTableSort } from '@shared/table-sort/sort-state';
 import { type AffairSort } from './affair-filters';
 
 export const affairColumns = [
@@ -24,7 +25,7 @@ export function affairSortDirection(sort: AffairSort, column: AffairColumn): Sor
 }
 
 export function nextAffairSort(sort: AffairSort, column: AffairColumn): AffairSort {
-  return sort === `${column}-asc` ? `${column}-desc` : `${column}-asc`;
+  return nextTableSort(sort, `${column}-asc`, `${column}-desc`);
 }
 
 export function compareAffairs(
@@ -33,8 +34,9 @@ export function compareAffairs(
   sort: AffairSort,
   collator: Intl.Collator,
 ): number {
+  const order = sort === 'none' ? 'updated-desc' : sort;
   let comparison: number;
-  switch (sort) {
+  switch (order) {
     case 'reference-asc':
     case 'reference-desc':
       comparison = collator.compare(left.quote.reference, right.quote.reference);
@@ -61,5 +63,5 @@ export function compareAffairs(
       break;
   }
   const byId = left.quote.id < right.quote.id ? -1 : left.quote.id > right.quote.id ? 1 : 0;
-  return (sort.endsWith('-desc') ? -comparison : comparison) || byId;
+  return (order.endsWith('-desc') ? -comparison : comparison) || byId;
 }

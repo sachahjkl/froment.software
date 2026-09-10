@@ -92,7 +92,7 @@ export class EntryFilterState {
   updateSort(sort: EntrySort): void {
     void this.router.navigate([], {
       relativeTo: this.route,
-      queryParams: { ...this.fields().value(), sort },
+      queryParams: { ...this.fields().value(), sort: sort === 'none' ? null : sort },
       queryParamsHandling: 'merge',
       replaceUrl: true,
     });

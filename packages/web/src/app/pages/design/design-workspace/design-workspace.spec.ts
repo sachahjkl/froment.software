@@ -174,6 +174,8 @@ describe('DesignWorkspace', () => {
     );
     root.querySelector<HTMLButtonElement>('[appTableSort]')!.click();
     await fixture.whenStable();
+    root.querySelector<HTMLButtonElement>('[appTableSort]')!.click();
+    await fixture.whenStable();
     expect(
       exporter()
         .rows()
@@ -195,6 +197,21 @@ describe('DesignWorkspace', () => {
     expect(document.activeElement).toBe(root.querySelector('app-filter-menu button'));
     expect(exporter().rows()).toHaveLength(6);
     expect(exporter().label()).toContain('Exporter les résultats filtrés (CSV)');
+  });
+
+  it('restores initial order without clearing the search or status filter', async () => {
+    const { fixture, input, status, exporter } = await setup();
+    await input('#workspace-search input', 'atl');
+    await status('draft');
+    const initial = exporter().rows();
+    const component = fixture.componentInstance;
+    for (const direction of ['ascending', 'descending', 'none']) {
+      component['sort']();
+      await fixture.whenStable();
+      expect(component['direction']()).toBe(direction);
+    }
+    expect(exporter().rows()).toEqual(initial);
+    expect(component['filterModel']()).toMatchObject({ query: 'atl', status: 'draft' });
   });
 
   it('neutralizes harmless formula fixtures when exporting local form values', async () => {

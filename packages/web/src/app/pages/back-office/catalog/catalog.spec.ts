@@ -125,7 +125,7 @@ describe('Catalog', () => {
     search.dispatchEvent(new Event('input'));
     await harness.fixture.whenStable();
     expect(root.querySelectorAll('tbody tr')).toHaveLength(1);
-    expect(router.url).toBe('/backoffice/catalogue/active?q=developement&sort=description-asc');
+    expect(router.url).toBe('/backoffice/catalogue/active?q=developement');
     expect(component['visibleItems']('active')[0]?.matches.length).toBeGreaterThan(0);
     expect(root.querySelector('tbody a')?.getAttribute('href')).toContain(`/${item.id}/edit?`);
     expect(
@@ -214,6 +214,11 @@ describe('Catalog', () => {
       const sort = sortButton(root, label);
       sort.click();
       await harness.fixture.whenStable();
+      expect(descriptions()).toEqual(expected([2, 1, 0]));
+      expect(root.querySelectorAll('th[aria-sort]')).toHaveLength(0);
+      expect(router.parseUrl(router.url).queryParams).not.toHaveProperty('sort');
+      sort.click();
+      await harness.fixture.whenStable();
       expect(descriptions()).toEqual(expected(ascending));
       expect(sort.parentElement?.getAttribute('aria-sort')).toBe('ascending');
       expect(root.querySelectorAll('th[aria-sort]')).toHaveLength(1);
@@ -225,6 +230,26 @@ describe('Catalog', () => {
       expect(records[0]).toBe(item);
     },
   );
+
+  it('resets sorting without changing search, VAT, the view, or export order', async () => {
+    const { component, harness, router } = await configure(
+      '/backoffice/catalogue/all?q=prestation&tax=2000&sort=price-desc',
+    );
+    component['sortBy']('price');
+    await harness.fixture.whenStable();
+    expect(component['query']().sort).toBe('none');
+    expect(component['sortDirection']('description')).toBe('none');
+    expect(router.parseUrl(router.url).queryParams).toEqual({ q: 'prestation', tax: '2000' });
+    expect(router.url.split('?')[0]).toBe('/backoffice/catalogue/all');
+    expect(component['visibleItems']('all').map(({ item }) => item.id)).toEqual([records[2]!.id]);
+    expect(component['exportRows']('all').map((row) => row[0])).toEqual(['Ancienne prestation']);
+    expect(component['editorQuery']('all')).toEqual({
+      q: 'prestation',
+      tax: 2000,
+      sort: undefined,
+      view: 'all',
+    });
+  });
 
   it('searches VAT choices and commits with the keyboard before restoring focus', async () => {
     const { root, harness, router } = await configure('/backoffice/catalogue/all?sort=price-desc');

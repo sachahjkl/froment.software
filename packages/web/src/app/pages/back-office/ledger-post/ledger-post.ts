@@ -38,7 +38,12 @@ import { Confirmation } from '@shared/confirmation/confirmation';
 import { LocalizedDatePipe } from '@shared/localized-date/localized-date-pipe';
 import { Notice } from '@shared/notice/notice';
 import { PageHeader } from '@shared/page-header/page-header';
-import { ledgerEntryLink, ledgerQuery, transactionLink } from '../banking/bank-workspace';
+import {
+  bankQueryParams,
+  ledgerEntryLink,
+  ledgerQuery,
+  transactionLink,
+} from '../banking/bank-workspace';
 
 const blank = () => ({ debitAccount: '', creditAccount: '', label: '' });
 type EntryField = keyof ReturnType<typeof blank>;
@@ -81,7 +86,7 @@ export class LedgerPost {
       () => this.busy() || this.state() !== 'ready' || !!this.pending() || !!this.completed(),
     );
   });
-  protected readonly backQuery = ledgerQuery(this.route.snapshot.queryParamMap);
+  protected readonly backQuery = bankQueryParams(ledgerQuery(this.route.snapshot.queryParamMap));
   protected readonly entryLink = ledgerEntryLink;
   protected readonly transactionLink = transactionLink;
   private generation = 0;

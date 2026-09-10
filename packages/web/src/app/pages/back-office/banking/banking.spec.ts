@@ -90,7 +90,7 @@ describe('Banking transaction workspace', () => {
     const harness = await RouterTestingHarness.create();
     await harness.navigateByUrl('/backoffice/banque?sort=invalid', Banking);
     await harness.fixture.whenStable();
-    expect(bankSortHeader(bankRoot(harness), 'Date').getAttribute('aria-sort')).toBe('descending');
+    expect(bankSortHeader(bankRoot(harness), 'Date').getAttribute('aria-sort')).toBe('none');
     expect(bankRoot(harness).textContent).toContain('2 transactions affichées');
     expect(bankRoot(harness).querySelector('tbody a')?.textContent).toContain('BANK-2');
     const amount = bankSortHeader(bankRoot(harness), 'Montant');
@@ -128,8 +128,23 @@ describe('Banking transaction workspace', () => {
     expect(bankSortHeader(bankRoot(harness), 'Montant').getAttribute('aria-sort')).toBe(
       'descending',
     );
+    bankSortHeader(bankRoot(harness), 'Montant').querySelector('button')?.click();
+    await harness.fixture.whenStable();
+    const resetParams = TestBed.inject(Router).parseUrl(TestBed.inject(Router).url).queryParams;
+    expect(resetParams['sort']).toBeUndefined();
+    expect(resetParams['q']).toBe('reglement');
+    expect(bankSortHeader(bankRoot(harness), 'Montant').getAttribute('aria-sort')).toBe('none');
+    expect(bankSortHeader(bankRoot(harness), 'Date').getAttribute('aria-sort')).toBe('none');
+    expect(
+      bankExport(harness)
+        .rows()
+        .map((row) => row[6]),
+    ).toEqual([-900, 10000]);
     bankField(bankRoot(harness), 'app-list-search input', 'absent-zzzz');
     await harness.fixture.whenStable();
+    expect(
+      TestBed.inject(Router).parseUrl(TestBed.inject(Router).url).queryParams['sort'],
+    ).toBeUndefined();
     expect(bankExport(harness).rows()).toEqual([]);
     expect(
       bankRoot(harness).querySelector('app-table-export button')?.getAttribute('aria-disabled'),
@@ -265,5 +280,15 @@ describe('Banking transaction workspace', () => {
     expect(openParams['to']).toBe('');
     expect(openParams['account']).toBe('MAIN');
     expect(openParams['sort']).toBe('amount-asc');
+    for (const sort of ['amount-desc', undefined]) {
+      bankSortHeader(bankRoot(harness), 'Montant').querySelector('button')?.click();
+      await harness.fixture.whenStable();
+      expect(TestBed.inject(Router).parseUrl(TestBed.inject(Router).url).queryParams).toEqual({
+        ...openParams,
+        sort,
+      });
+    }
+    expect(bankSortHeader(bankRoot(harness), 'Montant').getAttribute('aria-sort')).toBe('none');
+    expect(api.list).toHaveBeenCalledTimes(1);
   });
 });

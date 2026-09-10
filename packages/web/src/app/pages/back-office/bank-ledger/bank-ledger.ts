@@ -35,7 +35,7 @@ import { Icon } from '@shared/icon/icon';
 import { LocalizedDatePipe } from '@shared/localized-date/localized-date-pipe';
 import { Notice } from '@shared/notice/notice';
 import { PageHeader } from '@shared/page-header/page-header';
-import { Tabs } from '@shared/tabs/tabs';
+import { Tabs, type TabItem } from '@shared/tabs/tabs';
 import { TableSort } from '@shared/table-sort/table-sort';
 import {
   bankTableSort,
@@ -47,6 +47,7 @@ import { createFuzzySearch } from '@shared/fuzzy-search';
 import { SearchHighlight, SearchHighlightRegistry } from '@shared/search-highlight';
 import {
   bankTabs,
+  bankQueryParams,
   ledgerEntryColumns,
   ledgerSourceColumns,
   ledgerEntryLink,
@@ -97,6 +98,7 @@ export class BankLedger {
   protected readonly error = signal<TranslationKey | undefined>(undefined);
   protected readonly records = signal<typeof LedgerList.Type>({ entries: [], sources: [] });
   protected readonly query = signal(ledgerQuery(this.route.snapshot.queryParamMap));
+  protected readonly queryParams = computed(() => bankQueryParams(this.query()));
   protected readonly periodRequired = signal(false);
   private readonly periodError = viewChild('periodError', { read: ElementRef<HTMLElement> });
   protected readonly searchForm = form(signal({ q: this.query().q }));
@@ -106,6 +108,15 @@ export class BankLedger {
   private readonly filterMenu = viewChild(FilterMenu);
   private readonly searchControl = viewChild(ListSearch);
   protected readonly tabs = computed(() => bankTabs(this.i18n));
+  protected readonly viewTabs = computed<readonly TabItem[]>(() =>
+    (['sources', 'journal'] as const).map((view) => ({
+      path: '.',
+      id: `bank-${view}-tab`,
+      label: this.i18n.t(`bankWorkspace.${view}`),
+      queryParams: this.viewQuery(view),
+      active: this.query().view === view,
+    })),
+  );
   protected readonly sourceLink = ledgerSourceLink;
   protected readonly entryLink = ledgerEntryLink;
   protected readonly sourceColumns = ledgerSourceColumns;
@@ -275,14 +286,16 @@ export class BankLedger {
     this.periodRequired.set(false);
     void this.router.navigate([], {
       relativeTo: this.route,
-      queryParams: { ...this.query(), ...period },
+      queryParams: bankQueryParams({ ...this.query(), ...period }),
+      queryParamsHandling: 'merge',
     });
     this.filterMenu()?.close();
   }
   protected search(value: string): void {
     void this.router.navigate([], {
       relativeTo: this.route,
-      queryParams: { ...this.query(), q: value },
+      queryParams: bankQueryParams({ ...this.query(), q: value }),
+      queryParamsHandling: 'merge',
       replaceUrl: true,
     });
     if (value === '') this.searchControl()?.focus();
@@ -292,7 +305,7 @@ export class BankLedger {
       view === 'journal'
         ? bankTableSort(this.query().sort, ledgerEntryColumns)
         : bankTableSort(this.query().sort, ledgerSourceColumns);
-    return { ...this.query(), view, sort };
+    return bankQueryParams({ ...this.query(), view, sort });
   }
   protected sortDirection(column: string) {
     return bankSortDirection(this.query().sort, column);
@@ -300,7 +313,8 @@ export class BankLedger {
   protected sortBy(column: string): void {
     void this.router.navigate([], {
       relativeTo: this.route,
-      queryParams: { ...this.query(), sort: nextBankSort(this.query().sort, column) },
+      queryParams: bankQueryParams({ sort: nextBankSort(this.query().sort, column) }),
+      queryParamsHandling: 'merge',
       replaceUrl: true,
     });
   }

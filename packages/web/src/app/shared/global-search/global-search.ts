@@ -62,6 +62,10 @@ export class GlobalSearch {
   private dialog: DialogRef | undefined;
   protected readonly shortcutLabel = signal('Ctrl+K');
   protected readonly opened = signal(false);
+  protected readonly dialogId = computed(() => (this.opened() ? `${this.id}-dialog` : null));
+  protected readonly shortcutKeys = computed(() =>
+    this.shortcutEnabled() ? ['Control+k', 'Meta+k'].join(' ') : null,
+  );
   protected readonly state = signal<'idle' | 'loading' | 'ready' | 'error'>('idle');
   protected readonly searchForm = form(signal({ query: '' }), (path) => maxLength(path.query, 120));
   private readonly items = signal<readonly SearchItem[]>([]);

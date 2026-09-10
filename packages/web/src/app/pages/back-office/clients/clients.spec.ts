@@ -140,7 +140,10 @@ describe('Clients', () => {
     expect(names()).toEqual(['Ecole 2', 'École 2', 'École 10']);
     const buttons = root.querySelectorAll<HTMLButtonElement>('thead [appTableSort]');
     expect(buttons).toHaveLength(3);
-    expect(root.querySelectorAll('thead th[aria-sort]')).toHaveLength(1);
+    expect(root.querySelectorAll('thead th[aria-sort]')).toHaveLength(0);
+    buttons.item(0).click();
+    await fixture.whenStable();
+    expect(names()).toEqual(['Ecole 2', 'École 2', 'École 10']);
     expect(buttons.item(0).parentElement?.getAttribute('aria-sort')).toBe('ascending');
     buttons.item(0).click();
     await fixture.whenStable();
@@ -167,10 +170,52 @@ describe('Clients', () => {
     expect(exporter.rows().map((row) => row[0])).toEqual(names());
     expect(exporter.rows().every((row) => row.length === 6)).toBe(true);
     expect(exporter.filename()).toBe('clients.csv');
+    buttons.item(2).click();
+    await fixture.whenStable();
+    expect(names()).toEqual(['Ecole 2', 'École 2', 'École 10']);
+    expect(root.querySelectorAll('thead th[aria-sort]')).toHaveLength(0);
+    expect(
+      TestBed.inject(Router).parseUrl(TestBed.inject(Router).url).queryParams,
+    ).not.toHaveProperty('sort');
+    expect(exporter.rows().map((row) => row[0])).toEqual(names());
     await harness.navigateByUrl('/backoffice/clients/active?sort=unknown');
     await fixture.whenStable();
     expect(names()).toEqual(['Ecole 2', 'École 2', 'École 10']);
-    expect(buttons.item(0).parentElement?.getAttribute('aria-sort')).toBe('ascending');
+    expect(root.querySelectorAll('thead th[aria-sort]')).toHaveLength(0);
+  });
+
+  it('cycles each column back to the initial order without changing filters or the view', async () => {
+    const records = [
+      { ...client, id: '01ARZ3NDEKTSV4RRFFQ69G5FAX', displayName: 'Acme 10', updatedAt: 1 },
+      { ...client, id: '01ARZ3NDEKTSV4RRFFQ69G5FAW', displayName: 'Acme 2', updatedAt: 3 },
+      { ...client, displayName: 'Acme 2', updatedAt: 3 },
+      { ...client, id: '01ARZ3NDEKTSV4RRFFQ69G5FAY', displayName: 'Acme 0', country: 'Belgique' },
+    ];
+    const { fixture } = await configure(
+      vi.fn().mockResolvedValue(records),
+      '/backoffice/clients/all?q=Acme&country=France&contact=incomplete',
+    );
+    const page = fixture.debugElement.query(By.directive(Clients)).componentInstance as Clients;
+    const router = TestBed.inject(Router);
+    const filters = { q: 'Acme', country: 'France', contact: 'incomplete' };
+    const initial = [client.id, records[1]!.id, records[0]!.id];
+    for (const column of ['name', 'country', 'date'] as const) {
+      expect(page['sortDirection'](column)).toBe('none');
+      for (const direction of ['ascending', 'descending', 'none'] as const) {
+        page['sortBy'](column);
+        await fixture.whenStable();
+        expect(page['sortDirection'](column)).toBe(direction);
+      }
+      expect(router.url.split('?')[0]).toBe('/backoffice/clients/all');
+      expect(router.parseUrl(router.url).queryParams).toEqual(filters);
+      expect(page['visibleClients']('all').map(({ client }) => client.id)).toEqual(initial);
+      expect(page['exportRows']('all').map((row) => row[0])).toEqual([
+        'Acme 2',
+        'Acme 2',
+        'Acme 10',
+      ]);
+      expect(page['detailQuery']('all')).toEqual({ ...filters, sort: undefined, view: 'all' });
+    }
   });
 
   it('keeps sorting with Fuse filters and restores the list through real detail tabs', async () => {

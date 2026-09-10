@@ -3,7 +3,7 @@
 }
 .billing-page {
   display: grid;
-  gap: var(--space-5);
+  gap: var(--space-4);
   padding: var(--page-header-y) var(--page-x);
 }
 [appListWorkspace] > p {
@@ -22,7 +22,7 @@ header {
   justify-content: space-between;
   align-items: start;
 }
-h1 {
+.billing-page > h1 {
   font-size: var(--text-2xl);
   margin-block: var(--space-2);
 }

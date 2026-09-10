@@ -52,6 +52,7 @@ import {
   allocationColumns,
   historyColumns,
   bankQuery,
+  bankQueryParams,
   bankStatus,
   bankStatusLabel,
 } from '../banking/bank-workspace';
@@ -112,9 +113,8 @@ export class BankReconciliation {
   protected readonly history = signal<typeof BankMatchHistory.Type>([]);
   protected readonly allocationColumns = allocationColumns;
   protected readonly historyColumns = historyColumns;
-  // Le contrat des allocations actives ne contient pas de date.
   protected readonly allocationSort = computed(() =>
-    bankTableSort(this.params().get('allocationSort'), allocationColumns, 'invoice-asc'),
+    bankTableSort(this.params().get('allocationSort'), allocationColumns),
   );
   protected readonly historySort = computed(() =>
     bankTableSort(this.params().get('historySort'), historyColumns),
@@ -126,6 +126,8 @@ export class BankReconciliation {
         allocationColumns,
         this.i18n.language(),
         (row) => row.matchId,
+        // Le contrat des allocations actives ne contient pas de date.
+        'invoice-asc',
       ),
     ),
   );
@@ -201,7 +203,7 @@ export class BankReconciliation {
     const item = this.transaction();
     return bankStatusLabel(item ? bankStatus(item) : 'unmatched');
   });
-  protected readonly backQuery = bankQuery(this.route.snapshot.queryParamMap);
+  protected readonly backQuery = bankQueryParams(bankQuery(this.route.snapshot.queryParamMap));
   private generation = 0;
   private paymentGeneration = 0;
   private historyGeneration = 0;
@@ -535,10 +537,12 @@ export class BankReconciliation {
   }
   protected sortBy(table: 'allocation' | 'history', column: string): void {
     const sort = table === 'allocation' ? this.allocationSort() : this.historySort();
+    const nextSort = nextBankSort(sort, column);
     void this.router.navigate([], {
       relativeTo: this.route,
       queryParams: {
-        [table === 'allocation' ? 'allocationSort' : 'historySort']: nextBankSort(sort, column),
+        [table === 'allocation' ? 'allocationSort' : 'historySort']:
+          nextSort === 'none' ? null : nextSort,
       },
       queryParamsHandling: 'merge',
       replaceUrl: true,

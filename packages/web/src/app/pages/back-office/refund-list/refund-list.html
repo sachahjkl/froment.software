@@ -1,14 +1,16 @@
 <section class="billing-page" aria-labelledby="refunds-title">
-  <header>
-    <h1 id="refunds-title">{{ i18n.t('billingWorkspace.refunds') }}</h1>
+  <app-page-header>
+    <h1 id="refunds-title">{{ i18n.t('backOffice.billing.title') }}</h1>
+    <p class="muted">{{ i18n.t('backOffice.billing.intro') }}</p>
     <a
+      pageActions
       appLinkButton
       variant="primary"
       routerLink="/backoffice/facturation"
       [queryParams]="{ credit: 'with' }"
       >{{ i18n.t('billingWorkspace.chooseInvoice') }}</a
     >
-  </header>
+  </app-page-header>
   <app-billing-nav />
   <section appListWorkspace>
     <app-billing-entry-filters

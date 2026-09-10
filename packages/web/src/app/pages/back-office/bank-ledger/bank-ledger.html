@@ -1,26 +1,13 @@
 <section class="bank-page" aria-labelledby="ledger-title">
   <app-page-header
-    ><h1 id="ledger-title">{{ i18n.t('bankWorkspace.entries') }}</h1>
-    <p class="muted">{{ i18n.t('ledger.hint') }}</p></app-page-header
+    ><h1 id="ledger-title">{{ i18n.t('bank.title') }}</h1>
+    <p class="muted">{{ i18n.t('bankWorkspace.intro') }}</p></app-page-header
   >
   <app-tabs [label]="i18n.t('bank.title')" [tabs]="tabs()" />
   <p appNotice variant="info">{{ i18n.t('bankWorkspace.ledgerScope') }}</p>
   <p class="muted">{{ i18n.t('bankWorkspace.ledgerSortLoaded') }}</p>
   <section appListWorkspace [attr.aria-label]="i18n.t('bankWorkspace.entries')">
-    <nav class="view-nav spacer-x-2" [attr.aria-label]="i18n.t('bankWorkspace.entries')">
-      <a
-        routerLink="."
-        [queryParams]="viewQuery('sources')"
-        [attr.aria-current]="query().view === 'sources' ? 'page' : null"
-        >{{ i18n.t('bankWorkspace.sources') }}</a
-      >
-      <a
-        routerLink="."
-        [queryParams]="viewQuery('journal')"
-        [attr.aria-current]="query().view === 'journal' ? 'page' : null"
-        >{{ i18n.t('bankWorkspace.journal') }}</a
-      >
-    </nav>
+    <app-tabs [label]="i18n.t('bankWorkspace.entries')" [tabs]="viewTabs()" />
     <app-list-toolbar>
       <app-list-search
         listSearch
@@ -116,7 +103,7 @@
             <th scope="row">
               <a
                 [routerLink]="sourceLink(source.sourceKind, source.sourceId)"
-                [queryParams]="query()"
+                [queryParams]="queryParams()"
                 [appSearchHighlight]="result.indices"
                 >{{ source.reference }}</a
               >
@@ -157,7 +144,7 @@
             <th scope="row">
               <a
                 [routerLink]="entryLink(entry.id)"
-                [queryParams]="query()"
+                [queryParams]="queryParams()"
                 [appSearchHighlight]="result.indices"
                 >{{ entry.label }}</a
               ><small>{{ entry.id }}</small>

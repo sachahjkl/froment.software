@@ -1,10 +1,123 @@
-import { operation, setupEmailPage } from './email-workspace.spec-helper';
+import { invoiceId, operation, setupEmailPage } from './email-workspace.spec-helper';
 import { Emails } from './emails';
 import { installScrollIntoView } from '@shared/filter-choice/filter-choice.spec-helper';
 import { TestBed } from '@angular/core/testing';
 import { I18nService } from '@app/i18n.service';
 
 describe('Emails', () => {
+  it.each([
+    { view: 'messages', state: 'simulated', columns: ['subject', 'recipient', 'state', 'date'] },
+    { view: 'drafts', state: 'draft', columns: ['subject', 'recipient', 'state', 'date'] },
+    { view: 'templates', state: 'all', columns: ['subject', 'date'] },
+    { view: 'reminders', state: 'scheduled', columns: ['subject', 'state', 'date'] },
+  ] as const)(
+    'restores the initial $view order and preserves filters through each cycle',
+    async ({ view, state, columns }) => {
+      const filters = { q: 'Facture', state, from: '2026-01-01', to: '2026-12-31' };
+      const { harness, router } = await setupEmailPage(
+        `/backoffice/courriels/${view}?q=Facture&state=${state}&from=2026-01-01&to=2026-12-31`,
+      );
+      const page = harness.routeDebugElement!.componentInstance as Emails;
+      const rows = [
+        {
+          id: '91ff5717-c394-4708-bef2-6b5f5cafbda3',
+          subject: 'Facture A',
+          date: '2026-09-01T10:00:00Z',
+        },
+        {
+          id: '91ff5717-c394-4708-bef2-6b5f5cafbda2',
+          subject: 'Facture B',
+          date: '2026-09-06T10:00:00Z',
+        },
+        {
+          id: '91ff5717-c394-4708-bef2-6b5f5cafbda1',
+          subject: 'Facture C',
+          date: '2026-09-06T10:00:00Z',
+        },
+      ];
+      page['operations'].set(
+        rows.map(({ id, subject, date }) => ({
+          ...operation,
+          id: `${operation.id.slice(0, -1)}${id.slice(-1)}`,
+          request: { ...operation.request, subject },
+          createdAt: date,
+        })),
+      );
+      page['drafts'].set(
+        rows.map(({ id, subject, date }) => ({
+          id,
+          subject,
+          updatedAt: date,
+          recipient: 'client@example.test',
+          reference: 'FA-1',
+          body: '',
+          reminder: false,
+          version: 1,
+        })),
+      );
+      page['templates'].set(
+        rows.map(({ id, subject, date }) => ({
+          id,
+          subject,
+          updatedAt: date,
+          body: '',
+          version: 1,
+        })),
+      );
+      page['reminders'].set(
+        rows.map(({ id, subject, date }) => ({
+          id,
+          invoiceId,
+          invoiceReference: subject,
+          sendAt: date,
+          language: 'fr',
+          expectedMode: 'simulation',
+          expectedVersion: 1,
+          createdByUserId: invoiceId,
+          createdAt: '2025-01-01T00:00:00Z',
+          status: 'scheduled',
+          reason: null,
+          operationId: null,
+        })),
+      );
+      await harness.fixture.whenStable();
+      for (const column of columns) {
+        expect(page['sortDirection'](column)).toBe('none');
+        for (const direction of ['ascending', 'descending', 'none'] as const) {
+          page['sortBy'](column);
+          await harness.fixture.whenStable();
+          expect(page['sortDirection'](column)).toBe(direction);
+        }
+        expect(page['query']().sort).toBe('none');
+        expect(router.url.split('?')[0]).toBe(`/backoffice/courriels/${view}`);
+        expect(router.parseUrl(router.url).queryParams).toEqual(filters);
+        expect(page['exportRows'](view).map((row) => row[0])).toEqual([
+          'Facture C',
+          'Facture B',
+          'Facture A',
+        ]);
+        expect(page['returnQuery'](view)).toEqual({ ...filters, sort: undefined, view });
+      }
+    },
+  );
+
+  it.each([
+    { view: 'templates', sort: 'recipient-desc' },
+    { view: 'templates', sort: 'state-asc' },
+    { view: 'reminders', sort: 'recipient-asc' },
+  ])('uses the initial order for unsupported $view sort $sort', async ({ view, sort }) => {
+    const { harness } = await setupEmailPage(`/backoffice/courriels/${view}?sort=${sort}`);
+    const page = harness.routeDebugElement!.componentInstance as Emails;
+    expect(page['query']().sort).toBe('none');
+    expect(page['sortDirection']('date')).toBe('none');
+    page['sortBy']('subject');
+    await harness.fixture.whenStable();
+    expect(page['sortDirection']('subject')).toBe('ascending');
+    page['sortBy']('date');
+    await harness.fixture.whenStable();
+    expect(page['sortDirection']('date')).toBe('ascending');
+  });
+
   it.each([
     ['fr', ['0 résultat ·', '1 résultat ·', '2 résultats ·']],
     ['en', ['0 results ·', '1 result ·', '2 results ·']],

@@ -47,7 +47,7 @@ import { Confirmation } from '@shared/confirmation/confirmation';
 import { Notice } from '@shared/notice/notice';
 import { ObjectPicker } from '@shared/object-picker/object-picker';
 import { PageHeader } from '@shared/page-header/page-header';
-import { emailQuery, emailView } from '../emails/email-workspace';
+import { emailFilterQuery, emailQuery, emailView } from '../emails/email-workspace';
 
 const blank = () => ({ recipient: '', reference: '', subject: '', body: '' });
 type MessageField = keyof ReturnType<typeof blank>;
@@ -136,7 +136,7 @@ export class EmailComposer {
     return ['/backoffice/courriels', emailView(this.route.snapshot.queryParamMap.get('view'))];
   }
   protected backQuery() {
-    return emailQuery(this.route.snapshot.queryParamMap);
+    return emailFilterQuery(emailQuery(this.route.snapshot.queryParamMap));
   }
   protected invalid(field: MessageField): boolean {
     return this.messageForm[field]().invalid() && this.messageForm[field]().touched();

@@ -34,6 +34,7 @@ import { SearchHighlight, SearchHighlightRegistry } from '@shared/search-highlig
 import { FilterChip } from '@shared/filter-chip/filter-chip';
 import { clientContactIncomplete } from './client-contact';
 import { TableSort, type SortDirection } from '@shared/table-sort/table-sort';
+import { nextTableSort } from '@shared/table-sort/sort-state';
 import {
   clientFilters,
   clientFilterQuery,
@@ -152,7 +153,7 @@ export class Clients {
     },
   );
   private readonly results = computed(() => {
-    const { sort } = this.model();
+    const sort = this.model().sort === 'none' ? 'name-asc' : this.model().sort;
     const direction = sort.endsWith('-desc') ? -1 : 1;
     const collator = this.collator();
     return this.searchResults()
@@ -216,12 +217,14 @@ export class Clients {
   }
 
   protected sortBy(column: ClientSortColumn): void {
-    const sort =
-      this.sortDirection(column) === 'ascending'
-        ? (`${column}-desc` as const)
-        : (`${column}-asc` as const);
+    const sort = nextTableSort(this.model().sort, `${column}-asc`, `${column}-desc`);
     this.model.update((model) => ({ ...model, sort }));
-    this.writeQuery();
+    void this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { sort: sort === 'none' ? null : sort },
+      queryParamsHandling: 'merge',
+      replaceUrl: true,
+    });
   }
 
   protected detailQuery(view: ClientView) {

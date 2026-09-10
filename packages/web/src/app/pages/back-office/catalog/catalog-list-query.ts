@@ -3,6 +3,7 @@ import { CatalogItemCreateRequest } from '@froment/contracts';
 import { Option, Schema } from 'effect';
 
 const CatalogSort = Schema.Literals([
+  'none',
   'description-asc',
   'description-desc',
   'quantity-asc',
@@ -29,9 +30,14 @@ export const catalogListQuery = (params: ParamMap) => ({
   q: (params.get('q') ?? '').slice(0, 120),
   sort: Option.getOrElse(
     Schema.decodeUnknownOption(CatalogSort)(params.get('sort')),
-    () => 'description-asc' as const,
+    () => 'none' as const,
   ),
   tax: catalogTaxRate(params.get('tax')),
+});
+
+export const catalogFilterQuery = (query: ReturnType<typeof catalogListQuery>) => ({
+  ...query,
+  sort: query.sort === 'none' ? undefined : query.sort,
 });
 
 export const catalogView = (value: string | null | undefined): CatalogView =>

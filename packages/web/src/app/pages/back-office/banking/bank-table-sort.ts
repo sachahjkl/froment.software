@@ -1,4 +1,5 @@
 import type { TranslationKey } from '@app/i18n.service';
+import { nextTableSort } from '@shared/table-sort/sort-state';
 import type { SortDirection } from '@shared/table-sort/table-sort';
 
 export type BankTableColumn<Row> = {
@@ -13,12 +14,11 @@ export type BankTableColumn<Row> = {
 export function bankTableSort<Row>(
   value: string | null,
   columns: readonly BankTableColumn<Row>[],
-  defaultSort = 'date-desc',
 ): string {
   for (const { key } of columns) {
     if (value === `${key}-asc` || value === `${key}-desc`) return value;
   }
-  return defaultSort;
+  return 'none';
 }
 
 export function bankSortDirection(sort: string, column: string): SortDirection {
@@ -26,7 +26,7 @@ export function bankSortDirection(sort: string, column: string): SortDirection {
 }
 
 export function nextBankSort(sort: string, column: string): string {
-  return `${column}-${bankSortDirection(sort, column) === 'ascending' ? 'desc' : 'asc'}`;
+  return nextTableSort(sort, `${column}-asc`, `${column}-desc`);
 }
 
 const compareIdentity = (left: string, right: string): number =>
@@ -37,10 +37,12 @@ export function compareBankRows<Row>(
   columns: readonly BankTableColumn<Row>[],
   language: string,
   identity: (row: Row) => string,
+  initialSort = 'date-desc',
 ): (left: Row, right: Row) => number {
-  const column = columns.find(({ key }) => bankSortDirection(sort, key) !== 'none');
+  const effectiveSort = sort === 'none' ? initialSort : sort;
+  const column = columns.find(({ key }) => bankSortDirection(effectiveSort, key) !== 'none');
   if (!column) throw new Error('bank.sort_invalid');
-  const direction = sort.endsWith('-desc') ? -1 : 1;
+  const direction = effectiveSort.endsWith('-desc') ? -1 : 1;
   const collator = new Intl.Collator(language, { numeric: true, sensitivity: 'base' });
   return (left, right) => {
     let comparison: number;

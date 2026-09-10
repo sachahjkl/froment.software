@@ -15,16 +15,6 @@
 .clients-page {
   padding: var(--page-header-y) var(--page-x);
 }
-h1 {
-  font-size: var(--text-2xl);
-}
-.intro {
-  margin-block-start: var(--space-2);
-  color: var(--color-muted);
-}
-app-tabs {
-  margin-block-start: var(--space-6);
-}
 th,
 td {
   padding-block: var(--space-3);

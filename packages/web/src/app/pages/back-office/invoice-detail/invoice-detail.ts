@@ -21,6 +21,7 @@ import { Badge } from '@shared/badge/badge';
 import { DataTable } from '@shared/data-table/data-table';
 import { Notice } from '@shared/notice/notice';
 import { LocalizedDatePipe } from '@shared/localized-date/localized-date-pipe';
+import { Tabs, type TabItem } from '@shared/tabs/tabs';
 import { InvoiceTask } from '../billing/invoice-task';
 import {
   activePaidCents,
@@ -32,7 +33,7 @@ import {
 
 @Component({
   selector: 'app-invoice-detail',
-  imports: [Button, Badge, DataTable, Notice, RouterLink, FormField, LocalizedDatePipe],
+  imports: [Button, Badge, DataTable, Notice, RouterLink, FormField, LocalizedDatePipe, Tabs],
   providers: [InvoiceTask],
   templateUrl: './invoice-detail.html',
   styleUrl: './invoice-detail.scss',
@@ -49,7 +50,7 @@ export class InvoiceDetail {
   private readonly query = toSignal(this.task.route.queryParamMap, {
     initialValue: this.task.route.snapshot.queryParamMap,
   });
-  protected readonly tabs = [
+  private readonly sections = [
     { value: 'summary', label: 'billingWorkspace.summary' },
     { value: 'document', label: 'billingWorkspace.document' },
     { value: 'receipts', label: 'billingWorkspace.receipts' },
@@ -57,7 +58,18 @@ export class InvoiceDetail {
     { value: 'history', label: 'billingWorkspace.history' },
   ] as const;
   protected readonly tab = computed(
-    () => this.tabs.find((tab) => tab.value === this.query().get('tab'))?.value ?? 'summary',
+    () =>
+      this.sections.find((section) => section.value === this.query().get('tab'))?.value ??
+      'summary',
+  );
+  protected readonly tabs = computed<readonly TabItem[]>(() =>
+    this.sections.map((section) => ({
+      path: '.',
+      id: `invoice-${section.value}-tab`,
+      label: this.i18n.t(section.label),
+      queryParams: { tab: section.value },
+      active: this.tab() === section.value,
+    })),
   );
   protected readonly documentStatusKey = documentStatusKey;
   protected readonly paymentMethodKey = paymentMethodKey;

@@ -38,19 +38,47 @@ describe('Financial list sort', () => {
     const tied = { ...first, id: second.id };
     expect(compareEntries(first, tied, 'amount-desc', collator, (key) => key)).toBeLessThan(0);
   });
-  it('accepts only columns present in each table and toggles both URL directions', () => {
+  it('accepts only columns present in each table', () => {
     for (const columns of [receiptSortColumns, creditSortColumns, refundSortColumns]) {
-      expect(entrySort(convertToParamMap({}), columns)).toBe('date-desc');
+      expect(entrySort(convertToParamMap({}), columns)).toBe('none');
+      expect(entrySort(convertToParamMap({ sort: 'none' }), columns)).toBe('none');
       expect(entrySort(convertToParamMap({ sort: 'amount-asc' }), columns)).toBe('amount-asc');
-      expect(entrySort(convertToParamMap({ sort: 'actions-desc' }), columns)).toBe('date-desc');
+      expect(entrySort(convertToParamMap({ sort: 'actions-desc' }), columns)).toBe('none');
     }
-    expect(entrySort(convertToParamMap({ sort: 'status-asc' }), creditSortColumns)).toBe(
-      'date-desc',
-    );
-    expect(nextBillingSort('amount-asc', 'amount')).toBe('amount-desc');
-    expect(nextBillingSort('amount-desc', 'amount')).toBe('amount-asc');
+    expect(entrySort(convertToParamMap({ sort: 'status-asc' }), creditSortColumns)).toBe('none');
     expect(sortDirection('amount-asc', 'amount')).toBe('ascending');
     expect(sortDirection('amount-desc', 'amount')).toBe('descending');
     expect(sortDirection('date-desc', 'amount')).toBe('none');
+  });
+  it.each(receiptSortColumns)(
+    'cycles %s through ascending, descending and the initial order',
+    (column) => {
+      const ascending = nextBillingSort('none', column);
+      const descending = nextBillingSort(ascending, column);
+      const reset = nextBillingSort(descending, column);
+      expect(ascending).toBe(`${column}-asc`);
+      expect(descending).toBe(`${column}-desc`);
+      expect(reset).toBe('none');
+      expect(nextBillingSort(reset, column)).toBe(ascending);
+      expect(nextBillingSort(column === 'date' ? 'amount-desc' : 'date-desc', column)).toBe(
+        ascending,
+      );
+      expect(receiptSortColumns.every((key) => sortDirection(reset, key) === 'none')).toBe(true);
+    },
+  );
+  it('restores date-desc and its ID tie-break without changing the source entries', () => {
+    const tied = { ...first, id: second.id };
+    const rows = Object.freeze([tied, first, second]);
+    const reset = nextBillingSort('amount-desc', 'amount');
+    const sorted = rows.toSorted((left, right) =>
+      compareEntries(left, right, reset, collator, (key) => key),
+    );
+    expect(sorted).toEqual([second, first, tied]);
+    expect(sorted).toEqual(
+      rows.toSorted((left, right) =>
+        compareEntries(left, right, 'date-desc', collator, (key) => key),
+      ),
+    );
+    expect(rows).toEqual([tied, first, second]);
   });
 });

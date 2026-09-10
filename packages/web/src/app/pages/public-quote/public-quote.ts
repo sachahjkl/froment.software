@@ -20,13 +20,7 @@ import {
   validate,
 } from '@angular/forms/signals';
 import { DomSanitizer } from '@angular/platform-browser';
-import {
-  ActivatedRoute,
-  Router,
-  RouterLink,
-  RouterLinkActive,
-  RouterOutlet,
-} from '@angular/router';
+import { ActivatedRoute, Router, RouterLink, RouterOutlet } from '@angular/router';
 import {
   QuoteLinkToken,
   type PublicQuoteConsultationValue,
@@ -40,7 +34,7 @@ import { PublicQuoteApi } from '../../public-quote/public-quote-api';
 import { Button } from '@shared/button/button';
 import { Notice } from '@shared/notice/notice';
 import { StatusBlock } from '@shared/status-block/status-block';
-import { type TabItem } from '@shared/tabs/tabs';
+import { Tabs, type TabItem } from '@shared/tabs/tabs';
 import { TabLayout, TabPanel } from '@shared/tabs/tab-panel';
 import { Confirmation } from '@shared/confirmation/confirmation';
 import { formatLocalizedDate } from '@shared/localized-date/localized-date-pipe';
@@ -53,11 +47,11 @@ import { formatLocalizedDate } from '@shared/localized-date/localized-date-pipe'
     FormField,
     Notice,
     RouterLink,
-    RouterLinkActive,
     RouterOutlet,
     StatusBlock,
     TabLayout,
     TabPanel,
+    Tabs,
   ],
   templateUrl: './public-quote.html',
   styleUrl: './public-quote.scss',

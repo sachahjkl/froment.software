@@ -31,11 +31,13 @@ import { Notice } from '@shared/notice/notice';
 import { PageHeader } from '@shared/page-header/page-header';
 import { TableExport } from '@shared/table-export/table-export';
 import { TableSort, type SortDirection } from '@shared/table-sort/table-sort';
+import { nextTableSort } from '@shared/table-sort/sort-state';
 import { Tabs, type TabItem } from '@shared/tabs/tabs';
 import { TabLayout, TabPanel } from '@shared/tabs/tab-panel';
 import { createFuzzySearch } from '@shared/fuzzy-search';
 import { SearchHighlight, SearchHighlightRegistry } from '@shared/search-highlight';
 import {
+  catalogFilterQuery,
   catalogListQuery,
   catalogTaxRate,
   catalogView,
@@ -136,7 +138,7 @@ export class Catalog {
     },
   );
   private readonly results = computed(() => {
-    const { sort } = this.query();
+    const sort = this.query().sort === 'none' ? 'description-asc' : this.query().sort;
     const direction = sort.endsWith('desc') ? -1 : 1;
     const collator = new Intl.Collator(this.i18n.language(), {
       numeric: true,
@@ -202,7 +204,7 @@ export class Catalog {
   }
 
   protected editorQuery(view: CatalogView) {
-    return { ...this.query(), view };
+    return { ...catalogFilterQuery(this.query()), view };
   }
 
   protected createQuery() {
@@ -250,18 +252,20 @@ export class Catalog {
   }
 
   protected sortBy(column: CatalogSortColumn): void {
-    const sort =
-      this.sortDirection(column) === 'ascending'
-        ? (`${column}-desc` as const)
-        : (`${column}-asc` as const);
+    const sort = nextTableSort(this.query().sort, `${column}-asc`, `${column}-desc`);
     this.query.update((query) => ({ ...query, sort }));
-    this.updateQuery();
+    void this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { sort: sort === 'none' ? null : sort },
+      queryParamsHandling: 'merge',
+      replaceUrl: true,
+    });
   }
 
   private updateQuery(): void {
     void this.router.navigate([], {
       relativeTo: this.route,
-      queryParams: this.query(),
+      queryParams: catalogFilterQuery(this.query()),
       replaceUrl: true,
     });
   }

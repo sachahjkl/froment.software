@@ -2,8 +2,6 @@ export const commercialWorkspaceText = {
   fr: {
     'commercial.moreActions': 'Autres actions',
     'commercial.updated': 'Modification du devis',
-    'commercial.sortHint':
-      'Sélectionnez une colonne pour trier. Sélectionnez-la à nouveau pour inverser le tri.',
     'commercial.versionOrder': 'Révisions, de la première à la dernière.',
     'commercial.historyOrder': 'Événements, du plus ancien au plus récent.',
     'commercial.documentOrder': 'Documents dans l’ordre devis, commande, facture.',
@@ -90,7 +88,6 @@ export const commercialWorkspaceText = {
   en: {
     'commercial.moreActions': 'More actions',
     'commercial.updated': 'Quote updated',
-    'commercial.sortHint': 'Select a column to sort. Select it again to reverse the sort order.',
     'commercial.versionOrder': 'Revisions, from first to last.',
     'commercial.historyOrder': 'Events, from oldest to newest.',
     'commercial.documentOrder': 'Documents in quote, order, invoice order.',

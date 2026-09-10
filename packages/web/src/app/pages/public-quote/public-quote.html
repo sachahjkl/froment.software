@@ -44,19 +44,12 @@
     </section>
   </article>
 
-  <nav class="quote-steps" [attr.aria-label]="i18n.t('publicQuote.tabs')">
-    @for (step of quoteTabs(); track step.id) {
-    <a
-      [id]="step.id"
-      [routerLink]="step.path"
-      [preserveFragment]="true"
-      routerLinkActive="active"
-      ariaCurrentWhenActive="page"
-      [routerLinkActiveOptions]="{ paths: 'exact', queryParams: 'ignored', fragment: 'ignored', matrixParams: 'ignored' }"
-      >{{ step.label }}</a
-    >
-    }
-  </nav>
+  <app-tabs
+    class="quote-steps"
+    [label]="i18n.t('publicQuote.tabs')"
+    [tabs]="quoteTabs()"
+    [preserveFragment]="true"
+  />
   <router-outlet />
 
   <ng-template appTabPanel="summary">

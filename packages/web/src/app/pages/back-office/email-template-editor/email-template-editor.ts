@@ -28,7 +28,7 @@ import { ActionMenu } from '@shared/action-menu/action-menu';
 import { Confirmation } from '@shared/confirmation/confirmation';
 import { Notice } from '@shared/notice/notice';
 import { PageHeader } from '@shared/page-header/page-header';
-import { emailQuery } from '../emails/email-workspace';
+import { emailFilterQuery, emailQuery } from '../emails/email-workspace';
 
 @Component({
   host: { class: 'page-container' },
@@ -75,7 +75,7 @@ export class EmailTemplateEditor {
     );
   }
   protected backQuery() {
-    return emailQuery(this.route.snapshot.queryParamMap);
+    return emailFilterQuery(emailQuery(this.route.snapshot.queryParamMap));
   }
   protected invalid(field: 'subject' | 'body'): boolean {
     return this.templateForm[field]().touched() && this.templateForm[field]().invalid();

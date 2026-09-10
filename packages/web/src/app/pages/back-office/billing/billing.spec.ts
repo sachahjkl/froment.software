@@ -13,9 +13,11 @@ import {
   documentStatus,
   financialStatus,
   invoicePassesFilters,
+  invoiceSortColumns,
   type InvoiceSort,
   reminderEligible,
 } from './billing-state';
+import { nextBillingSort, sortDirection } from './billing-list';
 
 const invoice = (
   id: string,
@@ -44,7 +46,9 @@ describe('Billing', () => {
     const first = invoice('01ARZ3NDEKTSV4RRFFQ69G5FAY');
     const second = { ...first, id: '01ARZ3NDEKTSV4RRFFQ69G5FAZ', totalCents: 2400 };
     expect(billingSort(convertToParamMap({ sort: 'total-desc' }))).toBe('total-desc');
-    expect(billingSort(convertToParamMap({ sort: 'unknown' }))).toBe('due-asc');
+    expect(billingSort(convertToParamMap({ sort: 'unknown' }))).toBe('none');
+    expect(billingSort(convertToParamMap({}))).toBe('none');
+    expect(billingSort(convertToParamMap({ sort: 'none' }))).toBe('none');
     const collator = new Intl.Collator('fr', { numeric: true, sensitivity: 'base' });
     const compare = (left: InvoiceSummaryValue, right: InvoiceSummaryValue, sort: InvoiceSort) =>
       compareInvoices(left, right, sort, collator, (key) => key);
@@ -55,6 +59,40 @@ describe('Billing', () => {
     expect(
       compare(first, { ...second, invoiceNumber: 'FA-2026-000002' }, 'number-asc'),
     ).toBeLessThan(0);
+  });
+  it.each(invoiceSortColumns)(
+    'cycles %s through ascending, descending and the initial order',
+    (column) => {
+      const ascending = nextBillingSort('none', column);
+      const descending = nextBillingSort(ascending, column);
+      const reset = nextBillingSort(descending, column);
+      expect(ascending).toBe(`${column}-asc`);
+      expect(descending).toBe(`${column}-desc`);
+      expect(reset).toBe('none');
+      expect(nextBillingSort(reset, column)).toBe(ascending);
+      expect(nextBillingSort(column === 'due' ? 'total-desc' : 'due-desc', column)).toBe(ascending);
+      expect(billingSort(convertToParamMap({ sort: ascending }))).toBe(ascending);
+      expect(billingSort(convertToParamMap({ sort: descending }))).toBe(descending);
+      expect(invoiceSortColumns.every((key) => sortDirection(reset, key) === 'none')).toBe(true);
+    },
+  );
+  it('restores due-asc and its ID tie-break without changing the source invoices', () => {
+    const first = invoice('01ARZ3NDEKTSV4RRFFQ69G5FAY');
+    const second = { ...first, id: '01ARZ3NDEKTSV4RRFFQ69G5FAZ' };
+    const earlier = { ...first, dueDate: '2026-08-01' };
+    const rows = Object.freeze([second, first, earlier]);
+    const reset = nextBillingSort('total-desc', 'total');
+    const collator = new Intl.Collator('fr', { numeric: true, sensitivity: 'base' });
+    const sorted = rows.toSorted((left, right) =>
+      compareInvoices(left, right, reset, collator, (key) => key),
+    );
+    expect(sorted).toEqual([earlier, first, second]);
+    expect(sorted).toEqual(
+      rows.toSorted((left, right) =>
+        compareInvoices(left, right, 'due-asc', collator, (key) => key),
+      ),
+    );
+    expect(rows).toEqual([second, first, earlier]);
   });
   it('separates document status from its financial state', () => {
     const paid = invoice('01ARZ3NDEKTSV4RRFFQ69G5FAY', 'paid');

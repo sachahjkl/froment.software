@@ -19,6 +19,7 @@ export type AffairStage = (typeof affairStages)[number];
 export type AffairView = 'attention' | 'active' | 'completed' | 'all';
 
 const affairSortSchema = Schema.Literals([
+  'none',
   'reference-asc',
   'reference-desc',
   'title-asc',
@@ -37,7 +38,7 @@ export type AffairSort = typeof affairSortSchema.Type;
 export function affairSort(params: ParamMap): AffairSort {
   return Option.getOrElse(
     Schema.decodeUnknownOption(affairSortSchema)(params.get('sort')),
-    () => 'updated-desc' as const,
+    () => 'none' as const,
   );
 }
 
@@ -62,11 +63,12 @@ export function affairView(params: ParamMap): AffairView {
 
 export function affairContext(params: ParamMap) {
   const filters = affairFilters(params);
+  const sort = affairSort(params);
   return {
     q: filters.q || undefined,
     stage: filters.stage || undefined,
     client: filters.client || undefined,
     view: params.has('view') ? affairView(params) : undefined,
-    sort: params.has('sort') ? affairSort(params) : undefined,
+    sort: sort === 'none' ? undefined : sort,
   };
 }

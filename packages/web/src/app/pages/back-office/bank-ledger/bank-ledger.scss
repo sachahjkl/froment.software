@@ -1,14 +1,1 @@
 @use "../banking/bank-workspace";
-.view-nav {
-  display: flex;
-  flex-wrap: wrap;
-  border-block-end: 1px solid var(--color-line-strong);
-}
-.view-nav a {
-  padding: var(--space-3) var(--space-4);
-  border-block-end: 3px solid transparent;
-}
-.view-nav a[aria-current="page"] {
-  border-color: var(--color-button-primary-highlight);
-  font-weight: 700;
-}

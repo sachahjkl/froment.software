@@ -3,12 +3,15 @@
   <a
     [id]="tab.id"
     [routerLink]="tab.path"
-    [queryParamsHandling]="preserveQuery() ? 'preserve' : ''"
-    routerLinkActive="active"
-    ariaCurrentWhenActive="page"
-    [routerLinkActiveOptions]="{ paths: tab.exact === false ? 'subset' : 'exact', queryParams: 'ignored', fragment: 'ignored', matrixParams: 'ignored' }"
+    [queryParams]="tab.queryParams"
+    [queryParamsHandling]="queryParamsHandling(tab)"
+    [preserveFragment]="preserveFragment()"
+    routerLinkActive
+    #route="routerLinkActive"
+    [routerLinkActiveOptions]="activeOptions(tab)"
+    [class.active]="isActive(tab, route.isActive)"
+    [ariaCurrentWhenActive]="currentPage(tab)"
     [attr.aria-disabled]="disabled()"
-    (click)="disabled() && $event.preventDefault()"
   >
     {{ tab.label }}
   </a>

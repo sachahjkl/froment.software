@@ -16,7 +16,7 @@ describe('portal filters', () => {
       search: 'x'.repeat(120),
       kind: 'all',
       status: 'all',
-      sort: 'date-desc',
+      sort: 'none',
     });
     expect(portalFilterQuery(filters)).toEqual({
       q: 'x'.repeat(120),
@@ -39,6 +39,7 @@ describe('portal filters', () => {
   });
 
   it.each([
+    'none',
     'reference-asc',
     'reference-desc',
     'kind-asc',
@@ -53,5 +54,18 @@ describe('portal filters', () => {
     const filters = portalFilters(convertToParamMap({ sort }));
     expect(filters.sort).toBe(sort);
     expect(portalFilters(convertToParamMap(portalFilterQuery(filters)))).toEqual(filters);
+  });
+
+  it.each([undefined, null, '', 'invalid', 'none'])('uses the initial sort for %s', (sort) => {
+    const filters = portalFilters(
+      convertToParamMap({ q: 'Security', kind: 'invoice', status: 'open', sort }),
+    );
+    expect(filters.sort).toBe('none');
+    expect(portalFilterQuery(filters)).toEqual({
+      q: 'Security',
+      kind: 'invoice',
+      status: 'open',
+      sort: undefined,
+    });
   });
 });

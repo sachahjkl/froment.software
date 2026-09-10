@@ -105,6 +105,16 @@ Un échec de déconnexion affiche une erreur et une action de nouvelle tentative
 
 Le composant `PageHeader` sépare le titre des actions avec retour à la ligne.
 La référence `/design/page-header` présente ce composant.
+Les listes d’entités présentent un titre fixe et une description, sans surtitre.
+Facturation conserve son titre dans les vues Factures, Encaissements, Avoirs et Remboursements.
+Les onglets nomment les vues sans répéter leur nom dans le titre principal.
+
+Le composant `Tabs` utilise une surface et une ombre pour l’onglet actif.
+Le composant ne définit aucune marge extérieure.
+Le conteneur de page gère l’espacement avec `gap`, sans ajouter de marge sur les onglets.
+
+La recherche globale ressemble à un champ de recherche et ouvre une modale au clic.
+Son déclencheur conserve la sémantique d’un bouton et affiche le raccourci Ctrl+K ou Cmd+K.
 La référence `/design/drawer` présente le tiroir interactif.
 
 ### Parcours Clients
@@ -160,6 +170,9 @@ Une requête en cours bloque la fermeture. Une création incertaine interdit une
 
 `TableSort` nomme la colonne et le prochain sens de tri.
 La cellule d’en-tête expose le sens actuel avec `aria-sort`.
+Les clics suivent le cycle croissant, décroissant, puis ordre initial.
+La réinitialisation retire le paramètre de tri de l’URL sans effacer la recherche ni les filtres.
+L’ordre initial reste celui du module, même lorsque sa colonne ne porte aucune flèche de tri actif.
 `FilterChip` montre un filtre actif et son action de retrait.
 La composition `/design/workflows` présente les deux contrôles dans son tableau interactif.
 

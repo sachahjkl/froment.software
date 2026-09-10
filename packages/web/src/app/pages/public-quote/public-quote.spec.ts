@@ -200,9 +200,7 @@ describe('PublicQuote', () => {
         TestBed.inject(I18nService).t('quote_link.not_found'),
       );
       expect(
-        root.querySelector(
-          'form, input, .quote-steps, #quote-signature-panel, iframe, a[download]',
-        ),
+        root.querySelector('form, input, app-tabs, #quote-signature-panel, iframe, a[download]'),
       ).toBeNull();
       expect(download).not.toHaveBeenCalled();
       expect(signature).not.toHaveBeenCalled();
@@ -224,7 +222,7 @@ describe('PublicQuote', () => {
         expect(root.querySelector('[role="alert"]')?.textContent).toContain(
           TestBed.inject(I18nService).t('publicQuote.error'),
         );
-        expect(root.querySelector('form, input, .quote-steps, #quote-signature-panel')).toBeNull();
+        expect(root.querySelector('form, input, app-tabs, #quote-signature-panel')).toBeNull();
         expect(download).not.toHaveBeenCalled();
         expect(signature).not.toHaveBeenCalled();
         http.verify();
@@ -243,7 +241,7 @@ describe('PublicQuote', () => {
     expect(globalThis.location.hash).toBe(`#${token}`);
     expect(root.textContent).toContain('Software audit');
     expect(root.textContent).toContain('DE-2026-000001');
-    expect(root.querySelectorAll('.quote-steps a')).toHaveLength(4);
+    expect(root.querySelectorAll('app-tabs a')).toHaveLength(4);
     expect(root.querySelector('#quote-signature-panel')).toBeNull();
     root.querySelector<HTMLAnchorElement>('#quote-document-tab')?.click();
     await fixture.whenStable();

@@ -33,6 +33,7 @@ export const EmailState = Schema.Literals([
   'queued',
 ]);
 const EmailSort = Schema.Literals([
+  'none',
   'date-desc',
   'date-asc',
   'subject-asc',
@@ -61,8 +62,12 @@ export const emailQuery = (params: ParamMap) => ({
   to: emailDate(params.get('to')),
   sort: Option.getOrElse(
     Schema.decodeUnknownOption(EmailSort)(params.get('sort')),
-    () => 'date-desc' as const,
+    () => 'none' as const,
   ),
+});
+export const emailFilterQuery = (query: ReturnType<typeof emailQuery>) => ({
+  ...query,
+  sort: query.sort === 'none' ? undefined : query.sort,
 });
 export const emailDateMatches = (
   timestamp: string,
@@ -77,9 +82,10 @@ export const emailDateMatches = (
 export const compareEmailRows = (
   left: EmailSortRow,
   right: EmailSortRow,
-  sort: typeof EmailSort.Type,
+  selectedSort: typeof EmailSort.Type,
   language: string,
 ) => {
+  const sort = selectedSort === 'none' ? 'date-desc' : selectedSort;
   const column = sort.startsWith('date-')
     ? 'date'
     : sort.startsWith('recipient-')

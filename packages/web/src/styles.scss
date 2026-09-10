@@ -159,8 +159,12 @@ router-outlet {
 
 [appTabLayout] {
   display: grid;
-  gap: var(--space-5);
+  gap: var(--space-4);
   min-inline-size: 0;
+}
+
+app-page-header .muted {
+  color: var(--color-muted);
 }
 
 :where(div, nav, section, span)[pageActions],

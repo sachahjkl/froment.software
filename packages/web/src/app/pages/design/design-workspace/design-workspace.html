@@ -163,7 +163,7 @@
                 appTableSort
                 [label]="text().name"
                 [direction]="direction()"
-                (click)="direction.set(direction() === 'ascending' ? 'descending' : 'ascending')"
+                (click)="sort()"
               ></button>
             </th>
             <th scope="col">{{ text().contact }}</th>

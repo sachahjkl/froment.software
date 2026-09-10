@@ -27,6 +27,7 @@ import { FilterMenu, FilterPanel } from '@shared/filter-menu/filter-menu';
 import { FilterChoice, type FilterChoiceOption } from '@shared/filter-choice/filter-choice';
 import { TableExport } from '@shared/table-export/table-export';
 import { TableSort } from '@shared/table-sort/table-sort';
+import { PageHeader } from '@shared/page-header/page-header';
 import {
   affairColumns,
   affairSortDirection,
@@ -92,6 +93,7 @@ interface Affair {
     TableExport,
     TableSort,
     Notice,
+    PageHeader,
     RouterLink,
     RouterOutlet,
     SearchHighlight,
@@ -259,7 +261,8 @@ export class Affairs {
     return this.clients().find((client) => client.id === id)?.displayName ?? id;
   }
   protected returnQuery(view: AffairView) {
-    return { ...this.filterModel(), view, sort: this.sort() };
+    const sort = this.sort();
+    return { ...this.filterModel(), view, sort: sort === 'none' ? null : sort };
   }
   protected sortDirection(column: AffairColumn) {
     return affairSortDirection(this.sort(), column);
@@ -272,6 +275,7 @@ export class Affairs {
     void this.router.navigate([], {
       relativeTo: this.route,
       queryParams: this.returnQuery(this.currentView()),
+      queryParamsHandling: 'merge',
       replaceUrl,
     });
   }

@@ -1,9 +1,10 @@
 import { convertToParamMap } from '@angular/router';
-import { bankTableSort, compareBankRows } from './bank-table-sort';
+import { bankSortDirection, bankTableSort, compareBankRows, nextBankSort } from './bank-table-sort';
 import {
   allocationColumns,
   bankColumns,
   bankQuery,
+  bankQueryParams,
   historyColumns,
   ledgerEntryColumns,
   ledgerQuery,
@@ -21,16 +22,47 @@ import {
 
 describe('Bank table sorting', () => {
   it('accepts only known columns and directions for each table', () => {
-    for (const sort of [null, 'amount', 'amount-up', 'constructor-asc', 'label-desc']) {
-      expect(bankQuery(convertToParamMap({ sort })).sort).toBe('date-desc');
+    for (const sort of [null, '', 'none', 'amount', 'amount-up', 'constructor-asc', 'label-desc']) {
+      expect(bankQuery(convertToParamMap({ sort })).sort).toBe('none');
     }
+    expect(bankQuery(convertToParamMap({})).sort).toBe('none');
+    expect(ledgerQuery(convertToParamMap({})).sort).toBe('none');
+    expect(ledgerQuery(convertToParamMap({ view: 'journal' })).sort).toBe('none');
     expect(bankQuery(convertToParamMap({ sort: 'amount-asc' })).sort).toBe('amount-asc');
-    expect(ledgerQuery(convertToParamMap({ sort: 'label-desc' })).sort).toBe('date-desc');
+    expect(ledgerQuery(convertToParamMap({ sort: 'label-desc' })).sort).toBe('none');
     expect(ledgerQuery(convertToParamMap({ view: 'journal', sort: 'label-desc' })).sort).toBe(
       'label-desc',
     );
-    expect(bankTableSort('account-asc', previewColumns)).toBe('date-desc');
-    expect(bankTableSort('date-desc', allocationColumns, 'invoice-asc')).toBe('invoice-asc');
+    expect(bankTableSort('account-asc', previewColumns)).toBe('none');
+    expect(bankTableSort('date-desc', allocationColumns)).toBe('none');
+    expect(bankTableSort(null, historyColumns)).toBe('none');
+    expect(bankTableSort('unknown-desc', historyColumns)).toBe('none');
+  });
+  it('cycles from ascending to descending to none and starts another column ascending', () => {
+    for (const column of ['date', 'amount', 'invoice', 'cancelled', 'sourceKind']) {
+      const ascending = nextBankSort('none', column);
+      const descending = nextBankSort(ascending, column);
+      const reset = nextBankSort(descending, column);
+      expect(ascending).toBe(`${column}-asc`);
+      expect(descending).toBe(`${column}-desc`);
+      expect(reset).toBe('none');
+      expect(bankSortDirection(reset, column)).toBe('none');
+      expect(nextBankSort(reset, column)).toBe(ascending);
+      expect(nextBankSort('reference-desc', column)).toBe(ascending);
+      expect(nextBankSort('invalid', column)).toBe(ascending);
+    }
+  });
+  it('serializes none as a removed sort parameter without changing filters or independent sorts', () => {
+    const query = {
+      ...bankQuery(convertToParamMap({ q: 'reglement', account: 'MAIN', flow: 'credit' })),
+      historySort: 'date-desc',
+    };
+    expect(bankQueryParams(query)).toEqual({ ...query, sort: null });
+    expect(query.sort).toBe('none');
+    expect(bankQueryParams({ ...query, sort: 'amount-desc' })).toEqual({
+      ...query,
+      sort: 'amount-desc',
+    });
   });
   it('sorts signed cents numerically and calendar dates chronologically without changing the input', () => {
     const rows = [
@@ -43,12 +75,38 @@ describe('Bank table sorting', () => {
         .toSorted(compareBankRows('amount-asc', bankColumns, 'fr', (row) => row.id))
         .map((row) => row.id),
     ).toEqual(['A', 'C', 'B']);
+    for (const sort of ['date-desc', 'none']) {
+      expect(
+        rows
+          .toSorted(compareBankRows(sort, bankColumns, 'fr', (row) => row.id))
+          .map((row) => row.id),
+      ).toEqual(['A', 'C', 'B']);
+    }
+    expect(rows.map((row) => row.id)).toEqual(['C', 'A', 'B']);
+  });
+  it('restores ascending invoice order for allocations with stable ties and immutable input', () => {
+    const allocation = {
+      matchId: 'C',
+      paymentId: bankId,
+      invoiceId: bankId,
+      invoiceNumber: 'FA-10',
+      amountCents: 900,
+      feeCents: 0,
+      paymentCancelled: false,
+    };
+    const rows = Object.freeze([
+      allocation,
+      { ...allocation, matchId: 'B', invoiceNumber: 'FA-2' },
+      { ...allocation, matchId: 'A', invoiceNumber: 'FA-2' },
+    ]);
     expect(
       rows
-        .toSorted(compareBankRows('date-desc', bankColumns, 'fr', (row) => row.id))
-        .map((row) => row.id),
-    ).toEqual(['A', 'C', 'B']);
-    expect(rows.map((row) => row.id)).toEqual(['C', 'A', 'B']);
+        .toSorted(
+          compareBankRows('none', allocationColumns, 'fr', (row) => row.matchId, 'invoice-asc'),
+        )
+        .map((row) => row.matchId),
+    ).toEqual(['A', 'B', 'C']);
+    expect(rows.map((row) => row.matchId)).toEqual(['C', 'B', 'A']);
   });
   it('uses the current language collator and ascending stable identifiers for ties', () => {
     const rows = [
@@ -69,7 +127,7 @@ describe('Bank table sorting', () => {
       references.toSorted(compareBankRows('reference-asc', bankColumns, 'fr', (row) => row.id))[0]
         ?.reference,
     ).toBe('BANK-2');
-    for (const sort of ['amount-asc', 'amount-desc']) {
+    for (const sort of ['amount-asc', 'amount-desc', 'none']) {
       expect(
         rows
           .toSorted(compareBankRows(sort, bankColumns, 'fr', (row) => row.id))

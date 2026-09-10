@@ -105,6 +105,7 @@ describe('Bank ledger workspace', () => {
     );
     await harness.fixture.whenStable();
     expect(bankRoot(harness).querySelector('tbody a')?.textContent).toContain('FEES');
+    expect(bankSortHeader(bankRoot(harness), 'Date').getAttribute('aria-sort')).toBe('none');
     expect(bankRoot(harness).textContent).toContain('2 éléments affichés');
     bankSortHeader(bankRoot(harness), 'Type de source').querySelector('button')?.click();
     await harness.fixture.whenStable();
@@ -136,6 +137,19 @@ describe('Bank ledger workspace', () => {
       'descending',
     );
     expect(TestBed.inject(Router).url).toContain('sort=amount-desc');
+    bankSortHeader(bankRoot(harness), 'Montant').querySelector('button')?.click();
+    await harness.fixture.whenStable();
+    expect(
+      TestBed.inject(Router).parseUrl(TestBed.inject(Router).url).queryParams['sort'],
+    ).toBeUndefined();
+    expect(bankSortHeader(bankRoot(harness), 'Montant').getAttribute('aria-sort')).toBe('none');
+    expect(bankSortHeader(bankRoot(harness), 'Date').getAttribute('aria-sort')).toBe('none');
+    expect(
+      bankExport(harness)
+        .rows()
+        .map((row) => row[5]),
+    ).toEqual([900, 10000]);
+    expect(ledger.list).toHaveBeenCalledTimes(2);
   });
   it('keeps the period export separate from displayed journal rows and restores sorting after a reversal detail', async () => {
     const { ledger } = setupBankWorkspace();
@@ -151,6 +165,7 @@ describe('Bank ledger workspace', () => {
             sourceReference: 'BANK-10',
             label: 'Écriture 10',
             amountCents: 10000,
+            bookedOn: '2026-09-02',
           },
         ],
       },
@@ -176,10 +191,27 @@ describe('Bank ledger workspace', () => {
     expect(bankSortHeader(bankRoot(harness), 'Référence').getAttribute('aria-sort')).toBe(
       'ascending',
     );
+    bankSortHeader(bankRoot(harness), 'Référence').querySelector('button')?.click();
+    await harness.fixture.whenStable();
+    expect(TestBed.inject(Router).url).toContain('sort=reference-desc');
+    bankSortHeader(bankRoot(harness), 'Référence').querySelector('button')?.click();
+    await harness.fixture.whenStable();
+    expect(TestBed.inject(Router).parseUrl(TestBed.inject(Router).url).queryParams).toEqual({
+      view: 'journal',
+      from: '2026-09-01',
+      to: '2026-09-30',
+      q: '',
+    });
+    expect(bankSortHeader(bankRoot(harness), 'Référence').getAttribute('aria-sort')).toBe('none');
+    expect(bankSortHeader(bankRoot(harness), 'Date').getAttribute('aria-sort')).toBe('none');
     const localExport = bankExport(harness);
     expect(localExport.filename()).toBe('bank-journal-results.csv');
+    expect(localExport.rows().map((row) => row[2])).toEqual(['BANK-10', 'BANK-2']);
     bankField(bankRoot(harness), 'app-list-search input', 'absent-zzzz');
     await harness.fixture.whenStable();
+    expect(
+      TestBed.inject(Router).parseUrl(TestBed.inject(Router).url).queryParams['sort'],
+    ).toBeUndefined();
     expect(localExport.rows()).toEqual([]);
     expect(bankRoot(harness).textContent).toContain('0 élément affiché');
     const periodExport = bankRoot(harness).querySelector('a[download]');
@@ -250,5 +282,18 @@ describe('Bank ledger workspace', () => {
     expect(bankNamedInput(restored, 'Début').value).toBe('2026-09-01');
     expect(bankNamedInput(restored, 'Fin').value).toBe('2026-09-20');
     expect(restored.querySelector('[role="alert"]')).toBeNull();
+    pressKey(bankNamedInput(restored, 'Fin'), 'Escape', 27);
+    await harness.fixture.whenStable();
+    const beforeReset = TestBed.inject(Router).parseUrl(TestBed.inject(Router).url).queryParams;
+    for (const sort of ['reference-desc', undefined]) {
+      bankSortHeader(bankRoot(harness), 'Référence').querySelector('button')?.click();
+      await harness.fixture.whenStable();
+      expect(TestBed.inject(Router).parseUrl(TestBed.inject(Router).url).queryParams).toEqual({
+        ...beforeReset,
+        sort,
+      });
+    }
+    expect(bankSortHeader(bankRoot(harness), 'Référence').getAttribute('aria-sort')).toBe('none');
+    expect(ledger.list).toHaveBeenCalledTimes(2);
   });
 });

@@ -5,6 +5,7 @@ import { I18nService } from '@app/i18n.service';
 import { Button } from '@shared/button/button';
 import { DataTable } from '@shared/data-table/data-table';
 import { TableSort, type SortDirection } from '@shared/table-sort/table-sort';
+import { nextTableSort } from '@shared/table-sort/sort-state';
 import { TableExport } from '@shared/table-export/table-export';
 import { FilterChip } from '@shared/filter-chip/filter-chip';
 import { BulkSelection } from '@shared/bulk-selection/bulk-selection';
@@ -70,7 +71,7 @@ export class DataStories {
     query: this.text().examples.firstName,
     count: 3,
     layout: 'scroll',
-    direction: 'ascending',
+    direction: 'none',
     empty: false,
     pending: false,
     date: this.text().examples.date,
@@ -137,7 +138,7 @@ export class DataStories {
   protected sort(): void {
     this.model.update((value) => ({
       ...value,
-      direction: value.direction === 'ascending' ? 'descending' : 'ascending',
+      direction: nextTableSort(value.direction, 'ascending', 'descending'),
     }));
   }
   protected clear(): void {

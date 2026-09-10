@@ -1,5 +1,5 @@
-import { ChangeDetectionStrategy, Component, inject, input } from '@angular/core';
-import { I18nService } from '@app/i18n.service';
+import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
+import { I18nService, type TranslationKey } from '@app/i18n.service';
 
 export type SortDirection = 'none' | 'ascending' | 'descending';
 
@@ -7,13 +7,11 @@ export type SortDirection = 'none' | 'ascending' | 'descending';
   selector: 'button[appTableSort]',
   host: {
     type: 'button',
-    '[attr.aria-label]':
-      "i18n.tf(direction() === 'ascending' ? 'listControls.sortDescending' : 'listControls.sortAscending', { column: label() })",
+    '[attr.aria-label]': 'actionLabel()',
+    '[attr.title]': 'actionLabel()',
   },
   template: `<span>{{ label() }}</span
-    ><span class="sort-indicator" aria-hidden="true">{{
-      direction() === 'ascending' ? '↑' : direction() === 'descending' ? '↓' : '↕'
-    }}</span>`,
+    ><span class="sort-indicator" aria-hidden="true">{{ indicator() }}</span>`,
   styles: `
     :host {
       display: inline-flex;
@@ -48,4 +46,20 @@ export class TableSort {
   protected readonly i18n = inject(I18nService);
   readonly label = input.required<string>();
   readonly direction = input<SortDirection>('none');
+  protected readonly indicator = computed(() => {
+    const indicators = {
+      none: '↕',
+      ascending: '↑',
+      descending: '↓',
+    } satisfies Record<SortDirection, string>;
+    return indicators[this.direction()];
+  });
+  protected readonly actionLabel = computed(() => {
+    const actions = {
+      none: 'listControls.sortAscending',
+      ascending: 'listControls.sortDescending',
+      descending: 'listControls.resetSort',
+    } satisfies Record<SortDirection, TranslationKey>;
+    return this.i18n.tf(actions[this.direction()], { column: this.label() });
+  });
 }

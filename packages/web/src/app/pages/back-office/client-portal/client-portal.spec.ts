@@ -113,7 +113,7 @@ describe('ClientPortal', () => {
     expect(ids()).toEqual([quote, invoice, order]);
     const buttons = root.querySelectorAll<HTMLButtonElement>('thead [appTableSort]');
     expect(buttons).toHaveLength(5);
-    expect(buttons.item(3).parentElement?.getAttribute('aria-sort')).toBe('descending');
+    expect(root.querySelectorAll('thead th[aria-sort]')).toHaveLength(0);
     buttons.item(4).click();
     await harness.fixture.whenStable();
     expect(ids()).toEqual([quote, invoice, order]);
@@ -126,6 +126,12 @@ describe('ClientPortal', () => {
     expect(exporter.rows().map((row) => row[5])).toEqual([120, 25, 9]);
     expect(exporter.rows().map((row) => row[6])).toEqual([null, 15, null]);
     expect(exporter.rows().every((row) => row.length === 7)).toBe(true);
+    buttons.item(4).click();
+    await harness.fixture.whenStable();
+    expect(ids()).toEqual([quote, invoice, order]);
+    expect(root.querySelectorAll('thead th[aria-sort]')).toHaveLength(0);
+    expect(TestBed.inject(Router).url).toBe('/backoffice/client');
+    expect(exporter.rows().map((row) => row[5])).toEqual([9, 25, 120]);
     buttons.item(3).click();
     await harness.fixture.whenStable();
     expect(ids()).toEqual([order, invoice, quote]);
@@ -154,6 +160,35 @@ describe('ClientPortal', () => {
     await harness.fixture.whenStable();
     expect(TestBed.inject(Router).url).toBe('/backoffice/client?sort=reference-asc');
     expect(document.activeElement).toBe(search);
+  });
+
+  it('cycles each column without losing filters or the document permalink', async () => {
+    const api = new ClientPortalApiStub();
+    const invoice = api.invoices[0]!;
+    api.invoices = [
+      { ...invoice, id: orderId, updatedAt: '2026-08-19T08:00:00Z', totalCents: 900 },
+      invoice,
+      { ...invoice, id: quoteId, updatedAt: '2026-08-20T10:00:00+02:00', totalCents: 2500 },
+    ];
+    const { harness } = await configure(
+      `/backoffice/client?q=Security&kind=invoice&status=open&invoice=${invoiceId}`,
+      api,
+    );
+    const page = harness.routeDebugElement!.componentInstance as ClientPortal;
+    const router = TestBed.inject(Router);
+    const filters = { q: 'Security', kind: 'invoice', status: 'open' };
+    for (const column of ['reference', 'kind', 'status', 'date', 'amount'] as const) {
+      expect(page['sortDirection'](column)).toBe('none');
+      for (const direction of ['ascending', 'descending', 'none'] as const) {
+        page['sortBy'](column);
+        await harness.fixture.whenStable();
+        expect(page['sortDirection'](column)).toBe(direction);
+      }
+      expect(router.parseUrl(router.url).queryParams).toEqual({ ...filters, invoice: invoiceId });
+      expect(page['documents']().map(({ item }) => item.id)).toEqual([quoteId, invoiceId, orderId]);
+      expect(page['exportRows']().map((row) => row[5])).toEqual([25, 120, 9]);
+      expect(page['returnQuery']()).toEqual({ ...filters, sort: undefined });
+    }
   });
 
   it('compares translated types and statuses with the active language collator', async () => {

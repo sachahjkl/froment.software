@@ -20,7 +20,7 @@ export const invoiceSortColumns = [
 export type InvoiceSortColumn = (typeof invoiceSortColumns)[number];
 export type InvoiceSort = BillingSort<InvoiceSortColumn>;
 export const billingSort = (params: ParamMap): InvoiceSort =>
-  readBillingSort(params, invoiceSortColumns, 'due-asc');
+  readBillingSort(params, invoiceSortColumns);
 export const compareInvoices = (
   left: InvoiceSummaryValue,
   right: InvoiceSummaryValue,
@@ -28,23 +28,24 @@ export const compareInvoices = (
   collator: Intl.Collator,
   translate: (key: TranslationKey) => string,
 ): number => {
+  const order = sort === 'none' ? 'due-asc' : sort;
   let comparison: number;
-  if (sort.startsWith('due-')) {
+  if (order.startsWith('due-')) {
     comparison = Date.parse(left.dueDate) - Date.parse(right.dueDate);
-  } else if (sort.startsWith('total-')) {
+  } else if (order.startsWith('total-')) {
     comparison = left.totalCents - right.totalCents;
-  } else if (sort.startsWith('remaining-')) {
+  } else if (order.startsWith('remaining-')) {
     comparison = remainingCents(left) - remainingCents(right);
   } else {
     const value = (invoice: InvoiceSummaryValue): string => {
-      if (sort.startsWith('client-')) return invoice.clientDisplayName;
-      if (sort.startsWith('status-')) return translate(documentStatusKey(invoice.status));
-      if (sort.startsWith('financial-')) return translate(financialStatus(invoice));
+      if (order.startsWith('client-')) return invoice.clientDisplayName;
+      if (order.startsWith('status-')) return translate(documentStatusKey(invoice.status));
+      if (order.startsWith('financial-')) return translate(financialStatus(invoice));
       return invoice.invoiceNumber ?? invoice.title;
     };
     comparison = collator.compare(value(left), value(right));
   }
-  return (sort.endsWith('-desc') ? -comparison : comparison) || left.id.localeCompare(right.id);
+  return (order.endsWith('-desc') ? -comparison : comparison) || left.id.localeCompare(right.id);
 };
 
 export const billingFilters = (params: ParamMap) => ({

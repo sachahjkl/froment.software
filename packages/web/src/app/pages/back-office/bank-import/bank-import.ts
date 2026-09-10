@@ -35,7 +35,7 @@ import { LocalizedDatePipe } from '@shared/localized-date/localized-date-pipe';
 import { Notice } from '@shared/notice/notice';
 import { PageHeader } from '@shared/page-header/page-header';
 import { TableSort } from '@shared/table-sort/table-sort';
-import { bankQuery, previewColumns } from '../banking/bank-workspace';
+import { bankQuery, bankQueryParams, previewColumns } from '../banking/bank-workspace';
 import {
   bankTableSort,
   bankSortDirection,
@@ -102,7 +102,7 @@ export class BankImport {
     maxLength(path.csv, 500000);
     disabled(path, () => this.busy() || this.reading() || this.preview() !== undefined);
   });
-  protected readonly backQuery = bankQuery(this.route.snapshot.queryParamMap);
+  protected readonly backQuery = bankQueryParams(bankQuery(this.route.snapshot.queryParamMap));
   private readonly fileInput = viewChild<ElementRef<HTMLInputElement>>('statementFile');
   private readonly stage = viewChild<ElementRef<HTMLElement>>('stage');
   private prepared: BankImportRequestValue | undefined;
@@ -211,9 +211,10 @@ export class BankImport {
     return bankSortDirection(this.previewSort(), column);
   }
   protected sortBy(column: string): void {
+    const sort = nextBankSort(this.previewSort(), column);
     void this.router.navigate([], {
       relativeTo: this.route,
-      queryParams: { previewSort: nextBankSort(this.previewSort(), column) },
+      queryParams: { previewSort: sort === 'none' ? null : sort },
       queryParamsHandling: 'merge',
       replaceUrl: true,
     });

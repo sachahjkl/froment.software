@@ -181,11 +181,7 @@ function storyProperties(description: StoryDescriptions) {
       ['clearSelection', 'OutputEmitterRef<void>', '—'],
     ],
     'list-toolbar': [
-      [
-        '[listSearch] / [listFilters] / [listActions] / [listSummary]',
-        description.projectionSlot,
-        '—',
-      ],
+      ['[listSearch] / [listFilters] / [listActions]', description.projectionSlot, '—'],
     ],
     'list-workspace': [
       [
@@ -221,10 +217,10 @@ function storyProperties(description: StoryDescriptions) {
     tabs: [
       ['label', 'string', 'required'],
       ['tabs', 'readonly TabItem[]', 'required'],
-      ['disabled / preserveQuery', 'boolean', 'false'],
+      ['disabled / preserveQuery / preserveFragment', 'boolean', 'false'],
       [
         'TabItem',
-        '{ readonly path: string; readonly id: string; readonly label: string; readonly exact?: boolean }',
+        '{ readonly path: string; readonly id: string; readonly label: string; readonly exact?: boolean; readonly queryParams?: Params; readonly active?: boolean }',
         '—',
       ],
     ],

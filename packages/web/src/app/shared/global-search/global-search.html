@@ -1,17 +1,14 @@
 <button
   #trigger
-  appButton
-  class="search-trigger"
+  class="input search-trigger"
   type="button"
   aria-haspopup="dialog"
-  [attr.aria-label]="i18n.t('backOffice.search.title')"
-  [attr.aria-controls]="opened() ? id + '-dialog' : null"
-  [attr.aria-keyshortcuts]="shortcutEnabled() ? 'Control+k Meta+k' : null"
+  [attr.aria-controls]="dialogId()"
+  [attr.aria-keyshortcuts]="shortcutKeys()"
   (click)="open()"
 >
-  <app-icon name="search" /><span class="trigger-label"
-    >{{ i18n.t('backOffice.search.title') }}</span
-  >
+  <app-icon name="search" />
+  <span class="trigger-label">{{ i18n.t('globalSearch.hint') }}</span>
   @if (shortcutEnabled()) { <kbd aria-hidden="true">{{ shortcutLabel() }}</kbd> }
 </button>
 
