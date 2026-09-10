@@ -1,12 +1,12 @@
 <nav class="tab-list" [attr.aria-label]="label()">
   @for (tab of tabs(); track tab.id) {
   <a
-    #active="routerLinkActive"
     [id]="tab.id"
     [routerLink]="tab.path"
+    [queryParamsHandling]="preserveQuery() ? 'preserve' : ''"
     routerLinkActive="active"
-    [routerLinkActiveOptions]="{ exact: tab.exact ?? true }"
-    [attr.aria-current]="active.isActive ? 'page' : null"
+    ariaCurrentWhenActive="page"
+    [routerLinkActiveOptions]="{ paths: tab.exact === false ? 'subset' : 'exact', queryParams: 'ignored', fragment: 'ignored', matrixParams: 'ignored' }"
     [attr.aria-disabled]="disabled()"
     (click)="disabled() && $event.preventDefault()"
   >

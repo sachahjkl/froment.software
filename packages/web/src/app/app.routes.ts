@@ -306,6 +306,34 @@ export const routes: Routes = [
     children: tabRoutes('issued', 'billing', ['draft', 'issued', 'paid', 'void', 'all']),
   },
   {
+    path: 'backoffice/catalogue/new',
+    loadComponent: () =>
+      import('./pages/back-office/catalog-editor/catalog-editor').then(
+        (module) => module.CatalogEditor,
+      ),
+    canActivate: [administratorGuard],
+    canDeactivate: [unsavedChangesGuard],
+    data: { titleKey: 'catalog.create', robots: 'noindex, nofollow' },
+  },
+  {
+    path: 'backoffice/catalogue/:itemId/edit',
+    loadComponent: () =>
+      import('./pages/back-office/catalog-editor/catalog-editor').then(
+        (module) => module.CatalogEditor,
+      ),
+    canActivate: [administratorGuard],
+    canDeactivate: [unsavedChangesGuard],
+    data: { titleKey: 'catalogWorkspace.editTitle', robots: 'noindex, nofollow' },
+  },
+  {
+    path: 'backoffice/catalogue',
+    loadComponent: () =>
+      import('./pages/back-office/catalog/catalog').then((module) => module.Catalog),
+    canActivate: [administratorGuard],
+    data: { titleKey: 'catalog.title', robots: 'noindex, nofollow' },
+    children: tabRoutes('active', 'catalog', ['active', 'archived', 'all']),
+  },
+  {
     path: 'backoffice/configuration',
     loadComponent: () =>
       import('./pages/back-office/configuration/configuration').then(
@@ -350,12 +378,6 @@ export const routes: Routes = [
           import('./pages/back-office/integrations/integrations').then(
             (module) => module.Integrations,
           ),
-      },
-      {
-        path: 'catalogue',
-        loadComponent: () =>
-          import('./pages/back-office/catalog/catalog').then((module) => module.Catalog),
-        canDeactivate: [unsavedChangesGuard],
       },
       {
         path: 'entreprise',

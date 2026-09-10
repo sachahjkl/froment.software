@@ -566,7 +566,7 @@
       tabindex="0"
     >
       <h2>{{ i18n.t("design.components.data") }}</h2>
-      <app-visual-sample name="data table / scroll region">
+      <app-visual-sample name="data table / search and sort">
         <app-list-toolbar>
           <label class="field"
             >{{ i18n.t("design.components.search")
@@ -581,11 +581,29 @@
             i18n.tf("clientsWorkspace.count", { count: tableRows().length })
           }}</span>
         </app-list-toolbar>
+        @if (tableQuery()) {
+          <button
+            appFilterChip
+            [label]="i18n.tf('design.components.searchFilter', { query: tableQuery() })"
+            (click)="tableQuery.set(''); tableSearch.focus()"
+          ></button>
+        }
         <div appDataTable tableLayout="fluid">
           <table>
             <thead>
               <tr>
-                <th>{{ i18n.t("design.components.service") }}</th>
+                <th [attr.aria-sort]="tableDirection()">
+                  <button
+                    appTableSort
+                    [label]="i18n.t('design.components.service')"
+                    [direction]="tableDirection()"
+                    (click)="
+                      tableDirection.set(
+                        tableDirection() === 'ascending' ? 'descending' : 'ascending'
+                      )
+                    "
+                  ></button>
+                </th>
                 <th>{{ i18n.t("design.components.subject") }}</th>
                 <th>{{ i18n.t("design.components.status") }}</th>
               </tr>

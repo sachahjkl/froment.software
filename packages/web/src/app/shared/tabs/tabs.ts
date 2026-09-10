@@ -19,4 +19,5 @@ export class Tabs {
   readonly label = input.required<string>();
   readonly tabs = input.required<readonly TabItem[]>();
   readonly disabled = input(false);
+  readonly preserveQuery = input(false);
 }

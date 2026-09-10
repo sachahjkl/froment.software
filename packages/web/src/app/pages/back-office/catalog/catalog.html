@@ -1,148 +1,145 @@
-<section class="catalog-page" aria-labelledby="catalog-title">
-  <header>
-    <h2 id="catalog-title">{{ i18n.t('catalog.title') }}</h2>
-    <p class="intro">{{ i18n.t('catalog.intro') }}</p>
-  </header>
-  <form class="editor" (submit)="save($event)">
-    <h3>{{ i18n.t(editing() ? 'catalog.edit' : 'catalog.create') }}</h3>
-    <label class="field">
-      {{ i18n.t('catalog.description') }}
-      <input
-        id="catalog-description"
-        class="input"
-        [formField]="itemForm.description"
-        [attr.aria-invalid]="invalid('description')"
-        aria-describedby="catalog-description-error"
-      />
-      @if (invalid('description')) {
-      <span id="catalog-description-error" class="field-error"
-        >{{ i18n.t('catalog.fieldInvalid') }}</span
-      >
-      }
-    </label>
-    <div class="amounts">
-      <label class="field">
-        {{ i18n.t('catalog.quantity') }}
-        <input
-          id="catalog-quantity"
-          class="input"
-          inputmode="decimal"
-          [formField]="itemForm.quantity"
-          [attr.aria-invalid]="invalid('quantity')"
-          aria-describedby="catalog-number-hint"
-        />
-      </label>
-      <label class="field">
-        {{ i18n.t('catalog.price') }}
-        <input
-          id="catalog-price"
-          class="input"
-          inputmode="decimal"
-          [formField]="itemForm.unitPrice"
-          [attr.aria-invalid]="invalid('unitPrice')"
-          aria-describedby="catalog-number-hint"
-        />
-      </label>
-      <label class="field">
-        {{ i18n.t('catalog.tax') }}
-        <input
-          id="catalog-tax"
-          class="input"
-          inputmode="decimal"
-          [formField]="itemForm.vatRate"
-          [attr.aria-invalid]="invalid('vatRate')"
-          aria-describedby="catalog-number-hint"
-        />
-      </label>
-    </div>
-    <p id="catalog-number-hint" class="hint">{{ i18n.t('catalog.invalid') }}</p>
-    @if (editing()) {
-    <label class="choice"
-      ><input type="checkbox" [formField]="itemForm.archived" /> {{ i18n.t('catalog.archived')
-      }}</label
+<section appTabLayout class="catalog-page" aria-labelledby="catalog-title">
+  <app-page-header>
+    <h1 id="catalog-title">{{ i18n.t('catalog.title') }}</h1>
+    <p class="intro">{{ i18n.t('catalogWorkspace.intro') }}</p>
+    <a
+      pageActions
+      appLinkButton
+      variant="primary"
+      routerLink="/backoffice/catalogue/new"
+      [queryParams]="createQuery()"
+      ><app-icon name="plus" />{{ i18n.t('catalog.create') }}</a
     >
-    <p class="hint">{{ i18n.t('catalog.archiveHint') }}</p>
-    }
-    <div class="actions">
-      <button
-        appButton
-        variant="primary"
-        type="submit"
-        [disabled]="saving() || itemForm().invalid()"
-      >
-        {{ i18n.t('catalog.save') }}
-      </button>
-      <button appButton type="button" [disabled]="saving()" (click)="cancel()">
-        {{ i18n.t('catalog.cancel') }}
-      </button>
-    </div>
-  </form>
-  @if (error(); as key) {
-  <div appNotice variant="danger" role="alert">
-    <p>{{ i18n.t(key) }}</p>
-    <button appButton type="button" [disabled]="loading() || saving()" (click)="load()">
-      {{ i18n.t('catalog.reload') }}
-    </button>
-  </div>
-  } @if (saved()) {
-  <p appNotice role="status">{{ i18n.t('catalog.saved') }}</p>
+  </app-page-header>
+  <app-tabs [label]="i18n.t('catalogWorkspace.views')" [tabs]="tabs()" [preserveQuery]="true" />
+  @if (saved) {
+  <p appNotice variant="success" role="status">{{ i18n.t('catalog.saved') }}</p>
   }
-  <div class="filters">
-    <label class="field"
-      >{{ i18n.t('catalog.search') }}<input
-        class="input"
-        type="search"
-        [formField]="filters.search"
-    /></label>
-    <label class="choice"
-      ><input type="checkbox" [formField]="filters.archived" /> {{ i18n.t('catalog.showArchived')
-      }}</label
+  <router-outlet />
+  <ng-template appTabPanel="catalog" let-tab="tab">
+    <section
+      id="catalog-panel"
+      role="region"
+      [attr.aria-labelledby]="'catalog-' + tab + '-tab'"
+      class="catalog-results"
     >
-  </div>
-  @if (loading()) {
-  <p role="status">{{ i18n.t('catalog.loading') }}</p>
-  } @else {
-  <div appDataTable class="items">
-    <table>
-      <thead>
-        <tr>
-          <th scope="col">{{ i18n.t('catalog.description') }}</th>
-          <th scope="col" class="numeric">{{ i18n.t('catalog.quantity') }}</th>
-          <th scope="col" class="numeric">{{ i18n.t('catalog.price') }}</th>
-          <th scope="col" class="numeric">{{ i18n.t('catalog.tax') }}</th>
-          <th scope="col">{{ i18n.t('catalog.archived') }}</th>
-          <th scope="col"><span class="sr-only">{{ i18n.t('catalog.edit') }}</span></th>
-        </tr>
-      </thead>
-      <tbody>
-        @for (result of visibleItems(); track result.item.id) { @let item = result.item;
-        <tr>
-          <th scope="row">
-            <span [appSearchHighlight]="result.matches">{{ item.description }}</span>
-          </th>
-          <td class="numeric">{{ decimal(item.quantityMilli, 3) }}</td>
-          <td class="numeric">{{ decimal(item.unitPriceCents, 2) }} EUR</td>
-          <td class="numeric">{{ decimal(item.vatRateBasisPoints, 2) }} %</td>
-          <td>@if (item.archived) { {{ i18n.t('catalog.archived') }} }</td>
-          <td>
-            <button
-              appButton
-              type="button"
-              [disabled]="saving()"
-              (click)="edit(item)"
-              [attr.aria-label]="i18n.tf('catalog.editItem', { name: item.description })"
-            >
-              {{ i18n.t('catalog.edit') }}
-            </button>
-          </td>
-        </tr>
-        } @empty {
-        <tr>
-          <td colspan="6">{{ i18n.t('catalog.empty') }}</td>
-        </tr>
+      <app-list-toolbar>
+        <label class="field search" for="catalog-search"
+          >{{ i18n.t('catalog.search') }}
+          <input
+            #search
+            id="catalog-search"
+            class="input"
+            type="search"
+            autocomplete="off"
+            [formField]="filters.search"
+            (input)="setSearch(search.value)"
+          />
+        </label>
+        <span listSummary role="status"
+          >@if (state() === 'ready') { {{ i18n.tf('catalogWorkspace.count', { count:
+          visibleItems(tab).length }) }} }</span
+        >
+      </app-list-toolbar>
+      @if (query().q) {
+      <div class="active-filters">
+        <button
+          appFilterChip
+          [label]="i18n.tf('catalogWorkspace.searchFilter', { query: query().q })"
+          (click)="clearSearch()"
+        ></button>
+      </div>
+      } @switch (state()) { @case ('loading') {
+      <p role="status">{{ i18n.t('catalog.loading') }}</p>
+      } @case ('error') {
+      <div class="notice-flow">
+        <p appNotice variant="danger" role="alert">{{ i18n.t('catalogWorkspace.loadError') }}</p>
+        <button appButton type="button" (click)="load()">
+          {{ i18n.t('catalogWorkspace.retry') }}
+        </button>
+      </div>
+      } @case ('ready') { @if (visibleItems(tab).length === 0) {
+      <app-empty-state
+        icon="catalog"
+        [title]="i18n.t(query().q ? 'catalogWorkspace.noMatches' : tab === 'archived' ? 'catalogWorkspace.noArchived' : 'catalogWorkspace.empty')"
+      >
+        <p>
+          {{ i18n.t(query().q ? 'catalogWorkspace.changeSearch' : tab === 'archived' ?
+          'catalogWorkspace.archiveIntro' : 'catalogWorkspace.emptyIntro') }}
+        </p>
+        @if (query().q) {
+        <button emptyActions appButton type="button" (click)="clearSearch()">
+          {{ i18n.t('catalogWorkspace.clearSearch') }}
+        </button>
+        } @else if (tab !== 'archived') {
+        <a
+          emptyActions
+          appLinkButton
+          routerLink="/backoffice/catalogue/new"
+          [queryParams]="editorQuery(tab)"
+          >{{ i18n.t('catalog.create') }}</a
+        >
         }
-      </tbody>
-    </table>
-  </div>
-  }
+      </app-empty-state>
+      } @else {
+      <div appDataTable tableLayout="fluid" class="items">
+        <table>
+          <colgroup>
+            <col class="description-column" />
+            <col class="quantity-column" />
+            <col class="price-column" />
+            <col />
+            <col />
+          </colgroup>
+          <thead>
+            <tr>
+              <th scope="col" [attr.aria-sort]="sortDirection('description')">
+                <button
+                  appTableSort
+                  [label]="i18n.t('catalog.description')"
+                  [direction]="sortDirection('description')"
+                  (click)="sortBy('description')"
+                ></button>
+              </th>
+              <th scope="col" class="numeric">{{ i18n.t('catalog.quantity') }}</th>
+              <th scope="col" class="numeric" [attr.aria-sort]="sortDirection('price')">
+                <button
+                  appTableSort
+                  [label]="i18n.t('catalogWorkspace.price')"
+                  [direction]="sortDirection('price')"
+                  (click)="sortBy('price')"
+                ></button>
+              </th>
+              <th scope="col" class="numeric">{{ i18n.t('catalog.tax') }}</th>
+              <th scope="col">{{ i18n.t('catalogWorkspace.status') }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (result of visibleItems(tab); track result.item.id) { @let item = result.item;
+            <tr>
+              <th scope="row">
+                <a
+                  [routerLink]="['/backoffice/catalogue', item.id, 'edit']"
+                  [queryParams]="editorQuery(tab)"
+                  [appSearchHighlight]="result.matches"
+                  >{{ item.description }}</a
+                >
+              </th>
+              <td class="numeric">{{ decimal(item.quantityMilli, 3) }}</td>
+              <td class="numeric">{{ money(item.unitPriceCents) }}</td>
+              <td class="numeric">{{ decimal(item.vatRateBasisPoints, 2) }} %</td>
+              <td>
+                <span appBadge
+                  >{{ i18n.t(item.archived ? 'catalog.archived' : 'catalogWorkspace.available')
+                  }}</span
+                >
+              </td>
+            </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      } } }
+    </section>
+  </ng-template>
 </section>

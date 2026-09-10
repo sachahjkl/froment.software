@@ -116,6 +116,31 @@ Les documents publiés restent inchangés.
 L’atelier `/design/data` présente une recherche interactive et le tableau fluide.
 L’atelier `/design/feedback` présente l’état vide.
 
+### Parcours Catalogue
+
+Le catalogue utilise `/backoffice/catalogue`, hors de Configuration.
+Les vues Actives, Archivées et Toutes présentent uniquement la recherche et le tableau.
+Le tri porte sur la description ou le prix unitaire hors taxes.
+La recherche et le tri restent dans l’URL lors des changements de vue et des retours depuis l’éditeur.
+Un changement de paramètres de recherche ne déplace pas le focus vers `main`.
+
+La création utilise `/backoffice/catalogue/new`.
+La modification utilise `/backoffice/catalogue/:itemId/edit`.
+Le formulaire regroupe la description, les valeurs par défaut et la disponibilité.
+Une modification de disponibilité exige une confirmation.
+Les requêtes conservent la version chargée et les montants entiers du contrat métier.
+Un conflit conserve les champs saisis.
+Les documents existants restent inchangés.
+
+`TableSort` nomme la colonne et le prochain sens de tri.
+La cellule d’en-tête expose le sens actuel avec `aria-sort`.
+`FilterChip` montre un filtre actif et son action de retrait.
+L’atelier `/design/data` présente les deux contrôles dans son tableau interactif.
+
+Le scénario navigateur du Catalogue vérifie le zoom Chromium à 200 % dans un profil de test isolé.
+Il utilise le réglage du navigateur, sans zoom CSS ni changement du facteur de pincement.
+Il contrôle la liste, les erreurs de formulaire et les confirmations au-dessus du tiroir de navigation.
+
 Les actions rapides du tableau de bord se trouvent dans son en-tête.
 Les indicateurs utilisent deux colonnes sur mobile.
 Le menu du compte affiche l’adresse complète sans imposer sa largeur à l’en-tête.

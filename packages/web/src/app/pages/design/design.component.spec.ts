@@ -45,5 +45,14 @@ describe('DesignComponent', () => {
     search.dispatchEvent(new Event('input'));
     await fixture.whenStable();
     expect(root.querySelectorAll('#design-data-panel tbody tr')).toHaveLength(1);
+    root.querySelector<HTMLButtonElement>('[appFilterChip]')!.click();
+    await fixture.whenStable();
+    expect(root.querySelectorAll('#design-data-panel tbody tr')).toHaveLength(2);
+    root.querySelector<HTMLButtonElement>('[appTableSort]')!.click();
+    await fixture.whenStable();
+    expect(root.querySelector('#design-data-panel th')?.getAttribute('aria-sort')).toBe(
+      'descending',
+    );
+    expect(root.querySelector('#design-data-panel tbody tr')?.textContent).toContain('Web');
   });
 });

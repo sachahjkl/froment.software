@@ -1,47 +1,57 @@
-import { Confirmation } from '@shared/confirmation/confirmation';
 import {
   afterNextRender,
   ChangeDetectionStrategy,
   Component,
-  HostListener,
   computed,
+  DestroyRef,
   inject,
   signal,
 } from '@angular/core';
-import {
-  FormField,
-  disabled,
-  form,
-  maxLength,
-  pattern,
-  required,
-  submit,
-} from '@angular/forms/signals';
-import {
-  CatalogItemCreateRequest,
-  type CatalogItemValue,
-  type CatalogItemListValue,
-} from '@froment/contracts';
-import { Option, Schema } from 'effect';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { FormField, form } from '@angular/forms/signals';
+import { ActivatedRoute, Router, RouterLink, RouterOutlet } from '@angular/router';
+import { type CatalogItemListValue } from '@froment/contracts';
+import { formatMoney } from '@froment/l10n';
 import { CatalogApi } from '@backoffice/catalog-api';
-import { formatFixedDecimal, parseFixedDecimal } from '@backoffice/quote-input';
-import { I18nService, type TranslationKey } from '@app/i18n.service';
+import { formatFixedDecimal } from '@backoffice/quote-input';
+import { I18nService } from '@app/i18n.service';
+import { Badge } from '@shared/badge/badge';
 import { Button } from '@shared/button/button';
-import { Notice } from '@shared/notice/notice';
 import { DataTable } from '@shared/data-table/data-table';
+import { EmptyState } from '@shared/empty-state/empty-state';
+import { FilterChip } from '@shared/filter-chip/filter-chip';
+import { Icon } from '@shared/icon/icon';
+import { ListToolbar } from '@shared/list-toolbar/list-toolbar';
+import { Notice } from '@shared/notice/notice';
+import { PageHeader } from '@shared/page-header/page-header';
+import { TableSort, type SortDirection } from '@shared/table-sort/table-sort';
+import { Tabs, type TabItem } from '@shared/tabs/tabs';
+import { TabLayout, TabPanel } from '@shared/tabs/tab-panel';
 import { createFuzzySearch } from '@shared/fuzzy-search';
 import { SearchHighlight, SearchHighlightRegistry } from '@shared/search-highlight';
-
-const emptyModel = () => ({
-  description: '',
-  quantity: '1.000',
-  unitPrice: '0.00',
-  vatRate: '20.00',
-  archived: false,
-});
+import { catalogListQuery, catalogView, type CatalogView } from './catalog-list-query';
 
 @Component({
-  imports: [Button, FormField, Notice, DataTable, SearchHighlight],
+  host: { class: 'page-container' },
+  imports: [
+    Badge,
+    Button,
+    DataTable,
+    EmptyState,
+    FilterChip,
+    FormField,
+    Icon,
+    ListToolbar,
+    Notice,
+    PageHeader,
+    RouterLink,
+    RouterOutlet,
+    SearchHighlight,
+    TableSort,
+    TabLayout,
+    TabPanel,
+    Tabs,
+  ],
   providers: [SearchHighlightRegistry],
   selector: 'app-catalog',
   styleUrl: './catalog.scss',
@@ -49,21 +59,27 @@ const emptyModel = () => ({
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class Catalog {
-  private readonly confirmation = inject(Confirmation);
   protected readonly i18n = inject(I18nService);
   private readonly api = inject(CatalogApi);
-  private readonly model = signal(emptyModel());
-  protected readonly saving = signal(false);
-  protected readonly loading = signal(true);
+  private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
+  private readonly destroyRef = inject(DestroyRef);
+  protected readonly state = signal<'loading' | 'ready' | 'error'>('loading');
   protected readonly items = signal<CatalogItemListValue>([]);
-  protected readonly editing = signal<CatalogItemValue | undefined>(undefined);
-  protected readonly error = signal<TranslationKey | undefined>(undefined);
-  protected readonly saved = signal(false);
-  protected readonly filters = form(signal({ search: '', archived: false }));
+  protected readonly query = signal(catalogListQuery(this.route.snapshot.queryParamMap));
+  private readonly searchModel = signal({ search: this.query().q });
+  protected readonly filters = form(this.searchModel);
+  protected readonly saved =
+    this.router.currentNavigation()?.extras.state?.['catalogSaved'] === true;
+  protected readonly tabs = computed<readonly TabItem[]>(() =>
+    (['active', 'archived', 'all'] as const).map((view) => ({
+      path: view,
+      id: `catalog-${view}-tab`,
+      label: this.i18n.t(`catalogWorkspace.${view}`),
+    })),
+  );
   private readonly searchResults = createFuzzySearch(
-    computed(() =>
-      this.items().filter((item) => this.filters.archived().value() || !item.archived),
-    ),
+    this.items,
     computed(() => this.filters.search().value()),
     {
       keys: ['description'],
@@ -73,121 +89,108 @@ export class Catalog {
       threshold: 0.35,
     },
   );
-  protected readonly visibleItems = computed(() =>
-    this.searchResults().map((result) => ({
-      item: result.item,
-      matches: result.matches?.find((match) => match.key === 'description')?.indices ?? [],
-    })),
-  );
-  protected readonly itemForm = form(this.model, (path) => {
-    disabled(path, () => this.saving());
-    required(path.description);
-    maxLength(path.description, 160);
-    pattern(path.description, /\S/);
-    required(path.quantity);
-    pattern(path.quantity, /^\d+(?:[.,]\d{1,3})?$/);
-    required(path.unitPrice);
-    pattern(path.unitPrice, /^\d+(?:[.,]\d{1,2})?$/);
-    required(path.vatRate);
-    pattern(path.vatRate, /^\d+(?:[.,]\d{1,2})?$/);
+  private readonly results = computed(() => {
+    const { sort } = this.query();
+    const direction = sort.endsWith('desc') ? -1 : 1;
+    const collator = new Intl.Collator(this.i18n.language(), {
+      numeric: true,
+      sensitivity: 'base',
+    });
+    return this.searchResults()
+      .toSorted((left, right) => {
+        const comparison = sort.startsWith('price')
+          ? left.item.unitPriceCents - right.item.unitPriceCents
+          : collator.compare(left.item.description, right.item.description);
+        return direction * comparison || left.item.id.localeCompare(right.item.id);
+      })
+      .map((result) => ({
+        item: result.item,
+        matches: result.matches?.find((match) => match.key === 'description')?.indices ?? [],
+      }));
   });
+  private loadGeneration = 0;
+
   constructor() {
     afterNextRender(() => {
+      this.route.queryParamMap.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((params) => {
+        const query = catalogListQuery(params);
+        this.query.set(query);
+        this.searchModel.set({ search: query.q });
+      });
       void this.load();
     });
   }
-  async canDeactivate(): Promise<boolean> {
-    return (
-      !this.saving() &&
-      (!this.itemForm().dirty() ||
-        (await this.confirmation.request(this.i18n.t('catalog.unsavedChanges'))))
+
+  protected visibleItems(view: CatalogView) {
+    return this.results().filter(
+      ({ item }) => view === 'all' || item.archived === (view === 'archived'),
     );
   }
-  @HostListener('window:beforeunload', ['$event'])
-  protected preventUnsavedUnload(event: BeforeUnloadEvent): void {
-    if (this.itemForm().dirty() || this.saving()) event.preventDefault();
+
+  protected editorQuery(view: CatalogView) {
+    return { ...this.query(), view };
   }
-  protected invalid(field: 'description' | 'quantity' | 'unitPrice' | 'vatRate'): boolean {
-    return this.itemForm[field]().invalid() && this.itemForm[field]().touched();
+
+  protected createQuery() {
+    return this.editorQuery(catalogView(this.route.firstChild?.snapshot.url[0]?.path));
   }
-  protected async edit(item: CatalogItemValue): Promise<void> {
-    if (!(await this.canDeactivate())) return;
-    this.editing.set(item);
-    this.model.set({
-      description: item.description,
-      quantity: formatFixedDecimal(item.quantityMilli, 3),
-      unitPrice: formatFixedDecimal(item.unitPriceCents, 2),
-      vatRate: formatFixedDecimal(item.vatRateBasisPoints, 2),
-      archived: item.archived,
+
+  protected setSearch(value: string): void {
+    const q = value.slice(0, 120);
+    this.searchModel.set({ search: q });
+    this.query.update((query) => ({ ...query, q }));
+    void this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: this.query(),
+      replaceUrl: true,
     });
-    this.itemForm().reset();
-    this.error.set(undefined);
-    this.saved.set(false);
   }
-  protected async cancel(): Promise<void> {
-    if (await this.canDeactivate()) this.reset();
+
+  protected clearSearch(): void {
+    this.setSearch('');
+    this.filters.search().focusBoundControl();
   }
+
+  protected sortDirection(column: 'description' | 'price'): SortDirection {
+    const { sort } = this.query();
+    return sort === `${column}-asc`
+      ? 'ascending'
+      : sort === `${column}-desc`
+        ? 'descending'
+        : 'none';
+  }
+
+  protected sortBy(column: 'description' | 'price'): void {
+    const sort =
+      this.sortDirection(column) === 'ascending'
+        ? (`${column}-desc` as const)
+        : (`${column}-asc` as const);
+    this.query.update((query) => ({ ...query, sort }));
+    void this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: this.query(),
+      replaceUrl: true,
+    });
+  }
+
   protected async load(): Promise<void> {
-    if (this.saving()) return;
-    this.loading.set(true);
-    this.error.set(undefined);
+    const generation = ++this.loadGeneration;
+    this.state.set('loading');
     try {
-      this.items.set(await this.api.list());
+      const items = await this.api.list();
+      if (this.destroyRef.destroyed || generation !== this.loadGeneration) return;
+      this.items.set(items);
+      this.state.set('ready');
     } catch {
-      this.error.set('catalog.error');
-    } finally {
-      this.loading.set(false);
+      if (!this.destroyRef.destroyed && generation === this.loadGeneration) this.state.set('error');
     }
   }
-  protected save(event: SubmitEvent): void {
-    event.preventDefault();
-    if (this.saving()) return;
-    void submit(this.itemForm, async () => {
-      const model = this.model();
-      const request = Schema.decodeUnknownOption(CatalogItemCreateRequest)({
-        description: model.description.trim(),
-        quantityMilli: parseFixedDecimal(model.quantity, 3),
-        unitPriceCents: parseFixedDecimal(model.unitPrice, 2),
-        vatRateBasisPoints: parseFixedDecimal(model.vatRate, 2),
-        currency: 'EUR',
-      });
-      if (Option.isNone(request)) {
-        this.error.set('catalog.invalid');
-        return;
-      }
-      this.saving.set(true);
-      this.error.set(undefined);
-      this.saved.set(false);
-      const item = this.editing();
-      const outcome =
-        item === undefined
-          ? await this.api.create(request.value)
-          : await this.api.update(item.id, {
-              ...request.value,
-              expectedVersion: item.version,
-              archived: model.archived,
-            });
-      this.saving.set(false);
-      if (!outcome.success) {
-        this.error.set(outcome.code);
-        return;
-      }
-      this.items.update((items) => [
-        ...items.filter((value) => value.id !== outcome.result.id),
-        outcome.result,
-      ]);
-      this.reset();
-      this.saved.set(true);
-    });
+
+  protected money(cents: number): string {
+    return formatMoney(cents, this.i18n.language(), 'EUR');
   }
+
   protected decimal(value: number, places: number): string {
     return formatFixedDecimal(value, places, this.i18n.language() === 'fr' ? ',' : '.');
-  }
-  private reset(): void {
-    this.editing.set(undefined);
-    this.model.set(emptyModel());
-    this.itemForm().reset();
-    this.error.set(undefined);
-    this.saved.set(false);
   }
 }

@@ -15,6 +15,8 @@ import { DesignDocuments } from './design-documents';
 import { EmptyState } from '@shared/empty-state/empty-state';
 import { ListToolbar } from '@shared/list-toolbar/list-toolbar';
 import { createFuzzySearch } from '@shared/fuzzy-search';
+import { TableSort, type SortDirection } from '@shared/table-sort/table-sort';
+import { FilterChip } from '@shared/filter-chip/filter-chip';
 
 type ButtonSample = {
   readonly variant: ButtonVariant;
@@ -33,6 +35,8 @@ type ButtonSample = {
     DesignDocuments,
     EmptyState,
     ListToolbar,
+    TableSort,
+    FilterChip,
     Icon,
     Notice,
     RouterOutlet,
@@ -47,13 +51,21 @@ type ButtonSample = {
 })
 export class DesignComponent {
   protected readonly tableQuery = signal('');
-  protected readonly tableRows = createFuzzySearch(
+  protected readonly tableDirection = signal<SortDirection>('ascending');
+  private readonly tableSearchResults = createFuzzySearch(
     signal([
       { service: 'Web', subject: 'Angular' },
       { service: 'Desktop', subject: 'WPF' },
     ]),
     this.tableQuery,
     { keys: ['service', 'subject'], threshold: 0.35 },
+  );
+  protected readonly tableRows = computed(() =>
+    this.tableSearchResults().toSorted(
+      (left, right) =>
+        (this.tableDirection() === 'ascending' ? 1 : -1) *
+        left.item.service.localeCompare(right.item.service, this.i18n.language()),
+    ),
   );
   private readonly confirmation = inject(Confirmation);
   protected readonly confirmationResult = signal<'accepted' | 'cancelled' | undefined>(undefined);

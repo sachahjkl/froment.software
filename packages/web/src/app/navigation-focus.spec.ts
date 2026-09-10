@@ -3,7 +3,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter, Router, RouterOutlet } from '@angular/router';
 import { NavigationFocus } from './navigation-focus';
 
-@Component({ template: '<h1>Page</h1>' })
+@Component({ template: '<h1>Page</h1><input aria-label="Search" type="search" />' })
 class TestPage {}
 
 @Component({
@@ -37,5 +37,15 @@ describe('NavigationFocus', () => {
     await router.navigateByUrl('/two');
     await fixture.whenStable();
     expect(document.activeElement).toBe(fixture.nativeElement.querySelector('main'));
+  });
+  it('retains focus during search and sort query changes', async () => {
+    const search = fixture.nativeElement.querySelector('input') as HTMLInputElement;
+    search.focus();
+    await router.navigateByUrl('/one?q=audit&sort=price-asc');
+    await fixture.whenStable();
+    expect(document.activeElement).toBe(search);
+    await router.navigateByUrl('/one?q=angular&sort=price-desc');
+    await fixture.whenStable();
+    expect(document.activeElement).toBe(search);
   });
 });

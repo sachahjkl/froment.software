@@ -1,0 +1,94 @@
+<section class="catalog-editor" aria-labelledby="catalog-editor-title">
+  <a class="back-link" [routerLink]="backLink()" [queryParams]="backQuery()"
+    >{{ i18n.t('catalogWorkspace.back') }}</a
+  >
+  <app-page-header>
+    <h1 id="catalog-editor-title">
+      {{ i18n.t(editing() ? 'catalogWorkspace.editTitle' : 'catalog.create') }}
+    </h1>
+    @if (item(); as current) {
+    <p>
+      {{ current.description }}
+      <span appBadge
+        >{{ i18n.t(current.archived ? 'catalog.archived' : 'catalogWorkspace.available') }}</span
+      >
+    </p>
+    }
+    <p class="intro">{{ i18n.t('catalogWorkspace.formIntro') }}</p>
+  </app-page-header>
+  @if (state() === 'loading') {
+  <p role="status">{{ i18n.t('catalog.loading') }}</p>
+  } @if (error(); as code) {
+  <p appNotice variant="danger" role="alert">{{ i18n.t(code) }}</p>
+  } @if (state() === 'error') {
+  <button appButton type="button" (click)="load()">{{ i18n.t('catalogWorkspace.retry') }}</button>
+  } @else if (state() === 'ready') { @if (completed()) {
+  <p appNotice variant="success" role="status">{{ i18n.t('catalog.saved') }}</p>
+  <a appLinkButton [routerLink]="backLink()" [queryParams]="backQuery()"
+    >{{ i18n.t('catalogWorkspace.back') }}</a
+  >
+  } @else {
+  <form class="catalog-form" novalidate (submit)="save($event)">
+    <fieldset>
+      <legend>{{ i18n.t('catalogWorkspace.service') }}</legend>
+      <label class="field" for="catalog-description"
+        >{{ i18n.t('catalog.description') }}
+        <input
+          id="catalog-description"
+          class="input"
+          autocomplete="off"
+          [formField]="itemForm.description"
+          [attr.aria-invalid]="invalid('description')"
+          aria-describedby="catalog-description-error"
+        />
+        <span id="catalog-description-error" class="field-error"
+          >@if (invalid('description')) { {{ i18n.t('catalog.fieldInvalid') }} }</span
+        >
+      </label>
+    </fieldset>
+    <fieldset>
+      <legend>{{ i18n.t('catalogWorkspace.defaultValues') }}</legend>
+      <div class="amounts">
+        @for (amount of amounts; track amount.field) {
+        <label class="field" [for]="amount.id"
+          >{{ i18n.t(amount.label) }}
+          <input
+            [id]="amount.id"
+            class="input"
+            inputmode="decimal"
+            [formField]="itemForm[amount.field]"
+            [attr.aria-invalid]="invalid(amount.field)"
+            [attr.aria-describedby]="amount.id + '-error'"
+          />
+          <span [id]="amount.id + '-error'" class="field-error"
+            >@if (invalid(amount.field)) { {{ i18n.t(amount.error) }} }</span
+          >
+        </label>
+        }
+      </div>
+      <p class="hint">{{ i18n.t('catalogWorkspace.taxHint') }}</p>
+    </fieldset>
+    @if (editing()) {
+    <fieldset>
+      <legend>{{ i18n.t('catalogWorkspace.availability') }}</legend>
+      <label class="choice"
+        ><input
+          type="checkbox"
+          [formField]="itemForm.archived"
+          aria-describedby="catalog-archive-hint"
+        />{{ i18n.t('catalogWorkspace.archive') }}</label
+      >
+      <p id="catalog-archive-hint" class="hint">{{ i18n.t('catalog.archiveHint') }}</p>
+    </fieldset>
+    }
+    <div class="actions">
+      <button appButton variant="primary" type="submit" [disabled]="saving()">
+        {{ i18n.t(saving() ? 'catalogWorkspace.saving' : 'catalog.save') }}
+      </button>
+      <a appLinkButton [routerLink]="backLink()" [queryParams]="backQuery()"
+        >{{ i18n.t('catalogWorkspace.cancel') }}</a
+      >
+    </div>
+  </form>
+  } }
+</section>

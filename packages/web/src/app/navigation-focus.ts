@@ -17,16 +17,24 @@ export class NavigationFocus {
     { initialValue: null },
   );
   private initialNavigationComplete = this.router.navigated;
+  private previousUrl = this.router.url;
 
   constructor() {
     effect(() => {
       const navigation = this.navigationEnd();
       if (!navigation) return;
+      const previous = this.previousUrl;
+      this.previousUrl = navigation.urlAfterRedirects;
       if (!this.initialNavigationComplete) {
         this.initialNavigationComplete = true;
         return;
       }
       const fragment = this.router.parseUrl(navigation.urlAfterRedirects).fragment;
+      if (
+        previous.split(/[?#]/, 1)[0] === navigation.urlAfterRedirects.split(/[?#]/, 1)[0] &&
+        this.router.parseUrl(previous).fragment === fragment
+      )
+        return;
       if (fragment) {
         this.focusFragment(fragment);
       } else {

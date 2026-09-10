@@ -1,0 +1,259 @@
+import {
+  afterNextRender,
+  ChangeDetectionStrategy,
+  Component,
+  DestroyRef,
+  HostListener,
+  inject,
+  signal,
+} from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import {
+  disabled,
+  FormField,
+  form,
+  maxLength,
+  pattern,
+  required,
+  submit,
+  validate,
+} from '@angular/forms/signals';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { CatalogItemCreateRequest, Ulid, type CatalogItemValue } from '@froment/contracts';
+import { Option, Schema } from 'effect';
+import { CatalogApi } from '@backoffice/catalog-api';
+import { formatFixedDecimal, parseFixedDecimal } from '@backoffice/quote-input';
+import { I18nService, type TranslationKey } from '@app/i18n.service';
+import { Badge } from '@shared/badge/badge';
+import { Button } from '@shared/button/button';
+import { Confirmation } from '@shared/confirmation/confirmation';
+import { Notice } from '@shared/notice/notice';
+import { PageHeader } from '@shared/page-header/page-header';
+import { catalogListQuery, catalogReturnView } from '../catalog/catalog-list-query';
+
+const emptyItem = () => ({
+  description: '',
+  quantity: '1.000',
+  unitPrice: '0.00',
+  vatRate: '20.00',
+  archived: false,
+});
+type ItemField = 'description' | 'quantity' | 'unitPrice' | 'vatRate';
+
+@Component({
+  host: { class: 'page-container' },
+  selector: 'app-catalog-editor',
+  imports: [Badge, Button, FormField, Notice, PageHeader, RouterLink],
+  templateUrl: './catalog-editor.html',
+  styleUrl: './catalog-editor.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class CatalogEditor {
+  protected readonly i18n = inject(I18nService);
+  private readonly api = inject(CatalogApi);
+  private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
+  private readonly destroyRef = inject(DestroyRef);
+  private readonly confirmation = inject(Confirmation);
+  protected readonly state = signal<'loading' | 'ready' | 'error'>('loading');
+  protected readonly item = signal<CatalogItemValue | undefined>(undefined);
+  protected readonly editing = signal(false);
+  protected readonly saving = signal(false);
+  private readonly confirming = signal(false);
+  protected readonly completed = signal(false);
+  protected readonly error = signal<TranslationKey | undefined>(undefined);
+  private readonly model = signal(emptyItem());
+  protected readonly amounts = [
+    {
+      field: 'quantity',
+      label: 'catalog.quantity',
+      error: 'catalogWorkspace.quantityInvalid',
+      id: 'catalog-quantity',
+    },
+    {
+      field: 'unitPrice',
+      label: 'catalog.price',
+      error: 'catalogWorkspace.priceInvalid',
+      id: 'catalog-price',
+    },
+    {
+      field: 'vatRate',
+      label: 'catalog.tax',
+      error: 'catalogWorkspace.taxInvalid',
+      id: 'catalog-tax',
+    },
+  ] as const;
+  protected readonly itemForm = form(this.model, (path) => {
+    disabled(path, () => this.saving() || this.completed() || this.state() !== 'ready');
+    required(path.description);
+    maxLength(path.description, 160);
+    pattern(path.description, /\S/);
+    validate(path.quantity, ({ value }) =>
+      Schema.is(CatalogItemCreateRequest.fields.quantityMilli)(parseFixedDecimal(value(), 3))
+        ? undefined
+        : { kind: 'quantity' },
+    );
+    validate(path.unitPrice, ({ value }) =>
+      Schema.is(CatalogItemCreateRequest.fields.unitPriceCents)(parseFixedDecimal(value(), 2))
+        ? undefined
+        : { kind: 'price' },
+    );
+    validate(path.vatRate, ({ value }) =>
+      Schema.is(CatalogItemCreateRequest.fields.vatRateBasisPoints)(parseFixedDecimal(value(), 2))
+        ? undefined
+        : { kind: 'tax' },
+    );
+  });
+  private loadGeneration = 0;
+
+  constructor() {
+    afterNextRender(() =>
+      this.route.paramMap
+        .pipe(takeUntilDestroyed(this.destroyRef))
+        .subscribe(() => void this.load()),
+    );
+  }
+
+  protected backLink() {
+    return ['/backoffice/catalogue', catalogReturnView(this.route.snapshot.queryParamMap)];
+  }
+
+  protected backQuery() {
+    return catalogListQuery(this.route.snapshot.queryParamMap);
+  }
+
+  async canDeactivate(): Promise<boolean> {
+    return (
+      !this.saving() &&
+      !this.confirming() &&
+      (!this.itemForm().dirty() ||
+        (await this.confirmation.request(this.i18n.t('catalog.unsavedChanges'))))
+    );
+  }
+
+  @HostListener('window:beforeunload', ['$event'])
+  protected preventUnsavedUnload(event: BeforeUnloadEvent): void {
+    if (this.saving() || this.confirming() || this.itemForm().dirty()) event.preventDefault();
+  }
+
+  protected invalid(field: ItemField): boolean {
+    return this.itemForm[field]().invalid() && this.itemForm[field]().touched();
+  }
+
+  protected async load(): Promise<void> {
+    const generation = ++this.loadGeneration;
+    const id = this.route.snapshot.paramMap.get('itemId');
+    this.editing.set(id !== null);
+    this.state.set('loading');
+    this.error.set(undefined);
+    this.item.set(undefined);
+    this.completed.set(false);
+    this.model.set(emptyItem());
+    this.itemForm().reset();
+    if (id === null) {
+      this.state.set('ready');
+      return;
+    }
+    const decoded = Schema.decodeUnknownOption(Ulid)(id);
+    if (Option.isNone(decoded)) {
+      this.state.set('error');
+      this.error.set('catalog.not_found');
+      return;
+    }
+    try {
+      const items = await this.api.list();
+      if (this.destroyRef.destroyed || generation !== this.loadGeneration) return;
+      const item = items.find((candidate) => candidate.id === decoded.value);
+      if (item === undefined) {
+        this.state.set('error');
+        this.error.set('catalog.not_found');
+        return;
+      }
+      this.item.set(item);
+      this.model.set({
+        description: item.description,
+        quantity: formatFixedDecimal(item.quantityMilli, 3),
+        unitPrice: formatFixedDecimal(item.unitPriceCents, 2),
+        vatRate: formatFixedDecimal(item.vatRateBasisPoints, 2),
+        archived: item.archived,
+      });
+      this.itemForm().reset();
+      this.state.set('ready');
+    } catch {
+      if (this.destroyRef.destroyed || generation !== this.loadGeneration) return;
+      this.state.set('error');
+      this.error.set('catalogWorkspace.loadError');
+    }
+  }
+
+  protected save(event: SubmitEvent): void {
+    event.preventDefault();
+    if (this.saving() || this.confirming() || this.completed() || this.state() !== 'ready') return;
+    this.itemForm().markAsTouched();
+    if (this.itemForm().invalid()) {
+      for (const field of ['description', 'quantity', 'unitPrice', 'vatRate'] as const) {
+        if (this.itemForm[field]().invalid()) {
+          this.itemForm[field]().focusBoundControl();
+          break;
+        }
+      }
+      return;
+    }
+    void submit(this.itemForm, async () => {
+      const model = this.model();
+      const request = Schema.decodeUnknownOption(CatalogItemCreateRequest)({
+        description: model.description.trim(),
+        quantityMilli: parseFixedDecimal(model.quantity, 3),
+        unitPriceCents: parseFixedDecimal(model.unitPrice, 2),
+        vatRateBasisPoints: parseFixedDecimal(model.vatRate, 2),
+        currency: 'EUR',
+      });
+      if (Option.isNone(request)) {
+        this.error.set('catalog.invalid');
+        return;
+      }
+      const item = this.item();
+      this.error.set(undefined);
+      try {
+        if (item && item.archived !== model.archived) {
+          this.confirming.set(true);
+          const accepted = await this.confirmation.request(
+            this.i18n.t(
+              model.archived
+                ? 'catalogWorkspace.archiveConfirmation'
+                : 'catalogWorkspace.restoreConfirmation',
+            ),
+          );
+          this.confirming.set(false);
+          if (!accepted || this.destroyRef.destroyed) return;
+        }
+        this.saving.set(true);
+        const outcome = item
+          ? await this.api.update(item.id, {
+              ...request.value,
+              expectedVersion: item.version,
+              archived: model.archived,
+            })
+          : await this.api.create(request.value);
+        if (this.destroyRef.destroyed) return;
+        if (!outcome.success) {
+          this.error.set(outcome.code);
+          return;
+        }
+        this.item.set(outcome.result);
+        this.itemForm().reset();
+        this.completed.set(true);
+      } catch {
+        if (!this.destroyRef.destroyed) this.error.set('catalog.error');
+      } finally {
+        this.confirming.set(false);
+        this.saving.set(false);
+      }
+      if (this.completed())
+        await this.router.navigate(this.backLink(), {
+          queryParams: this.backQuery(),
+          state: { catalogSaved: true },
+        });
+    });
+  }
+}

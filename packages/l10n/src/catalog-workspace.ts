@@ -1,0 +1,87 @@
+export const catalogWorkspaceText = {
+  fr: {
+    'catalogWorkspace.intro': 'Préparez les prestations réutilisables dans vos devis.',
+    'catalogWorkspace.views': 'Vues du catalogue',
+    'catalogWorkspace.active': 'Actives',
+    'catalogWorkspace.archived': 'Archivées',
+    'catalogWorkspace.all': 'Toutes',
+    'catalogWorkspace.count': 'Prestations : {count}',
+    'catalogWorkspace.price': 'Prix unitaire HT',
+    'catalogWorkspace.status': 'État',
+    'catalogWorkspace.available': 'Active',
+    'catalogWorkspace.searchFilter': 'Recherche : {query}',
+    'catalogWorkspace.clearSearch': 'Effacer la recherche',
+    'catalogWorkspace.noMatches': 'Aucune prestation ne correspond à la recherche',
+    'catalogWorkspace.changeSearch': 'Modifiez la recherche ou consultez une autre vue.',
+    'catalogWorkspace.empty': 'Aucune prestation dans cette vue',
+    'catalogWorkspace.emptyIntro':
+      'Créez une prestation pour réutiliser sa description et ses valeurs dans vos devis.',
+    'catalogWorkspace.noArchived': 'Aucune prestation archivée',
+    'catalogWorkspace.archiveIntro': 'Les prestations archivées restent consultables ici.',
+    'catalogWorkspace.loadError': 'Le catalogue est indisponible. Réessayez le chargement.',
+    'catalogWorkspace.retry': 'Réessayer',
+    'catalogWorkspace.editTitle': 'Modifier la prestation',
+    'catalogWorkspace.back': 'Retour au catalogue',
+    'catalogWorkspace.formIntro':
+      'Les modifications ne changent pas les lignes déjà ajoutées à vos devis.',
+    'catalogWorkspace.service': 'Prestation',
+    'catalogWorkspace.defaultValues': 'Valeurs par défaut',
+    'catalogWorkspace.quantityInvalid':
+      'Saisissez une quantité de 0,001 à 9 007 199 254 740,991, avec 3 décimales maximum.',
+    'catalogWorkspace.priceInvalid':
+      'Saisissez un prix de 0 à 90 071 992 547 409,91 EUR, avec 2 décimales maximum.',
+    'catalogWorkspace.taxInvalid': 'Saisissez une TVA entre 0 et 100 %, avec 2 décimales maximum.',
+    'catalogWorkspace.taxHint':
+      'Les prix sont en euros, hors taxes. Vérifiez le taux de TVA pour chaque devis.',
+    'catalogWorkspace.availability': 'Disponibilité dans les devis',
+    'catalogWorkspace.archive': 'Archiver cette prestation',
+    'catalogWorkspace.archiveConfirmation':
+      'Archiver cette prestation et enregistrer les modifications ? Les lignes déjà ajoutées aux devis restent inchangées.',
+    'catalogWorkspace.restoreConfirmation':
+      'Réactiver cette prestation et enregistrer les modifications ? Elle sera disponible dans les nouveaux devis.',
+    'catalogWorkspace.saving': 'Enregistrement…',
+    'catalogWorkspace.cancel': 'Annuler',
+  },
+  en: {
+    'catalogWorkspace.intro': 'Prepare reusable services for your quotes.',
+    'catalogWorkspace.views': 'Catalog views',
+    'catalogWorkspace.active': 'Active',
+    'catalogWorkspace.archived': 'Archived',
+    'catalogWorkspace.all': 'All',
+    'catalogWorkspace.count': 'Services: {count}',
+    'catalogWorkspace.price': 'Unit price excluding tax',
+    'catalogWorkspace.status': 'Status',
+    'catalogWorkspace.available': 'Active',
+    'catalogWorkspace.searchFilter': 'Search: {query}',
+    'catalogWorkspace.clearSearch': 'Clear search',
+    'catalogWorkspace.noMatches': 'No services match the search',
+    'catalogWorkspace.changeSearch': 'Change the search or select another view.',
+    'catalogWorkspace.empty': 'No services in this view',
+    'catalogWorkspace.emptyIntro':
+      'Create a service to reuse its description and values in your quotes.',
+    'catalogWorkspace.noArchived': 'No archived services',
+    'catalogWorkspace.archiveIntro': 'Archived services remain available for review here.',
+    'catalogWorkspace.loadError': 'The catalog is unavailable. Try loading it again.',
+    'catalogWorkspace.retry': 'Retry',
+    'catalogWorkspace.editTitle': 'Edit service',
+    'catalogWorkspace.back': 'Back to catalog',
+    'catalogWorkspace.formIntro': 'Changes do not alter lines already added to your quotes.',
+    'catalogWorkspace.service': 'Service',
+    'catalogWorkspace.defaultValues': 'Default values',
+    'catalogWorkspace.quantityInvalid':
+      'Enter a quantity from 0.001 to 9,007,199,254,740.991, with at most 3 decimal places.',
+    'catalogWorkspace.priceInvalid':
+      'Enter a price from 0 to EUR 90,071,992,547,409.91, with at most 2 decimal places.',
+    'catalogWorkspace.taxInvalid': 'Enter VAT from 0 to 100%, with at most 2 decimal places.',
+    'catalogWorkspace.taxHint':
+      'Prices are in euros, excluding tax. Check the VAT rate for each quote.',
+    'catalogWorkspace.availability': 'Availability in quotes',
+    'catalogWorkspace.archive': 'Archive this service',
+    'catalogWorkspace.archiveConfirmation':
+      'Archive this service and save changes? Lines already added to quotes remain unchanged.',
+    'catalogWorkspace.restoreConfirmation':
+      'Reactivate this service and save changes? It will be available in new quotes.',
+    'catalogWorkspace.saving': 'Saving…',
+    'catalogWorkspace.cancel': 'Cancel',
+  },
+} as const;

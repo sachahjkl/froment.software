@@ -1,12 +1,15 @@
 import { TestBed } from '@angular/core/testing';
+import { provideRouter, Router } from '@angular/router';
+import { RouterTestingHarness } from '@angular/router/testing';
 import { vi } from 'vitest';
 import { CatalogApi } from '@backoffice/catalog-api';
+import { TabPanelOutlet } from '@shared/tabs/tab-panel';
 import { Catalog } from './catalog';
-import { Confirmation } from '@shared/confirmation/confirmation';
+import { CatalogEditor } from '../catalog-editor/catalog-editor';
 
 const item = {
   id: '01ARZ3NDEKTSV4RRFFQ69G5FAV',
-  description: 'Audit',
+  description: 'Développement Angular',
   quantityMilli: 1000,
   unitPriceCents: 12500,
   vatRateBasisPoints: 2000,
@@ -14,138 +17,121 @@ const item = {
   version: 3,
   archived: false,
 };
+const records = [
+  item,
+  {
+    ...item,
+    id: '01ARZ3NDEKTSV4RRFFQ69G5FAW',
+    description: 'Audit comptable',
+    unitPriceCents: 7500,
+  },
+  { ...item, id: '01ARZ3NDEKTSV4RRFFQ69G5FAX', description: 'Ancienne prestation', archived: true },
+];
+
+async function configure(url = '/backoffice/catalogue/active', fail = false) {
+  const list = vi.fn().mockImplementation(async () => {
+    if (fail) throw new Error('unavailable');
+    return records;
+  });
+  TestBed.configureTestingModule({
+    providers: [
+      provideRouter([
+        { path: 'backoffice/catalogue/new', component: CatalogEditor },
+        { path: 'backoffice/catalogue/:itemId/edit', component: CatalogEditor },
+        {
+          path: 'backoffice/catalogue',
+          component: Catalog,
+          children: ['active', 'archived', 'all'].map((tab) => ({
+            path: tab,
+            component: TabPanelOutlet,
+            data: { panel: 'catalog', tab },
+          })),
+        },
+      ]),
+      { provide: CatalogApi, useValue: { list } },
+    ],
+  });
+  const harness = await RouterTestingHarness.create();
+  const component = await harness.navigateByUrl(url, Catalog);
+  await harness.fixture.whenStable();
+  return {
+    harness,
+    component,
+    root: harness.fixture.nativeElement as HTMLElement,
+    list,
+    router: TestBed.inject(Router),
+  };
+}
 
 describe('Catalog', () => {
-  it('searches descriptions with typo and accent tolerance in a compact table', async () => {
-    TestBed.configureTestingModule({
-      providers: [
-        {
-          provide: CatalogApi,
-          useValue: {
-            list: async () => [
-              { ...item, description: 'Développement Angular' },
-              { ...item, id: '01ARZ3NDEKTSV4RRFFQ69G5FAW', description: 'Audit comptable' },
-            ],
-          },
-        },
-      ],
-    });
-    const fixture = TestBed.createComponent(Catalog);
-    await fixture.whenStable();
-    const root: HTMLElement = fixture.nativeElement;
-    expect(root.querySelectorAll('.items tbody tr')).toHaveLength(2);
-    const search = root.querySelector<HTMLInputElement>('input[type="search"]')!;
+  it('shows a focused list with dedicated editor links and URL-backed fuzzy search', async () => {
+    const { root, harness, router, component } = await configure();
+    expect(root.querySelector('form')).toBeNull();
+    expect(root.querySelectorAll('tbody tr')).toHaveLength(2);
+    const search = root.querySelector<HTMLInputElement>('#catalog-search')!;
     search.value = 'developement';
-    search.dispatchEvent(new Event('input', { bubbles: true }));
-    await fixture.whenStable();
-    expect(root.querySelectorAll('.items tbody tr')).toHaveLength(1);
-    expect(root.querySelector('.items tbody')?.textContent).toContain('Développement Angular');
-    expect(fixture.componentInstance['visibleItems']()[0]?.matches.length).toBeGreaterThan(0);
-    search.value = 'zzzzzzzz';
-    search.dispatchEvent(new Event('input', { bubbles: true }));
-    await fixture.whenStable();
-    expect(root.querySelector('.items td[colspan="6"]')).not.toBeNull();
+    search.dispatchEvent(new Event('input'));
+    await harness.fixture.whenStable();
+    expect(root.querySelectorAll('tbody tr')).toHaveLength(1);
+    expect(router.url).toBe('/backoffice/catalogue/active?q=developement&sort=description-asc');
+    expect(component['visibleItems']('active')[0]?.matches.length).toBeGreaterThan(0);
+    expect(root.querySelector('tbody a')?.getAttribute('href')).toContain(`/${item.id}/edit?`);
+    expect(
+      root.querySelector('#catalog-active-tab')?.getAttribute('aria-current'),
+      root.querySelector('#catalog-active-tab')?.outerHTML,
+    ).toBe('page');
+    root.querySelector<HTMLButtonElement>('[appFilterChip]')!.click();
+    await harness.fixture.whenStable();
+    expect(search.value).toBe('');
+    expect(document.activeElement).toBe(search);
+    expect(root.querySelectorAll('tbody tr')).toHaveLength(2);
   });
-  it('waits for confirmation before replacing or discarding edited values', async () => {
-    let decide!: (result: boolean) => void;
-    const request = vi.fn(
-      () =>
-        new Promise<boolean>((resolve) => {
-          decide = resolve;
-        }),
+
+  it('preserves search and sort through views, an editor, and the return link', async () => {
+    const { root, harness, router } = await configure(
+      '/backoffice/catalogue/all?q=angular&sort=price-desc',
     );
-    TestBed.configureTestingModule({
-      providers: [
-        { provide: CatalogApi, useValue: { list: async () => [item] } },
-        { provide: Confirmation, useValue: { request } },
-      ],
-    });
-    const fixture = TestBed.createComponent(Catalog);
-    await fixture.whenStable();
-    const root: HTMLElement = fixture.nativeElement;
-    const description = root.querySelector<HTMLInputElement>('#catalog-description')!;
-    description.value = 'Unsaved work';
-    description.dispatchEvent(new Event('input', { bubbles: true }));
-    await fixture.whenStable();
-    root.querySelector<HTMLButtonElement>('.items button')!.click();
-    expect(request).toHaveBeenCalledOnce();
-    expect(description.value).toBe('Unsaved work');
-    decide(false);
-    await fixture.whenStable();
-    expect(description.value).toBe('Unsaved work');
-    root.querySelector<HTMLButtonElement>('.items button')!.click();
-    decide(true);
-    await fixture.whenStable();
-    expect(description.value).toBe('Audit');
-    description.value = 'Another edit';
-    description.dispatchEvent(new Event('input', { bubbles: true }));
-    await fixture.whenStable();
-    root.querySelector<HTMLButtonElement>('form button[type="button"]')!.click();
-    expect(description.value).toBe('Another edit');
-    decide(false);
-    await fixture.whenStable();
-    expect(description.value).toBe('Another edit');
-    root.querySelector<HTMLButtonElement>('form button[type="button"]')!.click();
-    decide(true);
-    await fixture.whenStable();
-    expect(description.value).toBe('');
+    expect(root.querySelectorAll('tbody tr')).toHaveLength(1);
+    root.querySelector<HTMLAnchorElement>('tbody a')!.click();
+    await harness.fixture.whenStable();
+    expect(router.url).toContain('view=all');
+    expect(root.querySelector<HTMLInputElement>('#catalog-description')?.value).toBe(
+      item.description,
+    );
+    root.querySelector<HTMLAnchorElement>('.back-link')!.click();
+    await harness.fixture.whenStable();
+    expect(router.url).toBe('/backoffice/catalogue/all?q=angular&sort=price-desc');
+    root.querySelector<HTMLAnchorElement>('#catalog-archived-tab')!.click();
+    await harness.fixture.whenStable();
+    expect(router.url).toBe('/backoffice/catalogue/archived?q=angular&sort=price-desc');
+    expect(root.querySelector('app-empty-state')).not.toBeNull();
+    expect(root.querySelector('app-page-header a')?.getAttribute('href')).toContain(
+      'view=archived',
+    );
   });
 
-  it('updates with the loaded version and archives without deleting', async () => {
-    const update = vi.fn(async () => ({
-      success: true,
-      result: { ...item, version: 4, archived: true },
-    }));
-    TestBed.configureTestingModule({
-      providers: [{ provide: CatalogApi, useValue: { list: async () => [item], update } }],
-    });
-    const fixture = TestBed.createComponent(Catalog);
-    await fixture.whenStable();
-    const root: HTMLElement = fixture.nativeElement;
-    root.querySelector<HTMLButtonElement>('.items button')?.click();
-    await fixture.whenStable();
-    const archived = root.querySelector<HTMLInputElement>('form input[type="checkbox"]');
-    expect(archived).not.toBeNull();
-    archived?.click();
-    root
-      .querySelector('form')
-      ?.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
-    await fixture.whenStable();
-    expect(update).toHaveBeenCalledWith(item.id, {
-      description: 'Audit',
-      quantityMilli: 1000,
-      unitPriceCents: 12500,
-      vatRateBasisPoints: 2000,
-      currency: 'EUR',
-      expectedVersion: 3,
-      archived: true,
-    });
-    expect(root.querySelectorAll('.items button')).toHaveLength(0);
-    root.querySelector<HTMLInputElement>('.filters input[type="checkbox"]')?.click();
-    await fixture.whenStable();
-    expect(root.querySelectorAll('.items button')).toHaveLength(1);
+  it('sorts prices without changing stored records', async () => {
+    const { root, harness } = await configure();
+    const sort = root.querySelector<HTMLButtonElement>('th.numeric [appTableSort]')!;
+    sort.click();
+    await harness.fixture.whenStable();
+    expect(root.querySelector('tbody a')?.textContent).toBe('Audit comptable');
+    expect(sort.parentElement?.getAttribute('aria-sort')).toBe('ascending');
+    sort.click();
+    await harness.fixture.whenStable();
+    expect(root.querySelector('tbody a')?.textContent).toBe(item.description);
+    expect(sort.parentElement?.getAttribute('aria-sort')).toBe('descending');
+    expect(records[0]).toBe(item);
   });
 
-  it('keeps edited values when saving fails', async () => {
-    const update = vi.fn(async () => ({ success: false, code: 'catalog.version_conflict' }));
-    TestBed.configureTestingModule({
-      providers: [{ provide: CatalogApi, useValue: { list: async () => [item], update } }],
-    });
-    const fixture = TestBed.createComponent(Catalog);
-    await fixture.whenStable();
-    const root: HTMLElement = fixture.nativeElement;
-    root.querySelector<HTMLButtonElement>('.items button')?.click();
-    await fixture.whenStable();
-    const price = root.querySelector<HTMLInputElement>('#catalog-price');
-    if (price === null) throw new Error('catalog.price.input.missing');
-    price.value = '150.00';
-    price.dispatchEvent(new Event('input', { bubbles: true }));
-    root
-      .querySelector('form')
-      ?.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
-    await fixture.whenStable();
+  it('separates load errors from empty results and retries', async () => {
+    const { root, list, harness } = await configure('/backoffice/catalogue/active', true);
     expect(root.querySelector('[role="alert"]')).not.toBeNull();
-    expect(price.value).toBe('150.00');
-    expect(update).toHaveBeenCalledOnce();
+    expect(root.querySelector('app-empty-state')).toBeNull();
+    list.mockResolvedValue([]);
+    root.querySelector<HTMLButtonElement>('.notice-flow button')!.click();
+    await harness.fixture.whenStable();
+    expect(root.querySelector('[role="alert"]')).toBeNull();
+    expect(root.querySelector('app-empty-state')).not.toBeNull();
   });
 });

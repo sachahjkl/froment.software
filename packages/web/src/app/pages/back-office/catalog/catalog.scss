@@ -6,62 +6,38 @@
   gap: var(--space-6);
   padding: var(--page-header-y) var(--page-x);
 }
-h2 {
-  font-size: var(--text-xl);
-}
-.intro,
-.hint {
-  color: var(--color-muted);
-  max-width: var(--measure);
-}
-.intro {
-  margin-top: var(--space-2);
-}
-.editor {
+.catalog-results {
   display: grid;
   gap: var(--space-4);
-  max-width: 56rem;
+  min-inline-size: 0;
+}
+.intro {
+  color: var(--color-muted);
 }
 .field {
   display: grid;
-  min-width: 0;
   gap: var(--space-2);
+  min-inline-size: 0;
 }
-.amounts {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: var(--space-4);
-}
-.actions,
-.filters {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--space-3);
+.search {
+  flex: 1;
+  max-inline-size: 30rem;
 }
 .numeric {
   text-align: end;
-  white-space: nowrap;
   font-variant-numeric: tabular-nums;
 }
-.filters {
-  align-items: end;
+.description-column {
+  inline-size: 35%;
 }
-.filters > .choice {
-  align-items: center;
-  min-height: var(--control-height);
+.quantity-column {
+  inline-size: 18%;
 }
-.filters > .choice input {
-  margin: 0;
+.price-column {
+  inline-size: 22%;
 }
-.items li {
-  display: grid;
-  gap: var(--space-3);
-  justify-items: start;
-  padding: var(--panel-padding);
-}
-@media (max-width: 40rem) {
-  .amounts {
-    grid-template-columns: 1fr;
-  }
+.active-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
 }

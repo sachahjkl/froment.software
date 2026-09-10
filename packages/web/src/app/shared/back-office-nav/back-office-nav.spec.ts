@@ -11,7 +11,8 @@ describe('BackOfficeNav', () => {
       ['quotes/new', 'affaires'],
       ['invoices/example', 'facturation'],
       ['clients/example/profile', 'clients'],
-      ['configuration/catalogue', 'configuration/catalogue'],
+      ['catalogue/active', 'catalogue'],
+      ['catalogue/example/edit', 'catalogue'],
       ['configuration/services/resend', 'configuration'],
     ]) {
       await router.navigateByUrl(`/backoffice/${path}`);

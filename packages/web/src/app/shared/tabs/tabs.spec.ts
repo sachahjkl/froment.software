@@ -62,4 +62,18 @@ describe('Tabs', () => {
     link?.click();
     expect(TestBed.inject(Router).url).not.toBe('/first');
   });
+  it('marks the current route independently of its query', async () => {
+    const router = TestBed.inject(Router);
+    await router.navigateByUrl('/first?q=angular');
+    const fixture = TestBed.createComponent(TestHost);
+    await fixture.whenStable();
+    expect(fixture.nativeElement.querySelector('#first-tab')?.getAttribute('aria-current')).toBe(
+      'page',
+    );
+    await router.navigateByUrl('/first?q=audit');
+    await fixture.whenStable();
+    expect(fixture.nativeElement.querySelector('#first-tab')?.getAttribute('aria-current')).toBe(
+      'page',
+    );
+  });
 });

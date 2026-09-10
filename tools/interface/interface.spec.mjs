@@ -7,6 +7,8 @@ import { checkCreditNotes } from "./credit-notes.mjs";
 import { checkBankLedger } from "./bank-ledger.mjs";
 import { checkDashboardShell, openBackOfficeNavigation } from "./dashboard-shell.mjs";
 import { checkClientsWorkspace } from "./clients-workspace.mjs";
+import { checkCatalogWorkspace } from "./catalog-workspace.mjs";
+import { checkCatalogZoom } from "./catalog-zoom.mjs";
 import {
   accountEmail,
   clientId,
@@ -228,36 +230,11 @@ test("client form and complete account address", async ({ page, colorScheme }, t
   expect(audit.violations).toEqual([]);
   await page.screenshot({ path: testInfo.outputPath("account-security.png"), fullPage: true });
   await checkPasskeys(page, testInfo);
-  await page.route("**/api/catalog", (route) =>
-    route.fulfill({
-      json: [
-        {
-          id: quoteId,
-          description: "Développement Angular",
-          quantityMilli: 1000,
-          unitPriceCents: 12500,
-          vatRateBasisPoints: 2000,
-          currency: "EUR",
-          version: 1,
-          archived: false,
-        },
-        {
-          id: clientId,
-          description: "Audit comptable",
-          quantityMilli: 1000,
-          unitPriceCents: 7500,
-          vatRateBasisPoints: 2000,
-          currency: "EUR",
-          version: 1,
-          archived: false,
-        },
-      ],
-    }),
-  );
+  await checkCatalogWorkspace(page, testInfo);
+  if (testInfo.project.name === "desktop") await checkCatalogZoom(testInfo);
   for (const [tab, selector] of [
     ["entreprise", ".issuer-page"],
     ["conditions", ".presets-page"],
-    ["catalogue", ".catalog-page"],
   ]) {
     await page.goto(`/backoffice/configuration/${tab}`);
     await page.waitForLoadState("networkidle");
@@ -280,27 +257,6 @@ test("client form and complete account address", async ({ page, colorScheme }, t
     expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth)).toBe(
       false,
     );
-    if (tab === "catalogue") {
-      await expect(page.locator(".items tbody tr")).toHaveCount(2);
-      await page.locator('.filters input[type="search"]').fill("developement");
-      await expect(page.locator(".items tbody tr")).toHaveCount(1);
-      await expect(page.locator(".items tbody")).toContainText("Développement Angular");
-      for (let column = 0; column < 5; column++) {
-        const heading = page.locator(".items thead th").nth(column);
-        const cell = page.locator(".items tbody tr").first().locator("th, td").nth(column);
-        const alignment = await cell.evaluate((element) => getComputedStyle(element).textAlign);
-        await expect(heading).toHaveCSS("text-align", alignment);
-      }
-      const catalogAudit = await new AxeBuilder({ page })
-        .withTags(["wcag2a", "wcag2aa", "wcag21aa"])
-        .analyze();
-      expect(catalogAudit.violations).toEqual([]);
-      const label = await page.locator(".filters > .choice").boundingBox();
-      const checkbox = await page.locator(".filters > .choice input").boundingBox();
-      expect(Math.abs(label.y + label.height / 2 - checkbox.y - checkbox.height / 2)).toBeLessThan(
-        1,
-      );
-    }
     await page.screenshot({ path: testInfo.outputPath(`${tab}.png`), fullPage: true });
   }
   await checkServiceConnections(page, testInfo);

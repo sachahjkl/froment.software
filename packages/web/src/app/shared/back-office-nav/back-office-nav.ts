@@ -38,10 +38,10 @@ const items: readonly {
   { path: 'banque', label: 'bank.title', icon: 'bank', prefixes: ['banque'] },
   { path: 'courriels', label: 'emails.title', icon: 'mail', prefixes: ['courriels'] },
   {
-    path: 'configuration/catalogue',
+    path: 'catalogue',
     label: 'catalog.title',
     icon: 'catalog',
-    prefixes: ['configuration/catalogue'],
+    prefixes: ['catalogue'],
   },
   {
     path: 'configuration',
@@ -86,9 +86,7 @@ export class BackOfficeNav {
       path === `/backoffice/${prefix}` || path.startsWith(`/backoffice/${prefix}/`);
     return items.map((item) => ({
       ...item,
-      active:
-        item.prefixes.some(matches) &&
-        !(item.path === 'configuration' && matches('configuration/catalogue')),
+      active: item.prefixes.some(matches),
     }));
   });
 }

@@ -3,6 +3,8 @@ import { connectionText } from './connections.js';
 import { checkoutText } from './checkout.js';
 import { backOfficeShellText } from './back-office-shell.js';
 import { clientsWorkspaceText } from './clients-workspace.js';
+import { catalogWorkspaceText } from './catalog-workspace.js';
+import { listControlsText } from './list-controls.js';
 import { teamText } from './team.js';
 import { creditText } from './credit-notes.js';
 import { ledgerText } from './bank-ledger.js';
@@ -18,6 +20,9 @@ export const translations = {
     ...checkoutText.fr,
     ...backOfficeShellText.fr,
     ...clientsWorkspaceText.fr,
+    ...catalogWorkspaceText.fr,
+    'design.components.searchFilter': 'Recherche : {query}',
+    ...listControlsText.fr,
     ...webUiText.fr,
     ...teamText.fr,
     ...creditText.fr,
@@ -1535,6 +1540,9 @@ export const translations = {
     ...checkoutText.en,
     ...backOfficeShellText.en,
     ...clientsWorkspaceText.en,
+    ...catalogWorkspaceText.en,
+    'design.components.searchFilter': 'Search: {query}',
+    ...listControlsText.en,
     ...webUiText.en,
     ...teamText.en,
     ...creditText.en,
