@@ -60,7 +60,6 @@
         (click)="accountDisclosure.open = false"
         ><app-icon name="secrets" />{{ i18n.t('account.security_title') }}</a
       >
-      <ng-container *ngTemplateOutlet="preferences" />
       <button appButton class="sign-out" type="button" (click)="signOut()">
         <app-icon name="logout" />{{ i18n.t('backOffice.signOut') }}
       </button>
@@ -80,7 +79,6 @@
       ><app-icon name="user" />{{ i18n.t('account.security_title') }}</a
     >
     <button appButton type="button" (click)="signOut()">{{ i18n.t('backOffice.signOut') }}</button>
-    <ng-container *ngTemplateOutlet="preferences" />
   </div>
   }
 </ng-template>
@@ -98,6 +96,7 @@
   </nav>
   }
   <div class="sidebar-bottom">
+    <ng-container *ngTemplateOutlet="preferences" />
     <nav class="utility-links" [attr.aria-label]="i18n.t('backOfficeShell.resources')">
       <a routerLink="/">{{ i18n.t('backOfficeShell.website') }}</a>
       <a routerLink="/legal">{{ i18n.t('nav.legal') }}</a>
