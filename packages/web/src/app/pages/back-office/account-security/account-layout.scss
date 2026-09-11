@@ -1,5 +1,8 @@
 :host {
   display: block;
+  inline-size: 100%;
+  max-inline-size: var(--page-width-form);
+  margin-inline: auto;
 }
 .account-header {
   padding: var(--page-header-y) var(--page-x) var(--space-4);

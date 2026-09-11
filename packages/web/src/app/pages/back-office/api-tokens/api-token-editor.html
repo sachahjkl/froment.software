@@ -1,4 +1,4 @@
-<section class="tokens-page detail-page">
+<section class="tokens-page detail-page form-page">
   <app-page-header layout="stacked">
     <a pageBack routerLink="/backoffice/api" [queryParams]="navigation.params()"
       >{{ i18n.t('configurationWorkspace.backTokens') }}</a
@@ -36,45 +36,77 @@
     @if (tokenForm.expiresAt().touched() && !expirationValid()) {
     <p class="field-error">{{ i18n.t('backOffice.apiTokens.expirationInvalid') }}</p>
     }
-    <fieldset class="ds-panel" [disabled]="saving()">
-      <legend>{{ i18n.t('backOffice.apiTokens.permissions') }}</legend>
-      <label class="field"
-        >{{ i18n.t('backOffice.apiTokens.permissionSearch') }}<input
-          #permissionSearch
-          class="input"
-          type="search"
-          id="api-token-permission-search"
-          [value]="permissionQuery()"
-          (input)="updatePermissionQuery(permissionSearch)"
-      /></label>
-      <div class="permission-groups">
-        @for (group of permissionGroups(); track group.domain) {
-        <fieldset>
-          <legend><code>{{ group.domain }}</code></legend>
-          @for (result of group.permissions; track result.item.code) {
-          <label class="permission-option">
-            <input
-              #permission
-              type="checkbox"
-              [checked]="selected(result.item.code)"
-              (change)="togglePermission(result.item.code, permission.checked)"
-            />
-            <span
-              ><span [appSearchHighlight]="result.labelMatches">{{ result.item.label }}</span
-              ><code [appSearchHighlight]="result.codeMatches">{{ result.item.code }}</code></span
+    <div class="ds-panel form-panel">
+      <fieldset [disabled]="saving()">
+        <legend>{{ i18n.t('backOffice.apiTokens.permissions') }}</legend>
+        <label class="field"
+          >{{ i18n.t('backOffice.apiTokens.permissionSearch') }}<input
+            #permissionSearch
+            class="input"
+            type="search"
+            id="api-token-permission-search"
+            [value]="permissionQuery()"
+            (input)="updatePermissionQuery(permissionSearch)"
+        /></label>
+        <div
+          class="permission-groups"
+          ngAccordionGroup
+          [multiExpandable]="true"
+          [disabled]="saving()"
+        >
+          @for (group of permissionGroups(); track group.domain) {
+          <div class="permission-group">
+            <h3>
+              <button
+                appButton
+                type="button"
+                class="permission-toggle"
+                ngAccordionTrigger
+                [panel]="panel"
+                [expanded]="group.expanded"
+                (expandedChange)="setPermissionGroupExpanded(group.domain, $event)"
+              >
+                <code>{{ group.domain }}</code>
+                <span class="permission-count">{{ group.selectionLabel }}</span>
+                <app-icon name="chevron-right" />
+              </button>
+            </h3>
+            <div
+              class="permission-panel"
+              ngAccordionPanel
+              #panel="ngAccordionPanel"
+              [preserveContent]="true"
             >
-          </label>
+              <ng-template ngAccordionContent>
+                @for (result of group.permissions; track result.item.code) {
+                <label class="permission-option">
+                  <input
+                    #permission
+                    type="checkbox"
+                    [checked]="selected(result.item.code)"
+                    (change)="togglePermission(result.item.code, permission.checked)"
+                  />
+                  <span
+                    ><span [appSearchHighlight]="result.labelMatches">{{ result.item.label }}</span
+                    ><code [appSearchHighlight]="result.codeMatches"
+                      >{{ result.item.code }}</code
+                    ></span
+                  >
+                </label>
+                }
+              </ng-template>
+            </div>
+          </div>
+          } @empty {
+          <p>{{ i18n.t('backOffice.apiTokens.permissionEmpty') }}</p>
           }
-        </fieldset>
-        } @empty {
-        <p>{{ i18n.t('backOffice.apiTokens.permissionEmpty') }}</p>
-        }
-      </div>
-      <p role="status">
-        {{ i18n.plural('configurationWorkspace.permissionCount', { count:
-        tokenForm.permissions().value().length }) }}
-      </p>
-    </fieldset>
+        </div>
+        <p role="status">
+          {{ i18n.plural('configurationWorkspace.permissionCount', { count:
+          tokenForm.permissions().value().length }) }}
+        </p>
+      </fieldset>
+    </div>
     <div class="spacer-x-3">
       <button appButton variant="primary" type="submit" [disabled]="createDisabled()">
         {{ i18n.t('backOffice.apiTokens.create') }}

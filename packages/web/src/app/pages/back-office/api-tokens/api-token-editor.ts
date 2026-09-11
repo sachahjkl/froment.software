@@ -19,11 +19,18 @@ import {
   submit,
 } from '@angular/forms/signals';
 import { Router, RouterLink } from '@angular/router';
+import {
+  AccordionContent,
+  AccordionGroup,
+  AccordionPanel,
+  AccordionTrigger,
+} from '@angular/aria/accordion';
 import { ApiTokenPermissionCodes, type ApiTokenPermissionCodeValue } from '@froment/contracts';
 import type { FuseResultMatch } from 'fuse.js';
 import { ApiTokensApi } from '@backoffice/api-tokens-api';
 import { I18nService, type TranslationKey } from '@app/i18n.service';
 import { Button } from '@shared/button/button';
+import { Icon } from '@shared/icon/icon';
 import { Confirmation } from '@shared/confirmation/confirmation';
 import { Notice } from '@shared/notice/notice';
 import { PageHeader } from '@shared/page-header/page-header';
@@ -66,7 +73,20 @@ const emptyModel = (): TokenModel => ({
 
 @Component({
   host: { class: 'page-container', '(window:beforeunload)': 'beforeUnload($event)' },
-  imports: [FormField, RouterLink, Button, Notice, CopyField, SearchHighlight, PageHeader],
+  imports: [
+    FormField,
+    RouterLink,
+    Button,
+    Notice,
+    CopyField,
+    SearchHighlight,
+    PageHeader,
+    Icon,
+    AccordionContent,
+    AccordionGroup,
+    AccordionPanel,
+    AccordionTrigger,
+  ],
   providers: [SearchHighlightRegistry, ApiTokenNavigation],
   changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-api-token-editor',
@@ -114,6 +134,7 @@ export class ApiTokenEditor {
         .some((error) => error.kind === 'parse'),
   );
   protected readonly permissionQuery = signal('');
+  private readonly expandedPermissionDomains = signal<ReadonlySet<string>>(new Set());
   private readonly permissionOptions = computed<ReadonlyArray<PermissionOption>>(() =>
     ApiTokenPermissionCodes.map((code) => ({
       code,
@@ -145,6 +166,12 @@ export class ApiTokenEditor {
     ['client', 'quote', 'order', 'invoice', 'payment', 'document']
       .map((domain) => ({
         domain,
+        expanded: this.expandedPermissionDomains().has(domain),
+        selectionLabel: this.i18n.plural('configurationWorkspace.permissionSelection', {
+          count: this.model().permissions.filter((code) => code.startsWith(`${domain}.`)).length,
+          total: this.permissionOptions().filter(({ code }) => code.startsWith(`${domain}.`))
+            .length,
+        }),
         permissions: this.filteredPermissions().filter(({ item }) =>
           item.code.startsWith(`${domain}.`),
         ),
@@ -181,6 +208,20 @@ export class ApiTokenEditor {
 
   protected updatePermissionQuery(input: HTMLInputElement): void {
     this.permissionQuery.set(input.value.slice(0, 120));
+    if (this.permissionQuery().trim()) {
+      this.expandedPermissionDomains.update(
+        (domains) => new Set([...domains, ...this.permissionGroups().map((group) => group.domain)]),
+      );
+    }
+  }
+
+  protected setPermissionGroupExpanded(domain: string, expanded: boolean): void {
+    this.expandedPermissionDomains.update((domains) => {
+      const next = new Set(domains);
+      if (expanded) next.add(domain);
+      else next.delete(domain);
+      return next;
+    });
   }
 
   protected selected(permission: ApiTokenPermissionCodeValue): boolean {

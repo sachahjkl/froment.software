@@ -1,9 +1,5 @@
 @use "../quote-detail/commercial-detail";
 @use "shared/page-header/detail-page";
-.publication > form,
-app-copy-field {
-  max-inline-size: 52rem;
-}
 .review-check {
   display: flex;
   align-items: start;

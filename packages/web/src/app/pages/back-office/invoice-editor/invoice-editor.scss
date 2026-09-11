@@ -6,12 +6,7 @@
   gap: var(--space-4);
 }
 
-.document-editor > form {
-  max-inline-size: 60rem;
-  inline-size: 100%;
-}
 .saved-summary {
-  max-inline-size: 52rem;
   padding: var(--space-4);
 }
 .field-error:empty {

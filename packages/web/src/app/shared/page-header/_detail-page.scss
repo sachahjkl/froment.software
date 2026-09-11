@@ -5,7 +5,16 @@
   display: grid;
   gap: var(--space-4);
   min-inline-size: 0;
+  inline-size: 100%;
+  max-inline-size: var(--page-width-detail);
+  margin-inline: auto;
   padding: var(--page-header-y) var(--page-x);
+}
+.detail-page.form-page {
+  max-inline-size: var(--page-width-form);
+}
+.detail-page.wide-page {
+  max-inline-size: var(--page-width-wide);
 }
 app-page-header[data-header-layout="stacked"] h1 {
   margin: 0;
@@ -20,4 +29,11 @@ app-page-header[data-header-layout="stacked"] p {
 }
 .detail-page > button {
   justify-self: start;
+}
+@media print {
+  .detail-page,
+  .detail-page.form-page,
+  .detail-page.wide-page {
+    max-inline-size: none;
+  }
 }

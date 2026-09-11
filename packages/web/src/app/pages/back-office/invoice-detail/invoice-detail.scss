@@ -12,11 +12,9 @@ h2 {
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr));
   align-items: start;
   gap: var(--space-5);
-  max-inline-size: 64rem;
 }
 .summary {
   margin: 0;
-  max-inline-size: 52rem;
 }
 .summary.ds-panel {
   padding: var(--space-5);

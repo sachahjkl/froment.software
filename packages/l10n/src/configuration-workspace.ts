@@ -48,6 +48,8 @@ export const configurationWorkspaceText = {
     'configurationWorkspace.backTokens': 'Retour aux jetons API',
     'configurationWorkspace.permissionCount.one': '{count} permission',
     'configurationWorkspace.permissionCount.other': '{count} permissions',
+    'configurationWorkspace.permissionSelection.one': '{count} sélectionnée sur {total}',
+    'configurationWorkspace.permissionSelection.other': '{count} sélectionnées sur {total}',
     'configurationWorkspace.tokenInvalid':
       'Renseignez un nom, une expiration future et au moins une permission.',
     'configurationWorkspace.tokenConfirm.one':
@@ -127,6 +129,8 @@ export const configurationWorkspaceText = {
     'configurationWorkspace.backTokens': 'Back to API tokens',
     'configurationWorkspace.permissionCount.one': '{count} permission',
     'configurationWorkspace.permissionCount.other': '{count} permissions',
+    'configurationWorkspace.permissionSelection.one': '{count} selected of {total}',
+    'configurationWorkspace.permissionSelection.other': '{count} selected of {total}',
     'configurationWorkspace.tokenInvalid':
       'Enter a name, a future expiration and at least one permission.',
     'configurationWorkspace.tokenConfirm.one': 'Create the token “{name}” with {count} permission?',

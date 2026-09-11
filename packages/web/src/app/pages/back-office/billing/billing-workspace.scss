@@ -64,7 +64,6 @@ td small {
   display: grid;
   gap: var(--space-5);
   inline-size: 100%;
-  max-inline-size: 52rem;
 }
 .fields {
   display: grid;
@@ -77,9 +76,6 @@ td small {
 }
 .field-error:empty {
   display: none;
-}
-.summary {
-  max-inline-size: 52rem;
 }
 dl {
   display: grid;

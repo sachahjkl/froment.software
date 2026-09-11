@@ -102,6 +102,9 @@
   --page-section-y: clamp(var(--space-5), 3vw, var(--space-8));
   --panel-padding: clamp(var(--space-4), 3vw, var(--space-6));
   --layout-max: 60rem;
+  --page-width-form: 52rem;
+  --page-width-detail: 72rem;
+  --page-width-wide: 80rem;
   --measure: 72ch;
   --control-height: 2.25rem;
   --shell-height: 3rem;

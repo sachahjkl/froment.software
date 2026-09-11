@@ -8,7 +8,6 @@ h2 {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
   gap: var(--space-5);
-  max-inline-size: 58rem;
   margin-block: var(--space-5);
 }
 dt,

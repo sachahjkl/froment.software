@@ -1,4 +1,4 @@
-import { TestBed } from '@angular/core/testing';
+import { type ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap, provideRouter, Router } from '@angular/router';
 import { BehaviorSubject, of } from 'rxjs';
 import { ApiTokenPermissionCodes } from '@froment/contracts';
@@ -22,7 +22,18 @@ const token = {
   rateLimitPerMinute: 120,
 };
 const secret = `froment_api_v1_${token.id}.${'a'.repeat(43)}`;
-const fill = (root: HTMLElement) => {
+async function openPermissions(fixture: ComponentFixture<ApiTokenEditor>, domain = 'client') {
+  const root: HTMLElement = fixture.nativeElement;
+  const trigger = [...root.querySelectorAll<HTMLButtonElement>('[ngAccordionTrigger]')].find(
+    (button) => button.querySelector('code')?.textContent === domain,
+  );
+  if (!trigger) throw new Error('Missing permission group');
+  if (trigger.getAttribute('aria-expanded') !== 'true') trigger.click();
+  await fixture.whenStable();
+}
+const fill = async (fixture: ComponentFixture<ApiTokenEditor>) => {
+  await openPermissions(fixture);
+  const root: HTMLElement = fixture.nativeElement;
   const name = root.querySelector<HTMLInputElement>('#api-token-name');
   const permission = [...root.querySelectorAll('.permission-option')]
     .find((row) => row.querySelector('code')?.textContent === 'client.read')
@@ -144,6 +155,7 @@ describe('API token pages', () => {
     await fixture.whenStable();
     const root: HTMLElement = fixture.nativeElement;
     const component = fixture.componentInstance;
+    await openPermissions(fixture);
     const permission = root.querySelector<HTMLInputElement>('.permission-option input')!;
     permission.click();
     await fixture.whenStable();
@@ -204,7 +216,7 @@ describe('API token pages', () => {
     await fixture.whenStable();
     const root: HTMLElement = fixture.nativeElement;
     const component = fixture.componentInstance;
-    fill(root);
+    await fill(fixture);
     const expiration = root.querySelector<HTMLInputElement>('#api-token-expiration')!;
     const initial = expiration.value;
     vi.spyOn(expiration.validity, 'badInput', 'get').mockReturnValue(true);
@@ -344,6 +356,7 @@ describe('API token pages', () => {
       if (!name) throw new Error('Missing token name');
       name.value = 'ERP';
       name.dispatchEvent(new Event('input', { bubbles: true }));
+      await openPermissions(fixture);
       const choices = [...root.querySelectorAll<HTMLInputElement>('.permission-option input')];
       for (const choice of choices.slice(0, count)) {
         choice.checked = true;
@@ -351,7 +364,7 @@ describe('API token pages', () => {
       }
       await fixture.whenStable();
       expect(fixture.componentInstance['tokenForm'].permissions().value()).toHaveLength(count);
-      expect(root.querySelector('form > fieldset > p')?.textContent?.trim()).toBe(counter);
+      expect(root.querySelector('fieldset > p[role="status"]')?.textContent?.trim()).toBe(counter);
       expect(fixture.componentInstance['tokenConfirmation']()).toBe(confirmation);
       const button = root.querySelector<HTMLButtonElement>('button[type="submit"]');
       if (!button) throw new Error('Missing token submit button');
@@ -428,10 +441,11 @@ describe('API token pages', () => {
     const fixture = TestBed.createComponent(ApiTokenEditor);
     await fixture.whenStable();
     const root: HTMLElement = fixture.nativeElement;
-    expect(root.querySelectorAll('.permission-option')).toHaveLength(
-      ApiTokenPermissionCodes.length,
-    );
-    expect(root.querySelectorAll('.permission-groups fieldset')).toHaveLength(6);
+    expect(
+      fixture.componentInstance['permissionGroups']()
+        .flatMap((group) => group.permissions.map(({ item }) => item.code))
+        .toSorted(),
+    ).toEqual([...ApiTokenPermissionCodes].toSorted());
     expect(list).not.toHaveBeenCalled();
     const search = root.querySelector<HTMLInputElement>('#api-token-permission-search');
     if (!search) throw new Error('Missing permission search');
@@ -443,6 +457,44 @@ describe('API token pages', () => {
     expect(
       fixture.componentInstance['filteredPermissions']()[0]?.codeMatches.length,
     ).toBeGreaterThan(0);
+  });
+
+  it('keeps selected permissions when a group closes or a search hides it', async () => {
+    TestBed.configureTestingModule({ providers: [{ provide: ApiTokensApi, useValue: {} }] });
+    const fixture = TestBed.createComponent(ApiTokenEditor);
+    await fixture.whenStable();
+    const root: HTMLElement = fixture.nativeElement;
+    const component = fixture.componentInstance;
+    const initial = structuredClone(component['tokenForm']().value());
+    await openPermissions(fixture);
+    expect(component['hasUnsavedChanges']()).toBe(false);
+    expect(component['tokenForm']().value()).toEqual(initial);
+    await fill(fixture);
+    component['setPermissionGroupExpanded']('client', false);
+    await fixture.whenStable();
+    expect(component['tokenForm'].permissions().value()).toEqual(['client.read']);
+    const search = root.querySelector<HTMLInputElement>('#api-token-permission-search')!;
+    search.value = 'paid';
+    search.dispatchEvent(new Event('input'));
+    await fixture.whenStable();
+    expect(component['permissionGroups']().some((group) => group.domain === 'client')).toBe(false);
+    expect(
+      component['permissionGroups']().find((group) => group.domain === 'invoice')?.expanded,
+    ).toBe(true);
+    root.querySelector<HTMLInputElement>('.permission-option input')!.click();
+    await fixture.whenStable();
+    search.value = '';
+    search.dispatchEvent(new Event('input'));
+    await fixture.whenStable();
+    await openPermissions(fixture);
+    const selected = component['tokenForm'].permissions().value();
+    expect(selected).toEqual(['client.read', 'invoice.mark-paid']);
+    expect(component['hasUnsavedChanges']()).toBe(true);
+    expect(
+      [...root.querySelectorAll<HTMLInputElement>('.permission-option input')].filter(
+        (input) => input.checked,
+      ),
+    ).toHaveLength(2);
   });
 
   it('keeps invalid submit available and focuses the first invalid field', async () => {
@@ -487,7 +539,7 @@ describe('API token pages', () => {
     const fixture = TestBed.createComponent(ApiTokenEditor);
     await fixture.whenStable();
     const root: HTMLElement = fixture.nativeElement;
-    fill(root);
+    await fill(fixture);
     root.querySelector<HTMLFormElement>('form')?.dispatchEvent(new SubmitEvent('submit'));
     await fixture.whenStable();
     expect(create).toHaveBeenCalledWith(
@@ -549,7 +601,7 @@ describe('API token pages', () => {
     const fixture = TestBed.createComponent(ApiTokenEditor);
     await fixture.whenStable();
     const root: HTMLElement = fixture.nativeElement;
-    fill(root);
+    await fill(fixture);
     root.querySelector<HTMLFormElement>('form')?.dispatchEvent(new SubmitEvent('submit'));
     await vi.waitFor(() => expect(create).toHaveBeenCalledOnce());
     expect(await fixture.componentInstance.canDeactivate()).toBe(false);

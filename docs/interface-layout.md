@@ -7,8 +7,8 @@ Cette reprise concerne la disposition, la hiérarchie et la lisibilité, pas les
 
 - Alignez l’en-tête, le contenu et le pied de page publics avec `--page-x`.
 - Conservez la largeur publique de 60 rem.
-- Utilisez toute la largeur disponible dans le backoffice.
-- Limitez localement la largeur des formulaires lorsque leur contenu le nécessite.
+- Centrez le contenu du backoffice dans une largeur adaptée à la page.
+- Limitez la zone complète, avec son en-tête et ses messages, plutôt que le formulaire seul.
 - Utilisez `--panel-padding` pour les sous-groupes qui nécessitent un panneau.
 - Sur un formulaire à plusieurs groupes, appliquez le fond à chaque groupe, pas au formulaire entier.
 - Regroupez les champs liés avec `.field-grid` et réservez `.wide` aux champs occupant toute la ligne.
@@ -16,6 +16,24 @@ Cette reprise concerne la disposition, la hiérarchie et la lisibilité, pas les
 - Rendez la valeur complète accessible lorsqu’un texte est tronqué.
 
 ## Surfaces et composition
+
+Le backoffice utilise trois largeurs maximales, définies dans `packages/web/src/tokens.css`.
+
+| Composition                          | Largeur | Application                                   |
+| ------------------------------------ | ------- | --------------------------------------------- |
+| Formulaire ou tâche                  | 52 rem  | `.detail-page.form-page`, conteneur du compte |
+| Fiche ou composition à deux colonnes | 72 rem  | `.detail-page`                                |
+| Liste ou composition large           | 80 rem  | `main`, `.detail-page.wide-page`              |
+
+Les largeurs incluent l’espacement intérieur. Les zones utilisent `margin-inline: auto` et restent limitées à la largeur disponible.
+L’en-tête, les messages, les résultats et le formulaire partagent les mêmes bords.
+Les formulaires internes ne répètent pas une largeur maximale plus étroite.
+Les textes de lecture et les contrôles isolés peuvent conserver une largeur locale.
+
+Les formulaires clients, catalogue, conditions, permissions API, invitations, facturation, courriels et paramètres utilisent la largeur de formulaire.
+Les fiches commerciales et la composition Resend avec aperçu utilisent la largeur de fiche.
+Les listes, l’éditeur de devis avec récapitulatif, les fiches clients et les rapprochements bancaires utilisent la largeur large.
+L’impression ne conserve pas ces limites de largeur.
 
 Les alertes utilisent `Notice` sur un paragraphe ou un bloc contenant plusieurs éléments.
 Le composant gère la présentation, pas la position dans la page.
@@ -35,6 +53,10 @@ Les lignes de devis déjà présentées en panneaux ne reçoivent pas un second 
 La classe `.field` sépare le libellé de son contrôle par 8 px.
 Les classes `.fields` et `.field-grid` séparent les champs entre eux.
 `FieldGroup` regroupe les champs sous un `legend`. Ses libellés projetés utilisent aussi `.field`.
+
+L’éditeur de jetons API empile les groupes de permissions dans un accordéon Angular Aria.
+Plusieurs groupes peuvent rester ouverts. Leur compteur conserve la sélection totale du domaine, même lorsque la recherche masque des permissions.
+La recherche ouvre les groupes correspondants. Replier un groupe ne modifie pas les permissions sélectionnées.
 
 Les pages publiques conservent leur bordure, leur ombre et leur marge extérieure sur la texture.
 Dans le backoffice, la surface de page reste opaque, sans bordure extérieure ni ombre.
