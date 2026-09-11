@@ -5,13 +5,14 @@ import { AnchorCopy } from '../anchor-copy';
 @Component({
   selector: 'app-anchor-link',
   template: `
-    <a
+    <button
       class="anchor-link"
-      [href]="'#' + fragment()"
+      type="button"
       [attr.aria-label]="i18n.t('shell.copy_link')"
       (click)="copy()"
-      >#</a
     >
+      #
+    </button>
   `,
   styles: `
     :host {
@@ -20,9 +21,13 @@ import { AnchorCopy } from '../anchor-copy';
     }
     .anchor-link {
       padding-inline: var(--space-1);
+      border: 0;
+      background: transparent;
       color: var(--color-muted);
+      font: inherit;
       font-weight: 400;
       text-decoration: none;
+      cursor: pointer;
       opacity: 0.45;
       transition: opacity var(--duration-base) var(--ease-out);
     }

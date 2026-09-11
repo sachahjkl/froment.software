@@ -233,9 +233,11 @@ describe('App shell', () => {
     const writeText = vi.fn().mockResolvedValue(undefined);
     Object.defineProperty(navigator, 'clipboard', { configurable: true, value: { writeText } });
 
-    element.querySelector<HTMLAnchorElement>('a[href="#prestations"]')!.click();
+    const url = router.url;
+    element.querySelector<HTMLButtonElement>('app-anchor-link button')!.click();
     await fixture.whenStable();
 
+    expect(router.url).toBe(url);
     expect(writeText).toHaveBeenCalledWith(expect.stringMatching(/#prestations$/));
     expect(element.querySelector('.copy-notice')?.textContent).toContain('Lien copié');
   });
