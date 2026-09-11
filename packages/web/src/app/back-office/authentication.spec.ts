@@ -94,7 +94,7 @@ describe('Authentication', () => {
           provide: Authentication,
           useValue: {
             sessionMode: () => Promise.resolve(mode),
-            refreshAccount: async () => ({ mode, permissions: [] }),
+            currentAccount: async () => ({ mode, permissions: [] }),
           },
         },
       ],

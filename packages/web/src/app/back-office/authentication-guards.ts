@@ -49,14 +49,11 @@ const declaredAccess = (route: ActivatedRouteSnapshot): readonly Data[] =>
 const accessGuard: CanActivateFn = async (route) => {
   const injector = inject(Injector);
   const router = inject(Router);
-  const [{ Authentication }, { RouteAccount }] = await Promise.all([
-    import('./authentication'),
-    import('./route-account'),
-  ]);
+  const { Authentication } = await import('./authentication');
   const auth = injector.get(Authentication);
   if ((await auth.sessionMode()) !== 'administrator')
     return router.createUrlTree(['/backoffice/login']);
-  const account = await injector.get(RouteAccount).load(auth);
+  const account = await auth.currentAccount();
   if (account?.mode !== 'administrator') return router.createUrlTree(['/backoffice/login']);
   const declarations = declaredAccess(route);
   if (

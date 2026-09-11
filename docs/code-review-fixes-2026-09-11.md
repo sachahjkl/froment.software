@@ -85,7 +85,9 @@ Les contrôles ne réalisent ni paiement, ni remboursement, ni envoi réel.
 
 Le compte expose les permissions effectives calculées par le serveur.
 Les routes, la navigation et les actions utilisent ces permissions sans remplacer les contrôles API.
-Les gardes actualisent le compte une fois par navigation et vérifient les exigences des routes parentes.
+Les gardes réutilisent le compte chargé et vérifient les exigences des routes parentes.
+Une navigation ne vide pas les permissions et ne recharge pas le compte.
+Les changements de session invalident le compte. L’API contrôle les permissions sur chaque requête.
 Le chargement du compte borne les reprises et ignore les réponses d’une ancienne identité.
 
 Les devis et commandes exposent la disponibilité de leur PDF conservé.

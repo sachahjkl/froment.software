@@ -76,7 +76,7 @@ describe('authentication guards', () => {
     http.verify();
   });
 
-  it('reloads permissions on child navigation and retains parent requirements', async () => {
+  it('keeps the loaded account through navigation and checks updated parent permissions', async () => {
     TestBed.configureTestingModule({
       providers: [
         provideRouter([
@@ -96,6 +96,12 @@ describe('authentication guards', () => {
               },
             ],
           },
+          {
+            path: 'invoices',
+            component: GuardedPage,
+            canActivate: [administratorGuard],
+            data: permissionData('invoice.read'),
+          },
           { path: 'backoffice/account', component: GuardedPage },
         ]),
         provideHttpClient(),
@@ -108,18 +114,39 @@ describe('authentication guards', () => {
     });
     const router = TestBed.inject(Router);
     const http = TestBed.inject(HttpTestingController);
+    const authentication = TestBed.inject(Authentication);
     const first = router.navigateByUrl('/clients/active');
     (await vi.waitFor(() => http.expectOne('/api/auth/account'))).flush(
-      accountResponse(['client.read', 'quote.read']),
+      accountResponse(['client.read', 'quote.read', 'invoice.read']),
     );
     await first;
     expect(router.url).toBe('/clients/active');
+    const account = authentication.account();
+    expect(account).toBeDefined();
+    const refreshAccount = vi.spyOn(authentication, 'refreshAccount');
     const next = router.navigateByUrl('/clients/archived');
-    (await vi.waitFor(() => http.expectOne('/api/auth/account'))).flush(
-      accountResponse(['quote.read']),
-    );
+    await vi.waitFor(() => expect(router.url).toBe('/clients/archived'));
     await next;
+    expect(authentication.account()).toBe(account);
+    expect(refreshAccount).not.toHaveBeenCalled();
+    http.expectNone('/api/auth/account');
+
+    await router.navigateByUrl('/invoices');
+    expect(authentication.account()).toBe(account);
+    expect(refreshAccount).not.toHaveBeenCalled();
+    http.expectNone('/api/auth/account');
+
+    await router.navigateByUrl('/clients/active');
+    expect(authentication.account()).toBe(account);
+    expect(refreshAccount).not.toHaveBeenCalled();
+    http.expectNone('/api/auth/account');
+
+    const reload = authentication.refreshAccount();
+    http.expectOne('/api/auth/account').flush(accountResponse(['quote.read']));
+    await reload;
+    await router.navigateByUrl('/clients/archived');
     expect(router.url).toBe('/backoffice/account');
+    http.expectNone('/api/auth/account');
     http.verify();
   });
 
@@ -146,7 +173,7 @@ describe('authentication guards', () => {
           provideRouter([]),
           {
             provide: Authentication,
-            useValue: { sessionMode, refreshAccount: async () => ({ mode, permissions: [] }) },
+            useValue: { sessionMode, currentAccount: async () => ({ mode, permissions: [] }) },
           },
         ],
       });
@@ -169,7 +196,7 @@ describe('authentication guards', () => {
       const mode = guard === administratorGuard ? 'administrator' : 'client';
       const createAuthentication = vi.fn(() => ({
         sessionMode: () => Promise.resolve(mode),
-        refreshAccount: async () => ({ mode, permissions: [] }),
+        currentAccount: async () => ({ mode, permissions: [] }),
       }));
       TestBed.configureTestingModule({ providers: [provideRouter([])] });
       const injector = Injector.create({
