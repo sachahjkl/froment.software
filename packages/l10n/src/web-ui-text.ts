@@ -137,6 +137,9 @@ export const webUiText = {
     'blog.operations.title': 'De Nix à Grafana : exploiter Froment Software en production',
     'blog.operations.description':
       'La construction reproductible, la résolution des secrets et le trajet des journaux et traces en production.',
+    'blog.deployment.title': 'Du commit à Nomad : une promotion vérifiable vers la production',
+    'blog.deployment.description':
+      'Une chaîne de déploiement fondée sur Nix, les digests OCI, Tailscale, Nomad et des preuves de provenance.',
     'blog.topic.effect': 'Effect',
     'blog.topic.sqlite': 'SQLite',
     'blog.topic.documents': 'documents',
@@ -146,6 +149,8 @@ export const webUiText = {
     'blog.topic.nix': 'Nix',
     'blog.topic.secrets': 'secrets',
     'blog.topic.observability': 'observabilité',
+    'blog.topic.nomad': 'Nomad',
+    'blog.topic.supplyChain': 'chaîne logicielle',
     'blog.feed': 'Flux Atom',
     'metadata.author': 'Sacha Froment',
     'metadata.publisher': 'Froment Software',
@@ -288,6 +293,9 @@ export const webUiText = {
     'blog.operations.title': 'From Nix to Grafana: operating Froment Software in production',
     'blog.operations.description':
       'Reproducible builds, secret resolution, and the path of production logs and traces.',
+    'blog.deployment.title': 'From commit to Nomad: verifiable promotion to production',
+    'blog.deployment.description':
+      'A deployment pipeline based on Nix, OCI digests, Tailscale, Nomad, and provenance records.',
     'blog.topic.effect': 'Effect',
     'blog.topic.sqlite': 'SQLite',
     'blog.topic.documents': 'documents',
@@ -297,6 +305,8 @@ export const webUiText = {
     'blog.topic.nix': 'Nix',
     'blog.topic.secrets': 'secrets',
     'blog.topic.observability': 'observability',
+    'blog.topic.nomad': 'Nomad',
+    'blog.topic.supplyChain': 'software supply chain',
     'blog.feed': 'Atom feed',
     'metadata.author': 'Sacha Froment',
     'metadata.publisher': 'Froment Software',
