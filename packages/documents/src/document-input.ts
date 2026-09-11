@@ -1,4 +1,7 @@
 import {
+  DocumentTextBlock,
+  parseDocumentText,
+  type DocumentTextPresentationValue,
   type DocumentParty,
   type CreditNote,
   type InvoiceRenderSnapshotValue,
@@ -38,7 +41,8 @@ const PreparedDocument = Schema.Struct({
   lines: Schema.Array(DocumentLine),
   totals: Schema.Array(TextPair),
   termsHeading: Schema.String,
-  terms: Schema.String,
+  terms: Schema.Union([Schema.String, Schema.Array(DocumentTextBlock)]),
+  termsPlacement: Schema.Literals(['inline', 'new-page']),
   legal: Schema.Array(Schema.String),
   footer: Schema.String,
   thankYou: Schema.String,
@@ -56,6 +60,16 @@ export type OrderDocumentInput = typeof OrderDocumentInput.Type;
 const nonEmpty = (values: ReadonlyArray<string>): Array<string> =>
   values.filter((value) => value.length > 0);
 const wrapText = (value: string): string => value.replaceAll(/(\S{18})(?=\S)/g, '$1\u200b');
+const wrapBlocks = (blocks: ReadonlyArray<DocumentTextBlock>): ReadonlyArray<DocumentTextBlock> =>
+  blocks.map((block) => {
+    if (block.kind === 'list') return { ...block, items: block.items.map(wrapBlocks) };
+    return { ...block, spans: block.spans.map((span) => ({ ...span, text: wrapText(span.text) })) };
+  });
+const prepareTerms = (source: string, presentation?: DocumentTextPresentationValue) => ({
+  terms:
+    presentation?.format === 'markdown' ? wrapBlocks(parseDocumentText(source)) : wrapText(source),
+  termsPlacement: presentation?.placement ?? 'inline',
+});
 
 const partyLines = (party: DocumentParty): Array<string> =>
   nonEmpty([
@@ -132,7 +146,7 @@ export const prepareQuoteDocument = (snapshot: QuoteRenderSnapshotValue): QuoteD
     lines: lines(snapshot.lines),
     totals: totals(snapshot),
     termsHeading: snapshot.conditions.length === 0 ? '' : documentText.fr.conditions,
-    terms: wrapText(snapshot.conditions),
+    ...prepareTerms(snapshot.conditions, snapshot.conditionsPresentation),
     legal: [],
     footer: snapshot.issuer.displayName,
     thankYou: documentText.fr.thankYou,
@@ -163,7 +177,7 @@ export const prepareInvoiceDocument = (
     lines: lines(snapshot.lines),
     totals: totals(snapshot),
     termsHeading: snapshot.paymentTerms.length === 0 ? '' : documentText.fr.paymentTerms,
-    terms: wrapText(snapshot.paymentTerms),
+    ...prepareTerms(snapshot.paymentTerms, snapshot.paymentTermsPresentation),
     legal: [documentText.fr.latePayment, documentText.fr.collectionFee],
     footer: snapshot.issuer.displayName,
     thankYou: documentText.fr.thankYou,
@@ -186,7 +200,7 @@ export const prepareOrderDocument = (snapshot: OrderRenderSnapshotValue): OrderD
     lines: lines(snapshot.lines),
     totals: totals(snapshot),
     termsHeading: snapshot.conditions.length === 0 ? '' : documentText.fr.conditions,
-    terms: wrapText(snapshot.conditions),
+    ...prepareTerms(snapshot.conditions, snapshot.conditionsPresentation),
     legal: [],
     footer: snapshot.issuer.displayName,
     thankYou: documentText.fr.thankYou,
@@ -210,7 +224,7 @@ export const prepareCreditNoteDocument = (
     ],
     title: wrapText(`${documentText.fr.creditNote} · ${snapshot.title}`),
     termsHeading: documentText.fr.creditReason,
-    terms: wrapText(note.reason),
+    ...prepareTerms(note.reason),
     legal: [documentText.fr.creditNoRefund],
     thankYou: '',
   };

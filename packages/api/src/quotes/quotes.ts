@@ -20,6 +20,7 @@ import {
   type QuoteRenderSnapshotValue,
   type IssuerSettingsValue,
   type UlidValue,
+  type DocumentTextPresentationValue,
 } from '@froment/contracts';
 import { Clock, Context, DateTime, Effect, Layer, Schema } from 'effect';
 import { ulid } from 'ulid';
@@ -31,6 +32,7 @@ import { Database, DatabaseError } from '../database/database.js';
 import { calculateDocumentLine, calculateDocumentTotals } from '../documents/calculation.js';
 import { IssuerSettings } from '../issuer-settings/service.js';
 import { expireSentQuotes } from './quote-expiration.js';
+import { StoredTextPresentation, storeTextPresentation } from '../documents/text-presentation.js';
 
 const QuoteRecord = Schema.Struct({
   id: Ulid,
@@ -46,6 +48,7 @@ const RevisionRecord = Schema.Struct({
   clientDisplayName: Schema.NonEmptyString,
   title: Schema.String,
   conditions: Schema.String,
+  conditionsPresentation: StoredTextPresentation,
   currency: Schema.Literal('EUR'),
   netTotalCents: Schema.Int,
   vatTotalCents: Schema.Int,
@@ -137,7 +140,7 @@ export class Quotes extends Context.Service<Quotes, QuotesService>()('@froment/a
 
 const quoteSql = `select id, reference, client_id as clientId, status, version from quotes`;
 const revisionSql = `select id, quote_id as quoteId, version,
-  client_display_name as clientDisplayName, title, conditions, currency,
+  client_display_name as clientDisplayName, title, conditions, conditions_presentation as conditionsPresentation, currency,
   net_total_cents as netTotalCents, vat_total_cents as vatTotalCents,
   total_cents as totalCents, created_at as createdAt, created_by_user_id as createdByUserId,
   render_snapshot is not null as previewAvailable
@@ -173,33 +176,37 @@ export const QuotesLive = Layer.effect(
                 )
                 .all(...revisionIds),
             );
-      const mappedRevisions: Array<QuoteRevisionValue> = revisions.map((revision) => ({
-        id: revision.id,
-        version: revision.version,
-        previewAvailable: revision.previewAvailable === 1,
-        clientDisplayName: revision.clientDisplayName,
-        title: revision.title,
-        conditions: revision.conditions,
-        currency: revision.currency,
-        netTotalCents: revision.netTotalCents,
-        vatTotalCents: revision.vatTotalCents,
-        totalCents: revision.totalCents,
-        createdAt: DateTime.formatIso(DateTime.makeUnsafe(revision.createdAt)),
-        createdByUserId: revision.createdByUserId,
-        lines: lines
-          .filter((line) => line.revisionId === revision.id)
-          .map((line): QuoteLineValue => ({
-            id: line.id,
-            position: line.position,
-            description: line.description,
-            quantityMilli: line.quantityMilli,
-            unitPriceCents: line.unitPriceCents,
-            vatRateBasisPoints: line.vatRateBasisPoints,
-            netTotalCents: line.netTotalCents,
-            vatTotalCents: line.vatTotalCents,
-            totalCents: line.totalCents,
-          })),
-      }));
+      const mappedRevisions: Array<QuoteRevisionValue> = revisions.map((revision) => {
+        const value: QuoteRevisionValue = {
+          id: revision.id,
+          version: revision.version,
+          previewAvailable: revision.previewAvailable === 1,
+          clientDisplayName: revision.clientDisplayName,
+          title: revision.title,
+          conditions: revision.conditions,
+          currency: revision.currency,
+          netTotalCents: revision.netTotalCents,
+          vatTotalCents: revision.vatTotalCents,
+          totalCents: revision.totalCents,
+          createdAt: DateTime.formatIso(DateTime.makeUnsafe(revision.createdAt)),
+          createdByUserId: revision.createdByUserId,
+          lines: lines
+            .filter((line) => line.revisionId === revision.id)
+            .map((line): QuoteLineValue => ({
+              id: line.id,
+              position: line.position,
+              description: line.description,
+              quantityMilli: line.quantityMilli,
+              unitPriceCents: line.unitPriceCents,
+              vatRateBasisPoints: line.vatRateBasisPoints,
+              netTotalCents: line.netTotalCents,
+              vatTotalCents: line.vatTotalCents,
+              totalCents: line.totalCents,
+            })),
+        };
+        if (revision.conditionsPresentation === null) return value;
+        return { ...value, conditionsPresentation: revision.conditionsPresentation };
+      });
       const currentRevision = mappedRevisions.find(
         (revision) => revision.version === quote.version,
       );
@@ -310,6 +317,7 @@ export const QuotesLive = Layer.effect(
       issuer: IssuerSettingsValue,
       title: string,
       conditions: string,
+      conditionsPresentation: DocumentTextPresentationValue | undefined,
       lines: ReadonlyArray<QuoteLineInputValue>,
       createdByUserId: string,
       now: number,
@@ -324,7 +332,7 @@ export const QuotesLive = Layer.effect(
       }));
       const totals = calculateDocumentTotals(calculatedLines);
       const createdAt = DateTime.formatIso(DateTime.makeUnsafe(now));
-      const snapshot = Schema.decodeUnknownSync(QuoteRenderSnapshot)({
+      const snapshotInput = {
         templateId: 'quote-default',
         templateVersion: 1,
         quoteId,
@@ -347,14 +355,19 @@ export const QuotesLive = Layer.effect(
         currency: 'EUR',
         ...totals,
         lines: calculatedLines,
-      });
+      };
+      const snapshot = Schema.decodeUnknownSync(QuoteRenderSnapshot)(
+        conditionsPresentation === undefined
+          ? snapshotInput
+          : { ...snapshotInput, conditionsPresentation },
+      );
       database.sqlite
         .prepare(
           `insert into quote_revisions
-           (id, quote_id, version, client_display_name, title, conditions, currency,
+           (id, quote_id, version, client_display_name, title, conditions, conditions_presentation, currency,
              net_total_cents, vat_total_cents, total_cents, created_at, created_by_user_id,
                template_id, template_version, render_snapshot)
-             values (?, ?, ?, ?, ?, ?, 'EUR', ?, ?, ?, ?, ?, 'quote-default', 1, ?)`,
+             values (?, ?, ?, ?, ?, ?, ?, 'EUR', ?, ?, ?, ?, ?, 'quote-default', 1, ?)`,
         )
         .run(
           revisionId,
@@ -363,6 +376,7 @@ export const QuotesLive = Layer.effect(
           clientDisplayName,
           title.trim(),
           conditions,
+          storeTextPresentation(conditionsPresentation),
           totals.netTotalCents,
           totals.vatTotalCents,
           totals.totalCents,
@@ -423,6 +437,7 @@ export const QuotesLive = Layer.effect(
                 issuer,
                 request.title,
                 request.conditions,
+                request.conditionsPresentation,
                 request.lines,
                 createdByUserId,
                 now,
@@ -501,6 +516,7 @@ export const QuotesLive = Layer.effect(
                 issuer,
                 request.title,
                 request.conditions,
+                request.conditionsPresentation,
                 request.lines,
                 createdByUserId,
                 now,

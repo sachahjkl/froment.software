@@ -154,6 +154,76 @@ const inspectPdf = (pdf: Uint8Array) => {
 const normalizedText = (value: string): string => value.replaceAll(/[\s\u200b]/g, '');
 
 describe('DocumentRenderer', () => {
+  it('renders formatted conditions inline or on a new page for each document type', async () => {
+    const source =
+      '## Conditions particulières\n\nPaiement **à réception**.\n\nUne *seconde clause*.\n\n1. Première obligation\n2. Deuxième obligation\n   - Précision complémentaire';
+    for (const placement of ['inline', 'new-page'] as const) {
+      const presentation = { format: 'markdown', placement } as const;
+      const outputs = await Effect.runPromise(
+        DocumentRenderer.use((renderer) =>
+          Effect.all([
+            renderer.renderQuotePdf({
+              ...compactQuote,
+              conditions: source,
+              conditionsPresentation: presentation,
+            }),
+            renderer.renderInvoicePdf({
+              ...compactInvoice,
+              paymentTerms: source,
+              paymentTermsPresentation: presentation,
+            }),
+            renderer.renderOrderPdf({
+              ...compactOrder,
+              conditions: source,
+              conditionsPresentation: presentation,
+            }),
+          ]),
+        ).pipe(Effect.provide(DocumentRendererLive)),
+      );
+      for (const pdf of outputs) {
+        const inspected = inspectPdf(pdf);
+        const pages = inspected.text.split('\f');
+        const termsPage = pages.findIndex((page) =>
+          normalizedText(page).includes('Conditionsparticulières'),
+        );
+        expect(termsPage).toBe(placement === 'inline' ? 0 : 1);
+        const text = normalizedText(inspected.text);
+        expect(text).toContain('Paiementàréception.');
+        expect(text).toContain('Unesecondeclause.');
+        expect(text).toContain('Précisioncomplémentaire');
+        expect(inspected.text).not.toContain('**à réception**');
+      }
+      const invoiceText = inspectPdf(outputs[1]!).text.split('\f')[0]!;
+      expect(invoiceText).toContain('L441-10');
+    }
+  }, 30_000);
+
+  it('starts conditions after a multi-page table without adding a page for empty conditions', async () => {
+    const presentation = { format: 'markdown', placement: 'new-page' } as const;
+    const [large, empty] = await Effect.runPromise(
+      DocumentRenderer.use((renderer) =>
+        Effect.all([
+          renderer.renderQuotePdf({
+            ...quote,
+            conditions: '## Clause finale\n\nFin des conditions.',
+            conditionsPresentation: presentation,
+          }),
+          renderer.renderQuotePdf({
+            ...compactQuote,
+            conditions: '',
+            conditionsPresentation: presentation,
+          }),
+        ]),
+      ).pipe(Effect.provide(DocumentRendererLive)),
+    );
+    const pages = inspectPdf(large!).text.split('\f');
+    const tablePage = pages.findLastIndex((page) => normalizedText(page).includes('TotalTTC'));
+    const termsPage = pages.findIndex((page) => normalizedText(page).includes('Clausefinale'));
+    expect(tablePage).toBeGreaterThan(0);
+    expect(termsPage).toBe(tablePage + 1);
+    expect(inspectPdf(empty!).info).toMatch(/Pages:\s+1\b/);
+  }, 30_000);
+
   it('gives previews rich titles and a watermark on every page, without marking final PDFs', async () => {
     const outputs = await Effect.runPromise(
       DocumentRenderer.use((renderer) =>

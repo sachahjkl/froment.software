@@ -1,0 +1,40 @@
+@if (presentation()?.format === 'markdown' || blocks()) { @for (block of content(); track $index) {
+@switch (block.kind) { @case ('paragraph') {
+<p>
+  @for (span of block.spans; track $index) {<span
+    [class.bold]="span.bold"
+    [class.italic]="span.italic"
+    >{{ span.text }}</span
+  >}
+</p>
+} @case ('heading') { @if (block.level === 2) {
+<h3>
+  @for (span of block.spans; track $index) {<span
+    [class.bold]="span.bold"
+    [class.italic]="span.italic"
+    >{{ span.text }}</span
+  >}
+</h3>
+} @else {
+<h4>
+  @for (span of block.spans; track $index) {<span
+    [class.bold]="span.bold"
+    [class.italic]="span.italic"
+    >{{ span.text }}</span
+  >}
+</h4>
+} } @case ('list') { @if (block.ordered) {
+<ol [start]="block.start">
+  @for (item of block.items; track $index) {
+  <li><app-document-text-view [blocks]="item" /></li>
+  }
+</ol>
+} @else {
+<ul>
+  @for (item of block.items; track $index) {
+  <li><app-document-text-view [blocks]="item" /></li>
+  }
+</ul>
+} } } } } @else {
+<p>{{ source() }}</p>
+}

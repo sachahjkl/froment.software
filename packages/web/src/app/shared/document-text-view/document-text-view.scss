@@ -1,0 +1,28 @@
+:host {
+  display: grid;
+  gap: var(--space-3);
+  min-inline-size: 0;
+  overflow-wrap: anywhere;
+}
+p {
+  white-space: pre-wrap;
+}
+h3 {
+  font-size: var(--text-lg);
+}
+h4 {
+  font-size: var(--text-base);
+}
+.bold {
+  font-weight: 700;
+}
+.italic {
+  font-style: italic;
+}
+ul,
+ol {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0;
+  padding-inline-start: var(--space-6);
+}

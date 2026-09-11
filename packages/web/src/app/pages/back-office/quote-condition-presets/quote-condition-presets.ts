@@ -9,6 +9,7 @@ import {
 } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import {
+  documentTextContent,
   type QuoteConditionPresetListValue,
   type QuoteConditionPresetValue,
 } from '@froment/contracts';
@@ -54,7 +55,14 @@ export class QuoteConditionPresets {
   protected readonly i18n = inject(I18nService);
   private readonly api = inject(QuoteConditionPresetsApi);
   protected readonly presets = signal<QuoteConditionPresetListValue>([]);
-  protected readonly table = createWorkspaceTable(this.presets, conditionTableOptions);
+  private readonly tablePresets = computed(() =>
+    this.presets().map((preset) => ({
+      id: preset.id,
+      name: preset.name,
+      conditions: documentTextContent(preset.conditions, preset.conditionsPresentation),
+    })),
+  );
+  protected readonly table = createWorkspaceTable(this.tablePresets, conditionTableOptions);
   protected readonly conditionExport = computed(() =>
     this.table.rows().map((item) => [item.name, item.conditions]),
   );

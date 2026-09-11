@@ -106,7 +106,7 @@ export const OrdersLive = Layer.effect(
           const quote = Schema.decodeUnknownSync(QuoteRenderSnapshot)(
             JSON.parse(order.renderSnapshot),
           );
-          return Schema.decodeUnknownSync(OrderRenderSnapshot)({
+          const snapshotInput = {
             templateId: 'order-default',
             templateVersion: 1,
             orderId: order.id,
@@ -123,7 +123,12 @@ export const OrdersLive = Layer.effect(
             vatTotalCents: quote.vatTotalCents,
             totalCents: quote.totalCents,
             lines: quote.lines,
-          });
+          };
+          return Schema.decodeUnknownSync(OrderRenderSnapshot)(
+            quote.conditionsPresentation === undefined
+              ? snapshotInput
+              : { ...snapshotInput, conditionsPresentation: quote.conditionsPresentation },
+          );
         },
         catch: (cause) =>
           cause instanceof OrderNotFound || cause instanceof QuotePreviewUnavailable

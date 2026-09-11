@@ -78,7 +78,10 @@
       @if (currentQuote.snapshot.conditions) {
       <div class="conditions">
         <h3>{{ i18n.t('publicQuote.conditions') }}</h3>
-        <p>{{ currentQuote.snapshot.conditions }}</p>
+        <app-document-text-view
+          [source]="currentQuote.snapshot.conditions"
+          [presentation]="currentQuote.snapshot.conditionsPresentation"
+        />
       </div>
       }
       <a appLinkButton variant="primary" routerLink="document" [preserveFragment]="true"

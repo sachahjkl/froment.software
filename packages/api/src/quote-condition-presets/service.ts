@@ -13,8 +13,26 @@ import { ulid } from 'ulid';
 
 import { Audit } from '../audit/audit.js';
 import { Database, DatabaseError } from '../database/database.js';
+import { StoredTextPresentation, storeTextPresentation } from '../documents/text-presentation.js';
 
-const PresetRecord = Schema.Struct({ id: Ulid, name: Schema.String, conditions: Schema.String });
+const PresetRecord = Schema.Struct({
+  id: Ulid,
+  name: Schema.String,
+  conditions: Schema.String,
+  conditionsPresentation: StoredTextPresentation,
+});
+const presetValue = (record: typeof PresetRecord.Type): QuoteConditionPresetValue => {
+  const value = {
+    id: record.id,
+    name: record.name,
+    conditions: record.conditions,
+  };
+  return Schema.decodeUnknownSync(QuoteConditionPresetSchema)(
+    record.conditionsPresentation === null
+      ? value
+      : { ...value, conditionsPresentation: record.conditionsPresentation },
+  );
+};
 
 type PresetWriteError =
   | QuoteConditionPresetNotFound
@@ -51,13 +69,13 @@ export const QuoteConditionPresetsLive = Layer.effect(
 
     const read = (presetId: string): QuoteConditionPresetValue | undefined => {
       const row = database.sqlite
-        .prepare('select id, name, conditions from quote_condition_presets where id = ?')
+        .prepare(
+          'select id, name, conditions, conditions_presentation as conditionsPresentation from quote_condition_presets where id = ?',
+        )
         .get(presetId);
       return row === undefined
         ? undefined
-        : Schema.decodeUnknownSync(QuoteConditionPresetSchema)(
-            Schema.decodeUnknownSync(PresetRecord)(row),
-          );
+        : presetValue(Schema.decodeUnknownSync(PresetRecord)(row));
     };
 
     const ensureNameAvailable = (name: string, ignoredId?: string) => {
@@ -77,13 +95,13 @@ export const QuoteConditionPresetsLive = Layer.effect(
 
     const list = Effect.try({
       try: () =>
-        Schema.decodeUnknownSync(Schema.Array(QuoteConditionPresetSchema))(
+        Schema.decodeUnknownSync(Schema.Array(PresetRecord))(
           database.sqlite
             .prepare(
-              'select id, name, conditions from quote_condition_presets order by name collate nocase, id',
+              'select id, name, conditions, conditions_presentation as conditionsPresentation from quote_condition_presets order by name collate nocase, id',
             )
             .all(),
-        ),
+        ).map(presetValue),
       catch: (cause) => new DatabaseError({ operation: 'list.quote.condition.presets', cause }),
     });
 
@@ -102,9 +120,16 @@ export const QuoteConditionPresetsLive = Layer.effect(
               database.sqlite
                 .prepare(
                   `insert into quote_condition_presets
-                   (id, name, conditions, created_at, updated_at) values (?, ?, ?, ?, ?)`,
+                   (id, name, conditions, conditions_presentation, created_at, updated_at) values (?, ?, ?, ?, ?, ?)`,
                 )
-                .run(presetId, name, request.conditions, now, now);
+                .run(
+                  presetId,
+                  name,
+                  request.conditions,
+                  storeTextPresentation(request.conditionsPresentation),
+                  now,
+                  now,
+                );
               audit.insert({
                 action: 'quote.condition-preset-created',
                 actorUserId,
@@ -144,10 +169,16 @@ export const QuoteConditionPresetsLive = Layer.effect(
               ensureNameAvailable(name, presetId);
               database.sqlite
                 .prepare(
-                  `update quote_condition_presets set name = ?, conditions = ?, updated_at = ?
+                  `update quote_condition_presets set name = ?, conditions = ?, conditions_presentation = ?, updated_at = ?
                    where id = ?`,
                 )
-                .run(name, request.conditions, now, presetId);
+                .run(
+                  name,
+                  request.conditions,
+                  storeTextPresentation(request.conditionsPresentation),
+                  now,
+                  presetId,
+                );
               audit.insert({
                 action: 'quote.condition-preset-updated',
                 actorUserId,

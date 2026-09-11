@@ -36,8 +36,7 @@ section.summary > * + * {
   align-items: end;
   gap: var(--space-4);
 }
-.terms {
-  white-space: pre-wrap;
+app-document-text-view {
   max-inline-size: 70ch;
 }
 .version {

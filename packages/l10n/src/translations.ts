@@ -29,6 +29,7 @@ import { clientTablesText } from './client-tables.js';
 import { commercialHeaderText } from './commercial-header.js';
 import { teamInvitationText } from './team-invitation.js';
 import { settingsHeaderText } from './settings-header.js';
+import { documentTextEditorText } from './document-text-editor.js';
 
 export const translations = {
   fr: {
@@ -65,6 +66,7 @@ export const translations = {
     ...commercialHeaderText.fr,
     ...teamInvitationText.fr,
     ...settingsHeaderText.fr,
+    ...documentTextEditorText.fr,
     'backOffice.apiTokens.permission.payment.read': 'Exporter les règlements et leurs corrections.',
     'design.confirmation.title': 'Modales de confirmation',
     'design.confirmation.hint':
@@ -1601,6 +1603,7 @@ export const translations = {
     ...commercialHeaderText.en,
     ...teamInvitationText.en,
     ...settingsHeaderText.en,
+    ...documentTextEditorText.en,
     'backOffice.apiTokens.permission.payment.read': 'Export payments and their corrections.',
     'design.confirmation.title': 'Confirmation dialogs',
     'design.confirmation.hint':

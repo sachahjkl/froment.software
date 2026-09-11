@@ -4,9 +4,10 @@ import { formatMoney } from '@froment/l10n';
 import { formatFixedDecimal } from '@backoffice/quote-input';
 import { I18nService } from '@app/i18n.service';
 import { DataTable } from '@shared/data-table/data-table';
+import { DocumentTextView } from '@shared/document-text-view/document-text-view';
 
 @Component({
-  imports: [DataTable],
+  imports: [DataTable, DocumentTextView],
   changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-quote-lines',
   styleUrl: './quote-lines.scss',

@@ -7,17 +7,10 @@
   min-inline-size: 0;
   gap: var(--space-2);
 }
-textarea {
-  resize: vertical;
-}
 .form-actions {
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-3);
-}
-.preset-conditions {
-  white-space: pre-wrap;
-  overflow-wrap: anywhere;
 }
 form {
   display: grid;
@@ -50,4 +43,8 @@ h3 {
 }
 form section {
   padding: var(--space-4);
+}
+.preview {
+  display: grid;
+  gap: var(--space-3);
 }

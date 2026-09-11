@@ -25,10 +25,13 @@
     "@froment/contracts": "workspace:*",
     "@froment/l10n": "workspace:*",
     "@simplewebauthn/browser": "14.0.0",
+    "@tiptap/core": "catalog:",
+    "@tiptap/starter-kit": "catalog:",
     "effect": "catalog:",
     "fuse.js": "catalog:",
     "marked": "catalog:",
     "mermaid": "catalog:",
+    "prosemirror-markdown": "1.13.7",
     "rxjs": "catalog:",
     "tslib": "catalog:"
   },

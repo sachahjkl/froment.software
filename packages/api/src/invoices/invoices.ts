@@ -30,6 +30,7 @@ import {
   type QuoteLineInputValue,
   type QuoteLineValue,
   type UlidValue,
+  type DocumentTextPresentationValue,
 } from '@froment/contracts';
 import { Clock, Context, DateTime, Effect, Layer, Option, Schema } from 'effect';
 import { ulid } from 'ulid';
@@ -40,6 +41,7 @@ import { allocateBusinessReference, businessYear } from '../business/business-re
 import { Database, DatabaseError } from '../database/database.js';
 import { calculateDocumentLine, calculateDocumentTotals } from '../documents/calculation.js';
 import { validateDocumentParties } from '../documents/validation.js';
+import { StoredTextPresentation, storeTextPresentation } from '../documents/text-presentation.js';
 import { IssuerSettings } from '../issuer-settings/service.js';
 import {
   InvoicePayment,
@@ -80,6 +82,7 @@ const RevisionRecord = Schema.Struct({
   serviceDate: Schema.String,
   dueDate: Schema.String,
   paymentTerms: Schema.String,
+  paymentTermsPresentation: StoredTextPresentation,
   currency: Schema.Literal('EUR'),
   netTotalCents: Schema.Int,
   vatTotalCents: Schema.Int,
@@ -226,7 +229,7 @@ const invoiceSql = `select id, order_id as orderId,
 const revisionSql = `select id, invoice_id as invoiceId, version,
   invoice_number as invoiceNumber, issued_at as issuedAt,
   client_display_name as clientDisplayName, title, service_date as serviceDate,
-  due_date as dueDate, payment_terms as paymentTerms, currency,
+  due_date as dueDate, payment_terms as paymentTerms, payment_terms_presentation as paymentTermsPresentation, currency,
   net_total_cents as netTotalCents, vat_total_cents as vatTotalCents,
   total_cents as totalCents, created_at as createdAt, created_by_user_id as createdByUserId,
   render_snapshot as renderSnapshot from invoice_revisions`;
@@ -262,39 +265,43 @@ export const InvoicesLive = Layer.effect(
               )
               .all(...revisionIds),
       );
-      const mappedRevisions = revisions.map((revision): InvoiceRevisionValue => ({
-        id: revision.id,
-        version: revision.version,
-        clientDisplayName: revision.clientDisplayName,
-        invoiceNumber: revision.invoiceNumber,
-        issuedAt:
-          revision.issuedAt === null
-            ? null
-            : DateTime.formatIso(DateTime.makeUnsafe(revision.issuedAt)),
-        title: revision.title,
-        serviceDate: revision.serviceDate,
-        dueDate: revision.dueDate,
-        paymentTerms: revision.paymentTerms,
-        currency: revision.currency,
-        netTotalCents: revision.netTotalCents,
-        vatTotalCents: revision.vatTotalCents,
-        totalCents: revision.totalCents,
-        createdAt: DateTime.formatIso(DateTime.makeUnsafe(revision.createdAt)),
-        createdByUserId: revision.createdByUserId,
-        lines: lines
-          .filter((line) => line.revisionId === revision.id)
-          .map((line): QuoteLineValue => ({
-            id: line.id,
-            position: line.position,
-            description: line.description,
-            quantityMilli: line.quantityMilli,
-            unitPriceCents: line.unitPriceCents,
-            vatRateBasisPoints: line.vatRateBasisPoints,
-            netTotalCents: line.netTotalCents,
-            vatTotalCents: line.vatTotalCents,
-            totalCents: line.totalCents,
-          })),
-      }));
+      const mappedRevisions = revisions.map((revision): InvoiceRevisionValue => {
+        const value: InvoiceRevisionValue = {
+          id: revision.id,
+          version: revision.version,
+          clientDisplayName: revision.clientDisplayName,
+          invoiceNumber: revision.invoiceNumber,
+          issuedAt:
+            revision.issuedAt === null
+              ? null
+              : DateTime.formatIso(DateTime.makeUnsafe(revision.issuedAt)),
+          title: revision.title,
+          serviceDate: revision.serviceDate,
+          dueDate: revision.dueDate,
+          paymentTerms: revision.paymentTerms,
+          currency: revision.currency,
+          netTotalCents: revision.netTotalCents,
+          vatTotalCents: revision.vatTotalCents,
+          totalCents: revision.totalCents,
+          createdAt: DateTime.formatIso(DateTime.makeUnsafe(revision.createdAt)),
+          createdByUserId: revision.createdByUserId,
+          lines: lines
+            .filter((line) => line.revisionId === revision.id)
+            .map((line): QuoteLineValue => ({
+              id: line.id,
+              position: line.position,
+              description: line.description,
+              quantityMilli: line.quantityMilli,
+              unitPriceCents: line.unitPriceCents,
+              vatRateBasisPoints: line.vatRateBasisPoints,
+              netTotalCents: line.netTotalCents,
+              vatTotalCents: line.vatTotalCents,
+              totalCents: line.totalCents,
+            })),
+        };
+        if (revision.paymentTermsPresentation === null) return value;
+        return { ...value, paymentTermsPresentation: revision.paymentTermsPresentation };
+      });
       const currentRevision = mappedRevisions.find(
         (revision) => revision.version === invoice.version,
       );
@@ -453,6 +460,7 @@ export const InvoicesLive = Layer.effect(
       readonly serviceDate: string;
       readonly dueDate: string;
       readonly paymentTerms: string;
+      readonly paymentTermsPresentation?: DocumentTextPresentationValue;
       readonly lines: ReadonlyArray<QuoteLineInputValue>;
       readonly actorUserId: string;
       readonly now: number;
@@ -466,7 +474,7 @@ export const InvoicesLive = Layer.effect(
         ...calculateDocumentLine(line),
       }));
       const totals = calculateDocumentTotals(calculatedLines);
-      const snapshot = Schema.decodeUnknownSync(InvoiceRenderSnapshot)({
+      const snapshotInput = {
         templateId: 'invoice-default',
         templateVersion: 1,
         invoiceId: input.invoiceId,
@@ -488,15 +496,20 @@ export const InvoicesLive = Layer.effect(
         currency: 'EUR',
         ...totals,
         lines: calculatedLines,
-      });
+      };
+      const snapshot = Schema.decodeUnknownSync(InvoiceRenderSnapshot)(
+        input.paymentTermsPresentation === undefined
+          ? snapshotInput
+          : { ...snapshotInput, paymentTermsPresentation: input.paymentTermsPresentation },
+      );
       database.sqlite
         .prepare(
           `insert into invoice_revisions
            (id, invoice_id, version, invoice_number, issued_at, client_display_name, title,
-            service_date, due_date, payment_terms, currency, net_total_cents, vat_total_cents,
+            service_date, due_date, payment_terms, payment_terms_presentation, currency, net_total_cents, vat_total_cents,
             total_cents, created_at, created_by_user_id, template_id, template_version,
               render_snapshot)
-             values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'EUR', ?, ?, ?, ?, ?, 'invoice-default', 1, ?)`,
+             values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'EUR', ?, ?, ?, ?, ?, 'invoice-default', 1, ?)`,
         )
         .run(
           revisionId,
@@ -509,6 +522,7 @@ export const InvoicesLive = Layer.effect(
           input.serviceDate,
           input.dueDate,
           input.paymentTerms,
+          storeTextPresentation(input.paymentTermsPresentation),
           totals.netTotalCents,
           totals.vatTotalCents,
           totals.totalCents,
@@ -599,6 +613,7 @@ export const InvoicesLive = Layer.effect(
                 serviceDate: request.serviceDate,
                 dueDate: request.dueDate,
                 paymentTerms: request.paymentTerms,
+                paymentTermsPresentation: request.paymentTermsPresentation,
                 lines: quoteSnapshot.lines,
                 actorUserId,
                 now,
@@ -717,6 +732,7 @@ export const InvoicesLive = Layer.effect(
                 serviceDate: request.serviceDate,
                 dueDate: request.dueDate,
                 paymentTerms: request.paymentTerms,
+                paymentTermsPresentation: request.paymentTermsPresentation,
                 lines: request.lines,
                 actorUserId,
                 now,
@@ -846,6 +862,7 @@ export const InvoicesLive = Layer.effect(
                 serviceDate: current.serviceDate,
                 dueDate: current.dueDate,
                 paymentTerms: current.paymentTerms,
+                paymentTermsPresentation: current.paymentTermsPresentation,
                 lines: current.lines,
                 actorUserId,
                 now,

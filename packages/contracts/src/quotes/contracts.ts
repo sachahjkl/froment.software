@@ -1,4 +1,5 @@
 import { Option, Schema } from 'effect';
+import { DocumentTextPresentation, isDocumentText } from '../documents/document-text.js';
 
 import {
   AuthenticationRequired,
@@ -47,21 +48,36 @@ const QuoteLinesInput = Schema.Array(QuoteLineInput).check(
 );
 const QuoteTitle = Schema.String.check(Schema.isPattern(/\S/), Schema.isMaxLength(120));
 const QuoteConditions = Schema.String.check(Schema.isMaxLength(2_000));
+const conditionsFilter = Schema.makeFilter<{
+  readonly conditions: string;
+  readonly conditionsPresentation?: DocumentTextPresentation;
+}>(
+  (value) =>
+    value.conditionsPresentation?.format !== 'markdown' ||
+    isDocumentText(value.conditions) ||
+    'document.conditions_format.invalid',
+);
 
 export const QuoteCreateRequest = Schema.Struct({
   clientId: Ulid,
   title: QuoteTitle,
   conditions: QuoteConditions,
+  conditionsPresentation: Schema.optionalKey(DocumentTextPresentation),
   lines: QuoteLinesInput,
-}).annotate({ identifier: 'QuoteCreateRequest' });
+})
+  .check(conditionsFilter)
+  .annotate({ identifier: 'QuoteCreateRequest' });
 export type QuoteCreateRequest = typeof QuoteCreateRequest.Type;
 
 export const QuoteRevisionCreateRequest = Schema.Struct({
   expectedVersion: PositiveSafeInteger,
   title: QuoteTitle,
   conditions: QuoteConditions,
+  conditionsPresentation: Schema.optionalKey(DocumentTextPresentation),
   lines: QuoteLinesInput,
-}).annotate({ identifier: 'QuoteRevisionCreateRequest' });
+})
+  .check(conditionsFilter)
+  .annotate({ identifier: 'QuoteRevisionCreateRequest' });
 export type QuoteRevisionCreateRequest = typeof QuoteRevisionCreateRequest.Type;
 
 export const QuoteSendRequest = Schema.Struct({ expectedVersion: PositiveSafeInteger });
@@ -116,12 +132,13 @@ export const QuoteRenderSnapshot = Schema.Struct({
   client: DocumentParty,
   title: QuoteTitle,
   conditions: QuoteConditions,
+  conditionsPresentation: Schema.optionalKey(DocumentTextPresentation),
   currency: Schema.Literal('EUR'),
   netTotalCents: SafeInteger,
   vatTotalCents: SafeInteger,
   totalCents: SafeInteger,
   lines: DocumentLines,
-}).check(documentTotalsFilter);
+}).check(documentTotalsFilter, conditionsFilter);
 export type QuoteRenderSnapshot = typeof QuoteRenderSnapshot.Type;
 
 export const PublicQuoteConsultation = Schema.Struct({
@@ -152,6 +169,7 @@ export const QuoteRevision = Schema.Struct({
   clientDisplayName: DisplayName,
   title: QuoteTitle,
   conditions: QuoteConditions,
+  conditionsPresentation: Schema.optionalKey(DocumentTextPresentation),
   currency: Schema.Literal('EUR'),
   netTotalCents: SafeInteger,
   vatTotalCents: SafeInteger,
@@ -160,7 +178,7 @@ export const QuoteRevision = Schema.Struct({
   createdByUserId: Ulid,
   lines: DocumentLines,
 })
-  .check(documentTotalsFilter)
+  .check(documentTotalsFilter, conditionsFilter)
   .annotate({ identifier: 'QuoteRevision' });
 export type QuoteRevision = typeof QuoteRevision.Type;
 

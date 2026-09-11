@@ -17,9 +17,17 @@ import {
   pattern,
   required,
   submit,
+  validate,
 } from '@angular/forms/signals';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { type QuoteConditionPresetValue } from '@froment/contracts';
+import {
+  isDocumentText,
+  documentTextContent,
+  type QuoteConditionPresetValue,
+  type DocumentTextPresentationValue,
+} from '@froment/contracts';
+import { DocumentTextEditor } from '@shared/document-text-editor/document-text-editor';
+import { DocumentTextView } from '@shared/document-text-view/document-text-view';
 import { I18nService, type TranslationKey } from '@app/i18n.service';
 import { QuoteConditionPresetsApi } from '@backoffice/quote-condition-presets-api';
 import { Button } from '@shared/button/button';
@@ -31,7 +39,16 @@ import { workspaceTableParams, workspaceTableQuery } from '../configuration/work
 import { conditionTableOptions } from '../configuration/workspace-tables';
 
 @Component({
-  imports: [Button, Notice, FormField, RouterLink, PageHeader, Breadcrumbs],
+  imports: [
+    Button,
+    Notice,
+    FormField,
+    RouterLink,
+    PageHeader,
+    Breadcrumbs,
+    DocumentTextEditor,
+    DocumentTextView,
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-condition-editor',
   styleUrl: './condition-editor.scss',
@@ -52,7 +69,11 @@ export class ConditionEditor {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
-  protected readonly model = signal({ name: '', conditions: '' });
+  protected readonly model = signal<{
+    name: string;
+    conditions: string;
+    conditionsPresentation?: DocumentTextPresentationValue;
+  }>({ name: '', conditions: '' });
   protected readonly loading = signal(true);
   protected readonly ready = signal(false);
   protected readonly saving = signal(false);
@@ -73,6 +94,11 @@ export class ConditionEditor {
     },
   ]);
   protected readonly error = signal<TranslationKey | undefined>(undefined);
+  protected readonly previewAvailable = computed(
+    () =>
+      this.model().conditionsPresentation?.format !== 'markdown' ||
+      isDocumentText(this.model().conditions),
+  );
   protected readonly presetForm = form(this.model, (path) => {
     disabled(
       path,
@@ -84,6 +110,18 @@ export class ConditionEditor {
     pattern(path.name, /\S/);
     required(path.conditions);
     maxLength(path.conditions, 2_000);
+    validate(path.conditions, ({ value }) =>
+      this.model().conditionsPresentation?.format === 'markdown' && !isDocumentText(value())
+        ? { kind: 'format' }
+        : undefined,
+    );
+    validate(path.conditions, ({ value }) => {
+      if (this.model().conditionsPresentation?.format !== 'markdown' || !isDocumentText(value()))
+        return undefined;
+      return /\S/.test(documentTextContent(value(), this.model().conditionsPresentation))
+        ? undefined
+        : { kind: 'required' };
+    });
     pattern(path.conditions, /\S/);
   });
   private loadGeneration = 0;
@@ -146,6 +184,12 @@ export class ConditionEditor {
     return this.presetForm[field]().touched() && this.presetForm[field]().invalid();
   }
 
+  protected setConditionsPresentation(conditionsPresentation: DocumentTextPresentationValue): void {
+    if (this.presetForm.conditions().disabled()) return;
+    this.model.update((model) => ({ ...model, conditionsPresentation }));
+    this.presetForm.conditions().markAsDirty();
+  }
+
   protected async load(): Promise<void> {
     if (this.saving() || this.confirming() || this.uncertain()) return;
     const generation = ++this.loadGeneration;
@@ -171,7 +215,11 @@ export class ConditionEditor {
         return;
       }
       this.preset.set(preset);
-      this.model.set({ name: preset.name, conditions: preset.conditions });
+      this.model.set({
+        name: preset.name,
+        conditions: preset.conditions,
+        conditionsPresentation: preset.conditionsPresentation,
+      });
       this.presetForm().reset();
       this.ready.set(true);
     } catch {
@@ -203,7 +251,12 @@ export class ConditionEditor {
       this.error.set(undefined);
       const generation = this.loadGeneration;
       const preset = this.preset();
-      const request = { name: this.model().name.trim(), conditions: this.model().conditions };
+      const model = this.model();
+      const values = { name: model.name.trim(), conditions: model.conditions };
+      const request =
+        model.conditionsPresentation === undefined
+          ? values
+          : { ...values, conditionsPresentation: model.conditionsPresentation };
       try {
         const outcome =
           preset === undefined

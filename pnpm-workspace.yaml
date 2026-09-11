@@ -21,6 +21,8 @@ catalog:
   "@effect/platform-node": "4.0.0-rc.112"
   "@effect/vitest": "4.0.0-rc.112"
   "@oxlint/plugins": "1.81.0"
+  "@tiptap/core": "3.31.3"
+  "@tiptap/starter-kit": "3.31.3"
   "@types/node": "^24.13.3"
   "@types/better-sqlite3": "^9.6.0"
   "@vitest/coverage-v8": "4.1.11"

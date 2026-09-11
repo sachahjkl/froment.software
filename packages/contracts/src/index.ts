@@ -1,5 +1,14 @@
 export { HealthStatus, type HealthStatus as HealthStatusValue } from './status/contracts.js';
 export {
+  DocumentTextPresentation,
+  type DocumentTextPresentation as DocumentTextPresentationValue,
+  DocumentTextBlock,
+  DocumentTextSpan,
+  parseDocumentText,
+  isDocumentText,
+  documentTextContent,
+} from './documents/document-text.js';
+export {
   InvoiceNumber,
   type InvoiceNumber as InvoiceNumberValue,
   OrderReference,

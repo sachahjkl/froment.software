@@ -156,7 +156,10 @@
     </div>
     <section class="payment-terms">
       <h2>{{ i18n.t('backOffice.invoice.paymentTerms') }}</h2>
-      <p class="terms">{{ invoice.currentRevision.paymentTerms }}</p>
+      <app-document-text-view
+        [source]="invoice.currentRevision.paymentTerms"
+        [presentation]="invoice.currentRevision.paymentTermsPresentation"
+      />
     </section>
     } @case ('document') {
     <div class="document-toolbar">

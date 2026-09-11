@@ -461,6 +461,7 @@ export const quoteRevisions = sqliteTable(
     clientDisplayName: text('client_display_name').notNull(),
     title: text().notNull(),
     conditions: text().notNull(),
+    conditionsPresentation: text('conditions_presentation'),
     currency: text({ enum: ['EUR'] }).notNull(),
     netTotalCents: integer('net_total_cents').notNull(),
     vatTotalCents: integer('vat_total_cents').notNull(),
@@ -487,6 +488,10 @@ export const quoteRevisions = sqliteTable(
     ),
     check('quote_revisions_title_check', sql`length(trim(${table.title})) between 1 and 120`),
     check('quote_revisions_conditions_check', sql`length(${table.conditions}) <= 2000`),
+    check(
+      'quote_revisions_conditions_presentation_check',
+      sql`${table.conditionsPresentation} is null or json_valid(${table.conditionsPresentation})`,
+    ),
     check('quote_revisions_currency_check', sql`${table.currency} = 'EUR'`),
     check(
       'quote_revisions_totals_check',
@@ -543,6 +548,7 @@ export const quoteConditionPresets = sqliteTable(
     id: text().notNull().primaryKey(),
     name: text().notNull(),
     conditions: text().notNull(),
+    conditionsPresentation: text('conditions_presentation'),
     createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull(),
     updatedAt: integer('updated_at', { mode: 'timestamp_ms' }).notNull(),
   },
@@ -556,6 +562,10 @@ export const quoteConditionPresets = sqliteTable(
     check(
       'quote_condition_presets_conditions_check',
       sql`length(trim(${table.conditions})) > 0 and length(${table.conditions}) <= 2000`,
+    ),
+    check(
+      'quote_condition_presets_presentation_check',
+      sql`${table.conditionsPresentation} is null or json_valid(${table.conditionsPresentation})`,
     ),
     check(
       'quote_condition_presets_timestamps_check',
@@ -975,6 +985,7 @@ export const invoiceRevisions = sqliteTable(
     serviceDate: text('service_date').notNull(),
     dueDate: text('due_date').notNull(),
     paymentTerms: text('payment_terms').notNull(),
+    paymentTermsPresentation: text('payment_terms_presentation'),
     currency: text({ enum: ['EUR'] }).notNull(),
     netTotalCents: integer('net_total_cents').notNull(),
     vatTotalCents: integer('vat_total_cents').notNull(),
@@ -1009,6 +1020,10 @@ export const invoiceRevisions = sqliteTable(
       sql`strftime('%Y-%m-%d', ${table.serviceDate}, '+0 days') = ${table.serviceDate} and strftime('%Y-%m-%d', ${table.dueDate}, '+0 days') = ${table.dueDate} and ${table.dueDate} >= ${table.serviceDate}`,
     ),
     check('invoice_revisions_payment_terms_check', sql`length(${table.paymentTerms}) <= 2000`),
+    check(
+      'invoice_revisions_payment_terms_presentation_check',
+      sql`${table.paymentTermsPresentation} is null or json_valid(${table.paymentTermsPresentation})`,
+    ),
     check('invoice_revisions_currency_check', sql`${table.currency} = 'EUR'`),
     check(
       'invoice_revisions_totals_check',

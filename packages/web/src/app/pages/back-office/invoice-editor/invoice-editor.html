@@ -120,18 +120,17 @@
           ></label
         >
       </div>
-      <label class="field"
-        >{{ i18n.t('backOffice.invoice.paymentTerms') }}<textarea
-          class="input"
-          rows="5"
-          [formField]="invoiceForm.paymentTerms"
-          [attr.aria-invalid]="invoiceForm.paymentTerms().invalid() && invoiceForm.paymentTerms().touched()"
-          aria-describedby="invoice-payment-terms-error"
-        ></textarea>
-        <span id="invoice-payment-terms-error" class="field-error"
-          >@if (invoiceForm.paymentTerms().invalid() && invoiceForm.paymentTerms().touched()) { {{
-          i18n.t('backOffice.invoice.fieldInvalid') }} }</span
-        ></label
+      <app-document-text-editor
+        controlId="invoice-payment-terms"
+        [label]="i18n.t('backOffice.invoice.paymentTerms')"
+        [formField]="invoiceForm.paymentTerms"
+        [presentation]="paymentTermsPresentation()"
+        (presentationChange)="setPaymentTermsPresentation($event)"
+        descriptionId="invoice-payment-terms-error"
+      />
+      <span id="invoice-payment-terms-error" class="field-error"
+        >@if (invoiceForm.paymentTerms().invalid() && invoiceForm.paymentTerms().touched()) { {{
+        i18n.t('backOffice.invoice.fieldInvalid') }} }</span
       >
     </div>
     @if (!isNew()) {

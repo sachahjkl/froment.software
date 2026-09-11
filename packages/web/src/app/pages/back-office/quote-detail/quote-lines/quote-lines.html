@@ -38,5 +38,8 @@
 </dl>
 @if (revision().conditions) {
 <h3>{{ i18n.t('backOffice.quote.conditions') }}</h3>
-<p class="conditions">{{ revision().conditions }}</p>
+<app-document-text-view
+  [source]="revision().conditions"
+  [presentation]="revision().conditionsPresentation"
+/>
 }

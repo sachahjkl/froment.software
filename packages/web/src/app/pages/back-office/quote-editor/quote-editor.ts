@@ -54,6 +54,12 @@ import { ObjectPicker } from '@shared/object-picker/object-picker';
 import { affairContext } from '../affairs/affair-filters';
 import { CatalogEditor } from '../catalog-editor/catalog-editor';
 import { ConditionEditor } from '../quote-condition-presets/condition-editor';
+import {
+  documentTextContent,
+  isDocumentText,
+  type DocumentTextPresentationValue,
+} from '@froment/contracts';
+import { DocumentTextEditor } from '@shared/document-text-editor/document-text-editor';
 
 interface QuoteLineModel {
   readonly description: string;
@@ -65,6 +71,7 @@ interface QuoteLineModel {
 interface QuoteModel {
   readonly clientId: string;
   readonly conditions: string;
+  readonly conditionsPresentation?: DocumentTextPresentationValue;
   readonly lines: Array<QuoteLineModel>;
   readonly title: string;
 }
@@ -79,7 +86,16 @@ const emptyLine = (): QuoteLineModel => ({
 @Component({
   host: { class: 'page-container' },
   selector: 'app-quote-editor',
-  imports: [Button, FormField, ObjectPicker, Notice, OutcomePanel, PageHeader, RouterLink],
+  imports: [
+    Button,
+    FormField,
+    ObjectPicker,
+    Notice,
+    OutcomePanel,
+    PageHeader,
+    RouterLink,
+    DocumentTextEditor,
+  ],
   templateUrl: './quote-editor.html',
   styleUrl: './quote-editor.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -129,12 +145,14 @@ export class QuoteEditor {
   protected readonly uncertain = signal(false);
   protected readonly error = signal<TranslationKey | undefined>(undefined);
   protected readonly presetOptions = computed(() =>
-    this.conditionPresets().map((preset) => ({
-      id: preset.id,
-      label: preset.name,
-      detail:
-        preset.conditions.length > 160 ? `${preset.conditions.slice(0, 159)}…` : preset.conditions,
-    })),
+    this.conditionPresets().map((preset) => {
+      const text = documentTextContent(preset.conditions, preset.conditionsPresentation);
+      return {
+        id: preset.id,
+        label: preset.name,
+        detail: text.length > 160 ? `${text.slice(0, 159)}…` : text,
+      };
+    }),
   );
   private readonly model = signal<QuoteModel>({
     clientId: '',
@@ -142,6 +160,7 @@ export class QuoteEditor {
     lines: [emptyLine()],
     title: '',
   });
+  protected readonly conditionsPresentation = computed(() => this.model().conditionsPresentation);
   protected readonly catalogOptions = computed(() =>
     this.catalogItems().map((item) => ({
       id: item.id,
@@ -163,6 +182,11 @@ export class QuoteEditor {
     maxLength(path.title, 120);
     pattern(path.title, /\S/);
     maxLength(path.conditions, 2_000);
+    validate(path.conditions, ({ value }) =>
+      this.model().conditionsPresentation?.format === 'markdown' && !isDocumentText(value())
+        ? { kind: 'format' }
+        : undefined,
+    );
     minLength(path.lines, 1);
     maxLength(path.lines, 20);
     applyEach(path.lines, (line) => {
@@ -264,17 +288,29 @@ export class QuoteEditor {
     try {
       if (
         this.model().conditions &&
-        this.model().conditions !== preset.conditions &&
+        (this.model().conditions !== preset.conditions ||
+          JSON.stringify(this.model().conditionsPresentation) !==
+            JSON.stringify(preset.conditionsPresentation)) &&
         !(await this.confirmation.request(this.i18n.t('commercial.replaceConditions')))
       )
         return;
       if (this.destroyRef.destroyed || generation !== this.routeRequest || this.saveDisabled())
         return;
-      this.model.update((model) => ({ ...model, conditions: preset.conditions }));
+      this.model.update((model) => ({
+        ...model,
+        conditions: preset.conditions,
+        conditionsPresentation: preset.conditionsPresentation,
+      }));
       this.quoteForm().markAsDirty();
     } finally {
       this.applyingConditions.set(false);
     }
+  }
+
+  protected setConditionsPresentation(conditionsPresentation: DocumentTextPresentationValue): void {
+    if (this.quoteForm.conditions().disabled()) return;
+    this.model.update((model) => ({ ...model, conditionsPresentation }));
+    this.quoteForm.conditions().markAsDirty();
   }
 
   protected createCatalogItem(): void {
@@ -437,7 +473,15 @@ export class QuoteEditor {
       const generation = this.routeRequest;
       try {
         const model = this.model();
-        const common = { conditions: model.conditions, lines, title: model.title.trim() };
+        const values = {
+          conditions: model.conditions,
+          lines,
+          title: model.title.trim(),
+        };
+        const common =
+          model.conditionsPresentation === undefined
+            ? values
+            : { ...values, conditionsPresentation: model.conditionsPresentation };
         const quoteId = this.quoteId();
         if (quoteId === undefined) {
           const clientId = this.decodeQuoteId(model.clientId);
@@ -620,6 +664,7 @@ export class QuoteEditor {
     return {
       clientId: detail.clientId,
       conditions: detail.currentRevision.conditions,
+      conditionsPresentation: detail.currentRevision.conditionsPresentation,
       title: detail.currentRevision.title,
       lines: detail.currentRevision.lines.map((line) => ({
         description: line.description,

@@ -33,8 +33,7 @@ dd {
   font-size: var(--text-lg);
   font-weight: 600;
 }
-.conditions {
-  white-space: pre-wrap;
+app-document-text-view {
   max-inline-size: 80ch;
   margin-top: var(--space-3);
 }

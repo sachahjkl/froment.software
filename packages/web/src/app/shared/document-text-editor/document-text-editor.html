@@ -1,0 +1,34 @@
+<div class="field">
+  <span [id]="controlId() + '-label'" class="label">{{ label() }}</span>
+  <div class="editor">
+    <div class="toolbar" role="group" [attr.aria-label]="i18n.t('documentText.formatting')">
+      @for (item of toolbar(); track item.action) {
+      <button
+        appButton
+        type="button"
+        [attr.aria-pressed]="item.pressed"
+        [disabled]="item.disabled"
+        (click)="apply(item.action)"
+      >
+        {{ i18n.t(item.label) }}
+      </button>
+      }
+    </div>
+    <div #editorHost></div>
+  </div>
+</div>
+<label class="field placement">
+  {{ i18n.t('documentText.placement') }}
+  <select
+    class="select"
+    #position
+    [value]="placement()"
+    [disabled]="disabled()"
+    (change)="changePlacement(position.value)"
+    (blur)="touch.emit()"
+  >
+    @for (item of placements; track item.value) {
+    <option [value]="item.value">{{ i18n.t(item.label) }}</option>
+    }
+  </select>
+</label>

@@ -12,7 +12,9 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "effect": "catalog:"
+    "effect": "catalog:",
+    "entities": "8.0.0",
+    "marked": "catalog:"
   },
   "devDependencies": {
     "typescript": "catalog:",

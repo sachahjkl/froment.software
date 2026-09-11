@@ -26,11 +26,13 @@ import {
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import {
   CalendarDate,
+  isDocumentText,
   Ulid,
   type InvoiceDetailValue,
   type InvoiceRevisionCreateRequestValue,
   type OrderListValue,
   type QuoteLineInputValue,
+  type DocumentTextPresentationValue,
 } from '@froment/contracts';
 import { Schema } from 'effect';
 import { InvoicesApi } from '@backoffice/invoices-api';
@@ -43,6 +45,7 @@ import { Notice } from '@shared/notice/notice';
 import { PageHeader } from '@shared/page-header/page-header';
 import { Confirmation } from '@shared/confirmation/confirmation';
 import { BillingNavigation } from '../billing/billing-navigation';
+import { DocumentTextEditor } from '@shared/document-text-editor/document-text-editor';
 
 interface InvoiceLineModel {
   description: string;
@@ -56,7 +59,17 @@ const emptyLine = (): InvoiceLineModel => ({
   unitPrice: '0.00',
   vatRate: '20.00',
 });
-const emptyModel = () => ({
+interface InvoiceModel {
+  refreshParties: boolean;
+  orderId: string;
+  title: string;
+  serviceDate: string;
+  dueDate: string;
+  paymentTerms: string;
+  paymentTermsPresentation?: DocumentTextPresentationValue;
+  lines: InvoiceLineModel[];
+}
+const emptyModel = (): InvoiceModel => ({
   refreshParties: false,
   orderId: '',
   title: '',
@@ -69,7 +82,7 @@ const emptyModel = () => ({
 @Component({
   host: { class: 'page-container', '(window:beforeunload)': 'beforeUnload($event)' },
   selector: 'app-invoice-editor',
-  imports: [Button, FormField, Notice, PageHeader, RouterLink],
+  imports: [Button, FormField, Notice, PageHeader, RouterLink, DocumentTextEditor],
   templateUrl: './invoice-editor.html',
   styleUrl: './invoice-editor.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -102,6 +115,9 @@ export class InvoiceEditor {
   protected readonly completed = signal(false);
   protected readonly error = signal<TranslationKey | undefined>(undefined);
   private readonly model = signal(emptyModel());
+  protected readonly paymentTermsPresentation = computed(
+    () => this.model().paymentTermsPresentation,
+  );
   private readonly baseline = signal(JSON.stringify(this.model()));
   protected readonly editable = computed(() => this.isNew() || this.detail()?.status === 'draft');
   protected readonly saveDisabled = computed(
@@ -126,6 +142,11 @@ export class InvoiceEditor {
         : undefined,
     );
     maxLength(path.paymentTerms, 2000);
+    validate(path.paymentTerms, ({ value }) =>
+      this.model().paymentTermsPresentation?.format === 'markdown' && !isDocumentText(value())
+        ? { kind: 'format' }
+        : undefined,
+    );
     applyWhen(
       path.title,
       () => !this.isNew(),
@@ -208,6 +229,14 @@ export class InvoiceEditor {
       this.confirmation.request(this.i18n.t('backOffice.invoice.unsavedChanges'))
     );
   }
+
+  protected setPaymentTermsPresentation(
+    paymentTermsPresentation: DocumentTextPresentationValue,
+  ): void {
+    if (this.invoiceForm.paymentTerms().disabled()) return;
+    this.model.update((model) => ({ ...model, paymentTermsPresentation }));
+    this.invoiceForm.paymentTerms().markAsDirty();
+  }
   protected beforeUnload(event: BeforeUnloadEvent): void {
     if (this.saving() || this.hasUnsavedChanges()) {
       event.preventDefault();
@@ -231,12 +260,17 @@ export class InvoiceEditor {
               this.error.set('invoice.order_not_found');
               return;
             }
-            const outcome = await this.api.create({
+            const values = {
               orderId: model.orderId,
               serviceDate: model.serviceDate,
               dueDate: model.dueDate,
               paymentTerms: model.paymentTerms,
-            });
+            };
+            const request =
+              model.paymentTermsPresentation === undefined
+                ? values
+                : { ...values, paymentTermsPresentation: model.paymentTermsPresentation };
+            const outcome = await this.api.create(request);
             if (this.destroyRef.destroyed) return;
             if (!outcome.success) {
               if (outcome.failure?._tag === 'InvoiceAlreadyExists') {
@@ -264,7 +298,7 @@ export class InvoiceEditor {
             this.error.set('invoice.error');
             return;
           }
-          const request: InvoiceRevisionCreateRequestValue = {
+          const values: InvoiceRevisionCreateRequestValue = {
             expectedVersion: detail.version,
             refreshParties: model.refreshParties,
             title: model.title.trim(),
@@ -273,6 +307,10 @@ export class InvoiceEditor {
             paymentTerms: model.paymentTerms,
             lines,
           };
+          const request =
+            model.paymentTermsPresentation === undefined
+              ? values
+              : { ...values, paymentTermsPresentation: model.paymentTermsPresentation };
           const outcome = await this.api.createRevision(detail.id, request);
           if (this.destroyRef.destroyed) return;
           if (!outcome.success) {
@@ -359,6 +397,7 @@ export class InvoiceEditor {
       serviceDate: revision.serviceDate,
       dueDate: revision.dueDate,
       paymentTerms: revision.paymentTerms,
+      paymentTermsPresentation: revision.paymentTermsPresentation,
       lines: revision.lines.map((line) => ({
         description: line.description,
         quantity: formatFixedDecimal(line.quantityMilli, 3, separator),

@@ -1,4 +1,5 @@
 import { Schema } from 'effect';
+import { DocumentTextPresentation, isDocumentText } from '../documents/document-text.js';
 import { InvoicePayment, InvoicePaymentInvalid } from './payments.js';
 
 import {
@@ -31,6 +32,15 @@ import {
 export { CalendarDate, CalendarDateText } from '../temporal.js';
 const InvoiceTitle = Schema.String.check(Schema.isPattern(/\S/), Schema.isMaxLength(120));
 const PaymentTerms = Schema.String.check(Schema.isMaxLength(2_000));
+const paymentTermsFilter = Schema.makeFilter<{
+  readonly paymentTerms: string;
+  readonly paymentTermsPresentation?: DocumentTextPresentation;
+}>(
+  (value) =>
+    value.paymentTermsPresentation?.format !== 'markdown' ||
+    isDocumentText(value.paymentTerms) ||
+    'document.conditions_format.invalid',
+);
 const InvoiceLinesInput = Schema.Array(DocumentLineInput).check(
   Schema.isMinLength(1),
   Schema.isMaxLength(20),
@@ -57,7 +67,10 @@ export const InvoiceCreateRequest = Schema.Struct({
   serviceDate: CalendarDate,
   dueDate: CalendarDate,
   paymentTerms: PaymentTerms,
-}).annotate({ identifier: 'InvoiceCreateRequest' });
+  paymentTermsPresentation: Schema.optionalKey(DocumentTextPresentation),
+})
+  .check(paymentTermsFilter)
+  .annotate({ identifier: 'InvoiceCreateRequest' });
 export type InvoiceCreateRequest = typeof InvoiceCreateRequest.Type;
 
 export const InvoiceRevisionCreateRequest = Schema.Struct({
@@ -67,8 +80,11 @@ export const InvoiceRevisionCreateRequest = Schema.Struct({
   serviceDate: CalendarDate,
   dueDate: CalendarDate,
   paymentTerms: PaymentTerms,
+  paymentTermsPresentation: Schema.optionalKey(DocumentTextPresentation),
   lines: InvoiceLinesInput,
-}).annotate({ identifier: 'InvoiceRevisionCreateRequest' });
+})
+  .check(paymentTermsFilter)
+  .annotate({ identifier: 'InvoiceRevisionCreateRequest' });
 export type InvoiceRevisionCreateRequest = typeof InvoiceRevisionCreateRequest.Type;
 
 export const InvoiceIssueRequest = Schema.Struct({ expectedVersion: PositiveSafeInteger });
@@ -95,12 +111,13 @@ export const InvoiceRenderSnapshot = Schema.Struct({
   client: DocumentParty,
   title: InvoiceTitle,
   paymentTerms: PaymentTerms,
+  paymentTermsPresentation: Schema.optionalKey(DocumentTextPresentation),
   currency: Schema.Literal('EUR'),
   netTotalCents: SafeInteger,
   vatTotalCents: SafeInteger,
   totalCents: SafeInteger,
   lines: DocumentLines,
-}).check(documentTotalsFilter);
+}).check(documentTotalsFilter, paymentTermsFilter);
 export type InvoiceRenderSnapshot = typeof InvoiceRenderSnapshot.Type;
 
 export const InvoiceRevision = Schema.Struct({
@@ -113,6 +130,7 @@ export const InvoiceRevision = Schema.Struct({
   serviceDate: CalendarDate,
   dueDate: CalendarDate,
   paymentTerms: PaymentTerms,
+  paymentTermsPresentation: Schema.optionalKey(DocumentTextPresentation),
   currency: Schema.Literal('EUR'),
   netTotalCents: SafeInteger,
   vatTotalCents: SafeInteger,
@@ -121,7 +139,7 @@ export const InvoiceRevision = Schema.Struct({
   createdByUserId: Ulid,
   lines: DocumentLines,
 })
-  .check(documentTotalsFilter)
+  .check(documentTotalsFilter, paymentTermsFilter)
   .annotate({ identifier: 'InvoiceRevision' });
 export type InvoiceRevision = typeof InvoiceRevision.Type;
 

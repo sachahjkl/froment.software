@@ -1,4 +1,9 @@
 import { Schema } from 'effect';
+import {
+  DocumentTextPresentation,
+  documentTextContent,
+  isDocumentText,
+} from '../documents/document-text.js';
 
 import {
   AuthenticationRequired,
@@ -9,12 +14,23 @@ import { Ulid } from '../identifiers.js';
 
 const Name = Schema.String.check(Schema.isPattern(/\S/), Schema.isMaxLength(120));
 const Conditions = Schema.String.check(Schema.isPattern(/\S/), Schema.isMaxLength(2_000));
+const conditionsFilter = Schema.makeFilter<{
+  readonly conditions: string;
+  readonly conditionsPresentation?: DocumentTextPresentation;
+}>(
+  (value) =>
+    value.conditionsPresentation?.format !== 'markdown' ||
+    (isDocumentText(value.conditions) &&
+      /\S/.test(documentTextContent(value.conditions, value.conditionsPresentation))) ||
+    'document.conditions_format.invalid',
+);
 
 export const QuoteConditionPreset = Schema.Struct({
   id: Ulid,
   name: Name,
   conditions: Conditions,
-});
+  conditionsPresentation: Schema.optionalKey(DocumentTextPresentation),
+}).check(conditionsFilter);
 export type QuoteConditionPreset = typeof QuoteConditionPreset.Type;
 
 export const QuoteConditionPresetList = Schema.Array(QuoteConditionPreset);
@@ -23,7 +39,8 @@ export type QuoteConditionPresetList = typeof QuoteConditionPresetList.Type;
 export const QuoteConditionPresetWriteRequest = Schema.Struct({
   name: Name,
   conditions: Conditions,
-});
+  conditionsPresentation: Schema.optionalKey(DocumentTextPresentation),
+}).check(conditionsFilter);
 export type QuoteConditionPresetWriteRequest = typeof QuoteConditionPresetWriteRequest.Type;
 
 export class QuoteConditionPresetNotFound extends Schema.TaggedError<QuoteConditionPresetNotFound>()(

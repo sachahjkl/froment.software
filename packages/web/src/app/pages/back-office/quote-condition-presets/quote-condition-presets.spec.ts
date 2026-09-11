@@ -146,19 +146,17 @@ describe('QuoteConditionPresets', () => {
     await fixture.whenStable();
     const root: HTMLElement = fixture.nativeElement;
     const name = root.querySelector<HTMLInputElement>('#preset-name')!;
-    const conditions = root.querySelector<HTMLTextAreaElement>('#preset-conditions')!;
 
     name.value = 'Payment';
     name.dispatchEvent(new Event('input'));
-    conditions.value = 'Within 30 days';
-    conditions.dispatchEvent(new Event('input'));
+    fixture.componentInstance['presetForm'].conditions().value.set('Within 30 days');
     root.querySelector<HTMLFormElement>('form')!.dispatchEvent(new SubmitEvent('submit'));
     await fixture.whenStable();
 
     expect(create).toHaveBeenCalled();
     expect(fixture.componentInstance['error']()).toBe('referenceEditor.conditionsUncertain');
     expect(name.value).toBe('Payment');
-    expect(conditions.value).toBe('Within 30 days');
+    expect(fixture.componentInstance['presetForm'].conditions().value()).toBe('Within 30 days');
   });
 
   it('describes invalid preset fields', async () => {
@@ -179,5 +177,54 @@ describe('QuoteConditionPresets', () => {
     expect(name.getAttribute('aria-invalid')).toBe('true');
     expect(name.getAttribute('aria-describedby')).toBe('preset-name-error');
     expect(root.querySelector('#preset-name-error')).not.toBeNull();
+  });
+
+  it('guards a placement change without changing the text', async () => {
+    const request = vi.fn().mockResolvedValue(false);
+    TestBed.configureTestingModule({
+      providers: [
+        provideRouter([]),
+        { provide: QuoteConditionPresetsApi, useValue: { list: async () => [] } },
+        { provide: Confirmation, useValue: { request } },
+      ],
+    });
+    const fixture = TestBed.createComponent(ConditionEditor);
+    await fixture.whenStable();
+    const component = fixture.componentInstance;
+    component['setConditionsPresentation']({ format: 'markdown', placement: 'new-page' });
+    await fixture.whenStable();
+    expect(component['presetForm'].conditions().value()).toBe('');
+    expect(await component.canDeactivate()).toBe(false);
+    const event = new Event('beforeunload', { cancelable: true });
+    window.dispatchEvent(event);
+    expect(event.defaultPrevented).toBe(true);
+    expect(request).toHaveBeenCalledOnce();
+  });
+
+  it('rejects unsupported formatting before sending a create request', async () => {
+    const create = vi.fn();
+    TestBed.configureTestingModule({
+      providers: [
+        provideRouter([]),
+        { provide: QuoteConditionPresetsApi, useValue: { list: async () => [], create } },
+      ],
+    });
+    const fixture = TestBed.createComponent(ConditionEditor);
+    await fixture.whenStable();
+    const component = fixture.componentInstance;
+    component['model'].set({
+      name: 'Conditions',
+      conditions: '<b>Texte</b>',
+      conditionsPresentation: { format: 'markdown', placement: 'inline' },
+    });
+    await fixture.whenStable();
+    component['save'](new SubmitEvent('submit'));
+    await fixture.whenStable();
+    expect(create).not.toHaveBeenCalled();
+    expect(component['uncertain']()).toBe(false);
+    expect(component['presetForm'].conditions().disabled()).toBe(false);
+    component['presetForm'].conditions().value.set('Texte corrigé');
+    await fixture.whenStable();
+    expect(component['presetForm'].conditions().valid()).toBe(true);
   });
 });

@@ -1,4 +1,5 @@
 import { Schema } from 'effect';
+import { DocumentTextPresentation } from '../documents/document-text.js';
 
 import { DisplayName, Ulid } from '../identifiers.js';
 import { IsoUtc } from '../temporal.js';
@@ -42,6 +43,7 @@ export const OrderRenderSnapshot = Schema.Struct({
   client: DocumentParty,
   title: Schema.String.check(Schema.isPattern(/\S/), Schema.isMaxLength(120)),
   conditions: Schema.String.check(Schema.isMaxLength(2_000)),
+  conditionsPresentation: Schema.optionalKey(DocumentTextPresentation),
   currency: Schema.Literal('EUR'),
   netTotalCents: SafeInteger,
   vatTotalCents: SafeInteger,

@@ -234,21 +234,19 @@
           {{ i18n.t('configurationWorkspace.newCondition') }}
         </button>
       </div>
-      <label class="field"
-        >{{ i18n.t('backOffice.quote.conditions') }}
-        <textarea
-          class="input"
-          rows="5"
-          aria-describedby="quote-conditions-error"
-          [attr.aria-invalid]="quoteForm.conditions().invalid() && quoteForm.conditions().touched()"
-          [formField]="quoteForm.conditions"
-        ></textarea>
-        @if (quoteForm.conditions().invalid() && quoteForm.conditions().touched()) {
-        <span id="quote-conditions-error" class="field-error"
-          >{{ i18n.t('backOffice.quote.fieldInvalid') }}</span
-        >
-        }
-      </label>
+      <app-document-text-editor
+        controlId="quote-conditions"
+        [label]="i18n.t('backOffice.quote.conditions')"
+        [formField]="quoteForm.conditions"
+        [presentation]="conditionsPresentation()"
+        (presentationChange)="setConditionsPresentation($event)"
+        descriptionId="quote-conditions-error"
+      />
+      @if (quoteForm.conditions().invalid() && quoteForm.conditions().touched()) {
+      <span id="quote-conditions-error" class="field-error"
+        >{{ i18n.t('backOffice.quote.fieldInvalid') }}</span
+      >
+      }
     </section>
     @if (referenceNotice(); as noticeKey) {
     <p appNotice variant="success" role="status">{{ i18n.t(noticeKey) }}</p>

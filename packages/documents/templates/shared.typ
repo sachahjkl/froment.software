@@ -4,6 +4,38 @@
   }
 }
 
+#let text-spans(spans) = {
+  for span in spans {
+    let content = span.text.split("\n").map(line => text(line)).join(linebreak())
+    if span.bold { content = strong(content) }
+    if span.italic { content = emph(content) }
+    content
+  }
+}
+
+#let text-blocks(blocks) = {
+  for item in blocks {
+    if item.kind == "paragraph" {
+      block(spacing: 2.5mm)[#text-spans(item.spans)]
+    } else if item.kind == "heading" {
+      block(sticky: true, above: 3mm, below: 1.5mm)[
+        #text(size: if item.level == 2 { 10pt } else { 9pt }, weight: "bold")[#text-spans(item.spans)]
+      ]
+    } else if item.kind == "list" {
+      let items = item.items.map(text-blocks)
+      if item.ordered { enum(start: item.start, ..items) } else { list(..items) }
+    }
+  }
+}
+
+#let legal-notices(lines) = {
+  if lines.len() > 0 {
+    v(4mm)
+    set text(size: 7pt, weight: "regular")
+    stack-lines(lines, gap: 1.5mm)
+  }
+}
+
 #let document(data, preview: false) = {
   let line-gap = 1.4mm
   let row-inset = 1.3mm
@@ -91,17 +123,26 @@
     )
   ]
 
-  if data.terms.len() > 0 {
-    v(5mm)
-    strong(data.termsHeading)
-    linebreak()
-    data.terms
+  if data.termsPlacement == "new-page" {
+    legal-notices(data.legal)
   }
 
-  if data.legal.len() > 0 {
-    v(4mm)
-    set text(size: 7pt, weight: "regular")
-    stack-lines(data.legal, gap: 1.5mm)
+  if data.terms.len() > 0 {
+    if data.termsPlacement == "new-page" { pagebreak(weak: true) }
+    v(5mm)
+    if type(data.terms) == str {
+      strong(data.termsHeading)
+      linebreak()
+      data.terms
+    } else {
+      set text(weight: "regular")
+      block(sticky: true, below: 2.5mm)[#strong(data.termsHeading)]
+      text-blocks(data.terms)
+    }
+  }
+
+  if data.termsPlacement != "new-page" {
+    legal-notices(data.legal)
   }
 
   v(5mm)

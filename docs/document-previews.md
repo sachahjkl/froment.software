@@ -17,6 +17,8 @@ Exemples :
 Selon le navigateur, l’onglet affiche le titre PDF ou le nom du fichier.
 Les deux identifient l’aperçu au lieu d’afficher seulement le dernier segment `/preview` de l’URL.
 
+Les aperçus appliquent la [mise en forme et l’emplacement des conditions](document-conditions.md) enregistrés dans la version.
+
 ## Séparation des documents définitifs
 
 Le serveur applique le filigrane uniquement aux routes d’aperçu.

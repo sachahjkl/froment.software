@@ -32,6 +32,7 @@ import { Option, Schema } from 'effect';
 import { I18nService, type TranslationKey } from '@app/i18n.service';
 import { PublicQuoteApi } from '../../public-quote/public-quote-api';
 import { Button } from '@shared/button/button';
+import { DocumentTextView } from '@shared/document-text-view/document-text-view';
 import { Notice } from '@shared/notice/notice';
 import { StatusBlock } from '@shared/status-block/status-block';
 import { Tabs, type TabItem } from '@shared/tabs/tabs';
@@ -44,6 +45,7 @@ import { formatLocalizedDate } from '@shared/localized-date/localized-date-pipe'
   selector: 'app-public-quote',
   imports: [
     Button,
+    DocumentTextView,
     FormField,
     Notice,
     RouterLink,

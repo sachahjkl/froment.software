@@ -166,7 +166,9 @@ describe('Quote editor navigation', () => {
     await harness.fixture.whenStable();
     control<HTMLButtonElement>(document, '[role="dialog"] button.option').click();
     await harness.fixture.whenStable();
-    expect(control<HTMLTextAreaElement>(root, 'textarea').value).toBe('Payment within 30 days.');
+    expect(control<HTMLElement>(root, '#quote-conditions').textContent).toBe(
+      'Payment within 30 days.',
+    );
   });
   it('limits preset descriptions without truncating the copied conditions', async () => {
     const conditions = 'Payment conditions. '.repeat(100);
@@ -180,7 +182,7 @@ describe('Quote editor navigation', () => {
     expect(control<HTMLSpanElement>(option, 'span').textContent?.length).toBe(160);
     option.click();
     await harness.fixture.whenStable();
-    expect(control<HTMLTextAreaElement>(root, 'textarea').value).toBe(conditions);
+    expect(control<HTMLElement>(root, '#quote-conditions').textContent).toBe(conditions);
   });
   it('preselects an active client from the client profile link without making the form dirty', async () => {
     const { harness, root } = await open(
