@@ -5,7 +5,7 @@ import { DisplayName, Ulid } from '../identifiers.js';
 import { IsoUtc } from '../temporal.js';
 import { OrderReference, QuoteReference } from '../business/contracts.js';
 import { DocumentLines, documentTotalsFilter } from '../documents/lines.js';
-import { DocumentParty, IssuerSettings } from '../documents/contracts.js';
+import { DocumentCalendar, DocumentParty, IssuerSettings } from '../documents/contracts.js';
 
 const SafeInteger = Schema.Number.check(
   Schema.isInt(),
@@ -34,6 +34,7 @@ export type OrderList = typeof OrderList.Type;
 export const OrderRenderSnapshot = Schema.Struct({
   templateId: Schema.Literal('order-default'),
   templateVersion: Schema.Literal(1),
+  calendar: Schema.optionalKey(DocumentCalendar),
   orderId: Ulid,
   revisionId: Ulid,
   orderReference: OrderReference,

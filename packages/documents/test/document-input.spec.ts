@@ -2,6 +2,7 @@ import {
   prepareInvoiceDocument,
   prepareOrderDocument,
   prepareQuoteDocument,
+  prepareCreditNoteDocument,
 } from '@froment/documents';
 import {
   type InvoiceRenderSnapshotValue,
@@ -63,6 +64,83 @@ const quote: QuoteRenderSnapshotValue = {
 };
 
 describe('Typst document inputs', () => {
+  it.each([
+    ['2026-12-31T23:30:00.000Z', '1 janvier 2027'],
+    ['2026-08-19T22:30:00.000Z', '20 août 2026'],
+  ])('renders instant dates in the recorded business calendar: %s', (instant, expected) => {
+    const calendar = { timeZone: 'Europe/Paris' };
+    const datedQuote = { ...quote, createdAt: instant, calendar };
+    const datedInvoice: InvoiceRenderSnapshotValue = {
+      ...datedQuote,
+      templateId: 'invoice-default',
+      invoiceId: quote.quoteId,
+      orderId: quote.revisionId,
+      orderReference: 'CO-2026-000001',
+      invoiceNumber: 'FA-2027-000001',
+      issuedAt: instant,
+      serviceDate: '2026-08-19',
+      dueDate: '2027-01-31',
+      paymentTerms: '',
+    };
+    const datedOrder: OrderRenderSnapshotValue = {
+      ...datedQuote,
+      templateId: 'order-default',
+      orderId: quote.quoteId,
+      orderReference: 'CO-2026-000001',
+      confirmedAt: instant,
+    };
+    expect(prepareQuoteDocument(datedQuote).metadata).toContainEqual([
+      'Date d’émission :',
+      expected,
+    ]);
+    expect(prepareInvoiceDocument(datedInvoice).metadata).toContainEqual([
+      'Date d’émission :',
+      expected,
+    ]);
+    expect(prepareOrderDocument(datedOrder).metadata).toContainEqual(['Confirmée le :', expected]);
+    expect(prepareInvoiceDocument(datedInvoice).metadata).toContainEqual([
+      'Date d’échéance :',
+      '31 janvier 2027',
+    ]);
+    expect(prepareInvoiceDocument(datedInvoice).context).toContain(
+      'Date de prestation : 19 août 2026',
+    );
+  });
+
+  it('keeps the original invoice date while using the credit note business date', () => {
+    const invoice: InvoiceRenderSnapshotValue = {
+      ...quote,
+      templateId: 'invoice-default',
+      invoiceId: quote.quoteId,
+      orderId: quote.revisionId,
+      orderReference: 'CO-2026-000001',
+      invoiceNumber: 'FA-2026-000001',
+      issuedAt: '2026-08-19T23:30:00.000Z',
+      serviceDate: '2026-08-19',
+      dueDate: '2027-01-31',
+      paymentTerms: '',
+    };
+    const input = prepareCreditNoteDocument(
+      invoice,
+      {
+        id: quote.quoteId,
+        invoiceId: quote.quoteId,
+        invoiceRevisionId: quote.revisionId,
+        requestId: '00000000-0000-4000-8000-000000000000',
+        number: 'AV-2027-000001',
+        reason: 'Annulation',
+        issuedAt: '2026-12-31T23:30:00.000Z',
+        issuedByUserId: quote.quoteId,
+        netTotalCents: quote.netTotalCents,
+        vatTotalCents: quote.vatTotalCents,
+        totalCents: quote.totalCents,
+      },
+      '2027-01-01',
+    );
+    expect(input.metadata).toContainEqual(['Date d’émission :', '1 janvier 2027']);
+    expect(input.metadata).toContainEqual(['Date de la facture d’origine', '19 août 2026']);
+  });
+
   it('formats all business values in TypeScript', () => {
     const input = prepareQuoteDocument(quote);
     expect(input.metadata).toContainEqual(['Date d’émission :', '19 août 2026']);

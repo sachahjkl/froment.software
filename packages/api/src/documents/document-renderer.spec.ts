@@ -155,6 +155,25 @@ const inspectPdf = (pdf: Uint8Array) => {
 const normalizedText = (value: string): string => value.replaceAll(/[\s\u200b]/g, '');
 
 describe('DocumentRenderer', () => {
+  it('renders the business issue date without shifting calendar dates', async () => {
+    const pdf = await Effect.runPromise(
+      DocumentRenderer.use((renderer) =>
+        renderer.renderInvoicePdf({
+          ...compactInvoice,
+          calendar: { timeZone: 'Europe/Paris' },
+          invoiceNumber: 'FA-2027-000001',
+          issuedAt: '2026-12-31T23:30:00.000Z',
+          serviceDate: '2026-12-31',
+          dueDate: '2027-01-31',
+        }),
+      ).pipe(Effect.provide(DocumentRendererLive)),
+    );
+    const inspected = inspectPdf(pdf);
+    expect(inspected.text).toContain('1 janvier 2027');
+    expect(inspected.text).toContain('31 janvier 2027');
+    expect(inspected.text).toContain('31 décembre 2026');
+  });
+
   it('renders typed blocks with literal entities, empty paragraphs and heading breaks', async () => {
     const conditions = serializeDocumentText([
       { kind: 'heading', level: 2, spans: [{ text: 'Avant\nAprès', bold: false, italic: false }] },

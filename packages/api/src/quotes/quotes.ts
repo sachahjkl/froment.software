@@ -335,6 +335,7 @@ export const QuotesLive = Layer.effect(
       const snapshotInput = {
         templateId: 'quote-default',
         templateVersion: 1,
+        calendar: { timeZone: DateTime.zoneToString(businessConfig.timeZone) },
         quoteId,
         quoteReference,
         revisionId,

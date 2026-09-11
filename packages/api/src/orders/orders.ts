@@ -124,10 +124,14 @@ export const OrdersLive = Layer.effect(
             totalCents: quote.totalCents,
             lines: quote.lines,
           };
+          const snapshotWithCalendar =
+            quote.calendar === undefined
+              ? snapshotInput
+              : { ...snapshotInput, calendar: quote.calendar };
           return Schema.decodeUnknownSync(OrderRenderSnapshot)(
             quote.conditionsPresentation === undefined
-              ? snapshotInput
-              : { ...snapshotInput, conditionsPresentation: quote.conditionsPresentation },
+              ? snapshotWithCalendar
+              : { ...snapshotWithCalendar, conditionsPresentation: quote.conditionsPresentation },
           );
         },
         catch: (cause) =>

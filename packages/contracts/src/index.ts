@@ -1,4 +1,5 @@
 export { HealthStatus, type HealthStatus as HealthStatusValue } from './status/contracts.js';
+export { DocumentCalendar } from './documents/contracts.js';
 export {
   DocumentTextPresentation,
   type DocumentTextPresentation as DocumentTextPresentationValue,

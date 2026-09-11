@@ -43,6 +43,7 @@ export interface DocumentRendererService {
   readonly renderCreditNotePdf: (
     snapshot: InvoiceRenderSnapshotValue,
     note: typeof CreditNote.Type,
+    issuedOn: string,
   ) => Effect.Effect<Uint8Array, DocumentRenderError>;
   readonly renderQuotePdf: (
     snapshot: QuoteRenderSnapshotValue,
@@ -184,8 +185,8 @@ export const DocumentRendererLive = Layer.effect(
     );
 
     const renderCreditNotePdf = Effect.fn('DocumentRenderer.renderCreditNotePdf')(
-      (snapshot: InvoiceRenderSnapshotValue, note: typeof CreditNote.Type) =>
-        compile(prepareCreditNoteDocument(snapshot, note)).pipe(
+      (snapshot: InvoiceRenderSnapshotValue, note: typeof CreditNote.Type, issuedOn: string) =>
+        compile(prepareCreditNoteDocument(snapshot, note, issuedOn)).pipe(
           Effect.catchDefect(() => new DocumentRenderError({ reason: 'input' })),
         ),
     );

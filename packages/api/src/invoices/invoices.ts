@@ -477,6 +477,7 @@ export const InvoicesLive = Layer.effect(
       const snapshotInput = {
         templateId: 'invoice-default',
         templateVersion: 1,
+        calendar: { timeZone: DateTime.zoneToString(businessConfig.timeZone) },
         invoiceId: input.invoiceId,
         orderId: input.orderId,
         orderReference: input.orderReference,

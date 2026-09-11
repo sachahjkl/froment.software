@@ -138,6 +138,18 @@ describe('invoice contracts', () => {
     };
 
     expect(Schema.decodeUnknownSync(InvoiceRenderSnapshot)(snapshot)).toEqual(snapshot);
+    expect(
+      Schema.decodeUnknownSync(InvoiceRenderSnapshot)({
+        ...snapshot,
+        calendar: { timeZone: 'Europe/Paris' },
+      }).calendar,
+    ).toEqual({ timeZone: 'Europe/Paris' });
+    expect(() =>
+      Schema.decodeUnknownSync(InvoiceRenderSnapshot)({
+        ...snapshot,
+        calendar: { timeZone: 'not-a-zone' },
+      }),
+    ).toThrow();
     expect(() =>
       Schema.decodeUnknownSync(InvoiceRenderSnapshot)({ ...snapshot, totalCents: 119 }),
     ).toThrow();

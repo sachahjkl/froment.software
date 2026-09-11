@@ -298,7 +298,8 @@ const make = Effect.gen(function* () {
         ),
       catch: (cause) => new DatabaseError({ operation: 'credit.snapshot.read', cause }),
     });
-    const content = yield* renderer.renderCreditNotePdf(snapshot, note);
+    const issuedOn = invoiceIssueDate(Date.parse(note.issuedAt), business.timeZone);
+    const content = yield* renderer.renderCreditNotePdf(snapshot, note, issuedOn);
     const now = yield* Clock.currentTimeMillis;
     const result = yield* Effect.try({
       try: () => {

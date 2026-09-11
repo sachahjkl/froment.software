@@ -5,6 +5,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { TestClock } from 'effect/testing';
+import { prepareInvoiceDocument } from '@froment/documents';
 import { ulid } from 'ulid';
 import { exportInvoicePayments } from './payment-export.js';
 
@@ -241,6 +242,44 @@ const seedInvoice = (database: DatabaseService, dueDate = '2099-09-19') => {
 };
 
 describe('invoice issue recovery', () => {
+  it('freezes the business calendar in a new snapshot without rewriting its predecessor', async () => {
+    await Effect.runPromise(
+      Effect.gen(function* () {
+        const database = yield* Database;
+        const invoices = yield* Invoices;
+        seedInvoice(database);
+        const readOriginal = () =>
+          database.sqlite
+            .prepare('select render_snapshot from invoice_revisions where id = ?')
+            .pluck()
+            .get(revisionId);
+        const original = readOriginal();
+        yield* TestClock.setTime(
+          DateTime.toEpochMillis(DateTime.makeUnsafe('2026-12-31T23:30:00.000Z')),
+        );
+        const issued = yield* invoices.issue(invoiceId, { expectedVersion: 1 }, actorId);
+        const stored = yield* invoices.getSnapshot(invoiceId, issued.version);
+        expect(stored.calendar).toEqual({ timeZone: 'Europe/Paris' });
+        expect(stored.invoiceNumber).toBe('FA-2027-000001');
+        expect(prepareInvoiceDocument(stored).metadata).toContainEqual([
+          'Date d’émission :',
+          '1 janvier 2027',
+        ]);
+        expect(readOriginal()).toBe(original);
+      }).pipe(
+        Effect.provide(
+          makeTestLayer(':memory:', {
+            renderQuotePdf: () => Effect.die('unused'),
+            renderCreditNotePdf: () => Effect.die('unused'),
+            renderInvoicePdf: () => Effect.die('unused'),
+            renderOrderPdf: () => Effect.die('unused'),
+          }),
+        ),
+        Effect.provide(TestClock.layer()),
+      ),
+    );
+  });
+
   it('shows no client balance for historical paid and void invoices without inventing receipts', async () => {
     await Effect.runPromise(
       Effect.gen(function* () {

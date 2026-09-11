@@ -1,9 +1,18 @@
-import { Schema } from 'effect';
+import { DateTime, Option, Schema } from 'effect';
 
 import { QuoteReference } from '../business/contracts.js';
 import { PositiveSafeInteger } from './lines.js';
 import { DisplayName, Ulid } from '../identifiers.js';
 import { IsoUtc } from '../temporal.js';
+
+export const DocumentCalendar = Schema.Struct({
+  timeZone: Schema.String.check(
+    Schema.makeFilter((value) => Option.isSome(DateTime.zoneMakeNamed(value)), {
+      message: 'document.calendar.invalid_time_zone',
+    }),
+  ),
+});
+export type DocumentCalendar = typeof DocumentCalendar.Type;
 
 export const DocumentParty = Schema.Struct({
   displayName: DisplayName.check(Schema.isMaxLength(160)),

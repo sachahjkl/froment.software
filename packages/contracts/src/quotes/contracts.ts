@@ -17,6 +17,7 @@ import {
 } from '../documents/lines.js';
 import {
   DocumentNotFound,
+  DocumentCalendar,
   DocumentParty,
   DocumentIncomplete,
   IssuerSettings,
@@ -130,6 +131,7 @@ export type QuoteLine = typeof QuoteLine.Type;
 export const QuoteRenderSnapshot = Schema.Struct({
   templateId: Schema.Literal('quote-default'),
   templateVersion: Schema.Literal(1),
+  calendar: Schema.optionalKey(DocumentCalendar),
   quoteId: Ulid,
   quoteReference: QuoteReference,
   revisionId: Ulid,

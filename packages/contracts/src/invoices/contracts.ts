@@ -17,6 +17,7 @@ import {
 } from '../documents/lines.js';
 import {
   DocumentIncomplete,
+  DocumentCalendar,
   DocumentNotFound,
   DocumentParty,
   IssuerSettings,
@@ -95,6 +96,7 @@ export type InvoiceTransitionRequest = typeof InvoiceTransitionRequest.Type;
 export const InvoiceRenderSnapshot = Schema.Struct({
   templateId: Schema.Literal('invoice-default'),
   templateVersion: Schema.Literal(1),
+  calendar: Schema.optionalKey(DocumentCalendar),
   invoiceId: Ulid,
   orderId: Ulid,
   quoteReference: QuoteReference,

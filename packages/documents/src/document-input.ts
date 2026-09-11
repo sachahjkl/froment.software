@@ -1,6 +1,8 @@
 import {
   DocumentTextBlock,
+  CalendarDate,
   parseDocumentText,
+  type DocumentCalendar,
   type DocumentTextPresentationValue,
   type DocumentParty,
   type CreditNote,
@@ -10,7 +12,7 @@ import {
   type QuoteRenderSnapshotValue,
 } from '@froment/contracts';
 import { documentText } from '@froment/l10n';
-import { Schema } from 'effect';
+import { DateTime, Schema } from 'effect';
 
 import { formatMoney } from '@froment/l10n';
 
@@ -105,8 +107,19 @@ const quantity = (value: number): string => {
 };
 const percent = (value: number): string =>
   `${new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 2 }).format(value / 100)} %`;
-const date = (value: string): string =>
+const calendarDate = (value: string): string =>
   new Intl.DateTimeFormat('fr-FR', { dateStyle: 'long', timeZone: 'UTC' }).format(new Date(value));
+const instantDate = (value: string, calendar: DocumentCalendar | undefined): string => {
+  const instant = DateTime.makeUnsafe(value);
+  // Historical snapshots recorded no calendar and rendered their dates in UTC.
+  const day =
+    calendar === undefined
+      ? DateTime.formatIsoDateUtc(instant)
+      : DateTime.formatIsoDate(
+          DateTime.setZone(instant, DateTime.zoneMakeNamedUnsafe(calendar.timeZone)),
+        );
+  return calendarDate(day);
+};
 
 const lines = (source: QuoteRenderSnapshotValue['lines']): Array<typeof DocumentLine.Type> =>
   source.map((line, index) => ({
@@ -144,7 +157,7 @@ export const prepareQuoteDocument = (snapshot: QuoteRenderSnapshotValue): QuoteD
     client: partyLines(snapshot.client),
     metadata: [
       [documentText.fr.quoteNumber, snapshot.quoteReference],
-      [documentText.fr.issueDate, date(snapshot.createdAt)],
+      [documentText.fr.issueDate, instantDate(snapshot.createdAt, snapshot.calendar)],
       [documentText.fr.revision, String(snapshot.version)],
       [documentText.fr.currency, snapshot.currency],
     ],
@@ -171,14 +184,16 @@ export const prepareInvoiceDocument = (
       [documentText.fr.invoiceNumber, snapshot.invoiceNumber ?? documentText.fr.draft],
       ...(snapshot.issuedAt === null
         ? []
-        : ([[documentText.fr.issueDate, date(snapshot.issuedAt)]] as const)),
-      [documentText.fr.dueDate, date(snapshot.dueDate)],
+        : ([
+            [documentText.fr.issueDate, instantDate(snapshot.issuedAt, snapshot.calendar)],
+          ] as const)),
+      [documentText.fr.dueDate, calendarDate(snapshot.dueDate)],
       [documentText.fr.currency, snapshot.currency],
     ],
     context: [
       `${documentText.fr.orderNumber} ${snapshot.orderReference}`,
       `${documentText.fr.quoteNumber} ${snapshot.quoteReference}`,
-      `${documentText.fr.serviceDate} ${date(snapshot.serviceDate)}`,
+      `${documentText.fr.serviceDate} ${calendarDate(snapshot.serviceDate)}`,
     ],
     title: wrapText(snapshot.title),
     lineHeadings,
@@ -199,7 +214,7 @@ export const prepareOrderDocument = (snapshot: OrderRenderSnapshotValue): OrderD
     metadata: [
       [documentText.fr.orderNumber, snapshot.orderReference],
       [documentText.fr.quoteNumber, snapshot.quoteReference],
-      [documentText.fr.confirmationDate, date(snapshot.confirmedAt)],
+      [documentText.fr.confirmationDate, instantDate(snapshot.confirmedAt, snapshot.calendar)],
       [documentText.fr.currency, snapshot.currency],
     ],
     context: [],
@@ -217,6 +232,7 @@ export const prepareOrderDocument = (snapshot: OrderRenderSnapshotValue): OrderD
 export const prepareCreditNoteDocument = (
   snapshot: InvoiceRenderSnapshotValue,
   note: typeof CreditNote.Type,
+  issuedOn: string,
 ): InvoiceDocumentInput => {
   if (snapshot.issuedAt === null || snapshot.invoiceNumber === null)
     throw new Error('credit.invoice_not_issued');
@@ -225,9 +241,9 @@ export const prepareCreditNoteDocument = (
     ...invoice,
     metadata: [
       [documentText.fr.creditNoteNumber, note.number],
-      [documentText.fr.issueDate, date(note.issuedAt)],
+      [documentText.fr.issueDate, calendarDate(Schema.decodeUnknownSync(CalendarDate)(issuedOn))],
       [documentText.fr.invoiceNumber, snapshot.invoiceNumber],
-      [documentText.fr.originalInvoiceDate, date(snapshot.issuedAt)],
+      [documentText.fr.originalInvoiceDate, instantDate(snapshot.issuedAt, snapshot.calendar)],
       [documentText.fr.currency, snapshot.currency],
     ],
     title: wrapText(`${documentText.fr.creditNote} · ${snapshot.title}`),
