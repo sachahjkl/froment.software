@@ -6,6 +6,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { createServer } from 'node:net';
 import { promisify } from 'node:util';
+import { apiDocumentation } from '@froment/l10n';
 
 import Sqlite from 'better-sqlite3';
 import { CookieJar } from 'tough-cookie';
@@ -164,7 +165,7 @@ describe('HTTP server', () => {
     expect(englishSpecification.paths).toHaveProperty('/api/auth/account');
     expect(englishSpecification.components.securitySchemes.bearer).toMatchObject({
       scheme: 'bearer',
-      description: 'API token sent with the Bearer scheme.',
+      description: apiDocumentation.en.security.bearer,
     });
     expect(englishSpecification.components.securitySchemes).not.toHaveProperty('sessionCookie');
     const shell = await fetch(`${baseUrl}/backoffice/login`, { headers: { accept: 'text/html' } });

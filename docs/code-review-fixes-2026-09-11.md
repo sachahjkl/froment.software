@@ -35,6 +35,10 @@ Les encaissements et rapprochements autorisent seulement leur première annulati
 Les transactions bancaires et les références des factures émises restent immuables.
 Les connexions activent `recursive_triggers` pour protéger les données contre `INSERT OR REPLACE`.
 
+Un conflit avec une requête d’avoir déjà enregistrée utilise `invoice.credit_request_conflict`.
+Ce refus de tentative ne prouve pas l’absence d’une écriture antérieure.
+Une reprise incertaine conserve donc sa requête exacte.
+
 ## Sécurité et limites HTTP
 
 | Défaut                                                   | Correction                                                                                      |
@@ -81,6 +85,12 @@ Les contrôles ne réalisent ni paiement, ni remboursement, ni envoi réel.
 
 Le compte expose les permissions effectives calculées par le serveur.
 Les routes, la navigation et les actions utilisent ces permissions sans remplacer les contrôles API.
+Les gardes actualisent le compte une fois par navigation et vérifient les exigences des routes parentes.
+Le chargement du compte borne les reprises et ignore les réponses d’une ancienne identité.
+
+Les devis et commandes exposent la disponibilité de leur PDF conservé.
+Un compte disposant de `document.download` peut télécharger ce PDF sans permission de génération.
+Les confirmations de remplacement de lien et de vérification Stripe recontrôlent les permissions avant leur appel API.
 
 Un devis envoyé non signé permet de remplacer un lien perdu après confirmation.
 Le remplacement révoque l’ancien lien et conserve le devis ainsi que son PDF.
@@ -89,8 +99,41 @@ La version et l’identifiant du lien attendu protègent les remplacements concu
 Les dépendances concernées par les avis de sécurité ont été mises à jour.
 Le sérialiseur `prosemirror-markdown`, devenu inutilisé, est retiré.
 
+## Messages d’autorisation et de reprise
+
+Les messages français et anglais distinguent l’authentification requise des permissions insuffisantes.
+Ils ne présentent plus une reconnexion comme une correction des permissions manquantes.
+Les limites portent sur les demandes, sans supposer un échec préalable ou une modification.
+
+Les messages de traitement automatique nomment le compte initiateur.
+Les messages de vérification manuelle concernent le compte demandeur.
+Un changement de clé fournisseur ne signifie plus un changement de compte fournisseur.
+
+Les messages de lecture nomment les données à recharger.
+Les messages de modification distinguent un refus confirmé d’un résultat restant à confirmer.
+La création d’un jeton sans secret reçu exige une vérification de la liste avant toute nouvelle création.
+
+Les correspondances contextuelles servent uniquement à l’affichage.
+Elles ne modifient ni les codes publics ni les décisions de reprise.
+
 ## Vérification et exclusions
 
 Les vérifications utilisent `nix develop` et les tests métier, API, contrats et unités Angular.
+
+La validation locale finale réussit avec 1 716 tests :
+
+| Suite     | Tests |
+| --------- | ----: |
+| Web       | 1 179 |
+| API       |   369 |
+| Contrats  |    72 |
+| Langues   |    88 |
+| Documents |     8 |
+
+La compilation, le typage, le lint, le formatage, les hooks et `drizzle-kit check` réussissent.
+L’audit des dépendances ne signale aucun avis de sécurité.
+Le bundle initial mesure 863,47 kB, sous le seuil d’erreur de 1,05 MB.
+Les avertissements de taille et de dépendances CommonJS restent présents.
+
 Aucun scénario navigateur ne conditionne cette livraison.
 Aucune sauvegarde, donnée de production, clé réelle ou configuration fournisseur réelle n’est modifiée.
