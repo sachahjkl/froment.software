@@ -118,10 +118,16 @@ La page présente ces blocages avec les liens de correction disponibles.
 Une publication sans réponse définitive reste incertaine.
 La page bloque une nouvelle soumission tant que l’état du devis n’a pas été relu avec succès.
 Un échec du rechargement conserve l’avertissement de sortie.
-Après un rechargement réussi, la préparation du PDF et la vérification doivent être refaites.
+Si le devis reste en brouillon après rechargement, préparez son PDF et vérifiez-le de nouveau.
 
 L’API fournit le lien de signature uniquement dans la réponse de création.
 Elle ne permet pas de récupérer un lien perdu.
+Pour un devis envoyé non signé, la page permet de remplacer ce lien après confirmation.
+Le remplacement révoque l’ancien lien et conserve la révision ainsi que son PDF.
+La requête transmet la version du devis et l’identifiant du lien attendu.
+Si une autre opération remplace le lien entre-temps, le serveur refuse la requête avec `quote_link.conflict`.
+Les devis acceptés, expirés ou annulés ne permettent pas ce remplacement.
+Si la réponse du remplacement manque, rechargez le devis avant une nouvelle confirmation.
 Le lien du portail exige une connexion client et ne remplace pas le lien de signature.
 
 ## Commande

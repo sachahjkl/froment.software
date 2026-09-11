@@ -4,6 +4,7 @@ import {
   QuoteAcceptanceResult,
   QuoteLinkNotFound,
   QuoteLinkNotSignable,
+  QuoteLinkConflict,
   QuoteNotEditable,
   QuoteNotFound,
   QuotePdfRequired,
@@ -14,6 +15,8 @@ import {
   type PublicQuoteSignatureRequestValue,
   type QuoteAcceptanceResultValue,
   type QuoteLinkTokenValue,
+  type QuoteLinkStateValue,
+  type QuoteLinkReplacementRequestValue,
   type QuoteSendRequestValue,
   type QuoteSendResultValue,
   type UlidValue,
@@ -40,6 +43,8 @@ const QuoteSendRecord = Schema.Struct({
   artifactId: Schema.NullOr(Ulid),
   renderSnapshot: Schema.String,
 });
+
+const StoredLinkState = Schema.Struct({ id: Ulid, expiresAt: Schema.Int });
 
 const PublicQuoteRecord = Schema.Struct({
   quoteId: Ulid,
@@ -92,6 +97,17 @@ type QuoteSendError =
   | DatabaseError;
 
 export interface QuoteLinksService {
+  readonly linkState: (
+    quoteId: UlidValue,
+  ) => Effect.Effect<QuoteLinkStateValue | null, QuoteNotFound | QuoteNotEditable | DatabaseError>;
+  readonly replace: (
+    quoteId: UlidValue,
+    request: QuoteLinkReplacementRequestValue,
+    actorUserId: UlidValue,
+  ) => Effect.Effect<
+    QuoteSendResultValue,
+    Exclude<QuoteSendError, DocumentIncomplete> | QuoteLinkConflict
+  >;
   readonly send: (
     quoteId: UlidValue,
     request: QuoteSendRequestValue,
@@ -125,6 +141,131 @@ export const QuoteLinksLive = Layer.effect(
     const database = yield* Database;
     const businessConfig = yield* BusinessConfig;
 
+    const readQuote = (quoteId: UlidValue) => {
+      const raw = database.sqlite
+        .prepare(`select quotes.reference, quotes.status, quotes.version,
+        quote_revisions.id as revisionId, quote_revisions.render_snapshot as renderSnapshot,
+        document_artifacts.id as artifactId
+        from quotes join quote_revisions on quote_revisions.quote_id = quotes.id
+          and quote_revisions.version = quotes.version
+        left join document_artifacts on document_artifacts.revision_id = quote_revisions.id
+          and document_artifacts.kind = 'quote-pdf'
+        where quotes.id = ?`)
+        .get(quoteId);
+      if (raw === undefined) throw new QuoteNotFound({ code: 'quote.not_found' });
+      return Schema.decodeUnknownSync(QuoteSendRecord)(raw);
+    };
+    const readLink = (revisionId: UlidValue): QuoteLinkStateValue | null => {
+      const raw = database.sqlite
+        .prepare(`select id, expires_at as expiresAt from quote_links
+        where revision_id = ? and revoked_at is null and consumed_at is null
+        order by created_at desc, id desc limit 1`)
+        .get(revisionId);
+      if (raw === undefined) return null;
+      const link = Schema.decodeUnknownSync(StoredLinkState)(raw);
+      return { id: link.id, expiresAt: DateTime.formatIso(DateTime.makeUnsafe(link.expiresAt)) };
+    };
+    const linkState = Effect.fn('QuoteLinks.linkState')(function* (quoteId: UlidValue) {
+      const now = yield* Clock.currentTimeMillis;
+      return yield* Effect.try({
+        try: () =>
+          database.sqlite
+            .transaction(() => {
+              expireSentQuotes(database.sqlite, audit, now, quoteId);
+              const quote = readQuote(quoteId);
+              if (quote.status !== 'sent')
+                throw new QuoteNotEditable({ code: 'quote.not_editable' });
+              return readLink(quote.revisionId);
+            })
+            .immediate(),
+        catch: (cause) =>
+          cause instanceof QuoteNotFound || cause instanceof QuoteNotEditable
+            ? cause
+            : new DatabaseError({ operation: 'get.quote.link.state', cause }),
+      });
+    });
+    const replace = Effect.fn('QuoteLinks.replace')(function* (
+      quoteId: UlidValue,
+      request: QuoteLinkReplacementRequestValue,
+      actorUserId: UlidValue,
+    ) {
+      const now = yield* Clock.currentTimeMillis;
+      const expiresAt = now + runtime.publicQuote.linkLifetimeMillis;
+      const linkId = ulid(now);
+      const token = randomBytes(32).toString('base64url');
+      return yield* Effect.try({
+        try: () =>
+          database.sqlite
+            .transaction(() => {
+              expireSentQuotes(database.sqlite, audit, now, quoteId);
+              const quote = readQuote(quoteId);
+              if (quote.status !== 'sent')
+                throw new QuoteNotEditable({ code: 'quote.not_editable' });
+              if (quote.version !== request.expectedVersion)
+                throw new QuoteVersionConflict({
+                  code: 'quote.version_conflict',
+                  currentVersion: quote.version,
+                });
+              if (quote.artifactId === null)
+                throw new QuotePdfRequired({ code: 'quote.pdf_required' });
+              const previous = readLink(quote.revisionId);
+              if ((previous?.id ?? null) !== request.expectedLinkId)
+                throw new QuoteLinkConflict({ code: 'quote_link.conflict' });
+              database.sqlite
+                .prepare(`update quote_links set revoked_at = ?
+            where revision_id = ? and revoked_at is null and consumed_at is null`)
+                .run(now, quote.revisionId);
+              database.sqlite
+                .prepare(`insert into quote_links
+            (id, revision_id, token_hmac, created_at, expires_at) values (?, ?, ?, ?, ?)`)
+                .run(
+                  linkId,
+                  quote.revisionId,
+                  hmac(config.quoteLinkHmacKey, token),
+                  now,
+                  expiresAt,
+                );
+              const metadata = {
+                linkId,
+                revisionId: quote.revisionId,
+                version: String(quote.version),
+              };
+              audit.insert({
+                action: 'quote.link-replaced',
+                actorUserId,
+                resourceType: 'quote',
+                resourceId: quoteId,
+                metadata:
+                  previous === null ? metadata : { ...metadata, previousLinkId: previous.id },
+                occurredAt: now,
+              });
+              return {
+                quoteId,
+                revisionId: quote.revisionId,
+                version: quote.version,
+                status: 'sent' as const,
+                link: {
+                  id: linkId,
+                  url: `${config.publicOrigin}/quote#${token}`,
+                  expiresAt: DateTime.formatIso(DateTime.makeUnsafe(expiresAt)),
+                },
+              };
+            })
+            .immediate(),
+        catch: (cause) => {
+          if (
+            cause instanceof QuoteNotFound ||
+            cause instanceof QuoteNotEditable ||
+            cause instanceof QuoteVersionConflict ||
+            cause instanceof QuotePdfRequired ||
+            cause instanceof QuoteLinkConflict
+          )
+            return cause;
+          return new DatabaseError({ operation: 'replace.quote.link', cause });
+        },
+      });
+    });
+
     const send = Effect.fn('QuoteLinks.send')(function* (
       quoteId: UlidValue,
       request: QuoteSendRequestValue,
@@ -140,24 +281,7 @@ export const QuoteLinksLive = Layer.effect(
           database.sqlite
             .transaction(() => {
               expireSentQuotes(database.sqlite, audit, now, quoteId);
-              const raw = database.sqlite
-                .prepare(
-                  `select quotes.reference, quotes.status, quotes.version,
-                          quote_revisions.id as revisionId,
-                          quote_revisions.render_snapshot as renderSnapshot,
-                          document_artifacts.id as artifactId
-                   from quotes
-                   join quote_revisions
-                     on quote_revisions.quote_id = quotes.id
-                    and quote_revisions.version = quotes.version
-                   left join document_artifacts
-                     on document_artifacts.revision_id = quote_revisions.id
-                    and document_artifacts.kind = 'quote-pdf'
-                   where quotes.id = ?`,
-                )
-                .get(quoteId);
-              if (raw === undefined) throw new QuoteNotFound({ code: 'quote.not_found' });
-              const quote = Schema.decodeUnknownSync(QuoteSendRecord)(raw);
+              const quote = readQuote(quoteId);
               if (quote.status !== 'draft') {
                 throw new QuoteNotEditable({ code: 'quote.not_editable' });
               }
@@ -498,6 +622,6 @@ export const QuoteLinksLive = Layer.effect(
       });
     });
 
-    return QuoteLinks.of({ send, get, getPdf, accept });
+    return QuoteLinks.of({ send, linkState, replace, get, getPdf, accept });
   }),
 );

@@ -845,6 +845,8 @@ export const translations = {
     'quote_link.not_found':
       'Ce lien est indisponible. Demandez un nouveau lien à l’émetteur du devis.',
     'quote_link.not_signable': 'Ce devis ne peut plus être signé. Contactez son émetteur.',
+    'quote_link.conflict':
+      'Le lien de signature a changé. Rechargez le devis avant de le remplacer.',
     'publicQuote.error':
       'Le devis est indisponible. Rechargez la page pour vérifier son état avant de réessayer.',
     'publicQuote.pdfError': 'Le PDF est indisponible. Rechargez la page pour réessayer.',
@@ -2363,6 +2365,7 @@ export const translations = {
     'quote_condition_preset.name_conflict': 'This preset name is already in use.',
     'quote_link.not_found': 'This link is unavailable. Ask the quote issuer for a new link.',
     'quote_link.not_signable': 'This quote can no longer be signed. Contact its issuer.',
+    'quote_link.conflict': 'The signature link changed. Reload the quote before replacing it.',
     'publicQuote.error':
       'The quote is unavailable. Reload the page to check its status before trying again.',
     'publicQuote.pdfError': 'The PDF is unavailable. Reload the page to try again.',

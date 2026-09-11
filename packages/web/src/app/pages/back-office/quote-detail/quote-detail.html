@@ -41,6 +41,14 @@
         [queryParams]="context()"
         >{{ i18n.t('commercial.publish') }}</a
       >
+      } @else if (quote.status === 'sent') {
+      <a
+        appLinkButton
+        [routerLink]="['/backoffice/quotes', quote.id, 'publication']"
+        [queryParams]="context()"
+      >
+        {{ i18n.t('commercial.manageLink') }}
+      </a>
       }
       <app-action-menu
         [label]="i18n.t('commercial.moreActions')"

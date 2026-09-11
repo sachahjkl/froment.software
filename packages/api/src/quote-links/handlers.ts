@@ -16,6 +16,25 @@ export const QuoteLinkHandlers = HttpApiBuilder.group(Api, 'quoteLinks', (handle
   Effect.succeed(
     handlers
       .handle(
+        'quoteLinkState',
+        Effect.fn('quoteLinkState')(function* ({ params }) {
+          yield* setPrivateResponseHeaders;
+          return yield* (yield* QuoteLinks)
+            .linkState(params.quoteId)
+            .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
+        }),
+      )
+      .handle(
+        'quoteLinkReplace',
+        Effect.fn('quoteLinkReplace')(function* ({ params, payload }) {
+          yield* setPrivateResponseHeaders;
+          const principal = yield* ApiPrincipal;
+          return yield* (yield* QuoteLinks)
+            .replace(params.quoteId, payload, principal.userId)
+            .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
+        }),
+      )
+      .handle(
         'quoteSend',
         Effect.fn('quoteSend')(function* ({ params, payload }) {
           yield* setPrivateResponseHeaders;

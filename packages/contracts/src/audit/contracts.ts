@@ -64,6 +64,7 @@ export const AuditActions = [
   'quote.expired',
   'quote.revised',
   'quote.sent',
+  'quote.link-replaced',
 ] as const;
 export const AuditAction = Schema.Literals(AuditActions);
 export type AuditAction = typeof AuditAction.Type;

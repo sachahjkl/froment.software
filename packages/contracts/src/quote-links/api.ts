@@ -22,6 +22,9 @@ import {
   QuoteAcceptanceResult,
   QuoteLinkNotFound,
   QuoteLinkNotSignable,
+  QuoteLinkConflict,
+  QuoteLinkState,
+  QuoteLinkReplacementRequest,
   QuoteNotEditable,
   QuoteNotFound,
   QuotePdfRequired,
@@ -31,6 +34,32 @@ import {
 } from '../quotes/contracts.js';
 
 export class QuoteLinksApi extends HttpApiGroup.make('quoteLinks', { topLevel: true }).add(
+  HttpApiEndpoint.get('quoteLinkState', '/api/quotes/:quoteId/signature-link', {
+    params: { quoteId: Ulid },
+    success: Schema.NullOr(QuoteLinkState),
+    error: [AuthenticationRequired, PermissionDenied, QuoteNotFound, QuoteNotEditable],
+  }).pipe(requirePermissions([Permissions.quoteSend]), authenticate),
+  HttpApiEndpoint.post('quoteLinkReplace', '/api/quotes/:quoteId/signature-link', {
+    params: { quoteId: Ulid },
+    payload: QuoteLinkReplacementRequest,
+    success: QuoteSendResult,
+    error: [
+      AuthenticationRequired,
+      PermissionDenied,
+      RequestRateLimited,
+      QuoteNotFound,
+      QuoteNotEditable,
+      QuoteVersionConflict,
+      QuotePdfRequired,
+      QuoteLinkConflict,
+    ],
+  })
+    .middleware(ApiRequestBody)
+    .pipe(
+      requirePermissions([Permissions.quoteSend]),
+      authenticate,
+      rateLimit(RateLimits.tenPerMinute),
+    ),
   HttpApiEndpoint.post('quoteSend', '/api/quotes/:quoteId/send', {
     params: { quoteId: Ulid },
     payload: QuoteSendRequest,

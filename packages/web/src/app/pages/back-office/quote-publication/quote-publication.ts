@@ -18,6 +18,7 @@ import {
   type DocumentIssueValue,
   type QuoteDetailValue,
   type QuoteSendResultValue,
+  type QuoteLinkStateValue,
 } from '@froment/contracts';
 import { formatMoney } from '@froment/l10n';
 import { QuotesApi } from '@backoffice/quotes-api';
@@ -66,6 +67,7 @@ export class QuotePublication {
   protected readonly pending = signal(false);
   protected readonly uncertain = signal(false);
   protected readonly completed = signal<QuoteSendResultValue | undefined>(undefined);
+  protected readonly linkState = signal<QuoteLinkStateValue | null | undefined>(undefined);
   protected readonly artifact = signal<DocumentArtifactValue | undefined>(undefined);
   protected readonly pdfReady = computed(
     () =>
@@ -125,6 +127,7 @@ export class QuotePublication {
     this.quote.set(undefined);
     this.artifact.set(undefined);
     this.completed.set(undefined);
+    this.linkState.set(undefined);
     this.error.set(undefined);
     this.issues.set([]);
     this.copied.set(false);
@@ -142,6 +145,16 @@ export class QuotePublication {
         return;
       }
       this.quote.set(outcome.result);
+      if (outcome.result.status === 'sent') {
+        const link = await this.api.linkState(outcome.result.id);
+        if (this.destroyRef.destroyed || generation !== this.generation) return;
+        if (!link.success) {
+          this.error.set(link.code);
+          this.state.set('error');
+          return;
+        }
+        this.linkState.set(link.result);
+      }
       this.uncertain.set(false);
       this.review().reset({ checked: false });
       this.state.set('ready');
@@ -207,6 +220,45 @@ export class QuotePublication {
     if (!result) return;
     const copied = await this.textCopy.copy(result.link.url);
     if (this.completed() === result) this.copied.set(copied);
+  }
+  protected async replaceLink(): Promise<void> {
+    const quote = this.quote();
+    const link = this.linkState();
+    if (
+      !quote ||
+      quote.status !== 'sent' ||
+      link === undefined ||
+      this.pending() ||
+      this.confirming() ||
+      this.uncertain() ||
+      this.completed()
+    )
+      return;
+    const generation = this.generation;
+    if (!(await this.requestConfirmation('commercial.confirmReplaceLink'))) return;
+    if (this.destroyRef.destroyed || generation !== this.generation) return;
+    this.pending.set(true);
+    this.error.set(undefined);
+    try {
+      const outcome = await this.api.replaceLink(quote.id, {
+        expectedVersion: quote.version,
+        expectedLinkId: link?.id ?? null,
+      });
+      if (this.destroyRef.destroyed || generation !== this.generation) return;
+      if (outcome.success) {
+        this.completed.set(outcome.result);
+        this.copied.set(false);
+      } else if (outcome.code === 'quote.error') {
+        this.uncertain.set(true);
+        this.error.set('commercial.replacementUncertain');
+      } else this.error.set(outcome.code);
+    } catch {
+      if (this.destroyRef.destroyed || generation !== this.generation) return;
+      this.uncertain.set(true);
+      this.error.set('commercial.replacementUncertain');
+    } finally {
+      if (generation === this.generation) this.pending.set(false);
+    }
   }
   async canDeactivate(): Promise<boolean> {
     if (this.pending() || this.confirming()) return false;

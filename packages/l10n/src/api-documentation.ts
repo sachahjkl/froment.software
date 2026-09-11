@@ -225,6 +225,16 @@ export const apiDocumentation = {
         summary: 'Envoyer un devis',
         description: 'Crée un lien public de consultation pour un devis rendu.',
       },
+      quoteLinkState: {
+        summary: 'Consulter l’état du lien de signature',
+        description:
+          'Retourne l’identifiant et l’expiration du lien courant, sans révéler son jeton.',
+      },
+      quoteLinkReplace: {
+        summary: 'Remplacer un lien de signature',
+        description:
+          'Révoque le lien attendu et crée un nouveau lien pour le même devis envoyé non signé.',
+      },
       quoteCancel: { summary: 'Annuler un devis', description: 'Annule un devis modifiable.' },
       quoteRevisionCreate: {
         summary: 'Créer une révision de devis',
@@ -601,6 +611,16 @@ export const apiDocumentation = {
       quoteSend: {
         summary: 'Send a quote',
         description: 'Creates a public consultation link for a rendered quote.',
+      },
+      quoteLinkState: {
+        summary: 'Read signature link state',
+        description:
+          'Returns the current link identifier and expiration without revealing its token.',
+      },
+      quoteLinkReplace: {
+        summary: 'Replace a signature link',
+        description:
+          'Revokes the expected link and creates a new link for the same unsigned sent quote.',
       },
       quoteCancel: { summary: 'Cancel a quote', description: 'Cancels an editable quote.' },
       quoteRevisionCreate: {

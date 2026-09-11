@@ -7,6 +7,9 @@ import {
   QuoteFailure,
   QuoteList,
   QuoteSendResult,
+  QuoteLinkState,
+  type QuoteLinkStateValue,
+  type QuoteLinkReplacementRequestValue,
   type QuoteCreateRequestValue,
   type AuditEventValue,
   type QuoteCancelRequestValue,
@@ -90,6 +93,27 @@ export class QuotesApi {
   ): Promise<QuoteOutcome<QuoteSendResultValue>> {
     return requestOutcome(
       this.http.post<unknown>(`/api/quotes/${quoteId}/send`, request),
+      QuoteSendResult,
+      QuoteFailure,
+      'quote.error',
+    );
+  }
+
+  async linkState(quoteId: UlidValue): Promise<QuoteOutcome<QuoteLinkStateValue | null>> {
+    return requestOutcome(
+      this.http.get<unknown>(`/api/quotes/${quoteId}/signature-link`),
+      Schema.NullOr(QuoteLinkState),
+      QuoteFailure,
+      'quote.error',
+    );
+  }
+
+  async replaceLink(
+    quoteId: UlidValue,
+    request: QuoteLinkReplacementRequestValue,
+  ): Promise<QuoteOutcome<QuoteSendResultValue>> {
+    return requestOutcome(
+      this.http.post<unknown>(`/api/quotes/${quoteId}/signature-link`, request),
       QuoteSendResult,
       QuoteFailure,
       'quote.error',

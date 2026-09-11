@@ -9,7 +9,7 @@ export const commercialWorkspaceText = {
     'commercial.discardCancellation':
       'Abandonner la raison et la note d’annulation non soumises ? Le devis ne sera pas annulé.',
     'commercial.leavePublicationUncertain':
-      'Quitter cette publication incertaine ? Vérifiez l’état du devis avant toute nouvelle publication. Un lien perdu ne peut pas être récupéré.',
+      'Quitter cette publication incertaine ? Vérifiez l’état du devis avant de créer ou remplacer son lien.',
     'commercial.leaveReview':
       'Quitter la préparation du lien ? La vérification du document sera à refaire.',
     'commercial.search': 'Rechercher une référence, un titre ou un client',
@@ -67,16 +67,24 @@ export const commercialWorkspaceText = {
       'J’ai vérifié la révision, le PDF et les coordonnées des parties.',
     'commercial.confirmRequired': 'Confirmez la vérification du document.',
     'commercial.createLink': 'Créer le lien de signature',
+    'commercial.manageLink': 'Gérer le lien de signature',
+    'commercial.replaceLink': 'Remplacer le lien de signature',
+    'commercial.replaceLinkHint':
+      'Si le lien est perdu, remplacez-le. Le remplacement révoque l’ancien lien sans modifier le devis ni son PDF.',
+    'commercial.confirmReplaceLink':
+      'Remplacer le lien de signature ? L’ancien lien cessera immédiatement de fonctionner.',
+    'commercial.replacementUncertain':
+      'La réponse manque. Rechargez le devis avant tout nouveau remplacement.',
     'commercial.linkCreated': 'Le lien de signature est créé.',
     'commercial.leaveLink':
-      'Quitter sans copier le lien de signature ? Cette API ne permet pas de le récupérer.',
+      'Quitter sans copier le lien de signature ? Vous devrez le remplacer pour obtenir un nouveau lien.',
     'commercial.linkUnavailable':
-      'Le lien de signature est remis uniquement lors de sa création. Cette API ne permet pas de le récupérer.',
+      'Le lien de signature est remis uniquement lors de sa création. Si le lien est perdu, remplacez-le depuis cette page.',
     'commercial.portalHint':
       'Le lien du portail demande une connexion client. Ce lien ne remplace pas le lien de signature.',
     'commercial.publicationUnavailable': 'Ce devis ne peut pas être publié dans cet état.',
     'commercial.publicationUncertain':
-      'La publication reste incertaine. Rechargez le devis pour vérifier son état. Le lien perdu ne peut pas être récupéré.',
+      'La publication reste incertaine. Rechargez le devis pour vérifier son état avant de créer ou remplacer son lien.',
     'commercial.order': 'Commande',
     'commercial.orderImmutable':
       'Cette commande reprend la révision acceptée du devis. Son contenu est immuable.',
@@ -95,7 +103,7 @@ export const commercialWorkspaceText = {
     'commercial.discardCancellation':
       'Discard the unsubmitted cancellation reason and note? The quote will not be cancelled.',
     'commercial.leavePublicationUncertain':
-      'Leave this uncertain publication? Check the quote status before publishing again. A lost link cannot be retrieved.',
+      'Leave this uncertain publication? Check the quote status before creating or replacing its link.',
     'commercial.leaveReview':
       'Leave signature link preparation? You will need to check the document again.',
     'commercial.search': 'Search by reference, title or client',
@@ -150,16 +158,24 @@ export const commercialWorkspaceText = {
     'commercial.confirmDocument': 'I checked the revision, PDF and party details.',
     'commercial.confirmRequired': 'Confirm that you checked the document.',
     'commercial.createLink': 'Create signature link',
+    'commercial.manageLink': 'Manage signature link',
+    'commercial.replaceLink': 'Replace signature link',
+    'commercial.replaceLinkHint':
+      'If the link is lost, replace it. Replacement revokes the old link without changing the quote or its PDF.',
+    'commercial.confirmReplaceLink':
+      'Replace the signature link? The old link will stop working immediately.',
+    'commercial.replacementUncertain':
+      'The response is missing. Reload the quote before replacing the link again.',
     'commercial.linkCreated': 'The signature link is created.',
     'commercial.leaveLink':
-      'Leave without copying the signature link? This API cannot retrieve it.',
+      'Leave without copying the signature link? You will need to replace it to get a new link.',
     'commercial.linkUnavailable':
-      'The signature link is returned only when created. This API cannot retrieve it.',
+      'The signature link is returned only when created. If the link is lost, replace it from this page.',
     'commercial.portalHint':
       'The portal link requires client sign-in. It does not replace the signature link.',
     'commercial.publicationUnavailable': 'This quote cannot be published in its current state.',
     'commercial.publicationUncertain':
-      'Publication remains uncertain. Reload the quote to check its state. A lost link cannot be retrieved.',
+      'Publication remains uncertain. Reload the quote to check its state before creating or replacing its link.',
     'commercial.order': 'Order',
     'commercial.orderImmutable':
       'This order contains the accepted quote revision. Its content cannot change.',

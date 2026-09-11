@@ -17,6 +17,8 @@ describe('Quote publication', () => {
   const get = vi.fn();
   const renderPdf = vi.fn();
   const send = vi.fn();
+  const linkState = vi.fn();
+  const replaceLink = vi.fn();
   const copy = vi.fn();
   const confirm = vi.fn();
   const sent = {
@@ -34,12 +36,17 @@ describe('Quote publication', () => {
     get.mockReset().mockResolvedValue({ success: true, result: quoteFixture });
     renderPdf.mockReset().mockResolvedValue({ success: true, result: artifactFixture });
     send.mockReset().mockResolvedValue({ success: true, result: sent });
+    linkState.mockReset().mockResolvedValue({
+      success: true,
+      result: { id: sent.link.id, expiresAt: sent.link.expiresAt },
+    });
+    replaceLink.mockReset().mockResolvedValue({ success: true, result: sent });
     copy.mockReset().mockResolvedValue(true);
     confirm.mockReset().mockResolvedValue(false);
     TestBed.configureTestingModule({
       providers: [
         provideRouter(commercialTestRoutes),
-        { provide: QuotesApi, useValue: { get, renderPdf, send } },
+        { provide: QuotesApi, useValue: { get, renderPdf, send, linkState, replaceLink } },
         { provide: TextCopy, useValue: { copy } },
         { provide: Confirmation, useValue: { request: confirm } },
       ],
@@ -122,8 +129,9 @@ describe('Quote publication', () => {
     control<HTMLButtonElement>(root, 'form button[type="button"]').click();
     await harness.fixture.whenStable();
     expect(root.querySelector('form')).toBeNull();
-    expect(root.textContent).toMatch(/récupérer|retrieve/);
+    expect(root.textContent).toMatch(/remplacez|replace/);
     expect(send).toHaveBeenCalledOnce();
+    expect(replaceLink).not.toHaveBeenCalled();
   });
   it('retains version conflicts instead of publishing a newer revision', async () => {
     send.mockResolvedValue({ success: false, code: 'quote.version_conflict' });
@@ -134,6 +142,42 @@ describe('Quote publication', () => {
     expect(root.querySelector('[role="alert"]')).not.toBeNull();
     expect(get).toHaveBeenCalledOnce();
     expect(send).toHaveBeenCalledWith(quoteId, { expectedVersion: 2 });
+  });
+
+  it('replaces a lost link only after confirmation against the loaded link identifier', async () => {
+    get.mockResolvedValue({ success: true, result: { ...quoteFixture, status: 'sent' } });
+    const { harness, root } = await open();
+    const replace = control<HTMLButtonElement>(root, '.spacer-x-3 button');
+    replace.click();
+    await harness.fixture.whenStable();
+    expect(replaceLink).not.toHaveBeenCalled();
+    confirm.mockResolvedValue(true);
+    replace.click();
+    await harness.fixture.whenStable();
+    expect(replaceLink).toHaveBeenCalledExactlyOnceWith(quoteId, {
+      expectedVersion: quoteFixture.version,
+      expectedLinkId: sent.link.id,
+    });
+    expect(send).not.toHaveBeenCalled();
+    expect(control<HTMLAnchorElement>(root, 'app-copy-field a').href).toBe(sent.link.url);
+  });
+
+  it('blocks another replacement until an uncertain result has been checked', async () => {
+    get.mockResolvedValue({ success: true, result: { ...quoteFixture, status: 'sent' } });
+    replaceLink.mockResolvedValue({ success: false, code: 'quote.error' });
+    confirm.mockResolvedValue(true);
+    const { harness, root } = await open();
+    control<HTMLButtonElement>(root, '.spacer-x-3 button').click();
+    await harness.fixture.whenStable();
+    const replace = control<HTMLButtonElement>(root, '.spacer-x-3 button');
+    expect(replace.disabled).toBe(true);
+    replace.click();
+    await harness.fixture.whenStable();
+    expect(replaceLink).toHaveBeenCalledOnce();
+    expect(root.querySelector('app-copy-field')).toBeNull();
+    const event = new Event('beforeunload', { cancelable: true });
+    window.dispatchEvent(event);
+    expect(event.defaultPrevented).toBe(true);
   });
   it('warns before leaving a reviewed checkbox, including a cleared checkbox', async () => {
     const { harness, root } = await open();

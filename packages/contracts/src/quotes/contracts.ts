@@ -83,6 +83,14 @@ export type QuoteRevisionCreateRequest = typeof QuoteRevisionCreateRequest.Type;
 export const QuoteSendRequest = Schema.Struct({ expectedVersion: PositiveSafeInteger });
 export type QuoteSendRequest = typeof QuoteSendRequest.Type;
 
+export const QuoteLinkState = Schema.Struct({ id: Ulid, expiresAt: IsoUtc });
+export type QuoteLinkState = typeof QuoteLinkState.Type;
+export const QuoteLinkReplacementRequest = Schema.Struct({
+  expectedVersion: PositiveSafeInteger,
+  expectedLinkId: Schema.NullOr(Ulid),
+});
+export type QuoteLinkReplacementRequest = typeof QuoteLinkReplacementRequest.Type;
+
 export const QuoteCancellationReason = Schema.Literals([
   'client-declined',
   'scope-changed',
@@ -275,6 +283,12 @@ export class QuoteLinkNotSignable extends Schema.TaggedError<QuoteLinkNotSignabl
   { httpApiStatus: 409 },
 ) {}
 
+export class QuoteLinkConflict extends Schema.TaggedError<QuoteLinkConflict>()(
+  'QuoteLinkConflict',
+  { code: Schema.Literal('quote_link.conflict') },
+  { httpApiStatus: 409 },
+) {}
+
 export const QuoteFailure = Schema.Union([
   AuthenticationRequired,
   PermissionDenied,
@@ -286,6 +300,7 @@ export const QuoteFailure = Schema.Union([
   QuotePdfRequired,
   QuoteLinkNotFound,
   QuoteLinkNotSignable,
+  QuoteLinkConflict,
   DocumentNotFound,
   ClientNotFound,
   DocumentIncomplete,
