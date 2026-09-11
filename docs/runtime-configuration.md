@@ -49,6 +49,14 @@ Si toutes les places sont occupées, la vérification retourne HTTP 429 sans fil
 Une interruption HTTP ne libère la place qu’à la fin du calcul natif.
 Cette limite couvre la connexion, le changement de mot de passe et la confirmation des passkeys.
 
+## Origine des mutations par cookie
+
+`PUBLIC_ORIGIN` est l’origine exacte autorisée pour les mutations authentifiées par cookie.
+L’authentification commune refuse une origine absente, `null` ou différente avec HTTP 403 et `request.invalid_origin`.
+Les méthodes GET, HEAD et OPTIONS n’exigent pas cet en-tête.
+Les jetons API Bearer ne dépendent pas de cet en-tête.
+Un cookie et un Bearer présentés ensemble restent refusés avec HTTP 401.
+
 ## Tests
 
 Pour tester le chargement, fournissez `ConfigProvider.layer(ConfigProvider.fromUnknown(...))` à `RuntimeConfigurationLive`.

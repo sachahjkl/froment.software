@@ -13,6 +13,8 @@ import { AuditApi } from '../../../contracts/src/audit/api.js';
 import { ApiTokens } from '../api-tokens/service.js';
 import { Authentication, type AuthenticationService } from '../authentication/authentication.js';
 import { accessCookieName, AuthenticationHttpLive } from '../authentication/http.js';
+import { AuthenticationConfig } from '../authentication/authentication-config.js';
+import { authenticationConfig } from '../authentication/authentication-config.spec-helper.js';
 import { DatabaseError } from '../database/database.js';
 import { RuntimeConfigurationLive } from '../runtime-config.js';
 import { RequestLimiter } from '../server/request-limiter.js';
@@ -103,6 +105,7 @@ const fixtures = (
   const authLayer = AuthenticationHttpLive.pipe(
     Layer.provide(
       Layer.mergeAll(
+        Layer.succeed(AuthenticationConfig, authenticationConfig),
         Layer.mock(Authentication, { authorize }),
         Layer.mock(ApiTokens, {
           authenticate: () =>

@@ -22,6 +22,8 @@ import { setPrivateResponseHeaders } from '../http/response.js';
 import { RequestLimiter } from '../server/request-limiter.js';
 import { RuntimeConfiguration } from '../runtime-config.js';
 import { Authentication } from './authentication.js';
+import { AuthenticationConfig } from './authentication-config.js';
+import { requireRequestOrigin } from '../http/origin.js';
 
 export const refreshCookieName = '__Secure-froment-refresh';
 export const accessCookieName = '__Secure-froment-access';
@@ -76,32 +78,38 @@ export const authorizeClient = Effect.fn('authorizeClient')(function* (
     .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
 });
 
-const ApiAuthenticationLive = Layer.succeed(
+const ApiAuthenticationLive = Layer.effect(
   ApiAuthentication,
-  ApiAuthentication.of({
-    bearer: Effect.fn('ApiAuthentication.bearer')(function* (httpEffect, { credential }) {
-      yield* setPrivateResponseHeaders;
-      const request = yield* HttpServerRequest.HttpServerRequest;
-      const bearerToken = Redacted.value(credential);
-      const browserToken = request.cookies[accessCookieName];
-      if ((bearerToken.length > 0 && browserToken !== undefined) || bearerToken.includes(',')) {
-        return yield* new AuthenticationRequired({ code: 'authentication.required' });
-      }
-      const token = browserToken ?? bearerToken;
-      const kind =
-        browserToken !== undefined && token.startsWith('v4.public.')
-          ? ('access-token' as const)
-          : browserToken === undefined && token.startsWith('froment_api_v1_')
-            ? ('api-token' as const)
-            : undefined;
-      if (kind === undefined) {
-        return yield* new AuthenticationRequired({ code: 'authentication.required' });
-      }
-      return yield* Effect.provideService(httpEffect, ApiCredentials, {
-        kind,
-        token,
-      });
-    }),
+  Effect.gen(function* () {
+    const { publicOrigin } = yield* AuthenticationConfig;
+    return ApiAuthentication.of({
+      bearer: Effect.fn('ApiAuthentication.bearer')(function* (httpEffect, { credential }) {
+        yield* setPrivateResponseHeaders;
+        const request = yield* HttpServerRequest.HttpServerRequest;
+        const bearerToken = Redacted.value(credential);
+        const browserToken = request.cookies[accessCookieName];
+        if ((bearerToken.length > 0 && browserToken !== undefined) || bearerToken.includes(',')) {
+          return yield* new AuthenticationRequired({ code: 'authentication.required' });
+        }
+        const token = browserToken ?? bearerToken;
+        const kind =
+          browserToken !== undefined && token.startsWith('v4.public.')
+            ? ('access-token' as const)
+            : browserToken === undefined && token.startsWith('froment_api_v1_')
+              ? ('api-token' as const)
+              : undefined;
+        if (kind === undefined) {
+          return yield* new AuthenticationRequired({ code: 'authentication.required' });
+        }
+        if (kind === 'access-token' && !['GET', 'HEAD', 'OPTIONS'].includes(request.method)) {
+          yield* requireRequestOrigin(publicOrigin);
+        }
+        return yield* Effect.provideService(httpEffect, ApiCredentials, {
+          kind,
+          token,
+        });
+      }),
+    });
   }),
 );
 

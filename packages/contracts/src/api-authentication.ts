@@ -49,7 +49,7 @@ export class ApiAuthentication extends HttpApiMiddleware.Service<
 >()('@froment/contracts/ApiAuthentication', {
   requiredForClient: false,
   security: { bearer },
-  error: AuthenticationRequired,
+  error: [AuthenticationRequired, RequestInvalidOrigin],
 }) {}
 
 export class ApiBrowserRequest extends HttpApiMiddleware.Service<ApiBrowserRequest>()(
