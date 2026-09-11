@@ -1,3 +1,4 @@
+import { provideAccount } from '@backoffice/account.spec-helper';
 import { OverlayContainer } from '@angular/cdk/overlay';
 import { TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
@@ -315,4 +316,3 @@ describe('ClientDetail', () => {
     expect(await component.canDeactivate()).toBe(true);
   });
 });
-import { provideAccount } from '@backoffice/account.spec-helper';

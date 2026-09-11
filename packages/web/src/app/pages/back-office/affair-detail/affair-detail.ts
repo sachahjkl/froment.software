@@ -1,3 +1,5 @@
+import { Authentication } from '@backoffice/authentication';
+import { Can } from '@backoffice/can';
 import { DOCUMENT } from '@angular/common';
 import {
   afterNextRender,
@@ -370,5 +372,3 @@ export class AffairDetail {
     };
   }
 }
-import { Authentication } from '@backoffice/authentication';
-import { Can } from '@backoffice/can';

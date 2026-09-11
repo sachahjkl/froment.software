@@ -1,3 +1,4 @@
+import { provideAccount } from '@backoffice/account.spec-helper';
 import { Component } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
@@ -133,4 +134,3 @@ describe('ClientAccessEditor', () => {
     expect(confirmation.request).not.toHaveBeenCalled();
   });
 });
-import { provideAccount } from '@backoffice/account.spec-helper';

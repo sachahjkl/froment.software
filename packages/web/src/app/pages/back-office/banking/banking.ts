@@ -1,3 +1,4 @@
+import { Can } from '@backoffice/can';
 import { Authentication } from '@backoffice/authentication';
 import {
   afterNextRender,
@@ -305,4 +306,3 @@ export class Banking {
     return formatMoney(cents, this.i18n.language(), 'EUR');
   }
 }
-import { Can } from '@backoffice/can';

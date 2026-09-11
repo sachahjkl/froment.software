@@ -1,3 +1,4 @@
+import { Authentication } from '@backoffice/authentication';
 import {
   afterNextRender,
   afterRenderEffect,
@@ -327,4 +328,3 @@ export class BankLedger {
     return formatMoney(cents, this.i18n.language(), 'EUR');
   }
 }
-import { Authentication } from '@backoffice/authentication';

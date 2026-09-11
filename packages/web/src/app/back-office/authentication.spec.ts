@@ -7,7 +7,7 @@ import { type LoginModeValue } from '@froment/contracts';
 import { BrowserSessionStore } from './browser-session-store';
 import { AUTH_COOKIE_LOCK_MANAGER } from './auth-cookie-lock';
 import { Authentication } from './authentication';
-import { administratorGuard, clientGuard } from './authentication-guards';
+import { administratorGuard, clientGuard, sessionData } from './authentication-guards';
 import { BootstrapApi } from './bootstrap-api';
 import { authenticationInterceptor } from './authentication-interceptor';
 
@@ -94,15 +94,17 @@ describe('Authentication', () => {
           provide: Authentication,
           useValue: {
             sessionMode: () => Promise.resolve(mode),
-            currentAccount: async () => ({ mode, permissions: [] }),
+            refreshAccount: async () => ({ mode, permissions: [] }),
           },
         },
       ],
     });
     const router = TestBed.inject(Router);
+    const route = router.routerState.snapshot.root;
+    route.data = sessionData();
 
     const administratorRedirect = await TestBed.runInInjectionContext(() =>
-      administratorGuard({} as never, { url: '/backoffice/dashboard' } as never),
+      administratorGuard(route, router.routerState.snapshot),
     );
     if (!(administratorRedirect instanceof UrlTree))
       throw new Error('The administrator redirect is missing.');
@@ -115,9 +117,7 @@ describe('Authentication', () => {
 
     mode = 'administrator';
     await expect(
-      TestBed.runInInjectionContext(() =>
-        administratorGuard({} as never, { url: '/backoffice/dashboard' } as never),
-      ),
+      TestBed.runInInjectionContext(() => administratorGuard(route, router.routerState.snapshot)),
     ).resolves.toBe(true);
     const clientRedirect = await TestBed.runInInjectionContext(() =>
       clientGuard({} as never, { url: '/backoffice/client?quote=document-id' } as never),

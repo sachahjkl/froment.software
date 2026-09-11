@@ -1,3 +1,4 @@
+import { provideAccount } from '@backoffice/account.spec-helper';
 import { TestBed } from '@angular/core/testing';
 import { Router } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
@@ -293,4 +294,3 @@ describe('Banking transaction workspace', () => {
     expect(api.list).toHaveBeenCalledTimes(1);
   });
 });
-import { provideAccount } from '@backoffice/account.spec-helper';

@@ -1,3 +1,4 @@
+import { Can } from '@backoffice/can';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -100,4 +101,3 @@ export class QuoteDocument {
     }
   }
 }
-import { Can } from '@backoffice/can';

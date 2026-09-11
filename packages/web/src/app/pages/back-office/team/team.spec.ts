@@ -1,3 +1,4 @@
+import { provideAccount } from '@backoffice/account.spec-helper';
 import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap, provideRouter, Router } from '@angular/router';
 import { BehaviorSubject } from 'rxjs';
@@ -418,4 +419,3 @@ describe('Team', () => {
     expect(await fixture.componentInstance.canDeactivate()).toBe(true);
   });
 });
-import { provideAccount } from '@backoffice/account.spec-helper';

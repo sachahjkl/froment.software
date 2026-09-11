@@ -1,3 +1,4 @@
+import { Can } from '@backoffice/can';
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { disabled, form, FormField, submit, validate } from '@angular/forms/signals';
 import { Button } from '@shared/button/button';
@@ -66,4 +67,3 @@ export class InvoiceVoid {
     return this.task.canDeactivate(this.voidForm().dirty());
   }
 }
-import { Can } from '@backoffice/can';

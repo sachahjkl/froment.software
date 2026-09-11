@@ -1,3 +1,4 @@
+import { Can } from '@backoffice/can';
 import {
   afterNextRender,
   afterRenderEffect,
@@ -248,4 +249,3 @@ export class LedgerReversal {
       event.preventDefault();
   }
 }
-import { Can } from '@backoffice/can';

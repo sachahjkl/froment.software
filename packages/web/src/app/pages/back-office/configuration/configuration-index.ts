@@ -1,3 +1,4 @@
+import { Can } from '@backoffice/can';
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { I18nService } from '@app/i18n.service';
@@ -12,4 +13,3 @@ import { I18nService } from '@app/i18n.service';
 export class ConfigurationIndex {
   protected readonly i18n = inject(I18nService);
 }
-import { Can } from '@backoffice/can';

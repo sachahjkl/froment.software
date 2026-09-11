@@ -1,3 +1,4 @@
+import { provideAccount } from '@backoffice/account.spec-helper';
 import { TestBed } from '@angular/core/testing';
 import { Router } from '@angular/router';
 import { vi } from 'vitest';
@@ -301,4 +302,3 @@ describe('InvoiceEditor', () => {
     expect(await fixture.componentInstance.canDeactivate()).toBe(false);
   });
 });
-import { provideAccount } from '@backoffice/account.spec-helper';

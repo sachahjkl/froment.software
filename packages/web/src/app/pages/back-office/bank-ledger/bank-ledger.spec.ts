@@ -1,3 +1,4 @@
+import { provideAccount } from '@backoffice/account.spec-helper';
 import { RouterTestingHarness } from '@angular/router/testing';
 import { TestBed } from '@angular/core/testing';
 import { Router } from '@angular/router';
@@ -298,4 +299,3 @@ describe('Bank ledger workspace', () => {
     expect(ledger.list).toHaveBeenCalledTimes(2);
   });
 });
-import { provideAccount } from '@backoffice/account.spec-helper';

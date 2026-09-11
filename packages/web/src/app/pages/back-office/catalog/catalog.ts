@@ -1,3 +1,5 @@
+import { Authentication } from '@backoffice/authentication';
+import { Can } from '@backoffice/can';
 import {
   afterNextRender,
   ChangeDetectionStrategy,
@@ -293,5 +295,3 @@ export class Catalog {
     return formatFixedDecimal(value, places, this.i18n.language() === 'fr' ? ',' : '.');
   }
 }
-import { Authentication } from '@backoffice/authentication';
-import { Can } from '@backoffice/can';

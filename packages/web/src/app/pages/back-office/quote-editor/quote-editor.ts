@@ -1,3 +1,6 @@
+import { formatMoney } from '@froment/l10n';
+import { Can } from '@backoffice/can';
+import type { PermissionCodeValue } from '@froment/contracts';
 import { Confirmation } from '@shared/confirmation/confirmation';
 import { Dialog, type DialogRef } from '@angular/cdk/dialog';
 import {
@@ -688,6 +691,3 @@ export class QuoteEditor {
     this.error.set(code);
   }
 }
-import { formatMoney } from '@froment/l10n';
-import { Can } from '@backoffice/can';
-import type { PermissionCodeValue } from '@froment/contracts';

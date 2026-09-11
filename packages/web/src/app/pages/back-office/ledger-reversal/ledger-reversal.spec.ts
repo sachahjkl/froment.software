@@ -1,3 +1,4 @@
+import { provideAccount } from '@backoffice/account.spec-helper';
 import { TestBed } from '@angular/core/testing';
 import { Router } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
@@ -23,8 +24,8 @@ describe('Ledger reversal task', () => {
   beforeEach(() => TestBed.configureTestingModule({ providers: [provideAccount()] }));
   afterEach(() => vi.restoreAllMocks());
   it('keeps an entry readable without offering reversal instructions', async () => {
-    setupBankWorkspace();
     TestBed.configureTestingModule({ providers: [provideAccount(['ledger.read'])] });
+    setupBankWorkspace();
     const harness = await RouterTestingHarness.create();
     const page = await harness.navigateByUrl(
       `/backoffice/banque/ecritures/${otherBankId}/contrepasser`,
@@ -254,4 +255,3 @@ describe('Ledger reversal task', () => {
     expect(bankRoot(harness).querySelector(`a[href*="${bankId}/contrepasser"]`)).not.toBeNull();
   });
 });
-import { provideAccount } from '@backoffice/account.spec-helper';

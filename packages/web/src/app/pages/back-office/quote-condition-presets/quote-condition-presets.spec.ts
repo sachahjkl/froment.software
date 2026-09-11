@@ -1,3 +1,4 @@
+import { provideAccount } from '@backoffice/account.spec-helper';
 import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap, provideRouter, Router } from '@angular/router';
 import { of } from 'rxjs';
@@ -229,4 +230,3 @@ describe('QuoteConditionPresets', () => {
     expect(component['presetForm'].conditions().valid()).toBe(true);
   });
 });
-import { provideAccount } from '@backoffice/account.spec-helper';

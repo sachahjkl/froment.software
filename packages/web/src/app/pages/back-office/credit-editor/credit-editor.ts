@@ -1,3 +1,4 @@
+import { Can } from '@backoffice/can';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -104,4 +105,3 @@ export class CreditEditor {
     return this.task.canDeactivate(this.creditForm().dirty());
   }
 }
-import { Can } from '@backoffice/can';

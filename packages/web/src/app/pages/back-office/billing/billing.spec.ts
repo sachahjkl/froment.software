@@ -1,3 +1,4 @@
+import { provideAccount } from '@backoffice/account.spec-helper';
 import { provideHttpClient } from '@angular/common/http';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter, convertToParamMap } from '@angular/router';
@@ -183,4 +184,3 @@ describe('Billing', () => {
     expect(root.querySelector('tbody button')).toBeNull();
   });
 });
-import { provideAccount } from '@backoffice/account.spec-helper';

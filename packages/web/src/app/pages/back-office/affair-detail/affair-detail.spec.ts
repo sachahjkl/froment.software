@@ -1,3 +1,4 @@
+import { provideAccount } from '@backoffice/account.spec-helper';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
@@ -177,4 +178,3 @@ describe('Affair detail', () => {
     ).toBeNull();
   });
 });
-import { provideAccount } from '@backoffice/account.spec-helper';

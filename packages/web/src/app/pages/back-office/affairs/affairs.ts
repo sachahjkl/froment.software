@@ -1,3 +1,5 @@
+import { formatMoney } from '@froment/l10n';
+import { Can } from '@backoffice/can';
 import {
   afterNextRender,
   ChangeDetectionStrategy,
@@ -359,5 +361,3 @@ export class Affairs {
     };
   }
 }
-import { formatMoney } from '@froment/l10n';
-import { Can } from '@backoffice/can';

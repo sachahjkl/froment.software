@@ -1,3 +1,5 @@
+import { Authentication } from '@backoffice/authentication';
+import { Can } from '@backoffice/can';
 import { Confirmation } from '@shared/confirmation/confirmation';
 import {
   afterNextRender,
@@ -147,5 +149,3 @@ export class IssuerSettings {
     }
   }
 }
-import { Authentication } from '@backoffice/authentication';
-import { Can } from '@backoffice/can';

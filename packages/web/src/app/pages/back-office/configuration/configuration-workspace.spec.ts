@@ -1,3 +1,4 @@
+import { provideAccount } from '@backoffice/account.spec-helper';
 import { Component } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter, RouterLink } from '@angular/router';
@@ -104,4 +105,3 @@ describe('ConfigurationIndex', () => {
     expect(root.querySelectorAll('h1')).toHaveLength(1);
   });
 });
-import { provideAccount } from '@backoffice/account.spec-helper';

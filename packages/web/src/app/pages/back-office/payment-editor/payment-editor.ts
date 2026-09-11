@@ -1,3 +1,4 @@
+import { Can } from '@backoffice/can';
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import {
   disabled,
@@ -127,4 +128,3 @@ export class PaymentEditor {
     return this.task.canDeactivate(this.hasUnsavedChanges());
   }
 }
-import { Can } from '@backoffice/can';

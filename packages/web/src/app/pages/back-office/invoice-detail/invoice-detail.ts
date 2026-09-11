@@ -1,3 +1,5 @@
+import { Authentication } from '@backoffice/authentication';
+import { Can } from '@backoffice/can';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -256,5 +258,3 @@ export class InvoiceDetail {
     }
   }
 }
-import { Authentication } from '@backoffice/authentication';
-import { Can } from '@backoffice/can';

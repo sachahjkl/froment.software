@@ -1,3 +1,5 @@
+import { Authentication } from '@backoffice/authentication';
+import { Can } from '@backoffice/can';
 import {
   afterNextRender,
   ChangeDetectionStrategy,
@@ -304,5 +306,3 @@ export class Dashboard {
     }
   }
 }
-import { Authentication } from '@backoffice/authentication';
-import { Can } from '@backoffice/can';

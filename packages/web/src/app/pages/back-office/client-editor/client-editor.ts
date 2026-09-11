@@ -1,3 +1,5 @@
+import { Can } from '@backoffice/can';
+import type { PermissionCodeValue } from '@froment/contracts';
 import {
   afterNextRender,
   ChangeDetectionStrategy,
@@ -305,5 +307,3 @@ export class ClientEditor {
     });
   }
 }
-import { Can } from '@backoffice/can';
-import type { PermissionCodeValue } from '@froment/contracts';

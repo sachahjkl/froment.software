@@ -23,6 +23,7 @@ describe('order contracts', () => {
       totalCents: 12_000,
       createdAt: '2026-08-20T20:00:00.000Z',
       invoiceId: null,
+      pdfAvailable: false,
     };
 
     expect(Schema.decodeUnknownSync(OrderList)([order])).toEqual([order]);

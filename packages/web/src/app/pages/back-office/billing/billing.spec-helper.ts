@@ -1,3 +1,5 @@
+import { provideAccount } from '@backoffice/account.spec-helper';
+import type { PermissionCodeValue } from '@froment/contracts';
 import { type Type } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
@@ -173,5 +175,3 @@ export async function setupInvoicePage<T>(
   const root: HTMLElement = fixture.nativeElement;
   return { api, credits, fixture, root, queryParams };
 }
-import { provideAccount } from '@backoffice/account.spec-helper';
-import type { PermissionCodeValue } from '@froment/contracts';

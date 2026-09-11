@@ -1,3 +1,5 @@
+import { Authentication } from '@backoffice/authentication';
+import { Can } from '@backoffice/can';
 import { Confirmation } from '@shared/confirmation/confirmation';
 import {
   afterNextRender,
@@ -114,5 +116,3 @@ export class QuoteConditionPresets {
     if (this.saving()) event.preventDefault();
   }
 }
-import { Authentication } from '@backoffice/authentication';
-import { Can } from '@backoffice/can';

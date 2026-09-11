@@ -1,3 +1,4 @@
+import { Can } from '@backoffice/can';
 import {
   afterRenderEffect,
   ChangeDetectionStrategy,
@@ -152,4 +153,3 @@ export class TeamInvitation {
     }
   }
 }
-import { Can } from '@backoffice/can';

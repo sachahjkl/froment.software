@@ -1,3 +1,4 @@
+import { provideAccount } from '@backoffice/account.spec-helper';
 import { TestBed } from '@angular/core/testing';
 import { Router } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
@@ -39,8 +40,8 @@ function unloadIsBlocked(): boolean {
 describe('Bank reconciliation task', () => {
   beforeEach(() => TestBed.configureTestingModule({ providers: [provideAccount()] }));
   it('keeps the transaction readable without offering allocation instructions', async () => {
-    setupBankWorkspace();
     TestBed.configureTestingModule({ providers: [provideAccount(['bank.read', 'invoice.read'])] });
+    setupBankWorkspace();
     const harness = await RouterTestingHarness.create();
     const page = await harness.navigateByUrl(
       `/backoffice/banque/transactions/${bankId}`,
@@ -489,4 +490,3 @@ describe('Bank reconciliation task', () => {
     expect(root.querySelector('a[pageBack]')?.getAttribute('href')).toContain('sort=amount-desc');
   });
 });
-import { provideAccount } from '@backoffice/account.spec-helper';

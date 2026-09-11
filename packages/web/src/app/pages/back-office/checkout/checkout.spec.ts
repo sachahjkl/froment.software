@@ -379,6 +379,7 @@ it('does not reconcile after permission is removed during confirmation', async (
   });
   const fixture = TestBed.createComponent(CheckoutDetail);
   await fixture.whenStable();
+  await vi.waitFor(() => expect(fixture.componentInstance['current']()).toEqual(stopped));
   const pending = fixture.componentInstance['reconcile']();
   context.account.update((account) => account && { ...account, permissions: ['invoice.read'] });
   approve(true);

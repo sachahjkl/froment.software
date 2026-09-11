@@ -1,3 +1,4 @@
+import { formatMoney } from '@froment/l10n';
 import {
   afterNextRender,
   ChangeDetectionStrategy,
@@ -278,4 +279,3 @@ export class PublicQuote {
     this.pdfObjectUrl = undefined;
   }
 }
-import { formatMoney } from '@froment/l10n';

@@ -1,3 +1,4 @@
+import { Can } from '@backoffice/can';
 import { DOCUMENT } from '@angular/common';
 import {
   afterNextRender,
@@ -579,4 +580,3 @@ export class BankReconciliation {
     if (this.busy() || this.dirty()) event.preventDefault();
   }
 }
-import { Can } from '@backoffice/can';

@@ -1,3 +1,4 @@
+import { Can } from '@backoffice/can';
 import {
   afterNextRender,
   ChangeDetectionStrategy,
@@ -278,4 +279,3 @@ export class Clients {
     }
   }
 }
-import { Can } from '@backoffice/can';

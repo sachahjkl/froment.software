@@ -2,6 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { vi } from 'vitest';
 import { Authentication } from '@backoffice/authentication';
+import { Confirmation } from '@shared/confirmation/confirmation';
 import { AccountSecurity } from './account-security';
 
 describe('AccountSecurity', () => {
@@ -56,4 +57,3 @@ describe('AccountSecurity', () => {
     expect(await fixture.componentInstance.canDeactivate()).toBe(true);
   });
 });
-import { Confirmation } from '@shared/confirmation/confirmation';

@@ -1,3 +1,4 @@
+import { provideAccount } from '@backoffice/account.spec-helper';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { vi } from 'vitest';
@@ -103,4 +104,3 @@ describe('IssuerSettings', () => {
     expect(root.querySelector('#issuer-display-name-error')).not.toBeNull();
   });
 });
-import { provideAccount } from '@backoffice/account.spec-helper';

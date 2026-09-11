@@ -1,3 +1,4 @@
+import { formatMoney } from '@froment/l10n';
 import { Confirmation } from '@shared/confirmation/confirmation';
 import { Authentication } from '@backoffice/authentication';
 import { Can } from '@backoffice/can';
@@ -463,4 +464,3 @@ export class ClientDetail {
     this.error.set(code);
   }
 }
-import { formatMoney } from '@froment/l10n';

@@ -1,3 +1,4 @@
+import { Can } from '@backoffice/can';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -111,4 +112,3 @@ export class ReceiptCancel {
     return this.task.canDeactivate(this.cancelForm().dirty());
   }
 }
-import { Can } from '@backoffice/can';

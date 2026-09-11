@@ -1,3 +1,4 @@
+import { provideAccount } from '@backoffice/account.spec-helper';
 import { TestBed } from '@angular/core/testing';
 import type { PermissionCodeValue } from '@froment/contracts';
 import { By } from '@angular/platform-browser';
@@ -432,4 +433,3 @@ describe('Clients', () => {
     expect(root.querySelector('app-empty-state')).not.toBeNull();
   });
 });
-import { provideAccount } from '@backoffice/account.spec-helper';

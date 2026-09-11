@@ -1,3 +1,4 @@
+import { Can } from '@backoffice/can';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -134,4 +135,3 @@ export class RefundEditor {
     return this.task.canDeactivate(this.hasUnsavedChanges());
   }
 }
-import { Can } from '@backoffice/can';

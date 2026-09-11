@@ -21,6 +21,7 @@ import {
   type InvoiceListValue,
   type InvoiceRevisionCreateRequestValue,
   type InvoiceTransitionRequestValue,
+  type InvoicePaymentCancelRequestValue,
   type InvoicePaymentRequestValue,
   type UlidValue,
 } from '@froment/contracts';
@@ -178,4 +179,3 @@ export class InvoicesApi {
     );
   }
 }
-import { type InvoicePaymentCancelRequestValue } from '@froment/contracts';

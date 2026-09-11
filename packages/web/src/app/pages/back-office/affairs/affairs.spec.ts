@@ -1,3 +1,4 @@
+import { provideAccount } from '@backoffice/account.spec-helper';
 import { TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { provideRouter, Router } from '@angular/router';
@@ -552,4 +553,3 @@ describe('Affairs', () => {
     ).toBe('false');
   });
 });
-import { provideAccount } from '@backoffice/account.spec-helper';

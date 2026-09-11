@@ -1,3 +1,5 @@
+import { Can } from '@backoffice/can';
+import type { PermissionCodeValue } from '@froment/contracts';
 import {
   afterNextRender,
   afterRenderEffect,
@@ -441,5 +443,3 @@ export class InvoiceEditor {
     return formatMoney(cents, this.i18n.language(), 'EUR');
   }
 }
-import { Can } from '@backoffice/can';
-import type { PermissionCodeValue } from '@froment/contracts';

@@ -1,3 +1,4 @@
+import { Can } from '@backoffice/can';
 import {
   afterNextRender,
   ChangeDetectionStrategy,
@@ -169,4 +170,3 @@ export class ClientAccessEditor {
     });
   }
 }
-import { Can } from '@backoffice/can';

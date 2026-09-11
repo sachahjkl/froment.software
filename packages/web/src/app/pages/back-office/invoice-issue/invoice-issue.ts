@@ -1,3 +1,4 @@
+import { Can } from '@backoffice/can';
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { disabled, form, FormField, submit, validate } from '@angular/forms/signals';
 import { DomSanitizer } from '@angular/platform-browser';
@@ -71,4 +72,3 @@ export class InvoiceIssue {
     return this.task.canDeactivate(this.issueForm().dirty());
   }
 }
-import { Can } from '@backoffice/can';

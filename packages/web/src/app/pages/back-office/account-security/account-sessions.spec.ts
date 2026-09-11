@@ -1,6 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { vi } from 'vitest';
 import { Authentication } from '@backoffice/authentication';
+import { Confirmation } from '@shared/confirmation/confirmation';
 import { AccountSessions } from './account-sessions';
 
 const current = {
@@ -64,4 +65,3 @@ describe('AccountSessions', () => {
     expect(root.querySelectorAll('li')).toHaveLength(1);
   });
 });
-import { Confirmation } from '@shared/confirmation/confirmation';

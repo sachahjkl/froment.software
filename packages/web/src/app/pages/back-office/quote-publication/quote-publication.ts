@@ -1,3 +1,4 @@
+import { Can } from '@backoffice/can';
 import {
   afterNextRender,
   ChangeDetectionStrategy,
@@ -304,4 +305,3 @@ export class QuotePublication {
     }
   }
 }
-import { Can } from '@backoffice/can';
