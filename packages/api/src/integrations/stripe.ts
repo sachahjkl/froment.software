@@ -91,9 +91,10 @@ export const StripeCheckoutTransportLive = Layer.effect(
         if (response.status < 200 || response.status >= 300)
           return yield* new CheckoutTransportError({ code: 'checkout.rejected', retryable: false });
         const session = yield* HttpClientResponse.schemaBodyJson(StripeSession)(response).pipe(
-          Effect.mapError(
-            () =>
-              new CheckoutTransportError({ code: 'checkout.responseMismatch', retryable: false }),
+          Effect.mapError((error) =>
+            error._tag === 'HttpClientError'
+              ? new CheckoutTransportError({ code: 'checkout.unavailable', retryable: true })
+              : new CheckoutTransportError({ code: 'checkout.responseMismatch', retryable: false }),
           ),
         );
         return {

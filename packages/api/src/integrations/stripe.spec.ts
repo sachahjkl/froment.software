@@ -28,7 +28,12 @@ const body = {
 };
 const layer = (
   requests: HttpClientRequest.HttpClientRequest[],
-  options: { readonly status?: number; readonly key?: string; readonly body?: string } = {},
+  options: {
+    readonly status?: number;
+    readonly key?: string;
+    readonly body?: string;
+    readonly response?: () => Response;
+  } = {},
 ) =>
   StripeCheckoutTransportLive.pipe(
     Layer.provide(
@@ -39,7 +44,10 @@ const layer = (
           return Effect.succeed(
             HttpClientResponse.fromWeb(
               request,
-              new Response(options.body ?? JSON.stringify(body), { status: options.status ?? 200 }),
+              options.response?.() ??
+                new Response(options.body ?? JSON.stringify(body), {
+                  status: options.status ?? 200,
+                }),
             ),
           );
         }),
@@ -110,6 +118,40 @@ it.each(['sk_live_fake', '', 'invalid'])(
     expect(requests).toHaveLength(0);
   },
 );
+
+it('retries an interrupted response body with the same idempotency key and payload', async () => {
+  const requests: HttpClientRequest.HttpClientRequest[] = [];
+  await Effect.runPromise(
+    Effect.gen(function* () {
+      const transport = yield* CheckoutTransport;
+      const failure = yield* transport.create(input).pipe(Effect.flip);
+      expect(failure).toMatchObject({ code: 'checkout.unavailable', retryable: true });
+      expect(yield* transport.create(input)).toMatchObject({ id: body.id });
+    }).pipe(
+      Effect.provide(
+        layer(requests, {
+          response: () =>
+            requests.length === 1
+              ? new Response(
+                  new ReadableStream({
+                    start(controller) {
+                      controller.error(new Error('Response connection interrupted'));
+                    },
+                  }),
+                  { status: 200 },
+                )
+              : new Response(JSON.stringify(body), { status: 200 }),
+        }),
+      ),
+    ),
+  );
+  expect(requests).toHaveLength(2);
+  expect(requests.map((request) => request.headers['idempotency-key'])).toEqual([
+    `froment-checkout-test/${input.requestId}`,
+    `froment-checkout-test/${input.requestId}`,
+  ]);
+  expect(requests[0]?.body).toEqual(requests[1]?.body);
+});
 
 it.each([400, 401, 409, 429, 500])(
   'classifies HTTP %s without retaining private provider diagnostics',
