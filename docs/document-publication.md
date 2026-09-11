@@ -1,5 +1,16 @@
 # Contrôles avant publication
 
+## Dates du document
+
+Chaque nouveau snapshot de devis ou de facture conserve son calendrier métier dans `calendar.timeZone`.
+Le moteur PDF utilise ce calendrier pour les dates issues d’un instant.
+Les dates de prestation et d’échéance restent des dates calendaires.
+
+La preuve de signature version 2 conserve le calendrier de confirmation de la commande dans `orderCalendar`.
+Ce calendrier vient de la configuration au moment de la signature, même si le devis est ancien.
+Les preuves version 1 et les snapshots sans calendrier conservent leur lecture historique en UTC.
+Un changement de configuration ne réécrit ni les preuves ni les PDF conservés.
+
 ## Coordonnées
 
 Le serveur contrôle les coordonnées enregistrées dans la version du document, pas seulement les fiches actuelles.

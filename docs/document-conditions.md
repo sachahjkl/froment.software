@@ -16,7 +16,7 @@ La barre d’outils utilise des boutons à icônes avec des indications au survo
 Les flèches gauche et droite déplacent le focus entre les boutons.
 Tab quitte la barre d’outils.
 L’éditeur ne propose ni image, ni tableau, ni lien, ni code HTML.
-La limite reste de 2 000 caractères dans le texte enregistré, marques de mise en forme comprises.
+La limite reste de 2 000 caractères dans la chaîne enregistrée, structure JSON comprise pour les blocs typés.
 
 ## Emplacement dans le PDF
 
@@ -49,13 +49,14 @@ Les snapshots et les PDF déjà conservés restent inchangés.
 
 ## Format enregistré
 
-Le texte mis en forme utilise un sous-ensemble de Markdown.
+L’éditeur enregistre le texte mis en forme avec des blocs typés, sérialisés en JSON.
+Ce format conserve les indentations, les paragraphes vides, les titres multilignes et les caractères littéraux.
 Le champ `conditionsPresentation` décrit la présentation des modèles, devis et commandes.
 Le champ `paymentTermsPresentation` décrit celle des factures.
 
 ```json
 {
-  "format": "markdown",
+  "format": "blocks",
   "placement": "new-page"
 }
 ```
@@ -64,7 +65,11 @@ La valeur `inline` utilise la place disponible après les totaux.
 L’absence de présentation désigne un texte littéral.
 Le format `plain` conserve aussi le texte littéral, avec un emplacement explicite.
 
-Les contrats valident les éléments Markdown autorisés.
+Le format `markdown` reste lisible pour les textes déjà enregistrés.
+L’ouverture de ces textes ne change pas leur source.
+Une modification du texte les convertit en blocs typés.
+
+Le contrat `DocumentTextBlock` valide chaque bloc avant sa persistance.
 Le site et le moteur PDF utilisent les mêmes blocs typés.
 Le moteur PDF n’exécute aucun code Typst provenant des conditions.
 

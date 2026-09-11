@@ -32,7 +32,6 @@
     "fuse.js": "catalog:",
     "marked": "catalog:",
     "mermaid": "catalog:",
-    "prosemirror-markdown": "1.13.7",
     "rxjs": "catalog:",
     "tslib": "catalog:"
   },
