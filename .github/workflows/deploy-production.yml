@@ -60,6 +60,18 @@ jobs:
             --type spdxjson \
             "$image"
           gh attestation verify "oci://$image" --repo "$GITHUB_REPOSITORY"
-          nomad job run -namespace production -var "image=$image" deploy/nomad/production.nomad.hcl
+          nomad job run -detach -namespace production -var "image=$image" deploy/nomad/production.nomad.hcl
           test "$(nomad job inspect -namespace production -json froment-software | jq -r .Meta.image)" = "$image"
+          version=$(nomad job inspect -namespace production -json froment-software | jq -r .Version)
+          healthy=false
+          for _attempt in $(seq 1 90); do
+            if nomad job status -namespace production -json froment-software | jq -e --argjson version "$version" \
+              '.[0].Allocations | any(.JobVersion == $version and .DesiredStatus == "run" and .ClientStatus == "running" and .DeploymentStatus.Healthy == true)' \
+              >/dev/null; then
+              healthy=true
+              break
+            fi
+            sleep 2
+          done
+          test "$healthy" = true
           curl --fail --silent --show-error https://froment.software/api/health | grep --quiet '"status":"ok"'
