@@ -94,10 +94,8 @@ export class ConditionEditor {
     },
   ]);
   protected readonly error = signal<TranslationKey | undefined>(undefined);
-  protected readonly previewAvailable = computed(
-    () =>
-      this.model().conditionsPresentation?.format !== 'markdown' ||
-      isDocumentText(this.model().conditions),
+  protected readonly previewAvailable = computed(() =>
+    isDocumentText(this.model().conditions, this.model().conditionsPresentation?.format ?? 'plain'),
   );
   protected readonly presetForm = form(this.model, (path) => {
     disabled(
@@ -111,12 +109,12 @@ export class ConditionEditor {
     required(path.conditions);
     maxLength(path.conditions, 2_000);
     validate(path.conditions, ({ value }) =>
-      this.model().conditionsPresentation?.format === 'markdown' && !isDocumentText(value())
+      !isDocumentText(value(), this.model().conditionsPresentation?.format ?? 'plain')
         ? { kind: 'format' }
         : undefined,
     );
     validate(path.conditions, ({ value }) => {
-      if (this.model().conditionsPresentation?.format !== 'markdown' || !isDocumentText(value()))
+      if (!isDocumentText(value(), this.model().conditionsPresentation?.format ?? 'plain'))
         return undefined;
       return /\S/.test(documentTextContent(value(), this.model().conditionsPresentation))
         ? undefined

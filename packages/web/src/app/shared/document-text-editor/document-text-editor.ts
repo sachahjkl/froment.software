@@ -18,7 +18,7 @@ import StarterKit from '@tiptap/starter-kit';
 import type { DocumentTextPresentationValue } from '@froment/contracts';
 import { I18nService } from '@app/i18n.service';
 import { IconToolbar, type IconToolbarGroup } from '@shared/icon-toolbar/icon-toolbar';
-import { documentTextContent, documentTextSerializer } from './document-text-content';
+import { documentTextContent, serializeEditorDocument } from './document-text-content';
 
 type TextAction =
   | 'paragraph'
@@ -90,7 +90,7 @@ export class DocumentTextEditor implements FormValueControl<string> {
   private readonly transaction = signal(0);
   private editor: Editor | undefined;
   private renderedSource = '';
-  private renderedFormat: 'plain' | 'markdown' = 'plain';
+  private renderedFormat: DocumentTextPresentationValue['format'] = 'plain';
   protected readonly placement = computed(() => this.presentation()?.placement ?? 'inline');
   protected readonly toolbar = computed<ReadonlyArray<IconToolbarGroup<TextAction>>>(() => {
     this.transaction();
@@ -171,11 +171,11 @@ export class DocumentTextEditor implements FormValueControl<string> {
 
   private commit(placement = this.placement()): void {
     if (!this.editor || this.disabled()) return;
-    const source = documentTextSerializer.serialize(this.editor.state.doc);
+    const source = serializeEditorDocument(this.editor.state.doc);
     this.renderedSource = source;
-    this.renderedFormat = 'markdown';
+    this.renderedFormat = 'blocks';
     this.value.set(source);
-    this.presentationChange.emit({ format: 'markdown', placement });
+    this.presentationChange.emit({ format: 'blocks', placement });
   }
 
   protected changePlacement(value: string): void {

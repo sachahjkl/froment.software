@@ -1,4 +1,10 @@
-import { InvoiceDetail, QuoteConditionPreset, QuoteDetail } from '@froment/contracts';
+import {
+  InvoiceDetail,
+  QuoteConditionPreset,
+  QuoteDetail,
+  parseDocumentText,
+  serializeDocumentText,
+} from '@froment/contracts';
 import Sqlite from 'better-sqlite3';
 import { spawnSync } from 'node:child_process';
 import { Schema } from 'effect';
@@ -20,9 +26,12 @@ describe('formatted document conditions', () => {
   afterAll(async () => server.close());
 
   it('stores presentation with revisions, carries it to orders and preserves published data', async () => {
-    const conditions =
-      '## Conditions particulières\n\nPaiement **à réception**.\n\n- Première clause\n- Deuxième clause';
-    const presentation = { format: 'markdown', placement: 'new-page' } as const;
+    const conditions = serializeDocumentText(
+      parseDocumentText(
+        '## Conditions particulières\n\nPaiement **à réception**.\n\n- Première clause\n- Deuxième clause',
+      ),
+    );
+    const presentation = { format: 'blocks', placement: 'new-page' } as const;
     const createdPreset = await fetch(`${server.baseUrl}/api/quote-condition-presets`, {
       method: 'POST',
       headers: server.jsonHeaders,
@@ -75,7 +84,7 @@ describe('formatted document conditions', () => {
       headers: server.jsonHeaders,
       body: JSON.stringify({
         name: preset.name,
-        conditions: 'Autres conditions',
+        conditions: serializeDocumentText(parseDocumentText('Autres conditions')),
         conditionsPresentation: { ...presentation, placement: 'inline' },
       }),
     });
@@ -94,7 +103,7 @@ describe('formatted document conditions', () => {
         orderId: accepted.orderId,
         serviceDate: '2026-09-11',
         dueDate: '2026-10-11',
-        paymentTerms: '**Sous trente jours**',
+        paymentTerms: serializeDocumentText(parseDocumentText('**Sous trente jours**')),
         paymentTermsPresentation: presentation,
       }),
     });
@@ -121,7 +130,9 @@ describe('formatted document conditions', () => {
         headers: server.sessionHeaders,
       });
       const issued = Schema.decodeUnknownSync(InvoiceDetail)(await issuedResponse.json());
-      expect(issued.currentRevision.paymentTerms).toBe('**Sous trente jours**');
+      expect(issued.currentRevision.paymentTerms).toBe(
+        serializeDocumentText(parseDocumentText('**Sous trente jours**')),
+      );
       expect(issued.currentRevision.paymentTermsPresentation).toEqual(presentation);
       expect(
         database

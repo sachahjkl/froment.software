@@ -19,7 +19,11 @@ export class DocumentTextView {
   protected readonly content = computed(() => {
     const blocks = this.blocks();
     if (blocks !== undefined) return blocks;
-    if (this.presentation()?.format !== 'markdown') return [];
-    return parseDocumentText(this.source());
+    const format = this.presentation()?.format ?? 'plain';
+    if (format === 'plain') return [];
+    return parseDocumentText(this.source(), format);
   });
+  protected readonly formatted = computed(
+    () => this.blocks() !== undefined || (this.presentation()?.format ?? 'plain') !== 'plain',
+  );
 }

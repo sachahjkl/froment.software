@@ -67,7 +67,9 @@ const wrapBlocks = (blocks: ReadonlyArray<DocumentTextBlock>): ReadonlyArray<Doc
   });
 const prepareTerms = (source: string, presentation?: DocumentTextPresentationValue) => ({
   terms:
-    presentation?.format === 'markdown' ? wrapBlocks(parseDocumentText(source)) : wrapText(source),
+    presentation === undefined || presentation.format === 'plain'
+      ? wrapText(source)
+      : wrapBlocks(parseDocumentText(source, presentation.format)),
   termsPlacement: presentation?.placement ?? 'inline',
 });
 

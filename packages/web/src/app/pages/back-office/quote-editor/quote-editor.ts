@@ -183,7 +183,7 @@ export class QuoteEditor {
     pattern(path.title, /\S/);
     maxLength(path.conditions, 2_000);
     validate(path.conditions, ({ value }) =>
-      this.model().conditionsPresentation?.format === 'markdown' && !isDocumentText(value())
+      !isDocumentText(value(), this.model().conditionsPresentation?.format ?? 'plain')
         ? { kind: 'format' }
         : undefined,
     );

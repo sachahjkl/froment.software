@@ -143,7 +143,7 @@ export class InvoiceEditor {
     );
     maxLength(path.paymentTerms, 2000);
     validate(path.paymentTerms, ({ value }) =>
-      this.model().paymentTermsPresentation?.format === 'markdown' && !isDocumentText(value())
+      !isDocumentText(value(), this.model().paymentTermsPresentation?.format ?? 'plain')
         ? { kind: 'format' }
         : undefined,
     );

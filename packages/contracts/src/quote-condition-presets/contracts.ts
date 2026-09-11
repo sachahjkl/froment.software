@@ -19,8 +19,7 @@ const conditionsFilter = Schema.makeFilter<{
   readonly conditionsPresentation?: DocumentTextPresentation;
 }>(
   (value) =>
-    value.conditionsPresentation?.format !== 'markdown' ||
-    (isDocumentText(value.conditions) &&
+    (isDocumentText(value.conditions, value.conditionsPresentation?.format ?? 'plain') &&
       /\S/.test(documentTextContent(value.conditions, value.conditionsPresentation))) ||
     'document.conditions_format.invalid',
 );

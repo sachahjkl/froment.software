@@ -37,8 +37,7 @@ const paymentTermsFilter = Schema.makeFilter<{
   readonly paymentTermsPresentation?: DocumentTextPresentation;
 }>(
   (value) =>
-    value.paymentTermsPresentation?.format !== 'markdown' ||
-    isDocumentText(value.paymentTerms) ||
+    isDocumentText(value.paymentTerms, value.paymentTermsPresentation?.format ?? 'plain') ||
     'document.conditions_format.invalid',
 );
 const InvoiceLinesInput = Schema.Array(DocumentLineInput).check(

@@ -1,5 +1,5 @@
-@if (presentation()?.format === 'markdown' || blocks()) { @for (block of content(); track $index) {
-@switch (block.kind) { @case ('paragraph') {
+@if (formatted()) { @for (block of content(); track $index) { @switch (block.kind) { @case
+('paragraph') {
 <p>
   @for (span of block.spans; track $index) {<span
     [class.bold]="span.bold"

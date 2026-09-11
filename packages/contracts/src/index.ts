@@ -5,6 +5,7 @@ export {
   DocumentTextBlock,
   DocumentTextSpan,
   parseDocumentText,
+  serializeDocumentText,
   isDocumentText,
   documentTextContent,
 } from './documents/document-text.js';

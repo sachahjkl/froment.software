@@ -16,7 +16,11 @@
 #let text-blocks(blocks) = {
   for item in blocks {
     if item.kind == "paragraph" {
-      block(spacing: 2.5mm)[#text-spans(item.spans)]
+      if item.spans.len() == 0 {
+        block(height: 1em, spacing: 2.5mm)[]
+      } else {
+        block(spacing: 2.5mm)[#text-spans(item.spans)]
+      }
     } else if item.kind == "heading" {
       block(sticky: true, above: 3mm, below: 1.5mm)[
         #text(size: if item.level == 2 { 10pt } else { 9pt }, weight: "bold")[#text-spans(item.spans)]

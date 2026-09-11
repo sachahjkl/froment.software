@@ -2,6 +2,7 @@ import {
   InvoiceRenderSnapshot,
   OrderRenderSnapshot,
   QuoteRenderSnapshot,
+  serializeDocumentText,
 } from '@froment/contracts';
 import { spawnSync } from 'node:child_process';
 import { mkdtempSync, readFileSync, readdirSync, rmSync } from 'node:fs';
@@ -154,6 +155,34 @@ const inspectPdf = (pdf: Uint8Array) => {
 const normalizedText = (value: string): string => value.replaceAll(/[\s\u200b]/g, '');
 
 describe('DocumentRenderer', () => {
+  it('renders typed blocks with literal entities, empty paragraphs and heading breaks', async () => {
+    const conditions = serializeDocumentText([
+      { kind: 'heading', level: 2, spans: [{ text: 'Avant\nAprès', bold: false, italic: false }] },
+      { kind: 'paragraph', spans: [] },
+      {
+        kind: 'paragraph',
+        spans: [{ text: '    \\&amp; et **littéral**', bold: true, italic: true }],
+      },
+    ]);
+    for (const placement of ['inline', 'new-page'] as const) {
+      const pdf = await Effect.runPromise(
+        DocumentRenderer.use((renderer) =>
+          renderer.renderQuotePdf({
+            ...compactQuote,
+            conditions,
+            conditionsPresentation: { format: 'blocks', placement },
+          }),
+        ).pipe(Effect.provide(DocumentRendererLive)),
+      );
+      const inspected = inspectPdf(pdf);
+      expect(inspected.text).toMatch(/Avant\s*\n\s*Après/);
+      expect(inspected.text).toContain('\\&amp; et **littéral**');
+      expect(inspected.text.split('\f').findIndex((page) => page.includes('Avant'))).toBe(
+        placement === 'inline' ? 0 : 1,
+      );
+    }
+  });
+
   it('renders supplementary Unicode and every line of a page-sized description', async () => {
     const snapshot = Schema.decodeUnknownSync(QuoteRenderSnapshot)({
       ...compactQuote,

@@ -6,12 +6,15 @@
 }
 p {
   white-space: pre-wrap;
+  min-block-size: 1lh;
 }
 h3 {
   font-size: var(--text-lg);
+  white-space: pre-wrap;
 }
 h4 {
   font-size: var(--text-base);
+  white-space: pre-wrap;
 }
 .bold {
   font-weight: 700;

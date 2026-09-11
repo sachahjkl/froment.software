@@ -3,7 +3,7 @@ import { Marked } from 'marked';
 import { decodeHTMLStrict } from 'entities';
 
 export const DocumentTextPresentation = Schema.Struct({
-  format: Schema.Literals(['plain', 'markdown']),
+  format: Schema.Literals(['plain', 'markdown', 'blocks']),
   placement: Schema.Literals(['inline', 'new-page']),
 });
 export type DocumentTextPresentation = typeof DocumentTextPresentation.Type;
@@ -130,17 +130,38 @@ const blocks = (tokens: ReadonlyArray<BlockToken>): Array<DocumentTextBlock> =>
     }
   });
 
-export const parseDocumentText = (source: string): ReadonlyArray<DocumentTextBlock> =>
-  blocks(Schema.decodeUnknownSync(tokensSchema)(markdown.lexer(source)));
+const storedBlocks = Schema.fromJsonString(Schema.Array(DocumentTextBlock));
 
-export const isDocumentText = (source: string): boolean =>
-  Option.isSome(Schema.decodeUnknownOption(tokensSchema)(markdown.lexer(source)));
+export const serializeDocumentText = (content: ReadonlyArray<DocumentTextBlock>): string =>
+  Schema.encodeSync(storedBlocks)(content);
+
+export const parseDocumentText = (
+  source: string,
+  format: DocumentTextPresentation['format'] = 'markdown',
+): ReadonlyArray<DocumentTextBlock> => {
+  if (format === 'blocks') return Schema.decodeUnknownSync(storedBlocks)(source);
+  if (format === 'plain')
+    return source.split('\n\n').map((text) => ({
+      kind: 'paragraph',
+      spans: text.length === 0 ? [] : [{ text, bold: false, italic: false }],
+    }));
+  return blocks(Schema.decodeUnknownSync(tokensSchema)(markdown.lexer(source)));
+};
+
+export const isDocumentText = (
+  source: string,
+  format: DocumentTextPresentation['format'] = 'markdown',
+): boolean => {
+  if (format === 'plain') return true;
+  if (format === 'blocks') return Option.isSome(Schema.decodeUnknownOption(storedBlocks)(source));
+  return Option.isSome(Schema.decodeUnknownOption(tokensSchema)(markdown.lexer(source)));
+};
 
 export const documentTextContent = (
   source: string,
   presentation?: DocumentTextPresentation,
 ): string => {
-  if (presentation?.format !== 'markdown') return source;
+  if (presentation === undefined || presentation.format === 'plain') return source;
   const text = (values: ReadonlyArray<DocumentTextBlock>): string =>
     values
       .map((block) => {
@@ -148,5 +169,5 @@ export const documentTextContent = (
         return block.spans.map((span) => span.text).join('');
       })
       .join('\n\n');
-  return text(parseDocumentText(source));
+  return text(parseDocumentText(source, presentation.format));
 };

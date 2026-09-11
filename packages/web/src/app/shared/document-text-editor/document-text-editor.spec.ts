@@ -4,6 +4,7 @@ import { IconToolbar } from '@shared/icon-toolbar/icon-toolbar';
 import {
   documentTextContent,
   isDocumentText,
+  parseDocumentText,
   type DocumentTextPresentationValue,
 } from '@froment/contracts';
 import { describe, expect, it } from 'vitest';
@@ -52,12 +53,11 @@ describe('DocumentTextEditor', () => {
     await fixture.whenStable();
     component['changePlacement']('new-page');
     await fixture.whenStable();
-    expect(isDocumentText(component.value())).toBe(true);
-    expect(component.value()).toContain('**À réception**');
+    expect(isDocumentText(component.value(), 'blocks')).toBe(true);
     expect(documentTextContent(component.value(), component.presentation())).toBe(
       'Paiement\n\nÀ réception\n\nClause suivante',
     );
-    expect(presentations.at(-1)).toEqual({ format: 'markdown', placement: 'new-page' });
+    expect(presentations.at(-1)).toEqual({ format: 'blocks', placement: 'new-page' });
   });
 
   it('keeps literal punctuation when adding a page break to existing text', async () => {
@@ -86,7 +86,9 @@ describe('DocumentTextEditor', () => {
     component['editor']!.commands.setTextSelection({ from: 7, to: 12 });
     toolbar.activated.emit('bold');
     await fixture.whenStable();
-    expect(component.value()).toBe('Texte **ciblé**');
+    expect(parseDocumentText(component.value(), 'blocks')[0]).toMatchObject({
+      spans: expect.arrayContaining([expect.objectContaining({ text: 'ciblé', bold: true })]),
+    });
     expect(component['editor']!.state.selection).toMatchObject({ from: 7, to: 12 });
     expect(
       toolbar
@@ -96,14 +98,17 @@ describe('DocumentTextEditor', () => {
     ).toBe(true);
     toolbar.activated.emit('undo');
     await fixture.whenStable();
-    expect(component.value()).toBe('Texte ciblé');
+    expect(documentTextContent(component.value(), component.presentation())).toBe('Texte ciblé');
     toolbar.activated.emit('redo');
     await fixture.whenStable();
-    expect(component.value()).toBe('Texte **ciblé**');
+    const restored = component.value();
+    expect(parseDocumentText(restored, 'blocks')[0]).toMatchObject({
+      spans: expect.arrayContaining([expect.objectContaining({ text: 'ciblé', bold: true })]),
+    });
     fixture.componentRef.setInput('disabled', true);
     await fixture.whenStable();
     toolbar.activated.emit('italic');
-    expect(component.value()).toBe('Texte **ciblé**');
+    expect(component.value()).toBe(restored);
   });
 
   it.each([
@@ -120,9 +125,9 @@ describe('DocumentTextEditor', () => {
     await fixture.whenStable();
     const markdown = component.value();
     const presentation = component.presentation();
-    expect(isDocumentText(markdown)).toBe(true);
+    expect(isDocumentText(markdown, 'blocks')).toBe(true);
     expect(documentTextContent(markdown, presentation)).toBe(source);
-    component['editor']?.commands.setContent(editorContent(markdown, 'markdown'), {
+    component['editor']?.commands.setContent(editorContent(markdown, 'blocks'), {
       emitUpdate: false,
     });
     expect(component['editor']?.getText()).toBe(source);
@@ -155,9 +160,9 @@ describe('DocumentTextEditor', () => {
     });
     await fixture.whenStable();
     const source = component.value();
-    expect(isDocumentText(source)).toBe(true);
+    expect(isDocumentText(source, 'blocks')).toBe(true);
     expect(source).not.toContain('<');
-    expect(editorContent(source, 'markdown')).toMatchObject({
+    expect(editorContent(source, 'blocks')).toMatchObject({
       content: [
         {
           content: expect.arrayContaining([
@@ -165,7 +170,7 @@ describe('DocumentTextEditor', () => {
               text: 'second',
               marks: [{ type: 'bold' }, { type: 'italic' }],
             }),
-            expect.objectContaining({ text: 'dernier', marks: [{ type: 'italic' }] }),
+            expect.objectContaining({ text: ' dernier', marks: [{ type: 'italic' }] }),
           ]),
         },
       ],
@@ -178,8 +183,7 @@ describe('DocumentTextEditor', () => {
       editorContent('10. Première échéance\n11. Solde', 'markdown'),
     );
     await fixture.whenStable();
-    expect(component.value()).toContain('10. Première échéance');
-    expect(editorContent(component.value(), 'markdown')).toMatchObject({
+    expect(editorContent(component.value(), 'blocks')).toMatchObject({
       content: [{ type: 'orderedList', attrs: { start: 10 } }],
     });
   });

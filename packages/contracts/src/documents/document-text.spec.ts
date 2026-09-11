@@ -7,11 +7,62 @@ import {
   documentTextContent,
   isDocumentText,
   parseDocumentText,
+  serializeDocumentText,
 } from './document-text.js';
 
 const presentation = { format: 'markdown', placement: 'new-page' } as const;
 
 describe('document text', () => {
+  it('stores typed blocks without interpreting literal text or empty paragraphs', () => {
+    const content = [
+      { kind: 'heading', level: 2, spans: [{ text: 'Avant\nAprès', bold: false, italic: false }] },
+      { kind: 'paragraph', spans: [] },
+      { kind: 'paragraph', spans: [{ text: '    \\&amp;', bold: true, italic: true }] },
+    ] as const;
+    const source = serializeDocumentText(content);
+    expect(parseDocumentText(source, 'blocks')).toEqual(content);
+    expect(documentTextContent(source, { format: 'blocks', placement: 'inline' })).toBe(
+      'Avant\nAprès\n\n\n\n    \\&amp;',
+    );
+  });
+
+  it('validates block structure and retains the 2000-character stored-text limit', () => {
+    const presentation = { format: 'blocks', placement: 'inline' } as const;
+    const source = serializeDocumentText([
+      { kind: 'paragraph', spans: [{ text: '', bold: false, italic: false }] },
+    ]);
+    const conditions = serializeDocumentText([
+      {
+        kind: 'paragraph',
+        spans: [{ text: 'x'.repeat(2000 - source.length), bold: false, italic: false }],
+      },
+    ]);
+    expect(conditions.length).toBe(2000);
+    expect(
+      Schema.is(QuoteConditionPresetWriteRequest)({
+        name: 'Conditions',
+        conditions,
+        conditionsPresentation: presentation,
+      }),
+    ).toBe(true);
+    expect(
+      Schema.is(QuoteConditionPresetWriteRequest)({
+        name: 'Conditions',
+        conditions: conditions + ' ',
+        conditionsPresentation: presentation,
+      }),
+    ).toBe(false);
+    expect(isDocumentText('[{"kind":"html","text":"<b>Clause</b>"}]', 'blocks')).toBe(false);
+    expect(isDocumentText('not JSON', 'blocks')).toBe(false);
+    expect(
+      Schema.is(QuoteConditionPresetWriteRequest)({
+        name: 'Conditions',
+        conditions: serializeDocumentText([{ kind: 'paragraph', spans: [] }]),
+        conditionsPresentation: presentation,
+      }),
+    ).toBe(false);
+  });
+
   it('keeps paragraphs, emphasis, headings and nested lists', () => {
     const source =
       '## Paiement\n\nPremier **paragraphe** et *précision*.\n\nSecond paragraphe.\n\n1. Première clause\n2. Deuxième clause\n   - Détail';
