@@ -183,6 +183,7 @@ export class LedgerPost {
         label: this.model().label.trim(),
         sourceKind: source.sourceKind,
         sourceId: source.sourceId,
+        bookedOn: source.postingDate,
       };
       const fingerprint = JSON.stringify(payload);
       if (this.requestKey?.fingerprint !== fingerprint)

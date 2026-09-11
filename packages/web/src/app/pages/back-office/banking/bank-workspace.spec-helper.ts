@@ -37,6 +37,7 @@ export const ledgerSource: typeof LedgerSource.Type = {
   reference: 'DEBIT-1',
   account: 'Compte local',
   bookedOn: '2026-09-01',
+  postingDate: '2026-09-01',
   amountCents: 1234,
   entryId: null,
 };

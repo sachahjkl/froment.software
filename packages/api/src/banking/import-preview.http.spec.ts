@@ -149,6 +149,7 @@ describe('bank import preview HTTP', () => {
       const response = await post('/api/banking/ledger', {
         sourceKind: 'debit',
         sourceId: transaction.id,
+        bookedOn: source.source.postingDate,
         debitAccount: '627',
         creditAccount: '512',
         label: 'Bank fee',

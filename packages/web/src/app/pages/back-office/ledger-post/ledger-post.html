@@ -37,8 +37,12 @@
           <dd>{{ i18n.t(sourceLabel(detail.source.sourceKind)) }}</dd>
         </div>
         <div>
-          <dt>{{ i18n.t('bankWorkspace.date') }}</dt>
+          <dt>{{ i18n.t('ledger.bankDate') }}</dt>
           <dd>{{ detail.source.bookedOn | localizedDate: i18n.language() }}</dd>
+        </div>
+        <div>
+          <dt>{{ i18n.t('ledger.postingDate') }}</dt>
+          <dd>{{ detail.source.postingDate | localizedDate: i18n.language() }}</dd>
         </div>
         <div>
           <dt>{{ i18n.t('bankWorkspace.amount') }}</dt>

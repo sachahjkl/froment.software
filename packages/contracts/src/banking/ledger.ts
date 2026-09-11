@@ -11,6 +11,7 @@ export const LedgerRequest = Schema.Struct({
   requestId: Schema.String.check(Schema.isUUID(4)),
   sourceKind: LedgerSourceKind,
   sourceId: Ulid,
+  bookedOn: CalendarDate,
   debitAccount: LedgerAccount,
   creditAccount: LedgerAccount,
   label: Schema.String.check(Schema.isPattern(/\S/), Schema.isMaxLength(160)),
@@ -35,6 +36,7 @@ export const LedgerSource = Schema.Struct({
   reference: Schema.String,
   account: Schema.String,
   bookedOn: CalendarDate,
+  postingDate: CalendarDate,
   amountCents: PositiveSafeInteger,
   entryId: Schema.NullOr(Ulid),
 });

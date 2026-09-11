@@ -125,7 +125,7 @@ export const bankWorkspaceText = {
     'bankWorkspace.reversalDateInvalid':
       'Saisissez une date comprise entre la date de l’écriture et aujourd’hui.',
     'bankWorkspace.sourceSnapshot':
-      'Le serveur reprend le montant et la date de la source. La correction exige une contrepassation.',
+      'Le serveur reprend le montant bancaire. La date comptable tient compte des contrepassations précédentes. La correction exige une contrepassation.',
     'bankWorkspace.viewTransaction': 'Consulter la transaction',
     'bankWorkspace.activeEntry': 'Active',
     'bankWorkspace.reversedEntry': 'Contrepassée',
@@ -255,7 +255,7 @@ export const bankWorkspaceText = {
     'bankWorkspace.reversalReasonInvalid': 'Enter a reason with 1 to 160 characters.',
     'bankWorkspace.reversalDateInvalid': 'Enter a date between the entry date and today.',
     'bankWorkspace.sourceSnapshot':
-      'The server copies the source amount and date. Corrections require a reversal.',
+      'The server copies the bank amount. The posting date accounts for previous reversals. Corrections require a reversal.',
     'bankWorkspace.viewTransaction': 'View transaction',
     'bankWorkspace.activeEntry': 'Active',
     'bankWorkspace.reversedEntry': 'Reversed',

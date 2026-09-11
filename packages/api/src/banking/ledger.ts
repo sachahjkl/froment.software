@@ -25,7 +25,10 @@ const entryQuery = `select e.id, e.request_id as requestId, e.source_kind as sou
     else (select t.reference from bank_matches m join bank_transactions t on t.id = m.transaction_id where m.id = e.source_id)
     end as sourceReference
   from bank_ledger_entries e`;
-const sourceQuery = `select s.*, (select e.id from bank_ledger_entries e where e.source_kind = s.sourceKind
+const sourceQuery = `select s.*, max(s.bookedOn, coalesce((select max(r.booked_on)
+  from bank_ledger_entries r where r.source_kind = s.sourceKind and r.source_id = s.sourceId
+  and r.reverses_id is not null), s.bookedOn)) as postingDate,
+  (select e.id from bank_ledger_entries e where e.source_kind = s.sourceKind
   and e.source_id = s.sourceId and e.reverses_id is null
   and not exists (select 1 from bank_ledger_entries r where r.reverses_id = e.id)) as entryId from (
   select id as sourceId, 'debit' as sourceKind, reference, account, booked_on as bookedOn, -amount_cents as amountCents
@@ -149,6 +152,7 @@ const make = Effect.gen(function* () {
                 saved.reversesId !== null ||
                 saved.sourceKind !== request.sourceKind ||
                 saved.sourceId !== request.sourceId ||
+                saved.bookedOn !== request.bookedOn ||
                 saved.debitAccount !== request.debitAccount ||
                 saved.creditAccount !== request.creditAccount ||
                 saved.label !== request.label.trim() ||
@@ -164,7 +168,8 @@ const make = Effect.gen(function* () {
             const source = Schema.decodeUnknownSync(LedgerSource)(row);
             if (
               source.entryId !== null ||
-              source.bookedOn > invoiceIssueDate(now, business.timeZone)
+              request.bookedOn !== source.postingDate ||
+              source.postingDate > invoiceIssueDate(now, business.timeZone)
             )
               throw conflict();
             const entry = LedgerEntry.make({
@@ -172,7 +177,7 @@ const make = Effect.gen(function* () {
               label: request.label.trim(),
               id: ulid(),
               amountCents: source.amountCents,
-              bookedOn: source.bookedOn,
+              bookedOn: source.postingDate,
               recordedAt: DateTime.formatIso(DateTime.makeUnsafe(now)),
               recordedByUserId: actor,
               reversesId: null,

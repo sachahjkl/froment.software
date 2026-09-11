@@ -1,5 +1,7 @@
 export const ledgerText = {
   fr: {
+    'ledger.bankDate': 'Date bancaire',
+    'ledger.postingDate': 'Date comptable',
     'ledger.title': 'Écritures des débits et commissions',
     'ledger.hint':
       'Choisissez les comptes comptables avec votre comptable. Chaque écriture porte le même montant au débit et au crédit. Aucune TVA n’est déduite et aucun transfert n’est exécuté.',
@@ -38,6 +40,8 @@ export const ledgerText = {
       'Créer une écriture inverse définitive ? L’écriture initiale sera conservée. Aucun fonds ne sera transféré.',
   },
   en: {
+    'ledger.bankDate': 'Bank date',
+    'ledger.postingDate': 'Posting date',
     'ledger.title': 'Debit and fee entries',
     'ledger.hint':
       'Choose ledger accounts with your accountant. Each entry debits and credits the same amount. No VAT is deducted and no transfer is executed.',

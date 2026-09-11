@@ -30,13 +30,13 @@ it('posts balanced immutable debit entries once, reverses without deletion, and 
   const get = (path: string) =>
     fetch(`${server.baseUrl}${path}`, { headers: server.sessionHeaders });
   const ledgerPath = '/api/banking/ledger';
-  const period = '?from=2026-09-01&to=2026-09-06';
+  const period = '?from=2026-08-31&to=2026-09-06';
   try {
     expect(
       (
         await post('/api/banking/import', {
           account: 'BANK',
-          csv: 'transaction_id,booked_on,amount,currency,description\nD,2026-09-01,-12.34,EUR,Expense\nC,2026-09-01,12.34,EUR,Receipt',
+          csv: 'transaction_id,booked_on,amount,currency,description\nD,2026-08-31,-12.34,EUR,Expense\nC,2026-08-31,12.34,EUR,Receipt',
         })
       ).status,
     ).toBe(200);
@@ -51,6 +51,7 @@ it('posts balanced immutable debit entries once, reverses without deletion, and 
       requestId: randomUUID(),
       sourceKind: 'debit',
       sourceId: source.sourceId,
+      bookedOn: source.postingDate,
       debitAccount: '627',
       creditAccount: '512',
       label: '=Literal, "fee"',
@@ -77,7 +78,7 @@ it('posts balanced immutable debit entries once, reverses without deletion, and 
     if (!entry) throw new Error('ledger.test.entry_missing');
     expect(entry).toMatchObject({
       amountCents: 1234,
-      bookedOn: '2026-09-01',
+      bookedOn: '2026-08-31',
       debitAccount: '627',
       creditAccount: '512',
       reversesId: null,
@@ -92,7 +93,7 @@ it('posts balanced immutable debit entries once, reverses without deletion, and 
     const reversePath = `${ledgerPath}/${entry.id}/reverse`;
     const reverse = { requestId: randomUUID(), bookedOn: '2026-09-06', reason: 'Wrong account' };
     expect((await post(reversePath, { ...reverse, bookedOn: '2099-01-01' })).status).toBe(409);
-    expect((await post(reversePath, { ...reverse, bookedOn: '2026-08-31' })).status).toBe(409);
+    expect((await post(reversePath, { ...reverse, bookedOn: '2026-08-30' })).status).toBe(409);
     const reversed = Schema.decodeUnknownSync(LedgerEntry)(
       await (await post(reversePath, reverse)).json(),
     );
@@ -121,7 +122,18 @@ it('posts balanced immutable debit entries once, reverses without deletion, and 
     ).toBeNull();
     expect(
       (await post(ledgerPath, { ...request, requestId: randomUUID(), debitAccount: '606' })).status,
-    ).toBe(200);
+    ).toBe(409);
+    const corrected = Schema.decodeUnknownSync(LedgerEntry)(
+      await (
+        await post(ledgerPath, {
+          ...request,
+          requestId: randomUUID(),
+          debitAccount: '606',
+          bookedOn: reverse.bookedOn,
+        })
+      ).json(),
+    );
+    expect(corrected.bookedOn).toBe(reverse.bookedOn);
     expect(() => sqlite.prepare('update bank_ledger_entries set label = ?').run('Changed')).toThrow(
       'ledger_immutable',
     );
@@ -139,7 +151,52 @@ it('posts balanced immutable debit entries once, reverses without deletion, and 
     const narrow = Schema.decodeUnknownSync(LedgerList)(
       await (await get(`${ledgerPath}?from=2026-09-06&to=2026-09-06`)).json(),
     );
-    expect(narrow.entries.map((entry) => entry.id)).toEqual([reversed.id]);
+    expect(narrow.entries.map((entry) => entry.id).sort()).toEqual(
+      [reversed.id, corrected.id].sort(),
+    );
+    const augustPeriod = '?from=2026-08-01&to=2026-08-31';
+    const august = Schema.decodeUnknownSync(LedgerList)(
+      await (await get(ledgerPath + augustPeriod)).json(),
+    );
+    expect(august.entries.map((entry) => entry.id)).toEqual([entry.id]);
+    expect(august.sources[0]).toMatchObject({ bookedOn: '2026-08-31', postingDate: '2026-09-06' });
+    expect(
+      (await (await get(`${ledgerPath}/export${augustPeriod}`)).text()).trim().split('\r\n'),
+    ).toHaveLength(3);
+    expect(
+      narrow.entries.reduce(
+        (net, entry) =>
+          net + (entry.creditAccount === '512' ? entry.amountCents : -entry.amountCents),
+        0,
+      ),
+    ).toBe(0);
+    expect(
+      (
+        await post(`${ledgerPath}/${corrected.id}/reverse`, {
+          requestId: randomUUID(),
+          bookedOn: '2026-09-07',
+          reason: 'Second correction',
+        })
+      ).status,
+    ).toBe(200);
+    expect(
+      (
+        await post(ledgerPath, {
+          ...request,
+          requestId: randomUUID(),
+          bookedOn: '2026-09-06',
+        })
+      ).status,
+    ).toBe(409);
+    expect(
+      (
+        await post(ledgerPath, {
+          ...request,
+          requestId: randomUUID(),
+          bookedOn: '2026-09-07',
+        })
+      ).status,
+    ).toBe(200);
     expect((await get(`${ledgerPath}?from=2026-09-06&to=2026-09-01`)).status).toBe(400);
     const tokenResponse = await post('/api/tokens', {
       name: 'Ledger denied',
@@ -248,6 +305,7 @@ it('requires fee reversal before dissociation or receipt correction and rejects 
       requestId: randomUUID(),
       sourceKind: 'fee',
       sourceId: match.matchId,
+      bookedOn: '2026-09-01',
       debitAccount: '627',
       creditAccount: '511',
       label: 'Deducted fee',
