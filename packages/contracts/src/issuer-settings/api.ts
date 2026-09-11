@@ -10,12 +10,16 @@ import {
   PermissionDenied,
   RequestRateLimited,
 } from '../authentication/contracts.js';
-import { IssuerSettings, IssuerSettingsUpdateRequest } from '../documents/contracts.js';
+import {
+  IssuerSettingsDetail,
+  IssuerSettingsUpdateRequest,
+  IssuerSettingsConflict,
+} from './contracts.js';
 import { Permissions } from '../permissions.js';
 
 export class IssuerSettingsApi extends HttpApiGroup.make('issuerSettings', { topLevel: true }).add(
   HttpApiEndpoint.get('issuerSettingsGet', '/api/issuer-settings', {
-    success: IssuerSettings,
+    success: IssuerSettingsDetail,
     error: [
       AuthenticationRequired.pipe(HttpApiSchema.status(401)),
       PermissionDenied.pipe(HttpApiSchema.status(403)),
@@ -23,8 +27,9 @@ export class IssuerSettingsApi extends HttpApiGroup.make('issuerSettings', { top
   }).pipe(requirePermissions([Permissions.issuerRead]), authenticate, frontendSpecific),
   HttpApiEndpoint.put('issuerSettingsUpdate', '/api/issuer-settings', {
     payload: IssuerSettingsUpdateRequest,
-    success: IssuerSettings,
+    success: IssuerSettingsDetail,
     error: [
+      IssuerSettingsConflict,
       AuthenticationRequired.pipe(HttpApiSchema.status(401)),
       PermissionDenied.pipe(HttpApiSchema.status(403)),
       RequestRateLimited.pipe(HttpApiSchema.status(429)),

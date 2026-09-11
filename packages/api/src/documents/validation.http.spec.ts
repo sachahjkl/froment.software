@@ -1,4 +1,4 @@
-import { ClientSummary, InvoiceDetail } from '@froment/contracts';
+import { ClientSummary, InvoiceDetail, IssuerSettingsDetail } from '@froment/contracts';
 import { Schema } from 'effect';
 import Sqlite from 'better-sqlite3';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
@@ -19,13 +19,24 @@ describe('document publication checks', () => {
 
   it('blocks incomplete snapshots and refreshes invoice parties only on request', async () => {
     const issuer = await setIssuer(server);
-    const incompleteIssuer = { ...issuer, addressLine1: '', email: 'invalid' };
-    const setIncompleteIssuer = () =>
-      fetch(`${server.baseUrl}/api/issuer-settings`, {
+    const incompleteIssuer = {
+      ...issuer,
+      expectedVersion: issuer.version,
+      addressLine1: '',
+      email: 'invalid',
+    };
+    const setIncompleteIssuer = async () => {
+      const current = Schema.decodeUnknownSync(IssuerSettingsDetail)(
+        await (
+          await fetch(`${server.baseUrl}/api/issuer-settings`, { headers: server.sessionHeaders })
+        ).json(),
+      );
+      return fetch(`${server.baseUrl}/api/issuer-settings`, {
         method: 'PUT',
         headers: server.jsonHeaders,
-        body: JSON.stringify(incompleteIssuer),
+        body: JSON.stringify({ ...incompleteIssuer, expectedVersion: current.version }),
       });
+    };
     expect((await setIncompleteIssuer()).status).toBe(200);
     const client = await createClient(server);
     const quote = await createQuote(server, client.id);

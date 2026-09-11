@@ -6,6 +6,8 @@ import { join } from 'node:path';
 import { type AddressInfo, createServer } from 'node:net';
 import { promisify } from 'node:util';
 import { CookieJar } from 'tough-cookie';
+import { IssuerSettingsDetail } from '@froment/contracts';
+import { Schema } from 'effect';
 
 import { cookieHeaders, storeResponseCookies } from './cookies.spec-helper.js';
 
@@ -167,6 +169,11 @@ export const createClient = async (server: HttpTestServer, displayName = 'HTTP c
 };
 
 export const setIssuer = async (server: HttpTestServer, displayName = 'Froment Software') => {
+  const current = Schema.decodeUnknownSync(IssuerSettingsDetail)(
+    await (
+      await fetch(`${server.baseUrl}/api/issuer-settings`, { headers: server.sessionHeaders })
+    ).json(),
+  );
   const issuer = {
     displayName,
     addressLine1: '10 rue du Code',
@@ -182,10 +189,10 @@ export const setIssuer = async (server: HttpTestServer, displayName = 'Froment S
   const response = await fetch(`${server.baseUrl}/api/issuer-settings`, {
     method: 'PUT',
     headers: server.jsonHeaders,
-    body: JSON.stringify(issuer),
+    body: JSON.stringify({ ...issuer, expectedVersion: current.version }),
   });
   if (!response.ok) throw new Error(`Issuer update failed: ${await response.text()}`);
-  return issuer;
+  return Schema.decodeUnknownSync(IssuerSettingsDetail)(await response.json());
 };
 
 export const createQuote = async (server: HttpTestServer, clientId: string) => {

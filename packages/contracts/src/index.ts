@@ -175,10 +175,15 @@ export {
   type DocumentIssue as DocumentIssueValue,
   IssuerSettings,
   type IssuerSettings as IssuerSettingsValue,
-  IssuerSettingsUpdateRequest,
-  type IssuerSettingsUpdateRequest as IssuerSettingsUpdateRequestValue,
   QuotePreviewUnavailable,
 } from './documents/contracts.js';
+export {
+  IssuerSettingsDetail,
+  type IssuerSettingsDetail as IssuerSettingsDetailValue,
+  IssuerSettingsUpdateRequest,
+  type IssuerSettingsUpdateRequest as IssuerSettingsUpdateRequestValue,
+  IssuerSettingsConflict,
+} from './issuer-settings/contracts.js';
 export {
   PublicQuoteAccessRequest,
   type PublicQuoteAccessRequest as PublicQuoteAccessRequestValue,

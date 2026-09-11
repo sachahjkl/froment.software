@@ -96,8 +96,8 @@ const snapshot = Schema.decodeUnknownSync(InvoiceRenderSnapshot)({
 });
 
 const issuerSettings: IssuerSettingsService = {
-  get: Effect.succeed(issuer),
-  update: () => Effect.succeed(issuer),
+  get: Effect.succeed({ ...issuer, version: 1 }),
+  update: () => Effect.succeed({ ...issuer, version: 1 }),
 };
 const unused = () => Effect.die('The invoice PDF test does not use quote operations.');
 const quotes: QuotesService = {

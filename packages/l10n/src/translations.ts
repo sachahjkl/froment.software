@@ -939,6 +939,8 @@ export const translations = {
     'backOffice.issuer.saving': 'Enregistrement…',
     'backOffice.issuer.saved': 'Coordonnées enregistrées.',
     'issuer.error': 'Le serveur ne peut pas traiter les coordonnées émetteur.',
+    'issuer.conflict':
+      'Les coordonnées émetteur ont changé. Rechargez les coordonnées avant de reprendre vos modifications.',
     'table.scrollRegion': 'Tableau défilant horizontalement',
     'page.back_office_issuer_settings': 'Coordonnées émetteur | froment.software',
     'page.description.back_office_issuer_settings': 'Configuration des coordonnées des documents.',
@@ -2462,6 +2464,8 @@ export const translations = {
     'backOffice.issuer.saving': 'Saving…',
     'backOffice.issuer.saved': 'Issuer details saved.',
     'issuer.error': 'The server cannot process the issuer details.',
+    'issuer.conflict':
+      'The issuer details have changed. Reload the details before applying your changes again.',
     'table.scrollRegion': 'Horizontally scrollable table',
     'page.back_office_issuer_settings': 'Issuer details | froment.software',
     'page.description.back_office_issuer_settings': 'Configure document issuer details.',

@@ -51,6 +51,7 @@ export class IssuerSettings {
   protected readonly i18n = inject(I18nService);
   private readonly api = inject(IssuerSettingsApi);
   private readonly model = signal(emptySettings());
+  private readonly version = signal(0);
   protected readonly settingsForm = form(this.model, (path) => {
     disabled(path, () => this.loading() || this.saving() || !this.loaded());
     required(path.displayName);
@@ -108,26 +109,30 @@ export class IssuerSettings {
       this.saving.set(true);
       this.saved.set(false);
       this.error.set(undefined);
-      const outcome = await this.api.update(this.model());
+      const outcome = await this.api.update({ ...this.model(), expectedVersion: this.version() });
       this.saving.set(false);
       if (!outcome.success) {
-        this.error.set(
-          outcome.code === 'request.rate_limited' ? 'request.rate_limited' : 'issuer.error',
-        );
+        this.error.set(outcome.code);
         return;
       }
-      this.model.set(outcome.result);
+      const { version, ...settings } = outcome.result;
+      this.version.set(version);
+      this.model.set(settings);
       this.settingsForm().reset();
       this.saved.set(true);
     });
   }
 
   protected async load(): Promise<void> {
+    if (!(await this.canDeactivate())) return;
     this.loading.set(true);
     this.loaded.set(false);
+    this.saved.set(false);
     this.error.set(undefined);
     try {
-      this.model.set(await this.api.get());
+      const { version, ...settings } = await this.api.get();
+      this.version.set(version);
+      this.model.set(settings);
       this.settingsForm().reset();
       this.loaded.set(true);
     } catch {

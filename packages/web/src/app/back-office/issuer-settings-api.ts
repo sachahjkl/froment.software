@@ -1,20 +1,22 @@
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import {
-  IssuerSettings,
-  QuoteFailure,
+  IssuerSettingsDetail,
+  IssuerSettingsConflict,
+  RequestRateLimited,
   type IssuerSettingsUpdateRequestValue,
-  type IssuerSettingsValue,
-  type QuoteFailureValue,
+  type IssuerSettingsDetailValue,
 } from '@froment/contracts';
 import { Schema } from 'effect';
 import { firstValueFrom } from 'rxjs';
 
 import { requestOutcome, type ApiOutcome } from '@shared/api-outcome';
 
+const issuerSettingsFailure = Schema.Union([IssuerSettingsConflict, RequestRateLimited]);
+
 export type IssuerSettingsOutcome = ApiOutcome<
-  IssuerSettingsValue,
-  QuoteFailureValue,
+  IssuerSettingsDetailValue,
+  typeof issuerSettingsFailure.Type,
   'issuer.error'
 >;
 
@@ -22,8 +24,8 @@ export type IssuerSettingsOutcome = ApiOutcome<
 export class IssuerSettingsApi {
   private readonly http = inject(HttpClient);
 
-  async get(): Promise<IssuerSettingsValue> {
-    return Schema.decodeUnknownSync(IssuerSettings)(
+  async get(): Promise<IssuerSettingsDetailValue> {
+    return Schema.decodeUnknownSync(IssuerSettingsDetail)(
       await firstValueFrom(this.http.get<unknown>('/api/issuer-settings')),
     );
   }
@@ -31,8 +33,8 @@ export class IssuerSettingsApi {
   async update(request: IssuerSettingsUpdateRequestValue): Promise<IssuerSettingsOutcome> {
     return requestOutcome(
       this.http.put<unknown>('/api/issuer-settings', request),
-      IssuerSettings,
-      QuoteFailure,
+      IssuerSettingsDetail,
+      issuerSettingsFailure,
       'issuer.error',
     );
   }

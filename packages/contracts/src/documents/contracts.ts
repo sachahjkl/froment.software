@@ -33,9 +33,6 @@ export const IssuerSettings = Schema.Struct({
 });
 export type IssuerSettings = typeof IssuerSettings.Type;
 
-export const IssuerSettingsUpdateRequest = IssuerSettings;
-export type IssuerSettingsUpdateRequest = typeof IssuerSettingsUpdateRequest.Type;
-
 export const DocumentIssue = Schema.Struct({
   party: Schema.Literals(['issuer', 'client']),
   field: Schema.Literals(['displayName', 'addressLine1', 'city', 'country', 'email']),

@@ -198,8 +198,8 @@
   </form>
   } @if (error(); as errorKey) {
   <p appNotice variant="danger" role="alert">{{ i18n.t(errorKey) }}</p>
-  @if (!loaded()) {
-  <button appButton type="button" [disabled]="loading()" (click)="load()">
+  @if (!loaded() || errorKey === 'issuer.conflict') {
+  <button appButton type="button" [disabled]="loading() || saving()" (click)="load()">
     {{ i18n.t('configurationWorkspace.reload') }}
   </button>
   } }

@@ -253,10 +253,12 @@ export const issuerSettings = sqliteTable(
     phone: text().notNull(),
     registrationNumber: text('registration_number').notNull(),
     vatNumber: text('vat_number').notNull(),
+    version: integer().notNull().default(1),
     updatedAt: integer('updated_at', { mode: 'timestamp_ms' }).notNull(),
   },
   (table) => [
     check('issuer_settings_singleton_check', sql`${table.id} = 1`),
+    check('issuer_settings_version_check', sql`${table.version} between 1 and 9007199254740991`),
     check(
       'issuer_settings_fields_check',
       sql`length(trim(${table.displayName})) between 1 and 160 and length(${table.addressLine1}) <= 160 and length(${table.addressLine2}) <= 160 and length(${table.postalCode}) <= 32 and length(${table.city}) <= 120 and length(${table.country}) <= 120 and length(${table.email}) <= 254 and length(${table.phone}) <= 64 and length(${table.registrationNumber}) <= 64 and length(${table.vatNumber}) <= 64`,

@@ -1,7 +1,8 @@
 import {
-  IssuerSettings as IssuerSettingsSchema,
+  IssuerSettingsDetail as IssuerSettingsSchema,
+  IssuerSettingsConflict,
   type IssuerSettingsUpdateRequestValue,
-  type IssuerSettingsValue,
+  type IssuerSettingsDetailValue,
   type UlidValue,
 } from '@froment/contracts';
 import { Clock, Context, Effect, Layer, Schema } from 'effect';
@@ -10,11 +11,11 @@ import { Audit } from '../audit/audit.js';
 import { Database, DatabaseError } from '../database/database.js';
 
 export interface IssuerSettingsService {
-  readonly get: Effect.Effect<IssuerSettingsValue, DatabaseError>;
+  readonly get: Effect.Effect<IssuerSettingsDetailValue, DatabaseError>;
   readonly update: (
     request: IssuerSettingsUpdateRequestValue,
     actorUserId: UlidValue,
-  ) => Effect.Effect<IssuerSettingsValue, DatabaseError>;
+  ) => Effect.Effect<IssuerSettingsDetailValue, DatabaseError | IssuerSettingsConflict>;
 }
 
 export class IssuerSettings extends Context.Service<IssuerSettings, IssuerSettingsService>()(
@@ -23,7 +24,7 @@ export class IssuerSettings extends Context.Service<IssuerSettings, IssuerSettin
 
 const selectSettings = `select display_name as displayName, address_line_1 as addressLine1,
   address_line_2 as addressLine2, postal_code as postalCode, city, country, email, phone,
-  registration_number as registrationNumber, vat_number as vatNumber
+  registration_number as registrationNumber, vat_number as vatNumber, version
   from issuer_settings where id = 1`;
 
 export const IssuerSettingsLive = Layer.effect(
@@ -45,18 +46,20 @@ export const IssuerSettingsLive = Layer.effect(
       actorUserId: UlidValue,
     ) {
       const now = yield* Clock.currentTimeMillis;
+      const { expectedVersion, ...fields } = request;
       const settings = Object.fromEntries(
-        Object.entries(request).map(([key, value]) => [key, value.trim()]),
+        Object.entries(fields).map(([key, value]) => [key, value.trim()]),
       );
       return yield* Effect.try({
         try: () =>
           database.sqlite
             .transaction(() => {
-              database.sqlite
+              const result = database.sqlite
                 .prepare(
                   `update issuer_settings set display_name = ?, address_line_1 = ?, address_line_2 = ?,
                    postal_code = ?, city = ?, country = ?, email = ?, phone = ?,
-                   registration_number = ?, vat_number = ?, updated_at = ? where id = 1`,
+                   registration_number = ?, vat_number = ?, updated_at = ?, version = version + 1
+                   where id = 1 and version = ?`,
                 )
                 .run(
                   settings['displayName'],
@@ -70,7 +73,10 @@ export const IssuerSettingsLive = Layer.effect(
                   settings['registrationNumber'],
                   settings['vatNumber'],
                   now,
+                  expectedVersion,
                 );
+              if (result.changes !== 1)
+                throw new IssuerSettingsConflict({ code: 'issuer.conflict' });
               audit.insert({
                 action: 'issuer.updated',
                 actorUserId,
@@ -83,7 +89,10 @@ export const IssuerSettingsLive = Layer.effect(
               );
             })
             .immediate(),
-        catch: (cause) => new DatabaseError({ operation: 'update.issuer.settings', cause }),
+        catch: (cause) =>
+          cause instanceof IssuerSettingsConflict
+            ? cause
+            : new DatabaseError({ operation: 'update.issuer.settings', cause }),
       });
     });
 
