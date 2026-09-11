@@ -63,7 +63,7 @@
     </aside>
     <div class="bank-section">
       @if (item.amountCents > 0 && remaining() > 0) {
-      <section class="bank-section" aria-labelledby="allocation-title">
+      <section *appCan="'bank.reconcile'" class="bank-section" aria-labelledby="allocation-title">
         <h2 id="allocation-title">{{ i18n.t('bankWorkspace.allocate') }}</h2>
         <p>{{ i18n.t('bankWorkspace.groupHint') }}</p>
         <p class="muted">{{ i18n.t('bankWorkspace.paymentHint') }}</p>
@@ -79,7 +79,7 @@
         } @else if (!invoices().length) {
         <p>{{ i18n.t('bankWorkspace.noInvoices') }}</p>
         }
-        <form *appCan="'bank.reconcile'" class="task-form" novalidate (submit)="reconcile($event)">
+        <form class="task-form" novalidate (submit)="reconcile($event)">
           <label class="field"
             >{{ i18n.t('bank.invoice') }}<select
               #invoice

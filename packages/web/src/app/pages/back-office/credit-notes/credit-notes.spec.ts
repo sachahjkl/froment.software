@@ -1,5 +1,5 @@
 import { TestBed } from '@angular/core/testing';
-import { provideAccount } from '@backoffice/account.spec-helper';
+import { accountFixture, provideAccount } from '@backoffice/account.spec-helper';
 import { provideRouter } from '@angular/router';
 import { InvoicesApi } from '@backoffice/invoices-api';
 import { CreditNotes } from './credit-notes';
@@ -8,11 +8,13 @@ import { creditFixture, invoiceFixture } from '../billing/billing.spec-helper';
 describe('CreditNotes', () => {
   beforeEach(() => TestBed.configureTestingModule({ providers: [provideAccount()] }));
   it('reads the protected global list without creating editable financial forms', async () => {
+    const context = accountFixture(['invoice.read', 'document.download']);
     const invoice = invoiceFixture();
     const note = creditFixture().creditNote;
     if (!note) throw new Error('billing.test.credit_missing');
     TestBed.configureTestingModule({
       providers: [
+        context.provider,
         provideRouter([]),
         {
           provide: InvoicesApi,
@@ -42,6 +44,10 @@ describe('CreditNotes', () => {
     expect(root.querySelector('tbody a')?.textContent).toContain('AV-2026-000001');
     expect(root.querySelector('tbody a')?.getAttribute('href')).toContain('tab=credit');
     expect(root.querySelector('textarea')).toBeNull();
+    expect(root.querySelector('a[href$="/credit-note/pdf"]')).not.toBeNull();
+    context.account.update((account) => account && { ...account, permissions: ['invoice.read'] });
+    await fixture.whenStable();
+    expect(root.querySelector('a[href$="/credit-note/pdf"]')).toBeNull();
   });
   it('distinguishes a failed request from an empty list', async () => {
     TestBed.configureTestingModule({

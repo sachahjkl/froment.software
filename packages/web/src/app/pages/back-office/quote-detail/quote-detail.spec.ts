@@ -65,6 +65,17 @@ describe('Quote detail', () => {
       `/api/quotes/${quoteId}/revisions/1/preview`,
     );
   });
+  it('does not offer signature link management without send permission', async () => {
+    TestBed.configureTestingModule({ providers: [provideAccount(['quote.read'])] });
+    get.mockResolvedValue({ success: true, result: { ...quoteFixture, status: 'sent' } });
+    const harness = await RouterTestingHarness.create(`/backoffice/quotes/${quoteId}`);
+    await harness.fixture.whenStable();
+    expect(
+      harness.fixture.nativeElement.querySelector(
+        `a[href="/backoffice/quotes/${quoteId}/publication"]`,
+      ),
+    ).toBeNull();
+  });
   it('requires a reason and confirmation for cancellation', async () => {
     const harness = await RouterTestingHarness.create(`/backoffice/quotes/${quoteId}`);
     await harness.fixture.whenStable();

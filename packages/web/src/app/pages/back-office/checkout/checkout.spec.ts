@@ -13,6 +13,8 @@ import { InvoicesApi } from '@backoffice/invoices-api';
 import { Confirmation } from '@shared/confirmation/confirmation';
 import { Checkout } from './checkout';
 import { CheckoutDetail } from './checkout-detail';
+import { Authentication } from '@backoffice/authentication';
+import { accountFixture, provideAccount } from '@backoffice/account.spec-helper';
 
 const invoice = {
   id: '01ARZ3NDEKTSV4RRFFQ69G5FAV',
@@ -28,6 +30,8 @@ beforeEach(() => {
   sessionStorage.clear();
   TestBed.configureTestingModule({
     providers: [
+      provideAccount(),
+      { provide: Confirmation, useValue: { request: async () => true } },
       {
         provide: PendingProviderRequests,
         useValue: {
@@ -330,4 +334,55 @@ it('checks a stopped session explicitly without creating a new request and prese
   expect(create).not.toHaveBeenCalled();
   await detail['reconcile']();
   expect(reconcile).toHaveBeenCalledTimes(2);
+});
+
+it('does not reconcile after permission is removed during confirmation', async () => {
+  const context = accountFixture(['integration.configure', 'invoice.read']);
+  const request: CheckoutRequest = {
+    requestId: '7345c34c-320b-49a4-ae23-ec993e570e8b',
+    invoiceId: invoice.id,
+    expectedVersion: 2,
+  };
+  const stopped: CheckoutOperation = {
+    ...operation(request),
+    status: 'open',
+    nextAttemptAt: null,
+    sessionId: 'cs_test_existing',
+    error: 'checkout.statusWindowExceeded',
+  };
+  let approve: (accepted: boolean) => void = () => {
+    throw new Error('Confirmation is not open');
+  };
+  const reconcile = vi.fn();
+  TestBed.configureTestingModule({
+    providers: [
+      provideRouter([]),
+      { provide: Authentication, useValue: context.authentication },
+      {
+        provide: Confirmation,
+        useValue: {
+          request: () =>
+            new Promise<boolean>((resolve) => {
+              approve = resolve;
+            }),
+        },
+      },
+      {
+        provide: ActivatedRoute,
+        useValue: {
+          paramMap: of(convertToParamMap({ requestId: request.requestId })),
+          queryParamMap: of(convertToParamMap({})),
+        },
+      },
+      { provide: CheckoutApi, useValue: { list: () => of([stopped]), reconcile } },
+    ],
+  });
+  const fixture = TestBed.createComponent(CheckoutDetail);
+  await fixture.whenStable();
+  const pending = fixture.componentInstance['reconcile']();
+  context.account.update((account) => account && { ...account, permissions: ['invoice.read'] });
+  approve(true);
+  await pending;
+  expect(reconcile).not.toHaveBeenCalled();
+  expect(fixture.componentInstance['reconciling']()).toBe(false);
 });

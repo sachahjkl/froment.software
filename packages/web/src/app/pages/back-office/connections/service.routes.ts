@@ -32,7 +32,7 @@ export const serviceRoutes: Routes = [
     canActivate: [administratorGuard],
     canDeactivate: [unsavedChangesGuard],
     data: {
-      ...permissionData('integration.manage'),
+      ...permissionData('integration.configure'),
       titleKey: 'configurationWorkspace.newTest',
       robots: 'noindex, nofollow',
     },
@@ -43,7 +43,7 @@ export const serviceRoutes: Routes = [
       import('../email-test/email-test-detail').then((module) => module.EmailTestDetail),
     canActivate: [administratorGuard],
     data: {
-      ...permissionData('integration.manage'),
+      ...permissionData('integration.configure'),
       titleKey: 'configurationWorkspace.testDetail',
       robots: 'noindex, nofollow',
     },
@@ -54,7 +54,7 @@ export const serviceRoutes: Routes = [
       import('../email-test/email-test-list').then((module) => module.EmailTestList),
     canActivate: [administratorGuard],
     data: {
-      ...permissionData('integration.manage'),
+      ...permissionData('integration.configure'),
       titleKey: 'configurationWorkspace.tests',
       robots: 'noindex, nofollow',
     },
@@ -76,7 +76,7 @@ export const serviceRoutes: Routes = [
       import('../checkout/checkout-detail').then((module) => module.CheckoutDetail),
     canActivate: [administratorGuard],
     data: {
-      ...permissionData('integration.configure'),
+      ...permissionData('integration.configure', 'invoice.read'),
       titleKey: 'configurationWorkspace.testDetail',
       robots: 'noindex, nofollow',
     },
@@ -86,7 +86,7 @@ export const serviceRoutes: Routes = [
     loadComponent: () => import('../checkout/checkout-list').then((module) => module.CheckoutList),
     canActivate: [administratorGuard],
     data: {
-      ...permissionData('integration.configure'),
+      ...permissionData('integration.configure', 'invoice.read'),
       titleKey: 'configurationWorkspace.tests',
       robots: 'noindex, nofollow',
     },

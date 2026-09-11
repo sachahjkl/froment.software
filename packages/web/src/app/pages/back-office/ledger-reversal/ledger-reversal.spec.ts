@@ -22,6 +22,19 @@ function notifyDateValidity(input: HTMLInputElement, animationName = 'ng-invalid
 describe('Ledger reversal task', () => {
   beforeEach(() => TestBed.configureTestingModule({ providers: [provideAccount()] }));
   afterEach(() => vi.restoreAllMocks());
+  it('keeps an entry readable without offering reversal instructions', async () => {
+    setupBankWorkspace();
+    TestBed.configureTestingModule({ providers: [provideAccount(['ledger.read'])] });
+    const harness = await RouterTestingHarness.create();
+    const page = await harness.navigateByUrl(
+      `/backoffice/banque/ecritures/${otherBankId}/contrepasser`,
+      LedgerReversal,
+    );
+    await harness.fixture.whenStable();
+    expect(page['state']()).toBe('ready');
+    expect(page['titleLabel']()).toBe('bankWorkspace.entries');
+    expect(bankRoot(harness).querySelector('form')).toBeNull();
+  });
   it.each(['ng-valid', 'ng-invalid'])(
     'leaves an unchanged form after its %s animation without confirmation',
     async (animationName) => {

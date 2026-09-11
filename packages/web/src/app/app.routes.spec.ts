@@ -1,6 +1,10 @@
 import { type Routes } from '@angular/router';
 import { routes } from './app.routes';
-import { administratorGuard, clientGuard } from './back-office/authentication-guards';
+import {
+  administratorGuard,
+  administratorChildGuard,
+  clientGuard,
+} from './back-office/authentication-guards';
 import { unsavedChangesGuard } from './back-office/unsaved-changes-guard';
 
 const fullPaths = (entries: Routes, parent = ''): string[] =>
@@ -10,6 +14,28 @@ const fullPaths = (entries: Routes, parent = ''): string[] =>
   });
 
 describe('back-office route organization', () => {
+  it('declares session-only account and configuration routes with child checks', () => {
+    for (const path of ['backoffice/account', 'backoffice/configuration']) {
+      const route = routes.find((entry) => entry.path === path);
+      expect(route?.data?.['access']).toBe('session');
+      expect(route?.data?.['permissions']).toBeUndefined();
+      expect(route?.canActivateChild).toContain(administratorChildGuard);
+    }
+  });
+  it('aligns provider test routes with their API permissions', () => {
+    for (const suffix of ['', '/new', '/:requestId']) {
+      expect(
+        routes.find((entry) => entry.path === `backoffice/services/resend/tests${suffix}`)?.data?.[
+          'permissions'
+        ],
+      ).toEqual(['integration.configure']);
+      expect(
+        routes.find((entry) => entry.path === `backoffice/services/stripe/tests${suffix}`)?.data?.[
+          'permissions'
+        ],
+      ).toEqual(['integration.configure', 'invoice.read']);
+    }
+  });
   it('declares public invitation and authenticated shells in route data', () => {
     expect(routes.find((route) => route.path === 'backoffice/join')?.data?.['shell']).toBe(
       'public',

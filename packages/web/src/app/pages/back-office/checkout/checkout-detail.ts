@@ -12,6 +12,9 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 import { formatMoney } from '@froment/l10n';
 import { canReconcileCheckout } from '@froment/contracts';
 import { CheckoutApi } from '@backoffice/checkout-api';
+import { Authentication } from '@backoffice/authentication';
+import { Can } from '@backoffice/can';
+import { Confirmation } from '@shared/confirmation/confirmation';
 import { I18nService, type TranslationKey } from '@app/i18n.service';
 import { Button } from '@shared/button/button';
 import { Badge } from '@shared/badge/badge';
@@ -25,7 +28,7 @@ import { providerTabs, providerTestParams } from '../connections/provider-naviga
 
 @Component({
   host: { class: 'page-container' },
-  imports: [Button, Badge, Notice, RouterLink, LocalizedDatePipe, PageHeader, Tabs],
+  imports: [Can, Button, Badge, Notice, RouterLink, LocalizedDatePipe, PageHeader, Tabs],
   providers: [CheckoutHistory],
   changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-checkout-detail',
@@ -33,6 +36,12 @@ import { providerTabs, providerTestParams } from '../connections/provider-naviga
   templateUrl: './checkout-detail.html',
 })
 export class CheckoutDetail {
+  private readonly authentication = inject(Authentication);
+  private readonly confirmation = inject(Confirmation);
+  private readonly reconcileAllowed = computed(
+    () =>
+      this.authentication.can('integration.configure') && this.authentication.can('invoice.read'),
+  );
   protected readonly i18n = inject(I18nService);
   protected readonly history = inject(CheckoutHistory);
   private readonly api = inject(CheckoutApi);
@@ -71,11 +80,37 @@ export class CheckoutDetail {
 
   protected async reconcile(): Promise<void> {
     const current = this.current();
-    if (!current || !canReconcileCheckout(current) || this.reconciling()) return;
+    const account = this.authentication.account();
+    if (
+      !account ||
+      !this.reconcileAllowed() ||
+      !current ||
+      !canReconcileCheckout(current) ||
+      this.reconciling()
+    )
+      return;
     this.reconciling.set(true);
     this.reconcileError.set(undefined);
-    this.history.invalidate();
     try {
+      if (
+        !(await this.confirmation.request(this.i18n.t('checkout.reconcileHint'), {
+          acceptLabel: this.i18n.t('checkout.reconcile'),
+        }))
+      )
+        return;
+      if (this.destroyRef.destroyed) return;
+      const currentAccount = await this.authentication.refreshAccount();
+      const latest = this.current();
+      if (
+        this.destroyRef.destroyed ||
+        currentAccount?.userId !== account.userId ||
+        !this.reconcileAllowed() ||
+        !latest ||
+        !canReconcileCheckout(latest) ||
+        latest.request.requestId !== current.request.requestId
+      )
+        return;
+      this.history.invalidate();
       const outcome = await this.api.reconcile(current.request.requestId);
       if (this.destroyRef.destroyed) return;
       if (outcome.success) this.history.record(outcome.result);
@@ -85,7 +120,7 @@ export class CheckoutDetail {
     } finally {
       if (!this.destroyRef.destroyed) {
         this.reconciling.set(false);
-        this.history.refresh();
+        if (this.reconcileAllowed()) this.history.refresh();
       }
     }
   }

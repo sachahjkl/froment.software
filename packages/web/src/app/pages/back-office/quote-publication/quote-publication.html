@@ -52,6 +52,7 @@
   @if (completed(); as result) {
   <p appNotice variant="success" role="status">{{ i18n.t('commercial.linkCreated') }}</p>
   <app-copy-field
+    *appCan="'quote.send'"
     class="sent-link"
     headingId="signature-link-title"
     [label]="i18n.t('backOffice.quote.link.title')"
@@ -63,29 +64,31 @@
     [external]="true"
     (copy)="copyLink()"
   />
-  <p class="hint">{{ i18n.t('commercial.linkUnavailable') }}</p>
+  <p *appCan="'quote.send'" class="hint">{{ i18n.t('commercial.linkUnavailable') }}</p>
   } @else if (quote.status === 'sent') {
-  <p appNotice>{{ i18n.t('commercial.replaceLinkHint') }}</p>
-  @if (linkState(); as link) {
-  <p>{{ i18n.tf('backOffice.quote.link.expires', { date: date(link.expiresAt) }) }}</p>
-  } @if (error(); as key) {
-  <p appNotice variant="danger" role="alert">{{ i18n.t(key) }}</p>
-  }
-  <div class="spacer-x-3">
-    <button
-      appButton
-      type="button"
-      [disabled]="pending() || confirming() || uncertain()"
-      (click)="replaceLink()"
-    >
-      {{ i18n.t('commercial.replaceLink') }}
-    </button>
-    @if (error()) {
-    <button appButton type="button" [disabled]="pending() || confirming()" (click)="reload()">
-      {{ i18n.t('commercial.loadLatest') }}
-    </button>
+  <ng-container *appCan="'quote.send'">
+    <p appNotice>{{ i18n.t('commercial.replaceLinkHint') }}</p>
+    @if (linkState(); as link) {
+    <p>{{ i18n.tf('backOffice.quote.link.expires', { date: date(link.expiresAt) }) }}</p>
+    } @if (error(); as key) {
+    <p appNotice variant="danger" role="alert">{{ i18n.t(key) }}</p>
     }
-  </div>
+    <div class="spacer-x-3">
+      <button
+        appButton
+        type="button"
+        [disabled]="pending() || confirming() || uncertain()"
+        (click)="replaceLink()"
+      >
+        {{ i18n.t('commercial.replaceLink') }}
+      </button>
+      @if (error()) {
+      <button appButton type="button" [disabled]="pending() || confirming()" (click)="reload()">
+        {{ i18n.t('commercial.loadLatest') }}
+      </button>
+      }
+    </div>
+  </ng-container>
   } @else if (quote.status !== 'draft') {
   <p appNotice variant="warning">{{ i18n.t('commercial.publicationUnavailable') }}</p>
   } @else {

@@ -87,6 +87,29 @@ describe('Affair detail', () => {
       ],
     });
   });
+  it('does not offer previews or draft instructions to a read-only account', async () => {
+    TestBed.configureTestingModule({
+      providers: [
+        provideAccount([
+          'quote.read',
+          'order.read',
+          'invoice.read',
+          'client.read',
+          'document.download',
+        ]),
+      ],
+    });
+    TestBed.overrideProvider(OrdersApi, { useValue: { list: async () => [] } });
+    const harness = await RouterTestingHarness.create();
+    const page = await harness.navigateByUrl(
+      `/backoffice/affaires/${quoteId}/documents`,
+      AffairDetail,
+    );
+    await harness.fixture.whenStable();
+    expect(page['state']()).toBe('ready');
+    expect(page['nextActionVisible']()).toBe(false);
+    expect(harness.fixture.nativeElement.querySelector('a[href$="/preview"]')).toBeNull();
+  });
   it('separates overview, document links and audit history', async () => {
     const harness = await RouterTestingHarness.create(
       `/backoffice/affaires/${quoteId}/overview?q=Audit&view=all`,

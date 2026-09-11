@@ -59,7 +59,13 @@
   </dl>
   <div class="spacer-x-4">
     @if (canReconcile(item)) {
-    <button appButton type="button" [disabled]="reconciling()" (click)="reconcile()">
+    <button
+      *appCan="['integration.configure', 'invoice.read']"
+      appButton
+      type="button"
+      [disabled]="reconciling()"
+      (click)="reconcile()"
+    >
       {{ i18n.t('checkout.reconcile') }}
     </button>
     }
@@ -78,7 +84,7 @@
     }
   </div>
   @if (canReconcile(item)) {
-  <p>{{ i18n.t('checkout.reconcileHint') }}</p>
+  <p *appCan="['integration.configure', 'invoice.read']">{{ i18n.t('checkout.reconcileHint') }}</p>
   } @if (canOpen(item)) {
   <p>{{ i18n.t('checkout.testCard') }}</p>
   }

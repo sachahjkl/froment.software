@@ -38,6 +38,19 @@ function unloadIsBlocked(): boolean {
 
 describe('Bank reconciliation task', () => {
   beforeEach(() => TestBed.configureTestingModule({ providers: [provideAccount()] }));
+  it('keeps the transaction readable without offering allocation instructions', async () => {
+    setupBankWorkspace();
+    TestBed.configureTestingModule({ providers: [provideAccount(['bank.read', 'invoice.read'])] });
+    const harness = await RouterTestingHarness.create();
+    const page = await harness.navigateByUrl(
+      `/backoffice/banque/transactions/${bankId}`,
+      BankReconciliation,
+    );
+    await harness.fixture.whenStable();
+    expect(page['state']()).toBe('ready');
+    expect(page['titleLabel']()).toBe('bankWorkspace.context');
+    expect(bankRoot(harness).querySelector('#allocation-title')).toBeNull();
+  });
   it('keeps the transaction context and prepares its remaining amount after a partial allocation', async () => {
     const { api } = setupBankWorkspace();
     api.match.mockResolvedValue({

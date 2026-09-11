@@ -42,7 +42,8 @@
     <div class="affair-panel" [attr.aria-labelledby]="'affair-' + tab + '-tab'">
       @if (tab === 'overview') {
 
-      <section class="next-action ds-panel" aria-labelledby="next-action-title">
+      <section class="next-action ds-panel">
+        @if (nextActionVisible()) {
         <div>
           <h2 id="next-action-title">{{ i18n.t('backOffice.affair.nextAction') }}</h2>
           @if (invoice(); as invoice) {
@@ -53,6 +54,7 @@
           <p>{{ quoteNextAction(quote.status) }}</p>
           }
         </div>
+        }
         <dl class="quote-amount">
           <dt>{{ i18n.t('commercial.quoteAmount') }}</dt>
           <dd>{{ money(quote.currentRevision.totalCents) }}</dd>
@@ -122,6 +124,7 @@
                     <a
                       class="external-link"
                       [href]="'/api/quotes/' + quote.id + '/revisions/' + quote.version + '/preview'"
+                      *appCan="'document.render'"
                       target="_blank"
                       rel="noopener noreferrer"
                       >{{ i18n.t('backOffice.quote.preview.open') }}<app-icon name="external"
@@ -150,6 +153,7 @@
                     <a
                       class="external-link"
                       [href]="'/api/orders/' + order.id + '/preview'"
+                      *appCan="'document.render'"
                       target="_blank"
                       rel="noopener noreferrer"
                       >{{ i18n.t('backOffice.quote.preview.open') }}<app-icon name="external"
@@ -177,6 +181,7 @@
                     <a
                       class="external-link"
                       [href]="'/api/invoices/' + invoice.id + '/revisions/' + invoice.version + '/preview'"
+                      *appCan="'document.render'"
                       target="_blank"
                       rel="noopener noreferrer"
                       >{{ i18n.t('backOffice.quote.preview.open') }}<app-icon name="external"

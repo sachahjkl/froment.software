@@ -37,6 +37,7 @@ import {
 import { Schema } from 'effect';
 import { formatMoney } from '@froment/l10n';
 import { BankingApi } from '@backoffice/banking-api';
+import { Authentication } from '@backoffice/authentication';
 import { InvoicesApi } from '@backoffice/invoices-api';
 import { formatFixedDecimal, parseFixedDecimal } from '@backoffice/quote-input';
 import { I18nService, type TranslationKey } from '@app/i18n.service';
@@ -86,6 +87,7 @@ type MatchField = keyof ReturnType<typeof blankMatch>;
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class BankReconciliation {
+  private readonly authentication = inject(Authentication);
   protected readonly i18n = inject(I18nService);
   private readonly api = inject(BankingApi);
   private readonly invoicesApi = inject(InvoicesApi);
@@ -107,7 +109,7 @@ export class BankReconciliation {
   protected readonly saved = signal(false);
   protected readonly transaction = signal<BankTransactionValue | undefined>(undefined);
   protected readonly titleLabel = computed<TranslationKey>(() =>
-    (this.transaction()?.amountCents ?? 0) < 0
+    !this.authentication.can('bank.reconcile') || (this.transaction()?.amountCents ?? 0) < 0
       ? 'bankWorkspace.context'
       : 'bankWorkspace.reconciliation',
   );
@@ -270,6 +272,8 @@ export class BankReconciliation {
     }
   }
   protected async loadInvoices(): Promise<void> {
+    if (!this.authentication.can('bank.reconcile') || !this.authentication.can('invoice.read'))
+      return;
     const generation = this.generation;
     this.invoicesFailed.set(false);
     this.invoicesLoading.set(true);

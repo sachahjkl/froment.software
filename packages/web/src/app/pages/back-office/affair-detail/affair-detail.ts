@@ -124,6 +124,20 @@ export class AffairDetail {
       ? affairDocuments(quote, this.order(), this.invoice(), this.context(), this.i18n.language())
       : [];
   });
+  protected readonly nextActionVisible = computed(() => {
+    const invoice = this.invoice();
+    if (invoice)
+      return (
+        invoice.status !== 'draft' ||
+        (this.authentication.can('invoice.update') && this.authentication.can('invoice.issue'))
+      );
+    if (this.order()) return this.authentication.can('invoice.create');
+    const status = this.quote()?.status;
+    return (
+      (status !== 'draft' && status !== 'expired') ||
+      (this.authentication.can('quote.update') && this.authentication.can('quote.send'))
+    );
+  });
 
   constructor() {
     afterNextRender(() => {

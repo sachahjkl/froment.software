@@ -121,7 +121,10 @@
             <td>{{ entry.issuedAt | localizedDate: i18n.language(): { dateStyle: 'medium' } }}</td>
             <td class="amount">{{ money(entry.totalCents) }}</td>
             <td>
-              <a [href]="'/api/invoices/' + entry.invoiceId + '/credit-note/pdf'" download
+              <a
+                *appCan="['document.download', 'invoice.read']"
+                [href]="'/api/invoices/' + entry.invoiceId + '/credit-note/pdf'"
+                download
                 >{{ i18n.t('credit.pdf') }}</a
               >
             </td>

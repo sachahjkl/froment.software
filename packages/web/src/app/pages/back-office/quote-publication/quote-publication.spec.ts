@@ -3,6 +3,9 @@ import { provideRouter, Router } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
 import { vi } from 'vitest';
 import { QuotesApi } from '@backoffice/quotes-api';
+import { Authentication } from '@backoffice/authentication';
+import { accountFixture } from '@backoffice/account.spec-helper';
+import { QuotePublication } from './quote-publication';
 import { Confirmation } from '@shared/confirmation/confirmation';
 import { TextCopy } from '@shared/text-copy';
 import {
@@ -161,6 +164,32 @@ describe('Quote publication', () => {
     });
     expect(send).not.toHaveBeenCalled();
     expect(control<HTMLAnchorElement>(root, 'app-copy-field a').href).toBe(sent.link.url);
+  });
+
+  it('does not replace a link when permission is removed during confirmation', async () => {
+    const context = accountFixture(['quote.read', 'quote.send']);
+    TestBed.overrideProvider(Authentication, { useValue: context.authentication });
+    get.mockResolvedValue({ success: true, result: { ...quoteFixture, status: 'sent' } });
+    let approve: (accepted: boolean) => void = () => {
+      throw new Error('Confirmation is not open');
+    };
+    confirm.mockImplementation(
+      () =>
+        new Promise<boolean>((resolve) => {
+          approve = resolve;
+        }),
+    );
+    const { harness } = await open();
+    const page = await harness.navigateByUrl(
+      `/backoffice/quotes/${quoteId}/publication`,
+      QuotePublication,
+    );
+    const pending = page['replaceLink']();
+    context.account.update((account) => account && { ...account, permissions: ['quote.read'] });
+    approve(true);
+    await pending;
+    expect(replaceLink).not.toHaveBeenCalled();
+    expect(page['pending']()).toBe(false);
   });
 
   it('blocks another replacement until an uncertain result has been checked', async () => {

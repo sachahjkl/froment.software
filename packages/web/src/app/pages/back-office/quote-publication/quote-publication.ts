@@ -22,6 +22,7 @@ import {
 } from '@froment/contracts';
 import { formatMoney } from '@froment/l10n';
 import { QuotesApi } from '@backoffice/quotes-api';
+import { Authentication } from '@backoffice/authentication';
 import { I18nService, type TranslationKey } from '@app/i18n.service';
 import { Button } from '@shared/button/button';
 import { Confirmation } from '@shared/confirmation/confirmation';
@@ -53,6 +54,7 @@ import { affairContext } from '../affairs/affair-filters';
   templateUrl: './quote-publication.html',
 })
 export class QuotePublication {
+  private readonly authentication = inject(Authentication);
   private readonly documentPreview = viewChild(QuoteDocument);
   protected readonly i18n = inject(I18nService);
   private readonly api = inject(QuotesApi);
@@ -146,7 +148,7 @@ export class QuotePublication {
         return;
       }
       this.quote.set(outcome.result);
-      if (outcome.result.status === 'sent') {
+      if (outcome.result.status === 'sent' && this.authentication.can('quote.send')) {
         const link = await this.api.linkState(outcome.result.id);
         if (this.destroyRef.destroyed || generation !== this.generation) return;
         if (!link.success) {
@@ -171,6 +173,7 @@ export class QuotePublication {
     if (
       !quote ||
       quote.status !== 'draft' ||
+      !this.authentication.can('quote.send') ||
       this.pending() ||
       this.uncertain() ||
       this.confirming() ||
@@ -223,11 +226,14 @@ export class QuotePublication {
     if (this.completed() === result) this.copied.set(copied);
   }
   protected async replaceLink(): Promise<void> {
+    const account = this.authentication.account();
     const quote = this.quote();
     const link = this.linkState();
     if (
       !quote ||
       quote.status !== 'sent' ||
+      !account ||
+      !this.authentication.can('quote.send') ||
       link === undefined ||
       this.pending() ||
       this.confirming() ||
@@ -241,6 +247,14 @@ export class QuotePublication {
     this.pending.set(true);
     this.error.set(undefined);
     try {
+      const currentAccount = await this.authentication.refreshAccount();
+      if (
+        this.destroyRef.destroyed ||
+        generation !== this.generation ||
+        currentAccount?.userId !== account.userId ||
+        !this.authentication.can('quote.send')
+      )
+        return;
       const outcome = await this.api.replaceLink(quote.id, {
         expectedVersion: quote.version,
         expectedLinkId: link?.id ?? null,

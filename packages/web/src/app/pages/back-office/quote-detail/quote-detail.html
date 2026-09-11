@@ -45,6 +45,7 @@
       >
       } @else if (quote.status === 'sent') {
       <a
+        *appCan="'quote.send'"
         appLinkButton
         [routerLink]="['/backoffice/quotes', quote.id, 'publication']"
         [queryParams]="context()"
@@ -175,7 +176,7 @@
         </dl>
       </section>
       } @if (quote.status === 'sent') {
-      <p appNotice>{{ i18n.t('commercial.linkUnavailable') }}</p>
+      <p *appCan="'quote.send'" appNotice>{{ i18n.t('commercial.linkUnavailable') }}</p>
       } @if (quote.status !== 'draft') {
       <p class="hint">{{ i18n.t('commercial.portalHint') }}</p>
       } } @case ('document') { @if (revision(); as revision) {

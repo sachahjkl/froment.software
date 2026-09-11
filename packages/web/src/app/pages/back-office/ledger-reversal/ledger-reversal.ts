@@ -27,6 +27,7 @@ import { CalendarDate, Ulid, type LedgerEntry, type LedgerReverse } from '@frome
 import { Schema } from 'effect';
 import { formatMoney } from '@froment/l10n';
 import { BankLedgerApi } from '@backoffice/bank-ledger-api';
+import { Authentication } from '@backoffice/authentication';
 import { I18nService, type TranslationKey } from '@app/i18n.service';
 import { Badge } from '@shared/badge/badge';
 import { Button } from '@shared/button/button';
@@ -53,6 +54,10 @@ const blank = () => ({ reason: '', bookedOn: '' });
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class LedgerReversal {
+  private readonly authentication = inject(Authentication);
+  protected readonly titleLabel = computed<TranslationKey>(() =>
+    this.authentication.can('ledger.post') ? 'bankWorkspace.reverseTitle' : 'bankWorkspace.entries',
+  );
   protected readonly i18n = inject(I18nService);
   private readonly api = inject(BankLedgerApi);
   private readonly confirmation = inject(Confirmation);
