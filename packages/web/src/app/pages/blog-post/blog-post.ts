@@ -1,9 +1,8 @@
-import { ChangeDetectionStrategy, Component, computed, effect, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { Blog, RenderedBlogPost } from '../../blog/blog';
 import { I18nService } from '@app/i18n.service';
-import { PageMetadata } from '../../page-metadata';
 import { LocalizedDatePipe } from '@shared/localized-date/localized-date-pipe';
 import { MermaidDiagrams } from '@shared/mermaid-diagrams';
 
@@ -18,24 +17,20 @@ import { MermaidDiagrams } from '@shared/mermaid-diagrams';
 export class BlogPost {
   private readonly blog = inject(Blog);
   private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
   private readonly params = toSignal(this.route.paramMap, {
     initialValue: this.route.snapshot.paramMap,
   });
-  private readonly metadata = inject(PageMetadata);
+  private readonly queryParams = toSignal(this.route.queryParams, {
+    initialValue: this.route.snapshot.queryParams,
+  });
   protected readonly i18n = inject(I18nService);
   protected readonly post = computed<RenderedBlogPost | undefined>(() => {
     this.i18n.language();
-    return this.blog.find(this.params().get('slug') ?? '');
-  });
-
-  constructor() {
-    effect(() => {
-      const post = this.post();
-      if (post) {
-        this.metadata.setBlogPost(post);
-      } else {
-        this.metadata.clearBlogPost();
-      }
+    const url = this.router.createUrlTree([], {
+      relativeTo: this.route,
+      queryParams: this.queryParams(),
     });
-  }
+    return this.blog.find(this.params().get('slug') ?? '', this.router.serializeUrl(url));
+  });
 }

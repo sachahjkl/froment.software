@@ -4,7 +4,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { Meta, Title } from '@angular/platform-browser';
 import { ActivatedRoute, NavigationEnd, Router } from '@angular/router';
 import { filter } from 'rxjs';
-import { RenderedBlogPost } from './blog/blog';
+import { blogPosts, type BlogPostMetadata } from '@froment/l10n/blog-posts';
 import { I18nService, TranslationKey } from './i18n.service';
 
 const origin = 'https://froment.software';
@@ -76,20 +76,23 @@ export class PageMetadata {
     });
   }
 
-  setBlogPost(post: RenderedBlogPost): void {
-    const pageTitle = `${post.title} | froment.software`;
+  private setBlogPost(post: BlogPostMetadata): void {
+    const title = this.i18n.t(post.titleKey);
+    const description = this.i18n.t(post.descriptionKey);
+    const topics = post.topicKeys.map((key) => this.i18n.t(key));
+    const pageTitle = `${title} | froment.software`;
     const url = `${origin}/blog/${post.slug}`;
     this.title.setTitle(pageTitle);
-    this.meta.updateTag({ name: 'description', content: post.description });
-    this.meta.updateTag({ name: 'keywords', content: post.topics.join(', ') });
+    this.meta.updateTag({ name: 'description', content: description });
+    this.meta.updateTag({ name: 'keywords', content: topics.join(', ') });
     this.meta.updateTag({ property: 'og:type', content: 'article' });
     this.meta.updateTag({ property: 'og:title', content: pageTitle });
-    this.meta.updateTag({ property: 'og:description', content: post.description });
+    this.meta.updateTag({ property: 'og:description', content: description });
     this.meta.updateTag({ property: 'og:url', content: url });
     this.meta.updateTag({ property: 'article:published_time', content: post.published });
     this.meta.updateTag({ property: 'article:modified_time', content: post.updated });
     this.meta.updateTag({ name: 'twitter:title', content: pageTitle });
-    this.meta.updateTag({ name: 'twitter:description', content: post.description });
+    this.meta.updateTag({ name: 'twitter:description', content: description });
     let script = this.document.head.querySelector<HTMLScriptElement>('script[data-blog-post]');
     if (!script) {
       script = this.document.createElement('script');
@@ -100,8 +103,8 @@ export class PageMetadata {
     script.textContent = JSON.stringify({
       '@context': 'https://schema.org',
       '@type': 'BlogPosting',
-      headline: post.title,
-      description: post.description,
+      headline: title,
+      description,
       datePublished: post.published,
       dateModified: post.updated,
       mainEntityOfPage: url,
@@ -112,7 +115,7 @@ export class PageMetadata {
         sameAs: ['https://sacha.house'],
       },
       publisher: { '@type': 'Organization', name: this.i18n.t('metadata.publisher'), url: origin },
-      keywords: post.topics,
+      keywords: topics,
       inLanguage: this.i18n.language(),
     });
   }
@@ -120,22 +123,21 @@ export class PageMetadata {
   private updateRoute(): void {
     let route = this.route.snapshot;
     while (route.firstChild) route = route.firstChild;
-    const titleKey: TranslationKey | undefined = route.data['titleKey'];
-    const descriptionKey: TranslationKey | undefined = route.data['descriptionKey'];
-    if (titleKey) {
-      const title = this.i18n.t(titleKey);
-      this.title.setTitle(title);
-      this.meta.updateTag({ property: 'og:title', content: title });
-      this.meta.updateTag({ name: 'twitter:title', content: title });
+    let robots: string = route.data['robots'] ?? 'index, follow';
+    if (route.routeConfig?.path === 'blog/:slug') {
+      const post = blogPosts.find((post) => post.slug === route.paramMap.get('slug'));
+      if (post) {
+        this.setBlogPost(post);
+      } else {
+        this.clearBlogPost();
+        this.setPageText('page.not_found', 'page.description.not_found');
+        robots = 'noindex, nofollow';
+      }
+    } else {
+      this.clearBlogPost();
+      this.setPageText(route.data['titleKey'], route.data['descriptionKey']);
     }
-    if (descriptionKey) {
-      const description = this.i18n.t(descriptionKey);
-      this.meta.updateTag({ name: 'description', content: description });
-      this.meta.updateTag({ property: 'og:description', content: description });
-      this.meta.updateTag({ name: 'twitter:description', content: description });
-    }
-    this.meta.updateTag({ name: 'robots', content: route.data['robots'] ?? 'index, follow' });
-    if (route.routeConfig?.path !== 'blog/:slug') this.clearBlogPost();
+    this.meta.updateTag({ name: 'robots', content: robots });
     const url = this.canonicalUrl();
     this.meta.updateTag({
       property: 'og:locale',
@@ -149,6 +151,21 @@ export class PageMetadata {
     this.meta.updateTag({ name: 'twitter:image:alt', content: alt });
     this.updateCanonicalLink(url);
     this.updateSiteGraph();
+  }
+
+  private setPageText(titleKey?: TranslationKey, descriptionKey?: TranslationKey): void {
+    if (titleKey) {
+      const title = this.i18n.t(titleKey);
+      this.title.setTitle(title);
+      this.meta.updateTag({ property: 'og:title', content: title });
+      this.meta.updateTag({ name: 'twitter:title', content: title });
+    }
+    if (descriptionKey) {
+      const description = this.i18n.t(descriptionKey);
+      this.meta.updateTag({ name: 'description', content: description });
+      this.meta.updateTag({ property: 'og:description', content: description });
+      this.meta.updateTag({ name: 'twitter:description', content: description });
+    }
   }
 
   private updateSiteGraph(): void {
@@ -168,7 +185,7 @@ export class PageMetadata {
     script.textContent = JSON.stringify(graph);
   }
 
-  clearBlogPost(): void {
+  private clearBlogPost(): void {
     this.meta.updateTag({ property: 'og:type', content: 'website' });
     this.meta.removeTag('property="article:published_time"');
     this.meta.removeTag('property="article:modified_time"');

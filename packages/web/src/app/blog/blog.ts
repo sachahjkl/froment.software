@@ -56,12 +56,12 @@ export class Blog {
   readonly posts = computed(() => posts.map((post) => this.localize(post)));
   readonly latest = computed(() => this.posts()[0]);
 
-  find(slug: string): RenderedBlogPost | undefined {
+  find(slug: string, url?: string): RenderedBlogPost | undefined {
     const post = posts.find((entry) => entry.slug === slug);
-    return post ? this.localize(post) : undefined;
+    return post ? this.localize(post, url) : undefined;
   }
 
-  private localize(post: BlogPost): RenderedBlogPost {
+  private localize(post: BlogPost, url = `/blog/${post.slug}`): RenderedBlogPost {
     const language = this.i18n.language();
     const renderer = new marked.Renderer();
     const renderLink = renderer.link.bind(renderer);
@@ -77,9 +77,7 @@ export class Blog {
     renderer.link = (token) => {
       if (!token.href.startsWith('#')) return renderLink(token);
       const id = blogHeadingId(token.text, new Map());
-      return (
-        '<a' + ' href=' + '"#' + id + '">' + renderer.parser.parseInline(token.tokens) + '</a>'
-      );
+      return renderLink({ ...token, href: `${url}#${id}` });
     };
     const html = marked.parse(post.body[language], { async: false, gfm: true, renderer });
 

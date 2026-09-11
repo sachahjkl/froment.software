@@ -23,11 +23,25 @@ describe('Blog', () => {
     expect(blogPostSlugs).toHaveLength(TestBed.inject(Blog).posts().length);
   });
 
+  it('preserves the article URL and query in Markdown fragment links', () => {
+    const post = TestBed.inject(Blog).find(
+      '2026-08-architecture-effect',
+      '/blog/2026-08-architecture-effect?source=contact&mode=reading',
+    );
+
+    expect(post?.html).toContain(
+      'href="/blog/2026-08-architecture-effect?source=contact&amp;mode=reading#',
+    );
+    expect(post?.html).not.toContain('href="#');
+  });
+
   it('keeps Mermaid diagrams for browser rendering', () => {
     const post = TestBed.inject(Blog).find('2026-08-architecture-effect');
 
     expect(post?.html).toContain('<pre class="mermaid">');
     expect(post?.html).toContain('flowchart');
-    expect(post?.html).toContain('href="#une-chaine-d-integrite-fondee-sur-sha-256"');
+    expect(post?.html).toContain(
+      'href="/blog/2026-08-architecture-effect#une-chaine-d-integrite-fondee-sur-sha-256"',
+    );
   });
 });
