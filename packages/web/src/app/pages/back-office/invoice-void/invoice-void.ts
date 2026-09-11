@@ -51,6 +51,7 @@ export class InvoiceVoid {
     await this.task.run(
       () => this.task.api.void(attempt.id, { expectedVersion: attempt.version }),
       'backOffice.invoice.voidConfirm',
+      'void',
     );
   }
   protected async reload(): Promise<void> {

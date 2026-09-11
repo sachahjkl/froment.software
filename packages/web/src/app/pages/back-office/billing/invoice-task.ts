@@ -17,6 +17,7 @@ import { I18nService, type TranslationKey } from '@app/i18n.service';
 import { Confirmation } from '@shared/confirmation/confirmation';
 import { formatMoney } from '@froment/l10n';
 import { BillingNavigation } from './billing-navigation';
+import { invoiceFailureResolution, type InvoiceTaskOperation } from './invoice-task-result';
 
 interface TaskOutcome {
   readonly success: boolean;
@@ -25,21 +26,6 @@ interface TaskOutcome {
 }
 
 type TaskRunResult = 'skipped' | 'resolved' | 'unresolved';
-
-const failureResolution = (code: TranslationKey | undefined) => {
-  switch (code) {
-    case 'authentication.required':
-    case 'authentication.permission_denied':
-    case 'request.rate_limited':
-      return 'not-executed';
-    case undefined:
-    case 'invoice.error':
-    case 'credit.error':
-      return 'unknown';
-    default:
-      return 'rejected';
-  }
-};
 
 @Injectable()
 export class InvoiceTask {
@@ -108,6 +94,7 @@ export class InvoiceTask {
   async run(
     operation: () => Promise<TaskOutcome>,
     confirm: TranslationKey,
+    kind: InvoiceTaskOperation,
   ): Promise<TaskRunResult> {
     if (this.busy() || this.loading() || this.completed() || this.stale()) return 'skipped';
     const previousUncertain = this.uncertain();
@@ -128,15 +115,16 @@ export class InvoiceTask {
       }
       this.error.set(outcome.code ?? 'invoice.error');
       this.issues.set(outcome.failure?.issues ?? []);
-      this.stale.set(
-        outcome.code === 'invoice.version_conflict' ||
-          outcome.code === 'invoice.credit_conflict' ||
-          outcome.code === 'invoice.invalid_transition',
-      );
-      const resolution = failureResolution(outcome.code);
-      // A rejected retry at the HTTP boundary says nothing about an earlier attempt.
+      const resolution = invoiceFailureResolution(kind, outcome.code);
+      // Rejecting this attempt does not resolve an earlier attempt without replay evidence.
       this.uncertain.set(
-        resolution === 'unknown' || (resolution === 'not-executed' && previousUncertain),
+        resolution === 'unknown' || (resolution === 'attempt-rejected' && previousUncertain),
+      );
+      this.stale.set(
+        !this.uncertain() &&
+          (outcome.code === 'invoice.version_conflict' ||
+            outcome.code === 'invoice.credit_conflict' ||
+            outcome.code === 'invoice.invalid_transition'),
       );
       return this.uncertain() ? 'unresolved' : 'resolved';
     } catch {

@@ -111,6 +111,7 @@ export class PaymentEditor {
     const result = await this.task.run(
       () => this.task.api.recordPayment(invoice.id, request),
       'payment.confirm',
+      'record-payment',
     );
     if (result === 'resolved') this.attempt = undefined;
   }

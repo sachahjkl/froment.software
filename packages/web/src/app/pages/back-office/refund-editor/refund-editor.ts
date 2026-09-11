@@ -117,6 +117,7 @@ export class RefundEditor {
     const result = await this.task.run(
       () => this.api.refund(invoice.id, request),
       'credit.confirmRefund',
+      'refund',
     );
     if (result === 'resolved') this.attempt = undefined;
   }

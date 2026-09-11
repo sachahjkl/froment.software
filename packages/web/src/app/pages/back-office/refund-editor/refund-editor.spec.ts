@@ -164,6 +164,9 @@ describe('RefundEditor', () => {
     'authentication.required',
     'authentication.permission_denied',
     'request.rate_limited',
+    'request.invalid_origin',
+    'request.too_large',
+    'client.error',
   ] as const)(
     'retains an uncertain refund through %s and retries after access is restored',
     async (code) => {
@@ -211,6 +214,52 @@ describe('RefundEditor', () => {
       expect(await editor.canDeactivate()).toBe(true);
     },
   );
+  it.each(['request.invalid_origin', 'request.too_large'] as const)(
+    'unlocks an initial %s refusal without an earlier uncertain attempt',
+    async (code) => {
+      const { fixture, credits } = await setupInvoicePage(RefundEditor, {
+        credits: creditFixture(),
+      });
+      const editor = fixture.componentInstance;
+      vi.spyOn(Confirmation.prototype, 'request').mockResolvedValue(true);
+      editor['refundForm']().value.set({
+        amount: '2.00',
+        refundedOn: '2026-08-22',
+        reference: 'REFUND-1',
+      });
+      credits.refund.mockResolvedValueOnce({ success: false, code });
+      editor['save'](new Event('submit'));
+      await fixture.whenStable();
+      expect(editor['task'].uncertain()).toBe(false);
+      expect(editor['task'].locked()).toBe(false);
+      expect(editor['attempt']).toBeUndefined();
+      expect(editor['refundForm']().value().reference).toBe('REFUND-1');
+    },
+  );
+  it('keeps an initial unclassified failure unresolved until the same request succeeds', async () => {
+    const { fixture, credits } = await setupInvoicePage(RefundEditor, {
+      credits: creditFixture(),
+    });
+    const editor = fixture.componentInstance;
+    vi.spyOn(Confirmation.prototype, 'request').mockResolvedValue(true);
+    editor['refundForm']().value.set({
+      amount: '2.00',
+      refundedOn: '2026-08-22',
+      reference: 'REFUND-1',
+    });
+    credits.refund.mockResolvedValueOnce({ success: false, code: 'client.error' });
+    editor['save'](new Event('submit'));
+    await fixture.whenStable();
+    const request = credits.refund.mock.calls[0]?.[1];
+    expect(editor['task'].uncertain()).toBe(true);
+    expect(editor['task'].stale()).toBe(false);
+    expect(editor['attempt']).toEqual(request);
+    expect(await editor.canDeactivate()).toBe(false);
+    credits.refund.mockResolvedValueOnce({ success: true, result: creditFixture() });
+    await editor['retry']();
+    expect(credits.refund.mock.calls[1]?.[1]).toEqual(request);
+    expect(editor['task'].completed()).toBe(true);
+  });
   it('does not discard the request when another retry is already running', async () => {
     const { fixture, credits } = await setupInvoicePage(RefundEditor, {
       credits: creditFixture(),
@@ -235,6 +284,28 @@ describe('RefundEditor', () => {
     response.resolve({ success: true, result: creditFixture() });
     await fixture.whenStable();
     expect(editor['task'].completed()).toBe(true);
+  });
+  it('resolves an uncertain refund when replay lookup returns a business rejection', async () => {
+    const { fixture, credits } = await setupInvoicePage(RefundEditor, {
+      credits: creditFixture(),
+    });
+    const editor = fixture.componentInstance;
+    vi.spyOn(Confirmation.prototype, 'request').mockResolvedValue(true);
+    editor['refundForm']().value.set({
+      amount: '2.00',
+      refundedOn: '2026-08-22',
+      reference: 'REFUND-1',
+    });
+    credits.refund.mockRejectedValueOnce(new Error('response lost'));
+    editor['save'](new Event('submit'));
+    await fixture.whenStable();
+    const request = credits.refund.mock.calls[0]?.[1];
+    credits.refund.mockResolvedValueOnce({ success: false, code: 'invoice.credit_conflict' });
+    await editor['retry']();
+    expect(credits.refund.mock.calls[1]?.[1]).toEqual(request);
+    expect(editor['task'].uncertain()).toBe(false);
+    expect(editor['task'].stale()).toBe(true);
+    expect(editor['attempt']).toBeUndefined();
   });
   it('keeps refund input protected after an HTTP 409 disables the stale form', async () => {
     const params = convertToParamMap({ invoiceId });

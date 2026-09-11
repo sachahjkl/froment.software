@@ -78,6 +78,7 @@ export class RefundCancel {
     const result = await this.task.run(
       () => this.api.cancel(invoice.id, refund.id, reason),
       'credit.confirmCancel',
+      'cancel-refund',
     );
     if (result === 'resolved') this.attempt = undefined;
   }

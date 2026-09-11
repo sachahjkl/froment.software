@@ -56,6 +56,7 @@ export class InvoiceIssue {
     await this.task.run(
       () => this.task.api.issue(attempt.id, attempt.version),
       'backOffice.invoice.issueConfirm',
+      'issue',
     );
   }
   protected async reload(): Promise<void> {

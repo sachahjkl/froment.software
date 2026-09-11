@@ -87,6 +87,7 @@ export class CreditEditor {
     const result = await this.task.run(
       () => this.api.issue(invoice.id, request),
       'credit.confirmIssue',
+      'issue-credit',
     );
     if (result === 'resolved') this.attempt = undefined;
   }

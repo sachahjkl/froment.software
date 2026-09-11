@@ -94,6 +94,7 @@ export class ReceiptCancel {
     const result = await this.task.run(
       () => this.task.api.cancelPayment(invoice.id, payment.id, request),
       'payment.cancel_confirm',
+      'cancel-payment',
     );
     if (result === 'resolved') this.attempt = undefined;
   }
