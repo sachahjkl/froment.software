@@ -84,6 +84,7 @@ const fixtures = (
         sessionId,
         email: 'audit@example.test',
         mode: 'administrator',
+        permissions: ['audit.read'],
       });
     }
     return token === 'v4.public.collaborator'

@@ -7,6 +7,7 @@ import {
   AuthenticationRateLimited,
   AuthenticationRequired,
   PermissionDenied,
+  PermissionCode,
   PasswordChangeRequest,
   PasswordChangeRejected,
   RequestRateLimited,
@@ -63,6 +64,7 @@ export interface Principal {
   readonly email: AccountEmailValue;
   readonly mode: LoginModeValue;
   readonly sessionId: string;
+  readonly permissions: ReadonlyArray<PermissionCodeValue>;
 }
 
 export interface AuthenticationService {
@@ -556,11 +558,24 @@ export const AuthenticationLive = Layer.effect(
       if (mode !== claims.mode) {
         return yield* new AuthenticationRequired({ code: 'authentication.required' });
       }
+      const permissions = yield* Effect.try({
+        try: () =>
+          database.sqlite
+            .prepare(
+              `select distinct role_permissions.permission_code from user_roles
+               join role_permissions on role_permissions.role_id = user_roles.role_id
+               where user_roles.user_id = ? order by role_permissions.permission_code`,
+            )
+            .pluck()
+            .all(claims.userId),
+        catch: (cause) => new DatabaseError({ operation: 'authenticate.permissions', cause }),
+      });
       return {
         userId: claims.userId,
         email: account.email,
         sessionId: claims.sessionId,
         mode,
+        permissions: Schema.decodeUnknownSync(Schema.UniqueArray(PermissionCode))(permissions),
       };
     });
 
@@ -573,20 +588,7 @@ export const AuthenticationLive = Layer.effect(
       if (principal.mode !== requiredMode) {
         return yield* new PermissionDenied({ code: 'authentication.permission_denied' });
       }
-      const count = yield* Effect.try({
-        try: () =>
-          database.sqlite
-            .prepare(
-              `select count(distinct role_permissions.permission_code) from user_roles
-               join role_permissions on role_permissions.role_id = user_roles.role_id
-               where user_roles.user_id = ?
-                 and role_permissions.permission_code in (${permissions.map(() => '?').join(', ')})`,
-            )
-            .pluck()
-            .get(principal.userId, ...permissions),
-        catch: (cause) => new DatabaseError({ operation: 'authorize.permission', cause }),
-      });
-      if (count !== permissions.length) {
+      if (!permissions.every((permission) => principal.permissions.includes(permission))) {
         return yield* new PermissionDenied({ code: 'authentication.permission_denied' });
       }
       return principal;

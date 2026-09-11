@@ -1,5 +1,6 @@
 import {
   ApiTokenCreated,
+  CurrentAccount,
   TeamInviteResult,
   TeamList,
   TeamProfilePermissions,
@@ -106,6 +107,12 @@ it('creates single-use team invitations and enforces profiles, version checks an
       code: 'team.invitation_inactive',
     });
     let headers = await login('accountant@example.test');
+    const accountResponse = await fetch(`${server.baseUrl}/api/auth/account`, { headers });
+    expect(accountResponse.status).toBe(200);
+    expect(accountResponse.headers.get('cache-control')).toContain('no-store');
+    const account = Schema.decodeUnknownSync(CurrentAccount)(await accountResponse.json());
+    expect(account.mode).toBe('administrator');
+    expect(account.permissions).toEqual([...TeamProfilePermissions.accountant].sort());
     expect((await fetch(`${server.baseUrl}/api/invoices`, { headers })).status).toBe(200);
     expect((await fetch(`${server.baseUrl}/api/banking/transactions`, { headers })).status).toBe(
       200,

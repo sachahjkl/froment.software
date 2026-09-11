@@ -1,5 +1,6 @@
 import { Schema } from 'effect';
 import { Ulid } from '../identifiers.js';
+import { PermissionCode } from '../permissions.js';
 import { accountPasswordConfig } from './config.js';
 
 export const AccountEmail = Schema.String.check(
@@ -43,6 +44,7 @@ export const CurrentAccount = Schema.Struct({
   userId: Ulid,
   email: AccountEmail,
   mode: LoginMode,
+  permissions: Schema.UniqueArray(PermissionCode),
 });
 export type CurrentAccount = typeof CurrentAccount.Type;
 

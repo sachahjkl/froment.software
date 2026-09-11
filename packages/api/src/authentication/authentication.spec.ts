@@ -185,6 +185,39 @@ describe('Authentication', () => {
     );
   });
 
+  it('reads effective permissions from current roles and uses them for authorization', async () => {
+    await Effect.runPromise(
+      Effect.gen(function* () {
+        const database = yield* Database;
+        yield* seedAdministrator(database);
+        const authentication = yield* Authentication;
+        const session = yield* authentication.login(email, password, '192.0.2.1');
+        expect((yield* authentication.authenticate(session.accessToken)).permissions).toEqual([
+          'client.create',
+          'client.read',
+        ]);
+        database.sqlite
+          .prepare(
+            "delete from role_permissions where role_id = ? and permission_code = 'client.create'",
+          )
+          .run(roleId);
+        expect((yield* authentication.authenticate(session.accessToken)).permissions).toEqual([
+          'client.read',
+        ]);
+        expect(
+          (yield* authentication.authorize(session.accessToken, ['client.read'], 'administrator'))
+            .permissions,
+        ).toEqual(['client.read']);
+        expect(
+          yield* Effect.result(
+            authentication.authorize(session.accessToken, ['client.create'], 'administrator'),
+          ),
+        ).toMatchObject({ _tag: 'Failure', failure: { _tag: 'PermissionDenied' } });
+        database.sqlite.prepare('delete from user_roles where user_id = ?').run(userId);
+        expect((yield* authentication.authenticate(session.accessToken)).permissions).toEqual([]);
+      }).pipe(Effect.provide(authenticationLayer()), Effect.provide(TestClock.layer())),
+    );
+  });
   it('lists session families and revokes another family without closing the current one', async () => {
     await Effect.runPromise(
       Effect.gen(function* () {
