@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
 import { Button } from '../button/button';
 import { Icon } from '../icon/icon';
+import { contactMailto } from './contact-mailto';
 
 @Component({
   selector: 'app-contact-actions',
@@ -15,16 +16,5 @@ export class ContactActions {
   readonly subject = input('');
   readonly body = input('');
 
-  protected readonly mailto = computed(() => {
-    const query = new URLSearchParams();
-    if (this.subject()) {
-      query.set('subject', this.subject());
-    }
-    if (this.body()) {
-      query.set('body', this.body());
-    }
-
-    const parameters = query.toString();
-    return `mailto:contact@froment.software${parameters ? `?${parameters}` : ''}`;
-  });
+  protected readonly mailto = computed(() => contactMailto(this.subject(), this.body()));
 }

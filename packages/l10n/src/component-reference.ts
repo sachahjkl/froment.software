@@ -476,7 +476,7 @@ const frenchStories = /* @__PURE__ */ storyDefinitions(
       "<app-process-timeline [steps]=\"[{title: 'Aperçu', description: 'Vérifiez l’exemple local.'}]\" />",
     'concrete-examples': '<app-concrete-examples anchor="examples" context="expertise" />',
     'contact-actions':
-      '<app-contact-actions mailLabel="Courriel" bookLabel="Réserver un appel" subject="Exemple" body="Aperçu local" />',
+      '<!-- Fournissez du texte non encodé. L’objet reste sur une ligne. Le corps conserve ses retours à la ligne. -->\n<app-contact-actions mailLabel="Courriel" bookLabel="Réserver un appel" subject="Exemple C++" body="Aperçu local" />',
     'site-header': '<app-site-header />',
     'mobile-navigation':
       'providers: [provideMobileNavigation()]\nnavigation = inject(MOBILE_NAVIGATION);\n\n<button #trigger type="button" (click)="navigation.toggle(trigger)">Ouvrir</button>\n@if (navigation.open()) { <app-mobile-navigation /> }',
@@ -599,7 +599,7 @@ const englishStories = /* @__PURE__ */ storyDefinitions(
       "<app-process-timeline [steps]=\"[{title: 'Preview', description: 'Check the local example.'}]\" />",
     'concrete-examples': '<app-concrete-examples anchor="examples" context="expertise" />',
     'contact-actions':
-      '<app-contact-actions mailLabel="Email" bookLabel="Book a call" subject="Example" body="Local preview" />',
+      '<!-- Supply unencoded text. The subject stays on one line. The body keeps its line breaks. -->\n<app-contact-actions mailLabel="Email" bookLabel="Book a call" subject="C++ example" body="Local preview" />',
     'site-header': '<app-site-header />',
     'mobile-navigation':
       'providers: [provideMobileNavigation()]\nnavigation = inject(MOBILE_NAVIGATION);\n\n<button #trigger type="button" (click)="navigation.toggle(trigger)">Open</button>\n@if (navigation.open()) { <app-mobile-navigation /> }',
