@@ -1,7 +1,14 @@
 import { ConfigProvider, Effect, Layer } from 'effect';
 import { HttpClient, HttpClientResponse, type HttpClientRequest } from 'effect/unstable/http';
 import { expect, it } from 'vitest';
+import { TestClock } from 'effect/testing';
 import { ConnectionConfigLive } from './connection-config.js';
+import { Checkouts, CheckoutsLive } from './checkout-service.js';
+import {
+  integrationDatabaseLayer,
+  integrationTestTime,
+  seedIntegrationInvoice,
+} from './invoice.spec-helper.js';
 import { CheckoutTransport } from './checkout-transport.js';
 import { StripeCheckoutTransportLive } from './stripe.js';
 
@@ -153,6 +160,77 @@ it('retries an interrupted response body with the same idempotency key and paylo
   expect(requests[0]?.body).toEqual(requests[1]?.body);
 });
 
+it('recovers a queued creation after an interrupted body through the durable worker', async () => {
+  const requests: HttpClientRequest.HttpClientRequest[] = [];
+  let responseBody = body;
+  await Effect.runPromise(
+    Effect.gen(function* () {
+      yield* TestClock.setTime(integrationTestTime);
+      const invoice = yield* seedIntegrationInvoice();
+      const checkouts = yield* Checkouts;
+      const request = {
+        requestId: input.requestId,
+        invoiceId: invoice.invoiceId,
+        expectedVersion: 1,
+      };
+      const queued = yield* checkouts.enqueue(request, invoice.actorId);
+      responseBody = {
+        ...body,
+        amount_total: queued.amountCents,
+        metadata: { requestId: request.requestId, revisionId: queued.revisionId },
+        expires_at: Date.parse(queued.expiresAt) / 1000,
+      };
+      yield* checkouts.runPending();
+      expect(yield* checkouts.list()).toMatchObject([
+        {
+          request,
+          status: 'retrying',
+          attempts: 1,
+          error: 'checkout.unavailable',
+          sessionId: null,
+          nextAttemptAt: new Date(integrationTestTime + 120000).toISOString(),
+        },
+      ]);
+      yield* TestClock.adjust('2 minutes');
+      yield* checkouts.runPending();
+      expect(yield* checkouts.list()).toMatchObject([
+        {
+          request,
+          status: 'open',
+          attempts: 2,
+          error: null,
+          sessionId: body.id,
+        },
+      ]);
+    }).pipe(
+      Effect.provide(
+        CheckoutsLive.pipe(
+          Layer.provide(
+            layer(requests, {
+              response: () =>
+                requests.length === 1
+                  ? new Response(
+                      new ReadableStream({
+                        start(controller) {
+                          controller.error(new Error('Response connection interrupted'));
+                        },
+                      }),
+                    )
+                  : new Response(JSON.stringify(responseBody)),
+            }),
+          ),
+        ),
+      ),
+      Effect.provide(integrationDatabaseLayer()),
+      Effect.provide(TestClock.layer()),
+    ),
+  );
+  expect(requests).toHaveLength(2);
+  expect(requests[0]?.headers['idempotency-key']).toBe(`froment-checkout-test/${input.requestId}`);
+  expect(requests[1]?.headers['idempotency-key']).toBe(requests[0]?.headers['idempotency-key']);
+  expect(requests[1]?.body).toEqual(requests[0]?.body);
+});
+
 it.each([400, 401, 409, 429, 500])(
   'classifies HTTP %s without retaining private provider diagnostics',
   async (status) => {
@@ -183,6 +261,19 @@ it.each([
   );
   expect(error).toMatchObject({ code: 'checkout.responseMismatch', retryable: false });
 });
+
+it.each(['not JSON', '{"id":', ''])(
+  'rejects a completely received invalid JSON body without retrying',
+  async (body) => {
+    const error = await Effect.runPromise(
+      CheckoutTransport.use((transport) => transport.create(input)).pipe(
+        Effect.provide(layer([], { body })),
+        Effect.flip,
+      ),
+    );
+    expect(error).toMatchObject({ code: 'checkout.responseMismatch', retryable: false });
+  },
+);
 
 it.each([
   ['complete', 'paid', 'paid'],

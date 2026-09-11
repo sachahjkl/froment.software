@@ -66,6 +66,8 @@ Un défaut de traitement est signalé sans contenu privé. Le worker reprend à 
 La fermeture de son périmètre Effect arrête le worker et ses appels en cours.
 
 Les reprises conservent la même clé d’idempotence et les mêmes paramètres Stripe.
+Une interruption de lecture du corps HTTP est une erreur de transport et permet une reprise.
+Une réponse entièrement reçue mais invalide, y compris un JSON mal formé, reste un refus de validation sans reprise.
 Le serveur autorise cinq tentatives, espacées de deux, quatre, huit et seize minutes.
 Il bloque les reprises après 22 heures. La session expire 23 heures après l’enregistrement.
 Ces limites précèdent l’expiration des clés d’idempotence Stripe à 24 heures.

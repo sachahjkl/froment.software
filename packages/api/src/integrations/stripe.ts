@@ -1,6 +1,6 @@
 import { Config, Effect, Layer, Option, Redacted, Schema } from 'effect';
 import { CheckoutSessionId, CheckoutUrl } from '@froment/contracts';
-import { HttpClient, HttpClientRequest, HttpClientResponse } from 'effect/unstable/http';
+import { HttpClient, HttpClientRequest } from 'effect/unstable/http';
 import { RateLimiter } from 'effect/unstable/persistence';
 import { createHash } from 'node:crypto';
 import {
@@ -90,11 +90,17 @@ export const StripeCheckoutTransportLive = Layer.effect(
           });
         if (response.status < 200 || response.status >= 300)
           return yield* new CheckoutTransportError({ code: 'checkout.rejected', retryable: false });
-        const session = yield* HttpClientResponse.schemaBodyJson(StripeSession)(response).pipe(
-          Effect.mapError((error) =>
-            error._tag === 'HttpClientError'
-              ? new CheckoutTransportError({ code: 'checkout.unavailable', retryable: true })
-              : new CheckoutTransportError({ code: 'checkout.responseMismatch', retryable: false }),
+        const body = yield* response.text.pipe(
+          Effect.mapError(
+            () => new CheckoutTransportError({ code: 'checkout.unavailable', retryable: true }),
+          ),
+        );
+        const session = yield* Schema.decodeUnknownEffect(Schema.fromJsonString(StripeSession))(
+          body,
+        ).pipe(
+          Effect.mapError(
+            () =>
+              new CheckoutTransportError({ code: 'checkout.responseMismatch', retryable: false }),
           ),
         );
         return {
