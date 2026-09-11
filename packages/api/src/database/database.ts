@@ -125,6 +125,7 @@ export const migrateDatabase = (options: {
         const sqlite = new Sqlite(options.filename);
         try {
           sqlite.pragma(`busy_timeout = ${runtime.database.busyTimeoutMillis}`);
+          sqlite.pragma('recursive_triggers = ON');
           migrate(sqlite, options.migrationsFolder, options.businessTimeZone);
         } finally {
           sqlite.close();
@@ -153,6 +154,7 @@ export const makeDatabaseLayer = (options: { readonly filename: string }) =>
         try: () => {
           sqlite.pragma('journal_mode = WAL');
           sqlite.pragma('foreign_keys = ON');
+          sqlite.pragma('recursive_triggers = ON');
           sqlite.pragma(`busy_timeout = ${runtime.database.busyTimeoutMillis}`);
           sqlite.pragma('synchronous = FULL');
           const orm = drizzle({ client: sqlite });

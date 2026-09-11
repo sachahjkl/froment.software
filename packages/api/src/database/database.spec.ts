@@ -50,6 +50,7 @@ describe('Database', () => {
       Database.use(({ sqlite }) =>
         Effect.sync(() => ({
           foreignKeys: sqlite.pragma('foreign_keys', { simple: true }),
+          recursiveTriggers: sqlite.pragma('recursive_triggers', { simple: true }),
           journalMode: sqlite.pragma('journal_mode', { simple: true }),
           permissions: sqlite.prepare('select count(*) from permissions').pluck().get(),
           clientRolePermissions: sqlite
@@ -70,6 +71,7 @@ describe('Database', () => {
     );
 
     expect(state.foreignKeys).toBe(1);
+    expect(state.recursiveTriggers).toBe(1);
     expect(state.journalMode).toBe('wal');
     expect(state.permissions).toBe(PermissionCodes.length);
     expect(state.clientRolePermissions).toEqual([
