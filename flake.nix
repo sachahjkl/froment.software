@@ -210,6 +210,26 @@
           application = mkApplication localCommit;
           mkDockerImage =
             imageApplication:
+            let
+              containerEntrypoint = pkgs.writeShellScript "froment-software-container-entrypoint" ''
+                set -eu
+                profile="''${SECRETSPEC_PROFILE:?SECRETSPEC_PROFILE is required}"
+                case "$profile" in
+                  development|staging|production) ;;
+                  *)
+                    echo "Unsupported SecretSpec profile: $profile" >&2
+                    exit 64
+                    ;;
+                esac
+                exec ${lib.getExe secretspec} \
+                  --file ${secretBundle}/secretspec.toml \
+                  run \
+                  --profile "$profile" \
+                  --scope runtime \
+                  -- \
+                  ${imageApplication}/bin/${pname}-deploy
+              '';
+            in
             pkgs.dockerTools.buildLayeredImage {
               name = pname;
               tag = version;
@@ -220,6 +240,7 @@
                 pkgs.sops
                 secretBundle
                 secretspec
+                containerEntrypoint
               ];
               fakeRootCommands = ''
                 cp --remove-destination ./etc/passwd ./etc/passwd.writable
@@ -235,18 +256,7 @@
                 chown -R 1000:1000 ./home/froment ./var/lib/froment-software
               '';
               config = {
-                Cmd = [
-                  "${lib.getExe secretspec}"
-                  "--file"
-                  "${secretBundle}/secretspec.toml"
-                  "run"
-                  "--profile"
-                  "production"
-                  "--scope"
-                  "runtime"
-                  "--"
-                  "${imageApplication}/bin/${pname}-deploy"
-                ];
+                Cmd = [ "${containerEntrypoint}" ];
                 Env = [
                   "DATABASE_PATH=/var/lib/froment-software/froment.sqlite"
                   "SSL_CERT_FILE=${caBundle}"
@@ -254,6 +264,7 @@
                   "HOME=/home/froment"
                   "PATH=${lib.makeBinPath [ pkgs.sops ]}"
                   "TMPDIR=/tmp"
+                  "SECRETSPEC_PROFILE=production"
                 ];
                 ExposedPorts."3000/tcp" = { };
                 User = "froment";
@@ -320,12 +331,14 @@
                 export HOME="$TMPDIR"
                 secretspec --file ${./secretspec.toml} schema --profile production >/dev/null
                 secretspec --file ${./secretspec.toml} schema --profile development >/dev/null
+                secretspec --file ${./secretspec.toml} schema --profile staging >/dev/null
                 touch $out
               '';
           secretBundle = pkgs.runCommand "${pname}-secret-bundle" { } ''
             mkdir -p $out/secrets/froment-software
             cp ${./secretspec.toml} $out/secretspec.toml
             cp ${./secrets/froment-software/production.yaml} $out/secrets/froment-software/production.yaml
+            cp ${./secrets/froment-software/staging.yaml} $out/secrets/froment-software/staging.yaml
           '';
         in
         {

@@ -44,6 +44,8 @@ jobs:
     permissions:
       contents: read
       packages: write
+    outputs:
+      image: ${{ steps.publish.outputs.image }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -54,9 +56,9 @@ jobs:
           images: ${{ env.IMAGE_NAME }}
           tags: |
             type=sha,format=long
-            type=raw,value=latest,enable=${{ github.ref_name == github.event.repository.default_branch }}
       - run: nix build .#releaseDockerImage --print-build-logs
-      - name: Push OCI image
+      - id: publish
+        name: Push OCI image
         env:
           GHCR_TOKEN: ${{ github.token }}
           IMAGE_TAGS: ${{ steps.metadata.outputs.tags }}
@@ -73,3 +75,25 @@ jobs:
           for tag in "${tags[@]:1}"; do
             nix run .#skopeo -- copy --all --authfile "$authfile" "docker://${tags[0]}" "docker://$tag"
           done
+          digest=$(nix run .#skopeo -- inspect --authfile "$authfile" --format '{{.Digest}}' "docker://${tags[0]}")
+          printf 'image=%s@%s\n' "$IMAGE_NAME" "$digest" >>"$GITHUB_OUTPUT"
+
+  deploy-staging:
+    needs: publish
+    runs-on: [self-hosted, nixos, homelab]
+    environment:
+      name: staging
+      url: https://staging.froment.software
+    permissions:
+      contents: read
+      packages: read
+    concurrency:
+      group: deploy-staging-${{ github.repository }}
+      cancel-in-progress: false
+    steps:
+      - name: Deploy exact image to staging
+        env:
+          IMAGE: ${{ needs.publish.outputs.image }}
+        run: |
+          deploy=$(readlink -f "$(command -v froment-software-deploy)")
+          sudo "$deploy" staging "$IMAGE"

@@ -1,0 +1,49 @@
+name: Deploy production
+
+on:
+  workflow_dispatch:
+    inputs:
+      commit:
+        description: Full staged commit SHA. Leave empty to use the current master commit.
+        required: false
+        type: string
+
+env:
+  NIX_CONFIG: extra-experimental-features = nix-command flakes
+  IMAGE_NAME: ghcr.io/${{ github.repository }}
+
+jobs:
+  promote:
+    runs-on: [self-hosted, nixos, homelab]
+    environment:
+      name: production
+      url: https://froment.software
+    permissions:
+      contents: read
+      packages: read
+    concurrency:
+      group: deploy-production-${{ github.repository }}
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Resolve the staged image
+        id: image
+        env:
+          COMMIT: ${{ inputs.commit || github.sha }}
+          GHCR_TOKEN: ${{ github.token }}
+        run: |
+          [[ "$COMMIT" =~ ^[0-9a-f]{40}$ ]]
+          umask 077
+          authfile="$RUNNER_TEMP/skopeo-auth-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}.json"
+          trap 'rm -f "$authfile"' EXIT
+          printf '%s' "$GHCR_TOKEN" | nix run .#skopeo -- login --authfile "$authfile" ghcr.io --username "$GITHUB_ACTOR" --password-stdin
+          digest=$(nix run .#skopeo -- inspect --authfile "$authfile" --format '{{.Digest}}' "docker://$IMAGE_NAME:sha-$COMMIT")
+          printf 'reference=%s@%s\n' "$IMAGE_NAME" "$digest" >>"$GITHUB_OUTPUT"
+      - name: Promote the exact staging image
+        env:
+          IMAGE: ${{ steps.image.outputs.reference }}
+        run: |
+          deploy=$(readlink -f "$(command -v froment-software-deploy)")
+          sudo "$deploy" production "$IMAGE"

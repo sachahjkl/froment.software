@@ -106,7 +106,19 @@ podman run --rm \
   froment-software:0.0.0
 ```
 
-GitHub Actions checks the flake, builds the site, then publishes the image with the SHA and the `latest` tag on the default branch.
+GitHub Actions checks the flake, publishes an immutable SHA image, and deploys its digest to staging.
+
+The production workflow promotes only the digest currently running on staging. Start it manually from GitHub Actions after staging validation.
+
+Runtime presentation uses these variables:
+
+- `APP_ENV` accepts `development`, `staging`, or `production`;
+- `SITE_PHASE` accepts `construction` or `live`;
+- `SECRETSPEC_PROFILE` selects the matching encrypted secret profile.
+
+Development displays a red environment ribbon. Staging displays an amber ribbon. Production displays the construction notice only during the `construction` phase.
+
+The Effect server validates runtime values and serves them to Angular through `/runtime-config.js`.
 
 The server requires `PUBLIC_ORIGIN` at startup. Provide the complete public origin for each environment, without a path.
 
