@@ -24,8 +24,14 @@ export const traceRequest = <E, R>(
     const request = yield* HttpServerRequest.HttpServerRequest;
     const tracedRequest = request.modify({ url: request.url.split(/[?#]/, 1)[0] });
     return yield* HttpMiddleware.tracer(
-      Effect.provideService(application, HttpServerRequest.HttpServerRequest, request),
-    ).pipe(Effect.provideService(HttpServerRequest.HttpServerRequest, tracedRequest));
+      application.pipe(
+        Effect.provideService(HttpServerRequest.HttpServerRequest, request),
+        Effect.provideService(HttpMiddleware.TracerDisabledWhen, () => true),
+      ),
+    ).pipe(
+      Effect.provideService(HttpServerRequest.HttpServerRequest, tracedRequest),
+      Effect.provideService(HttpMiddleware.TracerDisabledWhen, () => false),
+    );
   });
 
 export const logRequest = <E, R>(
@@ -76,4 +82,8 @@ export const logRequest = <E, R>(
     return yield* exit;
   });
 
-export const HttpTracingLive = Layer.succeed(Headers.CurrentRedactedNames, redactedHeaderNames);
+export const HttpTracingLive = Layer.mergeAll(
+  Layer.succeed(Headers.CurrentRedactedNames, redactedHeaderNames),
+  // HttpEffect.toHandled adds an outer tracer before the server middleware.
+  Layer.succeed(HttpMiddleware.TracerDisabledWhen, () => true),
+);

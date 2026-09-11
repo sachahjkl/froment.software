@@ -1,12 +1,13 @@
 import { Effect, Exit, Logger, Tracer } from 'effect';
-import { HttpServerRequest, HttpServerResponse } from 'effect/unstable/http';
+import { HttpEffect, HttpServerRequest, HttpServerResponse } from 'effect/unstable/http';
 import { describe, expect, it } from 'vitest';
 
 import { type RecordedAuditEvent, RequestContext } from '../http/request-context.js';
+import { identifyRequest, preventHtmlCaching } from '../http/response.js';
 import { HttpTracingLive, logRequest, traceRequest } from './http-tracing.js';
 
 describe('HTTP tracing', () => {
-  it('redacts authentication headers through the real tracing middleware', async () => {
+  it('creates one filtered server span through HttpEffect.toHandled', async () => {
     let endSpan = () => {};
     const spanEnded = new Promise<void>((resolve) => {
       endSpan = resolve;
@@ -38,10 +39,25 @@ describe('HTTP tracing', () => {
         },
       }),
     );
+    let responses = 0;
 
     await Effect.runPromise(
       Effect.andThen(
-        traceRequest(Effect.succeed(HttpServerResponse.empty())),
+        HttpEffect.toHandled(
+          Effect.gen(function* () {
+            expect((yield* HttpServerRequest.HttpServerRequest).url).toContain(
+              'private@example.test',
+            );
+            return HttpServerResponse.empty();
+          }),
+          (_request, response) =>
+            Effect.sync(() => {
+              responses += 1;
+              expect(response.status).toBe(204);
+            }),
+          (application) =>
+            application.pipe(logRequest, preventHtmlCaching, identifyRequest, traceRequest),
+        ),
         Effect.promise(() => spanEnded),
       ).pipe(
         Effect.provideService(HttpServerRequest.HttpServerRequest, request),
@@ -50,6 +66,8 @@ describe('HTTP tracing', () => {
       ),
     );
 
+    expect(responses).toBe(1);
+    expect(spans).toHaveLength(1);
     const attributes = spans[0]?.attributes;
     expect(attributes?.get('http.request.header.authorization')).toBe('<redacted>');
     expect(attributes?.get('http.request.header.cookie')).toBe('<redacted>');
