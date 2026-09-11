@@ -4,6 +4,8 @@ import { DomSanitizer } from '@angular/platform-browser';
 import { marked } from 'marked';
 import { I18nService, Language } from '@app/i18n.service';
 import { blogPosts, type BlogPostMetadata } from '@froment/l10n/blog-posts';
+import deploymentEn from './posts/2026-09-du-commit-a-nomad.en.md';
+import deploymentFr from './posts/2026-09-du-commit-a-nomad.fr.md';
 import { blogHeadingId } from '@shared/blog-heading-id';
 import architectureEn from './posts/2026-08-architecture-effect.en.md';
 import architectureFr from './posts/2026-08-architecture-effect.fr.md';
@@ -36,6 +38,7 @@ export type RenderedBlogPost = Omit<
 };
 
 const bodies = {
+  '2026-09-du-commit-a-nomad': { fr: deploymentFr, en: deploymentEn },
   '2026-08-production-observabilite': { fr: operationsFr, en: operationsEn },
   '2026-08-securite-authentification': { fr: securityFr, en: securityEn },
   '2026-08-architecture-effect': { fr: architectureFr, en: architectureEn },

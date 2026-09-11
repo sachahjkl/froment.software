@@ -11,6 +11,14 @@ export interface BlogPostMetadata {
 
 export const blogPosts = [
   {
+    slug: '2026-09-du-commit-a-nomad',
+    published: '2026-09-11',
+    updated: '2026-09-11',
+    titleKey: 'blog.deployment.title',
+    descriptionKey: 'blog.deployment.description',
+    topicKeys: ['blog.topic.nix', 'blog.topic.nomad', 'blog.topic.supplyChain'],
+  },
+  {
     slug: '2026-08-production-observabilite',
     published: '2026-08-23',
     updated: '2026-08-23',
