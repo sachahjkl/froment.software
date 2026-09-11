@@ -62,6 +62,11 @@ export class ApiRequestBody extends HttpApiMiddleware.Service<ApiRequestBody>()(
   { error: RequestTooLarge },
 ) {}
 
+export const RequestBodyKind = Context.Reference<'standard' | 'bank-import'>(
+  '@froment/contracts/RequestBodyKind',
+  { defaultValue: () => 'standard' },
+);
+
 export class ApiTelemetry extends HttpApiMiddleware.Service<ApiTelemetry>()(
   '@froment/contracts/ApiTelemetry',
 ) {}

@@ -21,18 +21,22 @@ describe('RuntimeConfiguration', () => {
         AUTH_LOGIN_QUOTA_CAPACITY: '4',
         ARGON2_VERIFICATION_CONCURRENCY: '1',
         REQUEST_LIMITER_PUBLIC_CAPACITY: '5',
+        HTTP_MAXIMUM_BANK_IMPORT_BODY_BYTES: '600000',
       }),
     );
     expect(config.authentication.loginAttemptsPerMinute).toBe(3);
     expect(config.authentication.loginQuotaCapacity).toBe(4);
     expect(config.password.verificationConcurrency).toBe(1);
     expect(config.requestLimiter.publicCapacity).toBe(5);
+    expect(config.http.maximumBankImportBodyBytes).toBe(600_000);
+    expect(config.http.maximumRequestBodyBytes).toBe(32_768);
   });
   it.each([
     'AUTH_LOGIN_ATTEMPTS_PER_MINUTE',
     'AUTH_LOGIN_QUOTA_CAPACITY',
     'ARGON2_VERIFICATION_CONCURRENCY',
     'REQUEST_LIMITER_PUBLIC_CAPACITY',
+    'HTTP_MAXIMUM_BANK_IMPORT_BODY_BYTES',
   ])('rejects a zero security limit for %s', async (name) => {
     expect((await Effect.runPromise(load({ [name]: '0' }).pipe(Effect.flip)))._tag).toBe(
       'ConfigError',

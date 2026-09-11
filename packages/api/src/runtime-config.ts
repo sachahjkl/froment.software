@@ -52,7 +52,7 @@ export const defaultRuntimeConfig = {
   documentRenderer: { concurrency: 2, maximumOutputBytes: 1_048_576 },
   invoicePdfWorker: { concurrency: 1, intervalMillis: 1_000 },
   database: { busyTimeoutMillis: 5_000 },
-  http: { maximumRequestBodyBytes: 32_768 },
+  http: { maximumRequestBodyBytes: 32_768, maximumBankImportBodyBytes: 3_001_024 },
 } as const;
 
 export const RuntimeConfig = {
@@ -173,6 +173,10 @@ export const RuntimeConfig = {
   }),
   http: Config.all({
     maximumRequestBodyBytes: positiveInt('HTTP_MAXIMUM_REQUEST_BODY_BYTES', 32_768),
+    maximumBankImportBodyBytes: positiveInt(
+      'HTTP_MAXIMUM_BANK_IMPORT_BODY_BYTES',
+      defaultRuntimeConfig.http.maximumBankImportBodyBytes,
+    ),
   }),
 } as const;
 

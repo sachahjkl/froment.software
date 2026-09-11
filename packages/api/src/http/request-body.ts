@@ -1,6 +1,6 @@
-import { ApiRequestBody, RequestTooLarge } from '@froment/contracts';
-import { Effect, Layer, Option, Schema } from 'effect';
-import { HttpServerError, HttpServerRequest } from 'effect/unstable/http';
+import { ApiRequestBody, RequestBodyKind, RequestTooLarge } from '@froment/contracts';
+import { Context, Effect, FileSystem, Layer, Option, Schema } from 'effect';
+import { HttpServerRequest } from 'effect/unstable/http';
 
 import { setPrivateResponseHeaders } from './response.js';
 import { RuntimeConfiguration } from '../runtime-config.js';
@@ -8,9 +8,13 @@ import { RuntimeConfiguration } from '../runtime-config.js';
 export const ApiRequestBodyLive = Layer.effect(
   ApiRequestBody,
   Effect.gen(function* () {
-    const maximumRequestBodyBytes = (yield* RuntimeConfiguration).http.maximumRequestBodyBytes;
+    const config = (yield* RuntimeConfiguration).http;
     return ApiRequestBody.of(
-      Effect.fn('ApiRequestBody')(function* (httpEffect) {
+      Effect.fn('ApiRequestBody')(function* (httpEffect, { endpoint }) {
+        const maximumRequestBodyBytes =
+          Context.get(endpoint.annotations, RequestBodyKind) === 'bank-import'
+            ? config.maximumBankImportBodyBytes
+            : config.maximumRequestBodyBytes;
         yield* setPrivateResponseHeaders;
         const request = yield* HttpServerRequest.HttpServerRequest;
         if (request.headers['transfer-encoding'] !== undefined) {
@@ -22,12 +26,20 @@ export const ApiRequestBodyLive = Layer.effect(
         if (Option.isSome(contentLength) && contentLength.value > maximumRequestBodyBytes) {
           return yield* new RequestTooLarge({ code: 'request.too_large' });
         }
+        const text = yield* request.text.pipe(
+          Effect.provideService(
+            HttpServerRequest.MaxBodySize,
+            FileSystem.Size(maximumRequestBodyBytes),
+          ),
+          Effect.mapError(() => new RequestTooLarge({ code: 'request.too_large' })),
+        );
+        if (Buffer.byteLength(text, 'utf8') > maximumRequestBodyBytes) {
+          return yield* new RequestTooLarge({ code: 'request.too_large' });
+        }
         return yield* httpEffect.pipe(
-          Effect.mapError((error) =>
-            error instanceof HttpServerError.HttpServerError &&
-            error.reason._tag === 'RequestParseError'
-              ? new RequestTooLarge({ code: 'request.too_large' })
-              : error,
+          Effect.provideService(
+            HttpServerRequest.MaxBodySize,
+            FileSystem.Size(maximumRequestBodyBytes),
           ),
         );
       }),

@@ -57,6 +57,24 @@ Les méthodes GET, HEAD et OPTIONS n’exigent pas cet en-tête.
 Les jetons API Bearer ne dépendent pas de cet en-tête.
 Un cookie et un Bearer présentés ensemble restent refusés avec HTTP 401.
 
+## Corps HTTP et import CSV
+
+`HTTP_MAXIMUM_REQUEST_BODY_BYTES` reste fixé à 32 768 octets par défaut.
+`HTTP_MAXIMUM_BANK_IMPORT_BODY_BYTES` définit une limite distincte de 3 001 024 octets par défaut.
+Seuls `POST /api/banking/import` et `POST /api/banking/import/preview` utilisent cette limite distincte.
+Le contrat déclare ce type de corps, sans contenir la valeur de configuration.
+Le middleware contrôle `Content-Length` puis applique la même limite pendant la lecture Node du corps.
+Le dépassement retourne HTTP 413 avec `request.too_large` avant le décodage JSON et le traitement métier.
+Les corps avec `Transfer-Encoding` restent refusés.
+Un JSON mal formé reste une erreur HTTP 400.
+
+Le contrat CSV autorise 500 000 caractères JavaScript, pas 500 000 octets UTF-8.
+Le JSON peut utiliser six octets par caractère avec un échappement Unicode.
+La limite de transport couvre ces échappements, le compte de 100 caractères et l’enveloppe JSON.
+Les espaces supplémentaires dans le JSON restent soumis à la limite de transport.
+La règle métier conserve au maximum 1 000 lignes de données.
+Une valeur de transport inférieure réduit la taille réellement acceptée, sans modifier le contrat CSV.
+
 ## Tests
 
 Pour tester le chargement, fournissez `ConfigProvider.layer(ConfigProvider.fromUnknown(...))` à `RuntimeConfigurationLive`.

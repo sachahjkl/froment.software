@@ -1,5 +1,5 @@
 import { HttpApiEndpoint, HttpApiGroup } from 'effect/unstable/httpapi';
-import { ApiBrowserRequest, ApiRequestBody } from '../api-authentication.js';
+import { ApiBrowserRequest, ApiRequestBody, RequestBodyKind } from '../api-authentication.js';
 import { authenticate } from '../api-policy/authentication.js';
 import { requirePermissions } from '../api-policy/permissions.js';
 import { rateLimit, RateLimits } from '../api-policy/rate-limit.js';
@@ -48,6 +48,7 @@ export class BankingApi extends HttpApiGroup.make('banking', { topLevel: true })
     success: BankImportPreview,
     error: BankFailure.members,
   })
+    .annotate(RequestBodyKind, 'bank-import')
     .middleware(ApiRequestBody)
     .middleware(ApiBrowserRequest)
     .pipe(
@@ -61,6 +62,7 @@ export class BankingApi extends HttpApiGroup.make('banking', { topLevel: true })
     success: BankImportResult,
     error: BankFailure.members,
   })
+    .annotate(RequestBodyKind, 'bank-import')
     .middleware(ApiRequestBody)
     .middleware(ApiBrowserRequest)
     .pipe(
