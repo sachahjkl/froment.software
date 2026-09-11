@@ -64,7 +64,7 @@ describe('Login', () => {
       ],
     });
     const router = TestBed.inject(Router);
-    const target = '/backoffice/client?quote=01ARZ3NDEKTSV4RRFFQ69G5FAV';
+    const target = '/backoffice/client/documents/quote/01ARZ3NDEKTSV4RRFFQ69G5FAV';
     const harness = await RouterTestingHarness.create(`/?returnUrl=${encodeURIComponent(target)}`);
     const root: HTMLElement = harness.fixture.nativeElement;
     const navigate = vi.spyOn(router, 'navigateByUrl').mockResolvedValue(true);

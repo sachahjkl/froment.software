@@ -1,11 +1,12 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
-import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink, UrlSerializer } from '@angular/router';
 import { type LoginModeValue } from '@froment/contracts';
 import { Authentication } from '@backoffice/authentication';
 import { I18nService, TranslationKey } from '@app/i18n.service';
 import { Button } from '@shared/button/button';
 import { Notice } from '@shared/notice/notice';
 import { Passkeys } from '@backoffice/passkeys';
+import { loginDestination } from './login-navigation';
 
 @Component({
   host: { class: 'page-container' },
@@ -20,6 +21,7 @@ export class Login {
   private readonly auth = inject(Authentication);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
+  private readonly urlSerializer = inject(UrlSerializer);
   protected readonly error = signal<TranslationKey | undefined>(undefined);
   protected readonly pending = signal(false);
   protected readonly passkeys = inject(Passkeys);
@@ -55,12 +57,10 @@ export class Login {
   }
 
   private destination(mode: LoginModeValue): string {
-    const fallback = mode === 'client' ? '/backoffice/client' : '/backoffice/dashboard';
-    const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl');
-    if (mode !== 'client' || returnUrl === null) return fallback;
-    if (returnUrl === '/backoffice/client' || returnUrl.startsWith('/backoffice/client?')) {
-      return returnUrl;
-    }
-    return fallback;
+    return loginDestination(
+      mode,
+      this.route.snapshot.queryParamMap.get('returnUrl'),
+      this.urlSerializer,
+    );
   }
 }
