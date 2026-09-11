@@ -10,7 +10,7 @@
         [queryParams]="navigation.params()"
         >{{ i18n.t('configurationWorkspace.newInvitation') }}</a
       >
-      <button appButton type="button" [disabled]="busy() || loading()" (click)="load()">
+      <button appButton type="button" [disabled]="busy() || loading()" (click)="reload()">
         {{ i18n.t('team.reload') }}
       </button>
     </div>
@@ -140,13 +140,18 @@
             <td>{{ i18n.t(member.disabledAt === null ? 'team.active' : 'team.disabled') }}</td>
             <td>
               <div class="spacer-x-3">
-                <button appButton type="button" [disabled]="busy()" (click)="applyProfile(member)">
+                <button
+                  appButton
+                  type="button"
+                  [disabled]="busy() || loading()"
+                  (click)="applyProfile(member)"
+                >
                   {{ i18n.t('configurationWorkspace.applyProfile') }}
                 </button>
                 <button
                   appButton
                   type="button"
-                  [disabled]="busy()"
+                  [disabled]="busy() || loading()"
                   (click)="update(member, member.profile, member.disabledAt === null)"
                 >
                   {{ i18n.t(member.disabledAt === null ? 'team.disable' : 'team.enable') }}
@@ -304,7 +309,12 @@
               @if (invitation.acceptedAt !== null) { {{ i18n.t('team.accepted') }} } @else if
               (invitation.cancelledAt !== null) { {{ i18n.t('team.cancelled') }} } @else if
               (invitation.expiresAt <= now()) { {{ i18n.t('team.expired') }} } @else {
-              <button appButton type="button" [disabled]="busy()" (click)="cancel(invitation.id)">
+              <button
+                appButton
+                type="button"
+                [disabled]="busy() || loading()"
+                (click)="cancel(invitation.id)"
+              >
                 {{ i18n.t('team.cancel') }}
               </button>
               }

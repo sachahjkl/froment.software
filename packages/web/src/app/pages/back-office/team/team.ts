@@ -3,6 +3,7 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
+  DestroyRef,
   ElementRef,
   inject,
   signal,
@@ -80,6 +81,7 @@ export class Team {
   protected readonly navigation = inject(TeamNavigation);
   private readonly api = inject(TeamApi);
   private readonly confirmation = inject(Confirmation);
+  private readonly destroyRef = inject(DestroyRef);
   private readonly result = viewChild<ElementRef<HTMLElement>>('result');
   protected readonly data = signal<typeof TeamList.Type>({ members: [], invitations: [] });
   protected readonly members = createWorkspaceTable(
@@ -127,6 +129,9 @@ export class Team {
   protected readonly saved = signal(false);
   protected readonly now = signal(Date.now());
   private readonly profiles = signal<Record<string, string>>({});
+  protected readonly hasUnsavedChanges = computed(() =>
+    this.data().members.some((member) => this.profiles()[member.id] !== member.profile),
+  );
   protected readonly profileForm = form(this.profiles, (path) => {
     disabled(path, () => this.busy() || this.loading());
   });
@@ -135,33 +140,71 @@ export class Team {
       void this.load();
     });
   }
-  protected async load(): Promise<void> {
+  private async readTeam(): Promise<typeof TeamList.Type | undefined> {
+    try {
+      const outcome = await this.api.list();
+      if (this.destroyRef.destroyed) return;
+      if (outcome.success) {
+        this.error.set(undefined);
+        this.now.set(Date.now());
+        return outcome.result;
+      }
+      this.error.set(outcome.code);
+    } catch {
+      if (!this.destroyRef.destroyed) this.error.set('team.error');
+    }
+    return undefined;
+  }
+  private async load(): Promise<void> {
     this.loading.set(true);
-    const outcome = await this.api.list();
-    if (outcome.success) {
-      this.data.set(outcome.result);
+    const data = await this.readTeam();
+    if (data) {
+      this.data.set(data);
       this.profiles.set(
-        Object.fromEntries(outcome.result.members.map((member) => [member.id, member.profile])),
+        Object.fromEntries(data.members.map((member) => [member.id, member.profile])),
       );
       this.profileForm().reset();
-      this.error.set(undefined);
-      this.now.set(Date.now());
-    } else this.error.set(outcome.code);
+    }
     this.loading.set(false);
   }
-  protected async cancel(id: string): Promise<void> {
-    if (this.busy() || !(await this.confirmation.request(this.i18n.t('team.confirmCancel'))))
-      return;
+  protected async reload(): Promise<void> {
+    if (this.busy() || this.loading()) return;
     this.busy.set(true);
     try {
+      if (
+        this.hasUnsavedChanges() &&
+        !(await this.confirmation.request(this.i18n.t('team.reloadConfirm')))
+      )
+        return;
+      if (this.destroyRef.destroyed) return;
+      this.saved.set(false);
+      await this.load();
+    } catch {
+      if (!this.destroyRef.destroyed) this.error.set('team.error');
+    } finally {
+      this.busy.set(false);
+    }
+  }
+  protected async cancel(id: string): Promise<void> {
+    if (this.busy() || this.loading()) return;
+    this.busy.set(true);
+    try {
+      if (!(await this.confirmation.request(this.i18n.t('team.confirmCancel')))) return;
+      if (this.destroyRef.destroyed) return;
+      this.saved.set(false);
       const outcome = await this.api.cancel(id);
+      if (this.destroyRef.destroyed) return;
       if (!outcome.success) {
         this.error.set(outcome.code);
         return;
       }
-      await this.load();
+      const data = await this.readTeam();
+      if (!data) return;
+      this.data.update((current) => ({ ...current, invitations: data.invitations }));
       this.saved.set(true);
       this.result()?.nativeElement.focus();
+    } catch {
+      if (!this.destroyRef.destroyed) this.error.set('team.error');
     } finally {
       this.busy.set(false);
     }
@@ -171,22 +214,39 @@ export class Team {
     profile: typeof TeamProfile.Type,
     disabled: boolean,
   ): Promise<void> {
-    if (this.busy() || !(await this.confirmation.request(this.i18n.t('team.confirmUpdate'))))
-      return;
+    if (this.busy() || this.loading()) return;
+    const submittedProfile = this.profiles()[member.id] === profile;
     this.busy.set(true);
     try {
+      if (!(await this.confirmation.request(this.i18n.t('team.confirmUpdate')))) return;
+      if (this.destroyRef.destroyed) return;
+      this.saved.set(false);
       const outcome = await this.api.update(member.id, {
         expectedVersion: member.version,
         profile,
         disabled,
       });
+      if (this.destroyRef.destroyed) return;
       if (!outcome.success) {
         this.error.set(outcome.code);
         return;
       }
-      await this.load();
+      const data = await this.readTeam();
+      if (!data) return;
+      const updated = data.members.find((item) => item.id === member.id);
+      if (!updated) {
+        this.error.set('team.error');
+        return;
+      }
+      this.data.update((current) => ({
+        ...current,
+        members: current.members.map((item) => (item.id === member.id ? updated : item)),
+      }));
+      if (submittedProfile) this.profileForm[member.id]().reset(updated.profile);
       this.saved.set(true);
       this.result()?.nativeElement.focus();
+    } catch {
+      if (!this.destroyRef.destroyed) this.error.set('team.error');
     } finally {
       this.busy.set(false);
     }
@@ -200,11 +260,11 @@ export class Team {
     return new Date(value);
   }
   canDeactivate(): boolean | Promise<boolean> {
-    if (this.busy()) return false;
-    return !this.profileForm().dirty() || this.confirmation.request(this.i18n.t('team.leave'));
+    if (this.busy() || this.loading()) return false;
+    return !this.hasUnsavedChanges() || this.confirmation.request(this.i18n.t('team.leave'));
   }
   protected beforeUnload(event: BeforeUnloadEvent): void {
-    if (this.busy() || this.profileForm().dirty()) {
+    if (this.busy() || this.hasUnsavedChanges()) {
       event.preventDefault();
       event.returnValue = '';
     }

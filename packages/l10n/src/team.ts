@@ -1,6 +1,8 @@
 export const teamText = {
   fr: {
     'team.reload': 'Recharger les comptes et invitations',
+    'team.reloadConfirm':
+      'Recharger les comptes et invitations ? Les profils non enregistrés seront perdus.',
     'team.title': 'Équipe',
     'team.intro':
       'Invitez un collaborateur ou un comptable. Les comptes administrateurs existants ne sont pas modifiés ici.',
@@ -66,6 +68,7 @@ export const teamText = {
   },
   en: {
     'team.reload': 'Reload accounts and invitations',
+    'team.reloadConfirm': 'Reload accounts and invitations? Unsaved profiles will be lost.',
     'team.title': 'Team',
     'team.intro':
       'Invite a collaborator or an accountant. Existing administrator accounts are not changed here.',
