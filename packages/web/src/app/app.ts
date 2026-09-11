@@ -29,6 +29,7 @@ import { SiteHeader } from './shared/site-header/site-header';
 import { BackOfficeHeader } from './shared/back-office-header/back-office-header';
 import { BackOfficeHeaderPlaceholder } from './shared/back-office-header/back-office-header-placeholder';
 import { Button } from './shared/button/button';
+import { EnvironmentStatus } from './shared/environment-status/environment-status';
 
 @Component({
   selector: 'app-root',
@@ -38,6 +39,7 @@ import { Button } from './shared/button/button';
     BackOfficeHeaderPlaceholder,
     Button,
     CopyNotice,
+    EnvironmentStatus,
     RouterOutlet,
     SiteFooter,
     SiteHeader,

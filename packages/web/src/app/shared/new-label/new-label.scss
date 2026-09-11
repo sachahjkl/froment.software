@@ -6,7 +6,8 @@
   animation: new-label-float 3.2s ease-in-out infinite;
 }
 
-a {
+a,
+.label {
   position: relative;
   display: inline-block;
   overflow: hidden;
@@ -27,7 +28,8 @@ a {
     transform 160ms ease;
 }
 
-a::after {
+a::after,
+.label::after {
   position: absolute;
   inset: -50% auto -50% -60%;
   width: 36%;
@@ -37,7 +39,8 @@ a::after {
   animation: new-label-shine 3.8s ease-in-out infinite;
 }
 
-a span {
+a span,
+.label {
   position: relative;
   z-index: 1;
 }
@@ -74,7 +77,8 @@ a:focus-visible {
 
 @media (prefers-reduced-motion: reduce) {
   :host,
-  a::after {
+  a::after,
+  .label::after {
     animation: none;
   }
 }

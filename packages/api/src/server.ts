@@ -45,9 +45,9 @@ import { StripeWebhookRoute } from './integrations/stripe-webhook.js';
 import { BankingHandlers } from './banking/handlers.js';
 import { QuoteLinkHandlers } from './quote-links/handlers.js';
 import { RequestLimiterLive } from './server/request-limiter.js';
+import { RuntimeConfiguration, type RuntimeConfigValue } from './runtime-config.js';
 import { apiCatalog, apiCatalogContentType } from './server/api-catalog.js';
 import { StatusHandlers } from './status/handlers.js';
-import { RuntimeConfiguration } from './runtime-config.js';
 import { blogHandlers } from './blog/handlers.js';
 
 const FrenchApi = apiForLanguage('fr');
@@ -152,6 +152,7 @@ export const makeServerLayer = (options: {
   readonly port: number;
   readonly publicOrigin: string;
   readonly staticRoot: string;
+  readonly runtimeConfig: RuntimeConfigValue['application'];
 }) => {
   const ApiCatalogRoute = HttpRouter.add(
     'GET',
@@ -159,6 +160,20 @@ export const makeServerLayer = (options: {
     HttpServerResponse.jsonUnsafe(apiCatalog(options.publicOrigin), {
       contentType: apiCatalogContentType,
     }),
+  );
+  const RuntimeConfigRoute = HttpRouter.add(
+    'GET',
+    '/runtime-config.js',
+    HttpServerResponse.text(
+      `globalThis.fromentRuntimeConfig=${JSON.stringify(options.runtimeConfig)};`,
+      {
+        contentType: 'text/javascript; charset=utf-8',
+        headers: {
+          'cache-control': 'no-store',
+          'x-content-type-options': 'nosniff',
+        },
+      },
+    ),
   );
   const StaticRoutes = HttpStaticServer.layer({
     root: options.staticRoot,
@@ -186,6 +201,7 @@ export const makeServerLayer = (options: {
       EnglishApiDocs,
       LocalizedOpenApiRoutes,
       ApiCatalogRoute,
+      RuntimeConfigRoute,
       BackOfficeStaticRoutes,
       PublicQuoteStaticRoutes,
       StaticRoutes,
@@ -215,6 +231,7 @@ export const ServerLive = Layer.unwrap(
     const port = yield* Config.int('PORT').pipe(Config.withDefault(3000));
     const publicUrl = yield* Config.schema(Schema.URL, 'PUBLIC_ORIGIN');
     const staticRoot = yield* Config.string('STATIC_ROOT');
+    const runtime = yield* RuntimeConfiguration;
     const trustedProxyText = yield* Config.string('TRUSTED_PROXY_ADDRESSES').pipe(
       Config.withDefault(''),
     );
@@ -224,8 +241,11 @@ export const ServerLive = Layer.unwrap(
         .map((address) => address.trim())
         .filter(Boolean),
     );
-    return makeServerLayer({ port, publicOrigin: publicUrl.origin, staticRoot }).pipe(
-      Layer.provide(Layer.succeed(TrustedProxyAddresses, new Set(trustedProxyAddresses))),
-    );
+    return makeServerLayer({
+      port,
+      publicOrigin: publicUrl.origin,
+      staticRoot,
+      runtimeConfig: runtime.application,
+    }).pipe(Layer.provide(Layer.succeed(TrustedProxyAddresses, new Set(trustedProxyAddresses))));
   }),
 );

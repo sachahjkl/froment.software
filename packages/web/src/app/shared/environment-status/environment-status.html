@@ -1,0 +1,20 @@
+@if (environmentStatus; as status) {
+<a
+  class="environment-ribbon"
+  [class.staging]="environment === 'staging'"
+  routerLink="/version"
+  [attr.aria-label]="i18n.t(status.nameKey)"
+>
+  {{ i18n.t(status.labelKey) }}
+</a>
+} @if (showConstruction()) {
+<aside class="construction-notice" aria-labelledby="construction-title">
+  <div class="construction-inner">
+    <p class="construction-kicker">{{ i18n.t("shell.construction.kicker") }}</p>
+    <div>
+      <h2 id="construction-title">{{ i18n.t("shell.construction.title") }}</h2>
+      <p>{{ i18n.t("shell.construction.description") }}</p>
+    </div>
+  </div>
+</aside>
+}

@@ -1,4 +1,4 @@
-import { DeploymentMetadata } from '@froment/contracts';
+import { AppEnvironment, DeploymentMetadata } from '@froment/contracts';
 import { Config, Effect, Layer, Schema } from 'effect';
 import { FetchHttpClient } from 'effect/unstable/http';
 import { OtlpLogger, OtlpSerialization, OtlpTracer } from 'effect/unstable/observability';
@@ -9,8 +9,8 @@ export const ObservabilityLive = Layer.unwrap(
       Schema.fromJsonString(DeploymentMetadata),
       'DEPLOYMENT_METADATA',
     );
-    const environment = yield* Config.string('DEPLOYMENT_ENVIRONMENT').pipe(
-      Config.withDefault('production'),
+    const environment = yield* Config.schema(AppEnvironment, 'APP_ENV').pipe(
+      Config.withDefault('development'),
     );
     const serviceVersion = deployment.packages.find(
       (candidate) => candidate.name === '@froment/api',

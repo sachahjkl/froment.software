@@ -82,6 +82,7 @@ export const startHttpTestServer = async (
     BOOTSTRAP_PASSWORD_SCRYPT:
       'scrypt$16384$8$1$ABEiM0RVZneImaq7zN3u_w$bDQwYDYiQ_8HCiJ3-qXFtXFeV9FhIOa7E8VSgT__uegLrk4vqD6U920ImYTwk5RABOZsIk96bUNH1G9wbCXf1Q',
     BUSINESS_TIME_ZONE: 'Europe/Paris',
+    APP_ENV: 'development',
     DATABASE_PATH: databaseFilename,
     DEPLOYMENT_METADATA: JSON.stringify({
       commit: '6c9757782e249d4db6ffb804349b7da620494565',

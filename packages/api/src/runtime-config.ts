@@ -1,3 +1,4 @@
+import { AppEnvironment, SitePhase } from '@froment/contracts';
 import { Config, Context, Layer, Schema } from 'effect';
 
 const PositiveInt = Schema.Int.check(Schema.isGreaterThan(0));
@@ -27,6 +28,7 @@ export const defaultAuthenticationRuntimeConfig = {
 } as const;
 
 export const defaultRuntimeConfig = {
+  application: { appEnvironment: 'development', sitePhase: 'live' },
   authentication: defaultAuthenticationRuntimeConfig,
   requestLimiter: { capacity: 10_000, publicCapacity: 10_000, windowMillis: 60_000 },
   publicQuote: {
@@ -56,6 +58,14 @@ export const defaultRuntimeConfig = {
 } as const;
 
 export const RuntimeConfig = {
+  application: Config.all({
+    appEnvironment: Config.schema(AppEnvironment, 'APP_ENV').pipe(
+      Config.withDefault(defaultRuntimeConfig.application.appEnvironment),
+    ),
+    sitePhase: Config.schema(SitePhase, 'SITE_PHASE').pipe(
+      Config.withDefault(defaultRuntimeConfig.application.sitePhase),
+    ),
+  }),
   authentication: Config.all({
     accessTokenLifetimeMillis: positiveInt(
       'AUTH_ACCESS_TOKEN_LIFETIME_MILLIS',

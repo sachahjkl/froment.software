@@ -168,6 +168,11 @@ describe('HTTP server', () => {
       description: apiDocumentation.en.security.bearer,
     });
     expect(englishSpecification.components.securitySchemes).not.toHaveProperty('sessionCookie');
+    const runtimeConfig = await fetch(`${baseUrl}/runtime-config.js`);
+    expect(runtimeConfig.headers.get('cache-control')).toBe('no-store');
+    await expect(runtimeConfig.text()).resolves.toBe(
+      'globalThis.fromentRuntimeConfig={"appEnvironment":"development","sitePhase":"live"};',
+    );
     const shell = await fetch(`${baseUrl}/backoffice/login`, { headers: { accept: 'text/html' } });
     expect(await shell.text()).toContain('<app-root></app-root>');
   });

@@ -21,6 +21,7 @@
   } } @else if (publicPage()) {
   <app-site-header />
   }
+  <app-environment-status ngSkipHydration [publicPage]="publicPage()" />
   <main #mainContent id="main-content" tabindex="-1" [class.startup-main]="startup() !== 'ready'">
     @if (startup() === 'loading') {
     <div class="startup-status" role="status">

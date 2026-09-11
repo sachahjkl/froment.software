@@ -31,6 +31,20 @@ describe('RuntimeConfiguration', () => {
     expect(config.http.maximumBankImportBodyBytes).toBe(600_000);
     expect(config.http.maximumRequestBodyBytes).toBe(32_768);
   });
+  it('loads the application environment and site phase', async () => {
+    const config = await Effect.runPromise(
+      load({ APP_ENV: 'staging', SITE_PHASE: 'construction' }),
+    );
+    expect(config.application).toEqual({ appEnvironment: 'staging', sitePhase: 'construction' });
+  });
+  it.each([
+    ['APP_ENV', 'preview'],
+    ['SITE_PHASE', 'staging'],
+  ])('rejects unsupported application configuration %s=%s', async (name, value) => {
+    expect((await Effect.runPromise(load({ [name]: value }).pipe(Effect.flip)))._tag).toBe(
+      'ConfigError',
+    );
+  });
   it.each([
     'AUTH_LOGIN_ATTEMPTS_PER_MINUTE',
     'AUTH_LOGIN_QUOTA_CAPACITY',
