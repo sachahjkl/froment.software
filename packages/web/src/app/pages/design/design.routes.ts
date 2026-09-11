@@ -26,9 +26,15 @@ export const designRoutes: Routes = [
     loadComponent: () =>
       import('./stories/mermaid-stories').then((module) => module.MermaidStories),
   },
-  ...['button', 'link-button', 'action-menu', 'split-action', 'copy-field', 'anchor-link'].map(
-    (path) => ({ path, loadComponent: action }),
-  ),
+  ...[
+    'button',
+    'link-button',
+    'action-menu',
+    'split-action',
+    'icon-toolbar',
+    'copy-field',
+    'anchor-link',
+  ].map((path) => ({ path, loadComponent: action })),
   ...['badge', 'notice', 'empty-state', 'hint', 'status-block', 'icon', 'entity-icon'].map(
     (path) => ({
       path,

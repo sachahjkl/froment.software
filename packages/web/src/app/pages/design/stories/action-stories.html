@@ -31,7 +31,8 @@
     >
     } @if (entry.id === 'split-action') {
     <label>{{ 'menuLabel' }}<input class="input" [formField]="controls.menuLabel" /></label> } @if
-    (entry.id !== 'copy-field' && entry.id !== 'anchor-link' && entry.id !== 'copy-notice') {
+    (entry.id !== 'copy-field' && entry.id !== 'anchor-link' && entry.id !== 'copy-notice' &&
+    entry.id !== 'icon-toolbar') {
     <label
       >{{ text().variant }}<select class="select" [formField]="controls.variant">
         @for (variant of variants; track variant) {
@@ -52,7 +53,9 @@
     >
     } @if (entry.id === 'split-action') {
     <label><input type="checkbox" [formField]="controls.menuDisabled" />{{ 'menuDisabled' }}</label>
-    } }
+    } } @if (entry.id === 'icon-toolbar') {
+    <label><input type="checkbox" [formField]="controls.disabled" />{{ text().disabled }}</label>
+    }
   </div>
   <div storyPreview class="sample">
     @switch (entry.id) { @case ('button') {
@@ -96,6 +99,13 @@
       [menuDisabled]="model().menuDisabled"
       (primaryAction)="event.set('primaryAction')"
       (actionSelected)="event.set($event)"
+    />
+    } @case ('icon-toolbar') {
+    <app-icon-toolbar
+      [label]="model().label"
+      [groups]="toolbarGroups()"
+      [disabled]="model().disabled"
+      (activated)="activateToolbar($event)"
     />
     } @case ('copy-field') {
     <app-copy-field
@@ -201,6 +211,16 @@
         (primaryAction)="event.set('primaryAction')"
       />
       } }
+    </div>
+    } } @else if (entry.id === 'icon-toolbar') { @for (disabled of [false, true]; track disabled) {
+    <div class="sample" data-variant>
+      <code>{{ 'disabled: ' }}{{ disabled }}</code>
+      <app-icon-toolbar
+        [label]="model().label"
+        [groups]="toolbarGroups()"
+        [disabled]="disabled"
+        (activated)="activateToolbar($event)"
+      />
     </div>
     } } @else if (entry.id === 'copy-field') { @for (mode of ['value', 'description', 'link']; track
     mode) {

@@ -57,6 +57,15 @@ export const iconNames: readonly IconName[] = [
   'download',
   'filter',
   'rss',
+  'paragraph',
+  'heading-2',
+  'heading-3',
+  'bold',
+  'italic',
+  'list-bullets',
+  'list-numbers',
+  'undo',
+  'redo',
 ];
 @Component({
   selector: 'app-feedback-stories',

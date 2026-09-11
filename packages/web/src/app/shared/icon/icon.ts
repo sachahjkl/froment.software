@@ -36,13 +36,53 @@ export type IconName =
   | 'chevron-right'
   | 'download'
   | 'filter'
-  | 'rss';
+  | 'rss'
+  | 'paragraph'
+  | 'heading-2'
+  | 'heading-3'
+  | 'bold'
+  | 'italic'
+  | 'list-bullets'
+  | 'list-numbers'
+  | 'undo'
+  | 'redo';
 
 @Component({
   selector: 'app-icon',
   template: `
     <svg viewBox="0 0 24 24" aria-hidden="true">
       @switch (name()) {
+        @case ('paragraph') {
+          <path d="M13 4v16m4-16v16m2-16H9.5a4.5 4.5 0 0 0 0 9H13" />
+        }
+        @case ('heading-2') {
+          <path d="M4 12h8m-8 6V6m8 12V6m9 12h-4c0-4 4-3 4-6c0-1.5-2-2.5-4-1" />
+        }
+        @case ('heading-3') {
+          <path
+            d="M4 12h8m-8 6V6m8 12V6m5.5 4.5c1.7-1 3.5 0 3.5 1.5a2 2 0 0 1-2 2m-2 3.5c2 1.5 4 .3 4-1.5a2 2 0 0 0-2-2"
+          />
+        }
+        @case ('bold') {
+          <path d="M6 12h9a4 4 0 0 1 0 8H7a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h7a4 4 0 0 1 0 8" />
+        }
+        @case ('italic') {
+          <path d="M19 4h-9m4 16H5M15 4L9 20" />
+        }
+        @case ('list-bullets') {
+          <path d="M3 5h.01M3 12h.01M3 19h.01M8 5h13M8 12h13M8 19h13" />
+        }
+        @case ('list-numbers') {
+          <path
+            d="M11 5h10m-10 7h10m-10 7h10M4 4h1v5M4 9h2m.5 11H3.4c0-1 2.6-1.925 2.6-3.5a1.5 1.5 0 0 0-2.6-1.02"
+          />
+        }
+        @case ('undo') {
+          <path d="M9 14 4 9l5-5M4 9h10.5a5.5 5.5 0 0 1 0 11H11" />
+        }
+        @case ('redo') {
+          <path d="m15 14 5-5-5-5M20 9H9.5a5.5 5.5 0 0 0 0 11H13" />
+        }
         @case ('dashboard') {
           <path d="M3 3h7v7H3zm11 0h7v7h-7zM3 14h7v7H3zm11 0h7v7h-7z" />
         }

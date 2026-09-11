@@ -1,6 +1,10 @@
 export const documentTextEditorText = {
   fr: {
     'documentText.formatting': 'Mise en forme des conditions',
+    'documentText.structure': 'Paragraphes et titres',
+    'documentText.emphasis': 'Style du texte',
+    'documentText.lists': 'Listes',
+    'documentText.history': 'Historique des modifications',
     'documentText.paragraph': 'Paragraphe',
     'documentText.heading': 'Titre',
     'documentText.subheading': 'Sous-titre',
@@ -16,6 +20,10 @@ export const documentTextEditorText = {
   },
   en: {
     'documentText.formatting': 'Terms formatting',
+    'documentText.structure': 'Paragraphs and headings',
+    'documentText.emphasis': 'Text style',
+    'documentText.lists': 'Lists',
+    'documentText.history': 'Change history',
     'documentText.paragraph': 'Paragraph',
     'documentText.heading': 'Heading',
     'documentText.subheading': 'Subheading',

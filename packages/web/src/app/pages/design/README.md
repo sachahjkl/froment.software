@@ -2,7 +2,7 @@
 
 La référence expose une URL par entrée de `reference-catalog.ts`.
 Les huit familles de pages se chargent à la demande.
-Le catalogue contient 57 entrées, dont `EntityIcon` et la composition locale `DesignWorkspace`.
+Le catalogue contient 58 entrées, dont `IconToolbar` et la composition locale `DesignWorkspace`.
 
 ## Routes et chargement
 

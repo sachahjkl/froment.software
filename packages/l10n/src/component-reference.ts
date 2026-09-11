@@ -64,6 +64,17 @@ function storyProperties(description: StoryDescriptions) {
       ['primaryAction', 'OutputEmitterRef<void>', '—'],
       ['actionSelected', 'OutputEmitterRef<string>', '—'],
     ],
+    'icon-toolbar': [
+      ['label', 'string', 'required'],
+      ['groups', 'readonly IconToolbarGroup<Value>[]', 'required'],
+      ['disabled', 'boolean', 'false'],
+      ['activated', 'OutputEmitterRef<Value>', '—'],
+      [
+        'IconToolbarItem<Value>',
+        '{ value: Value; label: string; icon: IconName; pressed: boolean | null; disabled: boolean }',
+        '—',
+      ],
+    ],
     'copy-field': [
       ['value / actionLabel', 'string', 'required'],
       ['label / headingId / description / status', 'string', "''"],
@@ -386,6 +397,8 @@ const frenchStories = /* @__PURE__ */ storyDefinitions(
       '<app-action-menu label="Actions" [actions]="[{id: \'edit\', label: \'Modifier\'}]" (actionSelected)="command.set($event)" />',
     'split-action':
       '<app-split-action primaryLabel="Aperçu" menuLabel="Autres aperçus" [actions]="actions" (primaryAction)="preview()" (actionSelected)="command.set($event)" />',
+    'icon-toolbar':
+      '<app-icon-toolbar label="Mise en forme" [groups]="groups" [disabled]="saving()" (activated)="format($event)" />',
     'copy-field':
       '<app-copy-field label="Exemple" value="DEMO-1" actionLabel="Copier" (copy)="copyExample()" />',
     'anchor-link': '<h2 id="example">Exemple <app-anchor-link fragment="example" /></h2>',
@@ -507,6 +520,8 @@ const englishStories = /* @__PURE__ */ storyDefinitions(
       '<app-action-menu label="Actions" [actions]="[{id: \'edit\', label: \'Edit\'}]" (actionSelected)="command.set($event)" />',
     'split-action':
       '<app-split-action primaryLabel="Preview" menuLabel="More previews" [actions]="actions" (primaryAction)="preview()" (actionSelected)="command.set($event)" />',
+    'icon-toolbar':
+      '<app-icon-toolbar label="Formatting" [groups]="groups" [disabled]="saving()" (activated)="format($event)" />',
     'copy-field':
       '<app-copy-field label="Example" value="DEMO-1" actionLabel="Copy" (copy)="copyExample()" />',
     'anchor-link': '<h2 id="example">Example <app-anchor-link fragment="example" /></h2>',

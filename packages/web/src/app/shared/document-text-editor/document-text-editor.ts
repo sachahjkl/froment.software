@@ -16,8 +16,8 @@ import type { FormValueControl } from '@angular/forms/signals';
 import { Editor } from '@tiptap/core';
 import StarterKit from '@tiptap/starter-kit';
 import type { DocumentTextPresentationValue } from '@froment/contracts';
-import { I18nService, type TranslationKey } from '@app/i18n.service';
-import { Button } from '@shared/button/button';
+import { I18nService } from '@app/i18n.service';
+import { IconToolbar, type IconToolbarGroup } from '@shared/icon-toolbar/icon-toolbar';
 import { documentTextContent, documentTextSerializer } from './document-text-content';
 
 type TextAction =
@@ -30,20 +30,40 @@ type TextAction =
   | 'orderedList'
   | 'undo'
   | 'redo';
-const actions: ReadonlyArray<{ readonly action: TextAction; readonly label: TranslationKey }> = [
-  { action: 'paragraph', label: 'documentText.paragraph' },
-  { action: 'heading', label: 'documentText.heading' },
-  { action: 'subheading', label: 'documentText.subheading' },
-  { action: 'bold', label: 'documentText.bold' },
-  { action: 'italic', label: 'documentText.italic' },
-  { action: 'bulletList', label: 'documentText.bulletList' },
-  { action: 'orderedList', label: 'documentText.orderedList' },
-  { action: 'undo', label: 'documentText.undo' },
-  { action: 'redo', label: 'documentText.redo' },
-];
+const actionGroups = [
+  {
+    label: 'documentText.structure',
+    items: [
+      { value: 'paragraph', icon: 'paragraph', label: 'documentText.paragraph' },
+      { value: 'heading', icon: 'heading-2', label: 'documentText.heading' },
+      { value: 'subheading', icon: 'heading-3', label: 'documentText.subheading' },
+    ],
+  },
+  {
+    label: 'documentText.emphasis',
+    items: [
+      { value: 'bold', icon: 'bold', label: 'documentText.bold' },
+      { value: 'italic', icon: 'italic', label: 'documentText.italic' },
+    ],
+  },
+  {
+    label: 'documentText.lists',
+    items: [
+      { value: 'bulletList', icon: 'list-bullets', label: 'documentText.bulletList' },
+      { value: 'orderedList', icon: 'list-numbers', label: 'documentText.orderedList' },
+    ],
+  },
+  {
+    label: 'documentText.history',
+    items: [
+      { value: 'undo', icon: 'undo', label: 'documentText.undo' },
+      { value: 'redo', icon: 'redo', label: 'documentText.redo' },
+    ],
+  },
+] as const;
 
 @Component({
-  imports: [Button],
+  imports: [IconToolbar],
   changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-document-text-editor',
   styleUrl: './document-text-editor.scss',
@@ -72,12 +92,17 @@ export class DocumentTextEditor implements FormValueControl<string> {
   private renderedSource = '';
   private renderedFormat: 'plain' | 'markdown' = 'plain';
   protected readonly placement = computed(() => this.presentation()?.placement ?? 'inline');
-  protected readonly toolbar = computed(() => {
+  protected readonly toolbar = computed<ReadonlyArray<IconToolbarGroup<TextAction>>>(() => {
     this.transaction();
-    return actions.map((item) => ({
-      ...item,
-      pressed: this.pressed(item.action),
-      disabled: this.actionDisabled(item.action),
+    return actionGroups.map((group) => ({
+      label: this.i18n.t(group.label),
+      items: group.items.map((item) => ({
+        value: item.value,
+        icon: item.icon,
+        label: this.i18n.t(item.label),
+        pressed: this.pressed(item.value),
+        disabled: this.actionDisabled(item.value),
+      })),
     }));
   });
 

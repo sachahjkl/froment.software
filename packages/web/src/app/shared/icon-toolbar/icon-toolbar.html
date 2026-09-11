@@ -1,0 +1,28 @@
+<div
+  ngToolbar
+  [attr.aria-label]="label()"
+  [disabled]="disabled()"
+  [wrap]="true"
+  [value]="selected()"
+  (valueChange)="activateCurrent()"
+>
+  @for (group of groups(); track $index) {
+  <div class="group" role="group" [attr.aria-label]="group.label">
+    @for (item of group.items; track item.value) {
+    <app-hint #hint [text]="item.label">
+      <button
+        ngToolbarWidget
+        type="button"
+        [value]="item.value"
+        [disabled]="disabled() || item.disabled"
+        [attr.aria-labelledby]="hint.id"
+        [attr.aria-pressed]="item.pressed"
+        (click)="nativeClick($event, item)"
+      >
+        <app-icon [name]="item.icon" />
+      </button>
+    </app-hint>
+    }
+  </div>
+  }
+</div>

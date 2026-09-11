@@ -1,4 +1,6 @@
 import { TestBed } from '@angular/core/testing';
+import { By } from '@angular/platform-browser';
+import { IconToolbar } from '@shared/icon-toolbar/icon-toolbar';
 import {
   documentTextContent,
   isDocumentText,
@@ -74,6 +76,34 @@ describe('DocumentTextEditor', () => {
     expect(component['editor']?.isEditable).toBe(false);
     expect(component.value()).toBe('Original');
     expect(presentations).toEqual([]);
+  });
+
+  it('formats the selection from the toolbar and preserves undo and locking', async () => {
+    const { fixture, component } = await setup('Texte ciblé');
+    const toolbar: IconToolbar<string> = fixture.debugElement.query(
+      By.directive(IconToolbar),
+    ).componentInstance;
+    component['editor']!.commands.setTextSelection({ from: 7, to: 12 });
+    toolbar.activated.emit('bold');
+    await fixture.whenStable();
+    expect(component.value()).toBe('Texte **ciblé**');
+    expect(component['editor']!.state.selection).toMatchObject({ from: 7, to: 12 });
+    expect(
+      toolbar
+        .groups()
+        .flatMap((group) => group.items)
+        .find((item) => item.value === 'bold')?.pressed,
+    ).toBe(true);
+    toolbar.activated.emit('undo');
+    await fixture.whenStable();
+    expect(component.value()).toBe('Texte ciblé');
+    toolbar.activated.emit('redo');
+    await fixture.whenStable();
+    expect(component.value()).toBe('Texte **ciblé**');
+    fixture.componentRef.setInput('disabled', true);
+    await fixture.whenStable();
+    toolbar.activated.emit('italic');
+    expect(component.value()).toBe('Texte **ciblé**');
   });
 
   it.each([

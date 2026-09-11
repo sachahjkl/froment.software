@@ -50,6 +50,14 @@ export const referenceCatalog: readonly ReferenceEntry[] = [
     variants: 10,
   },
   {
+    id: 'icon-toolbar',
+    name: 'IconToolbar',
+    group: 'actions',
+    selectors: 'app-icon-toolbar',
+    source: 'icon-toolbar/icon-toolbar.ts',
+    variants: 2,
+  },
+  {
     id: 'copy-field',
     name: 'CopyField',
     group: 'actions',
@@ -111,7 +119,7 @@ export const referenceCatalog: readonly ReferenceEntry[] = [
     group: 'feedback',
     selectors: 'app-icon',
     source: 'icon/icon.ts',
-    variants: 35,
+    variants: 44,
   },
   {
     id: 'entity-icon',

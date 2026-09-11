@@ -12,6 +12,9 @@ L’éditeur propose les éléments suivants :
 - les commandes Annuler la modification et Rétablir la modification.
 
 La présentation du document fixe la police, les tailles et les couleurs.
+La barre d’outils utilise des boutons à icônes avec des indications au survol ou au focus.
+Les flèches gauche et droite déplacent le focus entre les boutons.
+Tab quitte la barre d’outils.
 L’éditeur ne propose ni image, ni tableau, ni lien, ni code HTML.
 La limite reste de 2 000 caractères dans le texte enregistré, marques de mise en forme comprises.
 

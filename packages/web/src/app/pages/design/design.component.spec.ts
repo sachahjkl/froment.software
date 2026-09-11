@@ -55,7 +55,7 @@ describe('Component reference', () => {
   }
 
   it('assigns every entry one lazy durable route without the old catalog tabs', async () => {
-    expect(referenceCatalog).toHaveLength(57);
+    expect(referenceCatalog).toHaveLength(58);
     expect(Object.keys(componentReferenceText.fr.stories).sort()).toEqual(
       referenceCatalog
         .filter((entry) => entry.id !== 'workflows')

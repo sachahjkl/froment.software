@@ -3,6 +3,8 @@ import { form, FormField } from '@angular/forms/signals';
 import { RouterLink } from '@angular/router';
 import { Button, type ButtonVariant } from '@shared/button/button';
 import { Icon } from '@shared/icon/icon';
+import { IconToolbar, type IconToolbarGroup } from '@shared/icon-toolbar/icon-toolbar';
+import { I18nService } from '@app/i18n.service';
 import { ActionMenu, type MenuAction } from '@shared/action-menu/action-menu';
 import { SplitAction } from '@shared/split-action/split-action';
 import { CopyField } from '@shared/copy-field/copy-field';
@@ -48,6 +50,7 @@ export const buttonVariants: readonly ButtonVariant[] = [
     StoryPage,
     Button,
     Icon,
+    IconToolbar,
     ActionMenu,
     SplitAction,
     CopyField,
@@ -84,6 +87,51 @@ export class ActionStories {
   });
   protected readonly controls = form(this.model);
   protected readonly event = signal('');
+  private readonly i18n = inject(I18nService);
+  private readonly toolbarSelection = signal<ReadonlySet<string>>(new Set(['bold']));
+  protected readonly toolbarGroups = computed<ReadonlyArray<IconToolbarGroup<string>>>(() => [
+    {
+      label: this.i18n.t('documentText.emphasis'),
+      items: [
+        {
+          value: 'bold',
+          icon: 'bold',
+          label: this.i18n.t('documentText.bold'),
+          pressed: this.toolbarSelection().has('bold'),
+          disabled: false,
+        },
+        {
+          value: 'italic',
+          icon: 'italic',
+          label: this.i18n.t('documentText.italic'),
+          pressed: this.toolbarSelection().has('italic'),
+          disabled: false,
+        },
+      ],
+    },
+    {
+      label: this.i18n.t('documentText.history'),
+      items: [
+        {
+          value: 'undo',
+          icon: 'undo',
+          label: this.i18n.t('documentText.undo'),
+          pressed: null,
+          disabled: true,
+        },
+      ],
+    },
+  ]);
+
+  protected activateToolbar(value: string): void {
+    this.event.set(value);
+    this.toolbarSelection.update((selected) => {
+      const next = new Set(selected);
+      if (next.has(value)) next.delete(value);
+      else next.add(value);
+      return next;
+    });
+  }
   protected readonly actions = computed<readonly MenuAction[]>(() => [
     {
       id: 'edit',

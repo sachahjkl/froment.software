@@ -1,19 +1,12 @@
 <div class="field">
   <span [id]="controlId() + '-label'" class="label">{{ label() }}</span>
   <div class="editor">
-    <div class="toolbar" role="group" [attr.aria-label]="i18n.t('documentText.formatting')">
-      @for (item of toolbar(); track item.action) {
-      <button
-        appButton
-        type="button"
-        [attr.aria-pressed]="item.pressed"
-        [disabled]="item.disabled"
-        (click)="apply(item.action)"
-      >
-        {{ i18n.t(item.label) }}
-      </button>
-      }
-    </div>
+    <app-icon-toolbar
+      [label]="i18n.t('documentText.formatting')"
+      [groups]="toolbar()"
+      [disabled]="disabled()"
+      (activated)="apply($event)"
+    />
     <div #editorHost></div>
   </div>
 </div>

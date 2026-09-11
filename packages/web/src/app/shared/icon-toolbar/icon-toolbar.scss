@@ -1,0 +1,49 @@
+:host {
+  display: block;
+  min-inline-size: 0;
+}
+[ngToolbar] {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2);
+}
+.group {
+  display: flex;
+  gap: 2px;
+}
+button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: 2rem;
+  block-size: 2rem;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--color-muted);
+  box-shadow: none;
+  cursor: pointer;
+}
+button:not([aria-disabled="true"], [aria-pressed="true"]):hover {
+  color: var(--color-ink);
+  background: color-mix(in oklab, var(--color-surface-sunken), transparent 35%);
+}
+button[aria-pressed="true"] {
+  background: var(--color-panel);
+  color: var(--color-ink);
+  box-shadow: var(--shadow-panel);
+}
+button:focus-visible {
+  outline-offset: -2px;
+}
+button[aria-disabled="true"] {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+app-icon {
+  inline-size: 1rem;
+  block-size: 1rem;
+}
