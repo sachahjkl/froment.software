@@ -75,11 +75,11 @@ export class RefundCancel {
     const refund = this.refund();
     const reason = this.attempt;
     if (!invoice || !refund || reason === undefined) return;
-    await this.task.run(
+    const result = await this.task.run(
       () => this.api.cancel(invoice.id, refund.id, reason),
       'credit.confirmCancel',
     );
-    if (!this.task.uncertain()) this.attempt = undefined;
+    if (result === 'resolved') this.attempt = undefined;
   }
   protected async reload(): Promise<void> {
     if (this.task.uncertain() || this.task.busy()) return;

@@ -24,6 +24,23 @@ interface TaskOutcome {
   readonly failure?: { readonly _tag: string; readonly issues?: ReadonlyArray<DocumentIssueValue> };
 }
 
+type TaskRunResult = 'skipped' | 'resolved' | 'unresolved';
+
+const failureResolution = (code: TranslationKey | undefined) => {
+  switch (code) {
+    case 'authentication.required':
+    case 'authentication.permission_denied':
+    case 'request.rate_limited':
+      return 'not-executed';
+    case undefined:
+    case 'invoice.error':
+    case 'credit.error':
+      return 'unknown';
+    default:
+      return 'rejected';
+  }
+};
+
 @Injectable()
 export class InvoiceTask {
   readonly i18n = inject(I18nService);
@@ -88,20 +105,26 @@ export class InvoiceTask {
       if (request === this.request && !this.destroyRef.destroyed) this.loading.set(false);
     }
   }
-  async run(operation: () => Promise<TaskOutcome>, confirm: TranslationKey): Promise<void> {
-    if (this.busy() || this.loading() || this.completed() || this.stale()) return;
+  async run(
+    operation: () => Promise<TaskOutcome>,
+    confirm: TranslationKey,
+  ): Promise<TaskRunResult> {
+    if (this.busy() || this.loading() || this.completed() || this.stale()) return 'skipped';
+    const previousUncertain = this.uncertain();
+    let started = false;
     this.busy.set(true);
     try {
-      if (!(await this.confirmation.request(this.i18n.t(confirm)))) return;
-      if (this.destroyRef.destroyed) return;
+      if (!(await this.confirmation.request(this.i18n.t(confirm)))) return 'skipped';
+      if (this.destroyRef.destroyed) return 'skipped';
       this.error.set(undefined);
       this.issues.set([]);
+      started = true;
       const outcome = await operation();
-      if (this.destroyRef.destroyed) return;
+      if (this.destroyRef.destroyed) return 'unresolved';
       if (outcome.success) {
         this.completed.set(true);
         this.uncertain.set(false);
-        return;
+        return 'resolved';
       }
       this.error.set(outcome.code ?? 'invoice.error');
       this.issues.set(outcome.failure?.issues ?? []);
@@ -110,12 +133,18 @@ export class InvoiceTask {
           outcome.code === 'invoice.credit_conflict' ||
           outcome.code === 'invoice.invalid_transition',
       );
-      this.uncertain.set(outcome.code === 'invoice.error' || outcome.code === 'credit.error');
+      const resolution = failureResolution(outcome.code);
+      // A rejected retry at the HTTP boundary says nothing about an earlier attempt.
+      this.uncertain.set(
+        resolution === 'unknown' || (resolution === 'not-executed' && previousUncertain),
+      );
+      return this.uncertain() ? 'unresolved' : 'resolved';
     } catch {
       if (!this.destroyRef.destroyed) {
         this.error.set('invoice.error');
-        this.uncertain.set(true);
+        this.uncertain.set(previousUncertain || started);
       }
+      return started ? 'unresolved' : 'skipped';
     } finally {
       if (!this.destroyRef.destroyed) this.busy.set(false);
     }

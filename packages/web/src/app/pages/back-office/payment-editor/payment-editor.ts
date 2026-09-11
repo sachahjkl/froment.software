@@ -108,8 +108,11 @@ export class PaymentEditor {
     const invoice = this.task.invoice();
     const request = this.attempt;
     if (!invoice || !request) return;
-    await this.task.run(() => this.task.api.recordPayment(invoice.id, request), 'payment.confirm');
-    if (!this.task.uncertain()) this.attempt = undefined;
+    const result = await this.task.run(
+      () => this.task.api.recordPayment(invoice.id, request),
+      'payment.confirm',
+    );
+    if (result === 'resolved') this.attempt = undefined;
   }
   protected async reload(): Promise<void> {
     if (this.task.uncertain() || this.task.busy()) return;

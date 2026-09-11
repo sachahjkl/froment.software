@@ -91,11 +91,11 @@ export class ReceiptCancel {
     const payment = this.payment();
     const request = this.attempt;
     if (!invoice || !payment || !request) return;
-    await this.task.run(
+    const result = await this.task.run(
       () => this.task.api.cancelPayment(invoice.id, payment.id, request),
       'payment.cancel_confirm',
     );
-    if (!this.task.uncertain()) this.attempt = undefined;
+    if (result === 'resolved') this.attempt = undefined;
   }
   protected async reload(): Promise<void> {
     if (this.task.uncertain() || this.task.busy()) return;

@@ -160,6 +160,82 @@ describe('RefundEditor', () => {
     const { root } = await setupInvoicePage(RefundEditor);
     expect(root.querySelector('form')).toBeNull();
   });
+  it.each([
+    'authentication.required',
+    'authentication.permission_denied',
+    'request.rate_limited',
+  ] as const)(
+    'retains an uncertain refund through %s and retries after access is restored',
+    async (code) => {
+      const { fixture, credits } = await setupInvoicePage(RefundEditor, {
+        credits: creditFixture(),
+      });
+      const editor = fixture.componentInstance;
+      const confirmation = vi.spyOn(Confirmation.prototype, 'request').mockResolvedValue(true);
+      editor['refundForm']().value.set({
+        amount: '2.00',
+        refundedOn: '2026-08-22',
+        reference: 'REFUND-1',
+      });
+      credits.refund.mockRejectedValueOnce(new Error('response lost'));
+      editor['save'](new Event('submit'));
+      await fixture.whenStable();
+      const request = credits.refund.mock.calls[0]?.[1];
+
+      credits.refund.mockResolvedValueOnce({ success: false, code });
+      await editor['retry']();
+      await fixture.whenStable();
+      expect(editor['task'].uncertain()).toBe(true);
+      expect(editor['attempt']).toEqual(request);
+      expect(await editor.canDeactivate()).toBe(false);
+      const unload = new Event('beforeunload', { cancelable: true });
+      window.dispatchEvent(unload);
+      expect(unload.defaultPrevented).toBe(true);
+      editor['save'](new Event('submit'));
+      await editor['reload']();
+      expect(credits.refund).toHaveBeenCalledTimes(2);
+
+      confirmation.mockResolvedValueOnce(false);
+      await editor['retry']();
+      expect(editor['attempt']).toEqual(request);
+      confirmation.mockRejectedValueOnce(new Error('confirmation interrupted'));
+      await editor['retry']();
+      expect(editor['task'].uncertain()).toBe(true);
+      expect(editor['attempt']).toEqual(request);
+
+      credits.refund.mockResolvedValueOnce({ success: true, result: creditFixture() });
+      await editor['retry']();
+      expect(credits.refund.mock.calls.map((call) => call[1])).toEqual([request, request, request]);
+      expect(editor['task'].completed()).toBe(true);
+      expect(editor['attempt']).toBeUndefined();
+      expect(await editor.canDeactivate()).toBe(true);
+    },
+  );
+  it('does not discard the request when another retry is already running', async () => {
+    const { fixture, credits } = await setupInvoicePage(RefundEditor, {
+      credits: creditFixture(),
+    });
+    const editor = fixture.componentInstance;
+    vi.spyOn(Confirmation.prototype, 'request').mockResolvedValue(true);
+    editor['refundForm']().value.set({
+      amount: '2.00',
+      refundedOn: '2026-08-22',
+      reference: 'REFUND-1',
+    });
+    const response = Promise.withResolvers<{
+      success: true;
+      result: ReturnType<typeof creditFixture>;
+    }>();
+    credits.refund.mockReturnValueOnce(response.promise);
+    editor['save'](new Event('submit'));
+    await vi.waitFor(() => expect(credits.refund).toHaveBeenCalledTimes(1));
+    const request = credits.refund.mock.calls[0]?.[1];
+    await editor['retry']();
+    expect(editor['attempt']).toEqual(request);
+    response.resolve({ success: true, result: creditFixture() });
+    await fixture.whenStable();
+    expect(editor['task'].completed()).toBe(true);
+  });
   it('keeps refund input protected after an HTTP 409 disables the stale form', async () => {
     const params = convertToParamMap({ invoiceId });
     TestBed.configureTestingModule({

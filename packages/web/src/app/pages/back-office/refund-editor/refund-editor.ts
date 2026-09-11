@@ -114,8 +114,11 @@ export class RefundEditor {
     const invoice = this.task.invoice();
     const request = this.attempt;
     if (!invoice || !request) return;
-    await this.task.run(() => this.api.refund(invoice.id, request), 'credit.confirmRefund');
-    if (!this.task.uncertain()) this.attempt = undefined;
+    const result = await this.task.run(
+      () => this.api.refund(invoice.id, request),
+      'credit.confirmRefund',
+    );
+    if (result === 'resolved') this.attempt = undefined;
   }
   protected async reload(): Promise<void> {
     if (this.task.uncertain() || this.task.busy()) return;
