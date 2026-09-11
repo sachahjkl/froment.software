@@ -1,7 +1,8 @@
 import { createHash } from 'node:crypto';
 import { join } from 'node:path';
 
-import { DateTime, Effect, Layer } from 'effect';
+import { DateTime, Effect, Layer, Schema } from 'effect';
+import { prepareOrderDocument } from '@froment/documents';
 import { TestClock } from 'effect/testing';
 import { describe, expect, it } from 'vitest';
 
@@ -16,6 +17,8 @@ import { RuntimeConfigurationDefaults } from '../runtime-config.js';
 import { IssuerSettingsLive } from '../issuer-settings/service.js';
 import { QuoteLinks, QuoteLinksLive } from '../quote-links/service.js';
 import { Quotes, QuotesLive } from './quotes.js';
+import { Orders, OrdersLive } from '../orders/orders.js';
+import { CurrentOrderConfirmationEvidence } from '../orders/confirmation-evidence.js';
 
 const actorId = '01ARZ3NDEKTSV4RRFFQ69G5FAA';
 const clientId = '01ARZ3NDEKTSV4RRFFQ69G5FAB';
@@ -63,7 +66,7 @@ const databaseLayer = () =>
 
 const lifecycleLayer = () => {
   const quoteCore = QuotesLive.pipe(Layer.provideMerge(IssuerSettingsLive));
-  return Layer.mergeAll(quoteCore, QuoteLinksLive, ClientsLive).pipe(
+  return Layer.mergeAll(quoteCore, QuoteLinksLive, ClientsLive, OrdersLive).pipe(
     Layer.provide(AuditLive),
     Layer.provide(PasswordsLive),
     Layer.provide(configLayer),
@@ -73,7 +76,10 @@ const lifecycleLayer = () => {
   );
 };
 
-const seedSentQuote = Effect.fn('seedSentQuote')(function* () {
+const seedSentQuote = Effect.fn('seedSentQuote')(function* (
+  expiration = expiresAt,
+  conditions = '',
+) {
   const database = yield* Database;
   const pdf = Buffer.from('%PDF-test');
   const snapshot = {
@@ -106,7 +112,7 @@ const seedSentQuote = Effect.fn('seedSentQuote')(function* () {
       email: '',
     },
     title: 'Quote',
-    conditions: '',
+    conditions,
     currency: 'EUR',
     netTotalCents: 100,
     vatTotalCents: 20,
@@ -152,10 +158,10 @@ const seedSentQuote = Effect.fn('seedSentQuote')(function* () {
          (id, quote_id, version, client_display_name, title, conditions, currency,
           net_total_cents, vat_total_cents, total_cents, created_at, created_by_user_id,
           template_id, template_version, render_snapshot)
-         values (?, ?, 1, 'Client', 'Quote', '', 'EUR', 100, 20, 120, ?, ?,
+          values (?, ?, 1, 'Client', 'Quote', ?, 'EUR', 100, 20, 120, ?, ?,
                  'quote-default', 1, ?)`,
       )
-      .run(revisionId, quoteId, createdAt, actorId, JSON.stringify(snapshot));
+      .run(revisionId, quoteId, conditions, createdAt, actorId, JSON.stringify(snapshot));
     database.sqlite
       .prepare(
         `insert into quote_lines
@@ -183,7 +189,7 @@ const seedSentQuote = Effect.fn('seedSentQuote')(function* () {
         `insert into quote_links (id, revision_id, token_hmac, created_at, expires_at)
          values (?, ?, ?, ?, ?)`,
       )
-      .run(linkId, revisionId, hmac(quoteLinkHmacKey, token), createdAt, expiresAt);
+      .run(linkId, revisionId, hmac(quoteLinkHmacKey, token), createdAt, expiration);
   });
 });
 
@@ -196,6 +202,161 @@ const signatureRequest = {
 const publicContext = { ipAddress: '127.0.0.1', userAgent: 'test' };
 
 describe('quote lifecycle', () => {
+  it('freezes the confirmation calendar when accepting an old quote after local midnight', async () => {
+    await Effect.runPromise(
+      Effect.gen(function* () {
+        const instant = DateTime.toEpochMillis(DateTime.makeUnsafe('2026-12-31T23:30:00.000Z'));
+        const conditions = 'Conditions historiques\n\nPaiement à réception.';
+        yield* seedSentQuote(instant + 60_000, conditions);
+        yield* TestClock.setTime(instant);
+        const database = yield* Database;
+        const quotes = yield* Quotes;
+        const links = yield* QuoteLinks;
+        const orders = yield* Orders;
+        const oldQuote = yield* quotes.getSnapshot(quoteId, 1);
+        expect(oldQuote.calendar).toBeUndefined();
+        const readOriginal = () =>
+          database.sqlite
+            .prepare(
+              `select r.render_snapshot, a.content, a.sha256 from quote_revisions r
+           join document_artifacts a on a.revision_id = r.id where r.id = ?`,
+            )
+            .get(revisionId);
+        const original = readOriginal();
+        const accepted = yield* links.accept(signatureRequest, publicContext);
+        const snapshot = yield* orders.getSnapshot(accepted.orderId);
+        expect(snapshot.calendar).toEqual({ timeZone: 'Europe/Paris' });
+        expect(snapshot.orderReference).toBe('CO-2027-000001');
+        expect(snapshot.conditions).toBe(conditions);
+        expect(snapshot.conditionsPresentation).toBe(oldQuote.conditionsPresentation);
+        expect(prepareOrderDocument(snapshot).metadata).toContainEqual([
+          'Confirmée le :',
+          '1 janvier 2027',
+        ]);
+        const evidence = Schema.decodeUnknownSync(Schema.Uint8Array)(
+          database.sqlite
+            .prepare('select evidence_content from quote_signatures where id = ?')
+            .pluck()
+            .get(accepted.signatureId),
+        );
+        expect(
+          Schema.decodeUnknownSync(Schema.fromJsonString(CurrentOrderConfirmationEvidence))(
+            Buffer.from(evidence).toString('utf8'),
+          ),
+        ).toEqual({ version: 2, orderCalendar: { timeZone: 'Europe/Paris' } });
+        const later = yield* orders
+          .getSnapshot(accepted.orderId)
+          .pipe(
+            Effect.provideService(
+              BusinessConfig,
+              BusinessConfig.of({ timeZone: DateTime.zoneMakeNamedUnsafe('America/New_York') }),
+            ),
+          );
+        expect(later).toEqual(snapshot);
+        expect(readOriginal()).toEqual(original);
+      }).pipe(Effect.provide(lifecycleLayer()), Effect.provide(TestClock.layer())),
+    );
+  });
+
+  it('keeps historical confirmation evidence, snapshots and PDF artifacts unchanged', async () => {
+    await Effect.runPromise(
+      Effect.gen(function* () {
+        const signedAt = DateTime.toEpochMillis(DateTime.makeUnsafe('2026-08-19T23:30:00.000Z'));
+        yield* seedSentQuote(signedAt + 60_000, 'Conditions conservées');
+        const database = yield* Database;
+        const signatureId = '01ARZ3NDEKTSV4RRFFQ69G5FAJ';
+        const orderId = '01ARZ3NDEKTSV4RRFFQ69G5FAK';
+        const auditId = '01ARZ3NDEKTSV4RRFFQ69G5FAM';
+        const orderArtifactId = '01ARZ3NDEKTSV4RRFFQ69G5FAN';
+        const snapshotJson = Schema.decodeUnknownSync(Schema.String)(
+          database.sqlite
+            .prepare('select render_snapshot from quote_revisions where id = ?')
+            .pluck()
+            .get(revisionId),
+        );
+        const evidence = Buffer.from(
+          JSON.stringify({
+            version: 1,
+            quoteId,
+            revisionId,
+            signatureId,
+            orderId,
+            acceptedAt: '2026-08-19T23:30:00.000Z',
+            snapshot: JSON.parse(snapshotJson),
+          }),
+        );
+        const digest = (content: string | Uint8Array) =>
+          createHash('sha256').update(content).digest('hex');
+        database.sqlite.prepare("update quotes set status = 'accepted' where id = ?").run(quoteId);
+        database.sqlite
+          .prepare('update quote_links set consumed_at = ? where id = ?')
+          .run(signedAt, linkId);
+        database.sqlite
+          .prepare(
+            `insert into audit_events (id, action, actor_user_id, resource_type, resource_id, occurred_at, metadata)
+           values (?, 'quote.accepted', null, 'quote', ?, ?, '{}')`,
+          )
+          .run(auditId, quoteId, signedAt);
+        database.sqlite
+          .prepare(
+            `insert into quote_signatures
+           (id, quote_id, revision_id, link_id, signer_name, consent, signature_kind, signature_value,
+            signed_at, ip_address, user_agent, snapshot_sha256, pdf_sha256, audit_event_id, evidence_content, evidence_sha256)
+           values (?, ?, ?, ?, 'Client', 1, 'typed', 'Client', ?, '127.0.0.1', '', ?, ?, ?, ?, ?)`,
+          )
+          .run(
+            signatureId,
+            quoteId,
+            revisionId,
+            linkId,
+            signedAt,
+            digest(snapshotJson),
+            digest('%PDF-test'),
+            auditId,
+            evidence,
+            digest(evidence),
+          );
+        database.sqlite
+          .prepare(
+            `insert into orders (id, reference, quote_id, revision_id, client_id, signature_id, status, created_at)
+           values (?, 'CO-2026-000001', ?, ?, ?, ?, 'confirmed', ?)`,
+          )
+          .run(orderId, quoteId, revisionId, clientId, signatureId, signedAt);
+        const pdf = Buffer.from('%PDF-historical-order');
+        database.sqlite
+          .prepare(
+            `insert into document_artifacts (id, order_id, kind, content_type, byte_size, sha256, content, created_at)
+           values (?, ?, 'order-pdf', 'application/pdf', ?, ?, ?, ?)`,
+          )
+          .run(orderArtifactId, orderId, pdf.byteLength, digest(pdf), pdf, signedAt);
+        const readArtifacts = () =>
+          database.sqlite.prepare('select * from document_artifacts order by id').all();
+        const originalArtifacts = readArtifacts();
+        const orders = yield* Orders;
+        const snapshot = yield* orders.getSnapshot(orderId);
+        expect(snapshot.calendar).toBeUndefined();
+        expect(snapshot.conditions).toBe('Conditions conservées');
+        expect(prepareOrderDocument(snapshot).metadata).toContainEqual([
+          'Confirmée le :',
+          '19 août 2026',
+        ]);
+        expect(readArtifacts()).toEqual(originalArtifacts);
+        expect(
+          database.sqlite
+            .prepare('select render_snapshot from quote_revisions where id = ?')
+            .pluck()
+            .get(revisionId),
+        ).toBe(snapshotJson);
+        expect(
+          database.sqlite
+            .prepare('select evidence_content from quote_signatures where id = ?')
+            .pluck()
+            .get(signatureId),
+        ).toEqual(evidence);
+      }).pipe(Effect.provide(lifecycleLayer())),
+    );
+  });
+
   it('persists expiration during a read without waiting for real time', async () => {
     const result = await Effect.runPromise(
       Effect.gen(function* () {

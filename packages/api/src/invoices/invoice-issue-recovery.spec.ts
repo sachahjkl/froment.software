@@ -248,6 +248,7 @@ describe('invoice issue recovery', () => {
         const database = yield* Database;
         const invoices = yield* Invoices;
         seedInvoice(database);
+        expect((yield* invoices.getSnapshot(invoiceId, 1)).calendar).toBeUndefined();
         const readOriginal = () =>
           database.sqlite
             .prepare('select render_snapshot from invoice_revisions where id = ?')

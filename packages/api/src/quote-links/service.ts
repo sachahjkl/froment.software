@@ -34,6 +34,7 @@ import { allocateBusinessReference, businessYear } from '../business/business-re
 import { verifyArtifactContent } from '../documents/artifact-integrity.js';
 import { validateDocumentParties } from '../documents/validation.js';
 import { expireSentQuotes } from '../quotes/quote-expiration.js';
+import { CurrentOrderConfirmationEvidence } from '../orders/confirmation-evidence.js';
 
 const QuoteSendRecord = Schema.Struct({
   reference: Schema.String,
@@ -518,9 +519,13 @@ export const QuoteLinksLive = Layer.effect(
                 occurredAt: now,
               });
               const acceptedAt = DateTime.formatIso(DateTime.makeUnsafe(now));
+              const confirmation = CurrentOrderConfirmationEvidence.make({
+                version: 2,
+                orderCalendar: { timeZone: DateTime.zoneToString(businessConfig.timeZone) },
+              });
               const evidenceContent = Buffer.from(
                 JSON.stringify({
-                  version: 1,
+                  ...confirmation,
                   quoteId: quote.quoteId,
                   revisionId: quote.revisionId,
                   linkId: quote.linkId,

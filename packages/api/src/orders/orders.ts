@@ -11,6 +11,8 @@ import {
 import { Context, DateTime, Effect, Layer, Schema } from 'effect';
 
 import { Database, DatabaseError } from '../database/database.js';
+import { verifyArtifactContent } from '../documents/artifact-integrity.js';
+import { OrderConfirmationEvidence } from './confirmation-evidence.js';
 
 const OrderSummaryRecord = Schema.Struct({
   id: Ulid,
@@ -33,6 +35,8 @@ const OrderSnapshotRecord = Schema.Struct({
   revisionId: Ulid,
   createdAt: Schema.Int,
   renderSnapshot: Schema.NullOr(Schema.String),
+  evidenceContent: Schema.Uint8Array,
+  evidenceSha256: Schema.String,
 });
 
 export interface OrdersService {
@@ -89,12 +93,15 @@ export const OrdersLive = Layer.effect(
             .prepare(
               `select orders.id, orders.reference, quotes.reference as quoteReference,
                       orders.revision_id as revisionId, orders.created_at as createdAt,
-                      quote_revisions.render_snapshot as renderSnapshot
+                      quote_revisions.render_snapshot as renderSnapshot,
+                      quote_signatures.evidence_content as evidenceContent,
+                      quote_signatures.evidence_sha256 as evidenceSha256
                from orders
                join quotes on quotes.id = orders.quote_id and quotes.status = 'accepted'
-               join quote_revisions
-                 on quote_revisions.id = orders.revision_id
-                and quote_revisions.quote_id = orders.quote_id
+                join quote_revisions
+                  on quote_revisions.id = orders.revision_id
+                 and quote_revisions.quote_id = orders.quote_id
+                join quote_signatures on quote_signatures.id = orders.signature_id
                where orders.id = ? and orders.status = 'confirmed'`,
             )
             .get(orderId);
@@ -106,6 +113,13 @@ export const OrdersLive = Layer.effect(
           const quote = Schema.decodeUnknownSync(QuoteRenderSnapshot)(
             JSON.parse(order.renderSnapshot),
           );
+          const evidence = verifyArtifactContent({
+            content: order.evidenceContent,
+            sha256: order.evidenceSha256,
+          });
+          const confirmation = Schema.decodeUnknownSync(
+            Schema.fromJsonString(OrderConfirmationEvidence),
+          )(Buffer.from(evidence.content).toString('utf8'));
           const snapshotInput = {
             templateId: 'order-default',
             templateVersion: 1,
@@ -125,9 +139,9 @@ export const OrdersLive = Layer.effect(
             lines: quote.lines,
           };
           const snapshotWithCalendar =
-            quote.calendar === undefined
+            confirmation.version === 1
               ? snapshotInput
-              : { ...snapshotInput, calendar: quote.calendar };
+              : { ...snapshotInput, calendar: confirmation.orderCalendar };
           return Schema.decodeUnknownSync(OrderRenderSnapshot)(
             quote.conditionsPresentation === undefined
               ? snapshotWithCalendar
