@@ -12,25 +12,63 @@ import type { FuseResultMatch } from 'fuse.js';
 
 const highlightName = 'search-match';
 
-@Injectable()
-export class SearchHighlightRegistry implements OnDestroy {
+@Injectable({ providedIn: 'root' })
+class SearchHighlightStore implements OnDestroy {
   private readonly registry = inject(DOCUMENT).defaultView?.CSS?.highlights;
   private readonly highlight = this.registry ? new Highlight() : undefined;
+  private readonly ranges = new Map<Range, number>();
 
   add(ranges: readonly Range[]): () => void {
-    if (!this.highlight || !this.registry) return () => undefined;
-    this.registry.set(highlightName, this.highlight);
-    for (const range of ranges) this.highlight.add(range);
+    const highlight = this.highlight;
+    const registry = this.registry;
+    if (!highlight || !registry || ranges.length === 0) return () => undefined;
+    for (const range of ranges) {
+      this.ranges.set(range, (this.ranges.get(range) ?? 0) + 1);
+      highlight.add(range);
+    }
+    registry.set(highlightName, highlight);
     return () => {
-      for (const range of ranges) this.highlight?.delete(range);
+      for (const range of ranges) {
+        const count = this.ranges.get(range) ?? 0;
+        if (count > 1) {
+          this.ranges.set(range, count - 1);
+        } else {
+          this.ranges.delete(range);
+          highlight.delete(range);
+        }
+      }
+      if (highlight.size === 0 && registry.get(highlightName) === highlight) {
+        registry.delete(highlightName);
+      }
     };
   }
 
   ngOnDestroy(): void {
+    this.ranges.clear();
+    this.highlight?.clear();
     const registry = this.registry;
     if (registry && registry.get(highlightName) === this.highlight) {
       registry.delete(highlightName);
     }
+  }
+}
+
+@Injectable()
+export class SearchHighlightRegistry implements OnDestroy {
+  private readonly store = inject(SearchHighlightStore);
+  private readonly cleanups = new Set<() => void>();
+
+  add(ranges: readonly Range[]): () => void {
+    const release = this.store.add(ranges);
+    const cleanup = () => {
+      if (this.cleanups.delete(cleanup)) release();
+    };
+    this.cleanups.add(cleanup);
+    return cleanup;
+  }
+
+  ngOnDestroy(): void {
+    for (const cleanup of this.cleanups) cleanup();
   }
 }
 

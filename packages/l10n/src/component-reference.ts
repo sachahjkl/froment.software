@@ -452,7 +452,7 @@ const frenchStories = /* @__PURE__ */ storyDefinitions(
     'list-workspace':
       '<section appListWorkspace>\n  <app-list-toolbar><app-list-search listSearch label="Rechercher" [(value)]="query" /></app-list-toolbar>\n  <div appDataTable><table><caption>Exemples</caption><thead><tr><th>Nom</th></tr></thead><tbody><tr><td>Atlas</td></tr></tbody></table></div>\n</section>',
     'search-highlight':
-      'providers: [SearchHighlightRegistry]\n\n<span [appSearchHighlight]="[[0, 2]]">Atlas</span>',
+      '// Les composants partagent le surlignage CSS. Chaque fournisseur nettoie ses propres plages.\nproviders: [SearchHighlightRegistry]\n\n<span [appSearchHighlight]="[[0, 2]]">Atlas</span>',
     'event-history': '<app-event-history label="Historique local" [events]="events" />',
     'localized-date': "{{ '2026-09-10' | localizedDate: 'fr': { dateStyle: 'long' } }}",
     'detail-row': '<p appDetailRow label="Référence">DEMO-1</p>',
@@ -575,7 +575,7 @@ const englishStories = /* @__PURE__ */ storyDefinitions(
     'list-workspace':
       '<section appListWorkspace>\n  <app-list-toolbar><app-list-search listSearch label="Search" [(value)]="query" /></app-list-toolbar>\n  <div appDataTable><table><caption>Examples</caption><thead><tr><th>Name</th></tr></thead><tbody><tr><td>Atlas</td></tr></tbody></table></div>\n</section>',
     'search-highlight':
-      'providers: [SearchHighlightRegistry]\n\n<span [appSearchHighlight]="[[0, 2]]">Atlas</span>',
+      '// Components share the CSS highlight. Each provider cleans up its own ranges.\nproviders: [SearchHighlightRegistry]\n\n<span [appSearchHighlight]="[[0, 2]]">Atlas</span>',
     'event-history': '<app-event-history label="Local history" [events]="events" />',
     'localized-date': "{{ '2026-09-10' | localizedDate: 'en': { dateStyle: 'long' } }}",
     'detail-row': '<p appDetailRow label="Reference">DEMO-1</p>',
