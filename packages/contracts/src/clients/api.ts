@@ -14,6 +14,7 @@ import {
   ClientArchived,
   ClientEmailConflict,
   ClientCreateRequest,
+  ClientCreationConflict,
   ClientList,
   ClientNotFound,
   ClientSummary,
@@ -48,6 +49,7 @@ export class ClientsApi extends HttpApiGroup.make('clients', { topLevel: true })
     payload: ClientCreateRequest,
     success: ClientSummary,
     error: [
+      ClientCreationConflict,
       AuthenticationRequired.pipe(HttpApiSchema.status(401)),
       PermissionDenied.pipe(HttpApiSchema.status(403)),
       RequestRateLimited.pipe(HttpApiSchema.status(429)),

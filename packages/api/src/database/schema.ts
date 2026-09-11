@@ -204,6 +204,26 @@ export const clients = sqliteTable(
   ],
 );
 
+export const clientCreationRequests = sqliteTable(
+  'client_creation_requests',
+  {
+    requestId: text('request_id').notNull().primaryKey(),
+    createdByUserId: text('created_by_user_id')
+      .notNull()
+      .references(() => users.id),
+    clientId: text('client_id')
+      .notNull()
+      .unique()
+      .references(() => clients.id),
+    request: text().notNull(),
+    result: text().notNull(),
+  },
+  (table) => [
+    check('client_creation_request_json_check', sql`json_valid(${table.request})`),
+    check('client_creation_result_json_check', sql`json_valid(${table.result})`),
+  ],
+);
+
 export const clientAccessAccounts = sqliteTable(
   'client_access_accounts',
   {

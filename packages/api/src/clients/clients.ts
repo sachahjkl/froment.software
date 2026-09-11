@@ -1,5 +1,8 @@
 import {
   ClientArchived,
+  ClientCreateRequest,
+  ClientCreationConflict,
+  ClientSummary,
   ClientAccessNotFound,
   ClientEmailConflict,
   ClientNotFound,
@@ -16,6 +19,7 @@ import {
 } from '@froment/contracts';
 import { Clock, Context, Effect, Layer, Schema } from 'effect';
 import { ulid } from 'ulid';
+import { isDeepStrictEqual } from 'node:util';
 
 import { Passwords } from '../authentication/password.js';
 import { Audit } from '../audit/audit.js';
@@ -32,6 +36,12 @@ const ClientRecord = Schema.Struct({
   email: Schema.String,
   archived: Schema.Number,
   updatedAt: Schema.Int,
+});
+
+const ClientCreationRecord = Schema.Struct({
+  createdByUserId: Ulid,
+  request: Schema.fromJsonString(ClientCreateRequest),
+  result: Schema.fromJsonString(ClientSummary),
 });
 
 const toSummary = (client: typeof ClientRecord.Type): ClientSummaryValue => ({
@@ -55,7 +65,7 @@ export interface ClientsService {
   readonly create: (
     request: ClientCreateRequestValue,
     actorUserId: UlidValue,
-  ) => Effect.Effect<ClientSummaryValue, DatabaseError>;
+  ) => Effect.Effect<ClientSummaryValue, ClientCreationConflict | DatabaseError>;
   readonly archive: (
     clientId: UlidValue,
     actorUserId: UlidValue,
@@ -151,7 +161,6 @@ export const ClientsLive = Layer.effect(
       request: ClientCreateRequestValue,
       actorUserId: UlidValue,
     ) {
-      const id = ulid();
       const now = yield* Clock.currentTimeMillis;
       const displayName = request.displayName.trim();
       const fields = {
@@ -162,10 +171,26 @@ export const ClientsLive = Layer.effect(
         country: request.country.trim(),
         email: request.email.trim(),
       };
-      yield* Effect.try({
+      return yield* Effect.try({
         try: () =>
           database.sqlite
             .transaction(() => {
+              const existing = database.sqlite
+                .prepare(
+                  'select created_by_user_id as createdByUserId, request, result from client_creation_requests where request_id = ?',
+                )
+                .get(request.requestId);
+              if (existing !== undefined) {
+                const saved = Schema.decodeUnknownSync(ClientCreationRecord)(existing);
+                if (
+                  saved.createdByUserId !== actorUserId ||
+                  !isDeepStrictEqual(saved.request, request)
+                ) {
+                  throw new ClientCreationConflict({ code: 'client.creation_conflict' });
+                }
+                return saved.result;
+              }
+              const id = ulid();
               database.sqlite
                 .prepare(
                   "insert into users (id, display_name, kind, created_at, updated_at) values (?, ?, 'client', ?, ?)",
@@ -205,11 +230,26 @@ export const ClientsLive = Layer.effect(
                 resourceId: id,
                 occurredAt: now,
               });
+              const result = { id, displayName, ...fields, archived: false, updatedAt: now };
+              database.sqlite
+                .prepare(
+                  'insert into client_creation_requests (request_id, created_by_user_id, client_id, request, result) values (?, ?, ?, ?, ?)',
+                )
+                .run(
+                  request.requestId,
+                  actorUserId,
+                  id,
+                  JSON.stringify(request),
+                  JSON.stringify(result),
+                );
+              return result;
             })
             .immediate(),
-        catch: (cause) => new DatabaseError({ operation: 'create.client', cause }),
+        catch: (cause) =>
+          cause instanceof ClientCreationConflict
+            ? cause
+            : new DatabaseError({ operation: 'create.client', cause }),
       });
-      return { id, displayName, ...fields, archived: false, updatedAt: now };
     });
 
     const update = Effect.fn('Clients.update')(function* (

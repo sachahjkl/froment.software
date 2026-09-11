@@ -4,6 +4,8 @@ import { provideRouter, Router } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
 import { vi } from 'vitest';
 import { ClientsApi } from '@backoffice/clients-api';
+import { ClientCreationStore } from '@backoffice/client-creation-store';
+import type { ClientCreateRequestValue } from '@froment/contracts';
 import { unsavedChangesGuard } from '@backoffice/unsaved-changes-guard';
 import { Confirmation } from '@shared/confirmation/confirmation';
 import { ClientEditor } from './client-editor';
@@ -34,6 +36,16 @@ async function configure(editing = false, value = client, loadError = false, que
     update: vi.fn().mockResolvedValue({ success: true, result: value }),
   };
   const confirmation = { request: vi.fn().mockResolvedValue(false) };
+  let pending: ClientCreateRequestValue | undefined;
+  const store = {
+    read: () => pending,
+    write: vi.fn((request: ClientCreateRequestValue) => {
+      pending = structuredClone(request);
+    }),
+    clear: vi.fn(() => {
+      pending = undefined;
+    }),
+  };
   TestBed.configureTestingModule({
     providers: [
       provideRouter([
@@ -51,6 +63,7 @@ async function configure(editing = false, value = client, loadError = false, que
         { path: 'backoffice/clients', component: ClientDestination },
       ]),
       { provide: ClientsApi, useValue: api },
+      { provide: ClientCreationStore, useValue: { open: async () => store } },
       { provide: Confirmation, useValue: confirmation },
     ],
   });
@@ -72,6 +85,7 @@ async function configure(editing = false, value = client, loadError = false, que
   };
   return {
     api,
+    store,
     root,
     component,
     confirmation,
@@ -88,6 +102,7 @@ describe('ClientEditor', () => {
     await fill('displayName', 'Acme');
     await save();
     expect(api.create).toHaveBeenCalledWith({
+      requestId: expect.any(String),
       displayName: 'Acme',
       email: '',
       addressLine1: '',
@@ -150,6 +165,49 @@ describe('ClientEditor', () => {
     expect(api.create).toHaveBeenCalledTimes(1);
     expect(root.querySelector<HTMLInputElement>('#client-displayName')?.disabled).toBe(true);
     expect(await component.canDeactivate()).toBe(false);
+  });
+
+  it('retains the exact creation through lost responses, denied access, navigation and recovery', async () => {
+    const { api, store, fill, save, component, router, confirmation, fixture } = await configure();
+    api.create.mockResolvedValueOnce({ success: false, code: 'client.error' });
+    await fill('displayName', 'Acme');
+    await save();
+    const request = api.create.mock.calls[0]?.[0];
+    expect(store.read()).toEqual(request);
+    expect(component['clientForm']().disabled()).toBe(true);
+    expect(await component.canDeactivate()).toBe(false);
+    const unload = new Event('beforeunload', { cancelable: true });
+    window.dispatchEvent(unload);
+    expect(unload.defaultPrevented).toBe(true);
+
+    api.create.mockResolvedValueOnce({ success: false, code: 'authentication.required' });
+    await save();
+    expect(store.read()).toEqual(request);
+    expect(component['pendingCreation']()).toEqual(request);
+    confirmation.request.mockResolvedValue(true);
+    await router.navigateByUrl('/backoffice/clients');
+    await router.navigateByUrl('/backoffice/clients/new');
+    await fixture.whenStable();
+    expect(api.create).toHaveBeenCalledTimes(2);
+    expect(store.read()).toEqual(request);
+
+    await save();
+    expect(api.create.mock.calls.map((call) => call[0])).toEqual([request, request, request]);
+    expect(store.read()).toBeUndefined();
+    expect(router.url).toBe(`/backoffice/clients/${client.id}`);
+  });
+
+  it('does not send a creation when its identity cannot be stored', async () => {
+    const { api, store, fill, save, component } = await configure();
+    store.write.mockImplementationOnce(() => {
+      throw new Error('storage full');
+    });
+    await fill('displayName', 'Acme');
+    await save();
+    expect(api.create).not.toHaveBeenCalled();
+    expect(component['pendingCreation']()).toBeUndefined();
+    expect(component['clientForm']().value().displayName).toBe('Acme');
+    expect(component['saving']()).toBe(false);
   });
 
   it('does not expose an archived client as an editable form', async () => {

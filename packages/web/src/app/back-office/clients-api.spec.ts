@@ -31,10 +31,11 @@ describe('ClientsApi', () => {
       archived: false,
       updatedAt: 42,
     };
-    const create = api.create(client);
+    const creation = { ...client, requestId: crypto.randomUUID() };
+    const create = api.create(creation);
     const request = http.expectOne('/api/clients');
     expect(request.request.method).toBe('POST');
-    expect(request.request.body).toEqual(client);
+    expect(request.request.body).toEqual(creation);
     request.flush(storedClient);
     await expect(create).resolves.toMatchObject({ success: true });
 

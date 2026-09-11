@@ -120,9 +120,24 @@ it('creates single-use team invitations and enforces profiles, version checks an
         )
       ).status,
     ).toBe(403);
-    expect((await post('/api/clients', { displayName: 'No', email: '' }, headers)).status).toBe(
-      403,
-    );
+    expect(
+      (
+        await post(
+          '/api/clients',
+          {
+            requestId: randomUUID(),
+            displayName: 'No',
+            email: '',
+            addressLine1: '',
+            addressLine2: '',
+            postalCode: '',
+            city: '',
+            country: '',
+          },
+          headers,
+        )
+      ).status,
+    ).toBe(403);
     const member = (await list()).members[0];
     if (member === undefined) throw new Error('team.test.member_missing');
     const permissions = () =>

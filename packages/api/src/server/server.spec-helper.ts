@@ -1,4 +1,5 @@
 import { execFile, spawn, type ChildProcess } from 'node:child_process';
+import { randomUUID } from 'node:crypto';
 import { cp, mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -151,6 +152,7 @@ export const createClient = async (server: HttpTestServer, displayName = 'HTTP c
     headers: server.jsonHeaders,
     body: JSON.stringify({
       displayName,
+      requestId: randomUUID(),
       addressLine1: '1 rue du Test',
       addressLine2: '',
       postalCode: '75001',

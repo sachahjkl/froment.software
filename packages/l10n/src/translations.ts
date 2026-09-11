@@ -1039,6 +1039,15 @@ export const translations = {
     'client.not_found': 'Ce client n’existe pas.',
     'client.archived': 'Ce client est archivé.',
     'client.version_conflict': 'Ce client a été modifié ailleurs. Rechargez la page.',
+    'client.creation_conflict':
+      'Cette requête de création appartient à une autre saisie ou à un autre compte.',
+    'client.creation_storage_error':
+      'La requête de création ne peut pas être conservée dans cet onglet. Aucun nouvel envoi n’a été effectué.',
+    'client.creation_pending':
+      'La création reste à confirmer. Reprenez la même requête pour éviter un doublon.',
+    'client.creation_retry': 'Reprendre la création',
+    'client.creation_leave':
+      'Quitter cette page ? La requête reste conservée dans cet onglet. Rouvrez la création client pour la reprendre.',
     'client.email_conflict': 'Cette adresse email appartient déjà à un compte.',
     'client.access_not_found': 'Cet accès client n’existe pas.',
     'backOffice.clientDetail.accessReady': 'Le compte {email} est prêt.',
@@ -2549,6 +2558,15 @@ export const translations = {
     'client.not_found': 'This client does not exist.',
     'client.archived': 'This client is archived.',
     'client.version_conflict': 'This client changed elsewhere. Reload the page.',
+    'client.creation_conflict':
+      'This creation request belongs to different input or another account.',
+    'client.creation_storage_error':
+      'This tab cannot retain the creation request. No new request was sent.',
+    'client.creation_pending':
+      'Creation is not confirmed. Retry the same request to prevent a duplicate.',
+    'client.creation_retry': 'Retry creation',
+    'client.creation_leave':
+      'Leave this page? This tab will retain the request. Open client creation again to retry it.',
     'client.email_conflict': 'This email address already belongs to an account.',
     'client.access_not_found': 'This client access does not exist.',
     'backOffice.clientDetail.accessReady': 'The {email} account is ready.',

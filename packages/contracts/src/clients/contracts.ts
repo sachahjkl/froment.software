@@ -26,7 +26,7 @@ export type ClientSummary = typeof ClientSummary.Type;
 export const ClientList = Schema.Array(ClientSummary);
 export type ClientList = typeof ClientList.Type;
 
-export const ClientCreateRequest = Schema.Struct({
+export const ClientInput = Schema.Struct({
   displayName: DisplayName.check(Schema.isMaxLength(120)),
   addressLine1: Schema.String.check(Schema.isMaxLength(160)),
   addressLine2: Schema.String.check(Schema.isMaxLength(160)),
@@ -37,11 +37,17 @@ export const ClientCreateRequest = Schema.Struct({
     Schema.isMaxLength(254),
     Schema.isPattern(/^$|^[^\s@]+@[^\s@]+\.[^\s@]+$/),
   ),
+});
+export type ClientInput = typeof ClientInput.Type;
+
+export const ClientCreateRequest = Schema.Struct({
+  requestId: Schema.String.check(Schema.isUUID(4)),
+  ...ClientInput.fields,
 }).annotate({ identifier: 'ClientCreateRequest' });
 export type ClientCreateRequest = typeof ClientCreateRequest.Type;
 
 export const ClientUpdateRequest = Schema.Struct({
-  ...ClientCreateRequest.fields,
+  ...ClientInput.fields,
   expectedUpdatedAt: Schema.Int,
 }).annotate({ identifier: 'ClientUpdateRequest' });
 export type ClientUpdateRequest = typeof ClientUpdateRequest.Type;
@@ -87,6 +93,12 @@ export class ClientEmailConflict extends Schema.TaggedError<ClientEmailConflict>
   { httpApiStatus: 409 },
 ) {}
 
+export class ClientCreationConflict extends Schema.TaggedError<ClientCreationConflict>()(
+  'ClientCreationConflict',
+  { code: Schema.Literal('client.creation_conflict') },
+  { httpApiStatus: 409 },
+) {}
+
 export class ClientAccessNotFound extends Schema.TaggedError<ClientAccessNotFound>()(
   'ClientAccessNotFound',
   { code: Schema.Literal('client.access_not_found') },
@@ -100,6 +112,7 @@ export const ClientFailure = Schema.Union([
   ClientArchived,
   ClientVersionConflict,
   ClientEmailConflict,
+  ClientCreationConflict,
   ClientAccessNotFound,
   RequestRateLimited,
 ]);

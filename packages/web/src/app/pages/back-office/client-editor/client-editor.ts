@@ -19,9 +19,16 @@ import {
   submit,
 } from '@angular/forms/signals';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { Ulid, type ClientCreateRequestValue, type ClientSummaryValue } from '@froment/contracts';
+import {
+  Ulid,
+  ClientInput,
+  type ClientInputValue,
+  type ClientCreateRequestValue,
+  type ClientSummaryValue,
+} from '@froment/contracts';
 import { Option, Schema } from 'effect';
-import { ClientsApi } from '@backoffice/clients-api';
+import { ClientsApi, type ClientOutcome } from '@backoffice/clients-api';
+import { ClientCreationStore, type PendingClientCreation } from '@backoffice/client-creation-store';
 import { I18nService, type TranslationKey } from '@app/i18n.service';
 import { Button } from '@shared/button/button';
 import { Confirmation } from '@shared/confirmation/confirmation';
@@ -29,7 +36,7 @@ import { Notice } from '@shared/notice/notice';
 import { PageHeader } from '@shared/page-header/page-header';
 import { clientNavigationQuery } from '../client-detail/client-navigation';
 
-const emptyClient = (): ClientCreateRequestValue => ({
+const emptyClient = (): ClientInputValue => ({
   displayName: '',
   addressLine1: '',
   addressLine2: '',
@@ -50,6 +57,9 @@ const emptyClient = (): ClientCreateRequestValue => ({
 export class ClientEditor {
   protected readonly i18n = inject(I18nService);
   private readonly api = inject(ClientsApi);
+  private readonly creationStore = inject(ClientCreationStore);
+  private store: PendingClientCreation | undefined;
+  protected readonly pendingCreation = signal<ClientCreateRequestValue | undefined>(undefined);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
@@ -65,6 +75,11 @@ export class ClientEditor {
   protected readonly error = signal<TranslationKey | undefined>(undefined);
   private readonly model = signal(emptyClient());
   protected readonly editing = signal(false);
+  protected readonly saveLabel = computed<TranslationKey>(() => {
+    if (this.saving()) return 'backOffice.clientDetail.saving';
+    if (this.pendingCreation()) return 'client.creation_retry';
+    return this.editing() ? 'backOffice.clientDetail.save' : 'backOffice.clients.create';
+  });
   protected readonly titleLabel = computed<TranslationKey>(() =>
     this.editing() ? 'clientsWorkspace.edit' : 'backOffice.clients.create',
   );
@@ -103,6 +118,7 @@ export class ClientEditor {
       path,
       () =>
         this.saving() ||
+        this.pendingCreation() !== undefined ||
         this.completed() ||
         this.state() !== 'ready' ||
         this.client()?.archived === true,
@@ -129,32 +145,37 @@ export class ClientEditor {
   }
 
   async canDeactivate(): Promise<boolean> {
+    if (this.saving()) return false;
+    if (this.completed()) return true;
+    if (this.pendingCreation())
+      return this.confirmation.request(this.i18n.t('client.creation_leave'));
     return (
-      !this.saving() &&
-      (!this.clientForm().dirty() ||
-        (await this.confirmation.request(this.i18n.t('backOffice.clientDetail.unsavedChanges'))))
+      !this.clientForm().dirty() ||
+      (await this.confirmation.request(this.i18n.t('backOffice.clientDetail.unsavedChanges')))
     );
   }
 
   @HostListener('window:beforeunload', ['$event'])
   protected preventUnsavedUnload(event: BeforeUnloadEvent): void {
-    if (this.saving() || this.clientForm().dirty()) event.preventDefault();
+    if (this.saving() || this.pendingCreation() || this.clientForm().dirty())
+      event.preventDefault();
   }
 
-  protected invalid(field: keyof ClientCreateRequestValue): boolean {
+  protected invalid(field: keyof ClientInputValue): boolean {
     return this.clientForm[field]().touched() && this.clientForm[field]().invalid();
   }
 
-  protected fieldError(field: keyof ClientCreateRequestValue): TranslationKey {
+  protected fieldError(field: keyof ClientInputValue): TranslationKey {
     if (field === 'displayName') return 'backOffice.clients.displayNameError';
     if (field === 'email') return 'backOffice.clientDetail.emailInvalid';
     return 'backOffice.clientDetail.fieldInvalid';
   }
-  protected fieldLabel(field: keyof ClientCreateRequestValue): TranslationKey {
+  protected fieldLabel(field: keyof ClientInputValue): TranslationKey {
     return `backOffice.clients.${field}`;
   }
 
   protected async load(): Promise<void> {
+    if (this.saving() || this.pendingCreation()) return;
     const generation = ++this.loadGeneration;
     const id = this.route.snapshot.paramMap.get('clientId');
     this.editing.set(id !== null);
@@ -162,10 +183,22 @@ export class ClientEditor {
     this.completed.set(false);
     this.error.set(undefined);
     if (id === null) {
-      this.client.set(undefined);
-      this.model.set(emptyClient());
-      this.clientForm().reset();
-      this.state.set('ready');
+      try {
+        const store = await this.creationStore.open();
+        if (generation !== this.loadGeneration || this.destroyRef.destroyed) return;
+        const pending = store.read();
+        this.store = store;
+        this.pendingCreation.set(pending);
+        this.client.set(undefined);
+        this.clientForm().reset(
+          pending ? Schema.decodeUnknownSync(ClientInput)(pending) : emptyClient(),
+        );
+        this.state.set('ready');
+      } catch {
+        if (generation !== this.loadGeneration || this.destroyRef.destroyed) return;
+        this.error.set('client.creation_storage_error');
+        this.state.set('error');
+      }
       return;
     }
     const decoded = Schema.decodeUnknownOption(Ulid)(id);
@@ -193,6 +226,10 @@ export class ClientEditor {
     event.preventDefault();
     if (this.saving() || this.completed() || this.state() !== 'ready' || this.client()?.archived)
       return;
+    if (this.pendingCreation()) {
+      void this.retryCreation();
+      return;
+    }
     this.clientForm().markAsTouched();
     if (this.clientForm().invalid()) {
       this.clientForm().errorSummary()[0]?.fieldTree().focusBoundControl();
@@ -201,25 +238,67 @@ export class ClientEditor {
     void submit(this.clientForm, async () => {
       this.saving.set(true);
       this.error.set(undefined);
-      const current = this.client();
-      const outcome = current
-        ? await this.api.update(current.id, {
-            ...this.model(),
-            expectedUpdatedAt: current.updatedAt,
-          })
-        : await this.api.create(this.model());
-      this.saving.set(false);
-      if (!outcome.success) {
-        this.error.set(outcome.code);
-        return;
+      try {
+        const current = this.client();
+        if (current) {
+          await this.acceptOutcome(
+            await this.api.update(current.id, {
+              ...this.model(),
+              expectedUpdatedAt: current.updatedAt,
+            }),
+          );
+        } else {
+          const request = { ...this.model(), requestId: crypto.randomUUID() };
+          if (!this.store) {
+            this.error.set('client.creation_storage_error');
+            return;
+          }
+          try {
+            this.store.write(request);
+          } catch {
+            this.error.set('client.creation_storage_error');
+            return;
+          }
+          this.pendingCreation.set(request);
+          await this.acceptOutcome(await this.api.create(request));
+        }
+      } catch {
+        this.error.set('client.error');
+      } finally {
+        this.saving.set(false);
       }
-      this.client.set(outcome.result);
-      this.completed.set(true);
-      this.clientForm().reset();
-      await this.router.navigate(['/backoffice/clients', outcome.result.id], {
-        queryParams: this.returnQuery(),
-        queryParamsHandling: 'replace',
-      });
+    });
+  }
+
+  protected async retryCreation(): Promise<void> {
+    const request = this.pendingCreation();
+    if (!request || this.saving() || this.completed()) return;
+    this.saving.set(true);
+    this.error.set(undefined);
+    try {
+      await this.acceptOutcome(await this.api.create(request));
+    } catch {
+      this.error.set('client.error');
+    } finally {
+      this.saving.set(false);
+    }
+  }
+
+  private async acceptOutcome(outcome: ClientOutcome<ClientSummaryValue>): Promise<void> {
+    if (this.destroyRef.destroyed) return;
+    if (!outcome.success) {
+      this.error.set(outcome.code);
+      return;
+    }
+    if (this.pendingCreation()) this.store?.clear();
+    this.pendingCreation.set(undefined);
+    this.client.set(outcome.result);
+    this.completed.set(true);
+    this.clientForm().reset();
+    this.saving.set(false);
+    await this.router.navigate(['/backoffice/clients', outcome.result.id], {
+      queryParams: this.returnQuery(),
+      queryParamsHandling: 'replace',
     });
   }
 }

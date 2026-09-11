@@ -56,6 +56,8 @@
     </div>
     } @if (error(); as code) {
     <p appNotice variant="danger" role="alert">{{ i18n.t(code) }}</p>
+    } @if (pendingCreation()) {
+    <p appNotice variant="warning" role="status">{{ i18n.t('client.creation_pending') }}</p>
     }
     <div class="actions">
       <button
@@ -64,8 +66,7 @@
         type="submit"
         [disabled]="saving() || completed() || (editing() && !clientForm().dirty())"
       >
-        {{ i18n.t(saving() ? 'backOffice.clientDetail.saving' : editing() ?
-        'backOffice.clientDetail.save' : 'backOffice.clients.create') }}
+        {{ i18n.t(saveLabel()) }}
       </button>
       <a
         appLinkButton

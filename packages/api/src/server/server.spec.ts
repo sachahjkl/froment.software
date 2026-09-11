@@ -1,4 +1,5 @@
 import { execFile, spawn, type ChildProcess } from 'node:child_process';
+import { randomUUID } from 'node:crypto';
 import { cp, mkdtemp, rm } from 'node:fs/promises';
 import { request as httpRequest } from 'node:http';
 import { tmpdir } from 'node:os';
@@ -326,7 +327,7 @@ describe('HTTP server', () => {
     const created = await fetch(`${baseUrl}/api/clients`, {
       method: 'POST',
       headers: { ...sessionHeaders, 'content-type': 'application/json' },
-      body: JSON.stringify(clientFields),
+      body: JSON.stringify({ ...clientFields, requestId: randomUUID() }),
     });
     const client = (await created.json()) as { id: string };
     const credentials = { email: 'portal@example.test', password: 'portal-password-123' };
@@ -445,7 +446,7 @@ describe('HTTP server', () => {
         authorization: `Bearer ${token.secret}`,
         'content-type': 'application/json',
       },
-      body: JSON.stringify(clientFields),
+      body: JSON.stringify({ ...clientFields, requestId: randomUUID() }),
     });
     expect(denied.status).toBe(403);
     expect(

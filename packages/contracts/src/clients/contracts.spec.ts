@@ -26,13 +26,31 @@ describe('client contracts', () => {
   });
 
   it('rejects blank client names', () => {
+    const request = { ...client, requestId: '4d2d762e-a1c5-4e02-a6af-7a8c473d4b33' };
     expect(() =>
-      Schema.decodeUnknownSync(ClientCreateRequest)({ ...client, displayName: '   ' }),
+      Schema.decodeUnknownSync(ClientCreateRequest)({ ...request, displayName: '   ' }),
     ).toThrow();
     expect(
-      Schema.decodeUnknownSync(ClientCreateRequest)({ ...client, displayName: 'Acme' }).displayName,
+      Schema.decodeUnknownSync(ClientCreateRequest)({ ...request, displayName: 'Acme' })
+        .displayName,
     ).toBe('Acme');
     expect(() => Schema.decodeUnknownSync(ClientSummary.fields.displayName)('   ')).toThrow();
+  });
+
+  it('requires a UUID creation identity without adding it to updates', () => {
+    for (const requestId of [undefined, '', 'invalid', '01ARZ3NDEKTSV4RRFFQ69G5FAV']) {
+      expect(Schema.is(ClientCreateRequest)({ ...client, displayName: 'Acme', requestId })).toBe(
+        false,
+      );
+    }
+    expect(
+      Schema.is(ClientCreateRequest)({
+        ...client,
+        displayName: 'Acme',
+        requestId: '4d2d762e-a1c5-4e02-a6af-7a8c473d4b33',
+      }),
+    ).toBe(true);
+    expect(ClientUpdateRequest.fields).not.toHaveProperty('requestId');
   });
 
   it('requires an explicit update version', () => {
