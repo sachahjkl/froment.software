@@ -150,11 +150,13 @@ jobs:
           [[ "$IMAGE" =~ ^ghcr\.io/sachahjkl/froment\.software@sha256:[0-9a-f]{64}$ ]]
           nomad job run -var "image=$IMAGE" deploy/nomad/staging.nomad.hcl
           test "$(nomad job inspect -json froment-software | jq -r .Meta.image)" = "$IMAGE"
-      - name: Verify staging access policy
+      - name: Verify public staging policy
         run: |
           headers="$RUNNER_TEMP/staging-headers"
-          status=$(curl --silent --show-error --output /dev/null --dump-header "$headers" \
+          body="$RUNNER_TEMP/staging-health"
+          status=$(curl --silent --show-error --output "$body" --dump-header "$headers" \
             --write-out '%{http_code}' https://staging.froment.software/api/health)
-          test "$status" = 401
-          grep --ignore-case --quiet '^www-authenticate: Basic' "$headers"
+          test "$status" = 200
+          grep --quiet '"status":"ok"' "$body"
+          if grep --ignore-case --quiet '^www-authenticate:' "$headers"; then exit 1; fi
           grep --ignore-case --quiet '^x-robots-tag: noindex, nofollow' "$headers"

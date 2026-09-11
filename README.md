@@ -115,6 +115,8 @@ The publication job signs the image and attaches its SBOM and build provenance.
 
 The staging job joins Tailscale from a GitHub-hosted runner and submits `deploy/nomad/staging.nomad.hcl`.
 
+Staging is publicly accessible and sends `X-Robots-Tag: noindex, nofollow` on every response.
+
 The production workflow promotes only the digest currently running on staging. Start it manually from GitHub Actions after staging validation.
 
 Nomad handles health checks, restarts, deployment state, and automatic image rollback.
