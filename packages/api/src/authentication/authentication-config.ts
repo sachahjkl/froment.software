@@ -1,12 +1,21 @@
 import { Config, Context, Effect, Layer, Redacted, Schema } from 'effect';
-import { extractPublicKeyFromSecretKey } from '@stablelib/ed25519';
-import { createHmac } from 'node:crypto';
+import { extractPublicKeyFromSecretKey, generateKeyPairFromSeed } from '@stablelib/ed25519';
+import { createHmac, timingSafeEqual } from 'node:crypto';
 
 const ScryptHash = Schema.String.check(
   Schema.isPattern(/^scrypt\$16384\$8\$1\$[A-Za-z0-9_-]{22}\$[A-Za-z0-9_-]{86}$/),
 );
 const HmacKey = Schema.String.check(Schema.isPattern(/^[A-Za-z0-9_-]{43}$/));
-const PasetoSecretKey = Schema.String.check(Schema.isPattern(/^k4\.secret\.[A-Za-z0-9_-]{86}$/));
+const pasetoSecretKeyPattern = /^k4\.secret\.[A-Za-z0-9_-]{86}$/;
+const validPasetoSecretKey = (value: string): boolean => {
+  if (!pasetoSecretKeyPattern.test(value)) return false;
+  const secretKey = Buffer.from(value.slice('k4.secret.'.length), 'base64url');
+  const generated = generateKeyPairFromSeed(secretKey.subarray(0, 32));
+  return timingSafeEqual(Buffer.from(generated.publicKey), secretKey.subarray(32));
+};
+const PasetoSecretKey = Schema.String.check(
+  Schema.makeFilter(validPasetoSecretKey, { message: 'authentication.invalid_paseto_secret_key' }),
+);
 
 export interface BootstrapPasswordHash {
   readonly cost: 16_384;

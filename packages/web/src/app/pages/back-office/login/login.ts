@@ -47,12 +47,12 @@ export class Login {
     this.error.set(undefined);
 
     const outcome = await this.auth.authenticate(email, password);
+    this.pending.set(false);
     if (outcome.success) {
       await this.router.navigateByUrl(this.destination(outcome.mode));
       return;
     }
 
-    this.pending.set(false);
     this.error.set(outcome.code);
   }
 
