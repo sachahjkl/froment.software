@@ -6,6 +6,11 @@ backup_directory=${BACKUP_DIRECTORY:-/var/lib/froment-software/backups}
 
 mkdir -p "$backup_directory"
 
+if [ "${REQUIRE_EXISTING_DATABASE:-false}" = true ] && [ ! -s "$database" ]; then
+  echo "The required existing database is missing: $database" >&2
+  exit 66
+fi
+
 if [ -s "$database" ]; then
   timestamp=$(date -u +%Y%m%dT%H%M%SZ)
   backup="$backup_directory/pre-deploy-$timestamp.sqlite"

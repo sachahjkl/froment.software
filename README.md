@@ -119,6 +119,8 @@ The production workflow promotes only the digest currently running on staging. S
 
 Nomad handles health checks, restarts, deployment state, and automatic image rollback.
 
+Production refuses to start without an existing database. Copy and verify legacy data before the first Nomad production deployment.
+
 Staging and production use separate Nomad namespaces, volumes, variables, deployment tokens, integration accounts, and backups.
 
 Application secrets come from environment-specific Nomad Variables. The OCI image contains no application secrets.

@@ -78,8 +78,9 @@ job "froment-software" {
       }
 
       env {
-        DATABASE_PATH    = "/var/lib/froment-software/froment.sqlite"
-        BACKUP_DIRECTORY = "/var/lib/froment-software/backups"
+        DATABASE_PATH             = "/var/lib/froment-software/froment.sqlite"
+        BACKUP_DIRECTORY          = "/var/lib/froment-software/backups"
+        REQUIRE_EXISTING_DATABASE = "true"
       }
 
       volume_mount {
