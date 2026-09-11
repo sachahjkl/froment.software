@@ -337,7 +337,9 @@
           packages = {
             default = application;
             inherit dockerImage secretspec;
+            cosign = pkgs.cosign;
             skopeo = pkgs.skopeo;
+            syft = pkgs.syft;
           }
           // lib.optionalAttrs (self ? rev) { inherit releaseDockerImage; };
 
