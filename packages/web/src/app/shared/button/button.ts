@@ -8,6 +8,7 @@ export type ButtonVariant =
   | 'warning'
   | 'danger'
   | 'dark'
+  | 'ghost'
   | 'link';
 
 @Component({

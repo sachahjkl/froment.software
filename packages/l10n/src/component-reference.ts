@@ -1,5 +1,11 @@
 type StoryProperty = readonly [name: string, type: string, defaultValue: string];
 
+const buttonVariantProperty: StoryProperty = [
+  'ButtonVariant',
+  "'default' | 'primary' | 'info' | 'success' | 'warning' | 'danger' | 'dark' | 'ghost' | 'link'",
+  '—',
+];
+
 export interface ComponentReferenceStory {
   readonly properties: readonly StoryProperty[];
   readonly usage: string;
@@ -32,6 +38,7 @@ function storyProperties(description: StoryDescriptions) {
   return {
     button: [
       ['variant', 'ButtonVariant', 'default'],
+      buttonVariantProperty,
       ['iconOnly', 'boolean', 'false'],
       ['disabled', `boolean · ${description.nativeAttribute}`, 'false'],
       ['type', `'button' | 'submit' | 'reset' · ${description.nativeAttribute}`, 'submit'],
@@ -39,6 +46,7 @@ function storyProperties(description: StoryDescriptions) {
     ],
     'link-button': [
       ['variant', 'ButtonVariant', 'default'],
+      buttonVariantProperty,
       ['iconOnly', 'boolean', 'false'],
       ['routerLink', 'string | readonly any[] | UrlTree | null | undefined', 'undefined'],
       ['href', `string · ${description.nativeAttribute}`, "''"],
@@ -49,6 +57,7 @@ function storyProperties(description: StoryDescriptions) {
       ['disabled / iconOnly', 'boolean', 'false'],
       ['appearance', "'button' | 'more'", 'button'],
       ['variant', 'ButtonVariant', 'default'],
+      buttonVariantProperty,
       ['actionSelected', 'OutputEmitterRef<string>', '—'],
       [
         'MenuAction',
@@ -61,6 +70,7 @@ function storyProperties(description: StoryDescriptions) {
       ['actions', 'readonly MenuAction[]', 'required'],
       ['primaryDisabled / menuDisabled', 'boolean', 'false'],
       ['variant', 'ButtonVariant', 'primary'],
+      buttonVariantProperty,
       ['primaryAction', 'OutputEmitterRef<void>', '—'],
       ['actionSelected', 'OutputEmitterRef<string>', '—'],
     ],
@@ -390,11 +400,12 @@ const frenchStories = /* @__PURE__ */ storyDefinitions(
     confirmationLabel: 'Libellé traduit de confirmation.accept',
   },
   {
-    button: '<button appButton type="button" variant="primary" (click)="preview()">Aperçu</button>',
+    button:
+      '<button appButton type="button" variant="primary" (click)="preview()">Aperçu</button>\n<!-- ghost partage les surfaces des onglets et de la barre d’icônes. link reste souligné. -->\n<button appButton type="button" variant="ghost" (click)="preview()">Aperçu secondaire</button>',
     'link-button':
-      '<a appLinkButton variant="primary" routerLink="/design/button">Référence du bouton</a>',
+      '<a appLinkButton variant="ghost" routerLink="/design/button">Référence du bouton</a>\n<a appLinkButton variant="link" routerLink="/design/button">Lien souligné</a>',
     'action-menu':
-      '<app-action-menu label="Actions" [actions]="[{id: \'edit\', label: \'Modifier\'}]" (actionSelected)="command.set($event)" />',
+      '<!-- more utilise la variante ghost et conserve un libellé accessible. -->\n<app-action-menu appearance="more" label="Actions" [actions]="[{id: \'edit\', label: \'Modifier\'}]" (actionSelected)="command.set($event)" />',
     'split-action':
       '<app-split-action primaryLabel="Aperçu" menuLabel="Autres aperçus" [actions]="actions" (primaryAction)="preview()" (actionSelected)="command.set($event)" />',
     'icon-toolbar':
@@ -513,11 +524,11 @@ const englishStories = /* @__PURE__ */ storyDefinitions(
   },
   {
     button:
-      '<button appButton type="button" variant="primary" (click)="preview()">Preview</button>',
+      '<button appButton type="button" variant="primary" (click)="preview()">Preview</button>\n<!-- ghost shares tab and icon toolbar surfaces. link stays underlined. -->\n<button appButton type="button" variant="ghost" (click)="preview()">Secondary preview</button>',
     'link-button':
-      '<a appLinkButton variant="primary" routerLink="/design/button">Button reference</a>',
+      '<a appLinkButton variant="ghost" routerLink="/design/button">Button reference</a>\n<a appLinkButton variant="link" routerLink="/design/button">Underlined link</a>',
     'action-menu':
-      '<app-action-menu label="Actions" [actions]="[{id: \'edit\', label: \'Edit\'}]" (actionSelected)="command.set($event)" />',
+      '<!-- more uses the ghost variant and keeps an accessible label. -->\n<app-action-menu appearance="more" label="Actions" [actions]="[{id: \'edit\', label: \'Edit\'}]" (actionSelected)="command.set($event)" />',
     'split-action':
       '<app-split-action primaryLabel="Preview" menuLabel="More previews" [actions]="actions" (primaryAction)="preview()" (actionSelected)="command.set($event)" />',
     'icon-toolbar':

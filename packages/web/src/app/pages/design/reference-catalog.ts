@@ -23,7 +23,7 @@ export const referenceCatalog: readonly ReferenceEntry[] = [
     group: 'actions',
     selectors: 'button[appButton]',
     source: 'button/button.ts',
-    variants: 10,
+    variants: 11,
   },
   {
     id: 'link-button',
@@ -31,7 +31,7 @@ export const referenceCatalog: readonly ReferenceEntry[] = [
     group: 'actions',
     selectors: 'a[appLinkButton]',
     source: 'button/button.ts',
-    variants: 9,
+    variants: 10,
   },
   {
     id: 'action-menu',
@@ -39,7 +39,7 @@ export const referenceCatalog: readonly ReferenceEntry[] = [
     group: 'actions',
     selectors: 'app-action-menu',
     source: 'action-menu/action-menu.ts',
-    variants: 10,
+    variants: 11,
   },
   {
     id: 'split-action',
@@ -47,7 +47,7 @@ export const referenceCatalog: readonly ReferenceEntry[] = [
     group: 'actions',
     selectors: 'app-split-action',
     source: 'split-action/split-action.ts',
-    variants: 10,
+    variants: 11,
   },
   {
     id: 'icon-toolbar',

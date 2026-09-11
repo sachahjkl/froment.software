@@ -23,6 +23,23 @@ describe('ActionMenu', () => {
     element.dispatchEvent(new KeyboardEvent('keydown', { key: value, keyCode, bubbles: true }));
   }
 
+  it('uses ghost for the more trigger and preserves the requested button variant', async () => {
+    const { fixture, trigger } = await setup();
+    fixture.componentRef.setInput('variant', 'link');
+    fixture.componentRef.setInput('appearance', 'more');
+    await fixture.whenStable();
+
+    expect(trigger.dataset['buttonVariant']).toBe('ghost');
+    expect(trigger.hasAttribute('data-button-icon-only')).toBe(true);
+    expect(trigger.getAttribute('aria-label')).toBe('Actions for Atlas');
+
+    fixture.componentRef.setInput('appearance', 'button');
+    await fixture.whenStable();
+
+    expect(trigger.dataset['buttonVariant']).toBe('link');
+    expect(trigger.hasAttribute('data-button-icon-only')).toBe(false);
+  });
+
   it('focuses disabled actions without activation and restores focus on Escape', async () => {
     const { fixture, trigger, overlay, selected } = await setup();
     trigger.focus();

@@ -27,18 +27,9 @@ export interface MenuAction {
       display: inline-flex;
       min-inline-size: 0;
     }
-    .trigger {
+    .trigger:not(.more-trigger) {
       border-start-start-radius: var(--action-menu-start-radius, var(--radius-md));
       border-end-start-radius: var(--action-menu-start-radius, var(--radius-md));
-    }
-    .trigger.more-trigger {
-      --icon-color: var(--color-ink);
-      color: var(--color-ink);
-      text-decoration: none;
-      border-radius: var(--radius-sm);
-    }
-    .trigger.more-trigger:is(:focus-visible, [aria-expanded='true']) {
-      background: var(--color-surface-sunken);
     }
     .menu {
       display: grid;
@@ -74,9 +65,6 @@ export interface MenuAction {
       opacity: 0.6;
     }
     @media (hover: hover) {
-      .trigger.more-trigger:hover:not(:disabled) {
-        background: var(--color-surface-sunken);
-      }
       .item:hover:not([aria-disabled='true']) {
         background: var(--color-surface-sunken);
       }
@@ -132,7 +120,7 @@ export class ActionMenu {
   readonly appearance = input<'button' | 'more'>('button');
   readonly variant = input<ButtonVariant>('default');
   protected readonly triggerVariant = computed(() =>
-    this.appearance() === 'more' ? 'link' : this.variant(),
+    this.appearance() === 'more' ? 'ghost' : this.variant(),
   );
   readonly actionSelected = output<string>();
 

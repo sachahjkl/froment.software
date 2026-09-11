@@ -1,0 +1,32 @@
+@mixin surface {
+  --icon-color: currentColor;
+  border-color: transparent;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--color-muted);
+  text-decoration: none;
+  text-shadow: none;
+  box-shadow: none;
+  cursor: pointer;
+}
+
+@mixin hover {
+  background: color-mix(in oklab, var(--color-surface-sunken), transparent 35%);
+  color: var(--color-ink);
+}
+
+@mixin active {
+  background: var(--color-panel);
+  color: var(--color-ink);
+  box-shadow: var(--shadow-panel);
+}
+
+@mixin focus {
+  outline: 2px solid var(--color-focus);
+  outline-offset: -2px;
+}
+
+@mixin disabled($opacity: 0.55) {
+  cursor: not-allowed;
+  opacity: $opacity;
+}

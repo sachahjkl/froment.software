@@ -1,3 +1,5 @@
+@use "shared/button/ghost";
+
 :host {
   --icon-color: var(--button-text);
   --button-color: var(--color-button-default);
@@ -125,6 +127,7 @@
   :is(:active, [data-button-state="active"]):not(
     :disabled,
     [aria-disabled="true"],
+    [data-button-variant="ghost"],
     [data-button-variant="link"]
   )
 ) {
@@ -136,14 +139,13 @@
 }
 
 @media (hover: hover) and (pointer: fine) {
-  :host(:hover:not(:disabled, [aria-disabled="true"], [data-button-variant="link"])) {
-    background-color: var(--button-highlight);
-    background-image: linear-gradient(to bottom, var(--button-highlight), var(--button-color));
-    color: var(--button-text);
-  }
-
   :host(
-    [data-button-state="hover"]:not(:disabled, [aria-disabled="true"], [data-button-variant="link"])
+    :is(:hover, [data-button-state="hover"]):not(
+      :disabled,
+      [aria-disabled="true"],
+      [data-button-variant="ghost"],
+      [data-button-variant="link"]
+    )
   ) {
     background-color: var(--button-highlight);
     background-image: linear-gradient(to bottom, var(--button-highlight), var(--button-color));
@@ -159,6 +161,41 @@
     background: transparent;
     color: var(--color-link-hover);
   }
+}
+
+:host([data-button-variant="ghost"]) {
+  @include ghost.surface;
+}
+
+:host(
+  [data-button-variant="ghost"]:is(:hover, [data-button-state="hover"]):not(
+      :disabled,
+      [aria-disabled="true"],
+      :active,
+      [data-button-state="active"],
+      [aria-pressed="true"],
+      [aria-expanded="true"]
+    )
+) {
+  @include ghost.hover;
+}
+
+:host(
+  [data-button-variant="ghost"]:is(:active, [data-button-state="active"]):not(
+      :disabled,
+      [aria-disabled="true"]
+    )
+),
+:host([data-button-variant="ghost"]:is([aria-pressed="true"], [aria-expanded="true"])) {
+  @include ghost.active;
+}
+
+:host([data-button-variant="ghost"]:focus-visible) {
+  @include ghost.focus;
+}
+
+:host([data-button-variant="ghost"]:is(:disabled, [aria-disabled="true"])) {
+  @include ghost.disabled;
 }
 
 @keyframes button-loading {

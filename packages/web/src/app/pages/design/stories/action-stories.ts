@@ -39,6 +39,7 @@ export const buttonVariants: readonly ButtonVariant[] = [
   'warning',
   'danger',
   'dark',
+  'ghost',
   'link',
 ];
 
