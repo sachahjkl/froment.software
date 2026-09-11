@@ -5,6 +5,24 @@
 `RuntimeConfigurationLive` charge ces valeurs au démarrage.
 Les services utilisent la configuration injectée avec `yield* RuntimeConfiguration`.
 
+## Environnement et phase du site
+
+`APP_ENV` accepte `development`, `staging` ou `production`.
+
+`SITE_PHASE` accepte `construction` ou `live`.
+
+La valeur de `SITE_PHASE` ne dépend pas de `APP_ENV`.
+
+L’API expose ces deux valeurs publiques dans `/runtime-config.js`.
+
+Angular charge cette ressource avant son démarrage.
+
+N’ajoutez aucun secret dans `PublicRuntimeConfig`.
+
+Staging et production utilisent `NODE_ENV=production` pour le processus Node.js.
+
+Consultez `docs/deployment.md` pour la chaîne de promotion.
+
 ## Pagination du journal d’audit
 
 `AUDIT_PAGE_SIZE` définit `audit.pageSize`.
