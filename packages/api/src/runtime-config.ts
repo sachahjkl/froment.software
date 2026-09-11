@@ -13,15 +13,14 @@ export const defaultAuthenticationRuntimeConfig = {
   refreshAttemptsPerAddressPerMinute: 600,
   refreshAttemptsPerTokenPerMinute: 10,
   apiTokenAttemptsPerAddressPerMinute: 120,
-  successfulLoginsPerMinute: 60,
+  loginAttemptsPerMinute: 60,
   quotaWindowMillis: 60_000,
   failureBaseDelayMillis: 1_000,
   failureMaximumDelayMillis: 900_000,
   failureExponentLimit: 10,
   failureCacheCapacity: 10_000,
   failureCacheLifetimeMillis: 3_600_000,
-  successfulLoginCacheCapacity: 20_000,
-  successfulLoginCacheLifetimeMillis: 120_000,
+  loginQuotaCapacity: 20_000,
   expiredSessionCleanupLimit: 500,
   bootstrapScryptMaximumMemoryBytes: 33_554_432,
   bootstrapConcurrency: 1,
@@ -43,7 +42,13 @@ export const defaultRuntimeConfig = {
     lastUsedUpdateIntervalMillis: 60_000,
   },
   audit: { pageSize: 50 },
-  password: { memoryCost: 19_456, timeCost: 2, parallelism: 1, hashLength: 32 },
+  password: {
+    memoryCost: 19_456,
+    timeCost: 2,
+    parallelism: 1,
+    hashLength: 32,
+    verificationConcurrency: 2,
+  },
   documentRenderer: { concurrency: 2, maximumOutputBytes: 1_048_576 },
   invoicePdfWorker: { concurrency: 1, intervalMillis: 1_000 },
   database: { busyTimeoutMillis: 5_000 },
@@ -80,9 +85,9 @@ export const RuntimeConfig = {
       'AUTH_API_TOKEN_ADDRESS_LIMIT_PER_MINUTE',
       defaultAuthenticationRuntimeConfig.apiTokenAttemptsPerAddressPerMinute,
     ),
-    successfulLoginsPerMinute: positiveInt(
-      'AUTH_SUCCESSFUL_LOGIN_LIMIT_PER_MINUTE',
-      defaultAuthenticationRuntimeConfig.successfulLoginsPerMinute,
+    loginAttemptsPerMinute: positiveInt(
+      'AUTH_LOGIN_ATTEMPTS_PER_MINUTE',
+      defaultAuthenticationRuntimeConfig.loginAttemptsPerMinute,
     ),
     quotaWindowMillis: positiveInt(
       'AUTH_QUOTA_WINDOW_MILLIS',
@@ -108,13 +113,9 @@ export const RuntimeConfig = {
       'AUTH_FAILURE_CACHE_LIFETIME_MILLIS',
       defaultAuthenticationRuntimeConfig.failureCacheLifetimeMillis,
     ),
-    successfulLoginCacheCapacity: positiveInt(
-      'AUTH_SUCCESSFUL_LOGIN_CACHE_CAPACITY',
-      defaultAuthenticationRuntimeConfig.successfulLoginCacheCapacity,
-    ),
-    successfulLoginCacheLifetimeMillis: positiveInt(
-      'AUTH_SUCCESSFUL_LOGIN_CACHE_LIFETIME_MILLIS',
-      defaultAuthenticationRuntimeConfig.successfulLoginCacheLifetimeMillis,
+    loginQuotaCapacity: positiveInt(
+      'AUTH_LOGIN_QUOTA_CAPACITY',
+      defaultAuthenticationRuntimeConfig.loginQuotaCapacity,
     ),
     expiredSessionCleanupLimit: positiveInt(
       'AUTH_EXPIRED_SESSION_CLEANUP_LIMIT',
@@ -150,6 +151,10 @@ export const RuntimeConfig = {
     pageSize: positiveInt('AUDIT_PAGE_SIZE', defaultRuntimeConfig.audit.pageSize),
   }),
   password: Config.all({
+    verificationConcurrency: positiveInt(
+      'ARGON2_VERIFICATION_CONCURRENCY',
+      defaultRuntimeConfig.password.verificationConcurrency,
+    ),
     memoryCost: positiveInt('ARGON2_MEMORY_COST', 19_456),
     timeCost: positiveInt('ARGON2_TIME_COST', 2),
     parallelism: positiveInt('ARGON2_PARALLELISM', 1),

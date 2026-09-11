@@ -1,13 +1,17 @@
 import { join } from 'node:path';
 
-import { Effect, Layer } from 'effect';
+import { Deferred, Effect, Fiber, Layer } from 'effect';
 import { TestClock } from 'effect/testing';
 import { describe, expect, it } from 'vitest';
 
 import { AuditLive } from '../audit/audit.js';
 import { Database } from '../database/database.js';
 import { makeMigratedDatabaseLayer } from '../database/database.spec-helper.js';
-import { RuntimeConfigurationDefaults } from '../runtime-config.js';
+import {
+  defaultRuntimeConfig,
+  RuntimeConfiguration,
+  type RuntimeConfigValue,
+} from '../runtime-config.js';
 import { Authentication, AuthenticationLive } from './authentication.js';
 import { AccessTokensLive } from './paseto.js';
 import { Passwords, PasswordsLive } from './password.js';
@@ -38,13 +42,16 @@ const configLayer = Layer.succeed(
   }),
 );
 
-const authenticationLayer = () =>
+const authenticationLayer = (
+  passwordLayer: Layer.Layer<Passwords> = PasswordsLive,
+  runtime: RuntimeConfigValue = defaultRuntimeConfig,
+) =>
   AuthenticationLive.pipe(
     Layer.provideMerge(AccessTokensLive),
-    Layer.provideMerge(PasswordsLive),
+    Layer.provideMerge(passwordLayer),
     Layer.provide(AuditLive),
     Layer.provide(configLayer),
-    Layer.provide(RuntimeConfigurationDefaults),
+    Layer.provide(Layer.succeed(RuntimeConfiguration, runtime)),
     Layer.provideMerge(
       makeMigratedDatabaseLayer({
         filename: ':memory:',
@@ -79,6 +86,105 @@ const seedAdministrator = Effect.fn('seedAdministrator')(function* (database: Da
 });
 
 describe('Authentication', () => {
+  it('refuses exhausted login quotas before password verification', async () => {
+    let calls = 0;
+    const passwords = Layer.succeed(
+      Passwords,
+      Passwords.of({
+        hash: () => Effect.succeed('$argon2id$fixture'),
+        verify: () =>
+          Effect.sync(() => {
+            calls += 1;
+            return true;
+          }),
+      }),
+    );
+    await Effect.runPromise(
+      Effect.gen(function* () {
+        yield* seedAdministrator(yield* Database);
+        const authentication = yield* Authentication;
+        for (let index = 0; index < 2; index++) {
+          yield* authentication.login(email, password, '192.0.2.1');
+        }
+        for (let index = 0; index < 10; index++) {
+          expect(
+            yield* Effect.result(authentication.login(email, password, '192.0.2.1')),
+          ).toMatchObject({ _tag: 'Failure', failure: { _tag: 'AuthenticationRateLimited' } });
+        }
+        expect(calls).toBe(2);
+        yield* TestClock.adjust('1 minute');
+        yield* authentication.login(email, password, '192.0.2.1');
+        expect(calls).toBe(3);
+      }).pipe(
+        Effect.provide(
+          authenticationLayer(passwords, {
+            ...defaultRuntimeConfig,
+            authentication: {
+              ...defaultRuntimeConfig.authentication,
+              loginAttemptsPerMinute: 2,
+              loginQuotaCapacity: 2,
+            },
+          }),
+        ),
+        Effect.provide(TestClock.layer()),
+      ),
+    );
+  });
+
+  it('reserves concurrent anonymous attempts before any verification completes', async () => {
+    await Effect.runPromise(
+      Effect.gen(function* () {
+        const started = yield* Deferred.make<void>();
+        const release = yield* Deferred.make<void>();
+        let calls = 0;
+        const passwords = Layer.succeed(
+          Passwords,
+          Passwords.of({
+            hash: () => Effect.die('unexpected.hash'),
+            verify: Effect.fn('controlledVerify')(function* () {
+              calls += 1;
+              if (calls === 2) yield* Deferred.succeed(started, undefined);
+              yield* Deferred.await(release);
+              return false;
+            }),
+          }),
+        );
+        yield* Effect.gen(function* () {
+          const authentication = yield* Authentication;
+          const attempt = Effect.result(authentication.login(email, password, '192.0.2.1'));
+          const pending = yield* Effect.forkChild(
+            Effect.all([attempt, attempt], { concurrency: 'unbounded' }),
+          );
+          yield* Deferred.await(started);
+          const refused = yield* Effect.all(
+            Array.from({ length: 6 }, () => attempt),
+            { concurrency: 'unbounded' },
+          );
+          expect(refused).toHaveLength(6);
+          for (const result of refused)
+            expect(result).toMatchObject({
+              _tag: 'Failure',
+              failure: { _tag: 'AuthenticationRateLimited' },
+            });
+          expect(calls).toBe(2);
+          yield* Deferred.succeed(release, undefined);
+          yield* Fiber.join(pending);
+        }).pipe(
+          Effect.provide(
+            authenticationLayer(passwords, {
+              ...defaultRuntimeConfig,
+              authentication: {
+                ...defaultRuntimeConfig.authentication,
+                loginAttemptsPerMinute: 2,
+                loginQuotaCapacity: 2,
+              },
+            }),
+          ),
+        );
+      }).pipe(Effect.provide(TestClock.layer())),
+    );
+  });
+
   it('lists session families and revokes another family without closing the current one', async () => {
     await Effect.runPromise(
       Effect.gen(function* () {

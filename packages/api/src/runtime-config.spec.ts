@@ -7,13 +7,37 @@ import {
   RuntimeConfigurationLive,
 } from './runtime-config.js';
 
-const load = (values: { readonly AUDIT_PAGE_SIZE?: string }) =>
+const load = (values: Readonly<Record<string, string>>) =>
   RuntimeConfiguration.pipe(
     Effect.provide(RuntimeConfigurationLive),
     Effect.provide(ConfigProvider.layer(ConfigProvider.fromUnknown(values))),
   );
 
 describe('RuntimeConfiguration', () => {
+  it('loads bounded security limits from the injected provider', async () => {
+    const config = await Effect.runPromise(
+      load({
+        AUTH_LOGIN_ATTEMPTS_PER_MINUTE: '3',
+        AUTH_LOGIN_QUOTA_CAPACITY: '4',
+        ARGON2_VERIFICATION_CONCURRENCY: '1',
+        REQUEST_LIMITER_PUBLIC_CAPACITY: '5',
+      }),
+    );
+    expect(config.authentication.loginAttemptsPerMinute).toBe(3);
+    expect(config.authentication.loginQuotaCapacity).toBe(4);
+    expect(config.password.verificationConcurrency).toBe(1);
+    expect(config.requestLimiter.publicCapacity).toBe(5);
+  });
+  it.each([
+    'AUTH_LOGIN_ATTEMPTS_PER_MINUTE',
+    'AUTH_LOGIN_QUOTA_CAPACITY',
+    'ARGON2_VERIFICATION_CONCURRENCY',
+    'REQUEST_LIMITER_PUBLIC_CAPACITY',
+  ])('rejects a zero security limit for %s', async (name) => {
+    expect((await Effect.runPromise(load({ [name]: '0' }).pipe(Effect.flip)))._tag).toBe(
+      'ConfigError',
+    );
+  });
   it('loads the declared defaults through Effect Config', async () => {
     expect(await Effect.runPromise(load({}))).toEqual(defaultRuntimeConfig);
   });

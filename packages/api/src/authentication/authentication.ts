@@ -9,6 +9,7 @@ import {
   PermissionDenied,
   PasswordChangeRequest,
   PasswordChangeRejected,
+  RequestRateLimited,
   type PasswordChangeRequestValue,
   SessionRejected,
   type AccountEmailValue,
@@ -27,15 +28,11 @@ import { AuthenticationConfig, hmac } from './authentication-config.js';
 import { AccessTokens } from './paseto.js';
 import { Passwords, type PasswordHashError } from './password.js';
 import { RuntimeConfiguration } from '../runtime-config.js';
+import * as RequestQuota from '../server/request-quota.js';
 
 interface LoginFailureState {
   readonly failures: number;
   readonly blockedUntil: number;
-}
-
-interface LoginQuotaState {
-  readonly count: number;
-  readonly startedAt: number;
 }
 
 interface PreparedSession extends AuthenticatedSession {
@@ -82,7 +79,10 @@ export interface AuthenticationService {
   readonly changePassword: (
     principal: Principal,
     request: PasswordChangeRequestValue,
-  ) => Effect.Effect<void, PasswordChangeRejected | DatabaseError | PasswordHashError>;
+  ) => Effect.Effect<
+    void,
+    PasswordChangeRejected | RequestRateLimited | DatabaseError | PasswordHashError
+  >;
   readonly login: (
     email: AccountEmailValue,
     password: AccountPasswordValue,
@@ -138,28 +138,9 @@ export const AuthenticationLive = Layer.effect(
       timeToLive: runtime.authentication.failureCacheLifetimeMillis,
       lookup: () => Ref.make<LoginFailureState>(initialLoginFailureState),
     });
-    const successfulLogins = yield* Cache.make({
-      capacity: runtime.authentication.successfulLoginCacheCapacity,
-      timeToLive: runtime.authentication.successfulLoginCacheLifetimeMillis,
-      lookup: () =>
-        Clock.currentTimeMillis.pipe(
-          Effect.flatMap((startedAt) => Ref.make<LoginQuotaState>({ count: 0, startedAt })),
-        ),
-    });
-
-    const consumeLoginQuota = Effect.fn('Authentication.consumeLoginQuota')(function* (
-      key: string,
-      now: number,
-    ) {
-      const state = yield* Cache.get(successfulLogins, key);
-      return yield* Ref.modify(state, (current): readonly [boolean, LoginQuotaState] => {
-        if (now - current.startedAt >= runtime.authentication.quotaWindowMillis) {
-          return [true, { count: 1, startedAt: now }];
-        }
-        if (current.count >= runtime.authentication.successfulLoginsPerMinute)
-          return [false, current];
-        return [true, { ...current, count: current.count + 1 }];
-      });
+    const reserveLogin = yield* RequestQuota.make({
+      capacity: runtime.authentication.loginQuotaCapacity,
+      windowMillis: runtime.authentication.quotaWindowMillis,
     });
 
     const registerFailure = Effect.fn('Authentication.registerFailure')(function* (
@@ -261,6 +242,14 @@ export const AuthenticationLive = Layer.effect(
     ) {
       const normalizedEmail = email.trim().toLowerCase();
       const accountKey = hmac(config.refreshHmacKey, normalizedEmail).toString('hex');
+      if (
+        !(yield* reserveLogin(
+          [`address:${clientAddress}`, `account:${accountKey}`],
+          runtime.authentication.loginAttemptsPerMinute,
+        ))
+      ) {
+        return yield* new AuthenticationRateLimited({ code: 'authentication.rate_limited' });
+      }
       const now = yield* Clock.currentTimeMillis;
       const addressFailureState = yield* Cache.get(addressFailures, clientAddress);
       const accountFailureState = yield* Cache.get(accountFailures, accountKey);
@@ -296,11 +285,17 @@ export const AuthenticationLive = Layer.effect(
         },
         catch: (cause) => new DatabaseError({ operation: 'find.password.credential', cause }),
       });
-      const passwordAccepted = yield* passwords.verify(
-        credential?.passwordHash ??
-          '$argon2id$v=19$m=19456,t=2,p=1$AAAAAAAAAAAAAAAAAAAAAA$AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA',
-        password,
-      );
+      const passwordAccepted = yield* passwords
+        .verify(
+          credential?.passwordHash ??
+            '$argon2id$v=19$m=19456,t=2,p=1$AAAAAAAAAAAAAAAAAAAAAA$AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA',
+          password,
+        )
+        .pipe(
+          Effect.catchTag('RequestRateLimited', () =>
+            Effect.fail(new AuthenticationRateLimited({ code: 'authentication.rate_limited' })),
+          ),
+        );
       if (credential === undefined || !passwordAccepted) {
         if (!(yield* registerFailure(addressFailureState, now))) {
           return yield* new AuthenticationRateLimited({ code: 'authentication.rate_limited' });
@@ -311,12 +306,6 @@ export const AuthenticationLive = Layer.effect(
         return yield* new AuthenticationRejected({ code: 'authentication.invalid_credentials' });
       }
 
-      if (
-        !(yield* consumeLoginQuota(`address:${clientAddress}`, now)) ||
-        !(yield* consumeLoginQuota(`account:${accountKey}`, now))
-      ) {
-        return yield* new AuthenticationRateLimited({ code: 'authentication.rate_limited' });
-      }
       yield* Ref.set(yield* Cache.get(accountFailures, accountKey), initialLoginFailureState);
       const session = yield* prepareSession(
         credential.userId,

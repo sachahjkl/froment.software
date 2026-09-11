@@ -36,6 +36,19 @@ Les compteurs actifs ne sont jamais évincés.
 Une adresse publique déjà limitée ne crée aucun compteur de jeton.
 Ces limites sont locales au processus et sont remises à zéro au redémarrage.
 
+## Vérification des mots de passe
+
+`AUTH_LOGIN_ATTEMPTS_PER_MINUTE` limite toutes les tentatives de connexion, réussies ou non, à 60 par adresse et par compte.
+`AUTH_QUOTA_WINDOW_MILLIS` définit leur fenêtre, de 60 000 ms par défaut.
+`AUTH_LOGIN_QUOTA_CAPACITY` limite leur registre séparé à 20 000 compteurs actifs.
+La réservation des deux compteurs est atomique et précède la lecture des identifiants et Argon2.
+Un refus ne crée aucune clé et ne consomme aucun compteur supplémentaire.
+
+`ARGON2_VERIFICATION_CONCURRENCY` limite les vérifications simultanées à 2 par processus.
+Si toutes les places sont occupées, la vérification retourne HTTP 429 sans file d’attente.
+Une interruption HTTP ne libère la place qu’à la fin du calcul natif.
+Cette limite couvre la connexion, le changement de mot de passe et la confirmation des passkeys.
+
 ## Tests
 
 Pour tester le chargement, fournissez `ConfigProvider.layer(ConfigProvider.fromUnknown(...))` à `RuntimeConfigurationLive`.

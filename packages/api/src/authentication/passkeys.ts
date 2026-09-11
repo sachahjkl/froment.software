@@ -1,6 +1,7 @@
 import {
   PasskeyList,
   PasskeyRejected,
+  RequestRateLimited,
   PasskeyRegistrationOptions,
   PasskeyLoginOptions,
   PasskeyRegistrationRequest,
@@ -23,7 +24,7 @@ import { Authentication, type AuthenticatedSession, type Principal } from './aut
 import { AuthenticationConfig } from './authentication-config.js';
 import { Passwords } from './password.js';
 
-type Failure = PasskeyRejected | DatabaseError;
+type Failure = PasskeyRejected | RequestRateLimited | DatabaseError;
 type Prepared<Options> = { readonly id: string; readonly options: Options };
 export class Passkeys extends Context.Service<
   Passkeys,
