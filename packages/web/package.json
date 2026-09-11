@@ -28,6 +28,7 @@
     "@tiptap/core": "catalog:",
     "@tiptap/starter-kit": "catalog:",
     "effect": "catalog:",
+    "entities": "8.0.0",
     "fuse.js": "catalog:",
     "marked": "catalog:",
     "mermaid": "catalog:",
