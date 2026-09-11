@@ -13,18 +13,6 @@ env:
 
 jobs:
   check:
-    if: github.event_name != 'push' || github.ref != format('refs/heads/{0}', github.event.repository.default_branch)
-    runs-on: ubuntu-latest
-    permissions: {}
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-      - uses: cachix/install-nix-action@13d8dd58da0234aa297dedd986986ccb8e7f3e24 # v31
-      - run: nix flake check --print-build-logs --max-jobs 1
-
-  protected-check:
-    if: github.event_name == 'push' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -33,11 +21,11 @@ jobs:
         with:
           persist-credentials: false
       - uses: cachix/install-nix-action@13d8dd58da0234aa297dedd986986ccb8e7f3e24 # v31
-      - run: nix flake check --print-build-logs --max-jobs 1
+      - run: nix flake check --print-build-logs --max-jobs 2
 
   publish:
     if: github.event_name == 'push' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
-    needs: protected-check
+    needs: check
     runs-on: ubuntu-latest
     concurrency:
       group: publish-image-${{ github.repository }}-${{ github.ref }}
