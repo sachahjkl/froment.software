@@ -9,6 +9,7 @@ import { ConditionEditor } from './condition-editor';
 import { QuoteConditionPresets } from './quote-condition-presets';
 
 describe('QuoteConditionPresets', () => {
+  beforeEach(() => TestBed.configureTestingModule({ providers: [provideAccount()] }));
   afterEach(() => vi.restoreAllMocks());
 
   it('keeps conditions searchable without inventing status or date filters', async () => {
@@ -228,3 +229,4 @@ describe('QuoteConditionPresets', () => {
     expect(component['presetForm'].conditions().valid()).toBe(true);
   });
 });
+import { provideAccount } from '@backoffice/account.spec-helper';

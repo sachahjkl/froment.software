@@ -18,6 +18,7 @@
         appLinkButton
         variant="primary"
         routerLink="/backoffice/invoices/new"
+        *appCan="'invoice.create'"
         [queryParams]="{ orderId: order.id }"
       >
         {{ i18n.t('backOffice.affair.nextAction.createInvoiceButton') }}

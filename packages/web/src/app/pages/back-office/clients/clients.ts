@@ -46,6 +46,7 @@ import {
   host: { class: 'page-container' },
   selector: 'app-clients',
   imports: [
+    Can,
     EntityIcon,
     Badge,
     Button,
@@ -277,3 +278,4 @@ export class Clients {
     }
   }
 }
+import { Can } from '@backoffice/can';

@@ -8,6 +8,7 @@ import type {
   OrderListValue,
   QuoteListValue,
 } from '@froment/contracts';
+import { PermissionCodes } from '@froment/contracts';
 import { Authentication } from '@backoffice/authentication';
 import { ClientsApi } from '@backoffice/clients-api';
 import { QuotesApi } from '@backoffice/quotes-api';
@@ -32,6 +33,7 @@ type PreviewRouter = Pick<
 export class BusinessContext {
   readonly text = referenceText();
   readonly destination = signal('');
+  readonly account = signal<CurrentAccountValue | undefined>(undefined);
   readonly events = new Subject<RouterEvent>();
   private readonly loading = new ReplaySubject<void>(1);
   private readonly destroyRef = inject(DestroyRef);
@@ -59,15 +61,28 @@ export class BusinessContext {
     this.loading.next();
   }
 
-  async currentAccount(): Promise<CurrentAccountValue | undefined> {
-    if (this.scenario === 'loading') await firstValueFrom(this.loading);
-    if (this.destroyRef.destroyed || this.scenario === 'error' || this.scenario === 'empty')
-      return undefined;
+  resetAccount(header: boolean): void {
+    this.account.set(header ? undefined : this.accountValue());
+  }
+
+  private accountValue(): CurrentAccountValue {
     return {
       userId: this.text().examples.accountId,
       email: this.text().examples.email,
       mode: this.administrator ? 'administrator' : 'client',
+      permissions: PermissionCodes,
     };
+  }
+
+  async currentAccount(): Promise<CurrentAccountValue | undefined> {
+    if (this.scenario === 'loading') await firstValueFrom(this.loading);
+    if (this.destroyRef.destroyed || this.scenario === 'error' || this.scenario === 'empty') {
+      this.account.set(undefined);
+      return undefined;
+    }
+    const account = this.accountValue();
+    this.account.set(account);
+    return account;
   }
 
   private async read(): Promise<boolean> {
@@ -165,9 +180,13 @@ export const businessProviders: Provider[] = [
   BusinessContext,
   {
     provide: Authentication,
-    useFactory: (): Pick<Authentication, 'currentAccount'> => {
+    useFactory: (): Pick<Authentication, 'currentAccount' | 'account' | 'can'> => {
       const context = inject(BusinessContext);
-      return { currentAccount: () => context.currentAccount() };
+      return {
+        currentAccount: () => context.currentAccount(),
+        account: context.account.asReadonly(),
+        can: (permission) => context.account()?.permissions.includes(permission) === true,
+      };
     },
   },
   {

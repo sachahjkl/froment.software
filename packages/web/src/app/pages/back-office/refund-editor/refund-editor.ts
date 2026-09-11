@@ -31,7 +31,7 @@ const emptyModel = () => ({ amount: '', refundedOn: '', reference: '' });
 
 @Component({
   selector: 'app-refund-editor',
-  imports: [Button, Notice, FormField, TaskFeedback, InvoiceTaskHeader],
+  imports: [Can, Button, Notice, FormField, TaskFeedback, InvoiceTaskHeader],
   providers: [InvoiceTask],
   templateUrl: './refund-editor.html',
   styleUrl: './refund-editor.scss',
@@ -134,3 +134,4 @@ export class RefundEditor {
     return this.task.canDeactivate(this.hasUnsavedChanges());
   }
 }
+import { Can } from '@backoffice/can';

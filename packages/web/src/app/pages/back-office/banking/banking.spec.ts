@@ -17,6 +17,7 @@ import {
 } from './bank-workspace.spec-helper';
 
 describe('Banking transaction workspace', () => {
+  beforeEach(() => TestBed.configureTestingModule({ providers: [provideAccount()] }));
   let scrolling: ReturnType<typeof installScrollIntoView>;
   beforeEach(() => {
     scrolling = installScrollIntoView();
@@ -292,3 +293,4 @@ describe('Banking transaction workspace', () => {
     expect(api.list).toHaveBeenCalledTimes(1);
   });
 });
+import { provideAccount } from '@backoffice/account.spec-helper';

@@ -105,6 +105,7 @@ const invoice = {
 } as InvoiceSummaryValue;
 
 describe('Affairs', () => {
+  beforeEach(() => TestBed.configureTestingModule({ providers: [provideAccount()] }));
   let scrolling: ReturnType<typeof installScrollIntoView>;
   beforeEach(() => {
     scrolling = installScrollIntoView();
@@ -550,3 +551,4 @@ describe('Affairs', () => {
     ).toBe('false');
   });
 });
+import { provideAccount } from '@backoffice/account.spec-helper';

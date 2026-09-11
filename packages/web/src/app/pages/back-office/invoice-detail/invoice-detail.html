@@ -31,6 +31,7 @@
       <a
         appLinkButton
         [routerLink]="['/backoffice/invoices', invoice.id, 'edit']"
+        *appCan="'invoice.update'"
         [queryParams]="task.navigation.detailQuery()"
         >{{ i18n.t('billingWorkspace.edit') }}</a
       >
@@ -38,6 +39,7 @@
         appLinkButton
         variant="primary"
         [routerLink]="['/backoffice/invoices', invoice.id, 'issue']"
+        *appCan="'invoice.issue'"
         [queryParams]="task.navigation.detailQuery()"
         >{{ i18n.t('backOffice.invoice.issue') }}</a
       >
@@ -46,6 +48,7 @@
         appLinkButton
         variant="primary"
         [routerLink]="['/backoffice/invoices', invoice.id, 'payments', 'new']"
+        *appCan="'invoice.mark-paid'"
         [queryParams]="task.navigation.detailQuery()"
         >{{ i18n.t('billingWorkspace.recordReceipt') }}</a
       >
@@ -53,6 +56,7 @@
       <a
         appLinkButton
         [routerLink]="['/backoffice/invoices', invoice.id, 'credits', 'new']"
+        *appCan="'invoice.credit'"
         [queryParams]="task.navigation.detailQuery()"
         >{{ i18n.t('credit.issue') }}</a
       >
@@ -60,12 +64,14 @@
       <a
         appLinkButton
         routerLink="/backoffice/courriels/new"
+        *appCan="'email.draft.manage'"
         [queryParams]="{ invoice: invoice.id }"
         >{{ i18n.t('billingWorkspace.email') }}</a
       >
       <a
         appLinkButton
         routerLink="/backoffice/courriels/reminders/new"
+        *appCan="'email.reminder.manage'"
         [queryParams]="{ invoice: invoice.id }"
         >{{ i18n.t('billingWorkspace.reminder') }}</a
       >
@@ -74,6 +80,7 @@
         appLinkButton
         variant="danger"
         [routerLink]="['/backoffice/invoices', invoice.id, 'void']"
+        *appCan="'invoice.void'"
         [queryParams]="task.navigation.detailQuery()"
         >{{ i18n.t('backOffice.invoice.void') }}</a
       >
@@ -181,7 +188,12 @@
         } @if (pdfUrl(); as url) {
         <a appLinkButton [href]="url" download>{{ i18n.t('backOffice.invoice.pdf.download') }}</a> }
         @else if (revision()?.invoiceNumber) {
-        <button appButton [disabled]="pdfPending()" (click)="generatePdf()">
+        <button
+          *appCan="'document.render'"
+          appButton
+          [disabled]="pdfPending()"
+          (click)="generatePdf()"
+        >
           {{ generateLabel() }}
         </button>
         }
@@ -242,6 +254,7 @@
               @if (canCancelPayment(invoice, payment, creditState())) {
               <a
                 [routerLink]="['/backoffice/invoices', invoice.id, 'payments', payment.id, 'cancel']"
+                *appCan="'invoice.mark-paid'"
                 [queryParams]="task.navigation.detailQuery()"
                 >{{ i18n.t('payment.cancel') }}</a
               >
@@ -275,6 +288,7 @@
     <a
       appLinkButton
       [routerLink]="['/backoffice/invoices', invoice.id, 'refunds', 'new']"
+      *appCan="'invoice.refund'"
       [queryParams]="task.navigation.detailQuery()"
       >{{ i18n.t('credit.recordRefund') }}</a
     >
@@ -307,6 +321,7 @@
               @if (refund.cancelledAt === null) {
               <a
                 [routerLink]="['/backoffice/invoices', invoice.id, 'refunds', refund.id, 'cancel']"
+                *appCan="'invoice.refund'"
                 [queryParams]="task.navigation.detailQuery()"
                 >{{ i18n.t('credit.cancelRefund') }}</a
               >

@@ -23,7 +23,7 @@ const emptyModel = () => ({ amount: '', paidOn: '', method: 'transfer', referenc
 
 @Component({
   selector: 'app-payment-editor',
-  imports: [Button, Notice, FormField, TaskFeedback, InvoiceTaskHeader],
+  imports: [Can, Button, Notice, FormField, TaskFeedback, InvoiceTaskHeader],
   providers: [InvoiceTask],
   templateUrl: './payment-editor.html',
   styleUrl: './payment-editor.scss',
@@ -127,3 +127,4 @@ export class PaymentEditor {
     return this.task.canDeactivate(this.hasUnsavedChanges());
   }
 }
+import { Can } from '@backoffice/can';

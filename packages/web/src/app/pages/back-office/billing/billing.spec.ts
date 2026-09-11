@@ -42,6 +42,7 @@ const invoice = (
 });
 
 describe('Billing', () => {
+  beforeEach(() => TestBed.configureTestingModule({ providers: [provideAccount()] }));
   it('sorts deterministically and accepts only known URL sort values', () => {
     const first = invoice('01ARZ3NDEKTSV4RRFFQ69G5FAY');
     const second = { ...first, id: '01ARZ3NDEKTSV4RRFFQ69G5FAZ', totalCents: 2400 };
@@ -182,3 +183,4 @@ describe('Billing', () => {
     expect(root.querySelector('tbody button')).toBeNull();
   });
 });
+import { provideAccount } from '@backoffice/account.spec-helper';

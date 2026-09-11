@@ -108,6 +108,7 @@ async function configure(url = '/backoffice/catalogue/active', fail = false) {
 }
 
 describe('Catalog', () => {
+  beforeEach(() => TestBed.configureTestingModule({ providers: [provideAccount()] }));
   let scrolling: ReturnType<typeof installScrollIntoView>;
 
   beforeEach(() => {
@@ -414,3 +415,4 @@ describe('Catalog', () => {
     );
   });
 });
+import { provideAccount } from '@backoffice/account.spec-helper';

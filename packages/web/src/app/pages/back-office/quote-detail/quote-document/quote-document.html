@@ -1,14 +1,29 @@
 <h2>{{ i18n.tf('backOffice.quote.preview.title', { version: revision().version }) }}</h2>
 @if (revision().previewAvailable) {
 <div class="actions">
-  <a appLinkButton [href]="preview()" target="_blank" rel="noopener noreferrer"
+  <a
+    *appCan="'document.render'"
+    appLinkButton
+    [href]="preview()"
+    target="_blank"
+    rel="noopener noreferrer"
     >{{ i18n.t('backOffice.quote.preview.open') }}</a
   >
-  <button #prepare appButton type="button" [disabled]="pending()" (click)="generate()">
+  <button
+    *appCan="'document.render'"
+    #prepare
+    appButton
+    type="button"
+    [disabled]="pending()"
+    (click)="generate()"
+  >
     {{ prepareLabel() }}
   </button>
   @if (artifact()) {
-  <a appLinkButton [href]="pdf()">{{ i18n.t('backOffice.quote.pdf.download') }}</a> }
+  <a *appCan="'document.download'" appLinkButton [href]="pdf()"
+    >{{ i18n.t('backOffice.quote.pdf.download') }}</a
+  >
+  }
 </div>
 @if (artifact()) {
 <p appNotice variant="success" role="status">{{ i18n.t('commercial.pdfReady') }}</p>
@@ -16,7 +31,11 @@
 <p appNotice variant="danger" role="alert">{{ i18n.t(key) }}</p>
 } @if (issues().length) {
 <app-document-issues [issues]="issues()" [clientId]="clientId()" kind="quote" /> }
-<iframe [src]="frame()" [title]="i18n.t('backOffice.quote.preview.frameTitle')"></iframe>
+<iframe
+  *appCan="'document.render'"
+  [src]="frame()"
+  [title]="i18n.t('backOffice.quote.preview.frameTitle')"
+></iframe>
 } @else {
 <p #unavailable appNotice variant="warning" tabindex="-1">
   {{ i18n.t('commercial.previewUnavailable') }}

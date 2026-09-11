@@ -37,6 +37,7 @@ function unloadIsBlocked(): boolean {
 }
 
 describe('Bank reconciliation task', () => {
+  beforeEach(() => TestBed.configureTestingModule({ providers: [provideAccount()] }));
   it('keeps the transaction context and prepares its remaining amount after a partial allocation', async () => {
     const { api } = setupBankWorkspace();
     api.match.mockResolvedValue({
@@ -475,3 +476,4 @@ describe('Bank reconciliation task', () => {
     expect(root.querySelector('a[pageBack]')?.getAttribute('href')).toContain('sort=amount-desc');
   });
 });
+import { provideAccount } from '@backoffice/account.spec-helper';

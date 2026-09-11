@@ -1,4 +1,6 @@
 import { Confirmation } from '@shared/confirmation/confirmation';
+import { Authentication } from '@backoffice/authentication';
+import { Can } from '@backoffice/can';
 import {
   afterNextRender,
   ChangeDetectionStrategy,
@@ -69,6 +71,7 @@ import {
   host: { class: 'page-container' },
   selector: 'app-client-detail',
   imports: [
+    Can,
     ActionMenu,
     Badge,
     Button,
@@ -100,6 +103,7 @@ import {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ClientDetail {
+  private readonly authentication = inject(Authentication);
   private readonly confirmation = inject(Confirmation);
   protected readonly i18n = inject(I18nService);
   private readonly api = inject(ClientsApi);
@@ -125,13 +129,16 @@ export class ClientDetail {
   protected readonly documentsError = signal(false);
   protected readonly affairsError = signal(false);
   protected readonly tabs = computed<readonly TabItem[]>(() =>
-    (['profile', 'affairs', 'documents', 'access'] as const).map((value) => ({
-      path: value,
-      id: `client-${value}-tab`,
-      label: this.i18n.t(
-        value === 'affairs' ? 'clientsWorkspace.affairs' : `backOffice.clientDetail.tab.${value}`,
-      ),
-    })),
+    (['profile', 'affairs', 'documents', 'access'] as const)
+      .filter((value) => value !== 'access' || this.authentication.can('client.access.manage'))
+      .filter((value) => value !== 'affairs' || this.authentication.can('quote.read'))
+      .map((value) => ({
+        path: value,
+        id: `client-${value}-tab`,
+        label: this.i18n.t(
+          value === 'affairs' ? 'clientsWorkspace.affairs' : `backOffice.clientDetail.tab.${value}`,
+        ),
+      })),
   );
   private readonly quotes = signal<ReadonlyArray<QuoteSummaryValue>>([]);
   private readonly orders = signal<ReadonlyArray<OrderSummaryValue>>([]);
@@ -429,10 +436,12 @@ export class ClientDetail {
     this.client.set(outcome.result);
     this.loading.set(false);
     const [quotes, orders, invoices, accesses] = await Promise.allSettled([
-      this.quotesApi.list(),
-      this.ordersApi.list(),
-      this.invoicesApi.list(),
-      this.api.listAccess(clientId.value),
+      this.authentication.can('quote.read') ? this.quotesApi.list() : [],
+      this.authentication.can('order.read') ? this.ordersApi.list() : [],
+      this.authentication.can('invoice.read') ? this.invoicesApi.list() : [],
+      this.authentication.can('client.access.manage')
+        ? this.api.listAccess(clientId.value)
+        : Promise.resolve({ success: true as const, result: [] }),
     ]);
     if (generation !== this.loadGeneration || this.destroyRef.destroyed) return;
     if (quotes.status === 'fulfilled') this.quotes.set(quotes.value);

@@ -20,6 +20,7 @@ function notifyDateValidity(input: HTMLInputElement): void {
 }
 
 describe('InvoiceEditor', () => {
+  beforeEach(() => TestBed.configureTestingModule({ providers: [provideAccount()] }));
   afterEach(() => vi.restoreAllMocks());
   it('keeps issued invoices read-only and moves financial tasks out of the editor', async () => {
     const { root } = await setupInvoicePage(InvoiceEditor);
@@ -299,3 +300,4 @@ describe('InvoiceEditor', () => {
     expect(await fixture.componentInstance.canDeactivate()).toBe(false);
   });
 });
+import { provideAccount } from '@backoffice/account.spec-helper';

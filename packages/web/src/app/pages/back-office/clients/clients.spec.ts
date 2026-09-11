@@ -1,4 +1,5 @@
 import { TestBed } from '@angular/core/testing';
+import type { PermissionCodeValue } from '@froment/contracts';
 import { By } from '@angular/platform-browser';
 import { provideRouter, Router } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
@@ -36,9 +37,11 @@ const archivedClient = {
 async function configure(
   list = vi.fn().mockResolvedValue([client, archivedClient]),
   url = '/backoffice/clients/active',
+  permissions?: readonly PermissionCodeValue[],
 ) {
   TestBed.configureTestingModule({
     providers: [
+      provideAccount(permissions),
       provideRouter([
         {
           path: 'backoffice/clients',
@@ -81,6 +84,11 @@ async function configure(
 }
 
 describe('Clients', () => {
+  it('keeps client records readable without offering client creation to a read-only account', async () => {
+    const { root } = await configure(undefined, '/backoffice/clients/active', ['client.read']);
+    expect(root.querySelector('a[href="/backoffice/clients/new"]')).toBeNull();
+    expect(root.querySelector(`a[href^="/backoffice/clients/${client.id}"]`)).not.toBeNull();
+  });
   let scrolling: ReturnType<typeof installScrollIntoView>;
   beforeEach(() => {
     scrolling = installScrollIntoView();
@@ -424,3 +432,4 @@ describe('Clients', () => {
     expect(root.querySelector('app-empty-state')).not.toBeNull();
   });
 });
+import { provideAccount } from '@backoffice/account.spec-helper';

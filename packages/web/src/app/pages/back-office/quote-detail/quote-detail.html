@@ -30,6 +30,7 @@
         appLinkButton
         [variant]="action.variant"
         [routerLink]="['/backoffice/quotes', quote.id, 'edit']"
+        *appCan="'quote.update'"
         [queryParams]="context()"
         >{{ i18n.t(action.label) }}</a
       >
@@ -38,6 +39,7 @@
         appLinkButton
         variant="primary"
         [routerLink]="['/backoffice/quotes', quote.id, 'publication']"
+        *appCan="'quote.send'"
         [queryParams]="context()"
         >{{ i18n.t('commercial.publish') }}</a
       >

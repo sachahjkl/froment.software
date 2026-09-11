@@ -92,7 +92,10 @@ describe('Authentication', () => {
         provideRouter([]),
         {
           provide: Authentication,
-          useValue: { sessionMode: () => Promise.resolve(mode) },
+          useValue: {
+            sessionMode: () => Promise.resolve(mode),
+            currentAccount: async () => ({ mode, permissions: [] }),
+          },
         },
       ],
     });

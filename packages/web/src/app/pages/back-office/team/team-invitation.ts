@@ -35,7 +35,7 @@ const rejectedBeforeCreation = (code: TranslationKey): boolean =>
 
 @Component({
   host: { class: 'page-container', '(window:beforeunload)': 'beforeUnload($event)' },
-  imports: [FormField, RouterLink, Button, Notice, PageHeader],
+  imports: [Can, FormField, RouterLink, Button, Notice, PageHeader],
   providers: [TeamNavigation],
   changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-team-invitation',
@@ -150,3 +150,4 @@ export class TeamInvitation {
     }
   }
 }
+import { Can } from '@backoffice/can';

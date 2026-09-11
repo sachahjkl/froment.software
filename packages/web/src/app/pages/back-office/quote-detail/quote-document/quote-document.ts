@@ -25,7 +25,7 @@ import { Notice } from '@shared/notice/notice';
 import { DocumentIssues } from '@shared/document-issues/document-issues';
 
 @Component({
-  imports: [Button, Notice, DocumentIssues],
+  imports: [Can, Button, Notice, DocumentIssues],
   changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-quote-document',
   styleUrl: './quote-document.scss',
@@ -97,3 +97,4 @@ export class QuoteDocument {
     }
   }
 }
+import { Can } from '@backoffice/can';

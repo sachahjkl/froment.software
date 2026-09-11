@@ -29,6 +29,7 @@
         appLinkButton
         variant="primary"
         routerLink="/backoffice/invoices/new"
+        *appCan="'invoice.create'"
         [queryParams]="{ orderId: order.id }"
         >{{ i18n.t('backOffice.affairs.createInvoice') }}</a
       >
@@ -76,15 +77,22 @@
       <a
         appLinkButton
         [href]="'/api/orders/' + order.id + '/preview'"
+        *appCan="'document.render'"
         target="_blank"
         rel="noopener noreferrer"
         >{{ i18n.t('backOffice.quote.preview.open') }}</a
       >
-      <button appButton type="button" [disabled]="pending()" (click)="generate()">
+      <button
+        *appCan="'document.render'"
+        appButton
+        type="button"
+        [disabled]="pending()"
+        (click)="generate()"
+      >
         {{ generateLabel() }}
       </button>
       @if (pdfReady()) {
-      <a appLinkButton [href]="'/api/orders/' + order.id + '/pdf'"
+      <a *appCan="'document.download'" appLinkButton [href]="'/api/orders/' + order.id + '/pdf'"
         >{{ i18n.t('backOffice.quote.pdf.download') }}</a
       >
       }

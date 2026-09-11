@@ -1,3 +1,6 @@
+import { Authentication } from '@backoffice/authentication';
+import { Can } from '@backoffice/can';
+import type { PermissionCodeValue } from '@froment/contracts';
 import {
   afterNextRender,
   ChangeDetectionStrategy,
@@ -65,6 +68,7 @@ import {
 @Component({
   host: { class: 'page-container' },
   imports: [
+    Can,
     EntityIcon,
     Badge,
     Button,
@@ -98,6 +102,19 @@ import {
   templateUrl: './emails.html',
 })
 export class Emails {
+  private readonly authentication = inject(Authentication);
+  protected viewPermissions(view: EmailView): readonly PermissionCodeValue[] {
+    switch (view) {
+      case 'messages':
+        return ['integration.manage'];
+      case 'drafts':
+        return ['email.draft.manage'];
+      case 'templates':
+        return ['email.template.manage'];
+      case 'reminders':
+        return ['email.reminder.manage', 'invoice.read', 'client.read', 'integration.manage'];
+    }
+  }
   protected readonly i18n = inject(I18nService);
   private readonly api = inject(IntegrationsApi);
   private readonly draftsApi = inject(EmailDraftsApi);
@@ -143,11 +160,15 @@ export class Emails {
   protected readonly filters = form(this.searchModel);
   protected readonly stateLabels = emailStateLabels;
   protected readonly tabs = computed<readonly TabItem[]>(() =>
-    emailViews.map((view) => ({
-      path: view,
-      id: `email-${view}-tab`,
-      label: this.i18n.t(`emailsWorkspace.${view}`),
-    })),
+    emailViews
+      .filter((view) =>
+        this.viewPermissions(view).every((permission) => this.authentication.can(permission)),
+      )
+      .map((view) => ({
+        path: view,
+        id: `email-${view}-tab`,
+        label: this.i18n.t(`emailsWorkspace.${view}`),
+      })),
   );
   private readonly messageSearch = createFuzzySearch(
     this.operations,
@@ -499,6 +520,8 @@ export class Emails {
     this.filters.search().focusBoundControl();
   }
   protected async load(view: EmailView): Promise<void> {
+    if (!this.viewPermissions(view).every((permission) => this.authentication.can(permission)))
+      return;
     const generation = ++this.generations[view];
     this.states.update((value) => ({ ...value, [view]: 'loading' }));
     try {

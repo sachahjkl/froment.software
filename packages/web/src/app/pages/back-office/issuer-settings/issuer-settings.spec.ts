@@ -5,6 +5,7 @@ import { IssuerSettingsApi } from '@backoffice/issuer-settings-api';
 import { IssuerSettings } from './issuer-settings';
 
 describe('IssuerSettings', () => {
+  beforeEach(() => TestBed.configureTestingModule({ providers: [provideAccount()] }));
   beforeEach(() => TestBed.configureTestingModule({ providers: [provideRouter([])] }));
 
   it('keeps local changes and the expected version after a conflict', async () => {
@@ -98,3 +99,4 @@ describe('IssuerSettings', () => {
     expect(root.querySelector('#issuer-display-name-error')).not.toBeNull();
   });
 });
+import { provideAccount } from '@backoffice/account.spec-helper';

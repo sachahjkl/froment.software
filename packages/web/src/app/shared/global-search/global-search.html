@@ -2,6 +2,7 @@
   #trigger
   class="input search-trigger"
   type="button"
+  [disabled]="!available()"
   aria-haspopup="dialog"
   [attr.aria-controls]="dialogId()"
   [attr.aria-keyshortcuts]="shortcutKeys()"

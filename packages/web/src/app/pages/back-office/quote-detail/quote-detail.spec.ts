@@ -23,6 +23,7 @@ async function openCancellation(harness: RouterTestingHarness, root: ParentNode)
 }
 
 describe('Quote detail', () => {
+  beforeEach(() => TestBed.configureTestingModule({ providers: [provideAccount()] }));
   const get = vi.fn();
   const cancel = vi.fn();
   const confirm = vi.fn();
@@ -193,3 +194,4 @@ describe('Quote detail', () => {
     expect(control<HTMLTextAreaElement>(root, 'textarea').value).toBe('Keep this explanation.');
   });
 });
+import { provideAccount } from '@backoffice/account.spec-helper';

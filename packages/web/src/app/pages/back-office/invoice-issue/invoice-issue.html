@@ -14,7 +14,7 @@
     [title]="i18n.t('backOffice.invoice.preview.frameTitle')"
   ></iframe>
   }
-  <form class="task-form ds-panel form-panel" (submit)="save($event)">
+  <form *appCan="'invoice.issue'" class="task-form ds-panel form-panel" (submit)="save($event)">
     <label
       ><input
         type="checkbox"

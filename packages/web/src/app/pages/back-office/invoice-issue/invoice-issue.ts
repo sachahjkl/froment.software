@@ -9,7 +9,7 @@ import { InvoiceTaskHeader } from '../billing/invoice-task-header';
 
 @Component({
   selector: 'app-invoice-issue',
-  imports: [Button, Notice, FormField, TaskFeedback, InvoiceTaskHeader],
+  imports: [Can, Button, Notice, FormField, TaskFeedback, InvoiceTaskHeader],
   providers: [InvoiceTask],
   templateUrl: './invoice-issue.html',
   styleUrl: './invoice-issue.scss',
@@ -71,3 +71,4 @@ export class InvoiceIssue {
     return this.task.canDeactivate(this.issueForm().dirty());
   }
 }
+import { Can } from '@backoffice/can';

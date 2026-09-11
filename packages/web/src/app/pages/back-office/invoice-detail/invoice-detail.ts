@@ -38,6 +38,7 @@ import { ClientDescription } from '../client-description/client-description';
 @Component({
   selector: 'app-invoice-detail',
   imports: [
+    Can,
     Button,
     Badge,
     ClientDescription,
@@ -57,6 +58,7 @@ import { ClientDescription } from '../client-description/client-description';
   host: { class: 'page-container' },
 })
 export class InvoiceDetail {
+  private readonly authentication = inject(Authentication);
   protected readonly task = inject(InvoiceTask);
   protected readonly i18n = this.task.i18n;
   private readonly creditsApi = inject(InvoiceCreditsApi);
@@ -75,18 +77,27 @@ export class InvoiceDetail {
   ] as const;
   protected readonly tab = computed(
     () =>
-      this.sections.find((section) => section.value === this.query().get('tab'))?.value ??
-      'summary',
+      this.sections.find(
+        (section) =>
+          this.sectionAllowed(section.value) && section.value === this.query().get('tab'),
+      )?.value ?? 'summary',
   );
   protected readonly tabs = computed<readonly TabItem[]>(() =>
-    this.sections.map((section) => ({
-      path: '.',
-      id: `invoice-${section.value}-tab`,
-      label: this.i18n.t(section.label),
-      queryParams: { tab: section.value },
-      active: this.tab() === section.value,
-    })),
+    this.sections
+      .filter((section) => this.sectionAllowed(section.value))
+      .map((section) => ({
+        path: '.',
+        id: `invoice-${section.value}-tab`,
+        label: this.i18n.t(section.label),
+        queryParams: { tab: section.value },
+        active: this.tab() === section.value,
+      })),
   );
+  private sectionAllowed(section: (typeof this.sections)[number]['value']): boolean {
+    if (section === 'history') return this.authentication.can('audit.read');
+    if (section === 'receipts') return this.authentication.can('payment.read');
+    return true;
+  }
   protected readonly headerTitle = computed(() => {
     const invoice = this.task.invoice();
     return invoice
@@ -150,7 +161,10 @@ export class InvoiceDetail {
     return result?.success ? result.result : undefined;
   });
   protected readonly orders = resource({
-    params: () => (this.tab() === 'summary' ? this.task.invoice()?.orderId : undefined),
+    params: () =>
+      this.authentication.can('order.read') && this.tab() === 'summary'
+        ? this.task.invoice()?.orderId
+        : undefined,
     loader: () => this.ordersApi.list(),
   });
   protected readonly order = computed(() =>
@@ -166,7 +180,7 @@ export class InvoiceDetail {
   protected readonly previewUrl = computed(() => {
     const invoice = this.task.invoice();
     const revision = this.revision();
-    return !invoice || !revision
+    return !this.authentication.can('document.render') || !invoice || !revision
       ? undefined
       : `/api/invoices/${invoice.id}/revisions/${revision.version}/preview`;
   });
@@ -189,7 +203,7 @@ export class InvoiceDetail {
   protected readonly pdfUrl = computed(() => {
     const invoice = this.task.invoice();
     const revision = this.revision();
-    if (!invoice || !revision) return undefined;
+    if (!this.authentication.can('document.download') || !invoice || !revision) return undefined;
     return (revision.version === invoice.version && invoice.pdf?.status === 'ready') ||
       this.generated().has(revision.id)
       ? `/api/invoices/${invoice.id}/revisions/${revision.version}/pdf`
@@ -242,3 +256,5 @@ export class InvoiceDetail {
     }
   }
 }
+import { Authentication } from '@backoffice/authentication';
+import { Can } from '@backoffice/can';

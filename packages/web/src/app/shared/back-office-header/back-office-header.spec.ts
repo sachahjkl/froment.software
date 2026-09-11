@@ -6,6 +6,7 @@ import { provideRouter, Router } from '@angular/router';
 import { afterEach, beforeEach, vi } from 'vitest';
 
 import { Authentication } from '@backoffice/authentication';
+import { accountFixture } from '@backoffice/account.spec-helper';
 import { I18nService } from '@app/i18n.service';
 import { BackOfficeHeader } from './back-office-header';
 
@@ -20,6 +21,10 @@ describe('BackOfficeHeader', () => {
   afterEach(() => vi.unstubAllGlobals());
   it('shows the administrator account, navigation, and sign-out action', async () => {
     const signOut = vi.fn().mockResolvedValue(true);
+    const context = accountFixture();
+    context.account.update(
+      (account) => account && { ...account, email: 'administrator@example.test' },
+    );
     TestBed.configureTestingModule({
       providers: [
         provideRouter([]),
@@ -27,12 +32,7 @@ describe('BackOfficeHeader', () => {
         {
           provide: Authentication,
           useValue: {
-            currentAccount: () =>
-              Promise.resolve({
-                userId: '01ARZ3NDEKTSV4RRFFQ69G5FAV',
-                email: 'administrator@example.test',
-                mode: 'administrator',
-              }),
+            ...context.authentication,
             signOut,
           },
         },
@@ -84,21 +84,17 @@ describe('BackOfficeHeader', () => {
     expect(overlay.querySelector('[role="menu"]')).toBeNull();
   });
   it('keeps business search and administrative subjects out of the customer shell', async () => {
+    const context = accountFixture([
+      'quote.read',
+      'order.read',
+      'invoice.read',
+      'document.download',
+    ]);
+    context.account.update(
+      (account) => account && { ...account, mode: 'client', email: 'client@example.test' },
+    );
     TestBed.configureTestingModule({
-      providers: [
-        provideRouter([]),
-        {
-          provide: Authentication,
-          useValue: {
-            currentAccount: () =>
-              Promise.resolve({
-                userId: '01ARZ3NDEKTSV4RRFFQ69G5FAV',
-                email: 'client@example.test',
-                mode: 'client',
-              }),
-          },
-        },
-      ],
+      providers: [provideRouter([]), context.provider],
     });
     const fixture = TestBed.createComponent(BackOfficeHeader);
     await fixture.whenStable();

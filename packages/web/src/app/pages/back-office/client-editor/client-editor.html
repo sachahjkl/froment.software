@@ -26,7 +26,7 @@
   } @else if (client()?.archived) {
   <p appNotice role="status">{{ i18n.t('backOffice.clientDetail.archived') }}</p>
   } @else {
-  <form class="profile-form" novalidate (submit)="save($event)">
+  <form *appCan="writePermission()" class="profile-form" novalidate (submit)="save($event)">
     @for (group of groups; track group.title) {
     <div class="ds-panel form-panel">
       <fieldset>

@@ -189,7 +189,13 @@
       </label>
     </fieldset>
     <div class="actions">
-      <button appButton variant="primary" type="submit" [disabled]="saveDisabled()">
+      <button
+        *appCan="'issuer.update'"
+        appButton
+        variant="primary"
+        type="submit"
+        [disabled]="saveDisabled()"
+      >
         @if (saving()) { {{ i18n.t('backOffice.issuer.saving') }} } @else { {{
         i18n.t('backOffice.issuer.save') }} }
       </button>

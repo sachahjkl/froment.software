@@ -70,6 +70,7 @@ type MatchField = keyof ReturnType<typeof blankMatch>;
   selector: 'app-bank-reconciliation',
   host: { class: 'page-container', '(window:beforeunload)': 'beforeUnload($event)' },
   imports: [
+    Can,
     Badge,
     Button,
     DataTable,
@@ -574,3 +575,4 @@ export class BankReconciliation {
     if (this.busy() || this.dirty()) event.preventDefault();
   }
 }
+import { Can } from '@backoffice/can';

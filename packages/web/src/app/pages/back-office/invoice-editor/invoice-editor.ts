@@ -82,12 +82,15 @@ const emptyModel = (): InvoiceModel => ({
 @Component({
   host: { class: 'page-container', '(window:beforeunload)': 'beforeUnload($event)' },
   selector: 'app-invoice-editor',
-  imports: [Button, FormField, Notice, PageHeader, RouterLink, DocumentTextEditor],
+  imports: [Can, Button, FormField, Notice, PageHeader, RouterLink, DocumentTextEditor],
   templateUrl: './invoice-editor.html',
   styleUrl: './invoice-editor.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class InvoiceEditor {
+  protected readonly writePermission = computed<PermissionCodeValue>(() =>
+    this.isNew() ? 'invoice.create' : 'invoice.update',
+  );
   protected readonly i18n = inject(I18nService);
   private readonly api = inject(InvoicesApi);
   private readonly ordersApi = inject(OrdersApi);
@@ -438,3 +441,5 @@ export class InvoiceEditor {
     return formatMoney(cents, this.i18n.language(), 'EUR');
   }
 }
+import { Can } from '@backoffice/can';
+import type { PermissionCodeValue } from '@froment/contracts';

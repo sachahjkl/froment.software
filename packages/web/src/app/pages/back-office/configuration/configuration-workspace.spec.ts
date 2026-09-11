@@ -23,6 +23,7 @@ import { PageHeader } from '@shared/page-header/page-header';
 class SettingsPage {}
 
 describe('ConfigurationIndex', () => {
+  beforeEach(() => TestBed.configureTestingModule({ providers: [provideAccount()] }));
   it('lets each child page own its return without adding an overview self-link', async () => {
     TestBed.configureTestingModule({
       providers: [
@@ -103,3 +104,4 @@ describe('ConfigurationIndex', () => {
     expect(root.querySelectorAll('h1')).toHaveLength(1);
   });
 });
+import { provideAccount } from '@backoffice/account.spec-helper';

@@ -33,7 +33,7 @@ import { clientNavigationQuery } from '../client-navigation';
 @Component({
   selector: 'app-client-access-editor',
   host: { class: 'page-container' },
-  imports: [Button, FormField, Notice, PageHeader, RouterLink],
+  imports: [Can, Button, FormField, Notice, PageHeader, RouterLink],
   templateUrl: './client-access-editor.html',
   styleUrl: './client-access-editor.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -169,3 +169,4 @@ export class ClientAccessEditor {
     });
   }
 }
+import { Can } from '@backoffice/can';

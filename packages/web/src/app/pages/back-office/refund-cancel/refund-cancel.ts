@@ -24,7 +24,7 @@ import { InvoiceTaskHeader } from '../billing/invoice-task-header';
 
 @Component({
   selector: 'app-refund-cancel',
-  imports: [Button, Notice, FormField, TaskFeedback, InvoiceTaskHeader],
+  imports: [Can, Button, Notice, FormField, TaskFeedback, InvoiceTaskHeader],
   providers: [InvoiceTask],
   templateUrl: './refund-cancel.html',
   styleUrl: './refund-cancel.scss',
@@ -95,3 +95,4 @@ export class RefundCancel {
     return this.task.canDeactivate(this.cancelForm().dirty());
   }
 }
+import { Can } from '@backoffice/can';

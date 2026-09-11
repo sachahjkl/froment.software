@@ -13,6 +13,7 @@ import { unsavedChangesGuard } from '@backoffice/unsaved-changes-guard';
 import { ClientEditor } from '@app/pages/back-office/client-editor/client-editor';
 import { I18nService } from '@app/i18n.service';
 import { GlobalSearch } from './global-search';
+import { accountFixture, provideAccount } from '@backoffice/account.spec-helper';
 
 @Component({ imports: [GlobalSearch], template: '<app-global-search [shortcutEnabled]="true" />' })
 class SearchPage {}
@@ -81,6 +82,29 @@ describe('GlobalSearch', () => {
   const orders = vi.fn();
   const invoices = vi.fn();
 
+  it('queries only permitted entities and ignores results after an account change', async () => {
+    const context = accountFixture(['client.read']);
+    TestBed.overrideProvider(context.provider.provide, { useValue: context.authentication });
+    let resolve: (value: (typeof client)[]) => void = () => {
+      throw new Error('Request not started');
+    };
+    clients.mockReturnValue(
+      new Promise<(typeof client)[]>((done) => {
+        resolve = done;
+      }),
+    );
+    const fixture = TestBed.createComponent(GlobalSearch);
+    const loading = fixture.componentInstance['load']();
+    expect(clients).toHaveBeenCalledOnce();
+    expect(quotes).not.toHaveBeenCalled();
+    expect(orders).not.toHaveBeenCalled();
+    expect(invoices).not.toHaveBeenCalled();
+    context.account.set(undefined);
+    resolve([client]);
+    await loading;
+    expect(fixture.componentInstance['items']()).toEqual([]);
+  });
+
   beforeEach(() => {
     clients.mockReset().mockResolvedValue([client]);
     quotes.mockReset().mockResolvedValue([]);
@@ -88,6 +112,7 @@ describe('GlobalSearch', () => {
     invoices.mockReset().mockResolvedValue([]);
     TestBed.configureTestingModule({
       providers: [
+        provideAccount(),
         provideRouter([
           { path: '', component: SearchPage },
           { path: 'backoffice/clients/:clientId', component: DetailPage },

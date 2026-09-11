@@ -1,5 +1,6 @@
 import { type Routes } from '@angular/router';
 import { unsavedChangesGuard } from '@backoffice/unsaved-changes-guard';
+import { permissionData, permissionsGuard } from '@backoffice/authentication-guards';
 
 export const configurationRoutes: Routes = [
   {
@@ -10,12 +11,16 @@ export const configurationRoutes: Routes = [
   },
   {
     path: 'entreprise',
+    canActivate: [permissionsGuard],
+    data: permissionData('issuer.read'),
     loadComponent: () =>
       import('../issuer-settings/issuer-settings').then((module) => module.IssuerSettings),
     canDeactivate: [unsavedChangesGuard],
   },
   {
     path: 'conditions/new',
+    canActivate: [permissionsGuard],
+    data: permissionData('condition.manage'),
     loadComponent: () =>
       import('../quote-condition-presets/condition-editor').then(
         (module) => module.ConditionEditor,
@@ -24,6 +29,8 @@ export const configurationRoutes: Routes = [
   },
   {
     path: 'conditions/:presetId/edit',
+    canActivate: [permissionsGuard],
+    data: permissionData('condition.read', 'condition.manage'),
     loadComponent: () =>
       import('../quote-condition-presets/condition-editor').then(
         (module) => module.ConditionEditor,
@@ -32,6 +39,8 @@ export const configurationRoutes: Routes = [
   },
   {
     path: 'conditions',
+    canActivate: [permissionsGuard],
+    data: permissionData('condition.read'),
     loadComponent: () =>
       import('../quote-condition-presets/quote-condition-presets').then(
         (module) => module.QuoteConditionPresets,
@@ -40,6 +49,8 @@ export const configurationRoutes: Routes = [
   },
   {
     path: 'carte-de-visite',
+    canActivate: [permissionsGuard],
+    data: permissionData('issuer.read'),
     loadComponent: () =>
       import('../../business-card/business-card').then((module) => module.BusinessCard),
     canDeactivate: [unsavedChangesGuard],

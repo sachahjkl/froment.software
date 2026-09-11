@@ -1,4 +1,5 @@
 import { Component } from '@angular/core';
+import { provideAccount } from '@backoffice/account.spec-helper';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
@@ -145,6 +146,7 @@ export async function setupEmailPage(path: string) {
   const navigation = { allowList: true };
   TestBed.configureTestingModule({
     providers: [
+      provideAccount(),
       provideRouter([
         {
           path: 'backoffice/courriels/new',

@@ -9,6 +9,7 @@ import {
   type LedgerEntry,
   type LedgerSource,
   type LedgerSourceKind,
+  type PermissionCodeValue,
 } from '@froment/contracts';
 import { Schema } from 'effect';
 import { type I18nService, type TranslationKey } from '@app/i18n.service';
@@ -185,19 +186,24 @@ export const validBankPeriod = (from: string, to: string): boolean =>
   (from === '' || Schema.is(CalendarDate)(from)) &&
   (to === '' || Schema.is(CalendarDate)(to)) &&
   (from === '' || to === '' || from <= to);
-export const bankTabs = (i18n: I18nService) => [
-  {
-    id: 'bank-transactions-tab',
-    path: '/backoffice/banque',
-    label: i18n.t('bankWorkspace.transactions'),
-    exact: true,
-  },
-  {
-    id: 'bank-entries-tab',
-    path: '/backoffice/banque/ecritures',
-    label: i18n.t('bankWorkspace.entries'),
-  },
-];
+export const bankTabs = (i18n: I18nService, can: (permission: PermissionCodeValue) => boolean) =>
+  (
+    [
+      {
+        permission: 'bank.read',
+        id: 'bank-transactions-tab',
+        path: '/backoffice/banque',
+        label: i18n.t('bankWorkspace.transactions'),
+        exact: true,
+      },
+      {
+        id: 'bank-entries-tab',
+        permission: 'ledger.read',
+        path: '/backoffice/banque/ecritures',
+        label: i18n.t('bankWorkspace.entries'),
+      },
+    ] as const
+  ).filter((tab) => can(tab.permission));
 export const ledgerQuery = (params: ParamMap) => {
   const year = new Date().getFullYear();
   return {

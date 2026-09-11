@@ -53,7 +53,7 @@
   @if (!loading() && !unavailable()) { @if (!editable()) {
   <p appNotice>{{ i18n.t('billingWorkspace.readonly') }}</p>
   } @else {
-  <form novalidate (submit)="save($event)">
+  <form *appCan="writePermission()" novalidate (submit)="save($event)">
     <div class="invoice-terms ds-panel form-panel">
       @if (isNew()) {
       <label class="field"

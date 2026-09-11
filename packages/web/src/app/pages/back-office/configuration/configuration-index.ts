@@ -3,7 +3,7 @@ import { RouterLink } from '@angular/router';
 import { I18nService } from '@app/i18n.service';
 
 @Component({
-  imports: [RouterLink],
+  imports: [Can, RouterLink],
   changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-configuration-index',
   styleUrl: './configuration-index.scss',
@@ -12,3 +12,4 @@ import { I18nService } from '@app/i18n.service';
 export class ConfigurationIndex {
   protected readonly i18n = inject(I18nService);
 }
+import { Can } from '@backoffice/can';

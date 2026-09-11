@@ -20,6 +20,7 @@ function notifyDateValidity(input: HTMLInputElement, animationName = 'ng-invalid
 }
 
 describe('Ledger reversal task', () => {
+  beforeEach(() => TestBed.configureTestingModule({ providers: [provideAccount()] }));
   afterEach(() => vi.restoreAllMocks());
   it.each(['ng-valid', 'ng-invalid'])(
     'leaves an unchanged form after its %s animation without confirmation',
@@ -240,3 +241,4 @@ describe('Ledger reversal task', () => {
     expect(bankRoot(harness).querySelector(`a[href*="${bankId}/contrepasser"]`)).not.toBeNull();
   });
 });
+import { provideAccount } from '@backoffice/account.spec-helper';

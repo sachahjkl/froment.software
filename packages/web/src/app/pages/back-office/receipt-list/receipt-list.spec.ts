@@ -1,4 +1,5 @@
 import { TestBed } from '@angular/core/testing';
+import { provideAccount } from '@backoffice/account.spec-helper';
 import { provideRouter } from '@angular/router';
 import { vi } from 'vitest';
 import { InvoicesApi } from '@backoffice/invoices-api';
@@ -6,6 +7,7 @@ import { ReceiptList } from './receipt-list';
 import { inputValue } from '../billing/billing.spec-helper';
 
 describe('ReceiptList', () => {
+  beforeEach(() => TestBed.configureTestingModule({ providers: [provideAccount()] }));
   it('keeps the CSV period after an export error', async () => {
     const exportPayments = vi
       .fn()

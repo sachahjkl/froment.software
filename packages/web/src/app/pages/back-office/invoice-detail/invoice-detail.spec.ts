@@ -1,4 +1,5 @@
 import { InvoiceDetail } from './invoice-detail';
+import { convertToParamMap } from '@angular/router';
 import {
   invoiceFixture,
   invoiceId,
@@ -7,6 +8,19 @@ import {
 } from '../billing/billing.spec-helper';
 
 describe('InvoiceDetail', () => {
+  it('keeps downloads available without write actions, audit requests or render previews', async () => {
+    const { root, api, fixture, queryParams } = await setupInvoicePage(InvoiceDetail, {
+      permissions: ['invoice.read', 'order.read', 'payment.read', 'document.download'],
+      query: { tab: 'history' },
+    });
+    expect(api.history).not.toHaveBeenCalled();
+    expect(root.querySelector('a[href$="/payments/new"]')).toBeNull();
+    queryParams.next(convertToParamMap({ tab: 'document' }));
+    await fixture.whenStable();
+    expect(root.querySelector('iframe')).toBeNull();
+    expect(root.querySelector('a[download]')).not.toBeNull();
+    expect(api.renderPdf).not.toHaveBeenCalled();
+  });
   it('loads refunds only when the receipts tab has active payments to cancel', async () => {
     const { credits, fixture } = await setupInvoicePage(InvoiceDetail, {
       query: { tab: 'receipts' },

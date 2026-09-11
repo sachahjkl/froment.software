@@ -96,7 +96,7 @@
     [revision]="quote.currentRevision"
     (prepared)="prepared($event)"
   />
-  <form (submit)="publish($event)" class="panel ds-panel" novalidate>
+  <form *appCan="'quote.send'" (submit)="publish($event)" class="panel ds-panel" novalidate>
     <p>{{ i18n.t('commercial.publicationEffect') }}</p>
     @if (!pdfReady()) {
     <p appNotice>{{ i18n.t('commercial.pdfRequired') }}</p>

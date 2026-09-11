@@ -7,6 +7,7 @@
         appLinkButton
         variant="primary"
         routerLink="invitations/new"
+        *appCan="'user.create'"
         [queryParams]="navigation.params()"
         >{{ i18n.t('configurationWorkspace.newInvitation') }}</a
       >
@@ -141,6 +142,7 @@
             <td>
               <div class="spacer-x-3">
                 <button
+                  *appCan="'user.update'"
                   appButton
                   type="button"
                   [disabled]="busy() || loading()"
@@ -153,6 +155,7 @@
                   type="button"
                   [disabled]="busy() || loading()"
                   (click)="update(member, member.profile, member.disabledAt === null)"
+                  *appCan="'user.update'"
                 >
                   {{ i18n.t(member.disabledAt === null ? 'team.disable' : 'team.enable') }}
                 </button>
@@ -310,6 +313,7 @@
               (invitation.cancelledAt !== null) { {{ i18n.t('team.cancelled') }} } @else if
               (invitation.expiresAt <= now()) { {{ i18n.t('team.expired') }} } @else {
               <button
+                *appCan="'user.create'"
                 appButton
                 type="button"
                 [disabled]="busy() || loading()"

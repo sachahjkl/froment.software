@@ -13,7 +13,6 @@ import { NavigationEnd, Router, RouterLink } from '@angular/router';
 import { NgTemplateOutlet } from '@angular/common';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { filter } from 'rxjs';
-import { type CurrentAccountValue } from '@froment/contracts';
 
 import { Authentication } from '@backoffice/authentication';
 import { I18nService } from '@app/i18n.service';
@@ -52,7 +51,7 @@ export class BackOfficeHeader {
   protected readonly i18n = inject(I18nService);
   private readonly auth = inject(Authentication);
   private readonly router = inject(Router);
-  protected readonly account = signal<CurrentAccountValue | undefined>(undefined);
+  protected readonly account = this.auth.account;
   protected readonly accountLoading = signal(true);
   protected readonly drawerOpen = signal(false);
   private readonly accountMenus = viewChildren(CdkMenuTrigger);
@@ -81,7 +80,7 @@ export class BackOfficeHeader {
 
   protected async loadAccount(): Promise<void> {
     this.accountLoading.set(true);
-    this.account.set(await this.auth.currentAccount());
+    await this.auth.currentAccount();
     this.accountLoading.set(false);
   }
 

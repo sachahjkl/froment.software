@@ -5,7 +5,13 @@ import { TestBed } from '@angular/core/testing';
 import { type CanActivateFn, provideRouter, Router, UrlTree } from '@angular/router';
 
 import { Authentication } from './authentication';
-import { administratorGuard, clientGuard } from './authentication-guards';
+import {
+  administratorGuard,
+  clientGuard,
+  permissionData,
+  permissionsGuard,
+} from './authentication-guards';
+import { accountFixture } from './account.spec-helper';
 import { BrowserSessionStore } from './browser-session-store';
 
 const clientUrl = '/backoffice/client/quotes/document-id?quote=a%2Fb&query=%C3%A9%20%2B#details';
@@ -29,12 +35,32 @@ const expectLoginRedirect = (result: Awaited<ReturnType<CanActivateFn>>, returnU
 };
 
 describe('authentication guards', () => {
+  it('checks declared effective permissions without granting administrator-mode write access', async () => {
+    const context = accountFixture(['client.read']);
+    TestBed.configureTestingModule({ providers: [provideRouter([]), context.provider] });
+    const router = TestBed.inject(Router);
+    const route = router.routerState.snapshot.root;
+    route.data = permissionData('client.read');
+    expect(await runGuard(administratorGuard, '/backoffice/clients')).toBe(true);
+    route.data = permissionData('client.create');
+    const denied = await runGuard(administratorGuard, '/backoffice/clients/new');
+    expect(denied).toBeInstanceOf(UrlTree);
+    if (denied instanceof UrlTree) expect(router.serializeUrl(denied)).toBe('/backoffice/account');
+    route.data = {};
+    expect(await runGuard(permissionsGuard, '/backoffice/clients/new')).toBeInstanceOf(UrlTree);
+  });
   it.each(['administrator', 'client', undefined] as const)(
     'applies the existing route policies for session mode %s',
     async (mode) => {
       const sessionMode = vi.fn().mockResolvedValue(mode);
       TestBed.configureTestingModule({
-        providers: [provideRouter([]), { provide: Authentication, useValue: { sessionMode } }],
+        providers: [
+          provideRouter([]),
+          {
+            provide: Authentication,
+            useValue: { sessionMode, currentAccount: async () => ({ mode, permissions: [] }) },
+          },
+        ],
       });
 
       const administratorResult = await runGuard(administratorGuard, '/backoffice/team?role=all');
@@ -54,6 +80,7 @@ describe('authentication guards', () => {
       const mode = guard === administratorGuard ? 'administrator' : 'client';
       const createAuthentication = vi.fn(() => ({
         sessionMode: () => Promise.resolve(mode),
+        currentAccount: async () => ({ mode, permissions: [] }),
       }));
       TestBed.configureTestingModule({ providers: [provideRouter([])] });
       const injector = Injector.create({

@@ -7,6 +7,7 @@ import {
   ElementRef,
   inject,
   input,
+  linkedSignal,
   signal,
   TemplateRef,
   viewChild,
@@ -21,6 +22,7 @@ import { ClientsApi } from '@backoffice/clients-api';
 import { QuotesApi } from '@backoffice/quotes-api';
 import { OrdersApi } from '@backoffice/orders-api';
 import { InvoicesApi } from '@backoffice/invoices-api';
+import { Authentication } from '@backoffice/authentication';
 import { I18nService } from '@app/i18n.service';
 import { Button } from '@shared/button/button';
 import { Icon } from '@shared/icon/icon';
@@ -46,6 +48,15 @@ interface SearchItem {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class GlobalSearch {
+  private readonly authentication = inject(Authentication);
+  protected readonly available = computed(
+    () =>
+      this.authentication.account()?.mode === 'administrator' &&
+      (this.authentication.can('client.read') ||
+        this.authentication.can('quote.read') ||
+        this.authentication.can('order.read') ||
+        this.authentication.can('invoice.read')),
+  );
   readonly shortcutEnabled = input(false);
   protected readonly id = inject(_IdGenerator).getId('global-search-');
   protected readonly i18n = inject(I18nService);
@@ -66,9 +77,15 @@ export class GlobalSearch {
   protected readonly shortcutKeys = computed(() =>
     this.shortcutEnabled() ? ['Control+k', 'Meta+k'].join(' ') : null,
   );
-  protected readonly state = signal<'idle' | 'loading' | 'ready' | 'error'>('idle');
+  protected readonly state = linkedSignal<'idle' | 'loading' | 'ready' | 'error'>(() => {
+    this.authentication.account();
+    return 'idle';
+  });
   protected readonly searchForm = form(signal({ query: '' }), (path) => maxLength(path.query, 120));
-  private readonly items = signal<readonly SearchItem[]>([]);
+  private readonly items = linkedSignal<readonly SearchItem[]>(() => {
+    this.authentication.account();
+    return [];
+  });
   private readonly results = createFuzzySearch(
     this.items,
     computed(() => this.searchForm.query().value()),
@@ -121,7 +138,7 @@ export class GlobalSearch {
   }
 
   protected open(): void {
-    if (this.dialog) return;
+    if (this.dialog || !this.available()) return;
     const dialog = this.dialogs.open(this.content(), {
       id: `${this.id}-dialog`,
       ariaLabelledBy: `${this.id}-heading`,
@@ -149,6 +166,7 @@ export class GlobalSearch {
   protected shortcut(event: KeyboardEvent): void {
     if (
       !this.shortcutEnabled() ||
+      !this.available() ||
       event.defaultPrevented ||
       event.isComposing ||
       event.altKey ||
@@ -172,16 +190,17 @@ export class GlobalSearch {
   }
 
   protected async load(): Promise<void> {
-    if (this.state() === 'loading') return;
+    const account = this.authentication.account();
+    if (this.state() === 'loading' || account === undefined || !this.available()) return;
     this.state.set('loading');
     try {
       const [clients, quotes, orders, invoices] = await Promise.all([
-        this.clientsApi.list(),
-        this.quotesApi.list(),
-        this.ordersApi.list(),
-        this.invoicesApi.list(),
+        this.authentication.can('client.read') ? this.clientsApi.list() : [],
+        this.authentication.can('quote.read') ? this.quotesApi.list() : [],
+        this.authentication.can('order.read') ? this.ordersApi.list() : [],
+        this.authentication.can('invoice.read') ? this.invoicesApi.list() : [],
       ]);
-      if (this.destroyRef.destroyed) return;
+      if (this.destroyRef.destroyed || this.authentication.account() !== account) return;
       this.items.set([
         ...clients.map((client) => ({
           id: client.id,
@@ -218,7 +237,8 @@ export class GlobalSearch {
       ]);
       this.state.set('ready');
     } catch {
-      if (!this.destroyRef.destroyed) this.state.set('error');
+      if (!this.destroyRef.destroyed && this.authentication.account() === account)
+        this.state.set('error');
     }
   }
 }

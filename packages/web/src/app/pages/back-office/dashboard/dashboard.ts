@@ -13,6 +13,7 @@ import {
   type InvoiceSummaryValue,
   type OrderSummaryValue,
   type QuoteSummaryValue,
+  type PermissionCodeValue,
 } from '@froment/contracts';
 import { formatMoney } from '@froment/l10n';
 
@@ -31,6 +32,7 @@ import { clientContactIncomplete } from '../clients/client-contact';
 type PageState = 'loading' | 'ready' | 'error';
 
 interface DashboardAction {
+  readonly permission: PermissionCodeValue;
   readonly id: string;
   readonly label: string;
   readonly title: string;
@@ -53,12 +55,13 @@ interface ActivityItem {
 @Component({
   host: { class: 'page-container' },
   selector: 'app-dashboard',
-  imports: [Badge, Button, DataTable, Notice, RouterLink],
+  imports: [Can, Badge, Button, DataTable, Notice, RouterLink],
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class Dashboard {
+  private readonly authentication = inject(Authentication);
   protected readonly i18n = inject(I18nService);
   private readonly quotesApi = inject(QuotesApi);
   private readonly clientsApi = inject(ClientsApi);
@@ -108,6 +111,13 @@ export class Dashboard {
           const blocked = archived || incomplete;
           return {
             id: `quote-${quote.id}`,
+            permission: blocked
+              ? archived
+                ? 'client.read'
+                : 'client.update'
+              : quote.status === 'draft'
+                ? 'quote.update'
+                : 'quote.read',
             label: blocked
               ? this.i18n.t(
                   archived ? 'dashboardWorkspace.blocked' : 'dashboardWorkspace.contactBlocked',
@@ -137,8 +147,9 @@ export class Dashboard {
         }),
       ...this.orders()
         .filter(({ invoiceId }) => invoiceId === null)
-        .map((order) => ({
+        .map((order): DashboardAction => ({
           id: `order-${order.id}`,
+          permission: 'invoice.create',
           label: this.i18n.t('backOffice.affairs.stage.ordered'),
           title: order.title,
           client: order.clientDisplayName,
@@ -155,8 +166,16 @@ export class Dashboard {
             invoice.pdf?.status === 'failed' ||
             (invoice.status === 'issued' && this.remaining(invoice) > 0),
         )
-        .map((invoice) => ({
+        .map((invoice): DashboardAction => ({
           id: `invoice-${invoice.id}`,
+          permission:
+            invoice.pdf?.status === 'failed'
+              ? 'invoice.read'
+              : this.canRemind(invoice)
+                ? 'email.draft.manage'
+                : invoice.status === 'draft'
+                  ? 'invoice.update'
+                  : 'invoice.read',
           label:
             invoice.pdf?.status === 'failed'
               ? this.i18n.t('dashboardWorkspace.pdfBlocked')
@@ -199,6 +218,7 @@ export class Dashboard {
                   : 3,
         })),
     ]
+      .filter((action) => this.authentication.can(action.permission))
       .sort((left, right) => left.priority - right.priority)
       .slice(0, 12);
   });
@@ -284,3 +304,5 @@ export class Dashboard {
     }
   }
 }
+import { Authentication } from '@backoffice/authentication';
+import { Can } from '@backoffice/can';

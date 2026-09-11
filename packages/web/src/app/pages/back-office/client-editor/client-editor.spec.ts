@@ -97,6 +97,7 @@ async function configure(editing = false, value = client, loadError = false, que
 }
 
 describe('ClientEditor', () => {
+  beforeEach(() => TestBed.configureTestingModule({ providers: [provideAccount()] }));
   it('creates an incomplete client and opens the saved detail page', async () => {
     const { api, fill, save, router } = await configure();
     await fill('displayName', 'Acme');
@@ -279,3 +280,4 @@ describe('ClientEditor', () => {
     expect(confirmation.request).not.toHaveBeenCalled();
   });
 });
+import { provideAccount } from '@backoffice/account.spec-helper';

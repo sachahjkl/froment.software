@@ -4,43 +4,63 @@ import { NavigationEnd, Router, RouterLink } from '@angular/router';
 import { filter, map } from 'rxjs';
 import { I18nService, type TranslationKey } from '@app/i18n.service';
 import { Icon, type IconName } from '@shared/icon/icon';
+import { Authentication } from '@backoffice/authentication';
+import type { PermissionCodeValue } from '@froment/contracts';
 
 interface NavigationItem {
   path: string;
   label: TranslationKey;
   icon: IconName;
   prefixes: readonly string[];
+  permissions: readonly PermissionCodeValue[];
 }
 
 const activityItems: readonly NavigationItem[] = [
   {
     path: 'dashboard',
+    permissions: ['client.read', 'quote.read', 'order.read', 'invoice.read'],
     label: 'backOffice.navigation.dashboard',
     icon: 'dashboard',
     prefixes: ['dashboard'],
   },
   {
     path: 'clients',
+    permissions: ['client.read'],
     label: 'backOffice.navigation.clients',
     icon: 'clients',
     prefixes: ['clients'],
   },
   {
     path: 'affaires',
+    permissions: ['quote.read', 'order.read', 'invoice.read'],
     label: 'backOffice.navigation.affairs',
     icon: 'folder',
     prefixes: ['affaires', 'quotes', 'orders'],
   },
   {
     path: 'facturation',
+    permissions: ['invoice.read'],
     label: 'backOffice.navigation.billing',
     icon: 'invoice',
     prefixes: ['facturation', 'invoices'],
   },
-  { path: 'banque', label: 'bank.title', icon: 'bank', prefixes: ['banque'] },
-  { path: 'courriels', label: 'emails.title', icon: 'mail', prefixes: ['courriels'] },
+  {
+    path: 'banque',
+    permissions: ['bank.read'],
+    label: 'bank.title',
+    icon: 'bank',
+    prefixes: ['banque'],
+  },
+  {
+    path: 'courriels',
+    permissions: ['email.draft.manage'],
+    label: 'emails.title',
+    icon: 'mail',
+    prefixes: ['courriels'],
+  },
   {
     path: 'catalogue',
+    permissions: ['catalog.read'],
     label: 'catalog.title',
     icon: 'catalog',
     prefixes: ['catalogue'],
@@ -48,17 +68,37 @@ const activityItems: readonly NavigationItem[] = [
 ];
 
 const administrationItems: readonly NavigationItem[] = [
-  { path: 'equipe', label: 'team.title', icon: 'clients', prefixes: ['equipe'] },
-  { path: 'api', label: 'backOfficeShell.apiAccess', icon: 'development', prefixes: ['api'] },
+  {
+    path: 'equipe',
+    permissions: ['user.read'],
+    label: 'team.title',
+    icon: 'clients',
+    prefixes: ['equipe'],
+  },
+  {
+    path: 'api',
+    permissions: ['api-token.manage'],
+    label: 'backOfficeShell.apiAccess',
+    icon: 'development',
+    prefixes: ['api'],
+  },
   {
     path: 'services',
+    permissions: ['integration.configure'],
     label: 'backOfficeShell.externalServices',
     icon: 'infrastructure',
     prefixes: ['services'],
   },
-  { path: 'audit', label: 'backOfficeShell.audit', icon: 'book', prefixes: ['audit'] },
+  {
+    path: 'audit',
+    permissions: ['audit.read'],
+    label: 'backOfficeShell.audit',
+    icon: 'book',
+    prefixes: ['audit'],
+  },
   {
     path: 'configuration',
+    permissions: ['issuer.read'],
     label: 'backOffice.navigation.configuration',
     icon: 'settings',
     prefixes: ['configuration'],
@@ -99,6 +139,7 @@ const groups = [
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class BackOfficeNav {
+  private readonly authentication = inject(Authentication);
   protected readonly i18n = inject(I18nService);
   private readonly router = inject(Router);
   private readonly url = toSignal(
@@ -112,9 +153,15 @@ export class BackOfficeNav {
     const path = this.url().split(/[?#]/, 1)[0];
     const matches = (prefix: string) =>
       path === `/backoffice/${prefix}` || path.startsWith(`/backoffice/${prefix}/`);
-    return groups.map((group) => ({
-      label: group.label,
-      items: group.items.map((item) => ({ ...item, active: item.prefixes.some(matches) })),
-    }));
+    return groups
+      .map((group) => ({
+        label: group.label,
+        items: group.items
+          .filter((item) =>
+            item.permissions.every((permission) => this.authentication.can(permission)),
+          )
+          .map((item) => ({ ...item, active: item.prefixes.some(matches) })),
+      }))
+      .filter((group) => group.items.length > 0);
   });
 }

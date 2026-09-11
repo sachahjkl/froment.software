@@ -11,6 +11,7 @@ import {
 } from '../quote-detail/commercial.spec-helper';
 
 describe('Order detail', () => {
+  beforeEach(() => TestBed.configureTestingModule({ providers: [provideAccount()] }));
   beforeEach(() =>
     TestBed.configureTestingModule({
       providers: [
@@ -99,3 +100,4 @@ describe('Order detail', () => {
     expect(root.querySelector('app-quote-lines')).toBeNull();
   });
 });
+import { provideAccount } from '@backoffice/account.spec-helper';

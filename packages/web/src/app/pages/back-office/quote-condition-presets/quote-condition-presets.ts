@@ -32,6 +32,7 @@ import { conditionTableOptions } from '../configuration/workspace-tables';
 @Component({
   selector: 'app-quote-condition-presets',
   imports: [
+    Can,
     Button,
     DataTable,
     RouterLink,
@@ -51,6 +52,7 @@ import { conditionTableOptions } from '../configuration/workspace-tables';
   host: { '(window:beforeunload)': 'beforeUnload($event)' },
 })
 export class QuoteConditionPresets {
+  protected readonly authentication = inject(Authentication);
   private readonly confirmation = inject(Confirmation);
   protected readonly i18n = inject(I18nService);
   private readonly api = inject(QuoteConditionPresetsApi);
@@ -112,3 +114,5 @@ export class QuoteConditionPresets {
     if (this.saving()) event.preventDefault();
   }
 }
+import { Authentication } from '@backoffice/authentication';
+import { Can } from '@backoffice/can';

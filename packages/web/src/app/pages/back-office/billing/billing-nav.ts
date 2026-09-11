@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { I18nService } from '@app/i18n.service';
 import { Tabs, type TabItem } from '@shared/tabs/tabs';
+import { Authentication } from '@backoffice/authentication';
 
 @Component({
   selector: 'app-billing-nav',
@@ -10,27 +11,36 @@ import { Tabs, type TabItem } from '@shared/tabs/tabs';
   template: `<app-tabs [label]="i18n.t('backOffice.billing.title')" [tabs]="items()" />`,
 })
 export class BillingNav {
+  private readonly authentication = inject(Authentication);
   protected readonly i18n = inject(I18nService);
-  protected readonly items = computed<readonly TabItem[]>(() => [
-    {
-      path: '/backoffice/facturation',
-      id: 'billing-invoices-tab',
-      label: this.i18n.t('billingWorkspace.invoices'),
-    },
-    {
-      path: '/backoffice/facturation/encaissements',
-      id: 'billing-receipts-tab',
-      label: this.i18n.t('billingWorkspace.receipts'),
-    },
-    {
-      path: '/backoffice/facturation/avoirs',
-      id: 'billing-credits-tab',
-      label: this.i18n.t('billingWorkspace.credits'),
-    },
-    {
-      path: '/backoffice/facturation/remboursements',
-      id: 'billing-refunds-tab',
-      label: this.i18n.t('billingWorkspace.refunds'),
-    },
-  ]);
+  protected readonly items = computed<readonly TabItem[]>(() =>
+    (
+      [
+        {
+          path: '/backoffice/facturation',
+          id: 'billing-invoices-tab',
+          permissions: ['invoice.read'],
+          label: this.i18n.t('billingWorkspace.invoices'),
+        },
+        {
+          path: '/backoffice/facturation/encaissements',
+          id: 'billing-receipts-tab',
+          permissions: ['invoice.read', 'payment.read'],
+          label: this.i18n.t('billingWorkspace.receipts'),
+        },
+        {
+          path: '/backoffice/facturation/avoirs',
+          id: 'billing-credits-tab',
+          permissions: ['invoice.read'],
+          label: this.i18n.t('billingWorkspace.credits'),
+        },
+        {
+          path: '/backoffice/facturation/remboursements',
+          id: 'billing-refunds-tab',
+          permissions: ['invoice.read', 'payment.read'],
+          label: this.i18n.t('billingWorkspace.refunds'),
+        },
+      ] as const
+    ).filter((item) => item.permissions.every((permission) => this.authentication.can(permission))),
+  );
 }

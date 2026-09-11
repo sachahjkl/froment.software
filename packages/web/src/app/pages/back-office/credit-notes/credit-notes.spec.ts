@@ -1,10 +1,12 @@
 import { TestBed } from '@angular/core/testing';
+import { provideAccount } from '@backoffice/account.spec-helper';
 import { provideRouter } from '@angular/router';
 import { InvoicesApi } from '@backoffice/invoices-api';
 import { CreditNotes } from './credit-notes';
 import { creditFixture, invoiceFixture } from '../billing/billing.spec-helper';
 
 describe('CreditNotes', () => {
+  beforeEach(() => TestBed.configureTestingModule({ providers: [provideAccount()] }));
   it('reads the protected global list without creating editable financial forms', async () => {
     const invoice = invoiceFixture();
     const note = creditFixture().creditNote;

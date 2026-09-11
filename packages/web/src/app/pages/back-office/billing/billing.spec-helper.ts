@@ -124,6 +124,7 @@ export async function setupInvoicePage<T>(
     params?: Record<string, string>;
     query?: Record<string, string>;
     orders?: OrderListValue;
+    permissions?: readonly PermissionCodeValue[];
   } = {},
 ) {
   const invoice = options.invoice ?? invoiceFixture();
@@ -152,6 +153,7 @@ export async function setupInvoicePage<T>(
   const queryParams = new BehaviorSubject(query);
   TestBed.configureTestingModule({
     providers: [
+      provideAccount(options.permissions),
       provideRouter([]),
       {
         provide: ActivatedRoute,
@@ -171,3 +173,5 @@ export async function setupInvoicePage<T>(
   const root: HTMLElement = fixture.nativeElement;
   return { api, credits, fixture, root, queryParams };
 }
+import { provideAccount } from '@backoffice/account.spec-helper';
+import type { PermissionCodeValue } from '@froment/contracts';

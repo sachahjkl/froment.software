@@ -7,6 +7,7 @@
       appLinkButton
       variant="primary"
       [routerLink]="createLink()"
+      *appCan="viewPermissions(currentView())"
       [queryParams]="returnQuery(currentView())"
       >{{ i18n.t(createLabel()) }}</a
     ></app-page-header
@@ -14,7 +15,12 @@
   <app-tabs [label]="i18n.t('emails.title')" [tabs]="tabs()" [disabled]="busy()" />
   <router-outlet />
   <ng-template appTabPanel="emails" let-tab="tab">
-    <section appListWorkspace class="results" [attr.aria-labelledby]="'email-' + tab + '-tab'">
+    <section
+      *appCan="viewPermissions(tab)"
+      appListWorkspace
+      class="results"
+      [attr.aria-labelledby]="'email-' + tab + '-tab'"
+    >
       <app-list-toolbar
         ><app-list-search
           listSearch

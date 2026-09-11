@@ -1,3 +1,4 @@
+import { Authentication } from '@backoffice/authentication';
 import {
   afterNextRender,
   ChangeDetectionStrategy,
@@ -53,6 +54,7 @@ import {
   host: { class: 'page-container' },
   selector: 'app-banking',
   imports: [
+    Can,
     Button,
     Badge,
     DataTable,
@@ -82,6 +84,7 @@ import {
   templateUrl: './banking.html',
 })
 export class Banking {
+  private readonly authentication = inject(Authentication);
   protected iconVariant(transaction: BankTransactionValue): EntityIconVariant {
     switch (bankStatus(transaction)) {
       case 'matched':
@@ -111,7 +114,9 @@ export class Banking {
   protected readonly filters = form(this.model);
   private readonly searchControl = viewChild(ListSearch);
   private readonly filterMenu = viewChild(FilterMenu);
-  protected readonly tabs = computed(() => bankTabs(this.i18n));
+  protected readonly tabs = computed(() =>
+    bankTabs(this.i18n, (permission) => this.authentication.can(permission)),
+  );
   protected readonly columns = bankColumns;
   protected readonly statusLabel = bankStatusLabel;
   protected readonly status = bankStatus;
@@ -300,3 +305,4 @@ export class Banking {
     return formatMoney(cents, this.i18n.language(), 'EUR');
   }
 }
+import { Can } from '@backoffice/can';

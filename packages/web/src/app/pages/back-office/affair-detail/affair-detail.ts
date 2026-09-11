@@ -56,6 +56,7 @@ type PortalDocumentKind = 'quote' | 'order' | 'invoice';
   host: { class: 'page-container' },
   selector: 'app-affair-detail',
   imports: [
+    Can,
     Badge,
     Button,
     ClientDescription,
@@ -75,6 +76,7 @@ type PortalDocumentKind = 'quote' | 'order' | 'invoice';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AffairDetail {
+  private readonly authentication = inject(Authentication);
   protected readonly i18n = inject(I18nService);
   private readonly route = inject(ActivatedRoute);
   private readonly document = inject(DOCUMENT);
@@ -89,11 +91,13 @@ export class AffairDetail {
   protected readonly backView = signal(affairView(this.route.snapshot.queryParamMap));
   protected readonly context = signal(affairContext(this.route.snapshot.queryParamMap));
   protected readonly tabs = computed<readonly TabItem[]>(() =>
-    (['overview', 'documents', 'history'] as const).map((tab) => ({
-      path: tab,
-      id: `affair-${tab}-tab`,
-      label: this.i18n.t(`commercial.${tab}`),
-    })),
+    (['overview', 'documents', 'history'] as const)
+      .filter((tab) => tab !== 'history' || this.authentication.can('audit.read'))
+      .map((tab) => ({
+        path: tab,
+        id: `affair-${tab}-tab`,
+        label: this.i18n.t(`commercial.${tab}`),
+      })),
   );
   protected readonly state = signal<'loading' | 'ready' | 'error'>('loading');
   protected readonly quote = signal<QuoteDetailValue | undefined>(undefined);
@@ -230,7 +234,7 @@ export class AffairDetail {
       const [quoteOutcome, orders, events] = await Promise.all([
         this.quotesApi.get(quoteId.value),
         this.ordersApi.list(),
-        this.quotesApi.listAffairEvents(quoteId.value),
+        this.authentication.can('audit.read') ? this.quotesApi.listAffairEvents(quoteId.value) : [],
       ]);
       if (this.destroyRef.destroyed || generation !== this.generation) return;
       if (!quoteOutcome.success) {
@@ -239,7 +243,9 @@ export class AffairDetail {
       }
       const quote = quoteOutcome.result;
       const order = orders.find((candidate) => candidate.quoteId === quote.id);
-      const clientOutcome = await this.clientsApi.get(quote.clientId);
+      const clientOutcome = this.authentication.can('client.read')
+        ? await this.clientsApi.get(quote.clientId)
+        : undefined;
       let invoice: InvoiceDetailValue | undefined;
       if (order?.invoiceId) {
         const invoiceOutcome = await this.invoicesApi.get(order.invoiceId);
@@ -250,7 +256,7 @@ export class AffairDetail {
       this.quote.set(quote);
       this.order.set(order);
       this.invoice.set(invoice);
-      if (clientOutcome.success) this.client.set(clientOutcome.result);
+      if (clientOutcome?.success) this.client.set(clientOutcome.result);
       const timeline =
         events.length === 0
           ? this.makeTimeline(quote, order, invoice)
@@ -350,3 +356,5 @@ export class AffairDetail {
     };
   }
 }
+import { Authentication } from '@backoffice/authentication';
+import { Can } from '@backoffice/can';

@@ -41,19 +41,20 @@ const emptySettings = (): IssuerSettingsValue => ({
 
 @Component({
   selector: 'app-issuer-settings',
-  imports: [Button, FormField, Notice, PageHeader, RouterLink],
+  imports: [Can, Button, FormField, Notice, PageHeader, RouterLink],
   templateUrl: './issuer-settings.html',
   styleUrl: './issuer-settings.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class IssuerSettings {
+  private readonly authentication = inject(Authentication);
   private readonly confirmation = inject(Confirmation);
   protected readonly i18n = inject(I18nService);
   private readonly api = inject(IssuerSettingsApi);
   private readonly model = signal(emptySettings());
   private readonly version = signal(0);
   protected readonly settingsForm = form(this.model, (path) => {
-    disabled(path, () => this.loading() || this.saving() || !this.loaded());
+    disabled(path, () => this.saveDisabled());
     required(path.displayName);
     pattern(path.displayName, /\S/);
     maxLength(path.displayName, 160);
@@ -73,7 +74,11 @@ export class IssuerSettings {
   protected readonly saved = signal(false);
   protected readonly error = signal<TranslationKey | undefined>(undefined);
   protected readonly saveDisabled = computed(
-    () => this.loading() || this.saving() || !this.loaded(),
+    () =>
+      !this.authentication.can('issuer.update') ||
+      this.loading() ||
+      this.saving() ||
+      !this.loaded(),
   );
 
   protected invalid(field: keyof IssuerSettingsValue): boolean {
@@ -99,7 +104,7 @@ export class IssuerSettings {
 
   protected save(event: SubmitEvent): void {
     event.preventDefault();
-    if (this.loading() || this.saving() || !this.loaded()) return;
+    if (this.saveDisabled()) return;
     if (this.settingsForm().invalid()) {
       this.settingsForm().markAsTouched();
       this.settingsForm().errorSummary()[0]?.fieldTree().focusBoundControl();
@@ -142,3 +147,5 @@ export class IssuerSettings {
     }
   }
 }
+import { Authentication } from '@backoffice/authentication';
+import { Can } from '@backoffice/can';

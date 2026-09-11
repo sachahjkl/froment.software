@@ -18,6 +18,7 @@ import {
 } from '../banking/bank-workspace.spec-helper';
 
 describe('Bank ledger workspace', () => {
+  beforeEach(() => TestBed.configureTestingModule({ providers: [provideAccount()] }));
   it('searches preserved bank references even when a source is no longer available to post', async () => {
     const { ledger } = setupBankWorkspace();
     ledger.list.mockResolvedValue({
@@ -297,3 +298,4 @@ describe('Bank ledger workspace', () => {
     expect(ledger.list).toHaveBeenCalledTimes(2);
   });
 });
+import { provideAccount } from '@backoffice/account.spec-helper';

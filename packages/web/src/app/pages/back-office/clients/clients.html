@@ -2,7 +2,12 @@
   <app-page-header>
     <h1 id="clients-title">{{ i18n.t('backOffice.clients.title') }}</h1>
     <p class="muted">{{ i18n.t('clientsWorkspace.listIntro') }}</p>
-    <a pageActions appLinkButton variant="primary" routerLink="/backoffice/clients/new"
+    <a
+      *appCan="'client.create'"
+      pageActions
+      appLinkButton
+      variant="primary"
+      routerLink="/backoffice/clients/new"
       ><app-icon name="plus" />{{ i18n.t('backOffice.clients.create') }}</a
     >
   </app-page-header>
@@ -120,7 +125,7 @@
           {{ i18n.t('clientsWorkspace.resetFilters') }}
         </button>
         } @else {
-        <a emptyActions appLinkButton routerLink="/backoffice/clients/new"
+        <a *appCan="'client.create'" emptyActions appLinkButton routerLink="/backoffice/clients/new"
           >{{ i18n.t('backOffice.clients.create') }}</a
         >
         }

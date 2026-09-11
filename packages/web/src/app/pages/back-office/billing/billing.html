@@ -7,6 +7,7 @@
       appLinkButton
       variant="primary"
       routerLink="/backoffice/invoices/new"
+      *appCan="'invoice.create'"
       [queryParams]="detailQuery()"
       >{{ i18n.t('backOffice.invoices.new') }}</a
     >
@@ -145,6 +146,7 @@
           appButton
           [disabled]="reminders().length === 0"
           (click)="preparingReminders.set(true)"
+          *appCan="'email.draft.manage'"
         >
           {{ i18n.t('billingWorkspace.prepareReminders') }} ({{ reminders().length }})
         </button>
@@ -158,7 +160,10 @@
       <ul>
         @for (invoice of reminders(); track invoice.id) {
         <li>
-          <a routerLink="/backoffice/courriels/new" [queryParams]="{ invoice: invoice.id }"
+          <a
+            *appCan="'email.draft.manage'"
+            routerLink="/backoffice/courriels/new"
+            [queryParams]="{ invoice: invoice.id }"
             >{{ invoice.invoiceNumber }} · {{ invoice.clientDisplayName }}</a
           >
         </li>

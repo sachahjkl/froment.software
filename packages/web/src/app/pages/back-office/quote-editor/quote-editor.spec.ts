@@ -18,6 +18,7 @@ import {
 } from '../quote-detail/commercial.spec-helper';
 
 describe('Quote editor navigation', () => {
+  beforeEach(() => TestBed.configureTestingModule({ providers: [provideAccount()] }));
   const get = vi.fn();
   const create = vi.fn();
   const createRevision = vi.fn();
@@ -290,3 +291,4 @@ describe('Quote editor navigation', () => {
     );
   });
 });
+import { provideAccount } from '@backoffice/account.spec-helper';

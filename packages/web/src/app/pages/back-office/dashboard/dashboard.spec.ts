@@ -63,6 +63,7 @@ async function configure(
 }
 
 describe('Dashboard', () => {
+  beforeEach(() => TestBed.configureTestingModule({ providers: [provideAccount()] }));
   it('links draft invoices directly to their editor and metrics to filtered workspaces', async () => {
     const startedAt = Date.now();
     const { root } = await configure([invoice]);
@@ -158,3 +159,4 @@ describe('Dashboard', () => {
     );
   });
 });
+import { provideAccount } from '@backoffice/account.spec-helper';

@@ -71,6 +71,7 @@ export class BusinessPreview implements OnChanges {
   ngOnChanges(): void {
     this.context.scenario = this.settings().scenario;
     this.context.administrator = this.settings().administrator;
+    this.context.resetAccount(this.component() === 'back-office-header');
     this.context.navigate(this.settings().path);
     this.context.destination.set('');
   }

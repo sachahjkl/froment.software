@@ -74,7 +74,7 @@
       </p>
       } @else {
       <p>{{ i18n.t('ledger.confirmReverse') }}</p>
-      <form class="task-form" novalidate (submit)="reverse($event)">
+      <form *appCan="'ledger.post'" class="task-form" novalidate (submit)="reverse($event)">
         <label class="field"
           >{{ i18n.t('ledger.reason') }}<textarea
             class="input"

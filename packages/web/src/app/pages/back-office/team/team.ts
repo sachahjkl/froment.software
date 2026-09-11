@@ -37,6 +37,7 @@ import { TeamNavigation } from './team-navigation';
 
 @Component({
   imports: [
+    Can,
     FormField,
     Button,
     Notice,
@@ -64,6 +65,7 @@ import { TeamNavigation } from './team-navigation';
   templateUrl: './team.html',
 })
 export class Team {
+  private readonly authentication = inject(Authentication);
   protected memberIconVariant(member: typeof TeamMember.Type): EntityIconVariant {
     return member.disabledAt === null ? 'success' : 'default';
   }
@@ -133,7 +135,7 @@ export class Team {
     this.data().members.some((member) => this.profiles()[member.id] !== member.profile),
   );
   protected readonly profileForm = form(this.profiles, (path) => {
-    disabled(path, () => this.busy() || this.loading());
+    disabled(path, () => !this.authentication.can('user.update') || this.busy() || this.loading());
   });
   constructor() {
     afterNextRender(() => {
@@ -270,3 +272,5 @@ export class Team {
     }
   }
 }
+import { Can } from '@backoffice/can';
+import { Authentication } from '@backoffice/authentication';

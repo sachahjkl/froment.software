@@ -79,7 +79,7 @@
         } @else if (!invoices().length) {
         <p>{{ i18n.t('bankWorkspace.noInvoices') }}</p>
         }
-        <form class="task-form" novalidate (submit)="reconcile($event)">
+        <form *appCan="'bank.reconcile'" class="task-form" novalidate (submit)="reconcile($event)">
           <label class="field"
             >{{ i18n.t('bank.invoice') }}<select
               #invoice
@@ -224,6 +224,7 @@
                     variant="warning"
                     [disabled]="busy() || !!pendingMatch() || !!pendingCancellation()"
                     (click)="selectCancellation(allocation)"
+                    *appCan="'bank.reconcile'"
                   >
                     {{ i18n.t('bankWorkspace.cancelAllocation') }}
                   </button>
@@ -234,7 +235,12 @@
           </table>
         </div>
         } @if (cancelling(); as allocation) {
-        <form class="ds-panel task-panel task-form" novalidate (submit)="cancelAllocation($event)">
+        <form
+          *appCan="'bank.reconcile'"
+          class="ds-panel task-panel task-form"
+          novalidate
+          (submit)="cancelAllocation($event)"
+        >
           <h3>{{ i18n.t('bankWorkspace.cancelContext') }}</h3>
           <p>
             {{ allocation.invoiceNumber }} · {{ allocation.paymentId }} · {{

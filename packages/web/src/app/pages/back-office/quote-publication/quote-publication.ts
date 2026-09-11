@@ -37,6 +37,7 @@ import { affairContext } from '../affairs/affair-filters';
 @Component({
   host: { class: 'page-container' },
   imports: [
+    Can,
     Button,
     CopyField,
     DocumentIssues,
@@ -289,3 +290,4 @@ export class QuotePublication {
     }
   }
 }
+import { Can } from '@backoffice/can';

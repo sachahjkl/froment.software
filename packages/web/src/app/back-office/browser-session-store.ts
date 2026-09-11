@@ -19,6 +19,10 @@ export class BrowserSessionStore {
   private refreshRequest: Promise<LoginModeValue | undefined> | undefined;
   private refreshTimer: ReturnType<typeof setTimeout> | undefined;
   private generation = 0;
+  private readonly revisionState = signal(0);
+  readonly revision = this.revisionState.asReadonly();
+  private readonly refreshState = signal(false);
+  readonly refreshing = this.refreshState.asReadonly();
 
   constructor() {
     const window = this.document.defaultView;
@@ -49,6 +53,7 @@ export class BrowserSessionStore {
 
   set(session: BrowserSessionValue): BrowserSessionValue {
     this.generation += 1;
+    this.revisionState.update((revision) => revision + 1);
     this.state.set(session);
     this.scheduleRefresh(session.expiresAt);
     return session;
@@ -56,6 +61,7 @@ export class BrowserSessionStore {
 
   clear(): void {
     this.generation += 1;
+    this.revisionState.update((revision) => revision + 1);
     this.state.set(undefined);
     if (this.refreshTimer !== undefined) clearTimeout(this.refreshTimer);
     this.refreshTimer = undefined;
@@ -63,6 +69,8 @@ export class BrowserSessionStore {
 
   refresh(): Promise<LoginModeValue | undefined> {
     if (this.refreshRequest !== undefined) return this.refreshRequest;
+    this.refreshState.set(true);
+    this.revisionState.update((revision) => revision + 1);
     const generation = this.generation;
     this.refreshRequest = this.cookieLock
       .run(async () => {
@@ -81,6 +89,7 @@ export class BrowserSessionStore {
       })
       .finally(() => {
         this.refreshRequest = undefined;
+        this.refreshState.set(false);
       });
     return this.refreshRequest;
   }

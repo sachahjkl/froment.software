@@ -59,6 +59,7 @@ import { canCancelQuote, quoteEditAction } from './quote-actions';
 @Component({
   host: { class: 'page-container' },
   imports: [
+    Can,
     Badge,
     ActionMenu,
     Button,
@@ -82,6 +83,7 @@ import { canCancelQuote, quoteEditAction } from './quote-actions';
   templateUrl: './quote-detail.html',
 })
 export class QuoteDetail {
+  private readonly authentication = inject(Authentication);
   protected readonly i18n = inject(I18nService);
   private readonly api = inject(QuotesApi);
   private readonly ordersApi = inject(OrdersApi);
@@ -117,7 +119,9 @@ export class QuoteDetail {
   });
   protected readonly canCancel = computed(() => {
     const quote = this.quote();
-    return quote !== undefined && canCancelQuote(quote.status);
+    return (
+      this.authentication.can('quote.delete') && quote !== undefined && canCancelQuote(quote.status)
+    );
   });
   protected readonly actionsDisabled = computed(() => this.cancelling() || this.confirming());
   protected readonly cancellationVisible = computed(
@@ -141,7 +145,7 @@ export class QuoteDetail {
           this.copied() ? 'backOffice.affair.portalLinkCopied' : 'backOffice.affair.copyPortalLink',
         ),
       });
-    if (canCancelQuote(quote.status))
+    if (this.canCancel())
       actions.push({
         id: 'cancel',
         label: this.i18n.t('backOffice.quote.cancel'),
@@ -263,7 +267,10 @@ export class QuoteDetail {
     }
     const finishLoading = this.pendingTasks.add();
     try {
-      const [outcome, orders] = await Promise.all([this.api.get(id), this.ordersApi.list()]);
+      const [outcome, orders] = await Promise.all([
+        this.api.get(id),
+        this.authentication.can('order.read') ? this.ordersApi.list() : [],
+      ]);
       if (this.destroyRef.destroyed || generation !== this.generation) return;
       if (!outcome.success) {
         this.error.set(outcome.code);
@@ -355,3 +362,5 @@ export class QuoteDetail {
     }
   }
 }
+import { Authentication } from '@backoffice/authentication';
+import { Can } from '@backoffice/can';

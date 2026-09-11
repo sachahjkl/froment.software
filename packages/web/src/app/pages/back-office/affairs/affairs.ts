@@ -78,6 +78,7 @@ interface Affair {
   host: { class: 'page-container' },
   selector: 'app-affairs',
   imports: [
+    Can,
     EntityIcon,
     Badge,
     Button,
@@ -359,3 +360,4 @@ export class Affairs {
   }
 }
 import { formatMoney } from '@froment/l10n';
+import { Can } from '@backoffice/can';

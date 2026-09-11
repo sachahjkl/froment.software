@@ -5,7 +5,13 @@
     >
     <h1 id="presets-title">{{ i18n.t('backOffice.conditionPresets.title') }}</h1>
     <p>{{ i18n.t('backOffice.conditionPresets.intro') }}</p>
-    <a appLinkButton pageActions variant="primary" routerLink="new" [queryParams]="table.params()"
+    <a
+      *appCan="'condition.manage'"
+      appLinkButton
+      pageActions
+      variant="primary"
+      routerLink="new"
+      [queryParams]="table.params()"
       >{{ i18n.t('configurationWorkspace.newCondition') }}</a
     >
   </app-page-header>
@@ -62,12 +68,15 @@
           @for (result of table.results(); track result.item.id) { @let preset = result.item;
           <tr>
             <th scope="row">
+              @if (authentication.can('condition.manage')) {
               <a
                 [routerLink]="[preset.id, 'edit']"
                 [queryParams]="table.params()"
                 [appSearchHighlight]="table.match(result, 'name')"
                 >{{ preset.name }}</a
               >
+              } @else {
+              <span [appSearchHighlight]="table.match(result, 'name')">{{ preset.name }}</span> }
             </th>
             <td class="preset-conditions">
               <span [appSearchHighlight]="table.match(result, 'conditions')"
@@ -81,6 +90,7 @@
                 type="button"
                 [disabled]="saving()"
                 (click)="remove(preset)"
+                *appCan="'condition.manage'"
               >
                 {{ i18n.t('backOffice.conditionPresets.delete') }}
               </button>

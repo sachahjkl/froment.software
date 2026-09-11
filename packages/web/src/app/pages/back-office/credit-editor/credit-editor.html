@@ -8,7 +8,7 @@
   } @else if (!task.completed() && task.invoice()) { @if (!eligible()) {
   <p appNotice>{{ i18n.t('billingWorkspace.unavailable') }}</p>
   } @else {
-  <form class="task-form ds-panel form-panel" (submit)="save($event)">
+  <form *appCan="'invoice.credit'" class="task-form ds-panel form-panel" (submit)="save($event)">
     <label class="field"
       >{{ i18n.t('credit.reason') }}<textarea
         class="input"

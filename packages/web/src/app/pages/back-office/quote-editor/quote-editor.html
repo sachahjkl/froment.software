@@ -55,7 +55,7 @@
     >{{ i18n.t('commercial.backQuote') }}</a
   >
   } } @else {
-  <form (submit)="save($event)" novalidate>
+  <form *appCan="writePermission()" (submit)="save($event)" novalidate>
     <div class="quote-identity ds-panel form-panel">
       @if (isNew()) {
       <label class="field"
@@ -81,7 +81,9 @@
       @if (clients().length === 0) {
       <p appNotice>
         {{ i18n.t('backOffice.quote.noClient') }}
-        <a routerLink="/backoffice/clients/new">{{ i18n.t('backOffice.quote.manageClients') }}</a>
+        <a *appCan="'client.create'" routerLink="/backoffice/clients/new"
+          >{{ i18n.t('backOffice.quote.manageClients') }}</a
+        >
       </p>
       } }
       <label class="field"
@@ -127,6 +129,7 @@
           type="button"
           [disabled]="saveDisabled() || quoteForm.lines.length >= 20"
           (click)="createCatalogItem()"
+          *appCan="'catalog.manage'"
           id="quote-create-catalog"
         >
           {{ i18n.t('catalog.create') }}
@@ -229,6 +232,7 @@
           type="button"
           [disabled]="saveDisabled()"
           (click)="createConditionPreset()"
+          *appCan="'condition.manage'"
           id="quote-create-conditions"
         >
           {{ i18n.t('configurationWorkspace.newCondition') }}

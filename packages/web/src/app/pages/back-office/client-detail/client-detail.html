@@ -18,16 +18,19 @@
         appLinkButton
         variant="primary"
         routerLink="/backoffice/quotes/new"
+        *appCan="'quote.create'"
         [queryParams]="{ clientId: current.id }"
         >{{ i18n.t('backOffice.dashboard.createQuote') }}</a
       >
       <a
         appLinkButton
         [routerLink]="['/backoffice/clients', current.id, 'edit']"
+        *appCan="'client.update'"
         queryParamsHandling="preserve"
         >{{ i18n.t('clientsWorkspace.edit') }}</a
       >
       <app-action-menu
+        *appCan="'client.archive'"
         [label]="i18n.t('backOffice.clients.actions')"
         [actions]="[{ id: 'archive', label: i18n.t('backOffice.clients.archive'), danger: true }]"
         [disabled]="archiving()"
@@ -41,7 +44,13 @@
   } @else if (client(); as current) { @if (archived()) {
   <div class="archived-notice" appNotice role="status">
     <p>{{ i18n.t('backOffice.clientDetail.archived') }}</p>
-    <button appButton type="button" [disabled]="reactivating()" (click)="reactivate()">
+    <button
+      *appCan="'client.archive'"
+      appButton
+      type="button"
+      [disabled]="reactivating()"
+      (click)="reactivate()"
+    >
       {{ i18n.t(reactivateLabel()) }}
     </button>
   </div>
@@ -541,6 +550,7 @@
                   type="button"
                   [disabled]="revokingAccessId() !== undefined"
                   (click)="revokeAccess(access)"
+                  *appCan="'client.access.manage'"
                 >
                   {{ i18n.t(revokeLabel(access)) }}
                 </button>
@@ -561,6 +571,7 @@
         appLinkButton
         variant="primary"
         [routerLink]="['/backoffice/clients', current.id, 'access', 'new']"
+        *appCan="'client.access.manage'"
         queryParamsHandling="preserve"
         >{{ i18n.t('backOffice.clientDetail.accessCreate') }}</a
       >

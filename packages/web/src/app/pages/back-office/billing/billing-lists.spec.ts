@@ -1,4 +1,5 @@
 import { provideHttpClient } from '@angular/common/http';
+import { provideAccount } from '@backoffice/account.spec-helper';
 import { type Injector } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
@@ -24,6 +25,7 @@ import {
 } from './billing.spec-helper';
 
 describe('Billing lists', () => {
+  beforeEach(() => TestBed.configureTestingModule({ providers: [provideAccount()] }));
   let scrolling: ReturnType<typeof installScrollIntoView>;
   beforeEach(() => {
     scrolling = installScrollIntoView();

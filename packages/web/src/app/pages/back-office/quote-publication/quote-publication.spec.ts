@@ -14,6 +14,7 @@ import {
 } from '../quote-detail/commercial.spec-helper';
 
 describe('Quote publication', () => {
+  beforeEach(() => TestBed.configureTestingModule({ providers: [provideAccount()] }));
   const get = vi.fn();
   const renderPdf = vi.fn();
   const send = vi.fn();
@@ -232,3 +233,4 @@ describe('Quote publication', () => {
     expect(root.querySelector('[role="alert"]')?.textContent).toMatch(/PDF/);
   });
 });
+import { provideAccount } from '@backoffice/account.spec-helper';

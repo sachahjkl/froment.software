@@ -1,6 +1,14 @@
 import { isPlatformBrowser } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
-import { inject, Injectable, PLATFORM_ID } from '@angular/core';
+import {
+  computed,
+  effect,
+  inject,
+  Injectable,
+  PLATFORM_ID,
+  signal,
+  untracked,
+} from '@angular/core';
 import {
   AuthenticationFailure,
   BrowserSession,
@@ -13,6 +21,7 @@ import {
   AccountSessionList,
   AccountSessionFailure,
   type PasswordChangeRequestValue,
+  type PermissionCodeValue,
 } from '@froment/contracts';
 import { Schema } from 'effect';
 import { firstValueFrom } from 'rxjs';
@@ -26,12 +35,61 @@ export type AuthenticationOutcome =
   | { readonly success: true; readonly mode: LoginModeValue }
   | ApiFailure<AuthenticationFailureValue, 'authentication.error'>;
 
+interface AccountKey {
+  readonly session: number;
+  readonly refresh: number;
+}
+
 @Injectable({ providedIn: 'root' })
 export class Authentication {
   private readonly http = inject(HttpClient);
   private readonly isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
   private readonly sessions = inject(BrowserSessionStore);
   private readonly cookieLock = inject(AuthCookieLock);
+  private readonly accountObserved = signal(false);
+  private readonly accountRefresh = signal(0);
+  private readonly accountKey = computed<AccountKey>(() => ({
+    session: this.sessions.revision(),
+    refresh: this.accountRefresh(),
+  }));
+  private readonly accountCache = signal<
+    | {
+        readonly key: AccountKey;
+        readonly value: CurrentAccountValue;
+      }
+    | undefined
+  >(undefined);
+  private accountRequest:
+    | {
+        readonly key: AccountKey;
+        readonly promise: Promise<CurrentAccountValue | undefined>;
+      }
+    | undefined;
+  readonly account = computed(() => {
+    const cached = this.accountCache();
+    return !this.sessions.refreshing() && cached?.key === this.accountKey()
+      ? cached.value
+      : undefined;
+  });
+
+  constructor() {
+    effect(() => {
+      this.accountKey();
+      if (!this.accountObserved() || this.sessions.refreshing()) return;
+      untracked(() => {
+        if (this.sessions.mode() !== undefined) void this.currentAccount();
+      });
+    });
+  }
+
+  can(permission: PermissionCodeValue): boolean {
+    return this.account()?.permissions.includes(permission) === true;
+  }
+
+  async refreshAccount(): Promise<CurrentAccountValue | undefined> {
+    this.accountRefresh.update((revision) => revision + 1);
+    return this.currentAccount();
+  }
 
   async authenticatePasskey(assertion: () => Promise<AuthenticationResponseJSON>) {
     try {
@@ -58,13 +116,35 @@ export class Authentication {
     }
   }
 
-  async currentAccount(): Promise<CurrentAccountValue | undefined> {
-    if (!this.isBrowser) return undefined;
+  currentAccount(): Promise<CurrentAccountValue | undefined> {
+    if (!this.isBrowser) return Promise.resolve(undefined);
+    this.accountObserved.set(true);
+    if (this.sessions.refreshing()) {
+      return this.sessions
+        .refresh()
+        .then((mode) => (mode === undefined ? undefined : this.currentAccount()));
+    }
+    if (this.sessions.mode() === undefined) return Promise.resolve(undefined);
+    const key = this.accountKey();
+    const account = this.account();
+    if (account !== undefined) return Promise.resolve(account);
+    if (this.accountRequest?.key === key) return this.accountRequest.promise;
+    const promise = this.loadAccount(key);
+    this.accountRequest = { key, promise };
+    return promise;
+  }
+
+  private async loadAccount(key: AccountKey): Promise<CurrentAccountValue | undefined> {
     try {
       const response = await firstValueFrom(this.http.get<unknown>('/api/auth/account'));
-      return Schema.decodeUnknownSync(CurrentAccount)(response);
+      const value = Schema.decodeUnknownSync(CurrentAccount)(response);
+      if (this.accountKey() !== key) return undefined;
+      this.accountCache.set({ key, value });
+      return value;
     } catch {
       return undefined;
+    } finally {
+      if (this.accountRequest?.key === key) this.accountRequest = undefined;
     }
   }
 

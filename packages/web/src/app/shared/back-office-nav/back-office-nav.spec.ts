@@ -1,8 +1,32 @@
 import { TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
 import { BackOfficeNav } from './back-office-nav';
+import { accountFixture, provideAccount } from '@backoffice/account.spec-helper';
+
+beforeEach(() => TestBed.configureTestingModule({ providers: [provideAccount()] }));
 
 describe('BackOfficeNav', () => {
+  it('hides unauthorized subjects and clears navigation when the account becomes unknown', async () => {
+    const context = accountFixture([
+      'client.read',
+      'quote.read',
+      'order.read',
+      'invoice.read',
+      'bank.read',
+      'issuer.read',
+      'catalog.read',
+    ]);
+    TestBed.configureTestingModule({ providers: [provideRouter([]), context.provider] });
+    const fixture = TestBed.createComponent(BackOfficeNav);
+    await fixture.whenStable();
+    const root: HTMLElement = fixture.nativeElement;
+    expect(root.querySelector('a[href="/backoffice/clients"]')).not.toBeNull();
+    expect(root.querySelector('a[href="/backoffice/equipe"]')).toBeNull();
+    expect(root.querySelector('a[href="/backoffice/courriels"]')).toBeNull();
+    context.account.set(undefined);
+    await fixture.whenStable();
+    expect(root.querySelector('a')).toBeNull();
+  });
   it('marks only one subject active, including associated editors', async () => {
     TestBed.configureTestingModule({ providers: [provideRouter([{ path: '**', children: [] }])] });
     const fixture = TestBed.createComponent(BackOfficeNav);

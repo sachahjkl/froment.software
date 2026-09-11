@@ -48,6 +48,7 @@ import {
 @Component({
   host: { class: 'page-container' },
   imports: [
+    Can,
     EntityIcon,
     Badge,
     Button,
@@ -80,6 +81,7 @@ import {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class Catalog {
+  protected readonly authentication = inject(Authentication);
   protected readonly i18n = inject(I18nService);
   private readonly api = inject(CatalogApi);
   private readonly route = inject(ActivatedRoute);
@@ -291,3 +293,5 @@ export class Catalog {
     return formatFixedDecimal(value, places, this.i18n.language() === 'fr' ? ',' : '.');
   }
 }
+import { Authentication } from '@backoffice/authentication';
+import { Can } from '@backoffice/can';

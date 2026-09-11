@@ -101,12 +101,14 @@
           @let source = result.item;
           <tr>
             <th scope="row">
+              @if (authentication.can('ledger.post')) {
               <a
                 [routerLink]="sourceLink(source.sourceKind, source.sourceId)"
                 [queryParams]="queryParams()"
                 [appSearchHighlight]="result.indices"
                 >{{ source.reference }}</a
               >
+              } @else { <span [appSearchHighlight]="result.indices">{{ source.reference }}</span> }
             </th>
             <td>{{ source.account }}</td>
             <td>{{ i18n.t(source.sourceKind === 'fee' ? 'ledger.fee' : 'ledger.debit') }}</td>

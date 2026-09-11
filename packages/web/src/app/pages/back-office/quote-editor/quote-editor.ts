@@ -87,6 +87,7 @@ const emptyLine = (): QuoteLineModel => ({
   host: { class: 'page-container' },
   selector: 'app-quote-editor',
   imports: [
+    Can,
     Button,
     FormField,
     ObjectPicker,
@@ -101,6 +102,9 @@ const emptyLine = (): QuoteLineModel => ({
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class QuoteEditor {
+  protected readonly writePermission = computed<PermissionCodeValue>(() =>
+    this.isNew() ? 'quote.create' : 'quote.update',
+  );
   private readonly confirmation = inject(Confirmation);
   private readonly catalogApi = inject(CatalogApi);
   protected readonly catalogItems = signal<CatalogItemListValue>([]);
@@ -685,3 +689,5 @@ export class QuoteEditor {
   }
 }
 import { formatMoney } from '@froment/l10n';
+import { Can } from '@backoffice/can';
+import type { PermissionCodeValue } from '@froment/contracts';

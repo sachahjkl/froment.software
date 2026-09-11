@@ -42,6 +42,7 @@ async function configure(query = '') {
 }
 
 describe('ClientAccessEditor', () => {
+  beforeEach(() => TestBed.configureTestingModule({ providers: [provideAccount()] }));
   it('keeps invalid submission enabled and focuses the first invalid field', async () => {
     const { root, harness, api } = await configure();
     expect(root.querySelector<HTMLButtonElement>('[type="submit"]')!.disabled).toBe(false);
@@ -132,3 +133,4 @@ describe('ClientAccessEditor', () => {
     expect(confirmation.request).not.toHaveBeenCalled();
   });
 });
+import { provideAccount } from '@backoffice/account.spec-helper';

@@ -26,7 +26,7 @@ import { canCancelPayment } from '../billing/receipt-cancellation';
 
 @Component({
   selector: 'app-receipt-cancel',
-  imports: [Button, Notice, FormField, TaskFeedback, InvoiceTaskHeader],
+  imports: [Can, Button, Notice, FormField, TaskFeedback, InvoiceTaskHeader],
   providers: [InvoiceTask],
   templateUrl: './receipt-cancel.html',
   styleUrl: './receipt-cancel.scss',
@@ -111,3 +111,4 @@ export class ReceiptCancel {
     return this.task.canDeactivate(this.cancelForm().dirty());
   }
 }
+import { Can } from '@backoffice/can';

@@ -1,10 +1,12 @@
 import { TestBed } from '@angular/core/testing';
+import { provideAccount } from '@backoffice/account.spec-helper';
 import { provideRouter } from '@angular/router';
 import { InvoicesApi } from '@backoffice/invoices-api';
 import { RefundList } from './refund-list';
 import { invoiceFixture } from '../billing/billing.spec-helper';
 
 describe('RefundList', () => {
+  beforeEach(() => TestBed.configureTestingModule({ providers: [provideAccount()] }));
   it('links recorded refunds to their invoice context without a bank transfer form', async () => {
     const invoice = invoiceFixture();
     TestBed.configureTestingModule({

@@ -22,6 +22,19 @@ describe('back-office route organization', () => {
     }
   });
 
+  it.each([
+    ['backoffice/clients/new', 'client.create'],
+    ['backoffice/clients/:clientId/edit', 'client.update'],
+    ['backoffice/quotes/new', 'quote.create'],
+    ['backoffice/quotes/:quoteId/publication', 'quote.send'],
+    ['backoffice/invoices/new', 'invoice.create'],
+    ['backoffice/invoices/:invoiceId/payments/new', 'invoice.mark-paid'],
+    ['backoffice/equipe/invitations/new', 'user.create'],
+  ])('declares the write permission for %s', (path, permission) => {
+    const route = routes.find((entry) => entry.path === path);
+    expect(route?.canActivate).toContain(administratorGuard);
+    expect(route?.data?.['permissions']).toContain(permission);
+  });
   it('keeps administrative subjects separate from company configuration', () => {
     const paths = fullPaths(routes);
     for (const subject of ['equipe', 'api', 'services', 'audit', 'configuration']) {

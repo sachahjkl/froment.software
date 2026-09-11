@@ -47,7 +47,7 @@ const blank = () => ({ reason: '', bookedOn: '' });
 @Component({
   selector: 'app-ledger-reversal',
   host: { class: 'page-container', '(window:beforeunload)': 'beforeUnload($event)' },
-  imports: [Badge, Button, FormField, LocalizedDatePipe, Notice, PageHeader, RouterLink],
+  imports: [Can, Badge, Button, FormField, LocalizedDatePipe, Notice, PageHeader, RouterLink],
   templateUrl: './ledger-reversal.html',
   styleUrl: './ledger-reversal.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -239,3 +239,4 @@ export class LedgerReversal {
       event.preventDefault();
   }
 }
+import { Can } from '@backoffice/can';

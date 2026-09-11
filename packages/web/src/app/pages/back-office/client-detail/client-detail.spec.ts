@@ -88,6 +88,7 @@ async function configure(panel = 'profile', archived = false, query = '') {
 }
 
 describe('ClientDetail', () => {
+  beforeEach(() => TestBed.configureTestingModule({ providers: [provideAccount()] }));
   it('shows a read-only profile and a dedicated edit link', async () => {
     const { root } = await configure();
     expect(root.querySelector('h1')?.textContent?.trim()).toBe('Acme');
@@ -314,3 +315,4 @@ describe('ClientDetail', () => {
     expect(await component.canDeactivate()).toBe(true);
   });
 });
+import { provideAccount } from '@backoffice/account.spec-helper';

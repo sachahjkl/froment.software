@@ -28,6 +28,7 @@ import { ClientDescription } from '../client-description/client-description';
 @Component({
   host: { class: 'page-container' },
   imports: [
+    Can,
     Badge,
     Button,
     Breadcrumbs,
@@ -152,3 +153,4 @@ export class OrderDetail {
     }
   }
 }
+import { Can } from '@backoffice/can';

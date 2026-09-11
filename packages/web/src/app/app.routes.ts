@@ -1,7 +1,12 @@
 import { Routes } from '@angular/router';
 import { HomeComponent } from './pages/home/home.component';
 import { policies } from './pages/policy/policy-documents';
-import { administratorGuard, clientGuard } from './back-office/authentication-guards';
+import {
+  administratorGuard,
+  clientGuard,
+  permissionData,
+  permissionsGuard,
+} from './back-office/authentication-guards';
 import { unsavedChangesGuard } from './back-office/unsaved-changes-guard';
 import { TabPanelOutlet } from './shared/tabs/tab-panel';
 import { billingRoutes } from './pages/back-office/billing/billing.routes';
@@ -153,6 +158,7 @@ export const routes: Routes = [
     canActivate: [administratorGuard],
     data: {
       shell: 'administrator',
+      ...permissionData('client.read', 'quote.read', 'order.read', 'invoice.read'),
       titleKey: 'page.back_office',
       descriptionKey: 'page.description.back_office',
       robots: 'noindex, nofollow',
@@ -219,6 +225,7 @@ export const routes: Routes = [
     data: {
       shell: 'administrator',
       titleKey: 'page.back_office_clients',
+      ...permissionData('client.read'),
       descriptionKey: 'page.description.back_office_clients',
       robots: 'noindex, nofollow',
     },
@@ -234,6 +241,7 @@ export const routes: Routes = [
     canDeactivate: [unsavedChangesGuard],
     data: {
       shell: 'administrator',
+      ...permissionData('client.create'),
       titleKey: 'backOffice.clients.create',
       robots: 'noindex, nofollow',
     },
@@ -248,6 +256,7 @@ export const routes: Routes = [
     canDeactivate: [unsavedChangesGuard],
     data: {
       shell: 'administrator',
+      ...permissionData('client.read', 'client.update'),
       titleKey: 'clientsWorkspace.edit',
       robots: 'noindex, nofollow',
     },
@@ -262,6 +271,7 @@ export const routes: Routes = [
     canDeactivate: [unsavedChangesGuard],
     data: {
       shell: 'administrator',
+      ...permissionData('client.read', 'client.access.manage'),
       titleKey: 'page.back_office_client_detail',
       robots: 'noindex, nofollow',
     },
@@ -277,6 +287,7 @@ export const routes: Routes = [
     data: {
       shell: 'administrator',
       titleKey: 'page.back_office_client_detail',
+      ...permissionData('client.read'),
       descriptionKey: 'page.description.back_office_client_detail',
       robots: 'noindex, nofollow',
     },
@@ -285,7 +296,12 @@ export const routes: Routes = [
       { path: 'profile', component: TabPanelOutlet, data: { panel: 'profile' } },
       { path: 'affairs', component: TabPanelOutlet, data: { panel: 'affairs' } },
       { path: 'documents', component: TabPanelOutlet, data: { panel: 'documents' } },
-      { path: 'access', component: TabPanelOutlet, data: { panel: 'access' } },
+      {
+        path: 'access',
+        component: TabPanelOutlet,
+        canActivate: [permissionsGuard],
+        data: { panel: 'access', ...permissionData('client.access.manage') },
+      },
     ],
   },
   {
@@ -296,6 +312,7 @@ export const routes: Routes = [
     data: {
       shell: 'administrator',
       titleKey: 'page.back_office_quotes',
+      ...permissionData('quote.read', 'order.read', 'invoice.read'),
       descriptionKey: 'page.description.back_office_quotes',
       robots: 'noindex, nofollow',
     },
@@ -308,10 +325,19 @@ export const routes: Routes = [
         (module) => module.AffairDetail,
       ),
     canActivate: [administratorGuard],
-    children: tabRoutes('overview', 'affair-detail', ['overview', 'documents', 'history']),
+    children: [
+      ...tabRoutes('overview', 'affair-detail', ['overview', 'documents']),
+      {
+        path: 'history',
+        component: TabPanelOutlet,
+        canActivate: [permissionsGuard],
+        data: { panel: 'affair-detail', tab: 'history', ...permissionData('audit.read') },
+      },
+    ],
     data: {
       shell: 'administrator',
       titleKey: 'page.back_office_affair_detail',
+      ...permissionData('quote.read', 'order.read', 'invoice.read'),
       descriptionKey: 'page.description.back_office_affair_detail',
       robots: 'noindex, nofollow',
     },
@@ -324,6 +350,13 @@ export const routes: Routes = [
     canDeactivate: [unsavedChangesGuard],
     data: {
       shell: 'administrator',
+      ...permissionData(
+        'quote.create',
+        'client.read',
+        'catalog.read',
+        'condition.read',
+        'issuer.read',
+      ),
       titleKey: 'page.back_office_quote_editor',
       descriptionKey: 'page.description.back_office_quote_editor',
       robots: 'noindex, nofollow',
@@ -337,6 +370,14 @@ export const routes: Routes = [
     canDeactivate: [unsavedChangesGuard],
     data: {
       shell: 'administrator',
+      ...permissionData(
+        'quote.read',
+        'quote.update',
+        'client.read',
+        'catalog.read',
+        'condition.read',
+        'issuer.read',
+      ),
       titleKey: 'page.back_office_quote_editor',
       descriptionKey: 'page.description.back_office_quote_editor',
       robots: 'noindex, nofollow',
@@ -352,6 +393,7 @@ export const routes: Routes = [
     canDeactivate: [unsavedChangesGuard],
     data: {
       shell: 'administrator',
+      ...permissionData('quote.read', 'quote.send'),
       titleKey: 'commercial.publicationTitle',
       robots: 'noindex, nofollow',
     },
@@ -363,14 +405,24 @@ export const routes: Routes = [
     canActivate: [administratorGuard],
     canDeactivate: [unsavedChangesGuard],
     children: tabRoutes('summary', 'quote-detail', ['summary', 'document', 'versions']),
-    data: { shell: 'administrator', titleKey: 'commercial.quote', robots: 'noindex, nofollow' },
+    data: {
+      shell: 'administrator',
+      ...permissionData('quote.read'),
+      titleKey: 'commercial.quote',
+      robots: 'noindex, nofollow',
+    },
   },
   {
     path: 'backoffice/orders/:orderId',
     loadComponent: () =>
       import('./pages/back-office/order-detail/order-detail').then((module) => module.OrderDetail),
     canActivate: [administratorGuard],
-    data: { shell: 'administrator', titleKey: 'commercial.order', robots: 'noindex, nofollow' },
+    data: {
+      shell: 'administrator',
+      ...permissionData('order.read', 'quote.read'),
+      titleKey: 'commercial.order',
+      robots: 'noindex, nofollow',
+    },
   },
   {
     path: 'backoffice/catalogue/new',
@@ -380,7 +432,12 @@ export const routes: Routes = [
       ),
     canActivate: [administratorGuard],
     canDeactivate: [unsavedChangesGuard],
-    data: { shell: 'administrator', titleKey: 'catalog.create', robots: 'noindex, nofollow' },
+    data: {
+      shell: 'administrator',
+      ...permissionData('catalog.manage'),
+      titleKey: 'catalog.create',
+      robots: 'noindex, nofollow',
+    },
   },
   {
     path: 'backoffice/catalogue/:itemId/edit',
@@ -392,6 +449,7 @@ export const routes: Routes = [
     canDeactivate: [unsavedChangesGuard],
     data: {
       shell: 'administrator',
+      ...permissionData('catalog.read', 'catalog.manage'),
       titleKey: 'catalogWorkspace.editTitle',
       robots: 'noindex, nofollow',
     },
@@ -401,7 +459,12 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./pages/back-office/catalog/catalog').then((module) => module.Catalog),
     canActivate: [administratorGuard],
-    data: { shell: 'administrator', titleKey: 'catalog.title', robots: 'noindex, nofollow' },
+    data: {
+      shell: 'administrator',
+      ...permissionData('catalog.read'),
+      titleKey: 'catalog.title',
+      robots: 'noindex, nofollow',
+    },
     children: tabRoutes('active', 'catalog', ['active', 'archived', 'all']),
   },
   {
@@ -429,6 +492,7 @@ export const routes: Routes = [
     canDeactivate: [unsavedChangesGuard],
     data: {
       shell: 'administrator',
+      ...permissionData('email.draft.manage'),
       titleKey: 'emailsWorkspace.newMessage',
       robots: 'noindex, nofollow',
     },
@@ -443,6 +507,7 @@ export const routes: Routes = [
     canDeactivate: [unsavedChangesGuard],
     data: {
       shell: 'administrator',
+      ...permissionData('email.draft.manage'),
       titleKey: 'emailsWorkspace.editDraft',
       robots: 'noindex, nofollow',
     },
@@ -455,6 +520,7 @@ export const routes: Routes = [
     canDeactivate: [unsavedChangesGuard],
     data: {
       shell: 'administrator',
+      ...permissionData('email.draft.manage'),
       titleKey: 'emailsWorkspace.message',
       robots: 'noindex, nofollow',
     },
@@ -469,6 +535,7 @@ export const routes: Routes = [
     canDeactivate: [unsavedChangesGuard],
     data: {
       shell: 'administrator',
+      ...permissionData('email.template.manage'),
       titleKey: 'emailsWorkspace.newTemplate',
       robots: 'noindex, nofollow',
     },
@@ -483,6 +550,7 @@ export const routes: Routes = [
     canDeactivate: [unsavedChangesGuard],
     data: {
       shell: 'administrator',
+      ...permissionData('email.template.manage'),
       titleKey: 'emailsWorkspace.editTemplate',
       robots: 'noindex, nofollow',
     },
@@ -497,6 +565,7 @@ export const routes: Routes = [
     canDeactivate: [unsavedChangesGuard],
     data: {
       shell: 'administrator',
+      ...permissionData('email.reminder.manage'),
       titleKey: 'emailsWorkspace.newReminder',
       robots: 'noindex, nofollow',
     },
@@ -509,11 +578,47 @@ export const routes: Routes = [
     canDeactivate: [unsavedChangesGuard],
     data: {
       shell: 'administrator',
+      ...permissionData('email.draft.manage'),
       titleKey: 'emails.title',
       descriptionKey: 'emails.intro',
       robots: 'noindex, nofollow',
     },
-    children: tabRoutes('messages', 'emails', ['messages', 'drafts', 'reminders', 'templates']),
+    children: [
+      { path: '', redirectTo: 'messages', pathMatch: 'full' },
+      {
+        path: 'messages',
+        component: TabPanelOutlet,
+        canActivate: [permissionsGuard],
+        data: { panel: 'emails', tab: 'messages', ...permissionData('integration.manage') },
+      },
+      {
+        path: 'drafts',
+        component: TabPanelOutlet,
+        canActivate: [permissionsGuard],
+        data: { panel: 'emails', tab: 'drafts', ...permissionData('email.draft.manage') },
+      },
+      {
+        path: 'reminders',
+        component: TabPanelOutlet,
+        canActivate: [permissionsGuard],
+        data: {
+          panel: 'emails',
+          tab: 'reminders',
+          ...permissionData(
+            'email.reminder.manage',
+            'invoice.read',
+            'client.read',
+            'integration.manage',
+          ),
+        },
+      },
+      {
+        path: 'templates',
+        component: TabPanelOutlet,
+        canActivate: [permissionsGuard],
+        data: { panel: 'emails', tab: 'templates', ...permissionData('email.template.manage') },
+      },
+    ],
   },
   {
     path: 'design',

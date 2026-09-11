@@ -25,7 +25,7 @@ import { InvoiceTaskHeader } from '../billing/invoice-task-header';
 
 @Component({
   selector: 'app-credit-editor',
-  imports: [Button, Notice, FormField, TaskFeedback, InvoiceTaskHeader],
+  imports: [Can, Button, Notice, FormField, TaskFeedback, InvoiceTaskHeader],
   providers: [InvoiceTask],
   templateUrl: './credit-editor.html',
   styleUrl: './credit-editor.scss',
@@ -104,3 +104,4 @@ export class CreditEditor {
     return this.task.canDeactivate(this.creditForm().dirty());
   }
 }
+import { Can } from '@backoffice/can';

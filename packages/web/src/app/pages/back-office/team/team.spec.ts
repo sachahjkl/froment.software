@@ -9,6 +9,7 @@ import { TeamJoin } from './team-join';
 import { Team } from './team';
 
 describe('Team', () => {
+  beforeEach(() => TestBed.configureTestingModule({ providers: [provideAccount()] }));
   it('exports team state without personal fields or invitation links', async () => {
     TestBed.configureTestingModule({
       providers: [
@@ -415,3 +416,4 @@ describe('Team', () => {
     expect(await fixture.componentInstance.canDeactivate()).toBe(true);
   });
 });
+import { provideAccount } from '@backoffice/account.spec-helper';

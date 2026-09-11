@@ -8,7 +8,7 @@ import { InvoiceTaskHeader } from '../billing/invoice-task-header';
 
 @Component({
   selector: 'app-invoice-void',
-  imports: [Button, Notice, FormField, TaskFeedback, InvoiceTaskHeader],
+  imports: [Can, Button, Notice, FormField, TaskFeedback, InvoiceTaskHeader],
   providers: [InvoiceTask],
   templateUrl: './invoice-void.html',
   styleUrl: './invoice-void.scss',
@@ -66,3 +66,4 @@ export class InvoiceVoid {
     return this.task.canDeactivate(this.voidForm().dirty());
   }
 }
+import { Can } from '@backoffice/can';

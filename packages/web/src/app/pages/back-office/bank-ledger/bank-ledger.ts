@@ -88,6 +88,7 @@ import {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class BankLedger {
+  protected readonly authentication = inject(Authentication);
   protected readonly i18n = inject(I18nService);
   private readonly api = inject(BankLedgerApi);
   private readonly route = inject(ActivatedRoute);
@@ -107,7 +108,9 @@ export class BankLedger {
   );
   private readonly filterMenu = viewChild(FilterMenu);
   private readonly searchControl = viewChild(ListSearch);
-  protected readonly tabs = computed(() => bankTabs(this.i18n));
+  protected readonly tabs = computed(() =>
+    bankTabs(this.i18n, (permission) => this.authentication.can(permission)),
+  );
   protected readonly viewTabs = computed<readonly TabItem[]>(() =>
     (['sources', 'journal'] as const).map((view) => ({
       path: '.',
@@ -322,3 +325,4 @@ export class BankLedger {
     return formatMoney(cents, this.i18n.language(), 'EUR');
   }
 }
+import { Authentication } from '@backoffice/authentication';

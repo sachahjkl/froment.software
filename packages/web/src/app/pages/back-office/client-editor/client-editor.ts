@@ -49,7 +49,7 @@ const emptyClient = (): ClientInputValue => ({
 @Component({
   host: { class: 'page-container' },
   selector: 'app-client-editor',
-  imports: [Button, FormField, Notice, PageHeader, RouterLink],
+  imports: [Can, Button, FormField, Notice, PageHeader, RouterLink],
   templateUrl: './client-editor.html',
   styleUrl: './client-editor.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -80,6 +80,9 @@ export class ClientEditor {
     if (this.pendingCreation()) return 'client.creation_retry';
     return this.editing() ? 'backOffice.clientDetail.save' : 'backOffice.clients.create';
   });
+  protected readonly writePermission = computed<PermissionCodeValue>(() =>
+    this.editing() ? 'client.update' : 'client.create',
+  );
   protected readonly titleLabel = computed<TranslationKey>(() =>
     this.editing() ? 'clientsWorkspace.edit' : 'backOffice.clients.create',
   );
@@ -302,3 +305,5 @@ export class ClientEditor {
     });
   }
 }
+import { Can } from '@backoffice/can';
+import type { PermissionCodeValue } from '@froment/contracts';

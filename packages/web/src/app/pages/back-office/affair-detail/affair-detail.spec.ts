@@ -19,6 +19,7 @@ import {
 } from '../quote-detail/commercial.spec-helper';
 
 describe('Affair detail', () => {
+  beforeEach(() => TestBed.configureTestingModule({ providers: [provideAccount()] }));
   it('distinguishes paid invoices from issued invoices in the document summary', () => {
     expect(invoiceSummaryBadge('paid')).toEqual({
       label: 'backOffice.invoice.status.paid',
@@ -153,3 +154,4 @@ describe('Affair detail', () => {
     ).toBeNull();
   });
 });
+import { provideAccount } from '@backoffice/account.spec-helper';
