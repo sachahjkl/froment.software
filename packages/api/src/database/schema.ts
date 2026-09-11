@@ -1280,6 +1280,26 @@ export const emailReminders = sqliteTable(
   ],
 );
 
+export const emailReminderRejections = sqliteTable(
+  'email_reminder_rejections',
+  {
+    requestId: text('request_id').primaryKey().notNull(),
+    request: text().notNull(),
+    reason: text().notNull(),
+    createdByUserId: text('created_by_user_id')
+      .notNull()
+      .references(() => users.id),
+    createdAt: text('created_at').notNull(),
+  },
+  (table) => [
+    check('email_reminder_rejections_request_check', sql`json_valid(${table.request})`),
+    check(
+      'email_reminder_rejections_reason_check',
+      sql`${table.reason} in ('invoice-ineligible', 'invoice-changed', 'recipient-invalid', 'mode-changed', 'date-invalid', 'already-scheduled', 'limit')`,
+    ),
+  ],
+);
+
 export const bankTransactions = sqliteTable(
   'bank_transactions',
   {

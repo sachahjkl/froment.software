@@ -12,7 +12,7 @@ import {
 } from '@angular/core';
 import { FormField, disabled, form, required } from '@angular/forms/signals';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { ReminderCreate, type InvoiceListValue } from '@froment/contracts';
+import { ReminderCreate, isReminderRejectionFor, type InvoiceListValue } from '@froment/contracts';
 import { Option, Schema } from 'effect';
 import { InvoicesApi } from '@backoffice/invoices-api';
 import { IntegrationsApi } from '@backoffice/integrations-api';
@@ -119,6 +119,7 @@ export class ReminderEditor {
       event.preventDefault();
   }
   protected async load(): Promise<void> {
+    if (this.busy() || this.confirming()) return;
     this.loading.set(true);
     this.loadFailed.set(false);
     this.error.set(undefined);
@@ -244,20 +245,23 @@ export class ReminderEditor {
   }
   protected async retry(): Promise<void> {
     const pending = this.pending();
-    if (
-      !pending ||
-      !this.store ||
-      this.busy() ||
-      !this.simulation() ||
-      pending.request.expectedMode !== 'simulation'
-    )
+    if (!pending || !this.store || this.busy() || pending.request.expectedMode !== 'simulation')
       return;
     this.busy.set(true);
     this.error.set(undefined);
     try {
       const outcome = await this.api.create(pending.requestId, pending.request);
+      if (this.destroyRef.destroyed) return;
       if (!outcome.success) {
-        this.error.set(outcome.code);
+        const failure = outcome.failure;
+        if (
+          failure?._tag === 'ReminderRejected' &&
+          isReminderRejectionFor(failure, pending.requestId, pending.request)
+        ) {
+          this.store.clear();
+          this.pending.set(undefined);
+          this.error.set(`reminder.rejected.${failure.reason}`);
+        } else this.error.set(outcome.code);
         return;
       }
       this.store.clear();

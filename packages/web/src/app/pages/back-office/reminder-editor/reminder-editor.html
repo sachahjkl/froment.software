@@ -5,6 +5,15 @@
     >
     <h1 id="reminder-title">{{ i18n.t('emailsWorkspace.newReminder') }}</h1>
     <p>{{ i18n.t('emailsWorkspace.simulationOnly') }}</p>
+    <button
+      appButton
+      pageActions
+      type="button"
+      [disabled]="busy() || confirming() || loading()"
+      (click)="load()"
+    >
+      {{ i18n.t('integrations.reload') }}
+    </button>
   </app-page-header>
   @if (error(); as error) {
   <p appNotice variant="danger" role="alert">{{ i18n.t(error) }}</p>

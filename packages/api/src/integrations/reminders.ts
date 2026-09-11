@@ -6,6 +6,8 @@ import {
   ReminderCreate,
   ReminderConflict,
   ReminderNotFound,
+  ReminderRejected,
+  ReminderRejectionReason,
   InvoiceSummary,
 } from '@froment/contracts';
 import { Clock, Context, DateTime, Effect, Layer, Schedule, Schema } from 'effect';
@@ -26,6 +28,11 @@ const Row = Schema.Struct({
   createdByUserId: Schema.String,
   createdAt: Schema.String,
 });
+const RejectionRow = Schema.Struct({
+  request: Schema.fromJsonString(ReminderCreate),
+  reason: ReminderRejectionReason,
+  createdByUserId: Schema.String,
+});
 const select =
   'select id, request, status, reason, operation_id as operationId, created_by_user_id as createdByUserId, created_at as createdAt, (select invoice_number from invoices where id = email_reminders.invoice_id) as invoiceReference from email_reminders';
 const decode = (row: typeof Row.Type) =>
@@ -38,7 +45,7 @@ const Invoice = Schema.Struct({
   paidCents: InvoiceSummary.fields.recordedPaidCents,
   recipient: Schema.String,
 });
-type Failure = DatabaseError | ReminderConflict | ReminderNotFound;
+type Failure = DatabaseError | ReminderConflict | ReminderNotFound | ReminderRejected;
 const failure = (cause: unknown) =>
   cause instanceof ReminderConflict || cause instanceof ReminderNotFound
     ? cause
@@ -82,6 +89,31 @@ export const RemindersLive = Layer.effect(
       const value = Schema.decodeUnknownSync(Invoice)(row);
       return value.totalCents > value.paidCents ? value : undefined;
     };
+    const rejectionReason = (
+      request: typeof ReminderCreate.Type,
+      now: number,
+    ): typeof ReminderRejectionReason.Type | null => {
+      const current = invoice(request.invoiceId);
+      if (current === undefined) return 'invoice-ineligible';
+      if (current.version !== request.expectedVersion) return 'invoice-changed';
+      if (!Schema.is(AccountEmail)(current.recipient)) return 'recipient-invalid';
+      if (provider.mode !== request.expectedMode) return 'mode-changed';
+      const sendAt = DateTime.toEpochMillis(DateTime.makeUnsafe(request.sendAt));
+      if (sendAt <= now || sendAt > now + 366 * 86400000) return 'date-invalid';
+      if (
+        sqlite
+          .prepare("select 1 from email_reminders where invoice_id = ? and status = 'scheduled'")
+          .get(request.invoiceId) !== undefined
+      )
+        return 'already-scheduled';
+      const count = Schema.decodeUnknownSync(Schema.Int)(
+        sqlite
+          .prepare("select count(*) from email_reminders where status = 'scheduled'")
+          .pluck()
+          .get(),
+      );
+      return count >= 100 ? 'limit' : null;
+    };
     const list = Effect.try({
       try: () =>
         Schema.decodeUnknownSync(Schema.Array(Row))(
@@ -99,7 +131,7 @@ export const RemindersLive = Layer.effect(
       userId: string,
     ) {
       const now = yield* Clock.currentTimeMillis;
-      return yield* Effect.try({
+      const result = yield* Effect.try({
         try: () =>
           sqlite
             .transaction(() => {
@@ -110,32 +142,56 @@ export const RemindersLive = Layer.effect(
                   return decode(saved);
                 throw new ReminderConflict({ code: 'reminder.conflict' });
               }
-              const current = invoice(request.invoiceId);
-              const sendAt = DateTime.toEpochMillis(DateTime.makeUnsafe(request.sendAt));
+              const rejected = sqlite
+                .prepare(
+                  'select request, reason, created_by_user_id as createdByUserId from email_reminder_rejections where request_id = ?',
+                )
+                .get(id);
+              if (rejected !== undefined) {
+                const saved = Schema.decodeUnknownSync(RejectionRow)(rejected);
+                if (saved.createdByUserId !== userId || !isDeepStrictEqual(saved.request, request))
+                  throw new ReminderConflict({ code: 'reminder.conflict' });
+                return new ReminderRejected({
+                  code: 'reminder.rejected',
+                  requestId: id,
+                  request: saved.request,
+                  reason: saved.reason,
+                });
+              }
               if (
-                current === undefined ||
-                current.version !== request.expectedVersion ||
-                !Schema.is(AccountEmail)(current.recipient) ||
-                provider.mode !== request.expectedMode ||
-                sendAt <= now ||
-                sendAt > now + 366 * 86400000 ||
-                sqlite
-                  .prepare(
-                    "select 1 from email_reminders where invoice_id = ? and status = 'scheduled'",
-                  )
-                  .get(request.invoiceId) !== undefined ||
                 sqlite
                   .prepare('select 1 from integration_operations where request_id = ?')
                   .get(id) !== undefined ||
-                sqlite.prepare('select 1 from email_drafts where id = ?').get(id) !== undefined ||
-                Schema.decodeUnknownSync(Schema.Int)(
-                  sqlite
-                    .prepare("select count(*) from email_reminders where status = 'scheduled'")
-                    .pluck()
-                    .get(),
-                ) >= 100
+                sqlite.prepare('select 1 from email_drafts where id = ?').get(id) !== undefined
               )
                 throw new ReminderConflict({ code: 'reminder.conflict' });
+              const reason = rejectionReason(request, now);
+              if (reason !== null) {
+                sqlite
+                  .prepare(`insert into email_reminder_rejections (request_id, request, reason, created_by_user_id, created_at)
+                  values (?, ?, ?, ?, ?)`)
+                  .run(
+                    id,
+                    JSON.stringify(request),
+                    reason,
+                    userId,
+                    DateTime.formatIso(DateTime.makeUnsafe(now)),
+                  );
+                audit.insert({
+                  action: 'email.reminder-rejected',
+                  actorUserId: userId,
+                  resourceType: 'integration',
+                  resourceId: id,
+                  occurredAt: now,
+                  metadata: { reason },
+                });
+                return new ReminderRejected({
+                  code: 'reminder.rejected',
+                  requestId: id,
+                  request,
+                  reason,
+                });
+              }
               sqlite
                 .prepare(
                   'insert into email_reminders (id, invoice_id, request, send_at, status, created_by_user_id, created_at) values (?, ?, ?, ?, ?, ?, ?)',
@@ -161,6 +217,9 @@ export const RemindersLive = Layer.effect(
             .immediate(),
         catch: failure,
       });
+      // Commit the refusal before returning its API error.
+      if (result instanceof ReminderRejected) return yield* result;
+      return result;
     });
     const cancel = Effect.fn('Reminders.cancel')(function* (id: string, userId: string) {
       const now = yield* Clock.currentTimeMillis;

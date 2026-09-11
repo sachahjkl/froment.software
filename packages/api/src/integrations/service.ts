@@ -119,6 +119,9 @@ const makeIntegrations = Effect.gen(function* () {
             if (
               database.sqlite
                 .prepare('select 1 from email_reminders where id = ?')
+                .get(request.requestId) !== undefined ||
+              database.sqlite
+                .prepare('select 1 from email_reminder_rejections where request_id = ?')
                 .get(request.requestId) !== undefined
             )
               throw new IntegrationConflict({ code: 'integration.request_conflict' });

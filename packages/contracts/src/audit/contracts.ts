@@ -21,6 +21,7 @@ export const AuditActions = [
   'email.template-saved',
   'email.template-archived',
   'email.reminder-scheduled',
+  'email.reminder-rejected',
   'email.reminder-cancelled',
   'email.reminder-processed',
   'email.draft-archived',

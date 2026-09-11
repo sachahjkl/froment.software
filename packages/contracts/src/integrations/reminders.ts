@@ -19,6 +19,36 @@ export const ReminderCreate = Schema.Struct({
   ...ReminderSchedule.fields,
   expectedVersion: PositiveSafeInteger,
 });
+export const ReminderRejectionReason = Schema.Literals([
+  'invoice-ineligible',
+  'invoice-changed',
+  'recipient-invalid',
+  'mode-changed',
+  'date-invalid',
+  'already-scheduled',
+  'limit',
+]);
+export class ReminderRejected extends Schema.TaggedError<ReminderRejected>()(
+  'ReminderRejected',
+  {
+    code: Schema.Literal('reminder.rejected'),
+    requestId: ReminderId,
+    request: ReminderCreate,
+    reason: ReminderRejectionReason,
+  },
+  { httpApiStatus: 409 },
+) {}
+export const isReminderRejectionFor = (
+  rejection: ReminderRejected,
+  requestId: string,
+  request: typeof ReminderCreate.Type,
+): boolean =>
+  rejection.requestId === requestId &&
+  rejection.request.invoiceId === request.invoiceId &&
+  rejection.request.expectedVersion === request.expectedVersion &&
+  rejection.request.sendAt === request.sendAt &&
+  rejection.request.expectedMode === request.expectedMode &&
+  rejection.request.language === request.language;
 export const Reminder = Schema.Struct({
   invoiceReference: Schema.NonEmptyString,
   ...ReminderCreate.fields,
@@ -49,6 +79,7 @@ export class ReminderNotFound extends Schema.TaggedError<ReminderNotFound>()(
 ) {}
 export const ReminderFailure = Schema.Union([
   ReminderConflict,
+  ReminderRejected,
   ReminderNotFound,
   AuthenticationRequired,
   PermissionDenied,

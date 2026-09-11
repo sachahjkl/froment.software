@@ -26,7 +26,22 @@ export const reminderText = {
     'reminder.error':
       'Impossible de traiter la programmation. Les données du formulaire restent inchangées.',
     'reminder.conflict':
-      'Vérifiez la facture, la date future et le mode. Une seule relance active par facture est autorisée, dans la limite de 100.',
+      'Cet identifiant correspond à une autre demande. Le résultat de votre demande reste inconnu. Conservez la demande d’origine.',
+    'reminder.rejected': 'Le serveur a refusé cette programmation avant sa création.',
+    'reminder.rejected.invoice-ineligible':
+      'Aucune relance créée : la facture n’est plus éligible. Actualisez les factures et choisissez une facture non soldée.',
+    'reminder.rejected.invoice-changed':
+      'Aucune relance créée : la version de la facture a changé. Actualisez les factures avant de recommencer.',
+    'reminder.rejected.recipient-invalid':
+      'Aucune relance créée : l’adresse du client est invalide. Corrigez cette adresse avant de recommencer.',
+    'reminder.rejected.mode-changed':
+      'Aucune relance créée : le mode du fournisseur a changé. Actualisez les accès avant de recommencer.',
+    'reminder.rejected.date-invalid':
+      'Aucune relance créée : choisissez une date future dans les 366 jours.',
+    'reminder.rejected.already-scheduled':
+      'Aucune relance créée : cette facture possède déjà une relance programmée. Consultez les relances existantes.',
+    'reminder.rejected.limit':
+      'Aucune relance créée : la limite de 100 programmations actives est atteinte.',
     'reminder.not_found': 'Cette relance n’existe pas.',
   },
   en: {
@@ -53,7 +68,21 @@ export const reminderText = {
     'reminder.mode-changed': 'The provider mode changed. No automatic submission.',
     'reminder.error': 'The scheduling operation failed. The form data remains unchanged.',
     'reminder.conflict':
-      'Check the invoice, future date, and mode. Only one active reminder per invoice is allowed, with a limit of 100.',
+      'This identifier belongs to another request. Your request result remains unknown. Keep the original request.',
+    'reminder.rejected': 'The server rejected this schedule before creating it.',
+    'reminder.rejected.invoice-ineligible':
+      'No reminder created: the invoice is no longer eligible. Refresh the invoices and select an unpaid invoice.',
+    'reminder.rejected.invoice-changed':
+      'No reminder created: the invoice version changed. Refresh the invoices before trying again.',
+    'reminder.rejected.recipient-invalid':
+      'No reminder created: the client address is invalid. Correct the address before trying again.',
+    'reminder.rejected.mode-changed':
+      'No reminder created: the provider mode changed. Refresh access before trying again.',
+    'reminder.rejected.date-invalid': 'No reminder created: select a future time within 366 days.',
+    'reminder.rejected.already-scheduled':
+      'No reminder created: this invoice already has a scheduled reminder. Check the existing reminders.',
+    'reminder.rejected.limit':
+      'No reminder created: the limit of 100 active schedules has been reached.',
     'reminder.not_found': 'This reminder does not exist.',
   },
 };

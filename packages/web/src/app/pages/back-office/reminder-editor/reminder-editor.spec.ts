@@ -1,4 +1,5 @@
 import { ReminderEditor } from './reminder-editor';
+import { ReminderRejected, type ReminderCreate } from '@froment/contracts';
 import { invoiceId, setupEmailPage } from '../emails/email-workspace.spec-helper';
 import { vi } from 'vitest';
 
@@ -157,6 +158,113 @@ describe('ReminderEditor', () => {
     await save();
     expect(reminders.create.mock.calls[1]).toEqual(reminders.create.mock.calls[0]);
     expect(router.url).toBe('/backoffice/courriels/reminders');
+  });
+  it.each(['invoice-ineligible', 'date-invalid'] as const)(
+    'unlocks the form after a precise %s refusal and uses a new identifier after correction',
+    async (reason) => {
+      const { harness, reminders, reminderStore, confirmation, fill, save, invoices } =
+        await setupEmailPage(`/backoffice/courriels/reminders/new?invoice=${invoiceId}`);
+      const component = harness.routeDebugElement!.componentInstance as ReminderEditor;
+      confirmation.request.mockResolvedValue(true);
+      reminders.create.mockImplementationOnce(
+        async (requestId: string, request: typeof ReminderCreate.Type) => ({
+          success: false,
+          code: 'reminder.rejected',
+          failure: new ReminderRejected({ code: 'reminder.rejected', requestId, request, reason }),
+        }),
+      );
+      await fill('reminder-date', '2026-10-01T10:00');
+      await save();
+      const original = reminders.create.mock.calls[0];
+      expect(component['pending']()).toBeUndefined();
+      expect(reminderStore.read()).toBeUndefined();
+      expect(component['scheduleForm']().disabled()).toBe(false);
+      expect(component['model']().date).toBe('2026-10-01T10:00');
+      expect(component['error']()).toBe(`reminder.rejected.${reason}`);
+      await component['load']();
+      expect(invoices.list).toHaveBeenCalledTimes(2);
+      await fill('reminder-date', '2026-10-02T10:00');
+      await save();
+      expect(reminders.create.mock.calls[1]?.[0]).not.toBe(original?.[0]);
+      expect(reminders.create.mock.calls[1]?.[1].expectedVersion).toBe(
+        original?.[1].expectedVersion,
+      );
+    },
+  );
+  it.each(['conflict', 'wrong-identifier', 'changed-request', 'permission'] as const)(
+    'keeps the original request after a %s response that cannot confirm its refusal',
+    async (kind) => {
+      const { harness, reminders, reminderStore, confirmation, fill, save } = await setupEmailPage(
+        `/backoffice/courriels/reminders/new?invoice=${invoiceId}`,
+      );
+      const component = harness.routeDebugElement!.componentInstance as ReminderEditor;
+      confirmation.request.mockResolvedValue(true);
+      reminders.create.mockImplementationOnce(
+        async (requestId: string, request: typeof ReminderCreate.Type) => {
+          if (kind === 'conflict')
+            return {
+              success: false,
+              code: 'reminder.conflict',
+              failure: { _tag: 'ReminderConflict', code: 'reminder.conflict' },
+            };
+          if (kind === 'permission')
+            return { success: false, code: 'authentication.permission_denied' };
+          return {
+            success: false,
+            code: 'reminder.rejected',
+            failure: new ReminderRejected({
+              code: 'reminder.rejected',
+              reason: 'date-invalid',
+              requestId: kind === 'wrong-identifier' ? crypto.randomUUID() : requestId,
+              request:
+                kind === 'changed-request'
+                  ? { ...request, expectedVersion: request.expectedVersion + 1 }
+                  : request,
+            }),
+          };
+        },
+      );
+      await fill('reminder-date', '2026-10-01T10:00');
+      await save();
+      const original = reminderStore.read();
+      expect(original).toBeDefined();
+      expect(component['pending']()).toEqual(original);
+      expect(component['scheduleForm']().disabled()).toBe(true);
+      await component['load']();
+      expect(reminderStore.read()).toEqual(original);
+      await component['retry']();
+      expect(reminders.create.mock.calls[1]).toEqual(reminders.create.mock.calls[0]);
+    },
+  );
+  it('retries an uncertain simulation request unchanged after the provider mode changes', async () => {
+    const { harness, api, reminders, reminderStore, confirmation, fill, save } =
+      await setupEmailPage(`/backoffice/courriels/reminders/new?invoice=${invoiceId}`);
+    const component = harness.routeDebugElement!.componentInstance as ReminderEditor;
+    confirmation.request.mockResolvedValue(true);
+    reminders.create.mockResolvedValueOnce({ success: false, code: 'reminder.error' });
+    await fill('reminder-date', '2026-10-01T10:00');
+    await save();
+    const original = reminderStore.read();
+    api.status.mockResolvedValue([{ kind: 'email', mode: 'live' }]);
+    reminders.create.mockImplementationOnce(
+      async (requestId: string, request: typeof ReminderCreate.Type) => ({
+        success: false,
+        code: 'reminder.rejected',
+        failure: new ReminderRejected({
+          code: 'reminder.rejected',
+          requestId,
+          request,
+          reason: 'mode-changed',
+        }),
+      }),
+    );
+    await component['load']();
+    await component['retry']();
+    expect(reminders.create.mock.calls[1]).toEqual([original?.requestId, original?.request]);
+    expect(reminderStore.read()).toBeUndefined();
+    expect(component['pending']()).toBeUndefined();
+    await component['schedule'](new SubmitEvent('submit'));
+    expect(reminders.create).toHaveBeenCalledTimes(2);
   });
   it('rejects missing invoices and invalid dates before writing', async () => {
     const { reminders, root, fill, save, harness } = await setupEmailPage(

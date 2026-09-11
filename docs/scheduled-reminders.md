@@ -16,6 +16,25 @@ La programmation exige une facture émise, un solde positif et une adresse clien
 Elle vérifie la version de la facture.
 Un UUID v4 stable rend les nouvelles tentatives de création idempotentes.
 
+## Refus et résultat inconnu
+
+Si une réponse est perdue, réessayez avec le même UUID et la demande d’origine.
+L’éditeur conserve cette demande dans son stockage de reprise et bloque ses modifications.
+Un conflit d’identifiant, une erreur de transport ou un refus de permission ne prouve pas l’absence d’une programmation antérieure.
+
+Le contrat `ReminderRejected` confirme un refus avant création pour un UUID et une demande précis.
+Il indique la raison : facture, adresse, mode, date, programmation existante ou limite atteinte.
+SQLite conserve ce refus et son auteur dans `email_reminder_rejections`, dans la même transaction que l’événement d’audit.
+Une nouvelle tentative identique restitue ce refus, même si les conditions ont changé depuis.
+Une demande modifiée ou un autre auteur reçoit un conflit, pas une confirmation de refus.
+Les brouillons et soumissions de courriels ne peuvent pas réutiliser cet UUID.
+
+Après un refus confirmé pour sa demande exacte, l’éditeur retire la demande de son stockage de reprise.
+Les champs deviennent modifiables sans perdre leur contenu.
+Corrigez les valeurs ou actualisez les factures et les accès.
+Une nouvelle programmation utilise un nouvel UUID.
+Une reprise conserve toujours le mode d’origine, même après un changement de configuration.
+
 ## Traitement durable
 
 Le service Effect `Reminders` expose `list`, `create`, `cancel` et `runPending`.
@@ -60,6 +79,7 @@ Son opération possède alors son propre historique.
 
 L’audit conserve la création, l’annulation et le résultat de la préparation.
 La route `GET /api/reminders` retourne au plus 100 lignes, avec priorité aux programmations actives.
+Elle trie les programmations par échéance croissante, puis l’historique par échéance décroissante.
 Les routes exigent `email.reminder.manage`, `invoice.read`, `client.read` et `integration.manage`.
 La migration attribue la nouvelle permission au rôle administrateur, sans modifier les jetons API.
 
