@@ -13,6 +13,7 @@ Cette reprise concerne la disposition, la hiérarchie et la lisibilité, pas les
 - Sur un formulaire à plusieurs groupes, appliquez le fond à chaque groupe, pas au formulaire entier.
 - Regroupez les champs liés avec `.field-grid` et réservez `.wide` aux champs occupant toute la ligne.
 - Conservez un seul titre `h1` par page, y compris dans les pages de configuration imbriquées.
+- Appliquez `text-wrap: balance` aux titres `h1` à `h6` avec la règle globale, sans répétition locale.
 - Rendez la valeur complète accessible lorsqu’un texte est tronqué.
 
 ## Surfaces et composition
