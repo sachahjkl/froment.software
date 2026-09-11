@@ -53,6 +53,7 @@ describe('Login', () => {
 
     expect(auth.calls).toEqual([['administrator@example.test', 'administrator-password']]);
     expect(navigate).toHaveBeenCalledWith('/backoffice/dashboard');
+    expect(root.querySelector<HTMLButtonElement>('button[type="submit"]')?.disabled).toBe(false);
   });
 
   it('returns a client to the requested portal document', async () => {
