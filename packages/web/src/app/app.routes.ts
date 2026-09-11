@@ -12,6 +12,7 @@ import { teamRoutes } from './pages/back-office/team/team.routes';
 import { apiTokenRoutes } from './pages/back-office/api-tokens/api-token.routes';
 import { serviceRoutes } from './pages/back-office/connections/service.routes';
 import { auditRoute } from './pages/back-office/configuration/audit/audit.routes';
+import { publicQuoteContextChanged } from './public-quote/public-quote-navigation';
 
 const tabRoutes = (defaultPath: string, panel: string, paths: readonly string[]): Routes => [
   { path: '', redirectTo: defaultPath, pathMatch: 'full' },
@@ -93,6 +94,7 @@ export const routes: Routes = [
   {
     path: 'quote',
     canDeactivate: [unsavedChangesGuard],
+    runGuardsAndResolvers: publicQuoteContextChanged,
     loadComponent: () =>
       import('./pages/public-quote/public-quote').then((module) => module.PublicQuote),
     data: {

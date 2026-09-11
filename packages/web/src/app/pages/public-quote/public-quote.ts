@@ -1,4 +1,3 @@
-import { DOCUMENT } from '@angular/common';
 import {
   afterNextRender,
   ChangeDetectionStrategy,
@@ -9,6 +8,7 @@ import {
   inject,
   signal,
 } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import {
   disabled,
   FormField,
@@ -28,6 +28,7 @@ import {
   type QuoteLinkTokenValue,
 } from '@froment/contracts';
 import { Option, Schema } from 'effect';
+import { distinctUntilChanged } from 'rxjs';
 
 import { I18nService, type TranslationKey } from '@app/i18n.service';
 import { PublicQuoteApi } from '../../public-quote/public-quote-api';
@@ -63,7 +64,6 @@ export class PublicQuote {
   protected readonly i18n = inject(I18nService);
   private readonly api = inject(PublicQuoteApi);
   private readonly destroyRef = inject(DestroyRef);
-  private readonly document = inject(DOCUMENT);
   private readonly sanitizer = inject(DomSanitizer);
   private readonly confirmation = inject(Confirmation);
   private readonly router = inject(Router);
@@ -71,6 +71,7 @@ export class PublicQuote {
   private readonly signatureModel = signal({ signerName: '', signature: '', consent: false });
   private token: QuoteLinkTokenValue | undefined;
   private pdfObjectUrl: string | undefined;
+  private loadGeneration = 0;
 
   protected readonly loading = signal(true);
   protected readonly signing = signal(false);
@@ -138,16 +139,20 @@ export class PublicQuote {
 
   constructor() {
     this.destroyRef.onDestroy(() => this.releasePdf());
-    afterNextRender(() => void this.load());
+    afterNextRender(() => {
+      this.route.fragment
+        .pipe(distinctUntilChanged(), takeUntilDestroyed(this.destroyRef))
+        .subscribe((fragment) => void this.load(fragment));
+    });
   }
 
   async canDeactivate(): Promise<boolean> {
-    return (
-      !this.signing() &&
-      (this.acceptance() !== undefined ||
-        !this.signatureForm().dirty() ||
-        (await this.confirmation.request(this.i18n.t('backOffice.clientDetail.unsavedChanges'))))
+    if (this.signing()) return false;
+    if (this.acceptance() !== undefined || !this.signatureForm().dirty()) return true;
+    const confirmed = await this.confirmation.request(
+      this.i18n.t('backOffice.clientDetail.unsavedChanges'),
     );
+    return confirmed && !this.signing();
   }
 
   @HostListener('window:beforeunload', ['$event'])
@@ -173,7 +178,8 @@ export class PublicQuote {
     }
     void submit(this.signatureForm, async () => {
       const token = this.token;
-      if (token === undefined) return;
+      const generation = this.loadGeneration;
+      if (token === undefined || token !== this.route.snapshot.fragment) return;
       this.signing.set(true);
       this.error.set(undefined);
       const model = this.signatureModel();
@@ -184,7 +190,7 @@ export class PublicQuote {
           consent: true,
           signature: { kind: 'typed', value: model.signature },
         });
-        if (this.destroyRef.destroyed) return;
+        if (!this.isCurrent(generation)) return;
         if (!outcome.success) {
           this.error.set(this.errorKey(outcome.code));
           return;
@@ -192,11 +198,11 @@ export class PublicQuote {
         this.acceptance.set(outcome.result);
         this.signatureForm().reset();
       } catch {
-        if (!this.destroyRef.destroyed) this.error.set('publicQuote.error');
+        if (this.isCurrent(generation)) this.error.set('publicQuote.error');
       } finally {
-        this.signing.set(false);
+        if (this.isCurrent(generation)) this.signing.set(false);
       }
-      if (this.acceptance())
+      if (this.isCurrent(generation) && this.acceptance())
         await this.router.navigate(['confirmation'], {
           relativeTo: this.route,
           preserveFragment: true,
@@ -214,10 +220,18 @@ export class PublicQuote {
     );
   }
 
-  private async load(): Promise<void> {
-    const browser = this.document.defaultView;
-    const rawToken = browser?.location.hash.slice(1) ?? '';
-    const token = Option.getOrUndefined(Schema.decodeUnknownOption(QuoteLinkToken)(rawToken));
+  private async load(fragment: string | null): Promise<void> {
+    const generation = ++this.loadGeneration;
+    this.token = undefined;
+    this.loading.set(true);
+    this.signing.set(false);
+    this.quote.set(undefined);
+    this.acceptance.set(undefined);
+    this.error.set(undefined);
+    this.signatureForm().reset({ signerName: '', signature: '', consent: false });
+    this.releasePdf();
+    this.pdfUrl.set(undefined);
+    const token = Option.getOrUndefined(Schema.decodeUnknownOption(QuoteLinkToken)(fragment));
     if (token === undefined) {
       this.error.set('quote_link.not_found');
       this.loading.set(false);
@@ -225,7 +239,7 @@ export class PublicQuote {
     }
     this.token = token;
     const outcome = await this.api.get(token);
-    if (this.destroyRef.destroyed) return;
+    if (!this.isCurrent(generation)) return;
     if (!outcome.success) {
       this.error.set(this.errorKey(outcome.code));
       this.loading.set(false);
@@ -234,14 +248,18 @@ export class PublicQuote {
     this.quote.set(outcome.result);
     try {
       const pdf = await this.api.getPdf(token);
-      if (this.destroyRef.destroyed) return;
+      if (!this.isCurrent(generation)) return;
       this.pdfObjectUrl = URL.createObjectURL(pdf);
       this.pdfUrl.set(this.pdfObjectUrl);
     } catch {
-      this.error.set('publicQuote.pdfError');
+      if (this.isCurrent(generation)) this.error.set('publicQuote.pdfError');
     } finally {
-      this.loading.set(false);
+      if (this.isCurrent(generation)) this.loading.set(false);
     }
+  }
+
+  private isCurrent(generation: number): boolean {
+    return !this.destroyRef.destroyed && generation === this.loadGeneration;
   }
 
   private errorKey(code: string): TranslationKey {

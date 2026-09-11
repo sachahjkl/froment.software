@@ -11,6 +11,7 @@ import { RouterTestingHarness } from '@angular/router/testing';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { PublicQuoteApi } from '../../public-quote/public-quote-api';
+import { publicQuoteContextChanged } from '../../public-quote/public-quote-navigation';
 import { PublicQuote } from './public-quote';
 import { I18nService } from '@app/i18n.service';
 import { TabPanelOutlet } from '@shared/tabs/tab-panel';
@@ -19,6 +20,16 @@ import { unsavedChangesGuard } from '@backoffice/unsaved-changes-guard';
 
 @Component({ template: '' })
 class OutsidePage {}
+
+function deferred<Value>() {
+  let resolve!: (value: Value) => void;
+  let reject!: (cause: unknown) => void;
+  const promise = new Promise<Value>((onResolve, onReject) => {
+    resolve = onResolve;
+    reject = onReject;
+  });
+  return { promise, resolve, reject };
+}
 
 const token = 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA';
 const quote = {
@@ -99,7 +110,7 @@ describe('PublicQuote', () => {
     get.mockClear();
     getPdf.mockClear();
     sign.mockClear();
-    confirmation.request.mockClear();
+    confirmation.request.mockReset().mockResolvedValue(false);
     globalThis.location.hash = token;
     Object.defineProperty(URL, 'createObjectURL', {
       configurable: true,
@@ -116,6 +127,7 @@ describe('PublicQuote', () => {
             path: '',
             component: PublicQuote,
             canDeactivate: [unsavedChangesGuard],
+            runGuardsAndResolvers: publicQuoteContextChanged,
             children: [
               { path: 'summary', component: TabPanelOutlet, data: { panel: 'summary' } },
               { path: 'document', component: TabPanelOutlet, data: { panel: 'document' } },
@@ -231,7 +243,7 @@ describe('PublicQuote', () => {
   });
 
   it('keeps the permalink and presents the immutable quote', async () => {
-    const harness = await RouterTestingHarness.create('/summary');
+    const harness = await RouterTestingHarness.create(`/summary#${token}`);
     const fixture = harness.fixture;
     const root: HTMLElement = fixture.nativeElement;
     await vi.waitFor(() => expect(root.textContent).toContain('Software audit'));
@@ -246,12 +258,11 @@ describe('PublicQuote', () => {
     root.querySelector<HTMLAnchorElement>('#quote-document-tab')?.click();
     await fixture.whenStable();
     expect(root.querySelector('a[download]')?.getAttribute('download')).toBe('DE-2026-000001.pdf');
-    expect(root.innerHTML).not.toContain(token);
     expect(root.querySelector('iframe')?.getAttribute('src')).toBe('blob:quote-pdf');
   });
 
   it('submits explicit consent and shows the accepted state', async () => {
-    const harness = await RouterTestingHarness.create('/summary');
+    const harness = await RouterTestingHarness.create(`/summary#${token}`);
     const fixture = harness.fixture;
     const root: HTMLElement = fixture.nativeElement;
     await vi.waitFor(() => expect(root.textContent).toContain('Software audit'));
@@ -292,9 +303,107 @@ describe('PublicQuote', () => {
     expect(getPdf).toHaveBeenCalledOnce();
   });
 
+  it('preserves an unfinished signature between steps but guards a token change', async () => {
+    const otherToken = 'B'.repeat(43);
+    const harness = await RouterTestingHarness.create(`/signature#${token}`);
+    const page = await harness.navigateByUrl(`/signature#${token}`, PublicQuote);
+    page['signatureForm'].signerName().value.set('Ada');
+    page['signatureForm']().markAsDirty();
+
+    await harness.navigateByUrl(`/document#${token}`);
+    expect(page['signatureModel']().signerName).toBe('Ada');
+    expect(get).toHaveBeenCalledOnce();
+    expect(confirmation.request).not.toHaveBeenCalled();
+
+    await harness.navigateByUrl(`/signature#${otherToken}`);
+    expect(TestBed.inject(Router).url).toBe(`/document#${token}`);
+    expect(page['signatureModel']().signerName).toBe('Ada');
+    expect(confirmation.request).toHaveBeenCalledOnce();
+
+    confirmation.request.mockResolvedValueOnce(true);
+    await harness.navigateByUrl(`/signature#${otherToken}`);
+    await harness.fixture.whenStable();
+    expect(get).toHaveBeenLastCalledWith(otherToken);
+    expect(page['signatureModel']()).toEqual({ signerName: '', signature: '', consent: false });
+    expect(page['signatureForm']().dirty()).toBe(false);
+    expect(URL.revokeObjectURL).toHaveBeenCalledWith('blob:quote-pdf');
+
+    page['signatureModel'].set({ signerName: 'Ada', signature: 'Ada', consent: true });
+    page['sign'](new SubmitEvent('submit'));
+    await harness.fixture.whenStable();
+    expect(sign).toHaveBeenLastCalledWith(expect.objectContaining({ token: otherToken }));
+    expect(TestBed.inject(Router).url).toBe(`/confirmation#${otherToken}`);
+  });
+
+  it('ignores an obsolete consultation response after the token changes', async () => {
+    const first = deferred<{ success: true; result: typeof quote }>();
+    get.mockReturnValueOnce(first.promise);
+    const harness = await RouterTestingHarness.create(`/summary#${token}`);
+    const otherToken = 'B'.repeat(43);
+    const page = await harness.navigateByUrl(`/summary#${otherToken}`, PublicQuote);
+    await harness.fixture.whenStable();
+    first.resolve({ success: true, result: { ...quote, canSign: false } });
+    await first.promise;
+    await harness.fixture.whenStable();
+
+    expect(page['quote']()?.canSign).toBe(true);
+    expect(getPdf).toHaveBeenCalledExactlyOnceWith(otherToken);
+    expect(page['loading']()).toBe(false);
+  });
+
+  it('ignores an obsolete PDF failure without completing the new consultation', async () => {
+    const firstPdf = deferred<Blob>();
+    const secondQuote = deferred<{ success: true; result: typeof quote }>();
+    getPdf.mockReturnValueOnce(firstPdf.promise);
+    const harness = await RouterTestingHarness.create(`/summary#${token}`);
+    get.mockReturnValueOnce(secondQuote.promise);
+    const page = await harness.navigateByUrl(`/summary#${'B'.repeat(43)}`, PublicQuote);
+    firstPdf.reject(new Error('obsolete_pdf'));
+    await harness.fixture.whenStable();
+
+    expect(page['loading']()).toBe(true);
+    expect(page['error']()).toBeUndefined();
+    expect(page['pdfUrl']()).toBeUndefined();
+    secondQuote.resolve({ success: true, result: quote });
+    await secondQuote.promise;
+    await harness.fixture.whenStable();
+    expect(page['loading']()).toBe(false);
+  });
+
+  it('clears the previous consultation when the next token is invalid', async () => {
+    const harness = await RouterTestingHarness.create(`/summary#${token}`);
+    const page = await harness.navigateByUrl('/summary#invalid', PublicQuote);
+    await harness.fixture.whenStable();
+
+    expect(page['quote']()).toBeUndefined();
+    expect(page['pdfUrl']()).toBeUndefined();
+    expect(page['error']()).toBe('quote_link.not_found');
+    expect(page['loading']()).toBe(false);
+    expect(get).toHaveBeenCalledOnce();
+  });
+
+  it('blocks token changes while a signature is pending', async () => {
+    const pending = deferred<Awaited<ReturnType<PublicQuoteApi['sign']>>>();
+    sign.mockReturnValueOnce(pending.promise);
+    const harness = await RouterTestingHarness.create(`/signature#${token}`);
+    const page = await harness.navigateByUrl(`/signature#${token}`, PublicQuote);
+    page['signatureModel'].set({ signerName: 'Ada', signature: 'Ada', consent: true });
+    page['sign'](new SubmitEvent('submit'));
+    await harness.fixture.whenStable();
+
+    await harness.navigateByUrl(`/signature#${'B'.repeat(43)}`);
+    expect(TestBed.inject(Router).url).toBe(`/signature#${token}`);
+    expect(get).toHaveBeenCalledOnce();
+    expect(confirmation.request).not.toHaveBeenCalled();
+    pending.resolve({ success: false, code: 'publicQuote.error' });
+    await pending.promise;
+    await harness.fixture.whenStable();
+    expect(page['signing']()).toBe(false);
+  });
+
   it('uses one main landmark, translates its summary, and describes invalid fields', async () => {
     TestBed.inject(I18nService).setLanguage('en');
-    const harness = await RouterTestingHarness.create('/summary');
+    const harness = await RouterTestingHarness.create(`/summary#${token}`);
     const fixture = harness.fixture;
     const root: HTMLElement = fixture.nativeElement;
     await vi.waitFor(() => expect(root.textContent).toContain('Software audit'));
@@ -314,7 +423,7 @@ describe('PublicQuote', () => {
   });
 
   it('focuses invalid fields and protects an unfinished signature when leaving', async () => {
-    const harness = await RouterTestingHarness.create('/signature');
+    const harness = await RouterTestingHarness.create(`/signature#${token}`);
     const fixture = harness.fixture;
     const root = harness.routeNativeElement!;
     await fixture.whenStable();

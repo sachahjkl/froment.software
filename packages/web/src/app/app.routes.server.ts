@@ -12,7 +12,7 @@ export const serverRoutes: ServerRoute[] = [
     getPrerenderParams: async () => blogPostSlugs.map((slug) => ({ slug })),
   },
   {
-    path: 'quote',
+    path: 'quote/**',
     renderMode: RenderMode.Client,
   },
   {
