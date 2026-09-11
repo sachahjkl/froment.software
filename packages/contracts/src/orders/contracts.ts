@@ -25,6 +25,7 @@ export const OrderSummary = Schema.Struct({
   totalCents: SafeInteger,
   createdAt: IsoUtc,
   invoiceId: Schema.NullOr(Ulid),
+  pdfAvailable: Schema.Boolean,
 }).annotate({ identifier: 'OrderSummary' });
 export type OrderSummary = typeof OrderSummary.Type;
 

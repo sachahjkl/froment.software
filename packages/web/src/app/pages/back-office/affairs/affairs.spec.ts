@@ -86,6 +86,7 @@ const order = {
   totalCents: acceptedQuote.totalCents,
   createdAt: '2026-08-20T11:00:00.000Z',
   invoiceId: '01ARZ3NDEKTSV4RRFFQ69G5FAF',
+  pdfAvailable: false,
 } as OrderSummaryValue;
 
 const invoice = {

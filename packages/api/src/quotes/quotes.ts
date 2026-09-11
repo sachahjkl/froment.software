@@ -56,6 +56,7 @@ const RevisionRecord = Schema.Struct({
   createdAt: Schema.Int,
   createdByUserId: Ulid,
   previewAvailable: Schema.Int,
+  pdfAvailable: Schema.Int,
 });
 const LineRecord = Schema.Struct({
   id: Ulid,
@@ -143,7 +144,10 @@ const revisionSql = `select id, quote_id as quoteId, version,
   client_display_name as clientDisplayName, title, conditions, conditions_presentation as conditionsPresentation, currency,
   net_total_cents as netTotalCents, vat_total_cents as vatTotalCents,
   total_cents as totalCents, created_at as createdAt, created_by_user_id as createdByUserId,
-  render_snapshot is not null as previewAvailable
+  render_snapshot is not null as previewAvailable,
+  exists(select 1 from document_artifacts
+    where document_artifacts.revision_id = quote_revisions.id
+      and document_artifacts.kind = 'quote-pdf') as pdfAvailable
   from quote_revisions`;
 const lineSql = `select id, revision_id as revisionId, position, description,
   quantity_milli as quantityMilli, unit_price_cents as unitPriceCents,
@@ -181,6 +185,7 @@ export const QuotesLive = Layer.effect(
           id: revision.id,
           version: revision.version,
           previewAvailable: revision.previewAvailable === 1,
+          pdfAvailable: revision.pdfAvailable === 1,
           clientDisplayName: revision.clientDisplayName,
           title: revision.title,
           conditions: revision.conditions,

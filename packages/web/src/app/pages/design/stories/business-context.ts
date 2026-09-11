@@ -138,6 +138,7 @@ export class BusinessContext {
         reference: example.orderReference,
         quoteId: example.quoteId,
         quoteReference: example.quoteReference,
+        pdfAvailable: false,
         revisionId: example.revisionId,
         clientId: example.clientId,
         clientDisplayName: example.firstName,

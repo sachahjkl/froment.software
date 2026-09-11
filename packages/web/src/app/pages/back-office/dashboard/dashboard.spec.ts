@@ -152,6 +152,7 @@ describe('Dashboard', () => {
       totalCents: invoice.totalCents,
       createdAt: invoice.updatedAt,
       invoiceId: null,
+      pdfAvailable: false,
     };
     const { root } = await configure([], [], [order]);
     expect(root.querySelector('tbody a')?.getAttribute('href')).toBe(

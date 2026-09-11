@@ -27,6 +27,7 @@ const OrderSummaryRecord = Schema.Struct({
   totalCents: Schema.Int,
   createdAt: Schema.Int,
   invoiceId: Schema.NullOr(Ulid),
+  pdfAvailable: Schema.Int,
 });
 const OrderSnapshotRecord = Schema.Struct({
   id: Ulid,
@@ -67,7 +68,10 @@ export const OrdersLive = Layer.effect(
                       quote_revisions.client_display_name as clientDisplayName,
                       quote_revisions.title, quote_revisions.currency,
                       quote_revisions.total_cents as totalCents,
-                      orders.created_at as createdAt, invoices.id as invoiceId
+                       orders.created_at as createdAt, invoices.id as invoiceId,
+                       exists(select 1 from document_artifacts
+                         where document_artifacts.order_id = orders.id
+                           and document_artifacts.kind = 'order-pdf') as pdfAvailable
                from orders
                join quotes on quotes.id = orders.quote_id and quotes.status = 'accepted'
                join quote_revisions
@@ -81,6 +85,7 @@ export const OrdersLive = Layer.effect(
             .all(),
         ).map((order) => ({
           ...order,
+          pdfAvailable: order.pdfAvailable === 1,
           createdAt: DateTime.formatIso(DateTime.makeUnsafe(order.createdAt)),
         })),
       catch: (cause) => new DatabaseError({ operation: 'list.orders', cause }),

@@ -26,6 +26,7 @@ describe('OrdersApi', () => {
         totalCents: 1_200,
         createdAt: '2026-08-20T06:00:00.000Z',
         invoiceId: null,
+        pdfAvailable: false,
       },
     ]);
     await expect(result).resolves.toHaveLength(1);

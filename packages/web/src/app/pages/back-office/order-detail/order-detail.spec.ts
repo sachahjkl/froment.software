@@ -24,6 +24,24 @@ describe('Order detail', () => {
       ],
     }),
   );
+  it('offers an existing PDF to a download-only account without rendering it', async () => {
+    TestBed.configureTestingModule({
+      providers: [provideAccount(['order.read', 'quote.read', 'document.download'])],
+    });
+    const renderPdf = vi.fn();
+    TestBed.overrideProvider(OrdersApi, {
+      useValue: {
+        list: async () => [{ ...orderFixture, pdfAvailable: true }],
+        renderPdf,
+      },
+    });
+    const harness = await RouterTestingHarness.create(`/backoffice/orders/${orderFixture.id}`);
+    await harness.fixture.whenStable();
+    expect(
+      harness.fixture.nativeElement.querySelector(`a[href="/api/orders/${orderFixture.id}/pdf"]`),
+    ).not.toBeNull();
+    expect(renderPdf).not.toHaveBeenCalled();
+  });
   it('shows the accepted revision instead of the current quote revision', async () => {
     TestBed.overrideProvider(QuotesApi, {
       useValue: {

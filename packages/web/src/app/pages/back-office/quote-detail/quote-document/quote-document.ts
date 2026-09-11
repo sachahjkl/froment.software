@@ -61,6 +61,9 @@ export class QuoteDocument {
     this.revision();
     return undefined;
   });
+  protected readonly pdfAvailable = computed(
+    () => this.revision().pdfAvailable || this.artifact() !== undefined,
+  );
   protected readonly preview = computed(
     () => `/api/quotes/${this.quoteId()}/revisions/${this.revision().version}/preview`,
   );

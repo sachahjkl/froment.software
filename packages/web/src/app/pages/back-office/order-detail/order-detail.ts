@@ -129,6 +129,7 @@ export class OrderDetail {
         return;
       }
       this.order.set(order);
+      this.pdfReady.set(order.pdfAvailable);
       this.revision.set(revision);
       this.state.set('ready');
     } catch {

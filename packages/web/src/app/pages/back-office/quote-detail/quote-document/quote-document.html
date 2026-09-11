@@ -1,6 +1,6 @@
 <h2>{{ i18n.tf('backOffice.quote.preview.title', { version: revision().version }) }}</h2>
-@if (revision().previewAvailable) {
 <div class="actions">
+  @if (revision().previewAvailable) {
   <a
     *appCan="'document.render'"
     appLinkButton
@@ -19,7 +19,7 @@
   >
     {{ prepareLabel() }}
   </button>
-  @if (artifact()) {
+  } @if (pdfAvailable()) {
   <a *appCan="'document.download'" appLinkButton [href]="pdf()"
     >{{ i18n.t('backOffice.quote.pdf.download') }}</a
   >
@@ -30,7 +30,8 @@
 } @if (error(); as key) {
 <p appNotice variant="danger" role="alert">{{ i18n.t(key) }}</p>
 } @if (issues().length) {
-<app-document-issues [issues]="issues()" [clientId]="clientId()" kind="quote" /> }
+<app-document-issues [issues]="issues()" [clientId]="clientId()" kind="quote" /> } @if
+(revision().previewAvailable) {
 <iframe
   *appCan="'document.render'"
   [src]="frame()"

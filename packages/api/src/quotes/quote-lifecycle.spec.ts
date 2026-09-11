@@ -202,6 +202,40 @@ const signatureRequest = {
 const publicContext = { ipAddress: '127.0.0.1', userAgent: 'test' };
 
 describe('quote lifecycle', () => {
+  it('reports stored PDF availability without changing snapshots or generating documents', async () => {
+    await Effect.runPromise(
+      Effect.gen(function* () {
+        yield* seedSentQuote();
+        yield* TestClock.setTime(createdAt + 100);
+        const quotes = yield* Quotes;
+        const orders = yield* Orders;
+        const database = yield* Database;
+        const accepted = yield* (yield* QuoteLinks).accept(signatureRequest, publicContext);
+        const before = yield* orders.getSnapshot(accepted.orderId);
+        expect((yield* quotes.get(quoteId)).currentRevision.pdfAvailable).toBe(true);
+        expect(yield* orders.list).toMatchObject([{ id: accepted.orderId, pdfAvailable: false }]);
+        const pdf = Buffer.from('%PDF-stored-order');
+        database.sqlite
+          .prepare(
+            `insert into document_artifacts (id, order_id, kind, content_type, byte_size, sha256, content, created_at)
+           values (?, ?, 'order-pdf', 'application/pdf', ?, ?, ?, ?)`,
+          )
+          .run(
+            secondLinkId,
+            accepted.orderId,
+            pdf.byteLength,
+            createHash('sha256').update(pdf).digest('hex'),
+            pdf,
+            createdAt + 100,
+          );
+        expect(yield* orders.list).toMatchObject([{ id: accepted.orderId, pdfAvailable: true }]);
+        expect(yield* orders.getSnapshot(accepted.orderId)).toEqual(before);
+        expect(
+          database.sqlite.prepare('select count(*) from document_artifacts').pluck().get(),
+        ).toBe(2);
+      }).pipe(Effect.provide(lifecycleLayer()), Effect.provide(TestClock.layer())),
+    );
+  });
   it('freezes the confirmation calendar when accepting an old quote after local midnight', async () => {
     await Effect.runPromise(
       Effect.gen(function* () {
@@ -408,6 +442,8 @@ describe('quote lifecycle', () => {
 
     expect(detail).toMatchObject({ status: 'draft', version: 2 });
     expect(detail.currentRevision.title).toBe('Revised quote');
+    expect(detail.currentRevision.pdfAvailable).toBe(false);
+    expect(detail.revisions.find((revision) => revision.version === 1)?.pdfAvailable).toBe(true);
   });
 
   it('keeps an accepted quote available after the signature deadline', async () => {

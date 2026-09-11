@@ -13,6 +13,7 @@ const revision = {
   id: '01ARZ3NDEKTSV4RRFFQ69G5FAZ',
   version: 2,
   previewAvailable: true,
+  pdfAvailable: false,
   clientDisplayName: 'Acme',
   title: 'Audit',
   conditions: '',
@@ -62,6 +63,7 @@ export const orderFixture = Schema.decodeUnknownSync(OrderSummary)({
   totalCents: 1200,
   createdAt: '2026-08-20T07:00:00.000Z',
   invoiceId: null,
+  pdfAvailable: false,
 });
 export const artifactFixture = Schema.decodeUnknownSync(DocumentArtifact)({
   id: '01ARZ3NDEKTSV4RRFFQ69G5FB1',

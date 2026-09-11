@@ -175,6 +175,7 @@ export const QuoteRevision = Schema.Struct({
   id: Ulid,
   version: PositiveSafeInteger,
   previewAvailable: Schema.Boolean,
+  pdfAvailable: Schema.Boolean,
   clientDisplayName: DisplayName,
   title: QuoteTitle,
   conditions: QuoteConditions,
