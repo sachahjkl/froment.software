@@ -29,6 +29,10 @@
 .back-office-shell app-copy-notice {
   display: contents;
 }
+.startup-main {
+  display: flex;
+  align-self: stretch;
+}
 .startup-status,
 .header-error {
   display: flex;
@@ -38,14 +42,25 @@
   padding: var(--page-y) var(--page-x);
   color: var(--color-muted);
 }
+.startup-status {
+  flex: 1;
+  min-width: 0;
+  flex-direction: column;
+  flex-wrap: nowrap;
+  justify-content: center;
+  gap: var(--space-4);
+  color: var(--color-ink);
+  font-size: var(--text-xl);
+  text-align: center;
+}
 .header-error {
   grid-area: header;
 }
 .loading-spinner {
   flex: none;
-  inline-size: 1.25rem;
-  block-size: 1.25rem;
-  border: 2px solid var(--color-line-strong);
+  inline-size: 3rem;
+  block-size: 3rem;
+  border: 3px solid var(--color-line-strong);
   border-block-start-color: var(--color-ink);
   border-radius: 50%;
 }
