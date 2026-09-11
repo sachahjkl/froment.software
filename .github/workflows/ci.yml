@@ -84,9 +84,11 @@ jobs:
 
       - name: Generate SBOM
         env:
-          IMAGE: ${{ steps.publish.outputs.image }}
           SBOM: ${{ runner.temp }}/froment-software.spdx.json
-        run: nix run .#syft -- "$IMAGE" --output "spdx-json=$SBOM"
+          TAR_ARCHIVE: ${{ runner.temp }}/froment-software.tar
+        run: |
+          gzip --decompress --stdout result >"$TAR_ARCHIVE"
+          nix run .#syft -- "docker-archive:$TAR_ARCHIVE" --output "spdx-json=$SBOM"
 
       - name: Sign image and SBOM
         env:
