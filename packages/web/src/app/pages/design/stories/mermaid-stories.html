@@ -10,9 +10,9 @@
     <p>{{ text().diagramSafety }}</p>
   </div>
   <div storyPreview>
-    @for (source of [text().diagrams[diagram()]]; track source) {
+    @let source = text().diagrams[diagram()];
     <section
-      appMermaidDiagrams
+      [appMermaidDiagrams]="source"
       class="diagram-frame"
       role="region"
       tabindex="0"
@@ -20,15 +20,14 @@
     >
       <pre class="mermaid" [textContent]="source"></pre>
     </section>
-    }
   </div>
   <div storyVariants class="samples">
     @for (variant of variants; track variant) {
     <div class="sample" data-variant>
       <h3>{{ text()[variant] }}</h3>
-      @for (source of [text().diagrams[variant]]; track source) {
+      @let source = text().diagrams[variant];
       <section
-        appMermaidDiagrams
+        [appMermaidDiagrams]="source"
         class="diagram-frame"
         role="region"
         tabindex="0"
@@ -36,7 +35,6 @@
       >
         <pre class="mermaid" [textContent]="source"></pre>
       </section>
-      }
     </div>
     }
   </div>

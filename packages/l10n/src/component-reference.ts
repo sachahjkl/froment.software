@@ -343,14 +343,11 @@ function storyProperties(description: StoryDescriptions) {
       ],
     ],
     'mermaid-diagrams': [
-      ['inputs', description.noInputs, '—'],
+      ['appMermaidDiagrams', 'string', 'required'],
       ['pre.mermaid', description.projectedContent, '—'],
       ['securityLevel', "'strict'", 'strict'],
-      [
-        'theme / startOnLoad / suppressErrors',
-        "'neutral' / false / true",
-        'neutral / false / true',
-      ],
+      ['theme / startOnLoad', "'neutral' / false", 'neutral / false'],
+      ['suppressErrorRendering', 'true', 'true'],
     ],
     'copy-notice': [
       ['inputs', description.noInputs, '—'],
@@ -493,7 +490,7 @@ const frenchStories = /* @__PURE__ */ storyDefinitions(
     'document-issues':
       '<app-document-issues [issues]="[{party: \'client\', field: \'email\', reason: \'invalid_email\'}]" [clientId]="clientId" kind="quote" />',
     'mermaid-diagrams':
-      '<section appMermaidDiagrams>\n  <pre class="mermaid">flowchart LR\n    A[Aperçu] --> B[Validation locale]</pre>\n</section>\n<!-- Le composant conserve securityLevel: strict. Aucun HTML non fiable n’est injecté. -->',
+      '<section [appMermaidDiagrams]="source()">\n  <pre class="mermaid" [textContent]="source()"></pre>\n</section>\n<!-- La source réactive déclenche le rendu en mode strict. -->',
     'copy-notice':
       'anchorCopy = inject(AnchorCopy);\n\n<button type="button" (click)="anchorCopy.copy(\'example\', \'Lien copié\')">Copier le lien</button>\n<!-- Le shell contient déjà <app-copy-notice />. Ne le dupliquez pas. -->',
   },
@@ -616,7 +613,7 @@ const englishStories = /* @__PURE__ */ storyDefinitions(
     'document-issues':
       '<app-document-issues [issues]="[{party: \'client\', field: \'email\', reason: \'invalid_email\'}]" [clientId]="clientId" kind="quote" />',
     'mermaid-diagrams':
-      '<section appMermaidDiagrams>\n  <pre class="mermaid">flowchart LR\n    A[Preview] --> B[Local validation]</pre>\n</section>\n<!-- The component keeps securityLevel: strict. No untrusted HTML is injected. -->',
+      '<section [appMermaidDiagrams]="source()">\n  <pre class="mermaid" [textContent]="source()"></pre>\n</section>\n<!-- The reactive source triggers rendering in strict mode. -->',
     'copy-notice':
       'anchorCopy = inject(AnchorCopy);\n\n<button type="button" (click)="anchorCopy.copy(\'example\', \'Link copied\')">Copy link</button>\n<!-- The shell already contains <app-copy-notice />. Do not duplicate it. -->',
   },

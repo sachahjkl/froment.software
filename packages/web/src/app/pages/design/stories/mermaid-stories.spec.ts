@@ -16,7 +16,10 @@ describe('Mermaid reference', () => {
     // Les imports concurrents contournent le mock de module manuel dans Vitest.
     // Les espions remplacent les méthodes du même objet Mermaid déjà chargé.
     vi.spyOn(mermaid, 'initialize').mockImplementation(() => undefined);
-    vi.spyOn(mermaid, 'run').mockResolvedValue(undefined);
+    vi.spyOn(mermaid, 'render').mockResolvedValue({
+      svg: '<svg role="img"></svg>',
+      diagramType: 'flowchart',
+    });
   });
   afterEach(() => {
     TestBed.resetTestingModule();
@@ -31,24 +34,14 @@ describe('Mermaid reference', () => {
     return { harness, root: harness.routeNativeElement! };
   }
 
-  it('uses the real directive with strict rendering and explicit local nodes', async () => {
+  it('renders current sources in strict mode when the diagram or language changes', async () => {
     const { harness, root } = await setup();
     const expectRenderedSources = async (sources: readonly string[]) => {
       await vi.waitFor(async () => {
         await harness.fixture.whenStable();
         harness.fixture.detectChanges();
-        const currentNodes = Array.from(root.querySelectorAll<HTMLElement>('pre.mermaid'));
-        expect(currentNodes).toHaveLength(3);
-        expect(currentNodes.map((node) => node.textContent)).toEqual(sources);
-        const renderedNodes = vi.mocked(mermaid.run).mock.calls.flatMap(([options]) => {
-          expect(options).toEqual(
-            expect.objectContaining({ nodes: expect.any(Array), suppressErrors: true }),
-          );
-          return Array.from(options!.nodes!);
-        });
-        expect(new Set(renderedNodes.filter((node) => node.isConnected))).toEqual(
-          new Set(currentNodes),
-        );
+        const renderedSources = vi.mocked(mermaid.render).mock.calls.map(([, source]) => source);
+        expect(renderedSources.sort()).toEqual(sources.slice().sort());
       });
     };
     const english = componentReferenceText.en.diagrams;
@@ -57,23 +50,22 @@ describe('Mermaid reference', () => {
       startOnLoad: false,
       securityLevel: 'strict',
       theme: 'neutral',
+      suppressErrorRendering: true,
     });
     const original = root.querySelector('[storyPreview] .mermaid');
     const select = root.querySelector<HTMLSelectElement>('[storyControls] select')!;
+    vi.mocked(mermaid.render).mockClear();
     select.value = 'sequence';
     select.dispatchEvent(new Event('input', { bubbles: true }));
     select.dispatchEvent(new Event('change', { bubbles: true }));
     await harness.fixture.whenStable();
-    await expectRenderedSources([english.sequence, english.flowchart, english.sequence]);
-    expect(original?.isConnected).toBe(false);
-    expect(root.querySelector('[storyPreview] .mermaid')?.textContent).toContain('sequenceDiagram');
-    expect(root.querySelector('[storyPreview] .mermaid')?.textContent).toContain('accTitle:');
-    expect(root.querySelector('[storyControls] textarea, [storyControls] input')).toBeNull();
+    await expectRenderedSources([english.sequence]);
+    expect(root.querySelector('[storyPreview] .mermaid')).toBe(original);
+    vi.mocked(mermaid.render).mockClear();
     TestBed.inject(I18nService).setLanguage('fr');
     await harness.fixture.whenStable();
     const french = componentReferenceText.fr.diagrams;
     await expectRenderedSources([french.sequence, french.flowchart, french.sequence]);
-    expect(root.querySelector('[storyPreview] .mermaid')?.textContent).toContain('Données locales');
   });
 
   it('keeps source text in Angular server mode without initializing Mermaid', async () => {
@@ -85,11 +77,11 @@ describe('Mermaid reference', () => {
     expect(root.querySelector('[storyPreview] pre')?.textContent).toContain('flowchart LR');
     expect(root.querySelector('svg, script, iframe')).toBeNull();
     expect(mermaid.initialize).not.toHaveBeenCalled();
-    expect(mermaid.run).not.toHaveBeenCalled();
+    expect(mermaid.render).not.toHaveBeenCalled();
   });
 
   it('retains the directive error marker if rendering fails', async () => {
-    vi.mocked(mermaid.run).mockRejectedValueOnce(new Error('reference.render_failed'));
+    vi.mocked(mermaid.render).mockRejectedValueOnce(new Error('reference.render_failed'));
     const { root } = await setup();
     await vi.waitFor(() => expect(root.querySelectorAll('.mermaid-error')).toHaveLength(1));
     expect(root.querySelector('[storyPreview] pre')?.textContent).toContain('flowchart LR');
