@@ -19,6 +19,7 @@ import { Schema } from 'effect';
 import { formatMoney } from '@froment/l10n';
 import { BankLedgerApi } from '@backoffice/bank-ledger-api';
 import { I18nService, type TranslationKey } from '@app/i18n.service';
+import { ledgerErrorMessage } from './ledger-error-message';
 import { Badge } from '@shared/badge/badge';
 import { Button } from '@shared/button/button';
 import { DataTable } from '@shared/data-table/data-table';
@@ -97,6 +98,7 @@ export class BankLedger {
   private readonly pendingTasks = inject(PendingTasks);
   protected readonly state = signal<'loading' | 'ready' | 'error'>('loading');
   protected readonly error = signal<TranslationKey | undefined>(undefined);
+  protected readonly errorMessage = computed(() => ledgerErrorMessage(this.error(), 'load'));
   protected readonly records = signal<typeof LedgerList.Type>({ entries: [], sources: [] });
   protected readonly query = signal(ledgerQuery(this.route.snapshot.queryParamMap));
   protected readonly queryParams = computed(() => bankQueryParams(this.query()));

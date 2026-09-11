@@ -5,6 +5,14 @@ export function checkoutStatusLabel(status: CheckoutOperation['status']): Transl
   return `checkout.${status}`;
 }
 
+export function checkoutReconcileErrorMessage(
+  code: TranslationKey | undefined,
+): TranslationKey | undefined {
+  if (code === 'checkout.error') return 'checkout.reconcileUnconfirmed';
+  if (code === 'authentication.permission_denied') return 'checkout.reconcileDenied';
+  return code;
+}
+
 export function checkoutKeyLabel(connection: typeof CheckoutConnection.Type): TranslationKey {
   if (connection.testKey) return 'checkout.testKey';
   if (connection.credentialsPresent) return 'checkout.testKeyRequired';

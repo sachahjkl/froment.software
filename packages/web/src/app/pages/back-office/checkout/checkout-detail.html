@@ -30,7 +30,7 @@
   <p>{{ item.invoiceNumber }}</p>
   } @else {
   <p role="status">{{ i18n.t(historyLabel()) }}</p>
-  } @if (reconcileError(); as code) {
+  } @if (reconcileErrorMessage(); as code) {
   <p appNotice variant="danger">{{ i18n.t(code) }}</p>
   } @if (current(); as item) { @if (item.error; as code) {
   <p appNotice variant="warning">{{ i18n.t(code) }}</p>

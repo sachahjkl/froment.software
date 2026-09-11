@@ -8,7 +8,7 @@
   </app-page-header>
   <p appNotice>{{ i18n.t('team.profiles') }}</p>
   <p #result tabindex="-1" role="status">@if (saved()) { {{ i18n.t('team.saved') }} }</p>
-  @if (error(); as code) {
+  @if (errorMessage(); as code) {
   <p appNotice variant="danger" role="alert">{{ i18n.t(code) }}</p>
   } @if (link()) {
   <section class="team-link">

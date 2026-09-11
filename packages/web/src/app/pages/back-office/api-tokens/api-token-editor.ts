@@ -39,6 +39,7 @@ import { TextCopy } from '@shared/text-copy';
 import { createFuzzySearch } from '@shared/fuzzy-search';
 import { SearchHighlight, SearchHighlightRegistry } from '@shared/search-highlight';
 import { ApiTokenNavigation } from './api-token-navigation';
+import { apiTokenErrorMessage } from './api-token-error-message';
 
 interface TokenModel {
   readonly name: string;
@@ -108,6 +109,9 @@ export class ApiTokenEditor {
   private readonly baseline = signal(JSON.stringify(this.model()));
   protected readonly saving = signal(false);
   protected readonly dialogError = signal<TranslationKey | undefined>(undefined);
+  protected readonly errorMessage = computed(() =>
+    apiTokenErrorMessage(this.dialogError(), 'create'),
+  );
   protected readonly secret = signal<string | undefined>(undefined);
   protected readonly copied = signal(false);
   protected readonly tokenConfirmation = computed(() =>

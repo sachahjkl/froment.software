@@ -37,6 +37,7 @@ import { TableExport } from '@shared/table-export/table-export';
 import { createWorkspaceTable } from '../configuration/workspace-table';
 import { tokenTableOptions } from '../configuration/workspace-tables';
 import { ApiTokenNavigation } from './api-token-navigation';
+import { apiTokenErrorMessage, type ApiTokenOperation } from './api-token-error-message';
 
 @Component({
   selector: 'app-api-tokens',
@@ -92,6 +93,10 @@ export class ApiTokens {
   protected readonly loadingMore = signal(false);
   protected readonly revoking = signal(false);
   protected readonly pageError = signal<TranslationKey | undefined>(undefined);
+  private readonly errorOperation = signal<ApiTokenOperation>('load');
+  protected readonly errorMessage = computed(() =>
+    apiTokenErrorMessage(this.pageError(), this.errorOperation()),
+  );
   private readonly now = signal(Date.now());
   private expirationTimer: ReturnType<typeof setTimeout> | undefined;
 
@@ -117,6 +122,7 @@ export class ApiTokens {
     const outcome = await this.api.revoke(token.id);
     this.revoking.set(false);
     if (!outcome.success) {
+      this.errorOperation.set('revoke');
       this.pageError.set(outcome.code);
       return;
     }
@@ -157,6 +163,7 @@ export class ApiTokens {
       this.nextCursor.set(page.nextCursor);
       this.scheduleExpiration();
     } catch {
+      this.errorOperation.set('load');
       this.pageError.set('api_token.error');
     } finally {
       this.loadingMore.set(false);
@@ -178,6 +185,7 @@ export class ApiTokens {
       this.nextCursor.set(page.nextCursor);
       this.scheduleExpiration();
     } catch {
+      this.errorOperation.set('load');
       this.pageError.set('api_token.error');
     } finally {
       this.loading.set(false);

@@ -7,7 +7,7 @@
     refund.refundedOn }}
   </p>
   } @if (task.invoice() && !task.completed() && !credits.isLoading()) { @if (!creditState()) {
-  <p appNotice variant="danger" role="alert">{{ i18n.t('credit.error') }}</p>
+  <p appNotice variant="danger" role="alert">{{ i18n.t('credit.loadError') }}</p>
   } @else if (!eligible()) {
   <p appNotice>{{ i18n.t('billingWorkspace.unavailable') }}</p>
   } @else {

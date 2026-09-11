@@ -4,7 +4,7 @@
     <p class="muted">{{ i18n.t('passkey.description') }}</p>
   </app-page-header>
   <p appNotice variant="info">{{ i18n.t('passkey.password_notice') }}</p>
-  @if (error(); as message) {
+  @if (errorMessage(); as message) {
   <p appNotice variant="danger" role="alert">{{ i18n.t(message) }}</p>
   } @if (status(); as message) {
   <p #operationStatus appNotice variant="success" role="status" tabindex="-1">

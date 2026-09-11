@@ -1,4 +1,11 @@
-import { afterNextRender, ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import {
+  afterNextRender,
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  inject,
+  signal,
+} from '@angular/core';
 import { disabled, form, FormField, required } from '@angular/forms/signals';
 import { RouterLink } from '@angular/router';
 import { TeamAccept } from '@froment/contracts';
@@ -8,6 +15,7 @@ import { I18nService, type TranslationKey } from '@app/i18n.service';
 import { Button } from '@shared/button/button';
 import { Notice } from '@shared/notice/notice';
 import { Confirmation } from '@shared/confirmation/confirmation';
+import { teamErrorMessage } from './team-error-message';
 
 @Component({
   selector: 'app-team-join',
@@ -26,6 +34,7 @@ export class TeamJoin {
   protected readonly ready = signal(false);
   protected readonly accepted = signal(false);
   protected readonly error = signal<TranslationKey | undefined>(undefined);
+  protected readonly errorMessage = computed(() => teamErrorMessage(this.error(), 'join'));
   protected readonly joinForm = form(signal({ password: '', confirmation: '' }), (path) => {
     required(path.password);
     required(path.confirmation);

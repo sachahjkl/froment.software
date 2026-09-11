@@ -34,6 +34,7 @@ import { Schema } from 'effect';
 import { formatMoney } from '@froment/l10n';
 import { BankLedgerApi } from '@backoffice/bank-ledger-api';
 import { I18nService, type TranslationKey } from '@app/i18n.service';
+import { ledgerErrorMessage } from '../bank-ledger/ledger-error-message';
 import { Button } from '@shared/button/button';
 import { Confirmation } from '@shared/confirmation/confirmation';
 import { LocalizedDatePipe } from '@shared/localized-date/localized-date-pipe';
@@ -68,6 +69,9 @@ export class LedgerPost {
   protected readonly state = signal<'loading' | 'ready' | 'error'>('loading');
   protected readonly busy = signal(false);
   protected readonly error = signal<TranslationKey | undefined>(undefined);
+  protected readonly errorMessage = computed(() =>
+    ledgerErrorMessage(this.error(), this.state() === 'ready' ? 'post' : 'load'),
+  );
   protected readonly detail = signal<typeof LedgerSourceDetail.Type | undefined>(undefined);
   protected readonly completed = signal<typeof LedgerEntry.Type | undefined>(undefined);
   protected readonly pending = signal<typeof LedgerRequest.Type | undefined>(undefined);

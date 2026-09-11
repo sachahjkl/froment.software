@@ -27,6 +27,7 @@ import { Confirmation } from '@shared/confirmation/confirmation';
 import { Notice } from '@shared/notice/notice';
 import { PageHeader } from '@shared/page-header/page-header';
 import { TeamNavigation } from './team-navigation';
+import { teamErrorMessage } from './team-error-message';
 
 const rejectedBeforeCreation = (code: TranslationKey): boolean =>
   code === 'team.email_exists' ||
@@ -50,6 +51,7 @@ export class TeamInvitation {
   private readonly result = viewChild<ElementRef<HTMLElement>>('result');
   protected readonly busy = signal(false);
   protected readonly error = signal<TranslationKey | undefined>(undefined);
+  protected readonly errorMessage = computed(() => teamErrorMessage(this.error(), 'invite'));
   protected readonly link = signal('');
   protected readonly saved = signal(false);
   protected readonly pending = signal<typeof TeamInvite.Type | undefined>(undefined);

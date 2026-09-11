@@ -1,6 +1,8 @@
 export const creditText = {
   fr: {
     'credit.title': 'Avoir et remboursements',
+    'credit.loadError':
+      'Impossible de charger l’avoir et les remboursements. Rechargez ces données avant de continuer.',
     'credit.noTransfer':
       'Ces opérations enregistrent des faits locaux. Aucun virement ni remboursement bancaire n’est exécuté.',
     'credit.saved': 'Opération enregistrée.',
@@ -27,12 +29,14 @@ export const creditText = {
     'credit.confirmCancel':
       'Annuler cet enregistrement erroné ? Le motif sera conservé. Cette action ne récupère aucun fonds.',
     'credit.error':
-      'Impossible de charger ou modifier ces données. Vérifiez vos droits et rechargez la page.',
+      'Le résultat de cette demande reste à confirmer. Consultez l’avoir et les remboursements avant de recommencer.',
     'invoice.credit_conflict':
       'Opération refusée. Vérifiez la facture, l’avoir existant, les encaissements disponibles, la date et la clé de la demande.',
   },
   en: {
     'credit.title': 'Credit note and refunds',
+    'credit.loadError':
+      'Unable to load the credit note and refunds. Reload this data before continuing.',
     'credit.noTransfer':
       'These operations record local facts. No bank transfer or refund is executed.',
     'credit.saved': 'Operation recorded.',
@@ -58,7 +62,8 @@ export const creditText = {
       'Record a refund that has already occurred? This action transfers no funds.',
     'credit.confirmCancel':
       'Cancel this incorrect record? The reason will be kept. This action recovers no funds.',
-    'credit.error': 'Cannot load or change this data. Check your permissions and reload the page.',
+    'credit.error':
+      'The result of this request is unconfirmed. Check the credit note and refunds before trying again.',
     'invoice.credit_conflict':
       'Operation rejected. Check the invoice, existing credit note, available receipts, date and request key.',
   },

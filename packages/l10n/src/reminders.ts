@@ -1,6 +1,12 @@
 export const reminderText = {
   fr: {
     'reminder.title': 'Relances programmées',
+    'reminder.loadError':
+      'Impossible de charger les relances. Rechargez la liste pour vérifier les demandes enregistrées.',
+    'reminder.scheduleUnconfirmed':
+      'L’enregistrement de la relance reste à confirmer. Conservez la demande en cours. Reprenez cette même demande.',
+    'reminder.cancelUnconfirmed':
+      'L’annulation de la relance reste à confirmer. Actualisez les relances pour vérifier son état.',
     'reminder.info':
       'La relance utilise le solde et l’adresse client au moment de sa préparation automatique. Une facture soldée ou annulée ne produit aucun courriel.',
     'reminder.content':
@@ -24,7 +30,7 @@ export const reminderText = {
       'Le compte initiateur est désactivé ou ses permissions ont changé.',
     'reminder.mode-changed': 'Le mode du fournisseur a changé. Aucun envoi automatique.',
     'reminder.error':
-      'Impossible de traiter la programmation. Les données du formulaire restent inchangées.',
+      'Le résultat de la demande concernant cette relance reste à confirmer. Vérifiez son suivi avant de recommencer.',
     'reminder.conflict':
       'Cet identifiant correspond à une autre demande. Le résultat de votre demande reste inconnu. Conservez la demande d’origine.',
     'reminder.rejected': 'Le serveur a refusé cette programmation avant sa création.',
@@ -46,6 +52,11 @@ export const reminderText = {
   },
   en: {
     'reminder.title': 'Scheduled reminders',
+    'reminder.loadError': 'Unable to load reminders. Reload the list to check recorded requests.',
+    'reminder.scheduleUnconfirmed':
+      'Reminder scheduling is unconfirmed. Keep the current request. Resume that same request.',
+    'reminder.cancelUnconfirmed':
+      'Reminder cancellation is unconfirmed. Refresh reminders to check its status.',
     'reminder.info':
       'The reminder uses the balance and client address at automatic preparation time. A settled or void invoice produces no email.',
     'reminder.content':
@@ -66,7 +77,8 @@ export const reminderText = {
     'reminder.recipient-invalid': 'The current client email address is invalid.',
     'reminder.permission-revoked': 'The initiating account is disabled or its permissions changed.',
     'reminder.mode-changed': 'The provider mode changed. No automatic submission.',
-    'reminder.error': 'The scheduling operation failed. The form data remains unchanged.',
+    'reminder.error':
+      'The result of this reminder request is unconfirmed. Check its status before trying again.',
     'reminder.conflict':
       'This identifier belongs to another request. Your request result remains unknown. Keep the original request.',
     'reminder.rejected': 'The server rejected this schedule before creating it.',

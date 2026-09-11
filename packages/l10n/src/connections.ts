@@ -29,7 +29,7 @@ export const connectionText = {
     'connections.reload': 'Actualiser les accès',
     'connections.loading': 'Chargement des connexions…',
     'connections.error':
-      'Accès indisponible. Vérifiez votre connexion et vos droits d’administration, puis actualisez les accès.',
+      'Impossible de charger la configuration des connexions. Réessayez le chargement.',
     'connections.simulations': 'Ouvrir les simulations et leur historique',
     'connections.back': 'Retour aux connexions',
     'connections.breadcrumb': 'Navigation des services',
@@ -105,13 +105,13 @@ export const connectionText = {
       'Les demandes et leur contenu sont conservés. Une reprise réutilise la même demande ; elle ne crée pas un nouveau message.',
     'emailTest.details': 'Voir le test',
     'emailTest.error':
-      'Impossible de charger ou d’enregistrer le test. Vérifiez votre connexion, puis actualisez le suivi avant de réessayer.',
+      'L’enregistrement du test reste à confirmer. Actualisez le suivi ou reprenez la même demande.',
     'emailTest.credentialsMissing':
       'Clé Resend absente. Renseignez RESEND_API_KEY dans le profil SOPS actif, puis redémarrez l’application.',
     'emailTest.credentialsChanged':
-      'La clé Resend a changé. Vérifiez le journal du compte initial avant de créer un autre test.',
+      'La clé utilisée pour ce test a changé. Consultez le journal du compte Resend associé à la clé précédente avant tout nouvel envoi.',
     'emailTest.permissionRevoked':
-      'Les droits de l’auteur ont été retirés. Demandez à un administrateur de vérifier le test.',
+      'Le compte à l’origine du test n’est plus autorisé à poursuivre le traitement automatique. Consultez le suivi avant tout nouvel envoi.',
     'emailTest.rejected':
       'Resend a refusé la demande. Vérifiez la clé, ses droits et la validation de mail.froment.software dans Resend.',
     'emailTest.rateLimited':
@@ -121,7 +121,7 @@ export const connectionText = {
     'emailTest.expired':
       'Le délai de reprise sûre est dépassé. Consultez le journal Resend ; ce message ne sera pas renvoyé automatiquement.',
     'emailTest.statusUnavailable':
-      'Le statut de remise est indisponible. Vérifiez les droits de lecture de la clé ou consultez le journal Resend.',
+      'La remise du courriel reste à confirmer. Consultez le journal Resend.',
     'emailTest.conflict':
       'Cette demande existe avec un autre contenu ou un autre auteur. Actualisez le suivi avant de continuer.',
     'emailTest.active': 'Un test attend déjà son envoi. Attendez sa fin et consultez son suivi.',
@@ -157,8 +157,7 @@ export const connectionText = {
     'connections.pending': 'Connector in preparation',
     'connections.reload': 'Refresh access status',
     'connections.loading': 'Loading connections…',
-    'connections.error':
-      'Access unavailable. Check your connection and administrator permissions, then refresh access status.',
+    'connections.error': 'Unable to load connection configuration. Try loading it again.',
     'connections.simulations': 'Open simulations and their history',
     'connections.back': 'Back to connections',
     'connections.breadcrumb': 'Service navigation',
@@ -233,13 +232,13 @@ export const connectionText = {
       'Requests and their content are retained. A retry uses the same request; it does not create a new message.',
     'emailTest.details': 'View test',
     'emailTest.error':
-      'Unable to load or record the test. Check your connection, then refresh test status before trying again.',
+      'Recording the test is unconfirmed. Refresh the status or resume the same request.',
     'emailTest.credentialsMissing':
       'Resend key missing. Set RESEND_API_KEY in the active SOPS profile, then restart the application.',
     'emailTest.credentialsChanged':
-      'The Resend key changed. Check the original account log before creating another test.',
+      'The key used for this test has changed. Check the Resend account log associated with the previous key before sending another email.',
     'emailTest.permissionRevoked':
-      'The author’s permissions were removed. Ask an administrator to check the test.',
+      'The account that started the test is no longer authorized to continue automatic processing. Check the test status before sending another email.',
     'emailTest.rejected':
       'Resend rejected the request. Check the key, its permissions and verification of mail.froment.software in Resend.',
     'emailTest.rateLimited':
@@ -248,8 +247,7 @@ export const connectionText = {
       'Resend did not confirm the request. Check the status and Resend log before sending another email.',
     'emailTest.expired':
       'The safe retry window has expired. Check the Resend log; this message will not be sent again automatically.',
-    'emailTest.statusUnavailable':
-      'Delivery status is unavailable. Check the key’s read permissions or consult the Resend log.',
+    'emailTest.statusUnavailable': 'Email delivery is unconfirmed. Check the Resend log.',
     'emailTest.conflict':
       'This request exists with different content or a different author. Refresh test status before continuing.',
     'emailTest.active':

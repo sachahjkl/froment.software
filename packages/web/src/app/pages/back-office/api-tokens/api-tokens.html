@@ -67,7 +67,7 @@
         (click)="table.filter('all'); tokenSearch.focus()"
       ></button>
     </div>
-    } @if (pageError(); as code) {
+    } @if (errorMessage(); as code) {
     <p appNotice variant="danger" role="alert">{{ i18n.t(code) }}</p>
     } @if (loading()) {
     <p role="status">{{ i18n.t('backOffice.apiTokens.loading') }}</p>

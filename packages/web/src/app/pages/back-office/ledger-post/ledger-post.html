@@ -11,7 +11,7 @@
     <p appNotice variant="success">{{ i18n.t('ledger.saved') }}</p>
     }
   </div>
-  @if (error(); as error) {
+  @if (errorMessage(); as error) {
   <p appNotice variant="danger" role="alert">{{ i18n.t(error) }}</p>
   @if (state() === 'ready' && !pending()) {
   <div>

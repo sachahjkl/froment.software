@@ -1,7 +1,7 @@
 <section class="notice-flow" aria-labelledby="join-title">
   <h1 id="join-title">{{ i18n.t('team.join') }}</h1>
   <p>{{ i18n.t('team.joinHint') }}</p>
-  @if (error(); as error) {
+  @if (errorMessage(); as error) {
   <p appNotice variant="danger" role="alert">{{ i18n.t(error) }}</p>
   } @if (accepted()) {
   <p appNotice variant="success" role="status">{{ i18n.t('team.joined') }}</p>

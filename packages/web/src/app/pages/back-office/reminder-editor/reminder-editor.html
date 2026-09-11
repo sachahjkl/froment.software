@@ -15,7 +15,7 @@
       {{ i18n.t('integrations.reload') }}
     </button>
   </app-page-header>
-  @if (error(); as error) {
+  @if (errorMessage(); as error) {
   <p appNotice variant="danger" role="alert">{{ i18n.t(error) }}</p>
   } @if (loading()) {
   <p role="status">{{ i18n.t('integrations.loading') }}</p>

@@ -86,7 +86,7 @@
         />
       </div>
     </app-list-toolbar>
-    @if (error(); as code) {
+    @if (errorMessage(); as code) {
     <p appNotice variant="danger" role="alert">{{ i18n.t(code) }}</p>
     } @if (state() === 'loading') {
     <p role="status">{{ i18n.t('audit.loading') }}</p>

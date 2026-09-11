@@ -4,6 +4,23 @@ export const teamText = {
     'team.reloadConfirm':
       'Recharger les comptes et invitations ? Les profils non enregistrés seront perdus.',
     'team.title': 'Équipe',
+    'team.loadError': 'Impossible de charger les comptes et invitations. Rechargez la liste.',
+    'team.inviteUnconfirmed':
+      'La création de l’invitation reste à confirmer. Conservez la demande en cours. Reprenez cette même demande.',
+    'team.cancelUnconfirmed':
+      'L’annulation de l’invitation reste à confirmer. Rechargez la liste pour vérifier son état.',
+    'team.updateUnconfirmed':
+      'La modification de l’accès reste à confirmer. Rechargez la liste pour vérifier le profil et l’état du compte.',
+    'team.joinUnconfirmed':
+      'La création de votre compte reste à confirmer. Essayez de vous connecter avec l’adresse invitée et le mot de passe choisi.',
+    'team.cancelRejected':
+      'L’annulation de cette invitation a été refusée. Vérifiez son état et les permissions de votre compte.',
+    'team.cancelDenied': 'Votre compte ne permet pas d’annuler cette invitation.',
+    'team.updateDenied': 'Votre compte ne permet pas de modifier les accès de ce membre.',
+    'team.updateRejected':
+      'La modification de cet accès a été refusée. Vérifiez les données actuelles du compte et vos permissions.',
+    'team.inviteInvalid':
+      'Vérifiez le nom, l’adresse de connexion et le profil de la personne invitée.',
     'team.intro':
       'Invitez un collaborateur ou un comptable. Les comptes administrateurs existants ne sont pas modifiés ici.',
     'team.profiles':
@@ -38,7 +55,8 @@ export const teamText = {
       'Modifier cet accès ? Toutes les sessions et tous les jetons API de ce compte seront révoqués.',
     'team.leave':
       'Quitter cette page ? Les données non enregistrées et le lien affiché ne seront pas conservés.',
-    'team.error': 'Opération impossible. Vérifiez vos droits et rechargez les données.',
+    'team.error':
+      'Le résultat de cette demande reste à confirmer. Vérifiez les comptes et invitations avant de recommencer.',
     'team.email_exists':
       'Cette adresse appartient déjà à un compte. Utilisez une autre adresse ou gérez le compte existant.',
     'team.invitation_exists':
@@ -50,9 +68,9 @@ export const teamText = {
     'team.invitation_inactive':
       'Cette invitation a expiré, a été annulée ou a déjà été acceptée. Rechargez la liste.',
     'team.invitation_permission':
-      'Votre compte ne peut plus créer d’invitations. Reconnectez-vous pour actualiser vos droits.',
+      'Votre compte ne permet pas de créer cette invitation. Demandez à un administrateur de vérifier les permissions de votre compte.',
     'team.conflict':
-      'Modification refusée. Vérifiez les données, les invitations existantes et la version du compte.',
+      'Cette demande a été refusée. Vérifiez les données actuelles et les permissions de votre compte.',
     'team.invitation_rejected':
       'Invitation indisponible, expirée ou déjà utilisée. Demandez une nouvelle invitation à l’administrateur.',
     'team.join': 'Rejoindre l’équipe',
@@ -70,6 +88,22 @@ export const teamText = {
     'team.reload': 'Reload accounts and invitations',
     'team.reloadConfirm': 'Reload accounts and invitations? Unsaved profiles will be lost.',
     'team.title': 'Team',
+    'team.loadError': 'Unable to load accounts and invitations. Reload the list.',
+    'team.inviteUnconfirmed':
+      'Invitation creation is unconfirmed. Keep the current request. Resume that same request.',
+    'team.cancelUnconfirmed':
+      'Invitation cancellation is unconfirmed. Reload the list to check its status.',
+    'team.updateUnconfirmed':
+      'The access change is unconfirmed. Reload the list to check the account profile and status.',
+    'team.joinUnconfirmed':
+      'Account creation is unconfirmed. Try signing in with the invited email address and the password you chose.',
+    'team.cancelRejected':
+      'Cancellation of this invitation was rejected. Check its status and your account permissions.',
+    'team.cancelDenied': 'Your account cannot cancel this invitation.',
+    'team.updateDenied': 'Your account cannot change this member’s access.',
+    'team.updateRejected':
+      'The change to this account’s access was rejected. Check its current details and your permissions.',
+    'team.inviteInvalid': 'Check the invited person’s name, sign-in email address and profile.',
     'team.intro':
       'Invite a collaborator or an accountant. Existing administrator accounts are not changed here.',
     'team.profiles':
@@ -102,7 +136,8 @@ export const teamText = {
     'team.confirmUpdate':
       'Change this access? All sessions and API tokens for this account will be revoked.',
     'team.leave': 'Leave this page? Unsaved data and the displayed link will not be kept.',
-    'team.error': 'Cannot complete the operation. Check your permissions and reload the data.',
+    'team.error':
+      'The result of this request is unconfirmed. Check accounts and invitations before trying again.',
     'team.email_exists':
       'This address already belongs to an account. Use another address or manage the existing account.',
     'team.invitation_exists':
@@ -114,8 +149,9 @@ export const teamText = {
     'team.invitation_inactive':
       'This invitation has expired, was cancelled or was already accepted. Reload the list.',
     'team.invitation_permission':
-      'Your account can no longer create invitations. Sign in again to refresh your permissions.',
-    'team.conflict': 'Change rejected. Check the data, existing invitations and account version.',
+      'Your account cannot create this invitation. Ask an administrator to check your account permissions.',
+    'team.conflict':
+      'This request was rejected. Check the current data and your account permissions.',
     'team.invitation_rejected':
       'Invitation unavailable, expired or already used. Ask the administrator for a new invitation.',
     'team.join': 'Join the team',

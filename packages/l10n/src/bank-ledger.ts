@@ -3,6 +3,12 @@ export const ledgerText = {
     'ledger.bankDate': 'Date bancaire',
     'ledger.postingDate': 'Date comptable',
     'ledger.title': 'Écritures des débits et commissions',
+    'ledger.loadError':
+      'Impossible de charger les écritures ou leurs sources. Rechargez ces données avant de continuer.',
+    'ledger.postUnconfirmed':
+      'La comptabilisation reste à confirmer. Reprenez la même demande sans modifier ses valeurs.',
+    'ledger.reverseUnconfirmed':
+      'La contrepassation reste à confirmer. Reprenez la même demande sans modifier ses valeurs.',
     'ledger.hint':
       'Choisissez les comptes comptables avec votre comptable. Chaque écriture porte le même montant au débit et au crédit. Aucune TVA n’est déduite et aucun transfert n’est exécuté.',
     'ledger.from': 'Date de début',
@@ -31,7 +37,7 @@ export const ledgerText = {
     'ledger.reversed': 'Contrepassée par :',
     'ledger.saved': 'Écriture enregistrée.',
     'ledger.error':
-      'Impossible de charger ou enregistrer les écritures. Vérifiez vos droits puis réessayez.',
+      'Le résultat de cette demande reste à confirmer. Consultez les écritures avant de recommencer.',
     'ledger.conflict':
       'Opération refusée. Vérifiez les comptes, les dates et l’état de la source. Si la période contient plus de 10 000 éléments, réduisez-la.',
     'ledger.confirmPost':
@@ -43,6 +49,12 @@ export const ledgerText = {
     'ledger.bankDate': 'Bank date',
     'ledger.postingDate': 'Posting date',
     'ledger.title': 'Debit and fee entries',
+    'ledger.loadError':
+      'Unable to load entries or their sources. Reload this data before continuing.',
+    'ledger.postUnconfirmed':
+      'Posting the entry is unconfirmed. Resume the same request without changing its values.',
+    'ledger.reverseUnconfirmed':
+      'Reversing the entry is unconfirmed. Resume the same request without changing its values.',
     'ledger.hint':
       'Choose ledger accounts with your accountant. Each entry debits and credits the same amount. No VAT is deducted and no transfer is executed.',
     'ledger.from': 'Start date',
@@ -70,7 +82,8 @@ export const ledgerText = {
     'ledger.reverses': 'Reverses:',
     'ledger.reversed': 'Reversed by:',
     'ledger.saved': 'Entry recorded.',
-    'ledger.error': 'Cannot load or record entries. Check your permissions and try again.',
+    'ledger.error':
+      'The result of this request is unconfirmed. Check the entries before trying again.',
     'ledger.conflict':
       'Operation rejected. Check accounts, dates and source status. If the period contains more than 10,000 items, reduce it.',
     'ledger.confirmPost':

@@ -21,7 +21,11 @@ import { Badge } from '@shared/badge/badge';
 import { Notice } from '@shared/notice/notice';
 import { LocalizedDatePipe } from '@shared/localized-date/localized-date-pipe';
 import { CheckoutHistory } from './checkout-history';
-import { canOpenCheckout, checkoutStatusLabel } from './checkout-view';
+import {
+  canOpenCheckout,
+  checkoutReconcileErrorMessage,
+  checkoutStatusLabel,
+} from './checkout-view';
 import { PageHeader } from '@shared/page-header/page-header';
 import { Tabs } from '@shared/tabs/tabs';
 import { providerTabs, providerTestParams } from '../connections/provider-navigation';
@@ -47,6 +51,9 @@ export class CheckoutDetail {
   private readonly api = inject(CheckoutApi);
   protected readonly reconciling = signal(false);
   protected readonly reconcileError = signal<TranslationKey | undefined>(undefined);
+  protected readonly reconcileErrorMessage = computed(() =>
+    checkoutReconcileErrorMessage(this.reconcileError()),
+  );
   protected readonly canReconcile = canReconcileCheckout;
   private readonly route = inject(ActivatedRoute);
   private readonly params = toSignal(this.route.paramMap, { requireSync: true });

@@ -3,6 +3,7 @@ import {
   afterNextRender,
   ChangeDetectionStrategy,
   Component,
+  computed,
   DestroyRef,
   ElementRef,
   Injector,
@@ -17,6 +18,7 @@ import { I18nService, type TranslationKey } from '@app/i18n.service';
 import { Button } from '@shared/button/button';
 import { Notice } from '@shared/notice/notice';
 import { PageHeader } from '@shared/page-header/page-header';
+import { accountErrorMessage, type AccountOperation } from './account-error-message';
 
 @Component({
   selector: 'app-account-sessions',
@@ -38,6 +40,10 @@ export class AccountSessions {
   protected readonly loading = signal(true);
   protected readonly revoking = signal<string | undefined>(undefined);
   protected readonly error = signal<TranslationKey | undefined>(undefined);
+  private readonly errorOperation = signal<AccountOperation>('load-sessions');
+  protected readonly errorMessage = computed(() =>
+    accountErrorMessage(this.error(), this.errorOperation()),
+  );
   protected readonly revoked = signal(false);
 
   constructor() {
@@ -49,6 +55,7 @@ export class AccountSessions {
   protected async reload(): Promise<void> {
     if (this.revoking() !== undefined || this.disabled()) return;
     this.loading.set(true);
+    this.errorOperation.set('load-sessions');
     this.error.set(undefined);
     try {
       const outcome = await this.authentication.listSessions();
@@ -75,6 +82,7 @@ export class AccountSessions {
     )
       return;
     this.revoking.set(session.id);
+    this.errorOperation.set('revoke-session');
     this.error.set(undefined);
     this.revoked.set(false);
     try {

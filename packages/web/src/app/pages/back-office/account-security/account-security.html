@@ -35,7 +35,7 @@
     /></label>
     @if (passwordForm.confirmation().touched() && passwordForm.confirmation().invalid()) {
     <p appNotice variant="danger">{{ i18n.t('account.password_mismatch') }}</p>
-    } @if (error(); as message) {
+    } @if (errorMessage(); as message) {
     <p appNotice variant="danger" role="alert">{{ i18n.t(message) }}</p>
     <p>{{ i18n.t('account.password_retry') }}</p>
     <a routerLink="/backoffice/login">{{ i18n.t('account.password_login') }}</a> }

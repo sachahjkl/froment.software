@@ -25,6 +25,7 @@ import { EmailDraftsApi } from '@backoffice/email-drafts-api';
 import { EmailTemplatesApi } from '@backoffice/email-templates-api';
 import { RemindersApi } from '@backoffice/reminders-api';
 import { I18nService, type TranslationKey } from '@app/i18n.service';
+import { reminderErrorMessage } from '../reminder-editor/reminder-error-message';
 import { Button } from '@shared/button/button';
 import { Badge } from '@shared/badge/badge';
 import { Confirmation } from '@shared/confirmation/confirmation';
@@ -137,6 +138,9 @@ export class Emails {
   protected readonly busy = signal(false);
   protected readonly confirming = signal(false);
   protected readonly actionError = signal<TranslationKey | undefined>(undefined);
+  protected readonly actionErrorMessage = computed(() =>
+    reminderErrorMessage(this.actionError(), 'cancel'),
+  );
   protected readonly query = signal(emailQuery(this.route.snapshot.queryParamMap));
   protected readonly filterCount = computed(
     () =>

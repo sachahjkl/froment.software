@@ -287,11 +287,13 @@ export const translations = {
     'backOffice.email': 'Adresse email',
     'backOffice.password': 'Mot de passe',
     'authentication.invalid_credentials': 'Adresse email ou mot de passe incorrect.',
-    'authentication.rate_limited': 'Trop de tentatives ont échoué. Réessayez plus tard.',
+    'authentication.rate_limited':
+      'La limite de demandes de connexion est atteinte. Réessayez plus tard.',
     'authentication.error':
-      'Connexion impossible. Vérifiez votre connexion réseau, puis réessayez.',
-    'authentication.required': 'La session a expiré. Reconnectez-vous.',
-    'authentication.permission_denied': 'Votre compte ne permet pas cette opération.',
+      'La connexion n’a pas été confirmée. Vérifiez votre connexion réseau, puis réessayez.',
+    'authentication.required': 'Une authentification valide est requise pour cette demande.',
+    'authentication.permission_denied':
+      'Les permissions requises pour cette demande ne sont pas disponibles.',
     'backOffice.pending': 'Vérification…',
     'backOffice.submit': 'Se connecter',
     'backOffice.bootstrap': 'Initialiser le premier administrateur',
@@ -513,7 +515,14 @@ export const translations = {
     'backOffice.apiTokens.secretSaved': 'J’ai enregistré le secret',
     'backOffice.apiTokens.leaveConfirmation':
       'Le secret peut être perdu définitivement. Quitter cette page ?',
-    'api_token.error': 'Le serveur ne peut pas traiter ce jeton.',
+    'api_token.error': 'Le résultat de la demande concernant les jetons API reste à confirmer.',
+    'backOffice.apiTokens.loadError': 'Impossible de charger les jetons API. Rechargez la page.',
+    'backOffice.apiTokens.createUnconfirmed':
+      'La création du jeton reste à confirmer. Consultez la liste avant de réessayer. Si le jeton existe sans secret reçu, révoquez-le avant d’en créer un autre.',
+    'backOffice.apiTokens.revokeUnconfirmed':
+      'La révocation reste à confirmer. Rechargez la page pour vérifier l’état du jeton.',
+    'backOffice.apiTokens.createDenied':
+      'Votre compte ne permet pas de créer un jeton avec les permissions sélectionnées. Demandez à un administrateur de vérifier les permissions de votre compte.',
     'api_token.not_found': 'Ce jeton n’existe pas.',
     'api_token.name_conflict': 'Un jeton porte déjà ce nom.',
     'api_token.invalid_expiration': 'La date d’expiration est invalide.',
@@ -675,6 +684,13 @@ export const translations = {
     'account.security_title': 'Sécurité du compte',
     'account.security_hint': 'Gérez votre mot de passe et vos sessions de connexion.',
     'account.sessions_title': 'Sessions actives',
+    'account.authenticationRequired':
+      'Votre authentification n’a pas pu être validée. Connectez-vous pour continuer.',
+    'account.sessions_load_error': 'Impossible de charger les sessions. Actualisez la liste.',
+    'account.session_revoke_unconfirmed':
+      'La fermeture de cette session reste à confirmer. Actualisez la liste pour vérifier son état.',
+    'account.password_unconfirmed':
+      'Le changement du mot de passe reste à confirmer. Essayez de vous connecter avec le nouveau mot de passe.',
     'account.sessions_hint':
       'Chaque connexion crée une session. Les dates ne permettent pas d’identifier un appareil ou un lieu. Le renouvellement ne représente pas la dernière action effectuée.',
     'account.sessions_reload': 'Actualiser les sessions',
@@ -890,7 +906,7 @@ export const translations = {
     'publicQuote.alreadyAccepted': 'Ce devis a déjà été accepté.',
     'quote.error': 'Le serveur ne peut pas traiter ce devis.',
     'quote.amount_too_large': 'Le montant du devis dépasse la limite autorisée.',
-    'request.rate_limited': 'Trop de modifications ont été demandées. Réessayez plus tard.',
+    'request.rate_limited': 'La limite de requêtes est atteinte. Réessayez plus tard.',
     'request.invalid_origin': 'L’origine de la requête est invalide.',
     'request.too_large': 'La requête dépasse la taille autorisée.',
     'page.back_office_quotes': 'Devis | froment.software',
@@ -1829,10 +1845,12 @@ export const translations = {
     'backOffice.email': 'Email address',
     'backOffice.password': 'Password',
     'authentication.invalid_credentials': 'Incorrect email address or password.',
-    'authentication.rate_limited': 'Too many attempts failed. Try again later.',
-    'authentication.error': 'Unable to sign in. Check your network connection and try again.',
-    'authentication.required': 'The session has expired. Sign in again.',
-    'authentication.permission_denied': 'Your account cannot perform this operation.',
+    'authentication.rate_limited': 'The sign-in request limit has been reached. Try again later.',
+    'authentication.error':
+      'Sign-in was not confirmed. Check your network connection and try again.',
+    'authentication.required': 'Valid authentication is required for this request.',
+    'authentication.permission_denied':
+      'The required permissions are not available for this request.',
     'backOffice.pending': 'Checking…',
     'backOffice.submit': 'Sign in',
     'backOffice.bootstrap': 'Initialize the first administrator',
@@ -2053,7 +2071,14 @@ export const translations = {
     'backOffice.apiTokens.secretSaved': 'I saved the secret',
     'backOffice.apiTokens.leaveConfirmation':
       'The secret can be lost permanently. Leave this page?',
-    'api_token.error': 'The server cannot process this token.',
+    'api_token.error': 'The result of the API token request is unconfirmed.',
+    'backOffice.apiTokens.loadError': 'Unable to load API tokens. Reload the page.',
+    'backOffice.apiTokens.createUnconfirmed':
+      'Token creation is unconfirmed. Check the list before trying again. If the token exists but its secret was not received, revoke it before creating another.',
+    'backOffice.apiTokens.revokeUnconfirmed':
+      'Revocation is unconfirmed. Reload the page to check the token status.',
+    'backOffice.apiTokens.createDenied':
+      'Your account cannot create a token with the selected permissions. Ask an administrator to check your account permissions.',
     'api_token.not_found': 'This token does not exist.',
     'api_token.name_conflict': 'A token already uses this name.',
     'api_token.invalid_expiration': 'The expiration date is invalid.',
@@ -2211,6 +2236,12 @@ export const translations = {
     'account.security_title': 'Account security',
     'account.security_hint': 'Manage your password and sign-in sessions.',
     'account.sessions_title': 'Active sessions',
+    'account.authenticationRequired': 'Your authentication was not validated. Sign in to continue.',
+    'account.sessions_load_error': 'Unable to load sessions. Refresh the list.',
+    'account.session_revoke_unconfirmed':
+      'Closure of this session is unconfirmed. Refresh the list to check its status.',
+    'account.password_unconfirmed':
+      'The password change is unconfirmed. Try signing in with the new password.',
     'account.sessions_hint':
       'Each sign-in creates a session. Dates do not identify a device or location. Renewal does not represent the last action performed.',
     'account.sessions_reload': 'Refresh sessions',
@@ -2415,7 +2446,7 @@ export const translations = {
     'publicQuote.alreadyAccepted': 'This quote has already been accepted.',
     'quote.error': 'The server cannot process this quote.',
     'quote.amount_too_large': 'The quote amount exceeds the allowed limit.',
-    'request.rate_limited': 'Too many changes were requested. Try again later.',
+    'request.rate_limited': 'The request limit has been reached. Try again later.',
     'request.invalid_origin': 'The request origin is invalid.',
     'request.too_large': 'The request exceeds the allowed size.',
     'page.back_office_quotes': 'Quotes | froment.software',

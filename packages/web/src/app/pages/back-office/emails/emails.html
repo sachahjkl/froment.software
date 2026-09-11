@@ -105,7 +105,7 @@
       </div>
       } @if (invalidRange()) {
       <p appNotice variant="danger" role="alert">{{ i18n.t('emailsWorkspace.dateRange') }}</p>
-      } @if (actionError(); as error) {
+      } @if (actionErrorMessage(); as error) {
       <p appNotice variant="danger" role="alert">{{ i18n.t(error) }}</p>
       } @if (viewState(tab) === 'loading') {
       <p role="status">{{ i18n.t('integrations.loading') }}</p>

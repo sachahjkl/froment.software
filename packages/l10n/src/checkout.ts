@@ -19,10 +19,12 @@ export const checkoutText = {
       'Le serveur consulte Stripe toutes les 30 secondes. Une notification signée déclenche une vérification anticipée.',
     'checkout.refresh': 'Actualiser les accès et le suivi',
     'checkout.reconcile': 'Vérifier la session auprès de Stripe',
+    'checkout.reconcileUnconfirmed':
+      'Le résultat de cette vérification reste à confirmer. Actualisez le suivi de cette session Stripe.',
     'checkout.reconcileHint':
       'Le suivi automatique est arrêté. Cette action consulte uniquement la session existante avec la clé de test actuelle. Elle ne crée aucun paiement.',
     'checkout.reconcileDenied':
-      'La vérification exige les droits de configuration et de lecture des factures.',
+      'Votre compte ne permet pas de vérifier cette session Stripe. Les permissions de configuration des connexions et de lecture des factures sont requises.',
     'checkout.notFound': 'Cette demande Stripe n’existe pas.',
     'checkout.statusWindowExceeded':
       'La période de suivi automatique est terminée. Le résultat reste inconnu. Vous pouvez demander une vérification de la session existante.',
@@ -54,7 +56,7 @@ export const checkoutText = {
       'La reprise locale est indisponible. Vérifiez la connexion au compte et le stockage de session du navigateur, puis actualisez le suivi. Aucune nouvelle création ne démarre sans cet enregistrement.',
     'checkout.progress': '3. Suivre le test',
     'checkout.paused':
-      'Suivi suspendu. Les derniers états restent affichés. Actualisez le suivi pour rétablir la connexion.',
+      'L’actualisation du suivi est suspendue. Les dernières données restent affichées. Actualisez le suivi pour réessayer.',
     'checkout.noTests': 'Aucune page de paiement de test enregistrée.',
     'checkout.historyLoading': 'Chargement des tests enregistrés…',
     'checkout.historyUnknown': 'Historique indisponible. Actualisez le suivi.',
@@ -94,9 +96,9 @@ export const checkoutText = {
     'checkout.testKeyRequired':
       'Cette clé n’est pas une clé de test. Le serveur interdit les appels Stripe réels. Utilisez une clé sk_test_ ou rk_test_.',
     'checkout.credentialsChanged':
-      'La clé Stripe a changé. La demande est bloquée pour éviter une création sur un autre compte. Vérifiez l’ancien compte Stripe.',
+      'La clé utilisée pour ce test a changé. Vérifiez le test dans le compte Stripe associé à la clé précédente.',
     'checkout.permissionRevoked':
-      'Les droits de l’auteur ont changé. Le serveur a arrêté cette demande. Vérifiez les accès administrateur.',
+      'Le compte à l’origine du test n’est plus autorisé à poursuivre le traitement automatique. Consultez le résultat dans Stripe.',
     'checkout.invoiceChanged':
       'Le solde ou l’état de la facture a changé. Consultez la facture avant de préparer un nouveau test.',
     'checkout.deadline':
@@ -119,7 +121,7 @@ export const checkoutText = {
     'checkout.invoiceIneligible':
       'La facture n’est plus éligible ou sa version a changé. Actualisez la liste et vérifiez son solde.',
     'checkout.error':
-      'La réponse du serveur n’a pas été reçue. Actualisez le suivi ou reprenez la même demande pour éviter les doublons.',
+      'Le résultat de la demande reste à confirmer. Actualisez le suivi ou reprenez la même demande pour éviter les doublons.',
     'checkout.loadError':
       'Impossible de charger les accès ou les factures. Actualisez cette page avant de créer un test.',
   },
@@ -143,9 +145,12 @@ export const checkoutText = {
       'The server checks Stripe every 30 seconds. A signed notification triggers an earlier check.',
     'checkout.refresh': 'Refresh access and status',
     'checkout.reconcile': 'Check the session with Stripe',
+    'checkout.reconcileUnconfirmed':
+      'The result of this check is unconfirmed. Refresh the status of this Stripe session.',
     'checkout.reconcileHint':
       'Automatic tracking has stopped. This action only reads the existing session with the current test key. It creates no payment.',
-    'checkout.reconcileDenied': 'Verification requires configuration and invoice read permissions.',
+    'checkout.reconcileDenied':
+      'Your account cannot check this Stripe session. Connection configuration and invoice read permissions are required.',
     'checkout.notFound': 'This Stripe request does not exist.',
     'checkout.statusWindowExceeded':
       'The automatic tracking period has ended. The result remains unknown. You can request a check of the existing session.',
@@ -176,7 +181,7 @@ export const checkoutText = {
       'Local recovery is unavailable. Check account access and browser session storage, then refresh the status. No new creation starts without this record.',
     'checkout.progress': '3. Track the test',
     'checkout.paused':
-      'Status refresh paused. The last states remain visible. Refresh the status to reconnect.',
+      'Status updates are paused. The last data remains visible. Refresh the status to try again.',
     'checkout.noTests': 'No test payment page recorded.',
     'checkout.historyLoading': 'Loading recorded tests…',
     'checkout.historyUnknown': 'History unavailable. Refresh the status.',
@@ -216,9 +221,9 @@ export const checkoutText = {
     'checkout.testKeyRequired':
       'This is not a test key. The server blocks live Stripe calls. Use an sk_test_ or rk_test_ key.',
     'checkout.credentialsChanged':
-      'The Stripe key changed. The request is blocked to prevent creation in another account. Check the previous Stripe account.',
+      'The key used for this test has changed. Check the test in the Stripe account associated with the previous key.',
     'checkout.permissionRevoked':
-      'The author’s permissions changed. The server stopped this request. Check administrator access.',
+      'The account that started the test is no longer authorized to continue automatic processing. Check the result in Stripe.',
     'checkout.invoiceChanged':
       'The invoice balance or status changed. Check the invoice before preparing another test.',
     'checkout.deadline':
@@ -240,7 +245,7 @@ export const checkoutText = {
     'checkout.invoiceIneligible':
       'The invoice is no longer eligible or its version changed. Refresh the list and check its balance.',
     'checkout.error':
-      'The server response was not received. Refresh the status or resume the same request to prevent duplicates.',
+      'The request result is unconfirmed. Refresh the status or resume the same request to prevent duplicates.',
     'checkout.loadError':
       'Cannot load access status or invoices. Refresh this page before creating a test.',
   },

@@ -1,5 +1,12 @@
 import { Confirmation } from '@shared/confirmation/confirmation';
-import { ChangeDetectionStrategy, Component, HostListener, inject, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  HostListener,
+  inject,
+  signal,
+} from '@angular/core';
 import {
   disabled,
   form,
@@ -17,6 +24,7 @@ import { I18nService, type TranslationKey } from '@app/i18n.service';
 import { Button } from '@shared/button/button';
 import { Notice } from '@shared/notice/notice';
 import { PageHeader } from '@shared/page-header/page-header';
+import { accountErrorMessage } from './account-error-message';
 
 @Component({
   selector: 'app-account-security',
@@ -32,6 +40,7 @@ export class AccountSecurity {
   protected readonly pending = signal(false);
   protected readonly complete = signal(false);
   protected readonly error = signal<TranslationKey | undefined>(undefined);
+  protected readonly errorMessage = computed(() => accountErrorMessage(this.error(), 'password'));
   private readonly model = signal({ currentPassword: '', newPassword: '', confirmation: '' });
   protected readonly passwordForm = form(this.model, (path) => {
     disabled(path, () => this.pending() || this.complete());

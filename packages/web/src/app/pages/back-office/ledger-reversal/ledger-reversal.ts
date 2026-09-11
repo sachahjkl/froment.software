@@ -29,6 +29,7 @@ import { formatMoney } from '@froment/l10n';
 import { BankLedgerApi } from '@backoffice/bank-ledger-api';
 import { Authentication } from '@backoffice/authentication';
 import { I18nService, type TranslationKey } from '@app/i18n.service';
+import { ledgerErrorMessage } from '../bank-ledger/ledger-error-message';
 import { Badge } from '@shared/badge/badge';
 import { Button } from '@shared/button/button';
 import { Confirmation } from '@shared/confirmation/confirmation';
@@ -68,6 +69,9 @@ export class LedgerReversal {
   protected readonly state = signal<'loading' | 'ready' | 'error'>('loading');
   protected readonly busy = signal(false);
   protected readonly error = signal<TranslationKey | undefined>(undefined);
+  protected readonly errorMessage = computed(() =>
+    ledgerErrorMessage(this.error(), this.state() === 'ready' ? 'reverse' : 'load'),
+  );
   protected readonly entry = signal<typeof LedgerEntry.Type | undefined>(undefined);
   protected readonly completed = signal<typeof LedgerEntry.Type | undefined>(undefined);
   protected readonly pending = signal<typeof LedgerReverse.Type | undefined>(undefined);

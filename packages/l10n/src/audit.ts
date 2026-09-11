@@ -8,6 +8,7 @@ export const auditText = {
     'audit.loadedCount.one': 'sur {count} événement chargé.',
     'audit.loadedCount.other': 'sur {count} événements chargés.',
     'audit.title': 'Journal d’audit',
+    'audit.readDenied': 'Votre compte ne permet pas de consulter le journal d’audit.',
     'audit.intro':
       'Événements enregistrés dans la base locale. Ce journal ne contient pas les journaux externes des fournisseurs.',
     'audit.open': 'Ouvrir le journal d’audit',
@@ -46,6 +47,7 @@ export const auditText = {
     'audit.loadedCount.one': 'from {count} loaded event.',
     'audit.loadedCount.other': 'from {count} loaded events.',
     'audit.title': 'Audit log',
+    'audit.readDenied': 'Your account cannot view the audit log.',
     'audit.intro':
       'Events recorded in the local database. This log does not include external provider logs.',
     'audit.open': 'Open the audit log',

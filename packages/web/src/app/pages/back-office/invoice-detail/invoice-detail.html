@@ -215,7 +215,7 @@
     @if (receiptCreditsRequired()) { @if (credits.isLoading()) {
     <p role="status">{{ i18n.t('backOffice.invoices.loading') }}</p>
     } @else if (!creditState()) {
-    <p appNotice variant="danger" role="alert">{{ i18n.t('credit.error') }}</p>
+    <p appNotice variant="danger" role="alert">{{ i18n.t('credit.loadError') }}</p>
     <button appButton type="button" (click)="credits.reload()">
       {{ i18n.t('listControls.reload') }}
     </button>
@@ -342,7 +342,7 @@
     } @else {
     <p>{{ i18n.t('billingWorkspace.noCreditNote') }}</p>
     } } @else {
-    <p appNotice variant="danger" role="alert">{{ i18n.t('credit.error') }}</p>
+    <p appNotice variant="danger" role="alert">{{ i18n.t('credit.loadError') }}</p>
     <button appButton (click)="credits.reload()">{{ i18n.t('credit.reload') }}</button> } } @case
     ('history') { @if (history.isLoading()) {
     <p role="status">{{ i18n.t('backOffice.invoices.loading') }}</p>

@@ -4,7 +4,7 @@
   <app-invoice-task-feedback /> @if (credits.isLoading()) {
   <p role="status">{{ i18n.t('backOffice.invoices.loading') }}</p>
   } @else if (task.invoice() && !creditState()) {
-  <p appNotice variant="danger" role="alert">{{ i18n.t('credit.error') }}</p>
+  <p appNotice variant="danger" role="alert">{{ i18n.t('credit.loadError') }}</p>
   } @else if (!task.completed() && task.invoice()) { @if (!eligible()) {
   <p appNotice>{{ i18n.t('billingWorkspace.unavailable') }}</p>
   } @else {

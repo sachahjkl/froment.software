@@ -113,7 +113,7 @@
       </button>
     </div>
   </form>
-  } @if (dialogError(); as code) {
+  } @if (errorMessage(); as code) {
   <p appNotice variant="danger" role="alert">{{ i18n.t(code) }}</p>
   }
 </section>

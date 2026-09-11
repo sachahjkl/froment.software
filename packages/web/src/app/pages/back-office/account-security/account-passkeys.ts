@@ -2,6 +2,7 @@ import {
   afterNextRender,
   ChangeDetectionStrategy,
   Component,
+  computed,
   ElementRef,
   Injector,
   inject,
@@ -18,6 +19,7 @@ import { Confirmation } from '@shared/confirmation/confirmation';
 import { Button } from '@shared/button/button';
 import { Notice } from '@shared/notice/notice';
 import { PageHeader } from '@shared/page-header/page-header';
+import { passkeyErrorMessage, type PasskeyOperation } from './account-error-message';
 
 @Component({
   selector: 'app-account-passkeys',
@@ -40,6 +42,10 @@ export class AccountPasskeys {
   protected readonly keys = signal<typeof PasskeyList.Type>([]);
   protected readonly loading = signal(true);
   protected readonly error = signal<TranslationKey | undefined>(undefined);
+  private readonly errorOperation = signal<PasskeyOperation>('load');
+  protected readonly errorMessage = computed(() =>
+    passkeyErrorMessage(this.error(), this.errorOperation()),
+  );
   protected readonly status = signal<TranslationKey | undefined>(undefined);
   private readonly values = signal({ name: '', password: '' });
   protected readonly fields = form(this.values, (path) => {
@@ -60,7 +66,10 @@ export class AccountPasskeys {
     this.loading.set(true);
     const outcome = await this.api.list();
     if (outcome.success) this.keys.set(outcome.result);
-    else this.error.set(outcome.code);
+    else {
+      this.errorOperation.set('load');
+      this.error.set(outcome.code);
+    }
     this.loading.set(false);
   }
 
@@ -83,7 +92,10 @@ export class AccountPasskeys {
         afterNextRender(() => this.operationStatus()?.nativeElement.focus(), {
           injector: this.injector,
         });
-      } else this.error.set(outcome.code);
+      } else {
+        this.errorOperation.set('add');
+        this.error.set(outcome.code);
+      }
     } finally {
       this.values.set({ name: '', password: '' });
       this.fields().reset();
@@ -116,7 +128,10 @@ export class AccountPasskeys {
         afterNextRender(() => this.operationStatus()?.nativeElement.focus(), {
           injector: this.injector,
         });
-      } else this.error.set(outcome.code);
+      } else {
+        this.errorOperation.set('remove');
+        this.error.set(outcome.code);
+      }
     } finally {
       this.values.update((value) => ({ ...value, password: '' }));
       this.busy.set(false);

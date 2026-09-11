@@ -39,7 +39,8 @@ export const apiDocumentation = {
     description: 'API pour les clients, devis, commandes, factures et documents générés.',
     requiredPermission: 'Permission requise : `{permission}`.',
     security: {
-      bearer: 'Jeton d’API transmis avec le schéma Bearer.',
+      bearer:
+        'Utilisez un jeton API `froment_api_v1_…` avec le schéma Bearer. Une session navigateur utilise ses cookies.',
     },
     groups: {
       audit: auditDocumentation.fr.group,
@@ -366,8 +367,9 @@ export const apiDocumentation = {
       },
       logout: { summary: 'Se déconnecter', description: 'Révoque la session active.' },
       refresh: {
-        summary: 'Rafraîchir la connexion',
-        description: 'Fait tourner le jeton de rafraîchissement et renvoie un jeton d’accès.',
+        summary: 'Renouveler la session',
+        description:
+          'Renouvelle la session et ses cookies. La réponse contient le mode d’accès et l’expiration, sans jeton secret.',
       },
       passwordChange: {
         summary: 'Changer le mot de passe',
@@ -443,7 +445,8 @@ export const apiDocumentation = {
     description: 'API for client records, quotes, orders, invoices, and generated documents.',
     requiredPermission: 'Required permission: `{permission}`.',
     security: {
-      bearer: 'API token sent with the Bearer scheme.',
+      bearer:
+        'Use a `froment_api_v1_…` API token with the Bearer scheme. A browser session uses its cookies.',
     },
     groups: {
       audit: auditDocumentation.en.group,
@@ -750,8 +753,9 @@ export const apiDocumentation = {
       login: { summary: 'Log in', description: 'Authenticates an account and creates a session.' },
       logout: { summary: 'Log out', description: 'Revokes the active session.' },
       refresh: {
-        summary: 'Refresh authentication',
-        description: 'Rotates the refresh token and returns an access token.',
+        summary: 'Renew the session',
+        description:
+          'Renews the session and its cookies. The response contains the access mode and expiration, without a secret token.',
       },
       currentAccount: {
         summary: 'Get current account',

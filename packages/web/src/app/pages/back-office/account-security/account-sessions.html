@@ -12,7 +12,7 @@
       {{ i18n.t('account.sessions_reload') }}
     </button>
   </app-page-header>
-  @if (error(); as message) {
+  @if (errorMessage(); as message) {
   <p appNotice variant="danger" role="alert">{{ i18n.t(message) }}</p>
   <p>{{ i18n.t('account.sessions_retry') }}</p>
   } @if (revoked()) {

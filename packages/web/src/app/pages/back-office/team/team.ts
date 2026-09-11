@@ -34,6 +34,7 @@ import { SearchHighlight, SearchHighlightRegistry } from '@shared/search-highlig
 import { createWorkspaceTable } from '../configuration/workspace-table';
 import { memberTableOptions, invitationTableOptions } from '../configuration/workspace-tables';
 import { TeamNavigation } from './team-navigation';
+import { teamErrorMessage, type TeamOperation } from './team-error-message';
 
 @Component({
   imports: [
@@ -128,6 +129,10 @@ export class Team {
   protected readonly busy = signal(false);
   protected readonly loading = signal(true);
   protected readonly error = signal<TranslationKey | undefined>(undefined);
+  private readonly errorOperation = signal<TeamOperation>('load');
+  protected readonly errorMessage = computed(() =>
+    teamErrorMessage(this.error(), this.errorOperation()),
+  );
   protected readonly saved = signal(false);
   protected readonly now = signal(Date.now());
   private readonly profiles = signal<Record<string, string>>({});
@@ -151,9 +156,13 @@ export class Team {
         this.now.set(Date.now());
         return outcome.result;
       }
+      this.errorOperation.set('load');
       this.error.set(outcome.code);
     } catch {
-      if (!this.destroyRef.destroyed) this.error.set('team.error');
+      if (!this.destroyRef.destroyed) {
+        this.errorOperation.set('load');
+        this.error.set('team.error');
+      }
     }
     return undefined;
   }
@@ -182,7 +191,10 @@ export class Team {
       this.saved.set(false);
       await this.load();
     } catch {
-      if (!this.destroyRef.destroyed) this.error.set('team.error');
+      if (!this.destroyRef.destroyed) {
+        this.errorOperation.set('load');
+        this.error.set('team.error');
+      }
     } finally {
       this.busy.set(false);
     }
@@ -197,6 +209,7 @@ export class Team {
       const outcome = await this.api.cancel(id);
       if (this.destroyRef.destroyed) return;
       if (!outcome.success) {
+        this.errorOperation.set('cancel');
         this.error.set(outcome.code);
         return;
       }
@@ -206,7 +219,10 @@ export class Team {
       this.saved.set(true);
       this.result()?.nativeElement.focus();
     } catch {
-      if (!this.destroyRef.destroyed) this.error.set('team.error');
+      if (!this.destroyRef.destroyed) {
+        this.errorOperation.set('cancel');
+        this.error.set('team.error');
+      }
     } finally {
       this.busy.set(false);
     }
@@ -230,6 +246,7 @@ export class Team {
       });
       if (this.destroyRef.destroyed) return;
       if (!outcome.success) {
+        this.errorOperation.set('update');
         this.error.set(outcome.code);
         return;
       }
@@ -237,6 +254,7 @@ export class Team {
       if (!data) return;
       const updated = data.members.find((item) => item.id === member.id);
       if (!updated) {
+        this.errorOperation.set('load');
         this.error.set('team.error');
         return;
       }
@@ -248,7 +266,10 @@ export class Team {
       this.saved.set(true);
       this.result()?.nativeElement.focus();
     } catch {
-      if (!this.destroyRef.destroyed) this.error.set('team.error');
+      if (!this.destroyRef.destroyed) {
+        this.errorOperation.set('update');
+        this.error.set('team.error');
+      }
     } finally {
       this.busy.set(false);
     }

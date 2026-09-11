@@ -30,6 +30,7 @@ import { LocalizedDatePipe } from '@shared/localized-date/localized-date-pipe';
 import { Notice } from '@shared/notice/notice';
 import { ObjectPicker } from '@shared/object-picker/object-picker';
 import { PageHeader } from '@shared/page-header/page-header';
+import { reminderErrorMessage } from './reminder-error-message';
 
 @Component({
   host: { class: 'page-container' },
@@ -58,6 +59,9 @@ export class ReminderEditor {
   protected readonly confirming = signal(false);
   protected readonly completed = signal(false);
   protected readonly error = signal<TranslationKey | undefined>(undefined);
+  protected readonly errorMessage = computed(() =>
+    reminderErrorMessage(this.error(), this.loadFailed() ? 'load' : 'schedule'),
+  );
   protected readonly invoices = signal<InvoiceListValue>([]);
   protected readonly simulation = signal(false);
   protected readonly pending = signal<typeof PendingReminder.Type | undefined>(undefined);

@@ -79,6 +79,9 @@ export class Audit {
   ]);
   protected readonly state = signal<'loading' | 'ready' | 'error'>('loading');
   protected readonly error = signal<TranslationKey | undefined>(undefined);
+  protected readonly errorMessage = computed(() =>
+    this.error() === 'authentication.permission_denied' ? 'audit.readDenied' : this.error(),
+  );
   protected readonly page = signal(emptyPage());
   protected readonly table = createWorkspaceTable(
     computed(() => this.page().items),

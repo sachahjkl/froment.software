@@ -65,7 +65,7 @@
     <div class="chips">
       <button appFilterChip [label]="query().q" (click)="search('')"></button>
     </div>
-    } @if (error(); as error) {
+    } @if (errorMessage(); as error) {
     <p appNotice variant="danger" role="alert">{{ i18n.t(error) }}</p>
     } @if (state() === 'loading') {
     <p role="status">{{ i18n.t('ledger.loading') }}</p>

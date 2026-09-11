@@ -17,7 +17,14 @@ export const passkeyText = {
     'passkey.unavailable':
       'Les clés d’accès nécessitent un navigateur compatible et une connexion HTTPS.',
     'passkey.rejected': 'La clé d’accès ou la confirmation a été refusée. Recommencez la demande.',
-    'passkey.error': 'L’opération a échoué ou a été annulée. Aucune connexion n’a été confirmée.',
+    'passkey.error':
+      'La connexion par clé d’accès n’a pas été confirmée. Réessayez ou utilisez votre mot de passe.',
+    'passkey.loadError':
+      'Impossible de charger les clés d’accès. Rechargez la page pour réessayer.',
+    'passkey.addUnconfirmed':
+      'L’ajout de la clé d’accès n’a pas été confirmé. Rechargez la page pour vérifier les clés enregistrées.',
+    'passkey.removeUnconfirmed':
+      'Le retrait de la clé d’accès reste à confirmer. Rechargez la page pour vérifier les clés enregistrées.',
     'passkey.added': 'Clé d’accès enregistrée.',
     'passkey.removed': 'Clé retirée. Les autres sessions ont été révoquées.',
   },
@@ -38,7 +45,12 @@ export const passkeyText = {
     'passkey.login': 'Sign in with a passkey',
     'passkey.unavailable': 'Passkeys require a compatible browser and HTTPS.',
     'passkey.rejected': 'The passkey or confirmation was rejected. Start a new request.',
-    'passkey.error': 'The operation failed or was cancelled. No sign-in was confirmed.',
+    'passkey.error': 'Passkey sign-in was not confirmed. Try again or use your password.',
+    'passkey.loadError': 'Unable to load passkeys. Reload the page to try again.',
+    'passkey.addUnconfirmed':
+      'Adding the passkey was not confirmed. Reload the page to check registered passkeys.',
+    'passkey.removeUnconfirmed':
+      'Passkey removal is unconfirmed. Reload the page to check registered passkeys.',
     'passkey.added': 'Passkey registered.',
     'passkey.removed': 'Passkey removed. Other sessions were revoked.',
   },
