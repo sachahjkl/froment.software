@@ -23,7 +23,7 @@
     "@stablelib/ed25519": "^2.1.0",
     "argon2": "^0.45.1",
     "better-sqlite3": "catalog:",
-    "csv-parse": "^6.2.1",
+    "csv-parse": "7.0.2",
     "drizzle-orm": "catalog:",
     "effect": "catalog:",
     "negotiator": "^1.1.0",
