@@ -26,7 +26,10 @@
       (
         system:
         let
-          pkgs = import nixpkgs { inherit system; };
+          pkgs = import nixpkgs {
+            inherit system;
+            config.allowUnfreePredicate = package: nixpkgs.lib.getName package == "nomad";
+          };
           secretspec = pkgs.secretspec;
           lib = pkgs.lib;
           packageJson = builtins.fromJSON (builtins.readFile ./package.json);
@@ -164,10 +167,19 @@
                   --set-default DATABASE_PATH data/froment.sqlite \
                   --set MIGRATIONS_ROOT $out/share/froment-software/drizzle
                 cp tools/deploy.sh $out/bin/${pname}-deploy
+                cp tools/prepare.sh $out/bin/${pname}-prepare
                 makeWrapper ${runtimeNode}/bin/node $out/bin/${pname}-backup \
                   --add-flags $out/lib/froment-software/backup.cjs \
                   --set MIGRATIONS_ROOT $out/share/froment-software/drizzle
-                chmod +x $out/bin/${pname}-deploy
+                chmod +x $out/bin/${pname}-deploy $out/bin/${pname}-prepare
+                wrapProgram $out/bin/${pname}-prepare \
+                  --prefix PATH : $out/bin:${
+                    lib.makeBinPath [
+                      pkgs.coreutils
+                      pkgs.findutils
+                      pkgs.sqlite
+                    ]
+                  }
                 runHook postInstall
               '';
             };
@@ -210,26 +222,6 @@
           application = mkApplication localCommit;
           mkDockerImage =
             imageApplication:
-            let
-              containerEntrypoint = pkgs.writeShellScript "froment-software-container-entrypoint" ''
-                set -eu
-                profile="''${SECRETSPEC_PROFILE:?SECRETSPEC_PROFILE is required}"
-                case "$profile" in
-                  development|staging|production) ;;
-                  *)
-                    echo "Unsupported SecretSpec profile: $profile" >&2
-                    exit 64
-                    ;;
-                esac
-                exec ${lib.getExe secretspec} \
-                  --file ${secretBundle}/secretspec.toml \
-                  run \
-                  --profile "$profile" \
-                  --scope runtime \
-                  -- \
-                  ${imageApplication}/bin/${pname}-deploy
-              '';
-            in
             pkgs.dockerTools.buildLayeredImage {
               name = pname;
               tag = version;
@@ -237,10 +229,6 @@
                 imageApplication
                 pkgs.dockerTools.fakeNss
                 pkgs.cacert
-                pkgs.sops
-                secretBundle
-                secretspec
-                containerEntrypoint
               ];
               fakeRootCommands = ''
                 cp --remove-destination ./etc/passwd ./etc/passwd.writable
@@ -256,15 +244,14 @@
                 chown -R 1000:1000 ./home/froment ./var/lib/froment-software
               '';
               config = {
-                Cmd = [ "${containerEntrypoint}" ];
+                Cmd = [ "${imageApplication}/bin/${pname}-deploy" ];
                 Env = [
                   "DATABASE_PATH=/var/lib/froment-software/froment.sqlite"
                   "SSL_CERT_FILE=${caBundle}"
                   "NIX_SSL_CERT_FILE=${caBundle}"
                   "HOME=/home/froment"
-                  "PATH=${lib.makeBinPath [ pkgs.sops ]}"
+                  "PATH=${lib.makeBinPath [ imageApplication ]}"
                   "TMPDIR=/tmp"
-                  "SECRETSPEC_PROFILE=production"
                 ];
                 ExposedPorts."3000/tcp" = { };
                 User = "froment";
@@ -334,12 +321,17 @@
                 secretspec --file ${./secretspec.toml} schema --profile staging >/dev/null
                 touch $out
               '';
-          secretBundle = pkgs.runCommand "${pname}-secret-bundle" { } ''
-            mkdir -p $out/secrets/froment-software
-            cp ${./secretspec.toml} $out/secretspec.toml
-            cp ${./secrets/froment-software/production.yaml} $out/secrets/froment-software/production.yaml
-            cp ${./secrets/froment-software/staging.yaml} $out/secrets/froment-software/staging.yaml
-          '';
+          nomadJobs =
+            pkgs.runCommand "${pname}-nomad-jobs"
+              {
+                nativeBuildInputs = [ pkgs.nomad ];
+              }
+              ''
+                image='ghcr.io/sachahjkl/froment.software@sha256:0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef'
+                nomad job validate -var "image=$image" ${./deploy/nomad/staging.nomad.hcl}
+                nomad job validate -var "image=$image" ${./deploy/nomad/production.nomad.hcl}
+                touch $out
+              '';
         in
         {
           packages = {
@@ -377,7 +369,7 @@
               '
               touch "$out"
             '';
-            inherit dockerImage productionClosure;
+            inherit dockerImage nomadJobs productionClosure;
             build = application;
             format = mkCheck "format" "pnpm format:check";
             lint = mkCheck "lint" "pnpm lint";
@@ -395,6 +387,7 @@
               cousineFonts
               pkgs.liberation_ttf
               pkgs.nodejs_26
+              pkgs.nomad
               pkgs.poppler-utils
               pnpm
               pkgs.sops
