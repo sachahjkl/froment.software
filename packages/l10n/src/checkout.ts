@@ -18,6 +18,14 @@ export const checkoutText = {
     'checkout.polling':
       'Le serveur consulte Stripe toutes les 30 secondes. Une notification signée déclenche une vérification anticipée.',
     'checkout.refresh': 'Actualiser les accès et le suivi',
+    'checkout.reconcile': 'Vérifier la session auprès de Stripe',
+    'checkout.reconcileHint':
+      'Le suivi automatique est arrêté. Cette action consulte uniquement la session existante avec la clé de test actuelle. Elle ne crée aucun paiement.',
+    'checkout.reconcileDenied':
+      'La vérification exige les droits de configuration et de lecture des factures.',
+    'checkout.notFound': 'Cette demande Stripe n’existe pas.',
+    'checkout.statusWindowExceeded':
+      'La période de suivi automatique est terminée. Le résultat reste inconnu. Vous pouvez demander une vérification de la session existante.',
     'checkout.prepare': '2. Préparer la page de paiement',
     'checkout.invoice': 'Facture',
     'checkout.chooseInvoice': 'Choisir une facture émise',
@@ -134,6 +142,13 @@ export const checkoutText = {
     'checkout.polling':
       'The server checks Stripe every 30 seconds. A signed notification triggers an earlier check.',
     'checkout.refresh': 'Refresh access and status',
+    'checkout.reconcile': 'Check the session with Stripe',
+    'checkout.reconcileHint':
+      'Automatic tracking has stopped. This action only reads the existing session with the current test key. It creates no payment.',
+    'checkout.reconcileDenied': 'Verification requires configuration and invoice read permissions.',
+    'checkout.notFound': 'This Stripe request does not exist.',
+    'checkout.statusWindowExceeded':
+      'The automatic tracking period has ended. The result remains unknown. You can request a check of the existing session.',
     'checkout.prepare': '2. Prepare the payment page',
     'checkout.invoice': 'Invoice',
     'checkout.chooseInvoice': 'Choose an issued invoice',
@@ -248,6 +263,11 @@ export const checkoutDocumentation = {
       description:
         'Fige le solde de la version émise, puis programme la création. Réutilisez le même UUID après une réponse incertaine. Le serveur refuse les clés réelles.',
     },
+    checkoutReconcile: {
+      summary: 'Vérifier une session de test après arrêt du suivi',
+      description:
+        'Consulte uniquement la session existante avec la clé de test actuelle. Vérifie les droits du demandeur et les données de session. Ne crée aucun paiement.',
+    },
   },
   en: {
     checkoutConnection: {
@@ -263,6 +283,11 @@ export const checkoutDocumentation = {
       summary: 'Prepare a test Stripe Checkout',
       description:
         'Freezes the issued version’s balance, then queues creation. Reuse the same UUID after an uncertain response. The server rejects live keys.',
+    },
+    checkoutReconcile: {
+      summary: 'Check a test session after tracking stops',
+      description:
+        'Only reads the existing session with the current test key. Checks caller permissions and session data. Creates no payment.',
     },
   },
 } as const;

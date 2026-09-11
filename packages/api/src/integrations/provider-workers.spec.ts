@@ -34,6 +34,7 @@ it('continues provider workers after defects and stops both when their scope clo
                 connection: { credentialsPresent: false, testKey: false, webhookConfigured: false },
                 enqueue: () => Effect.die('unused'),
                 list: () => Effect.succeed([]),
+                reconcile: () => Effect.die('unused'),
                 receiveEvent: () => Effect.void,
                 runPending: Effect.fn('CheckoutWorkerFake.pass')(function* () {
                   checkoutPasses++;

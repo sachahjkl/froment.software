@@ -56,6 +56,20 @@ export class IntegrationsApi extends HttpApiGroup.make('integrations', { topLeve
       rateLimit(RateLimits.tenPerMinute),
       frontendSpecific,
     ),
+  HttpApiEndpoint.post('checkoutReconcile', '/api/integrations/checkout/:requestId/reconcile', {
+    params: { requestId: CheckoutRequest.fields.requestId },
+    payload: Schema.Struct({}),
+    success: CheckoutOperation,
+    error: CheckoutFailure.members,
+  })
+    .middleware(ApiRequestBody)
+    .middleware(ApiBrowserRequest)
+    .pipe(
+      requirePermissions([Permissions.integrationConfigure, Permissions.invoiceRead]),
+      authenticate,
+      rateLimit(RateLimits.tenPerMinute),
+      frontendSpecific,
+    ),
   HttpApiEndpoint.get('providerConnections', '/api/integrations/connections', {
     success: ProviderConnections,
     error: IntegrationFailure.members,

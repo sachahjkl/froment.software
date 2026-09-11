@@ -34,4 +34,12 @@ export class CheckoutApi {
       'checkout.error',
     );
   }
+  reconcile(requestId: string) {
+    return requestOutcome(
+      this.http.post(`/api/integrations/checkout/${requestId}/reconcile`, {}),
+      CheckoutOperation,
+      CheckoutFailure,
+      'checkout.error',
+    );
+  }
 }

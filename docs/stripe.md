@@ -120,3 +120,23 @@ La facture reste émise après un paiement de test. Son historique financier res
 Si le résultat reste inconnu, consultez le journal Stripe avant de créer une nouvelle demande.
 Après une erreur de lecture, le serveur attend cinq minutes avant de consulter Stripe à nouveau.
 Il arrête le suivi trois jours après l’échéance prévue, sans inventer une confirmation d’expiration.
+
+## Reprendre une vérification
+
+L’état `open` décrit le dernier résultat connu de la session.
+Une prochaine tentative absente indique que son suivi automatique est arrêté, pas que la session est expirée.
+Le code `checkout.statusWindowExceeded` distingue la fin du suivi d’une erreur de lecture.
+
+Depuis la fiche du test, utilisez **Vérifier la session auprès de Stripe**.
+La route `POST /api/integrations/checkout/:requestId/reconcile` vérifie les permissions `integration.configure` et `invoice.read` du demandeur.
+Elle consulte uniquement la session enregistrée, avec la clé de test actuelle.
+Elle peut vérifier une session après rotation de clé ou retrait des droits de son auteur initial.
+Stripe doit autoriser la lecture de cette session avec la clé actuelle.
+La réponse doit correspondre au mode test, au montant et à toutes les données de suivi enregistrées.
+
+Cette vérification ne crée aucune session et ne modifie aucun encaissement local.
+Une confirmation de paiement ou d’expiration termine le suivi et libère la facture pour un nouveau test.
+Une réponse incertaine conserve la session ouverte et permet une nouvelle vérification explicite.
+Un résultat encore ouvert reprend le suivi automatique seulement si ses conditions initiales restent valides.
+La rotation de clé ne modifie jamais l’empreinte enregistrée pour la création ou ses reprises.
+Le verrou de traitement et son numéro de génération protègent aussi les vérifications explicites contre les réponses tardives.

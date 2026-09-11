@@ -30,6 +30,8 @@
   <p>{{ item.invoiceNumber }}</p>
   } @else {
   <p role="status">{{ i18n.t(historyLabel()) }}</p>
+  } @if (reconcileError(); as code) {
+  <p appNotice variant="danger">{{ i18n.t(code) }}</p>
   } @if (current(); as item) { @if (item.error; as code) {
   <p appNotice variant="warning">{{ i18n.t(code) }}</p>
   }
@@ -56,6 +58,11 @@
     }
   </dl>
   <div class="spacer-x-4">
+    @if (canReconcile(item)) {
+    <button appButton type="button" [disabled]="reconciling()" (click)="reconcile()">
+      {{ i18n.t('checkout.reconcile') }}
+    </button>
+    }
     <a [routerLink]="['/backoffice/invoices', item.request.invoiceId]"
       >{{ i18n.t('checkout.viewInvoice') }}</a
     >
@@ -70,7 +77,9 @@
     >
     }
   </div>
-  @if (canOpen(item)) {
+  @if (canReconcile(item)) {
+  <p>{{ i18n.t('checkout.reconcileHint') }}</p>
+  } @if (canOpen(item)) {
   <p>{{ i18n.t('checkout.testCard') }}</p>
   }
   <p>{{ i18n.t('checkout.returnHint') }}</p>

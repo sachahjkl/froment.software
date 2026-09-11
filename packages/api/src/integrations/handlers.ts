@@ -37,6 +37,15 @@ export const IntegrationHandlers = HttpApiBuilder.group(Api, 'integrations', (ha
         }),
       )
       .handle(
+        'checkoutReconcile',
+        Effect.fn('checkoutReconcile')(function* ({ params }) {
+          yield* setPrivateResponseHeaders;
+          return yield* (yield* Checkouts)
+            .reconcile(params.requestId, (yield* ApiPrincipal).userId)
+            .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
+        }),
+      )
+      .handle(
         'providerConnections',
         Effect.fn('providerConnections')(function* () {
           yield* setPrivateResponseHeaders;

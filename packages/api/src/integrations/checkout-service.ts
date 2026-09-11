@@ -65,10 +65,29 @@ const makeCheckouts = Effect.gen(function* () {
     and rp.permission_code in ('integration.configure', 'invoice.read')
     group by u.id having count(distinct rp.permission_code) = 2`)
       .get(actorId) !== undefined;
-  const record = (row: typeof Row.Type, status: string, now: number) =>
+  const connectionError = (): typeof CheckoutErrorCode.Type | null =>
+    !transport.connection.credentialsPresent
+      ? 'checkout.credentialsMissing'
+      : !transport.connection.testKey
+        ? 'checkout.testKeyRequired'
+        : null;
+  const automaticError = (row: typeof Row.Type): typeof CheckoutErrorCode.Type | null =>
+    !allowed(row.createdByUserId)
+      ? 'checkout.permissionRevoked'
+      : (connectionError() ??
+        (transport.accountKey !== row.accountKey ? 'checkout.credentialsChanged' : null));
+  const trackingError = (row: typeof Row.Type, now: number): typeof CheckoutErrorCode.Type | null =>
+    automaticError(row) ??
+    (now >= epoch(row.expiresAt) + 3 * 86400000 ? 'checkout.statusWindowExceeded' : null);
+  const record = (
+    row: typeof Row.Type,
+    status: string,
+    now: number,
+    actorId = row.createdByUserId,
+  ) =>
     audit.insert({
       action: 'integration.processed',
-      actorUserId: row.createdByUserId,
+      actorUserId: actorId,
       resourceType: 'integration',
       resourceId: row.request.requestId,
       metadata: {
@@ -181,26 +200,32 @@ const makeCheckouts = Effect.gen(function* () {
       catch: (cause) => (cause instanceof CheckoutConflict ? cause : databaseError(cause)),
     });
   });
-  const process = Effect.fn('Checkouts.process')(function* (requestId: string) {
+  const process = Effect.fn('Checkouts.process')(function* (requestId: string, actorId?: string) {
     const now = yield* Clock.currentTimeMillis;
     const job = yield* Effect.try({
       try: () =>
         sqlite
           .transaction(() => {
-            const row = read(requestId);
-            if (row.nextAttemptAt === null || row.nextAttemptAt > now) return undefined;
+            if (actorId !== undefined && !allowed(actorId))
+              throw new CheckoutConflict({ code: 'checkout.reconcileDenied' });
+            const candidate = sqlite.prepare(`${select} where request_id = ?`).get(requestId);
+            if (candidate === undefined) throw new CheckoutConflict({ code: 'checkout.notFound' });
+            const row = Schema.decodeUnknownSync(Row)(candidate);
+            if (actorId === undefined && (row.nextAttemptAt === null || row.nextAttemptAt > now))
+              return undefined;
             const reading = row.status === 'open';
+            if (actorId !== undefined) {
+              if (!reading) return undefined;
+              if (row.nextAttemptAt !== null && row.nextAttemptAt > now) return undefined;
+            }
             if (!reading && !['queued', 'creating', 'retrying'].includes(row.status))
               return undefined;
-            let error: typeof CheckoutErrorCode.Type | null = !allowed(row.createdByUserId)
-              ? 'checkout.permissionRevoked'
-              : !transport.connection.credentialsPresent
-                ? 'checkout.credentialsMissing'
-                : !transport.connection.testKey
-                  ? 'checkout.testKeyRequired'
-                  : transport.accountKey !== row.accountKey
-                    ? 'checkout.credentialsChanged'
-                    : null;
+            let error =
+              actorId !== undefined
+                ? connectionError()
+                : reading
+                  ? trackingError(row, now)
+                  : automaticError(row);
             if (error === null && !reading) {
               if (now >= epoch(row.expiresAt) - 3600000 || row.attempts >= 5)
                 error = 'checkout.deadline';
@@ -219,15 +244,13 @@ const makeCheckouts = Effect.gen(function* () {
                 }
               }
             }
-            if (reading && now >= epoch(row.expiresAt) + 3 * 86400000)
-              error = 'checkout.statusUnavailable';
             if (error !== null) {
               sqlite
                 .prepare(
                   'update checkout_operations set lease = lease + 1, status = ?, error = ?, updated_at = ?, next_attempt_at = null where request_id = ?',
                 )
                 .run(reading ? 'open' : 'blocked', error, iso(now), requestId);
-              record(row, error, now);
+              record(row, error, now, actorId);
               return undefined;
             }
             sqlite
@@ -241,10 +264,11 @@ const makeCheckouts = Effect.gen(function* () {
                 now + 120000,
                 requestId,
               );
+            if (actorId !== undefined) record(row, 'reconciliation-requested', now, actorId);
             return read(requestId);
           })
           .immediate(),
-      catch: databaseError,
+      catch: (cause) => (cause instanceof CheckoutConflict ? cause : databaseError(cause)),
     });
     if (job === undefined) return;
     const reading = job.status === 'open';
@@ -294,9 +318,14 @@ const makeCheckouts = Effect.gen(function* () {
                   : 'failed';
               error = reading ? 'checkout.statusUnavailable' : failure.code;
             }
+            const pauseReason = status === 'open' ? trackingError(job, finished) : null;
+            const stopReading = pauseReason !== null || (actorId !== undefined && error !== null);
+            if (error === null && pauseReason !== null) error = pauseReason;
             const next =
               status === 'open'
-                ? finished + (error === null ? 30000 : 300000)
+                ? stopReading
+                  ? null
+                  : finished + (error === null ? 30000 : 300000)
                 : status === 'retrying'
                   ? finished + 60000 * 2 ** job.attempts
                   : null;
@@ -316,9 +345,19 @@ const makeCheckouts = Effect.gen(function* () {
                 job.status,
               ).changes;
             if (changed > 0 && (status !== job.status || error !== job.error))
-              record(job, error ?? status, finished);
+              record(job, error ?? status, finished, actorId);
           })
           .immediate(),
+      catch: databaseError,
+    });
+  });
+  const reconcile = Effect.fn('Checkouts.reconcile')(function* (
+    requestId: string,
+    actorId: string,
+  ) {
+    yield* process(requestId, actorId);
+    return yield* Effect.try({
+      try: () => publicOperation(read(requestId)),
       catch: databaseError,
     });
   });
@@ -336,7 +375,7 @@ const makeCheckouts = Effect.gen(function* () {
         ),
       catch: databaseError,
     });
-    yield* Effect.forEach(ids, process, { discard: true });
+    yield* Effect.forEach(ids, (id) => process(id), { discard: true });
   });
   const receiveEvent = Effect.fn('Checkouts.receiveEvent')(function* (event: {
     readonly id: string;
@@ -370,7 +409,7 @@ const makeCheckouts = Effect.gen(function* () {
       catch: databaseError,
     });
   });
-  return { connection: transport.connection, enqueue, list, runPending, receiveEvent };
+  return { connection: transport.connection, enqueue, list, runPending, reconcile, receiveEvent };
 });
 export class Checkouts extends Context.Service<Checkouts, Effect.Success<typeof makeCheckouts>>()(
   '@froment/api/Checkouts',

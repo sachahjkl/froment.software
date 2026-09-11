@@ -25,6 +25,7 @@ export const CheckoutErrorCode = Schema.Literals([
   'checkout.rejected',
   'checkout.rateLimited',
   'checkout.statusUnavailable',
+  'checkout.statusWindowExceeded',
   'checkout.responseMismatch',
 ]);
 export const CheckoutOperation = Schema.Struct({
@@ -55,6 +56,8 @@ export const CheckoutOperation = Schema.Struct({
   error: Schema.NullOr(CheckoutErrorCode),
 });
 export type CheckoutOperation = typeof CheckoutOperation.Type;
+export const canReconcileCheckout = (operation: CheckoutOperation): boolean =>
+  operation.status === 'open' && operation.nextAttemptAt === null && operation.sessionId !== null;
 export const CheckoutList = Schema.Array(CheckoutOperation);
 export const CheckoutConnection = Schema.Struct({
   credentialsPresent: Schema.Boolean,
@@ -69,6 +72,8 @@ export class CheckoutConflict extends Schema.TaggedError<CheckoutConflict>()(
       'checkout.active',
       'checkout.limit',
       'checkout.invoiceIneligible',
+      'checkout.reconcileDenied',
+      'checkout.notFound',
     ]),
   },
   { httpApiStatus: 409 },

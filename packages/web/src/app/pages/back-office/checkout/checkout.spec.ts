@@ -281,3 +281,53 @@ it('does not create a Stripe session without durable storage', async () => {
   expect(create).not.toHaveBeenCalled();
   expect(fixture.componentInstance['error']()).toBe('checkout.recoveryUnavailable');
 });
+
+it('checks a stopped session explicitly without creating a new request and preserves unknown results', async () => {
+  const request: CheckoutRequest = {
+    requestId: '7345c34c-320b-49a4-ae23-ec993e570e8b',
+    invoiceId: invoice.id,
+    expectedVersion: 2,
+  };
+  const stopped: CheckoutOperation = {
+    ...operation(request),
+    status: 'open',
+    nextAttemptAt: null,
+    sessionId: 'cs_test_existing',
+    error: 'checkout.statusWindowExceeded',
+  };
+  const list = new Subject<readonly CheckoutOperation[]>();
+  const create = vi.fn();
+  const reconcile = vi
+    .fn()
+    .mockResolvedValueOnce({ success: false, code: 'checkout.error' })
+    .mockResolvedValueOnce({
+      success: true,
+      result: { ...stopped, status: 'expired', error: null },
+    });
+  TestBed.configureTestingModule({
+    providers: [
+      provideRouter([]),
+      {
+        provide: ActivatedRoute,
+        useValue: {
+          paramMap: of(convertToParamMap({ requestId: request.requestId })),
+          queryParamMap: of(convertToParamMap({})),
+        },
+      },
+      { provide: CheckoutApi, useValue: { list: () => list, create, reconcile } },
+    ],
+  });
+  const fixture = TestBed.createComponent(CheckoutDetail);
+  await fixture.whenStable();
+  const detail = fixture.componentInstance;
+  detail['history'].record(stopped);
+  await detail['reconcile']();
+  expect(detail['current']()).toEqual(stopped);
+  expect(detail['reconcileError']()).toBe('checkout.error');
+  await detail['reconcile']();
+  expect(detail['current']()?.status).toBe('expired');
+  expect(reconcile.mock.calls).toEqual([[request.requestId], [request.requestId]]);
+  expect(create).not.toHaveBeenCalled();
+  await detail['reconcile']();
+  expect(reconcile).toHaveBeenCalledTimes(2);
+});
