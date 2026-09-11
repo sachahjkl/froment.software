@@ -19,6 +19,8 @@ export class BrowserSessionStore {
   private refreshRequest: Promise<LoginModeValue | undefined> | undefined;
   private refreshTimer: ReturnType<typeof setTimeout> | undefined;
   private generation = 0;
+  private readonly identityState = signal(0);
+  readonly identity = this.identityState.asReadonly();
   private readonly revisionState = signal(0);
   readonly revision = this.revisionState.asReadonly();
   private readonly refreshState = signal(false);
@@ -52,6 +54,11 @@ export class BrowserSessionStore {
   }
 
   set(session: BrowserSessionValue): BrowserSessionValue {
+    this.identityState.update((identity) => identity + 1);
+    return this.updateSession(session);
+  }
+
+  private updateSession(session: BrowserSessionValue): BrowserSessionValue {
     this.generation += 1;
     this.revisionState.update((revision) => revision + 1);
     this.state.set(session);
@@ -60,6 +67,7 @@ export class BrowserSessionStore {
   }
 
   clear(): void {
+    this.identityState.update((identity) => identity + 1);
     this.generation += 1;
     this.revisionState.update((revision) => revision + 1);
     this.state.set(undefined);
@@ -81,7 +89,7 @@ export class BrowserSessionStore {
           const { decodeBrowserSession } = await import('./browser-session-decoder');
           const session = decodeBrowserSession(response);
           if (this.generation !== generation) return this.mode();
-          return this.set(session).mode;
+          return this.updateSession(session).mode;
         } catch {
           if (this.generation === generation) this.clear();
           return this.mode();

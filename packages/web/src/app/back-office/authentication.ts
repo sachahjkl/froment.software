@@ -1,5 +1,5 @@
 import { isPlatformBrowser } from '@angular/common';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import {
   computed,
   effect,
@@ -36,6 +36,7 @@ export type AuthenticationOutcome =
   | ApiFailure<AuthenticationFailureValue, 'authentication.error'>;
 
 interface AccountKey {
+  readonly identity: number;
   readonly session: number;
   readonly refresh: number;
 }
@@ -49,6 +50,7 @@ export class Authentication {
   private readonly accountObserved = signal(false);
   private readonly accountRefresh = signal(0);
   private readonly accountKey = computed<AccountKey>(() => ({
+    identity: this.sessions.identity(),
     session: this.sessions.revision(),
     refresh: this.accountRefresh(),
   }));
@@ -61,10 +63,11 @@ export class Authentication {
   >(undefined);
   private accountRequest:
     | {
-        readonly key: AccountKey;
+        readonly identity: number;
         readonly promise: Promise<CurrentAccountValue | undefined>;
       }
     | undefined;
+  private settledAccountKey: AccountKey | undefined;
   readonly account = computed(() => {
     const cached = this.accountCache();
     return !this.sessions.refreshing() && cached?.key === this.accountKey()
@@ -77,7 +80,8 @@ export class Authentication {
       this.accountKey();
       if (!this.accountObserved() || this.sessions.refreshing()) return;
       untracked(() => {
-        if (this.sessions.mode() !== undefined) void this.currentAccount();
+        if (this.sessions.mode() !== undefined && this.settledAccountKey !== this.accountKey())
+          void this.currentAccount();
       });
     });
   }
@@ -86,7 +90,9 @@ export class Authentication {
     return this.account()?.permissions.includes(permission) === true;
   }
 
-  async refreshAccount(): Promise<CurrentAccountValue | undefined> {
+  refreshAccount(): Promise<CurrentAccountValue | undefined> {
+    if (this.accountRequest?.identity === this.sessions.identity())
+      return this.accountRequest.promise;
     this.accountRefresh.update((revision) => revision + 1);
     return this.currentAccount();
   }
@@ -119,32 +125,60 @@ export class Authentication {
   currentAccount(): Promise<CurrentAccountValue | undefined> {
     if (!this.isBrowser) return Promise.resolve(undefined);
     this.accountObserved.set(true);
-    if (this.sessions.refreshing()) {
-      return this.sessions
-        .refresh()
-        .then((mode) => (mode === undefined ? undefined : this.currentAccount()));
-    }
-    if (this.sessions.mode() === undefined) return Promise.resolve(undefined);
-    const key = this.accountKey();
+    if (!this.sessions.refreshing() && this.sessions.mode() === undefined)
+      return Promise.resolve(undefined);
+    const identity = this.sessions.identity();
     const account = this.account();
     if (account !== undefined) return Promise.resolve(account);
-    if (this.accountRequest?.key === key) return this.accountRequest.promise;
-    const promise = this.loadAccount(key);
-    this.accountRequest = { key, promise };
+    if (this.accountRequest?.identity === identity) return this.accountRequest.promise;
+    const promise = this.loadAccount(identity);
+    this.accountRequest = { identity, promise };
     return promise;
   }
 
-  private async loadAccount(key: AccountKey): Promise<CurrentAccountValue | undefined> {
+  private async loadAccount(identity: number): Promise<CurrentAccountValue | undefined> {
+    const cached = this.accountCache();
+    const expectedUserId = cached?.key.identity === identity ? cached.value.userId : undefined;
     try {
-      const response = await firstValueFrom(this.http.get<unknown>('/api/auth/account'));
-      const value = Schema.decodeUnknownSync(CurrentAccount)(response);
-      if (this.accountKey() !== key) return undefined;
-      this.accountCache.set({ key, value });
-      return value;
+      for (let attempt = 0; attempt < 2; attempt += 1) {
+        if (this.sessions.refreshing()) await this.sessions.refresh();
+        if (this.sessions.identity() !== identity || this.sessions.mode() === undefined)
+          return undefined;
+        const key = this.accountKey();
+        let response: unknown;
+        try {
+          response = await firstValueFrom(this.http.get<unknown>('/api/auth/account'));
+        } catch (error) {
+          if (
+            attempt !== 0 ||
+            !(error instanceof HttpErrorResponse) ||
+            error.status !== 401 ||
+            this.sessions.identity() !== identity
+          )
+            return undefined;
+          if (this.sessions.revision() === key.session || this.sessions.refreshing())
+            await this.sessions.refresh();
+          continue;
+        }
+        if (this.sessions.identity() !== identity) return undefined;
+        if (this.accountKey() !== key || this.sessions.refreshing()) continue;
+        const value = Schema.decodeUnknownSync(CurrentAccount)(response);
+        if (
+          value.mode !== this.sessions.mode() ||
+          (expectedUserId !== undefined && value.userId !== expectedUserId)
+        ) {
+          this.sessions.clear();
+          return undefined;
+        }
+        this.accountCache.set({ key, value });
+        return value;
+      }
+      return undefined;
     } catch {
       return undefined;
     } finally {
-      if (this.accountRequest?.key === key) this.accountRequest = undefined;
+      if (this.sessions.identity() === identity) this.settledAccountKey = this.accountKey();
+      if (this.accountRequest?.identity === identity) this.accountRequest = undefined;
     }
   }
 

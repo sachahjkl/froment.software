@@ -1,11 +1,29 @@
 import { inject, Injector } from '@angular/core';
-import { type CanActivateFn, type Data, Router } from '@angular/router';
+import {
+  type ActivatedRouteSnapshot,
+  type CanActivateChildFn,
+  type CanActivateFn,
+  type Data,
+  Router,
+} from '@angular/router';
 import type { PermissionCodeValue } from '@froment/contracts';
 import type { Authentication } from './authentication';
 
+export interface PermissionRouteData {
+  readonly access: 'permissions';
+  readonly permissions: readonly [PermissionCodeValue, ...PermissionCodeValue[]];
+}
+
+export interface SessionRouteData {
+  readonly access: 'session';
+}
+
+export const sessionData = (): SessionRouteData => ({ access: 'session' });
+
 export const permissionData = (
   ...permissions: [PermissionCodeValue, ...PermissionCodeValue[]]
-) => ({
+): PermissionRouteData => ({
+  access: 'permissions',
   permissions,
 });
 
@@ -17,38 +35,49 @@ const permits = async (authentication: Authentication, data: Data) => {
   ]);
   return (
     authentication.account()?.mode === 'administrator' &&
+    data['access'] === 'permissions' &&
     Schema.is(Schema.Array(PermissionCode).check(Schema.isMinLength(1)))(required) &&
     required.every((code) => authentication.can(code))
   );
 };
 
-export const permissionsGuard: CanActivateFn = async (route) => {
+const declaredAccess = (route: ActivatedRouteSnapshot): readonly Data[] =>
+  route.pathFromRoot
+    .map((parent) => parent.routeConfig?.data ?? parent.data)
+    .filter((data) => data['access'] !== undefined || data['permissions'] !== undefined);
+
+const accessGuard: CanActivateFn = async (route) => {
   const injector = inject(Injector);
   const router = inject(Router);
-  const { Authentication } = await import('./authentication');
+  const [{ Authentication }, { RouteAccount }] = await Promise.all([
+    import('./authentication'),
+    import('./route-account'),
+  ]);
   const auth = injector.get(Authentication);
   if ((await auth.sessionMode()) !== 'administrator')
     return router.createUrlTree(['/backoffice/login']);
-  const account = await auth.currentAccount();
-  if (account?.mode === 'administrator' && (await permits(auth, route.data))) return true;
+  const account = await injector.get(RouteAccount).load(auth);
+  if (account?.mode !== 'administrator') return router.createUrlTree(['/backoffice/login']);
+  const declarations = declaredAccess(route);
+  if (
+    declarations.length > 0 &&
+    (
+      await Promise.all(
+        declarations.map(
+          (data) =>
+            (data['access'] === 'session' && data['permissions'] === undefined) ||
+            permits(auth, data),
+        ),
+      )
+    ).every(Boolean)
+  )
+    return true;
   return router.createUrlTree(['/backoffice/account']);
 };
 
-export const administratorGuard: CanActivateFn = async (route) => {
-  const injector = inject(Injector);
-  const router = inject(Router);
-  const { Authentication } = await import('./authentication');
-  const auth = injector.get(Authentication);
-  if ((await auth.sessionMode()) === 'administrator') {
-    const account = await auth.currentAccount();
-    if (account?.mode === 'administrator') {
-      if (route.data?.['permissions'] === undefined || (await permits(auth, route.data)))
-        return true;
-      return router.createUrlTree(['/backoffice/account']);
-    }
-  }
-  return router.createUrlTree(['/backoffice/login']);
-};
+export const administratorGuard: CanActivateFn = accessGuard;
+export const permissionsGuard: CanActivateFn = accessGuard;
+export const administratorChildGuard: CanActivateChildFn = accessGuard;
 
 export const clientGuard: CanActivateFn = async (_route, state) => {
   const injector = inject(Injector);

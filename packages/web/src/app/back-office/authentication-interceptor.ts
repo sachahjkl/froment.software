@@ -5,6 +5,8 @@ import { catchError, from, switchMap, throwError } from 'rxjs';
 import { BrowserSessionStore } from './browser-session-store';
 
 const excluded = (url: string) =>
+  // Authentication owns the bounded account retry across session revisions.
+  url === '/api/auth/account' ||
   url === '/api/auth/login' ||
   url === '/api/auth/refresh' ||
   url === '/api/auth/logout' ||

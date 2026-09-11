@@ -3,9 +3,11 @@ import { HomeComponent } from './pages/home/home.component';
 import { policies } from './pages/policy/policy-documents';
 import {
   administratorGuard,
+  administratorChildGuard,
   clientGuard,
   permissionData,
   permissionsGuard,
+  sessionData,
 } from './back-office/authentication-guards';
 import { unsavedChangesGuard } from './back-office/unsaved-changes-guard';
 import { TabPanelOutlet } from './shared/tabs/tab-panel';
@@ -172,8 +174,10 @@ export const routes: Routes = [
       ),
     children: accountRoutes,
     canActivate: [administratorGuard],
+    canActivateChild: [administratorChildGuard],
     data: {
       shell: 'administrator',
+      ...sessionData(),
       titleKey: 'account.security_title',
       descriptionKey: 'page.description.back_office',
       robots: 'noindex, nofollow',
@@ -222,6 +226,7 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./pages/back-office/clients/clients').then((module) => module.Clients),
     canActivate: [administratorGuard],
+    canActivateChild: [administratorChildGuard],
     data: {
       shell: 'administrator',
       titleKey: 'page.back_office_clients',
@@ -283,6 +288,7 @@ export const routes: Routes = [
         (module) => module.ClientDetail,
       ),
     canActivate: [administratorGuard],
+    canActivateChild: [administratorChildGuard],
     canDeactivate: [unsavedChangesGuard],
     data: {
       shell: 'administrator',
@@ -309,6 +315,7 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./pages/back-office/affairs/affairs').then((module) => module.Affairs),
     canActivate: [administratorGuard],
+    canActivateChild: [administratorChildGuard],
     data: {
       shell: 'administrator',
       titleKey: 'page.back_office_quotes',
@@ -325,6 +332,7 @@ export const routes: Routes = [
         (module) => module.AffairDetail,
       ),
     canActivate: [administratorGuard],
+    canActivateChild: [administratorChildGuard],
     children: [
       ...tabRoutes('overview', 'affair-detail', ['overview', 'documents']),
       {
@@ -403,6 +411,7 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./pages/back-office/quote-detail/quote-detail').then((module) => module.QuoteDetail),
     canActivate: [administratorGuard],
+    canActivateChild: [administratorChildGuard],
     canDeactivate: [unsavedChangesGuard],
     children: tabRoutes('summary', 'quote-detail', ['summary', 'document', 'versions']),
     data: {
@@ -459,6 +468,7 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./pages/back-office/catalog/catalog').then((module) => module.Catalog),
     canActivate: [administratorGuard],
+    canActivateChild: [administratorChildGuard],
     data: {
       shell: 'administrator',
       ...permissionData('catalog.read'),
@@ -474,8 +484,10 @@ export const routes: Routes = [
         (module) => module.Configuration,
       ),
     canActivate: [administratorGuard],
+    canActivateChild: [administratorChildGuard],
     data: {
       shell: 'administrator',
+      ...sessionData(),
       titleKey: 'page.back_office_issuer_settings',
       descriptionKey: 'page.description.back_office_issuer_settings',
       robots: 'noindex, nofollow',
@@ -575,6 +587,7 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./pages/back-office/emails/emails').then((module) => module.Emails),
     canActivate: [administratorGuard],
+    canActivateChild: [administratorChildGuard],
     canDeactivate: [unsavedChangesGuard],
     data: {
       shell: 'administrator',

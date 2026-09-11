@@ -15,7 +15,9 @@ export class Can {
   constructor() {
     effect(() => {
       const permissions = Array.ensure(this.appCan());
-      const allowed = permissions.every((permission) => this.authentication.can(permission));
+      const allowed =
+        permissions.length > 0 &&
+        permissions.every((permission) => this.authentication.can(permission));
       if (allowed && this.container.length === 0) this.container.createEmbeddedView(this.template);
       else if (!allowed) this.container.clear();
     });
