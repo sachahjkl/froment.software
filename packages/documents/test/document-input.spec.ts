@@ -111,4 +111,19 @@ describe('Typst document inputs', () => {
   it('formats every safe cent integer without precision loss', () => {
     expect(formatMoney(Number.MAX_SAFE_INTEGER, 'fr-FR', 'EUR')).toBe('90 071 992 547 409,91 €');
   });
+
+  it('keeps supplementary Unicode characters intact when wrapping words', () => {
+    const title = 'a'.repeat(17) + '😀' + 'b'.repeat(20);
+    const input = prepareQuoteDocument({ ...quote, title });
+    expect(input.title.isWellFormed()).toBe(true);
+    expect(input.title.replaceAll('\u200b', '')).toBe(title);
+  });
+
+  it('preserves every milliquantity at the safe integer limit', () => {
+    const input = prepareQuoteDocument({
+      ...quote,
+      lines: [{ ...line, quantityMilli: Number.MAX_SAFE_INTEGER }],
+    });
+    expect(input.lines[0]?.quantity).toBe('9 007 199 254 740,991');
+  });
 });

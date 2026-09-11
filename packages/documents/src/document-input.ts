@@ -59,7 +59,7 @@ export type OrderDocumentInput = typeof OrderDocumentInput.Type;
 
 const nonEmpty = (values: ReadonlyArray<string>): Array<string> =>
   values.filter((value) => value.length > 0);
-const wrapText = (value: string): string => value.replaceAll(/(\S{18})(?=\S)/g, '$1\u200b');
+const wrapText = (value: string): string => value.replaceAll(/(\S{18})(?=\S)/gu, '$1\u200b');
 const wrapBlocks = (blocks: ReadonlyArray<DocumentTextBlock>): ReadonlyArray<DocumentTextBlock> =>
   blocks.map((block) => {
     if (block.kind === 'list') return { ...block, items: block.items.map(wrapBlocks) };
@@ -93,8 +93,14 @@ const issuerLines = (issuer: IssuerSettings): Array<string> => [
 ];
 
 const money = (cents: number): string => formatMoney(cents, 'fr-FR', 'EUR');
-const quantity = (value: number): string =>
-  new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 3 }).format(value / 1_000);
+const quantity = (value: number): string => {
+  const integer = BigInt(value);
+  const decimal = `${integer / 1_000n}.${String(integer % 1_000n).padStart(3, '0')}`;
+  // SAFETY: Integer arithmetic produces an exact decimal quantity.
+  return new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 3 }).format(
+    decimal as Intl.StringNumericLiteral,
+  );
+};
 const percent = (value: number): string =>
   `${new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 2 }).format(value / 100)} %`;
 const date = (value: string): string =>

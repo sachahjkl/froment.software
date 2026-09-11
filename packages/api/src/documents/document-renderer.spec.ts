@@ -154,6 +154,26 @@ const inspectPdf = (pdf: Uint8Array) => {
 const normalizedText = (value: string): string => value.replaceAll(/[\s\u200b]/g, '');
 
 describe('DocumentRenderer', () => {
+  it('renders supplementary Unicode and every line of a page-sized description', async () => {
+    const snapshot = Schema.decodeUnknownSync(QuoteRenderSnapshot)({
+      ...compactQuote,
+      title: 'a'.repeat(17) + '😀',
+      lines: compactQuote.lines.map((line, index) => ({
+        ...line,
+        description: index === 0 ? 'x\n'.repeat(78) + 'FIN' : line.description,
+      })),
+    });
+    const pdf = await Effect.runPromise(
+      DocumentRenderer.use((renderer) => renderer.renderQuotePdf(snapshot)).pipe(
+        Effect.provide(DocumentRendererLive),
+      ),
+    );
+    const inspected = inspectPdf(pdf);
+    expect(inspected.text.match(/\bx\b/g)).toHaveLength(78);
+    expect(inspected.text).toContain('FIN');
+    expect(inspected.text).toContain('Total TTC');
+  });
+
   it('renders formatted conditions inline or on a new page for each document type', async () => {
     const source =
       '## Conditions particulières\n\nPaiement **à réception**.\n\nUne *seconde clause*.\n\n1. Première obligation\n2. Deuxième obligation\n   - Précision complémentaire';

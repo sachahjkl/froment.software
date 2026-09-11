@@ -96,12 +96,12 @@
       table.hline(stroke: 0.25mm + rgb("555555")),
     ),
     ..data.lines.map(line => (
-      table.cell(breakable: false)[#line.position],
-      table.cell(breakable: false)[#line.description],
-      table.cell(breakable: false)[#line.unitPrice],
-      table.cell(breakable: false)[#line.quantity],
-      table.cell(breakable: false)[#line.vat],
-      table.cell(breakable: false)[#line.amount],
+      table.cell()[#line.position],
+      table.cell()[#line.description],
+      table.cell()[#line.unitPrice],
+      table.cell()[#line.quantity],
+      table.cell()[#line.vat],
+      table.cell()[#line.amount],
     )).flatten(),
     table.hline(stroke: 0.25mm + rgb("555555")),
   )
