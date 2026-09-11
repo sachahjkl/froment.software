@@ -110,10 +110,7 @@ const fixtures = (
           authorizePermission,
         }),
         Layer.mock(Audit, { insert: () => userId }),
-        Layer.succeed(
-          RequestLimiter,
-          RequestLimiter.of({ allowRequest: () => Effect.succeed(true) }),
-        ),
+        Layer.mock(RequestLimiter, { allowRequest: () => Effect.succeed(true) }),
         configuration,
       ),
     ),

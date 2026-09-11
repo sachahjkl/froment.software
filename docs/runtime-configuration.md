@@ -25,6 +25,17 @@ La requête SQL et la validation des lignes utilisent cette même taille.
 Les contrats partagés valident la structure, sans imposer une taille propre au déploiement.
 La recherche, le tri et l’export de l’interface portent uniquement sur la page chargée.
 
+## Quotas de requêtes
+
+`REQUEST_LIMITER_CAPACITY` limite les compteurs ordinaires à 10 000 entrées.
+`REQUEST_LIMITER_PUBLIC_CAPACITY` limite séparément les compteurs des devis publics à 10 000 entrées.
+`REQUEST_LIMITER_WINDOW_MILLIS` définit leur fenêtre fixe, de 60 000 ms par défaut.
+Chaque compteur reste présent jusqu’à la fin de sa fenêtre, sans prolongation lors d’un refus.
+Si la capacité est atteinte, les nouvelles clés sont refusées jusqu’à la libération de compteurs expirés.
+Les compteurs actifs ne sont jamais évincés.
+Une adresse publique déjà limitée ne crée aucun compteur de jeton.
+Ces limites sont locales au processus et sont remises à zéro au redémarrage.
+
 ## Tests
 
 Pour tester le chargement, fournissez `ConfigProvider.layer(ConfigProvider.fromUnknown(...))` à `RuntimeConfigurationLive`.

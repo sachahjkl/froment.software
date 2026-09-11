@@ -19,16 +19,19 @@ export const limitPublicQuoteRequest = Effect.fn('limitPublicQuoteRequest')(func
       : route === 'download'
         ? runtime.publicQuote.downloadPerMinute
         : runtime.publicQuote.signaturePerMinute;
-  const tokenDigest = hmac(config.quoteLinkHmacKey, token).toString('hex');
-  const addressAllowed = yield* limiter.allowRequest(
+  const addressAllowed = yield* limiter.allowPublicRequest(
     `public-quote-${route}:address:${clientAddress}`,
     limit,
   );
-  const tokenAllowed = yield* limiter.allowRequest(
+  if (!addressAllowed) {
+    return yield* new RequestRateLimited({ code: 'request.rate_limited' });
+  }
+  const tokenDigest = hmac(config.quoteLinkHmacKey, token).toString('hex');
+  const tokenAllowed = yield* limiter.allowPublicRequest(
     `public-quote-${route}:token:${tokenDigest}`,
     limit,
   );
-  if (!addressAllowed || !tokenAllowed) {
+  if (!tokenAllowed) {
     return yield* new RequestRateLimited({ code: 'request.rate_limited' });
   }
 });

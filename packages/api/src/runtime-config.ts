@@ -29,7 +29,7 @@ export const defaultAuthenticationRuntimeConfig = {
 
 export const defaultRuntimeConfig = {
   authentication: defaultAuthenticationRuntimeConfig,
-  requestLimiter: { capacity: 10_000, cacheLifetimeMillis: 120_000, windowMillis: 60_000 },
+  requestLimiter: { capacity: 10_000, publicCapacity: 10_000, windowMillis: 60_000 },
   publicQuote: {
     readPerMinute: 60,
     downloadPerMinute: 20,
@@ -131,7 +131,7 @@ export const RuntimeConfig = {
   }),
   requestLimiter: Config.all({
     capacity: positiveInt('REQUEST_LIMITER_CAPACITY', 10_000),
-    cacheLifetimeMillis: positiveInt('REQUEST_LIMITER_CACHE_LIFETIME_MILLIS', 120_000),
+    publicCapacity: positiveInt('REQUEST_LIMITER_PUBLIC_CAPACITY', 10_000),
     windowMillis: positiveInt('REQUEST_LIMITER_WINDOW_MILLIS', 60_000),
   }),
   publicQuote: Config.all({

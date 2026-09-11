@@ -41,6 +41,62 @@ const publicQuoteRuntimeLayer = Layer.succeed(RuntimeConfiguration, {
 });
 
 describe('RequestLimiter', () => {
+  it('refuses new keys at capacity without evicting active counters', async () => {
+    await Effect.runPromise(
+      Effect.gen(function* () {
+        const limiter = yield* RequestLimiter;
+        expect(yield* limiter.allowRequest('protected', 1)).toBe(true);
+        expect(yield* limiter.allowRequest('other', 2)).toBe(true);
+        expect(yield* limiter.allowRequest('new', 1)).toBe(false);
+        expect(yield* limiter.allowRequest('other', 2)).toBe(true);
+        expect(yield* limiter.allowRequest('protected', 1)).toBe(false);
+        yield* TestClock.adjust('1 minute');
+        expect(yield* limiter.allowRequest('new', 1)).toBe(true);
+        expect(yield* limiter.allowRequest('protected', 1)).toBe(true);
+      }).pipe(
+        Effect.provide(RequestLimiterLive),
+        Effect.provideService(RuntimeConfiguration, {
+          ...defaultRuntimeConfig,
+          requestLimiter: { ...defaultRuntimeConfig.requestLimiter, capacity: 2 },
+        }),
+        Effect.provide(TestClock.layer()),
+      ),
+    );
+  });
+
+  it('does not create token keys after address refusal or reset protected quotas', async () => {
+    await Effect.runPromise(
+      Effect.gen(function* () {
+        const limiter = yield* RequestLimiter;
+        expect(yield* limiter.allowRequest('password-change:user', 1)).toBe(true);
+        yield* limitPublicQuoteRequest('read', 'first', '192.0.2.1');
+        for (let index = 0; index < 8; index++) {
+          expect(
+            yield* Effect.result(limitPublicQuoteRequest('read', `token-${index}`, '192.0.2.1')),
+          ).toMatchObject({ _tag: 'Failure', failure: { _tag: 'RequestRateLimited' } });
+        }
+        // Two public slots remain because refused addresses created no token keys.
+        yield* limitPublicQuoteRequest('read', 'second', '192.0.2.2');
+        expect(yield* limiter.allowPublicRequest('overflow', 1)).toBe(false);
+        expect(yield* limiter.allowRequest('password-change:user', 1)).toBe(false);
+        expect(yield* limiter.allowRequest('other-user', 1)).toBe(true);
+      }).pipe(
+        Effect.provide(RequestLimiterLive),
+        Effect.provide(authenticationConfigLayer),
+        Effect.provideService(RuntimeConfiguration, {
+          ...defaultRuntimeConfig,
+          requestLimiter: {
+            ...defaultRuntimeConfig.requestLimiter,
+            capacity: 2,
+            publicCapacity: 4,
+          },
+          publicQuote: { ...defaultRuntimeConfig.publicQuote, readPerMinute: 1 },
+        }),
+        Effect.provide(TestClock.layer()),
+      ),
+    );
+  });
+
   it('renews the mutation allowance after one minute', async () => {
     const result = await Effect.runPromise(
       Effect.gen(function* () {
