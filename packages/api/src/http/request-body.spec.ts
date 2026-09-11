@@ -58,6 +58,7 @@ const fixture = (
               sessionId: userId,
               mode: 'administrator',
               email: 'review@example.test',
+              permissions: ['bank.import', 'client.create'],
             }),
         }),
         Layer.mock(ApiTokens, {}),

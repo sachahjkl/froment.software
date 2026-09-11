@@ -300,6 +300,8 @@ describe('Team', () => {
       const navigate = vi.spyOn(Router.prototype, 'navigate').mockResolvedValue(true);
       const fixture = TestBed.createComponent(Team);
       await fixture.whenStable();
+      await vi.waitFor(() => expect(fixture.componentInstance['loading']()).toBe(false));
+      await fixture.whenStable();
       expect(fixture.componentInstance[table].query().filter).toBe(filter);
       const root: HTMLElement = fixture.nativeElement;
       const section = root.querySelector<HTMLElement>(`[aria-labelledby="${table}-title"]`);

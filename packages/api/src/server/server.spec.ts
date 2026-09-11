@@ -323,12 +323,13 @@ describe('HTTP server', () => {
   });
 
   it('manages multiple client access accounts independently', async () => {
-    const sessionHeaders = administratorSessionHeaders;
+    const sessionHeaders = { ...administratorSessionHeaders, origin: baseUrl };
     const created = await fetch(`${baseUrl}/api/clients`, {
       method: 'POST',
       headers: { ...sessionHeaders, 'content-type': 'application/json' },
       body: JSON.stringify({ ...clientFields, requestId: randomUUID() }),
     });
+    expect(created.status).toBe(200);
     const client = (await created.json()) as { id: string };
     const credentials = { email: 'portal@example.test', password: 'portal-password-123' };
     const access = await fetch(`${baseUrl}/api/clients/${client.id}/access`, {
@@ -425,6 +426,7 @@ describe('HTTP server', () => {
       headers: {
         ...administratorSessionHeaders,
         'content-type': 'application/json',
+        origin: baseUrl,
       },
       body: JSON.stringify({
         name: 'automation',

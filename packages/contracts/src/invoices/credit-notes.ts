@@ -6,6 +6,8 @@ import {
   AuthenticationRequired,
   PermissionDenied,
   RequestRateLimited,
+  RequestInvalidOrigin,
+  RequestTooLarge,
 } from '../authentication/contracts.js';
 
 export const CreditNoteRequest = Schema.Struct({
@@ -60,4 +62,6 @@ export const InvoiceCreditFailure = Schema.Union([
   AuthenticationRequired,
   PermissionDenied,
   RequestRateLimited,
+  RequestInvalidOrigin,
+  RequestTooLarge,
 ]);

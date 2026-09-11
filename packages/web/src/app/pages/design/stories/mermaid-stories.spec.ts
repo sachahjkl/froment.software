@@ -84,6 +84,8 @@ describe('Mermaid reference', () => {
     vi.mocked(mermaid.render).mockRejectedValueOnce(new Error('reference.render_failed'));
     const { root } = await setup();
     await vi.waitFor(() => expect(root.querySelectorAll('.mermaid-error')).toHaveLength(1));
-    expect(root.querySelector('[storyPreview] pre')?.textContent).toContain('flowchart LR');
+    expect(root.querySelector('.mermaid-error')?.textContent).toBe(
+      vi.mocked(mermaid.render).mock.calls[0]?.[1],
+    );
   });
 });

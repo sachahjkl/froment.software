@@ -5,6 +5,7 @@ import { vi } from 'vitest';
 import { TeamApi } from '@backoffice/team-api';
 import { Confirmation } from '@shared/confirmation/confirmation';
 import { Team } from './team';
+import { provideAccount } from '@backoffice/account.spec-helper';
 
 const firstId = '01ARZ3NDEKTSV4RRFFQ69G5FAV';
 const secondId = '01ARZ3NDEKTSV4RRFFQ69G5FAW';
@@ -69,6 +70,7 @@ const setup = async () => {
   TestBed.configureTestingModule({
     providers: [
       provideRouter([]),
+      provideAccount(),
       { provide: TeamApi, useValue: api },
       { provide: Confirmation, useValue: confirmation },
     ],
@@ -155,8 +157,11 @@ describe('team profile drafts', () => {
   it('guards confirmation and discards drafts only after an accepted, successful reload', async () => {
     const { fixture, component, api, confirmation, edit } = await setup();
     edit(firstId);
-    const response = Promise.withResolvers<boolean>();
-    confirmation.request.mockReturnValueOnce(response.promise);
+    let resolve!: (value: boolean) => void;
+    const response = new Promise<boolean>((onResolve) => {
+      resolve = onResolve;
+    });
+    confirmation.request.mockReturnValueOnce(response);
     const reload = component['reload']();
     await fixture.whenStable();
     expect(component['hasUnsavedChanges']()).toBe(true);
@@ -169,7 +174,7 @@ describe('team profile drafts', () => {
     await component['cancel'](invitationId);
     expect(api.list).toHaveBeenCalledTimes(1);
     expect(api.cancel).not.toHaveBeenCalled();
-    response.resolve(false);
+    resolve(false);
     await reload;
     expect(component['profileForm'][firstId]().value()).toBe('collaborator');
 

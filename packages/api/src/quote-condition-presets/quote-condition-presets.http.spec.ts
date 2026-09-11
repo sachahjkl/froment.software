@@ -40,7 +40,7 @@ describe('quote condition preset HTTP routes', () => {
 
     const remove = await fetch(`${server.baseUrl}/api/quote-condition-presets/${preset.id}`, {
       method: 'DELETE',
-      headers: server.sessionHeaders,
+      headers: { ...server.sessionHeaders, origin: server.baseUrl },
     });
     expect(remove.status).toBe(200);
     expect((await fetch(`${server.baseUrl}/api/quote-condition-presets`)).status).toBe(401);

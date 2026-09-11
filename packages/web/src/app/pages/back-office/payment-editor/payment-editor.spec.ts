@@ -6,6 +6,7 @@ import { By } from '@angular/platform-browser';
 import { of } from 'rxjs';
 import { vi } from 'vitest';
 import { InvoicesApi } from '@backoffice/invoices-api';
+import { provideAccount } from '@backoffice/account.spec-helper';
 import { Confirmation } from '@shared/confirmation/confirmation';
 import { PaymentEditor } from './payment-editor';
 import {
@@ -199,6 +200,7 @@ describe('PaymentEditor', () => {
     TestBed.configureTestingModule({
       providers: [
         provideHttpClient(),
+        provideAccount(),
         provideHttpClientTesting(),
         provideRouter([]),
         {

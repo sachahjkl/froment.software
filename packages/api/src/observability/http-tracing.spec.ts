@@ -1,5 +1,10 @@
 import { Effect, Exit, Logger, Tracer } from 'effect';
-import { HttpEffect, HttpServerRequest, HttpServerResponse } from 'effect/unstable/http';
+import {
+  HttpEffect,
+  HttpMiddleware,
+  HttpServerRequest,
+  HttpServerResponse,
+} from 'effect/unstable/http';
 import { describe, expect, it } from 'vitest';
 
 import { type RecordedAuditEvent, RequestContext } from '../http/request-context.js';
@@ -7,80 +12,82 @@ import { identifyRequest, preventHtmlCaching } from '../http/response.js';
 import { HttpTracingLive, logRequest, traceRequest } from './http-tracing.js';
 
 describe('HTTP tracing', () => {
-  it('creates one filtered server span through HttpEffect.toHandled', async () => {
-    let endSpan = () => {};
-    const spanEnded = new Promise<void>((resolve) => {
-      endSpan = resolve;
-    });
-    class CapturedSpan extends Tracer.NativeSpan {
-      override end(endTime: bigint, exit: Exit.Exit<unknown, unknown>) {
-        super.end(endTime, exit);
-        endSpan();
+  it.each([false, true])(
+    'creates one filtered server span through HttpEffect.toHandled with an inner tracer: %s',
+    async (innerTracer) => {
+      let endSpan = () => {};
+      const spanEnded = new Promise<void>((resolve) => {
+        endSpan = resolve;
+      });
+      class CapturedSpan extends Tracer.NativeSpan {
+        override end(endTime: bigint, exit: Exit.Exit<unknown, unknown>) {
+          super.end(endTime, exit);
+          endSpan();
+        }
       }
-    }
-    const spans: Array<Tracer.NativeSpan> = [];
-    const tracer = Tracer.make({
-      span: (options) => {
-        const span = new CapturedSpan(options);
-        spans.push(span);
-        return span;
-      },
-    });
-    const request = HttpServerRequest.fromWeb(
-      new Request('https://froment.software/api/clients?email=private@example.test', {
-        method: 'POST',
-        headers: {
-          'content-type': 'application/json',
-          authorization: 'Bearer another-secret',
-          cookie: '__Secure-froment-refresh=refresh-secret',
-          host: 'froment.software',
-          'x-customer-reference': 'private-customer',
-          'x-forwarded-proto': 'https',
+      const spans: Array<Tracer.NativeSpan> = [];
+      const tracer = Tracer.make({
+        span: (options) => {
+          const span = new CapturedSpan(options);
+          spans.push(span);
+          return span;
         },
-      }),
-    );
-    let responses = 0;
+      });
+      const request = HttpServerRequest.fromWeb(
+        new Request('https://froment.software/api/clients?email=private@example.test', {
+          method: 'POST',
+          headers: {
+            'content-type': 'application/json',
+            authorization: 'Bearer another-secret',
+            cookie: '__Secure-froment-refresh=refresh-secret',
+            host: 'froment.software',
+            'x-customer-reference': 'private-customer',
+            'x-forwarded-proto': 'https',
+          },
+        }),
+      );
+      let responses = 0;
+      const application = Effect.gen(function* () {
+        expect((yield* HttpServerRequest.HttpServerRequest).url).toContain('private@example.test');
+        return HttpServerResponse.empty();
+      });
 
-    await Effect.runPromise(
-      Effect.andThen(
-        HttpEffect.toHandled(
-          Effect.gen(function* () {
-            expect((yield* HttpServerRequest.HttpServerRequest).url).toContain(
-              'private@example.test',
-            );
-            return HttpServerResponse.empty();
-          }),
-          (_request, response) =>
-            Effect.sync(() => {
-              responses += 1;
-              expect(response.status).toBe(204);
-            }),
-          (application) =>
-            application.pipe(logRequest, preventHtmlCaching, identifyRequest, traceRequest),
+      await Effect.runPromise(
+        Effect.andThen(
+          HttpEffect.toHandled(
+            innerTracer ? HttpMiddleware.tracer(application) : application,
+            (_request, response) =>
+              Effect.sync(() => {
+                responses += 1;
+                expect(response.status).toBe(204);
+              }),
+            (application) =>
+              application.pipe(logRequest, preventHtmlCaching, identifyRequest, traceRequest),
+          ),
+          Effect.promise(() => spanEnded),
+        ).pipe(
+          Effect.provideService(HttpServerRequest.HttpServerRequest, request),
+          Effect.provideService(Tracer.Tracer, tracer),
+          Effect.provide(HttpTracingLive),
         ),
-        Effect.promise(() => spanEnded),
-      ).pipe(
-        Effect.provideService(HttpServerRequest.HttpServerRequest, request),
-        Effect.provideService(Tracer.Tracer, tracer),
-        Effect.provide(HttpTracingLive),
-      ),
-    );
+      );
 
-    expect(responses).toBe(1);
-    expect(spans).toHaveLength(1);
-    const attributes = spans[0]?.attributes;
-    expect(attributes?.get('http.request.header.authorization')).toBe('<redacted>');
-    expect(attributes?.get('http.request.header.cookie')).toBe('<redacted>');
-    expect(attributes?.get('http.request.header.content-type')).toBe('application/json');
-    expect(attributes?.get('http.request.header.x-customer-reference')).toBe('<redacted>');
-    expect(attributes?.get('url.full')).toBe('https://froment.software/api/clients');
-    expect(attributes?.has('url.query')).toBe(false);
-    const serializedAttributes = JSON.stringify([...(attributes?.entries() ?? [])]);
-    expect(serializedAttributes).not.toContain('another-secret');
-    expect(serializedAttributes).not.toContain('refresh-secret');
-    expect(serializedAttributes).not.toContain('private@example.test');
-    expect(serializedAttributes).not.toContain('private-customer');
-  });
+      expect(responses).toBe(1);
+      expect(spans).toHaveLength(1);
+      const attributes = spans[0]?.attributes;
+      expect(attributes?.get('http.request.header.authorization')).toBe('<redacted>');
+      expect(attributes?.get('http.request.header.cookie')).toBe('<redacted>');
+      expect(attributes?.get('http.request.header.content-type')).toBe('application/json');
+      expect(attributes?.get('http.request.header.x-customer-reference')).toBe('<redacted>');
+      expect(attributes?.get('url.full')).toBe('https://froment.software/api/clients');
+      expect(attributes?.has('url.query')).toBe(false);
+      const serializedAttributes = JSON.stringify([...(attributes?.entries() ?? [])]);
+      expect(serializedAttributes).not.toContain('another-secret');
+      expect(serializedAttributes).not.toContain('refresh-secret');
+      expect(serializedAttributes).not.toContain('private@example.test');
+      expect(serializedAttributes).not.toContain('private-customer');
+    },
+  );
 
   it('logs API, audit, static, and failed responses at their configured levels', async () => {
     const logs: Array<unknown> = [];

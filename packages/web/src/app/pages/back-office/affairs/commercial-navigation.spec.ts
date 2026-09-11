@@ -4,6 +4,7 @@ import { provideRouter, Router } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
 import { ClientsApi } from '@backoffice/clients-api';
 import { QuotesApi } from '@backoffice/quotes-api';
+import { provideAccount } from '@backoffice/account.spec-helper';
 import { OrdersApi } from '@backoffice/orders-api';
 import { InvoicesApi } from '@backoffice/invoices-api';
 import { CatalogApi } from '@backoffice/catalog-api';
@@ -23,6 +24,7 @@ describe('Commercial navigation context', () => {
   it('preserves the list context through the affair, quote, editor and publication without accepting returnUrl', async () => {
     TestBed.configureTestingModule({
       providers: [
+        provideAccount(),
         provideRouter([
           {
             path: 'backoffice/affaires',

@@ -6,6 +6,8 @@ import {
   AuthenticationRequired,
   PermissionDenied,
   RequestRateLimited,
+  RequestInvalidOrigin,
+  RequestTooLarge,
 } from '../authentication/contracts.js';
 import { DisplayName, Ulid } from '../identifiers.js';
 import {
@@ -261,6 +263,8 @@ export const InvoiceFailure = Schema.Union([
   AuthenticationRequired,
   PermissionDenied,
   RequestRateLimited,
+  RequestInvalidOrigin,
+  RequestTooLarge,
   InvoiceNotFound,
   InvoiceOrderNotFound,
   InvoiceAlreadyExists,

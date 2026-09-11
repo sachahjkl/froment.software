@@ -37,7 +37,7 @@ describe('quote HTTP routes', () => {
 
     const render = await fetch(`${server.baseUrl}/api/quotes/${quote.id}/revisions/1/pdf`, {
       method: 'POST',
-      headers: server.sessionHeaders,
+      headers: { ...server.sessionHeaders, origin: server.baseUrl },
     });
     const artifact = (await render.json()) as { byteSize: number; sha256: string };
     const download = await fetch(`${server.baseUrl}/api/quotes/${quote.id}/revisions/1/pdf`, {

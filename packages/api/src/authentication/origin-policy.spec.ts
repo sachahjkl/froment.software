@@ -32,6 +32,7 @@ const fixture = () => {
       sessionId,
       email: 'review@example.test',
       mode: 'administrator',
+      permissions: ['client.read', 'client.archive', 'client.update'],
     }),
   );
   const authenticate = vi.fn<ApiTokens['Service']['authenticate']>(() =>

@@ -57,6 +57,8 @@ describe('IssuerSettings', () => {
     });
     const fixture = TestBed.createComponent(IssuerSettings);
     await fixture.whenStable();
+    await vi.waitFor(() => expect(fixture.componentInstance['loading']()).toBe(false));
+    await fixture.whenStable();
     const root: HTMLElement = fixture.nativeElement;
     expect(root.querySelector('form')).toBeNull();
     expect(root.querySelector('[role="alert"]')).not.toBeNull();
@@ -88,6 +90,8 @@ describe('IssuerSettings', () => {
       ],
     });
     const fixture = TestBed.createComponent(IssuerSettings);
+    await fixture.whenStable();
+    await vi.waitFor(() => expect(fixture.componentInstance['loading']()).toBe(false));
     await fixture.whenStable();
     const root: HTMLElement = fixture.nativeElement;
     expect(root.querySelectorAll('fieldset')).toHaveLength(3);

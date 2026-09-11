@@ -22,6 +22,10 @@ const setup = async (source = '') => {
     fixture.componentRef.setInput('presentation', presentation);
   });
   await fixture.whenStable();
+  // JSDOM ne calcule pas la géométrie utilisée pour le défilement ProseMirror.
+  fixture.componentInstance['editor']?.setOptions({
+    editorProps: { handleScrollToSelection: () => true },
+  });
   return { fixture, component: fixture.componentInstance, presentations };
 };
 

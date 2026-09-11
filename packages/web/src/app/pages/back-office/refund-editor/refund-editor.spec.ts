@@ -5,6 +5,7 @@ import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/route
 import { of } from 'rxjs';
 import { vi } from 'vitest';
 import { InvoicesApi } from '@backoffice/invoices-api';
+import { provideAccount } from '@backoffice/account.spec-helper';
 import { InvoiceCreditsApi } from '@backoffice/invoice-credits-api';
 import { Confirmation } from '@shared/confirmation/confirmation';
 import { RefundEditor } from './refund-editor';
@@ -166,7 +167,7 @@ describe('RefundEditor', () => {
     'request.rate_limited',
     'request.invalid_origin',
     'request.too_large',
-    'client.error',
+    'credit.error',
   ] as const)(
     'retains an uncertain refund through %s and retries after access is restored',
     async (code) => {
@@ -247,7 +248,7 @@ describe('RefundEditor', () => {
       refundedOn: '2026-08-22',
       reference: 'REFUND-1',
     });
-    credits.refund.mockResolvedValueOnce({ success: false, code: 'client.error' });
+    credits.refund.mockResolvedValueOnce({ success: false, code: 'credit.error' });
     editor['save'](new Event('submit'));
     await fixture.whenStable();
     const request = credits.refund.mock.calls[0]?.[1];
@@ -271,17 +272,20 @@ describe('RefundEditor', () => {
       refundedOn: '2026-08-22',
       reference: 'REFUND-1',
     });
-    const response = Promise.withResolvers<{
+    let resolve!: (value: { success: true; result: ReturnType<typeof creditFixture> }) => void;
+    const response = new Promise<{
       success: true;
       result: ReturnType<typeof creditFixture>;
-    }>();
-    credits.refund.mockReturnValueOnce(response.promise);
+    }>((onResolve) => {
+      resolve = onResolve;
+    });
+    credits.refund.mockReturnValueOnce(response);
     editor['save'](new Event('submit'));
     await vi.waitFor(() => expect(credits.refund).toHaveBeenCalledTimes(1));
     const request = credits.refund.mock.calls[0]?.[1];
     await editor['retry']();
     expect(editor['attempt']).toEqual(request);
-    response.resolve({ success: true, result: creditFixture() });
+    resolve({ success: true, result: creditFixture() });
     await fixture.whenStable();
     expect(editor['task'].completed()).toBe(true);
   });
@@ -312,6 +316,7 @@ describe('RefundEditor', () => {
     TestBed.configureTestingModule({
       providers: [
         provideHttpClient(),
+        provideAccount(),
         provideHttpClientTesting(),
         provideRouter([]),
         {

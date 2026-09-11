@@ -140,7 +140,7 @@ export const startHttpTestServer = async (
     databaseFilename,
     output: () => serverOutput,
     sessionHeaders,
-    jsonHeaders: { ...sessionHeaders, 'content-type': 'application/json' },
+    jsonHeaders: { ...sessionHeaders, 'content-type': 'application/json', origin: baseUrl },
     close: async () => {
       await stopProcess(processHandle);
       await rm(staticRoot, { recursive: true, force: true });
@@ -248,7 +248,7 @@ export const createClientSession = async (server: HttpTestServer, clientId: stri
 export const renderQuotePdf = async (server: HttpTestServer, quoteId: string, version = 1) => {
   const response = await fetch(`${server.baseUrl}/api/quotes/${quoteId}/revisions/${version}/pdf`, {
     method: 'POST',
-    headers: server.sessionHeaders,
+    headers: { ...server.sessionHeaders, origin: server.baseUrl },
   });
   if (!response.ok) throw new Error(`Quote PDF render failed: ${await response.text()}`);
   // SAFETY: A successful render response follows the HTTP API success schema.

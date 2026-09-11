@@ -48,11 +48,11 @@ describe('order HTTP routes', () => {
     const renders = await Promise.all([
       fetch(`${server.baseUrl}/api/orders/${accepted.orderId}/pdf`, {
         method: 'POST',
-        headers: server.sessionHeaders,
+        headers: { ...server.sessionHeaders, origin: server.baseUrl },
       }),
       fetch(`${server.baseUrl}/api/orders/${accepted.orderId}/pdf`, {
         method: 'POST',
-        headers: server.sessionHeaders,
+        headers: { ...server.sessionHeaders, origin: server.baseUrl },
       }),
     ]);
     const artifacts = (await Promise.all(renders.map((response) => response.json()))) as Array<{
