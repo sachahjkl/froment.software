@@ -13,6 +13,7 @@ import { apiTokenRoutes } from './pages/back-office/api-tokens/api-token.routes'
 import { serviceRoutes } from './pages/back-office/connections/service.routes';
 import { auditRoute } from './pages/back-office/configuration/audit/audit.routes';
 import { publicQuoteContextChanged } from './public-quote/public-quote-navigation';
+import { withShell } from './app-shell';
 
 const tabRoutes = (defaultPath: string, panel: string, paths: readonly string[]): Routes => [
   { path: '', redirectTo: defaultPath, pathMatch: 'full' },
@@ -20,18 +21,20 @@ const tabRoutes = (defaultPath: string, panel: string, paths: readonly string[])
 ];
 
 export const routes: Routes = [
-  ...billingRoutes,
-  ...bankWorkspaceRoutes,
-  ...teamRoutes,
-  ...apiTokenRoutes,
-  ...serviceRoutes,
-  auditRoute,
+  ...withShell('administrator', [
+    ...billingRoutes,
+    ...bankWorkspaceRoutes,
+    ...teamRoutes,
+    ...apiTokenRoutes,
+    ...serviceRoutes,
+    auditRoute,
+  ]),
   {
     path: 'backoffice/join',
     loadComponent: () =>
       import('./pages/back-office/team/team-join').then((module) => module.TeamJoin),
     canDeactivate: [unsavedChangesGuard],
-    data: { titleKey: 'team.join', robots: 'noindex, nofollow' },
+    data: { shell: 'public', titleKey: 'team.join', robots: 'noindex, nofollow' },
   },
   {
     path: '',
@@ -119,6 +122,7 @@ export const routes: Routes = [
     path: 'backoffice/login',
     loadComponent: () => import('./pages/back-office/login/login').then((module) => module.Login),
     data: {
+      shell: 'public',
       titleKey: 'page.back_office',
       descriptionKey: 'page.description.back_office',
       robots: 'noindex, nofollow',
@@ -129,13 +133,14 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./pages/back-office/sign-out/sign-out').then((module) => module.SignOut),
     canDeactivate: [unsavedChangesGuard],
-    data: { titleKey: 'backOffice.signOut', robots: 'noindex, nofollow' },
+    data: { shell: 'public', titleKey: 'backOffice.signOut', robots: 'noindex, nofollow' },
   },
   {
     path: 'backoffice/bootstrap',
     loadComponent: () =>
       import('./pages/back-office/bootstrap/bootstrap').then((module) => module.Bootstrap),
     data: {
+      shell: 'public',
       titleKey: 'page.back_office',
       descriptionKey: 'page.description.back_office',
       robots: 'noindex, nofollow',
@@ -147,6 +152,7 @@ export const routes: Routes = [
       import('./pages/back-office/dashboard/dashboard').then((module) => module.Dashboard),
     canActivate: [administratorGuard],
     data: {
+      shell: 'administrator',
       titleKey: 'page.back_office',
       descriptionKey: 'page.description.back_office',
       robots: 'noindex, nofollow',
@@ -161,6 +167,7 @@ export const routes: Routes = [
     children: accountRoutes,
     canActivate: [administratorGuard],
     data: {
+      shell: 'administrator',
       titleKey: 'account.security_title',
       descriptionKey: 'page.description.back_office',
       robots: 'noindex, nofollow',
@@ -175,6 +182,7 @@ export const routes: Routes = [
     children: accountRoutes,
     canActivate: [clientGuard],
     data: {
+      shell: 'client',
       titleKey: 'account.security_title',
       descriptionKey: 'page.description.back_office',
       robots: 'noindex, nofollow',
@@ -187,7 +195,7 @@ export const routes: Routes = [
         (module) => module.CustomerDocumentDetail,
       ),
     canActivate: [clientGuard],
-    data: { titleKey: 'page.back_office_client', robots: 'noindex, nofollow' },
+    data: { shell: 'client', titleKey: 'page.back_office_client', robots: 'noindex, nofollow' },
   },
   {
     path: 'backoffice/client',
@@ -197,6 +205,7 @@ export const routes: Routes = [
       ),
     canActivate: [clientGuard],
     data: {
+      shell: 'client',
       titleKey: 'page.back_office_client',
       descriptionKey: 'page.description.back_office_client',
       robots: 'noindex, nofollow',
@@ -208,6 +217,7 @@ export const routes: Routes = [
       import('./pages/back-office/clients/clients').then((module) => module.Clients),
     canActivate: [administratorGuard],
     data: {
+      shell: 'administrator',
       titleKey: 'page.back_office_clients',
       descriptionKey: 'page.description.back_office_clients',
       robots: 'noindex, nofollow',
@@ -222,7 +232,11 @@ export const routes: Routes = [
       ),
     canActivate: [administratorGuard],
     canDeactivate: [unsavedChangesGuard],
-    data: { titleKey: 'backOffice.clients.create', robots: 'noindex, nofollow' },
+    data: {
+      shell: 'administrator',
+      titleKey: 'backOffice.clients.create',
+      robots: 'noindex, nofollow',
+    },
   },
   {
     path: 'backoffice/clients/:clientId/edit',
@@ -232,7 +246,11 @@ export const routes: Routes = [
       ),
     canActivate: [administratorGuard],
     canDeactivate: [unsavedChangesGuard],
-    data: { titleKey: 'clientsWorkspace.edit', robots: 'noindex, nofollow' },
+    data: {
+      shell: 'administrator',
+      titleKey: 'clientsWorkspace.edit',
+      robots: 'noindex, nofollow',
+    },
   },
   {
     path: 'backoffice/clients/:clientId/access/new',
@@ -242,7 +260,11 @@ export const routes: Routes = [
       ),
     canActivate: [administratorGuard],
     canDeactivate: [unsavedChangesGuard],
-    data: { titleKey: 'page.back_office_client_detail', robots: 'noindex, nofollow' },
+    data: {
+      shell: 'administrator',
+      titleKey: 'page.back_office_client_detail',
+      robots: 'noindex, nofollow',
+    },
   },
   {
     path: 'backoffice/clients/:clientId',
@@ -253,6 +275,7 @@ export const routes: Routes = [
     canActivate: [administratorGuard],
     canDeactivate: [unsavedChangesGuard],
     data: {
+      shell: 'administrator',
       titleKey: 'page.back_office_client_detail',
       descriptionKey: 'page.description.back_office_client_detail',
       robots: 'noindex, nofollow',
@@ -271,6 +294,7 @@ export const routes: Routes = [
       import('./pages/back-office/affairs/affairs').then((module) => module.Affairs),
     canActivate: [administratorGuard],
     data: {
+      shell: 'administrator',
       titleKey: 'page.back_office_quotes',
       descriptionKey: 'page.description.back_office_quotes',
       robots: 'noindex, nofollow',
@@ -286,6 +310,7 @@ export const routes: Routes = [
     canActivate: [administratorGuard],
     children: tabRoutes('overview', 'affair-detail', ['overview', 'documents', 'history']),
     data: {
+      shell: 'administrator',
       titleKey: 'page.back_office_affair_detail',
       descriptionKey: 'page.description.back_office_affair_detail',
       robots: 'noindex, nofollow',
@@ -298,6 +323,7 @@ export const routes: Routes = [
     canActivate: [administratorGuard],
     canDeactivate: [unsavedChangesGuard],
     data: {
+      shell: 'administrator',
       titleKey: 'page.back_office_quote_editor',
       descriptionKey: 'page.description.back_office_quote_editor',
       robots: 'noindex, nofollow',
@@ -310,6 +336,7 @@ export const routes: Routes = [
     canActivate: [administratorGuard],
     canDeactivate: [unsavedChangesGuard],
     data: {
+      shell: 'administrator',
       titleKey: 'page.back_office_quote_editor',
       descriptionKey: 'page.description.back_office_quote_editor',
       robots: 'noindex, nofollow',
@@ -323,7 +350,11 @@ export const routes: Routes = [
       ),
     canActivate: [administratorGuard],
     canDeactivate: [unsavedChangesGuard],
-    data: { titleKey: 'commercial.publicationTitle', robots: 'noindex, nofollow' },
+    data: {
+      shell: 'administrator',
+      titleKey: 'commercial.publicationTitle',
+      robots: 'noindex, nofollow',
+    },
   },
   {
     path: 'backoffice/quotes/:quoteId',
@@ -332,14 +363,14 @@ export const routes: Routes = [
     canActivate: [administratorGuard],
     canDeactivate: [unsavedChangesGuard],
     children: tabRoutes('summary', 'quote-detail', ['summary', 'document', 'versions']),
-    data: { titleKey: 'commercial.quote', robots: 'noindex, nofollow' },
+    data: { shell: 'administrator', titleKey: 'commercial.quote', robots: 'noindex, nofollow' },
   },
   {
     path: 'backoffice/orders/:orderId',
     loadComponent: () =>
       import('./pages/back-office/order-detail/order-detail').then((module) => module.OrderDetail),
     canActivate: [administratorGuard],
-    data: { titleKey: 'commercial.order', robots: 'noindex, nofollow' },
+    data: { shell: 'administrator', titleKey: 'commercial.order', robots: 'noindex, nofollow' },
   },
   {
     path: 'backoffice/catalogue/new',
@@ -349,7 +380,7 @@ export const routes: Routes = [
       ),
     canActivate: [administratorGuard],
     canDeactivate: [unsavedChangesGuard],
-    data: { titleKey: 'catalog.create', robots: 'noindex, nofollow' },
+    data: { shell: 'administrator', titleKey: 'catalog.create', robots: 'noindex, nofollow' },
   },
   {
     path: 'backoffice/catalogue/:itemId/edit',
@@ -359,14 +390,18 @@ export const routes: Routes = [
       ),
     canActivate: [administratorGuard],
     canDeactivate: [unsavedChangesGuard],
-    data: { titleKey: 'catalogWorkspace.editTitle', robots: 'noindex, nofollow' },
+    data: {
+      shell: 'administrator',
+      titleKey: 'catalogWorkspace.editTitle',
+      robots: 'noindex, nofollow',
+    },
   },
   {
     path: 'backoffice/catalogue',
     loadComponent: () =>
       import('./pages/back-office/catalog/catalog').then((module) => module.Catalog),
     canActivate: [administratorGuard],
-    data: { titleKey: 'catalog.title', robots: 'noindex, nofollow' },
+    data: { shell: 'administrator', titleKey: 'catalog.title', robots: 'noindex, nofollow' },
     children: tabRoutes('active', 'catalog', ['active', 'archived', 'all']),
   },
   {
@@ -377,6 +412,7 @@ export const routes: Routes = [
       ),
     canActivate: [administratorGuard],
     data: {
+      shell: 'administrator',
       titleKey: 'page.back_office_issuer_settings',
       descriptionKey: 'page.description.back_office_issuer_settings',
       robots: 'noindex, nofollow',
@@ -391,7 +427,11 @@ export const routes: Routes = [
       ),
     canActivate: [administratorGuard],
     canDeactivate: [unsavedChangesGuard],
-    data: { titleKey: 'emailsWorkspace.newMessage', robots: 'noindex, nofollow' },
+    data: {
+      shell: 'administrator',
+      titleKey: 'emailsWorkspace.newMessage',
+      robots: 'noindex, nofollow',
+    },
   },
   {
     path: 'backoffice/courriels/drafts/:draftId/edit',
@@ -401,7 +441,11 @@ export const routes: Routes = [
       ),
     canActivate: [administratorGuard],
     canDeactivate: [unsavedChangesGuard],
-    data: { titleKey: 'emailsWorkspace.editDraft', robots: 'noindex, nofollow' },
+    data: {
+      shell: 'administrator',
+      titleKey: 'emailsWorkspace.editDraft',
+      robots: 'noindex, nofollow',
+    },
   },
   {
     path: 'backoffice/courriels/messages/:operationId',
@@ -409,7 +453,11 @@ export const routes: Routes = [
       import('./pages/back-office/email-detail/email-detail').then((module) => module.EmailDetail),
     canActivate: [administratorGuard],
     canDeactivate: [unsavedChangesGuard],
-    data: { titleKey: 'emailsWorkspace.message', robots: 'noindex, nofollow' },
+    data: {
+      shell: 'administrator',
+      titleKey: 'emailsWorkspace.message',
+      robots: 'noindex, nofollow',
+    },
   },
   {
     path: 'backoffice/courriels/templates/new',
@@ -419,7 +467,11 @@ export const routes: Routes = [
       ),
     canActivate: [administratorGuard],
     canDeactivate: [unsavedChangesGuard],
-    data: { titleKey: 'emailsWorkspace.newTemplate', robots: 'noindex, nofollow' },
+    data: {
+      shell: 'administrator',
+      titleKey: 'emailsWorkspace.newTemplate',
+      robots: 'noindex, nofollow',
+    },
   },
   {
     path: 'backoffice/courriels/templates/:templateId/edit',
@@ -429,7 +481,11 @@ export const routes: Routes = [
       ),
     canActivate: [administratorGuard],
     canDeactivate: [unsavedChangesGuard],
-    data: { titleKey: 'emailsWorkspace.editTemplate', robots: 'noindex, nofollow' },
+    data: {
+      shell: 'administrator',
+      titleKey: 'emailsWorkspace.editTemplate',
+      robots: 'noindex, nofollow',
+    },
   },
   {
     path: 'backoffice/courriels/reminders/new',
@@ -439,7 +495,11 @@ export const routes: Routes = [
       ),
     canActivate: [administratorGuard],
     canDeactivate: [unsavedChangesGuard],
-    data: { titleKey: 'emailsWorkspace.newReminder', robots: 'noindex, nofollow' },
+    data: {
+      shell: 'administrator',
+      titleKey: 'emailsWorkspace.newReminder',
+      robots: 'noindex, nofollow',
+    },
   },
   {
     path: 'backoffice/courriels',
@@ -447,7 +507,12 @@ export const routes: Routes = [
       import('./pages/back-office/emails/emails').then((module) => module.Emails),
     canActivate: [administratorGuard],
     canDeactivate: [unsavedChangesGuard],
-    data: { titleKey: 'emails.title', descriptionKey: 'emails.intro', robots: 'noindex, nofollow' },
+    data: {
+      shell: 'administrator',
+      titleKey: 'emails.title',
+      descriptionKey: 'emails.intro',
+      robots: 'noindex, nofollow',
+    },
     children: tabRoutes('messages', 'emails', ['messages', 'drafts', 'reminders', 'templates']),
   },
   {
@@ -455,6 +520,7 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./pages/design/design.component').then((module) => module.DesignComponent),
     data: {
+      shell: 'standalone',
       titleKey: 'page.design',
       descriptionKey: 'page.description.design',
       robots: 'noindex, follow',
@@ -492,7 +558,11 @@ export const routes: Routes = [
   {
     path: 'version',
     loadComponent: () => import('./pages/version/version').then((module) => module.Version),
-    data: { titleKey: 'page.version', descriptionKey: 'page.description.version' },
+    data: {
+      shell: 'standalone',
+      titleKey: 'page.version',
+      descriptionKey: 'page.description.version',
+    },
   },
   {
     path: '404',

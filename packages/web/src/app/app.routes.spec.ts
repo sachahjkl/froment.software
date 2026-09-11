@@ -10,6 +10,18 @@ const fullPaths = (entries: Routes, parent = ''): string[] =>
   });
 
 describe('back-office route organization', () => {
+  it('declares public invitation and authenticated shells in route data', () => {
+    expect(routes.find((route) => route.path === 'backoffice/join')?.data?.['shell']).toBe(
+      'public',
+    );
+    for (const route of routes) {
+      if (route.canActivate?.includes(administratorGuard))
+        expect(route.data?.['shell'], route.path).toBe('administrator');
+      if (route.canActivate?.includes(clientGuard))
+        expect(route.data?.['shell'], route.path).toBe('client');
+    }
+  });
+
   it('keeps administrative subjects separate from company configuration', () => {
     const paths = fullPaths(routes);
     for (const subject of ['equipe', 'api', 'services', 'audit', 'configuration']) {

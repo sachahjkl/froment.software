@@ -1,7 +1,8 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { NavigationEnd, Router, RouterOutlet } from '@angular/router';
-import { filter } from 'rxjs';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { filter, map } from 'rxjs';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { routeShell } from './app-shell';
 import { I18nService } from './i18n.service';
 import { NavigationFocus } from './navigation-focus';
 import { PageMetadata } from './page-metadata';
@@ -21,35 +22,21 @@ import { BackOfficeHeader } from './shared/back-office-header/back-office-header
 export class App {
   protected readonly i18n = inject(I18nService);
   private readonly router = inject(Router);
-  protected readonly backOffice = signal(false);
-  protected readonly administrator = signal(false);
-  protected readonly standalonePage = signal(false);
+  private readonly shell = toSignal(
+    this.router.events.pipe(
+      filter((event) => event instanceof NavigationEnd),
+      map(() => routeShell(this.router.routerState.snapshot.root)),
+    ),
+    { initialValue: routeShell(this.router.routerState.snapshot.root) },
+  );
+  protected readonly backOffice = computed(
+    () => this.shell() === 'administrator' || this.shell() === 'client',
+  );
+  protected readonly administrator = computed(() => this.shell() === 'administrator');
+  protected readonly standalonePage = computed(() => this.shell() === 'standalone');
 
   constructor() {
     inject(NavigationFocus);
     inject(PageMetadata);
-    this.updateShell(this.router.url);
-    this.router.events
-      .pipe(
-        filter((event) => event instanceof NavigationEnd),
-        takeUntilDestroyed(),
-      )
-      .subscribe((event) => this.updateShell(event.urlAfterRedirects));
-  }
-
-  private updateShell(url: string): void {
-    const path = url.split(/[?#]/, 1)[0];
-    const authenticated =
-      path.startsWith('/backoffice/') &&
-      path !== '/backoffice/login' &&
-      path !== '/backoffice/sign-out' &&
-      path !== '/backoffice/bootstrap';
-    this.backOffice.set(authenticated);
-    this.standalonePage.set(
-      path === '/version' || path === '/design' || path.startsWith('/design/'),
-    );
-    this.administrator.set(
-      authenticated && path !== '/backoffice/client' && !path.startsWith('/backoffice/client/'),
-    );
   }
 }
