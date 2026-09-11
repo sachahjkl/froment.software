@@ -9,14 +9,32 @@
     (click)="$event.preventDefault(); mainContent.focus({ preventScroll: true })"
     >{{ i18n.t("shell.skip") }}</a
   >
-  @if (backOffice()) { @defer (when backOffice()) {
+  @if (backOffice()) { @defer (when startup() === 'ready') {
   <app-back-office-header [administrator]="administrator()" />
-  } } @else if (!standalonePage()) {
+  } @placeholder {
+  <app-back-office-header-placeholder [administrator]="administrator()" />
+  } @error {
+  <div class="header-error">
+    <p role="alert">{{ i18n.t('shell.navigationUnavailable') }}</p>
+    <button appButton type="button" (click)="reload()">{{ i18n.t('shell.reload') }}</button>
+  </div>
+  } } @else if (publicPage()) {
   <app-site-header />
   }
   <main #mainContent id="main-content" tabindex="-1">
+    @if (startup() === 'loading') {
+    <div class="startup-status" role="status">
+      <span class="loading-spinner" aria-hidden="true"></span>
+      <p>{{ i18n.t('shell.loading') }}</p>
+    </div>
+    } @else if (startup() === 'error') {
+    <div class="startup-status">
+      <p role="alert">{{ i18n.t('shell.loadError') }}</p>
+      <button appButton type="button" (click)="reload()">{{ i18n.t('shell.reload') }}</button>
+    </div>
+    }
     <router-outlet />
   </main>
-  @if (!backOffice() && !standalonePage()) { <app-site-footer /> }
+  @if (publicPage()) { <app-site-footer /> }
   <app-copy-notice />
 </div>

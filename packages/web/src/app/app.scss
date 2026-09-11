@@ -29,6 +29,36 @@
 .back-office-shell app-copy-notice {
   display: contents;
 }
+.startup-status,
+.header-error {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--page-y) var(--page-x);
+  color: var(--color-muted);
+}
+.header-error {
+  grid-area: header;
+}
+.loading-spinner {
+  flex: none;
+  inline-size: 1.25rem;
+  block-size: 1.25rem;
+  border: 2px solid var(--color-line-strong);
+  border-block-start-color: var(--color-ink);
+  border-radius: 50%;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .loading-spinner {
+    animation: loading-spin 800ms linear infinite;
+  }
+}
+@keyframes loading-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
 @media (max-width: 63.999rem) {
   .back-office-shell {
     grid-template-columns: minmax(0, 1fr);

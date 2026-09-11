@@ -1,0 +1,32 @@
+@mixin sidebar {
+  grid-area: sidebar;
+  position: sticky;
+  inset-block-start: 0;
+  block-size: 100dvh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  padding: var(--space-4);
+  border-inline-end: 1px solid var(--color-line);
+  background: var(--color-header);
+
+  @media (max-width: 63.999rem) {
+    display: none;
+  }
+}
+
+@mixin workspace-header {
+  grid-area: header;
+  position: sticky;
+  inset-block-start: 0;
+  z-index: var(--z-header);
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  min-block-size: 3.75rem;
+  padding: var(--space-3) var(--page-x);
+  border-block-end: 1px solid var(--color-line);
+  background: var(--color-surface);
+}

@@ -18,6 +18,15 @@ Cette reprise concerne la disposition, la hiérarchie et la lisibilité, pas les
 
 ## Surfaces et composition
 
+Le démarrage distingue une route inconnue d’une route publique.
+Avant la reconnaissance de la route, l’application affiche un indicateur de chargement sans en-tête public.
+Une route backoffice reconnue réserve la place de sa navigation pendant la vérification de session et le chargement des composants.
+Les gardes restent responsables de l’accès aux pages et aux données.
+
+Les pages prérendues transmettent leur shell avec `TransferState` pour conserver leur affichage pendant l’hydratation.
+Une navigation ultérieure conserve le shell actif jusqu’à sa réussite.
+Une navigation annulée ne remplace pas l’écran courant par un écran de chargement.
+
 Le backoffice utilise trois largeurs maximales, définies dans `packages/web/src/tokens.css`.
 
 | Composition                          | Largeur | Application                                   |

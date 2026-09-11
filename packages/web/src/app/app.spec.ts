@@ -36,6 +36,7 @@ describe('App shell', () => {
     i18n = TestBed.inject(I18nService);
     i18n.setLanguage('fr');
     fixture = TestBed.createComponent(App);
+    await router.navigateByUrl('/');
     await fixture.whenStable();
     element = fixture.nativeElement;
   });
@@ -116,9 +117,9 @@ describe('App shell', () => {
   it('focuses main after post-initial navigation while preserving routed content', async () => {
     const main = element.querySelector<HTMLElement>('main#main-content')!;
 
-    await navigate(fixture, router, '/about');
     expect(document.activeElement).not.toBe(main);
-
+    await navigate(fixture, router, '/about');
+    expect(document.activeElement).toBe(main);
     await navigate(fixture, router, '/services');
 
     expect(document.activeElement).toBe(main);

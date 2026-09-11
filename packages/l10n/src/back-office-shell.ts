@@ -1,5 +1,10 @@
 export const backOfficeShellText = {
   fr: {
+    'shell.loading': 'Chargement de la page…',
+    'shell.loadError': 'Le chargement de la page n’a pas abouti. Rechargez la page pour réessayer.',
+    'shell.navigationUnavailable':
+      'La navigation est indisponible. Rechargez la page pour réessayer.',
+    'shell.reload': 'Recharger la page',
     'backOfficeShell.activity': 'Activité',
     'backOfficeShell.administration': 'Administration',
     'backOfficeShell.apiAccess': 'API',
@@ -22,6 +27,10 @@ export const backOfficeShellText = {
       'Le tiroir conserve le focus et se ferme avec Échap. La navigation reste disponible sur les écrans étroits.',
   },
   en: {
+    'shell.loading': 'Loading page…',
+    'shell.loadError': 'The page did not load. Reload the page to try again.',
+    'shell.navigationUnavailable': 'Navigation is unavailable. Reload the page to try again.',
+    'shell.reload': 'Reload page',
     'backOfficeShell.activity': 'Business',
     'backOfficeShell.administration': 'Administration',
     'backOfficeShell.apiAccess': 'API',
