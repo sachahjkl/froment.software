@@ -46,7 +46,7 @@ job "froment-software" {
     }
 
     network {
-      mode = "bridge"
+      mode = "host"
 
       port "http" {
         static       = 9012

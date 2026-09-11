@@ -89,32 +89,49 @@ nix run                  # serveur Effect local sur le port 3000
 nix build .#dockerImage  # archive Docker reproductible
 ```
 
-## Podman deployment
+## Deployment
 
 The flake builds a Docker archive with Node.js, the Effect server, and the pre-rendered site.
 
 The image runs `froment-software-migrate`, then starts `froment-software` only after it succeeds. Starting the server directly does not run migrations.
 
-During deployment, stop the old container before you start the new one. Back up the volume, then start the new container with the command below.
+The default image command prepares the database, creates a verified pre-deployment backup, applies migrations, and starts the server.
 
 ```bash
 podman load < result
 podman run --rm \
+  -e APP_ENV=production \
+  -e SITE_PHASE=construction \
+  -e NODE_ENV=production \
   -e PUBLIC_ORIGIN=https://froment.software \
   -p 8080:3000 \
   -v froment-data:/var/lib/froment-software \
   froment-software:0.0.0
 ```
 
-GitHub Actions checks the flake, publishes an immutable SHA image, and deploys its digest to staging.
+GitHub Actions checks the flake and publishes an immutable OCI image to GHCR.
+
+The publication job signs the image and attaches its SBOM and build provenance.
+
+The staging job joins Tailscale from a GitHub-hosted runner and submits `deploy/nomad/staging.nomad.hcl`.
 
 The production workflow promotes only the digest currently running on staging. Start it manually from GitHub Actions after staging validation.
+
+Nomad handles health checks, restarts, deployment state, and automatic image rollback.
+
+Staging and production use separate Nomad namespaces, volumes, variables, deployment tokens, integration accounts, and backups.
+
+Application secrets come from environment-specific Nomad Variables. The OCI image contains no application secrets.
+
+The Nomad API accepts deployment traffic only through Tailscale. Deployment jobs do not run on the target host.
+
+The reusable platform guide is in `../nixconfig/docs/hosting-and-deployment.md`.
 
 Runtime presentation uses these variables:
 
 - `APP_ENV` accepts `development`, `staging`, or `production`;
 - `SITE_PHASE` accepts `construction` or `live`;
-- `SECRETSPEC_PROFILE` selects the matching encrypted secret profile.
+- `NODE_ENV` remains `production` in staging and production.
 
 Development displays a red environment ribbon. Staging displays an amber ribbon. Production displays the construction notice only during the `construction` phase.
 
