@@ -86,7 +86,9 @@ export const RemindersLive = Layer.effect(
       try: () =>
         Schema.decodeUnknownSync(Schema.Array(Row))(
           sqlite
-            .prepare(`${select} order by (status = 'scheduled') desc, send_at, id limit 100`)
+            .prepare(`${select} order by (status = 'scheduled') desc,
+              case when status = 'scheduled' then send_at end asc,
+              case when status != 'scheduled' then send_at end desc, id desc limit 100`)
             .all(),
         ).map(decode),
       catch: failure,
