@@ -40,6 +40,10 @@ Chaque commit accepté sur `master` produit une image.
 
 La CI publie l’image dans GitHub Container Registry (GHCR).
 
+Les checks et la publication utilisent des runners GitHub hébergés.
+
+Le serveur cible n’héberge aucun runner GitHub Actions.
+
 La CI déploie ensuite son digest sur staging.
 
 La promotion production reprend le digest actif sur staging.
