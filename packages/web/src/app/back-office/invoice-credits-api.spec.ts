@@ -5,6 +5,7 @@ import { InvoiceCreditsApi } from './invoice-credits-api';
 
 describe('InvoiceCreditsApi', () => {
   it.each([
+    ['InvoiceCreditRequestConflict', 'invoice.credit_request_conflict', 409],
     ['RequestInvalidOrigin', 'request.invalid_origin', 403],
     ['RequestTooLarge', 'request.too_large', 413],
     ['UnknownFailure', 'credit.error', 500],

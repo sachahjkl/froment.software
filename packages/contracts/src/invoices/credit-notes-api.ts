@@ -10,6 +10,7 @@ import { AuthenticationRequired, PermissionDenied } from '../authentication/cont
 import {
   CreditNoteRequest,
   InvoiceCreditConflict,
+  InvoiceCreditRequestConflict,
   InvoiceCredits,
   InvoiceRefundRequest,
   InvoiceRefundCancel,
@@ -25,7 +26,7 @@ export class CreditNotesApi extends HttpApiGroup.make('creditNotes', { topLevel:
     params: { invoiceId: Ulid },
     payload: CreditNoteRequest,
     success: InvoiceCredits,
-    error: [InvoiceCreditConflict],
+    error: [InvoiceCreditConflict, InvoiceCreditRequestConflict],
   })
     .middleware(ApiRequestBody)
     .middleware(ApiBrowserRequest)
@@ -34,7 +35,7 @@ export class CreditNotesApi extends HttpApiGroup.make('creditNotes', { topLevel:
     params: { invoiceId: Ulid },
     payload: InvoiceRefundRequest,
     success: InvoiceCredits,
-    error: [InvoiceCreditConflict],
+    error: [InvoiceCreditConflict, InvoiceCreditRequestConflict],
   })
     .middleware(ApiRequestBody)
     .middleware(ApiBrowserRequest)
@@ -43,7 +44,7 @@ export class CreditNotesApi extends HttpApiGroup.make('creditNotes', { topLevel:
     params: { invoiceId: Ulid, refundId: Ulid },
     payload: InvoiceRefundCancel,
     success: InvoiceCredits,
-    error: [InvoiceCreditConflict],
+    error: [InvoiceCreditConflict, InvoiceCreditRequestConflict],
   })
     .middleware(ApiRequestBody)
     .middleware(ApiBrowserRequest)

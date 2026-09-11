@@ -57,8 +57,14 @@ export class InvoiceCreditConflict extends Schema.TaggedError<InvoiceCreditConfl
   { code: Schema.Literal('invoice.credit_conflict') },
   { httpApiStatus: 409 },
 ) {}
+export class InvoiceCreditRequestConflict extends Schema.TaggedError<InvoiceCreditRequestConflict>()(
+  'InvoiceCreditRequestConflict',
+  { code: Schema.Literal('invoice.credit_request_conflict') },
+  { httpApiStatus: 409 },
+) {}
 export const InvoiceCreditFailure = Schema.Union([
   InvoiceCreditConflict,
+  InvoiceCreditRequestConflict,
   AuthenticationRequired,
   PermissionDenied,
   RequestRateLimited,

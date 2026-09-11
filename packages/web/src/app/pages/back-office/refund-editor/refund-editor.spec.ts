@@ -167,9 +167,10 @@ describe('RefundEditor', () => {
     'request.rate_limited',
     'request.invalid_origin',
     'request.too_large',
+    'invoice.credit_request_conflict',
     'credit.error',
   ] as const)(
-    'retains an uncertain refund through %s and retries after access is restored',
+    'retains an uncertain refund through %s and retries the exact request',
     async (code) => {
       const { fixture, credits } = await setupInvoicePage(RefundEditor, {
         credits: creditFixture(),
@@ -190,6 +191,8 @@ describe('RefundEditor', () => {
       await editor['retry']();
       await fixture.whenStable();
       expect(editor['task'].uncertain()).toBe(true);
+      expect(editor['task'].stale()).toBe(false);
+      expect(editor['task'].completed()).toBe(false);
       expect(editor['attempt']).toEqual(request);
       expect(await editor.canDeactivate()).toBe(false);
       const unload = new Event('beforeunload', { cancelable: true });
@@ -215,7 +218,11 @@ describe('RefundEditor', () => {
       expect(await editor.canDeactivate()).toBe(true);
     },
   );
-  it.each(['request.invalid_origin', 'request.too_large'] as const)(
+  it.each([
+    'request.invalid_origin',
+    'request.too_large',
+    'invoice.credit_request_conflict',
+  ] as const)(
     'unlocks an initial %s refusal without an earlier uncertain attempt',
     async (code) => {
       const { fixture, credits } = await setupInvoicePage(RefundEditor, {

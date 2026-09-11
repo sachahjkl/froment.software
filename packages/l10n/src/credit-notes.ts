@@ -32,6 +32,8 @@ export const creditText = {
       'Le résultat de cette demande reste à confirmer. Consultez l’avoir et les remboursements avant de recommencer.',
     'invoice.credit_conflict':
       'Opération refusée. Vérifiez la facture, l’avoir existant, les encaissements disponibles, la date et la clé de la demande.',
+    'invoice.credit_request_conflict':
+      'Cette demande correspond à une opération déjà enregistrée avec d’autres données. Vérifiez l’avoir et les remboursements existants.',
   },
   en: {
     'credit.title': 'Credit note and refunds',
@@ -66,6 +68,8 @@ export const creditText = {
       'The result of this request is unconfirmed. Check the credit note and refunds before trying again.',
     'invoice.credit_conflict':
       'Operation rejected. Check the invoice, existing credit note, available receipts, date and request key.',
+    'invoice.credit_request_conflict':
+      'This request refers to an operation already recorded with different data. Check the existing credit note and refunds.',
   },
 } as const;
 export const creditDocumentation = {

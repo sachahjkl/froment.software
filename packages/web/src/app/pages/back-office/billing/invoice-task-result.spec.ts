@@ -36,10 +36,13 @@ describe('invoice failure resolution', () => {
     }
   });
 
-  it('resolves credit requests only through the rejection after their replay lookup', () => {
+  it('resolves credit refusals after absence but not conflicts with an existing request', () => {
     for (const operation of ['refund', 'issue-credit', 'cancel-refund'] as const) {
       expect(invoiceFailureResolution(operation, 'invoice.credit_conflict')).toBe(
         'request-rejected',
+      );
+      expect(invoiceFailureResolution(operation, 'invoice.credit_request_conflict')).toBe(
+        'attempt-rejected',
       );
     }
   });

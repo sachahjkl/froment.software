@@ -30,6 +30,7 @@ const failureKinds = new Map<string, FailureKind>(
     'request.invalid_origin': 'boundary',
     'request.too_large': 'boundary',
     'invoice.credit_conflict': 'business',
+    'invoice.credit_request_conflict': 'business',
     'invoice.payment_invalid': 'business',
     'invoice.not_found': 'business',
     'invoice.version_conflict': 'business',
@@ -44,7 +45,7 @@ const failureKinds = new Map<string, FailureKind>(
   } satisfies Record<TaskFailureCode, FailureKind>),
 );
 
-// Only failures after replay lookup can resolve an earlier uncertain request.
+// Only failures that exclude an earlier write can resolve an uncertain request.
 const requestRejections = {
   issue: ['invoice.invalid_dates', 'document.incomplete'],
   void: ['invoice.invalid_transition'],

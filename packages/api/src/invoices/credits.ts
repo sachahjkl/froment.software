@@ -2,6 +2,7 @@ import {
   CreditNote,
   CreditNoteRequest,
   InvoiceCreditConflict,
+  InvoiceCreditRequestConflict,
   InvoiceCredits,
   InvoiceRefund,
   InvoiceRefundRequest,
@@ -29,6 +30,8 @@ const make = Effect.gen(function* () {
   const business = yield* BusinessConfig;
   const renderer = yield* DocumentRenderer;
   const conflict = () => new InvoiceCreditConflict({ code: 'invoice.credit_conflict' });
+  const requestConflict = () =>
+    new InvoiceCreditRequestConflict({ code: 'invoice.credit_request_conflict' });
   const read = (invoiceId: string) => {
     if (sqlite.prepare('select 1 from invoices where id = ?').get(invoiceId) === undefined)
       throw conflict();
@@ -89,7 +92,7 @@ const make = Effect.gen(function* () {
                 note.reason !== request.reason.trim() ||
                 expected !== request.expectedVersion
               )
-                throw conflict();
+                throw requestConflict();
               return read(invoiceId);
             }
             const raw = sqlite
@@ -150,7 +153,7 @@ const make = Effect.gen(function* () {
           })
           .immediate(),
       catch: (cause) =>
-        cause instanceof InvoiceCreditConflict
+        cause instanceof InvoiceCreditConflict || cause instanceof InvoiceCreditRequestConflict
           ? cause
           : new DatabaseError({ operation: 'invoice.credits.issue', cause }),
     });
@@ -176,7 +179,7 @@ const make = Effect.gen(function* () {
                 saved.refundedOn !== request.refundedOn ||
                 saved.reference !== request.reference.trim()
               )
-                throw conflict();
+                throw requestConflict();
               return read(invoiceId);
             }
             const state = read(invoiceId);
@@ -216,7 +219,7 @@ const make = Effect.gen(function* () {
           })
           .immediate(),
       catch: (cause) =>
-        cause instanceof InvoiceCreditConflict
+        cause instanceof InvoiceCreditConflict || cause instanceof InvoiceCreditRequestConflict
           ? cause
           : new DatabaseError({ operation: 'invoice.refund.record', cause }),
     });
@@ -235,7 +238,7 @@ const make = Effect.gen(function* () {
             const saved = read(invoiceId).refunds.find((refund) => refund.id === refundId);
             if (saved === undefined) throw conflict();
             if (saved.cancelledAt !== null) {
-              if (saved.cancellationReason !== request.reason.trim()) throw conflict();
+              if (saved.cancellationReason !== request.reason.trim()) throw requestConflict();
               return read(invoiceId);
             }
             sqlite
@@ -260,7 +263,7 @@ const make = Effect.gen(function* () {
           })
           .immediate(),
       catch: (cause) =>
-        cause instanceof InvoiceCreditConflict
+        cause instanceof InvoiceCreditConflict || cause instanceof InvoiceCreditRequestConflict
           ? cause
           : new DatabaseError({ operation: 'invoice.refund.cancel', cause }),
     });
