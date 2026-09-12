@@ -55,6 +55,8 @@ export const AuditActions = [
   'invoice.revised',
   'invoice.voided',
   'issuer.updated',
+  'company.settings-updated',
+  'company.accounting-initialized',
   'integration.requested',
   'integration.processed',
   'bank.imported',

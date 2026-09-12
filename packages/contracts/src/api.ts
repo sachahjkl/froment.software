@@ -19,6 +19,7 @@ import { ProviderActionsApi } from './integrations/provider-actions-api.js';
 import { BootstrapApi } from './bootstrap/api.js';
 import { ClientPortalApi } from './client-portal/api.js';
 import { ClientsApi } from './clients/api.js';
+import { CompanyApi } from './company/api.js';
 import { SuppliersApi } from './suppliers/api.js';
 import { ApiTokensApi } from './api-tokens/api.js';
 import { InvoicesApi } from './invoices/api.js';
@@ -34,6 +35,7 @@ export { RevisionVersionParameter } from './api-common.js';
 export { AffairsApi } from './affairs/api.js';
 export { ClientPortalApi } from './client-portal/api.js';
 export { ClientsApi } from './clients/api.js';
+export { CompanyApi } from './company/api.js';
 export { SuppliersApi } from './suppliers/api.js';
 export { ApiTokensApi } from './api-tokens/api.js';
 export { InvoicesApi } from './invoices/api.js';
@@ -64,6 +66,7 @@ export class Api extends HttpApi.make('froment-api')
   .add(RemindersApi)
   .add(ProviderActionsApi)
   .add(ClientsApi)
+  .add(CompanyApi)
   .add(SuppliersApi)
   .add(OrdersApi)
   .add(QuoteConditionPresetsApi)

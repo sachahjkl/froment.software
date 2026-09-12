@@ -19,6 +19,8 @@ export const Permissions = {
   catalogManage: { code: 'catalog.manage', audiences: [] },
   issuerRead: { code: 'issuer.read', audiences: [] },
   issuerUpdate: { code: 'issuer.update', audiences: [] },
+  companyRead: { code: 'company.read', audiences: [] },
+  companyUpdate: { code: 'company.update', audiences: [] },
   conditionRead: { code: 'condition.read', audiences: [] },
   conditionManage: { code: 'condition.manage', audiences: [] },
   paymentRead: { code: 'payment.read', audiences: ['api-token'] },

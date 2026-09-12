@@ -17,6 +17,8 @@ export const TeamProfilePermissions = {
     'document.download',
     'catalog.read',
     'condition.read',
+    'company.read',
+    'company.update',
     'supplier.read',
     'supplier.create',
     'supplier.update',
@@ -47,6 +49,7 @@ export const TeamProfilePermissions = {
     'email.draft.manage',
     'document.render',
     'integration.manage',
+    'company.read',
     'supplier.read',
   ],
 } as const satisfies Record<typeof TeamProfile.Type, ReadonlyArray<typeof PermissionCode.Type>>;

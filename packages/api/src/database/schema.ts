@@ -332,6 +332,42 @@ export const issuerSettings = sqliteTable(
   ],
 );
 
+export const companySettings = sqliteTable(
+  'company_settings',
+  {
+    id: integer().notNull().primaryKey(),
+    jurisdiction: text().notNull(),
+    functionalCurrency: text('functional_currency').notNull(),
+    accountingInitialized: integer('accounting_initialized', { mode: 'boolean' })
+      .notNull()
+      .default(false),
+    fiscalYearStartMonth: integer('fiscal_year_start_month').notNull().default(1),
+    fiscalYearStartDay: integer('fiscal_year_start_day').notNull().default(1),
+    defaultFiscalYearMonths: integer('default_fiscal_year_months').notNull().default(12),
+    enabledModules: text('enabled_modules').notNull(),
+    retentionYears: integer('retention_years').notNull().default(10),
+    version: integer().notNull().default(1),
+    updatedAt: integer('updated_at', { mode: 'timestamp_ms' }).notNull(),
+  },
+  (table) => [
+    check('company_settings_singleton_check', sql`${table.id} = 1`),
+    check('company_settings_jurisdiction_check', sql`${table.jurisdiction} = 'FR'`),
+    check(
+      'company_settings_currency_check',
+      sql`${table.functionalCurrency} glob '[A-Z][A-Z][A-Z]'`,
+    ),
+    check('company_settings_initialized_check', sql`${table.accountingInitialized} in (0, 1)`),
+    check(
+      'company_settings_fiscal_start_check',
+      sql`${table.fiscalYearStartMonth} between 1 and 12 and ${table.fiscalYearStartDay} between 1 and 31`,
+    ),
+    check('company_settings_fiscal_months_check', sql`${table.defaultFiscalYearMonths} = 12`),
+    check('company_settings_modules_json_check', sql`json_valid(${table.enabledModules})`),
+    check('company_settings_retention_check', sql`${table.retentionYears} >= 10`),
+    check('company_settings_version_check', sql`${table.version} between 1 and 9007199254740991`),
+  ],
+);
+
 export const refreshSessions = sqliteTable(
   'refresh_sessions',
   {

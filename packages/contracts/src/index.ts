@@ -1,6 +1,23 @@
 export { HealthStatus, type HealthStatus as HealthStatusValue } from './status/contracts.js';
 export { DocumentCalendar } from './documents/contracts.js';
 export {
+  AccountingAlreadyInitialized,
+  AccountingInitializeRequest,
+  type AccountingInitializeRequest as AccountingInitializeRequestValue,
+  CompanyModule,
+  type CompanyModule as CompanyModuleValue,
+  CompanySettings,
+  type CompanySettings as CompanySettingsValue,
+  CompanySettingsConflict,
+  CompanySettingsUpdateRequest,
+  type CompanySettingsUpdateRequest as CompanySettingsUpdateRequestValue,
+  FunctionalCurrency,
+  type FunctionalCurrency as FunctionalCurrencyValue,
+  FunctionalCurrencyLocked,
+  Jurisdiction,
+  type Jurisdiction as JurisdictionValue,
+} from './company/contracts.js';
+export {
   DocumentTextPresentation,
   type DocumentTextPresentation as DocumentTextPresentationValue,
   DocumentTextBlock,

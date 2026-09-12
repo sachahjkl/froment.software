@@ -57,6 +57,10 @@ export const apiDocumentation = {
           'Actions typées des cinq fournisseurs. Implémentations mock sans effet externe.',
       },
       clients: { title: 'Clients', description: 'Fiches clients et cycle de vie.' },
+      company: {
+        title: 'Société',
+        description: 'Juridiction, devise fonctionnelle, exercice, conservation et modules.',
+      },
       suppliers: { title: 'Fournisseurs', description: 'Fiches fournisseurs et cycle de vie.' },
       orders: { title: 'Commandes', description: 'Commandes et documents générés.' },
       quotes: { title: 'Devis', description: 'Devis, révisions, envoi et documents.' },
@@ -198,6 +202,18 @@ export const apiDocumentation = {
       clientReactivate: {
         summary: 'Réactiver un client',
         description: 'Réactive un client archivé.',
+      },
+      companySettingsGet: {
+        summary: 'Lire la configuration de la société',
+        description: 'Renvoie la juridiction, la devise, l’exercice et les modules activés.',
+      },
+      companySettingsUpdate: {
+        summary: 'Modifier la configuration de la société',
+        description: 'Modifie la configuration si sa version correspond.',
+      },
+      companyAccountingInitialize: {
+        summary: 'Initialiser la comptabilité',
+        description: 'Fixe définitivement la devise fonctionnelle de la comptabilité.',
       },
       supplierList: {
         summary: 'Lister les fournisseurs',
@@ -476,6 +492,10 @@ export const apiDocumentation = {
     groups: {
       audit: auditDocumentation.en.group,
       clients: { title: 'Clients', description: 'Client records and lifecycle.' },
+      company: {
+        title: 'Company',
+        description: 'Jurisdiction, functional currency, fiscal year, retention, and modules.',
+      },
       suppliers: { title: 'Suppliers', description: 'Supplier records and lifecycle.' },
       passkeys: passkeyDocumentation.en.group,
       team: teamDocumentation.en.group,
@@ -615,6 +635,18 @@ export const apiDocumentation = {
       clientReactivate: {
         summary: 'Reactivate a client',
         description: 'Reactivates an archived client.',
+      },
+      companySettingsGet: {
+        summary: 'Get company settings',
+        description: 'Returns jurisdiction, currency, fiscal year, and enabled modules.',
+      },
+      companySettingsUpdate: {
+        summary: 'Update company settings',
+        description: 'Updates the settings when their version matches.',
+      },
+      companyAccountingInitialize: {
+        summary: 'Initialize accounting',
+        description: 'Permanently locks the accounting functional currency.',
       },
       supplierList: {
         summary: 'List suppliers',
