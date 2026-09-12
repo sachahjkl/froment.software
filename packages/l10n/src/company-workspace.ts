@@ -37,6 +37,23 @@ export const companyWorkspaceText = {
     'company.functional_currency_locked':
       'La devise fonctionnelle est définitive après l’initialisation comptable.',
     'company.accounting_already_initialized': 'La comptabilité est déjà initialisée.',
+    'company.exchangeRates': 'Taux de change',
+    'company.exchangeRatesHint':
+      'Un taux indique les unités de devise étrangère pour une unité de devise fonctionnelle.',
+    'company.exchangeRateImport': 'Importer les taux BCE',
+    'company.exchangeRateOverride': 'Enregistrer la surcharge',
+    'company.exchangeRateDate': 'Date du taux',
+    'company.exchangeRateCurrency': 'Devise étrangère',
+    'company.exchangeRateValue': 'Taux',
+    'company.exchangeRatePair': 'Paire',
+    'company.exchangeRateSource': 'Source',
+    'company.exchangeRateEcb': 'BCE',
+    'company.exchangeRateManual': 'Surcharge manuelle',
+    'company.exchangeRateEmpty': 'Aucun taux de change.',
+    'company.exchangeRateInvalid': 'Saisissez une date, une devise et un taux positif valides.',
+    'company.exchange_rate_conflict':
+      'La devise étrangère doit différer de la devise fonctionnelle.',
+    'company.exchange_rate_import_failed': 'L’import des taux de la BCE a échoué.',
   },
   en: {
     'company.title': 'Company settings',
@@ -75,5 +92,22 @@ export const companyWorkspaceText = {
     'company.functional_currency_locked':
       'The functional currency is permanent after accounting initialization.',
     'company.accounting_already_initialized': 'Accounting is already initialized.',
+    'company.exchangeRates': 'Exchange rates',
+    'company.exchangeRatesHint':
+      'A rate gives foreign currency units for one functional currency unit.',
+    'company.exchangeRateImport': 'Import ECB rates',
+    'company.exchangeRateOverride': 'Save override',
+    'company.exchangeRateDate': 'Rate date',
+    'company.exchangeRateCurrency': 'Foreign currency',
+    'company.exchangeRateValue': 'Rate',
+    'company.exchangeRatePair': 'Pair',
+    'company.exchangeRateSource': 'Source',
+    'company.exchangeRateEcb': 'ECB',
+    'company.exchangeRateManual': 'Manual override',
+    'company.exchangeRateEmpty': 'No exchange rates.',
+    'company.exchangeRateInvalid': 'Enter a valid date, currency, and positive rate.',
+    'company.exchange_rate_conflict':
+      'The foreign currency must differ from the functional currency.',
+    'company.exchange_rate_import_failed': 'The ECB exchange-rate import failed.',
   },
 } as const;

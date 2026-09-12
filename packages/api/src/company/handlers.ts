@@ -4,6 +4,7 @@ import { HttpApiBuilder } from 'effect/unstable/httpapi';
 
 import { setPrivateResponseHeaders } from '../http/response.js';
 import { Company } from './service.js';
+import { ExchangeRates } from './exchange-rates.js';
 
 export const CompanyHandlers = HttpApiBuilder.group(Api, 'company', (handlers) =>
   Effect.succeed(
@@ -27,6 +28,30 @@ export const CompanyHandlers = HttpApiBuilder.group(Api, 'company', (handlers) =
           yield* setPrivateResponseHeaders;
           return yield* (yield* Company)
             .initializeAccounting(payload, (yield* ApiPrincipal).userId)
+            .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
+        }),
+      )
+      .handle('companyExchangeRateList', () =>
+        Effect.gen(function* () {
+          yield* setPrivateResponseHeaders;
+          return yield* (yield* ExchangeRates).list.pipe(
+            Effect.catchTag('DatabaseError', Effect.orDie),
+          );
+        }),
+      )
+      .handle('companyExchangeRateSet', ({ payload }) =>
+        Effect.gen(function* () {
+          yield* setPrivateResponseHeaders;
+          return yield* (yield* ExchangeRates)
+            .setManual(payload, (yield* ApiPrincipal).userId)
+            .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
+        }),
+      )
+      .handle('companyExchangeRateImport', () =>
+        Effect.gen(function* () {
+          yield* setPrivateResponseHeaders;
+          return yield* (yield* ExchangeRates)
+            .importEcb((yield* ApiPrincipal).userId)
             .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
         }),
       ),

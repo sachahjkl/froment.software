@@ -68,6 +68,8 @@ export const AuditActions = [
   'issuer.updated',
   'company.settings-updated',
   'company.accounting-initialized',
+  'company.exchange-rate-imported',
+  'company.exchange-rate-overridden',
   'role.created',
   'role.updated',
   'role.deleted',

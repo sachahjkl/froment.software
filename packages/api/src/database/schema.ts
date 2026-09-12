@@ -601,6 +601,36 @@ export const companySettings = sqliteTable(
   ],
 );
 
+export const exchangeRates = sqliteTable(
+  'exchange_rates',
+  {
+    id: text().primaryKey().notNull(),
+    rateDate: text('rate_date').notNull(),
+    functionalCurrency: text('functional_currency').notNull(),
+    foreignCurrency: text('foreign_currency').notNull(),
+    foreignUnitsPerFunctionalUnitNanos: integer(
+      'foreign_units_per_functional_unit_nanos',
+    ).notNull(),
+    source: text({ enum: ['ecb', 'manual'] }).notNull(),
+    importedAt: integer('imported_at', { mode: 'timestamp_ms' }).notNull(),
+    createdByUserId: text('created_by_user_id').references(() => users.id),
+  },
+  (table) => [
+    uniqueIndex('exchange_rate_date_currency_unique').on(
+      table.rateDate,
+      table.functionalCurrency,
+      table.foreignCurrency,
+    ),
+    index('exchange_rate_date_index').on(table.rateDate),
+    check(
+      'exchange_rate_currency_check',
+      sql`${table.functionalCurrency} <> ${table.foreignCurrency}`,
+    ),
+    check('exchange_rate_value_check', sql`${table.foreignUnitsPerFunctionalUnitNanos} > 0`),
+    check('exchange_rate_source_check', sql`${table.source} in ('ecb', 'manual')`),
+  ],
+);
+
 export const refreshSessions = sqliteTable(
   'refresh_sessions',
   {

@@ -226,6 +226,18 @@ export const apiDocumentation = {
         summary: 'Initialiser la comptabilité',
         description: 'Fixe définitivement la devise fonctionnelle de la comptabilité.',
       },
+      companyExchangeRateList: {
+        summary: 'Lister les taux de change',
+        description: 'Renvoie les taux BCE et les surcharges manuelles enregistrés.',
+      },
+      companyExchangeRateSet: {
+        summary: 'Surcharger un taux de change',
+        description: 'Enregistre un taux daté et trace la surcharge manuelle.',
+      },
+      companyExchangeRateImport: {
+        summary: 'Importer les taux de la BCE',
+        description: 'Importe les taux récents et conserve les surcharges manuelles.',
+      },
       supplierList: {
         summary: 'Lister les fournisseurs',
         description: 'Liste les fournisseurs actifs et archivés.',
@@ -686,6 +698,18 @@ export const apiDocumentation = {
       companyAccountingInitialize: {
         summary: 'Initialize accounting',
         description: 'Permanently locks the accounting functional currency.',
+      },
+      companyExchangeRateList: {
+        summary: 'List exchange rates',
+        description: 'Returns stored ECB rates and manual overrides.',
+      },
+      companyExchangeRateSet: {
+        summary: 'Override an exchange rate',
+        description: 'Stores a dated rate and audits the manual override.',
+      },
+      companyExchangeRateImport: {
+        summary: 'Import ECB rates',
+        description: 'Imports recent rates and preserves manual overrides.',
       },
       supplierList: {
         summary: 'List suppliers',

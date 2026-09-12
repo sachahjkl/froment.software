@@ -294,12 +294,13 @@ Elle ne remplace pas les critères de fin définis au début du document.
 | Analyse assistée fournisseur       | Réalisé en première version | Contrôle des adaptateurs et secrets                  |
 | Rôles personnalisés                | Réalisé en première version | Profils comptables et dernier administrateur         |
 | Paramètres comptables société      | Réalisé en première version | Initialisation et verrouillage complet               |
+| Taux de change                     | Réalisé en première version | Contre-valeurs et écarts de change                   |
 | Virements fournisseur              | Réalisé en première version | Contrôle de l’artefact immuable et rapprochement     |
 | Imports bancaires CAMT, OFX et CSV | Réalisé                     | Validation finale et livraison globale               |
 | Avoirs partiels et consolidés      | Réalisé en première version | Validation finale et intégration comptable           |
 | Encaissements scindés              | Réalisé                     | Validation finale                                    |
 | Sélecteurs de version intégrés     | Réalisé                     | Validation finale                                    |
-| Tableau éditable commun            | À faire                     | Composant partagé et modale mobile                   |
+| Tableau éditable commun            | Réalisé                     | Validation finale                                    |
 | Entité Affaire indépendante        | Réalisé en première version | Validation finale et enrichissement des vues         |
 | Comptabilité intégrée              | Partiel                     | Plan, périodes, écritures, états, CA3, FEC et pièces |
 | Suggestions de rapprochement       | Réalisé en première version | Validation finale et extension aux achats            |

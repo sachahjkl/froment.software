@@ -118,5 +118,87 @@
       }
     </div>
   </form>
+  <section class="ds-panel form-panel exchange-rates" aria-labelledby="exchange-rates-title">
+    <div class="section-heading">
+      <div>
+        <h2 id="exchange-rates-title">{{ i18n.t('company.exchangeRates') }}</h2>
+        <p class="muted">{{ i18n.t('company.exchangeRatesHint') }}</p>
+      </div>
+      <button
+        *appCan="'company.update'"
+        appButton
+        type="button"
+        [disabled]="exchangeRateBusy()"
+        (click)="importExchangeRates()"
+      >
+        {{ i18n.t('company.exchangeRateImport') }}
+      </button>
+    </div>
+    @if (exchangeRateError(); as code) {
+    <p appNotice variant="danger" role="alert">{{ i18n.t(code) }}</p>
+    }
+    <form *appCan="'company.update'" class="rate-form" (submit)="saveExchangeRate($event)">
+      <label class="field">
+        {{ i18n.t('company.exchangeRateDate') }}
+        <input
+          class="input"
+          type="date"
+          required
+          [value]="exchangeRateDate()"
+          (input)="setExchangeRateField('date', $event)"
+        />
+      </label>
+      <label class="field">
+        {{ i18n.t('company.exchangeRateCurrency') }}
+        <input
+          class="input"
+          maxlength="3"
+          pattern="[A-Z]{3}"
+          required
+          [value]="exchangeRateCurrency()"
+          (input)="setExchangeRateField('currency', $event)"
+        />
+      </label>
+      <label class="field">
+        {{ i18n.t('company.exchangeRateValue') }}
+        <input
+          class="input"
+          inputmode="decimal"
+          required
+          [value]="exchangeRateValue()"
+          (input)="setExchangeRateField('value', $event)"
+        />
+      </label>
+      <button appButton variant="primary" type="submit" [disabled]="exchangeRateBusy()">
+        {{ i18n.t('company.exchangeRateOverride') }}
+      </button>
+    </form>
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th scope="col">{{ i18n.t('company.exchangeRateDate') }}</th>
+            <th scope="col">{{ i18n.t('company.exchangeRatePair') }}</th>
+            <th scope="col">{{ i18n.t('company.exchangeRateValue') }}</th>
+            <th scope="col">{{ i18n.t('company.exchangeRateSource') }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (rate of exchangeRates(); track rate.id) {
+          <tr>
+            <td>{{ rate.rateDate }}</td>
+            <td>{{ rate.functionalCurrency }}/{{ rate.foreignCurrency }}</td>
+            <td class="amount">{{ rateValue(rate) }}</td>
+            <td>{{ rateSource(rate) }}</td>
+          </tr>
+          } @empty {
+          <tr>
+            <td colspan="4">{{ i18n.t('company.exchangeRateEmpty') }}</td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </section>
   }
 </section>

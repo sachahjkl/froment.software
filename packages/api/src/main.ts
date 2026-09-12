@@ -18,6 +18,7 @@ import { AccessTokensLive } from './authentication/paseto.js';
 import { ApiTokensLive } from './api-tokens/service.js';
 import { ClientsLive } from './clients/clients.js';
 import { CompanyLive } from './company/service.js';
+import { ExchangeRatesLive } from './company/exchange-rates.js';
 import { SuppliersLive } from './suppliers/service.js';
 import { SupplierInvoicesLive } from './supplier-invoices/service.js';
 import { SupplierInvoiceAnalysisLive } from './supplier-invoices/analysis-service.js';
@@ -87,6 +88,7 @@ const ServicesLive = Layer.mergeAll(
   AuditReaderLive,
   ClientsLive,
   CompanyLive,
+  ExchangeRatesLive.pipe(Layer.provide(FetchHttpClient.layer)),
   SuppliersLive,
   SupplierInvoicesLive,
   SupplierPaymentBatchesLive,

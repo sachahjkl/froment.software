@@ -229,7 +229,12 @@ export const createQuote = async (server: HttpTestServer, clientId: string) => {
     id: string;
     reference: string;
     version: number;
-    currentRevision: { id: string; lines: ReadonlyArray<object>; totalCents: number };
+    currentRevision: {
+      id: string;
+      currency: string;
+      lines: ReadonlyArray<object>;
+      totalCents: number;
+    };
   };
 };
 

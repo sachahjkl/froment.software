@@ -53,6 +53,38 @@ describe('CompanyApi', () => {
     initializeRequest.flush({ ...settings, accountingInitialized: true, version: 3, updatedAt: 2 });
     await expect(initialize).resolves.toMatchObject({ success: true });
 
+    const rate = {
+      id: '01ARZ3NDEKTSV4RRFFQ69G5FAV',
+      rateDate: '2026-09-11',
+      functionalCurrency: 'EUR',
+      foreignCurrency: 'USD',
+      foreignUnitsPerFunctionalUnitNanos: 1_100_000_000,
+      source: 'ecb',
+      importedAt: 1,
+      createdByUserId: null,
+    };
+    const listRates = api.listExchangeRates();
+    http.expectOne('/api/company/exchange-rates').flush([rate]);
+    await expect(listRates).resolves.toEqual({ success: true, result: [rate] });
+
+    const manualPayload = {
+      rateDate: '2026-09-11',
+      foreignCurrency: 'USD',
+      foreignUnitsPerFunctionalUnitNanos: 1_200_000_000,
+    };
+    const setRate = api.setExchangeRate(manualPayload);
+    const setRateRequest = http.expectOne('/api/company/exchange-rates');
+    expect(setRateRequest.request.method).toBe('PUT');
+    expect(setRateRequest.request.body).toEqual(manualPayload);
+    setRateRequest.flush({ ...rate, ...manualPayload, source: 'manual' });
+    await expect(setRate).resolves.toMatchObject({ success: true });
+
+    const importRates = api.importExchangeRates();
+    const importRequest = http.expectOne('/api/company/exchange-rates/ecb');
+    expect(importRequest.request.method).toBe('POST');
+    importRequest.flush([rate]);
+    await expect(importRates).resolves.toEqual({ success: true, result: [rate] });
+
     http.verify();
   });
 });

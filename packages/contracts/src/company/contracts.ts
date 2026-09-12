@@ -1,4 +1,7 @@
 import { Schema } from 'effect';
+import { CalendarDate } from '../temporal.js';
+import { PositiveSafeInteger } from '../documents/lines.js';
+import { Ulid } from '../identifiers.js';
 
 import {
   AuthenticationRequired,
@@ -23,6 +26,27 @@ export const CurrencyCode = Schema.String.check(Schema.isPattern(/^[A-Z]{3}$/));
 export type CurrencyCode = typeof CurrencyCode.Type;
 export const FunctionalCurrency = CurrencyCode;
 export type FunctionalCurrency = typeof FunctionalCurrency.Type;
+
+export const ExchangeRateSource = Schema.Literals(['ecb', 'manual']);
+export type ExchangeRateSource = typeof ExchangeRateSource.Type;
+export const ExchangeRate = Schema.Struct({
+  id: Ulid,
+  rateDate: CalendarDate,
+  functionalCurrency: CurrencyCode,
+  foreignCurrency: CurrencyCode,
+  foreignUnitsPerFunctionalUnitNanos: PositiveSafeInteger,
+  source: ExchangeRateSource,
+  importedAt: Schema.Int,
+  createdByUserId: Schema.NullOr(Ulid),
+}).annotate({ identifier: 'ExchangeRate' });
+export type ExchangeRate = typeof ExchangeRate.Type;
+export const ExchangeRateList = Schema.Array(ExchangeRate).check(Schema.isMaxLength(10_000));
+export const ExchangeRateManualRequest = Schema.Struct({
+  rateDate: CalendarDate,
+  foreignCurrency: CurrencyCode,
+  foreignUnitsPerFunctionalUnitNanos: PositiveSafeInteger,
+}).annotate({ identifier: 'ExchangeRateManualRequest' });
+export type ExchangeRateManualRequest = typeof ExchangeRateManualRequest.Type;
 
 const FiscalYearStart = Schema.Struct({
   fiscalYearStartMonth: Schema.Int.check(Schema.isBetween({ minimum: 1, maximum: 12 })),
@@ -87,6 +111,16 @@ export class AccountingAlreadyInitialized extends Schema.TaggedError<AccountingA
   { code: Schema.Literal('company.accounting_already_initialized') },
 ) {}
 
+export class ExchangeRateConflict extends Schema.TaggedError<ExchangeRateConflict>()(
+  'ExchangeRateConflict',
+  { code: Schema.Literal('company.exchange_rate_conflict') },
+) {}
+
+export class ExchangeRateImportFailed extends Schema.TaggedError<ExchangeRateImportFailed>()(
+  'ExchangeRateImportFailed',
+  { code: Schema.Literal('company.exchange_rate_import_failed') },
+) {}
+
 export const CompanyFailure = Schema.Union([
   AuthenticationRequired,
   PermissionDenied,
@@ -94,5 +128,7 @@ export const CompanyFailure = Schema.Union([
   CompanySettingsConflict,
   FunctionalCurrencyLocked,
   AccountingAlreadyInitialized,
+  ExchangeRateConflict,
+  ExchangeRateImportFailed,
 ]);
 export type CompanyFailure = typeof CompanyFailure.Type;

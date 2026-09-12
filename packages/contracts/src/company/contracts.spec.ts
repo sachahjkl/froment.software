@@ -1,7 +1,7 @@
 import { Schema } from 'effect';
 import { describe, expect, it } from 'vitest';
 
-import { CompanySettingsUpdateRequest } from './contracts.js';
+import { CompanySettingsUpdateRequest, ExchangeRateManualRequest } from './contracts.js';
 
 const request = {
   jurisdiction: 'FR',
@@ -33,5 +33,21 @@ describe('company settings contracts', () => {
       }),
     ).toBe(false);
     expect(Schema.is(CompanySettingsUpdateRequest)({ ...request, retentionYears: 9 })).toBe(false);
+  });
+
+  it('requires a dated ISO currency rate with nine-decimal integer precision', () => {
+    const rate = {
+      rateDate: '2026-09-11',
+      foreignCurrency: 'USD',
+      foreignUnitsPerFunctionalUnitNanos: 1_159_200_000,
+    };
+    expect(Schema.is(ExchangeRateManualRequest)(rate)).toBe(true);
+    expect(
+      Schema.is(ExchangeRateManualRequest)({
+        ...rate,
+        foreignUnitsPerFunctionalUnitNanos: 0,
+      }),
+    ).toBe(false);
+    expect(Schema.is(ExchangeRateManualRequest)({ ...rate, foreignCurrency: 'usd' })).toBe(false);
   });
 });

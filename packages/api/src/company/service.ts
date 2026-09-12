@@ -97,6 +97,9 @@ export const CompanyLive = Layer.effect(
                   code: 'company.functional_currency_locked',
                 });
               }
+              if (current.functionalCurrency !== request.functionalCurrency) {
+                sqlite.prepare('delete from exchange_rates').run();
+              }
               const version = current.version + 1;
               const updatedAt = Math.max(now, current.updatedAt + 1);
               const changed = sqlite

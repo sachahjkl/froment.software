@@ -61,6 +61,7 @@ export const defaultRuntimeConfig = {
   },
   secrets: { settingsEncryptionKey: Option.none() },
   supplierInvoiceAnalysis: { apiKey: Option.none(), requestTimeoutMillis: 20_000 },
+  exchangeRates: { requestTimeoutMillis: 10_000 },
 } as const;
 
 export const RuntimeConfig = {
@@ -206,6 +207,12 @@ export const RuntimeConfig = {
     requestTimeoutMillis: positiveInt(
       'SUPPLIER_INVOICE_ANALYSIS_REQUEST_TIMEOUT_MILLIS',
       defaultRuntimeConfig.supplierInvoiceAnalysis.requestTimeoutMillis,
+    ),
+  }),
+  exchangeRates: Config.all({
+    requestTimeoutMillis: positiveInt(
+      'EXCHANGE_RATE_REQUEST_TIMEOUT_MILLIS',
+      defaultRuntimeConfig.exchangeRates.requestTimeoutMillis,
     ),
   }),
 } as const;

@@ -17,6 +17,11 @@ import {
   CompanySettingsConflict,
   CompanySettingsUpdateRequest,
   FunctionalCurrencyLocked,
+  ExchangeRate,
+  ExchangeRateConflict,
+  ExchangeRateImportFailed,
+  ExchangeRateList,
+  ExchangeRateManualRequest,
 } from './contracts.js';
 
 const readErrors = [
@@ -24,11 +29,7 @@ const readErrors = [
   PermissionDenied.pipe(HttpApiSchema.status(403)),
 ] as const;
 
-const writeErrors = [
-  ...readErrors,
-  CompanySettingsConflict.pipe(HttpApiSchema.status(409)),
-  RequestRateLimited.pipe(HttpApiSchema.status(429)),
-] as const;
+const writeErrors = [...readErrors, RequestRateLimited.pipe(HttpApiSchema.status(429))] as const;
 
 export class CompanyApi extends HttpApiGroup.make('company', { topLevel: true }).add(
   HttpApiEndpoint.get('companySettingsGet', '/api/company', {
@@ -38,15 +39,38 @@ export class CompanyApi extends HttpApiGroup.make('company', { topLevel: true })
   HttpApiEndpoint.put('companySettingsUpdate', '/api/company', {
     payload: CompanySettingsUpdateRequest,
     success: CompanySettings,
-    error: [...writeErrors, FunctionalCurrencyLocked.pipe(HttpApiSchema.status(409))],
+    error: [
+      ...writeErrors,
+      CompanySettingsConflict.pipe(HttpApiSchema.status(409)),
+      FunctionalCurrencyLocked.pipe(HttpApiSchema.status(409)),
+    ],
   })
     .middleware(ApiRequestBody)
     .pipe(requirePermissions([Permissions.companyUpdate]), authenticate, frontendSpecific),
   HttpApiEndpoint.post('companyAccountingInitialize', '/api/company/accounting/initialize', {
     payload: AccountingInitializeRequest,
     success: CompanySettings,
-    error: [...writeErrors, AccountingAlreadyInitialized.pipe(HttpApiSchema.status(409))],
+    error: [
+      ...writeErrors,
+      CompanySettingsConflict.pipe(HttpApiSchema.status(409)),
+      AccountingAlreadyInitialized.pipe(HttpApiSchema.status(409)),
+    ],
   })
     .middleware(ApiRequestBody)
     .pipe(requirePermissions([Permissions.companyUpdate]), authenticate, frontendSpecific),
+  HttpApiEndpoint.get('companyExchangeRateList', '/api/company/exchange-rates', {
+    success: ExchangeRateList,
+    error: readErrors,
+  }).pipe(requirePermissions([Permissions.companyRead]), authenticate, frontendSpecific),
+  HttpApiEndpoint.put('companyExchangeRateSet', '/api/company/exchange-rates', {
+    payload: ExchangeRateManualRequest,
+    success: ExchangeRate,
+    error: [...writeErrors, ExchangeRateConflict.pipe(HttpApiSchema.status(409))],
+  })
+    .middleware(ApiRequestBody)
+    .pipe(requirePermissions([Permissions.companyUpdate]), authenticate, frontendSpecific),
+  HttpApiEndpoint.post('companyExchangeRateImport', '/api/company/exchange-rates/ecb', {
+    success: ExchangeRateList,
+    error: [...writeErrors, ExchangeRateImportFailed.pipe(HttpApiSchema.status(502))],
+  }).pipe(requirePermissions([Permissions.companyUpdate]), authenticate, frontendSpecific),
 ) {}

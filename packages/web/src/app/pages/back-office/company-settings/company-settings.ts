@@ -20,6 +20,7 @@ import type {
   CompanyModuleValue,
   CompanySettingsUpdateRequestValue,
   CompanySettingsValue,
+  ExchangeRateValue,
 } from '@froment/contracts';
 
 import { Can } from '@backoffice/can';
@@ -29,6 +30,7 @@ import { Button } from '@shared/button/button';
 import { Confirmation } from '@shared/confirmation/confirmation';
 import { Notice } from '@shared/notice/notice';
 import { PageHeader } from '@shared/page-header/page-header';
+import { formatFixedDecimal, parseFixedDecimal } from '@backoffice/quote-input';
 
 type CompanyModel = Omit<CompanySettingsUpdateRequestValue, 'expectedVersion'>;
 
@@ -78,6 +80,12 @@ export class CompanySettingsPage {
   });
   protected readonly saving = signal(false);
   protected readonly initializing = signal(false);
+  protected readonly exchangeRates = signal<ReadonlyArray<ExchangeRateValue>>([]);
+  protected readonly exchangeRateDate = signal('');
+  protected readonly exchangeRateCurrency = signal('');
+  protected readonly exchangeRateValue = signal('');
+  protected readonly exchangeRateBusy = signal(false);
+  protected readonly exchangeRateError = signal<TranslationKey | undefined>(undefined);
   protected readonly saved = signal(false);
   protected readonly error = signal<TranslationKey | undefined>(undefined);
 
@@ -86,14 +94,21 @@ export class CompanySettingsPage {
   }
 
   async canDeactivate(): Promise<boolean> {
-    if (this.saving() || this.initializing()) return false;
+    if (this.saving() || this.initializing() || this.exchangeRateBusy()) return false;
     if (!this.settingsForm().dirty()) return true;
     return this.confirmation.request(this.i18n.t('company.unsavedChanges'));
   }
 
   @HostListener('window:beforeunload', ['$event'])
   protected preventUnsavedUnload(event: BeforeUnloadEvent): void {
-    if (this.saving() || this.initializing() || this.settingsForm().dirty()) event.preventDefault();
+    if (
+      this.saving() ||
+      this.initializing() ||
+      this.exchangeRateBusy() ||
+      this.settingsForm().dirty()
+    ) {
+      event.preventDefault();
+    }
   }
 
   protected moduleEnabled(module: CompanyModuleValue): boolean {
@@ -136,6 +151,7 @@ export class CompanySettingsPage {
     }
     this.apply(outcome.result);
     this.state.set('ready');
+    await this.loadExchangeRates();
   }
 
   protected save(event: SubmitEvent): void {
@@ -190,6 +206,88 @@ export class CompanySettingsPage {
       this.error.set('company.error');
     } finally {
       this.initializing.set(false);
+    }
+  }
+
+  protected rateValue(rate: ExchangeRateValue): string {
+    return formatFixedDecimal(rate.foreignUnitsPerFunctionalUnitNanos, 9).replace(/\.?0+$/, '');
+  }
+
+  protected rateSource(rate: ExchangeRateValue): string {
+    return this.i18n.t(
+      rate.source === 'ecb' ? 'company.exchangeRateEcb' : 'company.exchangeRateManual',
+    );
+  }
+
+  protected setExchangeRateField(field: 'date' | 'currency' | 'value', event: Event): void {
+    if (!(event.currentTarget instanceof HTMLInputElement)) return;
+    if (field === 'date') this.exchangeRateDate.set(event.currentTarget.value);
+    if (field === 'currency')
+      this.exchangeRateCurrency.set(event.currentTarget.value.toUpperCase());
+    if (field === 'value') this.exchangeRateValue.set(event.currentTarget.value);
+  }
+
+  protected async saveExchangeRate(event: SubmitEvent): Promise<void> {
+    event.preventDefault();
+    const value = parseFixedDecimal(this.exchangeRateValue(), 9);
+    if (
+      this.exchangeRateBusy() ||
+      !/^\d{4}-\d{2}-\d{2}$/.test(this.exchangeRateDate()) ||
+      !/^[A-Z]{3}$/.test(this.exchangeRateCurrency()) ||
+      value === undefined ||
+      value === 0
+    ) {
+      this.exchangeRateError.set('company.exchangeRateInvalid');
+      return;
+    }
+    this.exchangeRateBusy.set(true);
+    this.exchangeRateError.set(undefined);
+    try {
+      const outcome = await this.api.setExchangeRate({
+        rateDate: this.exchangeRateDate(),
+        foreignCurrency: this.exchangeRateCurrency(),
+        foreignUnitsPerFunctionalUnitNanos: value,
+      });
+      if (!outcome.success) {
+        this.exchangeRateError.set(outcome.code);
+        return;
+      }
+      await this.loadExchangeRates();
+    } catch {
+      this.exchangeRateError.set('company.error');
+    } finally {
+      this.exchangeRateBusy.set(false);
+    }
+  }
+
+  protected async importExchangeRates(): Promise<void> {
+    if (this.exchangeRateBusy()) return;
+    this.exchangeRateBusy.set(true);
+    this.exchangeRateError.set(undefined);
+    try {
+      const outcome = await this.api.importExchangeRates();
+      if (!outcome.success) {
+        this.exchangeRateError.set(outcome.code);
+        return;
+      }
+      this.exchangeRates.set(outcome.result);
+    } catch {
+      this.exchangeRateError.set('company.error');
+    } finally {
+      this.exchangeRateBusy.set(false);
+    }
+  }
+
+  private async loadExchangeRates(): Promise<void> {
+    try {
+      const outcome = await this.api.listExchangeRates();
+      if (outcome.success) {
+        this.exchangeRates.set(outcome.result);
+      } else {
+        this.exchangeRateError.set(outcome.code);
+      }
+    } catch {
+      this.exchangeRateError.set('company.error');
     }
   }
 
