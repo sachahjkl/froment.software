@@ -49,9 +49,7 @@ job "froment-software" {
       mode = "host"
 
       port "http" {
-        static       = 9011
-        to           = 3000
-        host_network = "loopback"
+        to = 3000
       }
     }
 
@@ -137,6 +135,15 @@ EOH
         name     = "froment-software-staging"
         provider = "nomad"
         port     = "http"
+        tags = [
+          "traefik.enable=true",
+          "traefik.http.routers.froment-software-staging.entrypoints=websecure",
+          "traefik.http.routers.froment-software-staging.middlewares=froment-software-staging-noindex",
+          "traefik.http.routers.froment-software-staging.rule=Host(`staging.froment.software`)",
+          "traefik.http.routers.froment-software-staging.tls.certresolver=letsencrypt",
+          "traefik.http.routers.froment-software-staging.tls.domains[0].main=staging.froment.software",
+          "traefik.http.middlewares.froment-software-staging-noindex.headers.customresponseheaders.X-Robots-Tag=noindex, nofollow",
+        ]
 
         check {
           name     = "HTTP health"
