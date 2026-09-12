@@ -26,7 +26,6 @@
       system: let
         pkgs = import nixpkgs {
           inherit system;
-          config.allowUnfreePredicate = package: nixpkgs.lib.getName package == "nomad";
         };
         secretspec = pkgs.secretspec;
         lib = pkgs.lib;
@@ -377,7 +376,6 @@
               cousineFonts
               pkgs.liberation_ttf
               pkgs.nodejs_26
-              pkgs.nomad
               pkgs.poppler-utils
               pnpm
               pkgs.sops
