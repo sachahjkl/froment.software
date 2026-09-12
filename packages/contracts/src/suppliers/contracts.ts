@@ -1,5 +1,10 @@
 import { Schema } from 'effect';
 
+import {
+  AuthenticationRequired,
+  PermissionDenied,
+  RequestRateLimited,
+} from '../authentication/contracts.js';
 import { DisplayName, Ulid } from '../identifiers.js';
 
 export const SupplierInput = Schema.Struct({
@@ -72,3 +77,15 @@ export class SupplierCreationConflict extends Schema.TaggedError<SupplierCreatio
   'SupplierCreationConflict',
   { code: Schema.Literal('supplier.creation_conflict') },
 ) {}
+
+export const SupplierFailure = Schema.Union([
+  AuthenticationRequired,
+  PermissionDenied,
+  SupplierNotFound,
+  SupplierArchived,
+  SupplierVersionConflict,
+  SupplierCreationConflict,
+  RequestRateLimited,
+]);
+export type SupplierFailure = typeof SupplierFailure.Type;
+export type SupplierFailureCode = SupplierFailure['code'];

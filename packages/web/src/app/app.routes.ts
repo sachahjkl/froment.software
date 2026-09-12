@@ -237,6 +237,66 @@ export const routes: Routes = [
     children: tabRoutes('active', 'clients', ['active', 'archived', 'all']),
   },
   {
+    path: 'backoffice/fournisseurs',
+    loadComponent: () =>
+      import('./pages/back-office/suppliers/suppliers').then((module) => module.Suppliers),
+    canActivate: [administratorGuard],
+    canActivateChild: [administratorChildGuard],
+    data: {
+      shell: 'administrator',
+      titleKey: 'page.back_office_suppliers',
+      ...permissionData('supplier.read'),
+      descriptionKey: 'page.description.back_office_suppliers',
+      robots: 'noindex, nofollow',
+    },
+    children: tabRoutes('active', 'suppliers', ['active', 'archived', 'all']),
+  },
+  {
+    path: 'backoffice/fournisseurs/new',
+    loadComponent: () =>
+      import('./pages/back-office/supplier-editor/supplier-editor').then(
+        (module) => module.SupplierEditor,
+      ),
+    canActivate: [administratorGuard],
+    canDeactivate: [unsavedChangesGuard],
+    data: {
+      shell: 'administrator',
+      ...permissionData('supplier.create'),
+      titleKey: 'supplier.createTitle',
+      robots: 'noindex, nofollow',
+    },
+  },
+  {
+    path: 'backoffice/fournisseurs/:supplierId/edit',
+    loadComponent: () =>
+      import('./pages/back-office/supplier-editor/supplier-editor').then(
+        (module) => module.SupplierEditor,
+      ),
+    canActivate: [administratorGuard],
+    canDeactivate: [unsavedChangesGuard],
+    data: {
+      shell: 'administrator',
+      ...permissionData('supplier.read', 'supplier.update'),
+      titleKey: 'supplier.editTitle',
+      robots: 'noindex, nofollow',
+    },
+  },
+  {
+    path: 'backoffice/fournisseurs/:supplierId',
+    loadComponent: () =>
+      import('./pages/back-office/supplier-detail/supplier-detail').then(
+        (module) => module.SupplierDetail,
+      ),
+    canActivate: [administratorGuard],
+    data: {
+      shell: 'administrator',
+      ...permissionData('supplier.read'),
+      titleKey: 'page.back_office_supplier_detail',
+      descriptionKey: 'page.description.back_office_supplier_detail',
+      robots: 'noindex, nofollow',
+    },
+  },
+  {
     path: 'backoffice/clients/new',
     loadComponent: () =>
       import('./pages/back-office/client-editor/client-editor').then(

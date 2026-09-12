@@ -51,6 +51,8 @@ describe('back-office route organization', () => {
   it.each([
     ['backoffice/clients/new', 'client.create'],
     ['backoffice/clients/:clientId/edit', 'client.update'],
+    ['backoffice/fournisseurs/new', 'supplier.create'],
+    ['backoffice/fournisseurs/:supplierId/edit', 'supplier.update'],
     ['backoffice/quotes/new', 'quote.create'],
     ['backoffice/quotes/:quoteId/publication', 'quote.send'],
     ['backoffice/invoices/new', 'invoice.create'],

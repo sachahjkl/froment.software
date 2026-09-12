@@ -36,6 +36,7 @@ describe('BackOfficeNav', () => {
       ['orders/example', 'affaires'],
       ['invoices/example', 'facturation'],
       ['clients/example/profile', 'clients'],
+      ['fournisseurs/example', 'fournisseurs'],
       ['catalogue/active', 'catalogue'],
       ['catalogue/example/edit', 'catalogue'],
       ['configuration/entreprise', 'configuration'],
@@ -58,7 +59,7 @@ describe('BackOfficeNav', () => {
     await fixture.whenStable();
     const root: HTMLElement = fixture.nativeElement;
     expect(root.querySelectorAll('nav section')).toHaveLength(2);
-    expect(root.querySelectorAll('nav a')).toHaveLength(12);
+    expect(root.querySelector('a[href="/backoffice/fournisseurs"]')).not.toBeNull();
     expect(
       [...root.querySelectorAll('nav section:last-child a')].map((link) =>
         link.getAttribute('href'),

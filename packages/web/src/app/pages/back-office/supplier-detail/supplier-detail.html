@@ -1,0 +1,99 @@
+<section class="detail-page wide-page" aria-labelledby="supplier-title">
+  <app-page-header layout="stacked">
+    <a pageBack routerLink="/backoffice/fournisseurs" [queryParams]="listQuery()"
+      >{{ i18n.t('supplier.backToList') }}</a
+    >
+    @if (supplier(); as current) {
+    <h1 id="supplier-title">{{ current.displayName }}</h1>
+    } @if (supplier()) {
+    <p>{{ i18n.t('supplier.detailIntro') }}</p>
+    } @if (supplier()) {
+    <span pageBadges appBadge [variant]="statusVariant()">{{ statusLabel() }}</span>
+    } @if (supplier(); as current) {
+    <a
+      *appCan="'supplier.update'"
+      pageActions
+      appLinkButton
+      [routerLink]="['/backoffice/fournisseurs', current.id, 'edit']"
+      [queryParams]="listQuery()"
+      >{{ i18n.t('supplier.edit') }}</a
+    >
+    } @if (supplier()) {
+    <button
+      *appCan="'supplier.archive'"
+      pageActions
+      appButton
+      type="button"
+      [disabled]="changing()"
+      (click)="changeArchive()"
+    >
+      {{ archiveLabel() }}
+    </button>
+    }
+  </app-page-header>
+  @switch (state()) { @case ('loading') {
+  <p role="status">{{ i18n.t('supplier.loadingDetail') }}</p>
+  } @case ('error') {
+  <div class="notice-flow">
+    <p appNotice variant="danger" role="alert">{{ i18n.t(error()!) }}</p>
+    <button appButton type="button" (click)="load()">
+      {{ i18n.t('backOffice.dashboard.retry') }}
+    </button>
+  </div>
+  } @case ('ready') { @if (supplier(); as current) { @if (error(); as code) {
+  <p appNotice variant="danger" role="alert">{{ i18n.t(code) }}</p>
+  }
+  <div class="detail-grid">
+    <section class="ds-panel">
+      <h2>{{ i18n.t('supplier.identity') }}</h2>
+      <dl>
+        <div>
+          <dt>{{ i18n.t('supplier.registrationNumber') }}</dt>
+          <dd>{{ current.registrationNumber || i18n.t('supplier.notProvided') }}</dd>
+        </div>
+        <div>
+          <dt>{{ i18n.t('supplier.vatNumber') }}</dt>
+          <dd>{{ current.vatNumber || i18n.t('supplier.notProvided') }}</dd>
+        </div>
+        <div>
+          <dt>{{ i18n.t('supplier.email') }}</dt>
+          <dd>{{ current.email || i18n.t('supplier.notProvided') }}</dd>
+        </div>
+        <div>
+          <dt>{{ i18n.t('supplier.phone') }}</dt>
+          <dd>{{ current.phone || i18n.t('supplier.notProvided') }}</dd>
+        </div>
+      </dl>
+    </section>
+    <section class="ds-panel">
+      <h2>{{ i18n.t('supplier.address') }}</h2>
+      <address>
+        {{ current.addressLine1 || i18n.t('supplier.notProvided') }}<br />
+        @if (current.addressLine2) { {{ current.addressLine2 }}<br />
+        } {{ current.postalCode }} {{ current.city }}<br />{{ current.country }}
+      </address>
+    </section>
+    <section class="ds-panel">
+      <h2>{{ i18n.t('supplier.payment') }}</h2>
+      <dl>
+        <div>
+          <dt>{{ i18n.t('supplier.currency') }}</dt>
+          <dd>{{ current.defaultCurrency }}</dd>
+        </div>
+        <div>
+          <dt>{{ i18n.t('supplier.paymentTerms') }}</dt>
+          <dd>{{ i18n.tf('supplier.paymentTermsDays', { count: current.paymentTermsDays }) }}</dd>
+        </div>
+        <div>
+          <dt>{{ i18n.t('supplier.iban') }}</dt>
+          <dd>{{ current.iban || i18n.t('supplier.notProvided') }}</dd>
+        </div>
+        <div>
+          <dt>{{ i18n.t('supplier.bic') }}</dt>
+          <dd>{{ current.bic || i18n.t('supplier.notProvided') }}</dd>
+        </div>
+      </dl>
+    </section>
+  </div>
+  } } }
+</section>

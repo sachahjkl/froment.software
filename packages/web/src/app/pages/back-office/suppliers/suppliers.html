@@ -1,0 +1,95 @@
+<section appTabLayout class="suppliers-page" aria-labelledby="suppliers-title">
+  <app-page-header>
+    <h1 id="suppliers-title">{{ i18n.t('supplier.title') }}</h1>
+    <p class="muted">{{ i18n.t('supplier.listIntro') }}</p>
+    <a
+      *appCan="'supplier.create'"
+      pageActions
+      appLinkButton
+      variant="primary"
+      routerLink="/backoffice/fournisseurs/new"
+      ><app-icon name="plus" />{{ i18n.t('supplier.create') }}</a
+    >
+  </app-page-header>
+  <app-tabs [label]="i18n.t('supplier.tabs')" [tabs]="tabs()" [preserveQuery]="true" />
+  <router-outlet />
+  <ng-template appTabPanel="suppliers" let-tab="tab" let-id="id" let-tabId="tabId">
+    <section [id]="id" role="region" [attr.aria-labelledby]="tabId" tabindex="0">
+      <div class="list-controls spacer-x-2">
+        <label class="field" for="supplier-search">
+          {{ i18n.t('supplier.search') }}
+          <input
+            #searchInput
+            id="supplier-search"
+            class="input"
+            type="search"
+            maxlength="120"
+            [value]="query()"
+            (input)="setQuery($event)"
+          />
+        </label>
+        @if (query()) {
+        <button appButton type="button" (click)="clearQuery(searchInput)">
+          {{ i18n.t('supplier.clearSearch') }}
+        </button>
+        }
+      </div>
+      @switch (state()) { @case ('loading') {
+      <p role="status">{{ i18n.t('supplier.loading') }}</p>
+      } @case ('error') {
+      <div class="notice-flow">
+        <p appNotice variant="danger" role="alert">{{ i18n.t('supplier.error') }}</p>
+        <button appButton type="button" (click)="load()">
+          {{ i18n.t('backOffice.dashboard.retry') }}
+        </button>
+      </div>
+      } @case ('ready') { @if (visible(tab).length === 0) {
+      <app-empty-state icon="catalog" [title]="emptyTitle()">
+        <p>{{ emptyIntro() }}</p>
+      </app-empty-state>
+      } @else {
+      <div appDataTable tableLayout="fluid" class="wide-table">
+        <table>
+          <thead>
+            <tr>
+              <th scope="col">{{ i18n.t('supplier.name') }}</th>
+              <th scope="col">{{ i18n.t('supplier.contact') }}</th>
+              <th scope="col">{{ i18n.t('supplier.country') }}</th>
+              <th scope="col">{{ i18n.t('supplier.currency') }}</th>
+              <th scope="col">{{ i18n.t('supplier.paymentTerms') }}</th>
+              <th scope="col">{{ i18n.t('supplier.status') }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (supplier of visible(tab); track supplier.id) {
+            <tr>
+              <th scope="row">
+                <a
+                  [routerLink]="['/backoffice/fournisseurs', supplier.id]"
+                  [queryParams]="detailQuery()"
+                  >{{ supplier.displayName }}</a
+                >
+              </th>
+              <td>{{ supplier.email || supplier.phone || i18n.t('supplier.notProvided') }}</td>
+              <td>{{ supplier.country || i18n.t('supplier.notProvided') }}</td>
+              <td>{{ supplier.defaultCurrency }}</td>
+              <td>
+                {{ i18n.tf('supplier.paymentTermsDays', { count: supplier.paymentTermsDays }) }}
+              </td>
+              <td>
+                <span appBadge [variant]="statusVariant(supplier)"
+                  >{{ statusLabel(supplier) }}</span
+                >
+              </td>
+            </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      <p class="result-count" role="status">
+        {{ i18n.plural('supplier.count', { count: visible(tab).length }) }}
+      </p>
+      } } }
+    </section>
+  </ng-template>
+</section>

@@ -1,0 +1,187 @@
+<section class="detail-page form-page" aria-labelledby="supplier-editor-title">
+  <app-page-header layout="stacked">
+    <a pageBack [routerLink]="backLink()" [queryParams]="listQuery()"
+      >{{ i18n.t('supplier.cancel') }}</a
+    >
+    <h1 id="supplier-editor-title">{{ title() }}</h1>
+    <p>{{ intro() }}</p>
+  </app-page-header>
+  @if (state() === 'loading') {
+  <p role="status">{{ i18n.t('supplier.loadingDetail') }}</p>
+  } @else if (state() === 'error') {
+  <div class="notice-flow">
+    <p appNotice variant="danger" role="alert">{{ i18n.t(error()!) }}</p>
+    <button appButton type="button" (click)="load()">
+      {{ i18n.t('backOffice.dashboard.retry') }}
+    </button>
+  </div>
+  } @else { @if (error(); as code) {
+  <p appNotice variant="danger" role="alert">{{ i18n.t(code) }}</p>
+  } @if (supplier()?.archived) {
+  <p appNotice role="status">{{ i18n.t('supplier.archivedEdit') }}</p>
+  }
+  <form novalidate (submit)="save($event)">
+    <div class="ds-panel form-panel">
+      <fieldset>
+        <legend>{{ i18n.t('supplier.identity') }}</legend>
+        <div class="field-grid">
+          <label class="field wide" for="supplier-name"
+            >{{ i18n.t('supplier.name') }}<input
+              id="supplier-name"
+              class="input"
+              type="text"
+              autocomplete="organization"
+              [formField]="supplierForm.displayName"
+            />@if (invalid('displayName')) {
+            <span class="field-error" id="supplier-name-error"
+              >{{ i18n.t(fieldError('displayName')) }}</span
+            >
+            }</label
+          >
+          <label class="field" for="supplier-registration"
+            >{{ i18n.t('supplier.registrationNumber') }}<input
+              id="supplier-registration"
+              class="input"
+              type="text"
+              [formField]="supplierForm.registrationNumber"
+          /></label>
+          <label class="field" for="supplier-vat"
+            >{{ i18n.t('supplier.vatNumber') }}<input
+              id="supplier-vat"
+              class="input"
+              type="text"
+              [formField]="supplierForm.vatNumber"
+          /></label>
+          <label class="field" for="supplier-email"
+            >{{ i18n.t('supplier.email') }}<input
+              id="supplier-email"
+              class="input"
+              type="email"
+              autocomplete="email"
+              [formField]="supplierForm.email"
+            />@if (invalid('email')) {
+            <span class="field-error">{{ i18n.t(fieldError('email')) }}</span> }</label
+          >
+          <label class="field" for="supplier-phone"
+            >{{ i18n.t('supplier.phone') }}<input
+              id="supplier-phone"
+              class="input"
+              type="tel"
+              autocomplete="tel"
+              [formField]="supplierForm.phone"
+            />@if (invalid('phone')) {
+            <span class="field-error">{{ i18n.t(fieldError('phone')) }}</span> }</label
+          >
+        </div>
+      </fieldset>
+    </div>
+    <div class="ds-panel form-panel">
+      <fieldset>
+        <legend>{{ i18n.t('supplier.address') }}</legend>
+        <div class="field-grid">
+          <label class="field wide" for="supplier-address1"
+            >{{ i18n.t('supplier.addressLine1') }}<input
+              id="supplier-address1"
+              class="input"
+              type="text"
+              autocomplete="address-line1"
+              [formField]="supplierForm.addressLine1"
+          /></label>
+          <label class="field wide" for="supplier-address2"
+            >{{ i18n.t('supplier.addressLine2') }}<input
+              id="supplier-address2"
+              class="input"
+              type="text"
+              autocomplete="address-line2"
+              [formField]="supplierForm.addressLine2"
+          /></label>
+          <label class="field" for="supplier-postal"
+            >{{ i18n.t('supplier.postalCode') }}<input
+              id="supplier-postal"
+              class="input"
+              type="text"
+              autocomplete="postal-code"
+              [formField]="supplierForm.postalCode"
+          /></label>
+          <label class="field" for="supplier-city"
+            >{{ i18n.t('supplier.city') }}<input
+              id="supplier-city"
+              class="input"
+              type="text"
+              autocomplete="address-level2"
+              [formField]="supplierForm.city"
+          /></label>
+          <label class="field wide" for="supplier-country"
+            >{{ i18n.t('supplier.country') }}<input
+              id="supplier-country"
+              class="input"
+              type="text"
+              autocomplete="country-name"
+              [formField]="supplierForm.country"
+          /></label>
+        </div>
+      </fieldset>
+    </div>
+    <div class="ds-panel form-panel">
+      <fieldset>
+        <legend>{{ i18n.t('supplier.payment') }}</legend>
+        <div class="field-grid">
+          <label class="field" for="supplier-currency"
+            >{{ i18n.t('supplier.currency') }}<input
+              id="supplier-currency"
+              class="input"
+              type="text"
+              autocapitalize="characters"
+              [formField]="supplierForm.defaultCurrency"
+            />@if (invalid('defaultCurrency')) {
+            <span class="field-error">{{ i18n.t(fieldError('defaultCurrency')) }}</span> }</label
+          >
+          <label class="field" for="supplier-terms"
+            >{{ i18n.t('supplier.paymentTerms') }}<input
+              id="supplier-terms"
+              class="input"
+              type="number"
+              step="1"
+              [formField]="supplierForm.paymentTermsDays"
+            />@if (invalid('paymentTermsDays')) {
+            <span class="field-error">{{ i18n.t(fieldError('paymentTermsDays')) }}</span> }</label
+          >
+          <label class="field wide" for="supplier-iban"
+            >{{ i18n.t('supplier.iban') }}<input
+              id="supplier-iban"
+              class="input"
+              type="text"
+              autocomplete="off"
+              [formField]="supplierForm.iban"
+            />@if (invalid('iban')) {
+            <span class="field-error">{{ i18n.t(fieldError('iban')) }}</span> }</label
+          >
+          <label class="field" for="supplier-bic"
+            >{{ i18n.t('supplier.bic') }}<input
+              id="supplier-bic"
+              class="input"
+              type="text"
+              autocomplete="off"
+              [formField]="supplierForm.bic"
+            />@if (invalid('bic')) {
+            <span class="field-error">{{ i18n.t(fieldError('bic')) }}</span> }</label
+          >
+        </div>
+      </fieldset>
+    </div>
+    <div class="actions spacer-x-2">
+      <button
+        appButton
+        variant="primary"
+        type="submit"
+        [disabled]="saving() || supplier()?.archived"
+      >
+        {{ submitLabel() }}
+      </button>
+      <a appLinkButton [routerLink]="backLink()" [queryParams]="listQuery()"
+        >{{ i18n.t('supplier.cancel') }}</a
+      >
+    </div>
+  </form>
+  }
+</section>
