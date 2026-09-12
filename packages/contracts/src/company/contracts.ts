@@ -1,5 +1,11 @@
 import { Schema } from 'effect';
 
+import {
+  AuthenticationRequired,
+  PermissionDenied,
+  RequestRateLimited,
+} from '../authentication/contracts.js';
+
 export const Jurisdiction = Schema.Literal('FR');
 export type Jurisdiction = typeof Jurisdiction.Type;
 
@@ -78,3 +84,13 @@ export class AccountingAlreadyInitialized extends Schema.TaggedError<AccountingA
   'AccountingAlreadyInitialized',
   { code: Schema.Literal('company.accounting_already_initialized') },
 ) {}
+
+export const CompanyFailure = Schema.Union([
+  AuthenticationRequired,
+  PermissionDenied,
+  RequestRateLimited,
+  CompanySettingsConflict,
+  FunctionalCurrencyLocked,
+  AccountingAlreadyInitialized,
+]);
+export type CompanyFailure = typeof CompanyFailure.Type;

@@ -10,3 +10,4 @@ export * from './translation.js';
 export * from './translations.js';
 export * from './web-ui-text.js';
 export * from './supplier-workspace.js';
+export * from './company-workspace.js';

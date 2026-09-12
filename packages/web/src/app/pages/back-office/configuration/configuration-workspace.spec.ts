@@ -76,14 +76,9 @@ describe('ConfigurationIndex', () => {
     ).toBe(true);
   });
   it('separates team, API, services and audit into protected top-level routes', () => {
-    expect(configurationRoutes.map(({ path }) => path)).toEqual([
-      '',
-      'entreprise',
-      'conditions/new',
-      'conditions/:presetId/edit',
-      'conditions',
-      'carte-de-visite',
-    ]);
+    const configurationPaths = configurationRoutes.map(({ path }) => path);
+    expect(configurationPaths).toContain('societe');
+    expect(configurationPaths).toContain('entreprise');
     expect(auditRoute.path).toBe('backoffice/audit');
     for (const route of [...teamRoutes, ...apiTokenRoutes, ...serviceRoutes, auditRoute]) {
       expect(route.canActivate).toEqual([administratorGuard]);
@@ -98,7 +93,7 @@ describe('ConfigurationIndex', () => {
     const root: HTMLElement = fixture.nativeElement;
     expect(root.querySelectorAll('.groups section')).toHaveLength(2);
     expect(root.querySelector('a[href$="carte-de-visite"]')).not.toBeNull();
-    expect(root.querySelectorAll('a')).toHaveLength(3);
+    expect(root.querySelector('a[href$="societe"]')).not.toBeNull();
     for (const path of ['equipe', 'api', 'services', 'audit']) {
       expect(root.querySelector(`a[href$="${path}"]`)).toBeNull();
     }

@@ -9,6 +9,8 @@ export {
   CompanySettings,
   type CompanySettings as CompanySettingsValue,
   CompanySettingsConflict,
+  CompanyFailure,
+  type CompanyFailure as CompanyFailureValue,
   CompanySettingsUpdateRequest,
   type CompanySettingsUpdateRequest as CompanySettingsUpdateRequestValue,
   FunctionalCurrency,

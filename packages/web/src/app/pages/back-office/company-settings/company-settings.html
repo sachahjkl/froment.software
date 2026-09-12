@@ -1,0 +1,122 @@
+<section class="detail-page form-page" aria-labelledby="company-settings-title">
+  <app-page-header layout="stacked">
+    <h1 id="company-settings-title">{{ i18n.t('company.title') }}</h1>
+    <p>{{ i18n.t('company.intro') }}</p>
+  </app-page-header>
+  @if (state() === 'loading') {
+  <p role="status">{{ i18n.t('company.loading') }}</p>
+  } @else if (state() === 'error') {
+  <div class="notice-flow">
+    <p appNotice variant="danger" role="alert">{{ i18n.t(error()!) }}</p>
+    <button appButton type="button" (click)="load()">
+      {{ i18n.t('backOffice.dashboard.retry') }}
+    </button>
+  </div>
+  } @else { @if (saved()) {
+  <p appNotice variant="success" role="status">{{ i18n.t('company.saved') }}</p>
+  } @if (error(); as code) {
+  <p appNotice variant="danger" role="alert">{{ i18n.t(code) }}</p>
+  }
+  <form novalidate (submit)="save($event)">
+    <div class="ds-panel form-panel">
+      <fieldset>
+        <legend>{{ i18n.t('company.legal') }}</legend>
+        <div class="field-grid">
+          <label class="field" for="company-jurisdiction"
+            >{{ i18n.t('company.jurisdiction') }}<input
+              id="company-jurisdiction"
+              class="input"
+              type="text"
+              [value]="model().jurisdiction"
+              readonly
+          /></label>
+          <label class="field" for="company-currency"
+            >{{ i18n.t('company.functionalCurrency') }}<input
+              id="company-currency"
+              class="input"
+              type="text"
+              [formField]="settingsForm.functionalCurrency"
+          /></label>
+        </div>
+        <p class="muted">{{ accountingState() }}</p>
+      </fieldset>
+    </div>
+    <div class="ds-panel form-panel">
+      <fieldset>
+        <legend>{{ i18n.t('company.fiscalYear') }}</legend>
+        <div class="field-grid">
+          <label class="field" for="company-fiscal-month"
+            >{{ i18n.t('company.fiscalMonth') }}<input
+              id="company-fiscal-month"
+              class="input"
+              type="number"
+              step="1"
+              [formField]="settingsForm.fiscalYearStartMonth"
+          /></label>
+          <label class="field" for="company-fiscal-day"
+            >{{ i18n.t('company.fiscalDay') }}<input
+              id="company-fiscal-day"
+              class="input"
+              type="number"
+              step="1"
+              [formField]="settingsForm.fiscalYearStartDay"
+          /></label>
+        </div>
+        <p class="muted">{{ i18n.t('company.fiscalDuration') }}</p>
+      </fieldset>
+    </div>
+    <div class="ds-panel form-panel">
+      <fieldset>
+        <legend>{{ i18n.t('company.modules') }}</legend>
+        <div class="module-grid">
+          @for (module of modules; track module) {
+          <label
+            ><input
+              type="checkbox"
+              [checked]="moduleEnabled(module)"
+              (change)="setModule(module, $event)"
+            />{{ moduleLabel(module) }}</label
+          >
+          }
+        </div>
+      </fieldset>
+    </div>
+    <div class="ds-panel form-panel">
+      <fieldset>
+        <legend>{{ i18n.t('company.retention') }}</legend>
+        <label class="field" for="company-retention"
+          >{{ i18n.t('company.retentionYears') }}<input
+            id="company-retention"
+            class="input"
+            type="number"
+            step="1"
+            [formField]="settingsForm.retentionYears"
+        /></label>
+        <p class="muted">{{ i18n.t('company.retentionExplanation') }}</p>
+      </fieldset>
+    </div>
+    <div class="actions spacer-x-2">
+      <button
+        *appCan="'company.update'"
+        appButton
+        variant="primary"
+        type="submit"
+        [disabled]="saving()"
+      >
+        {{ i18n.t('company.save') }}
+      </button>
+      @if (!currencyLocked()) {
+      <button
+        *appCan="'company.update'"
+        appButton
+        type="button"
+        [disabled]="initializing()"
+        (click)="initializeAccounting()"
+      >
+        {{ i18n.t('company.initializeAccounting') }}
+      </button>
+      }
+    </div>
+  </form>
+  }
+</section>
