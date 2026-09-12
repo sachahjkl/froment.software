@@ -196,6 +196,7 @@ export {
   type SupplierUpdateRequest as SupplierUpdateRequestValue,
   SupplierVersionConflict,
 } from './suppliers/contracts.js';
+export * from './supplier-invoices/contracts.js';
 export {
   BootstrapFailure,
   type BootstrapFailure as BootstrapFailureValue,

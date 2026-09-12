@@ -22,6 +22,7 @@ import { ClientPortalApi } from './client-portal/api.js';
 import { ClientsApi } from './clients/api.js';
 import { CompanyApi } from './company/api.js';
 import { SuppliersApi } from './suppliers/api.js';
+import { SupplierInvoicesApi } from './supplier-invoices/api.js';
 import { ApiTokensApi } from './api-tokens/api.js';
 import { InvoicesApi } from './invoices/api.js';
 import { IssuerSettingsApi } from './issuer-settings/api.js';
@@ -39,6 +40,7 @@ export { ClientsApi } from './clients/api.js';
 export { CompanyApi } from './company/api.js';
 export { RolesApi } from './roles/api.js';
 export { SuppliersApi } from './suppliers/api.js';
+export { SupplierInvoicesApi } from './supplier-invoices/api.js';
 export { ApiTokensApi } from './api-tokens/api.js';
 export { InvoicesApi } from './invoices/api.js';
 export { IssuerSettingsApi } from './issuer-settings/api.js';
@@ -71,6 +73,7 @@ export class Api extends HttpApi.make('froment-api')
   .add(ClientsApi)
   .add(CompanyApi)
   .add(SuppliersApi)
+  .add(SupplierInvoicesApi)
   .add(OrdersApi)
   .add(QuoteConditionPresetsApi)
   .add(IssuerSettingsApi)

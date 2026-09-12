@@ -167,7 +167,7 @@ export class ApiTokenEditor {
     })),
   );
   protected readonly permissionGroups = computed(() =>
-    ['client', 'supplier', 'quote', 'order', 'invoice', 'payment', 'document']
+    ['client', 'supplier', 'supplier-invoice', 'quote', 'order', 'invoice', 'payment', 'document']
       .map((domain) => ({
         domain,
         expanded: this.expandedPermissionDomains().has(domain),

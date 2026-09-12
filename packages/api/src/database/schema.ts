@@ -296,6 +296,104 @@ export const supplierCreationRequests = sqliteTable(
   ],
 );
 
+export const supplierInvoices = sqliteTable(
+  'supplier_invoices',
+  {
+    id: text().notNull().primaryKey(),
+    requestId: text('request_id').notNull().unique(),
+    request: text().notNull(),
+    supplierId: text('supplier_id')
+      .notNull()
+      .references(() => suppliers.id, { onDelete: 'no action' }),
+    reference: text().notNull(),
+    invoiceDate: text('invoice_date').notNull(),
+    dueDate: text('due_date').notNull(),
+    currency: text().notNull(),
+    notes: text().notNull().default(''),
+    netTotalCents: integer('net_total_cents').notNull(),
+    vatTotalCents: integer('vat_total_cents').notNull(),
+    totalCents: integer('total_cents').notNull(),
+    status: text().notNull().default('draft'),
+    source: text().notNull(),
+    sourceFileName: text('source_file_name'),
+    externalSubmissionId: text('external_submission_id'),
+    confirmedAt: integer('confirmed_at', { mode: 'timestamp_ms' }),
+    approvedAt: integer('approved_at', { mode: 'timestamp_ms' }),
+    version: integer().notNull().default(1),
+    createdByUserId: text('created_by_user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'no action' }),
+    createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull(),
+    updatedAt: integer('updated_at', { mode: 'timestamp_ms' }).notNull(),
+  },
+  (table) => [
+    check(
+      'supplier_invoices_id_ulid_check',
+      sql`${table.id} is not null and length(${table.id}) = 26 and ${table.id} not glob '*[^0-9A-HJKMNP-TV-Z]*' and substr(${table.id}, 1, 1) between '0' and '7'`,
+    ),
+    check('supplier_invoices_request_id_check', sql`length(${table.requestId}) = 36`),
+    check('supplier_invoices_request_json_check', sql`json_valid(${table.request})`),
+    check(
+      'supplier_invoices_reference_check',
+      sql`length(trim(${table.reference})) between 1 and 80`,
+    ),
+    check(
+      'supplier_invoices_dates_check',
+      sql`${table.invoiceDate} glob '????-??-??' and ${table.dueDate} glob '????-??-??' and ${table.dueDate} >= ${table.invoiceDate}`,
+    ),
+    check('supplier_invoices_currency_check', sql`${table.currency} glob '[A-Z][A-Z][A-Z]'`),
+    check(
+      'supplier_invoices_totals_check',
+      sql`${table.netTotalCents} >= 0 and ${table.vatTotalCents} >= 0 and ${table.totalCents} = ${table.netTotalCents} + ${table.vatTotalCents}`,
+    ),
+    check(
+      'supplier_invoices_status_check',
+      sql`${table.status} in ('draft', 'confirmed', 'approved', 'paid', 'cancelled')`,
+    ),
+    check('supplier_invoices_source_check', sql`${table.source} in ('manual', 'ocr')`),
+    check('supplier_invoices_version_check', sql`${table.version} > 0`),
+    check('supplier_invoices_timestamps_check', sql`${table.updatedAt} >= ${table.createdAt}`),
+    uniqueIndex('supplier_invoices_supplier_reference_unique').on(
+      table.supplierId,
+      table.reference,
+    ),
+    index('supplier_invoices_due_date_index').on(table.dueDate),
+    index('supplier_invoices_status_index').on(table.status),
+  ],
+);
+
+export const supplierInvoiceLines = sqliteTable(
+  'supplier_invoice_lines',
+  {
+    id: text().notNull().primaryKey(),
+    invoiceId: text('invoice_id')
+      .notNull()
+      .references(() => supplierInvoices.id, { onDelete: 'cascade' }),
+    position: integer().notNull(),
+    description: text().notNull(),
+    netTotalCents: integer('net_total_cents').notNull(),
+    vatRateBasisPoints: integer('vat_rate_basis_points').notNull(),
+    vatTotalCents: integer('vat_total_cents').notNull(),
+    totalCents: integer('total_cents').notNull(),
+  },
+  (table) => [
+    check(
+      'supplier_invoice_lines_id_ulid_check',
+      sql`${table.id} is not null and length(${table.id}) = 26 and ${table.id} not glob '*[^0-9A-HJKMNP-TV-Z]*' and substr(${table.id}, 1, 1) between '0' and '7'`,
+    ),
+    check('supplier_invoice_lines_position_check', sql`${table.position} >= 0`),
+    check(
+      'supplier_invoice_lines_description_check',
+      sql`length(trim(${table.description})) between 1 and 500`,
+    ),
+    check(
+      'supplier_invoice_lines_amounts_check',
+      sql`${table.netTotalCents} >= 0 and ${table.vatRateBasisPoints} between 0 and 10000 and ${table.vatTotalCents} >= 0 and ${table.totalCents} = ${table.netTotalCents} + ${table.vatTotalCents}`,
+    ),
+    uniqueIndex('supplier_invoice_lines_position_unique').on(table.invoiceId, table.position),
+  ],
+);
+
 export const clientAccessAccounts = sqliteTable(
   'client_access_accounts',
   {

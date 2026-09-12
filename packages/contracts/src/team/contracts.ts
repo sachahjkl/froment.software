@@ -31,6 +31,10 @@ export const TeamProfilePermissions = {
     'supplier.create',
     'supplier.update',
     'supplier.archive',
+    'supplier-invoice.read',
+    'supplier-invoice.create',
+    'supplier-invoice.update',
+    'supplier-invoice.approve',
   ],
   collaborator: [
     'client.read',
@@ -60,6 +64,9 @@ export const TeamProfilePermissions = {
     'company.read',
     'role.read',
     'supplier.read',
+    'supplier-invoice.read',
+    'supplier-invoice.create',
+    'supplier-invoice.update',
   ],
 } as const satisfies Record<typeof TeamProfile.Type, ReadonlyArray<typeof PermissionCode.Type>>;
 export const TeamInvitationId = Schema.String.check(Schema.isUUID(4));

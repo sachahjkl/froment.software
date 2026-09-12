@@ -1,6 +1,7 @@
 import type { Language } from './language.js';
 import { teamDocumentation } from './team.js';
 import { roleDocumentation } from './roles.js';
+import { supplierInvoiceDocumentation } from './supplier-invoices.js';
 import { creditDocumentation } from './credit-notes.js';
 import { ledgerDocumentation } from './bank-ledger.js';
 import { passkeyDocumentation } from './passkeys.js';
@@ -48,6 +49,7 @@ export const apiDocumentation = {
       passkeys: passkeyDocumentation.fr.group,
       team: teamDocumentation.fr.group,
       roles: roleDocumentation.fr.group,
+      supplierInvoices: supplierInvoiceDocumentation.fr.group,
       creditNotes: creditDocumentation.fr.group,
       bankLedger: ledgerDocumentation.fr.group,
       emailDrafts: emailDraftDocumentation.fr.group,
@@ -134,6 +136,7 @@ export const apiDocumentation = {
       ...providerActionDocumentation.fr,
       ...teamDocumentation.fr.operations,
       ...roleDocumentation.fr.operations,
+      ...supplierInvoiceDocumentation.fr.operations,
       ...creditDocumentation.fr.operations,
       ...ledgerDocumentation.fr.operations,
       bankPaymentList: {
@@ -503,6 +506,7 @@ export const apiDocumentation = {
       passkeys: passkeyDocumentation.en.group,
       team: teamDocumentation.en.group,
       roles: roleDocumentation.en.group,
+      supplierInvoices: supplierInvoiceDocumentation.en.group,
       creditNotes: creditDocumentation.en.group,
       bankLedger: ledgerDocumentation.en.group,
       emailDrafts: emailDraftDocumentation.en.group,
@@ -581,6 +585,7 @@ export const apiDocumentation = {
       ...providerActionDocumentation.en,
       ...teamDocumentation.en.operations,
       ...roleDocumentation.en.operations,
+      ...supplierInvoiceDocumentation.en.operations,
       ...creditDocumentation.en.operations,
       ...ledgerDocumentation.en.operations,
       bankPaymentList: {

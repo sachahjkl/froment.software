@@ -19,6 +19,7 @@ import { ApiTokensLive } from './api-tokens/service.js';
 import { ClientsLive } from './clients/clients.js';
 import { CompanyLive } from './company/service.js';
 import { SuppliersLive } from './suppliers/service.js';
+import { SupplierInvoicesLive } from './supplier-invoices/service.js';
 import { DatabaseLive } from './database/database.js';
 import { DeploymentLive } from './deployment/deployment.js';
 import { IssuerSettingsLive } from './issuer-settings/service.js';
@@ -85,6 +86,7 @@ const ServicesLive = Layer.mergeAll(
   ClientsLive,
   CompanyLive,
   SuppliersLive,
+  SupplierInvoicesLive,
   InvoicePdfRuntimeLive,
   QuoteLinksLive.pipe(Layer.provide(BusinessConfigLive)),
   QuoteConditionPresetsLive,

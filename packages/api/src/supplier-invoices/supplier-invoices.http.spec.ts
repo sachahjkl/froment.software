@@ -1,0 +1,141 @@
+import { SupplierInvoice, SupplierSummary } from '@froment/contracts';
+import { Schema } from 'effect';
+import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+
+import { startHttpTestServer, type HttpTestServer } from '../server/server.spec-helper.js';
+
+describe('supplier invoice HTTP lifecycle', () => {
+  let server: HttpTestServer;
+
+  beforeAll(async () => {
+    server = await startHttpTestServer();
+  }, 30_000);
+  afterAll(async () => server.close());
+
+  it('creates an editable draft and freezes it before approval', async () => {
+    const write = (path: string, body: typeof Schema.Json.Type, method: 'POST' | 'PUT' = 'POST') =>
+      fetch(`${server.baseUrl}${path}`, {
+        method,
+        headers: server.jsonHeaders,
+        body: JSON.stringify(body),
+      });
+    const supplierResponse = await write('/api/suppliers', {
+      requestId: crypto.randomUUID(),
+      displayName: 'Supplier invoices test',
+      addressLine1: '',
+      addressLine2: '',
+      postalCode: '',
+      city: '',
+      country: 'France',
+      email: 'supplier@example.test',
+      phone: '',
+      registrationNumber: '',
+      vatNumber: '',
+      defaultCurrency: 'EUR',
+      paymentTermsDays: 30,
+      iban: '',
+      bic: '',
+    });
+    expect(supplierResponse.status).toBe(200);
+    const supplier = Schema.decodeUnknownSync(SupplierSummary)(await supplierResponse.json());
+    const creation = {
+      requestId: crypto.randomUUID(),
+      supplierId: supplier.id,
+      reference: 'SUP-2026-42',
+      invoiceDate: '2026-09-01',
+      dueDate: '2026-10-01',
+      currency: 'EUR',
+      lines: [
+        { description: 'Service', netTotalCents: 10_001, vatRateBasisPoints: 2_000 },
+        { description: 'Exempt fee', netTotalCents: 500, vatRateBasisPoints: 0 },
+      ],
+      notes: 'Check before payment',
+      source: 'manual',
+      sourceFileName: null,
+      externalSubmissionId: null,
+    };
+    const createResponse = await write('/api/supplier-invoices', creation);
+    expect(createResponse.status).toBe(200);
+    const created = Schema.decodeUnknownSync(SupplierInvoice)(await createResponse.json());
+    expect(created).toMatchObject({
+      supplierName: supplier.displayName,
+      status: 'draft',
+      netTotalCents: 10_501,
+      vatTotalCents: 2_000,
+      totalCents: 12_501,
+    });
+    const repeated = await write('/api/supplier-invoices', creation);
+    expect(repeated.status).toBe(200);
+    await expect(repeated.json()).resolves.toMatchObject({ id: created.id });
+
+    const updateResponse = await write(
+      `/api/supplier-invoices/${created.id}`,
+      {
+        supplierId: supplier.id,
+        reference: creation.reference,
+        invoiceDate: creation.invoiceDate,
+        dueDate: '2026-10-15',
+        currency: creation.currency,
+        lines: creation.lines,
+        notes: 'Validated totals',
+        expectedVersion: created.version,
+      },
+      'PUT',
+    );
+    expect(updateResponse.status).toBe(200);
+    const updated = Schema.decodeUnknownSync(SupplierInvoice)(await updateResponse.json());
+    expect(updated).toMatchObject({ dueDate: '2026-10-15', version: 2 });
+
+    const confirmResponse = await write(`/api/supplier-invoices/${created.id}/confirm`, {
+      expectedVersion: updated.version,
+    });
+    expect(confirmResponse.status).toBe(200);
+    const confirmed = Schema.decodeUnknownSync(SupplierInvoice)(await confirmResponse.json());
+    expect(confirmed).toMatchObject({ status: 'confirmed', version: 3 });
+    expect(confirmed.confirmedAt).not.toBeNull();
+
+    const frozenResponse = await write(
+      `/api/supplier-invoices/${created.id}`,
+      {
+        supplierId: supplier.id,
+        reference: creation.reference,
+        invoiceDate: creation.invoiceDate,
+        dueDate: creation.dueDate,
+        currency: creation.currency,
+        lines: creation.lines,
+        notes: '',
+        expectedVersion: confirmed.version,
+      },
+      'PUT',
+    );
+    expect(frozenResponse.status).toBe(409);
+    await expect(frozenResponse.json()).resolves.toMatchObject({
+      code: 'supplier_invoice.not_editable',
+    });
+
+    const approveResponse = await write(`/api/supplier-invoices/${created.id}/approve`, {
+      expectedVersion: confirmed.version,
+    });
+    expect(approveResponse.status).toBe(200);
+    const approved = Schema.decodeUnknownSync(SupplierInvoice)(await approveResponse.json());
+    expect(approved.status).toBe('approved');
+    expect(approved.approvedAt).not.toBeNull();
+    expect(
+      (
+        await write(`/api/supplier-invoices/${created.id}/cancel`, {
+          expectedVersion: approved.version,
+        })
+      ).status,
+    ).toBe(409);
+  });
+
+  it('protects reads and rejects duplicate supplier references', async () => {
+    expect((await fetch(`${server.baseUrl}/api/supplier-invoices`)).status).toBe(401);
+    const listResponse = await fetch(`${server.baseUrl}/api/supplier-invoices`, {
+      headers: server.sessionHeaders,
+    });
+    expect(listResponse.status).toBe(200);
+    const list = Schema.decodeUnknownSync(Schema.Array(SupplierInvoice))(await listResponse.json());
+    expect(list).toHaveLength(1);
+  });
+});

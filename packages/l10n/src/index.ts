@@ -11,4 +11,5 @@ export * from './translations.js';
 export * from './web-ui-text.js';
 export * from './supplier-workspace.js';
 export * from './roles.js';
+export * from './supplier-invoices.js';
 export * from './company-workspace.js';

@@ -28,6 +28,7 @@ import { ClientPortalHandlers } from './client-portal/handlers.js';
 import { ClientHandlers } from './clients/handlers.js';
 import { CompanyHandlers } from './company/handlers.js';
 import { SupplierHandlers } from './suppliers/handlers.js';
+import { SupplierInvoiceHandlers } from './supplier-invoices/handlers.js';
 import { apiForLanguage } from './documentation/api-documentation.js';
 import { requestLanguage } from './http/language.js';
 import { ApiTelemetryLive } from './observability/api-telemetry.js';
@@ -80,6 +81,7 @@ const apiRoutes = (publicOrigin: string) =>
         ClientHandlers,
         CompanyHandlers,
         SupplierHandlers,
+        SupplierInvoiceHandlers,
         OrderHandlers,
         QuoteConditionPresetHandlers,
         CatalogHandlers,
