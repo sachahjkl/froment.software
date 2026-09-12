@@ -43,24 +43,25 @@ jobs:
       - name: Install Cosign
         uses: sigstore/cosign-installer@6f9f17788090df1f26f669e9d70d6ae9567deba6 # v4.1.2
       - name: Promote the exact staging image
+        timeout-minutes: 15
         env:
           GH_TOKEN: ${{ github.token }}
           NOMAD_ADDR: http://homelab.panthera-python.ts.net:4646
           NOMAD_TOKEN: ${{ secrets.NOMAD_TOKEN }}
         run: |
-          image=$(nomad job inspect -namespace staging -json froment-software | jq -r .Meta.image)
+          image=$(timeout 30s nomad job inspect -namespace staging -json froment-software | jq -r .Meta.image)
           [[ "$image" =~ ^ghcr\.io/sachahjkl/froment\.software@sha256:[0-9a-f]{64}$ ]]
-          cosign verify \
+          timeout 2m cosign verify \
             --certificate-identity-regexp '^https://github.com/sachahjkl/froment\.software/\.github/workflows/ci\.yml@refs/heads/master$' \
             --certificate-oidc-issuer https://token.actions.githubusercontent.com \
-            "$image"
-          cosign verify-attestation \
+            "$image" >/dev/null
+          timeout 2m cosign verify-attestation \
             --certificate-identity-regexp '^https://github.com/sachahjkl/froment\.software/\.github/workflows/ci\.yml@refs/heads/master$' \
             --certificate-oidc-issuer https://token.actions.githubusercontent.com \
             --type spdxjson \
-            "$image"
-          gh attestation verify "oci://$image" --repo "$GITHUB_REPOSITORY"
-          nomad job run -detach -namespace production -var "image=$image" deploy/nomad/production.nomad.hcl
+            "$image" >/dev/null
+          timeout 2m gh attestation verify "oci://$image" --repo "$GITHUB_REPOSITORY" >/dev/null
+          timeout 30s nomad job run -detach -namespace production -var "image=$image" deploy/nomad/production.nomad.hcl
           test "$(nomad job inspect -namespace production -json froment-software | jq -r .Meta.image)" = "$image"
           version=$(nomad job inspect -namespace production -json froment-software | jq -r .Version)
           healthy=false

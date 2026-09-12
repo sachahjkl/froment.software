@@ -25,6 +25,7 @@ jobs:
           extra_nix_config: |
             extra-substituters = https://nix-community.cachix.org
             extra-trusted-public-keys = nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs=
+            max-jobs = 2
       - run: nix flake check --print-build-logs --max-jobs 2
 
   publish:
@@ -51,8 +52,9 @@ jobs:
           extra_nix_config: |
             extra-substituters = https://nix-community.cachix.org
             extra-trusted-public-keys = nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs=
+            max-jobs = 2
       - id: metadata
-        uses: docker/metadata-action@c1e51972afc2121e065aed6d45c65596fe445f3f # v5.8.0
+        uses: docker/metadata-action@dc802804100637a589fabce1cb79ff13a1411302 # v6.2.0
         with:
           images: ${{ env.IMAGE_NAME }}
           tags: |
@@ -141,6 +143,7 @@ jobs:
           unzip -q "$archive" -d "$RUNNER_TEMP/nomad-bin"
           printf '%s\n' "$RUNNER_TEMP/nomad-bin" >>"$GITHUB_PATH"
       - name: Deploy exact image to staging
+        timeout-minutes: 8
         env:
           IMAGE: ${{ needs.publish.outputs.image }}
           NOMAD_ADDR: http://homelab.panthera-python.ts.net:4646
@@ -148,7 +151,7 @@ jobs:
           NOMAD_TOKEN: ${{ secrets.NOMAD_TOKEN }}
         run: |
           [[ "$IMAGE" =~ ^ghcr\.io/sachahjkl/froment\.software@sha256:[0-9a-f]{64}$ ]]
-          nomad job run -detach -var "image=$IMAGE" deploy/nomad/staging.nomad.hcl
+          timeout 30s nomad job run -detach -var "image=$IMAGE" deploy/nomad/staging.nomad.hcl
           test "$(nomad job inspect -json froment-software | jq -r .Meta.image)" = "$IMAGE"
           version=$(nomad job inspect -json froment-software | jq -r .Version)
           healthy=false
