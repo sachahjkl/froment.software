@@ -4,6 +4,7 @@ import {
   DocumentParty,
   InvoiceAlreadyExists,
   InvoiceAmountTooLarge,
+  InvoiceAccountingUnavailable,
   InvoiceDetail,
   InvoiceInvalidDates,
   InvoiceInvalidTransition,
@@ -38,6 +39,11 @@ import { Clock, Context, DateTime, Effect, Layer, Option, Schema } from 'effect'
 import { ulid } from 'ulid';
 
 import { Audit } from '../audit/audit.js';
+import {
+  AccountingPostingUnavailable,
+  postAccountingEntry,
+  reverseAccountingSource,
+} from '../accounting/posting.js';
 import { BusinessConfig } from '../business/business-config.js';
 import { allocateBusinessReference, businessYear } from '../business/business-references.js';
 import { Database, DatabaseError } from '../database/database.js';
@@ -202,6 +208,7 @@ export interface InvoicesService {
     | InvoiceInvalidDates
     | InvoiceInvalidTransition
     | InvoiceExchangeRateMissing
+    | InvoiceAccountingUnavailable
     | DocumentIncomplete
     | DatabaseError
   >;
@@ -223,7 +230,11 @@ export interface InvoicesService {
     actorUserId: UlidValue,
   ) => Effect.Effect<
     InvoiceDetailValue,
-    InvoiceNotFound | InvoiceVersionConflict | InvoiceInvalidTransition | DatabaseError
+    | InvoiceNotFound
+    | InvoiceVersionConflict
+    | InvoiceInvalidTransition
+    | InvoiceAccountingUnavailable
+    | DatabaseError
   >;
 }
 
@@ -342,16 +353,18 @@ export const InvoicesLive = Layer.effect(
         creditedCents: Schema.decodeUnknownSync(Schema.Int)(
           database.sqlite
             .prepare(
-              `select coalesce(sum(lines.total_cents), 0)
-               from invoice_credit_note_lines lines
-               join invoice_credit_notes notes on notes.id = lines.credit_note_id
-               join invoice_credit_note_revisions credit_revisions
-                 on credit_revisions.id = lines.credit_note_revision_id
-               where lines.invoice_id = ? and notes.status = 'issued'
-                 and credit_revisions.version = notes.version`,
+              `select (select coalesce(sum(lines.total_cents), 0)
+                 from invoice_credit_note_lines lines
+                 join invoice_credit_notes notes on notes.id = lines.credit_note_id
+                 join invoice_credit_note_revisions credit_revisions
+                   on credit_revisions.id = lines.credit_note_revision_id
+                 where lines.invoice_id = ? and notes.status = 'issued'
+                   and credit_revisions.version = notes.version)
+                + coalesce((select sum(amount_cents) from invoice_credit_allocations
+                  where target_invoice_id = ?), 0)`,
             )
             .pluck()
-            .get(invoiceId),
+            .get(invoiceId, invoiceId),
         ),
         payments: Schema.decodeUnknownSync(Schema.Array(InvoicePayment))(
           database.sqlite
@@ -394,7 +407,9 @@ export const InvoicesLive = Layer.effect(
                            join invoice_credit_note_revisions credit_revisions
                              on credit_revisions.id = lines.credit_note_revision_id
                            where lines.invoice_id = invoices.id and notes.status = 'issued'
-                             and credit_revisions.version = notes.version), 0) as creditedCents
+                              and credit_revisions.version = notes.version), 0)
+                            + coalesce((select sum(amount_cents) from invoice_credit_allocations
+                              where target_invoice_id = invoices.id), 0) as creditedCents
                         , invoice_pdf_jobs.status as pdfStatus
                        , invoice_pdf_jobs.attempts as pdfAttempts
                        , invoice_pdf_jobs.error as pdfError
@@ -966,6 +981,50 @@ export const InvoicesLive = Layer.effect(
                   currentVersion: invoice.version,
                 });
               }
+              const functionalNetTotalCents = convertToFunctionalCents(
+                finalSnapshot.netTotalCents,
+                conversion.foreignUnitsPerFunctionalUnitNanos,
+              );
+              const functionalVatTotalCents = convertToFunctionalCents(
+                finalSnapshot.vatTotalCents,
+                conversion.foreignUnitsPerFunctionalUnitNanos,
+              );
+              const functionalTotalCents = functionalNetTotalCents + functionalVatTotalCents;
+              const postingLines = [
+                {
+                  accountCode: '411',
+                  label: invoiceNumber,
+                  debitCents: functionalTotalCents,
+                  creditCents: 0,
+                },
+                {
+                  accountCode: '706',
+                  label: invoiceNumber,
+                  debitCents: 0,
+                  creditCents: functionalNetTotalCents,
+                },
+              ];
+              if (functionalVatTotalCents > 0) {
+                postingLines.push({
+                  accountCode: '44571',
+                  label: invoiceNumber,
+                  debitCents: 0,
+                  creditCents: functionalVatTotalCents,
+                });
+              }
+              postAccountingEntry({
+                sqlite: database.sqlite,
+                sourceType: 'customer-invoice',
+                sourceId: invoiceId,
+                journalKind: 'sales',
+                entryDate: issueDate,
+                reference: invoiceNumber,
+                description: 'customer-invoice',
+                currency: conversion.functionalCurrency,
+                actorUserId,
+                now,
+                lines: postingLines,
+              });
               audit.insert({
                 action: 'invoice.issued',
                 actorUserId,
@@ -1011,10 +1070,13 @@ export const InvoicesLive = Layer.effect(
             cause instanceof InvoiceInvalidDates ||
             cause instanceof InvoiceInvalidTransition ||
             cause instanceof InvoiceExchangeRateMissing ||
+            cause instanceof InvoiceAccountingUnavailable ||
             cause instanceof DocumentIncomplete
           ) {
             return cause;
           }
+          if (cause instanceof AccountingPostingUnavailable)
+            return new InvoiceAccountingUnavailable({ code: 'invoice.accounting_unavailable' });
           return new DatabaseError({ operation: 'issue.invoice', cause });
         },
       });
@@ -1079,6 +1141,13 @@ export const InvoicesLive = Layer.effect(
                   currentVersion: invoice.version,
                 });
               }
+              reverseAccountingSource(
+                database.sqlite,
+                'customer-invoice',
+                invoiceId,
+                actorUserId,
+                now,
+              );
               audit.insert({
                 action: 'invoice.voided',
                 actorUserId,
@@ -1100,6 +1169,8 @@ export const InvoicesLive = Layer.effect(
           ) {
             return cause;
           }
+          if (cause instanceof AccountingPostingUnavailable)
+            return new InvoiceAccountingUnavailable({ code: 'invoice.accounting_unavailable' });
           return new DatabaseError({ operation: 'void.invoice', cause });
         },
       });

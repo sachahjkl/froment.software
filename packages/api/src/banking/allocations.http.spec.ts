@@ -137,7 +137,7 @@ it('splits receipts across credits, groups receipts, rejects excess allocations,
     expect((await list()).find((row) => row.id === a.id)).toMatchObject({
       matchedCents: 15000,
       allocations: expect.arrayContaining([
-        {
+        expect.objectContaining({
           matchId: expect.any(String),
           paymentId: first.id,
           invoiceId: invoice.id,
@@ -145,7 +145,7 @@ it('splits receipts across credits, groups receipts, rejects excess allocations,
           amountCents: 6000,
           feeCents: 0,
           paymentCancelled: false,
-        },
+        }),
       ]),
     });
     expect((await list()).find((row) => row.id === b.id)?.allocations).toHaveLength(3);

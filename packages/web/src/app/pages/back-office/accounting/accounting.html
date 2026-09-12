@@ -1,0 +1,796 @@
+<main class="accounting-page wide-page" aria-labelledby="accounting-title">
+  <app-page-header>
+    <h1 id="accounting-title">{{ i18n.t('accounting.title') }}</h1>
+    <p class="muted">{{ i18n.t('accounting.intro') }}</p>
+    @if (demoAvailable) {
+    <button
+      pageActions
+      appButton
+      variant="danger"
+      type="button"
+      *appCan="'demo.reset'"
+      [disabled]="busy() || demoPassword() === ''"
+      (click)="resetDemo()"
+    >
+      {{ i18n.t('demo.reset') }}
+    </button>
+    }
+  </app-page-header>
+
+  @if (demoAvailable) {
+  <div class="ds-panel form-panel" *appCan="'demo.reset'">
+    <label class="field" for="demo-reset-password"
+      >{{ i18n.t('demo.password') }}<input
+        id="demo-reset-password"
+        type="password"
+        autocomplete="current-password"
+        [ngModel]="demoPassword()"
+        (ngModelChange)="demoPassword.set($event)"
+    /></label>
+  </div>
+  }
+
+  <nav class="section-tabs" [attr.aria-label]="i18n.t('accounting.sections')">
+    @for (section of ['accounts', 'journals', 'periods', 'entries', 'lettering', 'reports',
+    'opening', 'evidence']; track section) {
+    <button
+      type="button"
+      [class.active]="tab() === section"
+      [attr.aria-current]="tabCurrent($any(section))"
+      (click)="selectTab($any(section))"
+    >
+      {{ i18n.t(tabLabel($any(section))) }}
+    </button>
+    }
+  </nav>
+
+  @if (notice()) {
+  <p appNotice variant="success" role="status">{{ i18n.t(notice()!) }}</p>
+  } @if (error()) {
+  <p appNotice variant="danger" role="alert">{{ i18n.t(error()!) }}</p>
+  } @if (state() === 'loading') {
+  <p role="status">{{ i18n.t('accounting.loading') }}</p>
+  } @if (state() === 'error') {
+  <p appNotice variant="danger" role="alert">{{ i18n.t('accounting.loadError') }}</p>
+  } @if (state() === 'ready' && tab() === 'accounts') {
+  <section class="workspace-grid">
+    <div class="ds-panel form-panel" *appCan="'accounting.write'">
+      <h2>{{ i18n.t(accountHeading()) }}</h2>
+      <div class="field">
+        <label for="account-code">{{ i18n.t('accounting.code') }}</label
+        ><input id="account-code" [(ngModel)]="accountForm.code" />
+      </div>
+      <div class="field">
+        <label for="account-label">{{ i18n.t('accounting.label') }}</label
+        ><input id="account-label" [(ngModel)]="accountForm.label" />
+      </div>
+      <div class="field">
+        <label for="account-kind">{{ i18n.t('accounting.kind') }}</label
+        ><select id="account-kind" [(ngModel)]="accountForm.kind">
+          @for (kind of ['asset', 'liability', 'equity', 'income', 'expense']; track kind) {
+          <option [ngValue]="kind">{{ i18n.t(accountKindLabel($any(kind))) }}</option>
+          }
+        </select>
+      </div>
+      <div class="button-row">
+        <button
+          appButton
+          variant="primary"
+          type="button"
+          [disabled]="busy()"
+          (click)="saveAccount()"
+        >
+          {{ i18n.t('accounting.save') }}</button
+        >@if (accountForm.id) {
+        <button appButton type="button" (click)="resetAccount()">
+          {{ i18n.t('accounting.cancel') }}
+        </button>
+        }
+      </div>
+    </div>
+    <div appDataTable tableLayout="fluid">
+      <table>
+        <thead>
+          <tr>
+            <th scope="col">{{ i18n.t('accounting.code') }}</th>
+            <th scope="col">{{ i18n.t('accounting.label') }}</th>
+            <th scope="col">{{ i18n.t('accounting.kind') }}</th>
+            <th scope="col">{{ i18n.t('accounting.status') }}</th>
+            <th scope="col">{{ i18n.t('accounting.actions') }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (account of accounts(); track account.id) {
+          <tr>
+            <th scope="row">{{ account.code }}</th>
+            <td>{{ account.label }}</td>
+            <td>{{ i18n.t(accountKindLabel(account.kind)) }}</td>
+            <td>{{ i18n.t(entityStatusLabel(account.archived)) }}</td>
+            <td>
+              <div class="button-row" *appCan="'accounting.write'">
+                <button appButton type="button" (click)="editAccount(account)">
+                  {{ i18n.t('accounting.edit') }}</button
+                ><button appButton type="button" (click)="toggleAccount(account)">
+                  {{ i18n.t(archiveActionLabel(account.archived)) }}
+                </button>
+              </div>
+            </td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </section>
+  } @if (state() === 'ready' && tab() === 'journals') {
+  <section class="workspace-grid">
+    <div class="ds-panel form-panel" *appCan="'accounting.write'">
+      <h2>{{ i18n.t(journalHeading()) }}</h2>
+      <div class="field">
+        <label for="journal-code">{{ i18n.t('accounting.code') }}</label
+        ><input id="journal-code" [(ngModel)]="journalForm.code" />
+      </div>
+      <div class="field">
+        <label for="journal-label">{{ i18n.t('accounting.label') }}</label
+        ><input id="journal-label" [(ngModel)]="journalForm.label" />
+      </div>
+      <div class="field">
+        <label for="journal-kind">{{ i18n.t('accounting.kind') }}</label
+        ><select id="journal-kind" [(ngModel)]="journalForm.kind">
+          @for (kind of ['sales', 'purchases', 'bank', 'general', 'opening']; track kind) {
+          <option [ngValue]="kind">{{ i18n.t(journalKindLabel($any(kind))) }}</option>
+          }
+        </select>
+      </div>
+      <div class="button-row">
+        <button
+          appButton
+          variant="primary"
+          type="button"
+          [disabled]="busy()"
+          (click)="saveJournal()"
+        >
+          {{ i18n.t('accounting.save') }}</button
+        >@if (journalForm.id) {
+        <button appButton type="button" (click)="resetJournal()">
+          {{ i18n.t('accounting.cancel') }}
+        </button>
+        }
+      </div>
+    </div>
+    <div appDataTable tableLayout="fluid">
+      <table>
+        <thead>
+          <tr>
+            <th scope="col">{{ i18n.t('accounting.code') }}</th>
+            <th scope="col">{{ i18n.t('accounting.label') }}</th>
+            <th scope="col">{{ i18n.t('accounting.kind') }}</th>
+            <th scope="col">{{ i18n.t('accounting.status') }}</th>
+            <th scope="col">{{ i18n.t('accounting.actions') }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (journal of journals(); track journal.id) {
+          <tr>
+            <th scope="row">{{ journal.code }}</th>
+            <td>{{ journal.label }}</td>
+            <td>{{ i18n.t(journalKindLabel(journal.kind)) }}</td>
+            <td>{{ i18n.t(entityStatusLabel(journal.archived)) }}</td>
+            <td>
+              <div class="button-row" *appCan="'accounting.write'">
+                <button appButton type="button" (click)="editJournal(journal)">
+                  {{ i18n.t('accounting.edit') }}</button
+                ><button appButton type="button" (click)="toggleJournal(journal)">
+                  {{ i18n.t(archiveActionLabel(journal.archived)) }}
+                </button>
+              </div>
+            </td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </section>
+  } @if (state() === 'ready' && tab() === 'periods') {
+  <section class="workspace-grid">
+    <div class="ds-panel form-panel" *appCan="'accounting.close'">
+      <h2>{{ i18n.t('accounting.period.add') }}</h2>
+      <div class="field">
+        <label for="period-label">{{ i18n.t('accounting.label') }}</label
+        ><input id="period-label" [(ngModel)]="periodForm.label" />
+      </div>
+      <div class="field-grid">
+        <div class="field">
+          <label for="period-start">{{ i18n.t('accounting.startsOn') }}</label
+          ><input id="period-start" type="date" [(ngModel)]="periodForm.startsOn" />
+        </div>
+        <div class="field">
+          <label for="period-end">{{ i18n.t('accounting.endsOn') }}</label
+          ><input id="period-end" type="date" [(ngModel)]="periodForm.endsOn" />
+        </div>
+      </div>
+      <button
+        appButton
+        variant="primary"
+        type="button"
+        [disabled]="busy()"
+        (click)="createPeriod()"
+      >
+        {{ i18n.t('accounting.create') }}
+      </button>
+    </div>
+    <div appDataTable tableLayout="fluid">
+      <table>
+        <thead>
+          <tr>
+            <th scope="col">{{ i18n.t('accounting.label') }}</th>
+            <th scope="col">{{ i18n.t('accounting.period') }}</th>
+            <th scope="col">{{ i18n.t('accounting.status') }}</th>
+            <th scope="col">{{ i18n.t('accounting.actions') }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (period of periods(); track period.id) {
+          <tr>
+            <th scope="row">{{ period.label }}</th>
+            <td>{{ period.startsOn }} — {{ period.endsOn }}</td>
+            <td>{{ i18n.t(periodStatusLabel(period)) }}</td>
+            <td>
+              <div class="button-row" *appCan="'accounting.close'">
+                @if (period.status === 'open') {
+                <button appButton type="button" (click)="transitionPeriod(period, 'lock')">
+                  {{ i18n.t('accounting.lock') }}
+                </button>
+                } @if (period.status !== 'closed') {
+                <button appButton type="button" (click)="transitionPeriod(period, 'close')">
+                  {{ i18n.t('accounting.close') }}
+                </button>
+                } @if (period.status !== 'open' && !period.finalClosed) {
+                <button appButton type="button" (click)="transitionPeriod(period, 'reopen')">
+                  {{ i18n.t('accounting.reopen') }}
+                </button>
+                } @if (period.status === 'closed' && !period.finalClosed) {
+                <button
+                  appButton
+                  variant="danger"
+                  type="button"
+                  (click)="transitionPeriod(period, 'final-close')"
+                >
+                  {{ i18n.t('accounting.finalClose') }}
+                </button>
+                }
+              </div>
+            </td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </section>
+  } @if (state() === 'ready' && tab() === 'entries') {
+  <section class="flow">
+    <div class="ds-panel form-panel" *appCan="'accounting.write'">
+      <h2>{{ i18n.t('accounting.entry.add') }}</h2>
+      <div class="field-grid">
+        <div class="field">
+          <label for="entry-journal">{{ i18n.t('accounting.journal') }}</label
+          ><select id="entry-journal" [(ngModel)]="entryForm.journalId">
+            <option value=""></option>
+            @for (journal of journals(); track journal.id) { @if (!journal.archived) {
+            <option [value]="journal.id">{{ journal.code }} — {{ journal.label }}</option>
+            } }
+          </select>
+        </div>
+        <div class="field">
+          <label for="entry-period">{{ i18n.t('accounting.period') }}</label
+          ><select id="entry-period" [(ngModel)]="entryForm.periodId">
+            <option value=""></option>
+            @for (period of periods(); track period.id) { @if (period.status === 'open') {
+            <option [value]="period.id">{{ period.label }}</option>
+            } }
+          </select>
+        </div>
+        <div class="field">
+          <label for="entry-date">{{ i18n.t('accounting.date') }}</label
+          ><input id="entry-date" type="date" [(ngModel)]="entryForm.entryDate" />
+        </div>
+      </div>
+      <div class="field-grid">
+        <div class="field">
+          <label for="entry-reference">{{ i18n.t('accounting.reference') }}</label
+          ><input id="entry-reference" [(ngModel)]="entryForm.reference" />
+        </div>
+        <div class="field">
+          <label for="entry-description">{{ i18n.t('accounting.description') }}</label
+          ><input id="entry-description" [(ngModel)]="entryForm.description" />
+        </div>
+      </div>
+      <div appDataTable tableLayout="fluid">
+        <table>
+          <thead>
+            <tr>
+              <th scope="col">{{ i18n.t('accounting.account') }}</th>
+              <th scope="col">{{ i18n.t('accounting.label') }}</th>
+              <th scope="col">{{ i18n.t('accounting.debit') }}</th>
+              <th scope="col">{{ i18n.t('accounting.credit') }}</th>
+              <th scope="col">{{ i18n.t('accounting.actions') }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (line of entryForm.lines; track $index) {
+            <tr>
+              <td>
+                <select [(ngModel)]="line.accountId">
+                  <option value=""></option>
+                  @for (account of activeAccounts(); track account.id) {
+                  <option [value]="account.id">{{ account.code }} — {{ account.label }}</option>
+                  }
+                </select>
+              </td>
+              <td><input [(ngModel)]="line.label" /></td>
+              <td><input inputmode="decimal" [(ngModel)]="line.debit" /></td>
+              <td><input inputmode="decimal" [(ngModel)]="line.credit" /></td>
+              <td>
+                <button
+                  appButton
+                  type="button"
+                  [disabled]="entryForm.lines.length <= 2"
+                  (click)="removeEntryLine($index)"
+                >
+                  {{ i18n.t('accounting.remove') }}
+                </button>
+              </td>
+            </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      <div class="button-row">
+        <button appButton type="button" (click)="addEntryLine()">
+          {{ i18n.t('accounting.line.add') }}</button
+        ><button
+          appButton
+          variant="primary"
+          type="button"
+          [disabled]="busy()"
+          (click)="createEntry()"
+        >
+          {{ i18n.t('accounting.createDraft') }}
+        </button>
+      </div>
+    </div>
+    <div appDataTable tableLayout="fluid">
+      <table>
+        <thead>
+          <tr>
+            <th scope="col">{{ i18n.t('accounting.date') }}</th>
+            <th scope="col">{{ i18n.t('accounting.reference') }}</th>
+            <th scope="col">{{ i18n.t('accounting.description') }}</th>
+            <th scope="col">{{ i18n.t('accounting.status') }}</th>
+            <th scope="col">{{ i18n.t('accounting.actions') }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (entry of entries(); track entry.id) {
+          <tr>
+            <td>{{ entry.entryDate }}</td>
+            <th scope="row">{{ entry.reference }}</th>
+            <td>{{ entry.description }}</td>
+            <td>{{ i18n.t(entryStatusLabel(entry)) }}</td>
+            <td>
+              <div class="button-row">
+                @if (entry.status === 'draft') {
+                <button
+                  appButton
+                  variant="primary"
+                  type="button"
+                  *appCan="'accounting.validate'"
+                  (click)="commandEntry(entry, 'post')"
+                >
+                  {{ i18n.t('accounting.post') }}
+                </button>
+                } @if (entry.status === 'posted') {
+                <button
+                  appButton
+                  type="button"
+                  *appCan="'accounting.validate'"
+                  (click)="commandEntry(entry, 'reverse')"
+                >
+                  {{ i18n.t('accounting.reverse') }}
+                </button>
+                }
+              </div>
+            </td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </section>
+  } @if (state() === 'ready' && tab() === 'lettering') {
+  <section class="flow" aria-labelledby="lettering-title">
+    <div class="ds-panel form-panel">
+      <h2 id="lettering-title">{{ i18n.t('accounting.lettering.title') }}</h2>
+      <p class="muted">{{ i18n.t('accounting.lettering.hint') }}</p>
+      <button
+        appButton
+        variant="primary"
+        type="button"
+        *appCan="'accounting.write'"
+        [disabled]="busy() || selectedLetteringLines().size < 2"
+        (click)="createLettering()"
+      >
+        {{ i18n.t('accounting.lettering.apply') }}
+      </button>
+    </div>
+    <div appDataTable tableLayout="fluid">
+      <table>
+        <thead>
+          <tr>
+            <th scope="col">{{ i18n.t('accounting.select') }}</th>
+            <th scope="col">{{ i18n.t('accounting.date') }}</th>
+            <th scope="col">{{ i18n.t('accounting.reference') }}</th>
+            <th scope="col">{{ i18n.t('accounting.account') }}</th>
+            <th scope="col">{{ i18n.t('accounting.label') }}</th>
+            <th scope="col">{{ i18n.t('accounting.debit') }}</th>
+            <th scope="col">{{ i18n.t('accounting.credit') }}</th>
+            <th scope="col">{{ i18n.t('accounting.lettering.code') }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (line of letterableLines(); track line.lineId) {
+          <tr>
+            <td>
+              <input
+                type="checkbox"
+                [checked]="letteringSelected(line.lineId)"
+                [disabled]="line.letteringCode !== null"
+                [attr.aria-label]="i18n.t('accounting.select')"
+                (change)="toggleLetteringLine(line.lineId, $any($event.target).checked)"
+              />
+            </td>
+            <td>{{ line.entryDate }}</td>
+            <td>{{ line.reference }}</td>
+            <td>{{ line.accountCode }}</td>
+            <th scope="row">{{ line.lineLabel }}</th>
+            <td class="numeric">{{ money(line.debitCents) }}</td>
+            <td class="numeric">{{ money(line.creditCents) }}</td>
+            <td>{{ line.letteringCode }}</td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </section>
+  } @if (state() === 'ready' && tab() === 'reports') {
+  <section class="flow">
+    <div class="ds-panel form-panel">
+      <h2>{{ i18n.t('accounting.reports') }}</h2>
+      <div class="field-grid">
+        <div class="field">
+          <label for="report-start">{{ i18n.t('accounting.startsOn') }}</label
+          ><input id="report-start" type="date" [(ngModel)]="reportForm.startsOn" />
+        </div>
+        <div class="field">
+          <label for="report-end">{{ i18n.t('accounting.endsOn') }}</label
+          ><input id="report-end" type="date" [(ngModel)]="reportForm.endsOn" />
+        </div>
+      </div>
+      <div class="button-row">
+        <button appButton variant="primary" type="button" (click)="loadReport()">
+          {{ i18n.t('accounting.generate') }}</button
+        ><button appButton type="button" *appCan="'accounting.export'" (click)="downloadFec()">
+          {{ i18n.t('accounting.fec') }}
+        </button>
+        @if (taxEnabled()) {
+        <button appButton type="button" *appCan="'accounting.export'" (click)="downloadCa3()">
+          {{ i18n.t('accounting.ca3') }}
+        </button>
+        }
+      </div>
+    </div>
+    @if (taxEnabled()) {
+    <div class="ds-panel form-panel" *appCan="'accounting.export'">
+      <h2>{{ i18n.t('accounting.taxFiling') }}</h2>
+      @if (!taxFilingSettings()) {
+      <button appButton type="button" (click)="loadTaxFiling()">
+        {{ i18n.t('accounting.taxFiling.load') }}
+      </button>
+      } @else {
+      <div class="field-grid">
+        <div class="field">
+          <label for="tax-filing-adapter">{{ i18n.t('accounting.taxFiling.adapter') }}</label>
+          <select id="tax-filing-adapter" [(ngModel)]="taxFilingForm.adapter">
+            <option value="local">{{ i18n.t('accounting.taxFiling.local') }}</option>
+            <option value="http">{{ i18n.t('accounting.taxFiling.http') }}</option>
+          </select>
+        </div>
+        @if (taxFilingForm.adapter === 'http') {
+        <div class="field">
+          <label for="tax-filing-endpoint">{{ i18n.t('accounting.taxFiling.endpoint') }}</label>
+          <input id="tax-filing-endpoint" type="url" [(ngModel)]="taxFilingForm.endpoint" />
+        </div>
+        <div class="field">
+          <label for="tax-filing-key">{{ i18n.t('accounting.taxFiling.apiKey') }}</label>
+          <input
+            id="tax-filing-key"
+            type="password"
+            autocomplete="new-password"
+            [(ngModel)]="taxFilingForm.apiKey"
+          />
+          @if (taxFilingSettings()?.credentialsPresent) {
+          <small>{{ i18n.t('accounting.taxFiling.credentialStored') }}</small>
+          }
+        </div>
+        }
+      </div>
+      <div class="button-row">
+        <button
+          appButton
+          type="button"
+          *appCan="'accounting.close'"
+          [disabled]="busy()"
+          (click)="saveTaxFilingSettings()"
+        >
+          {{ i18n.t('accounting.save') }}
+        </button>
+        <button
+          appButton
+          variant="primary"
+          type="button"
+          *appCan="'accounting.close'"
+          [disabled]="busy() || !taxReport()"
+          (click)="submitTaxFiling()"
+        >
+          {{ i18n.t('accounting.taxFiling.submit') }}
+        </button>
+      </div>
+      <ul>
+        @for (filing of taxFilings(); track filing.id) {
+        <li>{{ filing.startsOn }} — {{ filing.endsOn }} · {{ filing.providerReceipt }}</li>
+        }
+      </ul>
+      }
+    </div>
+    } @if (report(); as balance) {
+    <div appDataTable tableLayout="fluid">
+      <table>
+        <thead>
+          <tr>
+            <th scope="col">{{ i18n.t('accounting.account') }}</th>
+            <th scope="col">{{ i18n.t('accounting.label') }}</th>
+            <th scope="col">{{ i18n.t('accounting.debit') }}</th>
+            <th scope="col">{{ i18n.t('accounting.credit') }}</th>
+            <th scope="col">{{ i18n.t('accounting.balance') }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (row of balance.rows; track row.accountCode) {
+          <tr>
+            <th scope="row">{{ row.accountCode }}</th>
+            <td>{{ row.accountLabel }}</td>
+            <td class="numeric">{{ money(row.debitCents) }}</td>
+            <td class="numeric">{{ money(row.creditCents) }}</td>
+            <td class="numeric">{{ money(row.balanceCents) }}</td>
+          </tr>
+          }
+        </tbody>
+        <tfoot>
+          <tr>
+            <th colspan="2">{{ i18n.t('accounting.total') }}</th>
+            <td class="numeric">{{ money(balance.debitCents) }}</td>
+            <td class="numeric">{{ money(balance.creditCents) }}</td>
+            <td></td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+    } @if (financialReport(); as financial) {
+    <section class="report-cards" aria-labelledby="financial-title">
+      <h2 id="financial-title">{{ i18n.t('accounting.financialStatements') }}</h2>
+      <dl>
+        <div>
+          <dt>{{ i18n.t('accounting.assets') }}</dt>
+          <dd>{{ money(financial.assets.totalCents) }}</dd>
+        </div>
+        <div>
+          <dt>{{ i18n.t('accounting.liabilities') }}</dt>
+          <dd>{{ money(financial.liabilities.totalCents) }}</dd>
+        </div>
+        <div>
+          <dt>{{ i18n.t('accounting.equity') }}</dt>
+          <dd>{{ money(financial.equity.totalCents) }}</dd>
+        </div>
+        <div>
+          <dt>{{ i18n.t('accounting.income') }}</dt>
+          <dd>{{ money(financial.income.totalCents) }}</dd>
+        </div>
+        <div>
+          <dt>{{ i18n.t('accounting.expenses') }}</dt>
+          <dd>{{ money(financial.expenses.totalCents) }}</dd>
+        </div>
+        <div>
+          <dt>{{ i18n.t('accounting.netIncome') }}</dt>
+          <dd>{{ money(financial.netIncomeCents) }}</dd>
+        </div>
+      </dl>
+    </section>
+    } @if (taxReport(); as tax) {
+    <section class="report-cards" aria-labelledby="tax-title">
+      <h2 id="tax-title">{{ i18n.t('accounting.vat') }}</h2>
+      <dl>
+        @for (box of tax.ca3; track box.code) {
+        <div>
+          <dt>{{ box.code }} — {{ i18n.t(taxBoxLabel(box.code)) }}</dt>
+          <dd>{{ money(box.amountCents) }}</dd>
+        </div>
+        }
+      </dl>
+    </section>
+    } @if (ledgerReport(); as ledger) {
+    <section aria-labelledby="ledger-title">
+      <h2 id="ledger-title">{{ i18n.t('accounting.ledger') }}</h2>
+      <div appDataTable tableLayout="fluid">
+        <table>
+          <thead>
+            <tr>
+              <th scope="col">{{ i18n.t('accounting.date') }}</th>
+              <th scope="col">{{ i18n.t('accounting.journal') }}</th>
+              <th scope="col">{{ i18n.t('accounting.reference') }}</th>
+              <th scope="col">{{ i18n.t('accounting.account') }}</th>
+              <th scope="col">{{ i18n.t('accounting.label') }}</th>
+              <th scope="col">{{ i18n.t('accounting.debit') }}</th>
+              <th scope="col">{{ i18n.t('accounting.credit') }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (row of ledger.rows; track row.entryId + row.accountCode + row.lineLabel) {
+            <tr>
+              <td>{{ row.entryDate }}</td>
+              <td>{{ row.journalCode }}</td>
+              <td>{{ row.reference }}</td>
+              <td>{{ row.accountCode }}</td>
+              <th scope="row">{{ row.lineLabel }}</th>
+              <td class="numeric">{{ money(row.debitCents) }}</td>
+              <td class="numeric">{{ money(row.creditCents) }}</td>
+            </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </section>
+    }
+  </section>
+  } @if (state() === 'ready' && tab() === 'opening') {
+  <section class="flow">
+    <div class="ds-panel form-panel" *appCan="'accounting.write'">
+      <h2>{{ i18n.t('accounting.opening.title') }}</h2>
+      <p class="muted">{{ i18n.t('accounting.opening.hint') }}</p>
+      <div class="field">
+        <label for="opening-file">{{ i18n.t('accounting.file') }}</label
+        ><input
+          id="opening-file"
+          type="file"
+          accept="text/csv,.csv"
+          (change)="readOpeningFile($event)"
+        />
+      </div>
+      <div class="field-grid">
+        <div class="field">
+          <label for="opening-code">{{ i18n.t('accounting.opening.accountColumn') }}</label
+          ><input id="opening-code" [(ngModel)]="openingForm.accountCode" />
+        </div>
+        <div class="field">
+          <label for="opening-label">{{ i18n.t('accounting.opening.labelColumn') }}</label
+          ><input id="opening-label" [(ngModel)]="openingForm.accountLabel" />
+        </div>
+        <div class="field">
+          <label for="opening-debit">{{ i18n.t('accounting.opening.debitColumn') }}</label
+          ><input id="opening-debit" [(ngModel)]="openingForm.debit" />
+        </div>
+        <div class="field">
+          <label for="opening-credit">{{ i18n.t('accounting.opening.creditColumn') }}</label
+          ><input id="opening-credit" [(ngModel)]="openingForm.credit" />
+        </div>
+      </div>
+      <div class="field-grid">
+        <div class="field">
+          <label for="opening-date">{{ i18n.t('accounting.date') }}</label
+          ><input id="opening-date" type="date" [(ngModel)]="openingForm.entryDate" />
+        </div>
+        <div class="field">
+          <label for="opening-journal">{{ i18n.t('accounting.journal') }}</label
+          ><select id="opening-journal" [(ngModel)]="openingForm.journalId">
+            <option value=""></option>
+            @for (journal of journals(); track journal.id) { @if (journal.kind === 'opening') {
+            <option [value]="journal.id">{{ journal.label }}</option>
+            } }
+          </select>
+        </div>
+        <div class="field">
+          <label for="opening-period">{{ i18n.t('accounting.period') }}</label
+          ><select id="opening-period" [(ngModel)]="openingForm.periodId">
+            <option value=""></option>
+            @for (period of periods(); track period.id) { @if (period.status === 'open') {
+            <option [value]="period.id">{{ period.label }}</option>
+            } }
+          </select>
+        </div>
+      </div>
+      <button appButton variant="primary" type="button" (click)="previewOpening()">
+        {{ i18n.t('accounting.preview') }}
+      </button>
+    </div>
+    @if (openingPreview(); as preview) {
+    <div class="ds-panel">
+      <h2>{{ i18n.t('accounting.preview') }}</h2>
+      <p [class.success-text]="preview.balanced">
+        {{ i18n.t(openingStatusLabel(preview.balanced)) }}
+      </p>
+      <p>{{ money(preview.debitCents) }} / {{ money(preview.creditCents) }}</p>
+      @if (preview.balanced) {
+      <button
+        appButton
+        variant="primary"
+        type="button"
+        *appCan="'accounting.validate'"
+        (click)="commitOpening()"
+      >
+        {{ i18n.t('accounting.commit') }}
+      </button>
+      }
+    </div>
+    }
+  </section>
+  } @if (state() === 'ready' && tab() === 'evidence') {
+  <section class="workspace-grid">
+    <div class="ds-panel form-panel" *appCan="'accounting.evidence'">
+      <h2>{{ i18n.t('accounting.evidence.add') }}</h2>
+      <p class="muted">{{ i18n.t('accounting.evidence.retention') }}</p>
+      <div class="field">
+        <label for="evidence-entry">{{ i18n.t('accounting.entry') }}</label
+        ><select id="evidence-entry" [(ngModel)]="evidenceForm.entryId">
+          <option value=""></option>
+          @for (entry of entries(); track entry.id) {
+          <option [value]="entry.id">{{ entry.reference }} — {{ entry.description }}</option>
+          }
+        </select>
+      </div>
+      <div class="field">
+        <label for="evidence-file">{{ i18n.t('accounting.file') }}</label
+        ><input id="evidence-file" type="file" (change)="readEvidenceFile($event)" />
+      </div>
+      <button appButton variant="primary" type="button" (click)="addEvidence()">
+        {{ i18n.t('accounting.add') }}
+      </button>
+    </div>
+    <div appDataTable tableLayout="fluid">
+      <table>
+        <thead>
+          <tr>
+            <th scope="col">{{ i18n.t('accounting.file') }}</th>
+            <th scope="col">{{ i18n.t('accounting.entry') }}</th>
+            <th scope="col">{{ i18n.t('accounting.mediaType') }}</th>
+            <th scope="col">{{ i18n.t('accounting.fingerprint') }}</th>
+            <th scope="col">{{ i18n.t('accounting.actions') }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (item of evidence(); track item.id) {
+          <tr>
+            <th scope="row">{{ item.fileName }}</th>
+            <td>{{ item.entryId }}</td>
+            <td>{{ item.mediaType }}</td>
+            <td><code>{{ item.sha256 }}</code></td>
+            <td>
+              <button appButton type="button" [disabled]="busy()" (click)="downloadEvidence(item)">
+                {{ i18n.t('accounting.download') }}
+              </button>
+            </td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </section>
+  }
+</main>

@@ -9,6 +9,7 @@ const operations: ReadonlyArray<InvoiceTaskOperation> = [
   'issue-credit',
   'refund',
   'cancel-refund',
+  'cancel-allocation',
 ];
 
 describe('invoice failure resolution', () => {

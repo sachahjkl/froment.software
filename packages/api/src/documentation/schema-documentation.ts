@@ -35,6 +35,16 @@ export const describeSchema = (
         return value;
       });
   }
+  for (const keyword of ['$defs', 'definitions', 'dependentSchemas', 'patternProperties']) {
+    const schemas = result[keyword];
+    if (Predicate.isObject(schemas))
+      result[keyword] = Object.fromEntries(
+        Object.entries(schemas).map(([name, value]) => {
+          if (Predicate.isObject(value)) return [name, describeSchema(value, language, name)];
+          return [name, value];
+        }),
+      );
+  }
   let values = result['enum'];
   if (Object.hasOwn(result, 'const')) values = [result['const']];
   if (

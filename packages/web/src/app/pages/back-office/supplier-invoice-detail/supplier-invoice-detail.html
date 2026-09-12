@@ -11,7 +11,17 @@
     <p>{{ current.supplierName }} · {{ status() }}</p>
     }
     <div pageActions class="spacer-x-2">
-      @if (editable()) {
+      @if (canCreateCredit()) {
+      <button
+        *appCan="'supplier-invoice.create'"
+        appButton
+        type="button"
+        [disabled]="busy()"
+        (click)="createCredit()"
+      >
+        {{ i18n.t('supplierInvoice.creditAction') }}
+      </button>
+      } @if (editable()) {
       <a *appCan="'supplier-invoice.update'" appLinkButton [routerLink]="['edit']"
         >{{ i18n.t('supplierInvoice.edit') }}</a
       >
@@ -59,9 +69,27 @@
       <h2>{{ i18n.t('supplierInvoice.details') }}</h2>
       <dl>
         <div>
+          <dt>{{ i18n.t('supplierInvoice.kind') }}</dt>
+          <dd>{{ i18n.t(documentKind()) }}</dd>
+        </div>
+        <div>
+          <dt>{{ i18n.t('supplier.taxTreatment') }}</dt>
+          <dd>{{ i18n.t(taxTreatment()) }}</dd>
+        </div>
+        <div>
           <dt>{{ i18n.t('supplierInvoice.invoiceDate') }}</dt>
           <dd>{{ current.invoiceDate }}</dd>
         </div>
+        @if (current.sourceInvoiceId) {
+        <div>
+          <dt>{{ i18n.t('supplierInvoice.sourceInvoice') }}</dt>
+          <dd>
+            <a [routerLink]="['/backoffice/purchases', current.sourceInvoiceId]"
+              >{{ i18n.t('supplierInvoice.openSourceInvoice') }}</a
+            >
+          </dd>
+        </div>
+        }
         <div>
           <dt>{{ i18n.t('supplierInvoice.dueDate') }}</dt>
           <dd>{{ current.dueDate }}</dd>
@@ -90,6 +118,29 @@
       </dl>
     </section>
   </div>
+  <section class="ds-panel flow" aria-labelledby="supplier-evidence-title">
+    <h2 id="supplier-evidence-title">{{ i18n.t('supplierInvoice.evidence') }}</h2>
+    <label class="field" *appCan="'supplier-invoice.update'" for="supplier-evidence-file"
+      >{{ i18n.t('supplierInvoice.evidenceAdd') }}<input
+        id="supplier-evidence-file"
+        type="file"
+        [disabled]="busy()"
+        (change)="addEvidence($event)"
+    /></label>
+    @if (!evidence().length) {
+    <p class="muted">{{ i18n.t('supplierInvoice.evidenceEmpty') }}</p>
+    }
+    <ul>
+      @for (item of evidence(); track item.id) {
+      <li class="spacer-x-2">
+        <span>{{ item.fileName }} · {{ item.mediaType }}</span>
+        <button appButton type="button" [disabled]="busy()" (click)="downloadEvidence(item)">
+          {{ i18n.t('supplierInvoice.evidenceDownload') }}
+        </button>
+      </li>
+      }
+    </ul>
+  </section>
   <div appDataTable>
     <table>
       <thead>

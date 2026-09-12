@@ -2,6 +2,7 @@ import { Schema } from 'effect';
 import { Ulid } from '../identifiers.js';
 import { PermissionCode } from '../permissions.js';
 import { accountPasswordConfig } from './config.js';
+import { CompanyModule } from '../company/modules.js';
 
 export const AccountEmail = Schema.String.check(
   Schema.isMaxLength(254),
@@ -45,6 +46,7 @@ export const CurrentAccount = Schema.Struct({
   email: AccountEmail,
   mode: LoginMode,
   permissions: Schema.UniqueArray(PermissionCode),
+  enabledModules: Schema.UniqueArray(CompanyModule),
 });
 export type CurrentAccount = typeof CurrentAccount.Type;
 

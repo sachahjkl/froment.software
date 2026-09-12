@@ -62,7 +62,69 @@
       >
     </aside>
     <div class="bank-section">
-      @if (item.amountCents > 0 && remaining() > 0) {
+      @if (item.amountCents < 0) {
+      <section
+        *appCan="'bank.reconcile'"
+        class="bank-section"
+        aria-labelledby="supplier-match-title"
+      >
+        <h2 id="supplier-match-title">{{ i18n.t('bankWorkspace.supplierPayments') }}</h2>
+        <p class="muted">{{ i18n.t('bankWorkspace.supplierPaymentsHint') }}</p>
+        @if (!supplierPayments().length) {
+        <p>{{ i18n.t('bankWorkspace.noSupplierPayments') }}</p>
+        }
+        <ul class="suggestions">
+          @for (payment of supplierPayments(); track payment.batchId + payment.invoiceId) {
+          <li>
+            <button appButton type="button" [disabled]="busy()" (click)="matchSupplier(payment)">
+              {{ payment.reference }} · {{ payment.supplierName }} · {{
+              money(payment.availableCents) }}
+            </button>
+          </li>
+          }
+        </ul>
+        @if (supplierMatches().length) {
+        <h3>{{ i18n.t('bankWorkspace.supplierMatchHistory') }}</h3>
+        <div appDataTable tableLayout="fluid">
+          <table>
+            <thead>
+              <tr>
+                <th scope="col">{{ i18n.t('bank.invoice') }}</th>
+                <th scope="col">{{ i18n.t('bankWorkspace.amount') }}</th>
+                <th scope="col">{{ i18n.t('bankWorkspace.status') }}</th>
+                <th scope="col">{{ i18n.t('bankWorkspace.actions') }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (match of supplierMatches(); track match.id) {
+              <tr>
+                <th scope="row">
+                  <a [routerLink]="['/backoffice/purchases', match.invoiceId]"
+                    >{{ match.invoiceId }}</a
+                  >
+                </th>
+                <td>{{ money(match.amountCents) }}</td>
+                <td>{{ match.cancelledAt }}</td>
+                <td>
+                  @if (!match.cancelledAt) {
+                  <button
+                    appButton
+                    type="button"
+                    [disabled]="busy()"
+                    (click)="unmatchSupplier(match)"
+                  >
+                    {{ i18n.t('bankWorkspace.unmatch') }}
+                  </button>
+                  }
+                </td>
+              </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+        }
+      </section>
+      } @if (item.amountCents > 0 && remaining() > 0) {
       <section *appCan="'bank.reconcile'" class="bank-section" aria-labelledby="allocation-title">
         <h2 id="allocation-title">{{ i18n.t('bankWorkspace.allocate') }}</h2>
         <p>{{ i18n.t('bankWorkspace.groupHint') }}</p>

@@ -59,7 +59,7 @@
           <th scope="row">{{ row.reference }}</th>
           <td class="pre-wrap">{{ row.description }}</td>
           <td>{{ row.bookedOn | localizedDate: i18n.language() }}</td>
-          <td class="amount">{{ money(row.amountCents) }}</td>
+          <td class="amount">{{ money(row.amountCents, row.currency) }}</td>
           <td>{{ i18n.t(row.existing ? 'bankWorkspace.existing' : 'bankWorkspace.new') }}</td>
         </tr>
         }

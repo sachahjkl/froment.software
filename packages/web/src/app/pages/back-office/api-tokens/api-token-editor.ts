@@ -177,6 +177,7 @@ export class ApiTokenEditor {
       'invoice',
       'payment',
       'document',
+      'accounting',
     ]
       .map((domain) => ({
         domain,

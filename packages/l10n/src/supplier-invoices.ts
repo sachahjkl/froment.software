@@ -3,6 +3,17 @@ export const supplierInvoiceText = {
     'supplierInvoice.title': 'Factures fournisseurs',
     'supplierInvoice.intro': 'Contrôlez et approuvez les factures reçues avant leur paiement.',
     'supplierInvoice.create': 'Saisir une facture',
+    'supplierInvoice.creditAction': 'Créer un avoir fournisseur',
+    'supplierInvoice.kind': 'Type de document',
+    'supplierInvoice.kind.invoice': 'Facture fournisseur',
+    'supplierInvoice.kind.credit': 'Avoir fournisseur',
+    'supplierInvoice.sourceInvoice': 'Facture d’origine',
+    'supplierInvoice.openSourceInvoice': 'Ouvrir la facture d’origine',
+    'supplierInvoice.evidence': 'Pièces justificatives',
+    'supplierInvoice.evidenceAdd': 'Ajouter une pièce',
+    'supplierInvoice.evidenceEmpty': 'Aucune pièce justificative.',
+    'supplierInvoice.evidenceDownload': 'Télécharger',
+    'supplier_invoice.evidence_invalid': 'Sélectionnez un fichier non vide.',
     'supplierInvoice.analysis.action': 'Analyser un document',
     'supplierInvoice.analysis.title': 'Analyser une facture fournisseur',
     'supplierInvoice.analysis.intro':
@@ -24,7 +35,7 @@ export const supplierInvoiceText = {
     'supplierInvoice.analysisSettings.loading': 'Chargement de la configuration d’analyse…',
     'supplierInvoice.analysisSettings.adapter': 'Adaptateur',
     'supplierInvoice.analysisSettings.local': 'Analyse locale simulée',
-    'supplierInvoice.analysisSettings.http': 'Service HTTP externe',
+    'supplierInvoice.analysisSettings.openai': 'OpenAI',
     'supplierInvoice.analysisSettings.endpoint': 'Adresse HTTPS du service',
     'supplierInvoice.analysisSettings.apiKey': 'Nouvelle clé API',
     'supplierInvoice.analysisSettings.credentialPresent':
@@ -115,6 +126,8 @@ export const supplierInvoiceText = {
       'Cette action ne correspond pas à l’état actuel de la facture.',
     'supplier_invoice.exchange_rate_missing':
       'Ajoutez un taux de change daté avant de confirmer cette facture fournisseur.',
+    'supplier_invoice.accounting_unavailable':
+      'Ouvrez une période comptable et vérifiez le journal des achats ainsi que les comptes PCG requis.',
     'supplier_invoice.supplier_unavailable': 'Le fournisseur sélectionné est indisponible.',
     'supplier_invoice.analysis_not_configured':
       'Le service d’analyse des factures fournisseurs n’est pas configuré.',
@@ -145,6 +158,17 @@ export const supplierInvoiceText = {
     'supplierInvoice.title': 'Supplier invoices',
     'supplierInvoice.intro': 'Review and approve received invoices before payment.',
     'supplierInvoice.create': 'Enter an invoice',
+    'supplierInvoice.creditAction': 'Create supplier credit',
+    'supplierInvoice.kind': 'Document type',
+    'supplierInvoice.kind.invoice': 'Supplier invoice',
+    'supplierInvoice.kind.credit': 'Supplier credit',
+    'supplierInvoice.sourceInvoice': 'Source invoice',
+    'supplierInvoice.openSourceInvoice': 'Open source invoice',
+    'supplierInvoice.evidence': 'Evidence',
+    'supplierInvoice.evidenceAdd': 'Add evidence',
+    'supplierInvoice.evidenceEmpty': 'No evidence file.',
+    'supplierInvoice.evidenceDownload': 'Download',
+    'supplier_invoice.evidence_invalid': 'Select a non-empty file.',
     'supplierInvoice.analysis.action': 'Analyze a document',
     'supplierInvoice.analysis.title': 'Analyze a supplier invoice',
     'supplierInvoice.analysis.intro':
@@ -166,7 +190,7 @@ export const supplierInvoiceText = {
     'supplierInvoice.analysisSettings.loading': 'Loading analysis settings…',
     'supplierInvoice.analysisSettings.adapter': 'Adapter',
     'supplierInvoice.analysisSettings.local': 'Simulated local analysis',
-    'supplierInvoice.analysisSettings.http': 'External HTTP service',
+    'supplierInvoice.analysisSettings.openai': 'OpenAI',
     'supplierInvoice.analysisSettings.endpoint': 'Service HTTPS address',
     'supplierInvoice.analysisSettings.apiKey': 'New API key',
     'supplierInvoice.analysisSettings.credentialPresent':
@@ -251,6 +275,8 @@ export const supplierInvoiceText = {
     'supplier_invoice.invalid_transition': 'This action does not match the current invoice status.',
     'supplier_invoice.exchange_rate_missing':
       'Add a dated exchange rate before you confirm this supplier invoice.',
+    'supplier_invoice.accounting_unavailable':
+      'Open an accounting period and check the purchase journal and required PCG accounts.',
     'supplier_invoice.supplier_unavailable': 'The selected supplier is unavailable.',
     'supplier_invoice.analysis_not_configured':
       'The supplier invoice analysis service is not configured.',

@@ -2,6 +2,10 @@ import { Schema } from 'effect';
 import { CalendarDate } from '../temporal.js';
 import { PositiveSafeInteger } from '../documents/lines.js';
 import { Ulid } from '../identifiers.js';
+import { CompanyModule } from './modules.js';
+
+export { CompanyModule } from './modules.js';
+export type { CompanyModule as CompanyModuleValue } from './modules.js';
 
 import {
   AuthenticationRequired,
@@ -11,16 +15,6 @@ import {
 
 export const Jurisdiction = Schema.Literal('FR');
 export type Jurisdiction = typeof Jurisdiction.Type;
-
-export const CompanyModule = Schema.Literals([
-  'sales',
-  'purchasing',
-  'banking',
-  'accounting',
-  'tax',
-  'demonstration',
-]);
-export type CompanyModule = typeof CompanyModule.Type;
 
 export const CurrencyCode = Schema.String.check(Schema.isPattern(/^[A-Z]{3}$/));
 export type CurrencyCode = typeof CurrencyCode.Type;

@@ -12,7 +12,8 @@ export type InvoiceTaskOperation =
   | 'cancel-payment'
   | 'issue-credit'
   | 'refund'
-  | 'cancel-refund';
+  | 'cancel-refund'
+  | 'cancel-allocation';
 
 type TaskFailureCode =
   | InvoiceFailureValue['code']
@@ -36,6 +37,7 @@ const failureKinds = new Map<string, FailureKind>(
     'invoice.version_conflict': 'business',
     'invoice.invalid_dates': 'business',
     'invoice.exchange_rate_missing': 'business',
+    'invoice.accounting_unavailable': 'business',
     'invoice.invalid_transition': 'business',
     'document.incomplete': 'business',
     'invoice.order_not_found': 'unknown',
@@ -48,28 +50,35 @@ const failureKinds = new Map<string, FailureKind>(
 
 // Only failures that exclude an earlier write can resolve an uncertain request.
 const requestRejections = {
-  issue: ['invoice.invalid_dates', 'invoice.exchange_rate_missing', 'document.incomplete'],
+  issue: [
+    'invoice.invalid_dates',
+    'invoice.exchange_rate_missing',
+    'invoice.accounting_unavailable',
+    'document.incomplete',
+  ],
   void: ['invoice.invalid_transition'],
   'record-payment': ['invoice.version_conflict', 'invoice.invalid_transition'],
   'cancel-payment': ['invoice.invalid_transition'],
   'issue-credit': ['invoice.credit_conflict'],
   refund: ['invoice.credit_conflict'],
   'cancel-refund': ['invoice.credit_conflict'],
+  'cancel-allocation': ['invoice.credit_conflict'],
 } satisfies Record<InvoiceTaskOperation, ReadonlyArray<TaskFailureCode>>;
 
 export const invoiceFailureResolution = (
   operation: InvoiceTaskOperation,
   code: string | undefined,
 ): InvoiceFailureResolution => {
-  const kind = code === undefined ? 'unknown' : (failureKinds.get(code) ?? 'unknown');
+  let kind: FailureKind = 'unknown';
+  if (code !== undefined) kind = failureKinds.get(code) ?? 'unknown';
   switch (kind) {
     case 'unknown':
       return 'unknown';
     case 'boundary':
       return 'attempt-rejected';
     case 'business':
-      return requestRejections[operation].some((rejection) => rejection === code)
-        ? 'request-rejected'
-        : 'attempt-rejected';
+      if (requestRejections[operation].some((rejection) => rejection === code))
+        return 'request-rejected';
+      return 'attempt-rejected';
   }
 };

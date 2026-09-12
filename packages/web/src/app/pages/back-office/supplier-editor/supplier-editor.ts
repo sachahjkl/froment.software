@@ -40,6 +40,7 @@ const emptySupplier = (): SupplierInputValue => ({
   phone: '',
   registrationNumber: '',
   vatNumber: '',
+  taxTreatment: 'france',
   defaultCurrency: 'EUR',
   paymentTermsDays: 30,
   iban: '',
@@ -177,7 +178,13 @@ export class SupplierEditor {
       this.state.set('error');
       return;
     }
-    const { id: _id, archived: _archived, updatedAt: _updatedAt, ...input } = outcome.result;
+    const {
+      id: _id,
+      archived: _archived,
+      updatedAt: _updatedAt,
+      viesValidatedAt: _viesValidatedAt,
+      ...input
+    } = outcome.result;
     this.supplier.set(outcome.result);
     this.supplierForm().reset(input);
     this.state.set('ready');

@@ -14,6 +14,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { AuthenticationApi } from '../../../contracts/src/authentication/api.js';
 import { RuntimeConfigurationDefaults } from '../runtime-config.js';
 import { RequestLimiter } from '../server/request-limiter.js';
+import { Company } from '../company/service.js';
 import { Authentication } from './authentication.js';
 import { AuthenticationConfig } from './authentication-config.js';
 import { AuthenticationHandlers } from './handlers.js';
@@ -23,6 +24,7 @@ const account = {
   email: 'accountant@example.test',
   mode: 'administrator' as const,
   permissions: ['client.read', 'invoice.read'] as const,
+  enabledModules: ['sales', 'accounting'] as const,
 };
 
 const requestAccount = async (credentials: ApiCredentialsValue) => {
@@ -46,6 +48,20 @@ const requestAccount = async (credentials: ApiCredentialsValue) => {
       quoteLinkHmacKey: Buffer.alloc(32),
     }),
     Layer.mock(RequestLimiter, {}),
+    Layer.mock(Company, {
+      get: Effect.succeed({
+        jurisdiction: 'FR' as const,
+        functionalCurrency: 'EUR',
+        accountingInitialized: true,
+        fiscalYearStartMonth: 1,
+        fiscalYearStartDay: 1,
+        defaultFiscalYearMonths: 12 as const,
+        enabledModules: account.enabledModules,
+        retentionYears: 10,
+        version: 1,
+        updatedAt: 0,
+      }),
+    }),
     RuntimeConfigurationDefaults,
   );
   const handlers = AuthenticationHandlers.pipe(

@@ -1,4 +1,6 @@
 export { HealthStatus, type HealthStatus as HealthStatusValue } from './status/contracts.js';
+export * from './accounting/contracts.js';
+export * from './demo/contracts.js';
 export { DocumentCalendar } from './documents/contracts.js';
 export {
   AccountingAlreadyInitialized,
@@ -201,6 +203,9 @@ export {
   type SupplierList as SupplierListValue,
   SupplierNotFound,
   SupplierSummary,
+  SupplierTaxInvalid,
+  SupplierTaxTreatment,
+  type SupplierTaxTreatment as SupplierTaxTreatmentValue,
   type SupplierSummary as SupplierSummaryValue,
   SupplierUpdateRequest,
   type SupplierUpdateRequest as SupplierUpdateRequestValue,
@@ -368,6 +373,7 @@ export {
   CalendarDateText,
   InvoiceAlreadyExists,
   InvoiceAmountTooLarge,
+  InvoiceAccountingUnavailable,
   InvoiceCreateRequest,
   type InvoiceCreateRequest as InvoiceCreateRequestValue,
   InvoiceDetail,
@@ -490,6 +496,12 @@ export {
   BankSuggestionLimit,
   BankMatchRequest,
   BankUnmatchRequest,
+  SupplierBankPayment,
+  SupplierBankPaymentList,
+  SupplierBankMatch,
+  SupplierBankMatchList,
+  SupplierBankMatchRequest,
+  SupplierBankUnmatchRequest,
   BankImportRequest,
   BankImportFormat,
   BankCsvConfiguration,

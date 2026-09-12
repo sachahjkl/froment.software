@@ -35,6 +35,63 @@ interface ApiDocumentation {
   readonly operations: Readonly<Record<string, ApiDocumentationOperation>>;
 }
 
+const accountingOperationIds = [
+  'accountingAccountCreate',
+  'accountingAccountList',
+  'accountingAccountUpdate',
+  'accountingBalanceReport',
+  'accountingCa3Export',
+  'accountingEntryCreate',
+  'accountingEntryList',
+  'accountingEntryPost',
+  'accountingEntryReverse',
+  'accountingEvidenceCreate',
+  'accountingEvidenceDownload',
+  'accountingEvidenceList',
+  'accountingFecExport',
+  'accountingFinancialReport',
+  'accountingJournalCreate',
+  'accountingJournalList',
+  'accountingJournalUpdate',
+  'accountingLedgerReport',
+  'accountingLetterableLineList',
+  'accountingLetteringCreate',
+  'accountingOpeningCommit',
+  'accountingOpeningPreview',
+  'accountingPeriodClose',
+  'accountingPeriodCreate',
+  'accountingPeriodFinalClose',
+  'accountingPeriodList',
+  'accountingPeriodLock',
+  'accountingPeriodReopen',
+  'accountingTaxFilingSettings',
+  'accountingTaxFilingSettingsUpdate',
+  'accountingTaxFilingSubmissionList',
+  'accountingTaxFilingSubmit',
+  'accountingTaxReport',
+] as const;
+
+const addedOperationIds = [
+  'demoReset',
+  'invoiceCreditAllocate',
+  'invoiceCreditAllocationCancel',
+  'supplierBankMatch',
+  'supplierBankMatchList',
+  'supplierBankPaymentList',
+  'supplierBankUnmatch',
+  'supplierCreditCreate',
+  'supplierInvoiceEvidenceCreate',
+  'supplierInvoiceEvidenceDownload',
+  'supplierInvoiceEvidenceList',
+] as const;
+
+const operationDocumentation = (
+  ids: ReadonlyArray<string>,
+  summary: string,
+  description: string,
+): Readonly<Record<string, ApiDocumentationOperation>> =>
+  Object.fromEntries(ids.map((id) => [id, { summary, description }]));
+
 export const apiDocumentation = {
   fr: {
     title: 'API Froment Software',
@@ -109,12 +166,30 @@ export const apiDocumentation = {
       blog: { title: 'Blog', description: 'Publications techniques publiques.' },
       catalog: { title: 'Catalogue', description: 'Prestations réutilisables dans les devis.' },
       banking: { title: 'Banque', description: 'Relevés et rapprochement des règlements.' },
+      accounting: {
+        title: 'Comptabilité',
+        description: 'Écritures, périodes, rapports, justificatifs et déclarations fiscales.',
+      },
+      demo: {
+        title: 'Démonstration',
+        description: 'Réinitialisation protégée des données de démonstration en préproduction.',
+      },
       integrations: {
         title: 'Services externes',
         description: 'Adaptateurs et journal des demandes.',
       },
     },
     operations: {
+      ...operationDocumentation(
+        accountingOperationIds,
+        'Gérer la comptabilité',
+        'Exécute une opération comptable selon les permissions et les règles de période applicables.',
+      ),
+      ...operationDocumentation(
+        addedOperationIds,
+        'Gérer la suite de gestion',
+        'Exécute une opération métier selon les permissions et les contrôles applicables.',
+      ),
       ...auditDocumentation.fr.operations,
       blogFeed: {
         summary: 'Lire le flux Atom du blog',
@@ -597,9 +672,27 @@ export const apiDocumentation = {
       blog: { title: 'Blog', description: 'Public technical articles.' },
       catalog: { title: 'Catalog', description: 'Reusable services for quotes.' },
       banking: { title: 'Banking', description: 'Statements and payment reconciliation.' },
+      accounting: {
+        title: 'Accounting',
+        description: 'Entries, periods, reports, evidence, and tax filings.',
+      },
+      demo: {
+        title: 'Demonstration',
+        description: 'Protected reset of staging demonstration data.',
+      },
       integrations: { title: 'External services', description: 'Adapters and request history.' },
     },
     operations: {
+      ...operationDocumentation(
+        accountingOperationIds,
+        'Manage accounting',
+        'Runs an accounting operation with the applicable permissions and period rules.',
+      ),
+      ...operationDocumentation(
+        addedOperationIds,
+        'Manage the business suite',
+        'Runs a business operation with the applicable permissions and controls.',
+      ),
       ...auditDocumentation.en.operations,
       blogFeed: {
         summary: 'Read the blog Atom feed',

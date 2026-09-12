@@ -6,6 +6,7 @@ import {
   CreditNoteDraftUpdate,
   CreditNoteIssueRequest,
   InvoiceCreditFailure,
+  InvoiceCreditAllocationRequest,
   InvoiceCredits,
   InvoiceRefundRequest,
 } from '@froment/contracts';
@@ -62,9 +63,25 @@ export class InvoiceCreditsApi {
       'credit.error',
     );
   }
+  allocate(id: string, request: typeof InvoiceCreditAllocationRequest.Type) {
+    return requestOutcome(
+      this.http.post(`/api/invoices/${id}/credit-allocations`, request),
+      InvoiceCredits,
+      InvoiceCreditFailure,
+      'credit.error',
+    );
+  }
   cancel(id: string, refundId: string, reason: string) {
     return requestOutcome(
       this.http.post(`/api/invoices/${id}/refunds/${refundId}/cancel`, { reason }),
+      InvoiceCredits,
+      InvoiceCreditFailure,
+      'credit.error',
+    );
+  }
+  cancelAllocation(id: string, allocationId: string, reason: string) {
+    return requestOutcome(
+      this.http.post(`/api/invoices/${id}/credit-allocations/${allocationId}/cancel`, { reason }),
       InvoiceCredits,
       InvoiceCreditFailure,
       'credit.error',

@@ -52,7 +52,27 @@ export class RefundCancel {
       (refund) => refund.id === this.task.route.snapshot.paramMap.get('refundId'),
     ),
   );
-  protected readonly eligible = computed(() => this.refund()?.cancelledAt === null);
+  protected readonly allocation = computed(() =>
+    this.creditState()?.allocations.find(
+      (allocation) => allocation.id === this.task.route.snapshot.paramMap.get('allocationId'),
+    ),
+  );
+  protected readonly isAllocation = this.task.route.snapshot.paramMap.has('allocationId');
+  protected readonly entry = computed(() => this.allocation() ?? this.refund());
+  protected readonly eligible = computed(() => this.entry()?.cancelledAt === null);
+  protected readonly heading = computed(() =>
+    this.i18n.t(this.isAllocation ? 'credit.cancelAllocation' : 'credit.cancelRefund'),
+  );
+  protected readonly hint = computed(() =>
+    this.i18n.t(
+      this.isAllocation ? 'credit.cancelAllocationHint' : 'billingWorkspace.cancelRefundHint',
+    ),
+  );
+  protected readonly entryDate = computed(() => {
+    const entry = this.entry();
+    if (entry === undefined) return '';
+    return 'allocatedOn' in entry ? entry.allocatedOn : entry.refundedOn;
+  });
   protected readonly cancelForm = form(signal({ reason: '' }), (path) => {
     required(path.reason);
     pattern(path.reason, /\S/);
@@ -73,13 +93,16 @@ export class RefundCancel {
   }
   protected async retry(): Promise<void> {
     const invoice = this.task.invoice();
-    const refund = this.refund();
+    const entry = this.entry();
     const reason = this.attempt;
-    if (!invoice || !refund || reason === undefined) return;
+    if (!invoice || !entry || reason === undefined) return;
     const result = await this.task.run(
-      () => this.api.cancel(invoice.id, refund.id, reason),
+      () => {
+        if (this.isAllocation) return this.api.cancelAllocation(invoice.id, entry.id, reason);
+        return this.api.cancel(invoice.id, entry.id, reason);
+      },
       'credit.confirmCancel',
-      'cancel-refund',
+      this.isAllocation ? 'cancel-allocation' : 'cancel-refund',
     );
     if (result === 'resolved') this.attempt = undefined;
   }

@@ -7,13 +7,17 @@ import {
   SupplierInvoiceAnalysisStatus,
   SupplierInvoiceAnalysisSettingsUpdate,
   SupplierInvoiceCreateRequest,
+  SupplierCreditCreateRequest,
   SupplierInvoiceFailure,
+  SupplierInvoiceEvidence,
+  SupplierInvoiceEvidenceList,
   SupplierInvoiceList,
   SupplierInvoiceUpdateRequest,
   SupplierPaymentBatch,
   SupplierPaymentBatchCreateRequest,
   SupplierPaymentBatchList,
 } from '@froment/contracts';
+import { firstValueFrom } from 'rxjs';
 
 import { requestOutcome } from '@shared/api-outcome';
 
@@ -36,9 +40,45 @@ export class SupplierInvoicesApi {
       'supplierInvoice.error',
     );
   }
+  evidence(id: string) {
+    return requestOutcome(
+      this.http.get(`/api/supplier-invoices/${id}/evidence`),
+      SupplierInvoiceEvidenceList,
+      SupplierInvoiceFailure,
+      'supplierInvoice.error',
+    );
+  }
+  createEvidence(request: {
+    readonly invoiceId: string;
+    readonly fileName: string;
+    readonly mediaType: string;
+    readonly contentBase64: string;
+  }) {
+    return requestOutcome(
+      this.http.post('/api/supplier-invoice-evidence', request),
+      SupplierInvoiceEvidence,
+      SupplierInvoiceFailure,
+      'supplierInvoice.error',
+    );
+  }
+  downloadEvidence(id: string) {
+    return firstValueFrom(
+      this.http.get(`/api/supplier-invoice-evidence/${id}/download`, {
+        responseType: 'blob',
+      }),
+    );
+  }
   create(request: typeof SupplierInvoiceCreateRequest.Type) {
     return requestOutcome(
       this.http.post('/api/supplier-invoices', request),
+      SupplierInvoice,
+      SupplierInvoiceFailure,
+      'supplierInvoice.error',
+    );
+  }
+  createCredit(request: typeof SupplierCreditCreateRequest.Type) {
+    return requestOutcome(
+      this.http.post('/api/supplier-credits', request),
       SupplierInvoice,
       SupplierInvoiceFailure,
       'supplierInvoice.error',

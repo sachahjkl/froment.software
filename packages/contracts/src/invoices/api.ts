@@ -26,6 +26,7 @@ import {
   InvoiceInvalidDates,
   InvoiceInvalidTransition,
   InvoiceExchangeRateMissing,
+  InvoiceAccountingUnavailable,
   InvoiceIssueRequest,
   InvoiceIssueResult,
   InvoiceList,
@@ -177,6 +178,7 @@ export class InvoicesApi extends HttpApiGroup.make('invoices', { topLevel: true 
       InvoiceInvalidDates.pipe(HttpApiSchema.status(422)),
       InvoiceInvalidTransition.pipe(HttpApiSchema.status(409)),
       InvoiceExchangeRateMissing.pipe(HttpApiSchema.status(422)),
+      InvoiceAccountingUnavailable.pipe(HttpApiSchema.status(422)),
       DocumentIncomplete.pipe(HttpApiSchema.status(409)),
     ],
   })
@@ -235,6 +237,7 @@ export class InvoicesApi extends HttpApiGroup.make('invoices', { topLevel: true 
       InvoiceNotFound.pipe(HttpApiSchema.status(404)),
       InvoiceVersionConflict.pipe(HttpApiSchema.status(409)),
       InvoiceInvalidTransition.pipe(HttpApiSchema.status(409)),
+      InvoiceAccountingUnavailable.pipe(HttpApiSchema.status(422)),
     ],
   })
     .middleware(ApiRequestBody)

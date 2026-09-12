@@ -1,4 +1,5 @@
 import { Effect, Layer } from 'effect';
+import { FetchHttpClient } from 'effect/unstable/http';
 import { randomUUID } from 'node:crypto';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
@@ -20,6 +21,7 @@ const input = {
   phone: '+33 1 23 45 67 89',
   registrationNumber: ' 123456789 ',
   vatNumber: ' fr 00 123456789 ',
+  taxTreatment: 'france' as const,
   defaultCurrency: 'EUR',
   paymentTermsDays: 30,
   iban: 'fr76 3000 6000 0112 3456 7890 189',
@@ -28,6 +30,7 @@ const input = {
 
 const layer = () =>
   SuppliersLive.pipe(
+    Layer.provide(FetchHttpClient.layer),
     Layer.provide(AuditLive),
     Layer.provideMerge(
       makeMigratedDatabaseLayer({

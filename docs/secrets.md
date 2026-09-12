@@ -5,6 +5,7 @@ SecretSpec déclare les secrets dans `secretspec.toml`. SOPS chiffre leurs valeu
 | Profil        | Fichier                                     |
 | ------------- | ------------------------------------------- |
 | `development` | `secrets/froment-software/development.yaml` |
+| `staging`     | `secrets/froment-software/staging.yaml`     |
 | `production`  | `secrets/froment-software/production.yaml`  |
 
 ## Résolution
@@ -15,7 +16,10 @@ Chaque profil lit uniquement son fichier SOPS. Aucun repli entre profils n’est
 Renseignez les clés des prestataires dans chaque fichier où elles sont nécessaires.
 Les identifiants de prestataires restent facultatifs tant que les adaptateurs ne sont pas activés.
 La clé `SUPPLIER_INVOICE_ANALYSIS_API_KEY` initialise l’adaptateur d’analyse quand elle existe.
+La clé `ACCOUNTING_TAX_FILING_API_KEY` initialise l’adaptateur de télédéclaration quand elle existe.
 L’administration peut remplacer cette clé avec `SETTINGS_ENCRYPTION_KEY` configurée.
+
+`DEMO_PASSWORD` protège la réinitialisation staging. Ne publiez jamais sa valeur.
 
 Lors du passage en service réel, renseignez ensemble les identifiants liés : client OAuth et secret, clé Stripe et secret de webhook.
 

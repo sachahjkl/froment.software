@@ -40,6 +40,7 @@ const modules: readonly CompanyModuleValue[] = [
   'banking',
   'accounting',
   'tax',
+  'ai',
   'demonstration',
 ];
 

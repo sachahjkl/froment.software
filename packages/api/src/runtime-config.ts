@@ -58,10 +58,21 @@ export const defaultRuntimeConfig = {
     maximumRequestBodyBytes: 32_768,
     maximumBankImportBodyBytes: 3_001_024,
     maximumSupplierInvoiceAnalysisBodyBytes: 8_001_024,
+    maximumSupplierInvoiceEvidenceBodyBytes: 8_001_024,
   },
   secrets: { settingsEncryptionKey: Option.none() },
-  supplierInvoiceAnalysis: { apiKey: Option.none(), requestTimeoutMillis: 20_000 },
+  supplierInvoiceAnalysis: {
+    apiKey: Option.none(),
+    model: 'gpt-4.1-mini',
+    requestTimeoutMillis: 20_000,
+  },
   exchangeRates: { requestTimeoutMillis: 10_000 },
+  vies: {
+    endpoint: 'https://ec.europa.eu/taxation_customs/vies/rest-api/check-vat-number',
+    requestTimeoutMillis: 10_000,
+  },
+  taxFiling: { apiKey: Option.none(), requestTimeoutMillis: 20_000 },
+  demo: { password: Option.none() },
 } as const;
 
 export const RuntimeConfig = {
@@ -198,12 +209,19 @@ export const RuntimeConfig = {
       'HTTP_MAXIMUM_SUPPLIER_INVOICE_ANALYSIS_BODY_BYTES',
       defaultRuntimeConfig.http.maximumSupplierInvoiceAnalysisBodyBytes,
     ),
+    maximumSupplierInvoiceEvidenceBodyBytes: positiveInt(
+      'HTTP_MAXIMUM_SUPPLIER_INVOICE_EVIDENCE_BODY_BYTES',
+      defaultRuntimeConfig.http.maximumSupplierInvoiceEvidenceBodyBytes,
+    ),
   }),
   secrets: Config.all({
     settingsEncryptionKey: Config.option(Config.redacted('SETTINGS_ENCRYPTION_KEY')),
   }),
   supplierInvoiceAnalysis: Config.all({
     apiKey: Config.option(Config.redacted('SUPPLIER_INVOICE_ANALYSIS_API_KEY')),
+    model: Config.string('SUPPLIER_INVOICE_ANALYSIS_MODEL').pipe(
+      Config.withDefault(defaultRuntimeConfig.supplierInvoiceAnalysis.model),
+    ),
     requestTimeoutMillis: positiveInt(
       'SUPPLIER_INVOICE_ANALYSIS_REQUEST_TIMEOUT_MILLIS',
       defaultRuntimeConfig.supplierInvoiceAnalysis.requestTimeoutMillis,
@@ -214,6 +232,25 @@ export const RuntimeConfig = {
       'EXCHANGE_RATE_REQUEST_TIMEOUT_MILLIS',
       defaultRuntimeConfig.exchangeRates.requestTimeoutMillis,
     ),
+  }),
+  vies: Config.all({
+    endpoint: Config.string('VIES_ENDPOINT').pipe(
+      Config.withDefault(defaultRuntimeConfig.vies.endpoint),
+    ),
+    requestTimeoutMillis: positiveInt(
+      'VIES_REQUEST_TIMEOUT_MILLIS',
+      defaultRuntimeConfig.vies.requestTimeoutMillis,
+    ),
+  }),
+  taxFiling: Config.all({
+    apiKey: Config.option(Config.redacted('ACCOUNTING_TAX_FILING_API_KEY')),
+    requestTimeoutMillis: positiveInt(
+      'ACCOUNTING_TAX_FILING_REQUEST_TIMEOUT_MILLIS',
+      defaultRuntimeConfig.taxFiling.requestTimeoutMillis,
+    ),
+  }),
+  demo: Config.all({
+    password: Config.option(Config.redacted('DEMO_PASSWORD')),
   }),
 } as const;
 

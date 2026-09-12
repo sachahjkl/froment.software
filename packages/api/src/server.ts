@@ -53,6 +53,8 @@ import { RuntimeConfiguration, type RuntimeConfigValue } from './runtime-config.
 import { apiCatalog, apiCatalogContentType } from './server/api-catalog.js';
 import { StatusHandlers } from './status/handlers.js';
 import { blogHandlers } from './blog/handlers.js';
+import { AccountingHandlers } from './accounting/handlers.js';
+import { DemoHandlers } from './demo/handlers.js';
 
 const FrenchApi = apiForLanguage('fr');
 const EnglishApi = apiForLanguage('en');
@@ -95,6 +97,8 @@ const apiRoutes = (publicOrigin: string) =>
         InvoiceHandlers,
         ClientPortalHandlers,
         ApiTokenHandlers,
+        AccountingHandlers,
+        DemoHandlers,
       ),
     ),
     Layer.provide(

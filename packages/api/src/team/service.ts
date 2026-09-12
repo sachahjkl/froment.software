@@ -36,17 +36,20 @@ const make = Effect.gen(function* () {
         `select 1 from users u join user_roles ur on ur.user_id = u.id join role_permissions rp on rp.role_id = ur.role_id where u.id = ? and u.disabled_at is null and u.kind = 'administrator' and rp.permission_code = ?`,
       )
       .get(actor, permission) !== undefined;
-  const profilePermissions = (profile: typeof TeamProfile.Type) =>
-    profile.startsWith('custom:')
-      ? Schema.decodeUnknownSync(Schema.fromJsonString(Schema.Array(PermissionCode)))(
-          sqlite
-            .prepare('select permissions from custom_roles where id = ?')
-            .pluck()
-            .get(profile.slice('custom:'.length)),
-        )
-      : profile === 'accountant'
-        ? TeamProfilePermissions.accountant
-        : TeamProfilePermissions.collaborator;
+  const profilePermissions = (profile: typeof TeamProfile.Type) => {
+    if (profile.startsWith('custom:')) {
+      return Schema.decodeUnknownSync(Schema.fromJsonString(Schema.Array(PermissionCode)))(
+        sqlite
+          .prepare('select permissions from custom_roles where id = ?')
+          .pluck()
+          .get(profile.slice('custom:'.length)),
+      );
+    }
+    const standardProfile = Schema.decodeUnknownSync(
+      Schema.Literals(['collaborator', 'accountant', 'accounting-validator', 'accounting-reader']),
+    )(profile);
+    return TeamProfilePermissions[standardProfile];
+  };
   const assignProfile = (userId: string, profile: typeof TeamProfile.Type, now: number) => {
     const name = `team-${userId}`;
     const roleId =

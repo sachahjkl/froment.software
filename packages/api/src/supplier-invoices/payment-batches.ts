@@ -23,6 +23,7 @@ const PaymentInvoiceRecord = Schema.Struct({
   amountCents: Schema.Int,
   currency: Schema.String,
   status: Schema.String,
+  documentKind: Schema.String,
   iban: Schema.String,
   bic: Schema.String,
 });
@@ -221,8 +222,13 @@ export const SupplierPaymentBatchesLive = Layer.effect(
               const rows = Schema.decodeUnknownSync(Schema.Array(PaymentInvoiceRecord))(
                 database.sqlite
                   .prepare(
-                    `select i.id as invoiceId, i.reference, i.total_cents as amountCents,
-                            i.currency, i.status, s.display_name as supplierName, s.iban, s.bic
+                    `select i.id as invoiceId, i.reference,
+                            i.total_cents - coalesce((select sum(c.total_cents)
+                              from supplier_invoices c where c.source_invoice_id = i.id
+                              and c.document_kind = 'credit' and c.status in ('approved','paid')), 0)
+                              as amountCents,
+                            i.currency, i.status, i.document_kind as documentKind,
+                            s.display_name as supplierName, s.iban, s.bic
                      from supplier_invoices i join suppliers s on s.id = i.supplier_id
                      where i.id in (${placeholders})`,
                   )
@@ -238,6 +244,7 @@ export const SupplierPaymentBatchesLive = Layer.effect(
                 if (
                   invoice === undefined ||
                   invoice.status !== 'approved' ||
+                  invoice.documentKind !== 'invoice' ||
                   invoice.amountCents <= 0
                 )
                   throw new SupplierInvoiceConflict({
@@ -287,8 +294,8 @@ export const SupplierPaymentBatchesLive = Layer.effect(
                 .prepare(
                   `insert into supplier_payment_batches
                    (id, request_id, request, message_id, execution_date, transaction_count,
-                    control_sum_cents, content, created_by_user_id, created_at)
-                   values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                     control_sum_cents, content, created_by_user_id, created_at)
+                    values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
                 )
                 .run(
                   id,

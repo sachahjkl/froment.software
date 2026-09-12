@@ -270,6 +270,11 @@ export class InvoiceExchangeRateMissing extends Schema.TaggedError<InvoiceExchan
   { code: Schema.Literal('invoice.exchange_rate_missing') },
   { httpApiStatus: 422 },
 ) {}
+export class InvoiceAccountingUnavailable extends Schema.TaggedError<InvoiceAccountingUnavailable>()(
+  'InvoiceAccountingUnavailable',
+  { code: Schema.Literal('invoice.accounting_unavailable') },
+  { httpApiStatus: 422 },
+) {}
 
 export const InvoiceFailure = Schema.Union([
   InvoicePaymentInvalid,
@@ -287,6 +292,7 @@ export const InvoiceFailure = Schema.Union([
   InvoiceInvalidDates,
   InvoiceInvalidTransition,
   InvoiceExchangeRateMissing,
+  InvoiceAccountingUnavailable,
   DocumentNotFound,
   DocumentIncomplete,
 ]);

@@ -42,6 +42,24 @@ export const BankingHandlers = HttpApiBuilder.group(Api, 'banking', (handlers) =
         }),
       )
       .handle(
+        'supplierBankPaymentList',
+        Effect.fn('supplierBankPaymentList')(function* ({ params }) {
+          yield* setPrivateResponseHeaders;
+          return yield* (yield* Banking)
+            .supplierPayments(params.transactionId)
+            .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
+        }),
+      )
+      .handle(
+        'supplierBankMatchList',
+        Effect.fn('supplierBankMatchList')(function* ({ params }) {
+          yield* setPrivateResponseHeaders;
+          return yield* (yield* Banking)
+            .supplierMatches(params.transactionId)
+            .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
+        }),
+      )
+      .handle(
         'bankMatchSuggestionList',
         Effect.fn('bankMatchSuggestionList')(function* ({ params }) {
           yield* setPrivateResponseHeaders;
@@ -83,6 +101,29 @@ export const BankingHandlers = HttpApiBuilder.group(Api, 'banking', (handlers) =
           yield* setPrivateResponseHeaders;
           return yield* (yield* Banking)
             .unmatch(
+              params.transactionId,
+              payload.matchId,
+              payload.reason,
+              (yield* ApiPrincipal).userId,
+            )
+            .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
+        }),
+      )
+      .handle(
+        'supplierBankMatch',
+        Effect.fn('supplierBankMatch')(function* ({ params, payload }) {
+          yield* setPrivateResponseHeaders;
+          return yield* (yield* Banking)
+            .matchSupplier(params.transactionId, payload, (yield* ApiPrincipal).userId)
+            .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
+        }),
+      )
+      .handle(
+        'supplierBankUnmatch',
+        Effect.fn('supplierBankUnmatch')(function* ({ params, payload }) {
+          yield* setPrivateResponseHeaders;
+          return yield* (yield* Banking)
+            .unmatchSupplier(
               params.transactionId,
               payload.matchId,
               payload.reason,

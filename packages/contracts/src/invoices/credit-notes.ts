@@ -130,9 +130,29 @@ export const InvoiceRefund = Schema.Struct({
 export const InvoiceRefundCancel = Schema.Struct({
   reason: Schema.String.check(Schema.isPattern(/\S/), Schema.isMaxLength(500)),
 });
+export const InvoiceCreditAllocationRequest = Schema.Struct({
+  requestId: CreditNoteDraftRequest.fields.requestId,
+  targetInvoiceId: Ulid,
+  amountCents: PositiveSafeInteger,
+  allocatedOn: CalendarDate,
+  reference: Schema.String.check(Schema.isPattern(/\S/), Schema.isMaxLength(160)),
+});
+export type InvoiceCreditAllocationRequest = typeof InvoiceCreditAllocationRequest.Type;
+export const InvoiceCreditAllocation = Schema.Struct({
+  ...InvoiceCreditAllocationRequest.fields,
+  id: Ulid,
+  sourceInvoiceId: Ulid,
+  recordedAt: IsoUtc,
+  recordedByUserId: Ulid,
+  cancelledAt: Schema.NullOr(IsoUtc),
+  cancellationReason: Schema.NullOr(Schema.String),
+  cancelledByUserId: Schema.NullOr(Ulid),
+});
+export type InvoiceCreditAllocation = typeof InvoiceCreditAllocation.Type;
 export const InvoiceCredits = Schema.Struct({
   creditNotes: Schema.Array(CreditNote),
   refunds: Schema.Array(InvoiceRefund),
+  allocations: Schema.Array(InvoiceCreditAllocation),
   refundableCents: SafeInteger,
 });
 export const CreditNoteSummary = Schema.Struct({

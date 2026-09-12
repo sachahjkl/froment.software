@@ -4,11 +4,13 @@ import {
   ApiCredentials,
   ApiPrincipal,
   AuthenticationRequired,
+  PermissionDenied,
   EndpointRateLimit,
   RequestRateLimited,
   RequiredPermissions,
   Ulid,
   type PermissionCodeValue,
+  type CompanyModuleValue,
 } from '@froment/contracts';
 import { Clock, Context, Effect, Layer, Option, Redacted, Schema } from 'effect';
 import { HttpEffect, HttpServerRequest } from 'effect/unstable/http';
@@ -24,6 +26,44 @@ import { RuntimeConfiguration } from '../runtime-config.js';
 import { Authentication } from './authentication.js';
 import { AuthenticationConfig } from './authentication-config.js';
 import { requireRequestOrigin } from '../http/origin.js';
+import { Company } from '../company/service.js';
+
+const moduleForPermission = (permission: PermissionCodeValue): CompanyModuleValue | undefined => {
+  if (permission.startsWith('supplier')) return 'purchasing';
+  if (permission.startsWith('bank.')) return 'banking';
+  if (permission.startsWith('accounting.')) return 'accounting';
+  if (permission.startsWith('demo.')) return 'demonstration';
+  if (
+    permission.startsWith('quote.') ||
+    permission.startsWith('order.') ||
+    permission.startsWith('invoice.') ||
+    permission.startsWith('payment.') ||
+    permission.startsWith('client.') ||
+    permission.startsWith('catalog.') ||
+    permission.startsWith('ledger.') ||
+    permission.startsWith('document.')
+  )
+    return 'sales';
+  return undefined;
+};
+
+const requiredModules = (
+  endpointId: string,
+  permissions: ReadonlyArray<PermissionCodeValue>,
+): ReadonlySet<CompanyModuleValue> => {
+  const modules = new Set<CompanyModuleValue>();
+  for (const permission of permissions) {
+    const module = moduleForPermission(permission);
+    if (module !== undefined) modules.add(module);
+  }
+  if (endpointId.startsWith('supplierInvoiceAnalysis')) {
+    modules.add('purchasing');
+    modules.add('ai');
+  }
+  if (endpointId.startsWith('accountingTax') || endpointId === 'accountingCa3Export')
+    modules.add('tax');
+  return modules;
+};
 
 export const refreshCookieName = '__Secure-froment-refresh';
 export const accessCookieName = '__Secure-froment-access';
@@ -121,6 +161,7 @@ const ApiAuthorizationLive = Layer.effect(
     const audit = yield* Audit;
     const limiter = yield* RequestLimiter;
     const runtime = yield* RuntimeConfiguration;
+    const company = yield* Company;
     const limitEndpoint = Effect.fn('ApiAuthorization.limitEndpoint')(function* (
       principalId: string,
       endpointId: string,
@@ -139,6 +180,11 @@ const ApiAuthorizationLive = Layer.effect(
           () => new Error('authentication.endpoint.permission_missing'),
         );
         const endpointRateLimit = Context.getOption(endpoint.annotations, EndpointRateLimit);
+        const settings = yield* company.get.pipe(Effect.catchTag('DatabaseError', Effect.orDie));
+        for (const module of requiredModules(endpoint.identifier, permissions)) {
+          if (!settings.enabledModules.includes(module))
+            return yield* new PermissionDenied({ code: 'authentication.permission_denied' });
+        }
 
         if (credentials.kind === 'access-token') {
           const principal = yield* authentication

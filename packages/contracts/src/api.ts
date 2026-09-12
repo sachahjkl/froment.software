@@ -32,6 +32,8 @@ import { QuoteLinksApi } from './quote-links/api.js';
 import { QuotesApi } from './quotes/api.js';
 import { StatusApi } from './status/api.js';
 import { BlogApi } from './blog/api.js';
+import { AccountingApi } from './accounting/api.js';
+import { DemoApi } from './demo/api.js';
 
 export { RevisionVersionParameter } from './api-common.js';
 export { AffairsApi } from './affairs/api.js';
@@ -52,6 +54,8 @@ export { AuthenticationApi } from './authentication/api.js';
 export { BootstrapApi } from './bootstrap/api.js';
 export { StatusApi } from './status/api.js';
 export { BlogApi } from './blog/api.js';
+export { AccountingApi } from './accounting/api.js';
+export { DemoApi } from './demo/api.js';
 
 export class Api extends HttpApi.make('froment-api')
   .add(StatusApi)
@@ -84,5 +88,7 @@ export class Api extends HttpApi.make('froment-api')
   .add(InvoicesApi)
   .add(ClientPortalApi)
   .add(ApiTokensApi)
+  .add(AccountingApi)
+  .add(DemoApi)
   .middleware(ApiTelemetry)
   .annotateMerge(OpenApi.annotations({ version: 'latest' })) {}

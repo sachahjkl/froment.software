@@ -36,10 +36,12 @@ import { companyWorkspaceText } from './company-workspace.js';
 import { supplierInvoiceText } from './supplier-invoices.js';
 import { affairText } from './affairs.js';
 import { documentLineText } from './document-lines.js';
+import { accountingText } from './accounting.js';
 
 export const translations = {
   fr: {
     ...documentLineText.fr,
+    ...accountingText.fr,
     ...affairText.fr,
     ...connectionText.fr,
     ...checkoutText.fr,
@@ -80,6 +82,10 @@ export const translations = {
     ...companyWorkspaceText.fr,
     ...supplierInvoiceText.fr,
     'backOffice.apiTokens.permission.payment.read': 'Exporter les règlements et leurs corrections.',
+    'backOffice.apiTokens.permission.accounting.read': 'Lire les données comptables.',
+    'backOffice.apiTokens.permission.accounting.write': 'Créer et modifier les données comptables.',
+    'backOffice.apiTokens.permission.accounting.export': 'Exporter les données comptables.',
+    'backOffice.apiTokens.permission.accounting.evidence': 'Ajouter des pièces comptables.',
     'design.confirmation.title': 'Modales de confirmation',
     'design.confirmation.hint':
       'Le focus commence sur Annuler. Tab reste dans la modale. Échap et le fond annulent la demande.',
@@ -649,6 +655,8 @@ export const translations = {
     'invoice.invalid_dates': 'Vérifiez les dates de prestation et d’échéance.',
     'invoice.exchange_rate_missing':
       'Ajoutez un taux de change daté avant d’émettre cette facture.',
+    'invoice.accounting_unavailable':
+      'Ouvrez une période comptable et vérifiez le journal des ventes ainsi que les comptes PCG requis.',
     'invoice.invalid_transition': 'Ce changement de statut est impossible.',
     'invoice.error': 'Le serveur ne peut pas traiter cette facture.',
     'backOffice.quote.title.new': 'Nouveau devis',
@@ -1632,6 +1640,7 @@ export const translations = {
   },
   en: {
     ...documentLineText.en,
+    ...accountingText.en,
     ...affairText.en,
     ...connectionText.en,
     ...checkoutText.en,
@@ -1672,6 +1681,10 @@ export const translations = {
     ...companyWorkspaceText.en,
     ...supplierInvoiceText.en,
     'backOffice.apiTokens.permission.payment.read': 'Export payments and their corrections.',
+    'backOffice.apiTokens.permission.accounting.read': 'Read accounting data.',
+    'backOffice.apiTokens.permission.accounting.write': 'Create and update accounting data.',
+    'backOffice.apiTokens.permission.accounting.export': 'Export accounting data.',
+    'backOffice.apiTokens.permission.accounting.evidence': 'Add accounting evidence.',
     'design.confirmation.title': 'Confirmation dialogs',
     'design.confirmation.hint':
       'Focus starts on Cancel. Tab stays in the dialog. Escape and the backdrop cancel the request.',
@@ -2228,6 +2241,8 @@ export const translations = {
     'invoice.amount_too_large': 'The invoice amount is too large.',
     'invoice.invalid_dates': 'Check the service date and due date.',
     'invoice.exchange_rate_missing': 'Add a dated exchange rate before you issue this invoice.',
+    'invoice.accounting_unavailable':
+      'Open an accounting period and check the sales journal and required PCG accounts.',
     'invoice.invalid_transition': 'This status change is not valid.',
     'invoice.error': 'The server cannot process this invoice.',
     'backOffice.quote.title.new': 'New quote',

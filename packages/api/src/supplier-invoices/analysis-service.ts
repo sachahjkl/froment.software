@@ -11,6 +11,7 @@ import {
   type UlidValue,
 } from '@froment/contracts';
 import { Clock, Context, DateTime, Effect, Layer, Option, Redacted, Schema } from 'effect';
+import { HttpClient, HttpClientRequest, HttpClientResponse } from 'effect/unstable/http';
 import { createCipheriv, createDecipheriv, createHash, randomBytes } from 'node:crypto';
 import { ulid } from 'ulid';
 
@@ -25,7 +26,7 @@ const encryptionIvBytes = 12;
 const encryptionAlgorithm = 'aes-256-gcm';
 const sha256Algorithm = 'sha256';
 const submissionMetadata = (
-  adapter: 'local' | 'http',
+  adapter: 'local' | 'openai',
   endpointHost: string | null,
   bytes: number,
 ) => {
@@ -34,7 +35,7 @@ const submissionMetadata = (
 };
 
 const SettingsRow = Schema.Struct({
-  adapter: Schema.Literals(['local', 'http']),
+  adapter: Schema.Literals(['local', 'openai']),
   endpoint: Schema.NullOr(Schema.String),
   encryptedApiKey: Schema.NullOr(Schema.String),
   encryptionIv: Schema.NullOr(Schema.String),
@@ -64,12 +65,47 @@ const AnalysisOutput = Schema.Struct({
   ),
   notes: Schema.String.check(Schema.isMaxLength(SupplierInvoiceMaximumNotesLength)),
 });
+const OpenAiResponse = Schema.Struct({
+  output: Schema.Array(
+    Schema.Struct({
+      content: Schema.Array(
+        Schema.Struct({ type: Schema.String, text: Schema.optional(Schema.String) }),
+      ),
+    }),
+  ),
+});
+const analysisJsonSchema = {
+  type: 'object',
+  additionalProperties: false,
+  required: ['reference', 'invoiceDate', 'dueDate', 'currency', 'lines', 'notes'],
+  properties: {
+    reference: { type: 'string' },
+    invoiceDate: { type: 'string', pattern: '^\\d{4}-\\d{2}-\\d{2}$' },
+    dueDate: { type: 'string', pattern: '^\\d{4}-\\d{2}-\\d{2}$' },
+    currency: { type: 'string', pattern: '^[A-Z]{3}$' },
+    lines: {
+      type: 'array',
+      items: {
+        type: 'object',
+        additionalProperties: false,
+        required: ['description', 'netTotalCents', 'vatRateBasisPoints'],
+        properties: {
+          description: { type: 'string' },
+          netTotalCents: { type: 'integer' },
+          vatRateBasisPoints: { type: 'integer' },
+        },
+      },
+    },
+    notes: { type: 'string' },
+  },
+} as const;
 
 const make = Effect.gen(function* () {
   const { sqlite } = yield* Database;
   const audit = yield* Audit;
   const invoices = yield* SupplierInvoices;
   const config = yield* RuntimeConfiguration;
+  const httpClient = (yield* HttpClient.HttpClient).pipe(HttpClient.filterStatusOk);
 
   const settingsRow = () =>
     Schema.decodeUnknownSync(SettingsRow)(
@@ -139,7 +175,7 @@ const make = Effect.gen(function* () {
           adapter: row.adapter,
           endpoint: row.endpoint,
           credentialsPresent: credentialsPresent(row),
-          external: row.adapter === 'http',
+          external: row.adapter === 'openai',
           updatedAt: row.updatedAt,
         });
       },
@@ -155,7 +191,7 @@ const make = Effect.gen(function* () {
     const now = yield* Clock.currentTimeMillis;
     return yield* Effect.try({
       try: () => {
-        if (request.adapter === 'http' && request.endpoint === null) {
+        if (request.adapter === 'openai' && request.endpoint === null) {
           throw new SupplierInvoiceConflict({ code: 'supplier_invoice.analysis_not_configured' });
         }
         const current = settingsRow();
@@ -176,7 +212,7 @@ const make = Effect.gen(function* () {
           )
           .run(
             request.adapter,
-            request.adapter === 'http' ? request.endpoint : null,
+            request.adapter === 'openai' ? request.endpoint : null,
             secret.encryptedApiKey,
             secret.encryptionIv,
             secret.encryptionTag,
@@ -195,7 +231,7 @@ const make = Effect.gen(function* () {
           adapter: row.adapter,
           endpoint: row.endpoint,
           credentialsPresent: credentialsPresent(row),
-          external: row.adapter === 'http',
+          external: row.adapter === 'openai',
           updatedAt: row.updatedAt,
         });
       },
@@ -211,41 +247,66 @@ const make = Effect.gen(function* () {
     apiKey: string,
     request: typeof SupplierInvoiceAnalysisRequest.Type,
   ) {
-    const response = yield* Effect.tryPromise({
-      try: (signal) =>
-        fetch(endpoint, {
-          method: 'POST',
-          signal,
-          headers: {
-            accept: 'application/json',
-            authorization: `Bearer ${apiKey}`,
-            'content-type': 'application/json',
+    const httpRequest = yield* HttpClientRequest.post(endpoint).pipe(
+      HttpClientRequest.acceptJson,
+      HttpClientRequest.bearerToken(apiKey),
+      HttpClientRequest.bodyJson({
+        model: config.supplierInvoiceAnalysis.model,
+        input: [
+          {
+            role: 'user',
+            content: [
+              {
+                type: 'input_text',
+                // oxlint-disable-next-line anti-slop/no-natural-language-literals -- Provider instruction, not application interface prose.
+                text: 'Extract this supplier invoice. Return monetary values as integer cents and VAT rates as basis points.',
+              },
+              request.mediaType === 'application/pdf'
+                ? {
+                    type: 'input_file',
+                    filename: request.fileName,
+                    file_data: `data:${request.mediaType};base64,${request.contentBase64}`,
+                  }
+                : {
+                    type: 'input_image',
+                    image_url: `data:${request.mediaType};base64,${request.contentBase64}`,
+                  },
+            ],
           },
-          body: JSON.stringify({
-            fileName: request.fileName,
-            mediaType: request.mediaType,
-            contentBase64: request.contentBase64,
-          }),
-        }),
-      catch: () => new SupplierInvoiceConflict({ code: 'supplier_invoice.analysis_failed' }),
-    }).pipe(
+        ],
+        text: {
+          format: {
+            type: 'json_schema',
+            name: 'supplier_invoice',
+            strict: true,
+            schema: analysisJsonSchema,
+          },
+        },
+      }),
+      Effect.mapError(
+        () => new SupplierInvoiceConflict({ code: 'supplier_invoice.analysis_failed' }),
+      ),
+    );
+    const response = yield* httpClient.execute(httpRequest).pipe(
       Effect.timeout(config.supplierInvoiceAnalysis.requestTimeoutMillis),
       Effect.mapError(
         () => new SupplierInvoiceConflict({ code: 'supplier_invoice.analysis_failed' }),
       ),
     );
-    if (!response.ok) {
-      return yield* new SupplierInvoiceConflict({ code: 'supplier_invoice.analysis_failed' });
-    }
-    const body = yield* Effect.tryPromise({
-      try: () => response.json(),
-      catch: () => new SupplierInvoiceConflict({ code: 'supplier_invoice.analysis_failed' }),
-    });
-    return yield* Schema.decodeUnknownEffect(AnalysisOutput)(body).pipe(
+    const openAi = yield* HttpClientResponse.schemaBodyJson(OpenAiResponse)(response).pipe(
       Effect.mapError(
         () => new SupplierInvoiceConflict({ code: 'supplier_invoice.analysis_failed' }),
       ),
     );
+    const text = openAi.output
+      .flatMap((item) => item.content)
+      .find((item) => item.type === 'output_text')?.text;
+    if (text === undefined)
+      return yield* new SupplierInvoiceConflict({ code: 'supplier_invoice.analysis_failed' });
+    return yield* Effect.try({
+      try: () => Schema.decodeUnknownSync(AnalysisOutput)(JSON.parse(text)),
+      catch: () => new SupplierInvoiceConflict({ code: 'supplier_invoice.analysis_failed' }),
+    });
   });
 
   const analyze = Effect.fn('SupplierInvoiceAnalysis.analyze')(function* (
@@ -273,7 +334,7 @@ const make = Effect.gen(function* () {
       return yield* new SupplierInvoiceConflict({ code: 'supplier_invoice.analysis_failed' });
     }
     const settings = settingsRow();
-    if (settings.adapter === 'http' && !request.consent) {
+    if (settings.adapter === 'openai' && !request.consent) {
       return yield* new SupplierInvoiceConflict({
         code: 'supplier_invoice.analysis_consent_required',
       });
@@ -298,7 +359,7 @@ const make = Effect.gen(function* () {
     });
     const submissionId = ulid();
     const endpointHost =
-      settings.adapter === 'http' && settings.endpoint !== null
+      settings.adapter === 'openai' && settings.endpoint !== null
         ? new URL(settings.endpoint).host
         : null;
     yield* Effect.try({
@@ -371,7 +432,16 @@ const make = Effect.gen(function* () {
           ...output,
           source: 'ocr',
           sourceFileName: request.fileName,
-          externalSubmissionId: settings.adapter === 'http' ? submissionId : null,
+          externalSubmissionId: settings.adapter === 'openai' ? submissionId : null,
+        },
+        actorUserId,
+      );
+      yield* invoices.createEvidence(
+        {
+          invoiceId: invoice.id,
+          fileName: request.fileName,
+          mediaType: request.mediaType,
+          contentBase64: request.contentBase64,
         },
         actorUserId,
       );

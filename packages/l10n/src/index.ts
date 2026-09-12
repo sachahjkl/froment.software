@@ -13,3 +13,4 @@ export * from './supplier-workspace.js';
 export * from './roles.js';
 export * from './supplier-invoices.js';
 export * from './company-workspace.js';
+export * from './accounting.js';

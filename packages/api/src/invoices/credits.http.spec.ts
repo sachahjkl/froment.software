@@ -62,6 +62,22 @@ it('issues one immutable full credit, preserves PDFs, stops collection, and reco
     ).toBe(409);
     expect((await post(`${path}/issue`, { expectedVersion: draft.version })).status).toBe(200);
     let invoice = Schema.decodeUnknownSync(InvoiceDetail)(await (await get(path)).json());
+    const targetQuote = await createQuote(server, client.id);
+    const { accepted: targetOrder } = await acceptQuote(server, targetQuote.id);
+    const targetDraft = Schema.decodeUnknownSync(InvoiceDetail)(
+      await (
+        await post('/api/invoices', {
+          orderId: targetOrder.orderId,
+          serviceDate: '2026-09-01',
+          dueDate: '2027-01-01',
+          paymentTerms: '30 days',
+        })
+      ).json(),
+    );
+    const targetPath = `/api/invoices/${targetDraft.id}`;
+    expect(
+      (await post(`${targetPath}/issue`, { expectedVersion: targetDraft.version })).status,
+    ).toBe(200);
     const paymentRequest = {
       requestId: randomUUID(),
       expectedVersion: invoice.version,
@@ -103,9 +119,55 @@ it('issues one immutable full credit, preserves PDFs, stops collection, and reco
       vatTotalCents: invoice.currentRevision.vatTotalCents,
     });
     expect(state.refundableCents).toBe(10000);
+    const allocationRequest = {
+      requestId: randomUUID(),
+      targetInvoiceId: targetDraft.id,
+      amountCents: 4000,
+      allocatedOn: '2026-09-12',
+      reference: 'CREDIT-ALLOCATION',
+    };
+    const allocated = Schema.decodeUnknownSync(InvoiceCredits)(
+      await (await post(`${path}/credit-allocations`, allocationRequest)).json(),
+    );
+    const allocation = allocated.allocations[0];
+    if (allocation === undefined) throw new Error('credit.test.allocation_missing');
+    expect(allocated.refundableCents).toBe(6000);
+    expect(allocation).toMatchObject(allocationRequest);
+    const cancellation = { reason: 'Wrong target invoice' };
+    const cancelled = Schema.decodeUnknownSync(InvoiceCredits)(
+      await (await post(`${path}/credit-allocations/${allocation.id}/cancel`, cancellation)).json(),
+    );
+    expect(cancelled.refundableCents).toBe(10000);
+    expect(cancelled.allocations[0]).toMatchObject({
+      id: allocation.id,
+      cancellationReason: cancellation.reason,
+    });
+    expect(
+      (await post(`${path}/credit-allocations/${allocation.id}/cancel`, cancellation)).status,
+    ).toBe(200);
+    expect(
+      (
+        await post(`${path}/credit-allocations/${allocation.id}/cancel`, {
+          reason: 'Changed',
+        })
+      ).status,
+    ).toBe(409);
+    expect(() =>
+      sqlite
+        .prepare('update invoice_credit_allocations set cancellation_reason = ?')
+        .run('Changed'),
+    ).toThrow('database.trigger.invoice_credit_allocations_immutable_update');
+    expect(
+      sqlite
+        .prepare(
+          "select count(*) from audit_events where action = 'invoice.credit-allocation-cancelled'",
+        )
+        .pluck()
+        .get(),
+    ).toBe(1);
     expect(
       Schema.decodeUnknownSync(InvoiceCredits)(await (await get(`${path}/credits`)).json()),
-    ).toEqual(state);
+    ).toEqual(cancelled);
     expect((await post('/api/credit-notes', { ...request, reason: 'Changed' })).status).toBe(409);
     expect((await post('/api/credit-notes', { ...request, requestId: randomUUID() })).status).toBe(
       409,

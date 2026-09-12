@@ -33,7 +33,9 @@ it('preserves existing issuer details and bank transactions when applying the fi
     );
     sqlite.exec(`insert into bank_transactions (id, account, reference, booked_on, amount_cents, description, imported_at, imported_by_user_id)
       values ('01ARZ3NDEKTSV4RRFFQ69G5FAB', 'TEST', 'TEST', '2026-08-31', -10000, 'Test', '2026-09-01T00:00:00.000Z', '01ARZ3NDEKTSV4RRFFQ69G5FAA')`);
-    const bank = sqlite.prepare('select * from bank_transactions').get();
+    const bank = Schema.decodeUnknownSync(Schema.Record(Schema.String, Schema.Unknown))(
+      sqlite.prepare('select * from bank_transactions').get(),
+    );
     const issuer = Schema.decodeUnknownSync(Schema.Record(Schema.String, Schema.Unknown))(
       sqlite.prepare('select * from issuer_settings').get(),
     );
@@ -42,7 +44,7 @@ it('preserves existing issuer details and bank transactions when applying the fi
     }
     expect(sqlite.prepare('select * from issuer_settings').get()).toMatchObject(issuer);
     expect(sqlite.prepare('select version from issuer_settings').pluck().get()).toBe(1);
-    expect(sqlite.prepare('select * from bank_transactions').get()).toEqual(bank);
+    expect(sqlite.prepare('select * from bank_transactions').get()).toMatchObject(bank);
     expect(() => sqlite.exec('update issuer_settings set version = 0')).toThrow(
       'issuer_settings_version_check',
     );

@@ -38,6 +38,7 @@ describe('supplier invoice HTTP lifecycle', () => {
       phone: '',
       registrationNumber: '',
       vatNumber: '',
+      taxTreatment: 'france',
       defaultCurrency: 'EUR',
       paymentTermsDays: 30,
       iban: 'FR1420041010050500013M02606',
@@ -109,6 +110,26 @@ describe('supplier invoice HTTP lifecycle', () => {
       functionalTotalCents: 12_501,
     });
     expect(confirmed.confirmedAt).not.toBeNull();
+    const sqlite = new Sqlite(server.databaseFilename);
+    try {
+      expect(() =>
+        sqlite
+          .prepare('update supplier_invoices set total_cents = total_cents + 1 where id = ?')
+          .run(confirmed.id),
+      ).toThrow('database.trigger.supplier_invoices_confirmed_values_immutable');
+      expect(() =>
+        sqlite
+          .prepare(
+            'update supplier_invoice_lines set vat_total_cents = vat_total_cents + 1 where invoice_id = ?',
+          )
+          .run(confirmed.id),
+      ).toThrow('database.trigger.supplier_invoice_lines_confirmed_update');
+      expect(() =>
+        sqlite.prepare('delete from supplier_invoice_lines where invoice_id = ?').run(confirmed.id),
+      ).toThrow('database.trigger.supplier_invoice_lines_confirmed_delete');
+    } finally {
+      sqlite.close();
+    }
 
     const frozenResponse = await write(
       `/api/supplier-invoices/${created.id}`,
@@ -246,6 +267,7 @@ describe('supplier invoice HTTP lifecycle', () => {
         phone: '',
         registrationNumber: '',
         vatNumber: '',
+        taxTreatment: 'france',
         defaultCurrency: 'EUR',
         paymentTermsDays: 30,
         iban: '',
@@ -282,7 +304,7 @@ describe('supplier invoice HTTP lifecycle', () => {
         method: 'PUT',
         headers: server.jsonHeaders,
         body: JSON.stringify({
-          adapter: 'http',
+          adapter: 'openai',
           endpoint: 'https://analysis.example.test/invoices',
           apiKey: 'external-secret',
         }),
@@ -290,7 +312,7 @@ describe('supplier invoice HTTP lifecycle', () => {
     );
     expect(settingsResponse.status).toBe(200);
     await expect(settingsResponse.json()).resolves.toMatchObject({
-      adapter: 'http',
+      adapter: 'openai',
       credentialsPresent: true,
       external: true,
     });

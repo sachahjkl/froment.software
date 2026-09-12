@@ -12,6 +12,7 @@ import { ApiTokens } from '../api-tokens/service.js';
 import { Audit } from '../audit/audit.js';
 import { RequestLimiterLive } from '../server/request-limiter.js';
 import { ApiRequestBodyLive } from '../http/request-body.js';
+import { Company } from '../company/service.js';
 
 const userId = '01ARZ3NDEKTSV4RRFFQ69G5FAA';
 const sessionId = '01ARZ3NDEKTSV4RRFFQ69G5FAB';
@@ -49,6 +50,20 @@ const fixture = () => {
         Layer.mock(Authentication, { authorize }),
         Layer.mock(ApiTokens, { authenticate, authorizePermission: () => Effect.void }),
         Layer.mock(Audit, { insert: () => userId }),
+        Layer.mock(Company, {
+          get: Effect.succeed({
+            jurisdiction: 'FR' as const,
+            functionalCurrency: 'EUR',
+            accountingInitialized: false,
+            fiscalYearStartMonth: 1,
+            fiscalYearStartDay: 1,
+            defaultFiscalYearMonths: 12 as const,
+            enabledModules: ['sales', 'purchasing', 'banking', 'accounting', 'tax', 'ai'] as const,
+            retentionYears: 10,
+            version: 1,
+            updatedAt: 0,
+          }),
+        }),
         RequestLimiterLive,
       ),
     ),

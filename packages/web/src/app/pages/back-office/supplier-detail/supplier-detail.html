@@ -56,6 +56,16 @@
           <dd>{{ current.vatNumber || i18n.t('supplier.notProvided') }}</dd>
         </div>
         <div>
+          <dt>{{ i18n.t('supplier.taxTreatment') }}</dt>
+          <dd>{{ i18n.t(taxTreatmentLabel()) }}</dd>
+        </div>
+        @if (current.viesValidatedAt) {
+        <div>
+          <dt>{{ i18n.t('supplier.viesValidatedAt') }}</dt>
+          <dd>{{ date(current.viesValidatedAt) }}</dd>
+        </div>
+        }
+        <div>
           <dt>{{ i18n.t('supplier.email') }}</dt>
           <dd>{{ current.email || i18n.t('supplier.notProvided') }}</dd>
         </div>

@@ -8,7 +8,7 @@ export const CustomTeamProfile = Schema.String.check(
   Schema.isPattern(/^custom:[0-7][0-9A-HJKMNP-TV-Z]{25}$/),
 );
 export const TeamProfile = Schema.Union([
-  Schema.Literals(['collaborator', 'accountant']),
+  Schema.Literals(['collaborator', 'accountant', 'accounting-validator', 'accounting-reader']),
   CustomTeamProfile,
 ]);
 export const TeamProfilePermissions = {
@@ -37,6 +37,35 @@ export const TeamProfilePermissions = {
     'supplier-invoice.approve',
     'supplier-invoice.analyze',
     'supplier-invoice.pay',
+    'accounting.read',
+    'accounting.write',
+    'accounting.validate',
+    'accounting.close',
+    'accounting.export',
+    'accounting.evidence',
+  ],
+  'accounting-validator': [
+    'company.read',
+    'supplier.read',
+    'supplier-invoice.read',
+    'invoice.read',
+    'bank.read',
+    'document.download',
+    'accounting.read',
+    'accounting.write',
+    'accounting.validate',
+    'accounting.export',
+    'accounting.evidence',
+  ],
+  'accounting-reader': [
+    'company.read',
+    'supplier.read',
+    'supplier-invoice.read',
+    'invoice.read',
+    'bank.read',
+    'document.download',
+    'accounting.read',
+    'accounting.export',
   ],
   collaborator: [
     'client.read',

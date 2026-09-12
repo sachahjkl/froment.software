@@ -1,0 +1,66 @@
+<section class="detail-page form-page" aria-labelledby="credit-allocation-title">
+  <app-invoice-task-header
+    headingId="credit-allocation-title"
+    [heading]="i18n.t('credit.allocate')"
+  />
+  @if (error()) {
+  <p appNotice variant="danger" role="alert">{{ i18n.t('invoice.credit_conflict') }}</p>
+  }
+  <form class="ds-panel form-panel" (submit)="save($event)">
+    <p>{{ i18n.t('credit.refundable') }} {{ task.money(balance()) }}</p>
+    <label class="field" for="credit-allocation-target"
+      >{{ i18n.t('credit.targetInvoice') }}
+      <select
+        id="credit-allocation-target"
+        required
+        [ngModel]="targetInvoiceId()"
+        (ngModelChange)="targetInvoiceId.set($event)"
+        name="targetInvoiceId"
+      >
+        <option value=""></option>
+        @for (invoice of targets(); track invoice.id) {
+        <option [value]="invoice.id">
+          {{ invoice.invoiceNumber }} — {{ task.money(invoice.totalCents - invoice.recordedPaidCents
+          - invoice.creditedCents) }}
+        </option>
+        }
+      </select>
+    </label>
+    <label class="field" for="credit-allocation-amount"
+      >{{ i18n.t('credit.amount') }}
+      <input
+        id="credit-allocation-amount"
+        required
+        inputmode="decimal"
+        [ngModel]="amount()"
+        (ngModelChange)="amount.set($event)"
+        name="amount"
+      />
+    </label>
+    <label class="field" for="credit-allocation-date"
+      >{{ i18n.t('credit.allocatedOn') }}
+      <input
+        id="credit-allocation-date"
+        required
+        type="date"
+        [ngModel]="allocatedOn()"
+        (ngModelChange)="allocatedOn.set($event)"
+        name="allocatedOn"
+      />
+    </label>
+    <label class="field" for="credit-allocation-reference"
+      >{{ i18n.t('credit.reference') }}
+      <input
+        id="credit-allocation-reference"
+        required
+        maxlength="160"
+        [ngModel]="reference()"
+        (ngModelChange)="reference.set($event)"
+        name="reference"
+      />
+    </label>
+    <button appButton variant="primary" type="submit" [disabled]="busy() || balance() <= 0">
+      {{ i18n.t('credit.allocate') }}
+    </button>
+  </form>
+</section>

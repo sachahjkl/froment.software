@@ -113,6 +113,24 @@ N’ajoutez jamais un secret applicatif dans cette ressource publique.
 
 L’API valide `PASETO_SECRET_KEY` comme une paire Ed25519 complète au démarrage.
 
+`SETTINGS_ENCRYPTION_KEY` chiffre les clés configurées depuis le backoffice.
+
+`DEMO_PASSWORD` est obligatoire sur staging. Il protège la réinitialisation des données de démonstration.
+
+## Données de démonstration staging
+
+Utilisez l’action de réinitialisation depuis l’espace Comptabilité.
+
+Saisissez `DEMO_PASSWORD`, puis confirmez la suppression des données staging.
+
+La commande refuse les environnements autres que staging.
+
+La commande recrée les cinq profils standards et des données déterministes.
+
+Les comptes utilisent les adresses `@demo.invalid`. Le secret reste dans SOPS et Nomad Variables.
+
+Le simulateur local traite l’analyse fournisseur et la télédéclaration sans service facturé.
+
 ## Données persistantes
 
 Chaque environnement possède un volume Nomad distinct.

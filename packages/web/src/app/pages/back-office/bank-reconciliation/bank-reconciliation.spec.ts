@@ -68,6 +68,7 @@ describe('Bank reconciliation task', () => {
               invoiceNumber: 'FA-2026-000001',
               amountCents: 5000,
               feeCents: 0,
+              exchangeDifferenceFunctionalCents: 0,
               paymentCancelled: false,
             },
           ],
@@ -159,6 +160,7 @@ describe('Bank reconciliation task', () => {
       invoiceNumber: 'FA-2026-000001',
       amountCents: 5000,
       feeCents: 100,
+      exchangeDifferenceFunctionalCents: 0,
       paymentCancelled: true,
     };
     api.get.mockResolvedValue({
@@ -197,6 +199,7 @@ describe('Bank reconciliation task', () => {
         invoiceNumber: 'FA-2026-000001',
         amountCents: 2000,
         feeCents: 100,
+        exchangeDifferenceFunctionalCents: 0,
         paymentCancelled: false,
       };
       const second = {
@@ -370,6 +373,7 @@ describe('Bank reconciliation task', () => {
           reference: 'STALE',
           amountCents: 1000,
           availableCents: 1000,
+          currency: 'EUR',
           paidOn: '2026-09-01',
         },
       ],
@@ -390,6 +394,7 @@ describe('Bank reconciliation task', () => {
       invoiceNumber: 'FA-2',
       amountCents: 900,
       feeCents: 0,
+      exchangeDifferenceFunctionalCents: 0,
       paymentCancelled: false,
     };
     api.get.mockResolvedValue({

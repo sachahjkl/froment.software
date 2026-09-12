@@ -122,6 +122,20 @@ export const billingRoutes: Routes = [
     },
   },
   {
+    path: 'backoffice/invoices/:invoiceId/credit-allocations/new',
+    loadComponent: () =>
+      import('../credit-allocation-editor/credit-allocation-editor').then(
+        (module) => module.CreditAllocationEditor,
+      ),
+    canActivate: [administratorGuard],
+    canDeactivate: [unsavedChangesGuard],
+    data: {
+      ...permissionData('invoice.read', 'invoice.refund'),
+      titleKey: 'credit.allocate',
+      robots: 'noindex, nofollow',
+    },
+  },
+  {
     path: 'backoffice/invoices/:invoiceId/refunds/new',
     loadComponent: () => import('../refund-editor/refund-editor').then((m) => m.RefundEditor),
     canActivate: [administratorGuard],
@@ -140,6 +154,17 @@ export const billingRoutes: Routes = [
     data: {
       ...permissionData('invoice.read', 'invoice.refund'),
       titleKey: 'credit.cancelRefund',
+      robots: 'noindex, nofollow',
+    },
+  },
+  {
+    path: 'backoffice/invoices/:invoiceId/credit-allocations/:allocationId/cancel',
+    loadComponent: () => import('../refund-cancel/refund-cancel').then((m) => m.RefundCancel),
+    canActivate: [administratorGuard],
+    canDeactivate: [unsavedChangesGuard],
+    data: {
+      ...permissionData('invoice.read', 'invoice.refund'),
+      titleKey: 'credit.cancelAllocation',
       robots: 'noindex, nofollow',
     },
   },

@@ -84,7 +84,7 @@ export const teamMembers = sqliteTable(
   (table) => [
     check(
       'team_member_profile_check',
-      sql`${table.profile} in ('collaborator', 'accountant') or (length(${table.profile}) = 33 and substr(${table.profile}, 1, 7) = 'custom:' and substr(${table.profile}, 8, 1) between '0' and '7' and substr(${table.profile}, 8) not glob '*[^0-9A-HJKMNP-TV-Z]*')`,
+      sql`${table.profile} in ('collaborator', 'accountant', 'accounting-validator', 'accounting-reader') or (length(${table.profile}) = 33 and substr(${table.profile}, 1, 7) = 'custom:' and substr(${table.profile}, 8, 1) between '0' and '7' and substr(${table.profile}, 8) not glob '*[^0-9A-HJKMNP-TV-Z]*')`,
     ),
     check('team_member_version_check', sql`${table.version} > 0`),
   ],
@@ -109,7 +109,7 @@ export const teamInvitations = sqliteTable(
   (table) => [
     check(
       'team_invitation_profile_check',
-      sql`${table.profile} in ('collaborator', 'accountant') or (length(${table.profile}) = 33 and substr(${table.profile}, 1, 7) = 'custom:' and substr(${table.profile}, 8, 1) between '0' and '7' and substr(${table.profile}, 8) not glob '*[^0-9A-HJKMNP-TV-Z]*')`,
+      sql`${table.profile} in ('collaborator', 'accountant', 'accounting-validator', 'accounting-reader') or (length(${table.profile}) = 33 and substr(${table.profile}, 1, 7) = 'custom:' and substr(${table.profile}, 8, 1) between '0' and '7' and substr(${table.profile}, 8) not glob '*[^0-9A-HJKMNP-TV-Z]*')`,
     ),
     index('team_invitation_email_index').on(table.email),
   ],
@@ -250,6 +250,8 @@ export const suppliers = sqliteTable(
     phone: text().notNull().default(''),
     registrationNumber: text('registration_number').notNull().default(''),
     vatNumber: text('vat_number').notNull().default(''),
+    taxTreatment: text('tax_treatment').notNull().default('france'),
+    viesValidatedAt: integer('vies_validated_at', { mode: 'timestamp_ms' }),
     defaultCurrency: text('default_currency').notNull(),
     paymentTermsDays: integer('payment_terms_days').notNull().default(30),
     iban: text().notNull().default(''),
@@ -272,6 +274,10 @@ export const suppliers = sqliteTable(
       sql`length(${table.addressLine1}) <= 160 and length(${table.addressLine2}) <= 160 and length(${table.postalCode}) <= 32 and length(${table.city}) <= 120 and length(${table.country}) <= 120 and length(${table.email}) <= 254 and length(${table.phone}) <= 64 and length(${table.registrationNumber}) <= 64 and length(${table.vatNumber}) <= 64 and length(${table.iban}) <= 34 and length(${table.bic}) <= 11`,
     ),
     check('suppliers_currency_check', sql`${table.defaultCurrency} glob '[A-Z][A-Z][A-Z]'`),
+    check(
+      'suppliers_tax_treatment_check',
+      sql`${table.taxTreatment} in ('france','eu-reverse-charge','non-eu-import','foreign-local-tax')`,
+    ),
     check('suppliers_payment_terms_check', sql`${table.paymentTermsDays} between 0 and 365`),
     check('suppliers_archived_check', sql`${table.archived} in (0, 1)`),
     check('suppliers_timestamps_check', sql`${table.updatedAt} >= ${table.createdAt}`),
@@ -310,6 +316,11 @@ export const supplierInvoices = sqliteTable(
     supplierId: text('supplier_id')
       .notNull()
       .references(() => suppliers.id, { onDelete: 'no action' }),
+    documentKind: text('document_kind', { enum: ['invoice', 'credit'] })
+      .notNull()
+      .default('invoice'),
+    sourceInvoiceId: text('source_invoice_id'),
+    taxTreatment: text('tax_treatment').notNull().default('france'),
     reference: text().notNull(),
     invoiceDate: text('invoice_date').notNull(),
     dueDate: text('due_date').notNull(),
@@ -355,15 +366,19 @@ export const supplierInvoices = sqliteTable(
     check('supplier_invoices_currency_check', sql`${table.currency} glob '[A-Z][A-Z][A-Z]'`),
     check(
       'supplier_invoices_totals_check',
-      sql`${table.netTotalCents} >= 0 and ${table.vatTotalCents} >= 0 and ${table.totalCents} = ${table.netTotalCents} + ${table.vatTotalCents}`,
+      sql`${table.netTotalCents} >= 0 and ${table.vatTotalCents} >= 0 and ((${table.taxTreatment} in ('eu-reverse-charge', 'non-eu-import') and ${table.totalCents} = ${table.netTotalCents}) or (${table.taxTreatment} in ('france', 'foreign-local-tax') and ${table.totalCents} = ${table.netTotalCents} + ${table.vatTotalCents}))`,
     ),
     check(
       'supplier_invoices_functional_values_check',
-      sql`(${table.functionalCurrency} is null and ${table.exchangeRateDate} is null and ${table.foreignUnitsPerFunctionalUnitNanos} is null and ${table.functionalNetTotalCents} is null and ${table.functionalVatTotalCents} is null and ${table.functionalTotalCents} is null) or (${table.functionalCurrency} glob '[A-Z][A-Z][A-Z]' and strftime('%Y-%m-%d', ${table.exchangeRateDate}, '+0 days') = ${table.exchangeRateDate} and ${table.foreignUnitsPerFunctionalUnitNanos} between 1 and 9007199254740991 and ${table.functionalNetTotalCents} between 0 and 9007199254740991 and ${table.functionalVatTotalCents} between 0 and 9007199254740991 and ${table.functionalTotalCents} = ${table.functionalNetTotalCents} + ${table.functionalVatTotalCents})`,
+      sql`(${table.functionalCurrency} is null and ${table.exchangeRateDate} is null and ${table.foreignUnitsPerFunctionalUnitNanos} is null and ${table.functionalNetTotalCents} is null and ${table.functionalVatTotalCents} is null and ${table.functionalTotalCents} is null) or (${table.functionalCurrency} glob '[A-Z][A-Z][A-Z]' and strftime('%Y-%m-%d', ${table.exchangeRateDate}, '+0 days') = ${table.exchangeRateDate} and ${table.foreignUnitsPerFunctionalUnitNanos} between 1 and 9007199254740991 and ${table.functionalNetTotalCents} between 0 and 9007199254740991 and ${table.functionalVatTotalCents} between 0 and 9007199254740991 and ((${table.taxTreatment} in ('eu-reverse-charge', 'non-eu-import') and ${table.functionalTotalCents} = ${table.functionalNetTotalCents}) or (${table.taxTreatment} in ('france', 'foreign-local-tax') and ${table.functionalTotalCents} = ${table.functionalNetTotalCents} + ${table.functionalVatTotalCents})))`,
     ),
     check(
       'supplier_invoices_status_check',
       sql`${table.status} in ('draft', 'confirmed', 'approved', 'paid', 'cancelled')`,
+    ),
+    check(
+      'supplier_invoices_document_kind_check',
+      sql`${table.documentKind} in ('invoice','credit') and ((${table.documentKind} = 'invoice' and ${table.sourceInvoiceId} is null) or (${table.documentKind} = 'credit' and ${table.sourceInvoiceId} is not null))`,
     ),
     check('supplier_invoices_source_check', sql`${table.source} in ('manual', 'ocr')`),
     check('supplier_invoices_version_check', sql`${table.version} > 0`),
@@ -403,9 +418,31 @@ export const supplierInvoiceLines = sqliteTable(
     ),
     check(
       'supplier_invoice_lines_amounts_check',
-      sql`${table.netTotalCents} >= 0 and ${table.vatRateBasisPoints} between 0 and 10000 and ${table.vatTotalCents} >= 0 and ${table.totalCents} = ${table.netTotalCents} + ${table.vatTotalCents}`,
+      sql`${table.netTotalCents} >= 0 and ${table.vatRateBasisPoints} between 0 and 10000 and ${table.vatTotalCents} >= 0 and ${table.totalCents} in (${table.netTotalCents}, ${table.netTotalCents} + ${table.vatTotalCents})`,
     ),
     uniqueIndex('supplier_invoice_lines_position_unique').on(table.invoiceId, table.position),
+  ],
+);
+export const supplierInvoiceEvidence = sqliteTable(
+  'supplier_invoice_evidence',
+  {
+    id: text().notNull().primaryKey(),
+    invoiceId: text('invoice_id')
+      .notNull()
+      .references(() => supplierInvoices.id),
+    fileName: text('file_name').notNull(),
+    mediaType: text('media_type').notNull(),
+    size: integer().notNull(),
+    sha256: text().notNull(),
+    content: blob({ mode: 'buffer' }).notNull(),
+    createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull(),
+    createdByUserId: text('created_by_user_id')
+      .notNull()
+      .references(() => users.id),
+  },
+  (table) => [
+    uniqueIndex('supplier_invoice_evidence_sha_unique').on(table.invoiceId, table.sha256),
+    check('supplier_invoice_evidence_size_check', sql`${table.size} > 0`),
   ],
 );
 
@@ -477,7 +514,7 @@ export const supplierInvoiceAnalysisSettings = sqliteTable(
     check('supplier_invoice_analysis_settings_singleton_check', sql`${table.id} = 1`),
     check(
       'supplier_invoice_analysis_settings_adapter_check',
-      sql`${table.adapter} in ('local', 'http')`,
+      sql`${table.adapter} in ('local', 'openai')`,
     ),
     check(
       'supplier_invoice_analysis_settings_encryption_check',
@@ -638,6 +675,211 @@ export const exchangeRates = sqliteTable(
     ),
     check('exchange_rate_value_check', sql`${table.foreignUnitsPerFunctionalUnitNanos} > 0`),
     check('exchange_rate_source_check', sql`${table.source} in ('ecb', 'manual')`),
+  ],
+);
+
+export const accountingAccounts = sqliteTable(
+  'accounting_accounts',
+  {
+    id: text().notNull().primaryKey(),
+    code: text().notNull().unique(),
+    label: text().notNull(),
+    kind: text().notNull(),
+    system: integer({ mode: 'boolean' }).notNull().default(false),
+    archived: integer({ mode: 'boolean' }).notNull().default(false),
+    version: integer().notNull().default(1),
+    createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull(),
+    updatedAt: integer('updated_at', { mode: 'timestamp_ms' }).notNull(),
+  },
+  (table) => [
+    check(
+      'accounting_accounts_code_check',
+      sql`${table.code} glob '[0-9][0-9]*' and length(${table.code}) between 2 and 20`,
+    ),
+    check(
+      'accounting_accounts_kind_check',
+      sql`${table.kind} in ('asset','liability','equity','income','expense')`,
+    ),
+    check('accounting_accounts_label_check', sql`length(trim(${table.label})) between 1 and 160`),
+  ],
+);
+export const accountingJournals = sqliteTable(
+  'accounting_journals',
+  {
+    id: text().notNull().primaryKey(),
+    code: text().notNull().unique(),
+    label: text().notNull(),
+    kind: text().notNull(),
+    archived: integer({ mode: 'boolean' }).notNull().default(false),
+    version: integer().notNull().default(1),
+    createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull(),
+    updatedAt: integer('updated_at', { mode: 'timestamp_ms' }).notNull(),
+  },
+  (table) => [
+    check(
+      'accounting_journals_kind_check',
+      sql`${table.kind} in ('sales','purchases','bank','general','opening')`,
+    ),
+  ],
+);
+export const accountingPeriods = sqliteTable(
+  'accounting_periods',
+  {
+    id: text().notNull().primaryKey(),
+    label: text().notNull(),
+    startsOn: text('starts_on').notNull(),
+    endsOn: text('ends_on').notNull(),
+    status: text().notNull().default('open'),
+    finalClosed: integer('final_closed', { mode: 'boolean' }).notNull().default(false),
+    version: integer().notNull().default(1),
+    createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull(),
+    updatedAt: integer('updated_at', { mode: 'timestamp_ms' }).notNull(),
+  },
+  (table) => [
+    check('accounting_periods_dates_check', sql`${table.endsOn} >= ${table.startsOn}`),
+    check('accounting_periods_status_check', sql`${table.status} in ('open','locked','closed')`),
+  ],
+);
+export const accountingEntries = sqliteTable(
+  'accounting_entries',
+  {
+    id: text().notNull().primaryKey(),
+    requestId: text('request_id').notNull().unique(),
+    journalId: text('journal_id')
+      .notNull()
+      .references(() => accountingJournals.id),
+    periodId: text('period_id')
+      .notNull()
+      .references(() => accountingPeriods.id),
+    entryDate: text('entry_date').notNull(),
+    reference: text().notNull(),
+    description: text().notNull(),
+    currency: text().notNull(),
+    status: text().notNull().default('draft'),
+    reversalOfEntryId: text('reversal_of_entry_id'),
+    sourceType: text('source_type'),
+    sourceId: text('source_id'),
+    version: integer().notNull().default(1),
+    createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull(),
+    createdByUserId: text('created_by_user_id')
+      .notNull()
+      .references(() => users.id),
+    postedAt: integer('posted_at', { mode: 'timestamp_ms' }),
+    postedByUserId: text('posted_by_user_id').references(() => users.id),
+  },
+  (table) => [
+    check('accounting_entries_status_check', sql`${table.status} in ('draft','posted','reversed')`),
+    index('accounting_entries_date_index').on(table.entryDate),
+    uniqueIndex('accounting_entries_source_unique').on(table.sourceType, table.sourceId),
+  ],
+);
+export const accountingEntryLines = sqliteTable(
+  'accounting_entry_lines',
+  {
+    id: text().notNull().primaryKey(),
+    entryId: text('entry_id')
+      .notNull()
+      .references(() => accountingEntries.id, { onDelete: 'cascade' }),
+    position: integer().notNull(),
+    accountId: text('account_id')
+      .notNull()
+      .references(() => accountingAccounts.id),
+    label: text().notNull(),
+    debitCents: integer('debit_cents').notNull(),
+    creditCents: integer('credit_cents').notNull(),
+  },
+  (table) => [
+    check(
+      'accounting_lines_amount_check',
+      sql`${table.debitCents} >= 0 and ${table.creditCents} >= 0 and (${table.debitCents} = 0 or ${table.creditCents} = 0)`,
+    ),
+    uniqueIndex('accounting_lines_position_unique').on(table.entryId, table.position),
+  ],
+);
+export const accountingLettering = sqliteTable('accounting_lettering', {
+  id: text().notNull().primaryKey(),
+  requestId: text('request_id').notNull().unique(),
+  code: text().notNull().unique(),
+  accountId: text('account_id')
+    .notNull()
+    .references(() => accountingAccounts.id),
+  createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull(),
+  createdByUserId: text('created_by_user_id')
+    .notNull()
+    .references(() => users.id),
+});
+export const accountingLetteringLines = sqliteTable(
+  'accounting_lettering_lines',
+  {
+    letteringId: text('lettering_id')
+      .notNull()
+      .references(() => accountingLettering.id),
+    lineId: text('line_id')
+      .notNull()
+      .unique()
+      .references(() => accountingEntryLines.id),
+  },
+  (table) => [primaryKey({ columns: [table.letteringId, table.lineId] })],
+);
+export const accountingEvidence = sqliteTable(
+  'accounting_evidence',
+  {
+    id: text().notNull().primaryKey(),
+    entryId: text('entry_id')
+      .notNull()
+      .references(() => accountingEntries.id),
+    fileName: text('file_name').notNull(),
+    mediaType: text('media_type').notNull(),
+    size: integer().notNull(),
+    sha256: text().notNull(),
+    content: blob().notNull(),
+    createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull(),
+    createdByUserId: text('created_by_user_id')
+      .notNull()
+      .references(() => users.id),
+  },
+  (table) => [uniqueIndex('accounting_evidence_sha_unique').on(table.entryId, table.sha256)],
+);
+export const accountingTaxFilingSettings = sqliteTable(
+  'accounting_tax_filing_settings',
+  {
+    id: integer().notNull().primaryKey(),
+    adapter: text().notNull().default('local'),
+    endpoint: text(),
+    encryptedApiKey: text('encrypted_api_key'),
+    encryptionIv: text('encryption_iv'),
+    encryptionTag: text('encryption_tag'),
+    updatedAt: integer('updated_at', { mode: 'timestamp_ms' }),
+  },
+  (table) => [
+    check('accounting_tax_filing_settings_singleton_check', sql`${table.id} = 1`),
+    check(
+      'accounting_tax_filing_settings_adapter_check',
+      sql`${table.adapter} in ('local','http')`,
+    ),
+    check(
+      'accounting_tax_filing_settings_encryption_check',
+      sql`(${table.encryptedApiKey} is null and ${table.encryptionIv} is null and ${table.encryptionTag} is null) or (${table.encryptedApiKey} is not null and ${table.encryptionIv} is not null and ${table.encryptionTag} is not null)`,
+    ),
+  ],
+);
+export const accountingTaxFilings = sqliteTable(
+  'accounting_tax_filings',
+  {
+    id: text().notNull().primaryKey(),
+    requestId: text('request_id').notNull().unique(),
+    adapter: text().notNull(),
+    startsOn: text('starts_on').notNull(),
+    endsOn: text('ends_on').notNull(),
+    payloadSha256: text('payload_sha256').notNull(),
+    providerReceipt: text('provider_receipt').notNull(),
+    submittedAt: integer('submitted_at', { mode: 'timestamp_ms' }).notNull(),
+    submittedByUserId: text('submitted_by_user_id')
+      .notNull()
+      .references(() => users.id),
+  },
+  (table) => [
+    check('accounting_tax_filings_adapter_check', sql`${table.adapter} in ('local','http')`),
   ],
 );
 
@@ -1540,6 +1782,42 @@ export const invoiceRefunds = sqliteTable(
     check('invoice_refund_amount_check', sql`${table.amountCents} between 1 and 9007199254740991`),
   ],
 );
+export const invoiceCreditAllocations = sqliteTable(
+  'invoice_credit_allocations',
+  {
+    id: text().notNull().primaryKey(),
+    requestId: text('request_id').notNull().unique(),
+    sourceInvoiceId: text('source_invoice_id')
+      .notNull()
+      .references(() => invoices.id),
+    targetInvoiceId: text('target_invoice_id')
+      .notNull()
+      .references(() => invoices.id),
+    amountCents: integer('amount_cents').notNull(),
+    allocatedOn: text('allocated_on').notNull(),
+    reference: text().notNull(),
+    recordedAt: text('recorded_at').notNull(),
+    recordedByUserId: text('recorded_by_user_id')
+      .notNull()
+      .references(() => users.id),
+    cancelledAt: text('cancelled_at'),
+    cancelledByUserId: text('cancelled_by_user_id').references(() => users.id),
+    cancellationReason: text('cancellation_reason'),
+  },
+  (table) => [
+    check('invoice_credit_allocations_amount_check', sql`${table.amountCents} > 0`),
+    check(
+      'invoice_credit_allocations_distinct_invoices_check',
+      sql`${table.sourceInvoiceId} <> ${table.targetInvoiceId}`,
+    ),
+    check(
+      'invoice_credit_allocations_cancellation_check',
+      sql`(${table.cancelledAt} is null and ${table.cancelledByUserId} is null and ${table.cancellationReason} is null) or (${table.cancelledAt} is not null and ${table.cancelledByUserId} is not null and ${table.cancellationReason} is not null and length(trim(${table.cancellationReason})) between 1 and 500)`,
+    ),
+    index('invoice_credit_allocations_source_index').on(table.sourceInvoiceId),
+    index('invoice_credit_allocations_target_index').on(table.targetInvoiceId),
+  ],
+);
 
 export const invoiceRevisions = sqliteTable(
   'invoice_revisions',
@@ -1867,6 +2145,13 @@ export const bankTransactions = sqliteTable(
     reference: text().notNull(),
     bookedOn: text('booked_on').notNull(),
     amountCents: integer('amount_cents').notNull(),
+    currency: text().notNull().default('EUR'),
+    functionalCurrency: text('functional_currency').notNull().default('EUR'),
+    exchangeRateDate: text('exchange_rate_date').notNull().default('1970-01-01'),
+    foreignUnitsPerFunctionalUnitNanos: integer('foreign_units_per_functional_unit_nanos')
+      .notNull()
+      .default(1_000_000_000),
+    functionalAmountCents: integer('functional_amount_cents').notNull().default(0),
     description: text().notNull(),
     importedAt: text('imported_at').notNull(),
     importedByUserId: text('imported_by_user_id')
@@ -1883,6 +2168,9 @@ export const bankMatches = sqliteTable(
     requestId: text('request_id').notNull().unique(),
     amountCents: integer('amount_cents').notNull(),
     feeCents: integer('fee_cents').notNull().default(0),
+    exchangeDifferenceFunctionalCents: integer('exchange_difference_functional_cents')
+      .notNull()
+      .default(0),
     transactionId: text('transaction_id')
       .notNull()
       .references(() => bankTransactions.id),
@@ -1910,6 +2198,31 @@ export const bankMatches = sqliteTable(
       sql`${table.feeCents} >= 0 and ${table.feeCents} < ${table.amountCents}`,
     ),
   ],
+);
+export const supplierBankMatches = sqliteTable(
+  'supplier_bank_matches',
+  {
+    id: text().notNull().primaryKey(),
+    requestId: text('request_id').notNull().unique(),
+    transactionId: text('transaction_id')
+      .notNull()
+      .references(() => bankTransactions.id),
+    batchId: text('batch_id')
+      .notNull()
+      .references(() => supplierPaymentBatches.id),
+    invoiceId: text('invoice_id')
+      .notNull()
+      .references(() => supplierInvoices.id),
+    amountCents: integer('amount_cents').notNull(),
+    matchedAt: text('matched_at').notNull(),
+    matchedByUserId: text('matched_by_user_id')
+      .notNull()
+      .references(() => users.id),
+    cancelledAt: text('cancelled_at'),
+    cancelledByUserId: text('cancelled_by_user_id').references(() => users.id),
+    cancellationReason: text('cancellation_reason'),
+  },
+  (table) => [check('supplier_bank_matches_amount_check', sql`${table.amountCents} > 0`)],
 );
 
 export const bankLedgerEntries = sqliteTable(

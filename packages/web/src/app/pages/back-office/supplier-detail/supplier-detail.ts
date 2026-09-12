@@ -2,6 +2,7 @@ import {
   afterNextRender,
   ChangeDetectionStrategy,
   Component,
+  computed,
   DestroyRef,
   inject,
   signal,
@@ -38,6 +39,13 @@ export class SupplierDetail {
   protected readonly supplier = signal<SupplierSummaryValue | undefined>(undefined);
   protected readonly error = signal<TranslationKey | undefined>(undefined);
   protected readonly changing = signal(false);
+  protected readonly taxTreatmentLabel = computed<TranslationKey>(() => {
+    const treatment = this.supplier()?.taxTreatment;
+    if (treatment === 'eu-reverse-charge') return 'supplier.taxTreatment.eu';
+    if (treatment === 'non-eu-import') return 'supplier.taxTreatment.import';
+    if (treatment === 'foreign-local-tax') return 'supplier.taxTreatment.local';
+    return 'supplier.taxTreatment.france';
+  });
   private loadGeneration = 0;
 
   constructor() {
@@ -62,6 +70,13 @@ export class SupplierDetail {
 
   protected archiveLabel() {
     return this.i18n.t(this.supplier()?.archived ? 'supplier.reactivate' : 'supplier.archive');
+  }
+
+  protected date(value: number): string {
+    return new Intl.DateTimeFormat(this.i18n.language(), {
+      dateStyle: 'medium',
+      timeStyle: 'short',
+    }).format(value);
   }
 
   protected async load(): Promise<void> {

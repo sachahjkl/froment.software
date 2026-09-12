@@ -11,6 +11,7 @@ const administrator = {
   email: 'admin@example.test',
   mode: 'administrator',
   permissions: ['client.read', 'client.create'],
+  enabledModules: ['sales', 'purchasing', 'banking', 'accounting', 'tax', 'ai', 'demonstration'],
 };
 const accountant = {
   ...administrator,

@@ -156,6 +156,7 @@ export const creditFixture = (): typeof InvoiceCredits.Type => ({
     },
   ],
   refunds: [],
+  allocations: [],
   refundableCents: 400,
 });
 export const inputValue = (
@@ -203,7 +204,12 @@ export async function setupInvoicePage<T>(
   const credits = {
     get: vi.fn<InvoiceCreditsApi['get']>().mockResolvedValue({
       success: true,
-      result: options.credits ?? { creditNotes: [], refunds: [], refundableCents: 0 },
+      result: options.credits ?? {
+        creditNotes: [],
+        refunds: [],
+        allocations: [],
+        refundableCents: 0,
+      },
     }),
     create: vi.fn<InvoiceCreditsApi['create']>(),
     update: vi.fn<InvoiceCreditsApi['update']>(),

@@ -52,7 +52,12 @@ export const findCurrencyConversion = (
 export const convertToFunctionalCents = (foreignCents: number, rateNanos: number): number => {
   const numerator = BigInt(foreignCents) * BigInt(ExchangeRateScale);
   const divisor = BigInt(rateNanos);
-  const rounded = (numerator + divisor / 2n) / divisor;
+  let rounded: bigint;
+  if (numerator < 0n) {
+    rounded = (numerator - divisor / 2n) / divisor;
+  } else {
+    rounded = (numerator + divisor / 2n) / divisor;
+  }
   const result = Number(rounded);
   if (!Number.isSafeInteger(result)) throw new RangeError('invoice.functional_amount_too_large');
   return result;

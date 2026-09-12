@@ -2,6 +2,7 @@ import { Schema } from 'effect';
 
 import { FunctionalCurrency } from '../company/contracts.js';
 import { Ulid } from '../identifiers.js';
+import { SupplierTaxTreatment } from '../suppliers/contracts.js';
 
 export const SupplierInvoiceMaximumAmountCents = 9_000_000_000_000;
 export const SupplierInvoiceMaximumNetAmountCents = 4_000_000_000_000;
@@ -49,6 +50,8 @@ export const SupplierInvoiceStatus = Schema.Literals([
 export type SupplierInvoiceStatus = typeof SupplierInvoiceStatus.Type;
 export const SupplierInvoiceSource = Schema.Literals(['manual', 'ocr']);
 export type SupplierInvoiceSource = typeof SupplierInvoiceSource.Type;
+export const SupplierDocumentKind = Schema.Literals(['invoice', 'credit']);
+export type SupplierDocumentKind = typeof SupplierDocumentKind.Type;
 
 export const SupplierInvoiceLineInput = Schema.Struct({
   description: Schema.String.check(
@@ -103,6 +106,11 @@ export const SupplierInvoiceCreateRequest = Schema.Struct({
   .check(validDateOrder)
   .annotate({ identifier: 'SupplierInvoiceCreateRequest' });
 export type SupplierInvoiceCreateRequest = typeof SupplierInvoiceCreateRequest.Type;
+export const SupplierCreditCreateRequest = Schema.Struct({
+  requestId: Schema.String.check(Schema.isUUID(4)),
+  sourceInvoiceId: Ulid,
+});
+export type SupplierCreditCreateRequest = typeof SupplierCreditCreateRequest.Type;
 
 export const SupplierInvoiceUpdateRequest = Schema.Struct({
   ...fields,
@@ -116,6 +124,9 @@ export const SupplierInvoice = Schema.Struct({
   id: Ulid,
   supplierId: Ulid,
   supplierName: Schema.String,
+  taxTreatment: SupplierTaxTreatment,
+  documentKind: SupplierDocumentKind,
+  sourceInvoiceId: Schema.NullOr(Ulid),
   reference: fields.reference,
   invoiceDate: CalendarDate,
   dueDate: CalendarDate,
@@ -179,7 +190,7 @@ export const SupplierPaymentBatchList = Schema.Array(SupplierPaymentBatch).check
   Schema.isMaxLength(SupplierPaymentBatchListLimit),
 );
 
-export const SupplierInvoiceAnalysisAdapter = Schema.Literals(['local', 'http']);
+export const SupplierInvoiceAnalysisAdapter = Schema.Literals(['local', 'openai']);
 export const SupplierInvoiceAnalysisSettings = Schema.Struct({
   adapter: SupplierInvoiceAnalysisAdapter,
   endpoint: Schema.NullOr(Schema.String),
@@ -216,6 +227,30 @@ export const SupplierInvoiceAnalysisRequest = Schema.Struct({
   ),
   consent: Schema.Boolean,
 });
+export const SupplierInvoiceEvidence = Schema.Struct({
+  id: Ulid,
+  invoiceId: Ulid,
+  fileName: Schema.String.check(
+    Schema.isPattern(/\S/),
+    Schema.isMaxLength(SupplierInvoiceMaximumFileNameLength),
+  ),
+  mediaType: Schema.String.check(Schema.isPattern(/\S/), Schema.isMaxLength(160)),
+  size: Schema.Int.check(Schema.isGreaterThan(0)),
+  sha256: Schema.String.check(Schema.isPattern(/^[a-f0-9]{64}$/)),
+  createdAt: Schema.Int,
+});
+export type SupplierInvoiceEvidence = typeof SupplierInvoiceEvidence.Type;
+export const SupplierInvoiceEvidenceList = Schema.Array(SupplierInvoiceEvidence);
+export const SupplierInvoiceEvidenceCreate = Schema.Struct({
+  invoiceId: Ulid,
+  fileName: SupplierInvoiceEvidence.fields.fileName,
+  mediaType: SupplierInvoiceEvidence.fields.mediaType,
+  contentBase64: Schema.String.check(
+    Schema.isMinLength(Base64QuantumLength),
+    Schema.isPattern(/^[A-Za-z0-9+/]*={0,2}$/),
+  ),
+});
+export type SupplierInvoiceEvidenceCreate = typeof SupplierInvoiceEvidenceCreate.Type;
 
 export class SupplierInvoiceNotFound extends Schema.TaggedError<SupplierInvoiceNotFound>()(
   'SupplierInvoiceNotFound',
@@ -237,6 +272,8 @@ export class SupplierInvoiceConflict extends Schema.TaggedError<SupplierInvoiceC
       'supplier_invoice.not_editable',
       'supplier_invoice.invalid_transition',
       'supplier_invoice.exchange_rate_missing',
+      'supplier_invoice.accounting_unavailable',
+      'supplier_invoice.evidence_invalid',
       'supplier_invoice.supplier_unavailable',
       'supplier_invoice.analysis_not_configured',
       'supplier_invoice.analysis_consent_required',

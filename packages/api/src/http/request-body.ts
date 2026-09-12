@@ -12,12 +12,12 @@ export const ApiRequestBodyLive = Layer.effect(
     return ApiRequestBody.of(
       Effect.fn('ApiRequestBody')(function* (httpEffect, { endpoint }) {
         const bodyKind = Context.get(endpoint.annotations, RequestBodyKind);
-        const maximumRequestBodyBytes =
-          bodyKind === 'bank-import'
-            ? config.maximumBankImportBodyBytes
-            : bodyKind === 'supplier-invoice-analysis'
-              ? config.maximumSupplierInvoiceAnalysisBodyBytes
-              : config.maximumRequestBodyBytes;
+        let maximumRequestBodyBytes = config.maximumRequestBodyBytes;
+        if (bodyKind === 'bank-import') maximumRequestBodyBytes = config.maximumBankImportBodyBytes;
+        if (bodyKind === 'supplier-invoice-analysis')
+          maximumRequestBodyBytes = config.maximumSupplierInvoiceAnalysisBodyBytes;
+        if (bodyKind === 'supplier-invoice-evidence')
+          maximumRequestBodyBytes = config.maximumSupplierInvoiceEvidenceBodyBytes;
         yield* setPrivateResponseHeaders;
         const request = yield* HttpServerRequest.HttpServerRequest;
         if (request.headers['transfer-encoding'] !== undefined) {

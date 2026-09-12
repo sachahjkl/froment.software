@@ -9,7 +9,11 @@ import { Permissions } from '../permissions.js';
 import {
   SupplierInvoice,
   SupplierInvoiceCreateRequest,
+  SupplierCreditCreateRequest,
   SupplierInvoiceFailure,
+  SupplierInvoiceEvidence,
+  SupplierInvoiceEvidenceCreate,
+  SupplierInvoiceEvidenceList,
   SupplierInvoiceList,
   SupplierInvoiceAnalysisRequest,
   SupplierInvoiceAnalysisSettings,
@@ -32,6 +36,11 @@ export class SupplierInvoicesApi extends HttpApiGroup.make('supplierInvoices', {
   HttpApiEndpoint.get('supplierInvoiceGet', '/api/supplier-invoices/:invoiceId', {
     params: { invoiceId: Ulid },
     success: SupplierInvoice,
+    error: SupplierInvoiceFailure.members,
+  }).pipe(requirePermissions([Permissions.supplierInvoiceRead]), authenticate, frontendSpecific),
+  HttpApiEndpoint.get('supplierInvoiceEvidenceList', '/api/supplier-invoices/:invoiceId/evidence', {
+    params: { invoiceId: Ulid },
+    success: SupplierInvoiceEvidenceList,
     error: SupplierInvoiceFailure.members,
   }).pipe(requirePermissions([Permissions.supplierInvoiceRead]), authenticate, frontendSpecific),
   HttpApiEndpoint.get('supplierPaymentBatchList', '/api/supplier-payment-batches', {
@@ -63,6 +72,32 @@ export class SupplierInvoicesApi extends HttpApiGroup.make('supplierInvoices', {
   })
     .middleware(ApiRequestBody)
     .pipe(requirePermissions([Permissions.supplierInvoiceCreate]), authenticate, frontendSpecific),
+  HttpApiEndpoint.post('supplierCreditCreate', '/api/supplier-credits', {
+    payload: SupplierCreditCreateRequest,
+    success: SupplierInvoice,
+    error: SupplierInvoiceFailure.members,
+  })
+    .middleware(ApiRequestBody)
+    .pipe(requirePermissions([Permissions.supplierInvoiceCreate]), authenticate, frontendSpecific),
+  HttpApiEndpoint.post('supplierInvoiceEvidenceCreate', '/api/supplier-invoice-evidence', {
+    payload: SupplierInvoiceEvidenceCreate,
+    success: SupplierInvoiceEvidence,
+    error: SupplierInvoiceFailure.members,
+  })
+    .annotate(RequestBodyKind, 'supplier-invoice-evidence')
+    .middleware(ApiRequestBody)
+    .pipe(requirePermissions([Permissions.supplierInvoiceUpdate]), authenticate, frontendSpecific),
+  HttpApiEndpoint.get(
+    'supplierInvoiceEvidenceDownload',
+    '/api/supplier-invoice-evidence/:evidenceId/download',
+    {
+      params: { evidenceId: Ulid },
+      success: Schema.Uint8Array.pipe(
+        HttpApiSchema.asUint8Array({ contentType: 'application/octet-stream' }),
+      ),
+      error: SupplierInvoiceFailure.members,
+    },
+  ).pipe(requirePermissions([Permissions.supplierInvoiceRead]), authenticate, frontendSpecific),
   HttpApiEndpoint.put('supplierInvoiceUpdate', '/api/supplier-invoices/:invoiceId', {
     params: { invoiceId: Ulid },
     payload: SupplierInvoiceUpdateRequest,

@@ -44,6 +44,8 @@ import { ServerLive } from './server.js';
 import { ObservabilityLive } from './observability/observability.js';
 import { ClientPortalLive } from './client-portal/client-portal.js';
 import { RuntimeConfigurationLive } from './runtime-config.js';
+import { AccountingLive } from './accounting/service.js';
+import { DemoLive } from './demo/service.js';
 
 const QuoteCoreLive = Layer.mergeAll(
   QuotesLive,
@@ -89,10 +91,13 @@ const ServicesLive = Layer.mergeAll(
   ClientsLive,
   CompanyLive,
   ExchangeRatesLive.pipe(Layer.provide(FetchHttpClient.layer)),
-  SuppliersLive,
+  SuppliersLive.pipe(Layer.provide(FetchHttpClient.layer)),
   SupplierInvoicesLive,
   SupplierPaymentBatchesLive,
-  SupplierInvoiceAnalysisLive.pipe(Layer.provide(SupplierInvoicesLive)),
+  SupplierInvoiceAnalysisLive.pipe(
+    Layer.provide(SupplierInvoicesLive),
+    Layer.provide(FetchHttpClient.layer),
+  ),
   InvoicePdfRuntimeLive,
   QuoteLinksLive.pipe(Layer.provide(BusinessConfigLive)),
   QuoteConditionPresetsLive,
@@ -101,6 +106,8 @@ const ServicesLive = Layer.mergeAll(
   BankingLive,
   DeploymentLive,
   ClientPortalLive,
+  AccountingLive.pipe(Layer.provide(FetchHttpClient.layer)),
+  DemoLive,
 ).pipe(
   Layer.provideMerge(ConnectionConfigLive),
   Layer.provideMerge(AuditLive),

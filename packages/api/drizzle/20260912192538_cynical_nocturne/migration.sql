@@ -1,0 +1,1 @@
+ALTER TABLE `supplier_invoices` ADD `tax_treatment` text DEFAULT 'france' NOT NULL;

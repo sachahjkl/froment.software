@@ -18,6 +18,7 @@ import {
   SupplierList,
   SupplierNotFound,
   SupplierSummary,
+  SupplierTaxInvalid,
   SupplierUpdateRequest,
   SupplierVersionConflict,
 } from './contracts.js';
@@ -43,6 +44,7 @@ export class SuppliersApi extends HttpApiGroup.make('suppliers', { topLevel: tru
     error: [
       ...commonErrors,
       SupplierCreationConflict.pipe(HttpApiSchema.status(409)),
+      SupplierTaxInvalid.pipe(HttpApiSchema.status(422)),
       RequestRateLimited.pipe(HttpApiSchema.status(429)),
     ],
   })
@@ -61,6 +63,7 @@ export class SuppliersApi extends HttpApiGroup.make('suppliers', { topLevel: tru
       SupplierNotFound.pipe(HttpApiSchema.status(404)),
       SupplierArchived.pipe(HttpApiSchema.status(409)),
       SupplierVersionConflict.pipe(HttpApiSchema.status(409)),
+      SupplierTaxInvalid.pipe(HttpApiSchema.status(422)),
       RequestRateLimited.pipe(HttpApiSchema.status(429)),
     ],
   })

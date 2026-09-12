@@ -4,6 +4,7 @@ import {
   SupplierCreationConflict,
   SupplierNotFound,
   SupplierSummary,
+  SupplierTaxInvalid,
   SupplierVersionConflict,
   Ulid,
   type SupplierCreateRequestValue,
@@ -13,11 +14,13 @@ import {
   type UlidValue,
 } from '@froment/contracts';
 import { Clock, Context, Effect, Layer, Schema } from 'effect';
+import { HttpClient, HttpClientRequest, HttpClientResponse } from 'effect/unstable/http';
 import { isDeepStrictEqual } from 'node:util';
 import { ulid } from 'ulid';
 
 import { Audit } from '../audit/audit.js';
 import { Database, DatabaseError } from '../database/database.js';
+import { RuntimeConfiguration } from '../runtime-config.js';
 
 const SupplierRecord = Schema.Struct({
   id: Ulid,
@@ -31,6 +34,8 @@ const SupplierRecord = Schema.Struct({
   phone: Schema.String,
   registrationNumber: Schema.String,
   vatNumber: Schema.String,
+  taxTreatment: SupplierSummary.fields.taxTreatment,
+  viesValidatedAt: Schema.NullOr(Schema.Int),
   defaultCurrency: Schema.String,
   paymentTermsDays: Schema.Int,
   iban: Schema.String,
@@ -49,6 +54,7 @@ const selectSupplier = `select id, display_name as displayName,
   address_line_1 as addressLine1, address_line_2 as addressLine2,
   postal_code as postalCode, city, country, email, phone,
   registration_number as registrationNumber, vat_number as vatNumber,
+  tax_treatment as taxTreatment, vies_validated_at as viesValidatedAt,
   default_currency as defaultCurrency, payment_terms_days as paymentTermsDays,
   iban, bic, archived, updated_at as updatedAt from suppliers`;
 
@@ -59,7 +65,7 @@ const toSummary = (record: typeof SupplierRecord.Type): SupplierSummaryValue => 
 
 const normalizedFields = (
   input: SupplierCreateRequestValue | SupplierUpdateRequestValue,
-): Omit<SupplierSummaryValue, 'id' | 'archived' | 'updatedAt'> => ({
+): Omit<SupplierSummaryValue, 'id' | 'archived' | 'updatedAt' | 'viesValidatedAt'> => ({
   displayName: input.displayName.trim(),
   addressLine1: input.addressLine1.trim(),
   addressLine2: input.addressLine2.trim(),
@@ -70,6 +76,7 @@ const normalizedFields = (
   phone: input.phone.trim(),
   registrationNumber: input.registrationNumber.trim(),
   vatNumber: input.vatNumber.replaceAll(/\s/g, '').toUpperCase(),
+  taxTreatment: input.taxTreatment,
   defaultCurrency: input.defaultCurrency,
   paymentTermsDays: input.paymentTermsDays,
   iban: input.iban.replaceAll(/\s/g, '').toUpperCase(),
@@ -88,6 +95,7 @@ const fieldValues = (fields: ReturnType<typeof normalizedFields>) =>
     fields.phone,
     fields.registrationNumber,
     fields.vatNumber,
+    fields.taxTreatment,
     fields.defaultCurrency,
     fields.paymentTermsDays,
     fields.iban,
@@ -102,14 +110,21 @@ export interface SuppliersService {
   readonly create: (
     request: SupplierCreateRequestValue,
     actorUserId: UlidValue,
-  ) => Effect.Effect<SupplierSummaryValue, SupplierCreationConflict | DatabaseError>;
+  ) => Effect.Effect<
+    SupplierSummaryValue,
+    SupplierCreationConflict | SupplierTaxInvalid | DatabaseError
+  >;
   readonly update: (
     supplierId: UlidValue,
     request: SupplierUpdateRequestValue,
     actorUserId: UlidValue,
   ) => Effect.Effect<
     SupplierSummaryValue,
-    SupplierNotFound | SupplierArchived | SupplierVersionConflict | DatabaseError
+    | SupplierNotFound
+    | SupplierArchived
+    | SupplierVersionConflict
+    | SupplierTaxInvalid
+    | DatabaseError
   >;
   readonly archive: (
     supplierId: UlidValue,
@@ -130,6 +145,43 @@ export const SuppliersLive = Layer.effect(
   Effect.gen(function* () {
     const { sqlite } = yield* Database;
     const audit = yield* Audit;
+    const runtime = yield* RuntimeConfiguration;
+    const httpClient = (yield* HttpClient.HttpClient).pipe(HttpClient.filterStatusOk);
+    const validateTax = Effect.fn('Suppliers.validateTax')(function* (
+      fields: ReturnType<typeof normalizedFields>,
+      now: number,
+    ) {
+      if (fields.taxTreatment === 'france') {
+        if (fields.vatNumber !== '' && !/^FR[A-Z0-9]{2}\d{9}$/.test(fields.vatNumber))
+          return yield* new SupplierTaxInvalid({ code: 'supplier.tax_invalid' });
+        return null;
+      }
+      if (fields.taxTreatment === 'non-eu-import') return null;
+      if (fields.taxTreatment === 'foreign-local-tax') {
+        if (fields.vatNumber === '' && fields.registrationNumber === '')
+          return yield* new SupplierTaxInvalid({ code: 'supplier.tax_invalid' });
+        return null;
+      }
+      const match = /^([A-Z]{2})([A-Z0-9]{2,14})$/.exec(fields.vatNumber);
+      if (match === null || match[1] === 'FR')
+        return yield* new SupplierTaxInvalid({ code: 'supplier.tax_invalid' });
+      const request = yield* HttpClientRequest.post(runtime.vies.endpoint).pipe(
+        HttpClientRequest.acceptJson,
+        HttpClientRequest.bodyJson({ countryCode: match[1], vatNumber: match[2] }),
+        Effect.mapError(() => new SupplierTaxInvalid({ code: 'supplier.vies_unavailable' })),
+      );
+      const response = yield* httpClient.execute(request).pipe(
+        Effect.timeout(runtime.vies.requestTimeoutMillis),
+        Effect.mapError(() => new SupplierTaxInvalid({ code: 'supplier.vies_unavailable' })),
+      );
+      const valid = yield* HttpClientResponse.schemaBodyJson(
+        Schema.Struct({ valid: Schema.Boolean }),
+      )(response).pipe(
+        Effect.mapError(() => new SupplierTaxInvalid({ code: 'supplier.vies_unavailable' })),
+      );
+      if (!valid.valid) return yield* new SupplierTaxInvalid({ code: 'supplier.tax_invalid' });
+      return now;
+    });
 
     const read = (supplierId: UlidValue) => {
       const row = sqlite.prepare(`${selectSupplier} where id = ?`).get(supplierId);
@@ -161,6 +213,7 @@ export const SuppliersLive = Layer.effect(
     ) {
       const now = yield* Clock.currentTimeMillis;
       const fields = normalizedFields(request);
+      const viesValidatedAt = yield* validateTax(fields, now);
       return yield* Effect.try({
         try: () =>
           sqlite
@@ -185,12 +238,13 @@ export const SuppliersLive = Layer.effect(
                 .prepare(
                   `insert into suppliers
                    (id, display_name, address_line_1, address_line_2, postal_code, city,
-                    country, email, phone, registration_number, vat_number, default_currency,
-                    payment_terms_days, iban, bic, archived, created_at, updated_at)
-                   values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?)`,
+                     country, email, phone, registration_number, vat_number, tax_treatment,
+                     default_currency, payment_terms_days, iban, bic, vies_validated_at,
+                     archived, created_at, updated_at)
+                     values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?)`,
                 )
-                .run(id, ...fieldValues(fields), now, now);
-              const result = { id, ...fields, archived: false, updatedAt: now };
+                .run(id, ...fieldValues(fields), viesValidatedAt, now, now);
+              const result = { id, ...fields, viesValidatedAt, archived: false, updatedAt: now };
               audit.insert({
                 action: 'supplier.created',
                 actorUserId,
@@ -213,7 +267,7 @@ export const SuppliersLive = Layer.effect(
             })
             .immediate(),
         catch: (cause) =>
-          cause instanceof SupplierCreationConflict
+          cause instanceof SupplierCreationConflict || cause instanceof SupplierTaxInvalid
             ? cause
             : new DatabaseError({ operation: 'create.supplier', cause }),
       });
@@ -226,6 +280,7 @@ export const SuppliersLive = Layer.effect(
     ) {
       const now = yield* Clock.currentTimeMillis;
       const fields = normalizedFields(request);
+      const viesValidatedAt = yield* validateTax(fields, now);
       return yield* Effect.try({
         try: () =>
           sqlite
@@ -240,12 +295,14 @@ export const SuppliersLive = Layer.effect(
                 .prepare(
                   `update suppliers set display_name = ?, address_line_1 = ?, address_line_2 = ?,
                    postal_code = ?, city = ?, country = ?, email = ?, phone = ?,
-                   registration_number = ?, vat_number = ?, default_currency = ?,
-                   payment_terms_days = ?, iban = ?, bic = ?, updated_at = ?
+                    registration_number = ?, vat_number = ?, tax_treatment = ?,
+                    default_currency = ?, payment_terms_days = ?, iban = ?, bic = ?,
+                    vies_validated_at = ?, updated_at = ?
                    where id = ? and updated_at = ?`,
                 )
                 .run(
                   ...fieldValues(fields),
+                  viesValidatedAt,
                   updatedAt,
                   supplierId,
                   request.expectedUpdatedAt,
@@ -260,14 +317,15 @@ export const SuppliersLive = Layer.effect(
                 resourceId: supplierId,
                 occurredAt: updatedAt,
               });
-              return { id: supplierId, ...fields, archived: false, updatedAt };
+              return { id: supplierId, ...fields, viesValidatedAt, archived: false, updatedAt };
             })
             .immediate(),
         catch: (cause) => {
           if (
             cause instanceof SupplierNotFound ||
             cause instanceof SupplierArchived ||
-            cause instanceof SupplierVersionConflict
+            cause instanceof SupplierVersionConflict ||
+            cause instanceof SupplierTaxInvalid
           ) {
             return cause;
           }

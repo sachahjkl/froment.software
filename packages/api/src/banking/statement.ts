@@ -3,6 +3,7 @@ import {
   BankImportMaximumRecordLength,
   BankImportMaximumRowCount,
   CalendarDate,
+  CurrencyCode,
   type BankCsvConfiguration,
   type BankImportRequestValue,
 } from '@froment/contracts';
@@ -152,7 +153,7 @@ export const parseBankStatement = (request: BankImportRequestValue) => {
         !Schema.is(CalendarDate)(row.bookedOn) ||
         row.reference.trim() === '' ||
         row.reference.length > 160 ||
-        row.currency !== 'EUR' ||
+        !Schema.is(CurrencyCode)(row.currency) ||
         row.description.length > 500 ||
         references.has(row.reference)
       )
@@ -162,6 +163,7 @@ export const parseBankStatement = (request: BankImportRequestValue) => {
         reference: row.reference,
         bookedOn: row.bookedOn,
         amountCents: amountCents(row.amount, decimalSeparator),
+        currency: Schema.decodeUnknownSync(CurrencyCode)(row.currency),
         description: row.description,
       };
     });

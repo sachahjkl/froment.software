@@ -15,6 +15,7 @@ import {
   InvoiceCreditConflict,
   InvoiceCreditRequestConflict,
   InvoiceCredits,
+  InvoiceCreditAllocationRequest,
   InvoiceRefundRequest,
   InvoiceRefundCancel,
 } from './credit-notes.js';
@@ -65,12 +66,34 @@ export class CreditNotesApi extends HttpApiGroup.make('creditNotes', { topLevel:
     .middleware(ApiRequestBody)
     .middleware(ApiBrowserRequest)
     .pipe(requirePermissions([Permissions.invoiceRefund]), authenticate, frontendSpecific),
+  HttpApiEndpoint.post('invoiceCreditAllocate', '/api/invoices/:invoiceId/credit-allocations', {
+    params: { invoiceId: Ulid },
+    payload: InvoiceCreditAllocationRequest,
+    success: InvoiceCredits,
+    error: [InvoiceCreditConflict, InvoiceCreditRequestConflict],
+  })
+    .middleware(ApiRequestBody)
+    .middleware(ApiBrowserRequest)
+    .pipe(requirePermissions([Permissions.invoiceRefund]), authenticate, frontendSpecific),
   HttpApiEndpoint.post('invoiceRefundCancel', '/api/invoices/:invoiceId/refunds/:refundId/cancel', {
     params: { invoiceId: Ulid, refundId: Ulid },
     payload: InvoiceRefundCancel,
     success: InvoiceCredits,
     error: [InvoiceCreditConflict, InvoiceCreditRequestConflict],
   })
+    .middleware(ApiRequestBody)
+    .middleware(ApiBrowserRequest)
+    .pipe(requirePermissions([Permissions.invoiceRefund]), authenticate, frontendSpecific),
+  HttpApiEndpoint.post(
+    'invoiceCreditAllocationCancel',
+    '/api/invoices/:invoiceId/credit-allocations/:allocationId/cancel',
+    {
+      params: { invoiceId: Ulid, allocationId: Ulid },
+      payload: InvoiceRefundCancel,
+      success: InvoiceCredits,
+      error: [InvoiceCreditConflict, InvoiceCreditRequestConflict],
+    },
+  )
     .middleware(ApiRequestBody)
     .middleware(ApiBrowserRequest)
     .pipe(requirePermissions([Permissions.invoiceRefund]), authenticate, frontendSpecific),

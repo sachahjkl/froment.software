@@ -10,6 +10,9 @@ import {
   BankTransactionList,
   BankTransaction,
   BankMatchSuggestionList,
+  SupplierBankMatchList,
+  SupplierBankMatchRequest,
+  SupplierBankPaymentList,
   type BankImportRequestValue,
 } from '@froment/contracts';
 import { Schema } from 'effect';
@@ -52,6 +55,38 @@ export class BankingApi {
     return requestOutcome(
       this.http.get<unknown>(`/api/banking/transactions/${id}/suggestions`),
       BankMatchSuggestionList,
+      BankFailure,
+      'bank.error',
+    );
+  }
+  supplierPayments(id: string) {
+    return requestOutcome(
+      this.http.get(`/api/banking/transactions/${id}/supplier-payments`),
+      SupplierBankPaymentList,
+      BankFailure,
+      'bank.error',
+    );
+  }
+  supplierMatches(id: string) {
+    return requestOutcome(
+      this.http.get(`/api/banking/transactions/${id}/supplier-matches`),
+      SupplierBankMatchList,
+      BankFailure,
+      'bank.error',
+    );
+  }
+  matchSupplier(id: string, request: typeof SupplierBankMatchRequest.Type) {
+    return requestOutcome(
+      this.http.post(`/api/banking/transactions/${id}/supplier-match`, request),
+      SupplierBankPaymentList,
+      BankFailure,
+      'bank.error',
+    );
+  }
+  unmatchSupplier(id: string, matchId: string, reason: string) {
+    return requestOutcome(
+      this.http.post(`/api/banking/transactions/${id}/supplier-unmatch`, { matchId, reason }),
+      SupplierBankPaymentList,
       BankFailure,
       'bank.error',
     );

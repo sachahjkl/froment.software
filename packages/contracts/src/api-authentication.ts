@@ -63,7 +63,7 @@ export class ApiRequestBody extends HttpApiMiddleware.Service<ApiRequestBody>()(
 ) {}
 
 export const RequestBodyKind = Context.Reference<
-  'standard' | 'bank-import' | 'supplier-invoice-analysis'
+  'standard' | 'bank-import' | 'supplier-invoice-analysis' | 'supplier-invoice-evidence'
 >('@froment/contracts/RequestBodyKind', { defaultValue: () => 'standard' });
 
 export class ApiTelemetry extends HttpApiMiddleware.Service<ApiTelemetry>()(

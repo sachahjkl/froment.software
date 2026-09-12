@@ -84,6 +84,8 @@ export class TeamInvitation {
 
   protected profileLabel(profile: typeof TeamProfile.Type): string {
     if (profile === 'accountant') return this.i18n.t('team.accountant');
+    if (profile === 'accounting-validator') return this.i18n.t('team.accountingValidator');
+    if (profile === 'accounting-reader') return this.i18n.t('team.accountingReader');
     if (profile === 'collaborator') return this.i18n.t('team.collaborator');
     return this.roles().find(({ id }) => profile === `custom:${id}`)?.name ?? profile;
   }

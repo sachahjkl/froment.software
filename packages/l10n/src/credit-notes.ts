@@ -14,9 +14,16 @@ export const creditText = {
     'credit.refundedOn': 'Date du remboursement effectué',
     'credit.reference': 'Référence du remboursement',
     'credit.recordRefund': 'Enregistrer le remboursement effectué',
+    'credit.allocate': 'Imputer sur une facture',
+    'credit.allocations': 'Imputations',
+    'credit.targetInvoice': 'Facture cible',
+    'credit.allocatedOn': 'Date d’imputation',
     'credit.cancelReason': 'Motif de correction du remboursement',
     'credit.cancelled': 'Enregistrement annulé :',
     'credit.cancelRefund': 'Corriger cet enregistrement',
+    'credit.cancelAllocation': 'Annuler l’imputation',
+    'credit.cancelAllocationHint':
+      'L’annulation restaure la dette client et le solde de la facture cible.',
     'credit.fullHint':
       'L’avoir intégral reprend les lignes et la TVA de la facture émise. Il annule toute sa créance sans modifier la facture ni son PDF.',
     'credit.reason': 'Motif de l’avoir',
@@ -73,9 +80,16 @@ export const creditText = {
     'credit.refundedOn': 'Date of the completed refund',
     'credit.reference': 'Refund reference',
     'credit.recordRefund': 'Record completed refund',
+    'credit.allocate': 'Allocate to an invoice',
+    'credit.allocations': 'Allocations',
+    'credit.targetInvoice': 'Target invoice',
+    'credit.allocatedOn': 'Allocation date',
     'credit.cancelReason': 'Reason for correcting the refund',
     'credit.cancelled': 'Record cancelled:',
     'credit.cancelRefund': 'Correct this record',
+    'credit.cancelAllocation': 'Cancel allocation',
+    'credit.cancelAllocationHint':
+      'Cancellation restores the customer debt and the target invoice balance.',
     'credit.fullHint':
       'The full credit note copies the issued invoice lines and VAT. It cancels the entire debt without changing the invoice or its PDF.',
     'credit.reason': 'Credit note reason',

@@ -52,6 +52,17 @@
               type="text"
               [formField]="supplierForm.vatNumber"
           /></label>
+          <label class="field" for="supplier-tax-treatment"
+            >{{ i18n.t('supplier.taxTreatment') }}<select
+              id="supplier-tax-treatment"
+              [formField]="supplierForm.taxTreatment"
+            >
+              <option value="france">{{ i18n.t('supplier.taxTreatment.france') }}</option>
+              <option value="eu-reverse-charge">{{ i18n.t('supplier.taxTreatment.eu') }}</option>
+              <option value="non-eu-import">{{ i18n.t('supplier.taxTreatment.import') }}</option>
+              <option value="foreign-local-tax">{{ i18n.t('supplier.taxTreatment.local') }}</option>
+            </select></label
+          >
           <label class="field" for="supplier-email"
             >{{ i18n.t('supplier.email') }}<input
               id="supplier-email"

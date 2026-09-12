@@ -8,6 +8,9 @@ const invoice = {
   id: '01ARZ3NDEKTSV4RRFFQ69G5FAV',
   supplierId: '01ARZ3NDEKTSV4RRFFQ69G5FAW',
   supplierName: 'Test supplier',
+  taxTreatment: 'france',
+  documentKind: 'invoice',
+  sourceInvoiceId: null,
   reference: 'SUP-42',
   invoiceDate: '2026-09-01',
   dueDate: '2026-10-01',
@@ -27,6 +30,12 @@ const invoice = {
   netTotalCents: 10_000,
   vatTotalCents: 2_000,
   totalCents: 12_000,
+  functionalCurrency: null,
+  exchangeRateDate: null,
+  foreignUnitsPerFunctionalUnitNanos: null,
+  functionalNetTotalCents: null,
+  functionalVatTotalCents: null,
+  functionalTotalCents: null,
   status: 'draft',
   source: 'manual',
   sourceFileName: null,
@@ -111,7 +120,7 @@ describe('SupplierInvoicesApi', () => {
     await expect(statusResult).resolves.toMatchObject({ success: true });
 
     const settings = {
-      adapter: 'http' as const,
+      adapter: 'openai' as const,
       endpoint: 'https://analysis.example.test/invoices',
       apiKey: 'secret',
     };
@@ -120,7 +129,7 @@ describe('SupplierInvoicesApi', () => {
     expect(settingsRequest.request.method).toBe('PUT');
     expect(settingsRequest.request.body).toEqual(settings);
     settingsRequest.flush({
-      adapter: 'http',
+      adapter: 'openai',
       endpoint: settings.endpoint,
       credentialsPresent: true,
       external: true,

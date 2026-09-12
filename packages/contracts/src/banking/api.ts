@@ -18,6 +18,10 @@ import {
   BankMatchRequest,
   BankUnmatchRequest,
   BankMatchSuggestionList,
+  SupplierBankMatchList,
+  SupplierBankMatchRequest,
+  SupplierBankPaymentList,
+  SupplierBankUnmatchRequest,
 } from './contracts.js';
 
 export class BankingApi extends HttpApiGroup.make('banking', { topLevel: true }).add(
@@ -44,6 +48,32 @@ export class BankingApi extends HttpApiGroup.make('banking', { topLevel: true })
     success: BankTransaction,
     error: BankFailure.members,
   }).pipe(requirePermissions([Permissions.bankRead]), authenticate, frontendSpecific),
+  HttpApiEndpoint.get(
+    'supplierBankPaymentList',
+    '/api/banking/transactions/:transactionId/supplier-payments',
+    {
+      params: { transactionId: Ulid },
+      success: SupplierBankPaymentList,
+      error: BankFailure.members,
+    },
+  ).pipe(
+    requirePermissions([Permissions.bankRead, Permissions.supplierInvoiceRead]),
+    authenticate,
+    frontendSpecific,
+  ),
+  HttpApiEndpoint.get(
+    'supplierBankMatchList',
+    '/api/banking/transactions/:transactionId/supplier-matches',
+    {
+      params: { transactionId: Ulid },
+      success: SupplierBankMatchList,
+      error: BankFailure.members,
+    },
+  ).pipe(
+    requirePermissions([Permissions.bankRead, Permissions.supplierInvoiceRead]),
+    authenticate,
+    frontendSpecific,
+  ),
   HttpApiEndpoint.get(
     'bankMatchSuggestionList',
     '/api/banking/transactions/:transactionId/suggestions',
@@ -105,6 +135,42 @@ export class BankingApi extends HttpApiGroup.make('banking', { topLevel: true })
     success: BankTransactionList,
     error: BankFailure.members,
   })
+    .middleware(ApiRequestBody)
+    .middleware(ApiBrowserRequest)
+    .pipe(
+      requirePermissions([Permissions.bankReconcile]),
+      authenticate,
+      rateLimit(RateLimits.sixtyPerMinute),
+      frontendSpecific,
+    ),
+  HttpApiEndpoint.post(
+    'supplierBankMatch',
+    '/api/banking/transactions/:transactionId/supplier-match',
+    {
+      params: { transactionId: Ulid },
+      payload: SupplierBankMatchRequest,
+      success: SupplierBankPaymentList,
+      error: BankFailure.members,
+    },
+  )
+    .middleware(ApiRequestBody)
+    .middleware(ApiBrowserRequest)
+    .pipe(
+      requirePermissions([Permissions.bankReconcile]),
+      authenticate,
+      rateLimit(RateLimits.sixtyPerMinute),
+      frontendSpecific,
+    ),
+  HttpApiEndpoint.post(
+    'supplierBankUnmatch',
+    '/api/banking/transactions/:transactionId/supplier-unmatch',
+    {
+      params: { transactionId: Ulid },
+      payload: SupplierBankUnmatchRequest,
+      success: SupplierBankPaymentList,
+      error: BankFailure.members,
+    },
+  )
     .middleware(ApiRequestBody)
     .middleware(ApiBrowserRequest)
     .pipe(

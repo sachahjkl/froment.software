@@ -76,11 +76,34 @@ export const CreditNoteHandlers = HttpApiBuilder.group(Api, 'creditNotes', (hand
         }),
       )
       .handle(
+        'invoiceCreditAllocate',
+        Effect.fn('invoiceCreditAllocate')(function* ({ params, payload }) {
+          yield* setPrivateResponseHeaders;
+          return yield* credits
+            .allocate(params.invoiceId, payload, (yield* ApiPrincipal).userId)
+            .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
+        }),
+      )
+      .handle(
         'invoiceRefundCancel',
         Effect.fn('invoiceRefundCancel')(function* ({ params, payload }) {
           yield* setPrivateResponseHeaders;
           return yield* credits
             .cancelRefund(params.invoiceId, params.refundId, payload, (yield* ApiPrincipal).userId)
+            .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
+        }),
+      )
+      .handle(
+        'invoiceCreditAllocationCancel',
+        Effect.fn('invoiceCreditAllocationCancel')(function* ({ params, payload }) {
+          yield* setPrivateResponseHeaders;
+          return yield* credits
+            .cancelAllocation(
+              params.invoiceId,
+              params.allocationId,
+              payload,
+              (yield* ApiPrincipal).userId,
+            )
             .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
         }),
       )

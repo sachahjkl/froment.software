@@ -1,5 +1,15 @@
 export const bankWorkspaceText = {
   fr: {
+    'bankWorkspace.supplierPayments': 'Paiements fournisseur à rapprocher',
+    'bankWorkspace.supplierPaymentsHint':
+      'Confirmez le virement fournisseur correspondant. Une suggestion ne déclenche jamais un rapprochement automatique.',
+    'bankWorkspace.noSupplierPayments': 'Aucun paiement fournisseur disponible.',
+    'bankWorkspace.supplierMatchHistory': 'Historique des rapprochements fournisseur',
+    'bankWorkspace.supplierConfirm': 'Rapprocher ce paiement fournisseur avec le débit bancaire ?',
+    'bankWorkspace.supplierUnmatchConfirm': 'Annuler ce rapprochement fournisseur ?',
+    'bankWorkspace.supplierUnmatchReason': 'Annulation confirmée par un utilisateur.',
+    'bankWorkspace.unmatch': 'Dissocier',
+    'bankWorkspace.actions': 'Actions',
     'bankWorkspace.suggestions': 'Suggestions de rapprochement',
     'bankWorkspace.suggestionsHint':
       'Vérifiez la facture, le règlement et le montant avant de confirmer une suggestion.',
@@ -151,6 +161,16 @@ export const bankWorkspaceText = {
       'Une reprise conserve la même clé tant que les données ne changent pas.',
   },
   en: {
+    'bankWorkspace.supplierPayments': 'Supplier payments to reconcile',
+    'bankWorkspace.supplierPaymentsHint':
+      'Confirm the matching supplier transfer. A suggestion never triggers automatic reconciliation.',
+    'bankWorkspace.noSupplierPayments': 'No supplier payment is available.',
+    'bankWorkspace.supplierMatchHistory': 'Supplier reconciliation history',
+    'bankWorkspace.supplierConfirm': 'Reconcile this supplier payment with the bank debit?',
+    'bankWorkspace.supplierUnmatchConfirm': 'Cancel this supplier reconciliation?',
+    'bankWorkspace.supplierUnmatchReason': 'Cancellation confirmed by a user.',
+    'bankWorkspace.unmatch': 'Unmatch',
+    'bankWorkspace.actions': 'Actions',
     'bankWorkspace.suggestions': 'Reconciliation suggestions',
     'bankWorkspace.suggestionsHint':
       'Check the invoice, receipt, and amount before you confirm a suggestion.',

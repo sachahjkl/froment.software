@@ -71,6 +71,15 @@ export class BusinessContext {
       email: this.text().examples.email,
       mode: this.administrator ? 'administrator' : 'client',
       permissions: PermissionCodes,
+      enabledModules: [
+        'sales',
+        'purchasing',
+        'banking',
+        'accounting',
+        'tax',
+        'ai',
+        'demonstration',
+      ],
     };
   }
 

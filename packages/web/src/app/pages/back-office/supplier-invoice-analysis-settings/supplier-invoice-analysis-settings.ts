@@ -21,7 +21,7 @@ import { Notice } from '@shared/notice/notice';
 import { PageHeader } from '@shared/page-header/page-header';
 
 interface SettingsModel {
-  readonly adapter: 'local' | 'http';
+  readonly adapter: 'local' | 'openai';
   readonly endpoint: string;
   readonly apiKey: string;
 }
@@ -56,7 +56,7 @@ export class SupplierInvoiceAnalysisSettingsPage {
   protected readonly model = signal<SettingsModel>({ adapter: 'local', endpoint: '', apiKey: '' });
   protected readonly settingsForm = form(this.model, (path) => {
     validate(path.endpoint, ({ value }) =>
-      this.model().adapter === 'http' && !isSecureUrl(value()) ? { kind: 'url' } : undefined,
+      this.model().adapter === 'openai' && !isSecureUrl(value()) ? { kind: 'url' } : undefined,
     );
   });
   protected readonly settings = signal<typeof SupplierInvoiceAnalysisSettings.Type | undefined>(
@@ -85,7 +85,7 @@ export class SupplierInvoiceAnalysisSettingsPage {
   }
 
   protected external(): boolean {
-    return this.model().adapter === 'http';
+    return this.model().adapter === 'openai';
   }
 
   protected credentialState(): string {
@@ -110,7 +110,7 @@ export class SupplierInvoiceAnalysisSettingsPage {
         const model = this.model();
         let request: typeof SupplierInvoiceAnalysisSettingsUpdate.Type = {
           adapter: model.adapter,
-          endpoint: model.adapter === 'http' ? model.endpoint : null,
+          endpoint: model.adapter === 'openai' ? model.endpoint : null,
         };
         if (model.apiKey.length > 0) request = { ...request, apiKey: model.apiKey };
         const outcome = await this.api.updateAnalysisSettings(request);

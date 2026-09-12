@@ -16,11 +16,13 @@ const supplier = {
   phone: '+33 1 23 45 67 89',
   registrationNumber: '123456789',
   vatNumber: 'FR00123456789',
+  taxTreatment: 'france' as const,
   defaultCurrency: 'EUR',
   paymentTermsDays: 30,
   iban: 'FR7630006000011234567890189',
   bic: 'AGRIFRPP',
   archived: false,
+  viesValidatedAt: null,
   updatedAt: 42,
 };
 

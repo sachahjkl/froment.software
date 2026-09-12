@@ -12,6 +12,8 @@ import { translate } from '@froment/l10n';
 
 const standardProfileLabel = (profile: string, language: 'fr' | 'en'): string => {
   if (profile === 'accountant') return translate(language, 'team.accountant');
+  if (profile === 'accounting-validator') return translate(language, 'team.accountingValidator');
+  if (profile === 'accounting-reader') return translate(language, 'team.accountingReader');
   if (profile === 'collaborator') return translate(language, 'team.collaborator');
   return profile;
 };
@@ -61,6 +63,8 @@ export const invitationTableOptions: WorkspaceTableOptions<typeof TeamInvitation
   parameters: { q: 'invitationQ', sort: 'invitationSort', filter: 'invitationFilter' },
   filters: [
     { value: 'accountant', label: 'team.accountant' },
+    { value: 'accounting-validator', label: 'team.accountingValidator' },
+    { value: 'accounting-reader', label: 'team.accountingReader' },
     { value: 'collaborator', label: 'team.collaborator' },
   ],
   matchesFilter: (item, filter) => item.profile === filter,

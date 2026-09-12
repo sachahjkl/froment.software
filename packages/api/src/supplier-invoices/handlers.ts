@@ -26,6 +26,12 @@ export const SupplierInvoiceHandlers = HttpApiBuilder.group(Api, 'supplierInvoic
           Effect.catchTag('DatabaseError', Effect.orDie),
         ),
       )
+      .handle('supplierInvoiceEvidenceList', ({ params }) =>
+        setPrivateResponseHeaders.pipe(
+          Effect.andThen(invoices.evidence(params.invoiceId)),
+          Effect.catchTag('DatabaseError', Effect.orDie),
+        ),
+      )
       .handle('supplierPaymentBatchList', () =>
         setPrivateResponseHeaders.pipe(
           Effect.andThen(paymentBatches.list),
@@ -55,6 +61,32 @@ export const SupplierInvoiceHandlers = HttpApiBuilder.group(Api, 'supplierInvoic
           return yield* invoices
             .create(payload, yield* principal())
             .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
+        }),
+      )
+      .handle('supplierCreditCreate', ({ payload }) =>
+        Effect.gen(function* () {
+          yield* setPrivateResponseHeaders;
+          return yield* invoices
+            .createCredit(payload, yield* principal())
+            .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
+        }),
+      )
+      .handle('supplierInvoiceEvidenceCreate', ({ payload }) =>
+        Effect.gen(function* () {
+          yield* setPrivateResponseHeaders;
+          return yield* invoices
+            .createEvidence(payload, yield* principal())
+            .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
+        }),
+      )
+      .handle('supplierInvoiceEvidenceDownload', ({ params }) =>
+        Effect.gen(function* () {
+          yield* setPrivateResponseHeaders;
+          const result = yield* invoices
+            .downloadEvidence(params.evidenceId, yield* principal())
+            .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
+          yield* setDownloadName(result.fileName, 'attachment');
+          return result.content;
         }),
       )
       .handle('supplierInvoiceUpdate', ({ params, payload }) =>

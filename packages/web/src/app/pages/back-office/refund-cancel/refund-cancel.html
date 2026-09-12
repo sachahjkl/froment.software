@@ -1,10 +1,9 @@
 <section class="detail-page form-page" aria-labelledby="cancel-title">
-  <app-invoice-task-header headingId="cancel-title" [heading]="i18n.t('credit.cancelRefund')" />
-  <p appNotice>{{ i18n.t('billingWorkspace.cancelRefundHint') }}</p>
-  <app-invoice-task-feedback /> @if (refund(); as refund) {
+  <app-invoice-task-header headingId="cancel-title" [heading]="heading()" />
+  <p appNotice>{{ hint() }}</p>
+  <app-invoice-task-feedback /> @if (entry(); as entry) {
   <p>
-    <strong>{{ refund.reference }}</strong> · {{ task.money(refund.amountCents) }} · {{
-    refund.refundedOn }}
+    <strong>{{ entry.reference }}</strong> · {{ task.money(entry.amountCents) }} · {{ entryDate() }}
   </p>
   } @if (task.invoice() && !task.completed() && !credits.isLoading()) { @if (!creditState()) {
   <p appNotice variant="danger" role="alert">{{ i18n.t('credit.loadError') }}</p>
@@ -28,7 +27,7 @@
     </label>
     <div class="actions">
       <button appButton variant="danger" type="submit" [disabled]="task.locked()">
-        {{ i18n.t('credit.cancelRefund') }}
+        {{ heading() }}
       </button>
       @if (task.uncertain()) {
       <button appButton type="button" [disabled]="task.busy()" (click)="retry()">

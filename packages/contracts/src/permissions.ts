@@ -71,6 +71,13 @@ export const Permissions = {
   sessionManage: { code: 'session.manage', audiences: [] },
   apiTokenManage: { code: 'api-token.manage', audiences: [] },
   auditRead: { code: 'audit.read', audiences: [] },
+  accountingRead: { code: 'accounting.read', audiences: ['api-token'] },
+  accountingWrite: { code: 'accounting.write', audiences: ['api-token'] },
+  accountingValidate: { code: 'accounting.validate', audiences: [] },
+  accountingClose: { code: 'accounting.close', audiences: [] },
+  accountingExport: { code: 'accounting.export', audiences: ['api-token'] },
+  accountingEvidence: { code: 'accounting.evidence', audiences: ['api-token'] },
+  demoReset: { code: 'demo.reset', audiences: [] },
 } as const satisfies Record<
   string,
   { readonly code: string; readonly audiences: ReadonlyArray<PermissionAudience> }

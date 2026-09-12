@@ -7,6 +7,13 @@ import {
 } from '../authentication/contracts.js';
 import { DisplayName, Ulid } from '../identifiers.js';
 
+export const SupplierTaxTreatment = Schema.Literals([
+  'france',
+  'eu-reverse-charge',
+  'non-eu-import',
+  'foreign-local-tax',
+]);
+export type SupplierTaxTreatment = typeof SupplierTaxTreatment.Type;
 export const SupplierInput = Schema.Struct({
   displayName: DisplayName.check(Schema.isMaxLength(160)),
   addressLine1: Schema.String.check(Schema.isMaxLength(160)),
@@ -24,6 +31,7 @@ export const SupplierInput = Schema.Struct({
   ),
   registrationNumber: Schema.String.check(Schema.isMaxLength(64)),
   vatNumber: Schema.String.check(Schema.isMaxLength(64)),
+  taxTreatment: SupplierTaxTreatment,
   defaultCurrency: Schema.String.check(Schema.isPattern(/^[A-Z]{3}$/)),
   paymentTermsDays: Schema.Int.check(Schema.isBetween({ minimum: 0, maximum: 365 })),
   iban: Schema.String.check(
@@ -41,6 +49,7 @@ export const SupplierSummary = Schema.Struct({
   id: Ulid,
   ...SupplierInput.fields,
   archived: Schema.Boolean,
+  viesValidatedAt: Schema.NullOr(Schema.Int),
   updatedAt: Schema.Int,
 }).annotate({ identifier: 'SupplierSummary' });
 export type SupplierSummary = typeof SupplierSummary.Type;
@@ -77,6 +86,10 @@ export class SupplierCreationConflict extends Schema.TaggedError<SupplierCreatio
   'SupplierCreationConflict',
   { code: Schema.Literal('supplier.creation_conflict') },
 ) {}
+export class SupplierTaxInvalid extends Schema.TaggedError<SupplierTaxInvalid>()(
+  'SupplierTaxInvalid',
+  { code: Schema.Literals(['supplier.tax_invalid', 'supplier.vies_unavailable']) },
+) {}
 
 export const SupplierFailure = Schema.Union([
   AuthenticationRequired,
@@ -85,6 +98,7 @@ export const SupplierFailure = Schema.Union([
   SupplierArchived,
   SupplierVersionConflict,
   SupplierCreationConflict,
+  SupplierTaxInvalid,
   RequestRateLimited,
 ]);
 export type SupplierFailure = typeof SupplierFailure.Type;

@@ -7,6 +7,8 @@ import {
   CreditNoteRevision,
   InvoiceCreditConflict,
   InvoiceCreditRequestConflict,
+  InvoiceCreditAllocation,
+  InvoiceCreditAllocationRequest,
   InvoiceCredits,
   InvoiceRefund,
   InvoiceRefundRequest,
@@ -25,6 +27,15 @@ import { calculateDocumentLine, calculateDocumentTotals } from '../documents/cal
 import { DocumentRenderer } from '../documents/document-renderer.js';
 import { verifyArtifactContent } from '../documents/artifact-integrity.js';
 import { invoiceIssueDate } from './invoices.js';
+import {
+  convertToFunctionalCents,
+  findCurrencyConversion,
+} from '../company/currency-conversion.js';
+import {
+  AccountingPostingUnavailable,
+  postAccountingEntry,
+  reverseAccountingEntry,
+} from '../accounting/posting.js';
 
 const creditQuery = `select id, client_id as clientId, status, version, request_id as requestId,
   issue_request_id as issueRequestId, number, reason, currency, created_at as createdAt,
@@ -60,6 +71,8 @@ const CreditNoteRow = Schema.Struct({
 });
 const refundQuery =
   'select id, invoice_id as invoiceId, request_id as requestId, amount_cents as amountCents, refunded_on as refundedOn, reference, recorded_at as recordedAt, recorded_by_user_id as recordedByUserId, cancelled_at as cancelledAt, cancelled_by_user_id as cancelledByUserId, cancellation_reason as cancellationReason from invoice_refunds';
+const allocationQuery =
+  'select id, request_id as requestId, source_invoice_id as sourceInvoiceId, target_invoice_id as targetInvoiceId, amount_cents as amountCents, allocated_on as allocatedOn, reference, recorded_at as recordedAt, recorded_by_user_id as recordedByUserId, cancelled_at as cancelledAt, cancelled_by_user_id as cancelledByUserId, cancellation_reason as cancellationReason from invoice_credit_allocations';
 const SourceInvoice = Schema.Struct({
   clientId: Schema.String,
   status: Schema.String,
@@ -130,6 +143,11 @@ const make = Effect.gen(function* () {
     const refunds = Schema.decodeUnknownSync(Schema.Array(InvoiceRefund))(
       sqlite.prepare(`${refundQuery} where invoice_id = ? order by recorded_at, id`).all(invoiceId),
     );
+    const allocations = Schema.decodeUnknownSync(Schema.Array(InvoiceCreditAllocation))(
+      sqlite
+        .prepare(`${allocationQuery} where source_invoice_id = ? order by recorded_at, id`)
+        .all(invoiceId),
+    );
     const paid = Schema.decodeUnknownSync(Schema.Int)(
       sqlite
         .prepare(
@@ -163,14 +181,16 @@ const make = Effect.gen(function* () {
       (sum, refund) => sum + (refund.cancelledAt === null ? BigInt(refund.amountCents) : 0n),
       0n,
     );
+    const allocated = allocations.reduce((sum, allocation) => {
+      if (allocation.cancelledAt !== null) return sum;
+      return sum + BigInt(allocation.amountCents);
+    }, 0n);
+    const debt = BigInt(paid + credited - invoiceTotal) - refunded - allocated;
     return InvoiceCredits.make({
       creditNotes,
       refunds,
-      refundableCents: Number(
-        BigInt(paid + credited - invoiceTotal) - refunded > 0n
-          ? BigInt(paid + credited - invoiceTotal) - refunded
-          : 0n,
-      ),
+      allocations,
+      refundableCents: Number(debt > 0n ? debt : 0n),
     });
   };
 
@@ -474,6 +494,68 @@ const make = Effect.gen(function* () {
                  issue_request_id = ?, number = ?, issued_at = ?, issued_by_user_id = ? where id = ?`,
               )
               .run(request.requestId, number, issuedAt, actor, creditNoteId);
+            let functionalNetTotalCents = 0;
+            let functionalVatTotalCents = 0;
+            let functionalCurrency = saved.currency;
+            for (const line of saved.lines) {
+              const conversion = Schema.decodeUnknownSync(
+                Schema.Struct({ functionalCurrency: Schema.String, rate: Schema.Int }),
+              )(
+                sqlite
+                  .prepare(
+                    `select coalesce(r.functional_currency, r.currency) as functionalCurrency,
+                       coalesce(r.foreign_units_per_functional_unit_nanos, 1000000000) as rate
+                     from invoices i join invoice_revisions r
+                       on r.invoice_id = i.id and r.version = i.version
+                     where i.id = ?`,
+                  )
+                  .get(line.invoiceId),
+              );
+              functionalCurrency = conversion.functionalCurrency;
+              functionalNetTotalCents += convertToFunctionalCents(
+                line.netTotalCents,
+                conversion.rate,
+              );
+              functionalVatTotalCents += convertToFunctionalCents(
+                line.vatTotalCents,
+                conversion.rate,
+              );
+            }
+            const functionalTotalCents = functionalNetTotalCents + functionalVatTotalCents;
+            const postingLines = [
+              {
+                accountCode: '706',
+                label: number,
+                debitCents: functionalNetTotalCents,
+                creditCents: 0,
+              },
+              {
+                accountCode: '411',
+                label: number,
+                debitCents: 0,
+                creditCents: functionalTotalCents,
+              },
+            ];
+            if (functionalVatTotalCents > 0)
+              postingLines.push({
+                accountCode: '44571',
+                label: number,
+                debitCents: functionalVatTotalCents,
+                creditCents: 0,
+              });
+            postAccountingEntry({
+              sqlite,
+              sourceType: 'customer-credit',
+              sourceId: creditNoteId,
+              journalKind: 'sales',
+              entryDate: invoiceIssueDate(now, business.timeZone),
+              reference: number,
+              description: 'customer-credit',
+              currency: functionalCurrency,
+              actorUserId: actor,
+              now,
+              lines: postingLines,
+            });
             for (const invoiceId of new Set(saved.lines.map((line) => line.invoiceId)))
               audit.insert({
                 action: 'invoice.credited',
@@ -494,10 +576,12 @@ const make = Effect.gen(function* () {
             return readNote(creditNoteId);
           })
           .immediate(),
-      catch: (cause) =>
-        cause instanceof InvoiceCreditConflict || cause instanceof InvoiceCreditRequestConflict
-          ? cause
-          : new DatabaseError({ operation: 'invoice.credit.issue', cause }),
+      catch: (cause) => {
+        if (cause instanceof InvoiceCreditConflict || cause instanceof InvoiceCreditRequestConflict)
+          return cause;
+        if (cause instanceof AccountingPostingUnavailable) return conflict();
+        return new DatabaseError({ operation: 'invoice.credit.issue', cause });
+      },
     });
   });
 
@@ -554,6 +638,45 @@ const make = Effect.gen(function* () {
                 DateTime.formatIso(DateTime.makeUnsafe(now)),
                 actor,
               );
+            const invoiceCurrency = Schema.decodeUnknownSync(Schema.String)(
+              sqlite
+                .prepare(
+                  'select r.currency from invoices i join invoice_revisions r on r.invoice_id = i.id and r.version = i.version where i.id = ?',
+                )
+                .pluck()
+                .get(invoiceId),
+            );
+            const conversion = findCurrencyConversion(sqlite, invoiceCurrency, request.refundedOn);
+            if (conversion === undefined) throw conflict();
+            const functionalAmountCents = convertToFunctionalCents(
+              request.amountCents,
+              conversion.foreignUnitsPerFunctionalUnitNanos,
+            );
+            postAccountingEntry({
+              sqlite,
+              requestId: request.requestId,
+              journalKind: 'bank',
+              entryDate: request.refundedOn,
+              reference: request.reference.trim(),
+              description: 'customer-refund',
+              currency: conversion.functionalCurrency,
+              actorUserId: actor,
+              now,
+              lines: [
+                {
+                  accountCode: '411',
+                  label: request.reference.trim(),
+                  debitCents: functionalAmountCents,
+                  creditCents: 0,
+                },
+                {
+                  accountCode: '512',
+                  label: request.reference.trim(),
+                  debitCents: 0,
+                  creditCents: functionalAmountCents,
+                },
+              ],
+            });
             audit.insert({
               action: 'invoice.refund-recorded',
               actorUserId: actor,
@@ -565,10 +688,142 @@ const make = Effect.gen(function* () {
             return read(invoiceId);
           })
           .immediate(),
+      catch: (cause) => {
+        if (cause instanceof InvoiceCreditConflict || cause instanceof InvoiceCreditRequestConflict)
+          return cause;
+        if (cause instanceof AccountingPostingUnavailable) return conflict();
+        return new DatabaseError({ operation: 'invoice.refund.record', cause });
+      },
+    });
+  });
+
+  const allocate = Effect.fn('InvoiceCredits.allocate')(function* (
+    sourceInvoiceId: string,
+    request: typeof InvoiceCreditAllocationRequest.Type,
+    actor: string,
+  ) {
+    const now = yield* Clock.currentTimeMillis;
+    return yield* Effect.try({
+      try: () =>
+        sqlite
+          .transaction(() => {
+            const existing = sqlite
+              .prepare(`${allocationQuery} where request_id = ?`)
+              .get(request.requestId);
+            if (existing !== undefined) {
+              const saved = Schema.decodeUnknownSync(InvoiceCreditAllocation)(existing);
+              if (
+                saved.sourceInvoiceId !== sourceInvoiceId ||
+                saved.targetInvoiceId !== request.targetInvoiceId ||
+                saved.amountCents !== request.amountCents ||
+                saved.allocatedOn !== request.allocatedOn ||
+                saved.reference !== request.reference.trim()
+              )
+                throw requestConflict();
+              return read(sourceInvoiceId);
+            }
+            const sourceState = read(sourceInvoiceId);
+            const sourceIssuedOn = sourceState.creditNotes
+              .filter((note) => note.status === 'issued')
+              .map((note) => note.issuedAt)
+              .filter(Schema.is(Schema.String))
+              .sort()[0];
+            const source = Schema.decodeUnknownSync(
+              Schema.Struct({ clientId: Schema.String, currency: Schema.String }),
+            )(
+              sqlite
+                .prepare(
+                  `select i.client_id as clientId, r.currency from invoices i
+                   join invoice_revisions r on r.invoice_id = i.id and r.version = i.version
+                   where i.id = ?`,
+                )
+                .get(sourceInvoiceId),
+            );
+            const target = Schema.decodeUnknownSync(
+              Schema.Struct({
+                clientId: Schema.String,
+                currency: Schema.String,
+                status: Schema.String,
+                totalCents: Schema.Int,
+                paidCents: Schema.Int,
+                creditedCents: Schema.Int,
+                issuedAt: Schema.Int,
+              }),
+            )(
+              sqlite
+                .prepare(
+                  `select i.client_id as clientId, r.currency, i.status, r.total_cents as totalCents,
+                     coalesce((select sum(p.amount_cents) from invoice_payments p
+                       where p.invoice_id = i.id and p.cancelled_at is null), 0) as paidCents,
+                     coalesce((select sum(l.total_cents) from invoice_credit_note_lines l
+                       join invoice_credit_notes n on n.id = l.credit_note_id
+                       join invoice_credit_note_revisions cr on cr.id = l.credit_note_revision_id
+                       where l.invoice_id = i.id and n.status = 'issued' and cr.version = n.version), 0)
+                       + coalesce((select sum(a.amount_cents) from invoice_credit_allocations a
+                          where a.target_invoice_id = i.id and a.cancelled_at is null), 0) as creditedCents
+                   , i.issued_at as issuedAt from invoices i join invoice_revisions r
+                     on r.invoice_id = i.id and r.version = i.version where i.id = ?`,
+                )
+                .get(request.targetInvoiceId),
+            );
+            const targetRemaining = target.totalCents - target.paidCents - target.creditedCents;
+            if (
+              request.targetInvoiceId === sourceInvoiceId ||
+              target.clientId !== source.clientId ||
+              target.currency !== source.currency ||
+              target.status !== 'issued' ||
+              request.amountCents > sourceState.refundableCents ||
+              request.amountCents > targetRemaining ||
+              sourceIssuedOn === undefined ||
+              request.allocatedOn <
+                invoiceIssueDate(Date.parse(sourceIssuedOn), business.timeZone) ||
+              request.allocatedOn < invoiceIssueDate(target.issuedAt, business.timeZone) ||
+              request.allocatedOn > invoiceIssueDate(now, business.timeZone)
+            )
+              throw conflict();
+            const id = ulid(now);
+            const recordedAt = DateTime.formatIso(DateTime.makeUnsafe(now));
+            sqlite
+              .prepare(
+                'insert into invoice_credit_allocations (id, request_id, source_invoice_id, target_invoice_id, amount_cents, allocated_on, reference, recorded_at, recorded_by_user_id) values (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+              )
+              .run(
+                id,
+                request.requestId,
+                sourceInvoiceId,
+                request.targetInvoiceId,
+                request.amountCents,
+                request.allocatedOn,
+                request.reference.trim(),
+                recordedAt,
+                actor,
+              );
+            const settled = request.amountCents === targetRemaining;
+            if (settled)
+              sqlite
+                .prepare(
+                  "update invoices set status = 'paid', paid_at = ?, updated_at = ? where id = ?",
+                )
+                .run(now, now, request.targetInvoiceId);
+            audit.insert({
+              action: 'invoice.credit-allocated',
+              actorUserId: actor,
+              resourceType: 'invoice',
+              resourceId: sourceInvoiceId,
+              metadata: {
+                allocationId: id,
+                targetInvoiceId: request.targetInvoiceId,
+                amountCents: String(request.amountCents),
+              },
+              occurredAt: now,
+            });
+            return read(sourceInvoiceId);
+          })
+          .immediate(),
       catch: (cause) =>
         cause instanceof InvoiceCreditConflict || cause instanceof InvoiceCreditRequestConflict
           ? cause
-          : new DatabaseError({ operation: 'invoice.refund.record', cause }),
+          : new DatabaseError({ operation: 'invoice.credit.allocate', cause }),
     });
   });
 
@@ -599,6 +854,7 @@ const make = Effect.gen(function* () {
                 request.reason.trim(),
                 refundId,
               );
+            reverseAccountingEntry(sqlite, saved.requestId, actor, now);
             audit.insert({
               action: 'invoice.refund-cancelled',
               actorUserId: actor,
@@ -610,10 +866,87 @@ const make = Effect.gen(function* () {
             return read(invoiceId);
           })
           .immediate(),
-      catch: (cause) =>
-        cause instanceof InvoiceCreditConflict || cause instanceof InvoiceCreditRequestConflict
-          ? cause
-          : new DatabaseError({ operation: 'invoice.refund.cancel', cause }),
+      catch: (cause) => {
+        if (cause instanceof InvoiceCreditConflict || cause instanceof InvoiceCreditRequestConflict)
+          return cause;
+        if (cause instanceof AccountingPostingUnavailable) return conflict();
+        return new DatabaseError({ operation: 'invoice.refund.cancel', cause });
+      },
+    });
+  });
+
+  const cancelAllocation = Effect.fn('InvoiceCredits.cancelAllocation')(function* (
+    invoiceId: string,
+    allocationId: string,
+    request: typeof InvoiceRefundCancel.Type,
+    actor: string,
+  ) {
+    const now = yield* Clock.currentTimeMillis;
+    return yield* Effect.try({
+      try: () =>
+        sqlite
+          .transaction(() => {
+            const allocation = read(invoiceId).allocations.find(
+              (entry) => entry.id === allocationId,
+            );
+            if (allocation === undefined) throw conflict();
+            if (allocation.cancelledAt !== null) {
+              if (allocation.cancellationReason !== request.reason.trim()) throw requestConflict();
+              return read(invoiceId);
+            }
+            sqlite
+              .prepare(
+                'update invoice_credit_allocations set cancelled_at = ?, cancelled_by_user_id = ?, cancellation_reason = ? where id = ? and cancelled_at is null',
+              )
+              .run(
+                DateTime.formatIso(DateTime.makeUnsafe(now)),
+                actor,
+                request.reason.trim(),
+                allocationId,
+              );
+            const targetRemaining = Schema.decodeUnknownSync(Schema.Int)(
+              sqlite
+                .prepare(
+                  `select r.total_cents
+                    - coalesce((select sum(p.amount_cents) from invoice_payments p where p.invoice_id = i.id and p.cancelled_at is null), 0)
+                    - coalesce((select sum(l.total_cents) from invoice_credit_note_lines l
+                      join invoice_credit_notes n on n.id = l.credit_note_id
+                      join invoice_credit_note_revisions cr on cr.id = l.credit_note_revision_id
+                      where l.invoice_id = i.id and n.status = 'issued' and cr.version = n.version), 0)
+                    - coalesce((select sum(a.amount_cents) from invoice_credit_allocations a
+                      where a.target_invoice_id = i.id and a.cancelled_at is null), 0)
+                   from invoices i join invoice_revisions r on r.invoice_id = i.id and r.version = i.version
+                   where i.id = ?`,
+                )
+                .pluck()
+                .get(allocation.targetInvoiceId),
+            );
+            if (targetRemaining > 0)
+              sqlite
+                .prepare(
+                  "update invoices set status = 'issued', paid_at = null, updated_at = ? where id = ? and status = 'paid'",
+                )
+                .run(now, allocation.targetInvoiceId);
+            audit.insert({
+              action: 'invoice.credit-allocation-cancelled',
+              actorUserId: actor,
+              resourceType: 'invoice',
+              resourceId: invoiceId,
+              occurredAt: now,
+              metadata: {
+                allocationId,
+                targetInvoiceId: allocation.targetInvoiceId,
+                reason: request.reason.trim(),
+              },
+            });
+            return read(invoiceId);
+          })
+          .immediate(),
+      catch: (cause) => {
+        if (cause instanceof InvoiceCreditConflict || cause instanceof InvoiceCreditRequestConflict)
+          return cause;
+        return new DatabaseError({ operation: 'invoice.credit-allocation.cancel', cause });
+      },
     });
   });
 
@@ -717,7 +1050,19 @@ const make = Effect.gen(function* () {
     return yield* pdf(creditNoteId);
   });
 
-  return { get, getNote, create, update, issue, refund, cancelRefund, pdf, clientPdf };
+  return {
+    get,
+    getNote,
+    create,
+    update,
+    issue,
+    refund,
+    allocate,
+    cancelRefund,
+    cancelAllocation,
+    pdf,
+    clientPdf,
+  };
 });
 
 export class InvoiceCreditNotes extends Context.Service<

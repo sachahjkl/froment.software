@@ -19,6 +19,7 @@ import { teamRoutes } from './pages/back-office/team/team.routes';
 import { apiTokenRoutes } from './pages/back-office/api-tokens/api-token.routes';
 import { serviceRoutes } from './pages/back-office/connections/service.routes';
 import { auditRoute } from './pages/back-office/configuration/audit/audit.routes';
+import { accountingRoutes } from './pages/back-office/accounting/accounting.routes';
 import { publicQuoteContextChanged } from './public-quote/public-quote-navigation';
 import { withShell } from './app-shell';
 
@@ -31,6 +32,7 @@ export const routes: Routes = [
   ...withShell('administrator', [
     ...billingRoutes,
     ...bankWorkspaceRoutes,
+    ...accountingRoutes,
     ...teamRoutes,
     ...apiTokenRoutes,
     ...serviceRoutes,
@@ -108,6 +110,7 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./pages/public-quote/public-quote').then((module) => module.PublicQuote),
     data: {
+      shell: 'standalone',
       titleKey: 'page.public_quote',
       descriptionKey: 'page.description.public_quote',
       robots: 'noindex, nofollow',
@@ -277,6 +280,7 @@ export const routes: Routes = [
       shell: 'administrator',
       titleKey: 'supplierInvoice.analysis.title',
       ...permissionData('supplier-invoice.analyze', 'supplier.read'),
+      modules: ['purchasing', 'ai'],
       robots: 'noindex, nofollow',
     },
   },

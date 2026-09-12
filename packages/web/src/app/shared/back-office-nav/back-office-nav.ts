@@ -5,7 +5,7 @@ import { filter, map } from 'rxjs';
 import { I18nService, type TranslationKey } from '@app/i18n.service';
 import { Icon, type IconName } from '@shared/icon/icon';
 import { Authentication } from '@backoffice/authentication';
-import type { PermissionCodeValue } from '@froment/contracts';
+import type { CompanyModuleValue, PermissionCodeValue } from '@froment/contracts';
 
 interface NavigationItem {
   path: string;
@@ -13,12 +13,14 @@ interface NavigationItem {
   icon: IconName;
   prefixes: readonly string[];
   permissions: readonly PermissionCodeValue[];
+  modules?: readonly CompanyModuleValue[];
 }
 
 const activityItems: readonly NavigationItem[] = [
   {
     path: 'dashboard',
     permissions: ['client.read', 'quote.read', 'order.read', 'invoice.read'],
+    modules: ['sales'],
     label: 'backOffice.navigation.dashboard',
     icon: 'dashboard',
     prefixes: ['dashboard'],
@@ -26,6 +28,7 @@ const activityItems: readonly NavigationItem[] = [
   {
     path: 'clients',
     permissions: ['client.read'],
+    modules: ['sales'],
     label: 'backOffice.navigation.clients',
     icon: 'clients',
     prefixes: ['clients'],
@@ -33,6 +36,7 @@ const activityItems: readonly NavigationItem[] = [
   {
     path: 'suppliers',
     permissions: ['supplier.read'],
+    modules: ['purchasing'],
     label: 'backOffice.navigation.suppliers',
     icon: 'catalog',
     prefixes: ['suppliers'],
@@ -40,6 +44,7 @@ const activityItems: readonly NavigationItem[] = [
   {
     path: 'purchases',
     permissions: ['supplier-invoice.read'],
+    modules: ['purchasing'],
     label: 'backOffice.navigation.purchases',
     icon: 'invoice',
     prefixes: ['purchases'],
@@ -47,6 +52,7 @@ const activityItems: readonly NavigationItem[] = [
   {
     path: 'affairs',
     permissions: ['quote.read', 'order.read', 'invoice.read'],
+    modules: ['sales'],
     label: 'backOffice.navigation.affairs',
     icon: 'folder',
     prefixes: ['affairs', 'quotes', 'orders'],
@@ -54,6 +60,7 @@ const activityItems: readonly NavigationItem[] = [
   {
     path: 'billing',
     permissions: ['invoice.read'],
+    modules: ['sales'],
     label: 'backOffice.navigation.billing',
     icon: 'invoice',
     prefixes: ['billing', 'invoices'],
@@ -61,9 +68,18 @@ const activityItems: readonly NavigationItem[] = [
   {
     path: 'banking',
     permissions: ['bank.read'],
+    modules: ['banking'],
     label: 'bank.title',
     icon: 'bank',
     prefixes: ['banking'],
+  },
+  {
+    path: 'accounting',
+    permissions: ['accounting.read'],
+    modules: ['accounting'],
+    label: 'accounting.title',
+    icon: 'book',
+    prefixes: ['accounting'],
   },
   {
     path: 'emails',
@@ -75,6 +91,7 @@ const activityItems: readonly NavigationItem[] = [
   {
     path: 'catalog',
     permissions: ['catalog.read'],
+    modules: ['sales'],
     label: 'catalog.title',
     icon: 'catalog',
     prefixes: ['catalog'],
@@ -171,11 +188,15 @@ export class BackOfficeNav {
       .map((group) => ({
         label: group.label,
         items: group.items
-          .filter((item) =>
-            item.permissions.every((permission) => this.authentication.can(permission)),
-          )
+          .filter((item) => this.visible(item))
           .map((item) => ({ ...item, active: item.prefixes.some(matches) })),
       }))
       .filter((group) => group.items.length > 0);
   });
+
+  private visible(item: NavigationItem): boolean {
+    if (!item.permissions.every((permission) => this.authentication.can(permission))) return false;
+    const enabledModules = this.authentication.account()?.enabledModules ?? [];
+    return item.modules?.every((module) => enabledModules.includes(module)) ?? true;
+  }
 }

@@ -2,6 +2,7 @@ import { Schema } from 'effect';
 import { Ulid } from '../identifiers.js';
 import { CalendarDate, IsoUtc } from '../temporal.js';
 import { PositiveSafeInteger, SafeInteger } from '../documents/lines.js';
+import { CurrencyCode } from '../company/contracts.js';
 import {
   AuthenticationRequired,
   PermissionDenied,
@@ -72,6 +73,7 @@ export const BankAllocation = Schema.Struct({
   invoiceNumber: Schema.NullOr(Schema.String),
   amountCents: PositiveSafeInteger,
   paymentCancelled: Schema.Boolean,
+  exchangeDifferenceFunctionalCents: SafeInteger,
 });
 export const BankTransaction = Schema.Struct({
   id: Ulid,
@@ -79,6 +81,11 @@ export const BankTransaction = Schema.Struct({
   reference: Schema.String,
   bookedOn: CalendarDate,
   amountCents: Schema.Int,
+  currency: CurrencyCode,
+  functionalCurrency: CurrencyCode,
+  exchangeRateDate: CalendarDate,
+  foreignUnitsPerFunctionalUnitNanos: PositiveSafeInteger,
+  functionalAmountCents: Schema.Int,
   description: Schema.String,
   importedAt: IsoUtc,
   matchedCents: SafeInteger,
@@ -92,6 +99,7 @@ export const BankPaymentList = Schema.Array(
     reference: Schema.String,
     amountCents: PositiveSafeInteger,
     availableCents: SafeInteger,
+    currency: CurrencyCode,
   }),
 );
 export const BankMatchHistory = Schema.Array(
@@ -107,6 +115,7 @@ export const BankMatchHistory = Schema.Array(
     cancelledAt: Schema.NullOr(IsoUtc),
     cancelledByUserId: Schema.NullOr(Ulid),
     cancellationReason: Schema.NullOr(Schema.String),
+    exchangeDifferenceFunctionalCents: SafeInteger,
   }),
 );
 export const BankSuggestionLimit = 10;
@@ -125,6 +134,7 @@ export const BankMatchSuggestion = Schema.Struct({
   paidOn: CalendarDate,
   paymentReference: Schema.String,
   amountCents: PositiveSafeInteger,
+  currency: CurrencyCode,
   score: Schema.Int.check(Schema.isBetween({ minimum: 0, maximum: 100 })),
   reasons: Schema.Array(BankMatchSuggestionReason).check(Schema.isMinLength(1)),
 });
@@ -140,6 +150,11 @@ export const BankImportPreview = Schema.Struct({
       reference: Schema.String,
       bookedOn: CalendarDate,
       amountCents: Schema.Int,
+      currency: CurrencyCode,
+      functionalCurrency: CurrencyCode,
+      exchangeRateDate: CalendarDate,
+      foreignUnitsPerFunctionalUnitNanos: PositiveSafeInteger,
+      functionalAmountCents: Schema.Int,
       description: Schema.String,
       existing: Schema.Boolean,
     }),
@@ -156,6 +171,38 @@ export const BankMatchRequest = Schema.Struct({
   }),
 );
 export const BankUnmatchRequest = Schema.Struct({
+  matchId: Ulid,
+  reason: Schema.String.check(Schema.isPattern(/\S/), Schema.isMaxLength(500)),
+});
+export const SupplierBankPayment = Schema.Struct({
+  batchId: Ulid,
+  invoiceId: Ulid,
+  reference: Schema.String,
+  supplierName: Schema.String,
+  executionDate: CalendarDate,
+  amountCents: PositiveSafeInteger,
+  availableCents: SafeInteger,
+  matchedCents: SafeInteger,
+});
+export const SupplierBankPaymentList = Schema.Array(SupplierBankPayment);
+export const SupplierBankMatch = Schema.Struct({
+  id: Ulid,
+  batchId: Ulid,
+  invoiceId: Ulid,
+  amountCents: PositiveSafeInteger,
+  matchedAt: IsoUtc,
+  cancelledAt: Schema.NullOr(IsoUtc),
+  cancellationReason: Schema.NullOr(Schema.String),
+});
+export const SupplierBankMatchList = Schema.Array(SupplierBankMatch);
+export const SupplierBankMatchRequest = Schema.Struct({
+  requestId: Schema.String.check(Schema.isUUID(4)),
+  batchId: Ulid,
+  invoiceId: Ulid,
+  amountCents: PositiveSafeInteger,
+});
+export type SupplierBankMatchRequest = typeof SupplierBankMatchRequest.Type;
+export const SupplierBankUnmatchRequest = Schema.Struct({
   matchId: Ulid,
   reason: Schema.String.check(Schema.isPattern(/\S/), Schema.isMaxLength(500)),
 });

@@ -20,6 +20,8 @@ import { AuthenticationHttpLive, accessCookieName } from '../authentication/http
 import { ApiTokens } from '../api-tokens/service.js';
 import { Audit } from '../audit/audit.js';
 import { parseBankStatement } from '../banking/statement.js';
+import { ExchangeRateScale } from '../company/currency-conversion.js';
+import { Company } from '../company/service.js';
 import { defaultRuntimeConfig, RuntimeConfiguration } from '../runtime-config.js';
 import { RequestLimiterLive } from '../server/request-limiter.js';
 import { ApiBrowserRequestLive } from './origin.js';
@@ -73,6 +75,20 @@ const fixture = (
         }),
         Layer.mock(ApiTokens, {}),
         Layer.mock(Audit, { insert: () => userId }),
+        Layer.mock(Company, {
+          get: Effect.succeed({
+            jurisdiction: 'FR' as const,
+            functionalCurrency: 'EUR',
+            accountingInitialized: false,
+            fiscalYearStartMonth: 1,
+            fiscalYearStartDay: 1,
+            defaultFiscalYearMonths: 12 as const,
+            enabledModules: ['sales', 'purchasing', 'banking', 'accounting', 'tax', 'ai'] as const,
+            retentionYears: 10,
+            version: 1,
+            updatedAt: 0,
+          }),
+        }),
         RequestLimiterLive,
       ),
     ),
@@ -87,7 +103,14 @@ const fixture = (
           Effect.map((rows) => ({
             added: rows.length,
             existing: 0,
-            rows: rows.map((row) => ({ ...row, existing: false })),
+            rows: rows.map((row) => ({
+              ...row,
+              functionalCurrency: row.currency,
+              exchangeRateDate: row.bookedOn,
+              foreignUnitsPerFunctionalUnitNanos: ExchangeRateScale,
+              functionalAmountCents: row.amountCents,
+              existing: false,
+            })),
           })),
         ),
       )

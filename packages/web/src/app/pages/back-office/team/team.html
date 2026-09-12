@@ -135,6 +135,12 @@
                 >{{ i18n.t('configurationWorkspace.memberProfile') }}
                 <select class="select" [formField]="profileForm[member.id]">
                   <option [value]="'accountant'">{{ i18n.t('team.accountant') }}</option>
+                  <option [value]="'accounting-validator'">
+                    {{ i18n.t('team.accountingValidator') }}
+                  </option>
+                  <option [value]="'accounting-reader'">
+                    {{ i18n.t('team.accountingReader') }}
+                  </option>
                   <option [value]="'collaborator'">{{ i18n.t('team.collaborator') }}</option>
                   @for (role of data().roles; track role.id) {
                   <option [value]="'custom:' + role.id">{{ role.name }}</option>

@@ -22,6 +22,7 @@ it('generates escaped pain.001.001.03 amounts and payment identifiers', () => {
           amountCents: 12_501,
           currency: 'EUR',
           status: 'approved',
+          documentKind: 'invoice',
           iban: 'FR1420041010050500013M02606',
           bic: '',
         },

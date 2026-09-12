@@ -262,8 +262,8 @@ export class BankImport {
       replaceUrl: true,
     });
   }
-  protected money(cents: number): string {
-    return formatMoney(cents, this.i18n.language(), 'EUR');
+  protected money(cents: number, currency: string): string {
+    return formatMoney(cents, this.i18n.language(), currency);
   }
   private unsaved(): boolean {
     return (
