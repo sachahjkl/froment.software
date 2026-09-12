@@ -1,0 +1,11 @@
+application:
+  name: froment-software
+  port: 3000
+  healthPath: /api/health
+
+domain:
+  production: froment.software
+  staging: staging.froment.software
+
+volume:
+  mountPath: /var/lib/froment-software

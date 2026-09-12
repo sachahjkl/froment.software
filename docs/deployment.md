@@ -134,18 +134,11 @@ Ce contrôle évite une production vide après une erreur de montage.
 
 ## Spécifications Nomad
 
-Les fichiers suivants décrivent les charges de travail :
+Le Nomad Pack dans `deploy/nomad` décrit les deux charges de travail.
 
-- `deploy/nomad/staging.nomad.hcl`
-- `deploy/nomad/production.nomad.hcl`
-- `deploy/nomad/staging.volume.hcl`
-- `deploy/nomad/production.volume.hcl`
-- `deploy/nomad/staging-policy.hcl`
-- `deploy/nomad/production-policy.hcl`
+`application.yaml` déclare les domaines, le port, la santé et le volume.
 
-Chaque environnement utilise un jeton Nomad limité à son namespace.
-
-Un jeton staging ne peut pas lire les ressources production.
+GitHub OIDC fournit un jeton Nomad temporaire pour l’environnement demandé.
 
 ## Vérification staging
 
