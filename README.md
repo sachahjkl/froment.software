@@ -113,7 +113,7 @@ GitHub Actions checks the flake and publishes an immutable OCI image to GHCR.
 
 The publication job signs the image and attaches its SBOM and build provenance.
 
-The staging job joins Tailscale from a GitHub-hosted runner and submits `deploy/nomad/staging.nomad.hcl`.
+The staging job joins Tailscale from a GitHub-hosted runner and renders the Nomad Pack in `deploy`.
 
 Staging is publicly accessible and sends `X-Robots-Tag: noindex, nofollow` on every response.
 
