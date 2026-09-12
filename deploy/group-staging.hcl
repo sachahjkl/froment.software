@@ -7,7 +7,7 @@
       driver = "docker"
 
       config {
-        image        = "ghcr.io/sachahjkl/froment.software@sha256:0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+        image        = [[ var "image" . | quote ]]
         command      = "froment-software-prepare"
         network_mode = "services"
       }
