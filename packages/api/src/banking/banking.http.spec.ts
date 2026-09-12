@@ -1,5 +1,6 @@
 import {
   BankMatchHistory,
+  BankMatchSuggestionList,
   BankTransactionList,
   DefaultBankCsvConfiguration,
   InvoiceDetail,
@@ -89,6 +90,21 @@ describe('banking HTTP', () => {
       const debit = transactions.find((row) => row.reference === 'BANK-3');
       if (first === undefined || second === undefined || debit === undefined)
         throw new Error('bank.transaction.missing');
+      const suggestionsResponse = await fetch(
+        `${server.baseUrl}/api/banking/transactions/${first.id}/suggestions`,
+        { headers: server.sessionHeaders },
+      );
+      expect(suggestionsResponse.status).toBe(200);
+      expect(
+        Schema.decodeUnknownSync(BankMatchSuggestionList)(await suggestionsResponse.json()),
+      ).toMatchObject([
+        {
+          paymentId: payment.id,
+          invoiceId: invoice.id,
+          amountCents: 10000,
+          reasons: expect.arrayContaining(['exact-amount', 'payment-reference', 'close-date']),
+        },
+      ]);
       expect((await post(`/api/banking/transactions/${debit.id}/match`, allocation)).status).toBe(
         409,
       );

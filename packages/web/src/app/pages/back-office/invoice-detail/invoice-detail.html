@@ -273,21 +273,33 @@
     </div>
     } @case ('credit') { @if (credits.isLoading()) {
     <p role="status">{{ i18n.t('backOffice.invoices.loading') }}</p>
-    } @else if (creditState(); as state) { @if (state.creditNote; as note) {
+    } @else if (creditState(); as state) { @for (note of state.creditNotes; track note.id) {
     <section class="summary ds-panel">
-      <h2>{{ note.number }}</h2>
+      <h2>{{ note.number ?? i18n.t('credit.draft') }}</h2>
       <p>{{ note.reason }}</p>
       <p>
-        {{ note.issuedAt | localizedDate: i18n.language(): { dateStyle: 'medium' } }} · {{
-        task.money(note.totalCents) }}
+        {{ (note.issuedAt ?? note.createdAt) | localizedDate: i18n.language(): { dateStyle: 'medium'
+        } }} · {{ task.money(creditAmount(note, invoice.id)) }}
       </p>
+      @if (note.status === 'issued') {
       <a
         *appCan="['document.download', 'invoice.read']"
-        [href]="'/api/invoices/' + invoice.id + '/credit-note/pdf'"
+        [href]="'/api/credit-notes/' + note.id + '/pdf'"
         download
         >{{ i18n.t('credit.pdf') }}</a
       >
+      } @else {
+      <a
+        [routerLink]="['/backoffice/invoices', invoice.id, 'credits', note.id, 'edit']"
+        *appCan="'invoice.credit'"
+        [queryParams]="task.navigation.detailQuery()"
+        >{{ i18n.t('credit.editDraft') }}</a
+      >
+      }
     </section>
+    } @empty {
+    <p>{{ i18n.t('billingWorkspace.noCreditNote') }}</p>
+    }
     <p>{{ i18n.t('credit.refundable') }} {{ task.money(state.refundableCents) }}</p>
     @if (state.refundableCents > 0) {
     <a
@@ -342,8 +354,6 @@
       </table>
     </div>
     } @else {
-    <p>{{ i18n.t('billingWorkspace.noCreditNote') }}</p>
-    } } @else {
     <p appNotice variant="danger" role="alert">{{ i18n.t('credit.loadError') }}</p>
     <button appButton (click)="credits.reload()">{{ i18n.t('credit.reload') }}</button> } } @case
     ('history') { @if (history.isLoading()) {

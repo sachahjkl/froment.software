@@ -34,9 +34,11 @@ import { documentTextEditorText } from './document-text-editor.js';
 import { supplierWorkspaceText } from './supplier-workspace.js';
 import { companyWorkspaceText } from './company-workspace.js';
 import { supplierInvoiceText } from './supplier-invoices.js';
+import { affairText } from './affairs.js';
 
 export const translations = {
   fr: {
+    ...affairText.fr,
     ...connectionText.fr,
     ...checkoutText.fr,
     ...backOfficeShellText.fr,
@@ -504,6 +506,9 @@ export const translations = {
     'backOffice.apiTokens.permission.quote.delete': 'Supprimer les devis.',
     'backOffice.apiTokens.permission.quote.send': 'Créer les liens de signature des devis.',
     'backOffice.apiTokens.permission.order.read': 'Consulter les commandes.',
+    'backOffice.apiTokens.permission.affair.read': 'Consulter les affaires.',
+    'backOffice.apiTokens.permission.affair.create': 'Créer des affaires.',
+    'backOffice.apiTokens.permission.affair.update': 'Modifier les affaires.',
     'backOffice.apiTokens.permission.invoice.read': 'Consulter les factures.',
     'backOffice.apiTokens.permission.invoice.create': 'Créer des factures.',
     'backOffice.apiTokens.permission.invoice.update': 'Modifier les factures.',
@@ -658,6 +663,7 @@ export const translations = {
     'backOffice.quote.lines': 'Lignes',
     'backOffice.quote.description': 'Description',
     'backOffice.quote.quantity': 'Quantité',
+    'backOffice.quote.currency': 'Devise ISO',
     'backOffice.quote.unitPrice': 'Prix unitaire HT',
     'backOffice.quote.vatRate': 'TVA (%)',
     'backOffice.quote.removeLine': 'Supprimer la ligne',
@@ -1621,6 +1627,7 @@ export const translations = {
     'cookies.contact.content': 'Pour une question sur ce réglage ou le fonctionnement du site :',
   },
   en: {
+    ...affairText.en,
     ...connectionText.en,
     ...checkoutText.en,
     ...backOfficeShellText.en,
@@ -2079,6 +2086,9 @@ export const translations = {
     'backOffice.apiTokens.permission.quote.delete': 'Delete quotes.',
     'backOffice.apiTokens.permission.quote.send': 'Create signing links for quotes.',
     'backOffice.apiTokens.permission.order.read': 'View orders.',
+    'backOffice.apiTokens.permission.affair.read': 'View affairs.',
+    'backOffice.apiTokens.permission.affair.create': 'Create affairs.',
+    'backOffice.apiTokens.permission.affair.update': 'Update affairs.',
     'backOffice.apiTokens.permission.invoice.read': 'View invoices.',
     'backOffice.apiTokens.permission.invoice.create': 'Create invoices.',
     'backOffice.apiTokens.permission.invoice.update': 'Update invoices.',
@@ -2230,6 +2240,7 @@ export const translations = {
     'backOffice.quote.lines': 'Lines',
     'backOffice.quote.description': 'Description',
     'backOffice.quote.quantity': 'Quantity',
+    'backOffice.quote.currency': 'ISO currency',
     'backOffice.quote.unitPrice': 'Unit price before tax',
     'backOffice.quote.vatRate': 'VAT (%)',
     'backOffice.quote.removeLine': 'Remove line',

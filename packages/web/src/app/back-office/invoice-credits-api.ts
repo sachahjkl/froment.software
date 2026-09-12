@@ -1,7 +1,10 @@
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import {
-  CreditNoteRequest,
+  CreditNote,
+  CreditNoteDraftRequest,
+  CreditNoteDraftUpdate,
+  CreditNoteIssueRequest,
   InvoiceCreditFailure,
   InvoiceCredits,
   InvoiceRefundRequest,
@@ -19,10 +22,34 @@ export class InvoiceCreditsApi {
       'credit.error',
     );
   }
-  issue(id: string, request: typeof CreditNoteRequest.Type) {
+  getNote(id: string) {
     return requestOutcome(
-      this.http.post(`/api/invoices/${id}/credits`, request),
-      InvoiceCredits,
+      this.http.get(`/api/credit-notes/${id}`),
+      CreditNote,
+      InvoiceCreditFailure,
+      'credit.error',
+    );
+  }
+  create(request: typeof CreditNoteDraftRequest.Type) {
+    return requestOutcome(
+      this.http.post('/api/credit-notes', request),
+      CreditNote,
+      InvoiceCreditFailure,
+      'credit.error',
+    );
+  }
+  update(id: string, request: typeof CreditNoteDraftUpdate.Type) {
+    return requestOutcome(
+      this.http.put(`/api/credit-notes/${id}`, request),
+      CreditNote,
+      InvoiceCreditFailure,
+      'credit.error',
+    );
+  }
+  issue(id: string, request: typeof CreditNoteIssueRequest.Type) {
+    return requestOutcome(
+      this.http.post(`/api/credit-notes/${id}/issue`, request),
+      CreditNote,
       InvoiceCreditFailure,
       'credit.error',
     );

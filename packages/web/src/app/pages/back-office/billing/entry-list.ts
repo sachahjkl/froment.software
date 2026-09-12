@@ -70,12 +70,15 @@ export function compareEntries(
           ? entry.paidOn
           : 'refundedOn' in entry
             ? entry.refundedOn
-            : entry.issuedAt,
+            : (entry.issuedAt ?? entry.createdAt),
       );
     comparison = date(left) - date(right);
   } else {
     const value = (entry: FinancialEntry): string => {
-      if (order.startsWith('invoice-')) return entry.invoiceNumber ?? entry.title;
+      if (order.startsWith('invoice-'))
+        return 'sourceInvoiceNumbers' in entry
+          ? entry.sourceInvoiceNumbers.join(' ')
+          : (entry.invoiceNumber ?? entry.title ?? '');
       if (order.startsWith('client-')) return entry.clientDisplayName;
       if (order.startsWith('method-'))
         return 'method' in entry ? translate(paymentMethodKey(entry.method)) : '';
@@ -85,7 +88,7 @@ export function compareEntries(
             ? 'billingWorkspace.cancelled'
             : 'billingWorkspace.active',
         );
-      return 'reference' in entry ? entry.reference : entry.number;
+      return 'reference' in entry ? entry.reference : (entry.number ?? entry.id);
     };
     comparison = collator.compare(value(left), value(right));
   }

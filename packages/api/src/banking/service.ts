@@ -7,6 +7,10 @@ import {
   BankMatchRequest,
   BankPaymentList,
   BankTransactionNotFound,
+  BankMatchSuggestionList,
+  BankSuggestionLimit,
+  CalendarDate,
+  Ulid,
   type BankImportRequestValue,
 } from '@froment/contracts';
 import { Clock, Context, DateTime, Effect, Layer } from 'effect';
@@ -102,6 +106,98 @@ const makeBanking = Effect.gen(function* () {
     if (transaction === undefined)
       return yield* new BankTransactionNotFound({ code: 'bank.transaction_not_found' });
     return transaction;
+  });
+  const suggestions = Effect.fn('Banking.suggestions')(function* (transactionId: string) {
+    const transaction = yield* get(transactionId);
+    if (transaction.amountCents <= transaction.matchedCents || transaction.amountCents <= 0)
+      return BankMatchSuggestionList.make([]);
+    return yield* Effect.try({
+      try: () => {
+        const candidates = Schema.decodeUnknownSync(
+          Schema.Array(
+            Schema.Struct({
+              paymentId: Ulid,
+              invoiceId: Ulid,
+              invoiceNumber: Schema.NullOr(Schema.String),
+              clientDisplayName: Schema.String,
+              paidOn: CalendarDate,
+              paymentReference: Schema.String,
+              availableCents: Schema.Int,
+            }),
+          ),
+        )(
+          database.sqlite
+            .prepare(
+              `select p.id as paymentId, p.invoice_id as invoiceId,
+                i.invoice_number as invoiceNumber, r.client_display_name as clientDisplayName,
+                p.paid_on as paidOn, p.reference as paymentReference,
+                p.amount_cents - coalesce((select sum(amount_cents) from bank_matches
+                  where payment_id = p.id and cancelled_at is null), 0) as availableCents
+               from invoice_payments p
+               join invoices i on i.id = p.invoice_id
+               join invoice_revisions r on r.invoice_id = i.id and r.version = i.version
+               where p.cancelled_at is null
+               order by p.paid_on desc, p.id limit 1000`,
+            )
+            .all(),
+        );
+        const text = `${transaction.reference} ${transaction.description}`
+          .normalize('NFKD')
+          .replace(/\p{Mark}/gu, '')
+          .toLocaleLowerCase('fr');
+        const available = transaction.amountCents - transaction.matchedCents;
+        return BankMatchSuggestionList.make(
+          candidates
+            .flatMap((candidate) => {
+              if (candidate.availableCents <= 0) return [];
+              const amountCents = Math.min(candidate.availableCents, available);
+              let score = 0;
+              const reasons: Array<
+                | 'exact-amount'
+                | 'close-amount'
+                | 'invoice-reference'
+                | 'payment-reference'
+                | 'close-date'
+              > = [];
+              if (candidate.availableCents === available) {
+                score += 55;
+                reasons.push('exact-amount');
+              } else if (
+                Math.abs(candidate.availableCents - available) <=
+                Math.max(100, Math.round(available / 100))
+              ) {
+                score += 35;
+                reasons.push('close-amount');
+              }
+              if (candidate.invoiceNumber && text.includes(candidate.invoiceNumber.toLowerCase())) {
+                score += 25;
+                reasons.push('invoice-reference');
+              }
+              const paymentReference = candidate.paymentReference.trim().toLocaleLowerCase('fr');
+              if (paymentReference.length >= 4 && text.includes(paymentReference)) {
+                score += 10;
+                reasons.push('payment-reference');
+              }
+              const days = Math.abs(
+                (Date.parse(candidate.paidOn) - Date.parse(transaction.bookedOn)) / 86_400_000,
+              );
+              if (days <= 7) {
+                score += days <= 3 ? 10 : 5;
+                reasons.push('close-date');
+              }
+              return score < 35
+                ? []
+                : [{ ...candidate, amountCents, score: Math.min(score, 100), reasons }];
+            })
+            .toSorted(
+              (left, right) =>
+                right.score - left.score || left.paymentId.localeCompare(right.paymentId),
+            )
+            .slice(0, BankSuggestionLimit),
+        );
+      },
+      catch: (cause) => new DatabaseError({ operation: 'bank.suggestions', cause }),
+    });
   });
   const classifyStatement = (request: BankImportRequestValue) => {
     const rows = parseBankStatement(request).map((row) => {
@@ -368,7 +464,17 @@ const makeBanking = Effect.gen(function* () {
     });
     return yield* list;
   });
-  return { list, get, history, payments, previewStatement, importStatement, match, unmatch };
+  return {
+    list,
+    get,
+    history,
+    payments,
+    suggestions,
+    previewStatement,
+    importStatement,
+    match,
+    unmatch,
+  };
 });
 export class Banking extends Context.Service<Banking, Effect.Success<typeof makeBanking>>()(
   '@froment/api/Banking',

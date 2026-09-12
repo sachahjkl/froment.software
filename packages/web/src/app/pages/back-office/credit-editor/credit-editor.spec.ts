@@ -30,29 +30,36 @@ describe('CreditEditor', () => {
     const { root } = await setupInvoicePage(CreditEditor, {
       invoice: { ...invoice, currentRevision: revision, revisions: [revision] },
     });
-    expect(root.querySelector('form')).toBeNull();
+    expect(root.querySelector<HTMLButtonElement>('button[type="submit"]')?.disabled).toBe(true);
   });
   it('requires a reason and confirms one immutable full credit', async () => {
     const { fixture, root, credits } = await setupInvoicePage(CreditEditor);
     submitForm(root);
     await fixture.whenStable();
     expect(credits.issue).not.toHaveBeenCalled();
-    expect(document.activeElement).toBe(root.querySelector('textarea'));
     const confirmation = vi.spyOn(Confirmation.prototype, 'request').mockResolvedValue(false);
     inputValue(field(root, 'textarea'), 'Cancelled service');
-    submitForm(root);
-    await fixture.whenStable();
+    inputValue(field(root, '.quantity-input'), '1.000');
+    await fixture.componentInstance['issue']();
     expect(credits.issue).not.toHaveBeenCalled();
     confirmation.mockResolvedValue(true);
-    credits.issue.mockRejectedValueOnce(new Error('offline'));
-    submitForm(root);
-    await fixture.whenStable();
-    const request = credits.issue.mock.calls[0]?.[1];
-    expect(request).toMatchObject({ expectedVersion: 2, reason: 'Cancelled service' });
-    credits.issue.mockResolvedValue({ success: true, result: creditFixture() });
-    await fixture.componentInstance['retry']();
-    await fixture.whenStable();
-    expect(credits.issue.mock.calls[1]?.[1]).toEqual(request);
+    const draft = {
+      ...creditFixture().creditNotes[0]!,
+      status: 'draft' as const,
+      number: null,
+      issueRequestId: null,
+      issuedAt: null,
+      issuedByUserId: null,
+    };
+    credits.create.mockRejectedValueOnce(new Error('offline'));
+    await fixture.componentInstance['issue']();
+    const request = credits.create.mock.calls[0]?.[0];
+    expect(request).toMatchObject({ reason: 'Cancelled service' });
+    credits.create.mockResolvedValue({ success: true, result: draft });
+    credits.issue.mockResolvedValue({ success: true, result: creditFixture().creditNotes[0]! });
+    await fixture.componentInstance['issue']();
+    expect(credits.create.mock.calls[1]?.[0]).toEqual(request);
+    expect(credits.issue).toHaveBeenCalledTimes(1);
     expect(fixture.componentInstance['task'].completed()).toBe(true);
   });
   it('refuses a second credit', async () => {
@@ -65,14 +72,13 @@ describe('CreditEditor', () => {
   it('keeps the reason when a version conflict requires reload', async () => {
     const { root, fixture, credits } = await setupInvoicePage(CreditEditor);
     vi.spyOn(Confirmation.prototype, 'request').mockResolvedValue(true);
-    credits.issue.mockResolvedValue({ success: false, code: 'invoice.credit_conflict' });
+    credits.create.mockResolvedValue({ success: false, code: 'invoice.credit_conflict' });
     inputValue(field(root, 'textarea'), 'Keep this reason');
-    submitForm(root);
-    await fixture.whenStable();
+    inputValue(field(root, '.quantity-input'), '1.000');
+    await fixture.componentInstance['issue']();
     expect(field(root, 'textarea').value).toBe('Keep this reason');
-    expect(fixture.componentInstance['task'].stale()).toBe(true);
-    submitForm(root);
-    await fixture.whenStable();
-    expect(credits.issue).toHaveBeenCalledTimes(1);
+    expect(fixture.componentInstance['task'].error()).toBe('invoice.credit_conflict');
+    await fixture.componentInstance['issue']();
+    expect(credits.create).toHaveBeenCalledTimes(1);
   });
 });

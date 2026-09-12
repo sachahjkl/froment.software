@@ -44,6 +44,7 @@ describe('CustomerDocumentDetail', () => {
         recordedPaidCents: 0,
         remainingCents: 0,
         creditedCents: 2000,
+        creditNotes: [{ id: '01ARZ3NDEKTSV4RRFFQ69G5FB8', number: 'AV-2026-000001' }],
       },
     ];
     const { root, harness } = await configure(`/invoice/${invoiceId}`, api);
@@ -51,7 +52,7 @@ describe('CustomerDocumentDetail', () => {
       /sans détail complet|without complete payment details/,
     );
     expect(root.querySelector('a[download]')?.getAttribute('href')).toBe(
-      `/api/client/invoices/${invoiceId}/credit-note/pdf`,
+      '/api/client/credit-notes/01ARZ3NDEKTSV4RRFFQ69G5FB8/pdf',
     );
     const voidId = '01ARZ3NDEKTSV4RRFFQ69G5FAZ';
     api.invoices = [{ ...api.invoices[0]!, id: voidId, status: 'void' }];

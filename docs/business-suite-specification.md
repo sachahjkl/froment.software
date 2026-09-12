@@ -296,13 +296,13 @@ Elle ne remplace pas les critères de fin définis au début du document.
 | Paramètres comptables société      | Réalisé en première version | Initialisation et verrouillage complet               |
 | Virements fournisseur              | Réalisé en première version | Contrôle de l’artefact immuable et rapprochement     |
 | Imports bancaires CAMT, OFX et CSV | Réalisé                     | Validation finale et livraison globale               |
-| Avoirs partiels et consolidés      | À faire                     | Domaine, API, persistance, documents et interface    |
-| Encaissements scindés              | À faire                     | Actions, préremplissage et interface                 |
-| Sélecteurs de version intégrés     | À faire                     | Uniformisation de tous les documents                 |
+| Avoirs partiels et consolidés      | Réalisé en première version | Validation finale et intégration comptable           |
+| Encaissements scindés              | Réalisé                     | Validation finale                                    |
+| Sélecteurs de version intégrés     | Réalisé                     | Validation finale                                    |
 | Tableau éditable commun            | À faire                     | Composant partagé et modale mobile                   |
-| Entité Affaire indépendante        | À faire                     | Modèle, migration et interface                       |
+| Entité Affaire indépendante        | Réalisé en première version | Validation finale et enrichissement des vues         |
 | Comptabilité intégrée              | Partiel                     | Plan, périodes, écritures, états, CA3, FEC et pièces |
-| Suggestions de rapprochement       | À faire                     | Moteur de score, confirmation et audit               |
+| Suggestions de rapprochement       | Réalisé en première version | Validation finale et extension aux achats            |
 | Données de démonstration           | À faire                     | Générateur, commande, permissions et interface       |
 | Page autonome de signature         | À faire en dernier          | Composition, design et accessibilité                 |
 

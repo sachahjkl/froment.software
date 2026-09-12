@@ -14,6 +14,8 @@ export {
   CompanySettingsUpdateRequest,
   type CompanySettingsUpdateRequest as CompanySettingsUpdateRequestValue,
   FunctionalCurrency,
+  CurrencyCode,
+  type CurrencyCode as CurrencyCodeValue,
   type FunctionalCurrency as FunctionalCurrencyValue,
   FunctionalCurrencyLocked,
   Jurisdiction,
@@ -473,6 +475,10 @@ export {
   BankPaymentList,
   BankTransactionList,
   BankMatchHistory,
+  BankMatchSuggestionList,
+  BankMatchSuggestion,
+  BankMatchSuggestionReason,
+  BankSuggestionLimit,
   BankMatchRequest,
   BankUnmatchRequest,
   BankImportRequest,
@@ -498,6 +504,7 @@ export * from './authentication/passkeys.js';
 export * from './team/contracts.js';
 export * from './roles/contracts.js';
 export * from './invoices/credit-notes.js';
+export * from './affairs/contracts.js';
 export * from './banking/ledger.js';
 export * from './integrations/email-drafts.js';
 export * from './integrations/provider-actions.js';

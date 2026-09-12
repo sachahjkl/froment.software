@@ -50,6 +50,7 @@ describe('formatted document conditions', () => {
       headers: server.jsonHeaders,
       body: JSON.stringify({
         clientId: client.id,
+        currency: 'EUR',
         title: 'Prestation avec conditions',
         conditions: preset.conditions,
         conditionsPresentation: preset.conditionsPresentation,

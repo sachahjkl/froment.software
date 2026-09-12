@@ -67,7 +67,24 @@
         <h2 id="allocation-title">{{ i18n.t('bankWorkspace.allocate') }}</h2>
         <p>{{ i18n.t('bankWorkspace.groupHint') }}</p>
         <p class="muted">{{ i18n.t('bankWorkspace.paymentHint') }}</p>
-        @if (invoicesFailed()) {
+        @if (suggestionState() === 'loading') {
+        <p role="status">{{ i18n.t('bankWorkspace.suggestionsLoading') }}</p>
+        } @else if (suggestions().length > 0) {
+        <section class="suggestions" aria-labelledby="bank-suggestions-title">
+          <h3 id="bank-suggestions-title">{{ i18n.t('bankWorkspace.suggestions') }}</h3>
+          <p class="muted">{{ i18n.t('bankWorkspace.suggestionsHint') }}</p>
+          <ul>
+            @for (suggestion of suggestions(); track suggestion.paymentId) {
+            <li>
+              <button appButton type="button" variant="ghost" (click)="applySuggestion(suggestion)">
+                {{ suggestion.invoiceNumber }} · {{ suggestion.clientDisplayName }} · {{
+                money(suggestion.amountCents) }} · {{ suggestion.score }}%
+              </button>
+            </li>
+            }
+          </ul>
+        </section>
+        } @if (invoicesFailed()) {
         <p appNotice variant="danger" role="alert">{{ i18n.t('bank.error') }}</p>
         <div>
           <button appButton type="button" (click)="loadInvoices()">

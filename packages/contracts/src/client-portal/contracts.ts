@@ -1,4 +1,5 @@
 import { Schema } from 'effect';
+import { CurrencyCode } from '../company/contracts.js';
 
 import { CalendarDate } from '../temporal.js';
 import { StoredInvoiceNumber } from '../business/contracts.js';
@@ -18,7 +19,7 @@ export const ClientQuoteSummary = Schema.Struct({
   reference: QuoteReference,
   status: Schema.Literals(['sent', 'accepted', 'rejected', 'expired']),
   title: Title,
-  currency: Schema.Literal('EUR'),
+  currency: CurrencyCode,
   totalCents: SafeInteger,
   updatedAt: IsoUtc,
   pdfAvailable: Schema.Boolean,
@@ -35,7 +36,7 @@ export const ClientOrderSummary = Schema.Struct({
   quoteReference: QuoteReference,
   status: Schema.Literal('confirmed'),
   title: Title,
-  currency: Schema.Literal('EUR'),
+  currency: CurrencyCode,
   totalCents: SafeInteger,
   createdAt: IsoUtc,
   invoiceId: Schema.NullOr(Ulid),
@@ -57,10 +58,16 @@ export const ClientInvoiceSummary = Schema.Struct({
   invoiceNumber: StoredInvoiceNumber,
   title: Title,
   dueDate: CalendarDate,
-  currency: Schema.Literal('EUR'),
+  currency: CurrencyCode,
   totalCents: SafeInteger,
   updatedAt: IsoUtc,
   pdfAvailable: Schema.Boolean,
+  creditNotes: Schema.Array(
+    Schema.Struct({
+      id: Ulid,
+      number: Schema.String.check(Schema.isPattern(/^AV-\d{4}-\d{6}$/)),
+    }),
+  ),
 });
 export type ClientInvoiceSummary = typeof ClientInvoiceSummary.Type;
 

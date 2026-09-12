@@ -9,6 +9,7 @@ import {
   QuoteStatus,
   QuoteVersionConflict,
   Ulid,
+  CurrencyCode,
   type QuoteCreateRequestValue,
   type QuoteCancelRequestValue,
   type QuoteDetailValue,
@@ -24,6 +25,7 @@ import {
 } from '@froment/contracts';
 import { Clock, Context, DateTime, Effect, Layer, Schema } from 'effect';
 import { ulid } from 'ulid';
+import { randomUUID } from 'node:crypto';
 
 import { Audit } from '../audit/audit.js';
 import { BusinessConfig } from '../business/business-config.js';
@@ -49,7 +51,7 @@ const RevisionRecord = Schema.Struct({
   title: Schema.String,
   conditions: Schema.String,
   conditionsPresentation: StoredTextPresentation,
-  currency: Schema.Literal('EUR'),
+  currency: CurrencyCode,
   netTotalCents: Schema.Int,
   vatTotalCents: Schema.Int,
   totalCents: Schema.Int,
@@ -90,7 +92,7 @@ const QuoteSummaryRecord = Schema.Struct({
   status: QuoteStatus,
   version: Schema.Int,
   title: Schema.String,
-  currency: Schema.Literal('EUR'),
+  currency: CurrencyCode,
   totalCents: Schema.Int,
   updatedAt: Schema.Int,
 });
@@ -324,6 +326,7 @@ export const QuotesLive = Layer.effect(
       title: string,
       conditions: string,
       conditionsPresentation: DocumentTextPresentationValue | undefined,
+      currency: string,
       lines: ReadonlyArray<QuoteLineInputValue>,
       createdByUserId: string,
       now: number,
@@ -360,7 +363,7 @@ export const QuotesLive = Layer.effect(
         },
         title: title.trim(),
         conditions,
-        currency: 'EUR',
+        currency,
         ...totals,
         lines: calculatedLines,
       };
@@ -375,7 +378,7 @@ export const QuotesLive = Layer.effect(
            (id, quote_id, version, client_display_name, title, conditions, conditions_presentation, currency,
              net_total_cents, vat_total_cents, total_cents, created_at, created_by_user_id,
                template_id, template_version, render_snapshot)
-             values (?, ?, ?, ?, ?, ?, ?, 'EUR', ?, ?, ?, ?, ?, 'quote-default', 1, ?)`,
+              values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'quote-default', 1, ?)`,
         )
         .run(
           revisionId,
@@ -385,6 +388,7 @@ export const QuotesLive = Layer.effect(
           title.trim(),
           conditions,
           storeTextPresentation(conditionsPresentation),
+          currency,
           totals.netTotalCents,
           totals.vatTotalCents,
           totals.totalCents,
@@ -446,10 +450,45 @@ export const QuotesLive = Layer.effect(
                 request.title,
                 request.conditions,
                 request.conditionsPresentation,
+                request.currency,
                 request.lines,
                 createdByUserId,
                 now,
               );
+              const affairId = ulid(now + 1);
+              const affairReference = allocateBusinessReference(
+                database.sqlite,
+                'affair',
+                businessYear(now, businessConfig.timeZone),
+              );
+              database.sqlite
+                .prepare(
+                  `insert into affairs
+                   (id, request_id, reference, client_id, title, status, version, created_at, updated_at)
+                   values (?, ?, ?, ?, ?, 'open', 1, ?, ?)`,
+                )
+                .run(
+                  affairId,
+                  randomUUID(),
+                  affairReference,
+                  request.clientId,
+                  request.title,
+                  now,
+                  now,
+                );
+              database.sqlite
+                .prepare(
+                  'insert into affair_quotes (affair_id, quote_id, linked_at, linked_by_user_id) values (?, ?, ?, ?)',
+                )
+                .run(affairId, quoteId, now, createdByUserId);
+              audit.insert({
+                action: 'affair.created',
+                actorUserId: createdByUserId,
+                resourceType: 'affair',
+                resourceId: affairId,
+                metadata: { reference: affairReference },
+                occurredAt: now,
+              });
               audit.insert({
                 action: 'quote.created',
                 actorUserId: createdByUserId,
@@ -525,6 +564,7 @@ export const QuotesLive = Layer.effect(
                 request.title,
                 request.conditions,
                 request.conditionsPresentation,
+                request.currency,
                 request.lines,
                 createdByUserId,
                 now,

@@ -42,6 +42,15 @@ export const BankingHandlers = HttpApiBuilder.group(Api, 'banking', (handlers) =
         }),
       )
       .handle(
+        'bankMatchSuggestionList',
+        Effect.fn('bankMatchSuggestionList')(function* ({ params }) {
+          yield* setPrivateResponseHeaders;
+          return yield* (yield* Banking)
+            .suggestions(params.transactionId)
+            .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
+        }),
+      )
+      .handle(
         'bankImportPreview',
         Effect.fn('bankImportPreview')(function* ({ payload }) {
           yield* setPrivateResponseHeaders;

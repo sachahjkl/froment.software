@@ -237,13 +237,15 @@ export const prepareCreditNoteDocument = (
 ): InvoiceDocumentInput => {
   if (snapshot.issuedAt === null || snapshot.invoiceNumber === null)
     throw new Error('credit.invoice_not_issued');
+  if (note.status !== 'issued' || note.number === null) throw new Error('credit.note_not_issued');
   const invoice = prepareInvoiceDocument(snapshot);
+  const invoiceNumbers = [...new Set(note.lines.map((line) => line.invoiceNumber))].join(', ');
   return {
     ...invoice,
     metadata: [
       [documentText.fr.creditNoteNumber, note.number],
       [documentText.fr.issueDate, calendarDate(Schema.decodeUnknownSync(CalendarDate)(issuedOn))],
-      [documentText.fr.invoiceNumber, snapshot.invoiceNumber],
+      [documentText.fr.invoiceNumber, invoiceNumbers],
       [documentText.fr.originalInvoiceDate, instantDate(snapshot.issuedAt, snapshot.calendar)],
       [documentText.fr.currency, snapshot.currency],
     ],

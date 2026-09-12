@@ -796,6 +796,39 @@ export const rolePermissions = sqliteTable(
   ],
 );
 
+export const affairs = sqliteTable(
+  'affairs',
+  {
+    id: text().notNull().primaryKey(),
+    requestId: text('request_id').notNull().unique(),
+    reference: text().notNull().unique(),
+    clientId: text('client_id')
+      .notNull()
+      .references(() => clients.id),
+    title: text().notNull(),
+    status: text({ enum: ['open', 'closed'] }).notNull(),
+    version: integer().notNull(),
+    createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull(),
+    updatedAt: integer('updated_at', { mode: 'timestamp_ms' }).notNull(),
+  },
+  (table) => [
+    index('affairs_client_index').on(table.clientId),
+    check(
+      'affairs_id_ulid_check',
+      sql`${table.id} is not null and length(${table.id}) = 26 and ${table.id} not glob '*[^0-9A-HJKMNP-TV-Z]*' and substr(${table.id}, 1, 1) between '0' and '7'`,
+    ),
+    check('affairs_request_id_check', sql`length(${table.requestId}) = 36`),
+    check(
+      'affairs_reference_check',
+      sql`${table.reference} glob 'AF-[0-9][0-9][0-9][0-9]-[0-9][0-9][0-9][0-9][0-9][0-9]'`,
+    ),
+    check('affairs_title_check', sql`length(trim(${table.title})) between 1 and 160`),
+    check('affairs_status_check', sql`${table.status} in ('open', 'closed')`),
+    check('affairs_version_check', sql`${table.version} >= 1`),
+    check('affairs_timestamps_check', sql`${table.updatedAt} >= ${table.createdAt}`),
+  ],
+);
+
 export const quotes = sqliteTable(
   'quotes',
   {
@@ -828,6 +861,27 @@ export const quotes = sqliteTable(
     ),
     check('quotes_version_check', sql`${table.version} >= 1`),
     check('quotes_timestamps_check', sql`${table.updatedAt} >= ${table.createdAt}`),
+  ],
+);
+
+export const affairQuotes = sqliteTable(
+  'affair_quotes',
+  {
+    affairId: text('affair_id')
+      .notNull()
+      .references(() => affairs.id),
+    quoteId: text('quote_id')
+      .notNull()
+      .unique()
+      .references(() => quotes.id),
+    linkedAt: integer('linked_at', { mode: 'timestamp_ms' }).notNull(),
+    linkedByUserId: text('linked_by_user_id')
+      .notNull()
+      .references(() => users.id),
+  },
+  (table) => [
+    primaryKey({ columns: [table.affairId, table.quoteId] }),
+    index('affair_quotes_affair_index').on(table.affairId),
   ],
 );
 
@@ -1299,29 +1353,125 @@ export const invoiceCreditNotes = sqliteTable(
   'invoice_credit_notes',
   {
     id: text().primaryKey().notNull(),
-    invoiceId: text('invoice_id')
+    clientId: text('client_id')
       .notNull()
-      .unique()
-      .references(() => invoices.id),
-    invoiceRevisionId: text('invoice_revision_id')
-      .notNull()
-      .references(() => invoiceRevisions.id),
+      .references(() => clients.id),
     requestId: text('request_id').notNull().unique(),
-    number: text().notNull().unique(),
+    issueRequestId: text('issue_request_id').unique(),
+    status: text({ enum: ['draft', 'issued'] }).notNull(),
+    version: integer().notNull(),
+    number: text().unique(),
     reason: text().notNull(),
-    issuedAt: text('issued_at').notNull(),
-    issuedByUserId: text('issued_by_user_id')
+    currency: text().notNull(),
+    createdAt: text('created_at').notNull(),
+    createdByUserId: text('created_by_user_id')
+      .notNull()
+      .references(() => users.id),
+    issuedAt: text('issued_at'),
+    issuedByUserId: text('issued_by_user_id').references(() => users.id),
+    netTotalCents: integer('net_total_cents').notNull(),
+    vatTotalCents: integer('vat_total_cents').notNull(),
+    totalCents: integer('total_cents').notNull(),
+  },
+  (table) => [
+    index('credit_note_client_index').on(table.clientId),
+    check('credit_note_status_check', sql`${table.status} in ('draft', 'issued')`),
+    check('credit_note_version_check', sql`${table.version} >= 1`),
+    check(
+      'credit_note_amount_check',
+      sql`${table.totalCents} > 0 and ${table.totalCents} = ${table.netTotalCents} + ${table.vatTotalCents}`,
+    ),
+    check(
+      'credit_note_state_check',
+      sql`(${table.status} = 'draft' and ${table.number} is null and ${table.issueRequestId} is null and ${table.issuedAt} is null and ${table.issuedByUserId} is null) or (${table.status} = 'issued' and ${table.number} is not null and ${table.issueRequestId} is not null and ${table.issuedAt} is not null and ${table.issuedByUserId} is not null)`,
+    ),
+  ],
+);
+
+export const invoiceCreditNoteRevisions = sqliteTable(
+  'invoice_credit_note_revisions',
+  {
+    id: text().primaryKey().notNull(),
+    creditNoteId: text('credit_note_id')
+      .notNull()
+      .references(() => invoiceCreditNotes.id),
+    version: integer().notNull(),
+    reason: text().notNull(),
+    createdAt: text('created_at').notNull(),
+    createdByUserId: text('created_by_user_id')
       .notNull()
       .references(() => users.id),
     netTotalCents: integer('net_total_cents').notNull(),
     vatTotalCents: integer('vat_total_cents').notNull(),
     totalCents: integer('total_cents').notNull(),
-    expectedVersion: integer('expected_version').notNull(),
+  },
+  (table) => [
+    uniqueIndex('credit_note_revision_version_unique').on(table.creditNoteId, table.version),
+    check('credit_note_revision_version_check', sql`${table.version} >= 1`),
+    check(
+      'credit_note_revision_amount_check',
+      sql`${table.totalCents} > 0 and ${table.totalCents} = ${table.netTotalCents} + ${table.vatTotalCents}`,
+    ),
+  ],
+);
+
+export const invoiceCreditNoteLines = sqliteTable(
+  'invoice_credit_note_lines',
+  {
+    id: text().primaryKey().notNull(),
+    creditNoteId: text('credit_note_id')
+      .notNull()
+      .references(() => invoiceCreditNotes.id),
+    creditNoteRevisionId: text('credit_note_revision_id')
+      .notNull()
+      .references(() => invoiceCreditNoteRevisions.id),
+    invoiceId: text('invoice_id')
+      .notNull()
+      .references(() => invoices.id),
+    invoiceRevisionId: text('invoice_revision_id')
+      .notNull()
+      .references(() => invoiceRevisions.id),
+    invoiceVersion: integer('invoice_version').notNull(),
+    invoiceNumber: text('invoice_number').notNull(),
+    sourceLineId: text('source_line_id').notNull(),
+    position: integer().notNull(),
+    description: text().notNull(),
+    quantityMilli: integer('quantity_milli').notNull(),
+    unitPriceCents: integer('unit_price_cents').notNull(),
+    vatRateBasisPoints: integer('vat_rate_basis_points').notNull(),
+    netTotalCents: integer('net_total_cents').notNull(),
+    vatTotalCents: integer('vat_total_cents').notNull(),
+    totalCents: integer('total_cents').notNull(),
+  },
+  (table) => [
+    uniqueIndex('credit_note_line_position_unique').on(table.creditNoteRevisionId, table.position),
+    index('credit_note_line_source_index').on(table.invoiceId, table.sourceLineId),
+    check('credit_note_line_invoice_version_check', sql`${table.invoiceVersion} >= 1`),
+    check('credit_note_line_position_check', sql`${table.position} >= 0`),
+    check('credit_note_line_quantity_check', sql`${table.quantityMilli} > 0`),
+    check(
+      'credit_note_line_amount_check',
+      sql`${table.totalCents} = ${table.netTotalCents} + ${table.vatTotalCents}`,
+    ),
+  ],
+);
+
+export const invoiceCreditNoteArtifacts = sqliteTable(
+  'invoice_credit_note_artifacts',
+  {
+    creditNoteId: text('credit_note_id')
+      .primaryKey()
+      .notNull()
+      .references(() => invoiceCreditNotes.id),
+    content: blob({ mode: 'buffer' }).notNull(),
+    byteSize: integer('byte_size').notNull(),
+    sha256: text().notNull(),
+    createdAt: text('created_at').notNull(),
   },
   (table) => [
     check(
-      'credit_note_amount_check',
-      sql`${table.totalCents} > 0 and ${table.totalCents} = ${table.netTotalCents} + ${table.vatTotalCents}`,
+      'credit_note_artifact_content_check',
+      sql`${table.byteSize} > 0 and ${table.byteSize} = length(${table.content}) and typeof(${table.content}) = 'blob' and length(${table.sha256}) = 64 and ${table.sha256} not glob '*[^a-f0-9]*'`,
     ),
   ],
 );
@@ -1458,7 +1608,7 @@ export const invoiceLines = sqliteTable(
 export const businessReferenceCounters = sqliteTable(
   'business_reference_counters',
   {
-    kind: text({ enum: ['quote', 'order', 'invoice', 'credit-note'] }).notNull(),
+    kind: text({ enum: ['quote', 'order', 'invoice', 'credit-note', 'affair'] }).notNull(),
     year: integer().notNull(),
     nextValue: integer('next_value').notNull(),
   },
@@ -1466,7 +1616,7 @@ export const businessReferenceCounters = sqliteTable(
     primaryKey({ columns: [table.kind, table.year] }),
     check(
       'business_reference_counters_kind_check',
-      sql`${table.kind} in ('quote', 'order', 'invoice', 'credit-note')`,
+      sql`${table.kind} in ('quote', 'order', 'invoice', 'credit-note', 'affair')`,
     ),
     check('business_reference_counters_year_check', sql`${table.year} between 1 and 9999`),
     check(

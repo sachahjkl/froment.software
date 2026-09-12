@@ -31,6 +31,7 @@ import {
   type BankAllocation,
   type BankMatchHistory,
   type BankMatchRequest,
+  type BankMatchSuggestionList,
   type BankPaymentList,
   type BankTransactionValue,
   type InvoiceListValue,
@@ -120,6 +121,8 @@ export class BankReconciliation {
   protected readonly payments = signal<typeof BankPaymentList.Type>([]);
   protected readonly paymentState = signal<'idle' | 'loading' | 'ready' | 'error'>('idle');
   protected readonly history = signal<typeof BankMatchHistory.Type>([]);
+  protected readonly suggestions = signal<typeof BankMatchSuggestionList.Type>([]);
+  protected readonly suggestionState = signal<'loading' | 'ready' | 'error'>('loading');
   protected readonly allocationColumns = allocationColumns;
   protected readonly historyColumns = historyColumns;
   protected readonly allocationSort = computed(() =>
@@ -239,6 +242,8 @@ export class BankReconciliation {
     this.error.set(undefined);
     this.saved.set(false);
     this.transaction.set(undefined);
+    this.suggestions.set([]);
+    this.suggestionState.set('loading');
     this.payments.set([]);
     this.paymentState.set('idle');
     this.cancelling.set(undefined);
@@ -264,13 +269,41 @@ export class BankReconciliation {
       this.transaction.set(outcome.result);
       this.resetMatch();
       this.state.set('ready');
-      await Promise.all([this.loadHistory(), this.loadInvoices()]);
+      await Promise.all([this.loadHistory(), this.loadInvoices(), this.loadSuggestions(id)]);
     } catch {
       if (generation === this.generation && !this.destroyRef.destroyed) {
         this.error.set('bank.error');
         this.state.set('error');
       }
     }
+  }
+  private async loadSuggestions(transactionId: string): Promise<void> {
+    try {
+      const outcome = await this.api.suggestions(transactionId);
+      if (this.transaction()?.id !== transactionId || this.destroyRef.destroyed) return;
+      if (!outcome.success) {
+        this.suggestionState.set('error');
+        return;
+      }
+      this.suggestions.set(outcome.result);
+      this.suggestionState.set('ready');
+    } catch {
+      if (this.transaction()?.id === transactionId && !this.destroyRef.destroyed)
+        this.suggestionState.set('error');
+    }
+  }
+  protected async applySuggestion(
+    suggestion: (typeof BankMatchSuggestionList.Type)[number],
+  ): Promise<void> {
+    await this.selectInvoice(suggestion.invoiceId);
+    if (!this.payments().some((payment) => payment.id === suggestion.paymentId)) return;
+    this.model.update((model) => ({
+      ...model,
+      invoiceId: suggestion.invoiceId,
+      paymentId: suggestion.paymentId,
+      amount: formatFixedDecimal(suggestion.amountCents, 2),
+      fee: '0.00',
+    }));
   }
   protected async loadInvoices(): Promise<void> {
     if (!this.authentication.can('bank.reconcile') || !this.authentication.can('invoice.read'))

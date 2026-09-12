@@ -31,10 +31,10 @@ import {
   entryExportEmptyKey,
   entryEmptyKey,
 } from '../billing/entry-list';
-import { billingDetailQuery } from '../billing/billing-navigation';
 import { LocalizedDatePipe } from '@shared/localized-date/localized-date-pipe';
 import { BillingNav } from '../billing/billing-nav';
 import { businessDate } from '../billing/billing-state';
+import { billingDetailQuery } from '../billing/billing-navigation';
 import { EntryFilters, EntryFilterState } from '../billing/entry-filters';
 
 @Component({
@@ -66,20 +66,20 @@ export class CreditNotes {
   private readonly api = inject(InvoicesApi);
   private readonly destroyRef = inject(DestroyRef);
   protected readonly filters = inject(EntryFilterState);
-  protected readonly detailQuery = computed(() =>
-    billingDetailQuery('credits', this.filters.params(), 'credit'),
-  );
   protected readonly emptyKey = computed(() => entryEmptyKey(this.rows().length));
   protected readonly exportEmptyKey = computed(() => entryExportEmptyKey(this.state()));
   protected readonly rows = signal<typeof CreditNoteList.Type>([]);
   protected readonly sort = computed(() => entrySort(this.filters.params(), creditSortColumns));
+  protected readonly detailQuery = computed(() =>
+    billingDetailQuery('credits', this.filters.params()),
+  );
   protected readonly sortDirection = sortDirection;
   protected readonly matchIndices = matchIndices;
   private readonly searchResults = createFuzzySearch(
     this.rows,
     computed(() => this.filters.fields.q().value()),
     {
-      keys: ['number', 'reason', 'invoiceNumber', 'title', 'clientDisplayName', 'orderReference'],
+      keys: ['number', 'reason', 'sourceInvoiceNumbers', 'clientDisplayName'],
       ignoreDiacritics: true,
       ignoreLocation: true,
       includeMatches: true,
@@ -92,7 +92,9 @@ export class CreditNotes {
       sensitivity: 'base',
     });
     return this.searchResults()
-      .filter(({ item }) => this.filters.passes(item, businessDate(item.issuedAt)))
+      .filter(({ item }) =>
+        this.filters.passes(item, businessDate(item.issuedAt ?? item.createdAt)),
+      )
       .toSorted((left, right) =>
         compareEntries(left.item, right.item, this.sort(), collator, (key) => this.i18n.t(key)),
       );
@@ -108,9 +110,8 @@ export class CreditNotes {
     this.i18n.t('credit.title'),
     this.i18n.t('credit.reason'),
     this.i18n.t('backOffice.invoices.number'),
-    this.i18n.t('backOffice.invoice.title'),
-    this.i18n.t('backOffice.invoice.order'),
     this.i18n.t('backOffice.invoices.client'),
+    this.i18n.t('billingWorkspace.financialStatus'),
     this.i18n.t('billingWorkspace.issuedAt'),
     `${this.i18n.t('backOffice.invoice.total')} (EUR)`,
   ]);
@@ -120,11 +121,10 @@ export class CreditNotes {
       : this.visible().map(({ item: entry }) => [
           entry.number,
           entry.reason,
-          entry.invoiceNumber,
-          entry.title,
-          entry.orderReference,
+          entry.sourceInvoiceNumbers.join(' · '),
           entry.clientDisplayName,
-          entry.issuedAt,
+          this.i18n.t(entry.status === 'draft' ? 'credit.draft' : 'credit.issued'),
+          entry.issuedAt ?? entry.createdAt,
           entry.totalCents / 100,
         ]),
   );
@@ -145,7 +145,7 @@ export class CreditNotes {
       if (!this.destroyRef.destroyed) this.state.set('error');
     }
   }
-  protected money(cents: number): string {
-    return formatMoney(cents, this.i18n.language(), 'EUR');
+  protected money(cents: number, currency: string): string {
+    return formatMoney(cents, this.i18n.language(), currency);
   }
 }

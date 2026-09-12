@@ -65,12 +65,7 @@ export class OrderDetail {
       : this.i18n.t('commercial.order');
   });
   protected readonly breadcrumbs = computed(() => {
-    const order = this.order();
-    return commercialBreadcrumbs(
-      order && { id: order.quoteId, reference: order.quoteReference },
-      this.context(),
-      this.i18n.language(),
-    );
+    return commercialBreadcrumbs(undefined, this.context(), this.i18n.language());
   });
   protected readonly generateLabel = computed(() =>
     this.i18n.t(

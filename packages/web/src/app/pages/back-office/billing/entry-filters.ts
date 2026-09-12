@@ -27,13 +27,13 @@ const readFilters = (params: ParamMap) => ({
   ...readBillingPeriod(params),
 });
 export interface BillingEntry {
-  readonly invoiceNumber: string | null;
-  readonly title: string;
+  readonly invoiceNumber?: string | null;
+  readonly title?: string;
   readonly clientId: string;
   readonly clientDisplayName: string;
-  readonly orderReference: string;
+  readonly orderReference?: string;
   readonly reference?: string;
-  readonly number?: string;
+  readonly number?: string | null;
   readonly cancelledAt?: string | null;
 }
 @Injectable()
@@ -113,7 +113,9 @@ export class EntryFilterState {
       (!client || entry.clientId === client) &&
       (!from || date >= from) &&
       (!to || date <= to) &&
-      (!status || (status === 'cancelled' ? entry.cancelledAt != null : entry.cancelledAt === null))
+      (!status ||
+        !('cancelledAt' in entry) ||
+        (status === 'cancelled' ? entry.cancelledAt != null : entry.cancelledAt === null))
     );
   }
 }

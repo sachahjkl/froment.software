@@ -43,6 +43,15 @@
   <button appButton type="button" (click)="load()">{{ i18n.t('backOffice.affair.retry') }}</button>
   } @case ('ready') { @if (order(); as order) { @if (revision(); as revision) {
   <p appNotice>{{ i18n.t('commercial.orderImmutable') }}</p>
+  <label class="field version-selector"
+    >{{ i18n.t('commercial.versions') }}
+    <select class="input" disabled>
+      <option>
+        {{ i18n.tf('commercial.revision', { version: revision.version }) }} · {{
+        i18n.t('credit.readonlyVersion') }}
+      </option>
+    </select>
+  </label>
   <dl class="facts">
     <div>
       <dt>{{ i18n.t('commercial.confirmedAt') }}</dt>

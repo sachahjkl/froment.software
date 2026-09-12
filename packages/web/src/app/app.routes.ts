@@ -467,14 +467,14 @@ export const routes: Routes = [
     data: {
       shell: 'administrator',
       titleKey: 'page.back_office_quotes',
-      ...permissionData('quote.read', 'order.read', 'invoice.read'),
+      ...permissionData('affair.read'),
       descriptionKey: 'page.description.back_office_quotes',
       robots: 'noindex, nofollow',
     },
     children: tabRoutes('attention', 'affairs', ['attention', 'active', 'completed', 'all']),
   },
   {
-    path: 'backoffice/affairs/:quoteId',
+    path: 'backoffice/affairs/:affairId',
     loadComponent: () =>
       import('./pages/back-office/affair-detail/affair-detail').then(
         (module) => module.AffairDetail,
@@ -493,7 +493,7 @@ export const routes: Routes = [
     data: {
       shell: 'administrator',
       titleKey: 'page.back_office_affair_detail',
-      ...permissionData('quote.read', 'order.read', 'invoice.read'),
+      ...permissionData('affair.read', 'quote.read', 'order.read', 'invoice.read'),
       descriptionKey: 'page.description.back_office_affair_detail',
       robots: 'noindex, nofollow',
     },
@@ -561,7 +561,7 @@ export const routes: Routes = [
     canActivate: [administratorGuard],
     canActivateChild: [administratorChildGuard],
     canDeactivate: [unsavedChangesGuard],
-    children: tabRoutes('summary', 'quote-detail', ['summary', 'document', 'versions']),
+    children: tabRoutes('summary', 'quote-detail', ['summary', 'document']),
     data: {
       shell: 'administrator',
       ...permissionData('quote.read'),

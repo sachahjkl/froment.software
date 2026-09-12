@@ -17,6 +17,7 @@ import {
   InvoiceVersionConflict,
   QuoteRenderSnapshot,
   Ulid,
+  CurrencyCode,
   type InvoiceCreateRequestValue,
   type InvoiceDetailValue,
   type InvoiceIssueRequestValue,
@@ -83,7 +84,7 @@ const RevisionRecord = Schema.Struct({
   dueDate: Schema.String,
   paymentTerms: Schema.String,
   paymentTermsPresentation: StoredTextPresentation,
-  currency: Schema.Literal('EUR'),
+  currency: CurrencyCode,
   netTotalCents: Schema.Int,
   vatTotalCents: Schema.Int,
   totalCents: Schema.Int,
@@ -124,7 +125,7 @@ const InvoiceSummaryRecord = Schema.Struct({
   invoiceNumber: Schema.NullOr(Schema.String),
   title: Schema.String,
   dueDate: Schema.String,
-  currency: Schema.Literal('EUR'),
+  currency: CurrencyCode,
   totalCents: Schema.Int,
   updatedAt: Schema.Int,
   pdfStatus: Schema.NullOr(Schema.Literals(['pending', 'processing', 'ready', 'failed'])),
@@ -317,7 +318,13 @@ export const InvoicesLive = Layer.effect(
         creditedCents: Schema.decodeUnknownSync(Schema.Int)(
           database.sqlite
             .prepare(
-              'select coalesce(sum(total_cents), 0) from invoice_credit_notes where invoice_id = ?',
+              `select coalesce(sum(lines.total_cents), 0)
+               from invoice_credit_note_lines lines
+               join invoice_credit_notes notes on notes.id = lines.credit_note_id
+               join invoice_credit_note_revisions credit_revisions
+                 on credit_revisions.id = lines.credit_note_revision_id
+               where lines.invoice_id = ? and notes.status = 'issued'
+                 and credit_revisions.version = notes.version`,
             )
             .pluck()
             .get(invoiceId),
@@ -357,7 +364,13 @@ export const InvoicesLive = Layer.effect(
                        invoice_revisions.currency,
                        invoice_revisions.total_cents as totalCents, invoices.updated_at as updatedAt
                         , coalesce((select sum(amount_cents) from invoice_payments where invoice_id = invoices.id and cancelled_at is null), 0) as recordedPaidCents
-                        , coalesce((select sum(total_cents) from invoice_credit_notes where invoice_id = invoices.id), 0) as creditedCents
+                         , coalesce((select sum(lines.total_cents)
+                           from invoice_credit_note_lines lines
+                           join invoice_credit_notes notes on notes.id = lines.credit_note_id
+                           join invoice_credit_note_revisions credit_revisions
+                             on credit_revisions.id = lines.credit_note_revision_id
+                           where lines.invoice_id = invoices.id and notes.status = 'issued'
+                             and credit_revisions.version = notes.version), 0) as creditedCents
                         , invoice_pdf_jobs.status as pdfStatus
                        , invoice_pdf_jobs.attempts as pdfAttempts
                        , invoice_pdf_jobs.error as pdfError
@@ -461,6 +474,7 @@ export const InvoicesLive = Layer.effect(
       readonly dueDate: string;
       readonly paymentTerms: string;
       readonly paymentTermsPresentation?: DocumentTextPresentationValue;
+      readonly currency: string;
       readonly lines: ReadonlyArray<QuoteLineInputValue>;
       readonly actorUserId: string;
       readonly now: number;
@@ -494,7 +508,7 @@ export const InvoicesLive = Layer.effect(
         client: input.client,
         title: input.title.trim(),
         paymentTerms: input.paymentTerms,
-        currency: 'EUR',
+        currency: input.currency,
         ...totals,
         lines: calculatedLines,
       };
@@ -510,7 +524,7 @@ export const InvoicesLive = Layer.effect(
             service_date, due_date, payment_terms, payment_terms_presentation, currency, net_total_cents, vat_total_cents,
             total_cents, created_at, created_by_user_id, template_id, template_version,
               render_snapshot)
-             values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'EUR', ?, ?, ?, ?, ?, 'invoice-default', 1, ?)`,
+              values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'invoice-default', 1, ?)`,
         )
         .run(
           revisionId,
@@ -524,6 +538,7 @@ export const InvoicesLive = Layer.effect(
           input.dueDate,
           input.paymentTerms,
           storeTextPresentation(input.paymentTermsPresentation),
+          input.currency,
           totals.netTotalCents,
           totals.vatTotalCents,
           totals.totalCents,
@@ -615,6 +630,7 @@ export const InvoicesLive = Layer.effect(
                 dueDate: request.dueDate,
                 paymentTerms: request.paymentTerms,
                 paymentTermsPresentation: request.paymentTermsPresentation,
+                currency: quoteSnapshot.currency,
                 lines: quoteSnapshot.lines,
                 actorUserId,
                 now,
@@ -734,6 +750,7 @@ export const InvoicesLive = Layer.effect(
                 dueDate: request.dueDate,
                 paymentTerms: request.paymentTerms,
                 paymentTermsPresentation: request.paymentTermsPresentation,
+                currency: current.currency,
                 lines: request.lines,
                 actorUserId,
                 now,
@@ -864,6 +881,7 @@ export const InvoicesLive = Layer.effect(
                 dueDate: current.dueDate,
                 paymentTerms: current.paymentTerms,
                 paymentTermsPresentation: current.paymentTermsPresentation,
+                currency: current.currency,
                 lines: current.lines,
                 actorUserId,
                 now,
@@ -972,7 +990,12 @@ export const InvoicesLive = Layer.effect(
               if (
                 invoice.status !== 'issued' ||
                 database.sqlite
-                  .prepare('select 1 from invoice_credit_notes where invoice_id = ?')
+                  .prepare(`select 1 from invoice_credit_note_lines lines
+                    join invoice_credit_notes notes on notes.id = lines.credit_note_id
+                    join invoice_credit_note_revisions credit_revisions
+                      on credit_revisions.id = lines.credit_note_revision_id
+                    where lines.invoice_id = ? and notes.status = 'issued'
+                      and credit_revisions.version = notes.version`)
                   .get(invoiceId) !== undefined ||
                 database.sqlite
                   .prepare('select 1 from invoice_payments where invoice_id = ?')
@@ -1091,7 +1114,8 @@ export const InvoicesLive = Layer.effect(
                   DateTime.formatIso(DateTime.makeUnsafe(now)),
                   actorUserId,
                 );
-              const settled = nextPaid === BigInt(invoice.currentRevision.totalCents);
+              const settled =
+                nextPaid === BigInt(invoice.currentRevision.totalCents - invoice.creditedCents);
               database.sqlite
                 .prepare(`update invoices set status = ?, paid_at = ?, updated_at = ? where id = ?`)
                 .run(settled ? 'paid' : 'issued', settled ? now : null, now, invoiceId);
@@ -1179,7 +1203,11 @@ export const InvoicesLive = Layer.effect(
                   .pluck()
                   .get(invoiceId),
               );
-              if (BigInt(refunded) > paidAfterCancellation)
+              const debtAfterCancellation =
+                paidAfterCancellation +
+                BigInt(invoice.creditedCents) -
+                BigInt(invoice.currentRevision.totalCents);
+              if (BigInt(refunded) > (debtAfterCancellation > 0n ? debtAfterCancellation : 0n))
                 throw new InvoicePaymentInvalid({ code: 'invoice.payment_invalid' });
               database.sqlite
                 .prepare(

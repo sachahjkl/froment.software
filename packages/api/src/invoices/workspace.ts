@@ -1,5 +1,6 @@
 import {
   AuditEvent,
+  CreditNoteSummary,
   CreditNoteList,
   InvoiceHistory,
   InvoiceNotFound,
@@ -9,6 +10,12 @@ import {
 } from '@froment/contracts';
 import { DateTime, Effect, Schema } from 'effect';
 import { Database, DatabaseError } from '../database/database.js';
+
+const CreditNoteSummaryRow = Schema.Struct({
+  ...CreditNoteSummary.fields,
+  sourceInvoiceIds: Schema.fromJsonString(Schema.Array(Schema.String)),
+  sourceInvoiceNumbers: Schema.fromJsonString(Schema.Array(Schema.String)),
+});
 
 export const listInvoiceReceipts = Effect.fn('Invoices.listReceipts')(function* () {
   const { sqlite } = yield* Database;
@@ -45,20 +52,26 @@ export const listCreditNotes = Effect.fn('Invoices.listCreditNotes')(function* (
     try: () => {
       const rows = sqlite
         .prepare(`select
-      i.id as invoiceId, i.invoice_number as invoiceNumber, r.title,
-      i.client_id as clientId, r.client_display_name as clientDisplayName,
-      i.order_id as orderId, o.reference as orderReference,
-      entry.id, entry.invoice_revision_id as invoiceRevisionId, entry.request_id as requestId,
-      entry.number, entry.reason, entry.issued_at as issuedAt, entry.issued_by_user_id as issuedByUserId,
-      entry.net_total_cents as netTotalCents, entry.vat_total_cents as vatTotalCents,
-      entry.total_cents as totalCents
-      from invoice_credit_notes entry join invoices i on i.id = entry.invoice_id
-      join invoice_revisions r on r.invoice_id = i.id and r.version = i.version
-      join orders o on o.id = i.order_id order by entry.issued_at desc, entry.id desc limit 10001`)
+      entry.id, entry.client_id as clientId, u.display_name as clientDisplayName,
+      entry.status, entry.version, entry.number, entry.reason, entry.currency,
+      entry.created_at as createdAt, entry.issued_at as issuedAt,
+      entry.total_cents as totalCents,
+      json_group_array(distinct lines.invoice_id) as sourceInvoiceIds,
+      json_group_array(distinct lines.invoice_number) as sourceInvoiceNumbers
+      from invoice_credit_notes entry
+      join clients c on c.id = entry.client_id
+      join users u on u.id = c.id
+      join invoice_credit_note_lines lines on lines.credit_note_id = entry.id
+      join invoice_credit_note_revisions revisions
+        on revisions.id = lines.credit_note_revision_id and revisions.version = entry.version
+      group by entry.id
+      order by coalesce(entry.issued_at, entry.created_at) desc, entry.id desc limit 10001`)
         .all();
       if (rows.length > 10000)
         throw new InvoiceWorkspaceLimitExceeded({ code: 'invoice.workspace_limit' });
-      return Schema.decodeUnknownSync(CreditNoteList)(rows);
+      return Schema.decodeUnknownSync(CreditNoteList)(
+        Schema.decodeUnknownSync(Schema.Array(CreditNoteSummaryRow))(rows),
+      );
     },
     catch: (cause) =>
       cause instanceof InvoiceWorkspaceLimitExceeded
@@ -107,14 +120,18 @@ export const readInvoiceHistory = Effect.fn('Invoices.history')(function* (invoi
         resource_type as resourceType, resource_id as resourceId,
         request_id as requestId, trace_id as traceId, span_id as spanId,
         occurred_at as occurredAt, metadata from audit_events
-         where (resource_type = 'invoice' and resource_id = ?)
+          where (resource_type = 'invoice' and resource_id = ?)
+            or (resource_type = 'credit-note' and resource_id in (
+              select distinct lines.credit_note_id from invoice_credit_note_lines lines
+              where lines.invoice_id = ?
+            ))
             or (resource_type = 'document' and resource_id in (
               select artifact.id from document_artifacts artifact
               join invoice_revisions revision on revision.id = artifact.invoice_revision_id
               where revision.invoice_id = ?
             ))
          order by occurred_at desc, id desc limit 10001`)
-        .all(invoiceId, invoiceId);
+        .all(invoiceId, invoiceId, invoiceId);
       if (rawRows.length > 10000)
         throw new InvoiceWorkspaceLimitExceeded({ code: 'invoice.workspace_limit' });
       const rows = Schema.decodeUnknownSync(

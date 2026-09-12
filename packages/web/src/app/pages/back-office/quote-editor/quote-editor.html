@@ -102,6 +102,15 @@
         >
         }
       </label>
+      <label class="field"
+        >{{ i18n.t('backOffice.quote.currency') }}
+        <input
+          class="input"
+          autocapitalize="characters"
+          [formField]="quoteForm.currency"
+          [attr.aria-invalid]="quoteForm.currency().invalid() && quoteForm.currency().touched()"
+        />
+      </label>
     </div>
 
     <section class="lines" aria-labelledby="lines-title">

@@ -55,6 +55,7 @@ describe('client portal contracts', () => {
           totalCents: 1_200,
           updatedAt: '2026-08-20T08:00:00.000Z',
           pdfAvailable: false,
+          creditNotes: [],
         },
       ]),
     ).toHaveLength(1);
@@ -96,6 +97,7 @@ describe('client portal contracts', () => {
       totalCents: 1_200,
       updatedAt: '2026-08-20T08:00:00.000Z',
       pdfAvailable: false,
+      creditNotes: [],
     };
 
     expect(() => Schema.decodeUnknownSync(ClientInvoiceList)([invoice])).toThrow();

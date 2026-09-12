@@ -70,6 +70,7 @@ describe('quote contracts', () => {
   it('validates quote and line bounds', () => {
     const valid = {
       clientId: '01ARZ3NDEKTSV4RRFFQ69G5FAV',
+      currency: 'EUR',
       title: 'Website',
       conditions: '',
       lines: [line],

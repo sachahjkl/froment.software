@@ -69,7 +69,11 @@ export class RefundEditor {
     });
     required(path.refundedOn);
     validate(path.refundedOn, ({ value }) => {
-      const issuedAt = this.creditState()?.creditNote?.issuedAt;
+      const issuedAt = this.creditState()
+        ?.creditNotes.filter((note) => note.status === 'issued')
+        .map((note) => note.issuedAt)
+        .filter((value): value is string => value !== null)
+        .sort()[0];
       return !Schema.is(CalendarDate)(value()) ||
         value() > businessToday() ||
         (issuedAt !== undefined && value() < businessDate(issuedAt))

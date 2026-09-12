@@ -85,9 +85,15 @@
     </dl>
     @if (invoice.creditedCents > 0) {
     <p>{{ i18n.t('credit.credited') }} {{ money(invoice.creditedCents, invoice.currency) }}</p>
-    <a [href]="'/api/client/invoices/' + invoice.id + '/credit-note/pdf'" download
-      >{{ i18n.t('credit.pdf') }}</a
-    >
+    <ul>
+      @for (note of invoice.creditNotes; track note.id) {
+      <li>
+        <a [href]="'/api/client/credit-notes/' + note.id + '/pdf'" download
+          >{{ note.number }} · {{ i18n.t('credit.pdf') }}</a
+        >
+      </li>
+      }
+    </ul>
     } @if (invoice.status === 'paid' && invoice.recordedPaidCents < invoice.totalCents) {
     <p class="payment-note" appNotice>{{ i18n.t('backOffice.client.invoice.historicalPaid') }}</p>
     } @if (invoice.status === 'void') {

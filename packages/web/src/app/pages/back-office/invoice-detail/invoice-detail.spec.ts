@@ -57,9 +57,7 @@ describe('InvoiceDetail', () => {
     const { root } = await setupInvoicePage(InvoiceDetail);
     expect(root.querySelector('form')).toBeNull();
     expect(root.querySelector('input')).toBeNull();
-    expect(
-      root.querySelector(`a[href="/backoffice/invoices/${invoiceId}/payments/new"]`),
-    ).not.toBeNull();
+    expect(root.querySelector('app-split-action')).not.toBeNull();
     expect(root.querySelector('a[href*="/backoffice/emails/new?invoice="]')).not.toBeNull();
     expect(
       root.querySelector('a[href*="/backoffice/emails/reminders/new?invoice="]'),

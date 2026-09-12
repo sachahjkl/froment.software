@@ -36,6 +36,7 @@ describe('catalog HTTP lifecycle', () => {
       headers: server.jsonHeaders,
       body: JSON.stringify({
         clientId: client.id,
+        currency: payload.currency,
         title: 'Catalog quote',
         conditions: '',
         lines: [payload],

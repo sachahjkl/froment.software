@@ -1,5 +1,9 @@
 export const bankWorkspaceText = {
   fr: {
+    'bankWorkspace.suggestions': 'Suggestions de rapprochement',
+    'bankWorkspace.suggestionsHint':
+      'Vérifiez la facture, le règlement et le montant avant de confirmer une suggestion.',
+    'bankWorkspace.suggestionsLoading': 'Recherche des rapprochements probables…',
     'bankWorkspace.transactions': 'Transactions',
     'bankWorkspace.entries': 'Écritures',
     'bankWorkspace.intro':
@@ -147,6 +151,10 @@ export const bankWorkspaceText = {
       'Une reprise conserve la même clé tant que les données ne changent pas.',
   },
   en: {
+    'bankWorkspace.suggestions': 'Reconciliation suggestions',
+    'bankWorkspace.suggestionsHint':
+      'Check the invoice, receipt, and amount before you confirm a suggestion.',
+    'bankWorkspace.suggestionsLoading': 'Finding probable matches…',
     'bankWorkspace.transactions': 'Transactions',
     'bankWorkspace.entries': 'Entries',
     'bankWorkspace.intro':

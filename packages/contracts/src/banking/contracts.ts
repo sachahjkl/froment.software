@@ -109,6 +109,28 @@ export const BankMatchHistory = Schema.Array(
     cancellationReason: Schema.NullOr(Schema.String),
   }),
 );
+export const BankSuggestionLimit = 10;
+export const BankMatchSuggestionReason = Schema.Literals([
+  'exact-amount',
+  'close-amount',
+  'invoice-reference',
+  'payment-reference',
+  'close-date',
+]);
+export const BankMatchSuggestion = Schema.Struct({
+  paymentId: Ulid,
+  invoiceId: Ulid,
+  invoiceNumber: Schema.NullOr(Schema.String),
+  clientDisplayName: Schema.String,
+  paidOn: CalendarDate,
+  paymentReference: Schema.String,
+  amountCents: PositiveSafeInteger,
+  score: Schema.Int.check(Schema.isBetween({ minimum: 0, maximum: 100 })),
+  reasons: Schema.Array(BankMatchSuggestionReason).check(Schema.isMinLength(1)),
+});
+export const BankMatchSuggestionList = Schema.Array(BankMatchSuggestion).check(
+  Schema.isMaxLength(BankSuggestionLimit),
+);
 export type BankTransaction = typeof BankTransaction.Type;
 export const BankImportResult = Schema.Struct({ added: Schema.Int, existing: Schema.Int });
 export const BankImportPreview = Schema.Struct({

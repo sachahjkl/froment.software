@@ -19,7 +19,9 @@ export const CompanyModule = Schema.Literals([
 ]);
 export type CompanyModule = typeof CompanyModule.Type;
 
-export const FunctionalCurrency = Schema.String.check(Schema.isPattern(/^[A-Z]{3}$/));
+export const CurrencyCode = Schema.String.check(Schema.isPattern(/^[A-Z]{3}$/));
+export type CurrencyCode = typeof CurrencyCode.Type;
+export const FunctionalCurrency = CurrencyCode;
 export type FunctionalCurrency = typeof FunctionalCurrency.Type;
 
 const FiscalYearStart = Schema.Struct({

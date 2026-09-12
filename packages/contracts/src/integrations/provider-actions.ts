@@ -1,4 +1,5 @@
 import { Schema } from 'effect';
+import { CurrencyCode } from '../company/contracts.js';
 import { AccountEmail } from '../authentication/contracts.js';
 import { CalendarDate, IsoUtc } from '../temporal.js';
 import { PositiveSafeInteger, SafeInteger } from '../documents/lines.js';
@@ -197,7 +198,7 @@ export const ProviderPayment = Schema.Struct({
   amountCents: PositiveSafeInteger,
   capturedCents: SafeInteger,
   refundedCents: SafeInteger,
-  currency: Schema.Literal('EUR'),
+  currency: CurrencyCode,
   checkoutUrl: Schema.NullOr(Schema.String),
   updatedAt: IsoUtc,
 });
@@ -205,7 +206,7 @@ export const ProviderRefund = Schema.Struct({
   providerId: Reference,
   paymentId: Reference,
   amountCents: PositiveSafeInteger,
-  currency: Schema.Literal('EUR'),
+  currency: CurrencyCode,
   status: Schema.Literals(['pending', 'succeeded', 'failed', 'cancelled']),
   updatedAt: IsoUtc,
 });
@@ -224,7 +225,7 @@ export const ProviderBankAccount = Schema.Struct({
   providerId: Reference,
   name: Reference,
   iban: Schema.NullOr(Reference),
-  currency: Schema.Literal('EUR'),
+  currency: CurrencyCode,
 });
 export const ProviderBankTransaction = Schema.Struct({
   providerId: Reference,
@@ -233,7 +234,7 @@ export const ProviderBankTransaction = Schema.Struct({
   amountCents: Schema.Int.check(
     Schema.isBetween({ minimum: -Number.MAX_SAFE_INTEGER, maximum: Number.MAX_SAFE_INTEGER }),
   ),
-  currency: Schema.Literal('EUR'),
+  currency: CurrencyCode,
   description: Text,
   status: Schema.Literals(['pending', 'booked', 'reversed']),
 });
@@ -280,7 +281,7 @@ export const ElectronicReportRequest = Schema.Struct({
     Schema.Struct({
       invoiceId: Ulid,
       amountCents: PositiveSafeInteger,
-      currency: Schema.Literal('EUR'),
+      currency: CurrencyCode,
       paidOn: Schema.NullOr(CalendarDate),
     }),
   ).check(Schema.isMinLength(1), Schema.isMaxLength(1000)),

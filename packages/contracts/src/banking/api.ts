@@ -17,6 +17,7 @@ import {
   BankTransaction,
   BankMatchRequest,
   BankUnmatchRequest,
+  BankMatchSuggestionList,
 } from './contracts.js';
 
 export class BankingApi extends HttpApiGroup.make('banking', { topLevel: true }).add(
@@ -43,6 +44,19 @@ export class BankingApi extends HttpApiGroup.make('banking', { topLevel: true })
     success: BankTransaction,
     error: BankFailure.members,
   }).pipe(requirePermissions([Permissions.bankRead]), authenticate, frontendSpecific),
+  HttpApiEndpoint.get(
+    'bankMatchSuggestionList',
+    '/api/banking/transactions/:transactionId/suggestions',
+    {
+      params: { transactionId: Ulid },
+      success: BankMatchSuggestionList,
+      error: BankFailure.members,
+    },
+  ).pipe(
+    requirePermissions([Permissions.bankRead, Permissions.invoiceRead]),
+    authenticate,
+    frontendSpecific,
+  ),
   HttpApiEndpoint.post('bankImportPreview', '/api/banking/import/preview', {
     payload: BankImportRequest,
     success: BankImportPreview,

@@ -14,7 +14,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { FormField, form } from '@angular/forms/signals';
 import { DomSanitizer } from '@angular/platform-browser';
 import { Router, RouterLink } from '@angular/router';
-import { type AuditEventValue } from '@froment/contracts';
+import { type AuditEventValue, type CreditNote } from '@froment/contracts';
 import { type TranslationKey } from '@app/i18n.service';
 import { InvoiceCreditsApi } from '@backoffice/invoice-credits-api';
 import { OrdersApi } from '@backoffice/orders-api';
@@ -126,6 +126,11 @@ export class InvoiceDetail {
   protected readonly canCancelPayment = canCancelPayment;
   protected readonly recordedEntryStatus = recordedEntryStatus;
   protected readonly paymentMethodKey = paymentMethodKey;
+  protected creditAmount(note: typeof CreditNote.Type, invoiceId: string): number {
+    return note.lines
+      .filter((line) => line.invoiceId === invoiceId)
+      .reduce((total, line) => total + line.totalCents, 0);
+  }
   protected openPayment(mode: string): void {
     const invoice = this.task.invoice();
     if (!invoice || (mode !== 'partial' && mode !== 'full')) return;

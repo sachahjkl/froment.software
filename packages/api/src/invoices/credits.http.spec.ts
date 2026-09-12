@@ -1,4 +1,10 @@
-import { InvoiceCredits, InvoiceDetail, InvoiceList, ClientInvoiceList } from '@froment/contracts';
+import {
+  CreditNote,
+  InvoiceCredits,
+  InvoiceDetail,
+  InvoiceList,
+  ClientInvoiceList,
+} from '@froment/contracts';
 import { DateTime, Schema } from 'effect';
 import { invoiceIssueDate } from './invoices.js';
 import Sqlite from 'better-sqlite3';
@@ -42,10 +48,15 @@ it('issues one immutable full credit, preserves PDFs, stops collection, and reco
     const path = `/api/invoices/${draft.id}`;
     expect(
       (
-        await post(`${path}/credits`, {
+        await post('/api/credit-notes', {
           requestId: randomUUID(),
-          expectedVersion: draft.version,
           reason: 'Draft',
+          lines: draft.currentRevision.lines.map((line) => ({
+            invoiceId: draft.id,
+            invoiceVersion: draft.version,
+            sourceLineId: line.id,
+            quantityMilli: line.quantityMilli,
+          })),
         })
       ).status,
     ).toBe(409);
@@ -69,25 +80,34 @@ it('issues one immutable full credit, preserves PDFs, stops collection, and reco
     const initialRevisions = invoice.revisions;
     const request = {
       requestId: randomUUID(),
-      expectedVersion: invoice.version,
       reason: '<script>Service cancelled</script>',
+      lines: invoice.currentRevision.lines.map((line) => ({
+        invoiceId: invoice.id,
+        invoiceVersion: invoice.version,
+        sourceLineId: line.id,
+        quantityMilli: line.quantityMilli,
+      })),
     };
-    const response = await post(`${path}/credits`, request);
+    const response = await post('/api/credit-notes', request);
     expect(response.status).toBe(200);
-    const state = Schema.decodeUnknownSync(InvoiceCredits)(await response.json());
-    expect(state.creditNote).toMatchObject({
+    const draftNote = Schema.decodeUnknownSync(CreditNote)(await response.json());
+    const issueRequest = { requestId: randomUUID(), expectedVersion: draftNote.version };
+    const issueResponse = await post(`/api/credit-notes/${draftNote.id}/issue`, issueRequest);
+    expect(issueResponse.status).toBe(200);
+    const state = Schema.decodeUnknownSync(InvoiceCredits)(
+      await (await get(`${path}/credits`)).json(),
+    );
+    expect(state.creditNotes[0]).toMatchObject({
       totalCents: invoice.currentRevision.totalCents,
       netTotalCents: invoice.currentRevision.netTotalCents,
       vatTotalCents: invoice.currentRevision.vatTotalCents,
     });
     expect(state.refundableCents).toBe(10000);
     expect(
-      Schema.decodeUnknownSync(InvoiceCredits)(
-        await (await post(`${path}/credits`, request)).json(),
-      ),
+      Schema.decodeUnknownSync(InvoiceCredits)(await (await get(`${path}/credits`)).json()),
     ).toEqual(state);
-    expect((await post(`${path}/credits`, { ...request, reason: 'Changed' })).status).toBe(409);
-    expect((await post(`${path}/credits`, { ...request, requestId: randomUUID() })).status).toBe(
+    expect((await post('/api/credit-notes', { ...request, reason: 'Changed' })).status).toBe(409);
+    expect((await post('/api/credit-notes', { ...request, requestId: randomUUID() })).status).toBe(
       409,
     );
     expect(
@@ -115,13 +135,17 @@ it('issues one immutable full credit, preserves PDFs, stops collection, and reco
         })
       ).status,
     ).toBe(409);
-    const pdfResponse = await get(`${path}/credit-note/pdf`);
+    const note = state.creditNotes[0];
+    if (note === undefined || note.issuedAt === null) throw new Error('credit.test.note_missing');
+    const pdfResponse = await get(`/api/credit-notes/${note.id}/pdf`);
     expect(pdfResponse.status).toBe(200);
     expect(pdfResponse.headers.get('content-disposition')).toContain('AV-2026-000001.pdf');
     const pdf = Buffer.from(await pdfResponse.arrayBuffer());
     expect(pdf.subarray(0, 5).toString()).toBe('%PDF-');
     expect(pdf.equals(originalPdf)).toBe(false);
-    expect(Buffer.from(await (await get(`${path}/credit-note/pdf`)).arrayBuffer())).toEqual(pdf);
+    expect(
+      Buffer.from(await (await get(`/api/credit-notes/${note.id}/pdf`)).arrayBuffer()),
+    ).toEqual(pdf);
     expect(
       Buffer.from(await (await get(`${path}/revisions/${invoice.version}/pdf`)).arrayBuffer()),
     ).toEqual(originalPdf);
@@ -147,7 +171,7 @@ it('issues one immutable full credit, preserves PDFs, stops collection, and reco
     });
     expect(
       (
-        await fetch(`${server.baseUrl}/api/client/invoices/${draft.id}/credit-note/pdf`, {
+        await fetch(`${server.baseUrl}/api/client/credit-notes/${note.id}/pdf`, {
           headers: clientHeaders,
         })
       ).status,
@@ -156,17 +180,16 @@ it('issues one immutable full credit, preserves PDFs, stops collection, and reco
     const strangerHeaders = await createClientSession(server, stranger.id);
     expect(
       (
-        await fetch(`${server.baseUrl}/api/client/invoices/${draft.id}/credit-note/pdf`, {
+        await fetch(`${server.baseUrl}/api/client/credit-notes/${note.id}/pdf`, {
           headers: strangerHeaders,
         })
       ).status,
     ).toBe(409);
-    if (state.creditNote === null) throw new Error('credit.test.note_missing');
     const refund = {
       requestId: randomUUID(),
       amountCents: 6000,
       refundedOn: invoiceIssueDate(
-        Date.parse(state.creditNote.issuedAt),
+        Date.parse(note.issuedAt),
         DateTime.zoneMakeNamedUnsafe('Europe/Paris'),
       ),
       reference: 'REFUND',
@@ -233,16 +256,11 @@ it('issues one immutable full credit, preserves PDFs, stops collection, and reco
       'credit_note_immutable',
     );
     expect(() =>
-      sqlite
-        .prepare("update document_artifacts set sha256 = ? where kind = 'credit-note-pdf'")
-        .run('0'.repeat(64)),
-    ).toThrow('document_artifacts_immutable_update');
-    expect(
-      sqlite
-        .prepare("select sha256 from document_artifacts where kind = 'credit-note-pdf'")
-        .pluck()
-        .get(),
-    ).toBe(createHash('sha256').update(pdf).digest('hex'));
+      sqlite.prepare('update invoice_credit_note_artifacts set sha256 = ?').run('0'.repeat(64)),
+    ).toThrow('credit_note_artifacts_update');
+    expect(sqlite.prepare('select sha256 from invoice_credit_note_artifacts').pluck().get()).toBe(
+      createHash('sha256').update(pdf).digest('hex'),
+    );
   } finally {
     sqlite.close();
     await server.close();

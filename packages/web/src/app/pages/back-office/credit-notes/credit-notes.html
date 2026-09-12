@@ -94,10 +94,16 @@
                 <app-entity-icon icon="invoice" />
                 <div>
                   <a
-                    [routerLink]="['/backoffice/invoices', entry.invoiceId]"
+                    [routerLink]="[
+                      '/backoffice/invoices',
+                      entry.sourceInvoiceIds[0],
+                      'credits',
+                      entry.id,
+                      'edit'
+                    ]"
                     [queryParams]="detailQuery()"
                     [appSearchHighlight]="matchIndices(result, 'number')"
-                    >{{ entry.number }}</a
+                    >{{ entry.number ?? i18n.t('credit.draft') }}</a
                   ><small [appSearchHighlight]="matchIndices(result, 'reason')"
                     >{{ entry.reason }}</small
                   >
@@ -105,28 +111,29 @@
               </div>
             </td>
             <td>
-              <span [appSearchHighlight]="matchIndices(result, 'invoiceNumber')"
-                >{{ entry.invoiceNumber }}</span
-              ><small
-                ><span [appSearchHighlight]="matchIndices(result, 'title')">{{ entry.title }}</span>
-                ·
-                <span [appSearchHighlight]="matchIndices(result, 'orderReference')"
-                  >{{ entry.orderReference }}</span
-                ></small
+              <span [appSearchHighlight]="matchIndices(result, 'sourceInvoiceNumbers')"
+                >{{ entry.sourceInvoiceNumbers.join(' · ') }}</span
               >
             </td>
             <td [appSearchHighlight]="matchIndices(result, 'clientDisplayName')">
               {{ entry.clientDisplayName }}
             </td>
-            <td>{{ entry.issuedAt | localizedDate: i18n.language(): { dateStyle: 'medium' } }}</td>
-            <td class="amount">{{ money(entry.totalCents) }}</td>
             <td>
+              {{ (entry.issuedAt ?? entry.createdAt) | localizedDate: i18n.language(): { dateStyle:
+              'medium' } }}
+            </td>
+            <td class="amount">{{ money(entry.totalCents, entry.currency) }}</td>
+            <td>
+              @if (entry.status === 'issued') {
               <a
                 *appCan="['document.download', 'invoice.read']"
-                [href]="'/api/invoices/' + entry.invoiceId + '/credit-note/pdf'"
+                [href]="'/api/credit-notes/' + entry.id + '/pdf'"
                 download
                 >{{ i18n.t('credit.pdf') }}</a
               >
+              } @else {
+              <span>{{ i18n.t('credit.draft') }}</span>
+              }
             </td>
           </tr>
           } @empty {

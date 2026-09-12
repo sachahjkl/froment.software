@@ -1,5 +1,6 @@
 import { Schema } from 'effect';
 import { DocumentTextPresentation, isDocumentText } from '../documents/document-text.js';
+import { CurrencyCode } from '../company/contracts.js';
 import { InvoicePayment, InvoicePaymentInvalid } from './payments.js';
 
 import {
@@ -115,7 +116,7 @@ export const InvoiceRenderSnapshot = Schema.Struct({
   title: InvoiceTitle,
   paymentTerms: PaymentTerms,
   paymentTermsPresentation: Schema.optionalKey(DocumentTextPresentation),
-  currency: Schema.Literal('EUR'),
+  currency: CurrencyCode,
   netTotalCents: SafeInteger,
   vatTotalCents: SafeInteger,
   totalCents: SafeInteger,
@@ -134,7 +135,7 @@ export const InvoiceRevision = Schema.Struct({
   dueDate: CalendarDate,
   paymentTerms: PaymentTerms,
   paymentTermsPresentation: Schema.optionalKey(DocumentTextPresentation),
-  currency: Schema.Literal('EUR'),
+  currency: CurrencyCode,
   netTotalCents: SafeInteger,
   vatTotalCents: SafeInteger,
   totalCents: SafeInteger,
@@ -159,7 +160,7 @@ export const InvoiceSummary = Schema.Struct({
   invoiceNumber: Schema.NullOr(StoredInvoiceNumber),
   title: InvoiceTitle,
   dueDate: CalendarDate,
-  currency: Schema.Literal('EUR'),
+  currency: CurrencyCode,
   totalCents: SafeInteger,
   updatedAt: IsoUtc,
   pdf: Schema.NullOr(InvoicePdfState),

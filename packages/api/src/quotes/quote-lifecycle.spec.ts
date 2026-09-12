@@ -425,6 +425,7 @@ describe('quote lifecycle', () => {
           quoteId,
           {
             expectedVersion: 1,
+            currency: 'EUR',
             title: 'Revised quote',
             conditions: '',
             lines: [

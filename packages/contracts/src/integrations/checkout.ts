@@ -1,4 +1,5 @@
 import { Schema } from 'effect';
+import { CurrencyCode } from '../company/contracts.js';
 import { Ulid } from '../identifiers.js';
 import { IsoUtc } from '../temporal.js';
 import { PositiveSafeInteger } from '../documents/lines.js';
@@ -33,7 +34,7 @@ export const CheckoutOperation = Schema.Struct({
   revisionId: Ulid,
   invoiceNumber: Schema.NonEmptyString,
   amountCents: Schema.Int.check(Schema.isBetween({ minimum: 50, maximum: 99999999 })),
-  currency: Schema.Literal('EUR'),
+  currency: CurrencyCode,
   mode: Schema.Literal('test'),
   createdByUserId: Ulid,
   createdAt: IsoUtc,

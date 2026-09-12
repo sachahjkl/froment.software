@@ -1,5 +1,6 @@
 import { Option, Schema } from 'effect';
 import { DocumentTextPresentation, isDocumentText } from '../documents/document-text.js';
+import { CurrencyCode } from '../company/contracts.js';
 
 import {
   AuthenticationRequired,
@@ -60,6 +61,7 @@ const conditionsFilter = Schema.makeFilter<{
 
 export const QuoteCreateRequest = Schema.Struct({
   clientId: Ulid,
+  currency: CurrencyCode,
   title: QuoteTitle,
   conditions: QuoteConditions,
   conditionsPresentation: Schema.optionalKey(DocumentTextPresentation),
@@ -71,6 +73,7 @@ export type QuoteCreateRequest = typeof QuoteCreateRequest.Type;
 
 export const QuoteRevisionCreateRequest = Schema.Struct({
   expectedVersion: PositiveSafeInteger,
+  currency: CurrencyCode,
   title: QuoteTitle,
   conditions: QuoteConditions,
   conditionsPresentation: Schema.optionalKey(DocumentTextPresentation),
@@ -142,7 +145,7 @@ export const QuoteRenderSnapshot = Schema.Struct({
   title: QuoteTitle,
   conditions: QuoteConditions,
   conditionsPresentation: Schema.optionalKey(DocumentTextPresentation),
-  currency: Schema.Literal('EUR'),
+  currency: CurrencyCode,
   netTotalCents: SafeInteger,
   vatTotalCents: SafeInteger,
   totalCents: SafeInteger,
@@ -180,7 +183,7 @@ export const QuoteRevision = Schema.Struct({
   title: QuoteTitle,
   conditions: QuoteConditions,
   conditionsPresentation: Schema.optionalKey(DocumentTextPresentation),
-  currency: Schema.Literal('EUR'),
+  currency: CurrencyCode,
   netTotalCents: SafeInteger,
   vatTotalCents: SafeInteger,
   totalCents: SafeInteger,
@@ -200,7 +203,7 @@ export const QuoteSummary = Schema.Struct({
   status: QuoteStatus,
   version: PositiveSafeInteger,
   title: QuoteTitle,
-  currency: Schema.Literal('EUR'),
+  currency: CurrencyCode,
   totalCents: SafeInteger,
   updatedAt: IsoUtc,
 }).annotate({ identifier: 'QuoteSummary' });

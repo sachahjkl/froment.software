@@ -111,6 +111,17 @@ export const billingRoutes: Routes = [
     },
   },
   {
+    path: 'backoffice/invoices/:invoiceId/credits/:creditNoteId/edit',
+    loadComponent: () => import('../credit-editor/credit-editor').then((m) => m.CreditEditor),
+    canActivate: [administratorGuard],
+    canDeactivate: [unsavedChangesGuard],
+    data: {
+      ...permissionData('invoice.read', 'invoice.credit'),
+      titleKey: 'credit.editDraft',
+      robots: 'noindex, nofollow',
+    },
+  },
+  {
     path: 'backoffice/invoices/:invoiceId/refunds/new',
     loadComponent: () => import('../refund-editor/refund-editor').then((m) => m.RefundEditor),
     canActivate: [administratorGuard],

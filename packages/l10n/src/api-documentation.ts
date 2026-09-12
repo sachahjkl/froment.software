@@ -149,6 +149,11 @@ export const apiDocumentation = {
         description:
           'Afficher les 100 derniers rapprochements d’une opération, avec auteurs, dates et motifs de dissociation.',
       },
+      bankMatchSuggestionList: {
+        summary: 'Proposer des rapprochements',
+        description:
+          'Classe au maximum dix règlements probables. Une confirmation humaine reste obligatoire.',
+      },
       bankTransactionList: {
         summary: 'Lister les opérations bancaires',
         description: 'Retourne les 1 000 dernières opérations et leurs rapprochements actifs.',
@@ -328,6 +333,26 @@ export const apiDocumentation = {
           'Enregistre un règlement partiel ou complet. Réutilisez requestId avec les mêmes valeurs après une erreur réseau. Le solde ne peut pas devenir négatif.',
       },
       invoiceVoid: { summary: 'Annuler une facture', description: 'Annule une facture.' },
+      affairList: {
+        summary: 'Lister les affaires',
+        description: 'Liste les affaires indépendantes et leurs documents liés.',
+      },
+      affairGet: {
+        summary: 'Consulter une affaire',
+        description: 'Retourne une affaire et les identifiants de ses documents liés.',
+      },
+      affairCreate: {
+        summary: 'Créer une affaire',
+        description: 'Crée une affaire numérotée pour un client.',
+      },
+      affairUpdate: {
+        summary: 'Modifier une affaire',
+        description: 'Modifie le titre ou le statut avec contrôle de version.',
+      },
+      affairQuoteLink: {
+        summary: 'Lier un devis',
+        description: 'Déplace un devis compatible vers cette affaire.',
+      },
       affairEventList: {
         summary: 'Lister les événements d’une affaire',
         description: 'Liste les événements commerciaux liés à un client.',
@@ -598,6 +623,10 @@ export const apiDocumentation = {
         description:
           'Return the latest 100 matches for a transaction, including actors, dates and reasons for removal.',
       },
+      bankMatchSuggestionList: {
+        summary: 'Suggest reconciliations',
+        description: 'Ranks at most ten probable receipts. Human confirmation remains required.',
+      },
       bankTransactionList: {
         summary: 'List bank transactions',
         description: 'Returns the latest 1,000 transactions and their active matches.',
@@ -762,6 +791,26 @@ export const apiDocumentation = {
           'Records a partial or full payment. Reuse requestId with unchanged values after a network error. The balance cannot become negative.',
       },
       invoiceVoid: { summary: 'Void an invoice', description: 'Voids an invoice.' },
+      affairList: {
+        summary: 'List affairs',
+        description: 'Lists independent affairs and their linked documents.',
+      },
+      affairGet: {
+        summary: 'Read an affair',
+        description: 'Returns an affair and its linked document identifiers.',
+      },
+      affairCreate: {
+        summary: 'Create an affair',
+        description: 'Creates a numbered affair for one client.',
+      },
+      affairUpdate: {
+        summary: 'Update an affair',
+        description: 'Updates the title or status with version control.',
+      },
+      affairQuoteLink: {
+        summary: 'Link a quote',
+        description: 'Moves a compatible quote to this affair.',
+      },
       affairEventList: {
         summary: 'List affair events',
         description: 'Lists the commercial events related to a client.',

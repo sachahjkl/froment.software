@@ -138,18 +138,28 @@
     [preserveQuery]="true"
     [disabled]="actionsDisabled()"
   />
+  <label class="field version-selector"
+    >{{ i18n.t('commercial.versions') }}
+    <select class="input" [value]="version()" (change)="selectVersion($any($event.target).value)">
+      @for (item of revisions(); track item.id) {
+      <option [value]="item.version === quote.version ? '' : item.version">
+        {{ i18n.tf('commercial.revision', { version: item.version }) }} · {{ date(item.createdAt) }}
+      </option>
+      }
+    </select>
+  </label>
   <router-outlet />
   <ng-template appTabPanel="quote-detail" let-tab="tab">
     <section class="detail-panel section-space" [attr.aria-labelledby]="'quote-' + tab + '-tab'">
-      @switch (tab) { @case ('summary') {
+      @switch (tab) { @case ('summary') { @if (revision(); as selectedRevision) {
       <p class="muted">
         {{ i18n.t('commercial.updated') }} :
-        <time [attr.datetime]="quote.currentRevision.createdAt"
-          >{{ date(quote.currentRevision.createdAt) }}</time
+        <time [attr.datetime]="selectedRevision.createdAt"
+          >{{ date(selectedRevision.createdAt) }}</time
         >
       </p>
-      <app-quote-lines [revision]="quote.currentRevision" />
-      @if (order(); as order) {
+      <app-quote-lines [revision]="selectedRevision" />
+      } @if (order(); as order) {
       <section class="section-space" aria-labelledby="quote-related-documents-title">
         <h2 id="quote-related-documents-title">
           {{ i18n.t('commercialHeader.relatedDocuments') }}
@@ -183,39 +193,7 @@
       <app-quote-document [quoteId]="quote.id" [clientId]="quote.clientId" [revision]="revision" />
       } @else {
       <p appNotice variant="danger" role="alert">{{ i18n.t('quote.not_found') }}</p>
-      } } @case ('versions') {
-      <div appDataTable>
-        <table [attr.aria-label]="i18n.t('commercial.versions')">
-          <thead>
-            <tr>
-              <th scope="col">{{ i18n.t('commercial.versions') }}</th>
-              <th scope="col">{{ i18n.t('backOffice.affair.timeline.date') }}</th>
-              <th scope="col" class="amount">{{ i18n.t('commercial.quoteAmount') }}</th>
-              <th scope="col">{{ i18n.t('commercial.document') }}</th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (revision of revisions(); track revision.id) {
-            <tr>
-              <th scope="row">
-                {{ i18n.tf('commercial.revision', { version: revision.version }) }} · {{
-                revision.title }}
-              </th>
-              <td>{{ date(revision.createdAt) }}</td>
-              <td class="amount">{{ money(revision.totalCents) }}</td>
-              <td>
-                <a
-                  [routerLink]="['/backoffice/quotes', quote.id, 'document']"
-                  [queryParams]="revisionQuery(revision.version)"
-                  >{{ i18n.t('backOffice.quote.preview.show') }}</a
-                >
-              </td>
-            </tr>
-            }
-          </tbody>
-        </table>
-      </div>
-      } }
+      } } }
     </section>
   </ng-template>
   } } }

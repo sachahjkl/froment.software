@@ -57,9 +57,24 @@ const seedRefundInvoice = Effect.fn('CreditTest.seedRefundInvoice')(function* ()
       new Date(integrationTestTime).toISOString(),
       invoice.actorId,
     );
+  const draft = yield* credits.create(
+    {
+      requestId: randomUUID(),
+      reason: 'Service cancelled',
+      lines: [
+        {
+          invoiceId: invoice.invoiceId,
+          invoiceVersion: 1,
+          sourceLineId: invoice.snapshot.lines[0]!.id,
+          quantityMilli: invoice.snapshot.lines[0]!.quantityMilli,
+        },
+      ],
+    },
+    invoice.actorId,
+  );
   yield* credits.issue(
-    invoice.invoiceId,
-    { requestId: randomUUID(), expectedVersion: 1, reason: 'Service cancelled' },
+    draft.id,
+    { requestId: randomUUID(), expectedVersion: draft.version },
     invoice.actorId,
   );
   return invoice;
@@ -81,29 +96,47 @@ describe('credit request conflicts', () => {
         const second = yield* seedIntegrationInvoice();
         const credits = yield* InvoiceCreditNotes;
         const { sqlite } = yield* Database;
-        const request = { requestId: randomUUID(), expectedVersion: 1, reason: 'Cancelled' };
-        const state = yield* credits.issue(first.invoiceId, request, first.actorId);
-        for (const [invoiceId, changed] of [
-          [first.invoiceId, { ...request, reason: 'Changed' }],
-          [first.invoiceId, { ...request, expectedVersion: 2 }],
-          [second.invoiceId, request],
-          [ulid(), request],
-        ] as const) {
-          expect(
-            yield* Effect.result(credits.issue(invoiceId, changed, first.actorId)),
-          ).toMatchObject(requestConflict);
-        }
-        const newRequest = { ...request, requestId: randomUUID() };
+        const request = {
+          requestId: randomUUID(),
+          reason: 'Cancelled',
+          lines: [
+            {
+              invoiceId: first.invoiceId,
+              invoiceVersion: 1,
+              sourceLineId: first.snapshot.lines[0]!.id,
+              quantityMilli: 1000,
+            },
+          ],
+        };
+        const draft = yield* credits.create(request, first.actorId);
+        expect(yield* credits.create(request, second.actorId)).toEqual(draft);
         expect(
-          yield* Effect.result(credits.issue(first.invoiceId, newRequest, first.actorId)),
-        ).toMatchObject(businessConflict);
+          yield* Effect.result(credits.create({ ...request, reason: 'Changed' }, first.actorId)),
+        ).toMatchObject(requestConflict);
+        expect(
+          yield* Effect.result(
+            credits.create(
+              {
+                ...request,
+                lines: [{ ...request.lines[0], invoiceId: second.invoiceId }],
+              },
+              first.actorId,
+            ),
+          ),
+        ).toMatchObject(requestConflict);
+        const issueRequest = { requestId: randomUUID(), expectedVersion: draft.version };
+        const state = yield* credits.issue(draft.id, issueRequest, first.actorId);
+        expect(yield* credits.issue(draft.id, issueRequest, second.actorId)).toEqual(state);
+        const newRequest = { ...issueRequest, requestId: randomUUID() };
+        expect(
+          yield* Effect.result(credits.issue(draft.id, newRequest, first.actorId)),
+        ).toMatchObject(requestConflict);
         expect(
           sqlite
             .prepare('select 1 from invoice_credit_notes where request_id = ?')
             .get(newRequest.requestId),
         ).toBeUndefined();
-        expect(yield* credits.issue(first.invoiceId, request, second.actorId)).toEqual(state);
-        expect(state.creditNote?.issuedByUserId).toBe(first.actorId);
+        expect(state.issuedByUserId).toBe(first.actorId);
         expect(sqlite.prepare('select count(*) from invoice_credit_notes').pluck().get()).toBe(1);
         expect(
           sqlite
@@ -119,19 +152,40 @@ describe('credit request conflicts', () => {
     await Effect.runPromise(
       Effect.gen(function* () {
         yield* TestClock.setTime(integrationTestTime);
-        const { invoiceId, actorId } = yield* seedIntegrationInvoice();
+        const { invoiceId, actorId, snapshot } = yield* seedIntegrationInvoice();
         const credits = yield* InvoiceCreditNotes;
         const { sqlite } = yield* Database;
-        const request = { requestId: randomUUID(), expectedVersion: 2, reason: 'Cancelled' };
-        expect(yield* Effect.result(credits.issue(ulid(), request, actorId))).toMatchObject(
-          businessConflict,
-        );
-        expect(yield* Effect.result(credits.issue(invoiceId, request, actorId))).toMatchObject(
+        const request = {
+          requestId: randomUUID(),
+          reason: 'Cancelled',
+          lines: [
+            {
+              invoiceId,
+              invoiceVersion: 2,
+              sourceLineId: snapshot.lines[0]!.id,
+              quantityMilli: 1000,
+            },
+          ],
+        };
+        expect(yield* Effect.result(credits.create(request, actorId))).toMatchObject(
           businessConflict,
         );
         expect(sqlite.prepare('select count(*) from invoice_credit_notes').pluck().get()).toBe(0);
-        const state = yield* credits.issue(invoiceId, { ...request, expectedVersion: 1 }, actorId);
-        expect(state.creditNote?.requestId).toBe(request.requestId);
+        const state = yield* credits.create(
+          {
+            ...request,
+            lines: [
+              {
+                invoiceId,
+                invoiceVersion: 1,
+                sourceLineId: snapshot.lines[0]!.id,
+                quantityMilli: 1000,
+              },
+            ],
+          },
+          actorId,
+        );
+        expect(state.requestId).toBe(request.requestId);
       }).pipe(Effect.provide(layer()), Effect.provide(TestClock.layer())),
     );
   });

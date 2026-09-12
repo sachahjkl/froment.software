@@ -1,4 +1,5 @@
 import { Schema } from 'effect';
+import { CurrencyCode } from '../company/contracts.js';
 import {
   AuthenticationRequired,
   PermissionDenied,
@@ -9,7 +10,7 @@ import { Ulid } from '../identifiers.js';
 
 export const CatalogItemCreateRequest = Schema.Struct({
   ...DocumentLineInput.fields,
-  currency: Schema.Literal('EUR'),
+  currency: CurrencyCode,
 });
 export type CatalogItemCreateRequest = typeof CatalogItemCreateRequest.Type;
 export const CatalogItem = Schema.Struct({

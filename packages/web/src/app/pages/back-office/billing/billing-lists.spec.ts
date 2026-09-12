@@ -120,7 +120,14 @@ describe('Billing lists', () => {
       period: 'billingWorkspace.creditPeriod',
       dateField: 'issuedAt',
       date: '2026-08-21',
-      entry: { ...creditFixture().creditNote, ...context, issuedAt: '2026-08-20T23:30:00.000Z' },
+      entry: {
+        ...creditFixture().creditNotes[0]!,
+        clientDisplayName: context.clientDisplayName,
+        sourceInvoiceIds: [context.invoiceId],
+        sourceInvoiceNumbers: [context.invoiceNumber],
+        reason: 'Réparation moteur',
+        issuedAt: '2026-08-20T23:30:00.000Z',
+      },
     },
     {
       component: RefundList,
@@ -428,6 +435,12 @@ describe('Billing lists', () => {
           id: '01ARZ3NDEKTSV4RRFFQ69G5FC1',
           clientDisplayName: 'Equipe 10',
           title: 'Inspection pompe',
+          reason:
+            item.method === 'credits'
+              ? 'Inspection pompe'
+              : 'reason' in item.entry
+                ? item.entry.reason
+                : undefined,
           totalCents: 12000,
           amountCents: 12000,
         },

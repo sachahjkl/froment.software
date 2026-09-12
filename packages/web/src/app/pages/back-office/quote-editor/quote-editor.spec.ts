@@ -50,6 +50,7 @@ describe('Quote editor navigation', () => {
                 quantityMilli: 1500,
                 unitPriceCents: 12500,
                 vatRateBasisPoints: 550,
+                currency: 'EUR',
                 archived: false,
               },
             ],
@@ -233,6 +234,7 @@ describe('Quote editor navigation', () => {
     expect(create).toHaveBeenCalledOnce();
     expect(create).toHaveBeenCalledWith({
       clientId: quoteFixture.clientId,
+      currency: 'EUR',
       title: 'New quote',
       conditions: '',
       lines: [

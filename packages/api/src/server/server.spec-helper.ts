@@ -210,6 +210,7 @@ export const createQuote = async (server: HttpTestServer, clientId: string) => {
     headers: server.jsonHeaders,
     body: JSON.stringify({
       clientId,
+      currency: 'EUR',
       title: 'Integration quote',
       conditions: 'Payment is due within 30 days.',
       lines: [

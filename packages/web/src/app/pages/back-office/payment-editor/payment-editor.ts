@@ -1,5 +1,12 @@
 import { Can } from '@backoffice/can';
-import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  effect,
+  inject,
+  signal,
+} from '@angular/core';
 import {
   disabled,
   form,
@@ -42,10 +49,7 @@ export class PaymentEditor {
     return invoice ? detailBalance(invoice) : 0;
   });
   protected readonly eligible = computed(
-    () =>
-      this.task.invoice()?.status === 'issued' &&
-      this.task.invoice()?.creditedCents === 0 &&
-      this.balance() > 0,
+    () => this.task.invoice()?.status === 'issued' && this.balance() > 0,
   );
   private readonly model = signal(emptyModel());
   private baseline = JSON.stringify(this.model());

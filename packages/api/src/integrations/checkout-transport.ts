@@ -16,7 +16,7 @@ export interface CheckoutSubmission {
 export interface CheckoutSession {
   readonly id: string;
   readonly mode: 'test';
-  readonly currency: 'EUR';
+  readonly currency: string;
   readonly amountCents: number;
   readonly requestId: string;
   readonly revisionId: string;

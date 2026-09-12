@@ -52,6 +52,12 @@ La confirmation valide une seconde fois le contenu avant toute écriture.
 
 ## Rapprochement
 
+L’API propose au maximum dix rapprochements probables pour un crédit bancaire.
+Elle compare le montant, les références de facture et de règlement, puis la proximité des dates.
+Chaque suggestion affiche son score et ses raisons.
+Un utilisateur doit sélectionner la suggestion et confirmer le rapprochement.
+Le serveur ne crée jamais un rapprochement automatiquement.
+
 Enregistrez d’abord le règlement dans la facture.
 Sélectionnez ensuite le crédit bancaire, la facture et le règlement.
 Saisissez le montant à affecter au règlement.

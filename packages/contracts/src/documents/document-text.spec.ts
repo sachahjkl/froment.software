@@ -139,6 +139,7 @@ describe('document text', () => {
   it('validates formatted text at the request boundary', () => {
     const request = {
       clientId: '01ARZ3NDEKTSV4RRFFQ69G5FAV',
+      currency: 'EUR',
       title: 'Prestation',
       conditions: '**À réception**',
       conditionsPresentation: presentation,

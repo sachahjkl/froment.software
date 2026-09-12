@@ -1,227 +1,142 @@
-<section appTabLayout class="detail-page" aria-labelledby="affair-title">
+<section appTabLayout class="detail-page wide-page" aria-labelledby="affair-title">
   <app-page-header layout="stacked">
-    <a pageBack [routerLink]="['/backoffice/affairs', backView()]" [queryParams]="context()">
-      {{ i18n.t('backOffice.backToAffairs') }}
-    </a>
-    <h1 id="affair-title">{{ headerTitle() }}</h1>
-    @if (quote(); as quote) {
-    <p
-      appClientDescription
-      kind="affair"
-      [clientId]="quote.clientId"
-      [clientName]="quote.currentRevision.clientDisplayName"
-    ></p>
-    }
-    <ng-container pageActions>
-      @if (quote()) { @if (!invoice()) { @if (order(); as order) {
-      <a
-        appLinkButton
-        variant="primary"
-        routerLink="/backoffice/invoices/new"
-        *appCan="'invoice.create'"
-        [queryParams]="{ orderId: order.id }"
-      >
-        {{ i18n.t('backOffice.affair.nextAction.createInvoiceButton') }}
-      </a>
-      } } @if (invoiceReminderHref(); as reminderHref) {
-      <a appLinkButton [href]="reminderHref">{{ i18n.t('backOffice.affair.reminder.invoice') }}</a>
-      } @else if (quoteReminderHref(); as reminderHref) {
-      <a appLinkButton [href]="reminderHref">{{ i18n.t('backOffice.affair.reminder.quote') }}</a>
-      } }
+    <a pageBack routerLink="/backoffice/affairs">{{ i18n.t('backOffice.affairs.title') }}</a>
+    <h1 id="affair-title">{{ affair()?.reference ?? i18n.t('backOffice.affairs.title') }}</h1>
+    @if (affair(); as item) {
+    <p>{{ item.title }} · {{ item.clientDisplayName }}</p>
+    } @if (affair(); as item) {
+    <ng-container pageBadges>
+      <span appBadge [variant]="item.status === 'open' ? 'success' : 'default'">
+        {{ i18n.t(item.status === 'open' ? 'affair.open' : 'affair.closed') }}
+      </span>
     </ng-container>
+    }
   </app-page-header>
+
   @switch (state()) { @case ('loading') {
-  <p class="state" aria-live="polite">{{ i18n.t('backOffice.affair.loading') }}</p>
+  <p role="status">{{ i18n.t('backOffice.affair.loading') }}</p>
   } @case ('error') {
-  <p appNotice variant="danger" role="alert">{{ i18n.t('backOffice.affair.error') }}</p>
-  <button appButton type="button" (click)="load()">{{ i18n.t('backOffice.affair.retry') }}</button>
-  } @case ('ready') { @if (quote(); as quote) {
-  <app-tabs [tabs]="tabs()" [label]="quote.currentRevision.title" [preserveQuery]="true" />
+  <p appNotice variant="danger" role="alert">{{ i18n.t('affair.error') }}</p>
+  <button appButton type="button" (click)="load()">{{ i18n.t('listControls.reload') }}</button>
+  } @case ('ready') { @if (affair(); as item) {
+  <app-tabs [tabs]="tabs()" [label]="item.reference" />
   <router-outlet />
   <ng-template appTabPanel="affair-detail" let-tab="tab">
-    <div class="affair-panel" [attr.aria-labelledby]="'affair-' + tab + '-tab'">
-      @if (tab === 'overview') {
-
-      <section class="next-action ds-panel">
-        @if (nextActionVisible()) {
-        <div>
-          <h2 id="next-action-title">{{ i18n.t('backOffice.affair.nextAction') }}</h2>
-          @if (invoice(); as invoice) {
-          <p>{{ invoiceNextAction(invoice.status) }}</p>
-          } @else if (order()) {
-          <p>{{ i18n.t('backOffice.affair.nextAction.createInvoice') }}</p>
-          } @else {
-          <p>{{ quoteNextAction(quote.status) }}</p>
-          }
+    @switch (tab) { @case ('overview') {
+    <section
+      class="ds-panel form-panel"
+      *appCan="'affair.update'"
+      aria-labelledby="affair-edit-title"
+    >
+      <h2 id="affair-edit-title">{{ i18n.t('affair.edit') }}</h2>
+      <form class="field-grid" (submit)="save($event)">
+        <label class="field"
+          >{{ i18n.t('backOffice.invoice.title') }}<input
+            class="input"
+            [formField]="editForm.title"
+        /></label>
+        <label class="field"
+          >{{ i18n.t('billingWorkspace.financialStatus') }}
+          <select class="input" [formField]="editForm.status">
+            <option value="open">{{ i18n.t('affair.open') }}</option>
+            <option value="closed">{{ i18n.t('affair.closed') }}</option>
+          </select>
+        </label>
+        <div class="actions">
+          <button appButton type="submit" [disabled]="saving()">{{ i18n.t('affair.save') }}</button>
         </div>
-        }
-        <dl class="quote-amount">
-          <dt>{{ i18n.t('commercial.quoteAmount') }}</dt>
-          <dd>{{ money(quote.currentRevision.totalCents) }}</dd>
-        </dl>
-      </section>
+      </form>
+    </section>
 
-      <section class="related-documents" aria-labelledby="related-documents-title">
-        <h2 id="related-documents-title">{{ i18n.t('commercialHeader.relatedDocuments') }}</h2>
-        <ul class="document-list">
-          @for (document of relatedDocuments(); track document.kind) {
-          <li class="document-card ds-panel">
-            <div class="document-identity">
-              <app-entity-icon [icon]="document.icon" />
-              <div>
-                <h3>{{ i18n.t(document.label) }}</h3>
-                <a [routerLink]="document.link" [queryParams]="document.query"
-                  >{{ document.reference }}</a
+    <section
+      class="ds-panel form-panel"
+      *appCan="'affair.update'"
+      aria-labelledby="affair-link-title"
+    >
+      <h2 id="affair-link-title">{{ i18n.t('affair.linkQuote') }}</h2>
+      <div class="field-grid">
+        <label class="field"
+          >{{ i18n.t('commercial.quote') }}
+          <select
+            class="input"
+            [value]="selectedQuoteId()"
+            (change)="selectedQuoteId.set($any($event.target).value)"
+          >
+            <option value="">{{ i18n.t('affair.selectQuote') }}</option>
+            @for (quote of availableQuotes(); track quote.id) {
+            <option [value]="quote.id">{{ quote.reference }} · {{ quote.title }}</option>
+            }
+          </select>
+        </label>
+        <div class="actions">
+          <button
+            appButton
+            type="button"
+            [disabled]="!selectedQuoteId() || saving()"
+            (click)="linkQuote()"
+          >
+            {{ i18n.t('affair.link') }}
+          </button>
+        </div>
+      </div>
+    </section>
+    } @case ('documents') {
+    <section aria-labelledby="affair-documents-title">
+      <h2 id="affair-documents-title">{{ i18n.t('affair.documents') }}</h2>
+      <div appDataTable>
+        <table>
+          <thead>
+            <tr>
+              <th>{{ i18n.t('billingWorkspace.document') }}</th>
+              <th>{{ i18n.t('affair.reference') }}</th>
+              <th>{{ i18n.t('backOffice.invoice.title') }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (quote of linkedQuotes(); track quote.id) {
+            <tr>
+              <td>{{ i18n.t('commercial.quote') }}</td>
+              <td><a [routerLink]="['/backoffice/quotes', quote.id]">{{ quote.reference }}</a></td>
+              <td>{{ quote.title }}</td>
+            </tr>
+            } @for (order of linkedOrders(); track order.id) {
+            <tr>
+              <td>{{ i18n.t('commercial.order') }}</td>
+              <td><a [routerLink]="['/backoffice/orders', order.id]">{{ order.reference }}</a></td>
+              <td>{{ order.title }}</td>
+            </tr>
+            } @for (invoice of linkedInvoices(); track invoice.id) {
+            <tr>
+              <td>{{ i18n.t('backOffice.affair.invoice') }}</td>
+              <td>
+                <a [routerLink]="['/backoffice/invoices', invoice.id]"
+                  >{{ invoice.invoiceNumber ?? invoice.id }}</a
                 >
-              </div>
-            </div>
-            <div class="spacer-x-2">
-              @for (badge of document.badges; track badge.label) {
-              <span appBadge [variant]="badge.variant">{{ i18n.t(badge.label) }}</span>
-              }
-            </div>
-            <dl class="document-facts">
-              <div>
-                <dt>{{ i18n.t(document.dateLabel) }}</dt>
-                <dd><time [attr.datetime]="document.date">{{ date(document.date) }}</time></dd>
-              </div>
-              <div>
-                <dt>{{ i18n.t('backOffice.invoice.total') }}</dt>
-                <dd class="amount">{{ money(document.totalCents) }}</dd>
-              </div>
-            </dl>
-          </li>
-          }
-        </ul>
-      </section>
-      } @if (tab === 'documents') {
-      <section aria-labelledby="documents-title">
-        <h2 id="documents-title">{{ i18n.t('backOffice.affair.documents') }}</h2>
-        <div appDataTable>
-          <table aria-labelledby="documents-title">
-            <thead>
-              <tr>
-                <th>{{ i18n.t('backOffice.affair.document') }}</th>
-                <th>{{ i18n.t('backOffice.affair.reference') }}</th>
-                <th>{{ i18n.t('backOffice.affair.status') }}</th>
-                <th class="actions-column">{{ i18n.t('backOffice.affair.action') }}</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>{{ i18n.t('backOffice.affair.quote') }}</td>
-                <td>
-                  <a [routerLink]="['/backoffice/quotes', quote.id]" [queryParams]="context()"
-                    >{{ quote.reference }}</a
-                  >
-                </td>
-                <td>
-                  @let badge = quoteBadge(quote.status);
-                  <span appBadge [variant]="badge.variant">{{ i18n.t(badge.label) }}</span>
-                </td>
-                <td class="actions-column">
-                  <div class="document-actions">
-                    <a
-                      class="external-link"
-                      [href]="'/api/quotes/' + quote.id + '/revisions/' + quote.version + '/preview'"
-                      *appCan="'document.render'"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      >{{ i18n.t('backOffice.quote.preview.open') }}<app-icon name="external"
-                    /></a>
-                    <button appButton type="button" (click)="copyPortalUrl('quote', quote.id)">
-                      {{ portalCopyLabel('quote', quote.id) }}
-                    </button>
-                  </div>
-                </td>
-              </tr>
-              @if (order(); as order) {
-              <tr>
-                <td>{{ i18n.t('backOffice.affair.order') }}</td>
-                <td>
-                  <a [routerLink]="['/backoffice/orders', order.id]" [queryParams]="context()"
-                    >{{ order.reference }}</a
-                  >
-                </td>
-                <td>
-                  <span appBadge variant="success"
-                    >{{ i18n.t('backOffice.affair.confirmed') }}</span
-                  >
-                </td>
-                <td class="actions-column">
-                  <div class="document-actions">
-                    <a
-                      class="external-link"
-                      [href]="'/api/orders/' + order.id + '/preview'"
-                      *appCan="'document.render'"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      >{{ i18n.t('backOffice.quote.preview.open') }}<app-icon name="external"
-                    /></a>
-                    <button appButton type="button" (click)="copyPortalUrl('order', order.id)">
-                      {{ portalCopyLabel('order', order.id) }}
-                    </button>
-                  </div>
-                </td>
-              </tr>
-              } @if (invoice(); as invoice) {
-              <tr>
-                <td>{{ i18n.t('backOffice.affair.invoice') }}</td>
-                <td>
-                  <a [routerLink]="['/backoffice/invoices', invoice.id]"
-                    >{{ invoiceReference() }}</a
-                  >
-                </td>
-                <td>
-                  @let badge = invoiceBadge(invoice.status);
-                  <span appBadge [variant]="badge.variant">{{ i18n.t(badge.label) }}</span>
-                </td>
-                <td class="actions-column">
-                  <div class="document-actions">
-                    <a
-                      class="external-link"
-                      [href]="'/api/invoices/' + invoice.id + '/revisions/' + invoice.version + '/preview'"
-                      *appCan="'document.render'"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      >{{ i18n.t('backOffice.quote.preview.open') }}<app-icon name="external"
-                    /></a>
-                    <button appButton type="button" (click)="copyPortalUrl('invoice', invoice.id)">
-                      {{ portalCopyLabel('invoice', invoice.id) }}
-                    </button>
-                  </div>
-                </td>
-              </tr>
-              }
-            </tbody>
-          </table>
-        </div>
-      </section>
-      <p class="hint">{{ i18n.t('commercial.portalHint') }}</p>
-      } @if (tab === 'history') {
-      <section aria-labelledby="timeline-title">
-        <h2 id="timeline-title">{{ i18n.t('backOffice.affair.timeline') }}</h2>
-        <div appDataTable>
-          <table aria-labelledby="timeline-title">
-            <thead>
-              <tr>
-                <th>{{ i18n.t('backOffice.affair.timeline.date') }}</th>
-                <th>{{ i18n.t('backOffice.affair.timeline.eventHeader') }}</th>
-              </tr>
-            </thead>
-            <tbody>
-              @for (item of timeline(); track item.id) {
-              <tr>
-                <td><time [attr.datetime]="item.date">{{ date(item.date) }}</time></td>
-                <td>{{ i18n.t(item.label) }}</td>
-              </tr>
-              }
-            </tbody>
-          </table>
-        </div>
-      </section>
+              </td>
+              <td>{{ invoice.title }}</td>
+            </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </section>
+    } @case ('history') {
+    <section aria-labelledby="affair-history-title">
+      <h2 id="affair-history-title">{{ i18n.t('billingWorkspace.history') }}</h2>
+      @if (events().length === 0) {
+      <p>{{ i18n.t('affair.noHistory') }}</p>
+      } @else {
+      <ol class="timeline">
+        @for (event of events(); track event.id) {
+        <li>
+          <time [attr.datetime]="event.occurredAt">{{ event.occurredAt }}</time> · {{ event.action
+          }}
+        </li>
+        }
+      </ol>
       }
-    </div>
+    </section>
+    } }
   </ng-template>
   } } }
 </section>

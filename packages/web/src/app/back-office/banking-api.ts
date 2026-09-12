@@ -9,6 +9,7 @@ import {
   BankImportPreview,
   BankTransactionList,
   BankTransaction,
+  BankMatchSuggestionList,
   type BankImportRequestValue,
 } from '@froment/contracts';
 import { Schema } from 'effect';
@@ -43,6 +44,14 @@ export class BankingApi {
     return requestOutcome(
       this.http.get<unknown>(`/api/banking/transactions/${id}`),
       BankTransaction,
+      BankFailure,
+      'bank.error',
+    );
+  }
+  suggestions(id: string) {
+    return requestOutcome(
+      this.http.get<unknown>(`/api/banking/transactions/${id}/suggestions`),
+      BankMatchSuggestionList,
       BankFailure,
       'bank.error',
     );

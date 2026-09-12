@@ -73,6 +73,7 @@ interface QuoteLineModel {
 
 interface QuoteModel {
   readonly clientId: string;
+  readonly currency: string;
   readonly conditions: string;
   readonly conditionsPresentation?: DocumentTextPresentationValue;
   readonly lines: Array<QuoteLineModel>;
@@ -163,17 +164,20 @@ export class QuoteEditor {
   );
   private readonly model = signal<QuoteModel>({
     clientId: '',
+    currency: 'EUR',
     conditions: '',
     lines: [emptyLine()],
     title: '',
   });
   protected readonly conditionsPresentation = computed(() => this.model().conditionsPresentation);
   protected readonly catalogOptions = computed(() =>
-    this.catalogItems().map((item) => ({
-      id: item.id,
-      label: item.description,
-      detail: this.money(item.unitPriceCents),
-    })),
+    this.catalogItems()
+      .filter((item) => item.currency === this.model().currency)
+      .map((item) => ({
+        id: item.id,
+        label: item.description,
+        detail: this.money(item.unitPriceCents),
+      })),
   );
   protected readonly quoteForm = form(this.model, (path) => {
     disabled(path, {
@@ -185,6 +189,9 @@ export class QuoteEditor {
         this.referenceBusy(),
     });
     required(path.clientId);
+    required(path.currency);
+    maxLength(path.currency, 3);
+    pattern(path.currency, /^[A-Z]{3}$/);
     required(path.title);
     maxLength(path.title, 120);
     pattern(path.title, /\S/);
@@ -482,6 +489,7 @@ export class QuoteEditor {
         const model = this.model();
         const values = {
           conditions: model.conditions,
+          currency: model.currency,
           lines,
           title: model.title.trim(),
         };
@@ -570,7 +578,7 @@ export class QuoteEditor {
   }
 
   protected money(cents: number): string {
-    return formatMoney(cents, this.i18n.language(), 'EUR');
+    return formatMoney(cents, this.i18n.language(), this.model().currency);
   }
 
   private async load(parameter: string | null): Promise<void> {
@@ -589,7 +597,13 @@ export class QuoteEditor {
     this.error.set(undefined);
     this.unavailable.set(false);
     this.loading.set(true);
-    this.model.set({ clientId: '', conditions: '', lines: [emptyLine()], title: '' });
+    this.model.set({
+      clientId: '',
+      currency: 'EUR',
+      conditions: '',
+      lines: [emptyLine()],
+      title: '',
+    });
     this.quoteForm().reset();
     if (parameter !== null && quoteId === undefined) {
       this.error.set('quote.not_found');
@@ -670,6 +684,7 @@ export class QuoteEditor {
     const decimalSeparator = this.i18n.language() === 'fr' ? ',' : '.';
     return {
       clientId: detail.clientId,
+      currency: detail.currentRevision.currency,
       conditions: detail.currentRevision.conditions,
       conditionsPresentation: detail.currentRevision.conditionsPresentation,
       title: detail.currentRevision.title,
