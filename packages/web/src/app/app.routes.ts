@@ -77,7 +77,7 @@ export const routes: Routes = [
     },
   },
   {
-    path: 'services/developpement',
+    path: 'services/development',
     loadComponent: () =>
       import('./pages/service-detail/service-detail').then((module) => module.ServiceDetail),
     data: {
@@ -297,7 +297,7 @@ export const routes: Routes = [
     },
   },
   {
-    path: 'backoffice/fournisseurs',
+    path: 'backoffice/suppliers',
     loadComponent: () =>
       import('./pages/back-office/suppliers/suppliers').then((module) => module.Suppliers),
     canActivate: [administratorGuard],
@@ -312,7 +312,7 @@ export const routes: Routes = [
     children: tabRoutes('active', 'suppliers', ['active', 'archived', 'all']),
   },
   {
-    path: 'backoffice/fournisseurs/new',
+    path: 'backoffice/suppliers/new',
     loadComponent: () =>
       import('./pages/back-office/supplier-editor/supplier-editor').then(
         (module) => module.SupplierEditor,
@@ -327,7 +327,7 @@ export const routes: Routes = [
     },
   },
   {
-    path: 'backoffice/fournisseurs/:supplierId/edit',
+    path: 'backoffice/suppliers/:supplierId/edit',
     loadComponent: () =>
       import('./pages/back-office/supplier-editor/supplier-editor').then(
         (module) => module.SupplierEditor,
@@ -342,7 +342,7 @@ export const routes: Routes = [
     },
   },
   {
-    path: 'backoffice/fournisseurs/:supplierId',
+    path: 'backoffice/suppliers/:supplierId',
     loadComponent: () =>
       import('./pages/back-office/supplier-detail/supplier-detail').then(
         (module) => module.SupplierDetail,
@@ -431,7 +431,7 @@ export const routes: Routes = [
     ],
   },
   {
-    path: 'backoffice/affaires',
+    path: 'backoffice/affairs',
     loadComponent: () =>
       import('./pages/back-office/affairs/affairs').then((module) => module.Affairs),
     canActivate: [administratorGuard],
@@ -446,7 +446,7 @@ export const routes: Routes = [
     children: tabRoutes('attention', 'affairs', ['attention', 'active', 'completed', 'all']),
   },
   {
-    path: 'backoffice/affaires/:quoteId',
+    path: 'backoffice/affairs/:quoteId',
     loadComponent: () =>
       import('./pages/back-office/affair-detail/affair-detail').then(
         (module) => module.AffairDetail,
@@ -554,7 +554,7 @@ export const routes: Routes = [
     },
   },
   {
-    path: 'backoffice/catalogue/new',
+    path: 'backoffice/catalog/new',
     loadComponent: () =>
       import('./pages/back-office/catalog-editor/catalog-editor').then(
         (module) => module.CatalogEditor,
@@ -569,7 +569,7 @@ export const routes: Routes = [
     },
   },
   {
-    path: 'backoffice/catalogue/:itemId/edit',
+    path: 'backoffice/catalog/:itemId/edit',
     loadComponent: () =>
       import('./pages/back-office/catalog-editor/catalog-editor').then(
         (module) => module.CatalogEditor,
@@ -584,7 +584,7 @@ export const routes: Routes = [
     },
   },
   {
-    path: 'backoffice/catalogue',
+    path: 'backoffice/catalog',
     loadComponent: () =>
       import('./pages/back-office/catalog/catalog').then((module) => module.Catalog),
     canActivate: [administratorGuard],
@@ -615,7 +615,7 @@ export const routes: Routes = [
     children: configurationRoutes,
   },
   {
-    path: 'backoffice/courriels/new',
+    path: 'backoffice/emails/new',
     loadComponent: () =>
       import('./pages/back-office/email-composer/email-composer').then(
         (module) => module.EmailComposer,
@@ -630,7 +630,7 @@ export const routes: Routes = [
     },
   },
   {
-    path: 'backoffice/courriels/drafts/:draftId/edit',
+    path: 'backoffice/emails/drafts/:draftId/edit',
     loadComponent: () =>
       import('./pages/back-office/email-composer/email-composer').then(
         (module) => module.EmailComposer,
@@ -645,7 +645,7 @@ export const routes: Routes = [
     },
   },
   {
-    path: 'backoffice/courriels/messages/:operationId',
+    path: 'backoffice/emails/messages/:operationId',
     loadComponent: () =>
       import('./pages/back-office/email-detail/email-detail').then((module) => module.EmailDetail),
     canActivate: [administratorGuard],
@@ -658,7 +658,7 @@ export const routes: Routes = [
     },
   },
   {
-    path: 'backoffice/courriels/templates/new',
+    path: 'backoffice/emails/templates/new',
     loadComponent: () =>
       import('./pages/back-office/email-template-editor/email-template-editor').then(
         (module) => module.EmailTemplateEditor,
@@ -673,7 +673,7 @@ export const routes: Routes = [
     },
   },
   {
-    path: 'backoffice/courriels/templates/:templateId/edit',
+    path: 'backoffice/emails/templates/:templateId/edit',
     loadComponent: () =>
       import('./pages/back-office/email-template-editor/email-template-editor').then(
         (module) => module.EmailTemplateEditor,
@@ -688,7 +688,7 @@ export const routes: Routes = [
     },
   },
   {
-    path: 'backoffice/courriels/reminders/new',
+    path: 'backoffice/emails/reminders/new',
     loadComponent: () =>
       import('./pages/back-office/reminder-editor/reminder-editor').then(
         (module) => module.ReminderEditor,
@@ -703,7 +703,7 @@ export const routes: Routes = [
     },
   },
   {
-    path: 'backoffice/courriels',
+    path: 'backoffice/emails',
     loadComponent: () =>
       import('./pages/back-office/emails/emails').then((module) => module.Emails),
     canActivate: [administratorGuard],

@@ -179,7 +179,7 @@
                   <app-entity-icon icon="mail" [variant]="iconVariant(operation)" />
                   <div>
                     <a
-                      [routerLink]="['/backoffice/courriels/messages', operation.id]"
+                      [routerLink]="['/backoffice/emails/messages', operation.id]"
                       [queryParams]="returnQuery(tab)"
                       [appSearchHighlight]="result.indices"
                       >{{ operation.request.subject }}</a
@@ -202,7 +202,7 @@
                   <app-entity-icon icon="mail" />
                   <div>
                     <a
-                      [routerLink]="['/backoffice/courriels/drafts', draft.id, 'edit']"
+                      [routerLink]="['/backoffice/emails/drafts', draft.id, 'edit']"
                       [queryParams]="returnQuery(tab)"
                       [appSearchHighlight]="result.indices"
                       >{{ draft.subject || i18n.t('emailDraft.unnamed') }}</a
@@ -229,7 +229,7 @@
                 <div class="entity-label">
                   <app-entity-icon icon="mail" />
                   <a
-                    [routerLink]="['/backoffice/courriels/templates', template.id, 'edit']"
+                    [routerLink]="['/backoffice/emails/templates', template.id, 'edit']"
                     [queryParams]="returnQuery(tab)"
                     [appSearchHighlight]="result.indices"
                     >{{ template.subject }}</a
@@ -279,7 +279,7 @@
                   {{ i18n.t('reminder.cancel') }}
                 </button>
                 } @else if (reminder.operationId) {
-                <a [routerLink]="['/backoffice/courriels/messages', reminder.operationId]"
+                <a [routerLink]="['/backoffice/emails/messages', reminder.operationId]"
                   >{{ i18n.t('emailsWorkspace.viewMessage') }}</a
                 >
                 }

@@ -7,7 +7,7 @@
       pageActions
       appLinkButton
       variant="primary"
-      routerLink="/backoffice/fournisseurs/new"
+      routerLink="/backoffice/suppliers/new"
       ><app-icon name="plus" />{{ i18n.t('supplier.create') }}</a
     >
   </app-page-header>
@@ -65,7 +65,7 @@
             <tr>
               <th scope="row">
                 <a
-                  [routerLink]="['/backoffice/fournisseurs', supplier.id]"
+                  [routerLink]="['/backoffice/suppliers', supplier.id]"
                   [queryParams]="detailQuery()"
                   >{{ supplier.displayName }}</a
                 >

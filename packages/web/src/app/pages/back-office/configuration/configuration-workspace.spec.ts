@@ -34,7 +34,7 @@ describe('ConfigurationIndex', () => {
             component: Configuration,
             children: [
               { path: '', component: ConfigurationIndex },
-              { path: 'entreprise', component: SettingsPage },
+              { path: 'issuer', component: SettingsPage },
             ],
           },
         ]),
@@ -43,7 +43,7 @@ describe('ConfigurationIndex', () => {
     const harness = await RouterTestingHarness.create();
     await harness.navigateByUrl('/configuration', Configuration);
     expect(harness.routeNativeElement?.querySelector('[pageBack]')).toBeNull();
-    await harness.navigateByUrl('/configuration/entreprise', Configuration);
+    await harness.navigateByUrl('/configuration/issuer', Configuration);
     const links = harness.routeNativeElement?.querySelectorAll('a');
     expect(links).toHaveLength(1);
     expect(links?.[0]?.getAttribute('href')).toBe('/configuration');
@@ -56,7 +56,7 @@ describe('ConfigurationIndex', () => {
     for (const path of [
       'conditions/new',
       'conditions/:presetId/edit',
-      'backoffice/equipe/invitations/new',
+      'backoffice/team/invitations/new',
       'backoffice/api/new',
       'backoffice/services/resend/tests/new',
       'backoffice/services/stripe/tests/new',
@@ -77,8 +77,8 @@ describe('ConfigurationIndex', () => {
   });
   it('separates team, API, services and audit into protected top-level routes', () => {
     const configurationPaths = configurationRoutes.map(({ path }) => path);
-    expect(configurationPaths).toContain('societe');
-    expect(configurationPaths).toContain('entreprise');
+    expect(configurationPaths).toContain('company');
+    expect(configurationPaths).toContain('issuer');
     expect(auditRoute.path).toBe('backoffice/audit');
     for (const route of [...teamRoutes, ...apiTokenRoutes, ...serviceRoutes, auditRoute]) {
       expect(route.canActivate).toEqual([administratorGuard]);
@@ -92,9 +92,9 @@ describe('ConfigurationIndex', () => {
     await fixture.whenStable();
     const root: HTMLElement = fixture.nativeElement;
     expect(root.querySelectorAll('.groups section')).toHaveLength(2);
-    expect(root.querySelector('a[href$="carte-de-visite"]')).not.toBeNull();
-    expect(root.querySelector('a[href$="societe"]')).not.toBeNull();
-    for (const path of ['equipe', 'api', 'services', 'audit']) {
+    expect(root.querySelector('a[href$="business-card"]')).not.toBeNull();
+    expect(root.querySelector('a[href$="company"]')).not.toBeNull();
+    for (const path of ['team', 'api', 'services', 'audit']) {
       expect(root.querySelector(`a[href$="${path}"]`)).toBeNull();
     }
     expect(root.querySelectorAll('h1')).toHaveLength(1);

@@ -192,14 +192,14 @@ export const bankTabs = (i18n: I18nService, can: (permission: PermissionCodeValu
       {
         permission: 'bank.read',
         id: 'bank-transactions-tab',
-        path: '/backoffice/banque',
+        path: '/backoffice/banking',
         label: i18n.t('bankWorkspace.transactions'),
         exact: true,
       },
       {
         id: 'bank-entries-tab',
         permission: 'ledger.read',
-        path: '/backoffice/banque/ecritures',
+        path: '/backoffice/banking/ledger',
         label: i18n.t('bankWorkspace.entries'),
       },
     ] as const
@@ -218,9 +218,9 @@ export const ledgerQuery = (params: ParamMap) => {
   };
 };
 export const ledgerSourceLink = (kind: string, id: string) => [
-  '/backoffice/banque/ecritures/comptabiliser',
+  '/backoffice/banking/ledger/post',
   kind,
   id,
 ];
-export const ledgerEntryLink = (id: string) => ['/backoffice/banque/ecritures', id, 'contrepasser'];
-export const transactionLink = (id: string) => ['/backoffice/banque/transactions', id];
+export const ledgerEntryLink = (id: string) => ['/backoffice/banking/ledger', id, 'reverse'];
+export const transactionLink = (id: string) => ['/backoffice/banking/transactions', id];

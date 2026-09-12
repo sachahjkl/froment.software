@@ -61,8 +61,8 @@ export class RoleEditor {
   protected readonly saving = signal(false);
   protected readonly error = signal<TranslationKey | undefined>(undefined);
   protected readonly breadcrumbs = computed(() => [
-    { label: this.i18n.t('team.title'), path: '/backoffice/equipe' },
-    { label: this.i18n.t('role.title'), path: '/backoffice/equipe/roles' },
+    { label: this.i18n.t('team.title'), path: '/backoffice/team' },
+    { label: this.i18n.t('role.title'), path: '/backoffice/team/roles' },
   ]);
 
   constructor() {
@@ -112,7 +112,7 @@ export class RoleEditor {
           return;
         }
         this.roleForm().reset(this.model());
-        await this.router.navigate(['/backoffice/equipe/roles']);
+        await this.router.navigate(['/backoffice/team/roles']);
       } catch {
         this.error.set('role.error');
       } finally {

@@ -131,7 +131,7 @@ export class SupplierEditor {
 
   protected backLink(): readonly string[] {
     const supplier = this.supplier();
-    return supplier ? ['/backoffice/fournisseurs', supplier.id] : ['/backoffice/fournisseurs'];
+    return supplier ? ['/backoffice/suppliers', supplier.id] : ['/backoffice/suppliers'];
   }
 
   protected listQuery() {
@@ -208,7 +208,7 @@ export class SupplierEditor {
         }
         this.completed.set(true);
         this.supplierForm().reset();
-        await this.router.navigate(['/backoffice/fournisseurs', outcome.result.id], {
+        await this.router.navigate(['/backoffice/suppliers', outcome.result.id], {
           queryParams: this.listQuery(),
         });
       } catch {

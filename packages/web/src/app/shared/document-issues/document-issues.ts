@@ -33,7 +33,7 @@ const reasonKeys = {
           <a
             [routerLink]="
               group.party === 'issuer'
-                ? ['/backoffice/configuration/entreprise']
+                ? ['/backoffice/configuration/issuer']
                 : ['/backoffice/clients', clientId(), 'profile']
             "
           >

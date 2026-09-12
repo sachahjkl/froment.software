@@ -137,7 +137,7 @@ describe('Quote detail', () => {
     const event = new Event('beforeunload', { cancelable: true });
     window.dispatchEvent(event);
     expect(event.defaultPrevented).toBe(true);
-    await TestBed.inject(Router).navigateByUrl('/backoffice/affaires');
+    await TestBed.inject(Router).navigateByUrl('/backoffice/affairs');
     expect(TestBed.inject(Router).url).toContain('/versions');
     expect(confirm).toHaveBeenCalledOnce();
     control<HTMLAnchorElement>(root, '#quote-summary-tab').click();
@@ -164,7 +164,7 @@ describe('Quote detail', () => {
     expect(button.disabled).toBe(false);
     expect(document.querySelectorAll('[role="alertdialog"]')).toHaveLength(1);
     button.click();
-    await TestBed.inject(Router).navigateByUrl('/backoffice/affaires');
+    await TestBed.inject(Router).navigateByUrl('/backoffice/affairs');
     expect(TestBed.inject(Router).url).toContain('/summary');
     expect(document.querySelectorAll('[role="alertdialog"]')).toHaveLength(1);
     const event = new Event('beforeunload', { cancelable: true });

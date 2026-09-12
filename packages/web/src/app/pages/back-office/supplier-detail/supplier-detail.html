@@ -1,6 +1,6 @@
 <section class="detail-page wide-page" aria-labelledby="supplier-title">
   <app-page-header layout="stacked">
-    <a pageBack routerLink="/backoffice/fournisseurs" [queryParams]="listQuery()"
+    <a pageBack routerLink="/backoffice/suppliers" [queryParams]="listQuery()"
       >{{ i18n.t('supplier.backToList') }}</a
     >
     @if (supplier(); as current) {
@@ -14,7 +14,7 @@
       *appCan="'supplier.update'"
       pageActions
       appLinkButton
-      [routerLink]="['/backoffice/fournisseurs', current.id, 'edit']"
+      [routerLink]="['/backoffice/suppliers', current.id, 'edit']"
       [queryParams]="listQuery()"
       >{{ i18n.t('supplier.edit') }}</a
     >

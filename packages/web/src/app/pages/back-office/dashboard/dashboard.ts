@@ -192,7 +192,7 @@ export class Dashboard {
             invoice.pdf?.status === 'failed'
               ? ['/backoffice/invoices', invoice.id]
               : this.canRemind(invoice)
-                ? ['/backoffice/courriels/new']
+                ? ['/backoffice/emails/new']
                 : invoice.status === 'draft'
                   ? ['/backoffice/invoices', invoice.id, 'edit']
                   : ['/backoffice/invoices', invoice.id],

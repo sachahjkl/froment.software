@@ -27,12 +27,12 @@ describe('Commercial navigation context', () => {
         provideAccount(),
         provideRouter([
           {
-            path: 'backoffice/affaires',
+            path: 'backoffice/affairs',
             component: Affairs,
             children: detailTabs('affairs', ['all', 'attention', 'active', 'completed']),
           },
           {
-            path: 'backoffice/affaires/:quoteId',
+            path: 'backoffice/affairs/:quoteId',
             component: AffairDetail,
             children: detailTabs('affair-detail', ['overview', 'documents', 'history']),
           },
@@ -71,7 +71,7 @@ describe('Commercial navigation context', () => {
       ],
     });
     const harness = await RouterTestingHarness.create(
-      `/backoffice/affaires/all?q=Audit&stage=draft&client=${quoteFixture.clientId}&sort=amount-asc&returnUrl=https://invalid.test`,
+      `/backoffice/affairs/all?q=Audit&stage=draft&client=${quoteFixture.clientId}&sort=amount-asc&returnUrl=https://invalid.test`,
     );
     await harness.fixture.whenStable();
     const root: HTMLElement = harness.fixture.nativeElement;
@@ -118,9 +118,9 @@ describe('Commercial navigation context', () => {
     await follow('[pageBack] a, a[pageBack]');
     await follow(`a[href^="/backoffice/quotes/${quoteId}/publication?"]`);
     await follow('[pageBack] a, a[pageBack]');
-    await follow(`a[href^="/backoffice/affaires/${quoteId}?"]`);
+    await follow(`a[href^="/backoffice/affairs/${quoteId}?"]`);
     await follow('[pageBack] a, a[pageBack]');
-    expect(router.url).toContain('/backoffice/affaires/all?');
+    expect(router.url).toContain('/backoffice/affairs/all?');
     expect(
       labelControl<HTMLInputElement>(root, TestBed.inject(I18nService).t('commercial.search'))
         .value,

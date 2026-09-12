@@ -210,7 +210,7 @@ describe('Affairs', () => {
     expect(searchControl(root).value).toBe('developpement');
     expect(root.querySelectorAll('[appFilterChip]')).toHaveLength(3);
     const first = control<HTMLAnchorElement>(root, 'tbody tr td:first-child a');
-    expect(first.getAttribute('href')).toContain(`/backoffice/affaires/${acceptedQuote.id}`);
+    expect(first.getAttribute('href')).toContain(`/backoffice/affairs/${acceptedQuote.id}`);
     expect(root.querySelector('thead .amount')?.textContent).toMatch(/devis TTC|including VAT/);
     control<HTMLAnchorElement>(root, '#affairs-completed-tab').click();
     await harness.fixture.whenStable();

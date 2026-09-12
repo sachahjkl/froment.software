@@ -20,10 +20,10 @@
     } @if (entry.id === 'back-office-nav' || entry.id === 'back-office-header') {
     <label
       >{{ text().current }}<select class="select" [formField]="controls.path">
-        <option value="/backoffice/affaires">{{ text().affairs }}</option>
+        <option value="/backoffice/affairs">{{ text().affairs }}</option>
         <option value="/backoffice/quotes/example">{{ text().quoteDetail }}</option>
-        <option value="/backoffice/facturation">{{ text().billing }}</option>
-        <option value="/backoffice/configuration/entreprise">{{ text().company }}</option>
+        <option value="/backoffice/billing">{{ text().billing }}</option>
+        <option value="/backoffice/configuration/issuer">{{ text().company }}</option>
         <option value="/design/back-office-nav">{{ text().noActivePage }}</option>
       </select></label
     >

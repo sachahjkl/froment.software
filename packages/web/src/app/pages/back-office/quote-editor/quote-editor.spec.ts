@@ -109,7 +109,7 @@ describe('Quote editor navigation', () => {
     button.click();
     button.click();
     await vi.waitFor(() => expect(createRevision).toHaveBeenCalledTimes(1));
-    await TestBed.inject(Router).navigateByUrl('/backoffice/affaires');
+    await TestBed.inject(Router).navigateByUrl('/backoffice/affairs');
     expect(TestBed.inject(Router).url).toContain('/edit');
     const event = new Event('beforeunload', { cancelable: true });
     window.dispatchEvent(event);
@@ -121,13 +121,13 @@ describe('Quote editor navigation', () => {
   it('asks before leaving a dirty editor through the real guard', async () => {
     const { harness, root } = await open();
     inputValue(root, '#quote-name', 'Unsaved title');
-    await TestBed.inject(Router).navigateByUrl('/backoffice/affaires');
+    await TestBed.inject(Router).navigateByUrl('/backoffice/affairs');
     expect(confirm).toHaveBeenCalledOnce();
     expect(TestBed.inject(Router).url).toContain('/edit');
     confirm.mockResolvedValue(true);
-    await TestBed.inject(Router).navigateByUrl('/backoffice/affaires');
+    await TestBed.inject(Router).navigateByUrl('/backoffice/affairs');
     await harness.fixture.whenStable();
-    expect(TestBed.inject(Router).url).toBe('/backoffice/affaires');
+    expect(TestBed.inject(Router).url).toBe('/backoffice/affairs');
   });
   it('keeps the validated list context after saving a revision', async () => {
     createRevision.mockResolvedValue({ success: true, result: quoteFixture });
@@ -191,7 +191,7 @@ describe('Quote editor navigation', () => {
       `/backoffice/quotes/new?clientId=${quoteFixture.clientId}`,
     );
     expect(control<HTMLSelectElement>(root, '#quote-client').value).toBe(quoteFixture.clientId);
-    await TestBed.inject(Router).navigateByUrl('/backoffice/affaires');
+    await TestBed.inject(Router).navigateByUrl('/backoffice/affairs');
     await harness.fixture.whenStable();
     expect(confirm).not.toHaveBeenCalled();
   });
@@ -253,7 +253,7 @@ describe('Quote editor navigation', () => {
     );
     await harness.fixture.whenStable();
     expect(create).toHaveBeenCalledOnce();
-    await TestBed.inject(Router).navigateByUrl('/backoffice/affaires');
+    await TestBed.inject(Router).navigateByUrl('/backoffice/affairs');
     expect(confirm).toHaveBeenCalledOnce();
     expect(TestBed.inject(Router).url).toBe('/backoffice/quotes/new');
   });

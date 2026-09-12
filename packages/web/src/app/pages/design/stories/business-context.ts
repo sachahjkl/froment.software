@@ -40,7 +40,7 @@ export class BusinessContext {
   private navigationId = 0;
   scenario: BusinessSettings['scenario'] = 'ready';
   administrator = true;
-  url = '/backoffice/affaires';
+  url = '/backoffice/affairs';
 
   constructor() {
     this.destroyRef.onDestroy(() => {

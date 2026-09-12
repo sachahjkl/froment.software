@@ -256,14 +256,14 @@ La référence `/design/empty-state` présente l’état vide.
 
 ### Parcours Catalogue
 
-Le catalogue utilise `/backoffice/catalogue`, hors de Configuration.
+Le catalogue utilise `/backoffice/catalog`, hors de Configuration.
 Les vues Actives, Archivées et Toutes présentent uniquement la recherche et le tableau.
 Le tri porte sur la description ou le prix unitaire hors taxes.
 La recherche et le tri restent dans l’URL lors des changements de vue et des retours depuis l’éditeur.
 Un changement de paramètres de recherche ne déplace pas le focus vers `main`.
 
-La création utilise `/backoffice/catalogue/new`.
-La modification utilise `/backoffice/catalogue/:itemId/edit`.
+La création utilise `/backoffice/catalog/new`.
+La modification utilise `/backoffice/catalog/:itemId/edit`.
 Le formulaire regroupe la description, les valeurs par défaut et la disponibilité.
 Une modification de disponibilité exige une confirmation.
 Les requêtes conservent la version chargée et les montants entiers du contrat métier.

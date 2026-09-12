@@ -19,7 +19,7 @@ describe('ReminderEditor', () => {
     'allows leaving unchanged values after native validity animations with query %s',
     async (query) => {
       const { harness, root, confirmation, reminders, router } = await setupEmailPage(
-        `/backoffice/courriels/reminders/new${query}`,
+        `/backoffice/emails/reminders/new${query}`,
       );
       const component = harness.routeDebugElement!.componentInstance as ReminderEditor;
       const form = component['scheduleForm'];
@@ -40,7 +40,7 @@ describe('ReminderEditor', () => {
   );
   it('guards incomplete native dates even when the model remains empty', async () => {
     const { harness, root, confirmation, router } = await setupEmailPage(
-      `/backoffice/courriels/reminders/new?invoice=${invoiceId}`,
+      `/backoffice/emails/reminders/new?invoice=${invoiceId}`,
     );
     const component = harness.routeDebugElement!.componentInstance as ReminderEditor;
     const form = component['scheduleForm'];
@@ -70,7 +70,7 @@ describe('ReminderEditor', () => {
   });
   it('rejects native parse errors after a valid date before confirmation or API calls', async () => {
     const { harness, root, confirmation, reminders, reminderStore, fill, save } =
-      await setupEmailPage(`/backoffice/courriels/reminders/new?invoice=${invoiceId}`);
+      await setupEmailPage(`/backoffice/emails/reminders/new?invoice=${invoiceId}`);
     const component = harness.routeDebugElement!.componentInstance as ReminderEditor;
     await fill('reminder-date', '2026-10-01T10:00');
     const date = root.querySelector<HTMLInputElement>('#reminder-date')!;
@@ -92,7 +92,7 @@ describe('ReminderEditor', () => {
     'blocks exits while %s even without value changes',
     async (state) => {
       const { harness, root, confirmation, router } = await setupEmailPage(
-        `/backoffice/courriels/reminders/new?invoice=${invoiceId}`,
+        `/backoffice/emails/reminders/new?invoice=${invoiceId}`,
       );
       const component = harness.routeDebugElement!.componentInstance as ReminderEditor;
       component[state].set(true);
@@ -120,7 +120,7 @@ describe('ReminderEditor', () => {
       },
     };
     reminderStore.write(pending);
-    await router.navigateByUrl('/backoffice/courriels/reminders/new');
+    await router.navigateByUrl('/backoffice/emails/reminders/new');
     await harness.fixture.whenStable();
     expect(root.querySelector<HTMLInputElement>('#reminder-date')?.disabled).toBe(true);
     expect(reminders.create).not.toHaveBeenCalled();
@@ -135,7 +135,7 @@ describe('ReminderEditor', () => {
     confirmation.request.mockResolvedValue(true);
     await router.navigateByUrl('/other');
     invoices.list.mockResolvedValue([]);
-    await router.navigateByUrl('/backoffice/courriels/reminders/new');
+    await router.navigateByUrl('/backoffice/emails/reminders/new');
     await harness.fixture.whenStable();
     await (harness.routeDebugElement!.componentInstance as ReminderEditor)['retry']();
     expect(reminders.create).toHaveBeenCalledExactlyOnceWith(pending.requestId, pending.request);
@@ -143,7 +143,7 @@ describe('ReminderEditor', () => {
   });
   it('freezes uncertain schedules and retries the same request after failure', async () => {
     const { reminders, confirmation, root, fill, save, router } = await setupEmailPage(
-      `/backoffice/courriels/reminders/new?invoice=${invoiceId}`,
+      `/backoffice/emails/reminders/new?invoice=${invoiceId}`,
     );
     reminders.create.mockResolvedValueOnce({ success: false, code: 'reminder.error' });
     confirmation.request.mockResolvedValue(true);
@@ -157,13 +157,13 @@ describe('ReminderEditor', () => {
     expect(event.defaultPrevented).toBe(true);
     await save();
     expect(reminders.create.mock.calls[1]).toEqual(reminders.create.mock.calls[0]);
-    expect(router.url).toBe('/backoffice/courriels/reminders');
+    expect(router.url).toBe('/backoffice/emails/reminders');
   });
   it.each(['invoice-ineligible', 'date-invalid'] as const)(
     'unlocks the form after a precise %s refusal and uses a new identifier after correction',
     async (reason) => {
       const { harness, reminders, reminderStore, confirmation, fill, save, invoices } =
-        await setupEmailPage(`/backoffice/courriels/reminders/new?invoice=${invoiceId}`);
+        await setupEmailPage(`/backoffice/emails/reminders/new?invoice=${invoiceId}`);
       const component = harness.routeDebugElement!.componentInstance as ReminderEditor;
       confirmation.request.mockResolvedValue(true);
       reminders.create.mockImplementationOnce(
@@ -195,7 +195,7 @@ describe('ReminderEditor', () => {
     'keeps the original request after a %s response that cannot confirm its refusal',
     async (kind) => {
       const { harness, reminders, reminderStore, confirmation, fill, save } = await setupEmailPage(
-        `/backoffice/courriels/reminders/new?invoice=${invoiceId}`,
+        `/backoffice/emails/reminders/new?invoice=${invoiceId}`,
       );
       const component = harness.routeDebugElement!.componentInstance as ReminderEditor;
       confirmation.request.mockResolvedValue(true);
@@ -238,7 +238,7 @@ describe('ReminderEditor', () => {
   );
   it('retries an uncertain simulation request unchanged after the provider mode changes', async () => {
     const { harness, api, reminders, reminderStore, confirmation, fill, save } =
-      await setupEmailPage(`/backoffice/courriels/reminders/new?invoice=${invoiceId}`);
+      await setupEmailPage(`/backoffice/emails/reminders/new?invoice=${invoiceId}`);
     const component = harness.routeDebugElement!.componentInstance as ReminderEditor;
     confirmation.request.mockResolvedValue(true);
     reminders.create.mockResolvedValueOnce({ success: false, code: 'reminder.error' });
@@ -268,7 +268,7 @@ describe('ReminderEditor', () => {
   });
   it('rejects missing invoices and invalid dates before writing', async () => {
     const { reminders, root, fill, save, harness } = await setupEmailPage(
-      '/backoffice/courriels/reminders/new',
+      '/backoffice/emails/reminders/new',
     );
     await save();
     expect(document.activeElement).toBe(root.querySelector('app-object-picker button'));
@@ -285,7 +285,7 @@ describe('ReminderEditor', () => {
   });
   it('keeps dirty schedules when exit confirmation is declined', async () => {
     const { fill, router, confirmation } = await setupEmailPage(
-      `/backoffice/courriels/reminders/new?invoice=${invoiceId}`,
+      `/backoffice/emails/reminders/new?invoice=${invoiceId}`,
     );
     await fill('reminder-date', '2026-10-01T10:00');
     expect(await router.navigateByUrl('/other')).toBe(false);
@@ -301,7 +301,7 @@ describe('ReminderEditor', () => {
   });
   it('guards invoice changes and permits leaving after restoring the initial invoice', async () => {
     const { harness, confirmation, router } = await setupEmailPage(
-      '/backoffice/courriels/reminders/new',
+      '/backoffice/emails/reminders/new',
     );
     const component = harness.routeDebugElement!.componentInstance as ReminderEditor;
     component['choose'](invoiceId);
@@ -317,7 +317,7 @@ describe('ReminderEditor', () => {
   });
   it('keeps completed schedules locked without another exit warning or API call', async () => {
     const { harness, root, confirmation, reminders, reminderStore, fill, save, navigation } =
-      await setupEmailPage(`/backoffice/courriels/reminders/new?invoice=${invoiceId}`);
+      await setupEmailPage(`/backoffice/emails/reminders/new?invoice=${invoiceId}`);
     const component = harness.routeDebugElement!.componentInstance as ReminderEditor;
     navigation.allowList = false;
     confirmation.request.mockResolvedValueOnce(true);

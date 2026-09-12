@@ -10,7 +10,7 @@ export const configurationRoutes: Routes = [
       import('./configuration-index').then((module) => module.ConfigurationIndex),
   },
   {
-    path: 'societe',
+    path: 'company',
     canActivate: [permissionsGuard],
     data: permissionData('company.read'),
     loadComponent: () =>
@@ -18,7 +18,7 @@ export const configurationRoutes: Routes = [
     canDeactivate: [unsavedChangesGuard],
   },
   {
-    path: 'entreprise',
+    path: 'issuer',
     canActivate: [permissionsGuard],
     data: permissionData('issuer.read'),
     loadComponent: () =>
@@ -56,7 +56,7 @@ export const configurationRoutes: Routes = [
     canDeactivate: [unsavedChangesGuard],
   },
   {
-    path: 'carte-de-visite',
+    path: 'business-card',
     canActivate: [permissionsGuard],
     data: permissionData('issuer.read'),
     loadComponent: () =>

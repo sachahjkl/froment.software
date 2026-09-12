@@ -60,9 +60,9 @@ describe('InvoiceDetail', () => {
     expect(
       root.querySelector(`a[href="/backoffice/invoices/${invoiceId}/payments/new"]`),
     ).not.toBeNull();
-    expect(root.querySelector('a[href*="/backoffice/courriels/new?invoice="]')).not.toBeNull();
+    expect(root.querySelector('a[href*="/backoffice/emails/new?invoice="]')).not.toBeNull();
     expect(
-      root.querySelector('a[href*="/backoffice/courriels/reminders/new?invoice="]'),
+      root.querySelector('a[href*="/backoffice/emails/reminders/new?invoice="]'),
     ).not.toBeNull();
   });
   it('shows the saved PDF and preview without changing issued revisions', async () => {

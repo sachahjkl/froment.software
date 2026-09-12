@@ -79,7 +79,7 @@ describe('Dashboard', () => {
     for (const metric of root.querySelectorAll('.metrics a'))
       expect(metric.getAttribute('aria-describedby')).toBe('dashboard-loaded-at');
     expect(root.querySelector('.metrics a')?.getAttribute('href')).toBe(
-      '/backoffice/affaires/attention?stage=draft',
+      '/backoffice/affairs/attention?stage=draft',
     );
     expect(root.querySelector('search')).toBeNull();
     expect(root.querySelector('.activity-list time')?.getAttribute('datetime')).toBe(
@@ -117,7 +117,7 @@ describe('Dashboard', () => {
   it('opens an eligible reminder draft without sending a message', async () => {
     const { root } = await configure([{ ...invoice, status: 'issued' }]);
     expect(root.querySelector('tbody a')?.getAttribute('href')).toBe(
-      `/backoffice/courriels/new?invoice=${invoice.id}`,
+      `/backoffice/emails/new?invoice=${invoice.id}`,
     );
   });
 

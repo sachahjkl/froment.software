@@ -28,7 +28,7 @@ describe('Ledger reversal task', () => {
     setupBankWorkspace();
     const harness = await RouterTestingHarness.create();
     const page = await harness.navigateByUrl(
-      `/backoffice/banque/ecritures/${otherBankId}/contrepasser`,
+      `/backoffice/banking/ledger/${otherBankId}/reverse`,
       LedgerReversal,
     );
     await harness.fixture.whenStable();
@@ -43,7 +43,7 @@ describe('Ledger reversal task', () => {
       confirmation.request.mockResolvedValue(false);
       const harness = await RouterTestingHarness.create();
       const component = await harness.navigateByUrl(
-        `/backoffice/banque/ecritures/${otherBankId}/contrepasser`,
+        `/backoffice/banking/ledger/${otherBankId}/reverse`,
         LedgerReversal,
       );
       await harness.fixture.whenStable();
@@ -65,8 +65,8 @@ describe('Ledger reversal task', () => {
       bankSubmit(root);
       await harness.fixture.whenStable();
       expect(ledger.reverse).not.toHaveBeenCalled();
-      await harness.navigateByUrl('/backoffice/banque/ecritures');
-      expect(TestBed.inject(Router).url).toBe('/backoffice/banque/ecritures');
+      await harness.navigateByUrl('/backoffice/banking/ledger');
+      expect(TestBed.inject(Router).url).toBe('/backoffice/banking/ledger');
       expect(confirmation.request).not.toHaveBeenCalled();
     },
   );
@@ -74,13 +74,13 @@ describe('Ledger reversal task', () => {
     const { ledger, confirmation } = setupBankWorkspace();
     confirmation.request.mockResolvedValue(false);
     const harness = await RouterTestingHarness.create();
-    const path = `/backoffice/banque/ecritures/${otherBankId}/contrepasser`;
+    const path = `/backoffice/banking/ledger/${otherBankId}/reverse`;
     const component = await harness.navigateByUrl(path, LedgerReversal);
     await harness.fixture.whenStable();
     const root = bankRoot(harness);
     bankField(root, 'textarea', 'Retained reason');
     await harness.fixture.whenStable();
-    await harness.navigateByUrl('/backoffice/banque/ecritures');
+    await harness.navigateByUrl('/backoffice/banking/ledger');
     expect(TestBed.inject(Router).url).toBe(path);
     const unload = new Event('beforeunload', { cancelable: true });
     window.dispatchEvent(unload);
@@ -104,7 +104,7 @@ describe('Ledger reversal task', () => {
     confirmation.request.mockResolvedValue(false);
     const harness = await RouterTestingHarness.create();
     const component = await harness.navigateByUrl(
-      `/backoffice/banque/ecritures/${otherBankId}/contrepasser`,
+      `/backoffice/banking/ledger/${otherBankId}/reverse`,
       LedgerReversal,
     );
     await harness.fixture.whenStable();
@@ -143,7 +143,7 @@ describe('Ledger reversal task', () => {
     const { ledger, confirmation } = setupBankWorkspace();
     const harness = await RouterTestingHarness.create();
     const component = await harness.navigateByUrl(
-      `/backoffice/banque/ecritures/${otherBankId}/contrepasser`,
+      `/backoffice/banking/ledger/${otherBankId}/reverse`,
       LedgerReversal,
     );
     await harness.fixture.whenStable();
@@ -208,7 +208,7 @@ describe('Ledger reversal task', () => {
     ledger.reverse.mockReturnValueOnce(response);
     const harness = await RouterTestingHarness.create();
     const component = await harness.navigateByUrl(
-      `/backoffice/banque/ecritures/${otherBankId}/contrepasser`,
+      `/backoffice/banking/ledger/${otherBankId}/reverse`,
       LedgerReversal,
     );
     await harness.fixture.whenStable();
@@ -245,13 +245,13 @@ describe('Ledger reversal task', () => {
     });
     const harness = await RouterTestingHarness.create();
     await harness.navigateByUrl(
-      `/backoffice/banque/ecritures/${otherBankId}/contrepasser?from=2020-01-01&to=2020-12-31`,
+      `/backoffice/banking/ledger/${otherBankId}/reverse?from=2020-01-01&to=2020-12-31`,
       LedgerReversal,
     );
     await harness.fixture.whenStable();
     expect(ledger.getEntry).toHaveBeenCalledWith(otherBankId);
     expect(ledger.list).not.toHaveBeenCalled();
     expect(bankRoot(harness).querySelector('form')).toBeNull();
-    expect(bankRoot(harness).querySelector(`a[href*="${bankId}/contrepasser"]`)).not.toBeNull();
+    expect(bankRoot(harness).querySelector(`a[href*="${bankId}/reverse"]`)).not.toBeNull();
   });
 });

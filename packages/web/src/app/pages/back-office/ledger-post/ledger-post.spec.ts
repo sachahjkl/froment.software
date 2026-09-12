@@ -15,10 +15,7 @@ describe('Ledger posting task', () => {
   it('validates distinct accounts, guards dirty edits and retries the same immutable request', async () => {
     const { ledger, confirmation } = setupBankWorkspace();
     const harness = await RouterTestingHarness.create();
-    await harness.navigateByUrl(
-      `/backoffice/banque/ecritures/comptabiliser/debit/${bankId}`,
-      LedgerPost,
-    );
+    await harness.navigateByUrl(`/backoffice/banking/ledger/post/debit/${bankId}`, LedgerPost);
     await harness.fixture.whenStable();
     const root = bankRoot(harness);
     expect(ledger.getSource).toHaveBeenCalledWith('debit', bankId);
@@ -37,8 +34,8 @@ describe('Ledger posting task', () => {
     bankField(root, 'input[aria-describedby="credit-error"]', '512');
     await harness.fixture.whenStable();
     confirmation.request.mockResolvedValue(false);
-    await harness.navigateByUrl('/backoffice/banque/ecritures');
-    expect(TestBed.inject(Router).url).toContain('/comptabiliser/');
+    await harness.navigateByUrl('/backoffice/banking/ledger');
+    expect(TestBed.inject(Router).url).toContain('/post/');
     const unload = new Event('beforeunload', { cancelable: true });
     window.dispatchEvent(unload);
     expect(unload.defaultPrevented).toBe(true);

@@ -1,6 +1,6 @@
 <section class="detail-page wide-page" aria-labelledby="match-title">
   <app-page-header layout="stacked">
-    <a pageBack routerLink="/backoffice/banque" [queryParams]="backQuery"
+    <a pageBack routerLink="/backoffice/banking" [queryParams]="backQuery"
       >{{ i18n.t('bankWorkspace.back') }}</a
     >
     <h1 id="match-title">{{ i18n.t(titleLabel()) }}</h1>
@@ -57,7 +57,7 @@
         }
       </dl>
       <p class="muted">{{ i18n.t('bankWorkspace.accountHint') }}</p>
-      <a routerLink="/backoffice/banque/ecritures" [queryParams]="ledgerQuery()"
+      <a routerLink="/backoffice/banking/ledger" [queryParams]="ledgerQuery()"
         >{{ i18n.t('bankWorkspace.entries') }}</a
       >
     </aside>
@@ -248,7 +248,7 @@
             money(allocation.feeCents) }}
           </p>
           <p>{{ i18n.t('bankWorkspace.feePosted') }}</p>
-          <a routerLink="/backoffice/banque/ecritures" [queryParams]="ledgerQuery()"
+          <a routerLink="/backoffice/banking/ledger" [queryParams]="ledgerQuery()"
             >{{ i18n.t('bankWorkspace.viewFees') }}</a
           >
           <label class="field"

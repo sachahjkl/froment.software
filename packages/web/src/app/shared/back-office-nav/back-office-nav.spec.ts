@@ -21,8 +21,8 @@ describe('BackOfficeNav', () => {
     await fixture.whenStable();
     const root: HTMLElement = fixture.nativeElement;
     expect(root.querySelector('a[href="/backoffice/clients"]')).not.toBeNull();
-    expect(root.querySelector('a[href="/backoffice/equipe"]')).toBeNull();
-    expect(root.querySelector('a[href="/backoffice/courriels"]')).toBeNull();
+    expect(root.querySelector('a[href="/backoffice/team"]')).toBeNull();
+    expect(root.querySelector('a[href="/backoffice/emails"]')).toBeNull();
     context.account.set(undefined);
     await fixture.whenStable();
     expect(root.querySelector('a')).toBeNull();
@@ -32,15 +32,15 @@ describe('BackOfficeNav', () => {
     const fixture = TestBed.createComponent(BackOfficeNav);
     const router = TestBed.inject(Router);
     for (const [path, selected] of [
-      ['quotes/new', 'affaires'],
-      ['orders/example', 'affaires'],
-      ['invoices/example', 'facturation'],
+      ['quotes/new', 'affairs'],
+      ['orders/example', 'affairs'],
+      ['invoices/example', 'billing'],
       ['clients/example/profile', 'clients'],
-      ['fournisseurs/example', 'fournisseurs'],
-      ['catalogue/active', 'catalogue'],
-      ['catalogue/example/edit', 'catalogue'],
-      ['configuration/entreprise', 'configuration'],
-      ['equipe/invitations/new', 'equipe'],
+      ['suppliers/example', 'suppliers'],
+      ['catalog/active', 'catalog'],
+      ['catalog/example/edit', 'catalog'],
+      ['configuration/issuer', 'configuration'],
+      ['team/invitations/new', 'team'],
       ['api/new', 'api'],
       ['services/resend/tests/new', 'services'],
       ['services/stripe/tests/example', 'services'],
@@ -59,13 +59,13 @@ describe('BackOfficeNav', () => {
     await fixture.whenStable();
     const root: HTMLElement = fixture.nativeElement;
     expect(root.querySelectorAll('nav section')).toHaveLength(2);
-    expect(root.querySelector('a[href="/backoffice/fournisseurs"]')).not.toBeNull();
+    expect(root.querySelector('a[href="/backoffice/suppliers"]')).not.toBeNull();
     expect(
       [...root.querySelectorAll('nav section:last-child a')].map((link) =>
         link.getAttribute('href'),
       ),
     ).toEqual([
-      '/backoffice/equipe',
+      '/backoffice/team',
       '/backoffice/api',
       '/backoffice/services',
       '/backoffice/audit',

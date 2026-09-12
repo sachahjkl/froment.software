@@ -63,14 +63,14 @@
       } @if (actions().recordPayment) {
       <a
         appLinkButton
-        routerLink="/backoffice/courriels/new"
+        routerLink="/backoffice/emails/new"
         *appCan="'email.draft.manage'"
         [queryParams]="{ invoice: invoice.id }"
         >{{ i18n.t('billingWorkspace.email') }}</a
       >
       <a
         appLinkButton
-        routerLink="/backoffice/courriels/reminders/new"
+        routerLink="/backoffice/emails/reminders/new"
         *appCan="'email.reminder.manage'"
         [queryParams]="{ invoice: invoice.id }"
         >{{ i18n.t('billingWorkspace.reminder') }}</a

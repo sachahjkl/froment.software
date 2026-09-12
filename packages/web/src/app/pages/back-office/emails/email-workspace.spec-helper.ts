@@ -149,37 +149,37 @@ export async function setupEmailPage(path: string) {
       provideAccount(),
       provideRouter([
         {
-          path: 'backoffice/courriels/new',
+          path: 'backoffice/emails/new',
           component: EmailComposer,
           canDeactivate: [unsavedChangesGuard],
         },
         {
-          path: 'backoffice/courriels/drafts/:draftId/edit',
+          path: 'backoffice/emails/drafts/:draftId/edit',
           component: EmailComposer,
           canDeactivate: [unsavedChangesGuard],
         },
         {
-          path: 'backoffice/courriels/templates/new',
+          path: 'backoffice/emails/templates/new',
           component: EmailTemplateEditor,
           canDeactivate: [unsavedChangesGuard],
         },
         {
-          path: 'backoffice/courriels/templates/:templateId/edit',
+          path: 'backoffice/emails/templates/:templateId/edit',
           component: EmailTemplateEditor,
           canDeactivate: [unsavedChangesGuard],
         },
         {
-          path: 'backoffice/courriels/reminders/new',
+          path: 'backoffice/emails/reminders/new',
           component: ReminderEditor,
           canDeactivate: [unsavedChangesGuard],
         },
         {
-          path: 'backoffice/courriels/messages/:operationId',
+          path: 'backoffice/emails/messages/:operationId',
           component: EmailDetail,
           canDeactivate: [unsavedChangesGuard],
         },
         {
-          path: 'backoffice/courriels',
+          path: 'backoffice/emails',
           component: Emails,
           canActivate: [() => navigation.allowList],
           canDeactivate: [unsavedChangesGuard],

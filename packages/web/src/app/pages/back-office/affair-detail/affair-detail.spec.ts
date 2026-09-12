@@ -37,7 +37,7 @@ describe('Affair detail', () => {
       providers: [
         provideRouter([
           {
-            path: 'backoffice/affaires/:quoteId',
+            path: 'backoffice/affairs/:quoteId',
             component: AffairDetail,
             children: detailTabs('affair-detail', ['overview', 'documents', 'history']),
           },
@@ -103,7 +103,7 @@ describe('Affair detail', () => {
     TestBed.overrideProvider(OrdersApi, { useValue: { list: async () => [] } });
     const harness = await RouterTestingHarness.create();
     const page = await harness.navigateByUrl(
-      `/backoffice/affaires/${quoteId}/documents`,
+      `/backoffice/affairs/${quoteId}/documents`,
       AffairDetail,
     );
     await harness.fixture.whenStable();
@@ -113,7 +113,7 @@ describe('Affair detail', () => {
   });
   it('separates overview, document links and audit history', async () => {
     const harness = await RouterTestingHarness.create(
-      `/backoffice/affaires/${quoteId}/overview?q=Audit&view=all`,
+      `/backoffice/affairs/${quoteId}/overview?q=Audit&view=all`,
     );
     await harness.fixture.whenStable();
     const root: HTMLElement = harness.fixture.nativeElement;
@@ -121,7 +121,7 @@ describe('Affair detail', () => {
     expect(root.querySelector('#timeline-title')).toBeNull();
     expect(root.querySelector('a[href^="mailto:"]')).not.toBeNull();
     expect(control<HTMLAnchorElement>(root, '[pageBack]').getAttribute('href')).toContain(
-      '/backoffice/affaires/all?q=Audit',
+      '/backoffice/affairs/all?q=Audit',
     );
     control<HTMLAnchorElement>(root, '#affair-documents-tab').click();
     await harness.fixture.whenStable();
@@ -138,7 +138,7 @@ describe('Affair detail', () => {
   });
   it('removes the reminder for an overdue invoice covered by a credit note', async () => {
     creditedCents = 1200;
-    const harness = await RouterTestingHarness.create(`/backoffice/affaires/${quoteId}`);
+    const harness = await RouterTestingHarness.create(`/backoffice/affairs/${quoteId}`);
     await harness.fixture.whenStable();
     expect(harness.fixture.nativeElement.querySelector('#next-action-title')).not.toBeNull();
     expect(
@@ -156,7 +156,7 @@ describe('Affair detail', () => {
     TestBed.overrideProvider(QuotesApi, {
       useValue: { get, listAffairEvents: async () => events },
     });
-    const harness = await RouterTestingHarness.create(`/backoffice/affaires/${quoteId}/history`);
+    const harness = await RouterTestingHarness.create(`/backoffice/affairs/${quoteId}/history`);
     await harness.fixture.whenStable();
     const root: HTMLElement = harness.fixture.nativeElement;
     expect(Array.from(root.querySelectorAll('time'), (time) => time.dateTime)).toEqual([
@@ -170,7 +170,7 @@ describe('Affair detail', () => {
     TestBed.overrideProvider(InvoicesApi, {
       useValue: { get: async () => ({ success: false, code: 'invoice.error' }) },
     });
-    const harness = await RouterTestingHarness.create(`/backoffice/affaires/${quoteId}`);
+    const harness = await RouterTestingHarness.create(`/backoffice/affairs/${quoteId}`);
     await harness.fixture.whenStable();
     expect(harness.fixture.nativeElement.querySelector('[role="alert"]')).not.toBeNull();
     expect(

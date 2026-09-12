@@ -103,7 +103,7 @@ describe('BackOfficeHeader', () => {
     const root: HTMLElement = fixture.nativeElement;
     expect(root.querySelector('app-global-search')).toBeNull();
     expect(root.querySelector('app-back-office-nav')).toBeNull();
-    expect(root.querySelector('a[href="/backoffice/equipe"]')).toBeNull();
+    expect(root.querySelector('a[href="/backoffice/team"]')).toBeNull();
     expect(root.querySelector('a[href="/backoffice/api"]')).toBeNull();
     expect(root.querySelector('.client-navigation a')?.textContent?.trim()).toBe('Documents');
     expect(root.querySelector('.workspace-label')?.textContent?.trim()).toBe('Documents');

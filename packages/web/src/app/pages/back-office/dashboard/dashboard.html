@@ -37,7 +37,7 @@
   >
     <a
       class="ds-panel"
-      routerLink="/backoffice/affaires/attention"
+      routerLink="/backoffice/affairs/attention"
       [queryParams]="{ stage: 'draft' }"
       aria-describedby="dashboard-loaded-at"
       ><span>{{ i18n.t('backOffice.dashboard.draftQuotes') }}</span
@@ -45,7 +45,7 @@
     >
     <a
       class="ds-panel"
-      routerLink="/backoffice/affaires/active"
+      routerLink="/backoffice/affairs/active"
       [queryParams]="{ stage: 'sent' }"
       aria-describedby="dashboard-loaded-at"
       ><span>{{ i18n.t('backOffice.dashboard.awaitingSignature') }}</span
@@ -53,7 +53,7 @@
     >
     <a
       class="ds-panel"
-      routerLink="/backoffice/affaires/attention"
+      routerLink="/backoffice/affairs/attention"
       [queryParams]="{ stage: 'ordered' }"
       aria-describedby="dashboard-loaded-at"
       ><span>{{ i18n.t('backOffice.dashboard.toInvoice') }}</span
@@ -61,7 +61,7 @@
     >
     <a
       class="ds-panel"
-      routerLink="/backoffice/facturation"
+      routerLink="/backoffice/billing"
       [queryParams]="{ status: 'issued' }"
       aria-describedby="dashboard-loaded-at"
       ><span>{{ i18n.t('backOffice.dashboard.outstanding') }}</span
@@ -69,7 +69,7 @@
     >
     <a
       class="ds-panel"
-      routerLink="/backoffice/facturation"
+      routerLink="/backoffice/billing"
       [queryParams]="{ status: 'issued', due: 'overdue' }"
       aria-describedby="dashboard-loaded-at"
       ><span>{{ i18n.t('backOffice.dashboard.overdueInvoices') }}</span
@@ -79,7 +79,7 @@
   <section class="action-section" aria-labelledby="actions-title">
     <div class="section-heading">
       <h2 id="actions-title">{{ i18n.t('backOffice.dashboard.actions') }}</h2>
-      <a routerLink="/backoffice/affaires">{{ i18n.t('backOffice.dashboard.openAffairs') }}</a>
+      <a routerLink="/backoffice/affairs">{{ i18n.t('backOffice.dashboard.openAffairs') }}</a>
     </div>
     @if (actions().length === 0) {
     <p class="empty">{{ i18n.t('backOffice.dashboard.noActions') }}</p>

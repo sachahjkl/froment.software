@@ -20,7 +20,7 @@
     'emailDraft.saved') }}
   </p>
   @if (operation(); as operation) {
-  <a [routerLink]="['/backoffice/courriels/messages', operation.id]"
+  <a [routerLink]="['/backoffice/emails/messages', operation.id]"
     >{{ i18n.t('emailsWorkspace.viewMessage') }}</a
   >
   } } @else { @if (reminderPrepared()) {
@@ -76,7 +76,7 @@
           [options]="templateOptions()"
           [disabled]="busy() || pending() !== undefined"
           (selected)="applyTemplate($event)"
-        /><a routerLink="/backoffice/courriels/templates"
+        /><a routerLink="/backoffice/emails/templates"
           >{{ i18n.t('emailsWorkspace.manageTemplates') }}</a
         >
       </div>

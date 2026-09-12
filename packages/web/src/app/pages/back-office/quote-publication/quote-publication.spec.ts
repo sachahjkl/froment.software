@@ -97,13 +97,13 @@ describe('Quote publication', () => {
     expect(root.textContent).toMatch(/aucun courriel|does not send an email/);
     expect(root.querySelector('button[type="submit"]')).toBeNull();
     expect(control<HTMLAnchorElement>(root, 'app-copy-field a').href).toBe(sent.link.url);
-    await TestBed.inject(Router).navigateByUrl('/backoffice/affaires');
+    await TestBed.inject(Router).navigateByUrl('/backoffice/affairs');
     expect(TestBed.inject(Router).url).toContain('/publication');
     control<HTMLButtonElement>(root, 'app-copy-field button').click();
     await harness.fixture.whenStable();
     expect(copy).toHaveBeenCalledWith(sent.link.url);
-    await TestBed.inject(Router).navigateByUrl('/backoffice/affaires');
-    expect(TestBed.inject(Router).url).toBe('/backoffice/affaires');
+    await TestBed.inject(Router).navigateByUrl('/backoffice/affairs');
+    expect(TestBed.inject(Router).url).toBe('/backoffice/affairs');
   });
   it('shows server blockers and retains the reviewed revision', async () => {
     send.mockResolvedValue({
@@ -119,7 +119,7 @@ describe('Quote publication', () => {
     control<HTMLButtonElement>(root, 'button[type="submit"]').click();
     await harness.fixture.whenStable();
     expect(root.querySelector('app-document-issues')).not.toBeNull();
-    expect(root.querySelector('a[href="/backoffice/configuration/entreprise"]')).not.toBeNull();
+    expect(root.querySelector('a[href="/backoffice/configuration/issuer"]')).not.toBeNull();
     expect(control<HTMLInputElement>(root, 'input[type="checkbox"]').checked).toBe(true);
   });
   it('does not retry an uncertain publication or invent a recovered link', async () => {
@@ -220,7 +220,7 @@ describe('Quote publication', () => {
     const event = new Event('beforeunload', { cancelable: true });
     window.dispatchEvent(event);
     expect(event.defaultPrevented).toBe(true);
-    await TestBed.inject(Router).navigateByUrl('/backoffice/affaires');
+    await TestBed.inject(Router).navigateByUrl('/backoffice/affairs');
     expect(confirm).toHaveBeenCalledOnce();
     expect(TestBed.inject(Router).url).toContain('/publication');
   });
@@ -230,7 +230,7 @@ describe('Quote publication', () => {
     await prepare(harness, root);
     control<HTMLButtonElement>(root, 'button[type="submit"]').click();
     await harness.fixture.whenStable();
-    await TestBed.inject(Router).navigateByUrl('/backoffice/affaires');
+    await TestBed.inject(Router).navigateByUrl('/backoffice/affairs');
     expect(confirm).toHaveBeenCalledOnce();
     expect(TestBed.inject(Router).url).toContain('/publication');
     get.mockResolvedValueOnce({ success: false, code: 'quote.error' });

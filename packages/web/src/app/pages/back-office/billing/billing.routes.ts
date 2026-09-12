@@ -4,7 +4,7 @@ import { unsavedChangesGuard } from '@backoffice/unsaved-changes-guard';
 
 export const billingRoutes: Routes = [
   {
-    path: 'backoffice/facturation',
+    path: 'backoffice/billing',
     pathMatch: 'full',
     loadComponent: () => import('./billing').then((m) => m.Billing),
     canActivate: [administratorGuard],
@@ -15,7 +15,7 @@ export const billingRoutes: Routes = [
     },
   },
   {
-    path: 'backoffice/facturation/encaissements',
+    path: 'backoffice/billing/receipts',
     loadComponent: () => import('../receipt-list/receipt-list').then((m) => m.ReceiptList),
     canActivate: [administratorGuard],
     data: {
@@ -25,7 +25,7 @@ export const billingRoutes: Routes = [
     },
   },
   {
-    path: 'backoffice/facturation/avoirs',
+    path: 'backoffice/billing/credit-notes',
     loadComponent: () => import('../credit-notes/credit-notes').then((m) => m.CreditNotes),
     canActivate: [administratorGuard],
     data: {
@@ -35,7 +35,7 @@ export const billingRoutes: Routes = [
     },
   },
   {
-    path: 'backoffice/facturation/remboursements',
+    path: 'backoffice/billing/refunds',
     loadComponent: () => import('../refund-list/refund-list').then((m) => m.RefundList),
     canActivate: [administratorGuard],
     data: {

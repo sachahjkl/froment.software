@@ -6,7 +6,7 @@
       pageActions
       appLinkButton
       variant="primary"
-      routerLink="/backoffice/catalogue/new"
+      routerLink="/backoffice/catalog/new"
       *appCan="'catalog.manage'"
       [queryParams]="createQuery()"
       ><app-icon name="plus" />{{ i18n.t('catalog.create') }}</a
@@ -108,7 +108,7 @@
         <a
           emptyActions
           appLinkButton
-          routerLink="/backoffice/catalogue/new"
+          routerLink="/backoffice/catalog/new"
           *appCan="'catalog.manage'"
           [queryParams]="editorQuery(tab)"
           >{{ i18n.t('catalog.create') }}</a
@@ -195,7 +195,7 @@
                   <app-entity-icon icon="catalog" [variant]="iconVariant(item)" />
                   @if (authentication.can('catalog.manage')) {
                   <a
-                    [routerLink]="['/backoffice/catalogue', item.id, 'edit']"
+                    [routerLink]="['/backoffice/catalog', item.id, 'edit']"
                     [queryParams]="editorQuery(tab)"
                     [appSearchHighlight]="result.matches"
                     >{{ item.description }}</a
