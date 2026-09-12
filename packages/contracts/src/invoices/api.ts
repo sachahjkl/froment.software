@@ -25,6 +25,7 @@ import {
   InvoiceDocumentArtifact,
   InvoiceInvalidDates,
   InvoiceInvalidTransition,
+  InvoiceExchangeRateMissing,
   InvoiceIssueRequest,
   InvoiceIssueResult,
   InvoiceList,
@@ -175,6 +176,7 @@ export class InvoicesApi extends HttpApiGroup.make('invoices', { topLevel: true 
       InvoiceVersionConflict.pipe(HttpApiSchema.status(409)),
       InvoiceInvalidDates.pipe(HttpApiSchema.status(422)),
       InvoiceInvalidTransition.pipe(HttpApiSchema.status(409)),
+      InvoiceExchangeRateMissing.pipe(HttpApiSchema.status(422)),
       DocumentIncomplete.pipe(HttpApiSchema.status(409)),
     ],
   })

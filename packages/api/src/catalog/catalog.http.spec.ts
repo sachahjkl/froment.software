@@ -85,7 +85,7 @@ describe('catalog HTTP lifecycle', () => {
       { unitPriceCents: -1 },
       { vatRateBasisPoints: 10001 },
       { description: ' ' },
-      { currency: 'USD' },
+      { currency: 'usd' },
     ]) {
       const response = await fetch(`${server.baseUrl}/api/catalog`, {
         method: 'POST',

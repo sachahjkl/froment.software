@@ -378,6 +378,7 @@ export {
   type InvoiceFailure as InvoiceFailureValue,
   InvoiceInvalidDates,
   InvoiceInvalidTransition,
+  InvoiceExchangeRateMissing,
   InvoiceIssueRequest,
   type InvoiceIssueRequest as InvoiceIssueRequestValue,
   InvoiceIssueResult,

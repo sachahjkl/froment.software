@@ -35,6 +35,7 @@ const failureKinds = new Map<string, FailureKind>(
     'invoice.not_found': 'business',
     'invoice.version_conflict': 'business',
     'invoice.invalid_dates': 'business',
+    'invoice.exchange_rate_missing': 'business',
     'invoice.invalid_transition': 'business',
     'document.incomplete': 'business',
     'invoice.order_not_found': 'unknown',
@@ -47,7 +48,7 @@ const failureKinds = new Map<string, FailureKind>(
 
 // Only failures that exclude an earlier write can resolve an uncertain request.
 const requestRejections = {
-  issue: ['invoice.invalid_dates', 'document.incomplete'],
+  issue: ['invoice.invalid_dates', 'invoice.exchange_rate_missing', 'document.incomplete'],
   void: ['invoice.invalid_transition'],
   'record-payment': ['invoice.version_conflict', 'invoice.invalid_transition'],
   'cancel-payment': ['invoice.invalid_transition'],

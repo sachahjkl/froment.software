@@ -7,6 +7,7 @@ import {
   InvoiceDetail,
   InvoiceInvalidDates,
   InvoiceInvalidTransition,
+  InvoiceExchangeRateMissing,
   InvoiceIssueResult,
   InvoiceNotEditable,
   InvoiceNotFound,
@@ -44,6 +45,11 @@ import { calculateDocumentLine, calculateDocumentTotals } from '../documents/cal
 import { validateDocumentParties } from '../documents/validation.js';
 import { StoredTextPresentation, storeTextPresentation } from '../documents/text-presentation.js';
 import { IssuerSettings } from '../issuer-settings/service.js';
+import {
+  convertToFunctionalCents,
+  findCurrencyConversion,
+  type CurrencyConversion,
+} from '../company/currency-conversion.js';
 import {
   InvoicePayment,
   InvoicePaymentRequest,
@@ -88,6 +94,12 @@ const RevisionRecord = Schema.Struct({
   netTotalCents: Schema.Int,
   vatTotalCents: Schema.Int,
   totalCents: Schema.Int,
+  functionalCurrency: Schema.NullOr(CurrencyCode),
+  exchangeRateDate: Schema.NullOr(CalendarDate),
+  foreignUnitsPerFunctionalUnitNanos: Schema.NullOr(Schema.Int),
+  functionalNetTotalCents: Schema.NullOr(Schema.Int),
+  functionalVatTotalCents: Schema.NullOr(Schema.Int),
+  functionalTotalCents: Schema.NullOr(Schema.Int),
   createdAt: Schema.Int,
   createdByUserId: Ulid,
   renderSnapshot: Schema.String,
@@ -189,6 +201,7 @@ export interface InvoicesService {
     | InvoiceVersionConflict
     | InvoiceInvalidDates
     | InvoiceInvalidTransition
+    | InvoiceExchangeRateMissing
     | DocumentIncomplete
     | DatabaseError
   >;
@@ -233,6 +246,11 @@ const revisionSql = `select id, invoice_id as invoiceId, version,
   due_date as dueDate, payment_terms as paymentTerms, payment_terms_presentation as paymentTermsPresentation, currency,
   net_total_cents as netTotalCents, vat_total_cents as vatTotalCents,
   total_cents as totalCents, created_at as createdAt, created_by_user_id as createdByUserId,
+  functional_currency as functionalCurrency, exchange_rate_date as exchangeRateDate,
+  foreign_units_per_functional_unit_nanos as foreignUnitsPerFunctionalUnitNanos,
+  functional_net_total_cents as functionalNetTotalCents,
+  functional_vat_total_cents as functionalVatTotalCents,
+  functional_total_cents as functionalTotalCents,
   render_snapshot as renderSnapshot from invoice_revisions`;
 const lineSql = `select id, revision_id as revisionId, position, description,
   quantity_milli as quantityMilli, unit_price_cents as unitPriceCents,
@@ -284,6 +302,12 @@ export const InvoicesLive = Layer.effect(
           netTotalCents: revision.netTotalCents,
           vatTotalCents: revision.vatTotalCents,
           totalCents: revision.totalCents,
+          functionalCurrency: revision.functionalCurrency,
+          exchangeRateDate: revision.exchangeRateDate,
+          foreignUnitsPerFunctionalUnitNanos: revision.foreignUnitsPerFunctionalUnitNanos,
+          functionalNetTotalCents: revision.functionalNetTotalCents,
+          functionalVatTotalCents: revision.functionalVatTotalCents,
+          functionalTotalCents: revision.functionalTotalCents,
           createdAt: DateTime.formatIso(DateTime.makeUnsafe(revision.createdAt)),
           createdByUserId: revision.createdByUserId,
           lines: lines
@@ -476,6 +500,7 @@ export const InvoicesLive = Layer.effect(
       readonly paymentTermsPresentation?: DocumentTextPresentationValue;
       readonly currency: string;
       readonly lines: ReadonlyArray<QuoteLineInputValue>;
+      readonly conversion?: CurrencyConversion;
       readonly actorUserId: string;
       readonly now: number;
     }) => {
@@ -488,6 +513,23 @@ export const InvoicesLive = Layer.effect(
         ...calculateDocumentLine(line),
       }));
       const totals = calculateDocumentTotals(calculatedLines);
+      const functionalTotals =
+        input.conversion === undefined
+          ? undefined
+          : {
+              functionalNetTotalCents: convertToFunctionalCents(
+                totals.netTotalCents,
+                input.conversion.foreignUnitsPerFunctionalUnitNanos,
+              ),
+              functionalVatTotalCents: convertToFunctionalCents(
+                totals.vatTotalCents,
+                input.conversion.foreignUnitsPerFunctionalUnitNanos,
+              ),
+            };
+      const functionalTotalCents =
+        functionalTotals === undefined
+          ? undefined
+          : functionalTotals.functionalNetTotalCents + functionalTotals.functionalVatTotalCents;
       const snapshotInput = {
         templateId: 'invoice-default',
         templateVersion: 1,
@@ -522,9 +564,12 @@ export const InvoicesLive = Layer.effect(
           `insert into invoice_revisions
            (id, invoice_id, version, invoice_number, issued_at, client_display_name, title,
             service_date, due_date, payment_terms, payment_terms_presentation, currency, net_total_cents, vat_total_cents,
-            total_cents, created_at, created_by_user_id, template_id, template_version,
-              render_snapshot)
-              values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'invoice-default', 1, ?)`,
+             total_cents, functional_currency, exchange_rate_date,
+             foreign_units_per_functional_unit_nanos, functional_net_total_cents,
+             functional_vat_total_cents, functional_total_cents,
+             created_at, created_by_user_id, template_id, template_version,
+               render_snapshot)
+              values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'invoice-default', 1, ?)`,
         )
         .run(
           revisionId,
@@ -542,6 +587,12 @@ export const InvoicesLive = Layer.effect(
           totals.netTotalCents,
           totals.vatTotalCents,
           totals.totalCents,
+          input.conversion?.functionalCurrency ?? null,
+          input.conversion?.exchangeRateDate ?? null,
+          input.conversion?.foreignUnitsPerFunctionalUnitNanos ?? null,
+          functionalTotals?.functionalNetTotalCents ?? null,
+          functionalTotals?.functionalVatTotalCents ?? null,
+          functionalTotalCents ?? null,
           input.now,
           input.actorUserId,
           JSON.stringify(snapshot),
@@ -860,6 +911,14 @@ export const InvoicesLive = Layer.effect(
               const issueDate = invoiceIssueDate(now, businessConfig.timeZone);
               validateDates(current.serviceDate, current.dueDate, issueDate);
               validateDocumentParties(current);
+              const conversion = findCurrencyConversion(
+                database.sqlite,
+                current.currency,
+                issueDate,
+              );
+              if (conversion === undefined) {
+                throw new InvoiceExchangeRateMissing({ code: 'invoice.exchange_rate_missing' });
+              }
               const invoiceNumber = allocateBusinessReference(
                 database.sqlite,
                 'invoice',
@@ -883,6 +942,7 @@ export const InvoicesLive = Layer.effect(
                 paymentTermsPresentation: current.paymentTermsPresentation,
                 currency: current.currency,
                 lines: current.lines,
+                conversion,
                 actorUserId,
                 now,
               });
@@ -950,6 +1010,7 @@ export const InvoicesLive = Layer.effect(
             cause instanceof InvoiceVersionConflict ||
             cause instanceof InvoiceInvalidDates ||
             cause instanceof InvoiceInvalidTransition ||
+            cause instanceof InvoiceExchangeRateMissing ||
             cause instanceof DocumentIncomplete
           ) {
             return cause;

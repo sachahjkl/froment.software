@@ -647,6 +647,8 @@ export const translations = {
     'invoice.version_conflict': 'La facture a été modifiée ailleurs. Rechargez la page.',
     'invoice.amount_too_large': 'Le montant de la facture est trop élevé.',
     'invoice.invalid_dates': 'Vérifiez les dates de prestation et d’échéance.',
+    'invoice.exchange_rate_missing':
+      'Ajoutez un taux de change daté avant d’émettre cette facture.',
     'invoice.invalid_transition': 'Ce changement de statut est impossible.',
     'invoice.error': 'Le serveur ne peut pas traiter cette facture.',
     'backOffice.quote.title.new': 'Nouveau devis',
@@ -2225,6 +2227,7 @@ export const translations = {
     'invoice.version_conflict': 'The invoice changed elsewhere. Reload the page.',
     'invoice.amount_too_large': 'The invoice amount is too large.',
     'invoice.invalid_dates': 'Check the service date and due date.',
+    'invoice.exchange_rate_missing': 'Add a dated exchange rate before you issue this invoice.',
     'invoice.invalid_transition': 'This status change is not valid.',
     'invoice.error': 'The server cannot process this invoice.',
     'backOffice.quote.title.new': 'New quote',

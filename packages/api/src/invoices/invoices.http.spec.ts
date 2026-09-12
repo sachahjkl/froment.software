@@ -90,6 +90,21 @@ describe('invoice HTTP routes', () => {
     expect(issues.map(({ status }) => status)).toEqual([200, 200]);
     const issued = (await issues[0]!.json()) as { invoiceNumber: string; version: number };
     expect(issued).toMatchObject({ invoiceNumber: 'FA-2026-000001', version: 3 });
+    const issuedDetail = Schema.decodeUnknownSync(InvoiceDetail)(
+      await (
+        await fetch(`${server.baseUrl}/api/invoices/${invoice.id}`, {
+          headers: server.sessionHeaders,
+        })
+      ).json(),
+    );
+    expect(issuedDetail.currentRevision).toMatchObject({
+      currency: 'EUR',
+      functionalCurrency: 'EUR',
+      foreignUnitsPerFunctionalUnitNanos: 1_000_000_000,
+      functionalNetTotalCents: issuedDetail.currentRevision.netTotalCents,
+      functionalVatTotalCents: issuedDetail.currentRevision.vatTotalCents,
+      functionalTotalCents: issuedDetail.currentRevision.totalCents,
+    });
     const issuedPreview = await fetch(
       `${server.baseUrl}/api/invoices/${invoice.id}/revisions/3/preview`,
       { headers: server.sessionHeaders },
@@ -292,5 +307,65 @@ describe('invoice HTTP routes', () => {
     });
     expect(response.status).toBe(422);
     await expect(response.json()).resolves.toMatchObject({ code: 'invoice.invalid_dates' });
+  });
+
+  it('requires and freezes a dated exchange rate for a foreign-currency invoice', async () => {
+    await setIssuer(server);
+    const client = await createClient(server, 'Foreign invoice client');
+    const quote = await createQuote(server, client.id, 'USD');
+    const { accepted } = await acceptQuote(server, quote.id);
+    const createResponse = await fetch(`${server.baseUrl}/api/invoices`, {
+      method: 'POST',
+      headers: server.jsonHeaders,
+      body: JSON.stringify({
+        orderId: accepted.orderId,
+        serviceDate: '2026-09-11',
+        dueDate: '2026-10-12',
+        paymentTerms: 'Payment due within 30 days.',
+      }),
+    });
+    const draft = Schema.decodeUnknownSync(InvoiceDetail)(await createResponse.json());
+    const missingRate = await fetch(`${server.baseUrl}/api/invoices/${draft.id}/issue`, {
+      method: 'POST',
+      headers: server.jsonHeaders,
+      body: JSON.stringify({ expectedVersion: draft.version }),
+    });
+    expect(missingRate.status).toBe(422);
+    await expect(missingRate.json()).resolves.toMatchObject({
+      code: 'invoice.exchange_rate_missing',
+    });
+
+    const rateResponse = await fetch(`${server.baseUrl}/api/company/exchange-rates`, {
+      method: 'PUT',
+      headers: server.jsonHeaders,
+      body: JSON.stringify({
+        rateDate: '2026-09-11',
+        foreignCurrency: 'USD',
+        foreignUnitsPerFunctionalUnitNanos: 1_100_000_000,
+      }),
+    });
+    expect(rateResponse.status).toBe(200);
+    const issueResponse = await fetch(`${server.baseUrl}/api/invoices/${draft.id}/issue`, {
+      method: 'POST',
+      headers: server.jsonHeaders,
+      body: JSON.stringify({ expectedVersion: draft.version }),
+    });
+    expect(issueResponse.status).toBe(200);
+    const issued = Schema.decodeUnknownSync(InvoiceDetail)(
+      await (
+        await fetch(`${server.baseUrl}/api/invoices/${draft.id}`, {
+          headers: server.sessionHeaders,
+        })
+      ).json(),
+    );
+    expect(issued.currentRevision).toMatchObject({
+      currency: 'USD',
+      functionalCurrency: 'EUR',
+      exchangeRateDate: '2026-09-11',
+      foreignUnitsPerFunctionalUnitNanos: 1_100_000_000,
+      functionalNetTotalCents: 13_638,
+      functionalVatTotalCents: 2_727,
+      functionalTotalCents: 16_365,
+    });
   });
 });

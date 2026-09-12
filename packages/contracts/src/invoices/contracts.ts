@@ -139,6 +139,12 @@ export const InvoiceRevision = Schema.Struct({
   netTotalCents: SafeInteger,
   vatTotalCents: SafeInteger,
   totalCents: SafeInteger,
+  functionalCurrency: Schema.NullOr(CurrencyCode),
+  exchangeRateDate: Schema.NullOr(CalendarDate),
+  foreignUnitsPerFunctionalUnitNanos: Schema.NullOr(PositiveSafeInteger),
+  functionalNetTotalCents: Schema.NullOr(SafeInteger),
+  functionalVatTotalCents: Schema.NullOr(SafeInteger),
+  functionalTotalCents: Schema.NullOr(SafeInteger),
   createdAt: IsoUtc,
   createdByUserId: Ulid,
   lines: DocumentLines,
@@ -259,6 +265,12 @@ export class InvoiceInvalidTransition extends Schema.TaggedError<InvoiceInvalidT
   { httpApiStatus: 409 },
 ) {}
 
+export class InvoiceExchangeRateMissing extends Schema.TaggedError<InvoiceExchangeRateMissing>()(
+  'InvoiceExchangeRateMissing',
+  { code: Schema.Literal('invoice.exchange_rate_missing') },
+  { httpApiStatus: 422 },
+) {}
+
 export const InvoiceFailure = Schema.Union([
   InvoicePaymentInvalid,
   AuthenticationRequired,
@@ -274,6 +286,7 @@ export const InvoiceFailure = Schema.Union([
   InvoiceAmountTooLarge,
   InvoiceInvalidDates,
   InvoiceInvalidTransition,
+  InvoiceExchangeRateMissing,
   DocumentNotFound,
   DocumentIncomplete,
 ]);

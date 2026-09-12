@@ -294,7 +294,7 @@ Elle ne remplace pas les critères de fin définis au début du document.
 | Analyse assistée fournisseur       | Réalisé en première version | Contrôle des adaptateurs et secrets                  |
 | Rôles personnalisés                | Réalisé en première version | Profils comptables et dernier administrateur         |
 | Paramètres comptables société      | Réalisé en première version | Initialisation et verrouillage complet               |
-| Taux de change                     | Réalisé en première version | Contre-valeurs et écarts de change                   |
+| Taux de change                     | Réalisé en première version | Achats, banque et écarts de change                   |
 | Virements fournisseur              | Réalisé en première version | Contrôle de l’artefact immuable et rapprochement     |
 | Imports bancaires CAMT, OFX et CSV | Réalisé                     | Validation finale et livraison globale               |
 | Avoirs partiels et consolidés      | Réalisé en première version | Validation finale et intégration comptable           |

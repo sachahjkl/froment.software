@@ -48,6 +48,12 @@ export const invoiceFixture = (
     netTotalCents: 1000,
     vatTotalCents: 200,
     totalCents: 1200,
+    functionalCurrency: status === 'draft' ? null : ('EUR' as const),
+    exchangeRateDate: status === 'draft' ? null : '2026-08-20',
+    foreignUnitsPerFunctionalUnitNanos: status === 'draft' ? null : 1_000_000_000,
+    functionalNetTotalCents: status === 'draft' ? null : 1000,
+    functionalVatTotalCents: status === 'draft' ? null : 200,
+    functionalTotalCents: status === 'draft' ? null : 1200,
     createdAt: '2026-08-20T06:00:00.000Z',
     createdByUserId: '01ARZ3NDEKTSV4RRFFQ69G5FAX',
     lines: [

@@ -467,6 +467,7 @@ describe('Database', () => {
     );
 
     const sqlite = new Sqlite(filename);
+    sqlite.pragma('ignore_check_constraints = ON');
     sqlite.exec(`
       insert into users (id, display_name, kind, created_at, updated_at) values
         ('01ARZ3NDEKTSV4RRFFQ69G5FAA', 'Administrator', 'administrator', 1, 1),
@@ -520,6 +521,7 @@ describe('Database', () => {
                 12000, 1, '01ARZ3NDEKTSV4RRFFQ69G5FAA', 'invoice-default', 2,
                 '{"templateVersion":2}');
     `);
+    sqlite.pragma('ignore_check_constraints = OFF');
     sqlite.close();
 
     await cp(join(sourceFolder, snapshotMigration), join(migrationsFolder, snapshotMigration), {
