@@ -134,7 +134,7 @@ Ce contrôle évite une production vide après une erreur de montage.
 
 ## Spécifications Nomad
 
-Le Nomad Pack dans `deploy/nomad` décrit les deux charges de travail.
+Le Nomad Pack dans `deploy` décrit les deux charges de travail.
 
 `application.yaml` déclare les domaines, le port, la santé et le volume.
 
