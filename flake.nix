@@ -318,36 +318,6 @@
             secretspec --file ${./secretspec.toml} schema --profile staging >/dev/null
             touch $out
           '';
-        nomadJobs =
-          pkgs.runCommand "${pname}-nomad-jobs"
-          {
-            nativeBuildInputs = [
-              pkgs.nomad
-              pkgs.nomad-pack
-            ];
-          }
-          ''
-            export HOME="$TMPDIR"
-            image='ghcr.io/sachahjkl/froment.software@sha256:0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef'
-            for environment in staging production; do
-              cat > "$TMPDIR/$environment.vars.hcl" <<EOF
-            name = "froment-software"
-            domain = "example.froment.software"
-            environment = "$environment"
-            health_path = "/api/health"
-            image = "$image"
-            port = 3000
-            service_tags = []
-            volume_enabled = true
-            volume_mount_path = "/var/lib/froment-software"
-            volume_name = "froment-software-$environment-data"
-            EOF
-              nomad-pack render ${./deploy} --var-file "$TMPDIR/$environment.vars.hcl" \
-                --to-dir "$TMPDIR/$environment" --auto-approve >/dev/null
-              nomad job validate "$TMPDIR/$environment/application/application.nomad"
-            done
-            touch $out
-          '';
       in {
         packages =
           {
@@ -387,7 +357,7 @@
             '
             touch "$out"
           '';
-          inherit dockerImage nomadJobs productionClosure;
+          inherit dockerImage productionClosure;
           build = application;
           format = mkCheck "format" "pnpm format:check";
           lint = mkCheck "lint" "pnpm lint";

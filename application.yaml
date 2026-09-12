@@ -3,9 +3,30 @@ application:
   port: 3000
   healthPath: /api/health
 
-domain:
-  production: froment.software
-  staging: staging.froment.software
+modules:
+  config:
+    - deploy/config.hcl
 
+environments:
+  staging:
+    domain: staging.froment.software
+    noIndex: true
+    modules:
+      group:
+        - deploy/group-staging.hcl
+      task:
+        - deploy/task-staging.hcl
+  production:
+    domain: froment.software
+
+    modules:
+      group:
+        - deploy/group-production.hcl
+      task:
+        - deploy/task-production.hcl
 volume:
   mountPath: /var/lib/froment-software
+
+resources:
+  cpu: 1000
+  memory: 1024
