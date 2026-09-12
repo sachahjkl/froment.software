@@ -237,6 +237,66 @@ export const routes: Routes = [
     children: tabRoutes('active', 'clients', ['active', 'archived', 'all']),
   },
   {
+    path: 'backoffice/purchases',
+    loadComponent: () =>
+      import('./pages/back-office/supplier-invoices/supplier-invoices').then(
+        (module) => module.SupplierInvoicesPage,
+      ),
+    canActivate: [administratorGuard],
+    data: {
+      shell: 'administrator',
+      titleKey: 'page.back_office_supplier_invoices',
+      ...permissionData('supplier-invoice.read'),
+      descriptionKey: 'page.description.back_office_supplier_invoices',
+      robots: 'noindex, nofollow',
+    },
+  },
+  {
+    path: 'backoffice/purchases/new',
+    loadComponent: () =>
+      import('./pages/back-office/supplier-invoice-editor/supplier-invoice-editor').then(
+        (module) => module.SupplierInvoiceEditor,
+      ),
+    canActivate: [administratorGuard],
+    canDeactivate: [unsavedChangesGuard],
+    data: {
+      shell: 'administrator',
+      titleKey: 'supplierInvoice.createTitle',
+      ...permissionData('supplier-invoice.create'),
+      robots: 'noindex, nofollow',
+    },
+  },
+  {
+    path: 'backoffice/purchases/:invoiceId/edit',
+    loadComponent: () =>
+      import('./pages/back-office/supplier-invoice-editor/supplier-invoice-editor').then(
+        (module) => module.SupplierInvoiceEditor,
+      ),
+    canActivate: [administratorGuard],
+    canDeactivate: [unsavedChangesGuard],
+    data: {
+      shell: 'administrator',
+      titleKey: 'supplierInvoice.editTitle',
+      ...permissionData('supplier-invoice.read', 'supplier-invoice.update'),
+      robots: 'noindex, nofollow',
+    },
+  },
+  {
+    path: 'backoffice/purchases/:invoiceId',
+    loadComponent: () =>
+      import('./pages/back-office/supplier-invoice-detail/supplier-invoice-detail').then(
+        (module) => module.SupplierInvoiceDetail,
+      ),
+    canActivate: [administratorGuard],
+    data: {
+      shell: 'administrator',
+      titleKey: 'page.back_office_supplier_invoices',
+      ...permissionData('supplier-invoice.read'),
+      descriptionKey: 'page.description.back_office_supplier_invoices',
+      robots: 'noindex, nofollow',
+    },
+  },
+  {
     path: 'backoffice/fournisseurs',
     loadComponent: () =>
       import('./pages/back-office/suppliers/suppliers').then((module) => module.Suppliers),

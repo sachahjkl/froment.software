@@ -1,0 +1,116 @@
+<section class="detail-page wide-page" aria-labelledby="supplier-invoice-title">
+  <app-page-header layout="stacked">
+    <app-breadcrumbs
+      pageBack
+      [label]="i18n.t('backOfficeShell.breadcrumb')"
+      [items]="breadcrumbs()"
+      [current]="invoice()?.reference ?? i18n.t('supplierInvoice.loadingDetail')"
+    />
+    @if (invoice(); as current) {
+    <h1 id="supplier-invoice-title">{{ current.reference }}</h1>
+    <p>{{ current.supplierName }} · {{ status() }}</p>
+    }
+    <div pageActions class="spacer-x-2">
+      @if (editable()) {
+      <a *appCan="'supplier-invoice.update'" appLinkButton [routerLink]="['edit']"
+        >{{ i18n.t('supplierInvoice.edit') }}</a
+      >
+      } @if (canConfirm()) {
+      <button
+        *appCan="'supplier-invoice.update'"
+        appButton
+        type="button"
+        [disabled]="busy()"
+        (click)="transition('confirm')"
+      >
+        {{ i18n.t('supplierInvoice.confirmAction') }}
+      </button>
+      } @if (canApprove()) {
+      <button
+        *appCan="'supplier-invoice.approve'"
+        appButton
+        variant="primary"
+        type="button"
+        [disabled]="busy()"
+        (click)="transition('approve')"
+      >
+        {{ i18n.t('supplierInvoice.approveAction') }}
+      </button>
+      } @if (canCancel()) {
+      <button
+        *appCan="'supplier-invoice.update'"
+        appButton
+        type="button"
+        [disabled]="busy()"
+        (click)="transition('cancel')"
+      >
+        {{ i18n.t('supplierInvoice.cancelAction') }}
+      </button>
+      }
+    </div>
+  </app-page-header>
+  @if (error(); as code) {
+  <p appNotice variant="danger" role="alert">{{ i18n.t(code) }}</p>
+  } @if (loading()) {
+  <p role="status">{{ i18n.t('supplierInvoice.loadingDetail') }}</p>
+  } @if (invoice(); as current) {
+  <div class="detail-grid">
+    <section class="ds-panel">
+      <h2>{{ i18n.t('supplierInvoice.details') }}</h2>
+      <dl>
+        <div>
+          <dt>{{ i18n.t('supplierInvoice.invoiceDate') }}</dt>
+          <dd>{{ current.invoiceDate }}</dd>
+        </div>
+        <div>
+          <dt>{{ i18n.t('supplierInvoice.dueDate') }}</dt>
+          <dd>{{ current.dueDate }}</dd>
+        </div>
+        <div>
+          <dt>{{ i18n.t('supplierInvoice.source') }}</dt>
+          <dd>{{ source() }}</dd>
+        </div>
+      </dl>
+    </section>
+    <section class="ds-panel">
+      <h2>{{ i18n.t('supplierInvoice.totals') }}</h2>
+      <dl>
+        <div>
+          <dt>{{ i18n.t('supplierInvoice.net') }}</dt>
+          <dd>{{ money(current.netTotalCents) }}</dd>
+        </div>
+        <div>
+          <dt>{{ i18n.t('supplierInvoice.vat') }}</dt>
+          <dd>{{ money(current.vatTotalCents) }}</dd>
+        </div>
+        <div>
+          <dt>{{ i18n.t('supplierInvoice.total') }}</dt>
+          <dd>{{ money(current.totalCents) }}</dd>
+        </div>
+      </dl>
+    </section>
+  </div>
+  <div appDataTable>
+    <table>
+      <thead>
+        <tr>
+          <th scope="col">{{ i18n.t('supplierInvoice.description') }}</th>
+          <th scope="col">{{ i18n.t('supplierInvoice.net') }}</th>
+          <th scope="col">{{ i18n.t('supplierInvoice.vatRate') }}</th>
+          <th scope="col">{{ i18n.t('supplierInvoice.total') }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (line of current.lines; track line.id) {
+        <tr>
+          <th scope="row">{{ line.description }}</th>
+          <td>{{ money(line.netTotalCents) }}</td>
+          <td>{{ line.vatRateBasisPoints / 100 }} %</td>
+          <td>{{ money(line.totalCents) }}</td>
+        </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+  }
+</section>

@@ -1,0 +1,102 @@
+<section class="detail-page form-page" aria-labelledby="supplier-invoice-editor-title">
+  <app-page-header layout="stacked"
+    ><app-breadcrumbs
+      pageBack
+      [label]="i18n.t('backOfficeShell.breadcrumb')"
+      [items]="breadcrumbs()"
+      [current]="title()"
+    />
+    <h1 id="supplier-invoice-editor-title">{{ title() }}</h1>
+    <p>{{ i18n.t('supplierInvoice.editorIntro') }}</p></app-page-header
+  >
+  @if (error(); as code) {
+  <p appNotice variant="danger" role="alert">{{ i18n.t(code) }}</p>
+  } @if (loading()) {
+  <p role="status">{{ i18n.t('supplierInvoice.loadingDetail') }}</p>
+  } @else {
+  <form novalidate (submit)="save($event)">
+    <div class="ds-panel form-panel">
+      <div class="field-grid">
+        <label class="field"
+          >{{ i18n.t('supplierInvoice.supplier') }}<select
+            class="select"
+            [formField]="invoiceForm.supplierId"
+          >
+            <option value="">{{ i18n.t('supplierInvoice.chooseSupplier') }}</option>
+            @for (supplier of suppliers(); track supplier.id) {
+            <option [value]="supplier.id">{{ supplier.displayName }}</option>
+            }
+          </select></label
+        ><label class="field"
+          >{{ i18n.t('supplierInvoice.reference') }}<input
+            class="input"
+            [formField]="invoiceForm.reference" /></label
+        ><label class="field"
+          >{{ i18n.t('supplierInvoice.invoiceDate') }}<input
+            class="input"
+            type="date"
+            [formField]="invoiceForm.invoiceDate" /></label
+        ><label class="field"
+          >{{ i18n.t('supplierInvoice.dueDate') }}<input
+            class="input"
+            type="date"
+            [formField]="invoiceForm.dueDate" /></label
+        ><label class="field"
+          >{{ i18n.t('supplierInvoice.currency') }}<input
+            class="input"
+            [formField]="invoiceForm.currency"
+        /></label>
+      </div>
+    </div>
+    <div class="ds-panel form-panel">
+      <fieldset>
+        <legend>{{ i18n.t('supplierInvoice.lines') }}</legend>
+        @for (line of invoiceForm.lines; track $index) {
+        <div class="line-grid">
+          <label class="field"
+            >{{ i18n.t('supplierInvoice.description') }}<input
+              class="input"
+              [formField]="line.description" /></label
+          ><label class="field"
+            >{{ i18n.t('supplierInvoice.netAmount') }}<input
+              class="input"
+              inputmode="decimal"
+              [formField]="line.netAmount" /></label
+          ><label class="field"
+            >{{ i18n.t('supplierInvoice.vatRate') }}<input
+              class="input"
+              inputmode="decimal"
+              [formField]="line.vatRate" /></label
+          ><button
+            appButton
+            type="button"
+            [disabled]="model().lines.length === 1"
+            (click)="removeLine($index)"
+          >
+            {{ i18n.t('supplierInvoice.removeLine') }}
+          </button>
+        </div>
+        }<button appButton type="button" (click)="addLine()">
+          {{ i18n.t('supplierInvoice.addLine') }}
+        </button>
+      </fieldset>
+    </div>
+    <div class="ds-panel form-panel">
+      <label class="field"
+        >{{ i18n.t('supplierInvoice.notes') }}<textarea
+          class="textarea"
+          rows="4"
+          [formField]="invoiceForm.notes"
+        ></textarea>
+      </label>
+    </div>
+    <div class="spacer-x-2">
+      <button appButton variant="primary" type="submit" [disabled]="saving()">
+        {{ i18n.t('supplierInvoice.save') }}</button
+      ><a appLinkButton routerLink="/backoffice/purchases"
+        >{{ i18n.t('supplierInvoice.cancel') }}</a
+      >
+    </div>
+  </form>
+  }
+</section>

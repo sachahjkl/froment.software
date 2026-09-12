@@ -1,0 +1,53 @@
+<section class="detail-page wide-page" aria-labelledby="supplier-invoices-title">
+  <app-page-header>
+    <h1 id="supplier-invoices-title">{{ i18n.t('supplierInvoice.title') }}</h1>
+    <p>{{ i18n.t('supplierInvoice.intro') }}</p>
+    <a
+      *appCan="'supplier-invoice.create'"
+      pageActions
+      appLinkButton
+      variant="primary"
+      routerLink="new"
+      >{{ i18n.t('supplierInvoice.create') }}</a
+    >
+  </app-page-header>
+  @if (error(); as code) {
+  <p appNotice variant="danger" role="alert">{{ i18n.t(code) }}</p>
+  } @if (loading()) {
+  <p role="status">{{ i18n.t('supplierInvoice.loading') }}</p>
+  } @else {
+  <div appDataTable>
+    <table>
+      <thead>
+        <tr>
+          <th scope="col">{{ i18n.t('supplierInvoice.reference') }}</th>
+          <th scope="col">{{ i18n.t('supplierInvoice.supplier') }}</th>
+          <th scope="col">{{ i18n.t('supplierInvoice.invoiceDate') }}</th>
+          <th scope="col">{{ i18n.t('supplierInvoice.dueDate') }}</th>
+          <th scope="col">{{ i18n.t('supplierInvoice.status') }}</th>
+          <th scope="col">{{ i18n.t('supplierInvoice.total') }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (invoice of invoices(); track invoice.id) {
+        <tr>
+          <th scope="row"><a [routerLink]="[invoice.id]">{{ invoice.reference }}</a></th>
+          <td>{{ invoice.supplierName }}</td>
+          <td>{{ invoice.invoiceDate }}</td>
+          <td>{{ invoice.dueDate }}</td>
+          <td>{{ status(invoice) }}</td>
+          <td>{{ money(invoice) }}</td>
+        </tr>
+        } @empty {
+        <tr>
+          <td colspan="6">{{ i18n.t('supplierInvoice.empty') }}</td>
+        </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+  <footer class="list-summary">
+    <p role="status">{{ i18n.plural('supplierInvoice.count', { count: invoices().length }) }}</p>
+  </footer>
+  }
+</section>

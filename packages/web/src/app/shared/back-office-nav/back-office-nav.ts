@@ -38,6 +38,13 @@ const activityItems: readonly NavigationItem[] = [
     prefixes: ['fournisseurs'],
   },
   {
+    path: 'purchases',
+    permissions: ['supplier-invoice.read'],
+    label: 'backOffice.navigation.purchases',
+    icon: 'invoice',
+    prefixes: ['purchases'],
+  },
+  {
     path: 'affaires',
     permissions: ['quote.read', 'order.read', 'invoice.read'],
     label: 'backOffice.navigation.affairs',
