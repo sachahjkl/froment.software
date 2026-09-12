@@ -318,6 +318,12 @@ export const supplierInvoices = sqliteTable(
     netTotalCents: integer('net_total_cents').notNull(),
     vatTotalCents: integer('vat_total_cents').notNull(),
     totalCents: integer('total_cents').notNull(),
+    functionalCurrency: text('functional_currency'),
+    exchangeRateDate: text('exchange_rate_date'),
+    foreignUnitsPerFunctionalUnitNanos: integer('foreign_units_per_functional_unit_nanos'),
+    functionalNetTotalCents: integer('functional_net_total_cents'),
+    functionalVatTotalCents: integer('functional_vat_total_cents'),
+    functionalTotalCents: integer('functional_total_cents'),
     status: text().notNull().default('draft'),
     source: text().notNull(),
     sourceFileName: text('source_file_name'),
@@ -350,6 +356,10 @@ export const supplierInvoices = sqliteTable(
     check(
       'supplier_invoices_totals_check',
       sql`${table.netTotalCents} >= 0 and ${table.vatTotalCents} >= 0 and ${table.totalCents} = ${table.netTotalCents} + ${table.vatTotalCents}`,
+    ),
+    check(
+      'supplier_invoices_functional_values_check',
+      sql`(${table.functionalCurrency} is null and ${table.exchangeRateDate} is null and ${table.foreignUnitsPerFunctionalUnitNanos} is null and ${table.functionalNetTotalCents} is null and ${table.functionalVatTotalCents} is null and ${table.functionalTotalCents} is null) or (${table.functionalCurrency} glob '[A-Z][A-Z][A-Z]' and strftime('%Y-%m-%d', ${table.exchangeRateDate}, '+0 days') = ${table.exchangeRateDate} and ${table.foreignUnitsPerFunctionalUnitNanos} between 1 and 9007199254740991 and ${table.functionalNetTotalCents} between 0 and 9007199254740991 and ${table.functionalVatTotalCents} between 0 and 9007199254740991 and ${table.functionalTotalCents} = ${table.functionalNetTotalCents} + ${table.functionalVatTotalCents})`,
     ),
     check(
       'supplier_invoices_status_check',

@@ -15,6 +15,10 @@ import { Clock, Context, Effect, Layer, Schema } from 'effect';
 import { ulid } from 'ulid';
 
 import { Audit } from '../audit/audit.js';
+import {
+  convertToFunctionalCents,
+  findCurrencyConversion,
+} from '../company/currency-conversion.js';
 import { Database, DatabaseError } from '../database/database.js';
 
 const InvoiceRecord = Schema.Struct({
@@ -31,6 +35,12 @@ const InvoiceRecord = Schema.Struct({
   netTotalCents: Schema.Int,
   vatTotalCents: Schema.Int,
   totalCents: Schema.Int,
+  functionalCurrency: Schema.NullOr(Schema.String),
+  exchangeRateDate: Schema.NullOr(Schema.String),
+  foreignUnitsPerFunctionalUnitNanos: Schema.NullOr(Schema.Int),
+  functionalNetTotalCents: Schema.NullOr(Schema.Int),
+  functionalVatTotalCents: Schema.NullOr(Schema.Int),
+  functionalTotalCents: Schema.NullOr(Schema.Int),
   status: SupplierInvoice.fields.status,
   source: SupplierInvoice.fields.source,
   sourceFileName: Schema.NullOr(Schema.String),
@@ -46,7 +56,13 @@ const LineRecord = Schema.Struct({ ...SupplierInvoiceLine.fields });
 const selectInvoice = `select i.id, i.request_id as requestId, i.request, i.supplier_id as supplierId,
   s.display_name as supplierName, i.reference, i.invoice_date as invoiceDate, i.due_date as dueDate,
   i.currency, i.notes, i.net_total_cents as netTotalCents, i.vat_total_cents as vatTotalCents,
-  i.total_cents as totalCents, i.status, i.source, i.source_file_name as sourceFileName,
+  i.total_cents as totalCents, i.functional_currency as functionalCurrency,
+  i.exchange_rate_date as exchangeRateDate,
+  i.foreign_units_per_functional_unit_nanos as foreignUnitsPerFunctionalUnitNanos,
+  i.functional_net_total_cents as functionalNetTotalCents,
+  i.functional_vat_total_cents as functionalVatTotalCents,
+  i.functional_total_cents as functionalTotalCents,
+  i.status, i.source, i.source_file_name as sourceFileName,
   i.external_submission_id as externalSubmissionId, i.confirmed_at as confirmedAt,
   i.approved_at as approvedAt, i.version, i.created_at as createdAt, i.updated_at as updatedAt
   from supplier_invoices i join suppliers s on s.id = i.supplier_id`;
@@ -324,16 +340,51 @@ const make = Effect.gen(function* () {
             if (!from.includes(current.status)) {
               throw new SupplierInvoiceConflict({ code: 'supplier_invoice.invalid_transition' });
             }
+            const conversion =
+              status === 'confirmed'
+                ? findCurrencyConversion(sqlite, current.currency, current.invoiceDate)
+                : undefined;
+            if (status === 'confirmed' && conversion === undefined) {
+              throw new SupplierInvoiceConflict({
+                code: 'supplier_invoice.exchange_rate_missing',
+              });
+            }
+            const functionalNetTotalCents =
+              conversion === undefined
+                ? current.functionalNetTotalCents
+                : convertToFunctionalCents(
+                    current.netTotalCents,
+                    conversion.foreignUnitsPerFunctionalUnitNanos,
+                  );
+            const functionalVatTotalCents =
+              conversion === undefined
+                ? current.functionalVatTotalCents
+                : convertToFunctionalCents(
+                    current.vatTotalCents,
+                    conversion.foreignUnitsPerFunctionalUnitNanos,
+                  );
             const updatedAt = Math.max(now, current.updatedAt + 1);
             sqlite
               .prepare(
                 `update supplier_invoices set status = ?, confirmed_at = ?, approved_at = ?,
-                 version = version + 1, updated_at = ? where id = ? and version = ?`,
+                  functional_currency = ?, exchange_rate_date = ?,
+                  foreign_units_per_functional_unit_nanos = ?, functional_net_total_cents = ?,
+                  functional_vat_total_cents = ?, functional_total_cents = ?,
+                  version = version + 1, updated_at = ? where id = ? and version = ?`,
               )
               .run(
                 status,
                 status === 'confirmed' ? updatedAt : current.confirmedAt,
                 status === 'approved' ? updatedAt : current.approvedAt,
+                conversion?.functionalCurrency ?? current.functionalCurrency,
+                conversion?.exchangeRateDate ?? current.exchangeRateDate,
+                conversion?.foreignUnitsPerFunctionalUnitNanos ??
+                  current.foreignUnitsPerFunctionalUnitNanos,
+                functionalNetTotalCents,
+                functionalVatTotalCents,
+                functionalNetTotalCents === null || functionalVatTotalCents === null
+                  ? current.functionalTotalCents
+                  : functionalNetTotalCents + functionalVatTotalCents,
                 updatedAt,
                 id,
                 expectedVersion,

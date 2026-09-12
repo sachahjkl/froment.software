@@ -113,6 +113,8 @@ export const supplierInvoiceText = {
     'supplier_invoice.not_editable': 'Seul un brouillon peut être modifié.',
     'supplier_invoice.invalid_transition':
       'Cette action ne correspond pas à l’état actuel de la facture.',
+    'supplier_invoice.exchange_rate_missing':
+      'Ajoutez un taux de change daté avant de confirmer cette facture fournisseur.',
     'supplier_invoice.supplier_unavailable': 'Le fournisseur sélectionné est indisponible.',
     'supplier_invoice.analysis_not_configured':
       'Le service d’analyse des factures fournisseurs n’est pas configuré.',
@@ -247,6 +249,8 @@ export const supplierInvoiceText = {
     'supplier_invoice.reference_exists': 'This reference already exists for this supplier.',
     'supplier_invoice.not_editable': 'Only a draft can be edited.',
     'supplier_invoice.invalid_transition': 'This action does not match the current invoice status.',
+    'supplier_invoice.exchange_rate_missing':
+      'Add a dated exchange rate before you confirm this supplier invoice.',
     'supplier_invoice.supplier_unavailable': 'The selected supplier is unavailable.',
     'supplier_invoice.analysis_not_configured':
       'The supplier invoice analysis service is not configured.',

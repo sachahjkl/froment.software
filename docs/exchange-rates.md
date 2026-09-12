@@ -14,3 +14,6 @@ Chaque import et chaque surcharge produit un événement d’audit.
 Lors de l’émission d’une facture, le serveur sélectionne le dernier taux disponible à la date d’émission.
 La facture émise conserve la date, le taux et les totaux en devise fonctionnelle.
 Si aucun taux n’est disponible, le serveur refuse l’émission.
+
+Lors de la confirmation d’une facture fournisseur, le serveur utilise sa date de facture.
+La facture fournisseur conserve ensuite le taux et ses totaux en devise fonctionnelle.

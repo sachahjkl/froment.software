@@ -98,7 +98,16 @@ describe('supplier invoice HTTP lifecycle', () => {
     });
     expect(confirmResponse.status).toBe(200);
     const confirmed = Schema.decodeUnknownSync(SupplierInvoice)(await confirmResponse.json());
-    expect(confirmed).toMatchObject({ status: 'confirmed', version: 3 });
+    expect(confirmed).toMatchObject({
+      status: 'confirmed',
+      version: 3,
+      functionalCurrency: 'EUR',
+      exchangeRateDate: '2026-09-01',
+      foreignUnitsPerFunctionalUnitNanos: 1_000_000_000,
+      functionalNetTotalCents: 10_501,
+      functionalVatTotalCents: 2_000,
+      functionalTotalCents: 12_501,
+    });
     expect(confirmed.confirmedAt).not.toBeNull();
 
     const frozenResponse = await write(
@@ -149,6 +158,44 @@ describe('supplier invoice HTTP lifecycle', () => {
     });
     const repeatedPayment = await write('/api/supplier-payment-batches', paymentRequest);
     await expect(repeatedPayment.json()).resolves.toMatchObject({ id: payment.id });
+
+    const foreignCreateResponse = await write('/api/supplier-invoices', {
+      ...creation,
+      requestId: crypto.randomUUID(),
+      reference: 'SUP-2026-USD',
+      currency: 'USD',
+    });
+    const foreignDraft = Schema.decodeUnknownSync(SupplierInvoice)(
+      await foreignCreateResponse.json(),
+    );
+    const missingRate = await write(`/api/supplier-invoices/${foreignDraft.id}/confirm`, {
+      expectedVersion: foreignDraft.version,
+    });
+    expect(missingRate.status).toBe(409);
+    await expect(missingRate.json()).resolves.toMatchObject({
+      code: 'supplier_invoice.exchange_rate_missing',
+    });
+    await write(
+      '/api/company/exchange-rates',
+      {
+        rateDate: creation.invoiceDate,
+        foreignCurrency: 'USD',
+        foreignUnitsPerFunctionalUnitNanos: 1_100_000_000,
+      },
+      'PUT',
+    );
+    const foreignConfirm = await write(`/api/supplier-invoices/${foreignDraft.id}/confirm`, {
+      expectedVersion: foreignDraft.version,
+    });
+    expect(foreignConfirm.status).toBe(200);
+    expect(Schema.decodeUnknownSync(SupplierInvoice)(await foreignConfirm.json())).toMatchObject({
+      functionalCurrency: 'EUR',
+      exchangeRateDate: creation.invoiceDate,
+      foreignUnitsPerFunctionalUnitNanos: 1_100_000_000,
+      functionalNetTotalCents: 9_546,
+      functionalVatTotalCents: 1_818,
+      functionalTotalCents: 11_364,
+    });
     const paymentDownload = await fetch(
       `${server.baseUrl}/api/supplier-payment-batches/${payment.id}/download`,
       { headers: server.sessionHeaders },
@@ -180,7 +227,7 @@ describe('supplier invoice HTTP lifecycle', () => {
     });
     expect(listResponse.status).toBe(200);
     const list = Schema.decodeUnknownSync(Schema.Array(SupplierInvoice))(await listResponse.json());
-    expect(list).toHaveLength(1);
+    expect(list).toHaveLength(2);
   });
 
   it('creates an OCR draft and records explicit external consent', async () => {
