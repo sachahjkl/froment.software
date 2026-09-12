@@ -24,6 +24,8 @@ import {
   type BankImportPreview,
   type BankImportRequestValue,
   type BankImportResult,
+  type BankCsvConfigurationValue,
+  DefaultBankCsvConfiguration,
 } from '@froment/contracts';
 import { formatMoney } from '@froment/l10n';
 import { BankingApi } from '@backoffice/banking-api';
@@ -42,6 +44,14 @@ import {
   compareBankRows,
   nextBankSort,
 } from '../banking/bank-table-sort';
+
+type BankImportModel = {
+  -readonly [Key in keyof BankCsvConfigurationValue]: BankCsvConfigurationValue[Key];
+} & {
+  account: string;
+  format: BankImportRequestValue['format'];
+  content: string;
+};
 
 @Component({
   selector: 'app-bank-import',
@@ -94,16 +104,22 @@ export class BankImport {
       ),
     ),
   );
-  private readonly model = signal({
+  private readonly model = signal<BankImportModel>({
     account: this.route.snapshot.queryParamMap.get('account') ?? '',
-    csv: '',
+    format: 'csv',
+    content: '',
+    ...DefaultBankCsvConfiguration,
   });
   protected readonly importForm = form(this.model, (path) => {
     required(path.account);
     pattern(path.account, /\S/);
     maxLength(path.account, 100);
-    required(path.csv);
-    maxLength(path.csv, 500000);
+    required(path.content);
+    maxLength(path.content, 500000);
+    required(path.referenceColumn);
+    required(path.bookedOnColumn);
+    required(path.amountColumn);
+    required(path.descriptionColumn);
     disabled(path, () => this.busy() || this.reading() || this.preview() !== undefined);
   });
   protected readonly backQuery = bankQueryParams(bankQuery(this.route.snapshot.queryParamMap));
@@ -124,7 +140,7 @@ export class BankImport {
     this.preview.set(undefined);
     this.prepared = undefined;
     this.result.set(undefined);
-    this.model.update((model) => ({ ...model, csv: '' }));
+    this.model.update((model) => ({ ...model, content: '' }));
     this.filename.set('');
     this.error.set(undefined);
     const file = input.files?.[0];
@@ -135,9 +151,9 @@ export class BankImport {
     }
     this.reading.set(true);
     try {
-      const csv = new TextDecoder('utf-8', { fatal: true }).decode(await file.arrayBuffer());
+      const content = new TextDecoder('utf-8', { fatal: true }).decode(await file.arrayBuffer());
       if (generation !== this.fileGeneration || this.destroyRef.destroyed) return;
-      this.model.update((model) => ({ ...model, csv }));
+      this.model.update((model) => ({ ...model, content }));
       this.filename.set(file.name);
     } catch {
       if (generation === this.fileGeneration && !this.destroyRef.destroyed)
@@ -154,13 +170,31 @@ export class BankImport {
       this.importForm.account().focusBoundControl();
       return;
     }
-    if (this.importForm.csv().invalid()) {
+    if (this.importForm.content().invalid()) {
       this.error.set('bankWorkspace.fileInvalid');
       this.fileInput()?.nativeElement.focus();
       return;
     }
     void submit(this.importForm, async () => {
-      const request = { account: this.model().account.trim(), csv: this.model().csv };
+      const model = this.model();
+      const request: BankImportRequestValue = {
+        account: model.account.trim(),
+        format: model.format,
+        content: model.content,
+        csvConfiguration:
+          model.format === 'csv'
+            ? {
+                delimiter: model.delimiter,
+                referenceColumn: model.referenceColumn.trim(),
+                bookedOnColumn: model.bookedOnColumn.trim(),
+                amountColumn: model.amountColumn.trim(),
+                currencyColumn: model.currencyColumn.trim(),
+                descriptionColumn: model.descriptionColumn.trim(),
+                dateFormat: model.dateFormat,
+                decimalSeparator: model.decimalSeparator,
+              }
+            : null,
+      };
       this.busy.set(true);
       this.error.set(undefined);
       try {
@@ -194,7 +228,12 @@ export class BankImport {
       this.result.set(outcome.result);
       this.preview.set(undefined);
       this.prepared = undefined;
-      this.importForm().reset({ account: request.account, csv: '' });
+      this.importForm().reset({
+        account: request.account,
+        format: request.format,
+        content: '',
+        ...DefaultBankCsvConfiguration,
+      });
       this.filename.set('');
     } catch {
       if (!this.destroyRef.destroyed) this.error.set('bank.error');
@@ -223,13 +262,13 @@ export class BankImport {
       replaceUrl: true,
     });
   }
-  protected money(cents: number): string {
-    return formatMoney(cents, this.i18n.language(), 'EUR');
+  protected money(cents: number, currency: string): string {
+    return formatMoney(cents, this.i18n.language(), currency);
   }
   private unsaved(): boolean {
     return (
       !this.result() &&
-      (this.importForm().dirty() || this.model().csv !== '' || this.preview() !== undefined)
+      (this.importForm().dirty() || this.model().content !== '' || this.preview() !== undefined)
     );
   }
   async canDeactivate(): Promise<boolean> {

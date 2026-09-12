@@ -1,0 +1,116 @@
+<section class="detail-page wide-page" aria-labelledby="supplier-payment-batches-title">
+  <app-page-header layout="stacked">
+    <app-breadcrumbs
+      pageBack
+      [label]="i18n.t('backOfficeShell.breadcrumb')"
+      [items]="breadcrumbs()"
+      [current]="i18n.t('supplierPaymentBatch.title')"
+    />
+    <h1 id="supplier-payment-batches-title">{{ i18n.t('supplierPaymentBatch.title') }}</h1>
+    <p>{{ i18n.t('supplierPaymentBatch.intro') }}</p>
+  </app-page-header>
+
+  @if (error(); as code) {
+  <p appNotice variant="danger" role="alert">{{ i18n.t(code) }}</p>
+  } @if (created(); as batch) {
+  <p appNotice variant="success" role="status">
+    {{ i18n.t('supplierPaymentBatch.created') }}
+    <a [href]="'/api/supplier-payment-batches/' + batch.id + '/download'"
+      >{{ i18n.t('supplierPaymentBatch.download') }}</a
+    >
+  </p>
+  } @if (loading()) {
+  <p role="status">{{ i18n.t('supplierPaymentBatch.loading') }}</p>
+  } @else {
+  <section class="ds-panel form-panel" aria-labelledby="supplier-payment-create-title">
+    <h2 id="supplier-payment-create-title">{{ i18n.t('supplierPaymentBatch.createTitle') }}</h2>
+    <label class="field" for="supplier-payment-execution-date">
+      {{ i18n.t('supplierPaymentBatch.executionDate') }}
+      <input
+        id="supplier-payment-execution-date"
+        class="input"
+        type="date"
+        required
+        [value]="executionDate()"
+        (input)="setExecutionDate($event)"
+      />
+    </label>
+    <div appDataTable>
+      <table>
+        <thead>
+          <tr>
+            <th scope="col">{{ i18n.t('supplierPaymentBatch.select') }}</th>
+            <th scope="col">{{ i18n.t('supplierInvoice.reference') }}</th>
+            <th scope="col">{{ i18n.t('supplierInvoice.supplier') }}</th>
+            <th scope="col">{{ i18n.t('supplierInvoice.dueDate') }}</th>
+            <th scope="col">{{ i18n.t('supplierInvoice.total') }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (invoice of eligibleInvoices(); track invoice.id) {
+          <tr>
+            <td>
+              <input
+                type="checkbox"
+                [attr.aria-label]="i18n.tf('supplierPaymentBatch.selectInvoice', { reference: invoice.reference })"
+                [checked]="isSelected(invoice.id)"
+                (change)="select(invoice.id, $event)"
+              />
+            </td>
+            <th scope="row">
+              <a [routerLink]="['/backoffice/purchases', invoice.id]">{{ invoice.reference }}</a>
+            </th>
+            <td>{{ invoice.supplierName }}</td>
+            <td>{{ invoice.dueDate }}</td>
+            <td>{{ money(invoice.totalCents) }}</td>
+          </tr>
+          } @empty {
+          <tr>
+            <td colspan="5">{{ i18n.t('supplierPaymentBatch.emptyEligible') }}</td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    <button appButton variant="primary" type="button" [disabled]="!canCreate()" (click)="create()">
+      {{ i18n.t('supplierPaymentBatch.create') }}
+    </button>
+  </section>
+
+  <section aria-labelledby="supplier-payment-history-title">
+    <h2 id="supplier-payment-history-title">{{ i18n.t('supplierPaymentBatch.history') }}</h2>
+    <div appDataTable>
+      <table>
+        <thead>
+          <tr>
+            <th scope="col">{{ i18n.t('supplierPaymentBatch.messageId') }}</th>
+            <th scope="col">{{ i18n.t('supplierPaymentBatch.executionDate') }}</th>
+            <th scope="col">{{ i18n.t('supplierPaymentBatch.transactionCount') }}</th>
+            <th scope="col">{{ i18n.t('supplierPaymentBatch.controlSum') }}</th>
+            <th scope="col">{{ i18n.t('supplierPaymentBatch.file') }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (batch of batches(); track batch.id) {
+          <tr>
+            <th scope="row">{{ batch.messageId }}</th>
+            <td>{{ batch.executionDate }}</td>
+            <td>{{ batch.transactionCount }}</td>
+            <td>{{ money(batch.controlSumCents) }}</td>
+            <td>
+              <a [href]="'/api/supplier-payment-batches/' + batch.id + '/download'"
+                >{{ i18n.t('supplierPaymentBatch.download') }}</a
+              >
+            </td>
+          </tr>
+          } @empty {
+          <tr>
+            <td colspan="5">{{ i18n.t('supplierPaymentBatch.emptyHistory') }}</td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </section>
+  }
+</section>

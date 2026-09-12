@@ -40,7 +40,7 @@ export class BusinessContext {
   private navigationId = 0;
   scenario: BusinessSettings['scenario'] = 'ready';
   administrator = true;
-  url = '/backoffice/affaires';
+  url = '/backoffice/affairs';
 
   constructor() {
     this.destroyRef.onDestroy(() => {
@@ -71,6 +71,15 @@ export class BusinessContext {
       email: this.text().examples.email,
       mode: this.administrator ? 'administrator' : 'client',
       permissions: PermissionCodes,
+      enabledModules: [
+        'sales',
+        'purchasing',
+        'banking',
+        'accounting',
+        'tax',
+        'ai',
+        'demonstration',
+      ],
     };
   }
 
@@ -104,6 +113,7 @@ export class BusinessContext {
         city: example.city,
         country: example.country,
         email: example.email,
+        phone: '+33 1 23 45 67 89',
         archived: false,
         updatedAt: 0,
       },

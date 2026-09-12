@@ -145,8 +145,8 @@ Sinon, créez une facture depuis la commande.
 
 | Destination           | URL                                              |
 | --------------------- | ------------------------------------------------ |
-| Liste des affaires    | `/backoffice/affaires/:view`                     |
-| Détail de l’affaire   | `/backoffice/affaires/:quoteId/:tab`             |
+| Liste des affaires    | `/backoffice/affairs/:view`                      |
+| Détail de l’affaire   | `/backoffice/affairs/:quoteId/:tab`              |
 | Nouveau devis         | `/backoffice/quotes/new?clientId=:clientId`      |
 | Détail du devis       | `/backoffice/quotes/:quoteId/:tab`               |
 | Éditeur du devis      | `/backoffice/quotes/:quoteId/edit`               |

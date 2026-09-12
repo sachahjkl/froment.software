@@ -44,7 +44,7 @@ describe('Bank reconciliation task', () => {
     setupBankWorkspace();
     const harness = await RouterTestingHarness.create();
     const page = await harness.navigateByUrl(
-      `/backoffice/banque/transactions/${bankId}`,
+      `/backoffice/banking/transactions/${bankId}`,
       BankReconciliation,
     );
     await harness.fixture.whenStable();
@@ -68,6 +68,7 @@ describe('Bank reconciliation task', () => {
               invoiceNumber: 'FA-2026-000001',
               amountCents: 5000,
               feeCents: 0,
+              exchangeDifferenceFunctionalCents: 0,
               paymentCancelled: false,
             },
           ],
@@ -75,7 +76,7 @@ describe('Bank reconciliation task', () => {
       ],
     });
     const harness = await RouterTestingHarness.create();
-    await harness.navigateByUrl(`/backoffice/banque/transactions/${bankId}`, BankReconciliation);
+    await harness.navigateByUrl(`/backoffice/banking/transactions/${bankId}`, BankReconciliation);
     await harness.fixture.whenStable();
     const root = bankRoot(harness);
     bankField(root, 'form select', bankId);
@@ -99,7 +100,7 @@ describe('Bank reconciliation task', () => {
   it('renders immutable history as text and retries the same partial allocation snapshot', async () => {
     const { api } = setupBankWorkspace();
     const harness = await RouterTestingHarness.create();
-    await harness.navigateByUrl(`/backoffice/banque/transactions/${bankId}`, BankReconciliation);
+    await harness.navigateByUrl(`/backoffice/banking/transactions/${bankId}`, BankReconciliation);
     await harness.fixture.whenStable();
     const root = bankRoot(harness);
     expect(root.textContent).toContain('<script>Erreur de rapprochement</script>');
@@ -129,7 +130,7 @@ describe('Bank reconciliation task', () => {
   it('focuses an invalid amount and does not submit excess precision or a net over the remaining credit', async () => {
     const { api } = setupBankWorkspace();
     const harness = await RouterTestingHarness.create();
-    await harness.navigateByUrl(`/backoffice/banque/transactions/${bankId}`, BankReconciliation);
+    await harness.navigateByUrl(`/backoffice/banking/transactions/${bankId}`, BankReconciliation);
     await harness.fixture.whenStable();
     const root = bankRoot(harness);
     bankField(root, 'form select', bankId);
@@ -159,6 +160,7 @@ describe('Bank reconciliation task', () => {
       invoiceNumber: 'FA-2026-000001',
       amountCents: 5000,
       feeCents: 100,
+      exchangeDifferenceFunctionalCents: 0,
       paymentCancelled: true,
     };
     api.get.mockResolvedValue({
@@ -170,7 +172,7 @@ describe('Bank reconciliation task', () => {
       },
     });
     const harness = await RouterTestingHarness.create();
-    await harness.navigateByUrl(`/backoffice/banque/transactions/${bankId}`, BankReconciliation);
+    await harness.navigateByUrl(`/backoffice/banking/transactions/${bankId}`, BankReconciliation);
     await harness.fixture.whenStable();
     const root = bankRoot(harness);
     root.querySelectorAll<HTMLButtonElement>('tbody button')[1]?.click();
@@ -178,7 +180,7 @@ describe('Bank reconciliation task', () => {
     bankField(root, 'textarea', 'Encaissement annulé');
     await harness.fixture.whenStable();
     confirmation.request.mockResolvedValue(false);
-    await harness.navigateByUrl('/backoffice/banque');
+    await harness.navigateByUrl('/backoffice/banking');
     expect(TestBed.inject(Router).url).toContain(`/transactions/${bankId}`);
     confirmation.request.mockResolvedValue(true);
     bankSubmit(root, 'form.ds-panel');
@@ -197,6 +199,7 @@ describe('Bank reconciliation task', () => {
         invoiceNumber: 'FA-2026-000001',
         amountCents: 2000,
         feeCents: 100,
+        exchangeDifferenceFunctionalCents: 0,
         paymentCancelled: false,
       };
       const second = {
@@ -214,7 +217,7 @@ describe('Bank reconciliation task', () => {
       const source = structuredClone(transaction);
       api.get.mockResolvedValue({ success: true, result: transaction });
       const harness = await RouterTestingHarness.create();
-      const path = `/backoffice/banque/transactions/${bankId}?sort=amount-desc`;
+      const path = `/backoffice/banking/transactions/${bankId}?sort=amount-desc`;
       const component = await harness.navigateByUrl(path, BankReconciliation);
       await harness.fixture.whenStable();
       const root = bankRoot(harness);
@@ -274,7 +277,7 @@ describe('Bank reconciliation task', () => {
         await component['load']();
         bankSubmit(root, 'section[aria-labelledby="allocation-title"] form');
         if (originalAllocation) bankSubmit(root, 'form.ds-panel');
-        await harness.navigateByUrl('/backoffice/banque');
+        await harness.navigateByUrl('/backoffice/banking');
         expect(TestBed.inject(Router).url).toBe(path);
         expect(confirmation.request).toHaveBeenCalledTimes(1);
         expect(api.get).toHaveBeenCalledTimes(1);
@@ -296,7 +299,7 @@ describe('Bank reconciliation task', () => {
         expect(unloadIsBlocked()).toBe(true);
         confirmation.request.mockResolvedValue(false);
         await component['refresh']();
-        await harness.navigateByUrl('/backoffice/banque');
+        await harness.navigateByUrl('/backoffice/banking');
         expect(TestBed.inject(Router).url).toBe(path);
         expect(api.get).toHaveBeenCalledTimes(1);
         expect(component['matchForm']().value()).toEqual(matchDraft);
@@ -335,8 +338,8 @@ describe('Bank reconciliation task', () => {
         expect(api.unmatch).not.toHaveBeenCalled();
         expect(unloadIsBlocked()).toBe(false);
         expect(await component.canDeactivate()).toBe(true);
-        await harness.navigateByUrl('/backoffice/banque');
-        expect(TestBed.inject(Router).url).toBe('/backoffice/banque');
+        await harness.navigateByUrl('/backoffice/banking');
+        expect(TestBed.inject(Router).url).toBe('/backoffice/banking');
         expect(confirmation.request).toHaveBeenCalledTimes(4);
       } finally {
         denied.resolve(false);
@@ -354,7 +357,7 @@ describe('Bank reconciliation task', () => {
     });
     api.payments.mockImplementationOnce(() => late);
     const harness = await RouterTestingHarness.create();
-    await harness.navigateByUrl(`/backoffice/banque/transactions/${bankId}`, BankReconciliation);
+    await harness.navigateByUrl(`/backoffice/banking/transactions/${bankId}`, BankReconciliation);
     await harness.fixture.whenStable();
     const root = bankRoot(harness);
     bankField(root, 'form select', bankId);
@@ -370,6 +373,7 @@ describe('Bank reconciliation task', () => {
           reference: 'STALE',
           amountCents: 1000,
           availableCents: 1000,
+          currency: 'EUR',
           paidOn: '2026-09-01',
         },
       ],
@@ -390,6 +394,7 @@ describe('Bank reconciliation task', () => {
       invoiceNumber: 'FA-2',
       amountCents: 900,
       feeCents: 0,
+      exchangeDifferenceFunctionalCents: 0,
       paymentCancelled: false,
     };
     api.get.mockResolvedValue({
@@ -417,7 +422,7 @@ describe('Bank reconciliation task', () => {
     });
     const harness = await RouterTestingHarness.create();
     const component = await harness.navigateByUrl(
-      `/backoffice/banque/transactions/${bankId}?sort=amount-desc&q=reglement&account=MAIN`,
+      `/backoffice/banking/transactions/${bankId}?sort=amount-desc&q=reglement&account=MAIN`,
       BankReconciliation,
     );
     await harness.fixture.whenStable();

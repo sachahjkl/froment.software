@@ -1,6 +1,6 @@
 <section class="detail-page form-page" aria-labelledby="template-title">
   <app-page-header layout="stacked">
-    <a pageBack routerLink="/backoffice/courriels/templates" [queryParams]="backQuery()"
+    <a pageBack routerLink="/backoffice/emails/templates" [queryParams]="backQuery()"
       >{{ i18n.t('emailsWorkspace.backTemplates') }}</a
     >
     <h1 id="template-title">{{ i18n.t(titleLabel()) }}</h1>
@@ -59,7 +59,7 @@
         [disabled]="busy()"
         (actionSelected)="archive()"
       />
-      }<a appLinkButton routerLink="/backoffice/courriels/templates" [queryParams]="backQuery()"
+      }<a appLinkButton routerLink="/backoffice/emails/templates" [queryParams]="backQuery()"
         >{{ i18n.t('catalogWorkspace.cancel') }}</a
       >
     </div>

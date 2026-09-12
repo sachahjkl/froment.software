@@ -104,7 +104,7 @@ export const commercialTestRoutes: Routes = [
     children: detailTabs('quote-detail', ['summary', 'document', 'versions']),
   },
   { path: 'backoffice/orders/:orderId', component: OrderDetail },
-  { path: 'backoffice/affaires', component: CommercialDestination },
+  { path: 'backoffice/affairs', component: CommercialDestination },
   { path: 'backoffice/invoices/new', component: CommercialDestination },
   { path: 'backoffice/invoices/:invoiceId', component: CommercialDestination },
 ];

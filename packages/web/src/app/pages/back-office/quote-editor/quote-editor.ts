@@ -63,16 +63,16 @@ import {
   type DocumentTextPresentationValue,
 } from '@froment/contracts';
 import { DocumentTextEditor } from '@shared/document-text-editor/document-text-editor';
+import {
+  DocumentLineEditor,
+  type DocumentLineEditValue,
+} from '@shared/document-line-editor/document-line-editor';
 
-interface QuoteLineModel {
-  readonly description: string;
-  readonly quantity: string;
-  readonly unitPrice: string;
-  readonly vatRate: string;
-}
+type QuoteLineModel = DocumentLineEditValue;
 
 interface QuoteModel {
   readonly clientId: string;
+  readonly currency: string;
   readonly conditions: string;
   readonly conditionsPresentation?: DocumentTextPresentationValue;
   readonly lines: Array<QuoteLineModel>;
@@ -99,6 +99,7 @@ const emptyLine = (): QuoteLineModel => ({
     PageHeader,
     RouterLink,
     DocumentTextEditor,
+    DocumentLineEditor,
   ],
   templateUrl: './quote-editor.html',
   styleUrl: './quote-editor.scss',
@@ -163,17 +164,20 @@ export class QuoteEditor {
   );
   private readonly model = signal<QuoteModel>({
     clientId: '',
+    currency: 'EUR',
     conditions: '',
     lines: [emptyLine()],
     title: '',
   });
   protected readonly conditionsPresentation = computed(() => this.model().conditionsPresentation);
   protected readonly catalogOptions = computed(() =>
-    this.catalogItems().map((item) => ({
-      id: item.id,
-      label: item.description,
-      detail: this.money(item.unitPriceCents),
-    })),
+    this.catalogItems()
+      .filter((item) => item.currency === this.model().currency)
+      .map((item) => ({
+        id: item.id,
+        label: item.description,
+        detail: this.money(item.unitPriceCents),
+      })),
   );
   protected readonly quoteForm = form(this.model, (path) => {
     disabled(path, {
@@ -185,6 +189,9 @@ export class QuoteEditor {
         this.referenceBusy(),
     });
     required(path.clientId);
+    required(path.currency);
+    maxLength(path.currency, 3);
+    pattern(path.currency, /^[A-Z]{3}$/);
     required(path.title);
     maxLength(path.title, 120);
     pattern(path.title, /\S/);
@@ -234,6 +241,11 @@ export class QuoteEditor {
       this.detail() !== undefined &&
       (this.quoteForm().dirty() || this.saving() || this.uncertain()),
   );
+  protected readonly lineTotals = computed(() =>
+    this.totalsAreStale()
+      ? []
+      : (this.detail()?.currentRevision.lines.map((line) => line.totalCents) ?? []),
+  );
 
   constructor() {
     this.destroyRef.onDestroy(() => this.referenceDialog()?.close());
@@ -247,9 +259,9 @@ export class QuoteEditor {
     });
   }
 
-  protected addLine(): void {
-    if (this.saveDisabled() || this.referenceBusy() || this.model().lines.length >= 20) return;
-    this.model.update((model) => ({ ...model, lines: [...model.lines, emptyLine()] }));
+  protected setLines(lines: ReadonlyArray<DocumentLineEditValue>): void {
+    if (this.saveDisabled() || this.referenceBusy()) return;
+    this.model.update((model) => ({ ...model, lines: [...lines] }));
     this.quoteForm().markAsDirty();
   }
 
@@ -274,15 +286,6 @@ export class QuoteEditor {
           vatRate: formatFixedDecimal(item.vatRateBasisPoints, 2),
         },
       ],
-    }));
-    this.quoteForm().markAsDirty();
-  }
-
-  protected removeLine(index: number): void {
-    if (this.saveDisabled() || this.referenceBusy() || this.model().lines.length === 1) return;
-    this.model.update((model) => ({
-      ...model,
-      lines: model.lines.filter((_line, currentIndex) => currentIndex !== index),
     }));
     this.quoteForm().markAsDirty();
   }
@@ -482,6 +485,7 @@ export class QuoteEditor {
         const model = this.model();
         const values = {
           conditions: model.conditions,
+          currency: model.currency,
           lines,
           title: model.title.trim(),
         };
@@ -570,7 +574,7 @@ export class QuoteEditor {
   }
 
   protected money(cents: number): string {
-    return formatMoney(cents, this.i18n.language(), 'EUR');
+    return formatMoney(cents, this.i18n.language(), this.model().currency);
   }
 
   private async load(parameter: string | null): Promise<void> {
@@ -589,7 +593,13 @@ export class QuoteEditor {
     this.error.set(undefined);
     this.unavailable.set(false);
     this.loading.set(true);
-    this.model.set({ clientId: '', conditions: '', lines: [emptyLine()], title: '' });
+    this.model.set({
+      clientId: '',
+      currency: 'EUR',
+      conditions: '',
+      lines: [emptyLine()],
+      title: '',
+    });
     this.quoteForm().reset();
     if (parameter !== null && quoteId === undefined) {
       this.error.set('quote.not_found');
@@ -670,6 +680,7 @@ export class QuoteEditor {
     const decimalSeparator = this.i18n.language() === 'fr' ? ',' : '.';
     return {
       clientId: detail.clientId,
+      currency: detail.currentRevision.currency,
       conditions: detail.currentRevision.conditions,
       conditionsPresentation: detail.currentRevision.conditionsPresentation,
       title: detail.currentRevision.title,

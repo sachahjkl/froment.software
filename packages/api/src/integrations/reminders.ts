@@ -83,7 +83,12 @@ export const RemindersLive = Layer.effect(
       coalesce((select sum(amount_cents) from invoice_payments where invoice_id = i.id and cancelled_at is null), 0) as paidCents
       from invoices i join invoice_revisions r on r.invoice_id = i.id and r.version = i.version
       join clients c on c.id = i.client_id join users u on u.id = c.id
-       where i.id = ? and i.status = 'issued' and u.disabled_at is null and not exists (select 1 from invoice_credit_notes where invoice_id = i.id)`)
+       where i.id = ? and i.status = 'issued' and u.disabled_at is null
+       and r.total_cents > coalesce((select sum(p.amount_cents) from invoice_payments p where p.invoice_id = i.id and p.cancelled_at is null), 0)
+         + coalesce((select sum(l.total_cents) from invoice_credit_note_lines l
+           join invoice_credit_notes n on n.id = l.credit_note_id
+           join invoice_credit_note_revisions cr on cr.id = l.credit_note_revision_id
+           where l.invoice_id = i.id and n.status = 'issued' and cr.version = n.version), 0)`)
         .get(id);
       if (row === undefined) return undefined;
       const value = Schema.decodeUnknownSync(Invoice)(row);

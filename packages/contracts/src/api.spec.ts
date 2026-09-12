@@ -138,7 +138,7 @@ describe('API contracts', () => {
     ).toBe(10);
     expect(
       Option.getOrUndefined(Context.getOption(affairEvents.annotations, RequiredPermissions)),
-    ).toEqual(['quote.read', 'audit.read']);
+    ).toEqual(['affair.read', 'audit.read']);
     expect(
       Option.getOrUndefined(Context.getOption(tokenCreate.annotations, RequiredPermissions)),
     ).toEqual(['api-token.manage']);

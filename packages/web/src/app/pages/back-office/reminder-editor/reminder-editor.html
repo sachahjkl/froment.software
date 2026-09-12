@@ -1,6 +1,6 @@
 <section class="detail-page form-page" aria-labelledby="reminder-title">
   <app-page-header layout="stacked">
-    <a pageBack routerLink="/backoffice/courriels/reminders"
+    <a pageBack routerLink="/backoffice/emails/reminders"
       >{{ i18n.t('emailsWorkspace.backReminders') }}</a
     >
     <h1 id="reminder-title">{{ i18n.t('emailsWorkspace.newReminder') }}</h1>
@@ -69,7 +69,7 @@
     <div class="actions">
       <button appButton variant="primary" type="submit" [disabled]="busy() || confirming()">
         {{ i18n.t(pending() ? 'emails.retry' : 'reminder.schedule') }}</button
-      ><a appLinkButton routerLink="/backoffice/courriels/reminders"
+      ><a appLinkButton routerLink="/backoffice/emails/reminders"
         >{{ i18n.t('catalogWorkspace.cancel') }}</a
       >
     </div>

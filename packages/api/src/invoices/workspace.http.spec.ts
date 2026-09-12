@@ -1,5 +1,6 @@
 import {
   ApiTokenCreated,
+  CreditNote,
   CreditNoteList,
   InvoiceCredits,
   InvoiceDetail,
@@ -73,14 +74,27 @@ it('protects global financial lists and returns only persisted invoice entries a
         })
       ).json(),
     );
-    const credit = Schema.decodeUnknownSync(InvoiceCredits)(
-      await (
-        await post(`${path}/credits`, {
+    const draftCredit = await post('/api/credit-notes', {
+      requestId: randomUUID(),
+      reason: 'Cancelled service',
+      lines: invoice.currentRevision.lines.map((line) => ({
+        invoiceId: invoice.id,
+        invoiceVersion: invoice.version,
+        sourceLineId: line.id,
+        quantityMilli: line.quantityMilli,
+      })),
+    });
+    const note = Schema.decodeUnknownSync(CreditNote)(await draftCredit.json());
+    expect(
+      (
+        await post(`/api/credit-notes/${note.id}/issue`, {
           requestId: randomUUID(),
-          expectedVersion: invoice.version,
-          reason: 'Cancelled service',
+          expectedVersion: note.version,
         })
-      ).json(),
+      ).status,
+    ).toBe(200);
+    const credit = Schema.decodeUnknownSync(InvoiceCredits)(
+      await (await get(`${path}/credits`)).json(),
     );
     expect(
       (
@@ -113,7 +127,7 @@ it('protects global financial lists and returns only persisted invoice entries a
     });
     expect(notes).toHaveLength(1);
     expect(notes[0]).toMatchObject({
-      id: credit.creditNote?.id,
+      id: credit.creditNotes[0]?.id,
       totalCents: invoice.currentRevision.totalCents,
     });
     expect(refunds).toHaveLength(1);

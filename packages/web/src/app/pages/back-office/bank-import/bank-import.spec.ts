@@ -2,6 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { Router } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
 import { BankImport } from './bank-import';
+import { DefaultBankCsvConfiguration } from '@froment/contracts';
 import {
   bankField,
   bankPreview,
@@ -29,7 +30,7 @@ describe('Bank import task', () => {
   it('validates all data before confirmation and reports authoritative import counts', async () => {
     const { api } = setupBankWorkspace();
     const harness = await RouterTestingHarness.create();
-    await harness.navigateByUrl('/backoffice/banque/importer', BankImport);
+    await harness.navigateByUrl('/backoffice/banking/import', BankImport);
     await harness.fixture.whenStable();
     const root = bankRoot(harness);
     bankSubmit(root);
@@ -44,7 +45,9 @@ describe('Bank import task', () => {
     await harness.fixture.whenStable();
     expect(api.previewStatement).toHaveBeenCalledWith({
       account: 'Compte local',
-      csv: csv.slice(1),
+      format: 'csv',
+      csvConfiguration: DefaultBankCsvConfiguration,
+      content: csv.slice(1),
     });
     expect(api.importStatement).not.toHaveBeenCalled();
     expect(root.textContent).toContain('Règlement\nclient');
@@ -52,7 +55,9 @@ describe('Bank import task', () => {
     await harness.fixture.whenStable();
     expect(api.importStatement).toHaveBeenCalledWith({
       account: 'Compte local',
-      csv: csv.slice(1),
+      format: 'csv',
+      csvConfiguration: DefaultBankCsvConfiguration,
+      content: csv.slice(1),
     });
     expect(root.textContent).toContain('1 ajoutée(s)');
     expect(root.querySelector('input[type="file"]')).toBeNull();
@@ -60,7 +65,7 @@ describe('Bank import task', () => {
   it('rejects invalid UTF-8 and preserves the selected file when navigation is refused', async () => {
     const { confirmation, api } = setupBankWorkspace();
     const harness = await RouterTestingHarness.create();
-    await harness.navigateByUrl('/backoffice/banque/importer', BankImport);
+    await harness.navigateByUrl('/backoffice/banking/import', BankImport);
     await harness.fixture.whenStable();
     const root = bankRoot(harness);
     chooseFile(root, new Uint8Array([0xff, 0xff]));
@@ -71,8 +76,8 @@ describe('Bank import task', () => {
     chooseFile(root, new TextEncoder().encode(csv));
     await harness.fixture.whenStable();
     confirmation.request.mockResolvedValue(false);
-    await harness.navigateByUrl('/backoffice/banque');
-    expect(TestBed.inject(Router).url).toBe('/backoffice/banque/importer');
+    await harness.navigateByUrl('/backoffice/banking');
+    expect(TestBed.inject(Router).url).toBe('/backoffice/banking/import');
     const event = new Event('beforeunload', { cancelable: true });
     window.dispatchEvent(event);
     expect(event.defaultPrevented).toBe(true);
@@ -80,7 +85,7 @@ describe('Bank import task', () => {
   it('ignores a late file read after another file was selected', async () => {
     const { api } = setupBankWorkspace();
     const harness = await RouterTestingHarness.create();
-    await harness.navigateByUrl('/backoffice/banque/importer', BankImport);
+    await harness.navigateByUrl('/backoffice/banking/import', BankImport);
     await harness.fixture.whenStable();
     const root = bankRoot(harness);
     bankField(root, '#bank-account', 'Compte local');
@@ -98,7 +103,9 @@ describe('Bank import task', () => {
     await harness.fixture.whenStable();
     expect(api.previewStatement).toHaveBeenCalledWith({
       account: 'Compte local',
-      csv: csv.slice(1),
+      format: 'csv',
+      csvConfiguration: DefaultBankCsvConfiguration,
+      content: csv.slice(1),
     });
   });
   it('sorts the preview without changing its request or the transaction list sort', async () => {
@@ -115,7 +122,7 @@ describe('Bank import task', () => {
     });
     const harness = await RouterTestingHarness.create();
     await harness.navigateByUrl(
-      '/backoffice/banque/importer?sort=reference-desc&previewSort=invalid&q=reglement&account=MAIN',
+      '/backoffice/banking/import?sort=reference-desc&previewSort=invalid&q=reglement&account=MAIN',
       BankImport,
     );
     await harness.fixture.whenStable();
@@ -152,6 +159,11 @@ describe('Bank import task', () => {
     expect(api.previewStatement).toHaveBeenCalledTimes(1);
     root.querySelector<HTMLButtonElement>('.actions button[variant="primary"]')?.click();
     await harness.fixture.whenStable();
-    expect(api.importStatement).toHaveBeenCalledWith({ account: 'MAIN', csv: csv.slice(1) });
+    expect(api.importStatement).toHaveBeenCalledWith({
+      account: 'MAIN',
+      format: 'csv',
+      csvConfiguration: DefaultBankCsvConfiguration,
+      content: csv.slice(1),
+    });
   });
 });

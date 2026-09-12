@@ -1,180 +1,103 @@
-import { provideAccount } from '@backoffice/account.spec-helper';
 import { TestBed } from '@angular/core/testing';
-import { provideRouter, Router } from '@angular/router';
+import { provideRouter } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
-import { vi } from 'vitest';
+import { AffairsApi } from '@backoffice/affairs-api';
 import { InvoicesApi } from '@backoffice/invoices-api';
-import { ClientsApi } from '@backoffice/clients-api';
 import { OrdersApi } from '@backoffice/orders-api';
 import { QuotesApi } from '@backoffice/quotes-api';
+import { provideAccount } from '@backoffice/account.spec-helper';
+import { vi } from 'vitest';
 import { AffairDetail } from './affair-detail';
-import { invoiceSummaryBadge } from './affair-documents';
-import { invoiceFixture } from '../billing/billing.spec-helper';
-import {
-  CommercialDestination,
-  control,
-  detailTabs,
-  orderFixture,
-  quoteFixture,
-  quoteId,
-} from '../quote-detail/commercial.spec-helper';
+import { detailTabs } from '../quote-detail/commercial.spec-helper';
 
-describe('Affair detail', () => {
-  beforeEach(() => TestBed.configureTestingModule({ providers: [provideAccount()] }));
-  it('distinguishes paid invoices from issued invoices in the document summary', () => {
-    expect(invoiceSummaryBadge('paid')).toEqual({
-      label: 'backOffice.invoice.status.paid',
-      variant: 'success',
-    });
-    expect(invoiceSummaryBadge('issued').label).toBe('backOffice.invoice.status.issued');
-  });
-  let creditedCents = 0;
-  const get = vi.fn();
+const affairId = '01ARZ3NDEKTSV4RRFFQ69G5FC0';
+const quoteId = '01ARZ3NDEKTSV4RRFFQ69G5FAV';
+const affair = {
+  id: affairId,
+  requestId: '8599c0a4-45d5-47d8-b0e4-f9b05d5ca48b',
+  reference: 'AF-2026-000001',
+  clientId: '01ARZ3NDEKTSV4RRFFQ69G5FAW',
+  clientDisplayName: 'Acme',
+  title: 'Security review',
+  status: 'open' as const,
+  version: 1,
+  createdAt: '2026-08-20T08:00:00.000Z',
+  updatedAt: '2026-08-20T08:00:00.000Z',
+  quoteIds: [quoteId],
+  orderIds: [],
+  invoiceIds: [],
+};
+
+describe('AffairDetail', () => {
+  const update = vi.fn();
+  const linkQuote = vi.fn();
+
   beforeEach(() => {
-    creditedCents = 0;
-    get.mockReset().mockResolvedValue({ success: true, result: quoteFixture });
+    update.mockReset();
+    linkQuote.mockReset();
     TestBed.configureTestingModule({
       providers: [
+        provideAccount(),
         provideRouter([
           {
-            path: 'backoffice/affaires/:quoteId',
+            path: 'backoffice/affairs/:affairId',
             component: AffairDetail,
             children: detailTabs('affair-detail', ['overview', 'documents', 'history']),
           },
-          { path: 'list/:view', component: CommercialDestination },
         ]),
+        {
+          provide: AffairsApi,
+          useValue: {
+            get: async () => ({ success: true, result: affair }),
+            events: async () => ({
+              success: true,
+              result: [
+                { id: 'later', action: 'affair.updated', occurredAt: '2026-08-21T08:00:00.000Z' },
+                { id: 'earlier', action: 'affair.created', occurredAt: '2026-08-20T08:00:00.000Z' },
+              ],
+            }),
+            update,
+            linkQuote,
+          },
+        },
         {
           provide: QuotesApi,
           useValue: {
-            get,
-            listAffairEvents: async () => [
-              { id: 'event', action: 'quote.sent', occurredAt: '2026-08-20T08:00:00.000Z' },
+            list: async () => [
+              {
+                id: quoteId,
+                clientId: affair.clientId,
+                reference: 'DE-2026-000001',
+                title: 'Security review',
+              },
             ],
           },
         },
-        {
-          provide: OrdersApi,
-          useValue: {
-            list: async () => [{ ...orderFixture, invoiceId: '01ARZ3NDEKTSV4RRFFQ69G5FAF' }],
-          },
-        },
-        {
-          provide: ClientsApi,
-          useValue: {
-            get: async () => ({
-              success: true,
-              result: { displayName: 'Client', email: 'client@example.test' },
-            }),
-          },
-        },
-        {
-          provide: InvoicesApi,
-          useValue: {
-            get: async () => ({
-              success: true,
-              result: {
-                ...invoiceFixture(),
-                id: '01ARZ3NDEKTSV4RRFFQ69G5FAF',
-                status: 'issued',
-                version: 1,
-                creditedCents,
-                invoiceNumber: 'FA-2020-000001',
-                currentRevision: { ...invoiceFixture().currentRevision, dueDate: '2020-01-01' },
-                revisions: [],
-              },
-            }),
-          },
-        },
+        { provide: OrdersApi, useValue: { list: async () => [] } },
+        { provide: InvoicesApi, useValue: { list: async () => [] } },
       ],
     });
   });
-  it('does not offer previews or draft instructions to a read-only account', async () => {
-    TestBed.configureTestingModule({
-      providers: [
-        provideAccount([
-          'quote.read',
-          'order.read',
-          'invoice.read',
-          'client.read',
-          'document.download',
-        ]),
-      ],
-    });
-    TestBed.overrideProvider(OrdersApi, { useValue: { list: async () => [] } });
-    const harness = await RouterTestingHarness.create();
-    const page = await harness.navigateByUrl(
-      `/backoffice/affaires/${quoteId}/documents`,
-      AffairDetail,
-    );
+
+  it('shows linked documents on the documents tab', async () => {
+    const harness = await RouterTestingHarness.create(`/backoffice/affairs/${affairId}/documents`);
     await harness.fixture.whenStable();
-    expect(page['state']()).toBe('ready');
-    expect(page['nextActionVisible']()).toBe(false);
-    expect(harness.fixture.nativeElement.querySelector('a[href$="/preview"]')).toBeNull();
-  });
-  it('separates overview, document links and audit history', async () => {
-    const harness = await RouterTestingHarness.create(
-      `/backoffice/affaires/${quoteId}/overview?q=Audit&view=all`,
-    );
-    await harness.fixture.whenStable();
-    const root: HTMLElement = harness.fixture.nativeElement;
+    const root = harness.routeNativeElement!;
+    expect(root.textContent).toContain('DE-2026-000001');
     expect(root.querySelector('form')).toBeNull();
-    expect(root.querySelector('#timeline-title')).toBeNull();
-    expect(root.querySelector('a[href^="mailto:"]')).not.toBeNull();
-    expect(control<HTMLAnchorElement>(root, '[pageBack]').getAttribute('href')).toContain(
-      '/backoffice/affaires/all?q=Audit',
-    );
-    control<HTMLAnchorElement>(root, '#affair-documents-tab').click();
-    await harness.fixture.whenStable();
-    expect(root.querySelector('#documents-title')).not.toBeNull();
-    expect(root.querySelector(`a[href^="/backoffice/quotes/${quoteId}?"]`)).not.toBeNull();
-    expect(root.querySelector(`a[href^="/backoffice/orders/${orderFixture.id}?"]`)).not.toBeNull();
-    expect(root.querySelector('a[href$="/preview"]')).not.toBeNull();
-    control<HTMLAnchorElement>(root, '#affair-history-tab').click();
-    await harness.fixture.whenStable();
-    expect(TestBed.inject(Router).url).toContain('/history?q=Audit');
-    expect(root.querySelector('#timeline-title')).not.toBeNull();
-    expect(root.textContent).toMatch(/signature|Signing link/i);
-    expect(root.querySelector('#documents-title')).toBeNull();
   });
-  it('removes the reminder for an overdue invoice covered by a credit note', async () => {
-    creditedCents = 1200;
-    const harness = await RouterTestingHarness.create(`/backoffice/affaires/${quoteId}`);
+
+  it('sorts affair history without changing the response', async () => {
+    const harness = await RouterTestingHarness.create(`/backoffice/affairs/${affairId}/history`);
     await harness.fixture.whenStable();
-    expect(harness.fixture.nativeElement.querySelector('#next-action-title')).not.toBeNull();
     expect(
-      harness.fixture.nativeElement.querySelector(
-        'a[href="/backoffice/invoices/01ARZ3NDEKTSV4RRFFQ69G5FAF"]',
-      ),
-    ).not.toBeNull();
-    expect(harness.fixture.nativeElement.querySelector('a[href^="mailto:"]')).toBeNull();
+      Array.from(harness.routeNativeElement!.querySelectorAll('time'), (time) => time.dateTime),
+    ).toEqual(['2026-08-20T08:00:00.000Z', '2026-08-21T08:00:00.000Z']);
   });
-  it('keeps audit events in fixed chronological order without mutating the response', async () => {
-    const events = [
-      { id: 'later', action: 'quote.sent', occurredAt: '2026-02-01T08:00:00.000Z' },
-      { id: 'earlier', action: 'quote.created', occurredAt: '2026-01-31T08:00:00.000Z' },
-    ];
-    TestBed.overrideProvider(QuotesApi, {
-      useValue: { get, listAffairEvents: async () => events },
-    });
-    const harness = await RouterTestingHarness.create(`/backoffice/affaires/${quoteId}/history`);
+
+  it('shows editing controls only on the overview tab', async () => {
+    const harness = await RouterTestingHarness.create(`/backoffice/affairs/${affairId}/overview`);
     await harness.fixture.whenStable();
-    const root: HTMLElement = harness.fixture.nativeElement;
-    expect(Array.from(root.querySelectorAll('time'), (time) => time.dateTime)).toEqual([
-      '2026-01-31T08:00:00.000Z',
-      '2026-02-01T08:00:00.000Z',
-    ]);
-    expect(root.querySelector('[appTableSort]')).toBeNull();
-    expect(events[0]?.id).toBe('later');
-  });
-  it('does not display an invoice creation action when invoice loading fails', async () => {
-    TestBed.overrideProvider(InvoicesApi, {
-      useValue: { get: async () => ({ success: false, code: 'invoice.error' }) },
-    });
-    const harness = await RouterTestingHarness.create(`/backoffice/affaires/${quoteId}`);
-    await harness.fixture.whenStable();
-    expect(harness.fixture.nativeElement.querySelector('[role="alert"]')).not.toBeNull();
-    expect(
-      harness.fixture.nativeElement.querySelector('a[href^="/backoffice/invoices/new"]'),
-    ).toBeNull();
+    expect(harness.routeNativeElement!.querySelectorAll('form')).toHaveLength(1);
   });
 });

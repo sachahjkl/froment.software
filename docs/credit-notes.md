@@ -1,54 +1,60 @@
-# Avoir intégral et remboursements locaux
+# Avoirs client et remboursements locaux
 
 La fiche facture donne accès à **Avoir et remboursements**.
-Une facture émise ou payée peut recevoir un avoir intégral unique.
-L’avoir reprend exactement les lignes, les montants HT, la TVA et les parties de la révision émise.
-Il possède son propre numéro `AV-AAAA-NNNNNN`, sa date, son auteur et son motif.
+Une facture émise ou payée peut recevoir plusieurs avoirs dans la limite de ses lignes disponibles.
 
-L’émission ne modifie ni la facture, ni ses révisions, ni ses PDF.
-L’avoir est définitif : aucune route ne permet de le modifier ou de le supprimer.
-Cette version ne permet pas encore d’émettre un avoir partiel.
+## Brouillons et émission
 
-## Créance et encaissements
+Créez un avoir partiel en sélectionnant les quantités à créditer.
+Créez un avoir intégral en utilisant toutes les quantités restantes.
+Ajoutez plusieurs factures si elles utilisent le même client, la même société et la même devise.
 
-L’avoir intégral annule la créance restante.
-Les encaissements enregistrés restent visibles et ne deviennent pas des remboursements.
-Le portail client et les totaux du backoffice déduisent l’avoir du montant à recouvrer.
-Les relances programmées deviennent inéligibles et les reprises de relances déjà préparées sont bloquées.
-Un nouveau règlement et l’annulation directe de la facture sont refusés après émission de l’avoir.
+Chaque enregistrement conserve toutes ses versions.
+Une ancienne version reste disponible en lecture seule.
+Le brouillon courant reste modifiable.
 
-Le statut historique de la facture reste inchangé.
-Le champ `creditedCents` distingue la réduction de créance d’un paiement.
-Une ancienne déclaration « payée » sans encaissement enregistré ne crée aucun montant remboursable.
+L’émission attribue le numéro `AV-AAAA-NNNNNN`.
+Elle fige le motif, les lignes, les montants, l’auteur et la date.
+Le serveur contrôle de nouveau chaque quantité pendant l’émission.
+Il refuse les crédits cumulés supérieurs à la quantité de la ligne source.
+
+L’émission ne modifie pas les factures, leurs révisions ou leurs PDF.
+
+## Créance client
+
+Le portail client et le backoffice déduisent les avoirs émis du montant à recouvrer.
+Un avoir sur une facture payée crée une dette client égale au trop-perçu.
+Un avoir sur une facture partiellement payée crée seulement la dette qui dépasse le solde restant.
+
+Les encaissements enregistrés restent visibles.
+Un encaissement peut compléter le solde restant après un avoir partiel.
+Les relances et les paiements en ligne utilisent ce solde net.
 
 ## Remboursements
 
 Enregistrez uniquement un remboursement déjà effectué en dehors de l’application.
 Saisissez son montant, sa date et sa référence.
-Le serveur refuse les montants supérieurs aux encaissements actifs encore disponibles.
-Il refuse les dates futures et les dates antérieures à l’avoir.
+Le serveur refuse un montant supérieur à la dette client disponible.
+Il refuse une date future ou antérieure au premier avoir émis.
 
 Chaque remboursement conserve son auteur et sa date d’enregistrement.
 Une correction annule l’enregistrement avec un motif, sans le supprimer.
 La correction ne récupère aucun fonds.
-L’application refuse l’annulation d’un encaissement qui rend les remboursements actifs supérieurs aux encaissements restants.
 
-Les clés UUID stables empêchent les doublons lors des nouvelles tentatives.
-Une nouvelle tentative ne réactive pas un remboursement dont l’enregistrement a été annulé.
-Les transactions SQLite empêchent deux remboursements concurrents de consommer le même solde.
+Les clés UUID stables empêchent les doublons pendant les nouvelles tentatives.
+Les transactions SQLite protègent le solde remboursable contre les demandes concurrentes.
 
 ## Documents et accès
 
-Le premier téléchargement génère le PDF de l’avoir depuis les données immuables.
-Les téléchargements suivants réutilisent le PDF conservé et contrôlent son empreinte SHA-256.
-Les PDF utilisent le stockage documentaire existant.
-Le client peut télécharger seulement l’avoir de sa propre facture.
+Le premier téléchargement génère le PDF depuis la version émise.
+Les téléchargements suivants contrôlent et réutilisent l’artefact immuable.
+Un avoir consolidé indique toutes les factures sources.
+Le client peut télécharger seulement un avoir lié à son compte.
 
-- `invoice.credit` permet d’émettre l’avoir.
-- `invoice.refund` permet d’enregistrer et de corriger les remboursements.
-- `invoice.read` permet de consulter l’avoir et les remboursements.
-- Le téléchargement interne exige aussi `document.download`.
-- Les permissions d’émission et de remboursement sont attribuées aux administrateurs existants, pas aux jetons API ni aux profils d’équipe.
+- `invoice.credit` permet de créer, modifier et émettre un avoir.
+- `invoice.refund` permet d’enregistrer et de corriger un remboursement.
+- `invoice.read` permet de consulter les avoirs et remboursements.
+- `document.download` complète l’autorisation de téléchargement interne.
 
 Aucun fournisseur externe n’est appelé.
-Aucune opération de banque, paiement ou remboursement n’est exécutée.
+Aucune opération bancaire n’est exécutée.

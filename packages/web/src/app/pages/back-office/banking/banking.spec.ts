@@ -35,7 +35,7 @@ describe('Banking transaction workspace', () => {
     ]);
     const harness = await RouterTestingHarness.create();
     await harness.navigateByUrl(
-      '/backoffice/banque?flow=credit&status=partial&q=reglement',
+      '/backoffice/banking?flow=credit&status=partial&q=reglement',
       Banking,
     );
     await harness.fixture.whenStable();
@@ -45,7 +45,7 @@ describe('Banking transaction workspace', () => {
     expect(bankRoot(harness).querySelector('tbody a')?.getAttribute('href')).toContain(
       '/transactions/',
     );
-    await harness.navigateByUrl('/backoffice/banque?flow=debit', Banking);
+    await harness.navigateByUrl('/backoffice/banking?flow=debit', Banking);
     await harness.fixture.whenStable();
     expect(bankRoot(harness).textContent).toContain('Sans rapprochement');
     expect(bankRoot(harness).textContent).not.toContain('Partiellement rapproché');
@@ -54,7 +54,7 @@ describe('Banking transaction workspace', () => {
   it('keeps search in the URL and renders no matches separately from an empty account', async () => {
     setupBankWorkspace();
     const harness = await RouterTestingHarness.create();
-    await harness.navigateByUrl('/backoffice/banque', Banking);
+    await harness.navigateByUrl('/backoffice/banking', Banking);
     await harness.fixture.whenStable();
     bankField(bankRoot(harness), 'input[type="search"]', 'absent-zzzz');
     await harness.fixture.whenStable();
@@ -68,7 +68,7 @@ describe('Banking transaction workspace', () => {
     const { api } = setupBankWorkspace();
     api.list.mockRejectedValueOnce(new Error('offline'));
     const harness = await RouterTestingHarness.create();
-    await harness.navigateByUrl('/backoffice/banque', Banking);
+    await harness.navigateByUrl('/backoffice/banking', Banking);
     await harness.fixture.whenStable();
     expect(bankRoot(harness).querySelector('[role="alert"]')).not.toBeNull();
     [...bankRoot(harness).querySelectorAll<HTMLButtonElement>('button[appButton]')]
@@ -90,7 +90,7 @@ describe('Banking transaction workspace', () => {
       },
     ]);
     const harness = await RouterTestingHarness.create();
-    await harness.navigateByUrl('/backoffice/banque?sort=invalid', Banking);
+    await harness.navigateByUrl('/backoffice/banking?sort=invalid', Banking);
     await harness.fixture.whenStable();
     expect(bankSortHeader(bankRoot(harness), 'Date').getAttribute('aria-sort')).toBe('none');
     expect(bankRoot(harness).textContent).toContain('2 transactions affichées');
@@ -160,7 +160,7 @@ describe('Banking transaction workspace', () => {
       { ...bankTransaction, id: otherBankId, account: 'main', reference: 'LOWER' },
     ]);
     const harness = await RouterTestingHarness.create();
-    await harness.navigateByUrl('/backoffice/banque?sort=amount-desc', Banking);
+    await harness.navigateByUrl('/backoffice/banking?sort=amount-desc', Banking);
     await harness.fixture.whenStable();
     const trigger = bankRoot(harness).querySelector<HTMLButtonElement>('app-filter-menu > button');
     if (!trigger) throw new Error('bank.test.filter_trigger_missing');
@@ -229,7 +229,7 @@ describe('Banking transaction workspace', () => {
     api.list.mockResolvedValue([{ ...bankTransaction, account: 'MAIN' }]);
     const harness = await RouterTestingHarness.create();
     await harness.navigateByUrl(
-      '/backoffice/banque?account=MAIN&flow=credit&sort=amount-asc',
+      '/backoffice/banking?account=MAIN&flow=credit&sort=amount-asc',
       Banking,
     );
     await harness.fixture.whenStable();

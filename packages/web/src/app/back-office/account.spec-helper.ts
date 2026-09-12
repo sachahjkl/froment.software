@@ -12,6 +12,7 @@ export const accountFixture = (permissions: readonly PermissionCodeValue[] = Per
     email: 'account@example.test',
     mode: 'administrator',
     permissions,
+    enabledModules: ['sales', 'purchasing', 'banking', 'accounting', 'tax', 'ai', 'demonstration'],
   });
   const authentication = {
     account: account.asReadonly(),

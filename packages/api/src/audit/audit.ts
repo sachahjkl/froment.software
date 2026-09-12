@@ -109,7 +109,7 @@ export const AuditLive = Layer.effect(
       return id;
     };
 
-    const listAffair = Effect.fn('Audit.listAffair')(function* (quoteId: UlidValue) {
+    const listAffair = Effect.fn('Audit.listAffair')(function* (affairId: UlidValue) {
       return yield* Effect.try({
         try: () =>
           database.sqlite
@@ -119,15 +119,19 @@ export const AuditLive = Layer.effect(
                        request_id as requestId, trace_id as traceId, span_id as spanId,
                       occurred_at as occurredAt, metadata
                from audit_events
-               where (resource_type = 'quote' and resource_id = ?)
-                  or (resource_type = 'invoice' and resource_id in (
-                    select invoices.id from invoices
-                    join orders on orders.id = invoices.order_id
-                    where orders.quote_id = ?
+               where (resource_type = 'affair' and resource_id = ?)
+                  or (resource_type = 'quote' and resource_id in (
+                    select quote_id from affair_quotes where affair_id = ?
                   ))
+                   or (resource_type = 'invoice' and resource_id in (
+                     select invoices.id from invoices
+                     join orders on orders.id = invoices.order_id
+                     join affair_quotes on affair_quotes.quote_id = orders.quote_id
+                     where affair_quotes.affair_id = ?
+                   ))
                order by occurred_at, id`,
             )
-            .all(quoteId, quoteId)
+            .all(affairId, affairId, affairId)
             .map((row) => {
               const value = Schema.decodeUnknownSync(
                 Schema.Struct({

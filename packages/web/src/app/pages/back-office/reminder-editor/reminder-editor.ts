@@ -278,6 +278,6 @@ export class ReminderEditor {
     } finally {
       this.busy.set(false);
     }
-    if (this.completed()) await this.router.navigate(['/backoffice/courriels/reminders']);
+    if (this.completed()) await this.router.navigate(['/backoffice/emails/reminders']);
   }
 }

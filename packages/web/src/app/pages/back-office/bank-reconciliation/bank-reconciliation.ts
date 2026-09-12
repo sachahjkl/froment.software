@@ -31,9 +31,12 @@ import {
   type BankAllocation,
   type BankMatchHistory,
   type BankMatchRequest,
+  type BankMatchSuggestionList,
   type BankPaymentList,
   type BankTransactionValue,
   type InvoiceListValue,
+  type SupplierBankMatchList,
+  type SupplierBankPaymentList,
 } from '@froment/contracts';
 import { Schema } from 'effect';
 import { formatMoney } from '@froment/l10n';
@@ -120,6 +123,10 @@ export class BankReconciliation {
   protected readonly payments = signal<typeof BankPaymentList.Type>([]);
   protected readonly paymentState = signal<'idle' | 'loading' | 'ready' | 'error'>('idle');
   protected readonly history = signal<typeof BankMatchHistory.Type>([]);
+  protected readonly suggestions = signal<typeof BankMatchSuggestionList.Type>([]);
+  protected readonly supplierPayments = signal<typeof SupplierBankPaymentList.Type>([]);
+  protected readonly supplierMatches = signal<typeof SupplierBankMatchList.Type>([]);
+  protected readonly suggestionState = signal<'loading' | 'ready' | 'error'>('loading');
   protected readonly allocationColumns = allocationColumns;
   protected readonly historyColumns = historyColumns;
   protected readonly allocationSort = computed(() =>
@@ -239,6 +246,10 @@ export class BankReconciliation {
     this.error.set(undefined);
     this.saved.set(false);
     this.transaction.set(undefined);
+    this.suggestions.set([]);
+    this.supplierPayments.set([]);
+    this.supplierMatches.set([]);
+    this.suggestionState.set('loading');
     this.payments.set([]);
     this.paymentState.set('idle');
     this.cancelling.set(undefined);
@@ -264,13 +275,108 @@ export class BankReconciliation {
       this.transaction.set(outcome.result);
       this.resetMatch();
       this.state.set('ready');
-      await Promise.all([this.loadHistory(), this.loadInvoices()]);
+      const relatedLoads = [this.loadHistory(), this.loadInvoices(), this.loadSuggestions(id)];
+      if (outcome.result.amountCents < 0) relatedLoads.push(this.loadSupplierPayments(id));
+      await Promise.all(relatedLoads);
     } catch {
       if (generation === this.generation && !this.destroyRef.destroyed) {
         this.error.set('bank.error');
         this.state.set('error');
       }
     }
+  }
+  private async loadSuggestions(transactionId: string): Promise<void> {
+    try {
+      const outcome = await this.api.suggestions(transactionId);
+      if (this.transaction()?.id !== transactionId || this.destroyRef.destroyed) return;
+      if (!outcome.success) {
+        this.suggestionState.set('error');
+        return;
+      }
+      this.suggestions.set(outcome.result);
+      this.suggestionState.set('ready');
+    } catch {
+      if (this.transaction()?.id === transactionId && !this.destroyRef.destroyed)
+        this.suggestionState.set('error');
+    }
+  }
+  private async loadSupplierPayments(transactionId: string): Promise<void> {
+    const [payments, matches] = await Promise.all([
+      this.api.supplierPayments(transactionId),
+      this.api.supplierMatches(transactionId),
+    ]);
+    if (this.transaction()?.id !== transactionId || this.destroyRef.destroyed) return;
+    if (payments.success) this.supplierPayments.set(payments.result);
+    if (matches.success) this.supplierMatches.set(matches.result);
+  }
+  protected async matchSupplier(
+    payment: (typeof SupplierBankPaymentList.Type)[number],
+  ): Promise<void> {
+    const transaction = this.transaction();
+    if (transaction === undefined || this.busy()) return;
+    const confirmed = await this.confirmation.request(this.i18n.t('bankWorkspace.supplierConfirm'));
+    if (!confirmed) return;
+    this.busy.set(true);
+    const amountCents = Math.min(payment.availableCents, -transaction.amountCents);
+    try {
+      const outcome = await this.api.matchSupplier(transaction.id, {
+        requestId: crypto.randomUUID(),
+        batchId: payment.batchId,
+        invoiceId: payment.invoiceId,
+        amountCents,
+      });
+      if (!outcome.success) this.error.set(outcome.code);
+      else {
+        this.supplierPayments.set(outcome.result);
+        await this.loadSupplierPayments(transaction.id);
+        this.saved.set(true);
+      }
+    } catch {
+      this.error.set('bank.error');
+    } finally {
+      this.busy.set(false);
+    }
+  }
+  protected async unmatchSupplier(
+    match: (typeof SupplierBankMatchList.Type)[number],
+  ): Promise<void> {
+    const transaction = this.transaction();
+    if (transaction === undefined || this.busy()) return;
+    const confirmed = await this.confirmation.request(
+      this.i18n.t('bankWorkspace.supplierUnmatchConfirm'),
+    );
+    if (!confirmed) return;
+    this.busy.set(true);
+    try {
+      const outcome = await this.api.unmatchSupplier(
+        transaction.id,
+        match.id,
+        this.i18n.t('bankWorkspace.supplierUnmatchReason'),
+      );
+      if (!outcome.success) this.error.set(outcome.code);
+      else {
+        this.supplierPayments.set(outcome.result);
+        await this.loadSupplierPayments(transaction.id);
+        this.saved.set(true);
+      }
+    } catch {
+      this.error.set('bank.error');
+    } finally {
+      this.busy.set(false);
+    }
+  }
+  protected async applySuggestion(
+    suggestion: (typeof BankMatchSuggestionList.Type)[number],
+  ): Promise<void> {
+    await this.selectInvoice(suggestion.invoiceId);
+    if (!this.payments().some((payment) => payment.id === suggestion.paymentId)) return;
+    this.model.update((model) => ({
+      ...model,
+      invoiceId: suggestion.invoiceId,
+      paymentId: suggestion.paymentId,
+      amount: formatFixedDecimal(suggestion.amountCents, 2),
+      fee: '0.00',
+    }));
   }
   protected async loadInvoices(): Promise<void> {
     if (!this.authentication.can('bank.reconcile') || !this.authentication.can('invoice.read'))
@@ -560,7 +666,8 @@ export class BankReconciliation {
     });
   }
   protected money(cents: number): string {
-    return formatMoney(cents, this.i18n.language(), 'EUR');
+    const currency = this.transaction()?.currency ?? 'EUR';
+    return formatMoney(cents, this.i18n.language(), currency);
   }
   private dirty(): boolean {
     return (

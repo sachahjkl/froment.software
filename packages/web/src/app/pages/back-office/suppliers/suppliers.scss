@@ -1,0 +1,22 @@
+@use "shared/page-header/detail-page";
+
+.suppliers-page {
+  max-width: 80rem;
+  margin-inline: auto;
+}
+
+.list-controls {
+  display: flex;
+  align-items: end;
+  margin-block-end: var(--space-4);
+}
+
+.list-controls .field {
+  flex: 1;
+  max-width: 32rem;
+}
+
+.result-count {
+  margin-block: var(--space-3) 0;
+  color: var(--color-text-muted);
+}

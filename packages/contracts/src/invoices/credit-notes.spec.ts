@@ -17,14 +17,16 @@ describe('credit conflict contracts', () => {
     expect(Schema.decodeUnknownSync(InvoiceCreditFailure)(encoded)).toEqual(failure);
   });
 
-  it('declares both conflicts as HTTP 409 responses on all three mutation endpoints', () => {
+  it('declares both conflicts as HTTP 409 responses on all credit and refund mutations', () => {
     const specification = OpenApi.fromApi(Api);
-    for (const path of [
-      '/api/invoices/{invoiceId}/credits',
-      '/api/invoices/{invoiceId}/refunds',
-      '/api/invoices/{invoiceId}/refunds/{refundId}/cancel',
-    ]) {
-      expect(specification.paths[path]?.post?.responses['409']).toMatchObject({
+    for (const [path, method] of [
+      ['/api/credit-notes', 'post'],
+      ['/api/credit-notes/{creditNoteId}', 'put'],
+      ['/api/credit-notes/{creditNoteId}/issue', 'post'],
+      ['/api/invoices/{invoiceId}/refunds', 'post'],
+      ['/api/invoices/{invoiceId}/refunds/{refundId}/cancel', 'post'],
+    ] as const) {
+      expect(specification.paths[path]?.[method]?.responses['409']).toMatchObject({
         content: {
           'application/json': {
             schema: {

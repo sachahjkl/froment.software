@@ -62,7 +62,11 @@ export interface HttpTestServer {
 }
 
 export const startHttpTestServer = async (
-  options: { readonly stripeWebhookSecret?: string; readonly auditPageSize?: number } = {},
+  options: {
+    readonly stripeWebhookSecret?: string;
+    readonly auditPageSize?: number;
+    readonly settingsEncryptionKey?: string;
+  } = {},
 ): Promise<HttpTestServer> => {
   const staticRoot = await mkdtemp(join(tmpdir(), 'froment-api-'));
   await cp(join(import.meta.dirname, '../../../web/dist/froment-software/browser'), staticRoot, {
@@ -76,6 +80,7 @@ export const startHttpTestServer = async (
     STRIPE_SECRET_KEY: '',
     STRIPE_WEBHOOK_SECRET: options.stripeWebhookSecret ?? '',
     SIGNWELL_API_KEY: '',
+    SETTINGS_ENCRYPTION_KEY: options.settingsEncryptionKey ?? '',
     SUPERPDP_CLIENT_ID: '',
     SUPERPDP_CLIENT_SECRET: '',
     API_TOKEN_HMAC_KEY: 'DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD',
@@ -162,6 +167,7 @@ export const createClient = async (server: HttpTestServer, displayName = 'HTTP c
       city: 'Paris',
       country: 'France',
       email: `${displayName.toLowerCase().replaceAll(' ', '-')}@example.test`,
+      phone: '',
     }),
   });
   if (!response.ok) throw new Error(`Client creation failed: ${await response.text()}`);
@@ -186,6 +192,8 @@ export const setIssuer = async (server: HttpTestServer, displayName = 'Froment S
     phone: '+33 1 23 45 67 89',
     registrationNumber: '123 456 789 00012',
     vatNumber: 'FR00123456789',
+    iban: 'FR7630006000011234567890189',
+    bic: 'AGRIFRPP',
   };
   const response = await fetch(`${server.baseUrl}/api/issuer-settings`, {
     method: 'PUT',
@@ -196,12 +204,13 @@ export const setIssuer = async (server: HttpTestServer, displayName = 'Froment S
   return Schema.decodeUnknownSync(IssuerSettingsDetail)(await response.json());
 };
 
-export const createQuote = async (server: HttpTestServer, clientId: string) => {
+export const createQuote = async (server: HttpTestServer, clientId: string, currency = 'EUR') => {
   const response = await fetch(`${server.baseUrl}/api/quotes`, {
     method: 'POST',
     headers: server.jsonHeaders,
     body: JSON.stringify({
       clientId,
+      currency,
       title: 'Integration quote',
       conditions: 'Payment is due within 30 days.',
       lines: [
@@ -220,7 +229,12 @@ export const createQuote = async (server: HttpTestServer, clientId: string) => {
     id: string;
     reference: string;
     version: number;
-    currentRevision: { id: string; lines: ReadonlyArray<object>; totalCents: number };
+    currentRevision: {
+      id: string;
+      currency: string;
+      lines: ReadonlyArray<object>;
+      totalCents: number;
+    };
   };
 };
 

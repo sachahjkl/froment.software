@@ -1,0 +1,24 @@
+@use "shared/page-header/detail-page";
+
+.detail-grid {
+  display: grid;
+  gap: var(--space-4);
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr));
+}
+
+dl,
+address {
+  margin: 0;
+}
+
+dl div + div {
+  margin-block-start: var(--space-3);
+}
+
+dt {
+  color: var(--color-text-muted);
+}
+
+dd {
+  margin: var(--space-1) 0 0;
+}

@@ -188,6 +188,43 @@
         }
       </label>
     </fieldset>
+    <fieldset class="field-grid ds-panel">
+      <legend>{{ i18n.t('backOffice.issuer.paymentAccount') }}</legend>
+      <label class="field wide" for="issuer-iban">
+        {{ i18n.t('backOffice.issuer.iban') }}
+        <input
+          id="issuer-iban"
+          class="input"
+          type="text"
+          autocomplete="off"
+          aria-describedby="issuer-iban-error"
+          [attr.aria-invalid]="invalid('iban')"
+          [formField]="settingsForm.iban"
+        />
+        @if (invalid('iban')) {
+        <span id="issuer-iban-error" class="field-error"
+          >{{ i18n.t('backOffice.issuer.ibanInvalid') }}</span
+        >
+        }
+      </label>
+      <label class="field" for="issuer-bic">
+        {{ i18n.t('backOffice.issuer.bic') }}
+        <input
+          id="issuer-bic"
+          class="input"
+          type="text"
+          autocomplete="off"
+          aria-describedby="issuer-bic-error"
+          [attr.aria-invalid]="invalid('bic')"
+          [formField]="settingsForm.bic"
+        />
+        @if (invalid('bic')) {
+        <span id="issuer-bic-error" class="field-error"
+          >{{ i18n.t('backOffice.issuer.bicInvalid') }}</span
+        >
+        }
+      </label>
+    </fieldset>
     <div class="actions">
       <button
         *appCan="'issuer.update'"

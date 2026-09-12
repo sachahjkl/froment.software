@@ -31,7 +31,7 @@ describe('Bank ledger workspace', () => {
     });
     const harness = await RouterTestingHarness.create();
     await harness.navigateByUrl(
-      '/backoffice/banque/ecritures?from=2026-09-01&to=2026-09-30&view=journal&q=REFERENCE-CONSERVEE',
+      '/backoffice/banking/ledger?from=2026-09-01&to=2026-09-30&view=journal&q=REFERENCE-CONSERVEE',
       BankLedger,
     );
     await harness.fixture.whenStable();
@@ -50,14 +50,14 @@ describe('Bank ledger workspace', () => {
     });
     const harness = await RouterTestingHarness.create();
     await harness.navigateByUrl(
-      '/backoffice/banque/ecritures?from=2026-09-01&to=2026-09-30',
+      '/backoffice/banking/ledger?from=2026-09-01&to=2026-09-30',
       BankLedger,
     );
     await harness.fixture.whenStable();
     expect(ledger.list).toHaveBeenCalledWith({ from: '2026-09-01', to: '2026-09-30' });
     expect(bankRoot(harness).querySelectorAll('tbody tr')).toHaveLength(1);
     expect(bankRoot(harness).querySelector('tbody a')?.getAttribute('href')).toContain(
-      '/comptabiliser/debit/',
+      '/post/debit/',
     );
     expect(bankRoot(harness).querySelector('textarea')).toBeNull();
   });
@@ -65,12 +65,12 @@ describe('Bank ledger workspace', () => {
     const { ledger } = setupBankWorkspace();
     const harness = await RouterTestingHarness.create();
     await harness.navigateByUrl(
-      '/backoffice/banque/ecritures?from=2026-09-01&to=2026-09-30',
+      '/backoffice/banking/ledger?from=2026-09-01&to=2026-09-30',
       BankLedger,
     );
     await harness.fixture.whenStable();
     await harness.navigateByUrl(
-      '/backoffice/banque/ecritures?from=2026-09-01&to=2026-09-30&view=journal',
+      '/backoffice/banking/ledger?from=2026-09-01&to=2026-09-30&view=journal',
       BankLedger,
     );
     await harness.fixture.whenStable();
@@ -102,7 +102,7 @@ describe('Bank ledger workspace', () => {
     });
     const harness = await RouterTestingHarness.create();
     await harness.navigateByUrl(
-      '/backoffice/banque/ecritures?from=2026-09-01&to=2026-09-30',
+      '/backoffice/banking/ledger?from=2026-09-01&to=2026-09-30',
       BankLedger,
     );
     await harness.fixture.whenStable();
@@ -131,7 +131,7 @@ describe('Bank ledger workspace', () => {
     expect(ledger.list).toHaveBeenCalledTimes(1);
     bankRoot(harness).querySelector<HTMLAnchorElement>('tbody a')?.click();
     await harness.fixture.whenStable();
-    expect(TestBed.inject(Router).url).toContain('/comptabiliser/debit/');
+    expect(TestBed.inject(Router).url).toContain('/post/debit/');
     expect(TestBed.inject(Router).url).toContain('sort=amount-desc');
     bankRoot(harness).querySelector<HTMLAnchorElement>('a[pageBack]')!.click();
     await harness.fixture.whenStable();
@@ -174,7 +174,7 @@ describe('Bank ledger workspace', () => {
     });
     const harness = await RouterTestingHarness.create();
     await harness.navigateByUrl(
-      '/backoffice/banque/ecritures?view=journal&from=2026-09-01&to=2026-09-30&sort=reference-asc',
+      '/backoffice/banking/ledger?view=journal&from=2026-09-01&to=2026-09-30&sort=reference-asc',
       BankLedger,
     );
     await harness.fixture.whenStable();
@@ -186,7 +186,7 @@ describe('Bank ledger workspace', () => {
     expect(bankRoot(harness).querySelectorAll('thead button[appTableSort]')).toHaveLength(7);
     bankRoot(harness).querySelector<HTMLAnchorElement>('tbody a')?.click();
     await harness.fixture.whenStable();
-    expect(TestBed.inject(Router).url).toContain('/contrepasser');
+    expect(TestBed.inject(Router).url).toContain('/reverse');
     expect(TestBed.inject(Router).url).toContain('sort=reference-asc');
     bankRoot(harness).querySelector<HTMLAnchorElement>('a[pageBack]')!.click();
     await harness.fixture.whenStable();
@@ -229,7 +229,7 @@ describe('Bank ledger workspace', () => {
     const { ledger } = setupBankWorkspace();
     const harness = await RouterTestingHarness.create();
     await harness.navigateByUrl(
-      '/backoffice/banque/ecritures?view=journal&from=2026-09-01&to=2026-09-30&q=DEBIT-1&sort=reference-asc',
+      '/backoffice/banking/ledger?view=journal&from=2026-09-01&to=2026-09-30&q=DEBIT-1&sort=reference-asc',
       BankLedger,
     );
     await harness.fixture.whenStable();

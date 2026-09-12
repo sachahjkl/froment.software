@@ -2,8 +2,15 @@ import { Schema } from 'effect';
 import { AccountEmail, AccountPassword } from '../authentication/contracts.js';
 import { Ulid } from '../identifiers.js';
 import { PermissionCode } from '../permissions.js';
+import { CustomRole } from '../roles/contracts.js';
 
-export const TeamProfile = Schema.Literals(['collaborator', 'accountant']);
+export const CustomTeamProfile = Schema.String.check(
+  Schema.isPattern(/^custom:[0-7][0-9A-HJKMNP-TV-Z]{25}$/),
+);
+export const TeamProfile = Schema.Union([
+  Schema.Literals(['collaborator', 'accountant', 'accounting-validator', 'accounting-reader']),
+  CustomTeamProfile,
+]);
 export const TeamProfilePermissions = {
   accountant: [
     'ledger.read',
@@ -17,6 +24,48 @@ export const TeamProfilePermissions = {
     'document.download',
     'catalog.read',
     'condition.read',
+    'company.read',
+    'company.update',
+    'role.read',
+    'supplier.read',
+    'supplier.create',
+    'supplier.update',
+    'supplier.archive',
+    'supplier-invoice.read',
+    'supplier-invoice.create',
+    'supplier-invoice.update',
+    'supplier-invoice.approve',
+    'supplier-invoice.analyze',
+    'supplier-invoice.pay',
+    'accounting.read',
+    'accounting.write',
+    'accounting.validate',
+    'accounting.close',
+    'accounting.export',
+    'accounting.evidence',
+  ],
+  'accounting-validator': [
+    'company.read',
+    'supplier.read',
+    'supplier-invoice.read',
+    'invoice.read',
+    'bank.read',
+    'document.download',
+    'accounting.read',
+    'accounting.write',
+    'accounting.validate',
+    'accounting.export',
+    'accounting.evidence',
+  ],
+  'accounting-reader': [
+    'company.read',
+    'supplier.read',
+    'supplier-invoice.read',
+    'invoice.read',
+    'bank.read',
+    'document.download',
+    'accounting.read',
+    'accounting.export',
   ],
   collaborator: [
     'client.read',
@@ -43,6 +92,13 @@ export const TeamProfilePermissions = {
     'email.draft.manage',
     'document.render',
     'integration.manage',
+    'company.read',
+    'role.read',
+    'supplier.read',
+    'supplier-invoice.read',
+    'supplier-invoice.create',
+    'supplier-invoice.update',
+    'supplier-invoice.analyze',
   ],
 } as const satisfies Record<typeof TeamProfile.Type, ReadonlyArray<typeof PermissionCode.Type>>;
 export const TeamInvitationId = Schema.String.check(Schema.isUUID(4));
@@ -83,6 +139,7 @@ export const TeamMemberUpdate = Schema.Struct({
 export const TeamList = Schema.Struct({
   members: Schema.Array(TeamMember),
   invitations: Schema.Array(TeamInvitation),
+  roles: Schema.Array(CustomRole),
 });
 export class TeamConflict extends Schema.TaggedError<TeamConflict>()(
   'TeamConflict',
@@ -95,6 +152,8 @@ export class TeamConflict extends Schema.TaggedError<TeamConflict>()(
       'team.invitation_changed',
       'team.invitation_inactive',
       'team.invitation_permission',
+      'team.role_unavailable',
+      'team.last_administrator',
     ]),
   },
   { httpApiStatus: 409 },

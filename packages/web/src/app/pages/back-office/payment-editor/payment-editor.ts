@@ -1,5 +1,12 @@
 import { Can } from '@backoffice/can';
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  effect,
+  inject,
+  signal,
+} from '@angular/core';
 import {
   disabled,
   form,
@@ -12,7 +19,7 @@ import {
 } from '@angular/forms/signals';
 import { CalendarDate, InvoicePaymentRequest } from '@froment/contracts';
 import { Option, Schema } from 'effect';
-import { parseFixedDecimal } from '@backoffice/quote-input';
+import { formatFixedDecimal, parseFixedDecimal } from '@backoffice/quote-input';
 import { Button } from '@shared/button/button';
 import { Notice } from '@shared/notice/notice';
 import { InvoiceTask } from '../billing/invoice-task';
@@ -42,13 +49,11 @@ export class PaymentEditor {
     return invoice ? detailBalance(invoice) : 0;
   });
   protected readonly eligible = computed(
-    () =>
-      this.task.invoice()?.status === 'issued' &&
-      this.task.invoice()?.creditedCents === 0 &&
-      this.balance() > 0,
+    () => this.task.invoice()?.status === 'issued' && this.balance() > 0,
   );
   private readonly model = signal(emptyModel());
-  private readonly baseline = JSON.stringify(this.model());
+  private baseline = JSON.stringify(this.model());
+  private initializedFullAmount = false;
   protected readonly paymentForm = form(this.model, (path) => {
     disabled(path, () => this.task.locked() || !this.eligible());
     required(path.amount);
@@ -71,6 +76,20 @@ export class PaymentEditor {
     pattern(path.reference, /\S/);
     maxLength(path.reference, 160);
   });
+  constructor() {
+    effect(() => {
+      const balance = this.balance();
+      if (
+        this.initializedFullAmount ||
+        this.task.route.snapshot.queryParamMap.get('mode') !== 'full' ||
+        balance <= 0
+      )
+        return;
+      this.initializedFullAmount = true;
+      this.model.update((model) => ({ ...model, amount: formatFixedDecimal(balance, 2) }));
+      this.baseline = JSON.stringify(this.model());
+    });
+  }
   // Date-validity animations can mark unchanged values as dirty. Keep native parse errors protected.
   protected readonly hasUnsavedChanges = computed(
     () =>

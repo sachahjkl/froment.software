@@ -88,7 +88,11 @@ export class Team {
   private readonly confirmation = inject(Confirmation);
   private readonly destroyRef = inject(DestroyRef);
   private readonly result = viewChild<ElementRef<HTMLElement>>('result');
-  protected readonly data = signal<typeof TeamList.Type>({ members: [], invitations: [] });
+  protected readonly data = signal<typeof TeamList.Type>({
+    members: [],
+    invitations: [],
+    roles: [],
+  });
   protected readonly members = createWorkspaceTable(
     computed(() => this.data().members),
     memberTableOptions,
@@ -280,6 +284,13 @@ export class Team {
     const profile = Schema.decodeUnknownOption(TeamProfile)(this.profiles()[member.id]);
     if (Option.isSome(profile))
       await this.update(member, profile.value, member.disabledAt !== null);
+  }
+  protected profileLabel(profile: typeof TeamProfile.Type): string {
+    if (profile === 'accountant') return this.i18n.t('team.accountant');
+    if (profile === 'accounting-validator') return this.i18n.t('team.accountingValidator');
+    if (profile === 'accounting-reader') return this.i18n.t('team.accountingReader');
+    if (profile === 'collaborator') return this.i18n.t('team.collaborator');
+    return this.data().roles.find(({ id }) => profile === `custom:${id}`)?.name ?? profile;
   }
   protected date(value: number): Date {
     return new Date(value);

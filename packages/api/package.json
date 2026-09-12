@@ -26,6 +26,7 @@
     "csv-parse": "7.0.2",
     "drizzle-orm": "catalog:",
     "effect": "catalog:",
+    "fast-xml-parser": "^5.11.1",
     "negotiator": "^1.1.0",
     "paseto-ts": "^2.0.7",
     "stripe": "^22.6.1",

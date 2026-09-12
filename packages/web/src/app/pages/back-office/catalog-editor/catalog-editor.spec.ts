@@ -32,16 +32,16 @@ async function configure(editing = false) {
     providers: [
       provideRouter([
         {
-          path: 'backoffice/catalogue/new',
+          path: 'backoffice/catalog/new',
           component: CatalogEditor,
           canDeactivate: [unsavedChangesGuard],
         },
         {
-          path: 'backoffice/catalogue/:itemId/edit',
+          path: 'backoffice/catalog/:itemId/edit',
           component: CatalogEditor,
           canDeactivate: [unsavedChangesGuard],
         },
-        { path: 'backoffice/catalogue/:view', component: Destination },
+        { path: 'backoffice/catalog/:view', component: Destination },
       ]),
       { provide: CatalogApi, useValue: api },
       { provide: Confirmation, useValue: confirmation },
@@ -50,8 +50,8 @@ async function configure(editing = false) {
   const harness = await RouterTestingHarness.create();
   const component = await harness.navigateByUrl(
     editing
-      ? `/backoffice/catalogue/${item.id}/edit?q=audit&sort=price-desc&view=all`
-      : '/backoffice/catalogue/new',
+      ? `/backoffice/catalog/${item.id}/edit?q=audit&sort=price-desc&view=all`
+      : '/backoffice/catalog/new',
     CatalogEditor,
   );
   await harness.fixture.whenStable();
@@ -93,7 +93,7 @@ describe('CatalogEditor', () => {
       vatRateBasisPoints: 550,
       currency: 'EUR',
     });
-    expect(router.url).toContain('/backoffice/catalogue/active');
+    expect(router.url).toContain('/backoffice/catalog/active');
   });
 
   it('validates fields and focuses the first error without disabling submission', async () => {
@@ -137,7 +137,7 @@ describe('CatalogEditor', () => {
       item.id,
       expect.objectContaining({ archived: true, expectedVersion: 3 }),
     );
-    expect(router.url).toBe('/backoffice/catalogue/all?q=audit&sort=price-desc');
+    expect(router.url).toBe('/backoffice/catalog/all?q=audit&sort=price-desc');
   });
 
   it('blocks duplicate requests, route exits and native unload during saving', async () => {
@@ -149,7 +149,7 @@ describe('CatalogEditor', () => {
     expect(api.create).toHaveBeenCalledTimes(1);
     expect(root.querySelector<HTMLInputElement>('#catalog-description')?.disabled).toBe(true);
     expect(await component.canDeactivate()).toBe(false);
-    expect(await router.navigateByUrl('/backoffice/catalogue/active')).toBe(false);
+    expect(await router.navigateByUrl('/backoffice/catalog/active')).toBe(false);
     const event = new Event('beforeunload', { cancelable: true });
     window.dispatchEvent(event);
     expect(event.defaultPrevented).toBe(true);
@@ -161,15 +161,15 @@ describe('CatalogEditor', () => {
     const event = new Event('beforeunload', { cancelable: true });
     window.dispatchEvent(event);
     expect(event.defaultPrevented).toBe(true);
-    expect(await router.navigateByUrl('/backoffice/catalogue/all')).toBe(false);
+    expect(await router.navigateByUrl('/backoffice/catalog/all')).toBe(false);
     confirmation.request.mockResolvedValue(true);
-    expect(await router.navigateByUrl('/backoffice/catalogue/all')).toBe(true);
+    expect(await router.navigateByUrl('/backoffice/catalog/all')).toBe(true);
   });
 
   it('does not turn missing records or failed loads into creation forms', async () => {
     const { api, harness, root } = await configure();
     api.list.mockRejectedValue(new Error('unavailable'));
-    await harness.navigateByUrl(`/backoffice/catalogue/${item.id}/edit`, CatalogEditor);
+    await harness.navigateByUrl(`/backoffice/catalog/${item.id}/edit`, CatalogEditor);
     await harness.fixture.whenStable();
     expect(root.querySelector('form')).toBeNull();
     api.list.mockResolvedValue([]);
@@ -187,10 +187,10 @@ describe('CatalogEditor', () => {
         finish = resolve;
       }),
     );
-    await harness.navigateByUrl(`/backoffice/catalogue/${item.id}/edit`, CatalogEditor);
+    await harness.navigateByUrl(`/backoffice/catalog/${item.id}/edit`, CatalogEditor);
     const next = { ...item, id: '01ARZ3NDEKTSV4RRFFQ69G5FAW', description: 'Next service' };
     api.list.mockResolvedValue([next]);
-    await harness.navigateByUrl(`/backoffice/catalogue/${next.id}/edit`, CatalogEditor);
+    await harness.navigateByUrl(`/backoffice/catalog/${next.id}/edit`, CatalogEditor);
     await harness.fixture.whenStable();
     finish([item]);
     await harness.fixture.whenStable();
@@ -211,7 +211,7 @@ describe('CatalogEditor', () => {
 
   it('rejects malformed IDs without making a list request', async () => {
     const { api, harness, root } = await configure();
-    await harness.navigateByUrl('/backoffice/catalogue/invalid/edit', CatalogEditor);
+    await harness.navigateByUrl('/backoffice/catalog/invalid/edit', CatalogEditor);
     await harness.fixture.whenStable();
     expect(api.list).not.toHaveBeenCalled();
     expect(root.querySelector('form')).toBeNull();
@@ -272,7 +272,7 @@ describe('CatalogEditor', () => {
     await save();
     expect(confirmation.request).toHaveBeenCalledTimes(1);
     expect(api.update).not.toHaveBeenCalled();
-    expect(await router.navigateByUrl('/backoffice/catalogue/all')).toBe(false);
+    expect(await router.navigateByUrl('/backoffice/catalog/all')).toBe(false);
     decide(false);
     await harness.fixture.whenStable();
     expect(root.querySelector<HTMLInputElement>('[type="checkbox"]')?.checked).toBe(true);

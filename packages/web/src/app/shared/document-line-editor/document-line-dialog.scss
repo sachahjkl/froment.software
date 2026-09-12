@@ -1,0 +1,27 @@
+:host {
+  display: block;
+  max-block-size: calc(100dvh - 2rem);
+  overflow: auto;
+  overscroll-behavior: contain;
+  padding: var(--space-5);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  color: var(--color-ink);
+  box-shadow: var(--shadow-page);
+}
+
+form {
+  display: grid;
+  gap: var(--space-4);
+}
+
+h2 {
+  margin: 0;
+}
+
+.dialog-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  justify-content: flex-end;
+}

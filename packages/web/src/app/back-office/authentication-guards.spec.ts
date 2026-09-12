@@ -24,6 +24,7 @@ const accountResponse = (permissions: readonly PermissionCodeValue[]) => ({
   email: 'admin@example.test',
   mode: 'administrator',
   permissions,
+  enabledModules: ['sales', 'purchasing', 'banking', 'accounting', 'tax', 'ai', 'demonstration'],
 });
 
 @Component({ template: '' })
@@ -163,6 +164,26 @@ describe('authentication guards', () => {
     if (denied instanceof UrlTree) expect(router.serializeUrl(denied)).toBe('/backoffice/account');
     route.data = {};
     expect(await runGuard(permissionsGuard, '/backoffice/clients/new')).toBeInstanceOf(UrlTree);
+  });
+  it('denies routes when their inferred or declared modules are disabled', async () => {
+    const context = accountFixture(['accounting.read', 'supplier-invoice.analyze']);
+    const account = context.account();
+    if (account === undefined) throw new Error('authentication.test.account_missing');
+    context.account.set({ ...account, enabledModules: ['sales', 'purchasing'] });
+    TestBed.configureTestingModule({ providers: [provideRouter([]), context.provider] });
+    const router = TestBed.inject(Router);
+    const route = router.routerState.snapshot.root;
+    route.data = permissionData('accounting.read');
+    expect(await runGuard(permissionsGuard, '/backoffice/accounting')).toBeInstanceOf(UrlTree);
+    route.data = {
+      ...permissionData('supplier-invoice.analyze'),
+      modules: ['purchasing', 'ai'],
+    };
+    expect(
+      await runGuard(permissionsGuard, '/backoffice/supplier-invoices/analyze'),
+    ).toBeInstanceOf(UrlTree);
+    context.account.set({ ...account, enabledModules: ['accounting', 'purchasing', 'ai'] });
+    expect(await runGuard(permissionsGuard, '/backoffice/supplier-invoices/analyze')).toBe(true);
   });
   it.each(['administrator', 'client', undefined] as const)(
     'applies the existing route policies for session mode %s',

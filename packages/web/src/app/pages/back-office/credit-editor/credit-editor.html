@@ -1,44 +1,158 @@
 <section class="detail-page form-page" aria-labelledby="credit-title">
-  <app-invoice-task-header headingId="credit-title" [heading]="i18n.t('credit.issue')" />
-  <p appNotice>{{ i18n.t('billingWorkspace.creditHint') }}</p>
-  <app-invoice-task-feedback /> @if (credits.isLoading()) {
-  <p role="status">{{ i18n.t('backOffice.invoices.loading') }}</p>
-  } @else if (task.invoice() && !creditState()) {
-  <p appNotice variant="danger" role="alert">{{ i18n.t('credit.loadError') }}</p>
-  } @else if (!task.completed() && task.invoice()) { @if (!eligible()) {
-  <p appNotice>{{ i18n.t('billingWorkspace.unavailable') }}</p>
-  } @else {
-  <form *appCan="'invoice.credit'" class="task-form ds-panel form-panel" (submit)="save($event)">
-    <label class="field"
-      >{{ i18n.t('credit.reason') }}<textarea
-        class="input"
-        rows="5"
-        [formField]="creditForm.reason"
-        [attr.aria-invalid]="creditForm.reason().invalid() && creditForm.reason().touched()"
-        aria-describedby="credit-reason-hint credit-reason-error"
-      ></textarea>
-      <small id="credit-reason-hint"
-        >{{ i18n.tf('billingWorkspace.limit', { count: 1000 }) }}</small
-      >
-      <span id="credit-reason-error" class="field-error"
-        >@if (creditForm.reason().invalid() && creditForm.reason().touched()) { {{
-        i18n.t('billingWorkspace.reasonInvalid') }} }</span
-      >
-    </label>
-    <div class="actions">
-      <button appButton type="submit" variant="primary" [disabled]="task.locked()">
-        {{ i18n.t('credit.issue') }}
-      </button>
-      @if (task.uncertain()) {
-      <button appButton type="button" [disabled]="task.busy()" (click)="retry()">
-        {{ i18n.t('billingWorkspace.retrySame') }}
-      </button>
+  <app-invoice-task-header headingId="credit-title" [heading]="i18n.t('credit.create')" />
+  <p appNotice>{{ i18n.t('credit.draftHint') }}</p>
+  <app-invoice-task-feedback />
+
+  @if (task.invoice(); as invoice) { @if (lines().length > 0) {
+  <form *appCan="'invoice.credit'" class="task-form" (submit)="$event.preventDefault(); save()">
+    <section class="ds-panel form-panel" aria-labelledby="credit-reason-title">
+      <h2 id="credit-reason-title">{{ i18n.t('credit.details') }}</h2>
+      @if (readonlyVersion()) {
+      <dl class="facts">
+        <div>
+          <dt>{{ i18n.t('credit.reason') }}</dt>
+          <dd>{{ selectedRevision()?.reason }}</dd>
+        </div>
+      </dl>
+      } @else {
+      <label class="field"
+        >{{ i18n.t('credit.reason') }}<textarea
+          class="input"
+          rows="4"
+          [formField]="creditForm.reason"
+          [attr.aria-invalid]="creditForm.reason().invalid() && creditForm.reason().touched()"
+          aria-describedby="credit-reason-hint credit-reason-error"
+        ></textarea>
+        <small id="credit-reason-hint"
+          >{{ i18n.tf('billingWorkspace.limit', { count: 1000 }) }}</small
+        >
+        <span id="credit-reason-error" class="field-error"
+          >@if (creditForm.reason().invalid() && creditForm.reason().touched()) { {{
+          i18n.t('billingWorkspace.reasonInvalid') }} }</span
+        >
+      </label>
       }
+    </section>
+
+    <section class="ds-panel form-panel" aria-labelledby="credit-lines-title">
+      <h2 id="credit-lines-title">{{ i18n.t('credit.lines') }}</h2>
+      <p class="muted">{{ i18n.t('credit.linesHint') }}</p>
+      @if (revisions().length > 0) {
+      <label class="field version-selector"
+        >{{ i18n.t('commercial.versions') }}
+        <select
+          class="input"
+          [value]="selectedVersion()"
+          (change)="selectedVersion.set(+$any($event.target).value)"
+        >
+          @for (revision of revisions(); track revision.id) {
+          <option [value]="revision.version">
+            {{ i18n.tf('commercial.revision', { version: revision.version }) }}
+          </option>
+          }
+        </select>
+      </label>
+      }
+      <div appDataTable>
+        <table>
+          <thead>
+            <tr>
+              <th>{{ i18n.t('backOffice.invoices.number') }}</th>
+              <th>{{ i18n.t('backOffice.quote.description') }}</th>
+              <th>{{ i18n.t('backOffice.quote.quantity') }}</th>
+              <th>
+                <span class="visually-hidden">{{ i18n.t('backOffice.invoices.actions') }}</span>
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (line of displayLines(); track line.invoiceId + ':' + line.sourceLineId) {
+            <tr>
+              <td>{{ line.invoiceNumber }}</td>
+              <td>{{ line.description }}</td>
+              <td>
+                <label class="visually-hidden" [for]="'credit-quantity-' + line.sourceLineId"
+                  >{{ i18n.tf('credit.quantityFor', { description: line.description }) }}</label
+                >
+                <input
+                  class="input quantity-input"
+                  [id]="'credit-quantity-' + line.sourceLineId"
+                  inputmode="decimal"
+                  [value]="quantity(line)"
+                  [disabled]="readonlyVersion()"
+                  [attr.aria-invalid]="
+                    line.quantityMilli < 0 || line.quantityMilli > line.availableQuantityMilli
+                  "
+                  (input)="updateQuantity(line.sourceLineId, $any($event.target).value)"
+                />
+                <small
+                  >{{ i18n.tf('credit.availableQuantity', { quantity: availableQuantity(line) })
+                  }}</small
+                >
+              </td>
+              <td>
+                @if (!readonlyVersion() && line.invoiceId !== invoice.id) {
+                <button
+                  appButton
+                  type="button"
+                  variant="ghost"
+                  (click)="removeInvoice(line.invoiceId)"
+                >
+                  {{ i18n.t('credit.removeInvoice') }}
+                </button>
+                }
+              </td>
+            </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      @if (!readonlyVersion() && addableInvoices().length > 0) {
+      <div class="add-invoice">
+        <label class="field"
+          >{{ i18n.t('credit.addInvoice') }}
+          <select
+            class="input"
+            [value]="selectedInvoiceId()"
+            (change)="selectedInvoiceId.set($any($event.target).value)"
+          >
+            <option value="">{{ i18n.t('credit.selectInvoice') }}</option>
+            @for (candidate of addableInvoices(); track candidate.id) {
+            <option [value]="candidate.id">
+              {{ candidate.invoiceNumber }} · {{ candidate.title }}
+            </option>
+            }
+          </select>
+        </label>
+        <button
+          appButton
+          type="button"
+          [disabled]="!selectedInvoiceId() || task.busy()"
+          (click)="addInvoice()"
+        >
+          {{ i18n.t('credit.add') }}
+        </button>
+      </div>
+      }
+    </section>
+
+    @if (!readonlyVersion()) {
+    <div class="actions">
+      <button appButton type="submit" [disabled]="!eligible()">
+        {{ i18n.t('credit.saveDraft') }}
+      </button>
+      <button appButton type="button" variant="primary" [disabled]="!eligible()" (click)="issue()">
+        {{ i18n.t('credit.issueDraft') }}
+      </button>
     </div>
+    } @else {
+    <p appNotice>{{ i18n.t('credit.readonlyVersion') }}</p>
+    }
   </form>
-  } } @if (!task.completed() && !task.uncertain()) {
-  <button appButton [disabled]="task.busy() || task.loading()" (click)="reload()">
-    {{ i18n.t('listControls.reload') }}
-  </button>
+  } @else {
+  <p appNotice>{{ i18n.t('credit.noAvailableLines') }}</p>
+  } } @else if (!task.loading()) {
+  <p appNotice variant="danger" role="alert">{{ i18n.t('credit.loadError') }}</p>
   }
 </section>

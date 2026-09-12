@@ -1,0 +1,60 @@
+<section class="detail-page wide-page" aria-labelledby="roles-title">
+  <app-page-header layout="stacked">
+    <app-breadcrumbs
+      pageBack
+      [label]="i18n.t('backOfficeShell.breadcrumb')"
+      [items]="breadcrumbs()"
+      [current]="i18n.t('role.title')"
+    />
+    <h1 id="roles-title">{{ i18n.t('role.title') }}</h1>
+    <p>{{ i18n.t('role.intro') }}</p>
+    <a *appCan="'role.manage'" pageActions appLinkButton variant="primary" routerLink="new"
+      >{{ i18n.t('role.create') }}</a
+    >
+  </app-page-header>
+  @if (error(); as code) {
+  <p appNotice variant="danger" role="alert">{{ i18n.t(code) }}</p>
+  } @if (loading()) {
+  <p role="status">{{ i18n.t('role.loading') }}</p>
+  } @else {
+  <div appDataTable>
+    <table>
+      <thead>
+        <tr>
+          <th scope="col">{{ i18n.t('role.name') }}</th>
+          <th scope="col">{{ i18n.t('role.permissions') }}</th>
+          <th scope="col">{{ i18n.t('configurationWorkspace.actions') }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (role of roles(); track role.id) {
+        <tr>
+          <th scope="row">{{ role.name }}</th>
+          <td>{{ role.permissions.length }}</td>
+          <td>
+            <div class="spacer-x-2">
+              <a *appCan="'role.manage'" appLinkButton [routerLink]="[role.id, 'edit']"
+                >{{ i18n.t('role.edit') }}</a
+              ><button
+                *appCan="'role.manage'"
+                appButton
+                type="button"
+                [disabled]="busy()"
+                (click)="remove(role)"
+              >
+                {{ i18n.t('role.delete') }}
+              </button>
+            </div>
+          </td>
+        </tr>
+        } @empty {
+        <tr>
+          <td colspan="3">{{ i18n.t('role.empty') }}</td>
+        </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+  <p role="status">{{ i18n.plural('role.count', { count: roles().length }) }}</p>
+  }
+</section>

@@ -1,0 +1,171 @@
+import { Api, ApiPrincipal } from '@froment/contracts';
+import { Effect } from 'effect';
+import { HttpApiBuilder } from 'effect/unstable/httpapi';
+
+import { setDownloadName, setPrivateResponseHeaders } from '../http/response.js';
+import { SupplierInvoices } from './service.js';
+import { SupplierInvoiceAnalysis } from './analysis-service.js';
+import { SupplierPaymentBatches } from './payment-batches.js';
+
+export const SupplierInvoiceHandlers = HttpApiBuilder.group(Api, 'supplierInvoices', (handlers) =>
+  Effect.gen(function* () {
+    const invoices = yield* SupplierInvoices;
+    const analysis = yield* SupplierInvoiceAnalysis;
+    const paymentBatches = yield* SupplierPaymentBatches;
+    const principal = () => Effect.map(ApiPrincipal, ({ userId }) => userId);
+    return handlers
+      .handle('supplierInvoiceList', () =>
+        setPrivateResponseHeaders.pipe(
+          Effect.andThen(invoices.list),
+          Effect.catchTag('DatabaseError', Effect.orDie),
+        ),
+      )
+      .handle('supplierInvoiceGet', ({ params }) =>
+        setPrivateResponseHeaders.pipe(
+          Effect.andThen(invoices.get(params.invoiceId)),
+          Effect.catchTag('DatabaseError', Effect.orDie),
+        ),
+      )
+      .handle('supplierInvoiceEvidenceList', ({ params }) =>
+        setPrivateResponseHeaders.pipe(
+          Effect.andThen(invoices.evidence(params.invoiceId)),
+          Effect.catchTag('DatabaseError', Effect.orDie),
+        ),
+      )
+      .handle('supplierPaymentBatchList', () =>
+        setPrivateResponseHeaders.pipe(
+          Effect.andThen(paymentBatches.list),
+          Effect.catchTag('DatabaseError', Effect.orDie),
+        ),
+      )
+      .handle('supplierPaymentBatchCreate', ({ payload }) =>
+        Effect.gen(function* () {
+          yield* setPrivateResponseHeaders;
+          return yield* paymentBatches
+            .create(payload, yield* principal())
+            .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
+        }),
+      )
+      .handle('supplierPaymentBatchDownload', ({ params }) =>
+        Effect.gen(function* () {
+          yield* setPrivateResponseHeaders;
+          yield* setDownloadName(`supplier-payments-${params.batchId}.xml`, 'attachment');
+          return yield* paymentBatches
+            .download(params.batchId)
+            .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
+        }),
+      )
+      .handle('supplierInvoiceCreate', ({ payload }) =>
+        Effect.gen(function* () {
+          yield* setPrivateResponseHeaders;
+          return yield* invoices
+            .create(payload, yield* principal())
+            .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
+        }),
+      )
+      .handle('supplierCreditCreate', ({ payload }) =>
+        Effect.gen(function* () {
+          yield* setPrivateResponseHeaders;
+          return yield* invoices
+            .createCredit(payload, yield* principal())
+            .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
+        }),
+      )
+      .handle('supplierInvoiceEvidenceCreate', ({ payload }) =>
+        Effect.gen(function* () {
+          yield* setPrivateResponseHeaders;
+          return yield* invoices
+            .createEvidence(payload, yield* principal())
+            .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
+        }),
+      )
+      .handle('supplierInvoiceEvidenceDownload', ({ params }) =>
+        Effect.gen(function* () {
+          yield* setPrivateResponseHeaders;
+          const result = yield* invoices
+            .downloadEvidence(params.evidenceId, yield* principal())
+            .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
+          yield* setDownloadName(result.fileName, 'attachment');
+          return result.content;
+        }),
+      )
+      .handle('supplierInvoiceUpdate', ({ params, payload }) =>
+        Effect.gen(function* () {
+          yield* setPrivateResponseHeaders;
+          return yield* invoices
+            .update(params.invoiceId, payload, yield* principal())
+            .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
+        }),
+      )
+      .handle('supplierInvoiceConfirm', ({ params, payload }) =>
+        Effect.gen(function* () {
+          yield* setPrivateResponseHeaders;
+          return yield* invoices
+            .transition(
+              params.invoiceId,
+              payload.expectedVersion,
+              ['draft'],
+              'confirmed',
+              yield* principal(),
+            )
+            .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
+        }),
+      )
+      .handle('supplierInvoiceApprove', ({ params, payload }) =>
+        Effect.gen(function* () {
+          yield* setPrivateResponseHeaders;
+          return yield* invoices
+            .transition(
+              params.invoiceId,
+              payload.expectedVersion,
+              ['confirmed'],
+              'approved',
+              yield* principal(),
+            )
+            .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
+        }),
+      )
+      .handle('supplierInvoiceCancel', ({ params, payload }) =>
+        Effect.gen(function* () {
+          yield* setPrivateResponseHeaders;
+          return yield* invoices
+            .transition(
+              params.invoiceId,
+              payload.expectedVersion,
+              ['draft', 'confirmed'],
+              'cancelled',
+              yield* principal(),
+            )
+            .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
+        }),
+      )
+      .handle('supplierInvoiceAnalysisSettings', () =>
+        setPrivateResponseHeaders.pipe(
+          Effect.andThen(analysis.getSettings()),
+          Effect.catchTag('DatabaseError', Effect.orDie),
+        ),
+      )
+      .handle('supplierInvoiceAnalysisStatus', () =>
+        setPrivateResponseHeaders.pipe(
+          Effect.andThen(analysis.getStatus()),
+          Effect.catchTag('DatabaseError', Effect.orDie),
+        ),
+      )
+      .handle('supplierInvoiceAnalysisSettingsUpdate', ({ payload }) =>
+        Effect.gen(function* () {
+          yield* setPrivateResponseHeaders;
+          return yield* analysis
+            .updateSettings(payload, yield* principal())
+            .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
+        }),
+      )
+      .handle('supplierInvoiceAnalyze', ({ payload }) =>
+        Effect.gen(function* () {
+          yield* setPrivateResponseHeaders;
+          return yield* analysis
+            .analyze(payload, yield* principal())
+            .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
+        }),
+      );
+  }),
+);

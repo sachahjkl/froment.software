@@ -17,6 +17,12 @@ import { PasswordsLive } from './authentication/password.js';
 import { AccessTokensLive } from './authentication/paseto.js';
 import { ApiTokensLive } from './api-tokens/service.js';
 import { ClientsLive } from './clients/clients.js';
+import { CompanyLive } from './company/service.js';
+import { ExchangeRatesLive } from './company/exchange-rates.js';
+import { SuppliersLive } from './suppliers/service.js';
+import { SupplierInvoicesLive } from './supplier-invoices/service.js';
+import { SupplierInvoiceAnalysisLive } from './supplier-invoices/analysis-service.js';
+import { SupplierPaymentBatchesLive } from './supplier-invoices/payment-batches.js';
 import { DatabaseLive } from './database/database.js';
 import { DeploymentLive } from './deployment/deployment.js';
 import { IssuerSettingsLive } from './issuer-settings/service.js';
@@ -38,6 +44,8 @@ import { ServerLive } from './server.js';
 import { ObservabilityLive } from './observability/observability.js';
 import { ClientPortalLive } from './client-portal/client-portal.js';
 import { RuntimeConfigurationLive } from './runtime-config.js';
+import { AccountingLive } from './accounting/service.js';
+import { DemoLive } from './demo/service.js';
 
 const QuoteCoreLive = Layer.mergeAll(
   QuotesLive,
@@ -81,6 +89,15 @@ const ServicesLive = Layer.mergeAll(
   ApiTokensLive,
   AuditReaderLive,
   ClientsLive,
+  CompanyLive,
+  ExchangeRatesLive.pipe(Layer.provide(FetchHttpClient.layer)),
+  SuppliersLive.pipe(Layer.provide(FetchHttpClient.layer)),
+  SupplierInvoicesLive,
+  SupplierPaymentBatchesLive,
+  SupplierInvoiceAnalysisLive.pipe(
+    Layer.provide(SupplierInvoicesLive),
+    Layer.provide(FetchHttpClient.layer),
+  ),
   InvoicePdfRuntimeLive,
   QuoteLinksLive.pipe(Layer.provide(BusinessConfigLive)),
   QuoteConditionPresetsLive,
@@ -89,6 +106,8 @@ const ServicesLive = Layer.mergeAll(
   BankingLive,
   DeploymentLive,
   ClientPortalLive,
+  AccountingLive.pipe(Layer.provide(FetchHttpClient.layer)),
+  DemoLive,
 ).pipe(
   Layer.provideMerge(ConnectionConfigLive),
   Layer.provideMerge(AuditLive),

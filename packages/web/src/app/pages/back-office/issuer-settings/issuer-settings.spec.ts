@@ -21,6 +21,8 @@ describe('IssuerSettings', () => {
       phone: 'OLD',
       registrationNumber: '',
       vatNumber: 'VAT',
+      iban: '',
+      bic: '',
       version: 4,
     };
     const update = vi.fn().mockResolvedValue({ success: false, code: 'issuer.conflict' });
@@ -85,6 +87,8 @@ describe('IssuerSettings', () => {
               phone: '',
               registrationNumber: '',
               vatNumber: '',
+              iban: '',
+              bic: '',
             }),
           },
         },
@@ -95,7 +99,7 @@ describe('IssuerSettings', () => {
     await vi.waitFor(() => expect(fixture.componentInstance['loading']()).toBe(false));
     await fixture.whenStable();
     const root: HTMLElement = fixture.nativeElement;
-    expect(root.querySelectorAll('fieldset')).toHaveLength(3);
+    expect(root.querySelectorAll('fieldset')).toHaveLength(4);
     const submit = root.querySelector<HTMLButtonElement>('button[type="submit"]');
     expect(submit?.disabled).toBe(false);
     submit?.click();

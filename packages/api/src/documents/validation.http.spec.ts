@@ -73,6 +73,7 @@ describe('document publication checks', () => {
         headers: server.jsonHeaders,
         body: JSON.stringify({
           expectedVersion: 1,
+          currency: quote.currentRevision.currency,
           title: 'Complete quote',
           conditions: '',
           lines: quote.currentRevision.lines,

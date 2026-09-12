@@ -66,7 +66,7 @@ export class HomeComponent {
     {
       title: this.i18n.t('home.services.development.title'),
       description: this.i18n.t('home.services.development.desc'),
-      href: '/services/developpement',
+      href: '/services/development',
     },
   ]);
 

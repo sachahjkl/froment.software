@@ -164,16 +164,14 @@ describe('Billing', () => {
     TestBed.configureTestingModule({
       providers: [
         provideHttpClient(),
-        provideRouter([{ path: 'backoffice/facturation', component: Billing }]),
+        provideRouter([{ path: 'backoffice/billing', component: Billing }]),
         {
           provide: InvoicesApi,
           useValue: { list: async () => [invoice('01ARZ3NDEKTSV4RRFFQ69G5FAY')] },
         },
       ],
     });
-    const harness = await RouterTestingHarness.create(
-      '/backoffice/facturation?q=Acme&status=issued',
-    );
+    const harness = await RouterTestingHarness.create('/backoffice/billing?q=Acme&status=issued');
     await harness.fixture.whenStable();
     const root: HTMLElement = harness.fixture.nativeElement;
     expect(root.querySelector<HTMLInputElement>('input[type="search"]')?.value).toBe('Acme');

@@ -39,6 +39,7 @@ describe('QuotesApi', () => {
     const http = TestBed.inject(HttpTestingController);
     const result = api.createRevision('01ARZ3NDEKTSV4RRFFQ69G5FAY', {
       expectedVersion: 1,
+      currency: 'EUR',
       title: 'Audit',
       conditions: '',
       lines: [

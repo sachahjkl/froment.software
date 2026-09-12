@@ -23,7 +23,7 @@ import {
   submit,
   validate,
 } from '@angular/forms/signals';
-import { ActivatedRoute, RouterLink, RouterOutlet } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink, RouterOutlet } from '@angular/router';
 import {
   QuoteCancellationReason,
   type QuoteCancellationReasonValue,
@@ -38,7 +38,6 @@ import { I18nService, type TranslationKey } from '@app/i18n.service';
 import { Badge } from '@shared/badge/badge';
 import { Button } from '@shared/button/button';
 import { Confirmation } from '@shared/confirmation/confirmation';
-import { DataTable } from '@shared/data-table/data-table';
 import { ActionMenu, type MenuAction } from '@shared/action-menu/action-menu';
 import { Notice } from '@shared/notice/notice';
 import { PageHeader } from '@shared/page-header/page-header';
@@ -67,7 +66,6 @@ import { canCancelQuote, quoteEditAction } from './quote-actions';
     Button,
     ClientDescription,
     Breadcrumbs,
-    DataTable,
     FormField,
     Notice,
     PageHeader,
@@ -90,6 +88,7 @@ export class QuoteDetail {
   private readonly api = inject(QuotesApi);
   private readonly ordersApi = inject(OrdersApi);
   private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
   protected readonly context = signal(affairContext(this.route.snapshot.queryParamMap));
   private readonly destroyRef = inject(DestroyRef);
   private readonly pendingTasks = inject(PendingTasks);
@@ -134,7 +133,7 @@ export class QuoteDetail {
   );
   protected readonly loadError = computed(() => this.error() ?? 'quote.error');
   protected readonly breadcrumbs = computed(() =>
-    commercialBreadcrumbs(this.quote(), this.context(), this.i18n.language()),
+    commercialBreadcrumbs(undefined, this.context(), this.i18n.language()),
   );
   protected readonly secondaryActions = computed<readonly MenuAction[]>(() => {
     const quote = this.quote();
@@ -181,8 +180,14 @@ export class QuoteDetail {
   protected readonly revisions = computed(
     () => this.quote()?.revisions.toSorted((left, right) => left.version - right.version) ?? [],
   );
-  protected revisionQuery(version: number) {
-    return { ...this.context(), version };
+  protected selectVersion(version: string): void {
+    this.version.set(version);
+    void this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { version: version || null },
+      queryParamsHandling: 'merge',
+      replaceUrl: true,
+    });
   }
   private readonly cancellationModel = signal({ reason: '', note: '' });
   protected readonly hasCancellationInput = computed(
@@ -206,16 +211,10 @@ export class QuoteDetail {
   );
   protected readonly reasons = QuoteCancellationReason.literals;
   protected readonly tabs = computed<readonly TabItem[]>(() =>
-    ['summary', 'document', 'versions'].map((tab) => ({
+    ['summary', 'document'].map((tab) => ({
       path: tab,
       id: `quote-${tab}-tab`,
-      label: this.i18n.t(
-        tab === 'summary'
-          ? 'commercial.summary'
-          : tab === 'document'
-            ? 'commercial.document'
-            : 'commercial.versions',
-      ),
+      label: this.i18n.t(tab === 'summary' ? 'commercial.summary' : 'commercial.document'),
     })),
   );
   private generation = 0;

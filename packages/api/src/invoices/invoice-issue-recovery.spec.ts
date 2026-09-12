@@ -73,6 +73,7 @@ const snapshot = Schema.decodeUnknownSync(InvoiceRenderSnapshot)({
     city: 'Paris',
     country: 'France',
     email: 'client@example.test',
+    phone: '',
   },
   title: 'Invoice',
   paymentTerms: 'Payment due within 30 days.',
@@ -96,8 +97,8 @@ const snapshot = Schema.decodeUnknownSync(InvoiceRenderSnapshot)({
 });
 
 const issuerSettings: IssuerSettingsService = {
-  get: Effect.succeed({ ...issuer, version: 1 }),
-  update: () => Effect.succeed({ ...issuer, version: 1 }),
+  get: Effect.succeed({ ...issuer, iban: '', bic: '', version: 1 }),
+  update: () => Effect.succeed({ ...issuer, iban: '', bic: '', version: 1 }),
 };
 const unused = () => Effect.die('The invoice PDF test does not use quote operations.');
 const quotes: QuotesService = {

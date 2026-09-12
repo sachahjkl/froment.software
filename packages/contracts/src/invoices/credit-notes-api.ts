@@ -8,10 +8,14 @@ import { Permissions } from '../permissions.js';
 import { Ulid } from '../identifiers.js';
 import { AuthenticationRequired, PermissionDenied } from '../authentication/contracts.js';
 import {
-  CreditNoteRequest,
+  CreditNote,
+  CreditNoteDraftRequest,
+  CreditNoteDraftUpdate,
+  CreditNoteIssueRequest,
   InvoiceCreditConflict,
   InvoiceCreditRequestConflict,
   InvoiceCredits,
+  InvoiceCreditAllocationRequest,
   InvoiceRefundRequest,
   InvoiceRefundCancel,
 } from './credit-notes.js';
@@ -22,10 +26,32 @@ export class CreditNotesApi extends HttpApiGroup.make('creditNotes', { topLevel:
     success: InvoiceCredits,
     error: [InvoiceCreditConflict],
   }).pipe(requirePermissions([Permissions.invoiceRead]), authenticate, frontendSpecific),
-  HttpApiEndpoint.post('invoiceCreditIssue', '/api/invoices/:invoiceId/credits', {
-    params: { invoiceId: Ulid },
-    payload: CreditNoteRequest,
-    success: InvoiceCredits,
+  HttpApiEndpoint.get('creditNoteGet', '/api/credit-notes/:creditNoteId', {
+    params: { creditNoteId: Ulid },
+    success: CreditNote,
+    error: [InvoiceCreditConflict],
+  }).pipe(requirePermissions([Permissions.invoiceRead]), authenticate, frontendSpecific),
+  HttpApiEndpoint.post('creditNoteCreate', '/api/credit-notes', {
+    payload: CreditNoteDraftRequest,
+    success: CreditNote,
+    error: [InvoiceCreditConflict, InvoiceCreditRequestConflict],
+  })
+    .middleware(ApiRequestBody)
+    .middleware(ApiBrowserRequest)
+    .pipe(requirePermissions([Permissions.invoiceCredit]), authenticate, frontendSpecific),
+  HttpApiEndpoint.put('creditNoteUpdate', '/api/credit-notes/:creditNoteId', {
+    params: { creditNoteId: Ulid },
+    payload: CreditNoteDraftUpdate,
+    success: CreditNote,
+    error: [InvoiceCreditConflict, InvoiceCreditRequestConflict],
+  })
+    .middleware(ApiRequestBody)
+    .middleware(ApiBrowserRequest)
+    .pipe(requirePermissions([Permissions.invoiceCredit]), authenticate, frontendSpecific),
+  HttpApiEndpoint.post('creditNoteIssue', '/api/credit-notes/:creditNoteId/issue', {
+    params: { creditNoteId: Ulid },
+    payload: CreditNoteIssueRequest,
+    success: CreditNote,
     error: [InvoiceCreditConflict, InvoiceCreditRequestConflict],
   })
     .middleware(ApiRequestBody)
@@ -34,6 +60,15 @@ export class CreditNotesApi extends HttpApiGroup.make('creditNotes', { topLevel:
   HttpApiEndpoint.post('invoiceRefundRecord', '/api/invoices/:invoiceId/refunds', {
     params: { invoiceId: Ulid },
     payload: InvoiceRefundRequest,
+    success: InvoiceCredits,
+    error: [InvoiceCreditConflict, InvoiceCreditRequestConflict],
+  })
+    .middleware(ApiRequestBody)
+    .middleware(ApiBrowserRequest)
+    .pipe(requirePermissions([Permissions.invoiceRefund]), authenticate, frontendSpecific),
+  HttpApiEndpoint.post('invoiceCreditAllocate', '/api/invoices/:invoiceId/credit-allocations', {
+    params: { invoiceId: Ulid },
+    payload: InvoiceCreditAllocationRequest,
     success: InvoiceCredits,
     error: [InvoiceCreditConflict, InvoiceCreditRequestConflict],
   })
@@ -49,8 +84,21 @@ export class CreditNotesApi extends HttpApiGroup.make('creditNotes', { topLevel:
     .middleware(ApiRequestBody)
     .middleware(ApiBrowserRequest)
     .pipe(requirePermissions([Permissions.invoiceRefund]), authenticate, frontendSpecific),
-  HttpApiEndpoint.get('invoiceCreditPdf', '/api/invoices/:invoiceId/credit-note/pdf', {
-    params: { invoiceId: Ulid },
+  HttpApiEndpoint.post(
+    'invoiceCreditAllocationCancel',
+    '/api/invoices/:invoiceId/credit-allocations/:allocationId/cancel',
+    {
+      params: { invoiceId: Ulid, allocationId: Ulid },
+      payload: InvoiceRefundCancel,
+      success: InvoiceCredits,
+      error: [InvoiceCreditConflict, InvoiceCreditRequestConflict],
+    },
+  )
+    .middleware(ApiRequestBody)
+    .middleware(ApiBrowserRequest)
+    .pipe(requirePermissions([Permissions.invoiceRefund]), authenticate, frontendSpecific),
+  HttpApiEndpoint.get('invoiceCreditPdf', '/api/credit-notes/:creditNoteId/pdf', {
+    params: { creditNoteId: Ulid },
     success: Schema.Uint8Array.pipe(HttpApiSchema.asUint8Array({ contentType: 'application/pdf' })),
     error: [InvoiceCreditConflict],
   }).pipe(
@@ -58,8 +106,8 @@ export class CreditNotesApi extends HttpApiGroup.make('creditNotes', { topLevel:
     authenticate,
     frontendSpecific,
   ),
-  HttpApiEndpoint.get('clientCreditPdf', '/api/client/invoices/:invoiceId/credit-note/pdf', {
-    params: { invoiceId: Ulid },
+  HttpApiEndpoint.get('clientCreditPdf', '/api/client/credit-notes/:creditNoteId/pdf', {
+    params: { creditNoteId: Ulid },
     success: Schema.Uint8Array.pipe(HttpApiSchema.asUint8Array({ contentType: 'application/pdf' })),
     error: [InvoiceCreditConflict, AuthenticationRequired, PermissionDenied],
   }).pipe(frontendSpecific),

@@ -24,7 +24,7 @@ export class IssuerSettings extends Context.Service<IssuerSettings, IssuerSettin
 
 const selectSettings = `select display_name as displayName, address_line_1 as addressLine1,
   address_line_2 as addressLine2, postal_code as postalCode, city, country, email, phone,
-  registration_number as registrationNumber, vat_number as vatNumber, version
+  registration_number as registrationNumber, vat_number as vatNumber, iban, bic, version
   from issuer_settings where id = 1`;
 
 export const IssuerSettingsLive = Layer.effect(
@@ -48,7 +48,10 @@ export const IssuerSettingsLive = Layer.effect(
       const now = yield* Clock.currentTimeMillis;
       const { expectedVersion, ...fields } = request;
       const settings = Object.fromEntries(
-        Object.entries(fields).map(([key, value]) => [key, value.trim()]),
+        Object.entries(fields).map(([key, value]) => [
+          key,
+          ['iban', 'bic'].includes(key) ? value.replaceAll(' ', '').toUpperCase() : value.trim(),
+        ]),
       );
       return yield* Effect.try({
         try: () =>
@@ -58,7 +61,7 @@ export const IssuerSettingsLive = Layer.effect(
                 .prepare(
                   `update issuer_settings set display_name = ?, address_line_1 = ?, address_line_2 = ?,
                    postal_code = ?, city = ?, country = ?, email = ?, phone = ?,
-                   registration_number = ?, vat_number = ?, updated_at = ?, version = version + 1
+                   registration_number = ?, vat_number = ?, iban = ?, bic = ?, updated_at = ?, version = version + 1
                    where id = 1 and version = ?`,
                 )
                 .run(
@@ -72,6 +75,8 @@ export const IssuerSettingsLive = Layer.effect(
                   settings['phone'],
                   settings['registrationNumber'],
                   settings['vatNumber'],
+                  settings['iban'],
+                  settings['bic'],
                   now,
                   expectedVersion,
                 );

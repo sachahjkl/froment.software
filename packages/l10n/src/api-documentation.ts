@@ -1,5 +1,7 @@
 import type { Language } from './language.js';
 import { teamDocumentation } from './team.js';
+import { roleDocumentation } from './roles.js';
+import { supplierInvoiceDocumentation } from './supplier-invoices.js';
 import { creditDocumentation } from './credit-notes.js';
 import { ledgerDocumentation } from './bank-ledger.js';
 import { passkeyDocumentation } from './passkeys.js';
@@ -33,6 +35,63 @@ interface ApiDocumentation {
   readonly operations: Readonly<Record<string, ApiDocumentationOperation>>;
 }
 
+const accountingOperationIds = [
+  'accountingAccountCreate',
+  'accountingAccountList',
+  'accountingAccountUpdate',
+  'accountingBalanceReport',
+  'accountingCa3Export',
+  'accountingEntryCreate',
+  'accountingEntryList',
+  'accountingEntryPost',
+  'accountingEntryReverse',
+  'accountingEvidenceCreate',
+  'accountingEvidenceDownload',
+  'accountingEvidenceList',
+  'accountingFecExport',
+  'accountingFinancialReport',
+  'accountingJournalCreate',
+  'accountingJournalList',
+  'accountingJournalUpdate',
+  'accountingLedgerReport',
+  'accountingLetterableLineList',
+  'accountingLetteringCreate',
+  'accountingOpeningCommit',
+  'accountingOpeningPreview',
+  'accountingPeriodClose',
+  'accountingPeriodCreate',
+  'accountingPeriodFinalClose',
+  'accountingPeriodList',
+  'accountingPeriodLock',
+  'accountingPeriodReopen',
+  'accountingTaxFilingSettings',
+  'accountingTaxFilingSettingsUpdate',
+  'accountingTaxFilingSubmissionList',
+  'accountingTaxFilingSubmit',
+  'accountingTaxReport',
+] as const;
+
+const addedOperationIds = [
+  'demoReset',
+  'invoiceCreditAllocate',
+  'invoiceCreditAllocationCancel',
+  'supplierBankMatch',
+  'supplierBankMatchList',
+  'supplierBankPaymentList',
+  'supplierBankUnmatch',
+  'supplierCreditCreate',
+  'supplierInvoiceEvidenceCreate',
+  'supplierInvoiceEvidenceDownload',
+  'supplierInvoiceEvidenceList',
+] as const;
+
+const operationDocumentation = (
+  ids: ReadonlyArray<string>,
+  summary: string,
+  description: string,
+): Readonly<Record<string, ApiDocumentationOperation>> =>
+  Object.fromEntries(ids.map((id) => [id, { summary, description }]));
+
 export const apiDocumentation = {
   fr: {
     title: 'API Froment Software',
@@ -46,6 +105,8 @@ export const apiDocumentation = {
       audit: auditDocumentation.fr.group,
       passkeys: passkeyDocumentation.fr.group,
       team: teamDocumentation.fr.group,
+      roles: roleDocumentation.fr.group,
+      supplierInvoices: supplierInvoiceDocumentation.fr.group,
       creditNotes: creditDocumentation.fr.group,
       bankLedger: ledgerDocumentation.fr.group,
       emailDrafts: emailDraftDocumentation.fr.group,
@@ -57,6 +118,11 @@ export const apiDocumentation = {
           'Actions typées des cinq fournisseurs. Implémentations mock sans effet externe.',
       },
       clients: { title: 'Clients', description: 'Fiches clients et cycle de vie.' },
+      company: {
+        title: 'Société',
+        description: 'Juridiction, devise fonctionnelle, exercice, conservation et modules.',
+      },
+      suppliers: { title: 'Fournisseurs', description: 'Fiches fournisseurs et cycle de vie.' },
       orders: { title: 'Commandes', description: 'Commandes et documents générés.' },
       quotes: { title: 'Devis', description: 'Devis, révisions, envoi et documents.' },
       quoteLinks: {
@@ -100,12 +166,30 @@ export const apiDocumentation = {
       blog: { title: 'Blog', description: 'Publications techniques publiques.' },
       catalog: { title: 'Catalogue', description: 'Prestations réutilisables dans les devis.' },
       banking: { title: 'Banque', description: 'Relevés et rapprochement des règlements.' },
+      accounting: {
+        title: 'Comptabilité',
+        description: 'Écritures, périodes, rapports, justificatifs et déclarations fiscales.',
+      },
+      demo: {
+        title: 'Démonstration',
+        description: 'Réinitialisation protégée des données de démonstration en préproduction.',
+      },
       integrations: {
         title: 'Services externes',
         description: 'Adaptateurs et journal des demandes.',
       },
     },
     operations: {
+      ...operationDocumentation(
+        accountingOperationIds,
+        'Gérer la comptabilité',
+        'Exécute une opération comptable selon les permissions et les règles de période applicables.',
+      ),
+      ...operationDocumentation(
+        addedOperationIds,
+        'Gérer la suite de gestion',
+        'Exécute une opération métier selon les permissions et les contrôles applicables.',
+      ),
       ...auditDocumentation.fr.operations,
       blogFeed: {
         summary: 'Lire le flux Atom du blog',
@@ -126,6 +210,8 @@ export const apiDocumentation = {
       ...reminderDocumentation.fr.operations,
       ...providerActionDocumentation.fr,
       ...teamDocumentation.fr.operations,
+      ...roleDocumentation.fr.operations,
+      ...supplierInvoiceDocumentation.fr.operations,
       ...creditDocumentation.fr.operations,
       ...ledgerDocumentation.fr.operations,
       bankPaymentList: {
@@ -137,6 +223,11 @@ export const apiDocumentation = {
         summary: 'Consulter les rapprochements conservés',
         description:
           'Afficher les 100 derniers rapprochements d’une opération, avec auteurs, dates et motifs de dissociation.',
+      },
+      bankMatchSuggestionList: {
+        summary: 'Proposer des rapprochements',
+        description:
+          'Classe au maximum dix règlements probables. Une confirmation humaine reste obligatoire.',
       },
       bankTransactionList: {
         summary: 'Lister les opérations bancaires',
@@ -197,6 +288,54 @@ export const apiDocumentation = {
       clientReactivate: {
         summary: 'Réactiver un client',
         description: 'Réactive un client archivé.',
+      },
+      companySettingsGet: {
+        summary: 'Lire la configuration de la société',
+        description: 'Renvoie la juridiction, la devise, l’exercice et les modules activés.',
+      },
+      companySettingsUpdate: {
+        summary: 'Modifier la configuration de la société',
+        description: 'Modifie la configuration si sa version correspond.',
+      },
+      companyAccountingInitialize: {
+        summary: 'Initialiser la comptabilité',
+        description: 'Fixe définitivement la devise fonctionnelle de la comptabilité.',
+      },
+      companyExchangeRateList: {
+        summary: 'Lister les taux de change',
+        description: 'Renvoie les taux BCE et les surcharges manuelles enregistrés.',
+      },
+      companyExchangeRateSet: {
+        summary: 'Surcharger un taux de change',
+        description: 'Enregistre un taux daté et trace la surcharge manuelle.',
+      },
+      companyExchangeRateImport: {
+        summary: 'Importer les taux de la BCE',
+        description: 'Importe les taux récents et conserve les surcharges manuelles.',
+      },
+      supplierList: {
+        summary: 'Lister les fournisseurs',
+        description: 'Liste les fournisseurs actifs et archivés.',
+      },
+      supplierGet: {
+        summary: 'Obtenir un fournisseur',
+        description: 'Renvoie un fournisseur par identifiant.',
+      },
+      supplierCreate: {
+        summary: 'Créer un fournisseur',
+        description: 'Crée un fournisseur avec ses coordonnées et ses paramètres de paiement.',
+      },
+      supplierUpdate: {
+        summary: 'Modifier un fournisseur',
+        description: 'Modifie un fournisseur actif si sa version correspond.',
+      },
+      supplierArchive: {
+        summary: 'Archiver un fournisseur',
+        description: 'Archive un fournisseur.',
+      },
+      supplierReactivate: {
+        summary: 'Réactiver un fournisseur',
+        description: 'Réactive un fournisseur archivé.',
       },
       orderList: {
         summary: 'Lister les commandes',
@@ -281,6 +420,26 @@ export const apiDocumentation = {
           'Enregistre un règlement partiel ou complet. Réutilisez requestId avec les mêmes valeurs après une erreur réseau. Le solde ne peut pas devenir négatif.',
       },
       invoiceVoid: { summary: 'Annuler une facture', description: 'Annule une facture.' },
+      affairList: {
+        summary: 'Lister les affaires',
+        description: 'Liste les affaires indépendantes et leurs documents liés.',
+      },
+      affairGet: {
+        summary: 'Consulter une affaire',
+        description: 'Retourne une affaire et les identifiants de ses documents liés.',
+      },
+      affairCreate: {
+        summary: 'Créer une affaire',
+        description: 'Crée une affaire numérotée pour un client.',
+      },
+      affairUpdate: {
+        summary: 'Modifier une affaire',
+        description: 'Modifie le titre ou le statut avec contrôle de version.',
+      },
+      affairQuoteLink: {
+        summary: 'Lier un devis',
+        description: 'Déplace un devis compatible vers cette affaire.',
+      },
       affairEventList: {
         summary: 'Lister les événements d’une affaire',
         description: 'Liste les événements commerciaux liés à un client.',
@@ -451,8 +610,15 @@ export const apiDocumentation = {
     groups: {
       audit: auditDocumentation.en.group,
       clients: { title: 'Clients', description: 'Client records and lifecycle.' },
+      company: {
+        title: 'Company',
+        description: 'Jurisdiction, functional currency, fiscal year, retention, and modules.',
+      },
+      suppliers: { title: 'Suppliers', description: 'Supplier records and lifecycle.' },
       passkeys: passkeyDocumentation.en.group,
       team: teamDocumentation.en.group,
+      roles: roleDocumentation.en.group,
+      supplierInvoices: supplierInvoiceDocumentation.en.group,
       creditNotes: creditDocumentation.en.group,
       bankLedger: ledgerDocumentation.en.group,
       emailDrafts: emailDraftDocumentation.en.group,
@@ -506,9 +672,27 @@ export const apiDocumentation = {
       blog: { title: 'Blog', description: 'Public technical articles.' },
       catalog: { title: 'Catalog', description: 'Reusable services for quotes.' },
       banking: { title: 'Banking', description: 'Statements and payment reconciliation.' },
+      accounting: {
+        title: 'Accounting',
+        description: 'Entries, periods, reports, evidence, and tax filings.',
+      },
+      demo: {
+        title: 'Demonstration',
+        description: 'Protected reset of staging demonstration data.',
+      },
       integrations: { title: 'External services', description: 'Adapters and request history.' },
     },
     operations: {
+      ...operationDocumentation(
+        accountingOperationIds,
+        'Manage accounting',
+        'Runs an accounting operation with the applicable permissions and period rules.',
+      ),
+      ...operationDocumentation(
+        addedOperationIds,
+        'Manage the business suite',
+        'Runs a business operation with the applicable permissions and controls.',
+      ),
       ...auditDocumentation.en.operations,
       blogFeed: {
         summary: 'Read the blog Atom feed',
@@ -530,6 +714,8 @@ export const apiDocumentation = {
       ...reminderDocumentation.en.operations,
       ...providerActionDocumentation.en,
       ...teamDocumentation.en.operations,
+      ...roleDocumentation.en.operations,
+      ...supplierInvoiceDocumentation.en.operations,
       ...creditDocumentation.en.operations,
       ...ledgerDocumentation.en.operations,
       bankPaymentList: {
@@ -541,6 +727,10 @@ export const apiDocumentation = {
         summary: 'Read reconciliation history',
         description:
           'Return the latest 100 matches for a transaction, including actors, dates and reasons for removal.',
+      },
+      bankMatchSuggestionList: {
+        summary: 'Suggest reconciliations',
+        description: 'Ranks at most ten probable receipts. Human confirmation remains required.',
       },
       bankTransactionList: {
         summary: 'List bank transactions',
@@ -589,6 +779,54 @@ export const apiDocumentation = {
       clientReactivate: {
         summary: 'Reactivate a client',
         description: 'Reactivates an archived client.',
+      },
+      companySettingsGet: {
+        summary: 'Get company settings',
+        description: 'Returns jurisdiction, currency, fiscal year, and enabled modules.',
+      },
+      companySettingsUpdate: {
+        summary: 'Update company settings',
+        description: 'Updates the settings when their version matches.',
+      },
+      companyAccountingInitialize: {
+        summary: 'Initialize accounting',
+        description: 'Permanently locks the accounting functional currency.',
+      },
+      companyExchangeRateList: {
+        summary: 'List exchange rates',
+        description: 'Returns stored ECB rates and manual overrides.',
+      },
+      companyExchangeRateSet: {
+        summary: 'Override an exchange rate',
+        description: 'Stores a dated rate and audits the manual override.',
+      },
+      companyExchangeRateImport: {
+        summary: 'Import ECB rates',
+        description: 'Imports recent rates and preserves manual overrides.',
+      },
+      supplierList: {
+        summary: 'List suppliers',
+        description: 'Lists active and archived suppliers.',
+      },
+      supplierGet: {
+        summary: 'Get a supplier',
+        description: 'Returns one supplier by identifier.',
+      },
+      supplierCreate: {
+        summary: 'Create a supplier',
+        description: 'Creates a supplier with contact and payment settings.',
+      },
+      supplierUpdate: {
+        summary: 'Update a supplier',
+        description: 'Updates an active supplier when its version matches.',
+      },
+      supplierArchive: {
+        summary: 'Archive a supplier',
+        description: 'Archives a supplier.',
+      },
+      supplierReactivate: {
+        summary: 'Reactivate a supplier',
+        description: 'Reactivates an archived supplier.',
       },
       orderList: {
         summary: 'List orders',
@@ -670,6 +908,26 @@ export const apiDocumentation = {
           'Records a partial or full payment. Reuse requestId with unchanged values after a network error. The balance cannot become negative.',
       },
       invoiceVoid: { summary: 'Void an invoice', description: 'Voids an invoice.' },
+      affairList: {
+        summary: 'List affairs',
+        description: 'Lists independent affairs and their linked documents.',
+      },
+      affairGet: {
+        summary: 'Read an affair',
+        description: 'Returns an affair and its linked document identifiers.',
+      },
+      affairCreate: {
+        summary: 'Create an affair',
+        description: 'Creates a numbered affair for one client.',
+      },
+      affairUpdate: {
+        summary: 'Update an affair',
+        description: 'Updates the title or status with version control.',
+      },
+      affairQuoteLink: {
+        summary: 'Link a quote',
+        description: 'Moves a compatible quote to this affair.',
+      },
       affairEventList: {
         summary: 'List affair events',
         description: 'Lists the commercial events related to a client.',

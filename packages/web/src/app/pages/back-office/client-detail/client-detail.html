@@ -80,6 +80,10 @@
             <dt>{{ i18n.t('backOffice.clients.email') }}</dt>
             <dd>{{ current.email || i18n.t('clientsWorkspace.notProvided') }}</dd>
           </div>
+          <div>
+            <dt>{{ i18n.t('backOffice.clients.phone') }}</dt>
+            <dd>{{ current.phone || i18n.t('clientsWorkspace.notProvided') }}</dd>
+          </div>
         </dl>
       </div>
       <div>
@@ -236,7 +240,7 @@
                   <app-entity-icon icon="invoice" />
                   <div>
                     <a
-                      [routerLink]="['/backoffice/affaires', quote.id]"
+                      [routerLink]="['/backoffice/quotes', quote.id]"
                       [appSearchHighlight]="affairTable.match(result, 'reference')"
                       >{{ quote.reference }}</a
                     >

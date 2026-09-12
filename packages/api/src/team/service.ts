@@ -8,6 +8,9 @@ import {
   TeamMemberUpdate,
   TeamProfile,
   TeamProfilePermissions,
+  CustomRoleList,
+  CustomRole,
+  PermissionCode,
 } from '@froment/contracts';
 import { Clock, Context, Effect, Layer, Schema } from 'effect';
 import { createHash, createHmac } from 'node:crypto';
@@ -33,6 +36,20 @@ const make = Effect.gen(function* () {
         `select 1 from users u join user_roles ur on ur.user_id = u.id join role_permissions rp on rp.role_id = ur.role_id where u.id = ? and u.disabled_at is null and u.kind = 'administrator' and rp.permission_code = ?`,
       )
       .get(actor, permission) !== undefined;
+  const profilePermissions = (profile: typeof TeamProfile.Type) => {
+    if (profile.startsWith('custom:')) {
+      return Schema.decodeUnknownSync(Schema.fromJsonString(Schema.Array(PermissionCode)))(
+        sqlite
+          .prepare('select permissions from custom_roles where id = ?')
+          .pluck()
+          .get(profile.slice('custom:'.length)),
+      );
+    }
+    const standardProfile = Schema.decodeUnknownSync(
+      Schema.Literals(['collaborator', 'accountant', 'accounting-validator', 'accounting-reader']),
+    )(profile);
+    return TeamProfilePermissions[standardProfile];
+  };
   const assignProfile = (userId: string, profile: typeof TeamProfile.Type, now: number) => {
     const name = `team-${userId}`;
     const roleId =
@@ -44,7 +61,7 @@ const make = Effect.gen(function* () {
       .run(roleId, name, now);
     sqlite.prepare('delete from user_roles where user_id = ?').run(userId);
     sqlite.prepare('delete from role_permissions where role_id = ?').run(roleId);
-    for (const code of TeamProfilePermissions[profile])
+    for (const code of profilePermissions(profile))
       sqlite
         .prepare('insert into role_permissions (role_id, permission_code) values (?, ?)')
         .run(roleId, code);
@@ -65,6 +82,23 @@ const make = Effect.gen(function* () {
           order by (expires_at > ? and accepted_at is null and cancelled_at is null) desc,
           created_at desc, id desc limit 100`)
             .all(now),
+          roles: Schema.decodeUnknownSync(CustomRoleList)(
+            sqlite
+              .prepare(
+                `select id, name, permissions, version, created_at as createdAt, updated_at as updatedAt
+                 from custom_roles order by name collate nocase, id`,
+              )
+              .all()
+              .map((row) => {
+                const record = Schema.decodeUnknownSync(
+                  Schema.Struct({
+                    ...CustomRole.fields,
+                    permissions: Schema.fromJsonString(Schema.Array(PermissionCode)),
+                  }),
+                )(row);
+                return record;
+              }),
+          ),
         }),
       catch: (cause) => new DatabaseError({ operation: 'team.list', cause }),
     });
@@ -85,6 +119,14 @@ const make = Effect.gen(function* () {
           .transaction(() => {
             if (!allowed(actor, 'user.create'))
               throw new TeamConflict({ code: 'team.invitation_permission' });
+            if (
+              request.profile.startsWith('custom:') &&
+              sqlite
+                .prepare('select 1 from custom_roles where id = ?')
+                .get(request.profile.slice('custom:'.length)) === undefined
+            ) {
+              throw new TeamConflict({ code: 'team.role_unavailable' });
+            }
             const existing = sqlite
               .prepare(`${invitationQuery} where id = ?`)
               .get(request.requestId);
@@ -306,6 +348,34 @@ const make = Effect.gen(function* () {
               )
                 return;
               throw conflict();
+            }
+            if (
+              request.profile.startsWith('custom:') &&
+              sqlite
+                .prepare('select 1 from custom_roles where id = ?')
+                .get(request.profile.slice('custom:'.length)) === undefined
+            ) {
+              throw new TeamConflict({ code: 'team.role_unavailable' });
+            }
+            const currentlyAdministrator = member.disabledAt === null && allowed(id, 'user.update');
+            const remainsAdministrator =
+              !request.disabled && profilePermissions(request.profile).includes('user.update');
+            if (currentlyAdministrator && !remainsAdministrator) {
+              const activeAdministratorCount = Schema.decodeUnknownSync(Schema.Int)(
+                sqlite
+                  .prepare(
+                    `select count(distinct u.id) from users u
+                     join user_roles ur on ur.user_id = u.id
+                     join role_permissions rp on rp.role_id = ur.role_id
+                     where u.disabled_at is null and u.kind = 'administrator'
+                       and rp.permission_code = 'user.update'`,
+                  )
+                  .pluck()
+                  .get(),
+              );
+              if (activeAdministratorCount <= 1) {
+                throw new TeamConflict({ code: 'team.last_administrator' });
+              }
             }
             assignProfile(id, request.profile, now);
             sqlite

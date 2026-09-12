@@ -10,11 +10,21 @@ const party: DocumentPartyValue = {
   city: 'Hong Kong',
   country: 'Hong Kong',
   email: 'contact@example.test',
+  phone: '',
 };
 
 describe('document contact validation', () => {
   it('accepts an address without a postal code', () => {
     expect(() => validateDocumentParties({ issuer: party, client: party })).not.toThrow();
+  });
+
+  it('accepts a client phone number without a client email address', () => {
+    expect(() =>
+      validateDocumentParties({
+        issuer: party,
+        client: { ...party, email: '', phone: '+852 2123 4567' },
+      }),
+    ).not.toThrow();
   });
 
   it('collects missing fields and invalid email addresses for both parties', () => {

@@ -1,2 +1,22 @@
 @use "../billing/billing-workspace";
 @use "shared/page-header/detail-page";
+
+.task-form {
+  display: grid;
+  gap: var(--space-5);
+}
+
+.quantity-input {
+  inline-size: 8rem;
+}
+
+.add-invoice {
+  display: flex;
+  align-items: end;
+  gap: var(--space-3);
+  margin-block-start: var(--space-4);
+}
+
+.add-invoice .field {
+  flex: 1;
+}

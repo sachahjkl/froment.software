@@ -6,7 +6,7 @@
       pageActions
       appLinkButton
       variant="primary"
-      routerLink="/backoffice/banque/importer"
+      routerLink="/backoffice/banking/import"
       *appCan="'bank.import'"
       [queryParams]="queryParams()"
       >{{ i18n.t('bank.import') }}</a
@@ -158,9 +158,13 @@
             <td>
               <span appBadge>{{ i18n.t(statusLabel(status(item))) }}</span>@if (item.amountCents > 0
               && item.matchedCents > 0) {
-              <small>{{ money(item.matchedCents) }} / {{ money(item.amountCents) }}</small> }
+              <small
+                >{{ money(item.matchedCents, item.currency) }} / {{ money(item.amountCents,
+                item.currency) }}</small
+              >
+              }
             </td>
-            <td class="amount">{{ money(item.amountCents) }}</td>
+            <td class="amount">{{ money(item.amountCents, item.currency) }}</td>
           </tr>
           }
         </tbody>

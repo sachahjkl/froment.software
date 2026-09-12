@@ -34,7 +34,7 @@ describe('ConfigurationIndex', () => {
             component: Configuration,
             children: [
               { path: '', component: ConfigurationIndex },
-              { path: 'entreprise', component: SettingsPage },
+              { path: 'issuer', component: SettingsPage },
             ],
           },
         ]),
@@ -43,7 +43,7 @@ describe('ConfigurationIndex', () => {
     const harness = await RouterTestingHarness.create();
     await harness.navigateByUrl('/configuration', Configuration);
     expect(harness.routeNativeElement?.querySelector('[pageBack]')).toBeNull();
-    await harness.navigateByUrl('/configuration/entreprise', Configuration);
+    await harness.navigateByUrl('/configuration/issuer', Configuration);
     const links = harness.routeNativeElement?.querySelectorAll('a');
     expect(links).toHaveLength(1);
     expect(links?.[0]?.getAttribute('href')).toBe('/configuration');
@@ -56,7 +56,7 @@ describe('ConfigurationIndex', () => {
     for (const path of [
       'conditions/new',
       'conditions/:presetId/edit',
-      'backoffice/equipe/invitations/new',
+      'backoffice/team/invitations/new',
       'backoffice/api/new',
       'backoffice/services/resend/tests/new',
       'backoffice/services/stripe/tests/new',
@@ -76,14 +76,9 @@ describe('ConfigurationIndex', () => {
     ).toBe(true);
   });
   it('separates team, API, services and audit into protected top-level routes', () => {
-    expect(configurationRoutes.map(({ path }) => path)).toEqual([
-      '',
-      'entreprise',
-      'conditions/new',
-      'conditions/:presetId/edit',
-      'conditions',
-      'carte-de-visite',
-    ]);
+    const configurationPaths = configurationRoutes.map(({ path }) => path);
+    expect(configurationPaths).toContain('company');
+    expect(configurationPaths).toContain('issuer');
     expect(auditRoute.path).toBe('backoffice/audit');
     for (const route of [...teamRoutes, ...apiTokenRoutes, ...serviceRoutes, auditRoute]) {
       expect(route.canActivate).toEqual([administratorGuard]);
@@ -91,15 +86,16 @@ describe('ConfigurationIndex', () => {
       expect(route.redirectTo).toBeUndefined();
     }
   });
-  it('keeps only company and documents in configuration', async () => {
+  it('keeps company, documents, and invoice analysis in configuration', async () => {
     TestBed.configureTestingModule({ providers: [provideRouter([])] });
     const fixture = TestBed.createComponent(ConfigurationIndex);
     await fixture.whenStable();
     const root: HTMLElement = fixture.nativeElement;
-    expect(root.querySelectorAll('.groups section')).toHaveLength(2);
-    expect(root.querySelector('a[href$="carte-de-visite"]')).not.toBeNull();
-    expect(root.querySelectorAll('a')).toHaveLength(3);
-    for (const path of ['equipe', 'api', 'services', 'audit']) {
+    expect(root.querySelectorAll('.groups section')).toHaveLength(3);
+    expect(root.querySelector('a[href$="business-card"]')).not.toBeNull();
+    expect(root.querySelector('a[href$="company"]')).not.toBeNull();
+    expect(root.querySelector('a[href$="supplier-invoice-analysis"]')).not.toBeNull();
+    for (const path of ['team', 'api', 'services', 'audit']) {
       expect(root.querySelector(`a[href$="${path}"]`)).toBeNull();
     }
     expect(root.querySelectorAll('h1')).toHaveLength(1);

@@ -55,6 +55,10 @@ export const billingWorkspaceText = {
     'billingWorkspace.readonly':
       'Le document émis reste inchangé. Les encaissements et avoirs sont enregistrés séparément.',
     'billingWorkspace.recordReceipt': 'Enregistrer un encaissement',
+    'billingWorkspace.receipt': 'Encaissement',
+    'billingWorkspace.receiptOptions': 'Choisir le type d’encaissement',
+    'billingWorkspace.receiptPartial': 'Encaissement partiel',
+    'billingWorkspace.receiptFull': 'Encaissement intégral',
     'billingWorkspace.issueTitle': 'Émettre la facture',
     'billingWorkspace.issueHint':
       'Vérifiez le document. L’émission attribue un numéro définitif et fige cette version.',
@@ -167,6 +171,10 @@ export const billingWorkspaceText = {
     'billingWorkspace.readonly':
       'The issued document remains unchanged. Receipts and credit notes are recorded separately.',
     'billingWorkspace.recordReceipt': 'Record a receipt',
+    'billingWorkspace.receipt': 'Receipt',
+    'billingWorkspace.receiptOptions': 'Select the receipt type',
+    'billingWorkspace.receiptPartial': 'Partial receipt',
+    'billingWorkspace.receiptFull': 'Full receipt',
     'billingWorkspace.issueTitle': 'Issue invoice',
     'billingWorkspace.issueHint':
       'Check the document. Issuance assigns a final number and locks this version.',

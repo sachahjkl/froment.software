@@ -54,6 +54,7 @@ export class ClientPortalApiStub {
       totalCents: 12000,
       updatedAt: '2026-08-20T08:00:00.000Z',
       pdfAvailable: false,
+      creditNotes: [],
     },
   ];
   listQuotes(): Promise<ClientQuoteListValue> {

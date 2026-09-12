@@ -26,7 +26,7 @@ Les six domaines ont été examinés dans l’ordre prescrit.
 Les captures initiales couvrent les routes suivantes à 320 px dans les deux thèmes :
 
 - `/`, `/about`, `/clients`, `/services` ;
-- `/services/developpement`, `/services/audit-renovation`, `/tools`, `/blog` ;
+- `/services/development`, `/services/audit-renovation`, `/tools`, `/blog` ;
 - `/design`, `/backoffice/login`, `/backoffice/bootstrap` ;
 - `/quote` sans jeton et `/404`.
 

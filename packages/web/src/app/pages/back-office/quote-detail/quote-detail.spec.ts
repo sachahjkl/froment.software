@@ -43,7 +43,7 @@ describe('Quote detail', () => {
       ],
     });
   });
-  it('separates the read-only summary, document and version tabs', async () => {
+  it('separates the read-only summary and document tabs with an integrated version selector', async () => {
     const harness = await RouterTestingHarness.create(`/backoffice/quotes/${quoteId}`);
     await harness.fixture.whenStable();
     const root: HTMLElement = harness.fixture.nativeElement;
@@ -53,13 +53,10 @@ describe('Quote detail', () => {
     expect(
       root.querySelector(`a[href="/backoffice/quotes/${quoteId}/publication"]`),
     ).not.toBeNull();
-    control<HTMLAnchorElement>(root, '#quote-versions-tab').click();
+    selectValue(control<HTMLSelectElement>(root, '.version-selector select'), '1');
     await harness.fixture.whenStable();
-    expect(root.textContent).toContain('First version');
-    control<HTMLAnchorElement>(
-      root,
-      `a[href="/backoffice/quotes/${quoteId}/document?version=1"]`,
-    ).click();
+    expect(control<HTMLSelectElement>(root, '.version-selector select').value).toBe('1');
+    control<HTMLAnchorElement>(root, '#quote-document-tab').click();
     await harness.fixture.whenStable();
     expect(TestBed.inject(Router).url).toContain('/document?version=1');
     expect(control<HTMLIFrameElement>(root, 'iframe').getAttribute('src')).toBe(
@@ -105,10 +102,14 @@ describe('Quote detail', () => {
   it('keeps revisions in fixed ascending version order without mutating the response', async () => {
     const revisions = quoteFixture.revisions.toReversed();
     get.mockResolvedValue({ success: true, result: { ...quoteFixture, revisions } });
-    const harness = await RouterTestingHarness.create(`/backoffice/quotes/${quoteId}/versions`);
+    const harness = await RouterTestingHarness.create(`/backoffice/quotes/${quoteId}`);
     await harness.fixture.whenStable();
     const root: HTMLElement = harness.fixture.nativeElement;
-    expect(root.querySelector('tbody th')?.textContent).toContain('First version');
+    expect(
+      Array.from(root.querySelectorAll<HTMLOptionElement>('.version-selector option'), (option) =>
+        option.getAttribute('value'),
+      ),
+    ).toEqual(['1', '']);
     expect(root.querySelector('[appTableSort]')).toBeNull();
     expect(revisions[0]?.version).toBe(2);
   });
@@ -131,14 +132,14 @@ describe('Quote detail', () => {
     inputValue(root, 'textarea', 'Scope changed after review.');
     const reason = control<HTMLSelectElement>(root, 'select');
     selectValue(reason, 'scope-changed');
-    control<HTMLAnchorElement>(root, '#quote-versions-tab').click();
+    control<HTMLAnchorElement>(root, '#quote-document-tab').click();
     await harness.fixture.whenStable();
     expect(confirm).not.toHaveBeenCalled();
     const event = new Event('beforeunload', { cancelable: true });
     window.dispatchEvent(event);
     expect(event.defaultPrevented).toBe(true);
-    await TestBed.inject(Router).navigateByUrl('/backoffice/affaires');
-    expect(TestBed.inject(Router).url).toContain('/versions');
+    await TestBed.inject(Router).navigateByUrl('/backoffice/affairs');
+    expect(TestBed.inject(Router).url).toContain('/document');
     expect(confirm).toHaveBeenCalledOnce();
     control<HTMLAnchorElement>(root, '#quote-summary-tab').click();
     await harness.fixture.whenStable();
@@ -164,7 +165,7 @@ describe('Quote detail', () => {
     expect(button.disabled).toBe(false);
     expect(document.querySelectorAll('[role="alertdialog"]')).toHaveLength(1);
     button.click();
-    await TestBed.inject(Router).navigateByUrl('/backoffice/affaires');
+    await TestBed.inject(Router).navigateByUrl('/backoffice/affairs');
     expect(TestBed.inject(Router).url).toContain('/summary');
     expect(document.querySelectorAll('[role="alertdialog"]')).toHaveLength(1);
     const event = new Event('beforeunload', { cancelable: true });

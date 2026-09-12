@@ -36,7 +36,7 @@ describe('PaymentEditor', () => {
     };
     const { fixture, queryParams } = await setupInvoicePage(PaymentEditor, { query });
     const task = fixture.componentInstance['task'];
-    expect(task.navigation.listLink()).toBe('/backoffice/facturation/encaissements');
+    expect(task.navigation.listLink()).toBe('/backoffice/billing/receipts');
     expect(task.navigation.listQuery()).toEqual({
       q: 'BANK',
       status: 'active',

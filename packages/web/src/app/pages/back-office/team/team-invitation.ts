@@ -1,6 +1,7 @@
 import { Can } from '@backoffice/can';
 import {
   afterRenderEffect,
+  afterNextRender,
   ChangeDetectionStrategy,
   Component,
   computed,
@@ -19,7 +20,7 @@ import {
   required,
 } from '@angular/forms/signals';
 import { RouterLink } from '@angular/router';
-import { TeamInvite } from '@froment/contracts';
+import { CustomRole, TeamInvite, TeamProfile } from '@froment/contracts';
 import { Option, Schema } from 'effect';
 import { TeamApi } from '@backoffice/team-api';
 import { I18nService, type TranslationKey } from '@app/i18n.service';
@@ -56,6 +57,7 @@ export class TeamInvitation {
   protected readonly link = signal('');
   protected readonly saved = signal(false);
   protected readonly pending = signal<typeof TeamInvite.Type | undefined>(undefined);
+  protected readonly roles = signal<ReadonlyArray<CustomRole>>([]);
   protected readonly submitLabel = computed(() =>
     this.i18n.t(this.pending() ? 'teamInvitation.retry' : 'team.invite'),
   );
@@ -74,9 +76,18 @@ export class TeamInvitation {
   );
 
   constructor() {
+    afterNextRender(() => void this.loadRoles());
     afterRenderEffect(() => {
       if (this.saved()) this.result()?.nativeElement.focus();
     });
+  }
+
+  protected profileLabel(profile: typeof TeamProfile.Type): string {
+    if (profile === 'accountant') return this.i18n.t('team.accountant');
+    if (profile === 'accounting-validator') return this.i18n.t('team.accountingValidator');
+    if (profile === 'accounting-reader') return this.i18n.t('team.accountingReader');
+    if (profile === 'collaborator') return this.i18n.t('team.collaborator');
+    return this.roles().find(({ id }) => profile === `custom:${id}`)?.name ?? profile;
   }
 
   protected async invite(event: Event): Promise<void> {
@@ -108,9 +119,7 @@ export class TeamInvitation {
           this.i18n.tf('configurationWorkspace.inviteConfirm', {
             name: request.displayName,
             email: request.email,
-            profile: this.i18n.t(
-              request.profile === 'accountant' ? 'team.accountant' : 'team.collaborator',
-            ),
+            profile: this.profileLabel(request.profile),
           }),
         ))
       )
@@ -136,6 +145,16 @@ export class TeamInvitation {
 
   protected dismissLink(): void {
     this.link.set('');
+  }
+
+  private async loadRoles(): Promise<void> {
+    try {
+      const outcome = await this.api.list();
+      if (outcome.success) this.roles.set(outcome.result.roles);
+      else this.error.set(outcome.code);
+    } catch {
+      this.error.set('team.error');
+    }
   }
 
   canDeactivate(): boolean | Promise<boolean> {

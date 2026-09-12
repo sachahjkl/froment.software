@@ -1,6 +1,6 @@
 import { Schema } from 'effect';
 import { InvoicePayment } from './payments.js';
-import { CreditNote, InvoiceRefund } from './credit-notes.js';
+import { CreditNoteSummary, InvoiceRefund } from './credit-notes.js';
 import { InvoiceSummary } from './contracts.js';
 import { AuditEvent } from '../audit/contracts.js';
 
@@ -20,12 +20,7 @@ export const InvoiceReceiptList = Schema.Array(
     ...invoiceContext,
   }),
 ).check(Schema.isMaxLength(10000));
-export const CreditNoteList = Schema.Array(
-  Schema.Struct({
-    ...CreditNote.fields,
-    ...invoiceContext,
-  }),
-).check(Schema.isMaxLength(10000));
+export const CreditNoteList = Schema.Array(CreditNoteSummary).check(Schema.isMaxLength(10000));
 export const InvoiceRefundList = Schema.Array(
   Schema.Struct({
     ...InvoiceRefund.fields,

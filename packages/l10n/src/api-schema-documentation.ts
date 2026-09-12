@@ -86,9 +86,9 @@ export const apiSchemaDocumentation = {
           'Indique si l’élément est archivé. L’archivage ne modifie pas les documents existants.',
         examples: [false],
       },
-      csv: {
+      content: {
         description:
-          'Relevé UTF-8 séparé par des virgules, limité à 1 000 lignes et 500 000 caractères. En-tête exact : transaction_id,booked_on,amount,currency,description. Montants EUR avec deux décimales. Réimporter une référence avec des valeurs différentes refuse tout l’import.',
+          'Contenu CAMT.053, OFX ou CSV UTF-8, limité à 1 000 opérations et 500 000 caractères. Réimporter une référence modifiée refuse tout l’import.',
         examples: [
           'transaction_id,booked_on,amount,currency,description\nBANK-001,2026-09-01,125.00,EUR,Payment',
         ],
@@ -170,9 +170,9 @@ export const apiSchemaDocumentation = {
         description: 'Whether the item is archived. Archival does not change existing documents.',
         examples: [false],
       },
-      csv: {
+      content: {
         description:
-          'Comma-separated UTF-8 statement, limited to 1,000 rows and 500,000 characters. Exact header: transaction_id,booked_on,amount,currency,description. EUR amounts with two decimals. Reusing a reference with different values rejects the entire import.',
+          'CAMT.053, OFX, or UTF-8 CSV content limited to 1,000 transactions and 500,000 characters. Reusing a changed reference rejects the complete import.',
         examples: [
           'transaction_id,booked_on,amount,currency,description\nBANK-001,2026-09-01,125.00,EUR,Payment',
         ],

@@ -5,26 +5,11 @@
   display: grid;
   gap: var(--space-4);
 }
-.document-line {
-  padding: var(--space-3);
-  gap: var(--space-3);
-}
 .lines > * + * {
   margin-top: var(--space-3);
 }
 form > button[type="submit"] {
   justify-self: start;
-}
-@container (min-width: 42rem) {
-  .document-line {
-    grid-template-columns: minmax(10rem, 2fr) repeat(3, minmax(5rem, 1fr));
-  }
-  .document-line > .description {
-    grid-column: auto;
-  }
-  .document-line > .line-total {
-    grid-column: 2 / -1;
-  }
 }
 @media (min-width: 80rem) {
   .document-editor:has(> [appOutcomePanel]) {

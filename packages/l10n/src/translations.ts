@@ -15,6 +15,7 @@ import { auditText } from './audit.js';
 import { listWorkspaceText } from './list-workspace.js';
 import { dateRangeFilterText } from './date-range-filter.js';
 import { teamText } from './team.js';
+import { roleText } from './roles.js';
 import { creditText } from './credit-notes.js';
 import { ledgerText } from './bank-ledger.js';
 import { passkeyText } from './passkeys.js';
@@ -30,9 +31,18 @@ import { commercialHeaderText } from './commercial-header.js';
 import { teamInvitationText } from './team-invitation.js';
 import { settingsHeaderText } from './settings-header.js';
 import { documentTextEditorText } from './document-text-editor.js';
+import { supplierWorkspaceText } from './supplier-workspace.js';
+import { companyWorkspaceText } from './company-workspace.js';
+import { supplierInvoiceText } from './supplier-invoices.js';
+import { affairText } from './affairs.js';
+import { documentLineText } from './document-lines.js';
+import { accountingText } from './accounting.js';
 
 export const translations = {
   fr: {
+    ...documentLineText.fr,
+    ...accountingText.fr,
+    ...affairText.fr,
     ...connectionText.fr,
     ...checkoutText.fr,
     ...backOfficeShellText.fr,
@@ -52,6 +62,7 @@ export const translations = {
     'design.components.workflows': 'Parcours complets',
     ...webUiText.fr,
     ...teamText.fr,
+    ...roleText.fr,
     ...creditText.fr,
     ...ledgerText.fr,
     ...passkeyText.fr,
@@ -67,7 +78,14 @@ export const translations = {
     ...teamInvitationText.fr,
     ...settingsHeaderText.fr,
     ...documentTextEditorText.fr,
+    ...supplierWorkspaceText.fr,
+    ...companyWorkspaceText.fr,
+    ...supplierInvoiceText.fr,
     'backOffice.apiTokens.permission.payment.read': 'Exporter les règlements et leurs corrections.',
+    'backOffice.apiTokens.permission.accounting.read': 'Lire les données comptables.',
+    'backOffice.apiTokens.permission.accounting.write': 'Créer et modifier les données comptables.',
+    'backOffice.apiTokens.permission.accounting.export': 'Exporter les données comptables.',
+    'backOffice.apiTokens.permission.accounting.evidence': 'Ajouter des pièces comptables.',
     'design.confirmation.title': 'Modales de confirmation',
     'design.confirmation.hint':
       'Le focus commence sur Annuler. Tab reste dans la modale. Échap et le fond annulent la demande.',
@@ -482,12 +500,23 @@ export const translations = {
     'backOffice.apiTokens.permission.client.create': 'Créer des clients.',
     'backOffice.apiTokens.permission.client.update': 'Modifier les clients.',
     'backOffice.apiTokens.permission.client.archive': 'Archiver les clients.',
+    'backOffice.apiTokens.permission.supplier.read': 'Consulter les fournisseurs.',
+    'backOffice.apiTokens.permission.supplier.create': 'Créer des fournisseurs.',
+    'backOffice.apiTokens.permission.supplier.update': 'Modifier les fournisseurs.',
+    'backOffice.apiTokens.permission.supplier.archive': 'Archiver les fournisseurs.',
+    'backOffice.apiTokens.permission.supplier-invoice.read': 'Consulter les factures fournisseurs.',
+    'backOffice.apiTokens.permission.supplier-invoice.create': 'Créer des factures fournisseurs.',
+    'backOffice.apiTokens.permission.supplier-invoice.update':
+      'Modifier les factures fournisseurs.',
     'backOffice.apiTokens.permission.quote.read': 'Consulter les devis.',
     'backOffice.apiTokens.permission.quote.create': 'Créer des devis.',
     'backOffice.apiTokens.permission.quote.update': 'Modifier les devis.',
     'backOffice.apiTokens.permission.quote.delete': 'Supprimer les devis.',
     'backOffice.apiTokens.permission.quote.send': 'Créer les liens de signature des devis.',
     'backOffice.apiTokens.permission.order.read': 'Consulter les commandes.',
+    'backOffice.apiTokens.permission.affair.read': 'Consulter les affaires.',
+    'backOffice.apiTokens.permission.affair.create': 'Créer des affaires.',
+    'backOffice.apiTokens.permission.affair.update': 'Modifier les affaires.',
     'backOffice.apiTokens.permission.invoice.read': 'Consulter les factures.',
     'backOffice.apiTokens.permission.invoice.create': 'Créer des factures.',
     'backOffice.apiTokens.permission.invoice.update': 'Modifier les factures.',
@@ -624,6 +653,10 @@ export const translations = {
     'invoice.version_conflict': 'La facture a été modifiée ailleurs. Rechargez la page.',
     'invoice.amount_too_large': 'Le montant de la facture est trop élevé.',
     'invoice.invalid_dates': 'Vérifiez les dates de prestation et d’échéance.',
+    'invoice.exchange_rate_missing':
+      'Ajoutez un taux de change daté avant d’émettre cette facture.',
+    'invoice.accounting_unavailable':
+      'Ouvrez une période comptable et vérifiez le journal des ventes ainsi que les comptes PCG requis.',
     'invoice.invalid_transition': 'Ce changement de statut est impossible.',
     'invoice.error': 'Le serveur ne peut pas traiter cette facture.',
     'backOffice.quote.title.new': 'Nouveau devis',
@@ -642,6 +675,7 @@ export const translations = {
     'backOffice.quote.lines': 'Lignes',
     'backOffice.quote.description': 'Description',
     'backOffice.quote.quantity': 'Quantité',
+    'backOffice.quote.currency': 'Devise ISO',
     'backOffice.quote.unitPrice': 'Prix unitaire HT',
     'backOffice.quote.vatRate': 'TVA (%)',
     'backOffice.quote.removeLine': 'Supprimer la ligne',
@@ -809,6 +843,7 @@ export const translations = {
     'document.quote.refreshHint':
       'Chaque enregistrement crée une nouvelle version avec les coordonnées actuelles de l’entreprise et du client.',
     'document.invalidEmail': 'saisissez une adresse e-mail valide',
+    'document.invalidPhone': 'saisissez un numéro de téléphone valide',
     'document.issue': '{field} : {reason}.',
     'document.issuer.edit': 'Corriger la fiche entreprise',
     'document.client.edit': 'Corriger la fiche client',
@@ -939,6 +974,7 @@ export const translations = {
     'backOffice.clients.city': 'Ville',
     'backOffice.clients.country': 'Pays',
     'backOffice.clients.email': 'Adresse e-mail',
+    'backOffice.clients.phone': 'Numéro de téléphone',
     'backOffice.issuer.title': 'Coordonnées émetteur',
     'backOffice.issuer.intro':
       'Ces coordonnées sont figées dans chaque nouvelle révision de devis.',
@@ -949,6 +985,11 @@ export const translations = {
     'backOffice.issuer.phone': 'Téléphone',
     'backOffice.issuer.registrationNumber': 'Numéro SIRET',
     'backOffice.issuer.vatNumber': 'Numéro de TVA',
+    'backOffice.issuer.paymentAccount': 'Compte de paiement',
+    'backOffice.issuer.iban': 'IBAN débiteur',
+    'backOffice.issuer.bic': 'BIC débiteur',
+    'backOffice.issuer.ibanInvalid': 'Saisissez un IBAN valide.',
+    'backOffice.issuer.bicInvalid': 'Saisissez un BIC valide.',
     'backOffice.issuer.save': 'Enregistrer',
     'backOffice.issuer.saving': 'Enregistrement…',
     'backOffice.issuer.saved': 'Coordonnées enregistrées.',
@@ -1024,6 +1065,7 @@ export const translations = {
     'backOffice.clientDetail.reactivating': 'Réactivation…',
     'backOffice.clientDetail.fieldInvalid': 'Cette valeur est trop longue.',
     'backOffice.clientDetail.emailInvalid': 'Saisissez une adresse e-mail valide.',
+    'backOffice.clientDetail.phoneInvalid': 'Saisissez un numéro de téléphone valide.',
     'backOffice.clientDetail.unsavedChanges':
       'Les modifications non enregistrées seront perdues. Continuer ?',
     'backOffice.client.title': 'Documents',
@@ -1597,6 +1639,9 @@ export const translations = {
     'cookies.contact.content': 'Pour une question sur ce réglage ou le fonctionnement du site :',
   },
   en: {
+    ...documentLineText.en,
+    ...accountingText.en,
+    ...affairText.en,
     ...connectionText.en,
     ...checkoutText.en,
     ...backOfficeShellText.en,
@@ -1616,6 +1661,7 @@ export const translations = {
     'design.components.workflows': 'Complete workflows',
     ...webUiText.en,
     ...teamText.en,
+    ...roleText.en,
     ...creditText.en,
     ...ledgerText.en,
     ...passkeyText.en,
@@ -1631,7 +1677,14 @@ export const translations = {
     ...teamInvitationText.en,
     ...settingsHeaderText.en,
     ...documentTextEditorText.en,
+    ...supplierWorkspaceText.en,
+    ...companyWorkspaceText.en,
+    ...supplierInvoiceText.en,
     'backOffice.apiTokens.permission.payment.read': 'Export payments and their corrections.',
+    'backOffice.apiTokens.permission.accounting.read': 'Read accounting data.',
+    'backOffice.apiTokens.permission.accounting.write': 'Create and update accounting data.',
+    'backOffice.apiTokens.permission.accounting.export': 'Export accounting data.',
+    'backOffice.apiTokens.permission.accounting.evidence': 'Add accounting evidence.',
     'design.confirmation.title': 'Confirmation dialogs',
     'design.confirmation.hint':
       'Focus starts on Cancel. Tab stays in the dialog. Escape and the backdrop cancel the request.',
@@ -2038,12 +2091,22 @@ export const translations = {
     'backOffice.apiTokens.permission.client.create': 'Create clients.',
     'backOffice.apiTokens.permission.client.update': 'Update clients.',
     'backOffice.apiTokens.permission.client.archive': 'Archive clients.',
+    'backOffice.apiTokens.permission.supplier.read': 'View suppliers.',
+    'backOffice.apiTokens.permission.supplier.create': 'Create suppliers.',
+    'backOffice.apiTokens.permission.supplier.update': 'Update suppliers.',
+    'backOffice.apiTokens.permission.supplier.archive': 'Archive suppliers.',
+    'backOffice.apiTokens.permission.supplier-invoice.read': 'View supplier invoices.',
+    'backOffice.apiTokens.permission.supplier-invoice.create': 'Create supplier invoices.',
+    'backOffice.apiTokens.permission.supplier-invoice.update': 'Update supplier invoices.',
     'backOffice.apiTokens.permission.quote.read': 'View quotes.',
     'backOffice.apiTokens.permission.quote.create': 'Create quotes.',
     'backOffice.apiTokens.permission.quote.update': 'Update quotes.',
     'backOffice.apiTokens.permission.quote.delete': 'Delete quotes.',
     'backOffice.apiTokens.permission.quote.send': 'Create signing links for quotes.',
     'backOffice.apiTokens.permission.order.read': 'View orders.',
+    'backOffice.apiTokens.permission.affair.read': 'View affairs.',
+    'backOffice.apiTokens.permission.affair.create': 'Create affairs.',
+    'backOffice.apiTokens.permission.affair.update': 'Update affairs.',
     'backOffice.apiTokens.permission.invoice.read': 'View invoices.',
     'backOffice.apiTokens.permission.invoice.create': 'Create invoices.',
     'backOffice.apiTokens.permission.invoice.update': 'Update invoices.',
@@ -2177,6 +2240,9 @@ export const translations = {
     'invoice.version_conflict': 'The invoice changed elsewhere. Reload the page.',
     'invoice.amount_too_large': 'The invoice amount is too large.',
     'invoice.invalid_dates': 'Check the service date and due date.',
+    'invoice.exchange_rate_missing': 'Add a dated exchange rate before you issue this invoice.',
+    'invoice.accounting_unavailable':
+      'Open an accounting period and check the sales journal and required PCG accounts.',
     'invoice.invalid_transition': 'This status change is not valid.',
     'invoice.error': 'The server cannot process this invoice.',
     'backOffice.quote.title.new': 'New quote',
@@ -2195,6 +2261,7 @@ export const translations = {
     'backOffice.quote.lines': 'Lines',
     'backOffice.quote.description': 'Description',
     'backOffice.quote.quantity': 'Quantity',
+    'backOffice.quote.currency': 'ISO currency',
     'backOffice.quote.unitPrice': 'Unit price before tax',
     'backOffice.quote.vatRate': 'VAT (%)',
     'backOffice.quote.removeLine': 'Remove line',
@@ -2356,6 +2423,7 @@ export const translations = {
     'document.quote.refreshHint':
       'Each save creates a new revision with the current company and client details.',
     'document.invalidEmail': 'enter a valid email address',
+    'document.invalidPhone': 'enter a valid phone number',
     'document.issue': '{field}: {reason}.',
     'document.issuer.edit': 'Correct company details',
     'document.client.edit': 'Correct client details',
@@ -2478,6 +2546,7 @@ export const translations = {
     'backOffice.clients.city': 'City',
     'backOffice.clients.country': 'Country',
     'backOffice.clients.email': 'Email address',
+    'backOffice.clients.phone': 'Phone number',
     'backOffice.issuer.title': 'Issuer details',
     'backOffice.issuer.intro': 'These details are frozen into each new quote revision.',
     'backOffice.issuer.loading': 'Loading issuer details…',
@@ -2487,6 +2556,11 @@ export const translations = {
     'backOffice.issuer.phone': 'Phone',
     'backOffice.issuer.registrationNumber': 'Registration number',
     'backOffice.issuer.vatNumber': 'VAT number',
+    'backOffice.issuer.paymentAccount': 'Payment account',
+    'backOffice.issuer.iban': 'Debtor IBAN',
+    'backOffice.issuer.bic': 'Debtor BIC',
+    'backOffice.issuer.ibanInvalid': 'Enter a valid IBAN.',
+    'backOffice.issuer.bicInvalid': 'Enter a valid BIC.',
     'backOffice.issuer.save': 'Save',
     'backOffice.issuer.saving': 'Saving…',
     'backOffice.issuer.saved': 'Issuer details saved.',
@@ -2559,6 +2633,7 @@ export const translations = {
     'backOffice.clientDetail.reactivating': 'Reactivating…',
     'backOffice.clientDetail.fieldInvalid': 'This value is too long.',
     'backOffice.clientDetail.emailInvalid': 'Enter a valid email address.',
+    'backOffice.clientDetail.phoneInvalid': 'Enter a valid phone number.',
     'backOffice.clientDetail.unsavedChanges': 'Unsaved changes will be lost. Continue?',
     'backOffice.client.title': 'Documents',
     'backOffice.client.eyebrow': 'Secure client portal',

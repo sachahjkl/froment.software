@@ -1,10 +1,34 @@
 # Relevés bancaires et rapprochement
 
-La page **Banque** importe les relevés CSV et associe les encaissements aux règlements déjà enregistrés.
+La page **Banque** importe les relevés CAMT.053, OFX et CSV.
+Elle associe les encaissements aux règlements déjà enregistrés.
 Ces opérations utilisent les données réelles de l’installation, pas les adaptateurs simulés.
 Elles ne déclenchent aucun virement et ne créent aucun règlement supplémentaire.
 
-## Format du relevé
+## Formats du relevé
+
+### CAMT.053
+
+Importez un relevé XML ISO 20022 `camt.053`.
+Le serveur lit les montants, devises, dates comptables, références et libellés des écritures.
+Il utilise la référence du gestionnaire de compte si la référence d’écriture est absente.
+
+### OFX
+
+Importez un relevé OFX contenant une liste `BANKTRANLIST`.
+Le serveur lit `FITID`, `DTPOSTED`, `TRNAMT`, `NAME` et `MEMO` pour chaque opération.
+
+### CSV configurable
+
+Configurez les éléments suivants avant la prévisualisation :
+
+- le séparateur de colonnes ;
+- les colonnes de référence, de date, de montant, de devise et de libellé ;
+- le format de date ;
+- le séparateur décimal.
+
+Laissez la colonne de devise vide pour utiliser EUR.
+Le modèle téléchargeable fournit la configuration par défaut.
 
 Utilisez un fichier UTF-8 avec ces colonnes, dans cet ordre :
 
@@ -14,17 +38,25 @@ BANK-001,2026-09-01,100.00,EUR,Encaissement client
 BANK-002,2026-09-02,-2.50,EUR,Frais bancaires
 ```
 
-Le fichier accepte les guillemets CSV, les descriptions multilignes et un BOM UTF-8.
-L’import accepte au maximum 1 000 opérations par fichier et 500 ko depuis l’interface.
-Les montants utilisent un point et exactement deux décimales.
+Le CSV accepte les guillemets, les descriptions multilignes et un BOM UTF-8.
+L’import accepte au maximum 1 000 opérations et 500 ko depuis l’interface.
+Les montants utilisent exactement deux décimales.
 Seuls les montants non nuls en euros sont acceptés.
 
 Conservez un identifiant stable pour chaque compte et chaque opération bancaire.
 Le serveur ignore les opérations déjà importées avec les mêmes valeurs.
 Si une référence existante contient des valeurs différentes, le serveur refuse tout le fichier.
 Une erreur ne produit aucun import partiel.
+La prévisualisation ne crée ni opération, ni événement d’audit.
+La confirmation valide une seconde fois le contenu avant toute écriture.
 
 ## Rapprochement
+
+L’API propose au maximum dix rapprochements probables pour un crédit bancaire.
+Elle compare le montant, les références de facture et de règlement, puis la proximité des dates.
+Chaque suggestion affiche son score et ses raisons.
+Un utilisateur doit sélectionner la suggestion et confirmer le rapprochement.
+Le serveur ne crée jamais un rapprochement automatiquement.
 
 Enregistrez d’abord le règlement dans la facture.
 Sélectionnez ensuite le crédit bancaire, la facture et le règlement.

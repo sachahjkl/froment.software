@@ -4,7 +4,7 @@ import { unsavedChangesGuard } from '@backoffice/unsaved-changes-guard';
 
 export const billingRoutes: Routes = [
   {
-    path: 'backoffice/facturation',
+    path: 'backoffice/billing',
     pathMatch: 'full',
     loadComponent: () => import('./billing').then((m) => m.Billing),
     canActivate: [administratorGuard],
@@ -15,7 +15,7 @@ export const billingRoutes: Routes = [
     },
   },
   {
-    path: 'backoffice/facturation/encaissements',
+    path: 'backoffice/billing/receipts',
     loadComponent: () => import('../receipt-list/receipt-list').then((m) => m.ReceiptList),
     canActivate: [administratorGuard],
     data: {
@@ -25,7 +25,7 @@ export const billingRoutes: Routes = [
     },
   },
   {
-    path: 'backoffice/facturation/avoirs',
+    path: 'backoffice/billing/credit-notes',
     loadComponent: () => import('../credit-notes/credit-notes').then((m) => m.CreditNotes),
     canActivate: [administratorGuard],
     data: {
@@ -35,7 +35,7 @@ export const billingRoutes: Routes = [
     },
   },
   {
-    path: 'backoffice/facturation/remboursements',
+    path: 'backoffice/billing/refunds',
     loadComponent: () => import('../refund-list/refund-list').then((m) => m.RefundList),
     canActivate: [administratorGuard],
     data: {
@@ -111,6 +111,31 @@ export const billingRoutes: Routes = [
     },
   },
   {
+    path: 'backoffice/invoices/:invoiceId/credits/:creditNoteId/edit',
+    loadComponent: () => import('../credit-editor/credit-editor').then((m) => m.CreditEditor),
+    canActivate: [administratorGuard],
+    canDeactivate: [unsavedChangesGuard],
+    data: {
+      ...permissionData('invoice.read', 'invoice.credit'),
+      titleKey: 'credit.editDraft',
+      robots: 'noindex, nofollow',
+    },
+  },
+  {
+    path: 'backoffice/invoices/:invoiceId/credit-allocations/new',
+    loadComponent: () =>
+      import('../credit-allocation-editor/credit-allocation-editor').then(
+        (module) => module.CreditAllocationEditor,
+      ),
+    canActivate: [administratorGuard],
+    canDeactivate: [unsavedChangesGuard],
+    data: {
+      ...permissionData('invoice.read', 'invoice.refund'),
+      titleKey: 'credit.allocate',
+      robots: 'noindex, nofollow',
+    },
+  },
+  {
     path: 'backoffice/invoices/:invoiceId/refunds/new',
     loadComponent: () => import('../refund-editor/refund-editor').then((m) => m.RefundEditor),
     canActivate: [administratorGuard],
@@ -129,6 +154,17 @@ export const billingRoutes: Routes = [
     data: {
       ...permissionData('invoice.read', 'invoice.refund'),
       titleKey: 'credit.cancelRefund',
+      robots: 'noindex, nofollow',
+    },
+  },
+  {
+    path: 'backoffice/invoices/:invoiceId/credit-allocations/:allocationId/cancel',
+    loadComponent: () => import('../refund-cancel/refund-cancel').then((m) => m.RefundCancel),
+    canActivate: [administratorGuard],
+    canDeactivate: [unsavedChangesGuard],
+    data: {
+      ...permissionData('invoice.read', 'invoice.refund'),
+      titleKey: 'credit.cancelAllocation',
       robots: 'noindex, nofollow',
     },
   },

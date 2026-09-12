@@ -4,9 +4,10 @@
     <section class="ds-panel">
       <h2>{{ i18n.t('configurationWorkspace.company') }}</h2>
       <p>{{ i18n.t('configurationWorkspace.companyHint') }}</p>
-      <a *appCan="'issuer.read'" routerLink="entreprise"
+      <a *appCan="'issuer.read'" routerLink="issuer"
         >{{ i18n.t('backOffice.configuration.company') }}</a
       >
+      <a *appCan="'company.read'" routerLink="company">{{ i18n.t('company.title') }}</a>
     </section>
     <section class="ds-panel">
       <h2>{{ i18n.t('configurationWorkspace.documents') }}</h2>
@@ -14,8 +15,15 @@
       <a *appCan="'condition.read'" routerLink="conditions"
         >{{ i18n.t('backOffice.configuration.conditions') }}</a
       >
-      <a *appCan="'issuer.read'" routerLink="carte-de-visite"
+      <a *appCan="'issuer.read'" routerLink="business-card"
         >{{ i18n.t('configurationWorkspace.businessCard') }}</a
+      >
+    </section>
+    <section class="ds-panel">
+      <h2>{{ i18n.t('supplierInvoice.analysisSettings.title') }}</h2>
+      <p>{{ i18n.t('supplierInvoice.analysisSettings.intro') }}</p>
+      <a *appCan="'integration.configure'" routerLink="supplier-invoice-analysis"
+        >{{ i18n.t('supplierInvoice.analysisSettings.open') }}</a
       >
     </section>
   </div>

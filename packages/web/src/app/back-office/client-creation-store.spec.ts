@@ -25,6 +25,7 @@ describe('ClientCreationStore', () => {
       city: '',
       country: '',
       email: '',
+      phone: '',
     };
     const first = await service.open();
     first.write(request);

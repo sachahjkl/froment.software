@@ -92,7 +92,10 @@ const makeIntegrations = Effect.gen(function* () {
                   join users u on u.id = c.id
                   where m.operation_id = ? and m.status = 'queued' and i.status = 'issued'
                   and u.disabled_at is null and i.version = m.prepared_version and c.email = m.prepared_recipient
-                  and not exists (select 1 from invoice_credit_notes where invoice_id = i.id)
+                  and coalesce((select sum(l.total_cents) from invoice_credit_note_lines l
+                    join invoice_credit_notes n on n.id = l.credit_note_id
+                    join invoice_credit_note_revisions cr on cr.id = l.credit_note_revision_id
+                    where l.invoice_id = i.id and n.status = 'issued' and cr.version = n.version), 0) = 0
                   and coalesce((select sum(amount_cents) from invoice_payments where invoice_id = i.id and cancelled_at is null), 0) = m.prepared_paid_cents`)
                   .get(decoded.id);
                 if (current === undefined)

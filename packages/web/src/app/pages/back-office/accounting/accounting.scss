@@ -1,0 +1,85 @@
+@use "shared/page-header/detail-page";
+
+:host {
+  display: block;
+}
+.accounting-page {
+  padding: var(--page-header-y) var(--page-x);
+}
+.section-tabs {
+  display: flex;
+  gap: var(--space-1);
+  margin-block: var(--space-5);
+  overflow-x: auto;
+  border-block-end: 1px solid var(--color-line);
+}
+.section-tabs button {
+  padding: var(--space-3) var(--space-4);
+  border: 0;
+  border-block-end: 0.2rem solid transparent;
+  background: transparent;
+  color: var(--color-ink-muted);
+  white-space: nowrap;
+}
+.section-tabs button.active {
+  border-color: var(--color-accent);
+  color: var(--color-ink);
+  font-weight: 700;
+}
+.workspace-grid {
+  display: grid;
+  grid-template-columns: minmax(16rem, 22rem) minmax(0, 1fr);
+  gap: var(--space-5);
+  align-items: start;
+}
+.flow,
+.form-panel {
+  display: grid;
+  gap: var(--space-4);
+}
+.field,
+.field-grid {
+  display: grid;
+  gap: var(--space-2);
+}
+.field-grid {
+  grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+  gap: var(--space-4);
+}
+.button-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  align-items: center;
+}
+.numeric {
+  text-align: end;
+  font-variant-numeric: tabular-nums;
+}
+code {
+  overflow-wrap: anywhere;
+}
+.report-cards dl {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+  gap: var(--space-3);
+}
+.report-cards dl div {
+  padding: var(--space-3);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-sm);
+}
+.report-cards dt {
+  color: var(--color-ink-muted);
+}
+.report-cards dd {
+  margin: var(--space-1) 0 0;
+  font-size: var(--text-lg);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+@media (max-width: 60rem) {
+  .workspace-grid {
+    grid-template-columns: 1fr;
+  }
+}

@@ -1,0 +1,17 @@
+@use "shared/page-header/detail-page";
+.form-panel + .form-panel,
+.spacer-x-2 {
+  margin-block-start: var(--space-4);
+}
+.line-grid {
+  display: grid;
+  gap: var(--space-3);
+  grid-template-columns: minmax(12rem, 1fr) 9rem 7rem auto;
+  align-items: end;
+  margin-block-end: var(--space-3);
+}
+@media (max-width: 48rem) {
+  .line-grid {
+    grid-template-columns: 1fr;
+  }
+}

@@ -16,6 +16,7 @@ import { accessCookieName, AuthenticationHttpLive } from '../authentication/http
 import { AuthenticationConfig } from '../authentication/authentication-config.js';
 import { authenticationConfig } from '../authentication/authentication-config.spec-helper.js';
 import { DatabaseError } from '../database/database.js';
+import { Company } from '../company/service.js';
 import { RuntimeConfigurationLive } from '../runtime-config.js';
 import { RequestLimiter } from '../server/request-limiter.js';
 import { Audit } from './audit.js';
@@ -114,6 +115,20 @@ const fixtures = (
           authorizePermission,
         }),
         Layer.mock(Audit, { insert: () => userId }),
+        Layer.mock(Company, {
+          get: Effect.succeed({
+            jurisdiction: 'FR' as const,
+            functionalCurrency: 'EUR',
+            accountingInitialized: false,
+            fiscalYearStartMonth: 1,
+            fiscalYearStartDay: 1,
+            defaultFiscalYearMonths: 12 as const,
+            enabledModules: ['sales', 'purchasing', 'banking', 'accounting', 'tax', 'ai'] as const,
+            retentionYears: 10,
+            version: 1,
+            updatedAt: 0,
+          }),
+        }),
         Layer.mock(RequestLimiter, { allowRequest: () => Effect.succeed(true) }),
         configuration,
       ),

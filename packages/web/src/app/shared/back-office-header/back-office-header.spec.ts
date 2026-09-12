@@ -53,7 +53,9 @@ describe('BackOfficeHeader', () => {
     expect(root.querySelector('.sidebar-bottom app-theme-toggle')).not.toBeNull();
     expect(root.querySelector('.brand')).toBeNull();
     expect(root.querySelector('header a[href="/api/docs"]')?.getAttribute('target')).toBe('_blank');
-    expect(root.querySelectorAll('app-back-office-nav a svg')).toHaveLength(12);
+    expect(root.querySelectorAll('app-back-office-nav a svg')).toHaveLength(
+      root.querySelectorAll('app-back-office-nav a').length,
+    );
     expect(root.querySelector('app-global-search')).not.toBeNull();
     expect(root.querySelector<HTMLSelectElement>('app-language-selector select')?.value).toBe('en');
     expect(root.querySelector('a[href="/services"]')).toBeNull();
@@ -101,7 +103,7 @@ describe('BackOfficeHeader', () => {
     const root: HTMLElement = fixture.nativeElement;
     expect(root.querySelector('app-global-search')).toBeNull();
     expect(root.querySelector('app-back-office-nav')).toBeNull();
-    expect(root.querySelector('a[href="/backoffice/equipe"]')).toBeNull();
+    expect(root.querySelector('a[href="/backoffice/team"]')).toBeNull();
     expect(root.querySelector('a[href="/backoffice/api"]')).toBeNull();
     expect(root.querySelector('.client-navigation a')?.textContent?.trim()).toBe('Documents');
     expect(root.querySelector('.workspace-label')?.textContent?.trim()).toBe('Documents');

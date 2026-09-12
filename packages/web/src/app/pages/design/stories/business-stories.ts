@@ -21,7 +21,7 @@ export class BusinessStories {
   protected readonly model = signal<BusinessSettings>({
     scenario: 'ready',
     administrator: true,
-    path: '/backoffice/affaires',
+    path: '/backoffice/affairs',
     kind: 'quote',
     party: 'both',
   });
@@ -30,14 +30,14 @@ export class BusinessStories {
     {
       scenario: 'ready',
       administrator: true,
-      path: '/backoffice/affaires',
+      path: '/backoffice/affairs',
       kind: 'quote',
       party: 'issuer',
     },
     {
       scenario: 'ready',
       administrator: true,
-      path: '/backoffice/facturation',
+      path: '/backoffice/billing',
       kind: 'invoice',
       party: 'client',
     },

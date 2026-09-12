@@ -1,5 +1,6 @@
 import { Schema } from 'effect';
 import { DocumentTextPresentation, isDocumentText } from '../documents/document-text.js';
+import { CurrencyCode } from '../company/contracts.js';
 import { InvoicePayment, InvoicePaymentInvalid } from './payments.js';
 
 import {
@@ -115,7 +116,7 @@ export const InvoiceRenderSnapshot = Schema.Struct({
   title: InvoiceTitle,
   paymentTerms: PaymentTerms,
   paymentTermsPresentation: Schema.optionalKey(DocumentTextPresentation),
-  currency: Schema.Literal('EUR'),
+  currency: CurrencyCode,
   netTotalCents: SafeInteger,
   vatTotalCents: SafeInteger,
   totalCents: SafeInteger,
@@ -134,10 +135,16 @@ export const InvoiceRevision = Schema.Struct({
   dueDate: CalendarDate,
   paymentTerms: PaymentTerms,
   paymentTermsPresentation: Schema.optionalKey(DocumentTextPresentation),
-  currency: Schema.Literal('EUR'),
+  currency: CurrencyCode,
   netTotalCents: SafeInteger,
   vatTotalCents: SafeInteger,
   totalCents: SafeInteger,
+  functionalCurrency: Schema.NullOr(CurrencyCode),
+  exchangeRateDate: Schema.NullOr(CalendarDate),
+  foreignUnitsPerFunctionalUnitNanos: Schema.NullOr(PositiveSafeInteger),
+  functionalNetTotalCents: Schema.NullOr(SafeInteger),
+  functionalVatTotalCents: Schema.NullOr(SafeInteger),
+  functionalTotalCents: Schema.NullOr(SafeInteger),
   createdAt: IsoUtc,
   createdByUserId: Ulid,
   lines: DocumentLines,
@@ -159,7 +166,7 @@ export const InvoiceSummary = Schema.Struct({
   invoiceNumber: Schema.NullOr(StoredInvoiceNumber),
   title: InvoiceTitle,
   dueDate: CalendarDate,
-  currency: Schema.Literal('EUR'),
+  currency: CurrencyCode,
   totalCents: SafeInteger,
   updatedAt: IsoUtc,
   pdf: Schema.NullOr(InvoicePdfState),
@@ -258,6 +265,17 @@ export class InvoiceInvalidTransition extends Schema.TaggedError<InvoiceInvalidT
   { httpApiStatus: 409 },
 ) {}
 
+export class InvoiceExchangeRateMissing extends Schema.TaggedError<InvoiceExchangeRateMissing>()(
+  'InvoiceExchangeRateMissing',
+  { code: Schema.Literal('invoice.exchange_rate_missing') },
+  { httpApiStatus: 422 },
+) {}
+export class InvoiceAccountingUnavailable extends Schema.TaggedError<InvoiceAccountingUnavailable>()(
+  'InvoiceAccountingUnavailable',
+  { code: Schema.Literal('invoice.accounting_unavailable') },
+  { httpApiStatus: 422 },
+) {}
+
 export const InvoiceFailure = Schema.Union([
   InvoicePaymentInvalid,
   AuthenticationRequired,
@@ -273,6 +291,8 @@ export const InvoiceFailure = Schema.Union([
   InvoiceAmountTooLarge,
   InvoiceInvalidDates,
   InvoiceInvalidTransition,
+  InvoiceExchangeRateMissing,
+  InvoiceAccountingUnavailable,
   DocumentNotFound,
   DocumentIncomplete,
 ]);

@@ -51,11 +51,17 @@ describe('back-office route organization', () => {
   it.each([
     ['backoffice/clients/new', 'client.create'],
     ['backoffice/clients/:clientId/edit', 'client.update'],
+    ['backoffice/suppliers/new', 'supplier.create'],
+    ['backoffice/suppliers/:supplierId/edit', 'supplier.update'],
+    ['backoffice/purchases/new', 'supplier-invoice.create'],
+    ['backoffice/purchases/analyze', 'supplier-invoice.analyze'],
+    ['backoffice/purchases/payments', 'supplier-invoice.pay'],
+    ['backoffice/purchases/:invoiceId/edit', 'supplier-invoice.update'],
     ['backoffice/quotes/new', 'quote.create'],
     ['backoffice/quotes/:quoteId/publication', 'quote.send'],
     ['backoffice/invoices/new', 'invoice.create'],
     ['backoffice/invoices/:invoiceId/payments/new', 'invoice.mark-paid'],
-    ['backoffice/equipe/invitations/new', 'user.create'],
+    ['backoffice/team/invitations/new', 'user.create'],
   ])('declares the write permission for %s', (path, permission) => {
     const route = routes.find((entry) => entry.path === path);
     expect(route?.canActivate).toContain(administratorGuard);
@@ -63,7 +69,7 @@ describe('back-office route organization', () => {
   });
   it('keeps administrative subjects separate from company configuration', () => {
     const paths = fullPaths(routes);
-    for (const subject of ['equipe', 'api', 'services', 'audit', 'configuration']) {
+    for (const subject of ['team', 'api', 'services', 'audit', 'configuration']) {
       const route = routes.find((entry) => entry.path === `backoffice/${subject}`);
       expect(route, subject).toBeDefined();
       expect(route?.canActivate, subject).toContain(administratorGuard);
@@ -74,7 +80,7 @@ describe('back-office route organization', () => {
       ),
     ).toBe(false);
     expect(paths).toContain('backoffice/configuration/conditions/:presetId/edit');
-    expect(paths).toContain('backoffice/configuration/carte-de-visite');
+    expect(paths).toContain('backoffice/configuration/business-card');
     expect(paths).not.toContain('backoffice/configuration/identite');
   });
 
@@ -83,12 +89,13 @@ describe('back-office route organization', () => {
       'backoffice/quotes/:quoteId/edit',
       'backoffice/quotes/:quoteId/publication',
       'backoffice/invoices/:invoiceId/edit',
+      'backoffice/purchases/:invoiceId/edit',
       'backoffice/invoices/:invoiceId/issue',
       'backoffice/invoices/:invoiceId/payments/new',
       'backoffice/invoices/:invoiceId/credits/new',
       'backoffice/invoices/:invoiceId/refunds/new',
-      'backoffice/courriels/new',
-      'backoffice/courriels/reminders/new',
+      'backoffice/emails/new',
+      'backoffice/emails/reminders/new',
     ]) {
       const route = routes.find((entry) => entry.path === path);
       expect(route?.canActivate, path).toContain(administratorGuard);
@@ -119,5 +126,30 @@ describe('back-office route organization', () => {
   it('defines each top-level path once', () => {
     const paths = routes.map((route) => route.path);
     expect(new Set(paths).size).toBe(paths.length);
+  });
+
+  it('uses English route segments', () => {
+    const forbidden = new Set([
+      'affaires',
+      'avoirs',
+      'banque',
+      'carte-de-visite',
+      'catalogue',
+      'comptabiliser',
+      'contrepasser',
+      'courriels',
+      'ecritures',
+      'encaissements',
+      'entreprise',
+      'equipe',
+      'facturation',
+      'fournisseurs',
+      'importer',
+      'remboursements',
+      'societe',
+    ]);
+    for (const path of fullPaths(routes)) {
+      for (const segment of path.split('/')) expect(forbidden.has(segment), path).toBe(false);
+    }
   });
 });

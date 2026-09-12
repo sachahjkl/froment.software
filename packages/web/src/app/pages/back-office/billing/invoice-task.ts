@@ -158,6 +158,10 @@ export class InvoiceTask {
     this.focusRequested.set(true);
   }
   money(cents: number): string {
-    return formatMoney(cents, this.i18n.language(), 'EUR');
+    return formatMoney(
+      cents,
+      this.i18n.language(),
+      this.invoice()?.currentRevision.currency ?? 'EUR',
+    );
   }
 }

@@ -110,6 +110,7 @@ const seedSentQuote = Effect.fn('seedSentQuote')(function* (
       city: '',
       country: '',
       email: '',
+      phone: '',
     },
     title: 'Quote',
     conditions,
@@ -424,6 +425,7 @@ describe('quote lifecycle', () => {
           quoteId,
           {
             expectedVersion: 1,
+            currency: 'EUR',
             title: 'Revised quote',
             conditions: '',
             lines: [

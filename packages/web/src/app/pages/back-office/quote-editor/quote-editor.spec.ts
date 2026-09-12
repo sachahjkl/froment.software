@@ -50,6 +50,7 @@ describe('Quote editor navigation', () => {
                 quantityMilli: 1500,
                 unitPriceCents: 12500,
                 vatRateBasisPoints: 550,
+                currency: 'EUR',
                 archived: false,
               },
             ],
@@ -109,7 +110,7 @@ describe('Quote editor navigation', () => {
     button.click();
     button.click();
     await vi.waitFor(() => expect(createRevision).toHaveBeenCalledTimes(1));
-    await TestBed.inject(Router).navigateByUrl('/backoffice/affaires');
+    await TestBed.inject(Router).navigateByUrl('/backoffice/affairs');
     expect(TestBed.inject(Router).url).toContain('/edit');
     const event = new Event('beforeunload', { cancelable: true });
     window.dispatchEvent(event);
@@ -121,13 +122,13 @@ describe('Quote editor navigation', () => {
   it('asks before leaving a dirty editor through the real guard', async () => {
     const { harness, root } = await open();
     inputValue(root, '#quote-name', 'Unsaved title');
-    await TestBed.inject(Router).navigateByUrl('/backoffice/affaires');
+    await TestBed.inject(Router).navigateByUrl('/backoffice/affairs');
     expect(confirm).toHaveBeenCalledOnce();
     expect(TestBed.inject(Router).url).toContain('/edit');
     confirm.mockResolvedValue(true);
-    await TestBed.inject(Router).navigateByUrl('/backoffice/affaires');
+    await TestBed.inject(Router).navigateByUrl('/backoffice/affairs');
     await harness.fixture.whenStable();
-    expect(TestBed.inject(Router).url).toBe('/backoffice/affaires');
+    expect(TestBed.inject(Router).url).toBe('/backoffice/affairs');
   });
   it('keeps the validated list context after saving a revision', async () => {
     createRevision.mockResolvedValue({ success: true, result: quoteFixture });
@@ -154,7 +155,7 @@ describe('Quote editor navigation', () => {
     await harness.fixture.whenStable();
     control<HTMLButtonElement>(document, '[role="dialog"] button.option').click();
     await harness.fixture.whenStable();
-    const lines = root.querySelectorAll('.document-line');
+    const lines = root.querySelectorAll('.document-lines tbody tr');
     expect(lines).toHaveLength(2);
     expect(Array.from(lines[1]?.querySelectorAll('input') ?? [], (input) => input.value)).toEqual([
       'Catalog service',
@@ -191,7 +192,7 @@ describe('Quote editor navigation', () => {
       `/backoffice/quotes/new?clientId=${quoteFixture.clientId}`,
     );
     expect(control<HTMLSelectElement>(root, '#quote-client').value).toBe(quoteFixture.clientId);
-    await TestBed.inject(Router).navigateByUrl('/backoffice/affaires');
+    await TestBed.inject(Router).navigateByUrl('/backoffice/affairs');
     await harness.fixture.whenStable();
     expect(confirm).not.toHaveBeenCalled();
   });
@@ -226,13 +227,14 @@ describe('Quote editor navigation', () => {
     const client = control<HTMLSelectElement>(root, '#quote-client');
     selectValue(client, quoteFixture.clientId);
     inputValue(root, '#quote-name', 'New quote');
-    inputValue(root, '.document-line input', 'Audit');
+    inputValue(root, '.document-lines input', 'Audit');
     await harness.fixture.whenStable();
     control<HTMLButtonElement>(root, 'button[type="submit"]').click();
     await harness.fixture.whenStable();
     expect(create).toHaveBeenCalledOnce();
     expect(create).toHaveBeenCalledWith({
       clientId: quoteFixture.clientId,
+      currency: 'EUR',
       title: 'New quote',
       conditions: '',
       lines: [
@@ -253,7 +255,7 @@ describe('Quote editor navigation', () => {
     );
     await harness.fixture.whenStable();
     expect(create).toHaveBeenCalledOnce();
-    await TestBed.inject(Router).navigateByUrl('/backoffice/affaires');
+    await TestBed.inject(Router).navigateByUrl('/backoffice/affairs');
     expect(confirm).toHaveBeenCalledOnce();
     expect(TestBed.inject(Router).url).toBe('/backoffice/quotes/new');
   });

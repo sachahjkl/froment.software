@@ -1,4 +1,5 @@
 import {
+  DefaultBankCsvConfiguration,
   ApiTokenCreated,
   BankTransactionList,
   InvoiceDetail,
@@ -36,7 +37,10 @@ it('posts balanced immutable debit entries once, reverses without deletion, and 
       (
         await post('/api/banking/import', {
           account: 'BANK',
-          csv: 'transaction_id,booked_on,amount,currency,description\nD,2026-08-31,-12.34,EUR,Expense\nC,2026-08-31,12.34,EUR,Receipt',
+          format: 'csv',
+          csvConfiguration: DefaultBankCsvConfiguration,
+          content:
+            'transaction_id,booked_on,amount,currency,description\nD,2026-08-31,-12.34,EUR,Expense\nC,2026-08-31,12.34,EUR,Receipt',
         })
       ).status,
     ).toBe(200);
@@ -279,7 +283,10 @@ it('requires fee reversal before dissociation or receipt correction and rejects 
       (
         await post('/api/banking/import', {
           account: 'FEES',
-          csv: 'transaction_id,booked_on,amount,currency,description\nF,2026-09-01,100.00,EUR,Net',
+          format: 'csv',
+          csvConfiguration: DefaultBankCsvConfiguration,
+          content:
+            'transaction_id,booked_on,amount,currency,description\nF,2026-09-01,100.00,EUR,Net',
         })
       ).status,
     ).toBe(200);

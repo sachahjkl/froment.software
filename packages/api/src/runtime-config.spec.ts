@@ -22,6 +22,9 @@ describe('RuntimeConfiguration', () => {
         ARGON2_VERIFICATION_CONCURRENCY: '1',
         REQUEST_LIMITER_PUBLIC_CAPACITY: '5',
         HTTP_MAXIMUM_BANK_IMPORT_BODY_BYTES: '600000',
+        HTTP_MAXIMUM_SUPPLIER_INVOICE_ANALYSIS_BODY_BYTES: '700000',
+        SUPPLIER_INVOICE_ANALYSIS_REQUEST_TIMEOUT_MILLIS: '8000',
+        EXCHANGE_RATE_REQUEST_TIMEOUT_MILLIS: '7000',
       }),
     );
     expect(config.authentication.loginAttemptsPerMinute).toBe(3);
@@ -30,6 +33,9 @@ describe('RuntimeConfiguration', () => {
     expect(config.requestLimiter.publicCapacity).toBe(5);
     expect(config.http.maximumBankImportBodyBytes).toBe(600_000);
     expect(config.http.maximumRequestBodyBytes).toBe(32_768);
+    expect(config.http.maximumSupplierInvoiceAnalysisBodyBytes).toBe(700_000);
+    expect(config.supplierInvoiceAnalysis.requestTimeoutMillis).toBe(8_000);
+    expect(config.exchangeRates.requestTimeoutMillis).toBe(7_000);
   });
   it('loads the application environment and site phase', async () => {
     const config = await Effect.runPromise(
@@ -51,6 +57,8 @@ describe('RuntimeConfiguration', () => {
     'ARGON2_VERIFICATION_CONCURRENCY',
     'REQUEST_LIMITER_PUBLIC_CAPACITY',
     'HTTP_MAXIMUM_BANK_IMPORT_BODY_BYTES',
+    'HTTP_MAXIMUM_SUPPLIER_INVOICE_ANALYSIS_BODY_BYTES',
+    'SUPPLIER_INVOICE_ANALYSIS_REQUEST_TIMEOUT_MILLIS',
   ])('rejects a zero security limit for %s', async (name) => {
     expect((await Effect.runPromise(load({ [name]: '0' }).pipe(Effect.flip)))._tag).toBe(
       'ConfigError',

@@ -14,6 +14,7 @@ import { RequestLimiter } from '../server/request-limiter.js';
 import { RuntimeConfiguration } from '../runtime-config.js';
 import { Authentication } from './authentication.js';
 import { AuthenticationConfig, hmac } from './authentication-config.js';
+import { Company } from '../company/service.js';
 import {
   clearAccessCookie,
   clearRefreshCookie,
@@ -160,11 +161,15 @@ export const AuthenticationHandlers = HttpApiBuilder.group(Api, 'authentication'
           const principal = yield* (yield* Authentication)
             .authenticate(credentials.token)
             .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
+          const company = yield* (yield* Company).get.pipe(
+            Effect.catchTag('DatabaseError', Effect.orDie),
+          );
           return {
             userId: principal.userId,
             email: principal.email,
             mode: principal.mode,
             permissions: principal.permissions,
+            enabledModules: company.enabledModules,
           };
         }),
       )

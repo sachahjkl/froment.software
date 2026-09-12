@@ -19,12 +19,12 @@ Les limites de 100 résultats restent applicables aux exports des messages et de
 
 ## Pages dédiées
 
-- `/backoffice/courriels/new` prépare un message.
-- `/backoffice/courriels/drafts/:draftId/edit` modifie un brouillon.
-- `/backoffice/courriels/messages/:operationId` affiche un message enregistré.
-- `/backoffice/courriels/templates/new` crée un modèle.
-- `/backoffice/courriels/templates/:templateId/edit` modifie un modèle.
-- `/backoffice/courriels/reminders/new` programme une relance.
+- `/backoffice/emails/new` prépare un message.
+- `/backoffice/emails/drafts/:draftId/edit` modifie un brouillon.
+- `/backoffice/emails/messages/:operationId` affiche un message enregistré.
+- `/backoffice/emails/templates/new` crée un modèle.
+- `/backoffice/emails/templates/:templateId/edit` modifie un modèle.
+- `/backoffice/emails/reminders/new` programme une relance.
 
 Le paramètre `invoice` prépare un rappel ou sélectionne une facture pour une relance.
 La sélection d’un modèle change uniquement l’objet et le texte du message.

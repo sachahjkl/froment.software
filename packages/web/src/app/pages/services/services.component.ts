@@ -32,7 +32,7 @@ export class ServicesComponent {
     {
       title: this.i18n.t('services.offer.development.title'),
       description: this.i18n.t('services.offer.development.desc'),
-      href: '/services/developpement',
+      href: '/services/development',
       cta: this.i18n.t('services.offer.development.cta'),
     },
   ]);

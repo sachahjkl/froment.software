@@ -1,4 +1,8 @@
-import { BankTransactionList, InvoiceDetail } from '@froment/contracts';
+import {
+  BankTransactionList,
+  DefaultBankCsvConfiguration,
+  InvoiceDetail,
+} from '@froment/contracts';
 import { Effect, Schema } from 'effect';
 import { randomUUID } from 'node:crypto';
 import { expect, it } from 'vitest';
@@ -63,7 +67,9 @@ it('preserves financial records against SQL changes and permits normal cancellat
       (
         await post('/api/banking/import', {
           account: 'TEST',
-          csv: `transaction_id,booked_on,amount,currency,description\nTEST,2026-09-01,${(payment.amountCents / 100).toFixed(2)},EUR,Test receipt`,
+          format: 'csv',
+          csvConfiguration: DefaultBankCsvConfiguration,
+          content: `transaction_id,booked_on,amount,currency,description\nTEST,2026-09-01,${(payment.amountCents / 100).toFixed(2)},EUR,Test receipt`,
         })
       ).status,
     ).toBe(200);

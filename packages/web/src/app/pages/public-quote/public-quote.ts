@@ -133,6 +133,14 @@ export class PublicQuote {
       this.acceptance() !== undefined ||
       this.quote()?.canSign !== true,
   );
+  protected readonly unavailableSignatureVariant = computed(() => {
+    if (this.quote()?.status === 'accepted') return 'success' as const;
+    return 'danger' as const;
+  });
+  protected readonly unavailableSignatureLabel = computed<TranslationKey>(() => {
+    if (this.quote()?.status === 'accepted') return 'publicQuote.alreadyAccepted';
+    return 'publicQuoteWorkspace.notSignable';
+  });
 
   protected invalid(field: 'signerName' | 'signature' | 'consent'): boolean {
     return this.signatureForm[field]().touched() && this.signatureForm[field]().invalid();
@@ -212,7 +220,7 @@ export class PublicQuote {
   }
 
   protected formatMoney(cents: number): string {
-    return formatMoney(cents, this.i18n.language(), 'EUR');
+    return formatMoney(cents, this.i18n.language(), this.quote()?.snapshot.currency ?? 'EUR');
   }
 
   protected formatQuantity(milli: number): string {

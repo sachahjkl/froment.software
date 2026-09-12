@@ -4,6 +4,7 @@ import {
   ClientQuoteList,
   DocumentNotFound,
   Ulid,
+  CurrencyCode,
   type ClientInvoiceListValue,
   type ClientOrderListValue,
   type ClientQuoteListValue,
@@ -19,7 +20,7 @@ const ClientQuoteRecord = Schema.Struct({
   reference: Schema.String,
   status: Schema.Literals(['sent', 'accepted', 'rejected', 'expired']),
   title: Schema.String,
-  currency: Schema.Literal('EUR'),
+  currency: CurrencyCode,
   totalCents: Schema.Int,
   updatedAt: Schema.Int,
   pdfAvailable: Schema.Int,
@@ -31,7 +32,7 @@ const ClientOrderRecord = Schema.Struct({
   quoteReference: Schema.String,
   status: Schema.Literal('confirmed'),
   title: Schema.String,
-  currency: Schema.Literal('EUR'),
+  currency: CurrencyCode,
   totalCents: Schema.Int,
   createdAt: Schema.Int,
   invoiceId: Schema.NullOr(Ulid),
@@ -47,10 +48,13 @@ const ClientInvoiceRecord = Schema.Struct({
   invoiceNumber: Schema.String,
   title: Schema.String,
   dueDate: Schema.String,
-  currency: Schema.Literal('EUR'),
+  currency: CurrencyCode,
   totalCents: Schema.Int,
   updatedAt: Schema.Int,
   pdfAvailable: Schema.Int,
+  creditNotes: Schema.fromJsonString(
+    Schema.Array(Schema.Struct({ id: Ulid, number: Schema.String })),
+  ),
 });
 const PdfRecord = Schema.Struct({
   content: Schema.Uint8Array,
@@ -192,11 +196,24 @@ export const ClientPortalLive = Layer.effect(
                         invoices.invoice_number as invoiceNumber, invoice_revisions.title,
                         invoice_revisions.due_date as dueDate, invoice_revisions.currency,
                          invoice_revisions.total_cents as totalCents,
-                         coalesce((select sum(total_cents) from invoice_credit_notes where invoice_id = invoices.id), 0) as creditedCents,
+                          coalesce((select sum(lines.total_cents)
+                            from invoice_credit_note_lines lines
+                            join invoice_credit_notes notes on notes.id = lines.credit_note_id
+                            join invoice_credit_note_revisions credit_revisions
+                              on credit_revisions.id = lines.credit_note_revision_id
+                            where lines.invoice_id = invoices.id and notes.status = 'issued'
+                              and credit_revisions.version = notes.version), 0) as creditedCents,
                         coalesce((select sum(amount_cents) from invoice_payments
                           where invoice_id = invoices.id and cancelled_at is null), 0) as recordedPaidCents,
-                        invoices.updated_at as updatedAt,
-                        (invoice_pdf_jobs.status = 'ready'
+                         invoices.updated_at as updatedAt,
+                         coalesce((select json_group_array(distinct json_object('id', notes.id, 'number', notes.number))
+                           from invoice_credit_note_lines lines
+                           join invoice_credit_notes notes on notes.id = lines.credit_note_id
+                           join invoice_credit_note_revisions credit_revisions
+                             on credit_revisions.id = lines.credit_note_revision_id
+                           where lines.invoice_id = invoices.id and notes.status = 'issued'
+                             and credit_revisions.version = notes.version), '[]') as creditNotes,
+                         (invoice_pdf_jobs.status = 'ready'
                          and document_artifacts.id is not null) as pdfAvailable
                  from invoices
                  join orders

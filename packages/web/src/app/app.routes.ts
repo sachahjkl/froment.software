@@ -19,6 +19,7 @@ import { teamRoutes } from './pages/back-office/team/team.routes';
 import { apiTokenRoutes } from './pages/back-office/api-tokens/api-token.routes';
 import { serviceRoutes } from './pages/back-office/connections/service.routes';
 import { auditRoute } from './pages/back-office/configuration/audit/audit.routes';
+import { accountingRoutes } from './pages/back-office/accounting/accounting.routes';
 import { publicQuoteContextChanged } from './public-quote/public-quote-navigation';
 import { withShell } from './app-shell';
 
@@ -31,6 +32,7 @@ export const routes: Routes = [
   ...withShell('administrator', [
     ...billingRoutes,
     ...bankWorkspaceRoutes,
+    ...accountingRoutes,
     ...teamRoutes,
     ...apiTokenRoutes,
     ...serviceRoutes,
@@ -77,7 +79,7 @@ export const routes: Routes = [
     },
   },
   {
-    path: 'services/developpement',
+    path: 'services/development',
     loadComponent: () =>
       import('./pages/service-detail/service-detail').then((module) => module.ServiceDetail),
     data: {
@@ -108,6 +110,7 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./pages/public-quote/public-quote').then((module) => module.PublicQuote),
     data: {
+      shell: 'standalone',
       titleKey: 'page.public_quote',
       descriptionKey: 'page.description.public_quote',
       robots: 'noindex, nofollow',
@@ -237,6 +240,155 @@ export const routes: Routes = [
     children: tabRoutes('active', 'clients', ['active', 'archived', 'all']),
   },
   {
+    path: 'backoffice/purchases',
+    loadComponent: () =>
+      import('./pages/back-office/supplier-invoices/supplier-invoices').then(
+        (module) => module.SupplierInvoicesPage,
+      ),
+    canActivate: [administratorGuard],
+    data: {
+      shell: 'administrator',
+      titleKey: 'page.back_office_supplier_invoices',
+      ...permissionData('supplier-invoice.read'),
+      descriptionKey: 'page.description.back_office_supplier_invoices',
+      robots: 'noindex, nofollow',
+    },
+  },
+  {
+    path: 'backoffice/purchases/new',
+    loadComponent: () =>
+      import('./pages/back-office/supplier-invoice-editor/supplier-invoice-editor').then(
+        (module) => module.SupplierInvoiceEditor,
+      ),
+    canActivate: [administratorGuard],
+    canDeactivate: [unsavedChangesGuard],
+    data: {
+      shell: 'administrator',
+      titleKey: 'supplierInvoice.createTitle',
+      ...permissionData('supplier-invoice.create'),
+      robots: 'noindex, nofollow',
+    },
+  },
+  {
+    path: 'backoffice/purchases/analyze',
+    loadComponent: () =>
+      import('./pages/back-office/supplier-invoice-analysis/supplier-invoice-analysis').then(
+        (module) => module.SupplierInvoiceAnalysisPage,
+      ),
+    canActivate: [administratorGuard],
+    data: {
+      shell: 'administrator',
+      titleKey: 'supplierInvoice.analysis.title',
+      ...permissionData('supplier-invoice.analyze', 'supplier.read'),
+      modules: ['purchasing', 'ai'],
+      robots: 'noindex, nofollow',
+    },
+  },
+  {
+    path: 'backoffice/purchases/payments',
+    loadComponent: () =>
+      import('./pages/back-office/supplier-payment-batches/supplier-payment-batches').then(
+        (module) => module.SupplierPaymentBatchesPage,
+      ),
+    canActivate: [administratorGuard],
+    data: {
+      shell: 'administrator',
+      titleKey: 'supplierPaymentBatch.title',
+      ...permissionData('supplier-invoice.pay', 'supplier-invoice.read'),
+      robots: 'noindex, nofollow',
+    },
+  },
+  {
+    path: 'backoffice/purchases/:invoiceId/edit',
+    loadComponent: () =>
+      import('./pages/back-office/supplier-invoice-editor/supplier-invoice-editor').then(
+        (module) => module.SupplierInvoiceEditor,
+      ),
+    canActivate: [administratorGuard],
+    canDeactivate: [unsavedChangesGuard],
+    data: {
+      shell: 'administrator',
+      titleKey: 'supplierInvoice.editTitle',
+      ...permissionData('supplier-invoice.read', 'supplier-invoice.update'),
+      robots: 'noindex, nofollow',
+    },
+  },
+  {
+    path: 'backoffice/purchases/:invoiceId',
+    loadComponent: () =>
+      import('./pages/back-office/supplier-invoice-detail/supplier-invoice-detail').then(
+        (module) => module.SupplierInvoiceDetail,
+      ),
+    canActivate: [administratorGuard],
+    data: {
+      shell: 'administrator',
+      titleKey: 'page.back_office_supplier_invoices',
+      ...permissionData('supplier-invoice.read'),
+      descriptionKey: 'page.description.back_office_supplier_invoices',
+      robots: 'noindex, nofollow',
+    },
+  },
+  {
+    path: 'backoffice/suppliers',
+    loadComponent: () =>
+      import('./pages/back-office/suppliers/suppliers').then((module) => module.Suppliers),
+    canActivate: [administratorGuard],
+    canActivateChild: [administratorChildGuard],
+    data: {
+      shell: 'administrator',
+      titleKey: 'page.back_office_suppliers',
+      ...permissionData('supplier.read'),
+      descriptionKey: 'page.description.back_office_suppliers',
+      robots: 'noindex, nofollow',
+    },
+    children: tabRoutes('active', 'suppliers', ['active', 'archived', 'all']),
+  },
+  {
+    path: 'backoffice/suppliers/new',
+    loadComponent: () =>
+      import('./pages/back-office/supplier-editor/supplier-editor').then(
+        (module) => module.SupplierEditor,
+      ),
+    canActivate: [administratorGuard],
+    canDeactivate: [unsavedChangesGuard],
+    data: {
+      shell: 'administrator',
+      ...permissionData('supplier.create'),
+      titleKey: 'supplier.createTitle',
+      robots: 'noindex, nofollow',
+    },
+  },
+  {
+    path: 'backoffice/suppliers/:supplierId/edit',
+    loadComponent: () =>
+      import('./pages/back-office/supplier-editor/supplier-editor').then(
+        (module) => module.SupplierEditor,
+      ),
+    canActivate: [administratorGuard],
+    canDeactivate: [unsavedChangesGuard],
+    data: {
+      shell: 'administrator',
+      ...permissionData('supplier.read', 'supplier.update'),
+      titleKey: 'supplier.editTitle',
+      robots: 'noindex, nofollow',
+    },
+  },
+  {
+    path: 'backoffice/suppliers/:supplierId',
+    loadComponent: () =>
+      import('./pages/back-office/supplier-detail/supplier-detail').then(
+        (module) => module.SupplierDetail,
+      ),
+    canActivate: [administratorGuard],
+    data: {
+      shell: 'administrator',
+      ...permissionData('supplier.read'),
+      titleKey: 'page.back_office_supplier_detail',
+      descriptionKey: 'page.description.back_office_supplier_detail',
+      robots: 'noindex, nofollow',
+    },
+  },
+  {
     path: 'backoffice/clients/new',
     loadComponent: () =>
       import('./pages/back-office/client-editor/client-editor').then(
@@ -311,7 +463,7 @@ export const routes: Routes = [
     ],
   },
   {
-    path: 'backoffice/affaires',
+    path: 'backoffice/affairs',
     loadComponent: () =>
       import('./pages/back-office/affairs/affairs').then((module) => module.Affairs),
     canActivate: [administratorGuard],
@@ -319,14 +471,14 @@ export const routes: Routes = [
     data: {
       shell: 'administrator',
       titleKey: 'page.back_office_quotes',
-      ...permissionData('quote.read', 'order.read', 'invoice.read'),
+      ...permissionData('affair.read'),
       descriptionKey: 'page.description.back_office_quotes',
       robots: 'noindex, nofollow',
     },
     children: tabRoutes('attention', 'affairs', ['attention', 'active', 'completed', 'all']),
   },
   {
-    path: 'backoffice/affaires/:quoteId',
+    path: 'backoffice/affairs/:affairId',
     loadComponent: () =>
       import('./pages/back-office/affair-detail/affair-detail').then(
         (module) => module.AffairDetail,
@@ -345,7 +497,7 @@ export const routes: Routes = [
     data: {
       shell: 'administrator',
       titleKey: 'page.back_office_affair_detail',
-      ...permissionData('quote.read', 'order.read', 'invoice.read'),
+      ...permissionData('affair.read', 'quote.read', 'order.read', 'invoice.read'),
       descriptionKey: 'page.description.back_office_affair_detail',
       robots: 'noindex, nofollow',
     },
@@ -413,7 +565,7 @@ export const routes: Routes = [
     canActivate: [administratorGuard],
     canActivateChild: [administratorChildGuard],
     canDeactivate: [unsavedChangesGuard],
-    children: tabRoutes('summary', 'quote-detail', ['summary', 'document', 'versions']),
+    children: tabRoutes('summary', 'quote-detail', ['summary', 'document']),
     data: {
       shell: 'administrator',
       ...permissionData('quote.read'),
@@ -434,7 +586,7 @@ export const routes: Routes = [
     },
   },
   {
-    path: 'backoffice/catalogue/new',
+    path: 'backoffice/catalog/new',
     loadComponent: () =>
       import('./pages/back-office/catalog-editor/catalog-editor').then(
         (module) => module.CatalogEditor,
@@ -449,7 +601,7 @@ export const routes: Routes = [
     },
   },
   {
-    path: 'backoffice/catalogue/:itemId/edit',
+    path: 'backoffice/catalog/:itemId/edit',
     loadComponent: () =>
       import('./pages/back-office/catalog-editor/catalog-editor').then(
         (module) => module.CatalogEditor,
@@ -464,7 +616,7 @@ export const routes: Routes = [
     },
   },
   {
-    path: 'backoffice/catalogue',
+    path: 'backoffice/catalog',
     loadComponent: () =>
       import('./pages/back-office/catalog/catalog').then((module) => module.Catalog),
     canActivate: [administratorGuard],
@@ -495,7 +647,7 @@ export const routes: Routes = [
     children: configurationRoutes,
   },
   {
-    path: 'backoffice/courriels/new',
+    path: 'backoffice/emails/new',
     loadComponent: () =>
       import('./pages/back-office/email-composer/email-composer').then(
         (module) => module.EmailComposer,
@@ -510,7 +662,7 @@ export const routes: Routes = [
     },
   },
   {
-    path: 'backoffice/courriels/drafts/:draftId/edit',
+    path: 'backoffice/emails/drafts/:draftId/edit',
     loadComponent: () =>
       import('./pages/back-office/email-composer/email-composer').then(
         (module) => module.EmailComposer,
@@ -525,7 +677,7 @@ export const routes: Routes = [
     },
   },
   {
-    path: 'backoffice/courriels/messages/:operationId',
+    path: 'backoffice/emails/messages/:operationId',
     loadComponent: () =>
       import('./pages/back-office/email-detail/email-detail').then((module) => module.EmailDetail),
     canActivate: [administratorGuard],
@@ -538,7 +690,7 @@ export const routes: Routes = [
     },
   },
   {
-    path: 'backoffice/courriels/templates/new',
+    path: 'backoffice/emails/templates/new',
     loadComponent: () =>
       import('./pages/back-office/email-template-editor/email-template-editor').then(
         (module) => module.EmailTemplateEditor,
@@ -553,7 +705,7 @@ export const routes: Routes = [
     },
   },
   {
-    path: 'backoffice/courriels/templates/:templateId/edit',
+    path: 'backoffice/emails/templates/:templateId/edit',
     loadComponent: () =>
       import('./pages/back-office/email-template-editor/email-template-editor').then(
         (module) => module.EmailTemplateEditor,
@@ -568,7 +720,7 @@ export const routes: Routes = [
     },
   },
   {
-    path: 'backoffice/courriels/reminders/new',
+    path: 'backoffice/emails/reminders/new',
     loadComponent: () =>
       import('./pages/back-office/reminder-editor/reminder-editor').then(
         (module) => module.ReminderEditor,
@@ -583,7 +735,7 @@ export const routes: Routes = [
     },
   },
   {
-    path: 'backoffice/courriels',
+    path: 'backoffice/emails',
     loadComponent: () =>
       import('./pages/back-office/emails/emails').then((module) => module.Emails),
     canActivate: [administratorGuard],

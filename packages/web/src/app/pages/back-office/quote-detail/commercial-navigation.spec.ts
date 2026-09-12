@@ -16,8 +16,8 @@ describe('Commercial breadcrumbs', () => {
       }),
     );
     expect(commercialBreadcrumbs(affair, context, 'fr')).toEqual([
-      { path: ['/backoffice/affaires', 'active'], label: 'Affaires', queryParams: context },
-      { path: ['/backoffice/affaires', affair.id], label: affair.reference, queryParams: context },
+      { path: ['/backoffice/affairs', 'active'], label: 'Affaires', queryParams: context },
+      { path: ['/backoffice/affairs', affair.id], label: affair.reference, queryParams: context },
     ]);
     expect(context).not.toHaveProperty('returnUrl');
     expect(context).not.toHaveProperty('version');
@@ -26,7 +26,7 @@ describe('Commercial breadcrumbs', () => {
   it('keeps a list link when the document cannot load', () => {
     const context = affairContext(convertToParamMap({ view: 'invalid' }));
     expect(commercialBreadcrumbs(undefined, context, 'en')).toEqual([
-      { path: ['/backoffice/affaires', 'attention'], label: 'Engagements', queryParams: context },
+      { path: ['/backoffice/affairs', 'attention'], label: 'Engagements', queryParams: context },
     ]);
   });
 });

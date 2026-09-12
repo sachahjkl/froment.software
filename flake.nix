@@ -2,10 +2,10 @@
   description = "Froment Software website";
 
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+    nixpkgs.url = "https://flakehub.com/f/NixOS/nixpkgs/0.1";
     flake-utils.url = "github:numtide/flake-utils";
     git-hooks = {
-      url = "github:cachix/git-hooks.nix";
+      url = "https://flakehub.com/f/cachix/git-hooks.nix/0.1";
       inputs.nixpkgs.follows = "nixpkgs";
     };
   };
@@ -108,7 +108,7 @@
           inherit pname version src;
           inherit pnpm;
           fetcherVersion = 4;
-          hash = "sha256-jXfZ1OjzTfTQ2oQ4EE9o43Dm9fvoRCc3BDm1+hjSNXM=";
+          hash = "sha256-TsTeD16QQIwPP/MRqgP4CBWZTJ62EequkPA/QT9eEbM=";
         };
 
         mkApplication = commit:

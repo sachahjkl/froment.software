@@ -53,6 +53,7 @@ describe('quote HTTP routes', () => {
       headers: server.jsonHeaders,
       body: JSON.stringify({
         expectedVersion: 1,
+        currency: quote.currentRevision.currency,
         title: 'Revised quote',
         conditions: '',
         lines: [
@@ -74,6 +75,7 @@ describe('quote HTTP routes', () => {
       headers: server.jsonHeaders,
       body: JSON.stringify({
         expectedVersion: 1,
+        currency: quote.currentRevision.currency,
         title: 'Stale',
         conditions: '',
         lines: [

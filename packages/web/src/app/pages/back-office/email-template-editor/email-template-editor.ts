@@ -177,7 +177,7 @@ export class EmailTemplateEditor {
         this.busy.set(false);
       }
       if (this.completed())
-        await this.router.navigate(['/backoffice/courriels/templates'], {
+        await this.router.navigate(['/backoffice/emails/templates'], {
           queryParams: this.backQuery(),
         });
     });
@@ -208,7 +208,7 @@ export class EmailTemplateEditor {
       this.busy.set(false);
     }
     if (this.completed())
-      await this.router.navigate(['/backoffice/courriels/templates'], {
+      await this.router.navigate(['/backoffice/emails/templates'], {
         queryParams: this.backQuery(),
       });
   }

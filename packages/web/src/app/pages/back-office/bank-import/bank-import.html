@@ -1,6 +1,6 @@
 <section class="detail-page wide-page" aria-labelledby="import-title">
   <app-page-header layout="stacked">
-    <a pageBack routerLink="/backoffice/banque" [queryParams]="backQuery"
+    <a pageBack routerLink="/backoffice/banking" [queryParams]="backQuery"
       >{{ i18n.t('bankWorkspace.back') }}</a
     >
     <h1 id="import-title">{{ i18n.t('bank.import') }}</h1>
@@ -59,7 +59,7 @@
           <th scope="row">{{ row.reference }}</th>
           <td class="pre-wrap">{{ row.description }}</td>
           <td>{{ row.bookedOn | localizedDate: i18n.language() }}</td>
-          <td class="amount">{{ money(row.amountCents) }}</td>
+          <td class="amount">{{ money(row.amountCents, row.currency) }}</td>
           <td>{{ i18n.t(row.existing ? 'bankWorkspace.existing' : 'bankWorkspace.new') }}</td>
         </tr>
         }
@@ -68,9 +68,7 @@
   </div>
   } @else {
   <form class="task-form" novalidate (submit)="validate($event)">
-    <p id="csv-hint">{{ i18n.t('bankWorkspace.csvHint') }}</p>
-    <p>{{ i18n.t('bankWorkspace.csvColumns') }}</p>
-    <a href="/bank-statement-template.csv" download>{{ i18n.t('bank.template') }}</a>
+    <p id="statement-hint">{{ i18n.t('bankWorkspace.statementHint') }}</p>
     <label class="field"
       >{{ i18n.t('bankWorkspace.account') }}<input
         id="bank-account"
@@ -84,13 +82,83 @@
       ></label
     >
     <label class="field"
+      >{{ i18n.t('bankWorkspace.format') }}<select
+        id="bank-format"
+        class="input"
+        [formField]="importForm.format"
+      >
+        <option value="camt.053">CAMT.053</option>
+        <option value="ofx">OFX</option>
+        <option value="csv">CSV</option>
+      </select></label
+    >
+    @if (importForm.format().value() === 'csv') {
+    <fieldset class="field-grid ds-panel form-panel">
+      <legend>{{ i18n.t('bankWorkspace.csvConfiguration') }}</legend>
+      <label class="field"
+        >{{ i18n.t('bankWorkspace.delimiter') }}<select
+          class="input"
+          [formField]="importForm.delimiter"
+        >
+          <option value=",">{{ i18n.t('bankWorkspace.comma') }}</option>
+          <option value=";">{{ i18n.t('bankWorkspace.semicolon') }}</option>
+          <option [value]="'\t'">{{ i18n.t('bankWorkspace.tab') }}</option>
+        </select></label
+      >
+      <label class="field"
+        >{{ i18n.t('bankWorkspace.referenceColumn') }}<input
+          class="input"
+          [formField]="importForm.referenceColumn"
+      /></label>
+      <label class="field"
+        >{{ i18n.t('bankWorkspace.dateColumn') }}<input
+          class="input"
+          [formField]="importForm.bookedOnColumn"
+      /></label>
+      <label class="field"
+        >{{ i18n.t('bankWorkspace.amountColumn') }}<input
+          class="input"
+          [formField]="importForm.amountColumn"
+      /></label>
+      <label class="field"
+        >{{ i18n.t('bankWorkspace.currencyColumn') }}<input
+          class="input"
+          [formField]="importForm.currencyColumn"
+      /></label>
+      <label class="field"
+        >{{ i18n.t('bankWorkspace.descriptionColumn') }}<input
+          class="input"
+          [formField]="importForm.descriptionColumn"
+      /></label>
+      <label class="field"
+        >{{ i18n.t('bankWorkspace.dateFormat') }}<select
+          class="input"
+          [formField]="importForm.dateFormat"
+        >
+          <option value="yyyy-MM-dd">AAAA-MM-JJ</option>
+          <option value="dd/MM/yyyy">JJ/MM/AAAA</option>
+        </select></label
+      >
+      <label class="field"
+        >{{ i18n.t('bankWorkspace.decimalSeparator') }}<select
+          class="input"
+          [formField]="importForm.decimalSeparator"
+        >
+          <option value=".">1 234.56</option>
+          <option value=",">1 234,56</option>
+        </select></label
+      >
+      <a href="/bank-statement-template.csv" download>{{ i18n.t('bank.template') }}</a>
+    </fieldset>
+    }
+    <label class="field"
       >{{ i18n.t('bank.file') }}<input
         #statementFile
         id="bank-file"
         type="file"
-        accept=".csv,text/csv"
+        accept=".csv,.xml,.ofx,text/csv,application/xml,text/xml,application/x-ofx"
         [disabled]="busy()"
-        aria-describedby="csv-hint"
+        aria-describedby="statement-hint"
         (change)="readFile(statementFile)"
     /></label>
     @if (filename()) {

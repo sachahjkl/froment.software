@@ -45,7 +45,7 @@ describe('Breadcrumbs', () => {
     fixture.componentRef.setInput('items', [
       {
         label: 'Facturation',
-        path: '/backoffice/facturation',
+        path: '/backoffice/billing',
         queryParams: { q: 'Étude & audit', sort: 'due-asc' },
       },
       {

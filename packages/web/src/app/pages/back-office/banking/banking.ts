@@ -302,7 +302,7 @@ export class Banking {
             : 'bankWorkspace.search';
     return `${this.i18n.t(label)} : ${value}`;
   }
-  protected money(cents: number): string {
-    return formatMoney(cents, this.i18n.language(), 'EUR');
+  protected money(cents: number, currency: string): string {
+    return formatMoney(cents, this.i18n.language(), currency);
   }
 }

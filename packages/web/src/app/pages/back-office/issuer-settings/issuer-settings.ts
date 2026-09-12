@@ -19,7 +19,7 @@ import {
   required,
   submit,
 } from '@angular/forms/signals';
-import { type IssuerSettingsValue } from '@froment/contracts';
+import { type IssuerSettingsUpdateRequestValue } from '@froment/contracts';
 import { RouterLink } from '@angular/router';
 
 import { IssuerSettingsApi } from '@backoffice/issuer-settings-api';
@@ -28,7 +28,9 @@ import { Button } from '@shared/button/button';
 import { Notice } from '@shared/notice/notice';
 import { PageHeader } from '@shared/page-header/page-header';
 
-const emptySettings = (): IssuerSettingsValue => ({
+type IssuerSettingsModel = Omit<IssuerSettingsUpdateRequestValue, 'expectedVersion'>;
+
+const emptySettings = (): IssuerSettingsModel => ({
   displayName: '',
   addressLine1: '',
   addressLine2: '',
@@ -39,6 +41,8 @@ const emptySettings = (): IssuerSettingsValue => ({
   phone: '',
   registrationNumber: '',
   vatNumber: '',
+  iban: '',
+  bic: '',
 });
 
 @Component({
@@ -69,6 +73,10 @@ export class IssuerSettings {
     maxLength(path.phone, 64);
     maxLength(path.registrationNumber, 64);
     maxLength(path.vatNumber, 64);
+    maxLength(path.iban, 42);
+    pattern(path.iban, /^$|^[A-Za-z]{2}[0-9A-Za-z ]{13,40}$/);
+    maxLength(path.bic, 11);
+    pattern(path.bic, /^$|^[A-Za-z0-9]{8}(?:[A-Za-z0-9]{3})?$/);
   });
   protected readonly loading = signal(true);
   protected readonly loaded = signal(false);
@@ -83,7 +91,7 @@ export class IssuerSettings {
       !this.loaded(),
   );
 
-  protected invalid(field: keyof IssuerSettingsValue): boolean {
+  protected invalid(field: keyof IssuerSettingsModel): boolean {
     return this.settingsForm[field]().touched() && this.settingsForm[field]().invalid();
   }
 

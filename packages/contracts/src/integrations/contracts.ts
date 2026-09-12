@@ -1,4 +1,5 @@
 import { Schema } from 'effect';
+import { CurrencyCode } from '../company/contracts.js';
 import {
   AccountEmail,
   AuthenticationRequired,
@@ -32,7 +33,7 @@ export const PaymentSubmission = Schema.Struct({
   ...common,
   kind: Schema.Literal('payment'),
   amountCents: PositiveSafeInteger,
-  currency: Schema.Literal('EUR'),
+  currency: CurrencyCode,
   customerEmail: AccountEmail,
 });
 export const BankingSubmission = Schema.Struct({

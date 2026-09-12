@@ -1,0 +1,54 @@
+@use "shared/page-header/detail-page";
+
+.form-panel + .form-panel,
+.actions {
+  margin-block-start: var(--space-4);
+}
+
+.module-grid {
+  display: grid;
+  gap: var(--space-3);
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+}
+
+.module-grid label {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+}
+
+.exchange-rates {
+  display: grid;
+  gap: var(--space-4);
+  margin-block-start: var(--space-4);
+}
+
+.section-heading,
+.rate-form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+.section-heading h2,
+.section-heading p {
+  margin: 0;
+}
+
+.rate-form .field {
+  flex: 1 1 10rem;
+}
+
+.table-scroll {
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+}
+
+th {
+  text-align: start;
+}

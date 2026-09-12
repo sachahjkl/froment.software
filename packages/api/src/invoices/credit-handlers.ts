@@ -31,11 +31,38 @@ export const CreditNoteHandlers = HttpApiBuilder.group(Api, 'creditNotes', (hand
         }),
       )
       .handle(
-        'invoiceCreditIssue',
-        Effect.fn('invoiceCreditIssue')(function* ({ params, payload }) {
+        'creditNoteGet',
+        Effect.fn('creditNoteGet')(function* ({ params }) {
           yield* setPrivateResponseHeaders;
           return yield* credits
-            .issue(params.invoiceId, payload, (yield* ApiPrincipal).userId)
+            .getNote(params.creditNoteId)
+            .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
+        }),
+      )
+      .handle(
+        'creditNoteCreate',
+        Effect.fn('creditNoteCreate')(function* ({ payload }) {
+          yield* setPrivateResponseHeaders;
+          return yield* credits
+            .create(payload, (yield* ApiPrincipal).userId)
+            .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
+        }),
+      )
+      .handle(
+        'creditNoteUpdate',
+        Effect.fn('creditNoteUpdate')(function* ({ params, payload }) {
+          yield* setPrivateResponseHeaders;
+          return yield* credits
+            .update(params.creditNoteId, payload, (yield* ApiPrincipal).userId)
+            .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
+        }),
+      )
+      .handle(
+        'creditNoteIssue',
+        Effect.fn('creditNoteIssue')(function* ({ params, payload }) {
+          yield* setPrivateResponseHeaders;
+          return yield* credits
+            .issue(params.creditNoteId, payload, (yield* ApiPrincipal).userId)
             .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
         }),
       )
@@ -49,6 +76,15 @@ export const CreditNoteHandlers = HttpApiBuilder.group(Api, 'creditNotes', (hand
         }),
       )
       .handle(
+        'invoiceCreditAllocate',
+        Effect.fn('invoiceCreditAllocate')(function* ({ params, payload }) {
+          yield* setPrivateResponseHeaders;
+          return yield* credits
+            .allocate(params.invoiceId, payload, (yield* ApiPrincipal).userId)
+            .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
+        }),
+      )
+      .handle(
         'invoiceRefundCancel',
         Effect.fn('invoiceRefundCancel')(function* ({ params, payload }) {
           yield* setPrivateResponseHeaders;
@@ -58,12 +94,26 @@ export const CreditNoteHandlers = HttpApiBuilder.group(Api, 'creditNotes', (hand
         }),
       )
       .handle(
+        'invoiceCreditAllocationCancel',
+        Effect.fn('invoiceCreditAllocationCancel')(function* ({ params, payload }) {
+          yield* setPrivateResponseHeaders;
+          return yield* credits
+            .cancelAllocation(
+              params.invoiceId,
+              params.allocationId,
+              payload,
+              (yield* ApiPrincipal).userId,
+            )
+            .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
+        }),
+      )
+      .handle(
         'invoiceCreditPdf',
         Effect.fn('invoiceCreditPdf')(function* ({ params }) {
           yield* setPrivateResponseHeaders;
           yield* setPdfResponseHeaders;
           const pdf = yield* credits
-            .pdf(params.invoiceId)
+            .pdf(params.creditNoteId)
             .pipe(Effect.catchTag(['DatabaseError', 'DocumentRenderError'], Effect.die));
           yield* pdfFilename(pdf.number);
           return pdf.content;
@@ -79,7 +129,7 @@ export const CreditNoteHandlers = HttpApiBuilder.group(Api, 'creditNotes', (hand
             .resolveAccessClientId(principal.userId)
             .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
           const pdf = yield* credits
-            .clientPdf(params.invoiceId, clientId)
+            .clientPdf(params.creditNoteId, clientId)
             .pipe(Effect.catchTag(['DatabaseError', 'DocumentRenderError'], Effect.die));
           yield* pdfFilename(pdf.number);
           return pdf.content;

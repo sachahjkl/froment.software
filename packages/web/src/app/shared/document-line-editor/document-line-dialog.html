@@ -1,0 +1,30 @@
+<form (submit)="save($event)">
+  <h2 id="document-line-dialog-title">
+    {{ i18n.tf('documentLine.editNumber', { number: data.number }) }}
+  </h2>
+  <label class="field">
+    {{ i18n.t('documentLine.description') }}
+    <input class="input" [formField]="lineForm.description" />
+  </label>
+  <label class="field">
+    {{ i18n.t('documentLine.quantity') }}
+    <input class="input" inputmode="decimal" [formField]="lineForm.quantity" />
+  </label>
+  <label class="field">
+    {{ i18n.t('documentLine.unitPrice') }}
+    <input class="input" inputmode="decimal" [formField]="lineForm.unitPrice" />
+  </label>
+  <label class="field">
+    {{ i18n.t('documentLine.vatRate') }}
+    <input class="input" inputmode="decimal" [formField]="lineForm.vatRate" />
+  </label>
+  @if (lineForm().invalid() && lineForm().touched()) {
+  <p role="alert" class="field-error">{{ i18n.t('documentLine.invalid') }}</p>
+  }
+  <div class="dialog-actions">
+    <button appButton type="button" (click)="dialog.close()">
+      {{ i18n.t('documentLine.cancel') }}
+    </button>
+    <button appButton variant="primary" type="submit">{{ i18n.t('documentLine.save') }}</button>
+  </div>
+</form>

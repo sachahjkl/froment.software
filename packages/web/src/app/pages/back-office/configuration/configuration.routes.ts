@@ -10,7 +10,15 @@ export const configurationRoutes: Routes = [
       import('./configuration-index').then((module) => module.ConfigurationIndex),
   },
   {
-    path: 'entreprise',
+    path: 'company',
+    canActivate: [permissionsGuard],
+    data: permissionData('company.read'),
+    loadComponent: () =>
+      import('../company-settings/company-settings').then((module) => module.CompanySettingsPage),
+    canDeactivate: [unsavedChangesGuard],
+  },
+  {
+    path: 'issuer',
     canActivate: [permissionsGuard],
     data: permissionData('issuer.read'),
     loadComponent: () =>
@@ -48,11 +56,21 @@ export const configurationRoutes: Routes = [
     canDeactivate: [unsavedChangesGuard],
   },
   {
-    path: 'carte-de-visite',
+    path: 'business-card',
     canActivate: [permissionsGuard],
     data: permissionData('issuer.read'),
     loadComponent: () =>
       import('../../business-card/business-card').then((module) => module.BusinessCard),
+    canDeactivate: [unsavedChangesGuard],
+  },
+  {
+    path: 'supplier-invoice-analysis',
+    canActivate: [permissionsGuard],
+    data: permissionData('integration.configure'),
+    loadComponent: () =>
+      import('../supplier-invoice-analysis-settings/supplier-invoice-analysis-settings').then(
+        (module) => module.SupplierInvoiceAnalysisSettingsPage,
+      ),
     canDeactivate: [unsavedChangesGuard],
   },
 ];

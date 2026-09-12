@@ -4,7 +4,7 @@ import { unsavedChangesGuard } from '@backoffice/unsaved-changes-guard';
 
 export const bankWorkspaceRoutes: Routes = [
   {
-    path: 'backoffice/banque/importer',
+    path: 'backoffice/banking/import',
     loadComponent: () => import('../bank-import/bank-import').then((module) => module.BankImport),
     canActivate: [administratorGuard],
     canDeactivate: [unsavedChangesGuard],
@@ -15,7 +15,7 @@ export const bankWorkspaceRoutes: Routes = [
     },
   },
   {
-    path: 'backoffice/banque/transactions/:transactionId',
+    path: 'backoffice/banking/transactions/:transactionId',
     loadComponent: () =>
       import('../bank-reconciliation/bank-reconciliation').then(
         (module) => module.BankReconciliation,
@@ -29,7 +29,7 @@ export const bankWorkspaceRoutes: Routes = [
     },
   },
   {
-    path: 'backoffice/banque/ecritures/comptabiliser/:sourceKind/:sourceId',
+    path: 'backoffice/banking/ledger/post/:sourceKind/:sourceId',
     loadComponent: () => import('../ledger-post/ledger-post').then((module) => module.LedgerPost),
     canActivate: [administratorGuard],
     canDeactivate: [unsavedChangesGuard],
@@ -40,7 +40,7 @@ export const bankWorkspaceRoutes: Routes = [
     },
   },
   {
-    path: 'backoffice/banque/ecritures/:entryId/contrepasser',
+    path: 'backoffice/banking/ledger/:entryId/reverse',
     loadComponent: () =>
       import('../ledger-reversal/ledger-reversal').then((module) => module.LedgerReversal),
     canActivate: [administratorGuard],
@@ -52,7 +52,7 @@ export const bankWorkspaceRoutes: Routes = [
     },
   },
   {
-    path: 'backoffice/banque/ecritures',
+    path: 'backoffice/banking/ledger',
     loadComponent: () => import('../bank-ledger/bank-ledger').then((module) => module.BankLedger),
     canActivate: [administratorGuard],
     data: {
@@ -62,7 +62,7 @@ export const bankWorkspaceRoutes: Routes = [
     },
   },
   {
-    path: 'backoffice/banque',
+    path: 'backoffice/banking',
     loadComponent: () => import('./banking').then((module) => module.Banking),
     canActivate: [administratorGuard],
     data: {

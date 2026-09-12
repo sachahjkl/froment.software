@@ -14,6 +14,7 @@ import { AuthenticationHttpLive } from './authentication/http.js';
 import { AuthenticationHandlers } from './authentication/handlers.js';
 import { PasskeyHandlers } from './authentication/passkey-handlers.js';
 import { TeamHandlers } from './team/handlers.js';
+import { RoleHandlers } from './roles/handlers.js';
 import { CreditNoteHandlers } from './invoices/credit-handlers.js';
 import { BankLedgerHandlers } from './banking/ledger-handlers.js';
 import { EmailDraftHandlers } from './integrations/email-draft-handlers.js';
@@ -25,6 +26,9 @@ import { AuditHandlers } from './audit/handlers.js';
 import { BootstrapHandlers } from './bootstrap/handlers.js';
 import { ClientPortalHandlers } from './client-portal/handlers.js';
 import { ClientHandlers } from './clients/handlers.js';
+import { CompanyHandlers } from './company/handlers.js';
+import { SupplierHandlers } from './suppliers/handlers.js';
+import { SupplierInvoiceHandlers } from './supplier-invoices/handlers.js';
 import { apiForLanguage } from './documentation/api-documentation.js';
 import { requestLanguage } from './http/language.js';
 import { ApiTelemetryLive } from './observability/api-telemetry.js';
@@ -49,6 +53,8 @@ import { RuntimeConfiguration, type RuntimeConfigValue } from './runtime-config.
 import { apiCatalog, apiCatalogContentType } from './server/api-catalog.js';
 import { StatusHandlers } from './status/handlers.js';
 import { blogHandlers } from './blog/handlers.js';
+import { AccountingHandlers } from './accounting/handlers.js';
+import { DemoHandlers } from './demo/handlers.js';
 
 const FrenchApi = apiForLanguage('fr');
 const EnglishApi = apiForLanguage('en');
@@ -67,6 +73,7 @@ const apiRoutes = (publicOrigin: string) =>
         AuthenticationHandlers,
         PasskeyHandlers,
         TeamHandlers,
+        RoleHandlers,
         CreditNoteHandlers,
         BankLedgerHandlers,
         EmailDraftHandlers,
@@ -74,6 +81,9 @@ const apiRoutes = (publicOrigin: string) =>
         ReminderHandlers,
         ProviderActionHandlers,
         ClientHandlers,
+        CompanyHandlers,
+        SupplierHandlers,
+        SupplierInvoiceHandlers,
         OrderHandlers,
         QuoteConditionPresetHandlers,
         CatalogHandlers,
@@ -87,6 +97,8 @@ const apiRoutes = (publicOrigin: string) =>
         InvoiceHandlers,
         ClientPortalHandlers,
         ApiTokenHandlers,
+        AccountingHandlers,
+        DemoHandlers,
       ),
     ),
     Layer.provide(

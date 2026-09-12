@@ -1,70 +1,47 @@
-import { Authentication } from '@backoffice/authentication';
 import { Can } from '@backoffice/can';
-import { DOCUMENT } from '@angular/common';
+import { AffairsApi } from '@backoffice/affairs-api';
+import { InvoicesApi } from '@backoffice/invoices-api';
+import { OrdersApi } from '@backoffice/orders-api';
+import { QuotesApi } from '@backoffice/quotes-api';
 import {
   afterNextRender,
   ChangeDetectionStrategy,
   Component,
   computed,
-  DestroyRef,
   inject,
-  PendingTasks,
   signal,
 } from '@angular/core';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { form, FormField, maxLength, required } from '@angular/forms/signals';
 import { ActivatedRoute, RouterLink, RouterOutlet } from '@angular/router';
 import {
+  AffairQuoteLinkRequest,
+  AffairUpdateRequest,
+  type Affair,
+  type AuditEvent,
+  type InvoiceListValue,
+  type OrderListValue,
+  type QuoteListValue,
   Ulid,
-  type ClientSummaryValue,
-  type AuditEventValue,
-  type InvoiceDetailValue,
-  type InvoiceStatusValue,
-  type OrderSummaryValue,
-  type QuoteDetailValue,
-  type QuoteStatusValue,
 } from '@froment/contracts';
-import { formatMoney } from '@froment/l10n';
 import { Option, Schema } from 'effect';
-
-import { InvoicesApi } from '@backoffice/invoices-api';
-import { ClientsApi } from '@backoffice/clients-api';
-import { OrdersApi } from '@backoffice/orders-api';
-import { QuotesApi } from '@backoffice/quotes-api';
-import { I18nService, type TranslationKey } from '@app/i18n.service';
+import { I18nService } from '@app/i18n.service';
 import { Badge } from '@shared/badge/badge';
 import { Button } from '@shared/button/button';
 import { DataTable } from '@shared/data-table/data-table';
-import { EntityIcon } from '@shared/entity-icon/entity-icon';
-import { Icon } from '@shared/icon/icon';
 import { Notice } from '@shared/notice/notice';
 import { PageHeader } from '@shared/page-header/page-header';
-import { TextCopy } from '@shared/text-copy';
 import { Tabs, type TabItem } from '@shared/tabs/tabs';
 import { TabLayout, TabPanel } from '@shared/tabs/tab-panel';
-import { affairContext, affairView } from '../affairs/affair-filters';
-import { commercialDocumentTitle, quoteStatusBadge } from '../commercial-header';
-import { ClientDescription } from '../client-description/client-description';
-import { affairDocuments, invoiceReference, invoiceSummaryBadge } from './affair-documents';
-
-interface TimelineItem {
-  readonly id: string;
-  readonly date: string;
-  readonly label: TranslationKey;
-}
-
-type PortalDocumentKind = 'quote' | 'order' | 'invoice';
 
 @Component({
-  host: { class: 'page-container' },
   selector: 'app-affair-detail',
+  host: { class: 'page-container' },
   imports: [
     Can,
     Badge,
     Button,
-    ClientDescription,
     DataTable,
-    EntityIcon,
-    Icon,
+    FormField,
     Notice,
     PageHeader,
     RouterLink,
@@ -78,297 +55,134 @@ type PortalDocumentKind = 'quote' | 'order' | 'invoice';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AffairDetail {
-  private readonly authentication = inject(Authentication);
   protected readonly i18n = inject(I18nService);
-  private readonly route = inject(ActivatedRoute);
-  private readonly document = inject(DOCUMENT);
+  private readonly api = inject(AffairsApi);
   private readonly quotesApi = inject(QuotesApi);
   private readonly ordersApi = inject(OrdersApi);
   private readonly invoicesApi = inject(InvoicesApi);
-  private readonly clientsApi = inject(ClientsApi);
-  private readonly textCopy = inject(TextCopy);
-  private readonly destroyRef = inject(DestroyRef);
-  private readonly pendingTasks = inject(PendingTasks);
-  private generation = 0;
-  protected readonly backView = signal(affairView(this.route.snapshot.queryParamMap));
-  protected readonly context = signal(affairContext(this.route.snapshot.queryParamMap));
-  protected readonly tabs = computed<readonly TabItem[]>(() =>
-    (['overview', 'documents', 'history'] as const)
-      .filter((tab) => tab !== 'history' || this.authentication.can('audit.read'))
-      .map((tab) => ({
-        path: tab,
-        id: `affair-${tab}-tab`,
-        label: this.i18n.t(`commercial.${tab}`),
-      })),
-  );
+  private readonly route = inject(ActivatedRoute);
   protected readonly state = signal<'loading' | 'ready' | 'error'>('loading');
-  protected readonly quote = signal<QuoteDetailValue | undefined>(undefined);
-  protected readonly order = signal<OrderSummaryValue | undefined>(undefined);
-  protected readonly invoice = signal<InvoiceDetailValue | undefined>(undefined);
-  protected readonly client = signal<ClientSummaryValue | undefined>(undefined);
-  protected readonly timeline = signal<readonly TimelineItem[]>([]);
-  protected readonly copiedPortalLink = signal('');
-  protected readonly headerTitle = computed(() => {
-    const quote = this.quote();
-    return quote
-      ? commercialDocumentTitle(quote.reference, quote.currentRevision.title)
-      : this.i18n.t('backOffice.affairs.title');
+  protected readonly affair = signal<typeof Affair.Type | undefined>(undefined);
+  protected readonly quotes = signal<QuoteListValue>([]);
+  protected readonly orders = signal<OrderListValue>([]);
+  protected readonly invoices = signal<InvoiceListValue>([]);
+  protected readonly events = signal<ReadonlyArray<typeof AuditEvent.Type>>([]);
+  protected readonly selectedQuoteId = signal('');
+  private readonly model = signal<{ title: string; status: 'open' | 'closed' }>({
+    title: '',
+    status: 'open',
   });
-  protected readonly quoteBadge = quoteStatusBadge;
-  protected readonly invoiceBadge = invoiceSummaryBadge;
-  protected readonly invoiceReference = computed(() => {
-    const invoice = this.invoice();
-    return invoice ? invoiceReference(invoice.invoiceNumber, this.i18n.language()) : undefined;
+  protected readonly editForm = form(this.model, (path) => {
+    required(path.title);
+    maxLength(path.title, 160);
   });
-  protected readonly relatedDocuments = computed(() => {
-    const quote = this.quote();
-    return quote
-      ? affairDocuments(quote, this.order(), this.invoice(), this.context(), this.i18n.language())
+  protected readonly saving = signal(false);
+  protected readonly linkedQuotes = computed(() => {
+    const ids = new Set(this.affair()?.quoteIds ?? []);
+    return this.quotes().filter((quote) => ids.has(quote.id));
+  });
+  protected readonly linkedOrders = computed(() => {
+    const ids = new Set(this.affair()?.orderIds ?? []);
+    return this.orders().filter((order) => ids.has(order.id));
+  });
+  protected readonly linkedInvoices = computed(() => {
+    const ids = new Set(this.affair()?.invoiceIds ?? []);
+    return this.invoices().filter((invoice) => ids.has(invoice.id));
+  });
+  protected readonly availableQuotes = computed(() => {
+    const affair = this.affair();
+    const linked = new Set(affair?.quoteIds ?? []);
+    return affair
+      ? this.quotes().filter((quote) => quote.clientId === affair.clientId && !linked.has(quote.id))
       : [];
   });
-  protected readonly nextActionVisible = computed(() => {
-    const invoice = this.invoice();
-    if (invoice)
-      return (
-        invoice.status !== 'draft' ||
-        (this.authentication.can('invoice.update') && this.authentication.can('invoice.issue'))
-      );
-    if (this.order()) return this.authentication.can('invoice.create');
-    const status = this.quote()?.status;
-    return (
-      (status !== 'draft' && status !== 'expired') ||
-      (this.authentication.can('quote.update') && this.authentication.can('quote.send'))
-    );
-  });
+  protected readonly tabs = computed<readonly TabItem[]>(() => [
+    { path: 'overview', id: 'affair-overview-tab', label: this.i18n.t('commercial.summary') },
+    { path: 'documents', id: 'affair-documents-tab', label: this.i18n.t('affair.documents') },
+    { path: 'history', id: 'affair-history-tab', label: this.i18n.t('billingWorkspace.history') },
+  ]);
 
   constructor() {
-    afterNextRender(() => {
-      this.route.paramMap
-        .pipe(takeUntilDestroyed(this.destroyRef))
-        .subscribe(() => void this.load());
-      this.route.queryParamMap.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((params) => {
-        this.backView.set(affairView(params));
-        this.context.set(affairContext(params));
-      });
-    });
-  }
-
-  protected money(cents: number): string {
-    return formatMoney(cents, this.i18n.language(), 'EUR');
-  }
-
-  protected date(value: string): string {
-    return new Intl.DateTimeFormat(this.i18n.language(), {
-      dateStyle: 'medium',
-      timeStyle: 'short',
-    }).format(new Date(value));
-  }
-
-  protected quoteNextAction(status: QuoteStatusValue): string {
-    return this.i18n.t(`backOffice.affair.nextAction.quote.${status}`);
-  }
-
-  protected invoiceNextAction(status: InvoiceStatusValue): string {
-    return this.i18n.t(`backOffice.affair.nextAction.invoice.${status}`);
-  }
-
-  protected quoteReminderHref(): string | undefined {
-    const quote = this.quote();
-    const client = this.client();
-    if (quote?.status !== 'sent' || !client?.email) return undefined;
-    return this.mailto(
-      client.email,
-      this.i18n.tf('backOffice.affair.reminder.quoteSubject', { reference: quote.reference }),
-      this.i18n.tf('backOffice.affair.reminder.quoteBody', {
-        name: client.displayName,
-        reference: quote.reference,
-        url: this.portalUrl('quote', quote.id),
-      }),
-    );
-  }
-
-  protected invoiceReminderHref(): string | undefined {
-    const invoice = this.invoice();
-    const client = this.client();
-    if (
-      invoice?.status !== 'issued' ||
-      invoice.creditedCents > 0 ||
-      !client?.email ||
-      invoice.currentRevision.dueDate >= new Date().toISOString().slice(0, 10)
-    ) {
-      return undefined;
-    }
-    const reference = invoice.invoiceNumber ?? invoice.orderReference;
-    return this.mailto(
-      client.email,
-      this.i18n.tf('backOffice.affair.reminder.invoiceSubject', { reference }),
-      this.i18n.tf('backOffice.affair.reminder.invoiceBody', {
-        name: client.displayName,
-        reference,
-        dueDate: invoice.currentRevision.dueDate,
-        url: this.portalUrl('invoice', invoice.id),
-      }),
-    );
-  }
-
-  protected portalUrl(kind: PortalDocumentKind, id: string): string {
-    const url = new URL('/backoffice/client', this.document.location?.origin ?? 'http://localhost');
-    url.searchParams.set(kind, id);
-    return url.toString();
-  }
-
-  protected async copyPortalUrl(kind: PortalDocumentKind, id: string): Promise<void> {
-    if (await this.textCopy.copy(this.portalUrl(kind, id))) {
-      this.copiedPortalLink.set(`${kind}-${id}`);
-    }
-  }
-
-  protected portalCopyLabel(kind: PortalDocumentKind, id: string): string {
-    return this.i18n.t(
-      this.copiedPortalLink() === `${kind}-${id}`
-        ? 'backOffice.affair.portalLinkCopied'
-        : 'backOffice.affair.copyPortalLink',
-    );
+    afterNextRender(() => void this.load());
   }
 
   protected async load(): Promise<void> {
-    const generation = ++this.generation;
-    this.quote.set(undefined);
-    this.order.set(undefined);
-    this.invoice.set(undefined);
-    this.client.set(undefined);
-    this.timeline.set([]);
-    this.copiedPortalLink.set('');
-    const quoteId = Schema.decodeUnknownOption(Ulid)(this.route.snapshot.paramMap.get('quoteId'));
-    if (Option.isNone(quoteId)) {
+    const id = Schema.decodeUnknownOption(Ulid)(this.route.snapshot.paramMap.get('affairId'));
+    if (Option.isNone(id)) {
       this.state.set('error');
       return;
     }
     this.state.set('loading');
-    const finishLoading = this.pendingTasks.add();
     try {
-      const [quoteOutcome, orders, events] = await Promise.all([
-        this.quotesApi.get(quoteId.value),
+      const [affair, quotes, orders, invoices, events] = await Promise.all([
+        this.api.get(id.value),
+        this.quotesApi.list(),
         this.ordersApi.list(),
-        this.authentication.can('audit.read') ? this.quotesApi.listAffairEvents(quoteId.value) : [],
+        this.invoicesApi.list(),
+        this.api.events(id.value),
       ]);
-      if (this.destroyRef.destroyed || generation !== this.generation) return;
-      if (!quoteOutcome.success) {
+      if (!affair.success) {
         this.state.set('error');
         return;
       }
-      const quote = quoteOutcome.result;
-      const order = orders.find((candidate) => candidate.quoteId === quote.id);
-      const clientOutcome = this.authentication.can('client.read')
-        ? await this.clientsApi.get(quote.clientId)
-        : undefined;
-      let invoice: InvoiceDetailValue | undefined;
-      if (order?.invoiceId) {
-        const invoiceOutcome = await this.invoicesApi.get(order.invoiceId);
-        if (!invoiceOutcome.success) throw new Error('affair.invoice.unavailable');
-        invoice = invoiceOutcome.result;
-      }
-      if (this.destroyRef.destroyed || generation !== this.generation) return;
-      this.quote.set(quote);
-      this.order.set(order);
-      this.invoice.set(invoice);
-      if (clientOutcome?.success) this.client.set(clientOutcome.result);
-      const timeline =
-        events.length === 0
-          ? this.makeTimeline(quote, order, invoice)
-          : events.map((event) => this.eventTimelineItem(event));
-      this.timeline.set(
-        timeline.toSorted(
-          (left, right) =>
-            Date.parse(left.date) - Date.parse(right.date) ||
-            (left.id < right.id ? -1 : left.id > right.id ? 1 : 0),
-        ),
+      this.affair.set(affair.result);
+      this.quotes.set(quotes);
+      this.orders.set(orders);
+      this.invoices.set(invoices);
+      this.events.set(
+        events.success
+          ? events.result.toSorted((left, right) => left.occurredAt.localeCompare(right.occurredAt))
+          : [],
       );
+      this.editForm().reset({ title: affair.result.title, status: affair.result.status });
       this.state.set('ready');
     } catch {
-      if (!this.destroyRef.destroyed && generation === this.generation) this.state.set('error');
+      this.state.set('error');
+    }
+  }
+
+  protected async save(event: Event): Promise<void> {
+    event.preventDefault();
+    const affair = this.affair();
+    if (!affair || this.editForm().invalid() || this.saving()) return;
+    this.saving.set(true);
+    try {
+      const value = this.model();
+      const result = await this.api.update(
+        affair.id,
+        AffairUpdateRequest.make({
+          expectedVersion: affair.version,
+          title: value.title.trim(),
+          status: value.status,
+        }),
+      );
+      if (result.success) {
+        this.affair.set(result.result);
+        this.editForm().reset({ title: result.result.title, status: result.result.status });
+      } else this.state.set('error');
     } finally {
-      finishLoading();
+      this.saving.set(false);
     }
   }
 
-  private makeTimeline(
-    quote: QuoteDetailValue,
-    order: OrderSummaryValue | undefined,
-    invoice: InvoiceDetailValue | undefined,
-  ): readonly TimelineItem[] {
-    const items: TimelineItem[] = quote.revisions.map((revision) => ({
-      id: `quote-${revision.id}`,
-      date: revision.createdAt,
-      label:
-        revision.version === 1
-          ? 'backOffice.affair.timeline.quoteCreated'
-          : 'backOffice.affair.timeline.quoteRevised',
-    }));
-    if (order) {
-      items.push({
-        id: `order-${order.id}`,
-        date: order.createdAt,
-        label: 'backOffice.affair.timeline.orderConfirmed',
-      });
+  protected async linkQuote(): Promise<void> {
+    const affair = this.affair();
+    if (!affair || !this.selectedQuoteId() || this.saving()) return;
+    this.saving.set(true);
+    try {
+      const result = await this.api.linkQuote(
+        affair.id,
+        AffairQuoteLinkRequest.make({
+          expectedVersion: affair.version,
+          quoteId: Schema.decodeUnknownSync(Ulid)(this.selectedQuoteId()),
+        }),
+      );
+      if (result.success) {
+        this.affair.set(result.result);
+        this.selectedQuoteId.set('');
+      } else this.state.set('error');
+    } finally {
+      this.saving.set(false);
     }
-    if (invoice) {
-      for (const revision of invoice.revisions) {
-        items.push({
-          id: `invoice-${revision.id}`,
-          date: revision.createdAt,
-          label:
-            revision.version === 1
-              ? 'backOffice.affair.timeline.invoiceCreated'
-              : 'backOffice.affair.timeline.invoiceRevised',
-        });
-      }
-      if (invoice.issuedAt) {
-        items.push({
-          id: 'invoice-issued',
-          date: invoice.issuedAt,
-          label: 'backOffice.affair.timeline.invoiceIssued',
-        });
-      }
-      if (invoice.paidAt) {
-        items.push({
-          id: 'invoice-paid',
-          date: invoice.paidAt,
-          label: 'backOffice.affair.timeline.invoicePaid',
-        });
-      }
-      if (invoice.voidedAt) {
-        items.push({
-          id: 'invoice-voided',
-          date: invoice.voidedAt,
-          label: 'backOffice.affair.timeline.invoiceVoided',
-        });
-      }
-    }
-    return items;
-  }
-
-  private mailto(email: string, subject: string, body: string): string {
-    return `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-  }
-
-  private eventTimelineItem(event: AuditEventValue): TimelineItem {
-    let label: TranslationKey = 'backOffice.affair.timeline.event';
-    if (event.action === 'quote.created') label = 'backOffice.affair.timeline.quoteCreated';
-    if (event.action === 'quote.revised') label = 'backOffice.affair.timeline.quoteRevised';
-    if (event.action === 'quote.sent') label = 'backOffice.affair.timeline.quoteSent';
-    if (event.action === 'quote.accepted') label = 'backOffice.affair.timeline.orderConfirmed';
-    if (event.action === 'quote.expired') label = 'backOffice.affair.timeline.quoteExpired';
-    if (event.action === 'quote.cancelled') label = 'backOffice.affair.timeline.quoteCancelled';
-    if (event.action === 'invoice.created') label = 'backOffice.affair.timeline.invoiceCreated';
-    if (event.action === 'invoice.revised') label = 'backOffice.affair.timeline.invoiceRevised';
-    if (event.action === 'invoice.issued') label = 'backOffice.affair.timeline.invoiceIssued';
-    if (event.action === 'invoice.marked-paid') label = 'backOffice.affair.timeline.invoicePaid';
-    if (event.action === 'invoice.voided') label = 'backOffice.affair.timeline.invoiceVoided';
-    return {
-      id: event.id,
-      date: event.occurredAt,
-      label,
-    };
   }
 }

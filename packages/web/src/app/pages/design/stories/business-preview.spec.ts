@@ -45,7 +45,7 @@ describe('Isolated business previews', () => {
     const settings: BusinessSettings = {
       scenario,
       administrator,
-      path: '/backoffice/affaires',
+      path: '/backoffice/affairs',
       kind: 'quote',
       party: 'both',
     };
@@ -324,7 +324,7 @@ describe('Isolated business previews', () => {
     const navigate = vi.spyOn(TestBed.inject(Router), 'navigateByUrl');
     expect(root.querySelectorAll('.party')).toHaveLength(2);
     root.querySelector<HTMLAnchorElement>('.party a')!.click();
-    expect(context.destination()).toBe('/backoffice/configuration/entreprise');
+    expect(context.destination()).toBe('/backoffice/configuration/issuer');
     fixture.componentRef.setInput('settings', { ...settings, party: 'client', kind: 'invoice' });
     await fixture.whenStable();
     expect(root.querySelectorAll('.party')).toHaveLength(1);

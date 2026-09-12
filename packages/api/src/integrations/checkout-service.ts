@@ -34,10 +34,14 @@ const Invoice = Schema.Struct({
   balance: Schema.Int,
 });
 const invoiceSelect = `select r.render_snapshot as snapshot,
-  r.total_cents - coalesce((select sum(p.amount_cents) from invoice_payments p where p.invoice_id = i.id and p.cancelled_at is null), 0) as balance
+  r.total_cents
+    - coalesce((select sum(p.amount_cents) from invoice_payments p where p.invoice_id = i.id and p.cancelled_at is null), 0)
+    - coalesce((select sum(l.total_cents) from invoice_credit_note_lines l
+      join invoice_credit_notes n on n.id = l.credit_note_id
+      join invoice_credit_note_revisions cr on cr.id = l.credit_note_revision_id
+      where l.invoice_id = i.id and n.status = 'issued' and cr.version = n.version), 0) as balance
   from invoices i join invoice_revisions r on r.invoice_id = i.id and r.version = i.version
-  where i.id = ? and i.version = ? and i.status = 'issued'
-  and not exists (select 1 from invoice_credit_notes c where c.invoice_id = i.id)`;
+  where i.id = ? and i.version = ? and i.status = 'issued'`;
 const iso = (time: number) => DateTime.formatIso(DateTime.makeUnsafe(time));
 const epoch = (time: string) => DateTime.toEpochMillis(DateTime.makeUnsafe(time));
 const publicOperation = ({

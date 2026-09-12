@@ -14,16 +14,46 @@ export const creditText = {
     'credit.refundedOn': 'Date du remboursement effectué',
     'credit.reference': 'Référence du remboursement',
     'credit.recordRefund': 'Enregistrer le remboursement effectué',
+    'credit.allocate': 'Imputer sur une facture',
+    'credit.allocations': 'Imputations',
+    'credit.targetInvoice': 'Facture cible',
+    'credit.allocatedOn': 'Date d’imputation',
     'credit.cancelReason': 'Motif de correction du remboursement',
     'credit.cancelled': 'Enregistrement annulé :',
     'credit.cancelRefund': 'Corriger cet enregistrement',
+    'credit.cancelAllocation': 'Annuler l’imputation',
+    'credit.cancelAllocationHint':
+      'L’annulation restaure la dette client et le solde de la facture cible.',
     'credit.fullHint':
       'L’avoir intégral reprend les lignes et la TVA de la facture émise. Il annule toute sa créance sans modifier la facture ni son PDF.',
-    'credit.reason': 'Motif de l’avoir intégral',
+    'credit.reason': 'Motif de l’avoir',
     'credit.issue': 'Émettre l’avoir intégral',
+    'credit.create': 'Émettre un avoir',
+    'credit.options': 'Choisir le type d’avoir',
+    'credit.partial': 'Avoir partiel',
+    'credit.full': 'Avoir intégral',
+    'credit.draftHint':
+      'Sélectionnez les quantités à créditer. Enregistrez le brouillon ou émettez ensuite l’avoir définitif.',
+    'credit.details': 'Détails de l’avoir',
+    'credit.lines': 'Lignes créditées',
+    'credit.linesHint':
+      'Une quantité nulle exclut la ligne. Les quantités déjà créditées ne sont plus disponibles.',
+    'credit.quantityFor': 'Quantité créditée pour {description}',
+    'credit.availableQuantity': 'Disponible : {quantity}',
+    'credit.noAvailableLines': 'Aucune ligne ne reste disponible pour un avoir.',
+    'credit.addInvoice': 'Ajouter une facture du même client',
+    'credit.selectInvoice': 'Sélectionnez une facture',
+    'credit.add': 'Ajouter',
+    'credit.removeInvoice': 'Retirer la facture',
+    'credit.saveDraft': 'Enregistrer le brouillon',
+    'credit.issueDraft': 'Émettre l’avoir',
+    'credit.editDraft': 'Modifier le brouillon d’avoir',
+    'credit.draft': 'Brouillon',
+    'credit.issued': 'Émis',
+    'credit.readonlyVersion': 'Cette version est figée et disponible uniquement en lecture.',
     'credit.credited': 'Montant couvert par un avoir :',
     'credit.confirmIssue':
-      'Émettre un avoir intégral définitif ? La créance sera annulée. La facture et ses règlements seront conservés. Aucun remboursement ne sera exécuté.',
+      'Émettre cet avoir définitif ? Les factures et leurs règlements seront conservés. Aucun remboursement ne sera exécuté.',
     'credit.confirmRefund':
       'Enregistrer un remboursement déjà effectué ? Cette action ne transfère aucun fonds.',
     'credit.confirmCancel':
@@ -50,16 +80,46 @@ export const creditText = {
     'credit.refundedOn': 'Date of the completed refund',
     'credit.reference': 'Refund reference',
     'credit.recordRefund': 'Record completed refund',
+    'credit.allocate': 'Allocate to an invoice',
+    'credit.allocations': 'Allocations',
+    'credit.targetInvoice': 'Target invoice',
+    'credit.allocatedOn': 'Allocation date',
     'credit.cancelReason': 'Reason for correcting the refund',
     'credit.cancelled': 'Record cancelled:',
     'credit.cancelRefund': 'Correct this record',
+    'credit.cancelAllocation': 'Cancel allocation',
+    'credit.cancelAllocationHint':
+      'Cancellation restores the customer debt and the target invoice balance.',
     'credit.fullHint':
       'The full credit note copies the issued invoice lines and VAT. It cancels the entire debt without changing the invoice or its PDF.',
-    'credit.reason': 'Reason for the full credit note',
+    'credit.reason': 'Credit note reason',
     'credit.issue': 'Issue full credit note',
+    'credit.create': 'Issue a credit note',
+    'credit.options': 'Select the credit note type',
+    'credit.partial': 'Partial credit note',
+    'credit.full': 'Full credit note',
+    'credit.draftHint':
+      'Select the quantities to credit. Save the draft or issue the final credit note.',
+    'credit.details': 'Credit note details',
+    'credit.lines': 'Credited lines',
+    'credit.linesHint':
+      'A zero quantity excludes the line. Quantities already credited are unavailable.',
+    'credit.quantityFor': 'Credited quantity for {description}',
+    'credit.availableQuantity': 'Available: {quantity}',
+    'credit.noAvailableLines': 'No line remains available for a credit note.',
+    'credit.addInvoice': 'Add an invoice for this client',
+    'credit.selectInvoice': 'Select an invoice',
+    'credit.add': 'Add',
+    'credit.removeInvoice': 'Remove invoice',
+    'credit.saveDraft': 'Save draft',
+    'credit.issueDraft': 'Issue credit note',
+    'credit.editDraft': 'Edit credit note draft',
+    'credit.draft': 'Draft',
+    'credit.issued': 'Issued',
+    'credit.readonlyVersion': 'This version is frozen and available as read-only.',
     'credit.credited': 'Amount covered by a credit note:',
     'credit.confirmIssue':
-      'Issue a final full credit note? The debt will be cancelled. The invoice and payments will be kept. No refund will be executed.',
+      'Issue this final credit note? The invoices and payments will be kept. No refund will be executed.',
     'credit.confirmRefund':
       'Record a refund that has already occurred? This action transfers no funds.',
     'credit.confirmCancel':
@@ -77,7 +137,7 @@ export const creditDocumentation = {
     group: {
       title: 'Avoirs et remboursements',
       description:
-        'Avoirs intégraux immuables et enregistrement local des remboursements. Aucun transfert de fonds.',
+        'Brouillons d’avoirs partiels ou consolidés, émission immuable et enregistrement local des remboursements.',
     },
     operations: {
       invoiceCreditsGet: {
@@ -85,10 +145,22 @@ export const creditDocumentation = {
         description:
           'Retourne l’avoir intégral, les remboursements conservés et le montant encore remboursable sur les encaissements actifs.',
       },
-      invoiceCreditIssue: {
-        summary: 'Émettre un avoir intégral',
+      creditNoteGet: {
+        summary: 'Consulter un avoir',
+        description: 'Retourne un brouillon modifiable ou un avoir émis immuable avec ses lignes.',
+      },
+      creditNoteCreate: {
+        summary: 'Créer un brouillon d’avoir',
         description:
-          'Copie les montants HT et TVA de la facture émise dans un avoir numéroté. Préserve la facture, sa version et ses PDF. Une clé UUID stable protège les nouvelles tentatives.',
+          'Crée un avoir partiel ou consolidé pour les factures compatibles sélectionnées.',
+      },
+      creditNoteUpdate: {
+        summary: 'Modifier un brouillon d’avoir',
+        description: 'Remplace le motif et les lignes d’un brouillon avec contrôle de version.',
+      },
+      creditNoteIssue: {
+        summary: 'Émettre un avoir',
+        description: 'Fige les lignes du brouillon et attribue une référence AV-AAAA-NNNNNN.',
       },
       invoiceRefundRecord: {
         summary: 'Enregistrer un remboursement effectué',
@@ -116,7 +188,7 @@ export const creditDocumentation = {
     group: {
       title: 'Credit notes and refunds',
       description:
-        'Immutable full credit notes and local refund records. No funds are transferred.',
+        'Partial or consolidated credit note drafts, immutable issue, and local refund records.',
     },
     operations: {
       invoiceCreditsGet: {
@@ -124,10 +196,22 @@ export const creditDocumentation = {
         description:
           'Returns the full credit note, preserved refunds and the amount still available for refund from active receipts.',
       },
-      invoiceCreditIssue: {
-        summary: 'Issue a full credit note',
+      creditNoteGet: {
+        summary: 'Read a credit note',
+        description: 'Returns an editable draft or an immutable issued credit note with its lines.',
+      },
+      creditNoteCreate: {
+        summary: 'Create a credit note draft',
         description:
-          'Copies net amounts and VAT from the issued invoice into a numbered credit note. Preserves the invoice, version and PDFs. A stable UUID key protects retries.',
+          'Creates a partial or consolidated credit note for selected compatible invoices.',
+      },
+      creditNoteUpdate: {
+        summary: 'Update a credit note draft',
+        description: 'Replaces the reason and lines of a draft with version control.',
+      },
+      creditNoteIssue: {
+        summary: 'Issue a credit note',
+        description: 'Freezes the draft lines and assigns an AV-YYYY-NNNNNN reference.',
       },
       invoiceRefundRecord: {
         summary: 'Record a completed refund',

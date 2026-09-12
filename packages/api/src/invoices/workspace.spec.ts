@@ -22,6 +22,8 @@ it(
       // These reader fixtures contain only queried columns. HTTP tests use the migrated schema.
       sqlite.exec(`
       create table orders (id text primary key, reference text);
+      create table users (id text primary key, display_name text);
+      create table clients (id text primary key);
       create table invoices (
         id text primary key, invoice_number text, client_id text, order_id text, version integer
       );
@@ -35,9 +37,17 @@ it(
         recorded_by_user_id text, cancelled_at text, cancelled_by_user_id text, cancellation_reason text
       );
       create table invoice_credit_notes (
-        id text primary key, invoice_id text unique, invoice_revision_id text, request_id text,
-        number text, reason text, issued_at text, issued_by_user_id text,
+        id text primary key, client_id text, request_id text, issue_request_id text,
+        status text, version integer, number text, reason text, currency text, created_at text,
+        created_by_user_id text, issued_at text, issued_by_user_id text,
         net_total_cents integer, vat_total_cents integer, total_cents integer
+      );
+      create table invoice_credit_note_revisions (
+        id text primary key, credit_note_id text, version integer
+      );
+      create table invoice_credit_note_lines (
+        id text primary key, credit_note_id text, credit_note_revision_id text,
+        invoice_id text, invoice_number text
       );
       create table invoice_refunds (
         id text primary key, invoice_id text, request_id text, amount_cents integer, refunded_on text,
@@ -56,6 +66,8 @@ it(
       const historyInvoiceId = ulid();
       const documentId = ulid();
       const historyRevisionId = ulid();
+      sqlite.prepare('insert into users values (?, ?)').run(clientId, 'Client');
+      sqlite.prepare('insert into clients values (?)').run(clientId);
       sqlite.prepare('insert into orders values (?, ?)').run(orderId, 'CO-2026-000001');
       const insertInvoice = sqlite.prepare('insert into invoices values (?, ?, ?, ?, 1)');
       const insertRevision = sqlite.prepare(
@@ -69,8 +81,15 @@ it(
       const insertReceipt = sqlite.prepare(`insert into invoice_payments
       values (?, ?, ?, 1, ?, '2026-09-01', 'transfer', 'BANK',
         '2026-09-01T12:00:00.000Z', ?, null, null, null)`);
-      const insertCredit = sqlite.prepare(`insert into invoice_credit_notes
-      values (?, ?, ?, ?, ?, 'Cancelled service', '2026-09-01T12:00:00.000Z', ?, ?, 0, ?)`);
+      const insertCredit = sqlite.prepare(`insert into invoice_credit_notes values
+        (?, ?, ?, ?, 'issued', 1, ?, 'Cancelled service', 'EUR',
+         '2026-09-01T12:00:00.000Z', ?, '2026-09-01T12:00:00.000Z', ?, ?, 0, ?)`);
+      const insertCreditRevision = sqlite.prepare(
+        'insert into invoice_credit_note_revisions values (?, ?, 1)',
+      );
+      const insertCreditLine = sqlite.prepare(
+        'insert into invoice_credit_note_lines values (?, ?, ?, ?, ?)',
+      );
       const insertRefund = sqlite.prepare(`insert into invoice_refunds
       values (?, ?, ?, ?, '2026-09-01', 'REFUND',
         '2026-09-01T12:00:00.000Z', ?, null, null, null)`);
@@ -84,16 +103,23 @@ it(
         insertInvoice.run(invoiceId, `FA-2026-${suffix}`, clientId, orderId);
         insertRevision.run(revisionId, invoiceId);
         insertReceipt.run(ulid(), invoiceId, randomUUID(), amountCents, actorId);
+        const creditId = ulid();
+        const creditRevisionId = ulid();
+        const createRequestId = randomUUID();
+        const issueRequestId = randomUUID();
         insertCredit.run(
-          ulid(),
-          invoiceId,
-          revisionId,
-          randomUUID(),
+          creditId,
+          clientId,
+          createRequestId,
+          issueRequestId,
           `AV-2026-${suffix}`,
+          actorId,
           actorId,
           amountCents,
           amountCents,
         );
+        insertCreditRevision.run(creditRevisionId, creditId);
+        insertCreditLine.run(ulid(), creditId, creditRevisionId, invoiceId, `FA-2026-${suffix}`);
         insertRefund.run(ulid(), invoiceId, randomUUID(), amountCents, actorId);
         const documentEvent = index % 2 === 0;
         insertEvent.run(

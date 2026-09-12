@@ -4,9 +4,11 @@ import {
   DocumentParty,
   InvoiceAlreadyExists,
   InvoiceAmountTooLarge,
+  InvoiceAccountingUnavailable,
   InvoiceDetail,
   InvoiceInvalidDates,
   InvoiceInvalidTransition,
+  InvoiceExchangeRateMissing,
   InvoiceIssueResult,
   InvoiceNotEditable,
   InvoiceNotFound,
@@ -17,6 +19,7 @@ import {
   InvoiceVersionConflict,
   QuoteRenderSnapshot,
   Ulid,
+  CurrencyCode,
   type InvoiceCreateRequestValue,
   type InvoiceDetailValue,
   type InvoiceIssueRequestValue,
@@ -36,6 +39,11 @@ import { Clock, Context, DateTime, Effect, Layer, Option, Schema } from 'effect'
 import { ulid } from 'ulid';
 
 import { Audit } from '../audit/audit.js';
+import {
+  AccountingPostingUnavailable,
+  postAccountingEntry,
+  reverseAccountingSource,
+} from '../accounting/posting.js';
 import { BusinessConfig } from '../business/business-config.js';
 import { allocateBusinessReference, businessYear } from '../business/business-references.js';
 import { Database, DatabaseError } from '../database/database.js';
@@ -43,6 +51,11 @@ import { calculateDocumentLine, calculateDocumentTotals } from '../documents/cal
 import { validateDocumentParties } from '../documents/validation.js';
 import { StoredTextPresentation, storeTextPresentation } from '../documents/text-presentation.js';
 import { IssuerSettings } from '../issuer-settings/service.js';
+import {
+  convertToFunctionalCents,
+  findCurrencyConversion,
+  type CurrencyConversion,
+} from '../company/currency-conversion.js';
 import {
   InvoicePayment,
   InvoicePaymentRequest,
@@ -83,10 +96,16 @@ const RevisionRecord = Schema.Struct({
   dueDate: Schema.String,
   paymentTerms: Schema.String,
   paymentTermsPresentation: StoredTextPresentation,
-  currency: Schema.Literal('EUR'),
+  currency: CurrencyCode,
   netTotalCents: Schema.Int,
   vatTotalCents: Schema.Int,
   totalCents: Schema.Int,
+  functionalCurrency: Schema.NullOr(CurrencyCode),
+  exchangeRateDate: Schema.NullOr(CalendarDate),
+  foreignUnitsPerFunctionalUnitNanos: Schema.NullOr(Schema.Int),
+  functionalNetTotalCents: Schema.NullOr(Schema.Int),
+  functionalVatTotalCents: Schema.NullOr(Schema.Int),
+  functionalTotalCents: Schema.NullOr(Schema.Int),
   createdAt: Schema.Int,
   createdByUserId: Ulid,
   renderSnapshot: Schema.String,
@@ -124,7 +143,7 @@ const InvoiceSummaryRecord = Schema.Struct({
   invoiceNumber: Schema.NullOr(Schema.String),
   title: Schema.String,
   dueDate: Schema.String,
-  currency: Schema.Literal('EUR'),
+  currency: CurrencyCode,
   totalCents: Schema.Int,
   updatedAt: Schema.Int,
   pdfStatus: Schema.NullOr(Schema.Literals(['pending', 'processing', 'ready', 'failed'])),
@@ -188,6 +207,8 @@ export interface InvoicesService {
     | InvoiceVersionConflict
     | InvoiceInvalidDates
     | InvoiceInvalidTransition
+    | InvoiceExchangeRateMissing
+    | InvoiceAccountingUnavailable
     | DocumentIncomplete
     | DatabaseError
   >;
@@ -209,7 +230,11 @@ export interface InvoicesService {
     actorUserId: UlidValue,
   ) => Effect.Effect<
     InvoiceDetailValue,
-    InvoiceNotFound | InvoiceVersionConflict | InvoiceInvalidTransition | DatabaseError
+    | InvoiceNotFound
+    | InvoiceVersionConflict
+    | InvoiceInvalidTransition
+    | InvoiceAccountingUnavailable
+    | DatabaseError
   >;
 }
 
@@ -232,6 +257,11 @@ const revisionSql = `select id, invoice_id as invoiceId, version,
   due_date as dueDate, payment_terms as paymentTerms, payment_terms_presentation as paymentTermsPresentation, currency,
   net_total_cents as netTotalCents, vat_total_cents as vatTotalCents,
   total_cents as totalCents, created_at as createdAt, created_by_user_id as createdByUserId,
+  functional_currency as functionalCurrency, exchange_rate_date as exchangeRateDate,
+  foreign_units_per_functional_unit_nanos as foreignUnitsPerFunctionalUnitNanos,
+  functional_net_total_cents as functionalNetTotalCents,
+  functional_vat_total_cents as functionalVatTotalCents,
+  functional_total_cents as functionalTotalCents,
   render_snapshot as renderSnapshot from invoice_revisions`;
 const lineSql = `select id, revision_id as revisionId, position, description,
   quantity_milli as quantityMilli, unit_price_cents as unitPriceCents,
@@ -283,6 +313,12 @@ export const InvoicesLive = Layer.effect(
           netTotalCents: revision.netTotalCents,
           vatTotalCents: revision.vatTotalCents,
           totalCents: revision.totalCents,
+          functionalCurrency: revision.functionalCurrency,
+          exchangeRateDate: revision.exchangeRateDate,
+          foreignUnitsPerFunctionalUnitNanos: revision.foreignUnitsPerFunctionalUnitNanos,
+          functionalNetTotalCents: revision.functionalNetTotalCents,
+          functionalVatTotalCents: revision.functionalVatTotalCents,
+          functionalTotalCents: revision.functionalTotalCents,
           createdAt: DateTime.formatIso(DateTime.makeUnsafe(revision.createdAt)),
           createdByUserId: revision.createdByUserId,
           lines: lines
@@ -317,10 +353,18 @@ export const InvoicesLive = Layer.effect(
         creditedCents: Schema.decodeUnknownSync(Schema.Int)(
           database.sqlite
             .prepare(
-              'select coalesce(sum(total_cents), 0) from invoice_credit_notes where invoice_id = ?',
+              `select (select coalesce(sum(lines.total_cents), 0)
+                 from invoice_credit_note_lines lines
+                 join invoice_credit_notes notes on notes.id = lines.credit_note_id
+                 join invoice_credit_note_revisions credit_revisions
+                   on credit_revisions.id = lines.credit_note_revision_id
+                 where lines.invoice_id = ? and notes.status = 'issued'
+                   and credit_revisions.version = notes.version)
+                + coalesce((select sum(amount_cents) from invoice_credit_allocations
+                  where target_invoice_id = ?), 0)`,
             )
             .pluck()
-            .get(invoiceId),
+            .get(invoiceId, invoiceId),
         ),
         payments: Schema.decodeUnknownSync(Schema.Array(InvoicePayment))(
           database.sqlite
@@ -357,7 +401,15 @@ export const InvoicesLive = Layer.effect(
                        invoice_revisions.currency,
                        invoice_revisions.total_cents as totalCents, invoices.updated_at as updatedAt
                         , coalesce((select sum(amount_cents) from invoice_payments where invoice_id = invoices.id and cancelled_at is null), 0) as recordedPaidCents
-                        , coalesce((select sum(total_cents) from invoice_credit_notes where invoice_id = invoices.id), 0) as creditedCents
+                         , coalesce((select sum(lines.total_cents)
+                           from invoice_credit_note_lines lines
+                           join invoice_credit_notes notes on notes.id = lines.credit_note_id
+                           join invoice_credit_note_revisions credit_revisions
+                             on credit_revisions.id = lines.credit_note_revision_id
+                           where lines.invoice_id = invoices.id and notes.status = 'issued'
+                              and credit_revisions.version = notes.version), 0)
+                            + coalesce((select sum(amount_cents) from invoice_credit_allocations
+                              where target_invoice_id = invoices.id), 0) as creditedCents
                         , invoice_pdf_jobs.status as pdfStatus
                        , invoice_pdf_jobs.attempts as pdfAttempts
                        , invoice_pdf_jobs.error as pdfError
@@ -461,7 +513,9 @@ export const InvoicesLive = Layer.effect(
       readonly dueDate: string;
       readonly paymentTerms: string;
       readonly paymentTermsPresentation?: DocumentTextPresentationValue;
+      readonly currency: string;
       readonly lines: ReadonlyArray<QuoteLineInputValue>;
+      readonly conversion?: CurrencyConversion;
       readonly actorUserId: string;
       readonly now: number;
     }) => {
@@ -474,6 +528,23 @@ export const InvoicesLive = Layer.effect(
         ...calculateDocumentLine(line),
       }));
       const totals = calculateDocumentTotals(calculatedLines);
+      const functionalTotals =
+        input.conversion === undefined
+          ? undefined
+          : {
+              functionalNetTotalCents: convertToFunctionalCents(
+                totals.netTotalCents,
+                input.conversion.foreignUnitsPerFunctionalUnitNanos,
+              ),
+              functionalVatTotalCents: convertToFunctionalCents(
+                totals.vatTotalCents,
+                input.conversion.foreignUnitsPerFunctionalUnitNanos,
+              ),
+            };
+      const functionalTotalCents =
+        functionalTotals === undefined
+          ? undefined
+          : functionalTotals.functionalNetTotalCents + functionalTotals.functionalVatTotalCents;
       const snapshotInput = {
         templateId: 'invoice-default',
         templateVersion: 1,
@@ -494,7 +565,7 @@ export const InvoicesLive = Layer.effect(
         client: input.client,
         title: input.title.trim(),
         paymentTerms: input.paymentTerms,
-        currency: 'EUR',
+        currency: input.currency,
         ...totals,
         lines: calculatedLines,
       };
@@ -508,9 +579,12 @@ export const InvoicesLive = Layer.effect(
           `insert into invoice_revisions
            (id, invoice_id, version, invoice_number, issued_at, client_display_name, title,
             service_date, due_date, payment_terms, payment_terms_presentation, currency, net_total_cents, vat_total_cents,
-            total_cents, created_at, created_by_user_id, template_id, template_version,
-              render_snapshot)
-             values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'EUR', ?, ?, ?, ?, ?, 'invoice-default', 1, ?)`,
+             total_cents, functional_currency, exchange_rate_date,
+             foreign_units_per_functional_unit_nanos, functional_net_total_cents,
+             functional_vat_total_cents, functional_total_cents,
+             created_at, created_by_user_id, template_id, template_version,
+               render_snapshot)
+              values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'invoice-default', 1, ?)`,
         )
         .run(
           revisionId,
@@ -524,9 +598,16 @@ export const InvoicesLive = Layer.effect(
           input.dueDate,
           input.paymentTerms,
           storeTextPresentation(input.paymentTermsPresentation),
+          input.currency,
           totals.netTotalCents,
           totals.vatTotalCents,
           totals.totalCents,
+          input.conversion?.functionalCurrency ?? null,
+          input.conversion?.exchangeRateDate ?? null,
+          input.conversion?.foreignUnitsPerFunctionalUnitNanos ?? null,
+          functionalTotals?.functionalNetTotalCents ?? null,
+          functionalTotals?.functionalVatTotalCents ?? null,
+          functionalTotalCents ?? null,
           input.now,
           input.actorUserId,
           JSON.stringify(snapshot),
@@ -615,6 +696,7 @@ export const InvoicesLive = Layer.effect(
                 dueDate: request.dueDate,
                 paymentTerms: request.paymentTerms,
                 paymentTermsPresentation: request.paymentTermsPresentation,
+                currency: quoteSnapshot.currency,
                 lines: quoteSnapshot.lines,
                 actorUserId,
                 now,
@@ -700,7 +782,7 @@ export const InvoicesLive = Layer.effect(
                               clients.address_line_1 as addressLine1,
                               clients.address_line_2 as addressLine2,
                               clients.postal_code as postalCode, clients.city,
-                              clients.country, clients.email
+                               clients.country, clients.email, clients.phone
                        from clients join users on users.id = clients.id where clients.id = ?`,
                       )
                       .get(invoice.clientId),
@@ -734,6 +816,7 @@ export const InvoicesLive = Layer.effect(
                 dueDate: request.dueDate,
                 paymentTerms: request.paymentTerms,
                 paymentTermsPresentation: request.paymentTermsPresentation,
+                currency: current.currency,
                 lines: request.lines,
                 actorUserId,
                 now,
@@ -843,6 +926,14 @@ export const InvoicesLive = Layer.effect(
               const issueDate = invoiceIssueDate(now, businessConfig.timeZone);
               validateDates(current.serviceDate, current.dueDate, issueDate);
               validateDocumentParties(current);
+              const conversion = findCurrencyConversion(
+                database.sqlite,
+                current.currency,
+                issueDate,
+              );
+              if (conversion === undefined) {
+                throw new InvoiceExchangeRateMissing({ code: 'invoice.exchange_rate_missing' });
+              }
               const invoiceNumber = allocateBusinessReference(
                 database.sqlite,
                 'invoice',
@@ -864,7 +955,9 @@ export const InvoicesLive = Layer.effect(
                 dueDate: current.dueDate,
                 paymentTerms: current.paymentTerms,
                 paymentTermsPresentation: current.paymentTermsPresentation,
+                currency: current.currency,
                 lines: current.lines,
+                conversion,
                 actorUserId,
                 now,
               });
@@ -888,6 +981,50 @@ export const InvoicesLive = Layer.effect(
                   currentVersion: invoice.version,
                 });
               }
+              const functionalNetTotalCents = convertToFunctionalCents(
+                finalSnapshot.netTotalCents,
+                conversion.foreignUnitsPerFunctionalUnitNanos,
+              );
+              const functionalVatTotalCents = convertToFunctionalCents(
+                finalSnapshot.vatTotalCents,
+                conversion.foreignUnitsPerFunctionalUnitNanos,
+              );
+              const functionalTotalCents = functionalNetTotalCents + functionalVatTotalCents;
+              const postingLines = [
+                {
+                  accountCode: '411',
+                  label: invoiceNumber,
+                  debitCents: functionalTotalCents,
+                  creditCents: 0,
+                },
+                {
+                  accountCode: '706',
+                  label: invoiceNumber,
+                  debitCents: 0,
+                  creditCents: functionalNetTotalCents,
+                },
+              ];
+              if (functionalVatTotalCents > 0) {
+                postingLines.push({
+                  accountCode: '44571',
+                  label: invoiceNumber,
+                  debitCents: 0,
+                  creditCents: functionalVatTotalCents,
+                });
+              }
+              postAccountingEntry({
+                sqlite: database.sqlite,
+                sourceType: 'customer-invoice',
+                sourceId: invoiceId,
+                journalKind: 'sales',
+                entryDate: issueDate,
+                reference: invoiceNumber,
+                description: 'customer-invoice',
+                currency: conversion.functionalCurrency,
+                actorUserId,
+                now,
+                lines: postingLines,
+              });
               audit.insert({
                 action: 'invoice.issued',
                 actorUserId,
@@ -932,10 +1069,14 @@ export const InvoicesLive = Layer.effect(
             cause instanceof InvoiceVersionConflict ||
             cause instanceof InvoiceInvalidDates ||
             cause instanceof InvoiceInvalidTransition ||
+            cause instanceof InvoiceExchangeRateMissing ||
+            cause instanceof InvoiceAccountingUnavailable ||
             cause instanceof DocumentIncomplete
           ) {
             return cause;
           }
+          if (cause instanceof AccountingPostingUnavailable)
+            return new InvoiceAccountingUnavailable({ code: 'invoice.accounting_unavailable' });
           return new DatabaseError({ operation: 'issue.invoice', cause });
         },
       });
@@ -972,7 +1113,12 @@ export const InvoicesLive = Layer.effect(
               if (
                 invoice.status !== 'issued' ||
                 database.sqlite
-                  .prepare('select 1 from invoice_credit_notes where invoice_id = ?')
+                  .prepare(`select 1 from invoice_credit_note_lines lines
+                    join invoice_credit_notes notes on notes.id = lines.credit_note_id
+                    join invoice_credit_note_revisions credit_revisions
+                      on credit_revisions.id = lines.credit_note_revision_id
+                    where lines.invoice_id = ? and notes.status = 'issued'
+                      and credit_revisions.version = notes.version`)
                   .get(invoiceId) !== undefined ||
                 database.sqlite
                   .prepare('select 1 from invoice_payments where invoice_id = ?')
@@ -995,6 +1141,13 @@ export const InvoicesLive = Layer.effect(
                   currentVersion: invoice.version,
                 });
               }
+              reverseAccountingSource(
+                database.sqlite,
+                'customer-invoice',
+                invoiceId,
+                actorUserId,
+                now,
+              );
               audit.insert({
                 action: 'invoice.voided',
                 actorUserId,
@@ -1016,6 +1169,8 @@ export const InvoicesLive = Layer.effect(
           ) {
             return cause;
           }
+          if (cause instanceof AccountingPostingUnavailable)
+            return new InvoiceAccountingUnavailable({ code: 'invoice.accounting_unavailable' });
           return new DatabaseError({ operation: 'void.invoice', cause });
         },
       });
@@ -1091,7 +1246,8 @@ export const InvoicesLive = Layer.effect(
                   DateTime.formatIso(DateTime.makeUnsafe(now)),
                   actorUserId,
                 );
-              const settled = nextPaid === BigInt(invoice.currentRevision.totalCents);
+              const settled =
+                nextPaid === BigInt(invoice.currentRevision.totalCents - invoice.creditedCents);
               database.sqlite
                 .prepare(`update invoices set status = ?, paid_at = ?, updated_at = ? where id = ?`)
                 .run(settled ? 'paid' : 'issued', settled ? now : null, now, invoiceId);
@@ -1179,7 +1335,11 @@ export const InvoicesLive = Layer.effect(
                   .pluck()
                   .get(invoiceId),
               );
-              if (BigInt(refunded) > paidAfterCancellation)
+              const debtAfterCancellation =
+                paidAfterCancellation +
+                BigInt(invoice.creditedCents) -
+                BigInt(invoice.currentRevision.totalCents);
+              if (BigInt(refunded) > (debtAfterCancellation > 0n ? debtAfterCancellation : 0n))
                 throw new InvoicePaymentInvalid({ code: 'invoice.payment_invalid' });
               database.sqlite
                 .prepare(

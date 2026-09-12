@@ -92,6 +92,7 @@ describe('Bank table sorting', () => {
       invoiceNumber: 'FA-10',
       amountCents: 900,
       feeCents: 0,
+      exchangeDifferenceFunctionalCents: 0,
       paymentCancelled: false,
     };
     const rows = Object.freeze([

@@ -197,15 +197,8 @@
         <p class="legal-note">{{ i18n.t('publicQuote.legal') }}</p>
       </form>
       } @else {
-      <div
-        appStatusBlock
-        [variant]="currentQuote.status === 'accepted' ? 'success' : 'danger'"
-        role="status"
-      >
-        <h2 id="signature-title">
-          {{ i18n.t(currentQuote.status === 'accepted' ? 'publicQuote.alreadyAccepted' :
-          'publicQuoteWorkspace.notSignable') }}
-        </h2>
+      <div appStatusBlock [variant]="unavailableSignatureVariant()" role="status">
+        <h2 id="signature-title">{{ i18n.t(unavailableSignatureLabel()) }}</h2>
       </div>
       }
     </section>

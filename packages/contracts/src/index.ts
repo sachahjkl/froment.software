@@ -1,5 +1,36 @@
 export { HealthStatus, type HealthStatus as HealthStatusValue } from './status/contracts.js';
+export * from './accounting/contracts.js';
+export * from './demo/contracts.js';
 export { DocumentCalendar } from './documents/contracts.js';
+export {
+  AccountingAlreadyInitialized,
+  AccountingInitializeRequest,
+  type AccountingInitializeRequest as AccountingInitializeRequestValue,
+  CompanyModule,
+  type CompanyModule as CompanyModuleValue,
+  CompanySettings,
+  type CompanySettings as CompanySettingsValue,
+  CompanySettingsConflict,
+  CompanyFailure,
+  type CompanyFailure as CompanyFailureValue,
+  CompanySettingsUpdateRequest,
+  type CompanySettingsUpdateRequest as CompanySettingsUpdateRequestValue,
+  FunctionalCurrency,
+  CurrencyCode,
+  type CurrencyCode as CurrencyCodeValue,
+  ExchangeRate,
+  type ExchangeRate as ExchangeRateValue,
+  ExchangeRateList,
+  ExchangeRateManualRequest,
+  type ExchangeRateManualRequest as ExchangeRateManualRequestValue,
+  ExchangeRateSource,
+  ExchangeRateConflict,
+  ExchangeRateImportFailed,
+  type FunctionalCurrency as FunctionalCurrencyValue,
+  FunctionalCurrencyLocked,
+  Jurisdiction,
+  type Jurisdiction as JurisdictionValue,
+} from './company/contracts.js';
 export {
   DocumentTextPresentation,
   type DocumentTextPresentation as DocumentTextPresentationValue,
@@ -159,6 +190,29 @@ export {
   ClientVersionConflict,
 } from './clients/contracts.js';
 export {
+  SupplierArchived,
+  SupplierCreateRequest,
+  type SupplierCreateRequest as SupplierCreateRequestValue,
+  SupplierCreationConflict,
+  SupplierFailure,
+  type SupplierFailure as SupplierFailureValue,
+  type SupplierFailureCode,
+  SupplierInput,
+  type SupplierInput as SupplierInputValue,
+  SupplierList,
+  type SupplierList as SupplierListValue,
+  SupplierNotFound,
+  SupplierSummary,
+  SupplierTaxInvalid,
+  SupplierTaxTreatment,
+  type SupplierTaxTreatment as SupplierTaxTreatmentValue,
+  type SupplierSummary as SupplierSummaryValue,
+  SupplierUpdateRequest,
+  type SupplierUpdateRequest as SupplierUpdateRequestValue,
+  SupplierVersionConflict,
+} from './suppliers/contracts.js';
+export * from './supplier-invoices/contracts.js';
+export {
   BootstrapFailure,
   type BootstrapFailure as BootstrapFailureValue,
   type BootstrapFailureCode,
@@ -191,6 +245,8 @@ export {
   IssuerSettingsUpdateRequest,
   type IssuerSettingsUpdateRequest as IssuerSettingsUpdateRequestValue,
   IssuerSettingsConflict,
+  IssuerPaymentAccount,
+  type IssuerPaymentAccount as IssuerPaymentAccountValue,
 } from './issuer-settings/contracts.js';
 export {
   PublicQuoteAccessRequest,
@@ -317,6 +373,7 @@ export {
   CalendarDateText,
   InvoiceAlreadyExists,
   InvoiceAmountTooLarge,
+  InvoiceAccountingUnavailable,
   InvoiceCreateRequest,
   type InvoiceCreateRequest as InvoiceCreateRequestValue,
   InvoiceDetail,
@@ -327,6 +384,7 @@ export {
   type InvoiceFailure as InvoiceFailureValue,
   InvoiceInvalidDates,
   InvoiceInvalidTransition,
+  InvoiceExchangeRateMissing,
   InvoiceIssueRequest,
   type InvoiceIssueRequest as InvoiceIssueRequestValue,
   InvoiceIssueResult,
@@ -432,9 +490,26 @@ export {
   BankPaymentList,
   BankTransactionList,
   BankMatchHistory,
+  BankMatchSuggestionList,
+  BankMatchSuggestion,
+  BankMatchSuggestionReason,
+  BankSuggestionLimit,
   BankMatchRequest,
   BankUnmatchRequest,
+  SupplierBankPayment,
+  SupplierBankPaymentList,
+  SupplierBankMatch,
+  SupplierBankMatchList,
+  SupplierBankMatchRequest,
+  SupplierBankUnmatchRequest,
   BankImportRequest,
+  BankImportFormat,
+  BankCsvConfiguration,
+  DefaultBankCsvConfiguration,
+  BankImportMaximumContentLength,
+  BankImportMaximumRowCount,
+  BankImportMaximumRecordLength,
+  BankImportMaximumColumnNameLength,
   BankImportResult,
   BankImportPreview,
   BankFailure,
@@ -443,10 +518,14 @@ export {
   BankTransactionNotFound,
   type BankTransaction as BankTransactionValue,
   type BankImportRequest as BankImportRequestValue,
+  type BankImportFormat as BankImportFormatValue,
+  type BankCsvConfiguration as BankCsvConfigurationValue,
 } from './banking/contracts.js';
 export * from './authentication/passkeys.js';
 export * from './team/contracts.js';
+export * from './roles/contracts.js';
 export * from './invoices/credit-notes.js';
+export * from './affairs/contracts.js';
 export * from './banking/ledger.js';
 export * from './integrations/email-drafts.js';
 export * from './integrations/provider-actions.js';

@@ -14,6 +14,8 @@ it('requires a positive integer version for issuer updates', () => {
     phone: '',
     registrationNumber: '',
     vatNumber: '',
+    iban: '',
+    bic: '',
   };
   expect(Schema.is(IssuerSettingsUpdateRequest)(settings)).toBe(false);
   for (const expectedVersion of [0, -1, 1.5, Number.MAX_SAFE_INTEGER + 1]) {

@@ -44,33 +44,35 @@
         >{{ i18n.t('backOffice.invoice.issue') }}</a
       >
       } @else if (actions().recordPayment) {
-      <a
-        appLinkButton
+      <app-split-action
         variant="primary"
-        [routerLink]="['/backoffice/invoices', invoice.id, 'payments', 'new']"
         *appCan="'invoice.mark-paid'"
-        [queryParams]="task.navigation.detailQuery()"
-        >{{ i18n.t('billingWorkspace.recordReceipt') }}</a
-      >
+        [primaryLabel]="i18n.t('billingWorkspace.receipt')"
+        [menuLabel]="i18n.t('billingWorkspace.receiptOptions')"
+        [actions]="paymentActions()"
+        (primaryAction)="openPayment('partial')"
+        (actionSelected)="openPayment($event)"
+      />
       } @if (actions().credit) {
-      <a
-        appLinkButton
-        [routerLink]="['/backoffice/invoices', invoice.id, 'credits', 'new']"
+      <app-split-action
         *appCan="'invoice.credit'"
-        [queryParams]="task.navigation.detailQuery()"
-        >{{ i18n.t('credit.issue') }}</a
-      >
+        [primaryLabel]="i18n.t('credit.create')"
+        [menuLabel]="i18n.t('credit.options')"
+        [actions]="creditActions()"
+        (primaryAction)="openCredit('partial')"
+        (actionSelected)="openCredit($event)"
+      />
       } @if (actions().recordPayment) {
       <a
         appLinkButton
-        routerLink="/backoffice/courriels/new"
+        routerLink="/backoffice/emails/new"
         *appCan="'email.draft.manage'"
         [queryParams]="{ invoice: invoice.id }"
         >{{ i18n.t('billingWorkspace.email') }}</a
       >
       <a
         appLinkButton
-        routerLink="/backoffice/courriels/reminders/new"
+        routerLink="/backoffice/emails/reminders/new"
         *appCan="'email.reminder.manage'"
         [queryParams]="{ invoice: invoice.id }"
         >{{ i18n.t('billingWorkspace.reminder') }}</a
@@ -271,21 +273,33 @@
     </div>
     } @case ('credit') { @if (credits.isLoading()) {
     <p role="status">{{ i18n.t('backOffice.invoices.loading') }}</p>
-    } @else if (creditState(); as state) { @if (state.creditNote; as note) {
+    } @else if (creditState(); as state) { @for (note of state.creditNotes; track note.id) {
     <section class="summary ds-panel">
-      <h2>{{ note.number }}</h2>
+      <h2>{{ note.number ?? i18n.t('credit.draft') }}</h2>
       <p>{{ note.reason }}</p>
       <p>
-        {{ note.issuedAt | localizedDate: i18n.language(): { dateStyle: 'medium' } }} · {{
-        task.money(note.totalCents) }}
+        {{ (note.issuedAt ?? note.createdAt) | localizedDate: i18n.language(): { dateStyle: 'medium'
+        } }} · {{ task.money(creditAmount(note, invoice.id)) }}
       </p>
+      @if (note.status === 'issued') {
       <a
         *appCan="['document.download', 'invoice.read']"
-        [href]="'/api/invoices/' + invoice.id + '/credit-note/pdf'"
+        [href]="'/api/credit-notes/' + note.id + '/pdf'"
         download
         >{{ i18n.t('credit.pdf') }}</a
       >
+      } @else {
+      <a
+        [routerLink]="['/backoffice/invoices', invoice.id, 'credits', note.id, 'edit']"
+        *appCan="'invoice.credit'"
+        [queryParams]="task.navigation.detailQuery()"
+        >{{ i18n.t('credit.editDraft') }}</a
+      >
+      }
     </section>
+    } @empty {
+    <p>{{ i18n.t('billingWorkspace.noCreditNote') }}</p>
+    }
     <p>{{ i18n.t('credit.refundable') }} {{ task.money(state.refundableCents) }}</p>
     @if (state.refundableCents > 0) {
     <a
@@ -295,7 +309,62 @@
       [queryParams]="task.navigation.detailQuery()"
       >{{ i18n.t('credit.recordRefund') }}</a
     >
+    <a
+      appLinkButton
+      [routerLink]="['/backoffice/invoices', invoice.id, 'credit-allocations', 'new']"
+      *appCan="'invoice.refund'"
+      [queryParams]="task.navigation.detailQuery()"
+      >{{ i18n.t('credit.allocate') }}</a
+    >
     }
+    <h2>{{ i18n.t('credit.allocations') }}</h2>
+    <div appDataTable>
+      <table>
+        <thead>
+          <tr>
+            <th>{{ i18n.t('credit.reference') }}</th>
+            <th>{{ i18n.t('credit.targetInvoice') }}</th>
+            <th>{{ i18n.t('credit.allocatedOn') }}</th>
+            <th class="amount">{{ i18n.t('credit.amount') }}</th>
+            <th>{{ i18n.t('backOffice.invoices.actions') }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (allocation of state.allocations; track allocation.id) {
+          <tr [id]="allocation.id">
+            <td>{{ allocation.reference }}</td>
+            <td>
+              <a [routerLink]="['/backoffice/invoices', allocation.targetInvoiceId]"
+                >{{ allocation.targetInvoiceId }}</a
+              >
+            </td>
+            <td>{{ allocation.allocatedOn }}</td>
+            <td class="amount">{{ task.money(allocation.amountCents) }}</td>
+            <td>
+              @if (allocation.cancelledAt === null) {
+              <a
+                [routerLink]="[
+                  '/backoffice/invoices',
+                  invoice.id,
+                  'credit-allocations',
+                  allocation.id,
+                  'cancel',
+                ]"
+                *appCan="'invoice.refund'"
+                [queryParams]="task.navigation.detailQuery()"
+                >{{ i18n.t('credit.cancelAllocation') }}</a
+              >
+              } @else { {{ i18n.t(recordedEntryStatus(allocation.cancelledAt)) }} }
+            </td>
+          </tr>
+          } @empty {
+          <tr>
+            <td colspan="5">{{ i18n.t('billingWorkspace.empty') }}</td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
     <h2>{{ i18n.t('billingWorkspace.refunds') }}</h2>
     <p *appCan="'invoice.refund'" appNotice>{{ i18n.t('billingWorkspace.refundHint') }}</p>
     <div appDataTable>
@@ -340,8 +409,6 @@
       </table>
     </div>
     } @else {
-    <p>{{ i18n.t('billingWorkspace.noCreditNote') }}</p>
-    } } @else {
     <p appNotice variant="danger" role="alert">{{ i18n.t('credit.loadError') }}</p>
     <button appButton (click)="credits.reload()">{{ i18n.t('credit.reload') }}</button> } } @case
     ('history') { @if (history.isLoading()) {

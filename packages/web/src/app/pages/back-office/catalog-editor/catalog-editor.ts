@@ -148,7 +148,7 @@ export class CatalogEditor {
   }
 
   protected backLink() {
-    return ['/backoffice/catalogue', catalogReturnView(this.route.snapshot.queryParamMap)];
+    return ['/backoffice/catalog', catalogReturnView(this.route.snapshot.queryParamMap)];
   }
 
   protected backQuery() {

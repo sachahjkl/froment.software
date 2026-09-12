@@ -12,13 +12,14 @@ interface InvoiceActions {
 export function invoiceActions(invoice: InvoiceDetailValue | undefined): InvoiceActions {
   if (!invoice) return { edit: false, recordPayment: false, credit: false, void: false };
   const issued = invoice.status === 'issued';
-  const noCredit = invoice.creditedCents === 0;
+  const balance = detailBalance(invoice);
   return {
     edit: invoice.status === 'draft',
-    recordPayment: issued && noCredit && detailBalance(invoice) > 0,
+    recordPayment: issued && balance > 0,
     credit:
-      (issued || invoice.status === 'paid') && noCredit && invoice.currentRevision.totalCents > 0,
-    void: issued && noCredit && invoice.payments.length === 0,
+      (issued || invoice.status === 'paid') &&
+      invoice.creditedCents < invoice.currentRevision.totalCents,
+    void: issued && invoice.creditedCents === 0 && invoice.payments.length === 0,
   };
 }
 

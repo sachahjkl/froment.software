@@ -10,7 +10,14 @@ const fieldKeys = {
   city: 'backOffice.clients.city',
   country: 'backOffice.clients.country',
   email: 'backOffice.clients.email',
+  phone: 'backOffice.clients.phone',
 } as const satisfies Record<DocumentIssueValue['field'], TranslationKey>;
+
+const reasonKeys = {
+  required: 'document.required',
+  invalid_email: 'document.invalidEmail',
+  invalid_phone: 'document.invalidPhone',
+} as const satisfies Record<DocumentIssueValue['reason'], TranslationKey>;
 
 @Component({
   selector: 'app-document-issues',
@@ -26,7 +33,7 @@ const fieldKeys = {
           <a
             [routerLink]="
               group.party === 'issuer'
-                ? ['/backoffice/configuration/entreprise']
+                ? ['/backoffice/configuration/issuer']
                 : ['/backoffice/clients', clientId(), 'profile']
             "
           >
@@ -38,9 +45,7 @@ const fieldKeys = {
                 {{
                   i18n.tf('document.issue', {
                     field: i18n.t(fieldKeys[issue.field]),
-                    reason: i18n.t(
-                      issue.reason === 'required' ? 'document.required' : 'document.invalidEmail'
-                    ),
+                    reason: i18n.t(reasonKeys[issue.reason]),
                   })
                 }}
               </li>
@@ -76,6 +81,7 @@ export class DocumentIssues {
   readonly kind = input.required<'quote' | 'invoice'>();
   protected readonly i18n = inject(I18nService);
   protected readonly fieldKeys = fieldKeys;
+  protected readonly reasonKeys = reasonKeys;
   protected readonly groups = computed(() =>
     (['issuer', 'client'] as const)
       .map((party) => ({ party, issues: this.issues().filter((issue) => issue.party === party) }))

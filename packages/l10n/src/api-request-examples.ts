@@ -16,7 +16,19 @@ export const apiRequestExamples = {
   invoicePaymentCancel: { expectedVersion: 1, reason: 'Duplicate entry' },
   bankImport: {
     account: 'MAIN',
-    csv: 'transaction_id,booked_on,amount,currency,description\nBANK-001,2026-09-01,125.00,EUR,Payment',
+    format: 'csv',
+    csvConfiguration: {
+      delimiter: ',',
+      referenceColumn: 'transaction_id',
+      bookedOnColumn: 'booked_on',
+      amountColumn: 'amount',
+      currencyColumn: 'currency',
+      descriptionColumn: 'description',
+      dateFormat: 'yyyy-MM-dd',
+      decimalSeparator: '.',
+    },
+    content:
+      'transaction_id,booked_on,amount,currency,description\nBANK-001,2026-09-01,125.00,EUR,Payment',
   },
   bankMatch: {
     feeCents: 0,

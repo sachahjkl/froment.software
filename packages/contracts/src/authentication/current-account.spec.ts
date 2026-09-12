@@ -6,6 +6,7 @@ const account = {
   userId: '01ARZ3NDEKTSV4RRFFQ69G5FAA',
   email: 'accountant@example.test',
   mode: 'administrator',
+  enabledModules: ['sales'],
 };
 
 describe('CurrentAccount', () => {
