@@ -20,12 +20,16 @@ CREATE TABLE `__new_clients` (
 INSERT INTO `__new_clients`(`id`, `created_at`, `updated_at`, `address_line_1`, `address_line_2`, `postal_code`, `city`, `country`, `email`) SELECT `id`, `created_at`, `updated_at`, `address_line_1`, `address_line_2`, `postal_code`, `city`, `country`, `email` FROM `clients`;--> statement-breakpoint
 DROP TABLE `clients`;--> statement-breakpoint
 ALTER TABLE `__new_clients` RENAME TO `clients`;--> statement-breakpoint
+DROP TRIGGER IF EXISTS `published_quote_revisions_immutable_update`;--> statement-breakpoint
+DROP TRIGGER IF EXISTS `invoice_revisions_no_update`;--> statement-breakpoint
 UPDATE `quote_revisions`
 SET `render_snapshot` = json_set(`render_snapshot`, '$.client.phone', '')
 WHERE `render_snapshot` IS NOT NULL;--> statement-breakpoint
 UPDATE `invoice_revisions`
 SET `render_snapshot` = json_set(`render_snapshot`, '$.client.phone', '')
 WHERE `render_snapshot` IS NOT NULL;--> statement-breakpoint
+CREATE TRIGGER `published_quote_revisions_immutable_update` BEFORE UPDATE ON `quote_revisions` WHEN EXISTS (SELECT 1 FROM `document_artifacts` WHERE `revision_id` = OLD.`id`) BEGIN SELECT RAISE(ABORT, 'database.trigger.published_quote_revisions_immutable_update'); END;--> statement-breakpoint
+CREATE TRIGGER `invoice_revisions_no_update` BEFORE UPDATE ON `invoice_revisions` BEGIN SELECT RAISE(ABORT, 'database.trigger.invoice_revisions_no_update'); END;--> statement-breakpoint
 CREATE TRIGGER `clients_kind_before_insert` BEFORE INSERT ON `clients` BEGIN SELECT RAISE(ABORT, 'database.trigger.clients_kind_before_insert') WHERE NOT EXISTS (SELECT 1 FROM `users` WHERE `users`.`id` = NEW.`id` AND `users`.`kind` = 'client'); END;--> statement-breakpoint
 CREATE TRIGGER `clients_revoke_before_delete`
 BEFORE DELETE ON `clients`
