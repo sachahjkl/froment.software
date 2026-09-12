@@ -57,6 +57,7 @@ export const apiDocumentation = {
           'Actions typées des cinq fournisseurs. Implémentations mock sans effet externe.',
       },
       clients: { title: 'Clients', description: 'Fiches clients et cycle de vie.' },
+      suppliers: { title: 'Fournisseurs', description: 'Fiches fournisseurs et cycle de vie.' },
       orders: { title: 'Commandes', description: 'Commandes et documents générés.' },
       quotes: { title: 'Devis', description: 'Devis, révisions, envoi et documents.' },
       quoteLinks: {
@@ -197,6 +198,30 @@ export const apiDocumentation = {
       clientReactivate: {
         summary: 'Réactiver un client',
         description: 'Réactive un client archivé.',
+      },
+      supplierList: {
+        summary: 'Lister les fournisseurs',
+        description: 'Liste les fournisseurs actifs et archivés.',
+      },
+      supplierGet: {
+        summary: 'Obtenir un fournisseur',
+        description: 'Renvoie un fournisseur par identifiant.',
+      },
+      supplierCreate: {
+        summary: 'Créer un fournisseur',
+        description: 'Crée un fournisseur avec ses coordonnées et ses paramètres de paiement.',
+      },
+      supplierUpdate: {
+        summary: 'Modifier un fournisseur',
+        description: 'Modifie un fournisseur actif si sa version correspond.',
+      },
+      supplierArchive: {
+        summary: 'Archiver un fournisseur',
+        description: 'Archive un fournisseur.',
+      },
+      supplierReactivate: {
+        summary: 'Réactiver un fournisseur',
+        description: 'Réactive un fournisseur archivé.',
       },
       orderList: {
         summary: 'Lister les commandes',
@@ -451,6 +476,7 @@ export const apiDocumentation = {
     groups: {
       audit: auditDocumentation.en.group,
       clients: { title: 'Clients', description: 'Client records and lifecycle.' },
+      suppliers: { title: 'Suppliers', description: 'Supplier records and lifecycle.' },
       passkeys: passkeyDocumentation.en.group,
       team: teamDocumentation.en.group,
       creditNotes: creditDocumentation.en.group,
@@ -589,6 +615,30 @@ export const apiDocumentation = {
       clientReactivate: {
         summary: 'Reactivate a client',
         description: 'Reactivates an archived client.',
+      },
+      supplierList: {
+        summary: 'List suppliers',
+        description: 'Lists active and archived suppliers.',
+      },
+      supplierGet: {
+        summary: 'Get a supplier',
+        description: 'Returns one supplier by identifier.',
+      },
+      supplierCreate: {
+        summary: 'Create a supplier',
+        description: 'Creates a supplier with contact and payment settings.',
+      },
+      supplierUpdate: {
+        summary: 'Update a supplier',
+        description: 'Updates an active supplier when its version matches.',
+      },
+      supplierArchive: {
+        summary: 'Archive a supplier',
+        description: 'Archives a supplier.',
+      },
+      supplierReactivate: {
+        summary: 'Reactivate a supplier',
+        description: 'Reactivates an archived supplier.',
       },
       orderList: {
         summary: 'List orders',

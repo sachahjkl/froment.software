@@ -159,6 +159,22 @@ export {
   ClientVersionConflict,
 } from './clients/contracts.js';
 export {
+  SupplierArchived,
+  SupplierCreateRequest,
+  type SupplierCreateRequest as SupplierCreateRequestValue,
+  SupplierCreationConflict,
+  SupplierInput,
+  type SupplierInput as SupplierInputValue,
+  SupplierList,
+  type SupplierList as SupplierListValue,
+  SupplierNotFound,
+  SupplierSummary,
+  type SupplierSummary as SupplierSummaryValue,
+  SupplierUpdateRequest,
+  type SupplierUpdateRequest as SupplierUpdateRequestValue,
+  SupplierVersionConflict,
+} from './suppliers/contracts.js';
+export {
   BootstrapFailure,
   type BootstrapFailure as BootstrapFailureValue,
   type BootstrapFailureCode,

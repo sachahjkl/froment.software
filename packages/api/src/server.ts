@@ -25,6 +25,7 @@ import { AuditHandlers } from './audit/handlers.js';
 import { BootstrapHandlers } from './bootstrap/handlers.js';
 import { ClientPortalHandlers } from './client-portal/handlers.js';
 import { ClientHandlers } from './clients/handlers.js';
+import { SupplierHandlers } from './suppliers/handlers.js';
 import { apiForLanguage } from './documentation/api-documentation.js';
 import { requestLanguage } from './http/language.js';
 import { ApiTelemetryLive } from './observability/api-telemetry.js';
@@ -74,6 +75,7 @@ const apiRoutes = (publicOrigin: string) =>
         ReminderHandlers,
         ProviderActionHandlers,
         ClientHandlers,
+        SupplierHandlers,
         OrderHandlers,
         QuoteConditionPresetHandlers,
         CatalogHandlers,

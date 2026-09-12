@@ -17,6 +17,10 @@ export const TeamProfilePermissions = {
     'document.download',
     'catalog.read',
     'condition.read',
+    'supplier.read',
+    'supplier.create',
+    'supplier.update',
+    'supplier.archive',
   ],
   collaborator: [
     'client.read',
@@ -43,6 +47,7 @@ export const TeamProfilePermissions = {
     'email.draft.manage',
     'document.render',
     'integration.manage',
+    'supplier.read',
   ],
 } as const satisfies Record<typeof TeamProfile.Type, ReadonlyArray<typeof PermissionCode.Type>>;
 export const TeamInvitationId = Schema.String.check(Schema.isUUID(4));

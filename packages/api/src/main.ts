@@ -17,6 +17,7 @@ import { PasswordsLive } from './authentication/password.js';
 import { AccessTokensLive } from './authentication/paseto.js';
 import { ApiTokensLive } from './api-tokens/service.js';
 import { ClientsLive } from './clients/clients.js';
+import { SuppliersLive } from './suppliers/service.js';
 import { DatabaseLive } from './database/database.js';
 import { DeploymentLive } from './deployment/deployment.js';
 import { IssuerSettingsLive } from './issuer-settings/service.js';
@@ -81,6 +82,7 @@ const ServicesLive = Layer.mergeAll(
   ApiTokensLive,
   AuditReaderLive,
   ClientsLive,
+  SuppliersLive,
   InvoicePdfRuntimeLive,
   QuoteLinksLive.pipe(Layer.provide(BusinessConfigLive)),
   QuoteConditionPresetsLive,

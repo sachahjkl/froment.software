@@ -225,6 +225,71 @@ export const clientCreationRequests = sqliteTable(
   ],
 );
 
+export const suppliers = sqliteTable(
+  'suppliers',
+  {
+    id: text().notNull().primaryKey(),
+    displayName: text('display_name').notNull(),
+    addressLine1: text('address_line_1').notNull().default(''),
+    addressLine2: text('address_line_2').notNull().default(''),
+    postalCode: text('postal_code').notNull().default(''),
+    city: text().notNull().default(''),
+    country: text().notNull().default(''),
+    email: text().notNull().default(''),
+    phone: text().notNull().default(''),
+    registrationNumber: text('registration_number').notNull().default(''),
+    vatNumber: text('vat_number').notNull().default(''),
+    defaultCurrency: text('default_currency').notNull(),
+    paymentTermsDays: integer('payment_terms_days').notNull().default(30),
+    iban: text().notNull().default(''),
+    bic: text().notNull().default(''),
+    archived: integer({ mode: 'boolean' }).notNull().default(false),
+    createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull(),
+    updatedAt: integer('updated_at', { mode: 'timestamp_ms' }).notNull(),
+  },
+  (table) => [
+    check(
+      'suppliers_id_ulid_check',
+      sql`${table.id} is not null and length(${table.id}) = 26 and ${table.id} not glob '*[^0-9A-HJKMNP-TV-Z]*' and substr(${table.id}, 1, 1) between '0' and '7'`,
+    ),
+    check(
+      'suppliers_display_name_check',
+      sql`length(trim(${table.displayName})) between 1 and 160`,
+    ),
+    check(
+      'suppliers_fields_check',
+      sql`length(${table.addressLine1}) <= 160 and length(${table.addressLine2}) <= 160 and length(${table.postalCode}) <= 32 and length(${table.city}) <= 120 and length(${table.country}) <= 120 and length(${table.email}) <= 254 and length(${table.phone}) <= 64 and length(${table.registrationNumber}) <= 64 and length(${table.vatNumber}) <= 64 and length(${table.iban}) <= 34 and length(${table.bic}) <= 11`,
+    ),
+    check('suppliers_currency_check', sql`${table.defaultCurrency} glob '[A-Z][A-Z][A-Z]'`),
+    check('suppliers_payment_terms_check', sql`${table.paymentTermsDays} between 0 and 365`),
+    check('suppliers_archived_check', sql`${table.archived} in (0, 1)`),
+    check('suppliers_timestamps_check', sql`${table.updatedAt} >= ${table.createdAt}`),
+    index('suppliers_display_name_index').on(table.displayName),
+  ],
+);
+
+export const supplierCreationRequests = sqliteTable(
+  'supplier_creation_requests',
+  {
+    requestId: text('request_id').notNull().primaryKey(),
+    createdByUserId: text('created_by_user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'no action' }),
+    supplierId: text('supplier_id')
+      .notNull()
+      .unique()
+      .references(() => suppliers.id, { onDelete: 'cascade' }),
+    request: text().notNull(),
+    result: text().notNull(),
+  },
+  (table) => [
+    check(
+      'supplier_creation_requests_id_check',
+      sql`${table.requestId} glob '[0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f]-[0-9a-f][0-9a-f][0-9a-f][0-9a-f]-4[0-9a-f][0-9a-f][0-9a-f]-[89ab][0-9a-f][0-9a-f][0-9a-f]-[0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f]'`,
+    ),
+  ],
+);
+
 export const clientAccessAccounts = sqliteTable(
   'client_access_accounts',
   {
