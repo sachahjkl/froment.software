@@ -73,6 +73,7 @@ const snapshot = Schema.decodeUnknownSync(InvoiceRenderSnapshot)({
     city: 'Paris',
     country: 'France',
     email: 'client@example.test',
+    phone: '',
   },
   title: 'Invoice',
   paymentTerms: 'Payment due within 30 days.',

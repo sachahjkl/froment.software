@@ -32,6 +32,7 @@ const party = {
   city: 'V'.repeat(120),
   country: 'P'.repeat(120),
   email: `${'e'.repeat(150)}@example.test`,
+  phone: '',
 };
 const issuer = {
   ...party,

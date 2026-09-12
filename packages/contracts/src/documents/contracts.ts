@@ -22,12 +22,12 @@ export const DocumentParty = Schema.Struct({
   city: Schema.String.check(Schema.isMaxLength(120)),
   country: Schema.String.check(Schema.isMaxLength(120)),
   email: Schema.String.check(Schema.isMaxLength(254)),
+  phone: Schema.String.check(Schema.isMaxLength(64)),
 });
 export type DocumentParty = typeof DocumentParty.Type;
 
 export const IssuerSettings = Schema.Struct({
   ...DocumentParty.fields,
-  phone: Schema.String.check(Schema.isMaxLength(64)),
   registrationNumber: Schema.String.check(Schema.isMaxLength(64)),
   vatNumber: Schema.String.check(Schema.isMaxLength(64)),
 });
@@ -35,8 +35,8 @@ export type IssuerSettings = typeof IssuerSettings.Type;
 
 export const DocumentIssue = Schema.Struct({
   party: Schema.Literals(['issuer', 'client']),
-  field: Schema.Literals(['displayName', 'addressLine1', 'city', 'country', 'email']),
-  reason: Schema.Literals(['required', 'invalid_email']),
+  field: Schema.Literals(['displayName', 'addressLine1', 'city', 'country', 'email', 'phone']),
+  reason: Schema.Literals(['required', 'invalid_email', 'invalid_phone']),
 });
 export type DocumentIssue = typeof DocumentIssue.Type;
 

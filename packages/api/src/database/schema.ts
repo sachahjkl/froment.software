@@ -190,6 +190,7 @@ export const clients = sqliteTable(
     city: text().notNull().default(''),
     country: text().notNull().default(''),
     email: text().notNull().default(''),
+    phone: text().notNull().default(''),
   },
   (table) => [
     check(
@@ -199,7 +200,7 @@ export const clients = sqliteTable(
     check('clients_timestamps_check', sql`${table.updatedAt} >= ${table.createdAt}`),
     check(
       'clients_document_fields_check',
-      sql`length(${table.addressLine1}) <= 160 and length(${table.addressLine2}) <= 160 and length(${table.postalCode}) <= 32 and length(${table.city}) <= 120 and length(${table.country}) <= 120 and length(${table.email}) <= 254`,
+      sql`length(${table.addressLine1}) <= 160 and length(${table.addressLine2}) <= 160 and length(${table.postalCode}) <= 32 and length(${table.city}) <= 120 and length(${table.country}) <= 120 and length(${table.email}) <= 254 and length(${table.phone}) <= 64`,
     ),
   ],
 );

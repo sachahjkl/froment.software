@@ -25,6 +25,7 @@ const client = {
   city: 'Lyon',
   country: 'France',
   email: 'contact@acme.example',
+  phone: '+33 4 00 00 00 00',
   archived: false,
   updatedAt: 1,
 };

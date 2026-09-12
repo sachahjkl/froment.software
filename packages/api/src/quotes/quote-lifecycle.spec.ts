@@ -110,6 +110,7 @@ const seedSentQuote = Effect.fn('seedSentQuote')(function* (
       city: '',
       country: '',
       email: '',
+      phone: '',
     },
     title: 'Quote',
     conditions,

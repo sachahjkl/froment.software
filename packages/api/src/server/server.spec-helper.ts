@@ -162,6 +162,7 @@ export const createClient = async (server: HttpTestServer, displayName = 'HTTP c
       city: 'Paris',
       country: 'France',
       email: `${displayName.toLowerCase().replaceAll(' ', '-')}@example.test`,
+      phone: '',
     }),
   });
   if (!response.ok) throw new Error(`Client creation failed: ${await response.text()}`);

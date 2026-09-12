@@ -50,6 +50,7 @@ describe('PublicQuoteApi', () => {
           city: '',
           country: '',
           email: '',
+          phone: '',
         },
         title: 'Audit',
         conditions: '',

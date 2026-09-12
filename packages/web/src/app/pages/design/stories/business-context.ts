@@ -104,6 +104,7 @@ export class BusinessContext {
         city: example.city,
         country: example.country,
         email: example.email,
+        phone: '+33 1 23 45 67 89',
         archived: false,
         updatedAt: 0,
       },

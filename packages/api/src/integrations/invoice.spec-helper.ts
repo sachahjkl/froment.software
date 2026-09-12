@@ -69,6 +69,7 @@ export const seedIntegrationInvoice = Effect.fn('IntegrationTest.seedInvoice')(f
       city: 'Paris',
       country: 'France',
       email: 'client@example.test',
+      phone: '',
     },
     title: 'Invoice',
     paymentTerms: '30 days',

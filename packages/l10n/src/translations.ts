@@ -809,6 +809,7 @@ export const translations = {
     'document.quote.refreshHint':
       'Chaque enregistrement crée une nouvelle version avec les coordonnées actuelles de l’entreprise et du client.',
     'document.invalidEmail': 'saisissez une adresse e-mail valide',
+    'document.invalidPhone': 'saisissez un numéro de téléphone valide',
     'document.issue': '{field} : {reason}.',
     'document.issuer.edit': 'Corriger la fiche entreprise',
     'document.client.edit': 'Corriger la fiche client',
@@ -939,6 +940,7 @@ export const translations = {
     'backOffice.clients.city': 'Ville',
     'backOffice.clients.country': 'Pays',
     'backOffice.clients.email': 'Adresse e-mail',
+    'backOffice.clients.phone': 'Numéro de téléphone',
     'backOffice.issuer.title': 'Coordonnées émetteur',
     'backOffice.issuer.intro':
       'Ces coordonnées sont figées dans chaque nouvelle révision de devis.',
@@ -1024,6 +1026,7 @@ export const translations = {
     'backOffice.clientDetail.reactivating': 'Réactivation…',
     'backOffice.clientDetail.fieldInvalid': 'Cette valeur est trop longue.',
     'backOffice.clientDetail.emailInvalid': 'Saisissez une adresse e-mail valide.',
+    'backOffice.clientDetail.phoneInvalid': 'Saisissez un numéro de téléphone valide.',
     'backOffice.clientDetail.unsavedChanges':
       'Les modifications non enregistrées seront perdues. Continuer ?',
     'backOffice.client.title': 'Documents',
@@ -2356,6 +2359,7 @@ export const translations = {
     'document.quote.refreshHint':
       'Each save creates a new revision with the current company and client details.',
     'document.invalidEmail': 'enter a valid email address',
+    'document.invalidPhone': 'enter a valid phone number',
     'document.issue': '{field}: {reason}.',
     'document.issuer.edit': 'Correct company details',
     'document.client.edit': 'Correct client details',
@@ -2478,6 +2482,7 @@ export const translations = {
     'backOffice.clients.city': 'City',
     'backOffice.clients.country': 'Country',
     'backOffice.clients.email': 'Email address',
+    'backOffice.clients.phone': 'Phone number',
     'backOffice.issuer.title': 'Issuer details',
     'backOffice.issuer.intro': 'These details are frozen into each new quote revision.',
     'backOffice.issuer.loading': 'Loading issuer details…',
@@ -2559,6 +2564,7 @@ export const translations = {
     'backOffice.clientDetail.reactivating': 'Reactivating…',
     'backOffice.clientDetail.fieldInvalid': 'This value is too long.',
     'backOffice.clientDetail.emailInvalid': 'Enter a valid email address.',
+    'backOffice.clientDetail.phoneInvalid': 'Enter a valid phone number.',
     'backOffice.clientDetail.unsavedChanges': 'Unsaved changes will be lost. Continue?',
     'backOffice.client.title': 'Documents',
     'backOffice.client.eyebrow': 'Secure client portal',

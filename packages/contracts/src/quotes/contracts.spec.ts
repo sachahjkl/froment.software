@@ -38,6 +38,7 @@ const party = {
   city: '',
   country: '',
   email: '',
+  phone: '',
 };
 
 const snapshot = {

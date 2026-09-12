@@ -28,6 +28,7 @@ const clientFields = {
   city: '',
   country: '',
   email: '',
+  phone: '',
 } as const;
 
 const reservePort = () =>

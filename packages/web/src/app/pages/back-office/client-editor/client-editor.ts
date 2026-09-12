@@ -46,6 +46,7 @@ const emptyClient = (): ClientInputValue => ({
   city: '',
   country: '',
   email: '',
+  phone: '',
 });
 
 @Component({
@@ -105,6 +106,7 @@ export class ClientEditor {
       fields: [
         { name: 'displayName', autocomplete: 'organization', type: 'text', wide: true },
         { name: 'email', autocomplete: 'email', type: 'email', wide: true },
+        { name: 'phone', autocomplete: 'tel', type: 'tel', wide: true },
       ],
     },
     {
@@ -138,6 +140,8 @@ export class ClientEditor {
     maxLength(path.country, 120);
     maxLength(path.email, 254);
     pattern(path.email, /^$|^[^\s@]+@[^\s@]+\.[^\s@]+$/);
+    maxLength(path.phone, 64);
+    pattern(path.phone, /^$|^\+?[0-9][0-9 ()\-./]{5,62}$/);
   });
   private loadGeneration = 0;
 
@@ -173,6 +177,7 @@ export class ClientEditor {
   protected fieldError(field: keyof ClientInputValue): TranslationKey {
     if (field === 'displayName') return 'backOffice.clients.displayNameError';
     if (field === 'email') return 'backOffice.clientDetail.emailInvalid';
+    if (field === 'phone') return 'backOffice.clientDetail.phoneInvalid';
     return 'backOffice.clientDetail.fieldInvalid';
   }
   protected fieldLabel(field: keyof ClientInputValue): TranslationKey {
@@ -219,10 +224,19 @@ export class ClientEditor {
       this.state.set('error');
       return;
     }
-    const { displayName, addressLine1, addressLine2, postalCode, city, country, email } =
+    const { displayName, addressLine1, addressLine2, postalCode, city, country, email, phone } =
       outcome.result;
     this.client.set(outcome.result);
-    this.model.set({ displayName, addressLine1, addressLine2, postalCode, city, country, email });
+    this.model.set({
+      displayName,
+      addressLine1,
+      addressLine2,
+      postalCode,
+      city,
+      country,
+      email,
+      phone,
+    });
     this.clientForm().reset();
     this.state.set('ready');
   }

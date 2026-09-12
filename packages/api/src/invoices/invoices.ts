@@ -700,7 +700,7 @@ export const InvoicesLive = Layer.effect(
                               clients.address_line_1 as addressLine1,
                               clients.address_line_2 as addressLine2,
                               clients.postal_code as postalCode, clients.city,
-                              clients.country, clients.email
+                               clients.country, clients.email, clients.phone
                        from clients join users on users.id = clients.id where clients.id = ?`,
                       )
                       .get(invoice.clientId),

@@ -99,6 +99,7 @@ describe('invoice contracts', () => {
       city: '',
       country: '',
       email: '',
+      phone: '',
     };
     const snapshot = {
       templateId: 'invoice-default',

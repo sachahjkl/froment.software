@@ -20,6 +20,7 @@ const client = {
   city: 'Lyon',
   country: 'France',
   email: 'contact@acme.example',
+  phone: '+33 4 00 00 00 00',
   archived: false,
   updatedAt: 42,
 };
@@ -107,6 +108,7 @@ describe('ClientEditor', () => {
       requestId: expect.any(String),
       displayName: 'Acme',
       email: '',
+      phone: '',
       addressLine1: '',
       addressLine2: '',
       postalCode: '',
@@ -135,6 +137,7 @@ describe('ClientEditor', () => {
     expect(api.update).toHaveBeenCalledWith(client.id, {
       displayName: 'Acme Conseil',
       email: client.email,
+      phone: client.phone,
       addressLine1: client.addressLine1,
       addressLine2: '',
       postalCode: client.postalCode,

@@ -78,6 +78,7 @@ const ClientRecord = Schema.Struct({
   city: Schema.String,
   country: Schema.String,
   email: Schema.String,
+  phone: Schema.String,
   disabledAt: Schema.NullOr(Schema.Number),
 });
 const SnapshotRecord = Schema.Struct({ renderSnapshot: Schema.NullOr(Schema.String) });
@@ -303,7 +304,7 @@ export const QuotesLive = Layer.effect(
                   clients.address_line_1 as addressLine1,
                   clients.address_line_2 as addressLine2,
                   clients.postal_code as postalCode, clients.city,
-                  clients.country, clients.email
+                  clients.country, clients.email, clients.phone
            from clients join users on users.id = clients.id where clients.id = ?`,
         )
         .get(clientId);
@@ -355,6 +356,7 @@ export const QuotesLive = Layer.effect(
           city: client.city,
           country: client.country,
           email: client.email,
+          phone: client.phone,
         },
         title: title.trim(),
         conditions,

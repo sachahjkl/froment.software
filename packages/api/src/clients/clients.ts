@@ -34,6 +34,7 @@ const ClientRecord = Schema.Struct({
   city: Schema.String,
   country: Schema.String,
   email: Schema.String,
+  phone: Schema.String,
   archived: Schema.Number,
   updatedAt: Schema.Int,
 });
@@ -53,6 +54,7 @@ const toSummary = (client: typeof ClientRecord.Type): ClientSummaryValue => ({
   city: client.city,
   country: client.country,
   email: client.email,
+  phone: client.phone,
   archived: client.archived === 1,
   updatedAt: client.updatedAt,
 });
@@ -118,7 +120,7 @@ export const ClientsLive = Layer.effect(
                      clients.address_line_1 as addressLine1,
                      clients.address_line_2 as addressLine2,
                      clients.postal_code as postalCode, clients.city,
-                     clients.country, clients.email,
+                      clients.country, clients.email, clients.phone,
                      users.disabled_at is not null as archived,
                      clients.updated_at as updatedAt
              from clients
@@ -140,7 +142,7 @@ export const ClientsLive = Layer.effect(
                       clients.address_line_1 as addressLine1,
                       clients.address_line_2 as addressLine2,
                       clients.postal_code as postalCode, clients.city,
-                      clients.country, clients.email,
+                      clients.country, clients.email, clients.phone,
                       users.disabled_at is not null as archived,
                       clients.updated_at as updatedAt
                from clients join users on users.id = clients.id
@@ -170,6 +172,7 @@ export const ClientsLive = Layer.effect(
         city: request.city.trim(),
         country: request.country.trim(),
         email: request.email.trim(),
+        phone: request.phone.trim(),
       };
       return yield* Effect.try({
         try: () =>
@@ -200,8 +203,8 @@ export const ClientsLive = Layer.effect(
                 .prepare(
                   `insert into clients
                    (id, created_at, updated_at, address_line_1, address_line_2,
-                    postal_code, city, country, email)
-                   values (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                     postal_code, city, country, email, phone)
+                    values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
                 )
                 .run(
                   id,
@@ -213,6 +216,7 @@ export const ClientsLive = Layer.effect(
                   fields.city,
                   fields.country,
                   fields.email,
+                  fields.phone,
                 );
               const assignedRole = database.sqlite
                 .prepare(
@@ -266,6 +270,7 @@ export const ClientsLive = Layer.effect(
         city: request.city.trim(),
         country: request.country.trim(),
         email: request.email.trim(),
+        phone: request.phone.trim(),
       };
       return yield* Effect.try({
         try: () =>
@@ -297,7 +302,7 @@ export const ClientsLive = Layer.effect(
               const changed = database.sqlite
                 .prepare(
                   `update clients set address_line_1 = ?, address_line_2 = ?,
-                          postal_code = ?, city = ?, country = ?, email = ?, updated_at = ?
+                           postal_code = ?, city = ?, country = ?, email = ?, phone = ?, updated_at = ?
                    where id = ? and updated_at = ?`,
                 )
                 .run(
@@ -307,6 +312,7 @@ export const ClientsLive = Layer.effect(
                   fields.city,
                   fields.country,
                   fields.email,
+                  fields.phone,
                   updatedAt,
                   clientId,
                   request.expectedUpdatedAt,
@@ -355,7 +361,7 @@ export const ClientsLive = Layer.effect(
                            clients.address_line_1 as addressLine1,
                            clients.address_line_2 as addressLine2,
                            clients.postal_code as postalCode, clients.city,
-                           clients.country, clients.email,
+                       clients.country, clients.email, clients.phone,
                            users.disabled_at is not null as archived,
                            clients.updated_at as updatedAt
                    from clients join users on users.id = clients.id
@@ -427,7 +433,7 @@ export const ClientsLive = Layer.effect(
                            clients.address_line_1 as addressLine1,
                            clients.address_line_2 as addressLine2,
                            clients.postal_code as postalCode, clients.city,
-                           clients.country, clients.email,
+                            clients.country, clients.email, clients.phone,
                            users.disabled_at is not null as archived,
                            clients.updated_at as updatedAt
                    from clients join users on users.id = clients.id

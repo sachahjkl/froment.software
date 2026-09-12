@@ -12,7 +12,18 @@ describe('client contracts', () => {
     city: '',
     country: '',
     email: '',
+    phone: '',
   };
+
+  it('accepts an optional international phone number', () => {
+    const request = {
+      ...client,
+      displayName: 'Acme',
+      requestId: '4d2d762e-a1c5-4e02-a6af-7a8c473d4b33',
+    };
+    expect(Schema.is(ClientCreateRequest)({ ...request, phone: '+33 1 23 45 67 89' })).toBe(true);
+    expect(Schema.is(ClientCreateRequest)({ ...request, phone: 'call me' })).toBe(false);
+  });
   it('accepts email and password without an account mode', () => {
     expect(
       Schema.decodeUnknownSync(LoginRequest)({

@@ -46,6 +46,7 @@ describe('order contracts', () => {
       city: '',
       country: '',
       email: '',
+      phone: '',
     };
     const snapshot = {
       templateId: 'order-default',

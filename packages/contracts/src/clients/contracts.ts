@@ -18,6 +18,7 @@ export const ClientSummary = Schema.Struct({
   city: Schema.String,
   country: Schema.String,
   email: Schema.String,
+  phone: Schema.String,
   archived: Schema.Boolean,
   updatedAt: Schema.Int,
 }).annotate({ identifier: 'ClientSummary' });
@@ -36,6 +37,10 @@ export const ClientInput = Schema.Struct({
   email: Schema.String.check(
     Schema.isMaxLength(254),
     Schema.isPattern(/^$|^[^\s@]+@[^\s@]+\.[^\s@]+$/),
+  ),
+  phone: Schema.String.check(
+    Schema.isMaxLength(64),
+    Schema.isPattern(/^$|^\+?[0-9][0-9 ()\-./]{5,62}$/),
   ),
 });
 export type ClientInput = typeof ClientInput.Type;

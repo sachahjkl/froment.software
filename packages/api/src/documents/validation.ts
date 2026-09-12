@@ -7,7 +7,8 @@ import {
 import { Schema } from 'effect';
 
 const NonBlank = Schema.String.check(Schema.isPattern(/\S/));
-const requiredFields = ['displayName', 'addressLine1', 'city', 'country', 'email'] as const;
+const Phone = Schema.String.check(Schema.isPattern(/^\+?[0-9][0-9 ()\-./]{5,62}$/));
+const requiredFields = ['displayName', 'addressLine1', 'city', 'country'] as const;
 
 export const validateDocumentParties = (document: {
   readonly issuer: DocumentPartyValue;
@@ -19,10 +20,18 @@ export const validateDocumentParties = (document: {
       const value = document[party][field];
       if (!Schema.is(NonBlank)(value)) {
         issues.push({ party, field, reason: 'required' });
-      } else if (field === 'email' && !Schema.is(AccountEmail)(value)) {
-        issues.push({ party, field, reason: 'invalid_email' });
       }
     }
+    const { email, phone } = document[party];
+    if (party === 'issuer' || phone.trim() === '') {
+      if (!Schema.is(NonBlank)(email)) issues.push({ party, field: 'email', reason: 'required' });
+      else if (!Schema.is(AccountEmail)(email))
+        issues.push({ party, field: 'email', reason: 'invalid_email' });
+    } else if (email.trim() !== '' && !Schema.is(AccountEmail)(email)) {
+      issues.push({ party, field: 'email', reason: 'invalid_email' });
+    }
+    if (phone.trim() !== '' && !Schema.is(Phone)(phone))
+      issues.push({ party, field: 'phone', reason: 'invalid_phone' });
   }
   if (issues.length > 0) throw new DocumentIncomplete({ code: 'document.incomplete', issues });
 };

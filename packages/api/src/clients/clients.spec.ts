@@ -21,6 +21,7 @@ const input = {
   city: 'Paris',
   country: 'France',
   email: 'contact@acme.example',
+  phone: '+33 1 23 45 67 89',
 };
 const seed = Database.use(({ sqlite }) =>
   Effect.sync(() => {

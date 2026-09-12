@@ -64,6 +64,7 @@ const quote = {
       city: '',
       country: '',
       email: '',
+      phone: '',
     },
     title: 'Software audit',
     conditions: 'Payable in 30 days',

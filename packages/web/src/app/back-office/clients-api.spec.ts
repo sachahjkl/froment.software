@@ -24,6 +24,7 @@ describe('ClientsApi', () => {
       city: '',
       country: '',
       email: '',
+      phone: '',
     };
     const storedClient = {
       id: '01ARZ3NDEKTSV4RRFFQ69G5FAV',
