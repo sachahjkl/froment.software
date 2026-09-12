@@ -43,6 +43,7 @@ const client = {
   city: 'Lyon',
   country: 'France',
   email: 'client@example.test',
+  phone: '+33 4 12 34 56 78',
 };
 const quote: QuoteRenderSnapshotValue = {
   templateId: 'quote-default',
@@ -105,6 +106,9 @@ describe('Typst document inputs', () => {
     expect(prepareInvoiceDocument(datedInvoice).context).toContain(
       'Date de prestation : 19 août 2026',
     );
+    expect(prepareQuoteDocument(datedQuote).client).toContain(client.phone);
+    expect(prepareOrderDocument(datedOrder).client).toContain(client.phone);
+    expect(prepareInvoiceDocument(datedInvoice).client).toContain(client.phone);
   });
 
   it('keeps the original invoice date while using the credit note business date', () => {

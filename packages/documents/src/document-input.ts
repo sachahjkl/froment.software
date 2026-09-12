@@ -83,6 +83,7 @@ const partyLines = (party: DocumentParty): Array<string> =>
     `${party.postalCode} ${party.city}`.trim(),
     party.country,
     party.email,
+    party.phone,
   ]).map(wrapText);
 
 const issuerLines = (issuer: IssuerSettings): Array<string> => [
