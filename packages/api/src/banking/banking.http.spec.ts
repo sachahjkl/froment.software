@@ -1,4 +1,9 @@
-import { BankMatchHistory, BankTransactionList, InvoiceDetail } from '@froment/contracts';
+import {
+  BankMatchHistory,
+  BankTransactionList,
+  DefaultBankCsvConfiguration,
+  InvoiceDetail,
+} from '@froment/contracts';
 import { randomUUID } from 'node:crypto';
 import { Schema } from 'effect';
 import Sqlite from 'better-sqlite3';
@@ -20,7 +25,7 @@ describe('banking HTTP', () => {
       const client = await createClient(server);
       const quote = await createQuote(server, client.id);
       const { accepted } = await acceptQuote(server, quote.id);
-      type RequestBody = Readonly<Record<string, string | number>>;
+      type RequestBody = typeof Schema.Json.Type;
       const post = (path: string, body: RequestBody) =>
         fetch(`${server.baseUrl}${path}`, {
           method: 'POST',
@@ -63,7 +68,10 @@ describe('banking HTTP', () => {
         (
           await post('/api/banking/import', {
             account: 'Main',
-            csv: 'transaction_id,booked_on,amount,currency,description\nBANK-1,2026-09-01,100.00,EUR,Receipt\nBANK-2,2026-09-01,100.00,EUR,Other\nBANK-3,2026-09-01,-100.00,EUR,Debit',
+            format: 'csv',
+            csvConfiguration: DefaultBankCsvConfiguration,
+            content:
+              'transaction_id,booked_on,amount,currency,description\nBANK-1,2026-09-01,100.00,EUR,Receipt\nBANK-2,2026-09-01,100.00,EUR,Other\nBANK-3,2026-09-01,-100.00,EUR,Debit',
           })
         ).status,
       ).toBe(200);
@@ -192,11 +200,16 @@ describe('banking HTTP', () => {
       const url = `${server.baseUrl}/api/banking`;
       const header = 'transaction_id,booked_on,amount,currency,description\n';
       const csv = `${header}BANK-1,2026-09-01,100.00,EUR,Receipt\nBANK-2,2026-09-01,-10.00,EUR,Fee`;
-      const post = (csv: string, account = 'Main') =>
+      const post = (content: string, account = 'Main') =>
         fetch(`${url}/import`, {
           method: 'POST',
           headers: { ...server.jsonHeaders, origin: server.baseUrl },
-          body: JSON.stringify({ account, csv }),
+          body: JSON.stringify({
+            account,
+            format: 'csv',
+            csvConfiguration: DefaultBankCsvConfiguration,
+            content,
+          }),
         });
       expect((await fetch(`${url}/transactions`)).status).toBe(401);
       const client = await createClient(server);
@@ -207,7 +220,12 @@ describe('banking HTTP', () => {
           await fetch(`${url}/import`, {
             method: 'POST',
             headers: { ...server.jsonHeaders, origin: 'https://untrusted.example' },
-            body: JSON.stringify({ account: 'Main', csv }),
+            body: JSON.stringify({
+              account: 'Main',
+              format: 'csv',
+              csvConfiguration: DefaultBankCsvConfiguration,
+              content: csv,
+            }),
           })
         ).status,
       ).toBe(403);

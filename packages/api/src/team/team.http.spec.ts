@@ -1,6 +1,7 @@
 import {
   ApiTokenCreated,
   CurrentAccount,
+  DefaultBankCsvConfiguration,
   TeamInviteResult,
   TeamList,
   TeamProfilePermissions,
@@ -194,7 +195,10 @@ it('creates single-use team invitations and enforces profiles, version checks an
           '/api/banking/import',
           {
             account: 'TEAM',
-            csv: 'transaction_id,booked_on,amount,currency,description\nTEAM-1,2026-09-01,10.00,EUR,Test',
+            format: 'csv',
+            csvConfiguration: DefaultBankCsvConfiguration,
+            content:
+              'transaction_id,booked_on,amount,currency,description\nTEAM-1,2026-09-01,10.00,EUR,Test',
           },
           headers,
         )
@@ -222,9 +226,20 @@ it('creates single-use team invitations and enforces profiles, version checks an
       ).status,
     ).toBe(204);
     headers = await login(member.email);
-    expect((await post('/api/banking/import', { account: 'TEAM', csv: '' }, headers)).status).toBe(
-      403,
-    );
+    expect(
+      (
+        await post(
+          '/api/banking/import',
+          {
+            account: 'TEAM',
+            format: 'csv',
+            csvConfiguration: DefaultBankCsvConfiguration,
+            content: '',
+          },
+          headers,
+        )
+      ).status,
+    ).toBe(403);
     const client = await createClient(server);
     const clientHeaders = await createClientSession(server, client.id);
     expect((await fetch(`${server.baseUrl}/api/team`, { headers: clientHeaders })).status).toBe(

@@ -8,10 +8,61 @@ import {
   RequestRateLimited,
 } from '../authentication/contracts.js';
 
+export const BankImportMaximumContentLength = 500_000;
+export const BankImportMaximumRowCount = 1_000;
+export const BankImportMaximumRecordLength = 10_000;
+export const BankImportMaximumColumnNameLength = 100;
+export const BankImportFormat = Schema.Literals(['camt.053', 'ofx', 'csv']);
+export type BankImportFormat = typeof BankImportFormat.Type;
+export const BankCsvConfiguration = Schema.Struct({
+  delimiter: Schema.Literals([',', ';', '\t']),
+  referenceColumn: Schema.String.check(
+    Schema.isPattern(/\S/),
+    Schema.isMaxLength(BankImportMaximumColumnNameLength),
+  ),
+  bookedOnColumn: Schema.String.check(
+    Schema.isPattern(/\S/),
+    Schema.isMaxLength(BankImportMaximumColumnNameLength),
+  ),
+  amountColumn: Schema.String.check(
+    Schema.isPattern(/\S/),
+    Schema.isMaxLength(BankImportMaximumColumnNameLength),
+  ),
+  currencyColumn: Schema.String.check(Schema.isMaxLength(BankImportMaximumColumnNameLength)),
+  descriptionColumn: Schema.String.check(
+    Schema.isPattern(/\S/),
+    Schema.isMaxLength(BankImportMaximumColumnNameLength),
+  ),
+  dateFormat: Schema.Literals(['yyyy-MM-dd', 'dd/MM/yyyy']),
+  decimalSeparator: Schema.Literals(['.', ',']),
+});
+export type BankCsvConfiguration = typeof BankCsvConfiguration.Type;
+export const DefaultBankCsvConfiguration: BankCsvConfiguration = {
+  delimiter: ',',
+  referenceColumn: 'transaction_id',
+  bookedOnColumn: 'booked_on',
+  amountColumn: 'amount',
+  currencyColumn: 'currency',
+  descriptionColumn: 'description',
+  dateFormat: 'yyyy-MM-dd',
+  decimalSeparator: '.',
+};
 export const BankImportRequest = Schema.Struct({
   account: Schema.String.check(Schema.isPattern(/\S/), Schema.isMaxLength(100)),
-  csv: Schema.String.check(Schema.isMinLength(1), Schema.isMaxLength(500000)),
-});
+  format: BankImportFormat,
+  content: Schema.String.check(
+    Schema.isMinLength(1),
+    Schema.isMaxLength(BankImportMaximumContentLength),
+  ),
+  csvConfiguration: Schema.NullOr(BankCsvConfiguration),
+}).check(
+  Schema.makeFilter(
+    ({ format, csvConfiguration }) =>
+      (format === 'csv' && csvConfiguration !== null) ||
+      (format !== 'csv' && csvConfiguration === null),
+    { message: 'bank.import_configuration_invalid' },
+  ),
+);
 export type BankImportRequest = typeof BankImportRequest.Type;
 export const BankAllocation = Schema.Struct({
   feeCents: SafeInteger,

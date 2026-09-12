@@ -59,12 +59,23 @@ export const bankWorkspaceText = {
     'bankWorkspace.doneStep': '3. Résultat',
     'bankWorkspace.validationHint':
       'Le serveur vérifie toutes les lignes et les références existantes. La confirmation vérifie à nouveau les données avant l’ajout.',
-    'bankWorkspace.csvHint':
-      'CSV UTF-8, avec ou sans BOM, maximum 500 Ko et 1 000 transactions. Les champs entre guillemets peuvent contenir plusieurs lignes.',
-    'bankWorkspace.csvColumns':
-      'Colonnes : transaction_id, booked_on, amount, currency, description. Utilisez AAAA-MM-JJ, EUR et deux décimales exactes. Les débits ont un signe moins.',
+    'bankWorkspace.statementHint':
+      'Choisissez un fichier CAMT.053, OFX ou CSV UTF-8 de 500 Ko maximum.',
+    'bankWorkspace.format': 'Format du relevé',
+    'bankWorkspace.csvConfiguration': 'Correspondance des colonnes CSV',
+    'bankWorkspace.delimiter': 'Séparateur de colonnes',
+    'bankWorkspace.comma': 'Virgule',
+    'bankWorkspace.semicolon': 'Point-virgule',
+    'bankWorkspace.tab': 'Tabulation',
+    'bankWorkspace.referenceColumn': 'Colonne de référence',
+    'bankWorkspace.dateColumn': 'Colonne de date',
+    'bankWorkspace.amountColumn': 'Colonne de montant',
+    'bankWorkspace.currencyColumn': 'Colonne de devise, facultative pour EUR',
+    'bankWorkspace.descriptionColumn': 'Colonne de libellé',
+    'bankWorkspace.dateFormat': 'Format de date',
+    'bankWorkspace.decimalSeparator': 'Séparateur décimal',
     'bankWorkspace.accountInvalid': 'Saisissez un libellé de compte de 1 à 100 caractères.',
-    'bankWorkspace.fileInvalid': 'Choisissez un fichier CSV UTF-8 non vide, de 500 Ko maximum.',
+    'bankWorkspace.fileInvalid': 'Choisissez un relevé UTF-8 non vide, de 500 Ko maximum.',
     'bankWorkspace.preview': 'Transactions validées',
     'bankWorkspace.new': 'À ajouter',
     'bankWorkspace.existing': 'Déjà présente',
@@ -192,12 +203,24 @@ export const bankWorkspaceText = {
     'bankWorkspace.doneStep': '3. Result',
     'bankWorkspace.validationHint':
       'The server checks every row and existing reference. Confirmation checks the data again before adding transactions.',
-    'bankWorkspace.csvHint':
-      'UTF-8 CSV, with or without BOM, up to 500 KB and 1,000 transactions. Quoted fields can contain multiple lines.',
-    'bankWorkspace.csvColumns':
-      'Columns: transaction_id, booked_on, amount, currency, description. Use YYYY-MM-DD, EUR and exactly two decimals. Debits have a minus sign.',
+    'bankWorkspace.statementHint':
+      'Select a CAMT.053, OFX, or UTF-8 CSV file with a maximum size of 500 KB.',
+    'bankWorkspace.format': 'Statement format',
+    'bankWorkspace.csvConfiguration': 'CSV column mapping',
+    'bankWorkspace.delimiter': 'Column delimiter',
+    'bankWorkspace.comma': 'Comma',
+    'bankWorkspace.semicolon': 'Semicolon',
+    'bankWorkspace.tab': 'Tab',
+    'bankWorkspace.referenceColumn': 'Reference column',
+    'bankWorkspace.dateColumn': 'Date column',
+    'bankWorkspace.amountColumn': 'Amount column',
+    'bankWorkspace.currencyColumn': 'Currency column, optional for EUR',
+    'bankWorkspace.descriptionColumn': 'Description column',
+    'bankWorkspace.dateFormat': 'Date format',
+    'bankWorkspace.decimalSeparator': 'Decimal separator',
     'bankWorkspace.accountInvalid': 'Enter an account label with 1 to 100 characters.',
-    'bankWorkspace.fileInvalid': 'Choose a non-empty UTF-8 CSV file, up to 500 KB.',
+    'bankWorkspace.fileInvalid':
+      'Choose a non-empty UTF-8 statement with a maximum size of 500 KB.',
     'bankWorkspace.preview': 'Validated transactions',
     'bankWorkspace.new': 'To add',
     'bankWorkspace.existing': 'Already present',

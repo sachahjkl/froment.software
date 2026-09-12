@@ -2,6 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { Router } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
 import { BankImport } from './bank-import';
+import { DefaultBankCsvConfiguration } from '@froment/contracts';
 import {
   bankField,
   bankPreview,
@@ -44,7 +45,9 @@ describe('Bank import task', () => {
     await harness.fixture.whenStable();
     expect(api.previewStatement).toHaveBeenCalledWith({
       account: 'Compte local',
-      csv: csv.slice(1),
+      format: 'csv',
+      csvConfiguration: DefaultBankCsvConfiguration,
+      content: csv.slice(1),
     });
     expect(api.importStatement).not.toHaveBeenCalled();
     expect(root.textContent).toContain('Règlement\nclient');
@@ -52,7 +55,9 @@ describe('Bank import task', () => {
     await harness.fixture.whenStable();
     expect(api.importStatement).toHaveBeenCalledWith({
       account: 'Compte local',
-      csv: csv.slice(1),
+      format: 'csv',
+      csvConfiguration: DefaultBankCsvConfiguration,
+      content: csv.slice(1),
     });
     expect(root.textContent).toContain('1 ajoutée(s)');
     expect(root.querySelector('input[type="file"]')).toBeNull();
@@ -98,7 +103,9 @@ describe('Bank import task', () => {
     await harness.fixture.whenStable();
     expect(api.previewStatement).toHaveBeenCalledWith({
       account: 'Compte local',
-      csv: csv.slice(1),
+      format: 'csv',
+      csvConfiguration: DefaultBankCsvConfiguration,
+      content: csv.slice(1),
     });
   });
   it('sorts the preview without changing its request or the transaction list sort', async () => {
@@ -152,6 +159,11 @@ describe('Bank import task', () => {
     expect(api.previewStatement).toHaveBeenCalledTimes(1);
     root.querySelector<HTMLButtonElement>('.actions button[variant="primary"]')?.click();
     await harness.fixture.whenStable();
-    expect(api.importStatement).toHaveBeenCalledWith({ account: 'MAIN', csv: csv.slice(1) });
+    expect(api.importStatement).toHaveBeenCalledWith({
+      account: 'MAIN',
+      format: 'csv',
+      csvConfiguration: DefaultBankCsvConfiguration,
+      content: csv.slice(1),
+    });
   });
 });

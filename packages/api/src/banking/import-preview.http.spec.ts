@@ -1,5 +1,6 @@
 import {
   BankImportPreview,
+  DefaultBankCsvConfiguration,
   BankTransaction,
   BankTransactionList,
   LedgerEntry,
@@ -12,7 +13,7 @@ import { randomUUID } from 'node:crypto';
 import { describe, expect, it } from 'vitest';
 import { startHttpTestServer } from '../server/server.spec-helper.js';
 
-type BankRequestBody = Readonly<Record<string, string>>;
+type BankRequestBody = typeof Schema.Json.Type;
 
 describe('bank import preview HTTP', () => {
   it('validates the complete statement without writing transactions or audit events', async () => {
@@ -27,7 +28,9 @@ describe('bank import preview HTTP', () => {
       const header = 'transaction_id,booked_on,amount,currency,description\n';
       const request = {
         account: 'Main',
-        csv: `\uFEFF${header}BANK-1,2026-09-01,100.00,EUR,"Règlement\nclient"\nBANK-2,2026-09-01,-12.34,EUR,"Frais, banque"`,
+        format: 'csv',
+        csvConfiguration: DefaultBankCsvConfiguration,
+        content: `\uFEFF${header}BANK-1,2026-09-01,100.00,EUR,"Règlement\nclient"\nBANK-2,2026-09-01,-12.34,EUR,"Frais, banque"`,
       };
       const previewResponse = await post('/api/banking/import/preview', request);
       expect(previewResponse.status).toBe(200);
@@ -67,7 +70,9 @@ describe('bank import preview HTTP', () => {
       });
       const conflicting = {
         account: 'Main',
-        csv: `${header}NEW,2026-09-01,1.00,EUR,New\nBANK-1,2026-09-01,200.00,EUR,Changed`,
+        format: 'csv',
+        csvConfiguration: DefaultBankCsvConfiguration,
+        content: `${header}NEW,2026-09-01,1.00,EUR,New\nBANK-1,2026-09-01,200.00,EUR,Changed`,
       };
       expect((await post('/api/banking/import/preview', conflicting)).status).toBe(422);
       expect((await post('/api/banking/import', conflicting)).status).toBe(422);
@@ -76,7 +81,9 @@ describe('bank import preview HTTP', () => {
         (
           await post('/api/banking/import/preview', {
             ...request,
-            csv: `${header}BAD,2026-02-30,1.001,EUR,Invalid`,
+            format: 'csv',
+            csvConfiguration: DefaultBankCsvConfiguration,
+            content: `${header}BAD,2026-02-30,1.001,EUR,Invalid`,
           })
         ).status,
       ).toBe(422);
@@ -129,7 +136,10 @@ describe('bank import preview HTTP', () => {
         (
           await post('/api/banking/import', {
             account: 'Main',
-            csv: 'transaction_id,booked_on,amount,currency,description\nDEBIT,2026-09-01,-12.34,EUR,Fee',
+            format: 'csv',
+            csvConfiguration: DefaultBankCsvConfiguration,
+            content:
+              'transaction_id,booked_on,amount,currency,description\nDEBIT,2026-09-01,-12.34,EUR,Fee',
           })
         ).status,
       ).toBe(200);

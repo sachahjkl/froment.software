@@ -1,4 +1,8 @@
-import { BankImportInvalid } from '@froment/contracts';
+import {
+  BankImportInvalid,
+  DefaultBankCsvConfiguration,
+  type BankImportRequestValue,
+} from '@froment/contracts';
 import { NodeHttpServer } from '@effect/platform-node';
 import { Deferred, Effect, Layer, Scope } from 'effect';
 import { HttpRouter, HttpServer, HttpServerResponse } from 'effect/unstable/http';
@@ -15,7 +19,7 @@ import { authenticationConfig } from '../authentication/authentication-config.sp
 import { AuthenticationHttpLive, accessCookieName } from '../authentication/http.js';
 import { ApiTokens } from '../api-tokens/service.js';
 import { Audit } from '../audit/audit.js';
-import { parseBankStatement } from '../banking/csv.js';
+import { parseBankStatement } from '../banking/statement.js';
 import { defaultRuntimeConfig, RuntimeConfiguration } from '../runtime-config.js';
 import { RequestLimiterLive } from '../server/request-limiter.js';
 import { ApiBrowserRequestLive } from './origin.js';
@@ -37,13 +41,19 @@ const makeCsv = (rows: number, character = 'x') =>
     { length: rows },
     (_, index) => `ref-${index},2026-09-01,1.00,EUR,${character.repeat(400)}\n`,
   ).join('');
+const bankRequest = (content: string): BankImportRequestValue => ({
+  account: 'MAIN',
+  format: 'csv',
+  csvConfiguration: DefaultBankCsvConfiguration,
+  content,
+});
 
 const fixture = (
   maximumBankImportBodyBytes: number = defaultRuntimeConfig.http.maximumBankImportBodyBytes,
 ) => {
-  const parse = vi.fn((csv: string) =>
+  const parse = vi.fn((request: BankImportRequestValue) =>
     Effect.try({
-      try: () => parseBankStatement(csv),
+      try: () => parseBankStatement(request),
       catch: () => new BankImportInvalid({ code: 'bank.import_invalid' }),
     }),
   );
@@ -70,10 +80,10 @@ const fixture = (
   const handlers = HttpApiBuilder.group(TestApi, 'banking', (handlers) =>
     handlers
       .handle('bankImport', ({ payload }) =>
-        parse(payload.csv).pipe(Effect.map((rows) => ({ added: rows.length, existing: 0 }))),
+        parse(payload).pipe(Effect.map((rows) => ({ added: rows.length, existing: 0 }))),
       )
       .handle('bankImportPreview', ({ payload }) =>
-        parse(payload.csv).pipe(
+        parse(payload).pipe(
           Effect.map((rows) => ({
             added: rows.length,
             existing: 0,
@@ -153,10 +163,10 @@ describe('Request body policy', () => {
       const test = fixture();
       const csv = makeCsv(1000, 'é');
       expect(csv.length).toBeLessThanOrEqual(500_000);
-      const body = JSON.stringify({ account: 'MAIN', csv });
+      const body = JSON.stringify(bankRequest(csv));
       expect(Buffer.byteLength(body)).toBeGreaterThan(500_000);
       expect((await test.request(path, body, String(Buffer.byteLength(body)))).status).toBe(200);
-      expect(test.parse).toHaveBeenCalledWith(csv);
+      expect(test.parse).toHaveBeenCalledWith(bankRequest(csv));
       expect((await test.request('/api/clients', body)).status).toBe(413);
       expect(test.clientCreate).not.toHaveBeenCalled();
     },
@@ -177,17 +187,12 @@ describe('Request body policy', () => {
       /[\s\S]/g,
       (character) => `\\u${character.charCodeAt(0).toString(16).padStart(4, '0')}`,
     );
-    const body = `{"account":"MAIN","csv":"${escaped}"}`;
+    const body = `{"account":"MAIN","format":"csv","content":"${escaped}","csvConfiguration":${JSON.stringify(DefaultBankCsvConfiguration)}}`;
     expect(Buffer.byteLength(body)).toBeGreaterThan(3_000_000);
     expect((await test.request('/api/banking/import', body)).status).toBe(200);
-    expect(test.parse).toHaveBeenCalledWith(csv);
+    expect(test.parse).toHaveBeenCalledWith(bankRequest(csv));
     expect(
-      (
-        await test.request(
-          '/api/banking/import',
-          JSON.stringify({ account: 'MAIN', csv: csv + 'x' }),
-        )
-      ).status,
+      (await test.request('/api/banking/import', JSON.stringify(bankRequest(csv + 'x')))).status,
     ).toBe(400);
     expect(test.parse).toHaveBeenCalledTimes(1);
   });
@@ -196,7 +201,7 @@ describe('Request body policy', () => {
     const test = fixture();
     const response = await test.request(
       '/api/banking/import',
-      JSON.stringify({ account: 'MAIN', csv: makeCsv(1001) }),
+      JSON.stringify(bankRequest(makeCsv(1001))),
     );
     expect(response.status).toBe(422);
     expect(await response.json()).toEqual({
@@ -208,8 +213,8 @@ describe('Request body policy', () => {
   it.each([undefined, '1', '100000'])(
     'enforces the injected byte limit when Content-Length is %s',
     async (contentLength) => {
-      const test = fixture(128);
-      const body = JSON.stringify({ account: 'MAIN', csv: makeCsv(1) });
+      const test = fixture(512);
+      const body = JSON.stringify(bankRequest(makeCsv(1)));
       const response = await test.request('/api/banking/import', body, contentLength);
       expect(response.status).toBe(413);
       expect(await response.json()).toEqual({ _tag: 'RequestTooLarge', code: 'request.too_large' });
@@ -218,7 +223,7 @@ describe('Request body policy', () => {
   );
 
   it('applies the dedicated limit during native Node body reading without a socket connection', async () => {
-    const body = JSON.stringify({ account: 'MAIN', csv: makeCsv(100) });
+    const body = JSON.stringify(bankRequest(makeCsv(100)));
     const accepted = fixture(100_000);
     expect(Buffer.byteLength(body)).toBeGreaterThan(32_768);
     expect((await accepted.nodeRequest(body)).status).toBe(200);
@@ -235,14 +240,14 @@ describe('Request body policy', () => {
   });
 
   it('accepts exactly the configured bytes and rejects one extra byte', async () => {
-    const test = fixture(128);
+    const test = fixture(512);
     const csv = csvHeader + 'one,2026-09-01,1.00,EUR,é\n';
-    const json = JSON.stringify({ account: 'MAIN', csv });
-    const body = json + ' '.repeat(128 - Buffer.byteLength(json));
-    expect(Buffer.byteLength(body)).toBe(128);
-    expect((await test.nodeRequest(body, '128')).status).toBe(200);
+    const json = JSON.stringify(bankRequest(csv));
+    const body = json + ' '.repeat(512 - Buffer.byteLength(json));
+    expect(Buffer.byteLength(body)).toBe(512);
+    expect((await test.nodeRequest(body, '512')).status).toBe(200);
     expect((await test.nodeRequest(body + ' ', '1')).status).toBe(413);
-    expect((await test.request('/api/banking/import', json, '129')).status).toBe(413);
+    expect((await test.request('/api/banking/import', json, '513')).status).toBe(413);
     expect(test.parse).toHaveBeenCalledTimes(1);
   });
 });

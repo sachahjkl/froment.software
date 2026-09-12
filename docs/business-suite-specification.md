@@ -295,7 +295,7 @@ Elle ne remplace pas les critères de fin définis au début du document.
 | Rôles personnalisés                | Réalisé en première version | Profils comptables et dernier administrateur         |
 | Paramètres comptables société      | Réalisé en première version | Initialisation et verrouillage complet               |
 | Virements fournisseur              | Réalisé en première version | Contrôle de l’artefact immuable et rapprochement     |
-| Imports bancaires CAMT, OFX et CSV | En cours                    | Check Nix, documentation, commit et déploiement      |
+| Imports bancaires CAMT, OFX et CSV | Réalisé                     | Validation finale et livraison globale               |
 | Avoirs partiels et consolidés      | À faire                     | Domaine, API, persistance, documents et interface    |
 | Encaissements scindés              | À faire                     | Actions, préremplissage et interface                 |
 | Sélecteurs de version intégrés     | À faire                     | Uniformisation de tous les documents                 |

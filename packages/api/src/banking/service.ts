@@ -14,7 +14,7 @@ import { ulid } from 'ulid';
 import { Database, DatabaseError } from '../database/database.js';
 import { Audit } from '../audit/audit.js';
 import { Schema } from 'effect';
-import { parseBankStatement } from './csv.js';
+import { parseBankStatement } from './statement.js';
 
 const makeBanking = Effect.gen(function* () {
   const database = yield* Database;
@@ -104,7 +104,7 @@ const makeBanking = Effect.gen(function* () {
     return transaction;
   });
   const classifyStatement = (request: BankImportRequestValue) => {
-    const rows = parseBankStatement(request.csv).map((row) => {
+    const rows = parseBankStatement(request).map((row) => {
       const existing = database.sqlite
         .prepare(
           'select booked_on as bookedOn, amount_cents as amountCents, description from bank_transactions where account = ? and reference = ?',

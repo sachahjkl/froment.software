@@ -1,4 +1,9 @@
-import { BankPaymentList, BankTransactionList, InvoiceDetail } from '@froment/contracts';
+import {
+  BankPaymentList,
+  BankTransactionList,
+  DefaultBankCsvConfiguration,
+  InvoiceDetail,
+} from '@froment/contracts';
 import { Schema } from 'effect';
 import { randomUUID } from 'node:crypto';
 import { expect, it } from 'vitest';
@@ -77,7 +82,10 @@ it('splits receipts across credits, groups receipts, rejects excess allocations,
       (
         await post('/api/banking/import', {
           account: 'GROUP',
-          csv: 'transaction_id,booked_on,amount,currency,description\nA,2026-09-01,150.00,EUR,Grouped\nB,2026-09-01,200.00,EUR,Split',
+          format: 'csv',
+          csvConfiguration: DefaultBankCsvConfiguration,
+          content:
+            'transaction_id,booked_on,amount,currency,description\nA,2026-09-01,150.00,EUR,Grouped\nB,2026-09-01,200.00,EUR,Split',
         })
       ).status,
     ).toBe(200);

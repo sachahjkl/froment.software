@@ -476,6 +476,13 @@ export {
   BankMatchRequest,
   BankUnmatchRequest,
   BankImportRequest,
+  BankImportFormat,
+  BankCsvConfiguration,
+  DefaultBankCsvConfiguration,
+  BankImportMaximumContentLength,
+  BankImportMaximumRowCount,
+  BankImportMaximumRecordLength,
+  BankImportMaximumColumnNameLength,
   BankImportResult,
   BankImportPreview,
   BankFailure,
@@ -484,6 +491,8 @@ export {
   BankTransactionNotFound,
   type BankTransaction as BankTransactionValue,
   type BankImportRequest as BankImportRequestValue,
+  type BankImportFormat as BankImportFormatValue,
+  type BankCsvConfiguration as BankCsvConfigurationValue,
 } from './banking/contracts.js';
 export * from './authentication/passkeys.js';
 export * from './team/contracts.js';
