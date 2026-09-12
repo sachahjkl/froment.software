@@ -1,0 +1,147 @@
+<div class="desktop-lines">
+  <table>
+    <thead>
+      <tr>
+        <th scope="col">{{ i18n.t('documentLine.description') }}</th>
+        <th scope="col">{{ i18n.t('documentLine.quantity') }}</th>
+        <th scope="col">{{ i18n.t('documentLine.unitPrice') }}</th>
+        <th scope="col">{{ i18n.t('documentLine.vatRate') }}</th>
+        <th scope="col">{{ i18n.t('documentLine.total') }}</th>
+        <th scope="col">{{ i18n.t('documentLine.actions') }}</th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (line of lines(); track $index) {
+      <tr>
+        <td class="description-cell">
+          <label class="visually-hidden" [for]="'line-description-' + $index">
+            {{ i18n.tf('documentLine.descriptionNumber', { number: $index + 1 }) }}
+          </label>
+          <input
+            class="input"
+            [id]="'line-description-' + $index"
+            [value]="line.description"
+            [disabled]="disabled()"
+            [attr.aria-invalid]="showError($index, 'description', line.description)"
+            [attr.aria-describedby]="showError($index, 'description', line.description) ? 'line-description-error-' + $index : null"
+            (input)="update($index, 'description', $event)"
+          />
+          @if (showError($index, 'description', line.description)) {
+          <span class="field-error visually-hidden" [id]="'line-description-error-' + $index">
+            {{ i18n.t('documentLine.descriptionInvalid') }}
+          </span>
+          }
+        </td>
+        <td>
+          <label class="visually-hidden" [for]="'line-quantity-' + $index">
+            {{ i18n.tf('documentLine.quantityNumber', { number: $index + 1 }) }}
+          </label>
+          <input
+            class="input"
+            inputmode="decimal"
+            [id]="'line-quantity-' + $index"
+            [value]="line.quantity"
+            [disabled]="disabled()"
+            [attr.aria-invalid]="showError($index, 'quantity', line.quantity)"
+            [attr.aria-describedby]="showError($index, 'quantity', line.quantity) ? 'line-quantity-error-' + $index : null"
+            (input)="update($index, 'quantity', $event)"
+          />
+          @if (showError($index, 'quantity', line.quantity)) {
+          <span class="field-error visually-hidden" [id]="'line-quantity-error-' + $index">
+            {{ i18n.t('documentLine.quantityInvalid') }}
+          </span>
+          }
+        </td>
+        <td>
+          <label class="visually-hidden" [for]="'line-price-' + $index">
+            {{ i18n.tf('documentLine.unitPriceNumber', { number: $index + 1 }) }}
+          </label>
+          <input
+            class="input"
+            inputmode="decimal"
+            [id]="'line-price-' + $index"
+            [value]="line.unitPrice"
+            [disabled]="disabled()"
+            [attr.aria-invalid]="showError($index, 'unitPrice', line.unitPrice)"
+            [attr.aria-describedby]="showError($index, 'unitPrice', line.unitPrice) ? 'line-price-error-' + $index : null"
+            (input)="update($index, 'unitPrice', $event)"
+          />
+          @if (showError($index, 'unitPrice', line.unitPrice)) {
+          <span class="field-error visually-hidden" [id]="'line-price-error-' + $index">
+            {{ i18n.t('documentLine.unitPriceInvalid') }}
+          </span>
+          }
+        </td>
+        <td>
+          <label class="visually-hidden" [for]="'line-vat-' + $index">
+            {{ i18n.tf('documentLine.vatRateNumber', { number: $index + 1 }) }}
+          </label>
+          <input
+            class="input"
+            inputmode="decimal"
+            [id]="'line-vat-' + $index"
+            [value]="line.vatRate"
+            [disabled]="disabled()"
+            [attr.aria-invalid]="showError($index, 'vatRate', line.vatRate)"
+            [attr.aria-describedby]="showError($index, 'vatRate', line.vatRate) ? 'line-vat-error-' + $index : null"
+            (input)="update($index, 'vatRate', $event)"
+          />
+          @if (showError($index, 'vatRate', line.vatRate)) {
+          <span class="field-error visually-hidden" [id]="'line-vat-error-' + $index">
+            {{ i18n.t('documentLine.vatRateInvalid') }}
+          </span>
+          }
+        </td>
+        <td class="amount">
+          @if (totals()[$index] !== undefined) { {{ money(totals()[$index]!) }} }
+        </td>
+        <td>
+          <button
+            appButton
+            variant="danger"
+            type="button"
+            [disabled]="disabled() || lines().length === 1"
+            (click)="remove($index)"
+          >
+            {{ i18n.t('documentLine.remove') }}
+          </button>
+        </td>
+      </tr>
+      }
+    </tbody>
+  </table>
+</div>
+
+<ol class="mobile-lines">
+  @for (line of lines(); track $index) {
+  <li class="ds-panel">
+    <div>
+      <strong
+        >{{ line.description || i18n.tf('documentLine.number', { number: $index + 1 }) }}</strong
+      >
+      <p>{{ line.quantity }} × {{ line.unitPrice }} · {{ line.vatRate }} %</p>
+      @if (totals()[$index] !== undefined) {
+      <p class="amount">{{ money(totals()[$index]!) }}</p>
+      }
+    </div>
+    <div class="line-actions spacer-x-2">
+      <button appButton type="button" [disabled]="disabled()" (click)="edit($index)">
+        {{ i18n.t('documentLine.edit') }}
+      </button>
+      <button
+        appButton
+        variant="danger"
+        type="button"
+        [disabled]="disabled() || lines().length === 1"
+        (click)="remove($index)"
+      >
+        {{ i18n.t('documentLine.remove') }}
+      </button>
+    </div>
+  </li>
+  }
+</ol>
+
+<button appButton type="button" [disabled]="addDisabled()" (click)="add()">
+  {{ i18n.t('documentLine.add') }}
+</button>

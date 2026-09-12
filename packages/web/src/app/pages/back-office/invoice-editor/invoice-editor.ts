@@ -48,13 +48,12 @@ import { PageHeader } from '@shared/page-header/page-header';
 import { Confirmation } from '@shared/confirmation/confirmation';
 import { BillingNavigation } from '../billing/billing-navigation';
 import { DocumentTextEditor } from '@shared/document-text-editor/document-text-editor';
+import {
+  DocumentLineEditor,
+  type DocumentLineEditValue,
+} from '@shared/document-line-editor/document-line-editor';
 
-interface InvoiceLineModel {
-  description: string;
-  quantity: string;
-  unitPrice: string;
-  vatRate: string;
-}
+type InvoiceLineModel = DocumentLineEditValue;
 const emptyLine = (): InvoiceLineModel => ({
   description: '',
   quantity: '1.000',
@@ -84,7 +83,16 @@ const emptyModel = (): InvoiceModel => ({
 @Component({
   host: { class: 'page-container', '(window:beforeunload)': 'beforeUnload($event)' },
   selector: 'app-invoice-editor',
-  imports: [Can, Button, FormField, Notice, PageHeader, RouterLink, DocumentTextEditor],
+  imports: [
+    Can,
+    Button,
+    FormField,
+    Notice,
+    PageHeader,
+    RouterLink,
+    DocumentTextEditor,
+    DocumentLineEditor,
+  ],
   templateUrl: './invoice-editor.html',
   styleUrl: './invoice-editor.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -199,6 +207,11 @@ export class InvoiceEditor {
   protected readonly totalsAreStale = computed(
     () => this.detail() !== undefined && this.hasUnsavedChanges(),
   );
+  protected readonly lineTotals = computed(() =>
+    this.totalsAreStale()
+      ? []
+      : (this.detail()?.currentRevision.lines.map((line) => line.totalCents) ?? []),
+  );
 
   constructor() {
     afterNextRender(() =>
@@ -214,15 +227,9 @@ export class InvoiceEditor {
         this.element.nativeElement.querySelector<HTMLElement>('[data-editor-feedback]')?.focus();
     });
   }
-  protected addLine(): void {
-    if (this.saveDisabled() || this.model().lines.length >= 20) return;
-    this.model.update((model) => ({ ...model, lines: [...model.lines, emptyLine()] }));
-    this.invoiceForm().markAsDirty();
-    this.completed.set(false);
-  }
-  protected removeLine(index: number): void {
-    if (this.saveDisabled() || this.model().lines.length === 1) return;
-    this.model.update((model) => ({ ...model, lines: model.lines.filter((_, i) => i !== index) }));
+  protected setLines(lines: ReadonlyArray<DocumentLineEditValue>): void {
+    if (this.saveDisabled()) return;
+    this.model.update((model) => ({ ...model, lines: [...lines] }));
     this.invoiceForm().markAsDirty();
     this.completed.set(false);
   }

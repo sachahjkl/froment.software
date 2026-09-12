@@ -116,15 +116,15 @@
     <section class="lines" aria-labelledby="lines-title">
       <div class="section-heading">
         <h2 id="lines-title">{{ i18n.t('backOffice.quote.lines') }}</h2>
-        <button
-          appButton
-          type="button"
-          [disabled]="saveDisabled() || quoteForm.lines.length >= 20"
-          (click)="addLine()"
-        >
-          {{ i18n.t('backOffice.quote.addLine') }}
-        </button>
       </div>
+      <app-document-line-editor
+        class="document-lines"
+        [lines]="quoteForm.lines().value()"
+        [currency]="quoteForm.currency().value()"
+        [totals]="lineTotals()"
+        [disabled]="saveDisabled() || referenceBusy()"
+        (linesChange)="setLines($event)"
+      />
       <div class="condition-preset spacer-x-3">
         <app-object-picker
           class="catalog-picker"
@@ -145,87 +145,6 @@
         </button>
       </div>
       <p class="hint">{{ i18n.t('catalog.snapshotHint') }}</p>
-      @for (line of quoteForm.lines; track $index) {
-      <fieldset class="document-line ds-panel">
-        <legend>{{ i18n.tf('backOffice.quote.lineNumber', { number: $index + 1 }) }}</legend>
-        <label class="field description"
-          >{{ i18n.t('backOffice.quote.description') }}
-          <input
-            class="input"
-            type="text"
-            [attr.aria-describedby]="'line-description-error-' + $index"
-            [attr.aria-invalid]="line.description().invalid() && line.description().touched()"
-            [formField]="line.description"
-          />
-          @if (line.description().invalid() && line.description().touched()) {
-          <span [id]="'line-description-error-' + $index" class="field-error"
-            >{{ i18n.t('backOffice.quote.fieldInvalid') }}</span
-          >
-          }
-        </label>
-        <label class="field"
-          >{{ i18n.t('backOffice.quote.quantity') }}
-          <input
-            class="input"
-            inputmode="decimal"
-            [attr.aria-describedby]="'line-quantity-error-' + $index"
-            [attr.aria-invalid]="line.quantity().invalid() && line.quantity().touched()"
-            [formField]="line.quantity"
-          />
-          @if (line.quantity().invalid() && line.quantity().touched()) {
-          <span [id]="'line-quantity-error-' + $index" class="field-error"
-            >{{ i18n.t('backOffice.quote.quantityInvalid') }}</span
-          >
-          }
-        </label>
-        <label class="field"
-          >{{ i18n.t('backOffice.quote.unitPrice') }}
-          <input
-            class="input"
-            inputmode="decimal"
-            [attr.aria-describedby]="'line-price-error-' + $index"
-            [attr.aria-invalid]="line.unitPrice().invalid() && line.unitPrice().touched()"
-            [formField]="line.unitPrice"
-          />
-          @if (line.unitPrice().invalid() && line.unitPrice().touched()) {
-          <span [id]="'line-price-error-' + $index" class="field-error"
-            >{{ i18n.t('backOffice.quote.priceInvalid') }}</span
-          >
-          }
-        </label>
-        <label class="field"
-          >{{ i18n.t('backOffice.quote.vatRate') }}
-          <input
-            class="input"
-            inputmode="decimal"
-            [attr.aria-describedby]="'line-vat-error-' + $index"
-            [attr.aria-invalid]="line.vatRate().invalid() && line.vatRate().touched()"
-            [formField]="line.vatRate"
-          />
-          @if (line.vatRate().invalid() && line.vatRate().touched()) {
-          <span [id]="'line-vat-error-' + $index" class="field-error"
-            >{{ i18n.t('backOffice.quote.vatInvalid') }}</span
-          >
-          }
-        </label>
-        <button
-          appButton
-          variant="danger"
-          type="button"
-          [disabled]="saveDisabled() || quoteForm.lines.length === 1"
-          (click)="removeLine($index)"
-        >
-          {{ i18n.t('backOffice.quote.removeLine') }}
-        </button>
-        @if (!totalsAreStale() && detail(); as quote) { @if (quote.currentRevision.lines[$index]; as
-        savedLine) {
-        <p class="line-total">
-          {{ i18n.t('backOffice.quote.lineTotal') }}
-          <strong>{{ money(savedLine.totalCents) }}</strong>
-        </p>
-        } }
-      </fieldset>
-      }
     </section>
 
     <section class="conditions-section ds-panel form-panel">

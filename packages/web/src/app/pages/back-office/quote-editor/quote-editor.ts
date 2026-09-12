@@ -63,13 +63,12 @@ import {
   type DocumentTextPresentationValue,
 } from '@froment/contracts';
 import { DocumentTextEditor } from '@shared/document-text-editor/document-text-editor';
+import {
+  DocumentLineEditor,
+  type DocumentLineEditValue,
+} from '@shared/document-line-editor/document-line-editor';
 
-interface QuoteLineModel {
-  readonly description: string;
-  readonly quantity: string;
-  readonly unitPrice: string;
-  readonly vatRate: string;
-}
+type QuoteLineModel = DocumentLineEditValue;
 
 interface QuoteModel {
   readonly clientId: string;
@@ -100,6 +99,7 @@ const emptyLine = (): QuoteLineModel => ({
     PageHeader,
     RouterLink,
     DocumentTextEditor,
+    DocumentLineEditor,
   ],
   templateUrl: './quote-editor.html',
   styleUrl: './quote-editor.scss',
@@ -241,6 +241,11 @@ export class QuoteEditor {
       this.detail() !== undefined &&
       (this.quoteForm().dirty() || this.saving() || this.uncertain()),
   );
+  protected readonly lineTotals = computed(() =>
+    this.totalsAreStale()
+      ? []
+      : (this.detail()?.currentRevision.lines.map((line) => line.totalCents) ?? []),
+  );
 
   constructor() {
     this.destroyRef.onDestroy(() => this.referenceDialog()?.close());
@@ -254,9 +259,9 @@ export class QuoteEditor {
     });
   }
 
-  protected addLine(): void {
-    if (this.saveDisabled() || this.referenceBusy() || this.model().lines.length >= 20) return;
-    this.model.update((model) => ({ ...model, lines: [...model.lines, emptyLine()] }));
+  protected setLines(lines: ReadonlyArray<DocumentLineEditValue>): void {
+    if (this.saveDisabled() || this.referenceBusy()) return;
+    this.model.update((model) => ({ ...model, lines: [...lines] }));
     this.quoteForm().markAsDirty();
   }
 
@@ -281,15 +286,6 @@ export class QuoteEditor {
           vatRate: formatFixedDecimal(item.vatRateBasisPoints, 2),
         },
       ],
-    }));
-    this.quoteForm().markAsDirty();
-  }
-
-  protected removeLine(index: number): void {
-    if (this.saveDisabled() || this.referenceBusy() || this.model().lines.length === 1) return;
-    this.model.update((model) => ({
-      ...model,
-      lines: model.lines.filter((_line, currentIndex) => currentIndex !== index),
     }));
     this.quoteForm().markAsDirty();
   }

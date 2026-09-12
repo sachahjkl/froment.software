@@ -210,7 +210,7 @@ describe('InvoiceEditor', () => {
     const to = dates.item(1);
     inputValue(from, '2026-10-20');
     inputValue(to, '2026-09-20');
-    inputValue(field(root, 'fieldset input'), ' ');
+    inputValue(field(root, '.document-lines input'), ' ');
     await fixture.whenStable();
     const save = root.querySelector<HTMLButtonElement>('button[type="submit"]')!;
     expect(save.disabled).toBe(false);

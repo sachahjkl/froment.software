@@ -35,9 +35,11 @@ import { supplierWorkspaceText } from './supplier-workspace.js';
 import { companyWorkspaceText } from './company-workspace.js';
 import { supplierInvoiceText } from './supplier-invoices.js';
 import { affairText } from './affairs.js';
+import { documentLineText } from './document-lines.js';
 
 export const translations = {
   fr: {
+    ...documentLineText.fr,
     ...affairText.fr,
     ...connectionText.fr,
     ...checkoutText.fr,
@@ -1627,6 +1629,7 @@ export const translations = {
     'cookies.contact.content': 'Pour une question sur ce réglage ou le fonctionnement du site :',
   },
   en: {
+    ...documentLineText.en,
     ...affairText.en,
     ...connectionText.en,
     ...checkoutText.en,

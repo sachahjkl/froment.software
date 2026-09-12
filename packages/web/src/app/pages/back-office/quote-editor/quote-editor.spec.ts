@@ -155,7 +155,7 @@ describe('Quote editor navigation', () => {
     await harness.fixture.whenStable();
     control<HTMLButtonElement>(document, '[role="dialog"] button.option').click();
     await harness.fixture.whenStable();
-    const lines = root.querySelectorAll('.document-line');
+    const lines = root.querySelectorAll('.document-lines tbody tr');
     expect(lines).toHaveLength(2);
     expect(Array.from(lines[1]?.querySelectorAll('input') ?? [], (input) => input.value)).toEqual([
       'Catalog service',
@@ -227,7 +227,7 @@ describe('Quote editor navigation', () => {
     const client = control<HTMLSelectElement>(root, '#quote-client');
     selectValue(client, quoteFixture.clientId);
     inputValue(root, '#quote-name', 'New quote');
-    inputValue(root, '.document-line input', 'Audit');
+    inputValue(root, '.document-lines input', 'Audit');
     await harness.fixture.whenStable();
     control<HTMLButtonElement>(root, 'button[type="submit"]').click();
     await harness.fixture.whenStable();

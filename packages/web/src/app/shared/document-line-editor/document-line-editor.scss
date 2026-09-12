@@ -1,0 +1,59 @@
+:host {
+  display: grid;
+  container-type: inline-size;
+  gap: var(--space-3);
+}
+
+.desktop-lines {
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: var(--space-2);
+}
+
+th {
+  text-align: start;
+}
+
+td:not(.description-cell) .input {
+  min-inline-size: 6rem;
+}
+
+.description-cell {
+  width: 100%;
+}
+
+.mobile-lines {
+  display: none;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.mobile-lines li {
+  display: grid;
+  gap: var(--space-3);
+  padding: var(--space-3);
+}
+
+.mobile-lines p {
+  margin: var(--space-1) 0 0;
+}
+
+.line-actions {
+  flex-wrap: wrap;
+}
+
+@container (max-width: 38rem) {
+  .desktop-lines {
+    display: none;
+  }
+
+  .mobile-lines {
+    display: grid;
+    gap: var(--space-3);
+  }
+}
