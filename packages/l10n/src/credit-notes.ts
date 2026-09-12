@@ -21,6 +21,10 @@ export const creditText = {
       'L’avoir intégral reprend les lignes et la TVA de la facture émise. Il annule toute sa créance sans modifier la facture ni son PDF.',
     'credit.reason': 'Motif de l’avoir intégral',
     'credit.issue': 'Émettre l’avoir intégral',
+    'credit.create': 'Émettre un avoir',
+    'credit.options': 'Choisir le type d’avoir',
+    'credit.partial': 'Avoir partiel',
+    'credit.full': 'Avoir intégral',
     'credit.credited': 'Montant couvert par un avoir :',
     'credit.confirmIssue':
       'Émettre un avoir intégral définitif ? La créance sera annulée. La facture et ses règlements seront conservés. Aucun remboursement ne sera exécuté.',
@@ -57,6 +61,10 @@ export const creditText = {
       'The full credit note copies the issued invoice lines and VAT. It cancels the entire debt without changing the invoice or its PDF.',
     'credit.reason': 'Reason for the full credit note',
     'credit.issue': 'Issue full credit note',
+    'credit.create': 'Issue a credit note',
+    'credit.options': 'Select the credit note type',
+    'credit.partial': 'Partial credit note',
+    'credit.full': 'Full credit note',
     'credit.credited': 'Amount covered by a credit note:',
     'credit.confirmIssue':
       'Issue a final full credit note? The debt will be cancelled. The invoice and payments will be kept. No refund will be executed.',

@@ -44,22 +44,24 @@
         >{{ i18n.t('backOffice.invoice.issue') }}</a
       >
       } @else if (actions().recordPayment) {
-      <a
-        appLinkButton
+      <app-split-action
         variant="primary"
-        [routerLink]="['/backoffice/invoices', invoice.id, 'payments', 'new']"
         *appCan="'invoice.mark-paid'"
-        [queryParams]="task.navigation.detailQuery()"
-        >{{ i18n.t('billingWorkspace.recordReceipt') }}</a
-      >
+        [primaryLabel]="i18n.t('billingWorkspace.receipt')"
+        [menuLabel]="i18n.t('billingWorkspace.receiptOptions')"
+        [actions]="paymentActions()"
+        (primaryAction)="openPayment('partial')"
+        (actionSelected)="openPayment($event)"
+      />
       } @if (actions().credit) {
-      <a
-        appLinkButton
-        [routerLink]="['/backoffice/invoices', invoice.id, 'credits', 'new']"
+      <app-split-action
         *appCan="'invoice.credit'"
-        [queryParams]="task.navigation.detailQuery()"
-        >{{ i18n.t('credit.issue') }}</a
-      >
+        [primaryLabel]="i18n.t('credit.create')"
+        [menuLabel]="i18n.t('credit.options')"
+        [actions]="creditActions()"
+        (primaryAction)="openCredit('partial')"
+        (actionSelected)="openCredit($event)"
+      />
       } @if (actions().recordPayment) {
       <a
         appLinkButton

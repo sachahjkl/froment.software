@@ -13,7 +13,7 @@ import {
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormField, form } from '@angular/forms/signals';
 import { DomSanitizer } from '@angular/platform-browser';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { type AuditEventValue } from '@froment/contracts';
 import { type TranslationKey } from '@app/i18n.service';
 import { InvoiceCreditsApi } from '@backoffice/invoice-credits-api';
@@ -26,6 +26,8 @@ import { PageHeader } from '@shared/page-header/page-header';
 import { DocumentTextView } from '@shared/document-text-view/document-text-view';
 import { LocalizedDatePipe } from '@shared/localized-date/localized-date-pipe';
 import { Tabs, type TabItem } from '@shared/tabs/tabs';
+import { SplitAction } from '@shared/split-action/split-action';
+import { type MenuAction } from '@shared/action-menu/action-menu';
 import { InvoiceTask } from '../billing/invoice-task';
 import { activePaidCents, detailBalance, paymentMethodKey } from '../billing/billing-state';
 import {
@@ -52,6 +54,7 @@ import { ClientDescription } from '../client-description/client-description';
     FormField,
     LocalizedDatePipe,
     Tabs,
+    SplitAction,
   ],
   providers: [InvoiceTask],
   templateUrl: './invoice-detail.html',
@@ -67,6 +70,7 @@ export class InvoiceDetail {
   private readonly ordersApi = inject(OrdersApi);
   private readonly sanitizer = inject(DomSanitizer);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly router = inject(Router);
   private readonly query = toSignal(this.task.route.queryParamMap, {
     initialValue: this.task.route.snapshot.queryParamMap,
   });
@@ -111,9 +115,31 @@ export class InvoiceDetail {
     return invoice ? invoiceStatusBadge(invoice.status) : undefined;
   });
   protected readonly actions = computed(() => invoiceActions(this.task.invoice()));
+  protected readonly paymentActions = computed<readonly MenuAction[]>(() => [
+    { id: 'partial', label: this.i18n.t('billingWorkspace.receiptPartial') },
+    { id: 'full', label: this.i18n.t('billingWorkspace.receiptFull') },
+  ]);
+  protected readonly creditActions = computed<readonly MenuAction[]>(() => [
+    { id: 'partial', label: this.i18n.t('credit.partial') },
+    { id: 'full', label: this.i18n.t('credit.full') },
+  ]);
   protected readonly canCancelPayment = canCancelPayment;
   protected readonly recordedEntryStatus = recordedEntryStatus;
   protected readonly paymentMethodKey = paymentMethodKey;
+  protected openPayment(mode: string): void {
+    const invoice = this.task.invoice();
+    if (!invoice || (mode !== 'partial' && mode !== 'full')) return;
+    void this.router.navigate(['/backoffice/invoices', invoice.id, 'payments', 'new'], {
+      queryParams: { ...this.task.navigation.detailQuery(), mode },
+    });
+  }
+  protected openCredit(mode: string): void {
+    const invoice = this.task.invoice();
+    if (!invoice || (mode !== 'partial' && mode !== 'full')) return;
+    void this.router.navigate(['/backoffice/invoices', invoice.id, 'credits', 'new'], {
+      queryParams: { ...this.task.navigation.detailQuery(), mode },
+    });
+  }
   protected readonly paid = computed(() => {
     const invoice = this.task.invoice();
     return invoice ? activePaidCents(invoice) : 0;
