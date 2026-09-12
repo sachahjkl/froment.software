@@ -342,9 +342,9 @@
             volume_mount_path = "/var/lib/froment-software"
             volume_name = "froment-software-$environment-data"
             EOF
-              nomad-pack render ${./deploy/nomad} --var-file "$TMPDIR/$environment.vars.hcl" \
+              nomad-pack render ${./deploy} --var-file "$TMPDIR/$environment.vars.hcl" \
                 --to-dir "$TMPDIR/$environment" --auto-approve >/dev/null
-              nomad job validate "$TMPDIR/$environment/homelab-application/application.nomad"
+              nomad job validate "$TMPDIR/$environment/application/application.nomad"
             done
             touch $out
           '';
