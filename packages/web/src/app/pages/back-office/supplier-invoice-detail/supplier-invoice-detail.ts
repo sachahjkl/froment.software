@@ -7,7 +7,7 @@ import {
   signal,
 } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
-import type { SupplierInvoice } from '@froment/contracts';
+import { BasisPointsPerPercent, type SupplierInvoice } from '@froment/contracts';
 import { formatMoney } from '@froment/l10n';
 
 import { Can } from '@backoffice/can';
@@ -72,6 +72,9 @@ export class SupplierInvoiceDetail {
   protected source(): string {
     const source = this.invoice()?.source;
     return source ? this.i18n.t(`supplierInvoice.source.${source}`) : '';
+  }
+  protected vatRate(basisPoints: number): number {
+    return basisPoints / BasisPointsPerPercent;
   }
   protected async transition(action: 'confirm' | 'approve' | 'cancel'): Promise<void> {
     const invoice = this.invoice();

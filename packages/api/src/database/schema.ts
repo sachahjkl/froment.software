@@ -394,6 +394,75 @@ export const supplierInvoiceLines = sqliteTable(
   ],
 );
 
+export const supplierInvoiceAnalysisSettings = sqliteTable(
+  'supplier_invoice_analysis_settings',
+  {
+    id: integer().notNull().primaryKey(),
+    adapter: text().notNull(),
+    endpoint: text(),
+    encryptedApiKey: text('encrypted_api_key'),
+    encryptionIv: text('encryption_iv'),
+    encryptionTag: text('encryption_tag'),
+    updatedAt: integer('updated_at', { mode: 'timestamp_ms' }),
+  },
+  (table) => [
+    check('supplier_invoice_analysis_settings_singleton_check', sql`${table.id} = 1`),
+    check(
+      'supplier_invoice_analysis_settings_adapter_check',
+      sql`${table.adapter} in ('local', 'http')`,
+    ),
+    check(
+      'supplier_invoice_analysis_settings_encryption_check',
+      sql`(${table.encryptedApiKey} is null and ${table.encryptionIv} is null and ${table.encryptionTag} is null) or (${table.encryptedApiKey} is not null and ${table.encryptionIv} is not null and ${table.encryptionTag} is not null)`,
+    ),
+  ],
+);
+
+export const supplierInvoiceAnalysisSubmissions = sqliteTable(
+  'supplier_invoice_analysis_submissions',
+  {
+    id: text().notNull().primaryKey(),
+    requestId: text('request_id').notNull().unique(),
+    invoiceId: text('invoice_id').references(() => supplierInvoices.id, { onDelete: 'no action' }),
+    supplierId: text('supplier_id')
+      .notNull()
+      .references(() => suppliers.id, { onDelete: 'no action' }),
+    actorUserId: text('actor_user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'no action' }),
+    adapter: text().notNull(),
+    endpointHost: text('endpoint_host'),
+    fileName: text('file_name').notNull(),
+    mediaType: text('media_type').notNull(),
+    contentSha256: text('content_sha256').notNull(),
+    contentBytes: integer('content_bytes').notNull(),
+    consentAt: integer('consent_at', { mode: 'timestamp_ms' }),
+    status: text().notNull(),
+    errorCode: text('error_code'),
+    createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull(),
+    completedAt: integer('completed_at', { mode: 'timestamp_ms' }),
+  },
+  (table) => [
+    check(
+      'supplier_invoice_analysis_submissions_id_ulid_check',
+      sql`${table.id} is not null and length(${table.id}) = 26 and ${table.id} not glob '*[^0-9A-HJKMNP-TV-Z]*' and substr(${table.id}, 1, 1) between '0' and '7'`,
+    ),
+    check(
+      'supplier_invoice_analysis_submissions_request_id_check',
+      sql`length(${table.requestId}) = 36`,
+    ),
+    check(
+      'supplier_invoice_analysis_submissions_hash_check',
+      sql`length(${table.contentSha256}) = 64`,
+    ),
+    check('supplier_invoice_analysis_submissions_size_check', sql`${table.contentBytes} > 0`),
+    check(
+      'supplier_invoice_analysis_submissions_status_check',
+      sql`${table.status} in ('submitted', 'completed', 'failed')`,
+    ),
+  ],
+);
+
 export const clientAccessAccounts = sqliteTable(
   'client_access_accounts',
   {

@@ -3,6 +3,39 @@ export const supplierInvoiceText = {
     'supplierInvoice.title': 'Factures fournisseurs',
     'supplierInvoice.intro': 'Contrôlez et approuvez les factures reçues avant leur paiement.',
     'supplierInvoice.create': 'Saisir une facture',
+    'supplierInvoice.analysis.action': 'Analyser un document',
+    'supplierInvoice.analysis.title': 'Analyser une facture fournisseur',
+    'supplierInvoice.analysis.intro':
+      'Sélectionnez le fournisseur et le document. Contrôlez ensuite le brouillon créé.',
+    'supplierInvoice.analysis.loading': 'Chargement du service d’analyse…',
+    'supplierInvoice.analysis.file': 'Document à analyser',
+    'supplierInvoice.analysis.fileRequired': 'Sélectionnez un document à analyser.',
+    'supplierInvoice.analysis.invalidFile': 'Sélectionnez un fichier PDF, JPEG, PNG ou WebP.',
+    'supplierInvoice.analysis.externalNotice':
+      'Ce document sera envoyé au service externe configuré.',
+    'supplierInvoice.analysis.localNotice': 'Le document reste sur ce serveur pendant l’analyse.',
+    'supplierInvoice.analysis.consent': 'J’autorise cet envoi externe pour ce document.',
+    'supplierInvoice.analysis.submit': 'Créer le brouillon',
+    'supplierInvoice.analysis.failed': 'Impossible d’analyser ce document.',
+    'supplierInvoice.analysisSettings.title': 'Analyse des factures fournisseurs',
+    'supplierInvoice.analysisSettings.intro':
+      'Configurez le service qui extrait les données des documents reçus.',
+    'supplierInvoice.analysisSettings.open': 'Configurer l’analyse',
+    'supplierInvoice.analysisSettings.loading': 'Chargement de la configuration d’analyse…',
+    'supplierInvoice.analysisSettings.adapter': 'Adaptateur',
+    'supplierInvoice.analysisSettings.local': 'Analyse locale simulée',
+    'supplierInvoice.analysisSettings.http': 'Service HTTP externe',
+    'supplierInvoice.analysisSettings.endpoint': 'Adresse HTTPS du service',
+    'supplierInvoice.analysisSettings.apiKey': 'Nouvelle clé API',
+    'supplierInvoice.analysisSettings.credentialPresent':
+      'Une clé API est enregistrée. Laissez ce champ vide pour la conserver.',
+    'supplierInvoice.analysisSettings.credentialMissing': 'Aucune clé API n’est enregistrée.',
+    'supplierInvoice.analysisSettings.save': 'Enregistrer la configuration',
+    'supplierInvoice.analysisSettings.saved': 'La configuration d’analyse est enregistrée.',
+    'supplierInvoice.analysisSettings.error':
+      'Impossible de charger ou d’enregistrer la configuration.',
+    'supplierInvoice.analysisSettings.unsavedChanges':
+      'Abandonner les modifications de la configuration d’analyse ?',
     'supplierInvoice.createTitle': 'Saisir une facture fournisseur',
     'supplierInvoice.editTitle': 'Modifier la facture fournisseur',
     'supplierInvoice.editorIntro':
@@ -62,6 +95,14 @@ export const supplierInvoiceText = {
     'supplier_invoice.invalid_transition':
       'Cette action ne correspond pas à l’état actuel de la facture.',
     'supplier_invoice.supplier_unavailable': 'Le fournisseur sélectionné est indisponible.',
+    'supplier_invoice.analysis_not_configured':
+      'Le service d’analyse des factures fournisseurs n’est pas configuré.',
+    'supplier_invoice.analysis_consent_required':
+      'Donnez votre accord avant l’envoi du document au service externe.',
+    'supplier_invoice.analysis_failed': 'Le service n’a pas pu analyser ce document.',
+    'supplier_invoice.encryption_unavailable':
+      'La clé de chiffrement des secrets est indisponible.',
+    'supplier_invoice.date_order_invalid': 'La date d’échéance doit suivre la date de facture.',
     'page.back_office_supplier_invoices': 'Factures fournisseurs | Froment Software',
     'page.description.back_office_supplier_invoices': 'Gestion des factures fournisseurs.',
     'backOffice.navigation.purchases': 'Achats',
@@ -70,6 +111,37 @@ export const supplierInvoiceText = {
     'supplierInvoice.title': 'Supplier invoices',
     'supplierInvoice.intro': 'Review and approve received invoices before payment.',
     'supplierInvoice.create': 'Enter an invoice',
+    'supplierInvoice.analysis.action': 'Analyze a document',
+    'supplierInvoice.analysis.title': 'Analyze a supplier invoice',
+    'supplierInvoice.analysis.intro':
+      'Select the supplier and document. Then review the created draft.',
+    'supplierInvoice.analysis.loading': 'Loading the analysis service…',
+    'supplierInvoice.analysis.file': 'Document to analyze',
+    'supplierInvoice.analysis.fileRequired': 'Select a document to analyze.',
+    'supplierInvoice.analysis.invalidFile': 'Select a PDF, JPEG, PNG, or WebP file.',
+    'supplierInvoice.analysis.externalNotice':
+      'This document will be sent to the configured external service.',
+    'supplierInvoice.analysis.localNotice': 'The document stays on this server during analysis.',
+    'supplierInvoice.analysis.consent': 'I authorize this external submission for this document.',
+    'supplierInvoice.analysis.submit': 'Create draft',
+    'supplierInvoice.analysis.failed': 'This document cannot be analyzed.',
+    'supplierInvoice.analysisSettings.title': 'Supplier invoice analysis',
+    'supplierInvoice.analysisSettings.intro':
+      'Configure the service that extracts data from received documents.',
+    'supplierInvoice.analysisSettings.open': 'Configure analysis',
+    'supplierInvoice.analysisSettings.loading': 'Loading analysis settings…',
+    'supplierInvoice.analysisSettings.adapter': 'Adapter',
+    'supplierInvoice.analysisSettings.local': 'Simulated local analysis',
+    'supplierInvoice.analysisSettings.http': 'External HTTP service',
+    'supplierInvoice.analysisSettings.endpoint': 'Service HTTPS address',
+    'supplierInvoice.analysisSettings.apiKey': 'New API key',
+    'supplierInvoice.analysisSettings.credentialPresent':
+      'An API key is stored. Leave this field empty to keep it.',
+    'supplierInvoice.analysisSettings.credentialMissing': 'No API key is stored.',
+    'supplierInvoice.analysisSettings.save': 'Save settings',
+    'supplierInvoice.analysisSettings.saved': 'The analysis settings are saved.',
+    'supplierInvoice.analysisSettings.error': 'The settings cannot be loaded or saved.',
+    'supplierInvoice.analysisSettings.unsavedChanges': 'Discard the analysis settings changes?',
     'supplierInvoice.createTitle': 'Enter a supplier invoice',
     'supplierInvoice.editTitle': 'Edit supplier invoice',
     'supplierInvoice.editorIntro': 'Enter the received document data. Confirm it after review.',
@@ -126,6 +198,13 @@ export const supplierInvoiceText = {
     'supplier_invoice.not_editable': 'Only a draft can be edited.',
     'supplier_invoice.invalid_transition': 'This action does not match the current invoice status.',
     'supplier_invoice.supplier_unavailable': 'The selected supplier is unavailable.',
+    'supplier_invoice.analysis_not_configured':
+      'The supplier invoice analysis service is not configured.',
+    'supplier_invoice.analysis_consent_required':
+      'Give consent before sending the document to the external service.',
+    'supplier_invoice.analysis_failed': 'The service could not analyze this document.',
+    'supplier_invoice.encryption_unavailable': 'The secret encryption key is unavailable.',
+    'supplier_invoice.date_order_invalid': 'The due date must follow the invoice date.',
     'page.back_office_supplier_invoices': 'Supplier invoices | Froment Software',
     'page.description.back_office_supplier_invoices': 'Supplier invoice management.',
     'backOffice.navigation.purchases': 'Purchases',
@@ -167,6 +246,22 @@ export const supplierInvoiceDocumentation = {
         summary: 'Annuler une facture fournisseur',
         description: 'Annule un brouillon ou une facture confirmée.',
       },
+      supplierInvoiceAnalysisSettings: {
+        summary: 'Lire la configuration d’analyse',
+        description: 'Retourne l’adaptateur actif sans exposer ses secrets.',
+      },
+      supplierInvoiceAnalysisStatus: {
+        summary: 'Lire le mode d’analyse',
+        description: 'Indique si l’analyse envoie le document à un service externe.',
+      },
+      supplierInvoiceAnalysisSettingsUpdate: {
+        summary: 'Configurer l’analyse des factures fournisseurs',
+        description: 'Configure un adaptateur local ou HTTP et chiffre ses identifiants.',
+      },
+      supplierInvoiceAnalyze: {
+        summary: 'Analyser une facture fournisseur',
+        description: 'Crée un brouillon OCR après le consentement requis.',
+      },
     },
   },
   en: {
@@ -202,6 +297,22 @@ export const supplierInvoiceDocumentation = {
       supplierInvoiceCancel: {
         summary: 'Cancel a supplier invoice',
         description: 'Cancels a draft or confirmed invoice.',
+      },
+      supplierInvoiceAnalysisSettings: {
+        summary: 'Get analysis settings',
+        description: 'Returns the active adapter without exposing its secrets.',
+      },
+      supplierInvoiceAnalysisStatus: {
+        summary: 'Get the analysis mode',
+        description: 'Indicates if analysis sends the document to an external service.',
+      },
+      supplierInvoiceAnalysisSettingsUpdate: {
+        summary: 'Configure supplier invoice analysis',
+        description: 'Configures a local or HTTP adapter and encrypts its credentials.',
+      },
+      supplierInvoiceAnalyze: {
+        summary: 'Analyze a supplier invoice',
+        description: 'Creates an OCR draft after the required consent.',
       },
     },
   },

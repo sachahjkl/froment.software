@@ -14,6 +14,14 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import {
   CalendarDate,
   SupplierInvoiceLineInput,
+  SupplierInvoiceMaximumDescriptionLength,
+  SupplierInvoiceMaximumLineCount,
+  SupplierInvoiceMaximumNetAmountCents,
+  SupplierInvoiceMaximumNotesLength,
+  SupplierInvoiceMaximumReferenceLength,
+  SupplierInvoiceMaximumVatRateBasisPoints,
+  SupplierInvoiceMoneyDecimalPlaces,
+  SupplierInvoicePercentageDecimalPlaces,
   type SupplierInvoice,
   type SupplierInvoiceLineInput as SupplierInvoiceLineInputValue,
 } from '@froment/contracts';
@@ -43,7 +51,7 @@ interface Model {
   readonly notes: string;
   readonly lines: ReadonlyArray<LineModel>;
 }
-const emptyLine = (): LineModel => ({ description: '', netAmount: '', vatRate: '20.00' });
+const emptyLine = (): LineModel => ({ description: '', netAmount: '', vatRate: '' });
 const emptyModel = (): Model => ({
   supplierId: '',
   reference: '',
@@ -79,7 +87,7 @@ export class SupplierInvoiceEditor {
     required(path.supplierId);
     required(path.reference);
     pattern(path.reference, /\S/);
-    maxLength(path.reference, 80);
+    maxLength(path.reference, SupplierInvoiceMaximumReferenceLength);
     required(path.invoiceDate);
     validate(path.invoiceDate, ({ value }) =>
       Schema.is(CalendarDate)(value()) ? undefined : { kind: 'date' },
@@ -92,21 +100,23 @@ export class SupplierInvoiceEditor {
     );
     required(path.currency);
     pattern(path.currency, /^[A-Z]{3}$/);
-    maxLength(path.notes, 4_000);
+    maxLength(path.notes, SupplierInvoiceMaximumNotesLength);
     minLength(path.lines, 1);
     applyEach(path.lines, (line) => {
       required(line.description);
       pattern(line.description, /\S/);
-      maxLength(line.description, 500);
+      maxLength(line.description, SupplierInvoiceMaximumDescriptionLength);
       validate(line.netAmount, ({ value }) => {
-        const amount = parseFixedDecimal(value(), 2);
-        return amount === undefined || amount < 0 || amount > 4_000_000_000_000
+        const amount = parseFixedDecimal(value(), SupplierInvoiceMoneyDecimalPlaces);
+        return amount === undefined || amount < 0 || amount > SupplierInvoiceMaximumNetAmountCents
           ? { kind: 'amount' }
           : undefined;
       });
       validate(line.vatRate, ({ value }) => {
-        const rate = parseFixedDecimal(value(), 2);
-        return rate === undefined || rate < 0 || rate > 10_000 ? { kind: 'rate' } : undefined;
+        const rate = parseFixedDecimal(value(), SupplierInvoicePercentageDecimalPlaces);
+        return rate === undefined || rate < 0 || rate > SupplierInvoiceMaximumVatRateBasisPoints
+          ? { kind: 'rate' }
+          : undefined;
       });
     });
   });
@@ -124,7 +134,7 @@ export class SupplierInvoiceEditor {
     return this.i18n.t(this.editing ? 'supplierInvoice.editTitle' : 'supplierInvoice.createTitle');
   }
   protected addLine(): void {
-    if (this.model().lines.length >= 500) return;
+    if (this.model().lines.length >= SupplierInvoiceMaximumLineCount) return;
     this.model.update((model) => ({ ...model, lines: [...model.lines, emptyLine()] }));
     this.invoiceForm().markAsDirty();
   }
@@ -199,8 +209,8 @@ export class SupplierInvoiceEditor {
   private decodeLines(): ReadonlyArray<SupplierInvoiceLineInputValue> | undefined {
     const lines = this.model().lines.map((line) => ({
       description: line.description,
-      netTotalCents: parseFixedDecimal(line.netAmount, 2),
-      vatRateBasisPoints: parseFixedDecimal(line.vatRate, 2),
+      netTotalCents: parseFixedDecimal(line.netAmount, SupplierInvoiceMoneyDecimalPlaces),
+      vatRateBasisPoints: parseFixedDecimal(line.vatRate, SupplierInvoicePercentageDecimalPlaces),
     }));
     if (
       lines.some(
@@ -234,8 +244,11 @@ export class SupplierInvoiceEditor {
         notes: outcome.result.notes,
         lines: outcome.result.lines.map((line) => ({
           description: line.description,
-          netAmount: formatFixedDecimal(line.netTotalCents, 2),
-          vatRate: formatFixedDecimal(line.vatRateBasisPoints, 2),
+          netAmount: formatFixedDecimal(line.netTotalCents, SupplierInvoiceMoneyDecimalPlaces),
+          vatRate: formatFixedDecimal(
+            line.vatRateBasisPoints,
+            SupplierInvoicePercentageDecimalPlaces,
+          ),
         })),
       });
     } catch {

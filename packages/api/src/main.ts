@@ -20,6 +20,7 @@ import { ClientsLive } from './clients/clients.js';
 import { CompanyLive } from './company/service.js';
 import { SuppliersLive } from './suppliers/service.js';
 import { SupplierInvoicesLive } from './supplier-invoices/service.js';
+import { SupplierInvoiceAnalysisLive } from './supplier-invoices/analysis-service.js';
 import { DatabaseLive } from './database/database.js';
 import { DeploymentLive } from './deployment/deployment.js';
 import { IssuerSettingsLive } from './issuer-settings/service.js';
@@ -87,6 +88,7 @@ const ServicesLive = Layer.mergeAll(
   CompanyLive,
   SuppliersLive,
   SupplierInvoicesLive,
+  SupplierInvoiceAnalysisLive.pipe(Layer.provide(SupplierInvoicesLive)),
   InvoicePdfRuntimeLive,
   QuoteLinksLive.pipe(Layer.provide(BusinessConfigLive)),
   QuoteConditionPresetsLive,

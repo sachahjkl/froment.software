@@ -1,5 +1,5 @@
 import { AppEnvironment, SitePhase } from '@froment/contracts';
-import { Config, Context, Layer, Schema } from 'effect';
+import { Config, Context, Layer, Option, Schema } from 'effect';
 
 const PositiveInt = Schema.Int.check(Schema.isGreaterThan(0));
 
@@ -54,7 +54,13 @@ export const defaultRuntimeConfig = {
   documentRenderer: { concurrency: 2, maximumOutputBytes: 1_048_576 },
   invoicePdfWorker: { concurrency: 1, intervalMillis: 1_000 },
   database: { busyTimeoutMillis: 5_000 },
-  http: { maximumRequestBodyBytes: 32_768, maximumBankImportBodyBytes: 3_001_024 },
+  http: {
+    maximumRequestBodyBytes: 32_768,
+    maximumBankImportBodyBytes: 3_001_024,
+    maximumSupplierInvoiceAnalysisBodyBytes: 8_001_024,
+  },
+  secrets: { settingsEncryptionKey: Option.none() },
+  supplierInvoiceAnalysis: { apiKey: Option.none(), requestTimeoutMillis: 20_000 },
 } as const;
 
 export const RuntimeConfig = {
@@ -186,6 +192,20 @@ export const RuntimeConfig = {
     maximumBankImportBodyBytes: positiveInt(
       'HTTP_MAXIMUM_BANK_IMPORT_BODY_BYTES',
       defaultRuntimeConfig.http.maximumBankImportBodyBytes,
+    ),
+    maximumSupplierInvoiceAnalysisBodyBytes: positiveInt(
+      'HTTP_MAXIMUM_SUPPLIER_INVOICE_ANALYSIS_BODY_BYTES',
+      defaultRuntimeConfig.http.maximumSupplierInvoiceAnalysisBodyBytes,
+    ),
+  }),
+  secrets: Config.all({
+    settingsEncryptionKey: Config.option(Config.redacted('SETTINGS_ENCRYPTION_KEY')),
+  }),
+  supplierInvoiceAnalysis: Config.all({
+    apiKey: Config.option(Config.redacted('SUPPLIER_INVOICE_ANALYSIS_API_KEY')),
+    requestTimeoutMillis: positiveInt(
+      'SUPPLIER_INVOICE_ANALYSIS_REQUEST_TIMEOUT_MILLIS',
+      defaultRuntimeConfig.supplierInvoiceAnalysis.requestTimeoutMillis,
     ),
   }),
 } as const;

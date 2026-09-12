@@ -63,4 +63,14 @@ export const configurationRoutes: Routes = [
       import('../../business-card/business-card').then((module) => module.BusinessCard),
     canDeactivate: [unsavedChangesGuard],
   },
+  {
+    path: 'supplier-invoice-analysis',
+    canActivate: [permissionsGuard],
+    data: permissionData('integration.configure'),
+    loadComponent: () =>
+      import('../supplier-invoice-analysis-settings/supplier-invoice-analysis-settings').then(
+        (module) => module.SupplierInvoiceAnalysisSettingsPage,
+      ),
+    canDeactivate: [unsavedChangesGuard],
+  },
 ];

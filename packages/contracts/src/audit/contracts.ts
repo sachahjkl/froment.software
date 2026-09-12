@@ -48,6 +48,8 @@ export const AuditActions = [
   'supplier-invoice.confirmed',
   'supplier-invoice.approved',
   'supplier-invoice.cancelled',
+  'supplier-invoice.analysis-settings-updated',
+  'supplier-invoice.analysis-submitted',
   'supplier.updated',
   'catalog.created',
   'catalog.updated',

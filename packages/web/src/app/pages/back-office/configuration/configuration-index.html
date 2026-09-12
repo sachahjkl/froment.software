@@ -19,5 +19,12 @@
         >{{ i18n.t('configurationWorkspace.businessCard') }}</a
       >
     </section>
+    <section class="ds-panel">
+      <h2>{{ i18n.t('supplierInvoice.analysisSettings.title') }}</h2>
+      <p>{{ i18n.t('supplierInvoice.analysisSettings.intro') }}</p>
+      <a *appCan="'integration.configure'" routerLink="supplier-invoice-analysis"
+        >{{ i18n.t('supplierInvoice.analysisSettings.open') }}</a
+      >
+    </section>
   </div>
 </section>

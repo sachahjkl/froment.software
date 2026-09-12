@@ -1,14 +1,17 @@
 import { SupplierInvoice, SupplierSummary } from '@froment/contracts';
 import { Schema } from 'effect';
+import Sqlite from 'better-sqlite3';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 import { startHttpTestServer, type HttpTestServer } from '../server/server.spec-helper.js';
 
 describe('supplier invoice HTTP lifecycle', () => {
+  const settingsEncryptionKeyBytes = 32;
+  const settingsEncryptionKey = Buffer.alloc(settingsEncryptionKeyBytes, 's').toString('base64');
   let server: HttpTestServer;
 
   beforeAll(async () => {
-    server = await startHttpTestServer();
+    server = await startHttpTestServer({ settingsEncryptionKey });
   }, 30_000);
   afterAll(async () => server.close());
 
@@ -137,5 +140,113 @@ describe('supplier invoice HTTP lifecycle', () => {
     expect(listResponse.status).toBe(200);
     const list = Schema.decodeUnknownSync(Schema.Array(SupplierInvoice))(await listResponse.json());
     expect(list).toHaveLength(1);
+  });
+
+  it('creates an OCR draft and records explicit external consent', async () => {
+    const supplierResponse = await fetch(`${server.baseUrl}/api/suppliers`, {
+      method: 'POST',
+      headers: server.jsonHeaders,
+      body: JSON.stringify({
+        requestId: crypto.randomUUID(),
+        displayName: 'OCR supplier',
+        addressLine1: '',
+        addressLine2: '',
+        postalCode: '',
+        city: '',
+        country: 'France',
+        email: '',
+        phone: '',
+        registrationNumber: '',
+        vatNumber: '',
+        defaultCurrency: 'EUR',
+        paymentTermsDays: 30,
+        iban: '',
+        bic: '',
+      }),
+    });
+    const supplier = Schema.decodeUnknownSync(SupplierSummary)(await supplierResponse.json());
+    const analysisRequest = {
+      requestId: crypto.randomUUID(),
+      supplierId: supplier.id,
+      fileName: 'OCR-2026-9.pdf',
+      mediaType: 'application/pdf',
+      contentBase64: Buffer.from('fixture document').toString('base64'),
+      consent: false,
+    };
+    const analysisResponse = await fetch(`${server.baseUrl}/api/supplier-invoices/analyze`, {
+      method: 'POST',
+      headers: server.jsonHeaders,
+      body: JSON.stringify(analysisRequest),
+    });
+    expect(analysisResponse.status).toBe(200);
+    const invoice = Schema.decodeUnknownSync(SupplierInvoice)(await analysisResponse.json());
+    expect(invoice).toMatchObject({
+      supplierId: supplier.id,
+      reference: 'OCR-2026-9',
+      source: 'ocr',
+      sourceFileName: analysisRequest.fileName,
+      status: 'draft',
+    });
+
+    const settingsResponse = await fetch(
+      `${server.baseUrl}/api/supplier-invoice-analysis/settings`,
+      {
+        method: 'PUT',
+        headers: server.jsonHeaders,
+        body: JSON.stringify({
+          adapter: 'http',
+          endpoint: 'https://analysis.example.test/invoices',
+          apiKey: 'external-secret',
+        }),
+      },
+    );
+    expect(settingsResponse.status).toBe(200);
+    await expect(settingsResponse.json()).resolves.toMatchObject({
+      adapter: 'http',
+      credentialsPresent: true,
+      external: true,
+    });
+
+    const deniedResponse = await fetch(`${server.baseUrl}/api/supplier-invoices/analyze`, {
+      method: 'POST',
+      headers: server.jsonHeaders,
+      body: JSON.stringify({ ...analysisRequest, requestId: crypto.randomUUID() }),
+    });
+    expect(deniedResponse.status).toBe(409);
+    await expect(deniedResponse.json()).resolves.toMatchObject({
+      code: 'supplier_invoice.analysis_consent_required',
+    });
+
+    const sqlite = new Sqlite(server.databaseFilename, { readonly: true });
+    const settings = sqlite
+      .prepare(
+        `select encrypted_api_key as encryptedApiKey, encryption_iv as encryptionIv,
+         encryption_tag as encryptionTag from supplier_invoice_analysis_settings where id = 1`,
+      )
+      .get() as {
+      encryptedApiKey: string;
+      encryptionIv: string;
+      encryptionTag: string;
+    };
+    expect(settings.encryptedApiKey).not.toContain('external-secret');
+    expect(settings.encryptionIv).toBeTruthy();
+    expect(settings.encryptionTag).toBeTruthy();
+    expect(
+      sqlite
+        .prepare(
+          `select count(*) as count from audit_events
+           where action in ('supplier-invoice.analysis-settings-updated', 'supplier-invoice.analysis-submitted')`,
+        )
+        .get(),
+    ).toEqual({ count: 2 });
+    expect(
+      sqlite
+        .prepare(
+          `select adapter, consent_at as consentAt, status
+           from supplier_invoice_analysis_submissions where request_id = ?`,
+        )
+        .get(analysisRequest.requestId),
+    ).toEqual({ adapter: 'local', consentAt: null, status: 'completed' });
+    sqlite.close();
   });
 });

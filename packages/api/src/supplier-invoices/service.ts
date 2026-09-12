@@ -3,6 +3,7 @@ import {
   SupplierInvoiceConflict,
   SupplierInvoiceLine,
   SupplierInvoiceList,
+  SupplierInvoiceMaximumVatRateBasisPoints,
   SupplierInvoiceNotFound,
   type SupplierInvoiceCreateRequest,
   type SupplierInvoiceLineInput,
@@ -52,7 +53,9 @@ const selectInvoice = `select i.id, i.request_id as requestId, i.request, i.supp
 
 const lineValues = (lines: ReadonlyArray<SupplierInvoiceLineInput>) =>
   lines.map((line, position) => {
-    const vatTotalCents = Math.round((line.netTotalCents * line.vatRateBasisPoints) / 10_000);
+    const vatTotalCents = Math.round(
+      (line.netTotalCents * line.vatRateBasisPoints) / SupplierInvoiceMaximumVatRateBasisPoints,
+    );
     return {
       id: ulid(),
       position,

@@ -2,14 +2,14 @@
   <app-page-header>
     <h1 id="supplier-invoices-title">{{ i18n.t('supplierInvoice.title') }}</h1>
     <p>{{ i18n.t('supplierInvoice.intro') }}</p>
-    <a
-      *appCan="'supplier-invoice.create'"
-      pageActions
-      appLinkButton
-      variant="primary"
-      routerLink="new"
-      >{{ i18n.t('supplierInvoice.create') }}</a
-    >
+    <div pageActions class="spacer-x-2">
+      <a *appCan="'supplier-invoice.analyze'" appLinkButton routerLink="analyze"
+        >{{ i18n.t('supplierInvoice.analysis.action') }}</a
+      >
+      <a *appCan="'supplier-invoice.create'" appLinkButton variant="primary" routerLink="new"
+        >{{ i18n.t('supplierInvoice.create') }}</a
+      >
+    </div>
   </app-page-header>
   @if (error(); as code) {
   <p appNotice variant="danger" role="alert">{{ i18n.t(code) }}</p>

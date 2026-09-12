@@ -95,6 +95,53 @@ describe('SupplierInvoicesApi', () => {
       transitionRequest.flush({ ...invoice, version: 3, updatedAt: 3 });
       await expect(transition).resolves.toMatchObject({ success: true });
     }
+
+    const settingsResult = api.analysisSettings();
+    http.expectOne('/api/supplier-invoice-analysis/settings').flush({
+      adapter: 'local',
+      endpoint: null,
+      credentialsPresent: false,
+      external: false,
+      updatedAt: null,
+    });
+    await expect(settingsResult).resolves.toMatchObject({ success: true });
+
+    const statusResult = api.analysisStatus();
+    http.expectOne('/api/supplier-invoice-analysis/status').flush({ external: false });
+    await expect(statusResult).resolves.toMatchObject({ success: true });
+
+    const settings = {
+      adapter: 'http' as const,
+      endpoint: 'https://analysis.example.test/invoices',
+      apiKey: 'secret',
+    };
+    const settingsUpdate = api.updateAnalysisSettings(settings);
+    const settingsRequest = http.expectOne('/api/supplier-invoice-analysis/settings');
+    expect(settingsRequest.request.method).toBe('PUT');
+    expect(settingsRequest.request.body).toEqual(settings);
+    settingsRequest.flush({
+      adapter: 'http',
+      endpoint: settings.endpoint,
+      credentialsPresent: true,
+      external: true,
+      updatedAt: 2,
+    });
+    await expect(settingsUpdate).resolves.toMatchObject({ success: true });
+
+    const analysis = {
+      requestId: '4d346efb-633e-48b9-8db3-9afbff408a40',
+      supplierId: invoice.supplierId,
+      fileName: 'invoice.pdf',
+      mediaType: 'application/pdf' as const,
+      contentBase64: 'dGVzdA==',
+      consent: true,
+    };
+    const analysisResult = api.analyze(analysis);
+    const analysisRequest = http.expectOne('/api/supplier-invoices/analyze');
+    expect(analysisRequest.request.method).toBe('POST');
+    expect(analysisRequest.request.body).toEqual(analysis);
+    analysisRequest.flush({ ...invoice, source: 'ocr', sourceFileName: analysis.fileName });
+    await expect(analysisResult).resolves.toMatchObject({ success: true });
     http.verify();
   });
 });

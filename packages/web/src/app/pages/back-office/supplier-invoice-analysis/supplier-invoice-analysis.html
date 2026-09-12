@@ -1,0 +1,56 @@
+<section class="detail-page form-page" aria-labelledby="supplier-invoice-analysis-title">
+  <app-page-header layout="stacked">
+    <app-breadcrumbs
+      pageBack
+      [label]="i18n.t('backOfficeShell.breadcrumb')"
+      [items]="breadcrumbs()"
+      [current]="i18n.t('supplierInvoice.analysis.title')"
+    />
+    <h1 id="supplier-invoice-analysis-title">{{ i18n.t('supplierInvoice.analysis.title') }}</h1>
+    <p>{{ i18n.t('supplierInvoice.analysis.intro') }}</p>
+  </app-page-header>
+  @if (error(); as code) {
+  <p appNotice variant="danger" role="alert">{{ i18n.t(code) }}</p>
+  } @if (loading()) {
+  <p role="status">{{ i18n.t('supplierInvoice.analysis.loading') }}</p>
+  } @else {
+  <form novalidate (submit)="analyze($event)">
+    <div class="ds-panel form-panel">
+      <label class="field" for="analysis-supplier"
+        >{{ i18n.t('supplierInvoice.supplier') }}<select
+          id="analysis-supplier"
+          class="select"
+          [formField]="analysisForm.supplierId"
+        >
+          <option value="">{{ i18n.t('supplierInvoice.chooseSupplier') }}</option>
+          @for (supplier of suppliers(); track supplier.id) {
+          <option [value]="supplier.id">{{ supplier.displayName }}</option>
+          }
+        </select></label
+      >
+      <label class="field" for="analysis-file"
+        >{{ i18n.t('supplierInvoice.analysis.file') }}<input
+          id="analysis-file"
+          class="input"
+          type="file"
+          accept="application/pdf,image/jpeg,image/png,image/webp"
+          (change)="selectFile($event)"
+      /></label>
+      @if (external()) {
+      <p appNotice variant="warning">{{ i18n.t('supplierInvoice.analysis.externalNotice') }}</p>
+      <label class="consent"
+        ><input type="checkbox" [formField]="analysisForm.consent" />{{
+        i18n.t('supplierInvoice.analysis.consent') }}</label
+      >
+      } @else {
+      <p class="muted">{{ i18n.t('supplierInvoice.analysis.localNotice') }}</p>
+      }
+    </div>
+    <div class="actions spacer-x-2">
+      <button appButton variant="primary" type="submit" [disabled]="submitting()">
+        {{ i18n.t('supplierInvoice.analysis.submit') }}
+      </button>
+    </div>
+  </form>
+  }
+</section>

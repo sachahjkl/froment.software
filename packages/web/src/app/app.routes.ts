@@ -267,6 +267,20 @@ export const routes: Routes = [
     },
   },
   {
+    path: 'backoffice/purchases/analyze',
+    loadComponent: () =>
+      import('./pages/back-office/supplier-invoice-analysis/supplier-invoice-analysis').then(
+        (module) => module.SupplierInvoiceAnalysisPage,
+      ),
+    canActivate: [administratorGuard],
+    data: {
+      shell: 'administrator',
+      titleKey: 'supplierInvoice.analysis.title',
+      ...permissionData('supplier-invoice.analyze', 'supplier.read'),
+      robots: 'noindex, nofollow',
+    },
+  },
+  {
     path: 'backoffice/purchases/:invoiceId/edit',
     loadComponent: () =>
       import('./pages/back-office/supplier-invoice-editor/supplier-invoice-editor').then(

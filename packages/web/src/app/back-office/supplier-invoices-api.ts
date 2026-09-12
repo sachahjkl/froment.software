@@ -2,6 +2,10 @@ import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import {
   SupplierInvoice,
+  SupplierInvoiceAnalysisRequest,
+  SupplierInvoiceAnalysisSettings,
+  SupplierInvoiceAnalysisStatus,
+  SupplierInvoiceAnalysisSettingsUpdate,
   SupplierInvoiceCreateRequest,
   SupplierInvoiceFailure,
   SupplierInvoiceList,
@@ -48,6 +52,38 @@ export class SupplierInvoicesApi {
   transition(id: string, action: 'confirm' | 'approve' | 'cancel', expectedVersion: number) {
     return requestOutcome(
       this.http.post(`/api/supplier-invoices/${id}/${action}`, { expectedVersion }),
+      SupplierInvoice,
+      SupplierInvoiceFailure,
+      'supplierInvoice.error',
+    );
+  }
+  analysisSettings() {
+    return requestOutcome(
+      this.http.get('/api/supplier-invoice-analysis/settings'),
+      SupplierInvoiceAnalysisSettings,
+      SupplierInvoiceFailure,
+      'supplierInvoice.error',
+    );
+  }
+  analysisStatus() {
+    return requestOutcome(
+      this.http.get('/api/supplier-invoice-analysis/status'),
+      SupplierInvoiceAnalysisStatus,
+      SupplierInvoiceFailure,
+      'supplierInvoice.error',
+    );
+  }
+  updateAnalysisSettings(request: typeof SupplierInvoiceAnalysisSettingsUpdate.Type) {
+    return requestOutcome(
+      this.http.put('/api/supplier-invoice-analysis/settings', request),
+      SupplierInvoiceAnalysisSettings,
+      SupplierInvoiceFailure,
+      'supplierInvoice.error',
+    );
+  }
+  analyze(request: typeof SupplierInvoiceAnalysisRequest.Type) {
+    return requestOutcome(
+      this.http.post('/api/supplier-invoices/analyze', request),
       SupplierInvoice,
       SupplierInvoiceFailure,
       'supplierInvoice.error',

@@ -1,0 +1,60 @@
+<section class="detail-page form-page" aria-labelledby="analysis-settings-title">
+  <app-page-header layout="stacked">
+    <app-breadcrumbs
+      pageBack
+      [label]="i18n.t('backOfficeShell.breadcrumb')"
+      [items]="breadcrumbs()"
+      [current]="i18n.t('supplierInvoice.analysisSettings.title')"
+    />
+    <h1 id="analysis-settings-title">{{ i18n.t('supplierInvoice.analysisSettings.title') }}</h1>
+    <p>{{ i18n.t('supplierInvoice.analysisSettings.intro') }}</p>
+  </app-page-header>
+  @if (error(); as code) {
+  <p appNotice variant="danger" role="alert">{{ i18n.t(code) }}</p>
+  } @if (saved()) {
+  <p appNotice variant="success" role="status">
+    {{ i18n.t('supplierInvoice.analysisSettings.saved') }}
+  </p>
+  } @if (loading()) {
+  <p role="status">{{ i18n.t('supplierInvoice.analysisSettings.loading') }}</p>
+  } @else {
+  <form novalidate (submit)="save($event)">
+    <div class="ds-panel form-panel">
+      <label class="field" for="analysis-adapter"
+        >{{ i18n.t('supplierInvoice.analysisSettings.adapter') }}<select
+          id="analysis-adapter"
+          class="select"
+          [formField]="settingsForm.adapter"
+        >
+          <option value="local">{{ i18n.t('supplierInvoice.analysisSettings.local') }}</option>
+          <option value="http">{{ i18n.t('supplierInvoice.analysisSettings.http') }}</option>
+        </select></label
+      >
+      @if (external()) {
+      <label class="field" for="analysis-endpoint"
+        >{{ i18n.t('supplierInvoice.analysisSettings.endpoint') }}<input
+          id="analysis-endpoint"
+          class="input"
+          type="url"
+          inputmode="url"
+          [formField]="settingsForm.endpoint"
+      /></label>
+      <label class="field" for="analysis-api-key"
+        >{{ i18n.t('supplierInvoice.analysisSettings.apiKey') }}<input
+          id="analysis-api-key"
+          class="input"
+          type="password"
+          autocomplete="new-password"
+          [formField]="settingsForm.apiKey"
+      /></label>
+      <p class="muted">{{ credentialState() }}</p>
+      }
+    </div>
+    <div class="actions">
+      <button appButton variant="primary" type="submit" [disabled]="saving()">
+        {{ i18n.t('supplierInvoice.analysisSettings.save') }}
+      </button>
+    </div>
+  </form>
+  }
+</section>

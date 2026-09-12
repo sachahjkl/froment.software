@@ -86,14 +86,15 @@ describe('ConfigurationIndex', () => {
       expect(route.redirectTo).toBeUndefined();
     }
   });
-  it('keeps only company and documents in configuration', async () => {
+  it('keeps company, documents, and invoice analysis in configuration', async () => {
     TestBed.configureTestingModule({ providers: [provideRouter([])] });
     const fixture = TestBed.createComponent(ConfigurationIndex);
     await fixture.whenStable();
     const root: HTMLElement = fixture.nativeElement;
-    expect(root.querySelectorAll('.groups section')).toHaveLength(2);
+    expect(root.querySelectorAll('.groups section')).toHaveLength(3);
     expect(root.querySelector('a[href$="business-card"]')).not.toBeNull();
     expect(root.querySelector('a[href$="company"]')).not.toBeNull();
+    expect(root.querySelector('a[href$="supplier-invoice-analysis"]')).not.toBeNull();
     for (const path of ['team', 'api', 'services', 'audit']) {
       expect(root.querySelector(`a[href$="${path}"]`)).toBeNull();
     }

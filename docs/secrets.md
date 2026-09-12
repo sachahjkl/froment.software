@@ -14,6 +14,8 @@ Les secrets d’authentification restent propres à chaque profil. Une valeur ma
 Chaque profil lit uniquement son fichier SOPS. Aucun repli entre profils n’est configuré.
 Renseignez les clés des prestataires dans chaque fichier où elles sont nécessaires.
 Les identifiants de prestataires restent facultatifs tant que les adaptateurs ne sont pas activés.
+La clé `SUPPLIER_INVOICE_ANALYSIS_API_KEY` initialise l’adaptateur d’analyse quand elle existe.
+L’administration peut remplacer cette clé avec `SETTINGS_ENCRYPTION_KEY` configurée.
 
 Lors du passage en service réel, renseignez ensemble les identifiants liés : client OAuth et secret, clé Stripe et secret de webhook.
 

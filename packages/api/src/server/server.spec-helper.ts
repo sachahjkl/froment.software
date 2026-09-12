@@ -62,7 +62,11 @@ export interface HttpTestServer {
 }
 
 export const startHttpTestServer = async (
-  options: { readonly stripeWebhookSecret?: string; readonly auditPageSize?: number } = {},
+  options: {
+    readonly stripeWebhookSecret?: string;
+    readonly auditPageSize?: number;
+    readonly settingsEncryptionKey?: string;
+  } = {},
 ): Promise<HttpTestServer> => {
   const staticRoot = await mkdtemp(join(tmpdir(), 'froment-api-'));
   await cp(join(import.meta.dirname, '../../../web/dist/froment-software/browser'), staticRoot, {
@@ -76,6 +80,7 @@ export const startHttpTestServer = async (
     STRIPE_SECRET_KEY: '',
     STRIPE_WEBHOOK_SECRET: options.stripeWebhookSecret ?? '',
     SIGNWELL_API_KEY: '',
+    SETTINGS_ENCRYPTION_KEY: options.settingsEncryptionKey ?? '',
     SUPERPDP_CLIENT_ID: '',
     SUPERPDP_CLIENT_SECRET: '',
     API_TOKEN_HMAC_KEY: 'DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD',

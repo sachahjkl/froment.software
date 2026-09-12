@@ -38,6 +38,7 @@ export const Permissions = {
   supplierInvoiceCreate: { code: 'supplier-invoice.create', audiences: ['api-token'] },
   supplierInvoiceUpdate: { code: 'supplier-invoice.update', audiences: ['api-token'] },
   supplierInvoiceApprove: { code: 'supplier-invoice.approve', audiences: [] },
+  supplierInvoiceAnalyze: { code: 'supplier-invoice.analyze', audiences: [] },
   quoteRead: { code: 'quote.read', audiences: ['api-token', 'client'] },
   quoteCreate: { code: 'quote.create', audiences: ['api-token'] },
   quoteUpdate: { code: 'quote.update', audiences: ['api-token'] },

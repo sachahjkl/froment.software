@@ -105,7 +105,7 @@
         <tr>
           <th scope="row">{{ line.description }}</th>
           <td>{{ money(line.netTotalCents) }}</td>
-          <td>{{ line.vatRateBasisPoints / 100 }} %</td>
+          <td>{{ vatRate(line.vatRateBasisPoints) }} %</td>
           <td>{{ money(line.totalCents) }}</td>
         </tr>
         }

@@ -4,10 +4,12 @@ import { HttpApiBuilder } from 'effect/unstable/httpapi';
 
 import { setPrivateResponseHeaders } from '../http/response.js';
 import { SupplierInvoices } from './service.js';
+import { SupplierInvoiceAnalysis } from './analysis-service.js';
 
 export const SupplierInvoiceHandlers = HttpApiBuilder.group(Api, 'supplierInvoices', (handlers) =>
   Effect.gen(function* () {
     const invoices = yield* SupplierInvoices;
+    const analysis = yield* SupplierInvoiceAnalysis;
     const principal = () => Effect.map(ApiPrincipal, ({ userId }) => userId);
     return handlers
       .handle('supplierInvoiceList', () =>
@@ -77,6 +79,34 @@ export const SupplierInvoiceHandlers = HttpApiBuilder.group(Api, 'supplierInvoic
               'cancelled',
               yield* principal(),
             )
+            .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
+        }),
+      )
+      .handle('supplierInvoiceAnalysisSettings', () =>
+        setPrivateResponseHeaders.pipe(
+          Effect.andThen(analysis.getSettings()),
+          Effect.catchTag('DatabaseError', Effect.orDie),
+        ),
+      )
+      .handle('supplierInvoiceAnalysisStatus', () =>
+        setPrivateResponseHeaders.pipe(
+          Effect.andThen(analysis.getStatus()),
+          Effect.catchTag('DatabaseError', Effect.orDie),
+        ),
+      )
+      .handle('supplierInvoiceAnalysisSettingsUpdate', ({ payload }) =>
+        Effect.gen(function* () {
+          yield* setPrivateResponseHeaders;
+          return yield* analysis
+            .updateSettings(payload, yield* principal())
+            .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
+        }),
+      )
+      .handle('supplierInvoiceAnalyze', ({ payload }) =>
+        Effect.gen(function* () {
+          yield* setPrivateResponseHeaders;
+          return yield* analysis
+            .analyze(payload, yield* principal())
             .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
         }),
       );
