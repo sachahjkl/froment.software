@@ -19,11 +19,7 @@ import {
   submit,
 } from '@angular/forms/signals';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import {
-  Ulid,
-  type SupplierInputValue,
-  type SupplierSummaryValue,
-} from '@froment/contracts';
+import { Ulid, type SupplierInputValue, type SupplierSummaryValue } from '@froment/contracts';
 import { Option, Schema } from 'effect';
 
 import { SuppliersApi } from '@backoffice/suppliers-api';

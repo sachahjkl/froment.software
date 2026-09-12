@@ -8,11 +8,11 @@ Le guide de plateforme se trouve dans `nixconfig/docs/hosting-and-deployment.md`
 
 L’application utilise trois environnements :
 
-| Environnement | Adresse | Exécution | Données |
-|---|---|---|---|
-| développement | `http://localhost:4200` | poste local | base locale |
-| staging | `https://staging.froment.software` | Nomad | volume staging |
-| production | `https://froment.software` | Nomad | volume production |
+| Environnement | Adresse                            | Exécution   | Données           |
+| ------------- | ---------------------------------- | ----------- | ----------------- |
+| développement | `http://localhost:4200`            | poste local | base locale       |
+| staging       | `https://staging.froment.software` | Nomad       | volume staging    |
+| production    | `https://froment.software`         | Nomad       | volume production |
 
 `APP_ENV` identifie l’environnement.
 
@@ -117,10 +117,10 @@ L’API valide `PASETO_SECRET_KEY` comme une paire Ed25519 complète au démarra
 
 Chaque environnement possède un volume Nomad distinct.
 
-| Environnement | Volume |
-|---|---|
-| staging | `67d2bb7c-5ef9-4b65-c100-09d9fb991365` |
-| production | `d4579349-f86c-330b-381a-bb854f49db21` |
+| Environnement | Volume                                 |
+| ------------- | -------------------------------------- |
+| staging       | `67d2bb7c-5ef9-4b65-c100-09d9fb991365` |
+| production    | `d4579349-f86c-330b-381a-bb854f49db21` |
 
 Le conteneur utilise `/var/lib/froment-software/froment.sqlite`.
 
