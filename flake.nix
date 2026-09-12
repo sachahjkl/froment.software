@@ -267,7 +267,7 @@
 
           preCommitCheck = git-hooks.lib.${system}.run {
             package = pkgs.prek;
-            src = ./.;
+            src = lib.cleanSource ./.;
             hooks = {
               actionlint.enable = true;
               check-added-large-files.enable = true;
