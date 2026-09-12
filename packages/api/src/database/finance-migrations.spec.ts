@@ -12,7 +12,25 @@ it('preserves existing issuer details and bank transactions when applying the fi
   const issuerMigration = migrations.findIndex((migration) =>
     migration.name.endsWith('_issuer_settings_version'),
   );
+  const clientPhoneMigration = migrations.find((migration) =>
+    migration.name.endsWith('_polite_mandrill'),
+  );
   expect(issuerMigration).toBeGreaterThan(0);
+  if (clientPhoneMigration === undefined) throw new Error('migration.client_phone_missing');
+  const statementIndex = (text: string) =>
+    clientPhoneMigration.sql.findIndex((statement) => statement.includes(text));
+  const quoteDrop = statementIndex('DROP TRIGGER IF EXISTS `published_quote');
+  const invoiceDrop = statementIndex('DROP TRIGGER IF EXISTS `invoice_revisions_no_update`');
+  const quoteUpdate = statementIndex('UPDATE `quote_revisions`');
+  const invoiceUpdate = statementIndex('UPDATE `invoice_revisions`');
+  expect(quoteDrop).toBeGreaterThanOrEqual(0);
+  expect(invoiceDrop).toBeGreaterThan(quoteDrop);
+  expect(quoteUpdate).toBeGreaterThan(invoiceDrop);
+  expect(invoiceUpdate).toBeGreaterThan(quoteUpdate);
+  expect(statementIndex('CREATE TRIGGER `published_quote')).toBeGreaterThan(invoiceUpdate);
+  expect(statementIndex('CREATE TRIGGER `invoice_revisions_no_update`')).toBeGreaterThan(
+    invoiceUpdate,
+  );
   try {
     sqlite.function('business_year', { deterministic: true }, (milliseconds: number) =>
       DateTime.toParts(

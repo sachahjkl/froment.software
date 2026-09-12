@@ -119,11 +119,18 @@ it('issues one immutable full credit, preserves PDFs, stops collection, and reco
       vatTotalCents: invoice.currentRevision.vatTotalCents,
     });
     expect(state.refundableCents).toBe(10000);
+    const issuedNote = state.creditNotes[0];
+    if (issuedNote === undefined) throw new Error('credit.test.note_missing');
+    const issuedAt = issuedNote.issuedAt;
+    if (issuedAt === null) throw new Error('credit.test.note_missing');
     const allocationRequest = {
       requestId: randomUUID(),
       targetInvoiceId: targetDraft.id,
       amountCents: 4000,
-      allocatedOn: '2026-09-12',
+      allocatedOn: invoiceIssueDate(
+        Date.parse(issuedAt),
+        DateTime.zoneMakeNamedUnsafe('Europe/Paris'),
+      ),
       reference: 'CREDIT-ALLOCATION',
     };
     const allocated = Schema.decodeUnknownSync(InvoiceCredits)(
@@ -197,8 +204,7 @@ it('issues one immutable full credit, preserves PDFs, stops collection, and reco
         })
       ).status,
     ).toBe(409);
-    const note = state.creditNotes[0];
-    if (note === undefined || note.issuedAt === null) throw new Error('credit.test.note_missing');
+    const note = issuedNote;
     const pdfResponse = await get(`/api/credit-notes/${note.id}/pdf`);
     expect(pdfResponse.status).toBe(200);
     expect(pdfResponse.headers.get('content-disposition')).toContain('AV-2026-000001.pdf');
@@ -251,7 +257,7 @@ it('issues one immutable full credit, preserves PDFs, stops collection, and reco
       requestId: randomUUID(),
       amountCents: 6000,
       refundedOn: invoiceIssueDate(
-        Date.parse(note.issuedAt),
+        Date.parse(issuedAt),
         DateTime.zoneMakeNamedUnsafe('Europe/Paris'),
       ),
       reference: 'REFUND',
