@@ -2,14 +2,16 @@ import { Api, ApiPrincipal } from '@froment/contracts';
 import { Effect } from 'effect';
 import { HttpApiBuilder } from 'effect/unstable/httpapi';
 
-import { setPrivateResponseHeaders } from '../http/response.js';
+import { setDownloadName, setPrivateResponseHeaders } from '../http/response.js';
 import { SupplierInvoices } from './service.js';
 import { SupplierInvoiceAnalysis } from './analysis-service.js';
+import { SupplierPaymentBatches } from './payment-batches.js';
 
 export const SupplierInvoiceHandlers = HttpApiBuilder.group(Api, 'supplierInvoices', (handlers) =>
   Effect.gen(function* () {
     const invoices = yield* SupplierInvoices;
     const analysis = yield* SupplierInvoiceAnalysis;
+    const paymentBatches = yield* SupplierPaymentBatches;
     const principal = () => Effect.map(ApiPrincipal, ({ userId }) => userId);
     return handlers
       .handle('supplierInvoiceList', () =>
@@ -23,6 +25,29 @@ export const SupplierInvoiceHandlers = HttpApiBuilder.group(Api, 'supplierInvoic
           Effect.andThen(invoices.get(params.invoiceId)),
           Effect.catchTag('DatabaseError', Effect.orDie),
         ),
+      )
+      .handle('supplierPaymentBatchList', () =>
+        setPrivateResponseHeaders.pipe(
+          Effect.andThen(paymentBatches.list),
+          Effect.catchTag('DatabaseError', Effect.orDie),
+        ),
+      )
+      .handle('supplierPaymentBatchCreate', ({ payload }) =>
+        Effect.gen(function* () {
+          yield* setPrivateResponseHeaders;
+          return yield* paymentBatches
+            .create(payload, yield* principal())
+            .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
+        }),
+      )
+      .handle('supplierPaymentBatchDownload', ({ params }) =>
+        Effect.gen(function* () {
+          yield* setPrivateResponseHeaders;
+          yield* setDownloadName(`supplier-payments-${params.batchId}.xml`, 'attachment');
+          return yield* paymentBatches
+            .download(params.batchId)
+            .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
+        }),
       )
       .handle('supplierInvoiceCreate', ({ payload }) =>
         Effect.gen(function* () {

@@ -281,6 +281,20 @@ export const routes: Routes = [
     },
   },
   {
+    path: 'backoffice/purchases/payments',
+    loadComponent: () =>
+      import('./pages/back-office/supplier-payment-batches/supplier-payment-batches').then(
+        (module) => module.SupplierPaymentBatchesPage,
+      ),
+    canActivate: [administratorGuard],
+    data: {
+      shell: 'administrator',
+      titleKey: 'supplierPaymentBatch.title',
+      ...permissionData('supplier-invoice.pay', 'supplier-invoice.read'),
+      robots: 'noindex, nofollow',
+    },
+  },
+  {
     path: 'backoffice/purchases/:invoiceId/edit',
     loadComponent: () =>
       import('./pages/back-office/supplier-invoice-editor/supplier-invoice-editor').then(

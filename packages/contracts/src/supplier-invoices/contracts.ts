@@ -18,10 +18,19 @@ export const BasisPointsPerPercent = 100;
 export const SupplierInvoiceAnalysisMaximumEndpointLength = 2_000;
 export const SupplierInvoiceAnalysisMaximumCredentialLength = 2_000;
 export const Base64QuantumLength = 4;
+export const SupplierPaymentBatchMaximumInvoiceCount = 100;
+export const SupplierPaymentBatchListLimit = 100;
+export const SupplierPaymentBatchMaximumAmountCents =
+  SupplierInvoiceMaximumAmountCents * SupplierPaymentBatchMaximumInvoiceCount;
+export const SepaMaximumNameLength = 70;
+export const SepaMaximumIdentifierLength = 35;
 
 const CalendarDate = Schema.String.check(Schema.isPattern(/^\d{4}-\d{2}-\d{2}$/));
 const MoneyCents = Schema.Int.check(
   Schema.isBetween({ minimum: 0, maximum: SupplierInvoiceMaximumAmountCents }),
+);
+const PaymentBatchMoneyCents = Schema.Int.check(
+  Schema.isBetween({ minimum: 0, maximum: SupplierPaymentBatchMaximumAmountCents }),
 );
 const NetMoneyCents = Schema.Int.check(
   Schema.isBetween({ minimum: 0, maximum: SupplierInvoiceMaximumNetAmountCents }),
@@ -132,6 +141,38 @@ export const SupplierInvoiceTransitionRequest = Schema.Struct({
   expectedVersion: Schema.Int.check(Schema.isGreaterThan(0)),
 });
 
+export const SupplierPaymentBatchCreateRequest = Schema.Struct({
+  requestId: Schema.String.check(Schema.isUUID(4)),
+  executionDate: CalendarDate,
+  invoiceIds: Schema.Array(Ulid).check(
+    Schema.isMinLength(SupplierInvoiceMinimumLineCount),
+    Schema.isMaxLength(SupplierPaymentBatchMaximumInvoiceCount),
+  ),
+});
+export type SupplierPaymentBatchCreateRequest = typeof SupplierPaymentBatchCreateRequest.Type;
+export const SupplierPaymentBatchInvoice = Schema.Struct({
+  invoiceId: Ulid,
+  reference: Schema.String,
+  supplierName: Schema.String,
+  amountCents: MoneyCents,
+});
+export const SupplierPaymentBatch = Schema.Struct({
+  id: Ulid,
+  messageId: Schema.String,
+  executionDate: CalendarDate,
+  transactionCount: Schema.Int.check(Schema.isGreaterThan(0)),
+  controlSumCents: PaymentBatchMoneyCents,
+  createdAt: Schema.Int,
+  invoices: Schema.Array(SupplierPaymentBatchInvoice).check(
+    Schema.isMinLength(SupplierInvoiceMinimumLineCount),
+    Schema.isMaxLength(SupplierPaymentBatchMaximumInvoiceCount),
+  ),
+});
+export type SupplierPaymentBatch = typeof SupplierPaymentBatch.Type;
+export const SupplierPaymentBatchList = Schema.Array(SupplierPaymentBatch).check(
+  Schema.isMaxLength(SupplierPaymentBatchListLimit),
+);
+
 export const SupplierInvoiceAnalysisAdapter = Schema.Literals(['local', 'http']);
 export const SupplierInvoiceAnalysisSettings = Schema.Struct({
   adapter: SupplierInvoiceAnalysisAdapter,
@@ -175,6 +216,11 @@ export class SupplierInvoiceNotFound extends Schema.TaggedError<SupplierInvoiceN
   { code: Schema.Literal('supplier_invoice.not_found') },
   { httpApiStatus: 404 },
 ) {}
+export class SupplierPaymentBatchNotFound extends Schema.TaggedError<SupplierPaymentBatchNotFound>()(
+  'SupplierPaymentBatchNotFound',
+  { code: Schema.Literal('supplier_payment_batch.not_found') },
+  { httpApiStatus: 404 },
+) {}
 export class SupplierInvoiceConflict extends Schema.TaggedError<SupplierInvoiceConflict>()(
   'SupplierInvoiceConflict',
   {
@@ -189,11 +235,18 @@ export class SupplierInvoiceConflict extends Schema.TaggedError<SupplierInvoiceC
       'supplier_invoice.analysis_consent_required',
       'supplier_invoice.analysis_failed',
       'supplier_invoice.encryption_unavailable',
+      'supplier_payment_batch.creation_conflict',
+      'supplier_payment_batch.invoice_not_payable',
+      'supplier_payment_batch.currency_not_supported',
+      'supplier_payment_batch.debtor_account_incomplete',
+      'supplier_payment_batch.creditor_account_incomplete',
+      'supplier_payment_batch.party_name_too_long',
     ]),
   },
   { httpApiStatus: 409 },
 ) {}
 export const SupplierInvoiceFailure = Schema.Union([
   SupplierInvoiceNotFound,
+  SupplierPaymentBatchNotFound,
   SupplierInvoiceConflict,
 ]);

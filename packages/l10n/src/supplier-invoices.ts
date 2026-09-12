@@ -36,6 +36,25 @@ export const supplierInvoiceText = {
       'Impossible de charger ou d’enregistrer la configuration.',
     'supplierInvoice.analysisSettings.unsavedChanges':
       'Abandonner les modifications de la configuration d’analyse ?',
+    'supplierPaymentBatch.open': 'Préparer les virements',
+    'supplierPaymentBatch.title': 'Virements fournisseurs',
+    'supplierPaymentBatch.intro':
+      'Regroupez les factures approuvées dans un fichier bancaire SEPA pain.001.',
+    'supplierPaymentBatch.loading': 'Chargement des virements fournisseurs…',
+    'supplierPaymentBatch.createTitle': 'Nouveau lot de virements',
+    'supplierPaymentBatch.executionDate': 'Date d’exécution',
+    'supplierPaymentBatch.select': 'Sélection',
+    'supplierPaymentBatch.selectInvoice': 'Sélectionner la facture {reference}',
+    'supplierPaymentBatch.emptyEligible': 'Aucune facture approuvée en EUR.',
+    'supplierPaymentBatch.create': 'Générer le fichier pain.001',
+    'supplierPaymentBatch.created': 'Le lot de virements est créé.',
+    'supplierPaymentBatch.download': 'Télécharger le fichier XML',
+    'supplierPaymentBatch.history': 'Fichiers générés',
+    'supplierPaymentBatch.messageId': 'Identifiant du message',
+    'supplierPaymentBatch.transactionCount': 'Virements',
+    'supplierPaymentBatch.controlSum': 'Somme de contrôle',
+    'supplierPaymentBatch.file': 'Fichier',
+    'supplierPaymentBatch.emptyHistory': 'Aucun fichier de virements généré.',
     'supplierInvoice.createTitle': 'Saisir une facture fournisseur',
     'supplierInvoice.editTitle': 'Modifier la facture fournisseur',
     'supplierInvoice.editorIntro':
@@ -103,6 +122,19 @@ export const supplierInvoiceText = {
     'supplier_invoice.encryption_unavailable':
       'La clé de chiffrement des secrets est indisponible.',
     'supplier_invoice.date_order_invalid': 'La date d’échéance doit suivre la date de facture.',
+    'supplier_payment_batch.not_found': 'Ce lot de virements est introuvable.',
+    'supplier_payment_batch.creation_conflict':
+      'Cette demande de création contient maintenant d’autres données.',
+    'supplier_payment_batch.invoice_not_payable':
+      'Sélectionnez uniquement des factures approuvées avec un montant positif.',
+    'supplier_payment_batch.currency_not_supported':
+      'Le format SEPA pain.001 accepte uniquement les factures en EUR.',
+    'supplier_payment_batch.debtor_account_incomplete':
+      'Renseignez le compte de paiement dans les coordonnées émetteur.',
+    'supplier_payment_batch.creditor_account_incomplete':
+      'Renseignez l’IBAN de chaque fournisseur sélectionné.',
+    'supplier_payment_batch.party_name_too_long':
+      'Le nom de l’émetteur ou d’un fournisseur dépasse 70 caractères.',
     'page.back_office_supplier_invoices': 'Factures fournisseurs | Froment Software',
     'page.description.back_office_supplier_invoices': 'Gestion des factures fournisseurs.',
     'backOffice.navigation.purchases': 'Achats',
@@ -142,6 +174,24 @@ export const supplierInvoiceText = {
     'supplierInvoice.analysisSettings.saved': 'The analysis settings are saved.',
     'supplierInvoice.analysisSettings.error': 'The settings cannot be loaded or saved.',
     'supplierInvoice.analysisSettings.unsavedChanges': 'Discard the analysis settings changes?',
+    'supplierPaymentBatch.open': 'Prepare transfers',
+    'supplierPaymentBatch.title': 'Supplier payments',
+    'supplierPaymentBatch.intro': 'Group approved invoices in a SEPA pain.001 bank file.',
+    'supplierPaymentBatch.loading': 'Loading supplier payments…',
+    'supplierPaymentBatch.createTitle': 'New payment batch',
+    'supplierPaymentBatch.executionDate': 'Execution date',
+    'supplierPaymentBatch.select': 'Select',
+    'supplierPaymentBatch.selectInvoice': 'Select invoice {reference}',
+    'supplierPaymentBatch.emptyEligible': 'No approved EUR invoice.',
+    'supplierPaymentBatch.create': 'Generate pain.001 file',
+    'supplierPaymentBatch.created': 'The payment batch is created.',
+    'supplierPaymentBatch.download': 'Download XML file',
+    'supplierPaymentBatch.history': 'Generated files',
+    'supplierPaymentBatch.messageId': 'Message ID',
+    'supplierPaymentBatch.transactionCount': 'Transfers',
+    'supplierPaymentBatch.controlSum': 'Control sum',
+    'supplierPaymentBatch.file': 'File',
+    'supplierPaymentBatch.emptyHistory': 'No payment file generated.',
     'supplierInvoice.createTitle': 'Enter a supplier invoice',
     'supplierInvoice.editTitle': 'Edit supplier invoice',
     'supplierInvoice.editorIntro': 'Enter the received document data. Confirm it after review.',
@@ -205,6 +255,19 @@ export const supplierInvoiceText = {
     'supplier_invoice.analysis_failed': 'The service could not analyze this document.',
     'supplier_invoice.encryption_unavailable': 'The secret encryption key is unavailable.',
     'supplier_invoice.date_order_invalid': 'The due date must follow the invoice date.',
+    'supplier_payment_batch.not_found': 'This payment batch cannot be found.',
+    'supplier_payment_batch.creation_conflict':
+      'This creation request now contains different data.',
+    'supplier_payment_batch.invoice_not_payable':
+      'Select only approved invoices with a positive amount.',
+    'supplier_payment_batch.currency_not_supported':
+      'The SEPA pain.001 format accepts only EUR invoices.',
+    'supplier_payment_batch.debtor_account_incomplete':
+      'Enter the payment account in the issuer details.',
+    'supplier_payment_batch.creditor_account_incomplete':
+      'Enter an IBAN for each selected supplier.',
+    'supplier_payment_batch.party_name_too_long':
+      'The issuer name or a supplier name exceeds 70 characters.',
     'page.back_office_supplier_invoices': 'Supplier invoices | Froment Software',
     'page.description.back_office_supplier_invoices': 'Supplier invoice management.',
     'backOffice.navigation.purchases': 'Purchases',
@@ -262,6 +325,18 @@ export const supplierInvoiceDocumentation = {
         summary: 'Analyser une facture fournisseur',
         description: 'Crée un brouillon OCR après le consentement requis.',
       },
+      supplierPaymentBatchList: {
+        summary: 'Lister les lots de virements',
+        description: 'Retourne les derniers fichiers pain.001 générés.',
+      },
+      supplierPaymentBatchCreate: {
+        summary: 'Créer un lot de virements',
+        description: 'Génère un fichier pain.001 immuable pour les factures approuvées en EUR.',
+      },
+      supplierPaymentBatchDownload: {
+        summary: 'Télécharger un lot de virements',
+        description: 'Retourne le fichier XML pain.001 généré.',
+      },
     },
   },
   en: {
@@ -313,6 +388,18 @@ export const supplierInvoiceDocumentation = {
       supplierInvoiceAnalyze: {
         summary: 'Analyze a supplier invoice',
         description: 'Creates an OCR draft after the required consent.',
+      },
+      supplierPaymentBatchList: {
+        summary: 'List payment batches',
+        description: 'Returns the latest generated pain.001 files.',
+      },
+      supplierPaymentBatchCreate: {
+        summary: 'Create a payment batch',
+        description: 'Generates an immutable pain.001 file for approved EUR invoices.',
+      },
+      supplierPaymentBatchDownload: {
+        summary: 'Download a payment batch',
+        description: 'Returns the generated pain.001 XML file.',
       },
     },
   },

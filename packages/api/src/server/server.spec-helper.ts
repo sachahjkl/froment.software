@@ -192,6 +192,8 @@ export const setIssuer = async (server: HttpTestServer, displayName = 'Froment S
     phone: '+33 1 23 45 67 89',
     registrationNumber: '123 456 789 00012',
     vatNumber: 'FR00123456789',
+    iban: 'FR7630006000011234567890189',
+    bic: 'AGRIFRPP',
   };
   const response = await fetch(`${server.baseUrl}/api/issuer-settings`, {
     method: 'PUT',

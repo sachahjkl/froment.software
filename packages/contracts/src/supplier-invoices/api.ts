@@ -1,4 +1,5 @@
-import { HttpApiEndpoint, HttpApiGroup } from 'effect/unstable/httpapi';
+import { Schema } from 'effect';
+import { HttpApiEndpoint, HttpApiGroup, HttpApiSchema } from 'effect/unstable/httpapi';
 import { ApiRequestBody, RequestBodyKind } from '../api-authentication.js';
 import { authenticate } from '../api-policy/authentication.js';
 import { requirePermissions } from '../api-policy/permissions.js';
@@ -16,6 +17,9 @@ import {
   SupplierInvoiceAnalysisSettingsUpdate,
   SupplierInvoiceTransitionRequest,
   SupplierInvoiceUpdateRequest,
+  SupplierPaymentBatch,
+  SupplierPaymentBatchCreateRequest,
+  SupplierPaymentBatchList,
 } from './contracts.js';
 
 export class SupplierInvoicesApi extends HttpApiGroup.make('supplierInvoices', {
@@ -30,6 +34,28 @@ export class SupplierInvoicesApi extends HttpApiGroup.make('supplierInvoices', {
     success: SupplierInvoice,
     error: SupplierInvoiceFailure.members,
   }).pipe(requirePermissions([Permissions.supplierInvoiceRead]), authenticate, frontendSpecific),
+  HttpApiEndpoint.get('supplierPaymentBatchList', '/api/supplier-payment-batches', {
+    success: SupplierPaymentBatchList,
+    error: SupplierInvoiceFailure.members,
+  }).pipe(requirePermissions([Permissions.supplierInvoicePay]), authenticate, frontendSpecific),
+  HttpApiEndpoint.post('supplierPaymentBatchCreate', '/api/supplier-payment-batches', {
+    payload: SupplierPaymentBatchCreateRequest,
+    success: SupplierPaymentBatch,
+    error: SupplierInvoiceFailure.members,
+  })
+    .middleware(ApiRequestBody)
+    .pipe(requirePermissions([Permissions.supplierInvoicePay]), authenticate, frontendSpecific),
+  HttpApiEndpoint.get(
+    'supplierPaymentBatchDownload',
+    '/api/supplier-payment-batches/:batchId/download',
+    {
+      params: { batchId: Ulid },
+      success: Schema.Uint8Array.pipe(
+        HttpApiSchema.asUint8Array({ contentType: 'application/xml; charset=utf-8' }),
+      ),
+      error: SupplierInvoiceFailure.members,
+    },
+  ).pipe(requirePermissions([Permissions.supplierInvoicePay]), authenticate, frontendSpecific),
   HttpApiEndpoint.post('supplierInvoiceCreate', '/api/supplier-invoices', {
     payload: SupplierInvoiceCreateRequest,
     success: SupplierInvoice,

@@ -3,6 +3,9 @@
     <h1 id="supplier-invoices-title">{{ i18n.t('supplierInvoice.title') }}</h1>
     <p>{{ i18n.t('supplierInvoice.intro') }}</p>
     <div pageActions class="spacer-x-2">
+      <a *appCan="'supplier-invoice.pay'" appLinkButton routerLink="payments"
+        >{{ i18n.t('supplierPaymentBatch.open') }}</a
+      >
       <a *appCan="'supplier-invoice.analyze'" appLinkButton routerLink="analyze"
         >{{ i18n.t('supplierInvoice.analysis.action') }}</a
       >

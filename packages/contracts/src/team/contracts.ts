@@ -36,6 +36,7 @@ export const TeamProfilePermissions = {
     'supplier-invoice.update',
     'supplier-invoice.approve',
     'supplier-invoice.analyze',
+    'supplier-invoice.pay',
   ],
   collaborator: [
     'client.read',

@@ -11,6 +11,11 @@ import {
   uniqueIndex,
 } from 'drizzle-orm/sqlite-core';
 import { Schema } from 'effect';
+import {
+  SepaMaximumIdentifierLength,
+  SupplierPaymentBatchMaximumAmountCents,
+  SupplierPaymentBatchMaximumInvoiceCount,
+} from '@froment/contracts';
 
 export const users = sqliteTable(
   'users',
@@ -394,6 +399,59 @@ export const supplierInvoiceLines = sqliteTable(
   ],
 );
 
+export const supplierPaymentBatches = sqliteTable(
+  'supplier_payment_batches',
+  {
+    id: text().notNull().primaryKey(),
+    requestId: text('request_id').notNull().unique(),
+    request: text().notNull(),
+    messageId: text('message_id').notNull().unique(),
+    executionDate: text('execution_date').notNull(),
+    transactionCount: integer('transaction_count').notNull(),
+    controlSumCents: integer('control_sum_cents').notNull(),
+    content: blob({ mode: 'buffer' }).notNull(),
+    createdByUserId: text('created_by_user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'no action' }),
+    createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull(),
+  },
+  (table) => [
+    check(
+      'supplier_payment_batches_id_ulid_check',
+      sql`${table.id} is not null and length(${table.id}) = 26 and ${table.id} not glob '*[^0-9A-HJKMNP-TV-Z]*' and substr(${table.id}, 1, 1) between '0' and '7'`,
+    ),
+    check('supplier_payment_batches_request_id_check', sql`length(${table.requestId}) = 36`),
+    check('supplier_payment_batches_request_json_check', sql`json_valid(${table.request})`),
+    check(
+      'supplier_payment_batches_message_id_check',
+      sql`length(${table.messageId}) between 1 and ${sql.raw(String(SepaMaximumIdentifierLength))}`,
+    ),
+    check(
+      'supplier_payment_batches_values_check',
+      sql`${table.executionDate} glob '????-??-??' and ${table.transactionCount} between 1 and ${sql.raw(String(SupplierPaymentBatchMaximumInvoiceCount))} and ${table.controlSumCents} between 1 and ${sql.raw(String(SupplierPaymentBatchMaximumAmountCents))} and length(${table.content}) > 0`,
+    ),
+    index('supplier_payment_batches_created_at_index').on(table.createdAt),
+  ],
+);
+
+export const supplierPaymentBatchItems = sqliteTable(
+  'supplier_payment_batch_items',
+  {
+    batchId: text('batch_id')
+      .notNull()
+      .references(() => supplierPaymentBatches.id, { onDelete: 'cascade' }),
+    invoiceId: text('invoice_id')
+      .notNull()
+      .references(() => supplierInvoices.id, { onDelete: 'no action' }),
+    amountCents: integer('amount_cents').notNull(),
+  },
+  (table) => [
+    primaryKey({ columns: [table.batchId, table.invoiceId] }),
+    check('supplier_payment_batch_items_amount_check', sql`${table.amountCents} > 0`),
+    index('supplier_payment_batch_items_invoice_id_index').on(table.invoiceId),
+  ],
+);
+
 export const supplierInvoiceAnalysisSettings = sqliteTable(
   'supplier_invoice_analysis_settings',
   {
@@ -492,6 +550,8 @@ export const issuerSettings = sqliteTable(
     phone: text().notNull(),
     registrationNumber: text('registration_number').notNull(),
     vatNumber: text('vat_number').notNull(),
+    iban: text().notNull().default(''),
+    bic: text().notNull().default(''),
     version: integer().notNull().default(1),
     updatedAt: integer('updated_at', { mode: 'timestamp_ms' }).notNull(),
   },
@@ -500,7 +560,7 @@ export const issuerSettings = sqliteTable(
     check('issuer_settings_version_check', sql`${table.version} between 1 and 9007199254740991`),
     check(
       'issuer_settings_fields_check',
-      sql`length(trim(${table.displayName})) between 1 and 160 and length(${table.addressLine1}) <= 160 and length(${table.addressLine2}) <= 160 and length(${table.postalCode}) <= 32 and length(${table.city}) <= 120 and length(${table.country}) <= 120 and length(${table.email}) <= 254 and length(${table.phone}) <= 64 and length(${table.registrationNumber}) <= 64 and length(${table.vatNumber}) <= 64`,
+      sql`length(trim(${table.displayName})) between 1 and 160 and length(${table.addressLine1}) <= 160 and length(${table.addressLine2}) <= 160 and length(${table.postalCode}) <= 32 and length(${table.city}) <= 120 and length(${table.country}) <= 120 and length(${table.email}) <= 254 and length(${table.phone}) <= 64 and length(${table.registrationNumber}) <= 64 and length(${table.vatNumber}) <= 64 and length(${table.iban}) <= 42 and length(${table.bic}) <= 11`,
     ),
   ],
 );

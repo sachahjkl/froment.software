@@ -55,6 +55,7 @@ describe('back-office route organization', () => {
     ['backoffice/suppliers/:supplierId/edit', 'supplier.update'],
     ['backoffice/purchases/new', 'supplier-invoice.create'],
     ['backoffice/purchases/analyze', 'supplier-invoice.analyze'],
+    ['backoffice/purchases/payments', 'supplier-invoice.pay'],
     ['backoffice/purchases/:invoiceId/edit', 'supplier-invoice.update'],
     ['backoffice/quotes/new', 'quote.create'],
     ['backoffice/quotes/:quoteId/publication', 'quote.send'],

@@ -1,9 +1,13 @@
-import { SupplierInvoice, SupplierSummary } from '@froment/contracts';
+import { SupplierInvoice, SupplierPaymentBatch, SupplierSummary } from '@froment/contracts';
 import { Schema } from 'effect';
 import Sqlite from 'better-sqlite3';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
-import { startHttpTestServer, type HttpTestServer } from '../server/server.spec-helper.js';
+import {
+  setIssuer,
+  startHttpTestServer,
+  type HttpTestServer,
+} from '../server/server.spec-helper.js';
 
 describe('supplier invoice HTTP lifecycle', () => {
   const settingsEncryptionKeyBytes = 32;
@@ -36,8 +40,8 @@ describe('supplier invoice HTTP lifecycle', () => {
       vatNumber: '',
       defaultCurrency: 'EUR',
       paymentTermsDays: 30,
-      iban: '',
-      bic: '',
+      iban: 'FR1420041010050500013M02606',
+      bic: 'PSSTFRPPMON',
     });
     expect(supplierResponse.status).toBe(200);
     const supplier = Schema.decodeUnknownSync(SupplierSummary)(await supplierResponse.json());
@@ -123,6 +127,43 @@ describe('supplier invoice HTTP lifecycle', () => {
     const approved = Schema.decodeUnknownSync(SupplierInvoice)(await approveResponse.json());
     expect(approved.status).toBe('approved');
     expect(approved.approvedAt).not.toBeNull();
+
+    const paymentRequest = {
+      requestId: crypto.randomUUID(),
+      executionDate: '2026-10-15',
+      invoiceIds: [approved.id],
+    };
+    const incompleteAccount = await write('/api/supplier-payment-batches', paymentRequest);
+    expect(incompleteAccount.status).toBe(409);
+    await expect(incompleteAccount.json()).resolves.toMatchObject({
+      code: 'supplier_payment_batch.debtor_account_incomplete',
+    });
+    await setIssuer(server);
+    const paymentResponse = await write('/api/supplier-payment-batches', paymentRequest);
+    expect(paymentResponse.status).toBe(200);
+    const payment = Schema.decodeUnknownSync(SupplierPaymentBatch)(await paymentResponse.json());
+    expect(payment).toMatchObject({
+      executionDate: paymentRequest.executionDate,
+      transactionCount: 1,
+      controlSumCents: approved.totalCents,
+    });
+    const repeatedPayment = await write('/api/supplier-payment-batches', paymentRequest);
+    await expect(repeatedPayment.json()).resolves.toMatchObject({ id: payment.id });
+    const paymentDownload = await fetch(
+      `${server.baseUrl}/api/supplier-payment-batches/${payment.id}/download`,
+      { headers: server.sessionHeaders },
+    );
+    expect(paymentDownload.status).toBe(200);
+    expect(paymentDownload.headers.get('content-type')).toContain('application/xml');
+    expect(paymentDownload.headers.get('content-disposition')).toContain(`${payment.id}.xml`);
+    const pain001 = await paymentDownload.text();
+    expect(pain001).toContain('<InstdAmt Ccy="EUR">125.01</InstdAmt>');
+    expect(pain001).toContain(`<IBAN>FR1420041010050500013M02606</IBAN>`);
+    const paymentList = await fetch(`${server.baseUrl}/api/supplier-payment-batches`, {
+      headers: server.sessionHeaders,
+    });
+    expect(paymentList.status).toBe(200);
+    await expect(paymentList.json()).resolves.toMatchObject([{ id: payment.id }]);
     expect(
       (
         await write(`/api/supplier-invoices/${created.id}/cancel`, {

@@ -230,6 +230,8 @@ export {
   IssuerSettingsUpdateRequest,
   type IssuerSettingsUpdateRequest as IssuerSettingsUpdateRequestValue,
   IssuerSettingsConflict,
+  IssuerPaymentAccount,
+  type IssuerPaymentAccount as IssuerPaymentAccountValue,
 } from './issuer-settings/contracts.js';
 export {
   PublicQuoteAccessRequest,

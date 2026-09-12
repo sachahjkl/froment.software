@@ -10,6 +10,9 @@ import {
   SupplierInvoiceFailure,
   SupplierInvoiceList,
   SupplierInvoiceUpdateRequest,
+  SupplierPaymentBatch,
+  SupplierPaymentBatchCreateRequest,
+  SupplierPaymentBatchList,
 } from '@froment/contracts';
 
 import { requestOutcome } from '@shared/api-outcome';
@@ -85,6 +88,22 @@ export class SupplierInvoicesApi {
     return requestOutcome(
       this.http.post('/api/supplier-invoices/analyze', request),
       SupplierInvoice,
+      SupplierInvoiceFailure,
+      'supplierInvoice.error',
+    );
+  }
+  paymentBatches() {
+    return requestOutcome(
+      this.http.get('/api/supplier-payment-batches'),
+      SupplierPaymentBatchList,
+      SupplierInvoiceFailure,
+      'supplierInvoice.error',
+    );
+  }
+  createPaymentBatch(request: typeof SupplierPaymentBatchCreateRequest.Type) {
+    return requestOutcome(
+      this.http.post('/api/supplier-payment-batches', request),
+      SupplierPaymentBatch,
       SupplierInvoiceFailure,
       'supplierInvoice.error',
     );
