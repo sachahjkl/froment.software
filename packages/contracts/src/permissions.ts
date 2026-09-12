@@ -57,6 +57,8 @@ export const Permissions = {
   userRead: { code: 'user.read', audiences: [] },
   userCreate: { code: 'user.create', audiences: [] },
   userUpdate: { code: 'user.update', audiences: [] },
+  roleRead: { code: 'role.read', audiences: [] },
+  roleManage: { code: 'role.manage', audiences: [] },
   sessionManage: { code: 'session.manage', audiences: [] },
   apiTokenManage: { code: 'api-token.manage', audiences: [] },
   auditRead: { code: 'audit.read', audiences: [] },

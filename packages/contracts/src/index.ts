@@ -484,6 +484,7 @@ export {
 } from './banking/contracts.js';
 export * from './authentication/passkeys.js';
 export * from './team/contracts.js';
+export * from './roles/contracts.js';
 export * from './invoices/credit-notes.js';
 export * from './banking/ledger.js';
 export * from './integrations/email-drafts.js';

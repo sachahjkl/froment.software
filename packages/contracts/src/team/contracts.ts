@@ -19,6 +19,7 @@ export const TeamProfilePermissions = {
     'condition.read',
     'company.read',
     'company.update',
+    'role.read',
     'supplier.read',
     'supplier.create',
     'supplier.update',
@@ -50,6 +51,7 @@ export const TeamProfilePermissions = {
     'document.render',
     'integration.manage',
     'company.read',
+    'role.read',
     'supplier.read',
   ],
 } as const satisfies Record<typeof TeamProfile.Type, ReadonlyArray<typeof PermissionCode.Type>>;

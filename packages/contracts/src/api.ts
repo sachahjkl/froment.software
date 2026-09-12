@@ -5,6 +5,7 @@ import { CatalogApi } from './catalog/api.js';
 import { IntegrationsApi } from './integrations/api.js';
 import { BankingApi } from './banking/api.js';
 import { TeamApi } from './team/api.js';
+import { RolesApi } from './roles/api.js';
 import { CreditNotesApi } from './invoices/credit-notes-api.js';
 import { BankLedgerApi } from './banking/ledger-api.js';
 
@@ -36,6 +37,7 @@ export { AffairsApi } from './affairs/api.js';
 export { ClientPortalApi } from './client-portal/api.js';
 export { ClientsApi } from './clients/api.js';
 export { CompanyApi } from './company/api.js';
+export { RolesApi } from './roles/api.js';
 export { SuppliersApi } from './suppliers/api.js';
 export { ApiTokensApi } from './api-tokens/api.js';
 export { InvoicesApi } from './invoices/api.js';
@@ -56,6 +58,7 @@ export class Api extends HttpApi.make('froment-api')
   .add(IntegrationsApi)
   .add(BankingApi)
   .add(TeamApi)
+  .add(RolesApi)
   .add(CreditNotesApi)
   .add(BankLedgerApi)
   .add(BootstrapApi)

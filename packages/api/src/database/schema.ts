@@ -478,6 +478,30 @@ export const roles = sqliteTable(
   ],
 );
 
+export const customRoles = sqliteTable(
+  'custom_roles',
+  {
+    id: text().notNull().primaryKey(),
+    requestId: text('request_id').notNull().unique(),
+    name: text().notNull().unique(),
+    permissions: text().notNull(),
+    version: integer().notNull().default(1),
+    createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull(),
+    updatedAt: integer('updated_at', { mode: 'timestamp_ms' }).notNull(),
+  },
+  (table) => [
+    check(
+      'custom_roles_id_ulid_check',
+      sql`${table.id} is not null and length(${table.id}) = 26 and ${table.id} not glob '*[^0-9A-HJKMNP-TV-Z]*' and substr(${table.id}, 1, 1) between '0' and '7'`,
+    ),
+    check('custom_roles_request_id_check', sql`length(${table.requestId}) = 36`),
+    check('custom_roles_name_check', sql`length(trim(${table.name})) between 1 and 80`),
+    check('custom_roles_permissions_check', sql`json_valid(${table.permissions})`),
+    check('custom_roles_version_check', sql`${table.version} > 0`),
+    check('custom_roles_timestamps_check', sql`${table.updatedAt} >= ${table.createdAt}`),
+  ],
+);
+
 export const permissions = sqliteTable(
   'permissions',
   {

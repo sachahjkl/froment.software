@@ -14,6 +14,7 @@ import { AuthenticationHttpLive } from './authentication/http.js';
 import { AuthenticationHandlers } from './authentication/handlers.js';
 import { PasskeyHandlers } from './authentication/passkey-handlers.js';
 import { TeamHandlers } from './team/handlers.js';
+import { RoleHandlers } from './roles/handlers.js';
 import { CreditNoteHandlers } from './invoices/credit-handlers.js';
 import { BankLedgerHandlers } from './banking/ledger-handlers.js';
 import { EmailDraftHandlers } from './integrations/email-draft-handlers.js';
@@ -69,6 +70,7 @@ const apiRoutes = (publicOrigin: string) =>
         AuthenticationHandlers,
         PasskeyHandlers,
         TeamHandlers,
+        RoleHandlers,
         CreditNoteHandlers,
         BankLedgerHandlers,
         EmailDraftHandlers,
