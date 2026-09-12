@@ -43,6 +43,7 @@ export class CustomRoleConflict extends Schema.TaggedError<CustomRoleConflict>()
       'role.creation_conflict',
       'role.version_conflict',
       'role.in_use',
+      'role.last_administrator',
     ]),
   },
   { httpApiStatus: 409 },

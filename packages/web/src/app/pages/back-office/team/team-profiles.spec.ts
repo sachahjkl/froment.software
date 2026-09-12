@@ -32,6 +32,7 @@ const setup = async () => {
         cancelledAt: null,
       },
     ],
+    roles: [],
   };
   const api = {
     list: vi.fn(async () => ({ success: true as const, result: structuredClone(data) })),

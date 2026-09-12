@@ -50,6 +50,9 @@
         <option value="">{{ i18n.t('configurationWorkspace.chooseProfile') }}</option>
         <option value="accountant">{{ i18n.t('team.accountant') }}</option>
         <option value="collaborator">{{ i18n.t('team.collaborator') }}</option>
+        @for (role of roles(); track role.id) {
+        <option [value]="'custom:' + role.id">{{ role.name }}</option>
+        }
       </select></label
     >
     @if (invitationForm.profile().touched() && invitationForm.profile().invalid()) {

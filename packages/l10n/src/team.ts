@@ -73,6 +73,9 @@ export const teamText = {
       'Cette demande a été refusée. Vérifiez les données actuelles et les permissions de votre compte.',
     'team.invitation_rejected':
       'Invitation indisponible, expirée ou déjà utilisée. Demandez une nouvelle invitation à l’administrateur.',
+    'team.role_unavailable':
+      'Ce rôle personnalisé n’est plus disponible. Choisissez un autre rôle.',
+    'team.last_administrator': 'Conservez au moins un administrateur actif.',
     'team.join': 'Rejoindre l’équipe',
     'team.joinHint':
       'Le lien crée un compte pour l’adresse et le profil choisis par l’administrateur. Choisissez votre mot de passe.',
@@ -154,6 +157,8 @@ export const teamText = {
       'This request was rejected. Check the current data and your account permissions.',
     'team.invitation_rejected':
       'Invitation unavailable, expired or already used. Ask the administrator for a new invitation.',
+    'team.role_unavailable': 'This custom role is no longer available. Select another role.',
+    'team.last_administrator': 'Keep at least one active administrator.',
     'team.join': 'Join the team',
     'team.joinHint':
       'This link creates an account with the email and profile selected by the administrator. Choose your password.',

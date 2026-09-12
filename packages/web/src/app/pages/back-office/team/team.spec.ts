@@ -113,7 +113,7 @@ describe('Team', () => {
       expect(invite.mock.calls[1]?.[0].requestId).not.toBe(invite.mock.calls[0]?.[0].requestId);
       expect(invite.mock.calls[1]?.[0].email).toBe('available@example.test');
       expect(component['link']()).toContain('#secret');
-      expect(list).not.toHaveBeenCalled();
+      expect(list).toHaveBeenCalledOnce();
     },
   );
 

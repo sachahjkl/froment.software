@@ -15,6 +15,7 @@ import { auditText } from './audit.js';
 import { listWorkspaceText } from './list-workspace.js';
 import { dateRangeFilterText } from './date-range-filter.js';
 import { teamText } from './team.js';
+import { roleText } from './roles.js';
 import { creditText } from './credit-notes.js';
 import { ledgerText } from './bank-ledger.js';
 import { passkeyText } from './passkeys.js';
@@ -54,6 +55,7 @@ export const translations = {
     'design.components.workflows': 'Parcours complets',
     ...webUiText.fr,
     ...teamText.fr,
+    ...roleText.fr,
     ...creditText.fr,
     ...ledgerText.fr,
     ...passkeyText.fr,
@@ -1627,6 +1629,7 @@ export const translations = {
     'design.components.workflows': 'Complete workflows',
     ...webUiText.en,
     ...teamText.en,
+    ...roleText.en,
     ...creditText.en,
     ...ledgerText.en,
     ...passkeyText.en,

@@ -142,6 +142,35 @@ const make = Effect.gen(function* () {
               throw new CustomRoleConflict({ code: 'role.name_exists' });
             }
             const updatedAt = Math.max(now, current.updatedAt + 1);
+            if (
+              current.permissions.includes('user.update') &&
+              !request.permissions.includes('user.update')
+            ) {
+              const affectedAdministrators = Schema.decodeUnknownSync(Schema.Int)(
+                sqlite
+                  .prepare(
+                    `select count(*) from team_members t join users u on u.id = t.user_id
+                     where t.profile = ? and u.disabled_at is null`,
+                  )
+                  .pluck()
+                  .get(`custom:${id}`),
+              );
+              const activeAdministrators = Schema.decodeUnknownSync(Schema.Int)(
+                sqlite
+                  .prepare(
+                    `select count(distinct u.id) from users u
+                     join user_roles ur on ur.user_id = u.id
+                     join role_permissions rp on rp.role_id = ur.role_id
+                     where u.disabled_at is null and u.kind = 'administrator'
+                       and rp.permission_code = 'user.update'`,
+                  )
+                  .pluck()
+                  .get(),
+              );
+              if (activeAdministrators - affectedAdministrators < 1) {
+                throw new CustomRoleConflict({ code: 'role.last_administrator' });
+              }
+            }
             sqlite
               .prepare(
                 'update custom_roles set name = ?, permissions = ?, version = version + 1, updated_at = ? where id = ? and version = ?',
@@ -153,6 +182,23 @@ const make = Effect.gen(function* () {
                 id,
                 request.expectedVersion,
               );
+            const assignedUserIds = Schema.decodeUnknownSync(Schema.Array(Schema.String))(
+              sqlite
+                .prepare('select user_id from team_members where profile = ?')
+                .pluck()
+                .all(`custom:${id}`),
+            );
+            for (const userId of assignedUserIds) {
+              const memberRoleId = Schema.decodeUnknownSync(Schema.String)(
+                sqlite.prepare('select id from roles where name = ?').pluck().get(`team-${userId}`),
+              );
+              sqlite.prepare('delete from role_permissions where role_id = ?').run(memberRoleId);
+              for (const code of request.permissions) {
+                sqlite
+                  .prepare('insert into role_permissions (role_id, permission_code) values (?, ?)')
+                  .run(memberRoleId, code);
+              }
+            }
             audit.insert({
               action: 'role.updated',
               actorUserId,

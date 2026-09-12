@@ -1,0 +1,51 @@
+<section class="detail-page form-page" aria-labelledby="role-editor-title">
+  <app-page-header layout="stacked">
+    <app-breadcrumbs
+      pageBack
+      [label]="i18n.t('backOfficeShell.breadcrumb')"
+      [items]="breadcrumbs()"
+      [current]="title()"
+    />
+    <h1 id="role-editor-title">{{ title() }}</h1>
+    <p>{{ i18n.t('role.editorIntro') }}</p>
+  </app-page-header>
+  @if (error(); as code) {
+  <p appNotice variant="danger" role="alert">{{ i18n.t(code) }}</p>
+  } @if (loading()) {
+  <p role="status">{{ i18n.t('role.loading') }}</p>
+  } @else {
+  <form novalidate (submit)="save($event)">
+    <div class="ds-panel form-panel">
+      <label class="field" for="role-name"
+        >{{ i18n.t('role.name') }}<input id="role-name" class="input" [formField]="roleForm.name"
+      /></label>
+    </div>
+    <div class="ds-panel form-panel permissions">
+      <fieldset [disabled]="saving()">
+        <legend>{{ i18n.t('role.permissions') }}</legend>
+        @for (group of permissionGroups(); track group.domain) {
+        <section>
+          <h2>{{ group.domain }}</h2>
+          <div class="permission-grid">
+            @for (permission of group.permissions; track permission) {
+            <label
+              ><input
+                type="checkbox"
+                [checked]="selected(permission)"
+                (change)="toggle(permission, $event)"
+              /><code>{{ permission }}</code></label
+            >
+            }
+          </div>
+        </section>
+        }
+      </fieldset>
+    </div>
+    <div class="spacer-x-2">
+      <button appButton variant="primary" type="submit" [disabled]="saving()">
+        {{ i18n.t('role.save') }}</button
+      ><a appLinkButton routerLink="/backoffice/equipe/roles">{{ i18n.t('role.cancel') }}</a>
+    </div>
+  </form>
+  }
+</section>

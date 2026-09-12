@@ -11,6 +11,7 @@
         [queryParams]="navigation.params()"
         >{{ i18n.t('configurationWorkspace.newInvitation') }}</a
       >
+      <a appLinkButton routerLink="roles" *appCan="'role.read'">{{ i18n.t('role.title') }}</a>
       <button appButton type="button" [disabled]="busy() || loading()" (click)="reload()">
         {{ i18n.t('team.reload') }}
       </button>
@@ -135,6 +136,9 @@
                 <select class="select" [formField]="profileForm[member.id]">
                   <option [value]="'accountant'">{{ i18n.t('team.accountant') }}</option>
                   <option [value]="'collaborator'">{{ i18n.t('team.collaborator') }}</option>
+                  @for (role of data().roles; track role.id) {
+                  <option [value]="'custom:' + role.id">{{ role.name }}</option>
+                  }
                 </select>
               </label>
             </td>
@@ -296,10 +300,7 @@
                 >{{ invitation.email }}</span
               >
             </td>
-            <td>
-              {{ i18n.t(invitation.profile === 'accountant' ? 'team.accountant' :
-              'team.collaborator') }}
-            </td>
+            <td>{{ profileLabel(invitation.profile) }}</td>
             <td>
               {{ date(invitation.createdAt) | localizedDate: i18n.language(): { dateStyle: 'medium',
               timeStyle: 'short' } }}

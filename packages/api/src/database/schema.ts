@@ -77,7 +77,10 @@ export const teamMembers = sqliteTable(
     version: integer().notNull(),
   },
   (table) => [
-    check('team_member_profile_check', sql`${table.profile} in ('collaborator', 'accountant')`),
+    check(
+      'team_member_profile_check',
+      sql`${table.profile} in ('collaborator', 'accountant') or (length(${table.profile}) = 33 and substr(${table.profile}, 1, 7) = 'custom:' and substr(${table.profile}, 8, 1) between '0' and '7' and substr(${table.profile}, 8) not glob '*[^0-9A-HJKMNP-TV-Z]*')`,
+    ),
     check('team_member_version_check', sql`${table.version} > 0`),
   ],
 );
@@ -99,7 +102,10 @@ export const teamInvitations = sqliteTable(
     acceptedAt: integer('accepted_at'),
   },
   (table) => [
-    check('team_invitation_profile_check', sql`${table.profile} in ('collaborator', 'accountant')`),
+    check(
+      'team_invitation_profile_check',
+      sql`${table.profile} in ('collaborator', 'accountant') or (length(${table.profile}) = 33 and substr(${table.profile}, 1, 7) = 'custom:' and substr(${table.profile}, 8, 1) between '0' and '7' and substr(${table.profile}, 8) not glob '*[^0-9A-HJKMNP-TV-Z]*')`,
+    ),
     index('team_invitation_email_index').on(table.email),
   ],
 );

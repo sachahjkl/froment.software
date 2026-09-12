@@ -2,8 +2,15 @@ import { Schema } from 'effect';
 import { AccountEmail, AccountPassword } from '../authentication/contracts.js';
 import { Ulid } from '../identifiers.js';
 import { PermissionCode } from '../permissions.js';
+import { CustomRole } from '../roles/contracts.js';
 
-export const TeamProfile = Schema.Literals(['collaborator', 'accountant']);
+export const CustomTeamProfile = Schema.String.check(
+  Schema.isPattern(/^custom:[0-7][0-9A-HJKMNP-TV-Z]{25}$/),
+);
+export const TeamProfile = Schema.Union([
+  Schema.Literals(['collaborator', 'accountant']),
+  CustomTeamProfile,
+]);
 export const TeamProfilePermissions = {
   accountant: [
     'ledger.read',
@@ -93,6 +100,7 @@ export const TeamMemberUpdate = Schema.Struct({
 export const TeamList = Schema.Struct({
   members: Schema.Array(TeamMember),
   invitations: Schema.Array(TeamInvitation),
+  roles: Schema.Array(CustomRole),
 });
 export class TeamConflict extends Schema.TaggedError<TeamConflict>()(
   'TeamConflict',
@@ -105,6 +113,8 @@ export class TeamConflict extends Schema.TaggedError<TeamConflict>()(
       'team.invitation_changed',
       'team.invitation_inactive',
       'team.invitation_permission',
+      'team.role_unavailable',
+      'team.last_administrator',
     ]),
   },
   { httpApiStatus: 409 },
