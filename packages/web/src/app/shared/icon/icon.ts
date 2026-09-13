@@ -46,6 +46,7 @@ export type IconName =
   | 'list-numbers'
   | 'undo'
   | 'redo'
+  | 'pencil'
   | 'truck'
   | 'shopping-cart';
 
@@ -84,6 +85,9 @@ export type IconName =
         }
         @case ('redo') {
           <path d="m15 14 5-5-5-5M20 9H9.5a5.5 5.5 0 0 0 0 11H13" />
+        }
+        @case ('pencil') {
+          <path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L8 18l-4 1 1-4z" />
         }
         @case ('dashboard') {
           <path d="M3 3h7v7H3zm11 0h7v7h-7zM3 14h7v7H3zm11 0h7v7h-7z" />

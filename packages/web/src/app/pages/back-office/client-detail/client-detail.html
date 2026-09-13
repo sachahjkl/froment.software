@@ -22,13 +22,6 @@
         [queryParams]="{ clientId: current.id }"
         >{{ i18n.t('backOffice.dashboard.createQuote') }}</a
       >
-      <a
-        appLinkButton
-        [routerLink]="['/backoffice/clients', current.id, 'edit']"
-        *appCan="'client.update'"
-        queryParamsHandling="preserve"
-        >{{ i18n.t('clientsWorkspace.edit') }}</a
-      >
       <app-action-menu
         *appCan="'client.archive'"
         [label]="i18n.t('backOffice.clients.actions')"

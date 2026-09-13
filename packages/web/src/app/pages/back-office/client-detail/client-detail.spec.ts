@@ -99,7 +99,7 @@ async function configure(panel = 'profile', archived = false, query = '') {
 
 describe('ClientDetail', () => {
   beforeEach(() => TestBed.configureTestingModule({ providers: [provideAccount()] }));
-  it('shows a read-only profile and a dedicated edit link', async () => {
+  it('shows an inline-editable profile without a dedicated edit link', async () => {
     const { root } = await configure();
     expect(root.querySelector('h1')?.textContent?.trim()).toBe('Acme');
     expect(root.querySelector('form')).toBeNull();
@@ -107,9 +107,8 @@ describe('ClientDetail', () => {
     expect(root.querySelector('[pageActions] a')?.getAttribute('href')).toBe(
       `/backoffice/quotes/new?clientId=${client.id}`,
     );
-    expect(root.querySelectorAll('[pageActions] a')[1]?.getAttribute('href')).toBe(
-      `/backoffice/clients/${client.id}/edit`,
-    );
+    expect(root.querySelectorAll('[pageActions] a')).toHaveLength(1);
+    expect(root.querySelector('[appInlineEdit] button[aria-label]')).not.toBeNull();
   });
 
   it('edits one client field without sending placeholder text', async () => {

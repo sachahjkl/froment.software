@@ -1,4 +1,4 @@
-import { Can } from '@backoffice/can';
+import { Authentication } from '@backoffice/authentication';
 import { AffairsApi } from '@backoffice/affairs-api';
 import { InvoicesApi } from '@backoffice/invoices-api';
 import { OrdersApi } from '@backoffice/orders-api';
@@ -21,26 +21,42 @@ import {
   type QuoteListValue,
   Ulid,
 } from '@froment/contracts';
+import { formatMoney } from '@froment/l10n';
 import { Option, Schema } from 'effect';
-import { I18nService } from '@app/i18n.service';
-import { Badge } from '@shared/badge/badge';
+import { I18nService, type TranslationKey } from '@app/i18n.service';
+import { Badge, type BadgeVariant } from '@shared/badge/badge';
 import { Button } from '@shared/button/button';
-import { DataTable } from '@shared/data-table/data-table';
 import { Notice } from '@shared/notice/notice';
 import { PageHeader } from '@shared/page-header/page-header';
 import { Tabs, type TabItem } from '@shared/tabs/tabs';
 import { TabLayout, TabPanel } from '@shared/tabs/tab-panel';
 import { InlineEdit } from '@shared/inline-edit/inline-edit';
+import { Icon, type IconName } from '@shared/icon/icon';
+import { formatLocalizedDate } from '@shared/localized-date/localized-date-pipe';
+import { invoiceStatusBadge, quoteStatusBadge } from '../commercial-header';
+
+interface AffairDocumentSummary {
+  readonly id: string;
+  readonly kind: TranslationKey;
+  readonly icon: IconName;
+  readonly reference: string;
+  readonly title: string;
+  readonly status: TranslationKey;
+  readonly variant: BadgeVariant;
+  readonly totalCents: number;
+  readonly currency: string;
+  readonly updatedAt: string;
+  readonly link: readonly [string, string];
+}
 
 @Component({
   selector: 'app-affair-detail',
   host: { class: 'page-container' },
   imports: [
-    Can,
-    Badge,
     Button,
-    DataTable,
+    Badge,
     InlineEdit,
+    Icon,
     Notice,
     PageHeader,
     RouterLink,
@@ -55,6 +71,7 @@ import { InlineEdit } from '@shared/inline-edit/inline-edit';
 })
 export class AffairDetail {
   protected readonly i18n = inject(I18nService);
+  private readonly authentication = inject(Authentication);
   private readonly api = inject(AffairsApi);
   private readonly quotesApi = inject(QuotesApi);
   private readonly ordersApi = inject(OrdersApi);
@@ -68,6 +85,7 @@ export class AffairDetail {
   protected readonly events = signal<ReadonlyArray<typeof AuditEvent.Type>>([]);
   protected readonly editing = signal<'title' | 'status' | undefined>(undefined);
   protected readonly saving = signal(false);
+  protected readonly canEdit = computed(() => this.authentication.can('affair.update'));
   protected readonly statusOptions = computed(() => [
     { value: 'open', label: this.i18n.t('affair.open') },
     { value: 'closed', label: this.i18n.t('affair.closed') },
@@ -88,6 +106,53 @@ export class AffairDetail {
     const ids = new Set(this.affair()?.invoiceIds ?? []);
     return this.invoices().filter((invoice) => ids.has(invoice.id));
   });
+  protected readonly linkedDocuments = computed<readonly AffairDocumentSummary[]>(() => [
+    ...this.linkedQuotes().map((quote) => {
+      const badge = quoteStatusBadge(quote.status);
+      return {
+        id: quote.id,
+        kind: 'backOffice.affair.quote' as const,
+        icon: 'folder' as const,
+        reference: quote.reference,
+        title: quote.title,
+        status: badge.label,
+        variant: badge.variant,
+        totalCents: quote.totalCents,
+        currency: quote.currency,
+        updatedAt: quote.updatedAt,
+        link: ['/backoffice/quotes', quote.id] as const,
+      };
+    }),
+    ...this.linkedOrders().map((order) => ({
+      id: order.id,
+      kind: 'backOffice.affair.order' as const,
+      icon: 'check' as const,
+      reference: order.reference,
+      title: order.title,
+      status: 'backOffice.affair.confirmed' as const,
+      variant: 'success' as const,
+      totalCents: order.totalCents,
+      currency: order.currency,
+      updatedAt: order.createdAt,
+      link: ['/backoffice/orders', order.id] as const,
+    })),
+    ...this.linkedInvoices().map((invoice) => {
+      const badge = invoiceStatusBadge(invoice.status);
+      return {
+        id: invoice.id,
+        kind: 'backOffice.affair.invoice' as const,
+        icon: 'invoice' as const,
+        reference: invoice.invoiceNumber ?? this.i18n.t('commercialHeader.draftInvoice'),
+        title: invoice.title,
+        status: badge.label,
+        variant: badge.variant,
+        totalCents: invoice.totalCents,
+        currency: invoice.currency,
+        updatedAt: invoice.updatedAt,
+        link: ['/backoffice/invoices', invoice.id] as const,
+      };
+    }),
+  ]);
   protected readonly tabs = computed<readonly TabItem[]>(() => [
     { path: 'overview', id: 'affair-overview-tab', label: this.i18n.t('commercial.summary') },
     { path: 'history', id: 'affair-history-tab', label: this.i18n.t('billingWorkspace.history') },
@@ -156,5 +221,13 @@ export class AffairDetail {
     } finally {
       this.saving.set(false);
     }
+  }
+
+  protected money(cents: number, currency: string): string {
+    return formatMoney(cents, this.i18n.language(), currency);
+  }
+
+  protected date(value: string): string {
+    return formatLocalizedDate(value, this.i18n.language(), { dateStyle: 'medium' });
   }
 }
