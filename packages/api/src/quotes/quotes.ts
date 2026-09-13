@@ -1,4 +1,6 @@
 import {
+  AffairConflict,
+  AffairNotFound,
   ClientArchived,
   ClientNotFound,
   QuoteAmountTooLarge,
@@ -83,6 +85,11 @@ const ClientRecord = Schema.Struct({
   phone: Schema.String,
   disabledAt: Schema.NullOr(Schema.Number),
 });
+const AffairRecord = Schema.Struct({
+  id: Ulid,
+  clientId: Ulid,
+  status: Schema.Literals(['open', 'closed']),
+});
 const SnapshotRecord = Schema.Struct({ renderSnapshot: Schema.NullOr(Schema.String) });
 const QuoteSummaryRecord = Schema.Struct({
   id: Ulid,
@@ -123,7 +130,12 @@ export interface QuotesService {
     createdByUserId: string,
   ) => Effect.Effect<
     QuoteDetailValue,
-    ClientNotFound | ClientArchived | QuoteAmountTooLarge | DatabaseError
+    | AffairConflict
+    | AffairNotFound
+    | ClientNotFound
+    | ClientArchived
+    | QuoteAmountTooLarge
+    | DatabaseError
   >;
   readonly createRevision: (
     quoteId: UlidValue,
@@ -430,6 +442,25 @@ export const QuotesLive = Layer.effect(
           database.sqlite
             .transaction(() => {
               const client = findClient(request.clientId);
+              const requestedAffair =
+                request.affairId === undefined
+                  ? undefined
+                  : database.sqlite
+                      .prepare('select id, client_id as clientId, status from affairs where id = ?')
+                      .get(request.affairId);
+              if (request.affairId !== undefined && requestedAffair === undefined) {
+                throw new AffairNotFound({ code: 'affair.not_found' });
+              }
+              const affair =
+                requestedAffair === undefined
+                  ? undefined
+                  : Schema.decodeUnknownSync(AffairRecord)(requestedAffair);
+              if (
+                affair !== undefined &&
+                (affair.clientId !== request.clientId || affair.status !== 'open')
+              ) {
+                throw new AffairConflict({ code: 'affair.conflict' });
+              }
               const reference = allocateBusinessReference(
                 database.sqlite,
                 'quote',
@@ -455,40 +486,55 @@ export const QuotesLive = Layer.effect(
                 createdByUserId,
                 now,
               );
-              const affairId = ulid(now + 1);
-              const affairReference = allocateBusinessReference(
-                database.sqlite,
-                'affair',
-                businessYear(now, businessConfig.timeZone),
-              );
-              database.sqlite
-                .prepare(
-                  `insert into affairs
-                   (id, request_id, reference, client_id, title, status, version, created_at, updated_at)
-                   values (?, ?, ?, ?, ?, 'open', 1, ?, ?)`,
-                )
-                .run(
-                  affairId,
-                  randomUUID(),
-                  affairReference,
-                  request.clientId,
-                  request.title,
-                  now,
-                  now,
+              const affairId = affair?.id ?? ulid(now + 1);
+              if (affair === undefined) {
+                const affairReference = allocateBusinessReference(
+                  database.sqlite,
+                  'affair',
+                  businessYear(now, businessConfig.timeZone),
                 );
+                database.sqlite
+                  .prepare(
+                    `insert into affairs
+                     (id, request_id, reference, client_id, title, status, version, created_at, updated_at)
+                     values (?, ?, ?, ?, ?, 'open', 1, ?, ?)`,
+                  )
+                  .run(
+                    affairId,
+                    randomUUID(),
+                    affairReference,
+                    request.clientId,
+                    request.title,
+                    now,
+                    now,
+                  );
+                audit.insert({
+                  action: 'affair.created',
+                  actorUserId: createdByUserId,
+                  resourceType: 'affair',
+                  resourceId: affairId,
+                  metadata: { reference: affairReference },
+                  occurredAt: now,
+                });
+              }
               database.sqlite
                 .prepare(
                   'insert into affair_quotes (affair_id, quote_id, linked_at, linked_by_user_id) values (?, ?, ?, ?)',
                 )
                 .run(affairId, quoteId, now, createdByUserId);
-              audit.insert({
-                action: 'affair.created',
-                actorUserId: createdByUserId,
-                resourceType: 'affair',
-                resourceId: affairId,
-                metadata: { reference: affairReference },
-                occurredAt: now,
-              });
+              if (affair !== undefined) {
+                database.sqlite
+                  .prepare('update affairs set version = version + 1, updated_at = ? where id = ?')
+                  .run(now, affairId);
+                audit.insert({
+                  action: 'affair.quote-linked',
+                  actorUserId: createdByUserId,
+                  resourceType: 'affair',
+                  resourceId: affairId,
+                  metadata: { quoteId, reference },
+                  occurredAt: now,
+                });
+              }
               audit.insert({
                 action: 'quote.created',
                 actorUserId: createdByUserId,
@@ -503,7 +549,13 @@ export const QuotesLive = Layer.effect(
             })
             .immediate(),
         catch: (cause) => {
-          if (cause instanceof ClientNotFound || cause instanceof ClientArchived) return cause;
+          if (
+            cause instanceof AffairConflict ||
+            cause instanceof AffairNotFound ||
+            cause instanceof ClientNotFound ||
+            cause instanceof ClientArchived
+          )
+            return cause;
           if (cause instanceof RangeError) {
             return new QuoteAmountTooLarge({ code: 'quote.amount_too_large' });
           }

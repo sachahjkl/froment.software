@@ -196,6 +196,23 @@ describe('Quote editor navigation', () => {
     await harness.fixture.whenStable();
     expect(confirm).not.toHaveBeenCalled();
   });
+  it('creates a quote in the requested affair and locks its client', async () => {
+    const affairId = '01ARZ3NDEKTSV4RRFFQ69G5FC0';
+    create.mockResolvedValue({ success: false, code: 'quote.error' });
+    const { harness, root } = await open(
+      `/backoffice/quotes/new?affairId=${affairId}&clientId=${quoteFixture.clientId}`,
+    );
+    const client = control<HTMLSelectElement>(root, '#quote-client');
+    expect(client.value).toBe(quoteFixture.clientId);
+    expect(client.disabled).toBe(true);
+    inputValue(root, '#quote-name', 'Affair quote');
+    inputValue(root, '.document-lines input', 'Audit');
+    control<HTMLButtonElement>(root, 'button[type="submit"]').click();
+    await harness.fixture.whenStable();
+    expect(create).toHaveBeenCalledWith(
+      expect.objectContaining({ affairId, clientId: quoteFixture.clientId }),
+    );
+  });
   it.each(['invalid', '01ARZ3NDEKTSV4RRFFQ69G5FB2', quoteFixture.clientId])(
     'does not preselect an invalid, missing or archived client: %s',
     async (id) => {

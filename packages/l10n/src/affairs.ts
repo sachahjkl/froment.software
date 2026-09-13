@@ -3,6 +3,11 @@ export const affairText = {
     'affair.noHistory': 'Aucun événement enregistré pour cette affaire.',
     'affair.intro': 'Regroupez plusieurs devis, commandes et factures pour un même client.',
     'affair.create': 'Créer une affaire',
+    'affair.createQuote': 'Créer un devis',
+    'affair.archive': 'Archiver l’affaire',
+    'affair.archiveConfirm':
+      'Archiver cette affaire ? Les documents seront conservés et l’affaire restera consultable.',
+    'affair.reopen': 'Rouvrir l’affaire',
     'affair.selectClient': 'Sélectionnez un client',
     'affair.reference': 'Numéro d’affaire',
     'affair.documents': 'Documents liés',
@@ -22,6 +27,11 @@ export const affairText = {
     'affair.noHistory': 'No recorded events for this affair.',
     'affair.intro': 'Group multiple quotes, orders, and invoices for one client.',
     'affair.create': 'Create an affair',
+    'affair.createQuote': 'Create a quote',
+    'affair.archive': 'Archive affair',
+    'affair.archiveConfirm':
+      'Archive this affair? Its documents will remain available and the affair will remain accessible.',
+    'affair.reopen': 'Reopen affair',
     'affair.selectClient': 'Select a client',
     'affair.reference': 'Affair number',
     'affair.documents': 'Linked documents',

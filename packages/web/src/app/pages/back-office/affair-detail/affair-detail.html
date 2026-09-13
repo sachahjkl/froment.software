@@ -3,6 +3,27 @@
     <a pageBack routerLink="/backoffice/affairs">{{ i18n.t('backOffice.affairs.title') }}</a>
     <h1 id="affair-title">{{ affair()?.reference ?? i18n.t('backOffice.affairs.title') }}</h1>
     @if (affair(); as item) {
+    <ng-container pageActions>
+      @if (item.status === 'open' && canCreateQuote()) {
+      <a
+        appLinkButton
+        variant="primary"
+        routerLink="/backoffice/quotes/new"
+        [queryParams]="{ affairId: item.id, clientId: item.clientId }"
+      >
+        <app-icon name="plus" />{{ i18n.t('affair.createQuote') }}
+      </a>
+      } @if (canEdit()) { @if (item.status === 'open') {
+      <button appButton type="button" variant="danger" [disabled]="saving()" (click)="archive()">
+        {{ i18n.t('affair.archive') }}
+      </button>
+      } @else {
+      <button appButton type="button" [disabled]="saving()" (click)="reopen()">
+        {{ i18n.t('affair.reopen') }}
+      </button>
+      } }
+    </ng-container>
+    } @if (affair(); as item) {
     <dl class="affair-inline-fields">
       <div
         appInlineEdit

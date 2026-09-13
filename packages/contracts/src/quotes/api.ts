@@ -13,6 +13,7 @@ import {
   RequestRateLimited,
 } from '../authentication/contracts.js';
 import { ClientArchived, ClientNotFound } from '../clients/contracts.js';
+import { AffairConflict, AffairNotFound } from '../affairs/contracts.js';
 import {
   DocumentArtifact,
   DocumentNotFound,
@@ -93,6 +94,8 @@ export class QuotesApi extends HttpApiGroup.make('quotes', { topLevel: true }).a
       RequestRateLimited.pipe(HttpApiSchema.status(429)),
       ClientNotFound.pipe(HttpApiSchema.status(404)),
       ClientArchived.pipe(HttpApiSchema.status(409)),
+      AffairNotFound.pipe(HttpApiSchema.status(404)),
+      AffairConflict.pipe(HttpApiSchema.status(409)),
       QuoteAmountTooLarge.pipe(HttpApiSchema.status(422)),
     ],
   })

@@ -204,11 +204,17 @@ export const setIssuer = async (server: HttpTestServer, displayName = 'Froment S
   return Schema.decodeUnknownSync(IssuerSettingsDetail)(await response.json());
 };
 
-export const createQuote = async (server: HttpTestServer, clientId: string, currency = 'EUR') => {
+export const createQuote = async (
+  server: HttpTestServer,
+  clientId: string,
+  currency = 'EUR',
+  affairId?: string,
+) => {
   const response = await fetch(`${server.baseUrl}/api/quotes`, {
     method: 'POST',
     headers: server.jsonHeaders,
     body: JSON.stringify({
+      affairId,
       clientId,
       currency,
       title: 'Integration quote',

@@ -135,6 +135,7 @@ export class QuoteEditor {
   protected readonly referenceError = signal<TranslationKey | undefined>(undefined);
   protected readonly referenceNotice = signal<TranslationKey | undefined>(undefined);
   private readonly quoteId = signal<UlidValue | undefined>(undefined);
+  private readonly affairId = signal<UlidValue | undefined>(undefined);
   private routeRequest = 0;
   protected readonly isNew = signal(false);
   protected readonly titleKey = computed<TranslationKey>(() =>
@@ -188,6 +189,7 @@ export class QuoteEditor {
         this.uncertain() ||
         this.referenceBusy(),
     });
+    disabled(path.clientId, { when: () => this.affairId() !== undefined });
     required(path.clientId);
     required(path.currency);
     maxLength(path.currency, 3);
@@ -501,7 +503,9 @@ export class QuoteEditor {
             this.saving.set(false);
             return;
           }
-          const request: QuoteCreateRequestValue = { ...common, clientId };
+          const affairId = this.affairId();
+          const request: QuoteCreateRequestValue =
+            affairId === undefined ? { ...common, clientId } : { ...common, affairId, clientId };
           const outcome = await this.quotesApi.create(request);
           if (this.destroyRef.destroyed || generation !== this.routeRequest) return;
           if (!outcome.success) {
@@ -583,8 +587,10 @@ export class QuoteEditor {
     this.referenceError.set(undefined);
     this.referenceNotice.set(undefined);
     const requestedClientId = this.decodeQuoteId(this.route.snapshot.queryParamMap.get('clientId'));
+    const requestedAffairId = this.decodeQuoteId(this.route.snapshot.queryParamMap.get('affairId'));
     const quoteId = this.decodeQuoteId(parameter);
     this.quoteId.set(quoteId);
+    this.affairId.set(parameter === null ? requestedAffairId : undefined);
     this.isNew.set(parameter === null);
     this.detail.set(undefined);
     this.saving.set(false);
