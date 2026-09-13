@@ -6,6 +6,7 @@ on:
 jobs:
   production:
     permissions:
+      actions: read
       attestations: read
       contents: read
       id-token: write
