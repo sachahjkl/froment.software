@@ -72,45 +72,68 @@
       <div>
         <h2>{{ i18n.t('clientsWorkspace.identity') }}</h2>
         <dl>
-          <div>
-            <dt>{{ i18n.t('backOffice.clients.displayName') }}</dt>
-            <dd>{{ current.displayName }}</dd>
-          </div>
-          <div>
-            <dt>{{ i18n.t('backOffice.clients.email') }}</dt>
-            <dd>{{ current.email || i18n.t('clientsWorkspace.notProvided') }}</dd>
-          </div>
-          <div>
-            <dt>{{ i18n.t('backOffice.clients.phone') }}</dt>
-            <dd>{{ current.phone || i18n.t('clientsWorkspace.notProvided') }}</dd>
-          </div>
+          <div
+            appInlineEdit
+            [label]="i18n.t('backOffice.clients.displayName')"
+            [value]="current.displayName"
+            [emptyValue]="i18n.t('clientsWorkspace.notProvided')"
+            [editable]="canEditProfile()"
+            [editing]="editingField() === 'displayName'"
+            [saving]="savingField() === 'displayName'"
+            [required]="true"
+            [maximumLength]="120"
+            (editRequested)="editingField.set('displayName')"
+            (cancelRequested)="editingField.set(undefined)"
+            (saveRequested)="saveField('displayName', $event)"
+          ></div>
+          <div
+            appInlineEdit
+            [label]="i18n.t('backOffice.clients.email')"
+            [value]="current.email"
+            [emptyValue]="i18n.t('clientsWorkspace.notProvided')"
+            [editable]="canEditProfile()"
+            [editing]="editingField() === 'email'"
+            [saving]="savingField() === 'email'"
+            inputType="email"
+            [maximumLength]="254"
+            (editRequested)="editingField.set('email')"
+            (cancelRequested)="editingField.set(undefined)"
+            (saveRequested)="saveField('email', $event)"
+          ></div>
+          <div
+            appInlineEdit
+            [label]="i18n.t('backOffice.clients.phone')"
+            [value]="current.phone"
+            [emptyValue]="i18n.t('clientsWorkspace.notProvided')"
+            [editable]="canEditProfile()"
+            [editing]="editingField() === 'phone'"
+            [saving]="savingField() === 'phone'"
+            inputType="tel"
+            [maximumLength]="64"
+            (editRequested)="editingField.set('phone')"
+            (cancelRequested)="editingField.set(undefined)"
+            (saveRequested)="saveField('phone', $event)"
+          ></div>
         </dl>
       </div>
       <div>
         <h2>{{ i18n.t('clientsWorkspace.address') }}</h2>
         <dl>
-          <div>
-            <dt>{{ i18n.t('backOffice.clients.addressLine1') }}</dt>
-            <dd>{{ current.addressLine1 || i18n.t('clientsWorkspace.notProvided') }}</dd>
-          </div>
-          @if (current.addressLine2) {
-          <div>
-            <dt>{{ i18n.t('backOffice.clients.addressLine2') }}</dt>
-            <dd>{{ current.addressLine2 }}</dd>
-          </div>
+          @for (field of addressFields; track field.name) {
+          <div
+            appInlineEdit
+            [label]="i18n.t(field.label)"
+            [value]="current[field.name]"
+            [emptyValue]="i18n.t('clientsWorkspace.notProvided')"
+            [editable]="canEditProfile()"
+            [editing]="editingField() === field.name"
+            [saving]="savingField() === field.name"
+            [maximumLength]="field.maximumLength"
+            (editRequested)="editingField.set(field.name)"
+            (cancelRequested)="editingField.set(undefined)"
+            (saveRequested)="saveField(field.name, $event)"
+          ></div>
           }
-          <div>
-            <dt>{{ i18n.t('backOffice.clients.postalCode') }}</dt>
-            <dd>{{ current.postalCode || i18n.t('clientsWorkspace.notProvided') }}</dd>
-          </div>
-          <div>
-            <dt>{{ i18n.t('backOffice.clients.city') }}</dt>
-            <dd>{{ current.city || i18n.t('clientsWorkspace.notProvided') }}</dd>
-          </div>
-          <div>
-            <dt>{{ i18n.t('backOffice.clients.country') }}</dt>
-            <dd>{{ current.country || i18n.t('clientsWorkspace.notProvided') }}</dd>
-          </div>
         </dl>
       </div>
     </section>

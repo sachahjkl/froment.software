@@ -5,6 +5,11 @@
 .affair-panel > * + * {
   margin-top: var(--space-6);
 }
+.inline-fields {
+  display: grid;
+  gap: var(--space-4);
+  margin: var(--space-4) 0 0;
+}
 .quote-amount {
   margin: 0;
   text-align: end;

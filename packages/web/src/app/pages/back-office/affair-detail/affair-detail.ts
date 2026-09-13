@@ -11,7 +11,6 @@ import {
   inject,
   signal,
 } from '@angular/core';
-import { form, FormField, maxLength, required } from '@angular/forms/signals';
 import { ActivatedRoute, RouterLink, RouterOutlet } from '@angular/router';
 import {
   AffairUpdateRequest,
@@ -31,6 +30,7 @@ import { Notice } from '@shared/notice/notice';
 import { PageHeader } from '@shared/page-header/page-header';
 import { Tabs, type TabItem } from '@shared/tabs/tabs';
 import { TabLayout, TabPanel } from '@shared/tabs/tab-panel';
+import { InlineEdit } from '@shared/inline-edit/inline-edit';
 
 @Component({
   selector: 'app-affair-detail',
@@ -40,7 +40,7 @@ import { TabLayout, TabPanel } from '@shared/tabs/tab-panel';
     Badge,
     Button,
     DataTable,
-    FormField,
+    InlineEdit,
     Notice,
     PageHeader,
     RouterLink,
@@ -66,15 +66,16 @@ export class AffairDetail {
   protected readonly orders = signal<OrderListValue>([]);
   protected readonly invoices = signal<InvoiceListValue>([]);
   protected readonly events = signal<ReadonlyArray<typeof AuditEvent.Type>>([]);
-  private readonly model = signal<{ title: string; status: 'open' | 'closed' }>({
-    title: '',
-    status: 'open',
-  });
-  protected readonly editForm = form(this.model, (path) => {
-    required(path.title);
-    maxLength(path.title, 160);
-  });
+  protected readonly editing = signal<'title' | 'status' | undefined>(undefined);
   protected readonly saving = signal(false);
+  protected readonly statusOptions = computed(() => [
+    { value: 'open', label: this.i18n.t('affair.open') },
+    { value: 'closed', label: this.i18n.t('affair.closed') },
+  ]);
+  protected readonly statusLabel = computed(() => {
+    const status = this.affair()?.status;
+    return status === undefined ? '' : this.i18n.t(`affair.${status}`);
+  });
   protected readonly linkedQuotes = computed(() => {
     const ids = new Set(this.affair()?.quoteIds ?? []);
     return this.quotes().filter((quote) => ids.has(quote.id));
@@ -124,31 +125,33 @@ export class AffairDetail {
           ? events.result.toSorted((left, right) => left.occurredAt.localeCompare(right.occurredAt))
           : [],
       );
-      this.editForm().reset({ title: affair.result.title, status: affair.result.status });
       this.state.set('ready');
     } catch {
       this.state.set('error');
     }
   }
 
-  protected async save(event: Event): Promise<void> {
-    event.preventDefault();
+  protected async save(field: 'title' | 'status', value: string): Promise<void> {
     const affair = this.affair();
-    if (!affair || this.editForm().invalid() || this.saving()) return;
+    if (!affair || this.saving() || (field === 'title' && value === '')) return;
+    let status = affair.status;
+    if (field === 'status') {
+      if (value !== 'open' && value !== 'closed') return;
+      status = value;
+    }
     this.saving.set(true);
     try {
-      const value = this.model();
       const result = await this.api.update(
         affair.id,
         AffairUpdateRequest.make({
           expectedVersion: affair.version,
-          title: value.title.trim(),
-          status: value.status,
+          title: field === 'title' ? value : affair.title,
+          status,
         }),
       );
       if (result.success) {
         this.affair.set(result.result);
-        this.editForm().reset({ title: result.result.title, status: result.result.status });
+        this.editing.set(undefined);
       } else this.state.set('error');
     } finally {
       this.saving.set(false);
