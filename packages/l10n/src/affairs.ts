@@ -13,6 +13,9 @@ export const affairText = {
     'affair.save': 'Enregistrer l’affaire',
     'affair.not_found': 'Cette affaire est introuvable.',
     'affair.conflict': 'L’affaire a changé ou le document sélectionné est incompatible.',
+    'inlineEdit.edit': 'Modifier',
+    'inlineEdit.save': 'Enregistrer',
+    'inlineEdit.cancel': 'Annuler',
   },
   en: {
     'affair.noHistory': 'No recorded events for this affair.',
@@ -28,5 +31,8 @@ export const affairText = {
     'affair.save': 'Save affair',
     'affair.not_found': 'This affair was not found.',
     'affair.conflict': 'The affair changed or the selected document is incompatible.',
+    'inlineEdit.edit': 'Edit',
+    'inlineEdit.save': 'Save',
+    'inlineEdit.cancel': 'Cancel',
   },
 } as const;

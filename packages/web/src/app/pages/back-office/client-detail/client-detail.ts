@@ -16,6 +16,7 @@ import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router, RouterLink, RouterOutlet } from '@angular/router';
 import {
   Affair,
+  ClientUpdateRequest,
   Ulid,
   type ClientAccessValue,
   type ClientSummaryValue,
@@ -41,6 +42,7 @@ import { TabLayout, TabPanel } from '@shared/tabs/tab-panel';
 import { PageHeader } from '@shared/page-header/page-header';
 import { EmptyState } from '@shared/empty-state/empty-state';
 import { EntityIcon } from '@shared/entity-icon/entity-icon';
+import { InlineEdit } from '@shared/inline-edit/inline-edit';
 import { ListToolbar } from '@shared/list-toolbar/list-toolbar';
 import { ListWorkspace } from '@shared/list-toolbar/list-workspace';
 import { ListSearch } from '@shared/list-search/list-search';
@@ -70,6 +72,16 @@ import {
   clientAccessMatchesPeriod,
 } from './client-access-period';
 
+type ClientField =
+  | 'displayName'
+  | 'email'
+  | 'phone'
+  | 'addressLine1'
+  | 'addressLine2'
+  | 'postalCode'
+  | 'city'
+  | 'country';
+
 @Component({
   host: { class: 'page-container' },
   selector: 'app-client-detail',
@@ -88,6 +100,7 @@ import {
     PageHeader,
     EmptyState,
     EntityIcon,
+    InlineEdit,
     ListToolbar,
     ListWorkspace,
     ListSearch,
@@ -129,6 +142,15 @@ export class ClientDetail {
   );
   private loadGeneration = 0;
   protected readonly client = signal<ClientSummaryValue | undefined>(undefined);
+  protected readonly editingField = signal<ClientField | undefined>(undefined);
+  protected readonly savingField = signal<ClientField | undefined>(undefined);
+  protected readonly addressFields = [
+    { name: 'addressLine1', label: 'backOffice.clients.addressLine1', maximumLength: 160 },
+    { name: 'addressLine2', label: 'backOffice.clients.addressLine2', maximumLength: 160 },
+    { name: 'postalCode', label: 'backOffice.clients.postalCode', maximumLength: 32 },
+    { name: 'city', label: 'backOffice.clients.city', maximumLength: 120 },
+    { name: 'country', label: 'backOffice.clients.country', maximumLength: 120 },
+  ] as const;
   protected readonly archiving = signal(false);
   protected readonly documentsError = signal(false);
   protected readonly affairsError = signal(false);
@@ -206,6 +228,9 @@ export class ClientDetail {
   protected readonly loading = signal(true);
   protected readonly reactivating = signal(false);
   protected readonly archived = computed(() => this.client()?.archived ?? false);
+  protected readonly canEditProfile = computed(
+    () => this.authentication.can('client.update') && !this.archived(),
+  );
   protected readonly error = signal<TranslationKey | undefined>(undefined);
   protected readonly statusVariant = computed<BadgeVariant>(() =>
     this.archived() ? 'warning' : 'success',
@@ -310,12 +335,41 @@ export class ClientDetail {
   }
 
   async canDeactivate(): Promise<boolean> {
-    return !this.revokingAccessId() && !this.archiving() && !this.reactivating();
+    return (
+      !this.revokingAccessId() && !this.archiving() && !this.reactivating() && !this.savingField()
+    );
   }
 
   @HostListener('window:beforeunload', ['$event'])
   protected preventUnsavedUnload(event: BeforeUnloadEvent): void {
-    if (this.revokingAccessId() || this.archiving() || this.reactivating()) event.preventDefault();
+    if (this.revokingAccessId() || this.archiving() || this.reactivating() || this.savingField())
+      event.preventDefault();
+  }
+
+  protected async saveField(field: ClientField, value: string): Promise<void> {
+    const client = this.client();
+    if (!client || this.savingField() || !this.canEditProfile()) return;
+    this.savingField.set(field);
+    this.error.set(undefined);
+    const outcome = await this.api.update(
+      client.id,
+      ClientUpdateRequest.make({
+        displayName: client.displayName,
+        addressLine1: client.addressLine1,
+        addressLine2: client.addressLine2,
+        postalCode: client.postalCode,
+        city: client.city,
+        country: client.country,
+        email: client.email,
+        phone: client.phone,
+        [field]: value,
+        expectedUpdatedAt: client.updatedAt,
+      }),
+    );
+    this.savingField.set(undefined);
+    if (!outcome.success) return this.setError(outcome.code);
+    this.client.set(outcome.result);
+    this.editingField.set(undefined);
   }
 
   protected money(cents: number): string {

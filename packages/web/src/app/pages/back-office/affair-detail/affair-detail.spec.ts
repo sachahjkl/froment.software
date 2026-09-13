@@ -91,8 +91,11 @@ describe('AffairDetail', () => {
     ).toEqual(['2026-08-20T08:00:00.000Z', '2026-08-21T08:00:00.000Z']);
   });
 
-  it('shows editing controls only on the overview tab', async () => {
+  it('opens editing controls only after an edit request', async () => {
     const harness = await RouterTestingHarness.create(`/backoffice/affairs/${affairId}/overview`);
+    await harness.fixture.whenStable();
+    expect(harness.routeNativeElement!.querySelectorAll('form')).toHaveLength(0);
+    harness.routeNativeElement!.querySelector<HTMLButtonElement>('[appInlineEdit] button')!.click();
     await harness.fixture.whenStable();
     expect(harness.routeNativeElement!.querySelectorAll('form')).toHaveLength(1);
   });

@@ -32,23 +32,34 @@
       aria-labelledby="affair-edit-title"
     >
       <h2 id="affair-edit-title">{{ i18n.t('affair.edit') }}</h2>
-      <form class="field-grid" (submit)="save($event)">
-        <label class="field"
-          >{{ i18n.t('backOffice.invoice.title') }}<input
-            class="input"
-            [formField]="editForm.title"
-        /></label>
-        <label class="field"
-          >{{ i18n.t('billingWorkspace.financialStatus') }}
-          <select class="input" [formField]="editForm.status">
-            <option value="open">{{ i18n.t('affair.open') }}</option>
-            <option value="closed">{{ i18n.t('affair.closed') }}</option>
-          </select>
-        </label>
-        <div class="actions">
-          <button appButton type="submit" [disabled]="saving()">{{ i18n.t('affair.save') }}</button>
-        </div>
-      </form>
+      <dl class="inline-fields">
+        <div
+          appInlineEdit
+          [label]="i18n.t('backOffice.invoice.title')"
+          [value]="item.title"
+          [emptyValue]="i18n.t('clientsWorkspace.notProvided')"
+          [editing]="editing() === 'title'"
+          [saving]="saving()"
+          [required]="true"
+          [maximumLength]="160"
+          (editRequested)="editing.set('title')"
+          (cancelRequested)="editing.set(undefined)"
+          (saveRequested)="save('title', $event)"
+        ></div>
+        <div
+          appInlineEdit
+          [label]="i18n.t('billingWorkspace.financialStatus')"
+          [value]="item.status"
+          [displayValue]="statusLabel()"
+          [emptyValue]="i18n.t('clientsWorkspace.notProvided')"
+          [options]="statusOptions()"
+          [editing]="editing() === 'status'"
+          [saving]="saving()"
+          (editRequested)="editing.set('status')"
+          (cancelRequested)="editing.set(undefined)"
+          (saveRequested)="save('status', $event)"
+        ></div>
+      </dl>
     </section>
 
     <section aria-labelledby="affair-documents-title">

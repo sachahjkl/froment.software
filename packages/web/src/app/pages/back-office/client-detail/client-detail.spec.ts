@@ -46,6 +46,10 @@ function deferred<Value>() {
 async function configure(panel = 'profile', archived = false, query = '') {
   const api = {
     get: vi.fn().mockResolvedValue({ success: true, result: { ...client, archived } }),
+    update: vi.fn().mockImplementation(async (_id, request) => ({
+      success: true,
+      result: { ...client, ...request, updatedAt: 43 },
+    })),
     listAccess: vi.fn().mockResolvedValue({ success: true, result: [access] }),
     archive: vi.fn().mockResolvedValue({ success: true, result: { ...client, archived: true } }),
     reactivate: vi.fn().mockResolvedValue({ success: true, result: client }),
@@ -106,6 +110,23 @@ describe('ClientDetail', () => {
     expect(root.querySelectorAll('[pageActions] a')[1]?.getAttribute('href')).toBe(
       `/backoffice/clients/${client.id}/edit`,
     );
+  });
+
+  it('edits one client field without sending placeholder text', async () => {
+    const { root, api, fixture } = await configure();
+    const field = root.querySelector('[appInlineEdit]')!;
+    field.querySelector<HTMLButtonElement>('button')!.click();
+    await fixture.whenStable();
+    const input = field.querySelector<HTMLInputElement>('input')!;
+    input.value = 'Acme Europe';
+    input.dispatchEvent(new Event('input'));
+    field.querySelector<HTMLFormElement>('form')!.dispatchEvent(new Event('submit'));
+    await fixture.whenStable();
+    expect(api.update).toHaveBeenCalledWith(
+      client.id,
+      expect.objectContaining({ displayName: 'Acme Europe', expectedUpdatedAt: 42 }),
+    );
+    expect(root.querySelector('h1')?.textContent?.trim()).toBe('Acme Europe');
   });
 
   it('requires confirmation before archiving and keeps the client record visible', async () => {

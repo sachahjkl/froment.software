@@ -1,0 +1,44 @@
+<dt>{{ label() }}</dt>
+<dd>
+  @if (editing()) {
+  <form (submit)="submit($event)">
+    <label class="visually-hidden" [for]="controlId">{{ label() }}</label>
+    @if (options().length > 0) {
+    <select
+      class="select"
+      [id]="controlId"
+      [value]="draft()"
+      [disabled]="saving()"
+      (change)="draft.set($any($event.target).value)"
+    >
+      @for (option of options(); track option.value) {
+      <option [value]="option.value">{{ option.label }}</option>
+      }
+    </select>
+    } @else {
+    <input
+      class="input"
+      [id]="controlId"
+      [type]="inputType()"
+      [value]="draft()"
+      [required]="required()"
+      [maxLength]="maximumLength() ?? null"
+      [disabled]="saving()"
+      (input)="draft.set($any($event.target).value)"
+    />
+    }
+    <div class="spacer-x-2">
+      <button appButton type="submit" [disabled]="saving()">{{ i18n.t('inlineEdit.save') }}</button>
+      <button appButton type="button" [disabled]="saving()" (click)="cancelRequested.emit()">
+        {{ i18n.t('inlineEdit.cancel') }}
+      </button>
+    </div>
+  </form>
+  } @else {
+  <span>{{ displayValue() || value() || emptyValue() }}</span>
+  @if (editable()) {
+  <button appButton type="button" variant="ghost" (click)="editRequested.emit()">
+    {{ i18n.t('inlineEdit.edit') }}
+  </button>
+  } }
+</dd>
