@@ -819,14 +819,14 @@ const makeBanking = Effect.gen(function* () {
             const payment = Schema.decodeUnknownSync(
               Schema.Struct({
                 amountCents: Schema.Int,
+                functionalAmountCents: Schema.Int,
                 reference: Schema.String,
                 currency: CurrencyCode,
-                functionalTotalCents: Schema.NullOr(Schema.Int),
               }),
             )(
               database.sqlite
                 .prepare(
-                  'select item.amount_cents as amountCents, i.reference, i.currency, i.functional_total_cents as functionalTotalCents from supplier_payment_batch_items item join supplier_invoices i on i.id = item.invoice_id where item.batch_id = ? and item.invoice_id = ?',
+                  'select item.amount_cents as amountCents, item.functional_amount_cents as functionalAmountCents, i.reference, i.currency from supplier_payment_batch_items item join supplier_invoices i on i.id = item.invoice_id where item.batch_id = ? and item.invoice_id = ?',
                 )
                 .get(request.batchId, request.invoiceId),
             );
@@ -867,14 +867,12 @@ const makeBanking = Effect.gen(function* () {
                 DateTime.formatIso(DateTime.makeUnsafe(now)),
                 actorUserId,
               );
-            if (payment.functionalTotalCents === null)
-              throw new BankMatchConflict({ code: 'bank.match_conflict' });
             const bankFunctionalCents = convertToFunctionalCents(
               request.amountCents,
               transaction.exchangeRate,
             );
             const invoiceFunctionalCents = proportionalCents(
-              payment.functionalTotalCents,
+              payment.functionalAmountCents,
               request.amountCents,
               payment.amountCents,
             );
@@ -978,11 +976,28 @@ const makeBanking = Effect.gen(function* () {
                 matchId,
               );
             reverseCustomerSettlement(database.sqlite, saved.requestId, actorUserId, now);
+            const settlement = Schema.decodeUnknownSync(
+              Schema.Struct({ expectedCents: Schema.Int, matchedCents: Schema.Int }),
+            )(
+              database.sqlite
+                .prepare(
+                  `select item.amount_cents as expectedCents,
+                     coalesce((select sum(m.amount_cents) from supplier_bank_matches m
+                       where m.invoice_id = item.invoice_id and m.cancelled_at is null), 0)
+                       as matchedCents
+                   from supplier_payment_batch_items item where item.invoice_id = ?`,
+                )
+                .get(saved.invoiceId),
+            );
             database.sqlite
               .prepare(
-                "update supplier_invoices set status = 'approved', updated_at = ? where id = ? and status = 'paid'",
+                "update supplier_invoices set status = ?, updated_at = ? where id = ? and status in ('approved', 'paid')",
               )
-              .run(now, saved.invoiceId);
+              .run(
+                settlement.matchedCents === settlement.expectedCents ? 'paid' : 'approved',
+                now,
+                saved.invoiceId,
+              );
             audit.insert({
               action: 'bank.supplier-unmatched',
               actorUserId,

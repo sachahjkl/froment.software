@@ -21,6 +21,7 @@ const PaymentInvoiceRecord = Schema.Struct({
   reference: Schema.String,
   supplierName: Schema.String,
   amountCents: Schema.Int,
+  functionalAmountCents: Schema.Int,
   currency: Schema.String,
   status: Schema.String,
   documentKind: Schema.String,
@@ -219,14 +220,27 @@ export const SupplierPaymentBatchesLive = Layer.effect(
                   code: 'supplier_payment_batch.creation_conflict',
                 });
               const placeholders = normalizedRequest.invoiceIds.map(() => '?').join(', ');
+              const alreadyScheduled = database.sqlite
+                .prepare(
+                  `select 1 from supplier_payment_batch_items where invoice_id in (${placeholders}) limit 1`,
+                )
+                .get(...normalizedRequest.invoiceIds);
+              if (alreadyScheduled !== undefined)
+                throw new SupplierInvoiceConflict({
+                  code: 'supplier_payment_batch.invoice_not_payable',
+                });
               const rows = Schema.decodeUnknownSync(Schema.Array(PaymentInvoiceRecord))(
                 database.sqlite
                   .prepare(
                     `select i.id as invoiceId, i.reference,
-                            i.total_cents - coalesce((select sum(c.total_cents)
-                              from supplier_invoices c where c.source_invoice_id = i.id
-                              and c.document_kind = 'credit' and c.status in ('approved','paid')), 0)
-                              as amountCents,
+                             i.total_cents - coalesce((select sum(c.total_cents)
+                               from supplier_invoices c where c.source_invoice_id = i.id
+                               and c.document_kind = 'credit' and c.status in ('approved','paid')), 0)
+                               as amountCents,
+                             i.functional_total_cents - coalesce((select sum(c.functional_total_cents)
+                               from supplier_invoices c where c.source_invoice_id = i.id
+                               and c.document_kind = 'credit' and c.status in ('approved','paid')), 0)
+                               as functionalAmountCents,
                             i.currency, i.status, i.document_kind as documentKind,
                             s.display_name as supplierName, s.iban, s.bic
                      from supplier_invoices i join suppliers s on s.id = i.supplier_id
@@ -245,7 +259,8 @@ export const SupplierPaymentBatchesLive = Layer.effect(
                   invoice === undefined ||
                   invoice.status !== 'approved' ||
                   invoice.documentKind !== 'invoice' ||
-                  invoice.amountCents <= 0
+                  invoice.amountCents <= 0 ||
+                  invoice.functionalAmountCents <= 0
                 )
                   throw new SupplierInvoiceConflict({
                     code: 'supplier_payment_batch.invoice_not_payable',
@@ -310,11 +325,17 @@ export const SupplierPaymentBatchesLive = Layer.effect(
                   now,
                 );
               const insertItem = database.sqlite.prepare(
-                `insert into supplier_payment_batch_items (batch_id, invoice_id, amount_cents)
-                 values (?, ?, ?)`,
+                `insert into supplier_payment_batch_items
+                 (batch_id, invoice_id, amount_cents, functional_amount_cents)
+                 values (?, ?, ?, ?)`,
               );
               for (const invoice of invoices)
-                insertItem.run(id, invoice.invoiceId, invoice.amountCents);
+                insertItem.run(
+                  id,
+                  invoice.invoiceId,
+                  invoice.amountCents,
+                  invoice.functionalAmountCents,
+                );
               audit.insert({
                 action: 'supplier-payment-batch.created',
                 actorUserId,

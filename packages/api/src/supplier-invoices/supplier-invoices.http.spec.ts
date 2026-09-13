@@ -158,6 +158,44 @@ describe('supplier invoice HTTP lifecycle', () => {
     expect(approved.status).toBe('approved');
     expect(approved.approvedAt).not.toBeNull();
 
+    const creditRequest = { requestId: crypto.randomUUID(), sourceInvoiceId: approved.id };
+    const creditResponse = await write('/api/supplier-credits', creditRequest);
+    expect(creditResponse.status).toBe(200);
+    const creditDraft = Schema.decodeUnknownSync(SupplierInvoice)(await creditResponse.json());
+    const repeatedCredit = await write('/api/supplier-credits', creditRequest);
+    await expect(repeatedCredit.json()).resolves.toMatchObject({ id: creditDraft.id });
+    const conflictingCredit = await write('/api/supplier-credits', {
+      ...creditRequest,
+      sourceInvoiceId: '01ARZ3NDEKTSV4RRFFQ69G5FAV',
+    });
+    expect(conflictingCredit.status).toBe(409);
+    await expect(conflictingCredit.json()).resolves.toMatchObject({
+      code: 'supplier_invoice.creation_conflict',
+    });
+    const creditUpdate = await write(
+      `/api/supplier-invoices/${creditDraft.id}`,
+      {
+        supplierId: supplier.id,
+        reference: creditDraft.reference,
+        invoiceDate: creation.invoiceDate,
+        dueDate: creation.invoiceDate,
+        currency: creation.currency,
+        lines: [{ description: 'Partial credit', netTotalCents: 5_000, vatRateBasisPoints: 2_000 }],
+        notes: '',
+        expectedVersion: creditDraft.version,
+      },
+      'PUT',
+    );
+    const updatedCredit = Schema.decodeUnknownSync(SupplierInvoice)(await creditUpdate.json());
+    const creditConfirm = await write(`/api/supplier-invoices/${creditDraft.id}/confirm`, {
+      expectedVersion: updatedCredit.version,
+    });
+    const confirmedCredit = Schema.decodeUnknownSync(SupplierInvoice)(await creditConfirm.json());
+    const creditApprove = await write(`/api/supplier-invoices/${creditDraft.id}/approve`, {
+      expectedVersion: confirmedCredit.version,
+    });
+    expect(creditApprove.status).toBe(200);
+
     const paymentRequest = {
       requestId: crypto.randomUUID(),
       executionDate: '2026-10-15',
@@ -175,10 +213,18 @@ describe('supplier invoice HTTP lifecycle', () => {
     expect(payment).toMatchObject({
       executionDate: paymentRequest.executionDate,
       transactionCount: 1,
-      controlSumCents: approved.totalCents,
+      controlSumCents: approved.totalCents - 6_000,
     });
     const repeatedPayment = await write('/api/supplier-payment-batches', paymentRequest);
     await expect(repeatedPayment.json()).resolves.toMatchObject({ id: payment.id });
+    const duplicatePayment = await write('/api/supplier-payment-batches', {
+      ...paymentRequest,
+      requestId: crypto.randomUUID(),
+    });
+    expect(duplicatePayment.status).toBe(409);
+    await expect(duplicatePayment.json()).resolves.toMatchObject({
+      code: 'supplier_payment_batch.invoice_not_payable',
+    });
 
     const foreignCreateResponse = await write('/api/supplier-invoices', {
       ...creation,
@@ -225,7 +271,7 @@ describe('supplier invoice HTTP lifecycle', () => {
     expect(paymentDownload.headers.get('content-type')).toContain('application/xml');
     expect(paymentDownload.headers.get('content-disposition')).toContain(`${payment.id}.xml`);
     const pain001 = await paymentDownload.text();
-    expect(pain001).toContain('<InstdAmt Ccy="EUR">125.01</InstdAmt>');
+    expect(pain001).toContain('<InstdAmt Ccy="EUR">65.01</InstdAmt>');
     expect(pain001).toContain(`<IBAN>FR1420041010050500013M02606</IBAN>`);
     const paymentList = await fetch(`${server.baseUrl}/api/supplier-payment-batches`, {
       headers: server.sessionHeaders,
@@ -248,7 +294,7 @@ describe('supplier invoice HTTP lifecycle', () => {
     });
     expect(listResponse.status).toBe(200);
     const list = Schema.decodeUnknownSync(Schema.Array(SupplierInvoice))(await listResponse.json());
-    expect(list).toHaveLength(2);
+    expect(list).toHaveLength(3);
   });
 
   it('creates an OCR draft and records explicit external consent', async () => {
