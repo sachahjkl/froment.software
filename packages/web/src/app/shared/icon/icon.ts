@@ -45,7 +45,9 @@ export type IconName =
   | 'list-bullets'
   | 'list-numbers'
   | 'undo'
-  | 'redo';
+  | 'redo'
+  | 'truck'
+  | 'shopping-cart';
 
 @Component({
   selector: 'app-icon',
@@ -95,6 +97,16 @@ export type IconName =
         }
         @case ('invoice') {
           <path d="M6 3h9l4 4v14H5V3zm8 0v5h5M8 12h8m-8 4h6" />
+        }
+        @case ('truck') {
+          <path d="M10 17h4V5H2v12h3m9-8h4l4 4v4h-3m-9 0H8" />
+          <circle cx="6.5" cy="17.5" r="2.5" />
+          <circle cx="16.5" cy="17.5" r="2.5" />
+        }
+        @case ('shopping-cart') {
+          <circle cx="9" cy="20" r="1" />
+          <circle cx="19" cy="20" r="1" />
+          <path d="M3 4h2l2.4 10.4A2 2 0 0 0 9.3 16H18a2 2 0 0 0 1.9-1.4L21 8H6" />
         }
         @case ('bank') {
           <path d="m3 9 9-6 9 6zm2 3v7m5-7v7m4-7v7m5-7v7M3 22h18" />
