@@ -26,7 +26,7 @@
       [attr.aria-label]="i18n.t('backOfficeShell.apiNewTab')"
       ><app-icon name="book" />{{ i18n.t('backOfficeShell.api') }}<app-icon name="external"
     /></a>
-    <a routerLink="/version">{{ i18n.t('nav.version') }}</a>
+    <app-environment-status [publicPage]="false" [headerLink]="true" />
   </nav>
 </header>
 <app-drawer
