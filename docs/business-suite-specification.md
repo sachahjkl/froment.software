@@ -281,44 +281,40 @@ Traiter ce bloc après tous les autres blocs fonctionnels.
 
 ## 10. Matrice de suivi
 
-Cette matrice indique l’état observé au 12 septembre 2026.
+Cette matrice indique l’état observé au 13 septembre 2026.
 Elle ne remplace pas les critères de fin définis au début du document.
 
-| Bloc                               | État observé                | Travail restant principal                            |
-| ---------------------------------- | --------------------------- | ---------------------------------------------------- |
-| Déploiement Nomad                  | Réalisé                     | Validation finale et livraison globale               |
-| URL anglaises                      | Réalisé                     | Contrôle final de toutes les routes                  |
-| Téléphone client                   | Réalisé                     | Contrôle final des instantanés émis                  |
-| Référentiel fournisseur            | Réalisé en première version | Contrôle fiscal international complet                |
-| Factures fournisseur               | Réalisé en première version | Avoirs, comptabilité et rapprochement complet        |
-| Analyse assistée fournisseur       | Réalisé en première version | Contrôle des adaptateurs et secrets                  |
-| Rôles personnalisés                | Réalisé en première version | Profils comptables et dernier administrateur         |
-| Paramètres comptables société      | Réalisé en première version | Initialisation et verrouillage complet               |
-| Taux de change                     | Réalisé en première version | Banque et écarts de change                           |
-| Virements fournisseur              | Réalisé en première version | Contrôle de l’artefact immuable et rapprochement     |
-| Imports bancaires CAMT, OFX et CSV | Réalisé                     | Validation finale et livraison globale               |
-| Avoirs partiels et consolidés      | Réalisé en première version | Validation finale et intégration comptable           |
-| Encaissements scindés              | Réalisé                     | Validation finale                                    |
-| Sélecteurs de version intégrés     | Réalisé                     | Validation finale                                    |
-| Tableau éditable commun            | Réalisé                     | Validation finale                                    |
-| Entité Affaire indépendante        | Réalisé en première version | Validation finale et enrichissement des vues         |
-| Comptabilité intégrée              | Partiel                     | Plan, périodes, écritures, états, CA3, FEC et pièces |
-| Suggestions de rapprochement       | Réalisé en première version | Validation finale et extension aux achats            |
-| Données de démonstration           | À faire                     | Générateur, commande, permissions et interface       |
-| Page autonome de signature         | À faire en dernier          | Composition, design et accessibilité                 |
+| Bloc                               | État observé | Travail restant principal                     |
+| ---------------------------------- | ------------ | --------------------------------------------- |
+| Déploiement Nomad                  | Réalisé      | Validation du nouveau digest sur staging      |
+| URL anglaises                      | Réalisé      | Aucun                                         |
+| Téléphone client                   | Réalisé      | Aucun                                         |
+| Référentiel fournisseur            | Réalisé      | Aucun                                         |
+| Factures fournisseur               | Réalisé      | Aucun                                         |
+| Analyse assistée fournisseur       | Réalisé      | Rotation des secrets exposés                  |
+| Rôles personnalisés                | Réalisé      | Aucun                                         |
+| Paramètres comptables société      | Réalisé      | Aucun                                         |
+| Taux de change                     | Réalisé      | Aucun                                         |
+| Virements fournisseur              | Réalisé      | Aucun                                         |
+| Imports bancaires CAMT, OFX et CSV | Réalisé      | Aucun                                         |
+| Avoirs partiels et consolidés      | Réalisé      | Aucun                                         |
+| Encaissements scindés              | Réalisé      | Aucun                                         |
+| Sélecteurs de version intégrés     | Réalisé      | Aucun                                         |
+| Tableau éditable commun            | Réalisé      | Aucun                                         |
+| Entité Affaire indépendante        | Réalisé      | Aucun                                         |
+| Comptabilité intégrée              | Réalisé      | Aucun                                         |
+| Suggestions de rapprochement       | Réalisé      | Aucun                                         |
+| Données de démonstration           | Réalisé      | Validation de la réinitialisation sur staging |
+| Page autonome de signature         | Réalisé      | Revue visuelle avec un navigateur connecté    |
 
 ## 11. Ordre d’exécution restant
 
-1. Terminer et publier les imports bancaires standards.
-2. Terminer les avoirs, encaissements, versions et éditeurs de lignes.
-3. Terminer l’entité Affaire.
-4. Compléter le cycle fournisseur et les paiements.
-5. Compléter le socle multidevise.
-6. Compléter la comptabilité intégrée et les états France.
-7. Ajouter les suggestions de rapprochement.
-8. Ajouter les données de démonstration.
-9. Revoir la page de signature.
-10. Exécuter les checks complets et livrer une seule version.
+1. Exécuter les checks complets.
+2. Déployer le nouveau digest sur staging.
+3. Valider la réinitialisation des données de démonstration.
+4. Revoir la page de signature avec un navigateur connecté.
+5. Promouvoir le digest staging validé en production.
+6. Remplacer les secrets exposés avec les accès aux fournisseurs et à Nomad.
 
 ## 12. Provenance des décisions
 
