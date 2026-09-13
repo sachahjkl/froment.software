@@ -77,3 +77,51 @@ it('preserves existing issuer details and bank transactions when applying the fi
     sqlite.close();
   }
 });
+
+it('creates one affair for each quote that predates independent affairs', () => {
+  const sqlite = new Sqlite(':memory:');
+  const migrations = readMigrationFiles({
+    migrationsFolder: join(import.meta.dirname, '../../drizzle'),
+  });
+  const affairMigration = migrations.findIndex((migration) =>
+    migration.name.endsWith('_independent_affairs'),
+  );
+  expect(affairMigration).toBeGreaterThan(0);
+  try {
+    sqlite.function('business_year', { deterministic: true }, (_milliseconds: number) => '2026');
+    sqlite.pragma('foreign_keys = OFF');
+    sqlite.pragma('recursive_triggers = ON');
+    for (const migration of migrations.slice(0, affairMigration)) {
+      for (const statement of migration.sql) sqlite.exec(statement);
+    }
+    sqlite.pragma('foreign_keys = ON');
+    sqlite.exec(`
+      insert into users (id, display_name, kind, created_at, updated_at) values
+        ('01ARZ3NDEKTSV4RRFFQ69G5FAA', 'Administrator', 'administrator', 1, 1),
+        ('01ARZ3NDEKTSV4RRFFQ69G5FAB', 'Client', 'client', 1, 1);
+      insert into clients (id, created_at, updated_at)
+        values ('01ARZ3NDEKTSV4RRFFQ69G5FAB', 1, 1);
+      insert into quotes (id, reference, client_id, status, version, created_at, updated_at)
+        values ('01ARZ3NDEKTSV4RRFFQ69G5FAC', 'DE-2026-000001', '01ARZ3NDEKTSV4RRFFQ69G5FAB', 'draft', 1, 1, 1);
+      insert into quote_revisions
+        (id, quote_id, version, client_display_name, title, conditions, currency,
+         net_total_cents, vat_total_cents, total_cents, created_at, created_by_user_id)
+        values
+        ('01ARZ3NDEKTSV4RRFFQ69G5FAD', '01ARZ3NDEKTSV4RRFFQ69G5FAC', 1, 'Client',
+         'Existing quote', '', 'EUR', 0, 0, 0, 1, '01ARZ3NDEKTSV4RRFFQ69G5FAA');
+    `);
+    for (const statement of migrations[affairMigration]!.sql) sqlite.exec(statement);
+    expect(sqlite.prepare('select reference, title, status from affairs').get()).toEqual({
+      reference: 'AF-2026-000001',
+      title: 'Existing quote',
+      status: 'open',
+    });
+    expect(sqlite.prepare('select affair_id, quote_id from affair_quotes').get()).toEqual({
+      affair_id: '01ARZ3NDEKTSV4RRFFQ69G5FAC',
+      quote_id: '01ARZ3NDEKTSV4RRFFQ69G5FAC',
+    });
+    expect(sqlite.pragma('foreign_key_check')).toEqual([]);
+  } finally {
+    sqlite.close();
+  }
+});
