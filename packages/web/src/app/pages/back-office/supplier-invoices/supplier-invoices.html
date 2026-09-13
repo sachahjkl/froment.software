@@ -19,38 +19,55 @@
   } @if (loading()) {
   <p role="status">{{ i18n.t('supplierInvoice.loading') }}</p>
   } @else {
-  <div appDataTable>
-    <table>
-      <thead>
-        <tr>
-          <th scope="col">{{ i18n.t('supplierInvoice.reference') }}</th>
-          <th scope="col">{{ i18n.t('supplierInvoice.supplier') }}</th>
-          <th scope="col">{{ i18n.t('supplierInvoice.invoiceDate') }}</th>
-          <th scope="col">{{ i18n.t('supplierInvoice.dueDate') }}</th>
-          <th scope="col">{{ i18n.t('supplierInvoice.status') }}</th>
-          <th scope="col">{{ i18n.t('supplierInvoice.total') }}</th>
-        </tr>
-      </thead>
-      <tbody>
-        @for (invoice of invoices(); track invoice.id) {
-        <tr>
-          <th scope="row"><a [routerLink]="[invoice.id]">{{ invoice.reference }}</a></th>
-          <td>{{ invoice.supplierName }}</td>
-          <td>{{ invoice.invoiceDate }}</td>
-          <td>{{ invoice.dueDate }}</td>
-          <td>{{ status(invoice) }}</td>
-          <td>{{ money(invoice) }}</td>
-        </tr>
-        } @empty {
-        <tr>
-          <td colspan="6">{{ i18n.t('supplierInvoice.empty') }}</td>
-        </tr>
-        }
-      </tbody>
-    </table>
-  </div>
-  <footer class="list-summary">
-    <p role="status">{{ i18n.plural('supplierInvoice.count', { count: invoices().length }) }}</p>
-  </footer>
+  <section appListWorkspace>
+    <app-workspace-table-tools
+      [query]="table.query().q"
+      [filter]="table.query().filter"
+      [filterLabel]="i18n.t('supplierInvoice.status')"
+      [filterSummary]="table.filterSummary()"
+      [filterOptions]="table.filterOptions()"
+      [columns]="['reference', 'supplier', 'invoiceDate', 'dueDate', 'status', 'totalCents']"
+      [rows]="invoiceExport()"
+      filename="supplier-invoices.csv"
+      [pending]="loading() || error() !== undefined"
+      (queryChange)="table.search($event)"
+      (filterChange)="table.filter($event)"
+    />
+    <div appDataTable>
+      <table>
+        <thead>
+          <tr>
+            <th scope="col">{{ i18n.t('supplierInvoice.reference') }}</th>
+            <th scope="col">{{ i18n.t('supplierInvoice.supplier') }}</th>
+            <th scope="col">{{ i18n.t('supplierInvoice.invoiceDate') }}</th>
+            <th scope="col">{{ i18n.t('supplierInvoice.dueDate') }}</th>
+            <th scope="col">{{ i18n.t('supplierInvoice.status') }}</th>
+            <th scope="col">{{ i18n.t('supplierInvoice.total') }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (result of table.results(); track result.item.id) { @let invoice = result.item;
+          <tr>
+            <th scope="row"><a [routerLink]="[invoice.id]">{{ invoice.reference }}</a></th>
+            <td>{{ invoice.supplierName }}</td>
+            <td>{{ invoice.invoiceDate }}</td>
+            <td>{{ invoice.dueDate }}</td>
+            <td>{{ status(invoice) }}</td>
+            <td>{{ money(invoice) }}</td>
+          </tr>
+          } @empty {
+          <tr>
+            <td colspan="6">{{ i18n.t('supplierInvoice.empty') }}</td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    <footer class="list-summary">
+      <p role="status">
+        {{ i18n.plural('supplierInvoice.count', { count: table.results().length }) }}
+      </p>
+    </footer>
+  </section>
   }
 </section>
