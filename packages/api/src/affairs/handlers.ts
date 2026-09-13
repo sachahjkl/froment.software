@@ -44,15 +44,6 @@ export const AffairHandlers = HttpApiBuilder.group(Api, 'affairs', (handlers) =>
         }),
       )
       .handle(
-        'affairQuoteLink',
-        Effect.fn('affairQuoteLink')(function* ({ params, payload }) {
-          yield* setPrivateResponseHeaders;
-          return yield* affairs
-            .linkQuote(params.affairId, payload, (yield* ApiPrincipal).userId)
-            .pipe(Effect.catchTag('DatabaseError', Effect.orDie));
-        }),
-      )
-      .handle(
         'affairEventList',
         Effect.fn('affairEventList')(function* ({ params }) {
           yield* setPrivateResponseHeaders;

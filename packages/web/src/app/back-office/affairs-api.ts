@@ -5,7 +5,6 @@ import {
   AffairCreateRequest,
   AffairFailure,
   AffairList,
-  AffairQuoteLinkRequest,
   AffairUpdateRequest,
   AuditEvent,
 } from '@froment/contracts';
@@ -41,15 +40,6 @@ export class AffairsApi {
   update(id: string, request: typeof AffairUpdateRequest.Type) {
     return requestOutcome(
       this.http.put(`/api/affairs/${id}`, request),
-      Affair,
-      AffairFailure,
-      'affair.error',
-    );
-  }
-
-  linkQuote(id: string, request: typeof AffairQuoteLinkRequest.Type) {
-    return requestOutcome(
-      this.http.post(`/api/affairs/${id}/quotes`, request),
       Affair,
       AffairFailure,
       'affair.error',

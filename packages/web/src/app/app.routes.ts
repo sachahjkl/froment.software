@@ -486,7 +486,7 @@ export const routes: Routes = [
     canActivate: [administratorGuard],
     canActivateChild: [administratorChildGuard],
     children: [
-      ...tabRoutes('overview', 'affair-detail', ['overview', 'documents']),
+      ...tabRoutes('overview', 'affair-detail', ['overview']),
       {
         path: 'history',
         component: TabPanelOutlet,

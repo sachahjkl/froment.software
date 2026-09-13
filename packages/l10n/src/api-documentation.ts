@@ -436,10 +436,6 @@ export const apiDocumentation = {
         summary: 'Modifier une affaire',
         description: 'Modifie le titre ou le statut avec contrôle de version.',
       },
-      affairQuoteLink: {
-        summary: 'Lier un devis',
-        description: 'Déplace un devis compatible vers cette affaire.',
-      },
       affairEventList: {
         summary: 'Lister les événements d’une affaire',
         description: 'Liste les événements commerciaux liés à un client.',
@@ -923,10 +919,6 @@ export const apiDocumentation = {
       affairUpdate: {
         summary: 'Update an affair',
         description: 'Updates the title or status with version control.',
-      },
-      affairQuoteLink: {
-        summary: 'Link a quote',
-        description: 'Moves a compatible quote to this affair.',
       },
       affairEventList: {
         summary: 'List affair events',
