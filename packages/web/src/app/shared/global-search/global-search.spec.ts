@@ -286,6 +286,19 @@ describe('GlobalSearch', () => {
     },
   );
 
+  it('finds permitted creation actions', async () => {
+    const harness = await RouterTestingHarness.create('/');
+    TestBed.inject(I18nService).setLanguage('fr');
+    const input = await openSearch(harness);
+    search(input, 'créer devis');
+    await harness.fixture.whenStable();
+    const result = overlay().querySelector<HTMLAnchorElement>('.results a');
+    expect(result?.getAttribute('href')).toBe('/backoffice/quotes/new');
+    expect(result?.closest('section')?.querySelector('h3')?.textContent).toContain(
+      TestBed.inject(I18nService).t('backOffice.search.kind.action'),
+    );
+  });
+
   it('keeps the search and form when the real exit confirmation is cancelled', async () => {
     TestBed.configureTestingModule({
       providers: [

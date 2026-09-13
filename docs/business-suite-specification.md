@@ -96,6 +96,9 @@ Les lots techniques intermédiaires servent uniquement à sécuriser le dévelop
 - Utiliser un ULID interne.
 - Attribuer un numéro métier `AF-YYYY-XXXXXX`.
 - Permettre à une affaire de regrouper plusieurs documents.
+- Permettre la création d’un devis depuis une affaire ouverte.
+- Associer ce devis à l’affaire sans créer une seconde affaire.
+- Permettre l’archivage réversible d’une affaire avec conservation de ses documents et de son audit.
 - Migrer automatiquement les affaires existantes.
 - Le produit neuf ne conserve pas les anciennes URL françaises.
 
@@ -263,7 +266,13 @@ Traiter ce bloc après tous les autres blocs fonctionnels.
 - Revoir sa composition, ses états et son accessibilité.
 - Aligner sa présentation avec le design du backoffice.
 
-## 9. Livraison et exploitation
+## 9. Navigation du backoffice
+
+- Rechercher les entités et les actions principales dans la recherche globale.
+- Afficher uniquement les actions autorisées par les permissions du compte.
+- Ouvrir directement la page prévue pour chaque action.
+
+## 10. Livraison et exploitation
 
 - Livrer tout le périmètre comme une version unique.
 - Déployer staging sur `https://staging.froment.software`.
@@ -279,7 +288,7 @@ Traiter ce bloc après tous les autres blocs fonctionnels.
 - Promouvoir en production le digest exact validé sur staging.
 - Séparer les chemins, permissions, volumes et variables par environnement.
 
-## 10. Matrice de suivi
+## 11. Matrice de suivi
 
 Cette matrice indique l’état observé au 13 septembre 2026.
 Elle ne remplace pas les critères de fin définis au début du document.
@@ -302,12 +311,13 @@ Elle ne remplace pas les critères de fin définis au début du document.
 | Sélecteurs de version intégrés     | Réalisé      | Aucun                                         |
 | Tableau éditable commun            | Réalisé      | Aucun                                         |
 | Entité Affaire indépendante        | Réalisé      | Aucun                                         |
+| Actions dans la recherche globale  | Réalisé      | Aucun                                         |
 | Comptabilité intégrée              | Réalisé      | Aucun                                         |
 | Suggestions de rapprochement       | Réalisé      | Aucun                                         |
 | Données de démonstration           | Réalisé      | Validation de la réinitialisation sur staging |
 | Page autonome de signature         | Réalisé      | Revue visuelle avec un navigateur connecté    |
 
-## 11. Ordre d’exécution restant
+## 12. Ordre d’exécution restant
 
 1. Exécuter les checks complets.
 2. Déployer le nouveau digest sur staging.
@@ -316,7 +326,7 @@ Elle ne remplace pas les critères de fin définis au début du document.
 5. Promouvoir le digest staging validé en production.
 6. Remplacer les secrets exposés avec les accès aux fournisseurs et à Nomad.
 
-## 12. Provenance des décisions
+## 13. Provenance des décisions
 
 L’historique contient quatre questionnaires structurés entre 09:57 et 10:49 UTC.
 Ils ont fixé les décisions suivantes :
