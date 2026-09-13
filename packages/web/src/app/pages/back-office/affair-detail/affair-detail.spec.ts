@@ -6,7 +6,9 @@ import { InvoicesApi } from '@backoffice/invoices-api';
 import { OrdersApi } from '@backoffice/orders-api';
 import { QuotesApi } from '@backoffice/quotes-api';
 import { provideAccount } from '@backoffice/account.spec-helper';
+import { formatMoney } from '@froment/l10n';
 import { vi } from 'vitest';
+import { I18nService } from '@app/i18n.service';
 import { AffairDetail } from './affair-detail';
 import { detailTabs } from '../quote-detail/commercial.spec-helper';
 
@@ -84,7 +86,9 @@ describe('AffairDetail', () => {
     await harness.fixture.whenStable();
     const root = harness.routeNativeElement!;
     expect(root.textContent).toContain('DE-2026-000001');
-    expect(root.textContent).toContain('120,00');
+    expect(root.querySelector('.amount')?.textContent).toBe(
+      formatMoney(12_000, TestBed.inject(I18nService).language(), 'EUR'),
+    );
     expect(root.querySelector('.document-card')).not.toBeNull();
     expect(
       root.querySelector('app-page-header [appInlineEdit] app-icon[name="pencil"]'),
