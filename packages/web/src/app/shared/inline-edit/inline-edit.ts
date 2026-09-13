@@ -9,6 +9,7 @@ import {
 } from '@angular/core';
 import { I18nService } from '@app/i18n.service';
 import { Button } from '@shared/button/button';
+import { Icon } from '@shared/icon/icon';
 
 export interface InlineEditOption {
   readonly value: string;
@@ -17,7 +18,7 @@ export interface InlineEditOption {
 
 @Component({
   selector: 'div[appInlineEdit]',
-  imports: [Button],
+  imports: [Button, Icon],
   styleUrl: './inline-edit.scss',
   templateUrl: './inline-edit.html',
   changeDetection: ChangeDetectionStrategy.OnPush,

@@ -3,16 +3,39 @@
     <a pageBack routerLink="/backoffice/affairs">{{ i18n.t('backOffice.affairs.title') }}</a>
     <h1 id="affair-title">{{ affair()?.reference ?? i18n.t('backOffice.affairs.title') }}</h1>
     @if (affair(); as item) {
+    <dl class="affair-inline-fields">
+      <div
+        appInlineEdit
+        [label]="i18n.t('backOffice.invoice.title')"
+        [value]="item.title"
+        [emptyValue]="i18n.t('clientsWorkspace.notProvided')"
+        [editable]="canEdit()"
+        [editing]="editing() === 'title'"
+        [saving]="saving()"
+        [required]="true"
+        [maximumLength]="160"
+        (editRequested)="editing.set('title')"
+        (cancelRequested)="editing.set(undefined)"
+        (saveRequested)="save('title', $event)"
+      ></div>
+      <div
+        appInlineEdit
+        [label]="i18n.t('billingWorkspace.financialStatus')"
+        [value]="item.status"
+        [displayValue]="statusLabel()"
+        [emptyValue]="i18n.t('clientsWorkspace.notProvided')"
+        [editable]="canEdit()"
+        [options]="statusOptions()"
+        [editing]="editing() === 'status'"
+        [saving]="saving()"
+        (editRequested)="editing.set('status')"
+        (cancelRequested)="editing.set(undefined)"
+        (saveRequested)="save('status', $event)"
+      ></div>
+    </dl>
     <p>
-      {{ item.title }} ·
       <a [routerLink]="['/backoffice/clients', item.clientId]">{{ item.clientDisplayName }}</a>
     </p>
-    } @if (affair(); as item) {
-    <ng-container pageBadges>
-      <span appBadge [variant]="item.status === 'open' ? 'success' : 'default'">
-        {{ i18n.t(item.status === 'open' ? 'affair.open' : 'affair.closed') }}
-      </span>
-    </ng-container>
     }
   </app-page-header>
 
@@ -26,80 +49,41 @@
   <router-outlet />
   <ng-template appTabPanel="affair-detail" let-tab="tab">
     @switch (tab) { @case ('overview') {
-    <section
-      class="ds-panel form-panel"
-      *appCan="'affair.update'"
-      aria-labelledby="affair-edit-title"
-    >
-      <h2 id="affair-edit-title">{{ i18n.t('affair.edit') }}</h2>
-      <dl class="inline-fields">
-        <div
-          appInlineEdit
-          [label]="i18n.t('backOffice.invoice.title')"
-          [value]="item.title"
-          [emptyValue]="i18n.t('clientsWorkspace.notProvided')"
-          [editing]="editing() === 'title'"
-          [saving]="saving()"
-          [required]="true"
-          [maximumLength]="160"
-          (editRequested)="editing.set('title')"
-          (cancelRequested)="editing.set(undefined)"
-          (saveRequested)="save('title', $event)"
-        ></div>
-        <div
-          appInlineEdit
-          [label]="i18n.t('billingWorkspace.financialStatus')"
-          [value]="item.status"
-          [displayValue]="statusLabel()"
-          [emptyValue]="i18n.t('clientsWorkspace.notProvided')"
-          [options]="statusOptions()"
-          [editing]="editing() === 'status'"
-          [saving]="saving()"
-          (editRequested)="editing.set('status')"
-          (cancelRequested)="editing.set(undefined)"
-          (saveRequested)="save('status', $event)"
-        ></div>
-      </dl>
-    </section>
-
     <section aria-labelledby="affair-documents-title">
       <h2 id="affair-documents-title">{{ i18n.t('affair.documents') }}</h2>
-      <div appDataTable>
-        <table>
-          <thead>
-            <tr>
-              <th>{{ i18n.t('billingWorkspace.document') }}</th>
-              <th>{{ i18n.t('affair.reference') }}</th>
-              <th>{{ i18n.t('backOffice.invoice.title') }}</th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (quote of linkedQuotes(); track quote.id) {
-            <tr>
-              <td>{{ i18n.t('commercial.quote') }}</td>
-              <td><a [routerLink]="['/backoffice/quotes', quote.id]">{{ quote.reference }}</a></td>
-              <td>{{ quote.title }}</td>
-            </tr>
-            } @for (order of linkedOrders(); track order.id) {
-            <tr>
-              <td>{{ i18n.t('commercial.order') }}</td>
-              <td><a [routerLink]="['/backoffice/orders', order.id]">{{ order.reference }}</a></td>
-              <td>{{ order.title }}</td>
-            </tr>
-            } @for (invoice of linkedInvoices(); track invoice.id) {
-            <tr>
-              <td>{{ i18n.t('backOffice.affair.invoice') }}</td>
-              <td>
-                <a [routerLink]="['/backoffice/invoices', invoice.id]"
-                  >{{ invoice.invoiceNumber ?? invoice.id }}</a
-                >
-              </td>
-              <td>{{ invoice.title }}</td>
-            </tr>
-            }
-          </tbody>
-        </table>
-      </div>
+      @if (linkedDocuments().length === 0) {
+      <p class="hint">{{ i18n.t('affair.noDocuments') }}</p>
+      } @else {
+      <ul class="document-list">
+        @for (document of linkedDocuments(); track document.id) {
+        <li class="ds-panel document-card">
+          <div class="document-identity">
+            <app-icon [name]="document.icon" />
+            <div>
+              <p class="hint">{{ i18n.t(document.kind) }}</p>
+              <h3>
+                <a [routerLink]="document.link">{{ document.reference }}</a>
+              </h3>
+              <p>{{ document.title }}</p>
+            </div>
+          </div>
+          <span appBadge [variant]="document.variant">{{ i18n.t(document.status) }}</span>
+          <dl class="document-facts">
+            <div>
+              <dt>{{ i18n.t('backOffice.clientDetail.total') }}</dt>
+              <dd class="amount">{{ money(document.totalCents, document.currency) }}</dd>
+            </div>
+            <div>
+              <dt>{{ i18n.t('clientTables.updatedAt') }}</dt>
+              <dd>
+                <time [attr.datetime]="document.updatedAt">{{ date(document.updatedAt) }}</time>
+              </dd>
+            </div>
+          </dl>
+        </li>
+        }
+      </ul>
+      }
     </section>
     } @case ('history') {
     <section aria-labelledby="affair-history-title">

@@ -5,8 +5,9 @@
 .affair-panel > * + * {
   margin-top: var(--space-6);
 }
-.inline-fields {
+.affair-inline-fields {
   display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr));
   gap: var(--space-4);
   margin: var(--space-4) 0 0;
 }

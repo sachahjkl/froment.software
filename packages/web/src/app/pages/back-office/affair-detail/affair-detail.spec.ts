@@ -65,6 +65,10 @@ describe('AffairDetail', () => {
                 clientId: affair.clientId,
                 reference: 'DE-2026-000001',
                 title: 'Security review',
+                status: 'draft',
+                totalCents: 12_000,
+                currency: 'EUR',
+                updatedAt: '2026-08-20T08:00:00.000Z',
               },
             ],
           },
@@ -80,6 +84,12 @@ describe('AffairDetail', () => {
     await harness.fixture.whenStable();
     const root = harness.routeNativeElement!;
     expect(root.textContent).toContain('DE-2026-000001');
+    expect(root.textContent).toContain('120,00');
+    expect(root.querySelector('.document-card')).not.toBeNull();
+    expect(
+      root.querySelector('app-page-header [appInlineEdit] app-icon[name="pencil"]'),
+    ).not.toBeNull();
+    expect(root.querySelector('#affair-edit-title')).toBeNull();
     expect(root.querySelector(`a[href="/backoffice/clients/${affair.clientId}"]`)).not.toBeNull();
   });
 

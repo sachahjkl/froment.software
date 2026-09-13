@@ -37,8 +37,15 @@
   } @else {
   <span>{{ displayValue() || value() || emptyValue() }}</span>
   @if (editable()) {
-  <button appButton type="button" variant="ghost" (click)="editRequested.emit()">
-    {{ i18n.t('inlineEdit.edit') }}
+  <button
+    appButton
+    type="button"
+    variant="ghost"
+    [iconOnly]="true"
+    [attr.aria-label]="i18n.tf('inlineEdit.editField', { field: label() })"
+    (click)="editRequested.emit()"
+  >
+    <app-icon name="pencil" />
   </button>
   } }
 </dd>
