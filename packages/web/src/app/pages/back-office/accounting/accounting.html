@@ -2,33 +2,7 @@
   <app-page-header>
     <h1 id="accounting-title">{{ i18n.t('accounting.title') }}</h1>
     <p class="muted">{{ i18n.t('accounting.intro') }}</p>
-    @if (demoAvailable) {
-    <button
-      pageActions
-      appButton
-      variant="danger"
-      type="button"
-      *appCan="'demo.reset'"
-      [disabled]="busy() || demoPassword() === ''"
-      (click)="resetDemo()"
-    >
-      {{ i18n.t('demo.reset') }}
-    </button>
-    }
   </app-page-header>
-
-  @if (demoAvailable) {
-  <div class="ds-panel form-panel" *appCan="'demo.reset'">
-    <label class="field" for="demo-reset-password"
-      >{{ i18n.t('demo.password') }}<input
-        id="demo-reset-password"
-        type="password"
-        autocomplete="current-password"
-        [ngModel]="demoPassword()"
-        (ngModelChange)="demoPassword.set($event)"
-    /></label>
-  </div>
-  }
 
   <nav class="section-tabs" [attr.aria-label]="i18n.t('accounting.sections')">
     @for (section of ['accounts', 'journals', 'periods', 'entries', 'lettering', 'reports',

@@ -17,7 +17,6 @@ import {
 } from '@froment/contracts';
 import { formatMoney } from '@froment/l10n';
 import { AccountingApi } from '@backoffice/accounting-api';
-import { DemoApi } from '@backoffice/demo-api';
 import { Authentication } from '@backoffice/authentication';
 import { Can } from '@backoffice/can';
 import { I18nService, type TranslationKey } from '@app/i18n.service';
@@ -26,8 +25,6 @@ import { DataTable } from '@shared/data-table/data-table';
 import { Notice } from '@shared/notice/notice';
 import { PageHeader } from '@shared/page-header/page-header';
 import { Confirmation } from '@shared/confirmation/confirmation';
-import { RuntimeConfiguration } from '@app/runtime-configuration';
-import { Router } from '@angular/router';
 
 const CENTS_PER_UNIT = 100;
 const DEFAULT_OPENING_DELIMITER = ';' as const;
@@ -105,15 +102,10 @@ export class Accounting {
   protected readonly authentication = inject(Authentication);
   protected readonly i18n = inject(I18nService);
   private readonly api = inject(AccountingApi);
-  private readonly demoApi = inject(DemoApi);
   private readonly confirmation = inject(Confirmation);
-  private readonly router = inject(Router);
-  private readonly runtime = inject(RuntimeConfiguration);
-  protected readonly demoAvailable = this.runtime.value?.appEnvironment === 'staging';
   protected readonly taxEnabled = computed(
     () => this.authentication.account()?.enabledModules.includes('tax') === true,
   );
-  protected readonly demoPassword = signal('');
   protected readonly state = signal<'loading' | 'ready' | 'error'>('loading');
   protected readonly busy = signal(false);
   protected readonly notice = signal<TranslationKey | null>(null);
@@ -212,22 +204,6 @@ export class Accounting {
     this.letterableLines.set(letterableLines.result);
     this.evidence.set(evidence.result);
     this.state.set('ready');
-  }
-
-  protected async resetDemo(): Promise<void> {
-    const confirmed = await this.confirmation.request(this.i18n.t('demo.confirm'), {
-      acceptLabel: this.i18n.t('demo.reset'),
-      variant: 'danger',
-    });
-    if (!confirmed) return;
-    this.busy.set(true);
-    const result = await this.demoApi.reset(this.demoPassword());
-    this.busy.set(false);
-    if (!result.success) {
-      this.error.set('demo.error');
-      return;
-    }
-    await this.router.navigate(['/backoffice/login'], { queryParams: { demoReset: 'true' } });
   }
 
   protected selectTab(tab: AccountingTab): void {

@@ -119,7 +119,7 @@ L’API valide `PASETO_SECRET_KEY` comme une paire Ed25519 complète au démarra
 
 ## Données de démonstration staging
 
-Utilisez l’action de réinitialisation depuis l’espace Comptabilité.
+Utilisez l’action de réinitialisation depuis Configuration.
 
 Saisissez `DEMO_PASSWORD`, puis confirmez la suppression des données staging.
 

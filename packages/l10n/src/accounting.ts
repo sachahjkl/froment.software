@@ -131,6 +131,8 @@ export const accountingText = {
     'accounting.lettering.apply': 'Appliquer le lettrage',
     'accounting.lettering.code': 'Code de lettrage',
     'demo.reset': 'Réinitialiser la démonstration',
+    'demo.title': 'Données de démonstration',
+    'demo.hint': 'Restaurez toutes les données de démonstration de cette installation staging.',
     'demo.password': 'Mot de passe de réinitialisation',
     'demo.confirm':
       'Remplacer toutes les données de staging par le jeu de démonstration ? Toutes les sessions seront fermées.',
@@ -267,6 +269,8 @@ export const accountingText = {
     'accounting.lettering.apply': 'Apply lettering',
     'accounting.lettering.code': 'Lettering code',
     'demo.reset': 'Reset demonstration data',
+    'demo.title': 'Demonstration data',
+    'demo.hint': 'Restore all demonstration data for this staging installation.',
     'demo.password': 'Reset password',
     'demo.confirm':
       'Replace all staging data with the demonstration dataset? All sessions will close.',

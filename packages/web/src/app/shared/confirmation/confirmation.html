@@ -1,15 +1,35 @@
-<h2 id="confirmation-title">{{ i18n.t('confirmation.title') }}</h2>
-<p id="confirmation-message">{{ data.message }}</p>
-<div class="confirmation-actions">
-  <button appButton type="button" data-confirmation-cancel (click)="dialog.close(false)">
-    {{ i18n.t('confirmation.cancel') }}
-  </button>
-  <button
-    appButton
-    type="button"
-    [variant]="data.variant ?? 'primary'"
-    (click)="dialog.close(true)"
-  >
-    {{ data.acceptLabel ?? i18n.t('confirmation.accept') }}
-  </button>
-</div>
+<form
+  (submit)="
+    $event.preventDefault();
+    dialog.close(data.secretLabel === undefined ? true : secret())
+  "
+>
+  <h2 id="confirmation-title">{{ i18n.t('confirmation.title') }}</h2>
+  <p id="confirmation-message">{{ data.message }}</p>
+  @if (data.secretLabel) {
+  <label class="confirmation-secret">
+    {{ data.secretLabel }}
+    <input
+      data-confirmation-secret
+      class="input"
+      type="password"
+      autocomplete="current-password"
+      [value]="secret()"
+      (input)="secret.set($any($event.target).value)"
+    />
+  </label>
+  }
+  <div class="confirmation-actions">
+    <button appButton type="button" data-confirmation-cancel (click)="dialog.close(false)">
+      {{ i18n.t('confirmation.cancel') }}
+    </button>
+    <button
+      appButton
+      type="submit"
+      [variant]="data.variant ?? 'primary'"
+      [disabled]="data.secretLabel !== undefined && secret() === ''"
+    >
+      {{ data.acceptLabel ?? i18n.t('confirmation.accept') }}
+    </button>
+  </div>
+</form>
