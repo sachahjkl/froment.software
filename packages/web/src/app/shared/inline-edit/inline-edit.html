@@ -3,35 +3,58 @@
   @if (editing()) {
   <form (submit)="submit($event)">
     <label class="visually-hidden" [for]="controlId">{{ label() }}</label>
-    @if (options().length > 0) {
-    <select
-      class="select"
-      [id]="controlId"
-      [value]="draft()"
-      [disabled]="saving()"
-      (change)="draft.set($any($event.target).value)"
-    >
-      @for (option of options(); track option.value) {
-      <option [value]="option.value">{{ option.label }}</option>
+    <div class="edit-control">
+      @if (options().length > 0) {
+      <select
+        class="select"
+        [id]="controlId"
+        [value]="draft()"
+        [disabled]="saving()"
+        (change)="draft.set($any($event.target).value)"
+      >
+        @for (option of options(); track option.value) {
+        <option [value]="option.value">{{ option.label }}</option>
+        }
+      </select>
+      } @else {
+      <input
+        class="input"
+        [id]="controlId"
+        [type]="inputType()"
+        [value]="draft()"
+        [required]="required()"
+        [maxLength]="maximumLength() ?? null"
+        [disabled]="saving()"
+        (input)="draft.set($any($event.target).value)"
+      />
       }
-    </select>
-    } @else {
-    <input
-      class="input"
-      [id]="controlId"
-      [type]="inputType()"
-      [value]="draft()"
-      [required]="required()"
-      [maxLength]="maximumLength() ?? null"
-      [disabled]="saving()"
-      (input)="draft.set($any($event.target).value)"
-    />
-    }
-    <div class="spacer-x-2">
-      <button appButton type="submit" [disabled]="saving()">{{ i18n.t('inlineEdit.save') }}</button>
-      <button appButton type="button" [disabled]="saving()" (click)="cancelRequested.emit()">
-        {{ i18n.t('inlineEdit.cancel') }}
-      </button>
+      <div class="edit-actions">
+        <app-hint [text]="i18n.t('inlineEdit.save')">
+          <button
+            appButton
+            type="submit"
+            variant="ghost"
+            [iconOnly]="true"
+            [disabled]="saving()"
+            [attr.aria-label]="i18n.t('inlineEdit.save')"
+          >
+            <app-icon name="check" />
+          </button>
+        </app-hint>
+        <app-hint [text]="i18n.t('inlineEdit.cancel')">
+          <button
+            appButton
+            type="button"
+            variant="ghost"
+            [iconOnly]="true"
+            [disabled]="saving()"
+            [attr.aria-label]="i18n.t('inlineEdit.cancel')"
+            (click)="cancelRequested.emit()"
+          >
+            <app-icon name="close" />
+          </button>
+        </app-hint>
+      </div>
     </div>
   </form>
   } @else {
