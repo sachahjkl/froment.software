@@ -25,7 +25,20 @@ import { DataTable } from '@shared/data-table/data-table';
 import { Notice } from '@shared/notice/notice';
 import { PageHeader } from '@shared/page-header/page-header';
 import { Confirmation } from '@shared/confirmation/confirmation';
+import { ListWorkspace } from '@shared/list-toolbar/list-workspace';
+import { WorkspaceTableTools } from '@shared/list-toolbar/workspace-table-tools';
 import { Tabs } from '@shared/tabs/tabs';
+import { createWorkspaceTable } from '../configuration/workspace-table';
+import {
+  accountTableOptions,
+  balanceTableOptions,
+  entryTableOptions,
+  evidenceTableOptions,
+  journalTableOptions,
+  ledgerTableOptions,
+  letteringTableOptions,
+  periodTableOptions,
+} from './accounting-tables';
 
 const CENTS_PER_UNIT = 100;
 const DEFAULT_OPENING_DELIMITER = ';' as const;
@@ -104,7 +117,17 @@ const yearRange = () => {
 @Component({
   selector: 'app-accounting',
   host: { class: 'page-container' },
-  imports: [Button, Can, DataTable, FormsModule, Notice, PageHeader, Tabs],
+  imports: [
+    WorkspaceTableTools,
+    Button,
+    Can,
+    DataTable,
+    FormsModule,
+    ListWorkspace,
+    Notice,
+    PageHeader,
+    Tabs,
+  ],
   templateUrl: './accounting.html',
   styleUrl: './accounting.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -136,6 +159,15 @@ export class Accounting {
   protected readonly letterableLines = signal<ReadonlyArray<AccountingLetterableLine>>([]);
   protected readonly selectedLetteringLines = signal<ReadonlySet<string>>(new Set());
   protected readonly evidence = signal<ReadonlyArray<AccountingEvidence>>([]);
+  protected readonly accountTable = createWorkspaceTable(this.accounts, accountTableOptions);
+  protected readonly journalTable = createWorkspaceTable(this.journals, journalTableOptions);
+  protected readonly periodTable = createWorkspaceTable(this.periods, periodTableOptions);
+  protected readonly entryTable = createWorkspaceTable(this.entries, entryTableOptions);
+  protected readonly letteringTable = createWorkspaceTable(
+    this.letterableLines,
+    letteringTableOptions,
+  );
+  protected readonly evidenceTable = createWorkspaceTable(this.evidence, evidenceTableOptions);
   protected readonly activeAccounts = computed(() =>
     this.accounts().filter((account) => !account.archived),
   );
@@ -167,6 +199,10 @@ export class Accounting {
   protected reportForm = yearRange();
   protected readonly report = signal<AccountingBalanceReport | null>(null);
   protected readonly ledgerReport = signal<AccountingLedgerReport | null>(null);
+  private readonly balanceRows = computed(() => this.report()?.rows ?? []);
+  private readonly ledgerRows = computed(() => this.ledgerReport()?.rows ?? []);
+  protected readonly balanceTable = createWorkspaceTable(this.balanceRows, balanceTableOptions);
+  protected readonly ledgerTable = createWorkspaceTable(this.ledgerRows, ledgerTableOptions);
   protected readonly financialReport = signal<AccountingFinancialReport | null>(null);
   protected readonly taxReport = signal<AccountingTaxReport | null>(null);
   protected readonly taxFilingSettings = signal<AccountingTaxFilingSettings | null>(null);
@@ -189,6 +225,88 @@ export class Accounting {
   };
   protected readonly openingPreview = signal<OpeningBalancePreview | null>(null);
   protected evidenceForm = { entryId: '', fileName: '', mediaType: '', contentBase64: '' };
+  protected readonly accountExport = computed(() =>
+    this.accountTable
+      .rows()
+      .map((item) => [
+        item.code,
+        item.label,
+        this.i18n.t(this.accountKindLabel(item.kind)),
+        this.i18n.t(this.entityStatusLabel(item.archived)),
+      ]),
+  );
+  protected readonly journalExport = computed(() =>
+    this.journalTable
+      .rows()
+      .map((item) => [
+        item.code,
+        item.label,
+        this.i18n.t(this.journalKindLabel(item.kind)),
+        this.i18n.t(this.entityStatusLabel(item.archived)),
+      ]),
+  );
+  protected readonly periodExport = computed(() =>
+    this.periodTable
+      .rows()
+      .map((item) => [
+        item.label,
+        item.startsOn,
+        item.endsOn,
+        this.i18n.t(this.periodStatusLabel(item)),
+      ]),
+  );
+  protected readonly entryExport = computed(() =>
+    this.entryTable
+      .rows()
+      .map((item) => [
+        item.entryDate,
+        item.reference,
+        item.description,
+        this.i18n.t(this.entryStatusLabel(item)),
+      ]),
+  );
+  protected readonly letteringExport = computed(() =>
+    this.letteringTable
+      .rows()
+      .map((item) => [
+        item.entryDate,
+        item.reference,
+        item.accountCode,
+        item.lineLabel,
+        item.debitCents,
+        item.creditCents,
+        item.letteringCode ?? '',
+      ]),
+  );
+  protected readonly evidenceExport = computed(() =>
+    this.evidenceTable
+      .rows()
+      .map((item) => [item.fileName, item.entryId, item.mediaType, item.sha256]),
+  );
+  protected readonly balanceExport = computed(() =>
+    this.balanceTable
+      .rows()
+      .map((item) => [
+        item.accountCode,
+        item.accountLabel,
+        item.debitCents,
+        item.creditCents,
+        item.balanceCents,
+      ]),
+  );
+  protected readonly ledgerExport = computed(() =>
+    this.ledgerTable
+      .rows()
+      .map((item) => [
+        item.entryDate,
+        item.journalCode,
+        item.reference,
+        item.accountCode,
+        item.lineLabel,
+        item.debitCents,
+        item.creditCents,
+      ]),
+  );
 
   constructor() {
     void this.load();

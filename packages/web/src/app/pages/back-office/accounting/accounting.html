@@ -1,4 +1,4 @@
-<main class="accounting-page wide-page" aria-labelledby="accounting-title">
+<main class="detail-page wide-page accounting-page" aria-labelledby="accounting-title">
   <app-page-header>
     <h1 id="accounting-title">{{ i18n.t('accounting.title') }}</h1>
     <p class="muted">{{ i18n.t('accounting.intro') }}</p>
@@ -54,38 +54,59 @@
         }
       </div>
     </div>
-    <div appDataTable tableLayout="fluid">
-      <table>
-        <thead>
-          <tr>
-            <th scope="col">{{ i18n.t('accounting.code') }}</th>
-            <th scope="col">{{ i18n.t('accounting.label') }}</th>
-            <th scope="col">{{ i18n.t('accounting.kind') }}</th>
-            <th scope="col">{{ i18n.t('accounting.status') }}</th>
-            <th scope="col">{{ i18n.t('accounting.actions') }}</th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (account of accounts(); track account.id) {
-          <tr>
-            <th scope="row">{{ account.code }}</th>
-            <td>{{ account.label }}</td>
-            <td>{{ i18n.t(accountKindLabel(account.kind)) }}</td>
-            <td>{{ i18n.t(entityStatusLabel(account.archived)) }}</td>
-            <td>
-              <div class="button-row" *appCan="'accounting.write'">
-                <button appButton type="button" (click)="editAccount(account)">
-                  {{ i18n.t('accounting.edit') }}</button
-                ><button appButton type="button" (click)="toggleAccount(account)">
-                  {{ i18n.t(archiveActionLabel(account.archived)) }}
-                </button>
-              </div>
-            </td>
-          </tr>
-          }
-        </tbody>
-      </table>
-    </div>
+    <section appListWorkspace>
+      <app-workspace-table-tools
+        [query]="accountTable.query().q"
+        [filter]="accountTable.query().filter"
+        [filterLabel]="i18n.t('accounting.status')"
+        [filterSummary]="accountTable.filterSummary()"
+        [filterOptions]="accountTable.filterOptions()"
+        [columns]="['code', 'label', 'kind', 'status']"
+        [rows]="accountExport()"
+        filename="accounting-accounts.csv"
+        [pending]="busy()"
+        (queryChange)="accountTable.search($event)"
+        (filterChange)="accountTable.filter($event)"
+      />
+      <div appDataTable tableLayout="fluid">
+        <table>
+          <thead>
+            <tr>
+              <th scope="col">{{ i18n.t('accounting.code') }}</th>
+              <th scope="col">{{ i18n.t('accounting.label') }}</th>
+              <th scope="col">{{ i18n.t('accounting.kind') }}</th>
+              <th scope="col">{{ i18n.t('accounting.status') }}</th>
+              <th scope="col">{{ i18n.t('accounting.actions') }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (result of accountTable.results(); track result.item.id) { @let account =
+            result.item;
+            <tr>
+              <th scope="row">{{ account.code }}</th>
+              <td>{{ account.label }}</td>
+              <td>{{ i18n.t(accountKindLabel(account.kind)) }}</td>
+              <td>{{ i18n.t(entityStatusLabel(account.archived)) }}</td>
+              <td>
+                <div class="button-row" *appCan="'accounting.write'">
+                  <button appButton type="button" (click)="editAccount(account)">
+                    {{ i18n.t('accounting.edit') }}</button
+                  ><button appButton type="button" (click)="toggleAccount(account)">
+                    {{ i18n.t(archiveActionLabel(account.archived)) }}
+                  </button>
+                </div>
+              </td>
+            </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      <footer class="list-summary">
+        <p role="status">
+          {{ i18n.plural('accounting.rows', { count: accountTable.results().length }) }}
+        </p>
+      </footer>
+    </section>
   </section>
   } @if (state() === 'ready' && tab() === 'journals') {
   <section class="workspace-grid">
@@ -123,38 +144,59 @@
         }
       </div>
     </div>
-    <div appDataTable tableLayout="fluid">
-      <table>
-        <thead>
-          <tr>
-            <th scope="col">{{ i18n.t('accounting.code') }}</th>
-            <th scope="col">{{ i18n.t('accounting.label') }}</th>
-            <th scope="col">{{ i18n.t('accounting.kind') }}</th>
-            <th scope="col">{{ i18n.t('accounting.status') }}</th>
-            <th scope="col">{{ i18n.t('accounting.actions') }}</th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (journal of journals(); track journal.id) {
-          <tr>
-            <th scope="row">{{ journal.code }}</th>
-            <td>{{ journal.label }}</td>
-            <td>{{ i18n.t(journalKindLabel(journal.kind)) }}</td>
-            <td>{{ i18n.t(entityStatusLabel(journal.archived)) }}</td>
-            <td>
-              <div class="button-row" *appCan="'accounting.write'">
-                <button appButton type="button" (click)="editJournal(journal)">
-                  {{ i18n.t('accounting.edit') }}</button
-                ><button appButton type="button" (click)="toggleJournal(journal)">
-                  {{ i18n.t(archiveActionLabel(journal.archived)) }}
-                </button>
-              </div>
-            </td>
-          </tr>
-          }
-        </tbody>
-      </table>
-    </div>
+    <section appListWorkspace>
+      <app-workspace-table-tools
+        [query]="journalTable.query().q"
+        [filter]="journalTable.query().filter"
+        [filterLabel]="i18n.t('accounting.status')"
+        [filterSummary]="journalTable.filterSummary()"
+        [filterOptions]="journalTable.filterOptions()"
+        [columns]="['code', 'label', 'kind', 'status']"
+        [rows]="journalExport()"
+        filename="accounting-journals.csv"
+        [pending]="busy()"
+        (queryChange)="journalTable.search($event)"
+        (filterChange)="journalTable.filter($event)"
+      />
+      <div appDataTable tableLayout="fluid">
+        <table>
+          <thead>
+            <tr>
+              <th scope="col">{{ i18n.t('accounting.code') }}</th>
+              <th scope="col">{{ i18n.t('accounting.label') }}</th>
+              <th scope="col">{{ i18n.t('accounting.kind') }}</th>
+              <th scope="col">{{ i18n.t('accounting.status') }}</th>
+              <th scope="col">{{ i18n.t('accounting.actions') }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (result of journalTable.results(); track result.item.id) { @let journal =
+            result.item;
+            <tr>
+              <th scope="row">{{ journal.code }}</th>
+              <td>{{ journal.label }}</td>
+              <td>{{ i18n.t(journalKindLabel(journal.kind)) }}</td>
+              <td>{{ i18n.t(entityStatusLabel(journal.archived)) }}</td>
+              <td>
+                <div class="button-row" *appCan="'accounting.write'">
+                  <button appButton type="button" (click)="editJournal(journal)">
+                    {{ i18n.t('accounting.edit') }}</button
+                  ><button appButton type="button" (click)="toggleJournal(journal)">
+                    {{ i18n.t(archiveActionLabel(journal.archived)) }}
+                  </button>
+                </div>
+              </td>
+            </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      <footer class="list-summary">
+        <p role="status">
+          {{ i18n.plural('accounting.rows', { count: journalTable.results().length }) }}
+        </p>
+      </footer>
+    </section>
   </section>
   } @if (state() === 'ready' && tab() === 'periods') {
   <section class="workspace-grid">
@@ -184,53 +226,74 @@
         {{ i18n.t('accounting.create') }}
       </button>
     </div>
-    <div appDataTable tableLayout="fluid">
-      <table>
-        <thead>
-          <tr>
-            <th scope="col">{{ i18n.t('accounting.label') }}</th>
-            <th scope="col">{{ i18n.t('accounting.period') }}</th>
-            <th scope="col">{{ i18n.t('accounting.status') }}</th>
-            <th scope="col">{{ i18n.t('accounting.actions') }}</th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (period of periods(); track period.id) {
-          <tr>
-            <th scope="row">{{ period.label }}</th>
-            <td>{{ period.startsOn }} — {{ period.endsOn }}</td>
-            <td>{{ i18n.t(periodStatusLabel(period)) }}</td>
-            <td>
-              <div class="button-row" *appCan="'accounting.close'">
-                @if (period.status === 'open') {
-                <button appButton type="button" (click)="transitionPeriod(period, 'lock')">
-                  {{ i18n.t('accounting.lock') }}
-                </button>
-                } @if (period.status !== 'closed') {
-                <button appButton type="button" (click)="transitionPeriod(period, 'close')">
-                  {{ i18n.t('accounting.close') }}
-                </button>
-                } @if (period.status !== 'open' && !period.finalClosed) {
-                <button appButton type="button" (click)="transitionPeriod(period, 'reopen')">
-                  {{ i18n.t('accounting.reopen') }}
-                </button>
-                } @if (period.status === 'closed' && !period.finalClosed) {
-                <button
-                  appButton
-                  variant="danger"
-                  type="button"
-                  (click)="transitionPeriod(period, 'final-close')"
-                >
-                  {{ i18n.t('accounting.finalClose') }}
-                </button>
-                }
-              </div>
-            </td>
-          </tr>
-          }
-        </tbody>
-      </table>
-    </div>
+    <section appListWorkspace>
+      <app-workspace-table-tools
+        [query]="periodTable.query().q"
+        [filter]="periodTable.query().filter"
+        [filterLabel]="i18n.t('accounting.status')"
+        [filterSummary]="periodTable.filterSummary()"
+        [filterOptions]="periodTable.filterOptions()"
+        [columns]="['label', 'startsOn', 'endsOn', 'status']"
+        [rows]="periodExport()"
+        filename="accounting-periods.csv"
+        [pending]="busy()"
+        (queryChange)="periodTable.search($event)"
+        (filterChange)="periodTable.filter($event)"
+      />
+      <div appDataTable tableLayout="fluid">
+        <table>
+          <thead>
+            <tr>
+              <th scope="col">{{ i18n.t('accounting.label') }}</th>
+              <th scope="col">{{ i18n.t('accounting.period') }}</th>
+              <th scope="col">{{ i18n.t('accounting.status') }}</th>
+              <th scope="col">{{ i18n.t('accounting.actions') }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (result of periodTable.results(); track result.item.id) { @let period =
+            result.item;
+            <tr>
+              <th scope="row">{{ period.label }}</th>
+              <td>{{ period.startsOn }} — {{ period.endsOn }}</td>
+              <td>{{ i18n.t(periodStatusLabel(period)) }}</td>
+              <td>
+                <div class="button-row" *appCan="'accounting.close'">
+                  @if (period.status === 'open') {
+                  <button appButton type="button" (click)="transitionPeriod(period, 'lock')">
+                    {{ i18n.t('accounting.lock') }}
+                  </button>
+                  } @if (period.status !== 'closed') {
+                  <button appButton type="button" (click)="transitionPeriod(period, 'close')">
+                    {{ i18n.t('accounting.close') }}
+                  </button>
+                  } @if (period.status !== 'open' && !period.finalClosed) {
+                  <button appButton type="button" (click)="transitionPeriod(period, 'reopen')">
+                    {{ i18n.t('accounting.reopen') }}
+                  </button>
+                  } @if (period.status === 'closed' && !period.finalClosed) {
+                  <button
+                    appButton
+                    variant="danger"
+                    type="button"
+                    (click)="transitionPeriod(period, 'final-close')"
+                  >
+                    {{ i18n.t('accounting.finalClose') }}
+                  </button>
+                  }
+                </div>
+              </td>
+            </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      <footer class="list-summary">
+        <p role="status">
+          {{ i18n.plural('accounting.rows', { count: periodTable.results().length }) }}
+        </p>
+      </footer>
+    </section>
   </section>
   } @if (state() === 'ready' && tab() === 'entries') {
   <section class="flow">
@@ -324,53 +387,73 @@
         </button>
       </div>
     </div>
-    <div appDataTable tableLayout="fluid">
-      <table>
-        <thead>
-          <tr>
-            <th scope="col">{{ i18n.t('accounting.date') }}</th>
-            <th scope="col">{{ i18n.t('accounting.reference') }}</th>
-            <th scope="col">{{ i18n.t('accounting.description') }}</th>
-            <th scope="col">{{ i18n.t('accounting.status') }}</th>
-            <th scope="col">{{ i18n.t('accounting.actions') }}</th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (entry of entries(); track entry.id) {
-          <tr>
-            <td>{{ entry.entryDate }}</td>
-            <th scope="row">{{ entry.reference }}</th>
-            <td>{{ entry.description }}</td>
-            <td>{{ i18n.t(entryStatusLabel(entry)) }}</td>
-            <td>
-              <div class="button-row">
-                @if (entry.status === 'draft') {
-                <button
-                  appButton
-                  variant="primary"
-                  type="button"
-                  *appCan="'accounting.validate'"
-                  (click)="commandEntry(entry, 'post')"
-                >
-                  {{ i18n.t('accounting.post') }}
-                </button>
-                } @if (entry.status === 'posted') {
-                <button
-                  appButton
-                  type="button"
-                  *appCan="'accounting.validate'"
-                  (click)="commandEntry(entry, 'reverse')"
-                >
-                  {{ i18n.t('accounting.reverse') }}
-                </button>
-                }
-              </div>
-            </td>
-          </tr>
-          }
-        </tbody>
-      </table>
-    </div>
+    <section appListWorkspace>
+      <app-workspace-table-tools
+        [query]="entryTable.query().q"
+        [filter]="entryTable.query().filter"
+        [filterLabel]="i18n.t('accounting.status')"
+        [filterSummary]="entryTable.filterSummary()"
+        [filterOptions]="entryTable.filterOptions()"
+        [columns]="['date', 'reference', 'description', 'status']"
+        [rows]="entryExport()"
+        filename="accounting-entries.csv"
+        [pending]="busy()"
+        (queryChange)="entryTable.search($event)"
+        (filterChange)="entryTable.filter($event)"
+      />
+      <div appDataTable tableLayout="fluid">
+        <table>
+          <thead>
+            <tr>
+              <th scope="col">{{ i18n.t('accounting.date') }}</th>
+              <th scope="col">{{ i18n.t('accounting.reference') }}</th>
+              <th scope="col">{{ i18n.t('accounting.description') }}</th>
+              <th scope="col">{{ i18n.t('accounting.status') }}</th>
+              <th scope="col">{{ i18n.t('accounting.actions') }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (result of entryTable.results(); track result.item.id) { @let entry = result.item;
+            <tr>
+              <td>{{ entry.entryDate }}</td>
+              <th scope="row">{{ entry.reference }}</th>
+              <td>{{ entry.description }}</td>
+              <td>{{ i18n.t(entryStatusLabel(entry)) }}</td>
+              <td>
+                <div class="button-row">
+                  @if (entry.status === 'draft') {
+                  <button
+                    appButton
+                    variant="primary"
+                    type="button"
+                    *appCan="'accounting.validate'"
+                    (click)="commandEntry(entry, 'post')"
+                  >
+                    {{ i18n.t('accounting.post') }}
+                  </button>
+                  } @if (entry.status === 'posted') {
+                  <button
+                    appButton
+                    type="button"
+                    *appCan="'accounting.validate'"
+                    (click)="commandEntry(entry, 'reverse')"
+                  >
+                    {{ i18n.t('accounting.reverse') }}
+                  </button>
+                  }
+                </div>
+              </td>
+            </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      <footer class="list-summary">
+        <p role="status">
+          {{ i18n.plural('accounting.rows', { count: entryTable.results().length }) }}
+        </p>
+      </footer>
+    </section>
   </section>
   } @if (state() === 'ready' && tab() === 'lettering') {
   <section class="flow" aria-labelledby="lettering-title">
@@ -388,44 +471,65 @@
         {{ i18n.t('accounting.lettering.apply') }}
       </button>
     </div>
-    <div appDataTable tableLayout="fluid">
-      <table>
-        <thead>
-          <tr>
-            <th scope="col">{{ i18n.t('accounting.select') }}</th>
-            <th scope="col">{{ i18n.t('accounting.date') }}</th>
-            <th scope="col">{{ i18n.t('accounting.reference') }}</th>
-            <th scope="col">{{ i18n.t('accounting.account') }}</th>
-            <th scope="col">{{ i18n.t('accounting.label') }}</th>
-            <th scope="col">{{ i18n.t('accounting.debit') }}</th>
-            <th scope="col">{{ i18n.t('accounting.credit') }}</th>
-            <th scope="col">{{ i18n.t('accounting.lettering.code') }}</th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (line of letterableLines(); track line.lineId) {
-          <tr>
-            <td>
-              <input
-                type="checkbox"
-                [checked]="letteringSelected(line.lineId)"
-                [disabled]="line.letteringCode !== null"
-                [attr.aria-label]="i18n.t('accounting.select')"
-                (change)="toggleLetteringLine(line.lineId, $any($event.target).checked)"
-              />
-            </td>
-            <td>{{ line.entryDate }}</td>
-            <td>{{ line.reference }}</td>
-            <td>{{ line.accountCode }}</td>
-            <th scope="row">{{ line.lineLabel }}</th>
-            <td class="numeric">{{ money(line.debitCents) }}</td>
-            <td class="numeric">{{ money(line.creditCents) }}</td>
-            <td>{{ line.letteringCode }}</td>
-          </tr>
-          }
-        </tbody>
-      </table>
-    </div>
+    <section appListWorkspace>
+      <app-workspace-table-tools
+        [query]="letteringTable.query().q"
+        [filter]="letteringTable.query().filter"
+        [filterLabel]="i18n.t('accounting.status')"
+        [filterSummary]="letteringTable.filterSummary()"
+        [filterOptions]="letteringTable.filterOptions()"
+        [columns]="['date', 'reference', 'account', 'label', 'debit', 'credit', 'lettering']"
+        [rows]="letteringExport()"
+        filename="accounting-lettering.csv"
+        [pending]="busy()"
+        (queryChange)="letteringTable.search($event)"
+        (filterChange)="letteringTable.filter($event)"
+      />
+      <div appDataTable tableLayout="fluid">
+        <table>
+          <thead>
+            <tr>
+              <th scope="col">{{ i18n.t('accounting.select') }}</th>
+              <th scope="col">{{ i18n.t('accounting.date') }}</th>
+              <th scope="col">{{ i18n.t('accounting.reference') }}</th>
+              <th scope="col">{{ i18n.t('accounting.account') }}</th>
+              <th scope="col">{{ i18n.t('accounting.label') }}</th>
+              <th scope="col">{{ i18n.t('accounting.debit') }}</th>
+              <th scope="col">{{ i18n.t('accounting.credit') }}</th>
+              <th scope="col">{{ i18n.t('accounting.lettering.code') }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (result of letteringTable.results(); track result.item.lineId) { @let line =
+            result.item;
+            <tr>
+              <td>
+                <input
+                  type="checkbox"
+                  [checked]="letteringSelected(line.lineId)"
+                  [disabled]="line.letteringCode !== null"
+                  [attr.aria-label]="i18n.t('accounting.select')"
+                  (change)="toggleLetteringLine(line.lineId, $any($event.target).checked)"
+                />
+              </td>
+              <td>{{ line.entryDate }}</td>
+              <td>{{ line.reference }}</td>
+              <td>{{ line.accountCode }}</td>
+              <th scope="row">{{ line.lineLabel }}</th>
+              <td class="numeric">{{ money(line.debitCents) }}</td>
+              <td class="numeric">{{ money(line.creditCents) }}</td>
+              <td>{{ line.letteringCode }}</td>
+            </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      <footer class="list-summary">
+        <p role="status">
+          {{ i18n.plural('accounting.rows', { count: letteringTable.results().length }) }}
+        </p>
+      </footer>
+    </section>
   </section>
   } @if (state() === 'ready' && tab() === 'reports') {
   <section class="flow">
@@ -524,38 +628,60 @@
       }
     </div>
     } @if (report(); as balance) {
-    <div appDataTable tableLayout="fluid">
-      <table>
-        <thead>
-          <tr>
-            <th scope="col">{{ i18n.t('accounting.account') }}</th>
-            <th scope="col">{{ i18n.t('accounting.label') }}</th>
-            <th scope="col">{{ i18n.t('accounting.debit') }}</th>
-            <th scope="col">{{ i18n.t('accounting.credit') }}</th>
-            <th scope="col">{{ i18n.t('accounting.balance') }}</th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (row of balance.rows; track row.accountCode) {
-          <tr>
-            <th scope="row">{{ row.accountCode }}</th>
-            <td>{{ row.accountLabel }}</td>
-            <td class="numeric">{{ money(row.debitCents) }}</td>
-            <td class="numeric">{{ money(row.creditCents) }}</td>
-            <td class="numeric">{{ money(row.balanceCents) }}</td>
-          </tr>
-          }
-        </tbody>
-        <tfoot>
-          <tr>
-            <th colspan="2">{{ i18n.t('accounting.total') }}</th>
-            <td class="numeric">{{ money(balance.debitCents) }}</td>
-            <td class="numeric">{{ money(balance.creditCents) }}</td>
-            <td></td>
-          </tr>
-        </tfoot>
-      </table>
-    </div>
+    <section appListWorkspace aria-labelledby="balance-title">
+      <h2 id="balance-title">{{ i18n.t('accounting.balance') }}</h2>
+      <app-workspace-table-tools
+        [query]="balanceTable.query().q"
+        [filter]="balanceTable.query().filter"
+        [filterLabel]="i18n.t('accounting.balance')"
+        [filterSummary]="balanceTable.filterSummary()"
+        [filterOptions]="balanceTable.filterOptions()"
+        [columns]="['account', 'label', 'debit', 'credit', 'balance']"
+        [rows]="balanceExport()"
+        filename="accounting-balance.csv"
+        [pending]="busy()"
+        (queryChange)="balanceTable.search($event)"
+        (filterChange)="balanceTable.filter($event)"
+      />
+      <div appDataTable tableLayout="fluid">
+        <table>
+          <thead>
+            <tr>
+              <th scope="col">{{ i18n.t('accounting.account') }}</th>
+              <th scope="col">{{ i18n.t('accounting.label') }}</th>
+              <th scope="col">{{ i18n.t('accounting.debit') }}</th>
+              <th scope="col">{{ i18n.t('accounting.credit') }}</th>
+              <th scope="col">{{ i18n.t('accounting.balance') }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (result of balanceTable.results(); track result.item.accountCode) { @let row =
+            result.item;
+            <tr>
+              <th scope="row">{{ row.accountCode }}</th>
+              <td>{{ row.accountLabel }}</td>
+              <td class="numeric">{{ money(row.debitCents) }}</td>
+              <td class="numeric">{{ money(row.creditCents) }}</td>
+              <td class="numeric">{{ money(row.balanceCents) }}</td>
+            </tr>
+            }
+          </tbody>
+          <tfoot>
+            <tr>
+              <th colspan="2">{{ i18n.t('accounting.total') }}</th>
+              <td class="numeric">{{ money(balance.debitCents) }}</td>
+              <td class="numeric">{{ money(balance.creditCents) }}</td>
+              <td></td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+      <footer class="list-summary">
+        <p role="status">
+          {{ i18n.plural('accounting.rows', { count: balanceTable.results().length }) }}
+        </p>
+      </footer>
+    </section>
     } @if (financialReport(); as financial) {
     <section class="report-cards" aria-labelledby="financial-title">
       <h2 id="financial-title">{{ i18n.t('accounting.financialStatements') }}</h2>
@@ -599,8 +725,21 @@
       </dl>
     </section>
     } @if (ledgerReport(); as ledger) {
-    <section aria-labelledby="ledger-title">
+    <section appListWorkspace aria-labelledby="ledger-title">
       <h2 id="ledger-title">{{ i18n.t('accounting.ledger') }}</h2>
+      <app-workspace-table-tools
+        [query]="ledgerTable.query().q"
+        [filter]="ledgerTable.query().filter"
+        [filterLabel]="i18n.t('accounting.balance')"
+        [filterSummary]="ledgerTable.filterSummary()"
+        [filterOptions]="ledgerTable.filterOptions()"
+        [columns]="['date', 'journal', 'reference', 'account', 'label', 'debit', 'credit']"
+        [rows]="ledgerExport()"
+        filename="accounting-ledger.csv"
+        [pending]="busy()"
+        (queryChange)="ledgerTable.search($event)"
+        (filterChange)="ledgerTable.filter($event)"
+      />
       <div appDataTable tableLayout="fluid">
         <table>
           <thead>
@@ -615,7 +754,8 @@
             </tr>
           </thead>
           <tbody>
-            @for (row of ledger.rows; track row.entryId + row.accountCode + row.lineLabel) {
+            @for (result of ledgerTable.results(); track result.item.entryId +
+            result.item.accountCode + result.item.lineLabel) { @let row = result.item;
             <tr>
               <td>{{ row.entryDate }}</td>
               <td>{{ row.journalCode }}</td>
@@ -629,6 +769,11 @@
           </tbody>
         </table>
       </div>
+      <footer class="list-summary">
+        <p role="status">
+          {{ i18n.plural('accounting.rows', { count: ledgerTable.results().length }) }}
+        </p>
+      </footer>
     </section>
     }
   </section>
@@ -736,34 +881,60 @@
         {{ i18n.t('accounting.add') }}
       </button>
     </div>
-    <div appDataTable tableLayout="fluid">
-      <table>
-        <thead>
-          <tr>
-            <th scope="col">{{ i18n.t('accounting.file') }}</th>
-            <th scope="col">{{ i18n.t('accounting.entry') }}</th>
-            <th scope="col">{{ i18n.t('accounting.mediaType') }}</th>
-            <th scope="col">{{ i18n.t('accounting.fingerprint') }}</th>
-            <th scope="col">{{ i18n.t('accounting.actions') }}</th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (item of evidence(); track item.id) {
-          <tr>
-            <th scope="row">{{ item.fileName }}</th>
-            <td>{{ item.entryId }}</td>
-            <td>{{ item.mediaType }}</td>
-            <td><code>{{ item.sha256 }}</code></td>
-            <td>
-              <button appButton type="button" [disabled]="busy()" (click)="downloadEvidence(item)">
-                {{ i18n.t('accounting.download') }}
-              </button>
-            </td>
-          </tr>
-          }
-        </tbody>
-      </table>
-    </div>
+    <section appListWorkspace>
+      <app-workspace-table-tools
+        [query]="evidenceTable.query().q"
+        [filter]="evidenceTable.query().filter"
+        [filterLabel]="i18n.t('accounting.mediaType')"
+        [filterSummary]="evidenceTable.filterSummary()"
+        [filterOptions]="evidenceTable.filterOptions()"
+        [columns]="['file', 'entry', 'mediaType', 'fingerprint']"
+        [rows]="evidenceExport()"
+        filename="accounting-evidence.csv"
+        [pending]="busy()"
+        (queryChange)="evidenceTable.search($event)"
+        (filterChange)="evidenceTable.filter($event)"
+      />
+      <div appDataTable tableLayout="fluid">
+        <table>
+          <thead>
+            <tr>
+              <th scope="col">{{ i18n.t('accounting.file') }}</th>
+              <th scope="col">{{ i18n.t('accounting.entry') }}</th>
+              <th scope="col">{{ i18n.t('accounting.mediaType') }}</th>
+              <th scope="col">{{ i18n.t('accounting.fingerprint') }}</th>
+              <th scope="col">{{ i18n.t('accounting.actions') }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (result of evidenceTable.results(); track result.item.id) { @let item =
+            result.item;
+            <tr>
+              <th scope="row">{{ item.fileName }}</th>
+              <td>{{ item.entryId }}</td>
+              <td>{{ item.mediaType }}</td>
+              <td><code>{{ item.sha256 }}</code></td>
+              <td>
+                <button
+                  appButton
+                  type="button"
+                  [disabled]="busy()"
+                  (click)="downloadEvidence(item)"
+                >
+                  {{ i18n.t('accounting.download') }}
+                </button>
+              </td>
+            </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      <footer class="list-summary">
+        <p role="status">
+          {{ i18n.plural('accounting.rows', { count: evidenceTable.results().length }) }}
+        </p>
+      </footer>
+    </section>
   </section>
   }
 </main>

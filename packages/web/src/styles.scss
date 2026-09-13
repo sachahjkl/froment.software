@@ -1,3 +1,5 @@
+@use "shared/page-header/detail-page";
+
 *,
 *::before,
 *::after {
@@ -437,6 +439,8 @@ code {
 }
 
 .ds-panel.form-panel {
+  display: grid;
+  gap: var(--space-4);
   min-inline-size: 0;
   padding: var(--panel-padding);
 }

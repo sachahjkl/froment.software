@@ -3,20 +3,13 @@
 :host {
   display: block;
 }
-.accounting-page {
-  padding: var(--page-header-y) var(--page-x);
-}
-.accounting-page > app-tabs {
-  margin-block: var(--space-5);
-}
 .workspace-grid {
   display: grid;
   grid-template-columns: minmax(16rem, 22rem) minmax(0, 1fr);
   gap: var(--space-5);
   align-items: start;
 }
-.flow,
-.form-panel {
+.flow {
   display: grid;
   gap: var(--space-4);
 }
