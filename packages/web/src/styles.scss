@@ -44,6 +44,12 @@ html[data-theme="dark"] {
   color-scheme: dark;
 }
 
+html:not([data-app-environment="production"][data-site-phase="construction"])
+  .runtime-construction-only,
+html[data-app-environment="production"][data-site-phase="construction"] .runtime-live-only {
+  display: none;
+}
+
 html:has(.back-office-shell, app-design) {
   background-color: var(--color-surface);
   background-image: none;

@@ -7,8 +7,8 @@
 >
   {{ i18n.t(status.labelKey) }}
 </a>
-} @if (showConstruction()) {
-<aside class="construction-notice" aria-labelledby="construction-title">
+} @if (publicPage()) {
+<aside class="construction-notice runtime-construction-only" aria-labelledby="construction-title">
   <div class="construction-inner">
     <p class="construction-kicker">{{ i18n.t("shell.construction.kicker") }}</p>
     <div>
