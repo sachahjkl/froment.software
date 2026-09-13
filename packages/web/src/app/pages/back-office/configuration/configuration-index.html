@@ -26,5 +26,23 @@
         >{{ i18n.t('supplierInvoice.analysisSettings.open') }}</a
       >
     </section>
+    @if (demoAvailable) {
+    <section class="ds-panel" *appCan="'demo.reset'">
+      <h2>{{ i18n.t('demo.title') }}</h2>
+      <p>{{ i18n.t('demo.hint') }}</p>
+      @if (resetError()) {
+      <p appNotice variant="danger" role="alert">{{ i18n.t('demo.error') }}</p>
+      }
+      <button
+        appButton
+        variant="danger"
+        type="button"
+        [disabled]="resetting()"
+        (click)="resetDemo()"
+      >
+        {{ i18n.t('demo.reset') }}
+      </button>
+    </section>
+    }
   </div>
 </section>

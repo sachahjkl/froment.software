@@ -66,6 +66,26 @@ describe('Confirmation', () => {
     expect(await result).toBe(true);
   });
 
+  it('requests a secret without exposing it outside the result', async () => {
+    const { fixture, service, overlay } = await setup();
+    const result = service.requestSecret('Reset all data?', 'Reset password', {
+      acceptLabel: 'Reset',
+      variant: 'danger',
+    });
+    await fixture.whenStable();
+    const input = overlay.querySelector<HTMLInputElement>('[data-confirmation-secret]')!;
+    const action = overlay.querySelector<HTMLButtonElement>('[type="submit"]')!;
+    expect(document.activeElement).toBe(input);
+    expect(input.type).toBe('password');
+    expect(action.disabled).toBe(true);
+    input.value = 'demo-secret';
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    await fixture.whenStable();
+    expect(action.disabled).toBe(false);
+    action.click();
+    expect(await result).toBe('demo-secret');
+  });
+
   it('returns false for Escape and backdrop clicks', async () => {
     const { fixture, service, overlay } = await setup();
     const escaped = service.request('Discard changes?');
