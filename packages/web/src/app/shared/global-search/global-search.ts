@@ -24,6 +24,7 @@ import { OrdersApi } from '@backoffice/orders-api';
 import { InvoicesApi } from '@backoffice/invoices-api';
 import { Authentication } from '@backoffice/authentication';
 import { I18nService } from '@app/i18n.service';
+import type { PermissionCodeValue } from '@froment/contracts';
 import { Button } from '@shared/button/button';
 import { Icon } from '@shared/icon/icon';
 import { createFuzzySearch } from '@shared/fuzzy-search';
@@ -31,10 +32,19 @@ import { SearchHighlight, SearchHighlightRegistry } from '@shared/search-highlig
 
 interface SearchItem {
   readonly id: string;
-  readonly kind: 'client' | 'quote' | 'order' | 'invoice';
+  readonly kind: 'action' | 'client' | 'quote' | 'order' | 'invoice';
   readonly reference: string;
   readonly detail: string;
   readonly aliases: string;
+  readonly link: readonly string[];
+}
+
+interface SearchAction {
+  readonly id: string;
+  readonly label: string;
+  readonly detail: string;
+  readonly aliases: string;
+  readonly permissions: readonly PermissionCodeValue[];
   readonly link: readonly string[];
 }
 
@@ -55,7 +65,8 @@ export class GlobalSearch {
       (this.authentication.can('client.read') ||
         this.authentication.can('quote.read') ||
         this.authentication.can('order.read') ||
-        this.authentication.can('invoice.read')),
+        this.authentication.can('invoice.read') ||
+        this.actions().length > 0),
   );
   readonly shortcutEnabled = input(false);
   protected readonly id = inject(_IdGenerator).getId('global-search-');
@@ -86,8 +97,88 @@ export class GlobalSearch {
     this.authentication.account();
     return [];
   });
+  private readonly actions = computed<readonly SearchAction[]>(() => {
+    const actions = [
+      {
+        id: 'create-quote',
+        label: this.i18n.t('globalSearch.action.createQuote'),
+        detail: this.i18n.t('globalSearch.action.createQuoteDetail'),
+        aliases: this.i18n.t('globalSearch.action.createQuoteAliases'),
+        permissions: [
+          'quote.create',
+          'client.read',
+          'catalog.read',
+          'condition.read',
+          'issuer.read',
+        ],
+        link: ['/backoffice/quotes/new'],
+      },
+      {
+        id: 'create-client',
+        label: this.i18n.t('globalSearch.action.createClient'),
+        detail: this.i18n.t('globalSearch.action.createClientDetail'),
+        aliases: this.i18n.t('globalSearch.action.createClientAliases'),
+        permissions: ['client.create'],
+        link: ['/backoffice/clients/new'],
+      },
+      {
+        id: 'create-affair',
+        label: this.i18n.t('globalSearch.action.createAffair'),
+        detail: this.i18n.t('globalSearch.action.createAffairDetail'),
+        aliases: this.i18n.t('globalSearch.action.createAffairAliases'),
+        permissions: ['affair.create', 'affair.read', 'client.read'],
+        link: ['/backoffice/affairs'],
+      },
+      {
+        id: 'create-purchase',
+        label: this.i18n.t('globalSearch.action.createPurchase'),
+        detail: this.i18n.t('globalSearch.action.createPurchaseDetail'),
+        aliases: this.i18n.t('globalSearch.action.createPurchaseAliases'),
+        permissions: ['supplier-invoice.create'],
+        link: ['/backoffice/purchases/new'],
+      },
+      {
+        id: 'create-supplier',
+        label: this.i18n.t('globalSearch.action.createSupplier'),
+        detail: this.i18n.t('globalSearch.action.createSupplierDetail'),
+        aliases: this.i18n.t('globalSearch.action.createSupplierAliases'),
+        permissions: ['supplier.create'],
+        link: ['/backoffice/suppliers/new'],
+      },
+      {
+        id: 'create-catalog-item',
+        label: this.i18n.t('globalSearch.action.createCatalogItem'),
+        detail: this.i18n.t('globalSearch.action.createCatalogItemDetail'),
+        aliases: this.i18n.t('globalSearch.action.createCatalogItemAliases'),
+        permissions: ['catalog.manage'],
+        link: ['/backoffice/catalog/new'],
+      },
+      {
+        id: 'compose-email',
+        label: this.i18n.t('globalSearch.action.composeEmail'),
+        detail: this.i18n.t('globalSearch.action.composeEmailDetail'),
+        aliases: this.i18n.t('globalSearch.action.composeEmailAliases'),
+        permissions: ['email.draft.manage'],
+        link: ['/backoffice/emails/new'],
+      },
+    ] satisfies readonly SearchAction[];
+    return actions.filter((action) =>
+      action.permissions.every((permission) => this.authentication.can(permission)),
+    );
+  });
+  private readonly searchItems = computed<readonly SearchItem[]>(() => [
+    ...this.actions().map((action) => ({
+      id: action.id,
+      kind: 'action' as const,
+      reference: action.label,
+      detail: action.detail,
+      aliases: action.aliases,
+      link: action.link,
+    })),
+    ...this.items(),
+  ]);
   private readonly results = createFuzzySearch(
-    this.items,
+    this.searchItems,
     computed(() => this.searchForm.query().value()),
     {
       keys: [
@@ -103,7 +194,7 @@ export class GlobalSearch {
   );
   protected readonly groups = computed(() => {
     if (!this.searchForm.query().value().trim()) return [];
-    return (['client', 'quote', 'order', 'invoice'] as const)
+    return (['action', 'client', 'quote', 'order', 'invoice'] as const)
       .map((kind) => ({
         kind,
         label: this.i18n.t(`backOffice.search.kind.${kind}`),

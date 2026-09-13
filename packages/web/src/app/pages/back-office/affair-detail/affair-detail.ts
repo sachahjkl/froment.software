@@ -32,6 +32,7 @@ import { Tabs, type TabItem } from '@shared/tabs/tabs';
 import { TabLayout, TabPanel } from '@shared/tabs/tab-panel';
 import { InlineEdit } from '@shared/inline-edit/inline-edit';
 import { Icon, type IconName } from '@shared/icon/icon';
+import { Confirmation } from '@shared/confirmation/confirmation';
 import { formatLocalizedDate } from '@shared/localized-date/localized-date-pipe';
 import { invoiceStatusBadge, quoteStatusBadge } from '../commercial-header';
 
@@ -72,6 +73,7 @@ interface AffairDocumentSummary {
 export class AffairDetail {
   protected readonly i18n = inject(I18nService);
   private readonly authentication = inject(Authentication);
+  private readonly confirmation = inject(Confirmation);
   private readonly api = inject(AffairsApi);
   private readonly quotesApi = inject(QuotesApi);
   private readonly ordersApi = inject(OrdersApi);
@@ -86,6 +88,14 @@ export class AffairDetail {
   protected readonly editing = signal<'title' | 'status' | undefined>(undefined);
   protected readonly saving = signal(false);
   protected readonly canEdit = computed(() => this.authentication.can('affair.update'));
+  protected readonly canCreateQuote = computed(
+    () =>
+      this.authentication.can('quote.create') &&
+      this.authentication.can('client.read') &&
+      this.authentication.can('catalog.read') &&
+      this.authentication.can('condition.read') &&
+      this.authentication.can('issuer.read'),
+  );
   protected readonly statusOptions = computed(() => [
     { value: 'open', label: this.i18n.t('affair.open') },
     { value: 'closed', label: this.i18n.t('affair.closed') },
@@ -221,6 +231,21 @@ export class AffairDetail {
     } finally {
       this.saving.set(false);
     }
+  }
+
+  protected async archive(): Promise<void> {
+    if (
+      this.affair()?.status !== 'open' ||
+      !this.canEdit() ||
+      !(await this.confirmation.request(this.i18n.t('affair.archiveConfirm')))
+    )
+      return;
+    await this.save('status', 'closed');
+  }
+
+  protected async reopen(): Promise<void> {
+    if (this.affair()?.status !== 'closed' || !this.canEdit()) return;
+    await this.save('status', 'open');
   }
 
   protected money(cents: number, currency: string): string {

@@ -41,6 +41,17 @@ it('creates one affair with each quote and keeps independent affairs editable', 
       ),
     ).toEqual(created);
 
+    const linkedQuote = await createQuote(server, client.id, 'EUR', created.id);
+    const afterLinkedQuote = Schema.decodeUnknownSync(AffairList)(
+      await (
+        await fetch(`${server.baseUrl}/api/affairs`, { headers: server.sessionHeaders })
+      ).json(),
+    );
+    expect(afterLinkedQuote).toHaveLength(2);
+    const linkedAffair = afterLinkedQuote.find((affair) => affair.id === created.id);
+    if (linkedAffair === undefined) throw new Error('The linked affair is missing.');
+    expect(linkedAffair.quoteIds).toEqual([linkedQuote.id]);
+
     const obsoleteLinkResponse = await request(`/api/affairs/${created.id}/quotes`, 'POST', {
       expectedVersion: created.version,
       quoteId: quote.id,
@@ -49,13 +60,31 @@ it('creates one affair with each quote and keeps independent affairs editable', 
     const updated = Schema.decodeUnknownSync(Affair)(
       await (
         await request(`/api/affairs/${created.id}`, 'PUT', {
-          expectedVersion: created.version,
+          expectedVersion: linkedAffair.version,
           title: 'Client renewal complete',
           status: 'closed',
         })
       ).json(),
     );
-    expect(updated).toMatchObject({ status: 'closed', version: 2, quoteIds: [] });
+    expect(updated).toMatchObject({ status: 'closed', version: 3, quoteIds: [linkedQuote.id] });
+
+    const closedAffairQuote = await request('/api/quotes', 'POST', {
+      affairId: created.id,
+      clientId: client.id,
+      currency: 'EUR',
+      title: 'Late quote',
+      conditions: '',
+      lines: [
+        {
+          description: 'Consulting',
+          quantityMilli: 1_000,
+          unitPriceCents: 10_000,
+          vatRateBasisPoints: 2_000,
+        },
+      ],
+    });
+    expect(closedAffairQuote.status).toBe(409);
+    await expect(closedAffairQuote.json()).resolves.toMatchObject({ code: 'affair.conflict' });
   } finally {
     await server.close();
   }

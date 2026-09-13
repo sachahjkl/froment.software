@@ -8,6 +8,7 @@ import {
   RequestRateLimited,
 } from '../authentication/contracts.js';
 import { ClientArchived, ClientNotFound } from '../clients/contracts.js';
+import { AffairConflict, AffairNotFound } from '../affairs/contracts.js';
 import {
   DocumentLine,
   DocumentLineInput,
@@ -60,6 +61,7 @@ const conditionsFilter = Schema.makeFilter<{
 );
 
 export const QuoteCreateRequest = Schema.Struct({
+  affairId: Schema.optionalKey(Ulid),
   clientId: Ulid,
   currency: CurrencyCode,
   title: QuoteTitle,
@@ -310,6 +312,8 @@ export const QuoteFailure = Schema.Union([
   ClientNotFound,
   DocumentIncomplete,
   ClientArchived,
+  AffairNotFound,
+  AffairConflict,
   RequestRateLimited,
 ]);
 export type QuoteFailure = typeof QuoteFailure.Type;

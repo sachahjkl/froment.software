@@ -11,6 +11,7 @@ import { vi } from 'vitest';
 import { I18nService } from '@app/i18n.service';
 import { AffairDetail } from './affair-detail';
 import { detailTabs } from '../quote-detail/commercial.spec-helper';
+import { Confirmation } from '@shared/confirmation/confirmation';
 
 const affairId = '01ARZ3NDEKTSV4RRFFQ69G5FC0';
 const quoteId = '01ARZ3NDEKTSV4RRFFQ69G5FAV';
@@ -32,8 +33,13 @@ const affair = {
 
 describe('AffairDetail', () => {
   const update = vi.fn();
+  const confirm = vi.fn();
   beforeEach(() => {
-    update.mockReset();
+    update.mockReset().mockResolvedValue({
+      success: true,
+      result: { ...affair, status: 'closed', version: 2 },
+    });
+    confirm.mockReset().mockResolvedValue(true);
     TestBed.configureTestingModule({
       providers: [
         provideAccount(),
@@ -77,6 +83,7 @@ describe('AffairDetail', () => {
         },
         { provide: OrdersApi, useValue: { list: async () => [] } },
         { provide: InvoicesApi, useValue: { list: async () => [] } },
+        { provide: Confirmation, useValue: { request: confirm } },
       ],
     });
   });
@@ -95,6 +102,25 @@ describe('AffairDetail', () => {
     ).not.toBeNull();
     expect(root.querySelector('#affair-edit-title')).toBeNull();
     expect(root.querySelector(`a[href="/backoffice/clients/${affair.clientId}"]`)).not.toBeNull();
+    expect(
+      root.querySelector(
+        `a[href="/backoffice/quotes/new?affairId=${affair.id}&clientId=${affair.clientId}"]`,
+      ),
+    ).not.toBeNull();
+  });
+
+  it('archives an affair after confirmation', async () => {
+    const harness = await RouterTestingHarness.create(`/backoffice/affairs/${affairId}/overview`);
+    await harness.fixture.whenStable();
+    harness
+      .routeNativeElement!.querySelector<HTMLButtonElement>('[data-button-variant="danger"]')!
+      .click();
+    await harness.fixture.whenStable();
+    expect(confirm).toHaveBeenCalledOnce();
+    expect(update).toHaveBeenCalledWith(
+      affairId,
+      expect.objectContaining({ expectedVersion: 1, status: 'closed' }),
+    );
   });
 
   it('sorts affair history without changing the response', async () => {
