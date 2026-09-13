@@ -1,4 +1,4 @@
-import { type ClientAccessValue, type QuoteSummaryValue } from '@froment/contracts';
+import { Affair, type ClientAccessValue } from '@froment/contracts';
 import { formatMoney, translate, type Language } from '@froment/l10n';
 import { type CsvCell } from '@shared/table-export/csv';
 import { type WorkspaceTableOptions } from '../configuration/workspace-table';
@@ -15,7 +15,8 @@ export interface ClientDocument {
   readonly updatedAt: string;
 }
 
-export type ClientAffairRow = QuoteSummaryValue & { readonly position: number };
+type AffairValue = typeof Affair.Type;
+export type ClientAffairRow = AffairValue & { readonly position: number };
 export type ClientAccessRow = ClientAccessValue & { readonly position: number };
 
 export const clientAffairTableOptions: WorkspaceTableOptions<ClientAffairRow> = {
@@ -25,9 +26,8 @@ export const clientAffairTableOptions: WorkspaceTableOptions<ClientAffairRow> = 
     {
       kind: 'text',
       key: 'status',
-      value: (item, language) => translate(language, `backOffice.quote.status.${item.status}`),
+      value: (item, language) => translate(language, `affair.${item.status}`),
     },
-    { kind: 'number', key: 'amount', value: (item) => item.totalCents },
     { kind: 'number', key: 'date', value: (item) => Date.parse(item.updatedAt) },
   ],
   defaultSort: 'positionAsc',
@@ -35,12 +35,8 @@ export const clientAffairTableOptions: WorkspaceTableOptions<ClientAffairRow> = 
   searchKeys: ['reference', 'title'],
   parameters: { q: 'clientAffairQ', sort: 'clientAffairSort', filter: 'clientAffairStatus' },
   filters: [
-    { value: 'draft', label: 'backOffice.quote.status.draft' },
-    { value: 'sent', label: 'backOffice.quote.status.sent' },
-    { value: 'accepted', label: 'backOffice.quote.status.accepted' },
-    { value: 'rejected', label: 'backOffice.quote.status.rejected' },
-    { value: 'expired', label: 'backOffice.quote.status.expired' },
-    { value: 'cancelled', label: 'backOffice.quote.status.cancelled' },
+    { value: 'open', label: 'affair.open' },
+    { value: 'closed', label: 'affair.closed' },
   ],
   matchesFilter: (item, filter) => item.status === filter,
 };
@@ -77,14 +73,13 @@ export const clientAccessTableOptions: WorkspaceTableOptions<ClientAccessRow> = 
 };
 
 export function clientAffairExport(
-  rows: readonly QuoteSummaryValue[],
+  rows: readonly AffairValue[],
   language: Language,
 ): readonly (readonly CsvCell[])[] {
   return rows.map((item) => [
     item.reference,
     item.title,
-    translate(language, `backOffice.quote.status.${item.status}`),
-    formatMoney(item.totalCents, language, 'EUR'),
+    translate(language, `affair.${item.status}`),
     item.updatedAt,
   ]);
 }

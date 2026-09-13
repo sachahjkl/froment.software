@@ -104,7 +104,7 @@ describe('ClientAccessEditor', () => {
 
   it('retains only allowed context after access creation', async () => {
     const { root, harness, confirmation } = await configure(
-      '?q=Acme&view=all&clientAffairStatus=sent&clientDocumentSort=dateAsc&clientAccessSort=emailDesc&clientAccessTo=2026-09-30&password=secret',
+      '?q=Acme&view=all&clientAffairStatus=open&clientDocumentSort=dateAsc&clientAccessSort=emailDesc&clientAccessTo=2026-09-30&password=secret',
     );
     const email = root.querySelector<HTMLInputElement>('#client-account-email')!;
     const password = root.querySelector<HTMLInputElement>('#client-account-password')!;
@@ -126,7 +126,7 @@ describe('ClientAccessEditor', () => {
     expect(destination.queryParams).toEqual({
       q: 'Acme',
       view: 'all',
-      clientAffairStatus: 'sent',
+      clientAffairStatus: 'open',
       clientDocumentSort: 'dateAsc',
       clientAccessSort: 'emailDesc',
       clientAccessTo: '2026-09-30',
