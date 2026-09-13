@@ -15,6 +15,7 @@ import {
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router, RouterLink, RouterOutlet } from '@angular/router';
 import {
+  Affair,
   Ulid,
   type ClientAccessValue,
   type ClientSummaryValue,
@@ -28,6 +29,7 @@ import { ClientsApi, type ClientErrorCode } from '@backoffice/clients-api';
 import { InvoicesApi } from '@backoffice/invoices-api';
 import { OrdersApi } from '@backoffice/orders-api';
 import { QuotesApi } from '@backoffice/quotes-api';
+import { AffairsApi } from '@backoffice/affairs-api';
 import { I18nService, type TranslationKey } from '@app/i18n.service';
 import { Badge, type BadgeVariant } from '@shared/badge/badge';
 import { ActionMenu } from '@shared/action-menu/action-menu';
@@ -109,6 +111,7 @@ export class ClientDetail {
   protected readonly i18n = inject(I18nService);
   private readonly api = inject(ClientsApi);
   private readonly quotesApi = inject(QuotesApi);
+  private readonly affairsApi = inject(AffairsApi);
   private readonly ordersApi = inject(OrdersApi);
   private readonly invoicesApi = inject(InvoicesApi);
   private readonly route = inject(ActivatedRoute);
@@ -144,10 +147,11 @@ export class ClientDetail {
   private readonly quotes = signal<ReadonlyArray<QuoteSummaryValue>>([]);
   private readonly orders = signal<ReadonlyArray<OrderSummaryValue>>([]);
   private readonly invoices = signal<ReadonlyArray<InvoiceSummaryValue>>([]);
+  private readonly allAffairs = signal<ReadonlyArray<typeof Affair.Type>>([]);
   protected readonly affairs = computed(() =>
-    this.quotes()
+    this.allAffairs()
       .filter(({ clientId }) => clientId === this.client()?.id)
-      .map((quote, position) => ({ ...quote, position })),
+      .map((affair, position) => ({ ...affair, position })),
   );
   protected readonly documentsLoading = signal(true);
   protected readonly documents = computed<readonly ClientDocument[]>(() => {
@@ -267,7 +271,6 @@ export class ClientDetail {
     this.i18n.t('clientTables.reference'),
     this.i18n.t('clientTables.title'),
     this.i18n.t('clientTables.affairStatus'),
-    this.i18n.t('backOffice.clientDetail.total'),
     this.i18n.t('clientTables.updatedAt'),
   ]);
   protected readonly documentExportColumns = computed(() => [
@@ -321,6 +324,10 @@ export class ClientDetail {
 
   protected quoteStatus(status: QuoteSummaryValue['status']): string {
     return this.i18n.t(`backOffice.quote.status.${status}`);
+  }
+
+  protected affairStatus(status: (typeof Affair.Type)['status']): string {
+    return this.i18n.t(`affair.${status}`);
   }
 
   protected formatDate(timestamp: number | string): string {
@@ -416,6 +423,7 @@ export class ClientDetail {
     this.affairsError.set(false);
     this.accessesError.set(undefined);
     this.quotes.set([]);
+    this.allAffairs.set([]);
     this.orders.set([]);
     this.invoices.set([]);
     this.accesses.set([]);
@@ -436,7 +444,11 @@ export class ClientDetail {
     }
     this.client.set(outcome.result);
     this.loading.set(false);
-    const [quotes, orders, invoices, accesses] = await Promise.allSettled([
+    const affairsPromise = this.authentication.can('quote.read')
+      ? this.affairsApi.list()
+      : Promise.resolve({ success: true as const, result: [] });
+    const [affairs, quotes, orders, invoices, accesses] = await Promise.allSettled([
+      affairsPromise,
       this.authentication.can('quote.read') ? this.quotesApi.list() : [],
       this.authentication.can('order.read') ? this.ordersApi.list() : [],
       this.authentication.can('invoice.read') ? this.invoicesApi.list() : [],
@@ -445,6 +457,8 @@ export class ClientDetail {
         : Promise.resolve({ success: true as const, result: [] }),
     ]);
     if (generation !== this.loadGeneration || this.destroyRef.destroyed) return;
+    if (affairs.status === 'fulfilled' && affairs.value.success)
+      this.allAffairs.set(affairs.value.result);
     if (quotes.status === 'fulfilled') this.quotes.set(quotes.value);
     if (orders.status === 'fulfilled') this.orders.set(orders.value);
     if (invoices.status === 'fulfilled') this.invoices.set(invoices.value);
@@ -456,7 +470,9 @@ export class ClientDetail {
     }
     this.accessesLoading.set(false);
     this.documentsError.set([quotes, orders, invoices].some(({ status }) => status === 'rejected'));
-    this.affairsError.set(quotes.status === 'rejected');
+    this.affairsError.set(
+      affairs.status === 'rejected' || (affairs.status === 'fulfilled' && !affairs.value.success),
+    );
     this.documentsLoading.set(false);
   }
 

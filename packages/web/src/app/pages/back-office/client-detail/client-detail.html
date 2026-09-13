@@ -189,7 +189,7 @@
         {{ i18n.t('backOffice.dashboard.retry') }}
       </button>
       } @else { @if (affairTable.rows().length === 0) {
-      <app-empty-state icon="invoice" [title]="i18n.t(affairEmptyLabel())" /> } @else {
+      <app-empty-state icon="folder" [title]="i18n.t(affairEmptyLabel())" /> } @else {
       <div appDataTable tableLayout="fluid" class="wide-table">
         <table>
           <thead>
@@ -218,41 +218,33 @@
                   (click)="affairTable.sort('date')"
                 ></button>
               </th>
-              <th
-                scope="col"
-                class="amount"
-                [attr.aria-sort]="ariaSort(affairTable.direction('amount'))"
-              >
-                <button
-                  appTableSort
-                  [label]="i18n.t('backOffice.clientDetail.total')"
-                  [direction]="affairTable.direction('amount')"
-                  (click)="affairTable.sort('amount')"
-                ></button>
-              </th>
             </tr>
           </thead>
           <tbody>
-            @for (result of affairTable.results(); track result.item.id) { @let quote = result.item;
+            @for (result of affairTable.results(); track result.item.id) { @let affair =
+            result.item;
             <tr>
               <th scope="row">
                 <div class="entity-label">
-                  <app-entity-icon icon="invoice" />
+                  <app-entity-icon icon="folder" />
                   <div>
                     <a
-                      [routerLink]="['/backoffice/quotes', quote.id]"
+                      [routerLink]="['/backoffice/affairs', affair.id]"
                       [appSearchHighlight]="affairTable.match(result, 'reference')"
-                      >{{ quote.reference }}</a
+                      >{{ affair.reference }}</a
                     >
                     <small [appSearchHighlight]="affairTable.match(result, 'title')"
-                      >{{ quote.title }}</small
+                      >{{ affair.title }}</small
                     >
                   </div>
                 </div>
               </th>
-              <td><span appBadge>{{ quoteStatus(quote.status) }}</span></td>
-              <td><time [dateTime]="quote.updatedAt">{{ formatDate(quote.updatedAt) }}</time></td>
-              <td class="amount">{{ money(quote.totalCents) }}</td>
+              <td>
+                <span appBadge>{{ affairStatus(affair.status) }}</span>
+              </td>
+              <td>
+                <time [dateTime]="affair.updatedAt">{{ formatDate(affair.updatedAt) }}</time>
+              </td>
             </tr>
             }
           </tbody>

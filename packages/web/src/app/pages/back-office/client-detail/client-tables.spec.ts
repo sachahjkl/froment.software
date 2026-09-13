@@ -26,28 +26,34 @@ import {
 const affairs: readonly ClientAffairRow[] = [
   {
     id: '01ARZ3NDEKTSV4RRFFQ69G5FAW',
+    requestId: '8599c0a4-45d5-47d8-b0e4-f9b05d5ca48b',
     clientId: '01ARZ3NDEKTSV4RRFFQ69G5FAV',
     clientDisplayName: 'Acme',
-    reference: 'DEV-2026-0010',
+    reference: 'AF-2026-000010',
     title: 'Étage 10',
-    status: 'accepted',
+    status: 'open',
     version: 1,
-    currency: 'EUR',
-    totalCents: 9007199254740991,
+    createdAt: '2026-08-01T22:00:00.001Z',
     updatedAt: '2026-09-01T22:00:00.001Z',
+    quoteIds: [],
+    orderIds: [],
+    invoiceIds: [],
     position: 0,
   },
   {
     id: '01ARZ3NDEKTSV4RRFFQ69G5FAX',
+    requestId: '8599c0a4-45d5-47d8-b0e4-f9b05d5ca48c',
     clientId: '01ARZ3NDEKTSV4RRFFQ69G5FAV',
     clientDisplayName: 'Acme',
-    reference: 'DEV-2026-0002',
+    reference: 'AF-2026-000002',
     title: 'Étage 2',
-    status: 'draft',
+    status: 'closed',
     version: 1,
-    currency: 'EUR',
-    totalCents: 9007199254740990,
+    createdAt: '2026-08-01T22:00:00.000Z',
     updatedAt: '2026-09-01T22:00:00.000Z',
+    quoteIds: [],
+    orderIds: [],
+    invoiceIds: [],
     position: 1,
   },
 ];
@@ -123,8 +129,8 @@ describe('Client table queries', () => {
       contact: 'incomplete',
       sort: 'name-desc',
       clientAffairQ: 'Étage',
-      clientAffairSort: 'amountDesc',
-      clientAffairStatus: 'accepted',
+      clientAffairSort: 'dateDesc',
+      clientAffairStatus: 'open',
       clientDocumentQ: 'FAC',
       clientDocumentSort: 'dateAsc',
       clientDocumentType: 'invoice',
@@ -135,8 +141,8 @@ describe('Client table queries', () => {
     });
     expect(workspaceTableQuery(params, clientAffairTableOptions)).toEqual({
       q: 'Étage',
-      sort: 'amountDesc',
-      filter: 'accepted',
+      sort: 'dateDesc',
+      filter: 'open',
     });
     expect(workspaceTableQuery(params, clientDocumentTableOptions)).toEqual({
       q: 'FAC',
@@ -203,9 +209,9 @@ describe('Client table queries', () => {
     expect(table.rows().map(({ id }) => id)).toEqual(['order-a']);
   });
 
-  it('uses quote statuses without adding access statuses or permissions', () => {
+  it('uses affair statuses without adding access statuses or permissions', () => {
     expect(
-      affairs.filter((item) => clientAffairTableOptions.matchesFilter?.(item, 'accepted')),
+      affairs.filter((item) => clientAffairTableOptions.matchesFilter?.(item, 'open')),
     ).toEqual([affairs[0]]);
     expect(clientAccessTableOptions.filters).toBeUndefined();
     expect(clientAccessTableOptions.searchKeys).toEqual(['email']);
@@ -282,11 +288,7 @@ describe('Client table ordering', () => {
     ]);
   });
 
-  it('compares raw cents and timestamps without losing a cent or a millisecond', () => {
-    expect(sorted(affairs, clientAffairTableOptions, 'amountAsc')).toEqual([
-      affairs[1]!.id,
-      affairs[0]!.id,
-    ]);
+  it('compares timestamps without losing a millisecond', () => {
     expect(sorted(affairs, clientAffairTableOptions, 'dateAsc')).toEqual([
       affairs[1]!.id,
       affairs[0]!.id,
@@ -311,12 +313,11 @@ describe('Client table ordering', () => {
 });
 
 describe('Client table exports', () => {
-  it('exports exact amounts and timestamps with explicit columns', () => {
+  it('exports affair status and exact document amounts with explicit columns', () => {
     expect(clientAffairExport(affairs, 'en')[0]).toEqual([
-      'DEV-2026-0010',
+      'AF-2026-000010',
       'Étage 10',
-      'Accepted',
-      '€90,071,992,547,409.91',
+      'Open',
       '2026-09-01T22:00:00.001Z',
     ]);
     expect(clientDocumentExport(documents, 'en')[1]).toEqual([

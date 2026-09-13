@@ -9,6 +9,7 @@ import { ClientsApi } from '@backoffice/clients-api';
 import { InvoicesApi } from '@backoffice/invoices-api';
 import { OrdersApi } from '@backoffice/orders-api';
 import { QuotesApi } from '@backoffice/quotes-api';
+import { AffairsApi } from '@backoffice/affairs-api';
 import { Confirmation } from '@shared/confirmation/confirmation';
 import { ClientDetail } from './client-detail';
 import { I18nService } from '@app/i18n.service';
@@ -52,6 +53,7 @@ async function configure(panel = 'profile', archived = false, query = '') {
   };
   const confirmation = { request: vi.fn().mockResolvedValue(false) };
   const quotesApi = { list: vi.fn().mockResolvedValue([]) };
+  const affairsApi = { list: vi.fn().mockResolvedValue({ success: true, result: [] }) };
   const ordersApi = { list: vi.fn().mockResolvedValue([]) };
   const invoicesApi = { list: vi.fn().mockResolvedValue([]) };
   TestBed.configureTestingModule({
@@ -70,6 +72,7 @@ async function configure(panel = 'profile', archived = false, query = '') {
       { provide: ClientsApi, useValue: api },
       { provide: Confirmation, useValue: confirmation },
       { provide: QuotesApi, useValue: quotesApi },
+      { provide: AffairsApi, useValue: affairsApi },
       { provide: OrdersApi, useValue: ordersApi },
       { provide: InvoicesApi, useValue: invoicesApi },
     ],
@@ -80,6 +83,7 @@ async function configure(panel = 'profile', archived = false, query = '') {
     api,
     confirmation,
     quotesApi,
+    affairsApi,
     ordersApi,
     invoicesApi,
     fixture: harness.fixture,
@@ -260,21 +264,27 @@ describe('ClientDetail', () => {
   });
 
   it('does not hide loaded affairs when another document source fails', async () => {
-    const { component, quotesApi, ordersApi } = await configure();
-    quotesApi.list.mockResolvedValueOnce([
-      {
-        id: access.id,
-        clientId: client.id,
-        clientDisplayName: client.displayName,
-        reference: 'DEV-2026-0001',
-        title: 'Projet',
-        status: 'draft',
-        version: 1,
-        currency: 'EUR',
-        totalCents: 100,
-        updatedAt: '2026-09-01T00:00:00.000Z',
-      },
-    ]);
+    const { component, affairsApi, ordersApi } = await configure();
+    affairsApi.list.mockResolvedValueOnce({
+      success: true,
+      result: [
+        {
+          id: access.id,
+          requestId: '8599c0a4-45d5-47d8-b0e4-f9b05d5ca48b',
+          clientId: client.id,
+          clientDisplayName: client.displayName,
+          reference: 'AF-2026-000001',
+          title: 'Projet',
+          status: 'open',
+          version: 1,
+          createdAt: '2026-09-01T00:00:00.000Z',
+          updatedAt: '2026-09-01T00:00:00.000Z',
+          quoteIds: [],
+          orderIds: [],
+          invoiceIds: [],
+        },
+      ],
+    });
     ordersApi.list.mockRejectedValueOnce(new Error('failed'));
     await component['load']();
     expect(component['affairsError']()).toBe(false);

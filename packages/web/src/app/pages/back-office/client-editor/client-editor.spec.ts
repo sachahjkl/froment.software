@@ -237,7 +237,7 @@ describe('ClientEditor', () => {
     'retains allowed context through the return link %s',
     async (selector) => {
       const query =
-        '?q=Acme&view=archived&country=France&contact=incomplete&sort=name-desc&clientAffairStatus=accepted&clientDocumentType=invoice&clientAccessQ=portal&clientAccessFrom=2026-09-01&returnUrl=https://example.test&token=secret';
+        '?q=Acme&view=archived&country=France&contact=incomplete&sort=name-desc&clientAffairStatus=open&clientDocumentType=invoice&clientAccessQ=portal&clientAccessFrom=2026-09-01&returnUrl=https://example.test&token=secret';
       const { root, fixture, router } = await configure(true, client, false, query);
       root.querySelector<HTMLAnchorElement>(selector)!.click();
       await fixture.whenStable();
@@ -253,7 +253,7 @@ describe('ClientEditor', () => {
         country: 'France',
         contact: 'incomplete',
         sort: 'name-desc',
-        clientAffairStatus: 'accepted',
+        clientAffairStatus: 'open',
         clientDocumentType: 'invoice',
         clientAccessQ: 'portal',
         clientAccessFrom: '2026-09-01',
@@ -263,7 +263,7 @@ describe('ClientEditor', () => {
 
   it('retains allowed context after saving without adding a leave confirmation', async () => {
     const query =
-      '?q=Acme&view=all&clientAffairSort=amountDesc&clientDocumentSort=dateAsc&clientAccessSort=emailDesc&clientAccessTo=2026-09-30&returnUrl=/backoffice/team';
+      '?q=Acme&view=all&clientAffairSort=dateDesc&clientDocumentSort=dateAsc&clientAccessSort=emailDesc&clientAccessTo=2026-09-30&returnUrl=/backoffice/team';
     const { fill, save, router, confirmation } = await configure(true, client, false, query);
     await fill('displayName', 'Acme Conseil');
     await save();
@@ -276,7 +276,7 @@ describe('ClientEditor', () => {
     expect(destination.queryParams).toEqual({
       q: 'Acme',
       view: 'all',
-      clientAffairSort: 'amountDesc',
+      clientAffairSort: 'dateDesc',
       clientDocumentSort: 'dateAsc',
       clientAccessSort: 'emailDesc',
       clientAccessTo: '2026-09-30',
