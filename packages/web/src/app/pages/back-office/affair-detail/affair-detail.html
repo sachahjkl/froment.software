@@ -3,7 +3,10 @@
     <a pageBack routerLink="/backoffice/affairs">{{ i18n.t('backOffice.affairs.title') }}</a>
     <h1 id="affair-title">{{ affair()?.reference ?? i18n.t('backOffice.affairs.title') }}</h1>
     @if (affair(); as item) {
-    <p>{{ item.title }} · {{ item.clientDisplayName }}</p>
+    <p>
+      {{ item.title }} ·
+      <a [routerLink]="['/backoffice/clients', item.clientId]">{{ item.clientDisplayName }}</a>
+    </p>
     } @if (affair(); as item) {
     <ng-container pageBadges>
       <span appBadge [variant]="item.status === 'open' ? 'success' : 'default'">
@@ -48,39 +51,6 @@
       </form>
     </section>
 
-    <section
-      class="ds-panel form-panel"
-      *appCan="'affair.update'"
-      aria-labelledby="affair-link-title"
-    >
-      <h2 id="affair-link-title">{{ i18n.t('affair.linkQuote') }}</h2>
-      <div class="field-grid">
-        <label class="field"
-          >{{ i18n.t('commercial.quote') }}
-          <select
-            class="input"
-            [value]="selectedQuoteId()"
-            (change)="selectedQuoteId.set($any($event.target).value)"
-          >
-            <option value="">{{ i18n.t('affair.selectQuote') }}</option>
-            @for (quote of availableQuotes(); track quote.id) {
-            <option [value]="quote.id">{{ quote.reference }} · {{ quote.title }}</option>
-            }
-          </select>
-        </label>
-        <div class="actions">
-          <button
-            appButton
-            type="button"
-            [disabled]="!selectedQuoteId() || saving()"
-            (click)="linkQuote()"
-          >
-            {{ i18n.t('affair.link') }}
-          </button>
-        </div>
-      </div>
-    </section>
-    } @case ('documents') {
     <section aria-labelledby="affair-documents-title">
       <h2 id="affair-documents-title">{{ i18n.t('affair.documents') }}</h2>
       <div appDataTable>

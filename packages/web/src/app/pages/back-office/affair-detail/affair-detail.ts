@@ -14,7 +14,6 @@ import {
 import { form, FormField, maxLength, required } from '@angular/forms/signals';
 import { ActivatedRoute, RouterLink, RouterOutlet } from '@angular/router';
 import {
-  AffairQuoteLinkRequest,
   AffairUpdateRequest,
   type Affair,
   type AuditEvent,
@@ -67,7 +66,6 @@ export class AffairDetail {
   protected readonly orders = signal<OrderListValue>([]);
   protected readonly invoices = signal<InvoiceListValue>([]);
   protected readonly events = signal<ReadonlyArray<typeof AuditEvent.Type>>([]);
-  protected readonly selectedQuoteId = signal('');
   private readonly model = signal<{ title: string; status: 'open' | 'closed' }>({
     title: '',
     status: 'open',
@@ -89,16 +87,8 @@ export class AffairDetail {
     const ids = new Set(this.affair()?.invoiceIds ?? []);
     return this.invoices().filter((invoice) => ids.has(invoice.id));
   });
-  protected readonly availableQuotes = computed(() => {
-    const affair = this.affair();
-    const linked = new Set(affair?.quoteIds ?? []);
-    return affair
-      ? this.quotes().filter((quote) => quote.clientId === affair.clientId && !linked.has(quote.id))
-      : [];
-  });
   protected readonly tabs = computed<readonly TabItem[]>(() => [
     { path: 'overview', id: 'affair-overview-tab', label: this.i18n.t('commercial.summary') },
-    { path: 'documents', id: 'affair-documents-tab', label: this.i18n.t('affair.documents') },
     { path: 'history', id: 'affair-history-tab', label: this.i18n.t('billingWorkspace.history') },
   ]);
 
@@ -159,27 +149,6 @@ export class AffairDetail {
       if (result.success) {
         this.affair.set(result.result);
         this.editForm().reset({ title: result.result.title, status: result.result.status });
-      } else this.state.set('error');
-    } finally {
-      this.saving.set(false);
-    }
-  }
-
-  protected async linkQuote(): Promise<void> {
-    const affair = this.affair();
-    if (!affair || !this.selectedQuoteId() || this.saving()) return;
-    this.saving.set(true);
-    try {
-      const result = await this.api.linkQuote(
-        affair.id,
-        AffairQuoteLinkRequest.make({
-          expectedVersion: affair.version,
-          quoteId: Schema.decodeUnknownSync(Ulid)(this.selectedQuoteId()),
-        }),
-      );
-      if (result.success) {
-        this.affair.set(result.result);
-        this.selectedQuoteId.set('');
       } else this.state.set('error');
     } finally {
       this.saving.set(false);

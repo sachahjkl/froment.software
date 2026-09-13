@@ -4,7 +4,6 @@ import {
   AffairCreateRequest,
   AffairList,
   AffairNotFound,
-  AffairQuoteLinkRequest,
   AffairUpdateRequest,
 } from '@froment/contracts';
 import { Clock, Context, DateTime, Effect, Layer, Schema } from 'effect';
@@ -180,70 +179,7 @@ const make = Effect.gen(function* () {
     });
   });
 
-  const linkQuote = Effect.fn('Affairs.linkQuote')(function* (
-    id: string,
-    request: typeof AffairQuoteLinkRequest.Type,
-    actor: string,
-  ) {
-    const now = yield* Clock.currentTimeMillis;
-    return yield* Effect.try({
-      try: () =>
-        sqlite
-          .transaction(() => {
-            const saved = read(id);
-            if (saved.version !== request.expectedVersion) throw conflict();
-            const quote = sqlite
-              .prepare('select client_id as clientId from quotes where id = ?')
-              .get(request.quoteId);
-            if (
-              quote === undefined ||
-              Schema.decodeUnknownSync(Schema.Struct({ clientId: Schema.String }))(quote)
-                .clientId !== saved.clientId
-            )
-              throw conflict();
-            const existing = sqlite
-              .prepare('select affair_id from affair_quotes where quote_id = ?')
-              .pluck()
-              .get(request.quoteId);
-            const existingAffairId =
-              existing === undefined
-                ? undefined
-                : Schema.decodeUnknownSync(Schema.String)(existing);
-            if (existingAffairId !== id) {
-              if (existingAffairId !== undefined) {
-                sqlite.prepare('delete from affair_quotes where quote_id = ?').run(request.quoteId);
-                sqlite
-                  .prepare('update affairs set version = version + 1, updated_at = ? where id = ?')
-                  .run(now, existingAffairId);
-              }
-              sqlite
-                .prepare(
-                  'insert into affair_quotes (affair_id, quote_id, linked_at, linked_by_user_id) values (?, ?, ?, ?)',
-                )
-                .run(id, request.quoteId, now, actor);
-              sqlite
-                .prepare('update affairs set version = version + 1, updated_at = ? where id = ?')
-                .run(now, id);
-              audit.insert({
-                action: 'affair.quote-linked',
-                actorUserId: actor,
-                resourceType: 'affair',
-                resourceId: id,
-                occurredAt: now,
-                metadata: { quoteId: request.quoteId },
-              });
-            }
-            return read(id);
-          })
-          .immediate(),
-      catch: (cause) =>
-        cause instanceof AffairNotFound || cause instanceof AffairConflict
-          ? cause
-          : new DatabaseError({ operation: 'affair.quote-link', cause }),
-    });
-  });
-
-  return { list, get, create, update, linkQuote };
+  return { list, get, create, update };
 });
 
 export class Affairs extends Context.Service<Affairs, Effect.Success<typeof make>>()(

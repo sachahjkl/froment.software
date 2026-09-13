@@ -9,7 +9,7 @@ import {
   startHttpTestServer,
 } from '../server/server.spec-helper.js';
 
-it('creates independent affairs and links quotes from the same client', async () => {
+it('creates one affair with each quote and keeps independent affairs editable', async () => {
   const server = await startHttpTestServer();
   const request = (path: string, method: 'POST' | 'PUT', body: typeof Schema.Json.Type) =>
     fetch(`${server.baseUrl}${path}`, {
@@ -41,33 +41,21 @@ it('creates independent affairs and links quotes from the same client', async ()
       ),
     ).toEqual(created);
 
-    const linkedResponse = await request(`/api/affairs/${created.id}/quotes`, 'POST', {
+    const obsoleteLinkResponse = await request(`/api/affairs/${created.id}/quotes`, 'POST', {
       expectedVersion: created.version,
       quoteId: quote.id,
     });
-    expect(linkedResponse.status).toBe(200);
-    const linked = Schema.decodeUnknownSync(Affair)(await linkedResponse.json());
-    expect(linked.quoteIds).toEqual([quote.id]);
-    expect(linked.version).toBe(2);
-    expect(
-      (
-        await request(`/api/affairs/${created.id}`, 'PUT', {
-          expectedVersion: created.version,
-          title: 'Stale title',
-          status: 'closed',
-        })
-      ).status,
-    ).toBe(409);
+    expect(obsoleteLinkResponse.status).toBe(404);
     const updated = Schema.decodeUnknownSync(Affair)(
       await (
         await request(`/api/affairs/${created.id}`, 'PUT', {
-          expectedVersion: linked.version,
+          expectedVersion: created.version,
           title: 'Client renewal complete',
           status: 'closed',
         })
       ).json(),
     );
-    expect(updated).toMatchObject({ status: 'closed', version: 3 });
+    expect(updated).toMatchObject({ status: 'closed', version: 2, quoteIds: [] });
   } finally {
     await server.close();
   }

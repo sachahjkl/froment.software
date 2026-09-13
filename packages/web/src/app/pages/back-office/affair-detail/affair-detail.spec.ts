@@ -30,11 +30,8 @@ const affair = {
 
 describe('AffairDetail', () => {
   const update = vi.fn();
-  const linkQuote = vi.fn();
-
   beforeEach(() => {
     update.mockReset();
-    linkQuote.mockReset();
     TestBed.configureTestingModule({
       providers: [
         provideAccount(),
@@ -42,7 +39,7 @@ describe('AffairDetail', () => {
           {
             path: 'backoffice/affairs/:affairId',
             component: AffairDetail,
-            children: detailTabs('affair-detail', ['overview', 'documents', 'history']),
+            children: detailTabs('affair-detail', ['overview', 'history']),
           },
         ]),
         {
@@ -57,7 +54,6 @@ describe('AffairDetail', () => {
               ],
             }),
             update,
-            linkQuote,
           },
         },
         {
@@ -79,12 +75,12 @@ describe('AffairDetail', () => {
     });
   });
 
-  it('shows linked documents on the documents tab', async () => {
-    const harness = await RouterTestingHarness.create(`/backoffice/affairs/${affairId}/documents`);
+  it('shows linked documents and the client link on the overview tab', async () => {
+    const harness = await RouterTestingHarness.create(`/backoffice/affairs/${affairId}/overview`);
     await harness.fixture.whenStable();
     const root = harness.routeNativeElement!;
     expect(root.textContent).toContain('DE-2026-000001');
-    expect(root.querySelector('form')).toBeNull();
+    expect(root.querySelector(`a[href="/backoffice/clients/${affair.clientId}"]`)).not.toBeNull();
   });
 
   it('sorts affair history without changing the response', async () => {

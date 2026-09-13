@@ -14,7 +14,6 @@ import {
   AffairCreateRequest,
   AffairList,
   AffairNotFound,
-  AffairQuoteLinkRequest,
   AffairUpdateRequest,
 } from './contracts.js';
 
@@ -38,15 +37,6 @@ export class AffairsApi extends HttpApiGroup.make('affairs', { topLevel: true })
   HttpApiEndpoint.put('affairUpdate', '/api/affairs/:affairId', {
     params: { affairId: Ulid },
     payload: AffairUpdateRequest,
-    success: Affair,
-    error: [AffairNotFound, AffairConflict],
-  })
-    .middleware(ApiRequestBody)
-    .middleware(ApiBrowserRequest)
-    .pipe(requirePermissions([Permissions.affairUpdate]), authenticate, frontendSpecific),
-  HttpApiEndpoint.post('affairQuoteLink', '/api/affairs/:affairId/quotes', {
-    params: { affairId: Ulid },
-    payload: AffairQuoteLinkRequest,
     success: Affair,
     error: [AffairNotFound, AffairConflict],
   })

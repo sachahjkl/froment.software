@@ -20,11 +20,6 @@ export const AffairUpdateRequest = Schema.Struct({
   status: AffairStatus,
 });
 
-export const AffairQuoteLinkRequest = Schema.Struct({
-  expectedVersion: PositiveSafeInteger,
-  quoteId: Ulid,
-});
-
 export const Affair = Schema.Struct({
   id: Ulid,
   requestId: AffairCreateRequest.fields.requestId,
