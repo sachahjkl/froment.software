@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, input } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import type { AppEnvironmentValue } from '@froment/contracts';
 
@@ -36,7 +36,4 @@ export class EnvironmentStatus {
   private readonly runtime = inject(RuntimeConfiguration);
   protected readonly environment = this.runtime.value?.appEnvironment;
   protected readonly environmentStatus = environmentStatus(this.environment);
-  protected readonly showConstruction = computed(
-    () => this.publicPage() && this.runtime.productionConstruction,
-  );
 }

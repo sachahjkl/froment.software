@@ -177,7 +177,7 @@ export const makeServerLayer = (options: {
     'GET',
     '/runtime-config.js',
     HttpServerResponse.text(
-      `globalThis.fromentRuntimeConfig=${JSON.stringify(options.runtimeConfig)};`,
+      `globalThis.fromentRuntimeConfig=${JSON.stringify(options.runtimeConfig)};document.documentElement.dataset.appEnvironment=globalThis.fromentRuntimeConfig.appEnvironment;document.documentElement.dataset.sitePhase=globalThis.fromentRuntimeConfig.sitePhase;`,
       {
         contentType: 'text/javascript; charset=utf-8',
         headers: {
