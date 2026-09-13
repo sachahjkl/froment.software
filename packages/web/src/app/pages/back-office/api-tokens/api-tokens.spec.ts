@@ -98,7 +98,7 @@ describe('API token pages', () => {
     const initial = structuredClone(form().value());
     expect(initial.expiresAt).not.toBe('');
     notifyDateValidity(root.querySelector<HTMLInputElement>('#api-token-expiration')!);
-    const search = root.querySelector<HTMLInputElement>('#api-token-permission-search')!;
+    const search = root.querySelector<HTMLInputElement>('#permission-search')!;
     search.value = 'invoice';
     search.dispatchEvent(new Event('input', { bubbles: true }));
     await fixture.whenStable();
@@ -442,21 +442,18 @@ describe('API token pages', () => {
     await fixture.whenStable();
     const root: HTMLElement = fixture.nativeElement;
     expect(
-      fixture.componentInstance['permissionGroups']()
-        .flatMap((group) => group.permissions.map(({ item }) => item.code))
+      fixture.componentInstance['permissionOptions']()
+        .map(({ code }) => code)
         .toSorted(),
     ).toEqual([...ApiTokenPermissionCodes].toSorted());
     expect(list).not.toHaveBeenCalled();
-    const search = root.querySelector<HTMLInputElement>('#api-token-permission-search');
+    const search = root.querySelector<HTMLInputElement>('#permission-search');
     if (!search) throw new Error('Missing permission search');
     search.value = 'paid';
     search.dispatchEvent(new Event('input'));
     await fixture.whenStable();
     expect(root.querySelectorAll('.permission-option')).toHaveLength(1);
     expect(root.querySelector('.permission-option')?.textContent).toContain('invoice.mark-paid');
-    expect(
-      fixture.componentInstance['filteredPermissions']()[0]?.codeMatches.length,
-    ).toBeGreaterThan(0);
   });
 
   it('keeps selected permissions when a group closes or a search hides it', async () => {
@@ -470,17 +467,19 @@ describe('API token pages', () => {
     expect(component['hasUnsavedChanges']()).toBe(false);
     expect(component['tokenForm']().value()).toEqual(initial);
     await fill(fixture);
-    component['setPermissionGroupExpanded']('client', false);
+    root.querySelector<HTMLButtonElement>('[ngAccordionTrigger][aria-expanded="true"]')?.click();
     await fixture.whenStable();
     expect(component['tokenForm'].permissions().value()).toEqual(['client.read']);
-    const search = root.querySelector<HTMLInputElement>('#api-token-permission-search')!;
+    const search = root.querySelector<HTMLInputElement>('#permission-search')!;
     search.value = 'paid';
     search.dispatchEvent(new Event('input'));
     await fixture.whenStable();
-    expect(component['permissionGroups']().some((group) => group.domain === 'client')).toBe(false);
+    expect(root.textContent).not.toContain('client.read');
     expect(
-      component['permissionGroups']().find((group) => group.domain === 'invoice')?.expanded,
-    ).toBe(true);
+      [...root.querySelectorAll<HTMLButtonElement>('[ngAccordionTrigger]')]
+        .find((button) => button.querySelector('code')?.textContent === 'invoice')
+        ?.getAttribute('aria-expanded'),
+    ).toBe('true');
     root.querySelector<HTMLInputElement>('.permission-option input')!.click();
     await fixture.whenStable();
     search.value = '';

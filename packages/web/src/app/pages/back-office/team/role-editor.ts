@@ -17,20 +17,20 @@ import { Breadcrumbs } from '@shared/breadcrumbs/breadcrumbs';
 import { Confirmation } from '@shared/confirmation/confirmation';
 import { Notice } from '@shared/notice/notice';
 import { PageHeader } from '@shared/page-header/page-header';
+import {
+  PermissionPicker,
+  type PermissionSelectionChange,
+} from '@shared/permission-picker/permission-picker';
 
 interface RoleModel {
   readonly name: string;
   readonly permissions: ReadonlyArray<PermissionCodeValue>;
 }
 
-const permissionDomains = [
-  ...new Set(PermissionCodes.map((code) => code.slice(0, code.indexOf('.')))),
-];
-
 @Component({
   host: { class: 'page-container', '(window:beforeunload)': 'beforeUnload($event)' },
   selector: 'app-role-editor',
-  imports: [Breadcrumbs, Button, FormField, Notice, PageHeader, RouterLink],
+  imports: [Breadcrumbs, Button, FormField, Notice, PageHeader, PermissionPicker, RouterLink],
   templateUrl: './role-editor.html',
   styleUrl: './role-editor.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -51,12 +51,7 @@ export class RoleEditor {
     pattern(path.name, /\S/);
     maxLength(path.name, 80);
   });
-  protected readonly permissionGroups = computed(() =>
-    permissionDomains.map((domain) => ({
-      domain,
-      permissions: PermissionCodes.filter((code) => code.startsWith(`${domain}.`)),
-    })),
-  );
+  protected readonly permissionOptions = PermissionCodes.map((code) => ({ code, label: code }));
   protected readonly loading = signal(this.editing);
   protected readonly saving = signal(false);
   protected readonly error = signal<TranslationKey | undefined>(undefined);
@@ -75,17 +70,13 @@ export class RoleEditor {
     return this.i18n.t(this.editing ? 'role.editTitle' : 'role.createTitle');
   }
 
-  protected selected(permission: PermissionCodeValue): boolean {
-    return this.model().permissions.includes(permission);
-  }
-
-  protected toggle(permission: PermissionCodeValue, event: Event): void {
-    if (!(event.currentTarget instanceof HTMLInputElement)) return;
-    const checked = event.currentTarget.checked;
+  protected changePermission(change: PermissionSelectionChange): void {
+    const permission = PermissionCodes.find((code) => code === change.code);
+    if (permission === undefined) return;
     this.roleForm.permissions().markAsDirty();
     this.model.update((model) => ({
       ...model,
-      permissions: checked
+      permissions: change.selected
         ? [...model.permissions, permission]
         : model.permissions.filter((code) => code !== permission),
     }));

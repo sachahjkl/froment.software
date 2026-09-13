@@ -1,8 +1,8 @@
 <nav class="tab-list" [attr.aria-label]="label()">
-  @for (tab of tabs(); track tab.id) {
+  @for (tab of tabs(); track tab.id) { @if (tab.path; as path) {
   <a
     [id]="tab.id"
-    [routerLink]="tab.path"
+    [routerLink]="path"
     [queryParams]="tab.queryParams"
     [queryParamsHandling]="queryParamsHandling(tab)"
     [preserveFragment]="preserveFragment()"
@@ -15,5 +15,15 @@
   >
     {{ tab.label }}
   </a>
-  }
+  } @else {
+  <button
+    type="button"
+    [class.active]="tab.active"
+    [attr.aria-current]="tab.active ? 'page' : null"
+    [disabled]="disabled()"
+    (click)="tabSelected.emit(tab.id)"
+  >
+    {{ tab.label }}
+  </button>
+  } }
 </nav>

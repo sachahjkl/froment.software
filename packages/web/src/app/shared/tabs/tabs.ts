@@ -5,6 +5,7 @@ import {
   ElementRef,
   inject,
   input,
+  output,
   Renderer2,
 } from '@angular/core';
 import {
@@ -16,7 +17,7 @@ import {
 } from '@angular/router';
 
 export interface TabItem {
-  readonly path: string;
+  readonly path?: string;
   readonly id: string;
   readonly label: string;
   readonly exact?: boolean;
@@ -37,6 +38,7 @@ export class Tabs {
   readonly disabled = input(false);
   readonly preserveQuery = input(false);
   readonly preserveFragment = input(false);
+  readonly tabSelected = output<string>();
 
   constructor() {
     const host = inject<ElementRef<HTMLElement>>(ElementRef);
