@@ -202,6 +202,10 @@ app-page-header .muted {
   color: var(--color-muted);
 }
 
+.muted {
+  color: var(--color-muted);
+}
+
 :where(div, nav, section, span)[pageActions],
 :where(div, nav, section, span)[pageBadges],
 :where(div, nav, section, span)[listActions] {
@@ -514,6 +518,8 @@ textarea.input {
 }
 
 .field-hint {
+  display: block;
+  margin-block: var(--space-1) 0;
   color: var(--color-muted);
   font-size: var(--text-xs);
   font-weight: 400;

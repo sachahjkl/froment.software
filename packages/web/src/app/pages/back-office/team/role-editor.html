@@ -21,25 +21,12 @@
       /></label>
     </div>
     <div class="ds-panel form-panel permissions">
-      <fieldset [disabled]="saving()">
-        <legend>{{ i18n.t('role.permissions') }}</legend>
-        @for (group of permissionGroups(); track group.domain) {
-        <section>
-          <h2>{{ group.domain }}</h2>
-          <div class="permission-grid">
-            @for (permission of group.permissions; track permission) {
-            <label
-              ><input
-                type="checkbox"
-                [checked]="selected(permission)"
-                (change)="toggle(permission, $event)"
-              /><code>{{ permission }}</code></label
-            >
-            }
-          </div>
-        </section>
-        }
-      </fieldset>
+      <app-permission-picker
+        [options]="permissionOptions"
+        [selectedCodes]="roleForm.permissions().value()"
+        [disabled]="saving()"
+        (selectionChange)="changePermission($event)"
+      />
     </div>
     <div class="spacer-x-2">
       <button appButton variant="primary" type="submit" [disabled]="saving()">

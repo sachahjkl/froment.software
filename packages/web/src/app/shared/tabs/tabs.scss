@@ -19,7 +19,7 @@
   padding-block-end: var(--space-3);
 }
 
-a {
+:is(a, button) {
   @include ghost.surface;
   display: inline-flex;
   align-items: center;
@@ -28,19 +28,20 @@ a {
   border: 0;
 }
 
-a:not([aria-disabled="true"], [aria-current="page"]):hover {
+:is(a, button):not([aria-disabled="true"], [aria-current="page"]):hover {
   @include ghost.hover;
 }
 
-a[aria-current="page"] {
+:is(a, button)[aria-current="page"] {
   @include ghost.active;
   font-weight: 700;
 }
 
-a:focus-visible {
+:is(a, button):focus-visible {
   @include ghost.focus;
 }
 
-a[aria-disabled="true"] {
+:is(a, button)[aria-disabled="true"],
+button:disabled {
   @include ghost.disabled;
 }

@@ -25,6 +25,7 @@ import { DataTable } from '@shared/data-table/data-table';
 import { Notice } from '@shared/notice/notice';
 import { PageHeader } from '@shared/page-header/page-header';
 import { Confirmation } from '@shared/confirmation/confirmation';
+import { Tabs } from '@shared/tabs/tabs';
 
 const CENTS_PER_UNIT = 100;
 const DEFAULT_OPENING_DELIMITER = ';' as const;
@@ -37,6 +38,16 @@ type AccountingTab =
   | 'reports'
   | 'opening'
   | 'evidence';
+const accountingTabs: ReadonlyArray<AccountingTab> = [
+  'accounts',
+  'journals',
+  'periods',
+  'entries',
+  'lettering',
+  'reports',
+  'opening',
+  'evidence',
+];
 interface EntryLineDraft {
   accountId: string;
   label: string;
@@ -93,7 +104,7 @@ const yearRange = () => {
 @Component({
   selector: 'app-accounting',
   host: { class: 'page-container' },
-  imports: [Button, Can, DataTable, FormsModule, Notice, PageHeader],
+  imports: [Button, Can, DataTable, FormsModule, Notice, PageHeader, Tabs],
   templateUrl: './accounting.html',
   styleUrl: './accounting.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -111,6 +122,13 @@ export class Accounting {
   protected readonly notice = signal<TranslationKey | null>(null);
   protected readonly error = signal<TranslationKey | null>(null);
   protected readonly tab = signal<AccountingTab>('accounts');
+  protected readonly tabs = computed(() =>
+    accountingTabs.map((id) => ({
+      id,
+      label: this.i18n.t(this.tabLabel(id)),
+      active: this.tab() === id,
+    })),
+  );
   protected readonly accounts = signal<ReadonlyArray<AccountingAccount>>([]);
   protected readonly journals = signal<ReadonlyArray<AccountingJournal>>([]);
   protected readonly periods = signal<ReadonlyArray<AccountingPeriod>>([]);
@@ -206,16 +224,14 @@ export class Accounting {
     this.state.set('ready');
   }
 
-  protected selectTab(tab: AccountingTab): void {
+  protected selectTab(tabId: string): void {
+    const tab = this.tabs().find(({ id }) => id === tabId)?.id;
+    if (tab === undefined) return;
     this.tab.set(tab);
     this.clearMessages();
   }
   protected tabLabel(tab: AccountingTab): TranslationKey {
     return `accounting.${tab}`;
-  }
-  protected tabCurrent(tab: AccountingTab): 'page' | null {
-    if (this.tab() === tab) return 'page';
-    return null;
   }
   protected accountHeading(): TranslationKey {
     if (this.accountForm.id) return 'accounting.account.edit';

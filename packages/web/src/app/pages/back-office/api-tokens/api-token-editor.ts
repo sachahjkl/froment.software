@@ -19,25 +19,19 @@ import {
   submit,
 } from '@angular/forms/signals';
 import { Router, RouterLink } from '@angular/router';
-import {
-  AccordionContent,
-  AccordionGroup,
-  AccordionPanel,
-  AccordionTrigger,
-} from '@angular/aria/accordion';
 import { ApiTokenPermissionCodes, type ApiTokenPermissionCodeValue } from '@froment/contracts';
-import type { FuseResultMatch } from 'fuse.js';
 import { ApiTokensApi } from '@backoffice/api-tokens-api';
 import { I18nService, type TranslationKey } from '@app/i18n.service';
 import { Button } from '@shared/button/button';
-import { Icon } from '@shared/icon/icon';
 import { Confirmation } from '@shared/confirmation/confirmation';
 import { Notice } from '@shared/notice/notice';
 import { PageHeader } from '@shared/page-header/page-header';
 import { CopyField } from '@shared/copy-field/copy-field';
 import { TextCopy } from '@shared/text-copy';
-import { createFuzzySearch } from '@shared/fuzzy-search';
-import { SearchHighlight, SearchHighlightRegistry } from '@shared/search-highlight';
+import {
+  PermissionPicker,
+  type PermissionSelectionChange,
+} from '@shared/permission-picker/permission-picker';
 import { ApiTokenNavigation } from './api-token-navigation';
 import { apiTokenErrorMessage } from './api-token-error-message';
 
@@ -46,19 +40,6 @@ interface TokenModel {
   readonly expiresAt: string;
   readonly permissions: ReadonlyArray<ApiTokenPermissionCodeValue>;
 }
-
-interface PermissionOption {
-  readonly code: ApiTokenPermissionCodeValue;
-  readonly label: string;
-}
-
-interface PermissionResult {
-  readonly item: PermissionOption;
-  readonly codeMatches: FuseResultMatch['indices'];
-  readonly labelMatches: FuseResultMatch['indices'];
-}
-
-const noMatches: FuseResultMatch['indices'] = [];
 
 const initialExpiration = () => {
   const date = new Date(Date.now() + 90 * 24 * 60 * 60 * 1_000);
@@ -74,21 +55,8 @@ const emptyModel = (): TokenModel => ({
 
 @Component({
   host: { class: 'page-container', '(window:beforeunload)': 'beforeUnload($event)' },
-  imports: [
-    FormField,
-    RouterLink,
-    Button,
-    Notice,
-    CopyField,
-    SearchHighlight,
-    PageHeader,
-    Icon,
-    AccordionContent,
-    AccordionGroup,
-    AccordionPanel,
-    AccordionTrigger,
-  ],
-  providers: [SearchHighlightRegistry, ApiTokenNavigation],
+  imports: [FormField, RouterLink, Button, Notice, CopyField, PermissionPicker, PageHeader],
+  providers: [ApiTokenNavigation],
   changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-api-token-editor',
   styleUrl: './api-token-editor.scss',
@@ -101,9 +69,7 @@ export class ApiTokenEditor {
   private readonly api = inject(ApiTokensApi);
   private readonly textCopy = inject(TextCopy);
   private readonly router = inject(Router);
-  private readonly permissionInput = viewChild('permissionSearch', {
-    read: ElementRef<HTMLInputElement>,
-  });
+  private readonly permissionPicker = viewChild(PermissionPicker);
   private readonly secretHeading = viewChild('secretHeading', { read: ElementRef<HTMLElement> });
   private readonly model = signal<TokenModel>(emptyModel());
   private readonly baseline = signal(JSON.stringify(this.model()));
@@ -137,61 +103,11 @@ export class ApiTokenEditor {
         .errors()
         .some((error) => error.kind === 'parse'),
   );
-  protected readonly permissionQuery = signal('');
-  private readonly expandedPermissionDomains = signal<ReadonlySet<string>>(new Set());
-  private readonly permissionOptions = computed<ReadonlyArray<PermissionOption>>(() =>
+  protected readonly permissionOptions = computed(() =>
     ApiTokenPermissionCodes.map((code) => ({
       code,
       label: this.i18n.t(`backOffice.apiTokens.permission.${code}`),
     })),
-  );
-  private readonly permissionSearchResults = createFuzzySearch(
-    this.permissionOptions,
-    this.permissionQuery,
-    {
-      keys: [
-        { name: 'code', weight: 0.45 },
-        { name: 'label', weight: 0.55 },
-      ],
-      ignoreDiacritics: true,
-      ignoreLocation: true,
-      includeMatches: true,
-      threshold: 0.35,
-    },
-  );
-  protected readonly filteredPermissions = computed<ReadonlyArray<PermissionResult>>(() =>
-    this.permissionSearchResults().map(({ item, matches = [] }) => ({
-      item,
-      codeMatches: matches.find(({ key }) => key === 'code')?.indices ?? noMatches,
-      labelMatches: matches.find(({ key }) => key === 'label')?.indices ?? noMatches,
-    })),
-  );
-  protected readonly permissionGroups = computed(() =>
-    [
-      'client',
-      'supplier',
-      'supplier-invoice',
-      'affair',
-      'quote',
-      'order',
-      'invoice',
-      'payment',
-      'document',
-      'accounting',
-    ]
-      .map((domain) => ({
-        domain,
-        expanded: this.expandedPermissionDomains().has(domain),
-        selectionLabel: this.i18n.plural('configurationWorkspace.permissionSelection', {
-          count: this.model().permissions.filter((code) => code.startsWith(`${domain}.`)).length,
-          total: this.permissionOptions().filter(({ code }) => code.startsWith(`${domain}.`))
-            .length,
-        }),
-        permissions: this.filteredPermissions().filter(({ item }) =>
-          item.code.startsWith(`${domain}.`),
-        ),
-      }))
-      .filter((group) => group.permissions.length > 0),
   );
 
   constructor() {
@@ -221,26 +137,10 @@ export class ApiTokenEditor {
     }));
   }
 
-  protected updatePermissionQuery(input: HTMLInputElement): void {
-    this.permissionQuery.set(input.value.slice(0, 120));
-    if (this.permissionQuery().trim()) {
-      this.expandedPermissionDomains.update(
-        (domains) => new Set([...domains, ...this.permissionGroups().map((group) => group.domain)]),
-      );
-    }
-  }
-
-  protected setPermissionGroupExpanded(domain: string, expanded: boolean): void {
-    this.expandedPermissionDomains.update((domains) => {
-      const next = new Set(domains);
-      if (expanded) next.add(domain);
-      else next.delete(domain);
-      return next;
-    });
-  }
-
-  protected selected(permission: ApiTokenPermissionCodeValue): boolean {
-    return this.model().permissions.includes(permission);
+  protected changePermission(change: PermissionSelectionChange): void {
+    const permission = ApiTokenPermissionCodes.find((code) => code === change.code);
+    if (permission === undefined) return;
+    this.togglePermission(permission, change.selected);
   }
 
   protected create(event: SubmitEvent): void {
@@ -251,7 +151,7 @@ export class ApiTokenEditor {
       this.dialogError.set('configurationWorkspace.tokenInvalid');
       if (this.tokenForm.name().invalid()) this.tokenForm.name().focusBoundControl();
       else if (!this.expirationValid()) this.tokenForm.expiresAt().focusBoundControl();
-      else this.permissionInput()?.nativeElement.focus();
+      else this.permissionPicker()?.focusSearch();
       return;
     }
     void submit(this.tokenForm, async () => {

@@ -6,25 +6,8 @@
 .accounting-page {
   padding: var(--page-header-y) var(--page-x);
 }
-.section-tabs {
-  display: flex;
-  gap: var(--space-1);
+.accounting-page > app-tabs {
   margin-block: var(--space-5);
-  overflow-x: auto;
-  border-block-end: 1px solid var(--color-line);
-}
-.section-tabs button {
-  padding: var(--space-3) var(--space-4);
-  border: 0;
-  border-block-end: 0.2rem solid transparent;
-  background: transparent;
-  color: var(--color-ink-muted);
-  white-space: nowrap;
-}
-.section-tabs button.active {
-  border-color: var(--color-accent);
-  color: var(--color-ink);
-  font-weight: 700;
 }
 .workspace-grid {
   display: grid;

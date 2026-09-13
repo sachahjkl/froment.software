@@ -1,0 +1,66 @@
+<fieldset [disabled]="disabled()">
+  <legend>{{ i18n.t('backOffice.apiTokens.permissions') }}</legend>
+  <label class="field">
+    {{ i18n.t('backOffice.apiTokens.permissionSearch') }}
+    <input
+      #searchInput
+      id="permission-search"
+      class="input"
+      type="search"
+      [placeholder]="i18n.t('backOffice.apiTokens.permissionSearchPlaceholder')"
+      [value]="query()"
+      (input)="updateQuery(searchInput)"
+    />
+  </label>
+  <div class="permission-groups" ngAccordionGroup [multiExpandable]="true">
+    @for (group of groups(); track group.domain) {
+    <div class="permission-group">
+      <h3>
+        <button
+          appButton
+          type="button"
+          class="permission-toggle"
+          ngAccordionTrigger
+          [panel]="panel"
+          [expanded]="group.expanded"
+          (expandedChange)="setExpanded(group.domain, $event)"
+        >
+          <code>{{ group.domain }}</code>
+          <span class="permission-count">{{ group.selectionLabel }}</span>
+          <app-icon name="chevron-right" />
+        </button>
+      </h3>
+      <div
+        class="permission-panel"
+        ngAccordionPanel
+        #panel="ngAccordionPanel"
+        [preserveContent]="true"
+      >
+        <ng-template ngAccordionContent>
+          @for (result of group.permissions; track result.item.code) {
+          <label class="permission-option">
+            <input
+              #permission
+              type="checkbox"
+              [checked]="selected(result.item.code)"
+              (change)="
+                selectionChange.emit({ code: result.item.code, selected: permission.checked })
+              "
+            />
+            <span>
+              <span [appSearchHighlight]="result.labelMatches">{{ result.item.label }}</span>
+              <code [appSearchHighlight]="result.codeMatches">{{ result.item.code }}</code>
+            </span>
+          </label>
+          }
+        </ng-template>
+      </div>
+    </div>
+    } @empty {
+    <p>{{ i18n.t('backOffice.apiTokens.permissionEmpty') }}</p>
+    }
+  </div>
+  <p role="status">
+    {{ i18n.plural('configurationWorkspace.permissionCount', { count: selectedCodes().length }) }}
+  </p>
+</fieldset>

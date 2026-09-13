@@ -174,6 +174,25 @@ describe('Tabs', () => {
     expect(root.querySelector('#document-tab')?.hasAttribute('aria-current')).toBe(false);
   });
 
+  it('emits local section selection without navigation', async () => {
+    const fixture = TestBed.createComponent(Tabs);
+    const selected: Array<string> = [];
+    fixture.componentRef.setInput('label', 'Sections');
+    fixture.componentRef.setInput('tabs', [
+      { id: 'summary-tab', label: 'Summary', active: true },
+      { id: 'details-tab', label: 'Details', active: false },
+    ]);
+    fixture.componentInstance.tabSelected.subscribe((id) => selected.push(id));
+    await fixture.whenStable();
+
+    const root: HTMLElement = fixture.nativeElement;
+    const buttons = root.querySelectorAll<HTMLButtonElement>('button');
+    expect(buttons[0]?.getAttribute('aria-current')).toBe('page');
+    buttons[1]?.click();
+
+    expect(selected).toEqual(['details-tab']);
+  });
+
   it('marks the current route independently of its query', async () => {
     const router = TestBed.inject(Router);
     await router.navigateByUrl('/first?q=angular');

@@ -4,19 +4,11 @@
     <p class="muted">{{ i18n.t('accounting.intro') }}</p>
   </app-page-header>
 
-  <nav class="section-tabs" [attr.aria-label]="i18n.t('accounting.sections')">
-    @for (section of ['accounts', 'journals', 'periods', 'entries', 'lettering', 'reports',
-    'opening', 'evidence']; track section) {
-    <button
-      type="button"
-      [class.active]="tab() === section"
-      [attr.aria-current]="tabCurrent($any(section))"
-      (click)="selectTab($any(section))"
-    >
-      {{ i18n.t(tabLabel($any(section))) }}
-    </button>
-    }
-  </nav>
+  <app-tabs
+    [label]="i18n.t('accounting.sections')"
+    [tabs]="tabs()"
+    (tabSelected)="selectTab($event)"
+  />
 
   @if (notice()) {
   <p appNotice variant="success" role="status">{{ i18n.t(notice()!) }}</p>
@@ -32,15 +24,15 @@
       <h2>{{ i18n.t(accountHeading()) }}</h2>
       <div class="field">
         <label for="account-code">{{ i18n.t('accounting.code') }}</label
-        ><input id="account-code" [(ngModel)]="accountForm.code" />
+        ><input class="input" id="account-code" [(ngModel)]="accountForm.code" />
       </div>
       <div class="field">
         <label for="account-label">{{ i18n.t('accounting.label') }}</label
-        ><input id="account-label" [(ngModel)]="accountForm.label" />
+        ><input class="input" id="account-label" [(ngModel)]="accountForm.label" />
       </div>
       <div class="field">
         <label for="account-kind">{{ i18n.t('accounting.kind') }}</label
-        ><select id="account-kind" [(ngModel)]="accountForm.kind">
+        ><select class="select" id="account-kind" [(ngModel)]="accountForm.kind">
           @for (kind of ['asset', 'liability', 'equity', 'income', 'expense']; track kind) {
           <option [ngValue]="kind">{{ i18n.t(accountKindLabel($any(kind))) }}</option>
           }
@@ -101,15 +93,15 @@
       <h2>{{ i18n.t(journalHeading()) }}</h2>
       <div class="field">
         <label for="journal-code">{{ i18n.t('accounting.code') }}</label
-        ><input id="journal-code" [(ngModel)]="journalForm.code" />
+        ><input class="input" id="journal-code" [(ngModel)]="journalForm.code" />
       </div>
       <div class="field">
         <label for="journal-label">{{ i18n.t('accounting.label') }}</label
-        ><input id="journal-label" [(ngModel)]="journalForm.label" />
+        ><input class="input" id="journal-label" [(ngModel)]="journalForm.label" />
       </div>
       <div class="field">
         <label for="journal-kind">{{ i18n.t('accounting.kind') }}</label
-        ><select id="journal-kind" [(ngModel)]="journalForm.kind">
+        ><select class="select" id="journal-kind" [(ngModel)]="journalForm.kind">
           @for (kind of ['sales', 'purchases', 'bank', 'general', 'opening']; track kind) {
           <option [ngValue]="kind">{{ i18n.t(journalKindLabel($any(kind))) }}</option>
           }
@@ -170,16 +162,16 @@
       <h2>{{ i18n.t('accounting.period.add') }}</h2>
       <div class="field">
         <label for="period-label">{{ i18n.t('accounting.label') }}</label
-        ><input id="period-label" [(ngModel)]="periodForm.label" />
+        ><input class="input" id="period-label" [(ngModel)]="periodForm.label" />
       </div>
       <div class="field-grid">
         <div class="field">
           <label for="period-start">{{ i18n.t('accounting.startsOn') }}</label
-          ><input id="period-start" type="date" [(ngModel)]="periodForm.startsOn" />
+          ><input class="input" id="period-start" type="date" [(ngModel)]="periodForm.startsOn" />
         </div>
         <div class="field">
           <label for="period-end">{{ i18n.t('accounting.endsOn') }}</label
-          ><input id="period-end" type="date" [(ngModel)]="periodForm.endsOn" />
+          ><input class="input" id="period-end" type="date" [(ngModel)]="periodForm.endsOn" />
         </div>
       </div>
       <button
@@ -247,7 +239,7 @@
       <div class="field-grid">
         <div class="field">
           <label for="entry-journal">{{ i18n.t('accounting.journal') }}</label
-          ><select id="entry-journal" [(ngModel)]="entryForm.journalId">
+          ><select class="select" id="entry-journal" [(ngModel)]="entryForm.journalId">
             <option value=""></option>
             @for (journal of journals(); track journal.id) { @if (!journal.archived) {
             <option [value]="journal.id">{{ journal.code }} — {{ journal.label }}</option>
@@ -256,7 +248,7 @@
         </div>
         <div class="field">
           <label for="entry-period">{{ i18n.t('accounting.period') }}</label
-          ><select id="entry-period" [(ngModel)]="entryForm.periodId">
+          ><select class="select" id="entry-period" [(ngModel)]="entryForm.periodId">
             <option value=""></option>
             @for (period of periods(); track period.id) { @if (period.status === 'open') {
             <option [value]="period.id">{{ period.label }}</option>
@@ -265,17 +257,17 @@
         </div>
         <div class="field">
           <label for="entry-date">{{ i18n.t('accounting.date') }}</label
-          ><input id="entry-date" type="date" [(ngModel)]="entryForm.entryDate" />
+          ><input class="input" id="entry-date" type="date" [(ngModel)]="entryForm.entryDate" />
         </div>
       </div>
       <div class="field-grid">
         <div class="field">
           <label for="entry-reference">{{ i18n.t('accounting.reference') }}</label
-          ><input id="entry-reference" [(ngModel)]="entryForm.reference" />
+          ><input class="input" id="entry-reference" [(ngModel)]="entryForm.reference" />
         </div>
         <div class="field">
           <label for="entry-description">{{ i18n.t('accounting.description') }}</label
-          ><input id="entry-description" [(ngModel)]="entryForm.description" />
+          ><input class="input" id="entry-description" [(ngModel)]="entryForm.description" />
         </div>
       </div>
       <div appDataTable tableLayout="fluid">
@@ -293,16 +285,16 @@
             @for (line of entryForm.lines; track $index) {
             <tr>
               <td>
-                <select [(ngModel)]="line.accountId">
+                <select class="select" [(ngModel)]="line.accountId">
                   <option value=""></option>
                   @for (account of activeAccounts(); track account.id) {
                   <option [value]="account.id">{{ account.code }} — {{ account.label }}</option>
                   }
                 </select>
               </td>
-              <td><input [(ngModel)]="line.label" /></td>
-              <td><input inputmode="decimal" [(ngModel)]="line.debit" /></td>
-              <td><input inputmode="decimal" [(ngModel)]="line.credit" /></td>
+              <td><input class="input" [(ngModel)]="line.label" /></td>
+              <td><input class="input" inputmode="decimal" [(ngModel)]="line.debit" /></td>
+              <td><input class="input" inputmode="decimal" [(ngModel)]="line.credit" /></td>
               <td>
                 <button
                   appButton
@@ -442,11 +434,11 @@
       <div class="field-grid">
         <div class="field">
           <label for="report-start">{{ i18n.t('accounting.startsOn') }}</label
-          ><input id="report-start" type="date" [(ngModel)]="reportForm.startsOn" />
+          ><input class="input" id="report-start" type="date" [(ngModel)]="reportForm.startsOn" />
         </div>
         <div class="field">
           <label for="report-end">{{ i18n.t('accounting.endsOn') }}</label
-          ><input id="report-end" type="date" [(ngModel)]="reportForm.endsOn" />
+          ><input class="input" id="report-end" type="date" [(ngModel)]="reportForm.endsOn" />
         </div>
       </div>
       <div class="button-row">
@@ -473,7 +465,7 @@
       <div class="field-grid">
         <div class="field">
           <label for="tax-filing-adapter">{{ i18n.t('accounting.taxFiling.adapter') }}</label>
-          <select id="tax-filing-adapter" [(ngModel)]="taxFilingForm.adapter">
+          <select class="select" id="tax-filing-adapter" [(ngModel)]="taxFilingForm.adapter">
             <option value="local">{{ i18n.t('accounting.taxFiling.local') }}</option>
             <option value="http">{{ i18n.t('accounting.taxFiling.http') }}</option>
           </select>
@@ -481,11 +473,17 @@
         @if (taxFilingForm.adapter === 'http') {
         <div class="field">
           <label for="tax-filing-endpoint">{{ i18n.t('accounting.taxFiling.endpoint') }}</label>
-          <input id="tax-filing-endpoint" type="url" [(ngModel)]="taxFilingForm.endpoint" />
+          <input
+            class="input"
+            id="tax-filing-endpoint"
+            type="url"
+            [(ngModel)]="taxFilingForm.endpoint"
+          />
         </div>
         <div class="field">
           <label for="tax-filing-key">{{ i18n.t('accounting.taxFiling.apiKey') }}</label>
           <input
+            class="input"
             id="tax-filing-key"
             type="password"
             autocomplete="new-password"
@@ -638,10 +636,11 @@
   <section class="flow">
     <div class="ds-panel form-panel" *appCan="'accounting.write'">
       <h2>{{ i18n.t('accounting.opening.title') }}</h2>
-      <p class="muted">{{ i18n.t('accounting.opening.hint') }}</p>
+      <p class="field-hint">{{ i18n.t('accounting.opening.hint') }}</p>
       <div class="field">
         <label for="opening-file">{{ i18n.t('accounting.file') }}</label
         ><input
+          class="input"
           id="opening-file"
           type="file"
           accept="text/csv,.csv"
@@ -651,29 +650,29 @@
       <div class="field-grid">
         <div class="field">
           <label for="opening-code">{{ i18n.t('accounting.opening.accountColumn') }}</label
-          ><input id="opening-code" [(ngModel)]="openingForm.accountCode" />
+          ><input class="input" id="opening-code" [(ngModel)]="openingForm.accountCode" />
         </div>
         <div class="field">
           <label for="opening-label">{{ i18n.t('accounting.opening.labelColumn') }}</label
-          ><input id="opening-label" [(ngModel)]="openingForm.accountLabel" />
+          ><input class="input" id="opening-label" [(ngModel)]="openingForm.accountLabel" />
         </div>
         <div class="field">
           <label for="opening-debit">{{ i18n.t('accounting.opening.debitColumn') }}</label
-          ><input id="opening-debit" [(ngModel)]="openingForm.debit" />
+          ><input class="input" id="opening-debit" [(ngModel)]="openingForm.debit" />
         </div>
         <div class="field">
           <label for="opening-credit">{{ i18n.t('accounting.opening.creditColumn') }}</label
-          ><input id="opening-credit" [(ngModel)]="openingForm.credit" />
+          ><input class="input" id="opening-credit" [(ngModel)]="openingForm.credit" />
         </div>
       </div>
       <div class="field-grid">
         <div class="field">
           <label for="opening-date">{{ i18n.t('accounting.date') }}</label
-          ><input id="opening-date" type="date" [(ngModel)]="openingForm.entryDate" />
+          ><input class="input" id="opening-date" type="date" [(ngModel)]="openingForm.entryDate" />
         </div>
         <div class="field">
           <label for="opening-journal">{{ i18n.t('accounting.journal') }}</label
-          ><select id="opening-journal" [(ngModel)]="openingForm.journalId">
+          ><select class="select" id="opening-journal" [(ngModel)]="openingForm.journalId">
             <option value=""></option>
             @for (journal of journals(); track journal.id) { @if (journal.kind === 'opening') {
             <option [value]="journal.id">{{ journal.label }}</option>
@@ -682,7 +681,7 @@
         </div>
         <div class="field">
           <label for="opening-period">{{ i18n.t('accounting.period') }}</label
-          ><select id="opening-period" [(ngModel)]="openingForm.periodId">
+          ><select class="select" id="opening-period" [(ngModel)]="openingForm.periodId">
             <option value=""></option>
             @for (period of periods(); track period.id) { @if (period.status === 'open') {
             <option [value]="period.id">{{ period.label }}</option>
@@ -719,10 +718,10 @@
   <section class="workspace-grid">
     <div class="ds-panel form-panel" *appCan="'accounting.evidence'">
       <h2>{{ i18n.t('accounting.evidence.add') }}</h2>
-      <p class="muted">{{ i18n.t('accounting.evidence.retention') }}</p>
+      <p class="field-hint">{{ i18n.t('accounting.evidence.retention') }}</p>
       <div class="field">
         <label for="evidence-entry">{{ i18n.t('accounting.entry') }}</label
-        ><select id="evidence-entry" [(ngModel)]="evidenceForm.entryId">
+        ><select class="select" id="evidence-entry" [(ngModel)]="evidenceForm.entryId">
           <option value=""></option>
           @for (entry of entries(); track entry.id) {
           <option [value]="entry.id">{{ entry.reference }} — {{ entry.description }}</option>
@@ -731,7 +730,7 @@
       </div>
       <div class="field">
         <label for="evidence-file">{{ i18n.t('accounting.file') }}</label
-        ><input id="evidence-file" type="file" (change)="readEvidenceFile($event)" />
+        ><input class="input" id="evidence-file" type="file" (change)="readEvidenceFile($event)" />
       </div>
       <button appButton variant="primary" type="button" (click)="addEvidence()">
         {{ i18n.t('accounting.add') }}

@@ -1,8 +1,14 @@
 @use "shared/page-header/detail-page";
 
-.form-panel + .form-panel,
-.actions {
-  margin-block-start: var(--space-4);
+form {
+  display: grid;
+  gap: var(--space-5);
+}
+
+fieldset {
+  min-inline-size: 0;
+  margin: 0;
+  padding: var(--space-5);
 }
 
 .module-grid {

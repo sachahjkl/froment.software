@@ -18,83 +18,71 @@
   <p appNotice variant="danger" role="alert">{{ i18n.t(code) }}</p>
   }
   <form novalidate (submit)="save($event)">
-    <div class="ds-panel form-panel">
-      <fieldset>
-        <legend>{{ i18n.t('company.legal') }}</legend>
-        <div class="field-grid">
-          <label class="field" for="company-jurisdiction"
-            >{{ i18n.t('company.jurisdiction') }}<input
-              id="company-jurisdiction"
-              class="input"
-              type="text"
-              [value]="model().jurisdiction"
-              readonly
-          /></label>
-          <label class="field" for="company-currency"
-            >{{ i18n.t('company.functionalCurrency') }}<input
-              id="company-currency"
-              class="input"
-              type="text"
-              [formField]="settingsForm.functionalCurrency"
-          /></label>
-        </div>
-        <p class="muted">{{ accountingState() }}</p>
-      </fieldset>
-    </div>
-    <div class="ds-panel form-panel">
-      <fieldset>
-        <legend>{{ i18n.t('company.fiscalYear') }}</legend>
-        <div class="field-grid">
-          <label class="field" for="company-fiscal-month"
-            >{{ i18n.t('company.fiscalMonth') }}<input
-              id="company-fiscal-month"
-              class="input"
-              type="number"
-              step="1"
-              [formField]="settingsForm.fiscalYearStartMonth"
-          /></label>
-          <label class="field" for="company-fiscal-day"
-            >{{ i18n.t('company.fiscalDay') }}<input
-              id="company-fiscal-day"
-              class="input"
-              type="number"
-              step="1"
-              [formField]="settingsForm.fiscalYearStartDay"
-          /></label>
-        </div>
-        <p class="muted">{{ i18n.t('company.fiscalDuration') }}</p>
-      </fieldset>
-    </div>
-    <div class="ds-panel form-panel">
-      <fieldset>
-        <legend>{{ i18n.t('company.modules') }}</legend>
-        <div class="module-grid">
-          @for (module of modules; track module) {
-          <label
-            ><input
-              type="checkbox"
-              [checked]="moduleEnabled(module)"
-              (change)="setModule(module, $event)"
-            />{{ moduleLabel(module) }}</label
-          >
-          }
-        </div>
-      </fieldset>
-    </div>
-    <div class="ds-panel form-panel">
-      <fieldset>
-        <legend>{{ i18n.t('company.retention') }}</legend>
-        <label class="field" for="company-retention"
-          >{{ i18n.t('company.retentionYears') }}<input
-            id="company-retention"
-            class="input"
-            type="number"
-            step="1"
-            [formField]="settingsForm.retentionYears"
-        /></label>
-        <p class="muted">{{ i18n.t('company.retentionExplanation') }}</p>
-      </fieldset>
-    </div>
+    <fieldset class="field-grid ds-panel">
+      <legend>{{ i18n.t('company.legal') }}</legend>
+      <label class="field" for="company-jurisdiction"
+        >{{ i18n.t('company.jurisdiction') }}<input
+          id="company-jurisdiction"
+          class="input"
+          type="text"
+          [value]="model().jurisdiction"
+          readonly
+      /></label>
+      <label class="field" for="company-currency"
+        >{{ i18n.t('company.functionalCurrency') }}<input
+          id="company-currency"
+          class="input"
+          type="text"
+          [formField]="settingsForm.functionalCurrency"
+      /></label>
+      <p class="field-hint wide">{{ accountingState() }}</p>
+    </fieldset>
+    <fieldset class="field-grid ds-panel">
+      <legend>{{ i18n.t('company.fiscalYear') }}</legend>
+      <label class="field" for="company-fiscal-month"
+        >{{ i18n.t('company.fiscalMonth') }}<input
+          id="company-fiscal-month"
+          class="input"
+          type="number"
+          step="1"
+          [formField]="settingsForm.fiscalYearStartMonth"
+      /></label>
+      <label class="field" for="company-fiscal-day"
+        >{{ i18n.t('company.fiscalDay') }}<input
+          id="company-fiscal-day"
+          class="input"
+          type="number"
+          step="1"
+          [formField]="settingsForm.fiscalYearStartDay"
+      /></label>
+      <p class="field-hint wide">{{ i18n.t('company.fiscalDuration') }}</p>
+    </fieldset>
+    <fieldset class="field-grid ds-panel">
+      <legend>{{ i18n.t('company.modules') }}</legend>
+      <div class="module-grid wide">
+        @for (module of modules; track module) {
+        <label
+          ><input
+            type="checkbox"
+            [checked]="moduleEnabled(module)"
+            (change)="setModule(module, $event)"
+          />{{ moduleLabel(module) }}</label
+        >
+        }
+      </div>
+    </fieldset>
+    <fieldset class="field-grid ds-panel">
+      <legend>{{ i18n.t('company.retention') }}</legend>
+      <label class="field wide" for="company-retention"
+        >{{ i18n.t('company.retentionYears') }}<input
+          id="company-retention"
+          class="input"
+          type="number"
+          step="1"
+          [formField]="settingsForm.retentionYears"
+      /></label>
+      <p class="field-hint wide">{{ i18n.t('company.retentionExplanation') }}</p>
+    </fieldset>
     <div class="actions spacer-x-2">
       <button
         *appCan="'company.update'"
