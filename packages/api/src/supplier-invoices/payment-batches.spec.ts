@@ -20,6 +20,7 @@ it('generates escaped pain.001.001.03 amounts and payment identifiers', () => {
           reference: 'SUP-42 <final>',
           supplierName: 'Supplier & Company',
           amountCents: 12_501,
+          functionalAmountCents: 12_501,
           currency: 'EUR',
           status: 'approved',
           documentKind: 'invoice',

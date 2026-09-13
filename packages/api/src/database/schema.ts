@@ -491,11 +491,16 @@ export const supplierPaymentBatchItems = sqliteTable(
       .notNull()
       .references(() => supplierInvoices.id, { onDelete: 'no action' }),
     amountCents: integer('amount_cents').notNull(),
+    functionalAmountCents: integer('functional_amount_cents').notNull(),
   },
   (table) => [
     primaryKey({ columns: [table.batchId, table.invoiceId] }),
     check('supplier_payment_batch_items_amount_check', sql`${table.amountCents} > 0`),
-    index('supplier_payment_batch_items_invoice_id_index').on(table.invoiceId),
+    check(
+      'supplier_payment_batch_items_functional_amount_check',
+      sql`${table.functionalAmountCents} > 0`,
+    ),
+    uniqueIndex('supplier_payment_batch_items_invoice_id_unique').on(table.invoiceId),
   ],
 );
 

@@ -1006,9 +1006,9 @@ const make = Effect.gen(function* () {
                 );
               sqlite
                 .prepare(
-                  'insert into supplier_payment_batch_items (batch_id, invoice_id, amount_cents) values (?, ?, ?)',
+                  'insert into supplier_payment_batch_items (batch_id, invoice_id, amount_cents, functional_amount_cents) values (?, ?, ?, ?)',
                 )
-                .run(paymentBatchId, paymentInvoiceId, MONEY_NET_CENTS);
+                .run(paymentBatchId, paymentInvoiceId, MONEY_NET_CENTS, MONEY_NET_CENTS);
               sqlite
                 .prepare(
                   'insert into supplier_bank_matches (id, request_id, transaction_id, batch_id, invoice_id, amount_cents, matched_at, matched_by_user_id) values (?, ?, ?, ?, ?, ?, ?, ?)',

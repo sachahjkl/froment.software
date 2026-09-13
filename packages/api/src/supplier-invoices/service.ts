@@ -480,13 +480,20 @@ const make = Effect.gen(function* () {
       try: () =>
         sqlite
           .transaction(() => {
-            const prior = Schema.decodeUnknownSync(Schema.UndefinedOr(Schema.String))(
-              sqlite
-                .prepare('select id from supplier_invoices where request_id = ?')
-                .pluck()
-                .get(request.requestId),
-            );
-            if (prior !== undefined) return read(prior);
+            const serializedRequest = JSON.stringify(request);
+            const prior = sqlite
+              .prepare('select id, request from supplier_invoices where request_id = ?')
+              .get(request.requestId);
+            if (prior !== undefined) {
+              const saved = Schema.decodeUnknownSync(
+                Schema.Struct({ id: Schema.String, request: Schema.String }),
+              )(prior);
+              if (saved.request !== serializedRequest)
+                throw new SupplierInvoiceConflict({
+                  code: 'supplier_invoice.creation_conflict',
+                });
+              return read(saved.id);
+            }
             const source = read(request.sourceInvoiceId);
             if (
               source.documentKind !== 'invoice' ||
@@ -512,7 +519,7 @@ const make = Effect.gen(function* () {
               .run(
                 id,
                 request.requestId,
-                JSON.stringify(request),
+                serializedRequest,
                 source.supplierId,
                 source.id,
                 source.taxTreatment,
