@@ -59,7 +59,7 @@ export class MermaidDiagrams {
               viewer.className = 'mermaid-viewer';
               node.before(viewer);
               viewer.append(node);
-              const panzoom = Panzoom(svg, { maxScale: 6, minScale: 1 });
+              const panzoom = Panzoom(svg, { maxScale: 6, minScale: 0.25 });
               node.tabIndex = 0;
               node.setAttribute('aria-label', this.i18n.t('blog.diagram.move'));
               const controls = document.createElement('div');
@@ -75,12 +75,30 @@ export class MermaidDiagrams {
               addButton('+', 'blog.diagram.zoomIn', () => panzoom.zoomIn());
               addButton('−', 'blog.diagram.zoomOut', () => panzoom.zoomOut());
               addButton('↺', 'blog.diagram.reset', () => panzoom.reset());
+              const fullscreenButton = document.createElement('button');
+              fullscreenButton.type = 'button';
+              fullscreenButton.textContent = '⛶';
+              const updateFullscreenLabel = () =>
+                fullscreenButton.setAttribute(
+                  'aria-label',
+                  this.i18n.t(
+                    document.fullscreenElement === viewer
+                      ? 'blog.diagram.exitFullscreen'
+                      : 'blog.diagram.fullscreen',
+                  ),
+                );
+              updateFullscreenLabel();
+              fullscreenButton.addEventListener('click', () => {
+                if (document.fullscreenElement === viewer) void document.exitFullscreen();
+                else void viewer.requestFullscreen();
+              });
+              document.addEventListener('fullscreenchange', updateFullscreenLabel);
+              controls.append(fullscreenButton);
               viewer.append(controls);
               const onWheel = (event: WheelEvent) => {
                 if (event.ctrlKey || event.metaKey) panzoom.zoomWithWheel(event);
               };
               const onKeydown = (event: KeyboardEvent) => {
-                if (panzoom.getScale() <= 1) return;
                 let x = 0;
                 let y = 0;
                 if (event.key === 'ArrowLeft') x = -40;
@@ -96,6 +114,7 @@ export class MermaidDiagrams {
               dispose.push(() => {
                 node.removeEventListener('wheel', onWheel);
                 node.removeEventListener('keydown', onKeydown);
+                document.removeEventListener('fullscreenchange', updateFullscreenLabel);
                 panzoom.destroy();
               });
             } catch {

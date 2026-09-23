@@ -313,6 +313,15 @@ app-page-header .muted {
   position: relative;
   margin-block: var(--space-4) 0;
 }
+.blog-body .mermaid-viewer:fullscreen {
+  margin: 0;
+  padding: var(--space-4);
+  background: var(--color-surface-raised);
+}
+.blog-body .mermaid-viewer:fullscreen pre.mermaid {
+  height: 100%;
+  max-height: none;
+}
 .blog-body .mermaid-viewer pre.mermaid {
   display: block;
   margin: 0;
