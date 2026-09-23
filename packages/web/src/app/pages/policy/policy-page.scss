@@ -1,5 +1,5 @@
 .policy-page {
-  padding: var(--page-header-y) var(--page-x);
+  padding-block: 4rem 6rem;
 }
 .policy-lead {
   margin-top: var(--space-3);
@@ -13,10 +13,12 @@
   font-size: var(--text-xs);
 }
 .policy-layout {
-  margin-top: var(--space-8);
+  margin-top: 3rem;
 }
 .policy-summary {
-  margin-bottom: var(--space-7);
+  margin-bottom: 2rem;
+  padding-block: 1.5rem;
+  border-block: 1px solid var(--color-line);
 }
 .policy-summary p {
   margin-top: var(--space-2);
@@ -26,7 +28,8 @@
   max-width: 68ch;
 }
 .policy-section {
-  padding-block: var(--space-5);
+  padding-block: 1.5rem;
+  border-bottom: 1px solid var(--color-line);
 }
 .policy-section > p {
   margin-top: var(--space-3);

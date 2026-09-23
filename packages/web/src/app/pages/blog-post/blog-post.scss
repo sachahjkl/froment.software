@@ -3,7 +3,7 @@
 }
 .blog-post,
 .missing-post {
-  padding: var(--page-header-y) var(--page-x);
+  padding-block: 4rem 6rem;
 }
 .blog-post header {
   max-width: var(--measure);

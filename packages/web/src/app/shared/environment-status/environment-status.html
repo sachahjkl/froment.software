@@ -20,7 +20,7 @@
 } @if (publicPage()) {
 <aside class="construction-notice runtime-construction-only" aria-labelledby="construction-title">
   <div class="construction-inner">
-    <p class="construction-kicker">{{ i18n.t("shell.construction.kicker") }}</p>
+    <span class="construction-icon" aria-hidden="true">🚧</span>
     <div>
       <h2 id="construction-title">{{ i18n.t("shell.construction.title") }}</h2>
       <p>{{ i18n.t("shell.construction.description") }}</p>

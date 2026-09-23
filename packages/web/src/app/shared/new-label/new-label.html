@@ -1,4 +1,6 @@
+@if (construction) {
 <span class="label runtime-construction-only">{{ i18n.t("shell.underConstruction") }}</span>
+} @else {
 <a
   class="runtime-live-only"
   routerLink="/blog/2026-08-froment-software-arrive"
@@ -6,3 +8,4 @@
 >
   <span>{{ i18n.t("shell.nowLive") }}</span>
 </a>
+}

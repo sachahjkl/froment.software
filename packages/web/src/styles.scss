@@ -58,7 +58,7 @@ html:has(.back-office-shell, app-design) {
   background-image: none;
 }
 
-html:has(app-home) {
+html:has(app-home, app-blog, app-blog-post, app-policy-page, app-login) {
   background-color: var(--color-surface-raised);
   background-image: none;
 }
@@ -84,6 +84,18 @@ body {
   border-radius: var(--radius-md);
   background: var(--color-surface);
   box-shadow: var(--shadow-page);
+}
+
+:is(app-blog, app-blog-post, app-policy-page, app-login).page-container {
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+:is(app-blog, app-blog-post, app-policy-page, app-login) :is(h1, h2) {
+  font-family: var(--font-body);
+  letter-spacing: -0.035em;
 }
 
 .back-office-shell .page-container {
