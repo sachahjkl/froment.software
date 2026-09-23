@@ -22,43 +22,29 @@ Push after a meaningful batch of commits, or when the work is ready for CI/revie
 - Utilisez les outils navigateur existants uniquement pour des vérifications visuelles locales et ponctuelles.
 - Ne figez pas la structure du DOM, les libellés, l’ordre des contrôles ou les détails visuels par des assertions exhaustives.
 - Ne modifiez pas le produit uniquement pour satisfaire un scénario navigateur fragile.
-- Gardez les tests proportionnés au risque. Préférez des tests ciblés sur les règles métier, les permissions, la persistance et les contrats.
-- Conservez les tests métier et API, la compilation, le lint et le formatage dans les checks.
+- Gardez les tests proportionnés au risque. Préférez des tests ciblés sur les routes, les métadonnées et le flux Atom.
+- Conservez les tests, la compilation, le lint et le formatage dans les checks.
 
 ## Composition de l’interface
 
 - Réservez `details` et `summary` aux disclosures éditoriaux, comme les FAQ.
-- Utilisez les composants de menu, de modale ou de popover pour les interactions riches.
-- Groupez les boutons et les liens avec un espacement explicite. Utilisez les composants partagés ou les classes `spacer-x-*` et `spacer-y-*`.
-- Placez les compteurs de résultats sous les tableaux, hors des barres de recherche et de filtres.
+- Groupez les boutons et les liens avec un espacement explicite.
 - Calculez les valeurs dérivées dans des fonctions typées ou des `computed`. Évitez les ternaires dans les templates.
 - Importez les styles partagés avec les chemins Sass `shared/...`, configurés dans `angular.json`. Évitez les remontées `../../../shared`.
 - Laissez le conteneur principal gérer la hauteur de la page. N’imposez pas une hauteur de viewport à chaque page interne.
-- Centrez le contenu du backoffice avec les largeurs partagées : 52 rem pour les formulaires, 72 rem pour les fiches, 80 rem pour les listes.
-- Limitez la zone complète avec son en-tête et ses messages. Ne limitez pas uniquement son formulaire.
-- Utilisez `.detail-page.form-page` pour une tâche et `.detail-page.wide-page` pour une composition large.
-- Utilisez `Tabs` pour les onglets. Laissez le conteneur gérer leur espacement, sans marge supérieure dans le composant.
-- Donnez aux listes d’entités un titre fixe et une description avec `PageHeader`, sans surtitre ni répétition de l’onglet actif.
-- Utilisez `PageHeader` avec `layout="stacked"` pour les fiches et tâches du backoffice. Placez leur navigation de contexte dans `pageBack`.
-- Sur un parcours imbriqué, remplacez le retour simple par `Breadcrumbs`. Conservez les paramètres autorisés sur chaque lien parent.
-- Utilisez `.field` pour espacer un libellé et son contrôle. Réservez `.fields` et `.field-grid` aux groupes de champs.
-- Identifiez les groupes de formulaire avec `.ds-panel.form-panel`. Évitez les panneaux imbriqués et les surfaces sur chaque champ.
-- Placez les badges dans `pageBadges` et les actions dans `pageActions`. Excluez les retours et les noms d’entités de ces actions.
-- Rendez le nom du client cliquable dans la description de la fiche. Ne répétez pas ce lien ailleurs dans l’en-tête.
-- Présentez les documents liés avec leur type, leur référence et leurs données disponibles. Évitez les suites de références sans libellé.
-- Importez `shared/page-header/detail-page` pour la composition des fiches. Ne redéfinissez pas localement leur titre ou leur lien de retour.
+- Conservez les URL des notes dans le sitemap, les métadonnées et le flux Atom.
 
 ## Learning More About Effect
 
 This repository uses the Effect TypeScript library.
 
-Before writing Effect code, read `node_modules/effect/AGENTS.md` completely.
+Before writing Effect code, read `packages/marketing/node_modules/effect/AGENTS.md` completely.
 
-If the guide does not cover an API, search `node_modules/effect/src`.
+If the guide does not cover an API, search `packages/marketing/node_modules/effect/src`.
 
 ## Runtime Configuration
 
-- Declare runtime settings in `packages/api/src/runtime-config.ts` with Effect `Config`.
+- Declare runtime settings in `packages/marketing/src/runtime-config.ts` with Effect `Config`.
 - Read runtime settings through the injected `RuntimeConfiguration`.
 - Do not store runtime settings in standalone constants or shared contracts.
 - Validate runtime-dependent limits with the injected configuration.

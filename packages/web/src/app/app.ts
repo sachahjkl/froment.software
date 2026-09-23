@@ -26,23 +26,17 @@ import { PageMetadata } from './page-metadata';
 import { CopyNotice } from './shared/copy-notice/copy-notice';
 import { SiteFooter } from './shared/site-footer/site-footer';
 import { SiteHeader } from './shared/site-header/site-header';
-import { BackOfficeHeader } from './shared/back-office-header/back-office-header';
-import { BackOfficeHeaderPlaceholder } from './shared/back-office-header/back-office-header-placeholder';
 import { Button } from './shared/button/button';
 import { EnvironmentStatus } from './shared/environment-status/environment-status';
-import { FlashOutlet } from './shared/flash/flash-outlet';
 import { NavigationProgress } from './shared/navigation-progress/navigation-progress';
 
 @Component({
   selector: 'app-root',
   standalone: true,
   imports: [
-    BackOfficeHeader,
-    BackOfficeHeaderPlaceholder,
     Button,
     CopyNotice,
     EnvironmentStatus,
-    FlashOutlet,
     NavigationProgress,
     RouterOutlet,
     SiteFooter,
@@ -65,10 +59,6 @@ export class App {
   protected readonly startup = signal<'loading' | 'ready' | 'error'>(
     this.initialShell === undefined ? 'loading' : 'ready',
   );
-  protected readonly backOffice = computed(
-    () => this.shell() === 'administrator' || this.shell() === 'client',
-  );
-  protected readonly administrator = computed(() => this.shell() === 'administrator');
   protected readonly standalonePage = computed(() => this.shell() === 'standalone');
   protected readonly publicPage = computed(
     () => this.shell() === 'public' || this.shell() === 'landing',

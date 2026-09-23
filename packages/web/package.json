@@ -12,12 +12,10 @@
     "lint:templates": "node tools/check-template-prose.mjs"
   },
   "dependencies": {
-    "@angular/aria": "catalog:",
     "@angular/cdk": "catalog:",
     "@angular/common": "catalog:",
     "@angular/compiler": "catalog:",
     "@angular/core": "catalog:",
-    "@angular/forms": "catalog:",
     "@angular/platform-browser": "catalog:",
     "@angular/platform-server": "catalog:",
     "@angular/router": "catalog:",
@@ -26,12 +24,7 @@
     "@froment/l10n": "workspace:*",
     "@kitlangton/justice": "0.3.2",
     "@panzoom/panzoom": "4.6.2",
-    "@simplewebauthn/browser": "14.0.0",
-    "@tiptap/core": "catalog:",
-    "@tiptap/starter-kit": "catalog:",
     "effect": "catalog:",
-    "entities": "8.0.0",
-    "fuse.js": "catalog:",
     "marked": "catalog:",
     "mermaid": "catalog:",
     "rxjs": "catalog:",
@@ -41,7 +34,6 @@
     "@angular/build": "catalog:",
     "@angular/cli": "catalog:",
     "@angular/compiler-cli": "catalog:",
-    "@scalar/api-reference": "1.67.0",
     "jsdom": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:"

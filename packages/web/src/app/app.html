@@ -1,31 +1,16 @@
-<div
-  class="app-shell"
-  [class.back-office-shell]="backOffice()"
-  [class.standalone-shell]="standalonePage()"
->
+<div class="app-shell" [class.standalone-shell]="standalonePage()">
   <a
     class="skip-link"
     href="#main-content"
     (click)="$event.preventDefault(); mainContent.focus({ preventScroll: true })"
     >{{ i18n.t("shell.skip") }}</a
   >
-  @if (backOffice()) { @defer (when startup() === 'ready') {
-  <app-back-office-header [administrator]="administrator()" />
-  } @placeholder {
-  <app-back-office-header-placeholder [administrator]="administrator()" />
-  } @error {
-  <div class="header-error">
-    <app-navigation-progress />
-    <p role="alert">{{ i18n.t('shell.navigationUnavailable') }}</p>
-    <button appButton type="button" (click)="reload()">{{ i18n.t('shell.reload') }}</button>
-  </div>
-  } } @else if (publicPage() && !landingPage()) {
+  @if (publicPage() && !landingPage()) {
   <app-site-header />
   } @else if (standalonePage()) {
   <app-navigation-progress class="standalone-progress" />
-  } @if (!backOffice()) {
-  <app-environment-status ngSkipHydration [publicPage]="publicPage()" placement="hidden" />
   }
+  <app-environment-status ngSkipHydration [publicPage]="publicPage()" placement="hidden" />
   <main
     #mainContent
     id="main-content"
@@ -43,7 +28,7 @@
       <p role="alert">{{ i18n.t('shell.loadError') }}</p>
       <button appButton type="button" (click)="reload()">{{ i18n.t('shell.reload') }}</button>
     </div>
-    } @defer (when backOffice()) { <app-flash-outlet /> }
+    }
     <router-outlet />
   </main>
   @if (publicPage()) { <app-site-footer /> }

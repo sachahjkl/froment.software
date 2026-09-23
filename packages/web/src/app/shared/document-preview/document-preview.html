@@ -1,7 +1,0 @@
-@if (loading()) {
-<p role="status">{{ loadingLabel() }}</p>
-} @else if (failed()) {
-<p appNotice variant="danger" role="alert">{{ errorLabel() }}</p>
-} @else if (frameUrl(); as frame) {
-<iframe class="preview-surface" [src]="frame" [title]="title()"></iframe>
-}

@@ -2,40 +2,36 @@ import { Component } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
-import { routeShell, withShell } from './app-shell';
+import { routeShell } from './app-shell';
 
 @Component({ template: '' })
 class ShellPage {}
 
 describe('routeShell', () => {
-  it('uses route metadata, including a public child of an administrator route', async () => {
+  it('uses the most specific shell metadata', async () => {
     TestBed.configureTestingModule({
       providers: [
         provideRouter([
-          ...withShell('administrator', [
-            {
-              path: 'workspace',
-              children: [
-                { path: 'detail', component: ShellPage },
-                { path: 'join', component: ShellPage, data: { shell: 'public' } },
-              ],
-            },
-          ]),
-          { path: 'backoffice/unknown', component: ShellPage },
-          { path: 'customer', component: ShellPage, data: { shell: 'client' } },
+          {
+            path: 'landing',
+            data: { shell: 'landing' },
+            children: [
+              { path: 'detail', component: ShellPage },
+              { path: 'about', component: ShellPage, data: { shell: 'public' } },
+            ],
+          },
+          { path: 'unknown', component: ShellPage },
           { path: 'version', component: ShellPage, data: { shell: 'standalone' } },
         ]),
       ],
     });
-    const harness = await RouterTestingHarness.create('/workspace/detail');
+    const harness = await RouterTestingHarness.create('/landing/detail');
     const shell = () => routeShell(TestBed.inject(Router).routerState.snapshot.root);
-    expect(shell()).toBe('administrator');
-    await harness.navigateByUrl('/workspace/join');
+    expect(shell()).toBe('landing');
+    await harness.navigateByUrl('/landing/about');
     expect(shell()).toBe('public');
-    await harness.navigateByUrl('/backoffice/unknown');
+    await harness.navigateByUrl('/unknown');
     expect(shell()).toBe('public');
-    await harness.navigateByUrl('/customer');
-    expect(shell()).toBe('client');
     await harness.navigateByUrl('/version');
     expect(shell()).toBe('standalone');
   });

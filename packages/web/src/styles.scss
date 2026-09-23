@@ -1,4 +1,3 @@
-@use "shared/page-header/detail-page";
 @use "shared/accessibility";
 
 *,
@@ -53,18 +52,9 @@ html[data-app-environment="production"][data-site-phase="construction"] .runtime
   display: none;
 }
 
-html:has(.back-office-shell, app-design) {
-  background-color: var(--color-surface);
-  background-image: none;
-}
-
-html:has(app-home, app-notes, app-note, app-policy-page, app-login) {
+html:has(app-home, app-notes, app-note, app-policy-page) {
   background-color: var(--color-surface-raised);
   background-image: none;
-}
-
-.app-shell:has(app-design) {
-  background: var(--color-surface);
 }
 
 body {
@@ -86,22 +76,16 @@ body {
   box-shadow: var(--shadow-page);
 }
 
-:is(app-notes, app-note, app-policy-page, app-login).page-container {
+:is(app-notes, app-note, app-policy-page).page-container {
   border: 0;
   border-radius: 0;
   background: transparent;
   box-shadow: none;
 }
 
-:is(app-notes, app-note, app-policy-page, app-login) :is(h1, h2) {
+:is(app-notes, app-note, app-policy-page) :is(h1, h2) {
   font-family: var(--font-body);
   letter-spacing: -0.035em;
-}
-
-.back-office-shell .page-container {
-  border: 0;
-  border-radius: 0;
-  box-shadow: none;
 }
 
 @media print {

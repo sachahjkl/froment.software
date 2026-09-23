@@ -41,14 +41,12 @@ describe('App shell', () => {
     element = fixture.nativeElement;
   });
 
-  it('exposes the skip target and keeps the design route out of navigation', async () => {
+  it('exposes the skip target', async () => {
     const skipLink = element.querySelector<HTMLAnchorElement>('.skip-link')!;
     const main = element.querySelector<HTMLElement>('main#main-content')!;
 
     expect(skipLink.getAttribute('href')).toBe('#main-content');
     expect(main.tabIndex).toBe(-1);
-    expect(router.config.some((route) => route.path === 'design')).toBe(true);
-    expect(element.querySelector('a[href="/design"]')).toBeNull();
     expect(element.querySelector('app-site-header')).toBeNull();
     expect(element.querySelector('app-site-footer')).not.toBeNull();
 
@@ -78,20 +76,6 @@ describe('App shell', () => {
     expect(element.querySelector('main#main-content app-version')).not.toBeNull();
   });
 
-  it('uses the standalone shell for the component reference and restores the public shell on exit', async () => {
-    await navigate(fixture, router, '/design');
-    expect(element.querySelector('.app-shell')?.classList).toContain('standalone-shell');
-    expect(element.querySelector('app-site-header')).toBeNull();
-    expect(element.querySelector(':scope > .app-shell > app-site-footer')).toBeNull();
-    expect(element.querySelector('app-design app-site-footer')).not.toBeNull();
-    expect(element.querySelector('app-back-office-header')).toBeNull();
-    expect(element.querySelector('main#main-content app-design')).not.toBeNull();
-    await navigate(fixture, router, '/about');
-    expect(element.querySelector('.app-shell')?.classList).not.toContain('standalone-shell');
-    expect(element.querySelector('app-site-header')).not.toBeNull();
-    expect(element.querySelector('app-site-footer')).not.toBeNull();
-  });
-
   it('updates canonical, robots, and social metadata for route and language changes', async () => {
     await navigate(fixture, router, '/about');
 
@@ -116,14 +100,14 @@ describe('App shell', () => {
       meta('meta[property="og:image:alt"]').content,
     );
 
-    await navigate(fixture, router, '/design?preview=true');
+    await navigate(fixture, router, '/404');
 
-    expect(meta('meta[name="robots"]').content).toBe('noindex, follow');
-    expect(meta('meta[property="og:url"]').content).toBe('https://froment.software/design/button');
+    expect(meta('meta[name="robots"]').content).toBe('noindex, nofollow');
+    expect(meta('meta[property="og:url"]').content).toBe('https://froment.software/404');
     expect(document.head.querySelector<HTMLLinkElement>('link[rel="canonical"]')?.href).toBe(
-      'https://froment.software/design/button',
+      'https://froment.software/404',
     );
-    expect(element.querySelector('app-design')).not.toBeNull();
+    expect(element.querySelector('app-not-found')).not.toBeNull();
   });
 
   it('focuses main after post-initial navigation while preserving routed content', async () => {

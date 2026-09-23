@@ -1,6 +1,6 @@
 Cette application ne sépare pas seulement une interface web d'un serveur. Elle sépare les contrats, les textes, la préparation documentaire, les effets métier et leur exécution. Cette structure devient surtout visible quand un devis signé doit rester relié à une commande, une facture et leurs PDF.
 
-Cet article décrit le code présent dans le dépôt en août 2026. Il distingue les garanties effectives des intentions possibles.
+Cet article décrit le code d’août 2026, désormais conservé dans le [dépôt du backoffice](https://github.com/sachahjkl/backoffice). Il distingue les garanties effectives des intentions possibles.
 
 ## Table des matières
 

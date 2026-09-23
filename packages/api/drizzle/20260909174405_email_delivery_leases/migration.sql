@@ -1,1 +1,0 @@
-ALTER TABLE `email_tests` ADD `lease` integer DEFAULT 0 NOT NULL;

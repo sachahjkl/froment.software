@@ -1,8 +1,0 @@
-<app-page-header class="account-header">
-  <h1>{{ i18n.t('configurationWorkspace.account') }}</h1>
-  <a pageActions appLinkButton icon="logout" routerLink="/backoffice/sign-out"
-    >{{ i18n.t('backOffice.signOut') }}</a
-  >
-</app-page-header>
-<app-tabs [label]="i18n.t('configurationWorkspace.account')" [tabs]="tabs()" />
-<router-outlet />

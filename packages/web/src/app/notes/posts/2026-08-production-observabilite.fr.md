@@ -1,5 +1,7 @@
 Mettre une application en production ne consiste pas seulement à produire un conteneur. Il faut relier un build reproductible, une publication contrôlée, des secrets résolus au démarrage, des migrations ordonnées et une télémétrie exploitable. Voici l’état réel de cette chaîne pour Froment Software en août 2026.
 
+Le code métier cité se trouve maintenant dans le [dépôt du backoffice](https://github.com/sachahjkl/backoffice).
+
 ## Table des matières
 
 - [Deux dépôts, trois responsabilités](#deux-dépôts-trois-responsabilités)

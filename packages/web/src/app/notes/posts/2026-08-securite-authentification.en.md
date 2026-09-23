@@ -1,4 +1,4 @@
-Real application security is not the name of an algorithm. It depends on credential paths, checks on each request, stored state, and known limits. This article describes the current Froment Software implementation from its source code. It contains no key, token, or secret value.
+Real application security is not the name of an algorithm. It depends on credential paths, checks on each request, stored state, and known limits. This article describes the August 2026 code in the [backoffice repository](https://github.com/sachahjkl/backoffice). It contains no key, token, or secret value.
 
 ## Table of contents
 

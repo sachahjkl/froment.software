@@ -5,8 +5,7 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
-    "./notes": "./src/notes.ts",
-    "./component-reference": "./src/component-reference.ts"
+    "./notes": "./src/notes.ts"
   },
   "scripts": {
     "build": "tsc --noEmit",

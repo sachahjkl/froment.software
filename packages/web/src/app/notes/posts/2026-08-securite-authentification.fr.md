@@ -1,4 +1,4 @@
-La sécurité réelle d’une application ne se résume pas au nom d’un algorithme. Elle dépend du trajet des identifiants, des vérifications effectuées à chaque requête, des états conservés et des limites connues. Cet article décrit l’implémentation actuelle de Froment Software à partir du code source. Il ne contient ni clé, ni jeton, ni valeur de secret.
+La sécurité réelle d’une application ne se résume pas au nom d’un algorithme. Elle dépend du trajet des identifiants, des vérifications effectuées à chaque requête, des états conservés et des limites connues. Cet article décrit le code du [backoffice](https://github.com/sachahjkl/backoffice) en août 2026. Il ne contient ni clé, ni jeton, ni valeur de secret.
 
 ## Table des matières
 

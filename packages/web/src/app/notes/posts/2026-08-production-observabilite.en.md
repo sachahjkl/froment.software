@@ -1,5 +1,7 @@
 Putting an application into production involves more than producing a container. The system must connect a reproducible build, controlled publication, startup secret resolution, ordered migrations and usable telemetry. This article describes the actual Froment Software chain in August 2026.
 
+The business code cited here now lives in the [backoffice repository](https://github.com/sachahjkl/backoffice).
+
 ## Table of contents
 
 - [Two repositories, three responsibilities](#two-repositories-three-responsibilities)

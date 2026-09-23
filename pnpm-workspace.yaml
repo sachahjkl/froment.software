@@ -2,7 +2,6 @@ packages:
   - "packages/*"
 
 catalog:
-  "@angular/aria": "22.1.5"
   "@angular/build": "22.1.7"
   "@angular/cli": "22.1.7"
   "@angular/cdk": "22.1.5"
@@ -10,29 +9,15 @@ catalog:
   "@angular/compiler": "22.1.5"
   "@angular/compiler-cli": "22.1.5"
   "@angular/core": "22.1.5"
-  "@angular/forms": "22.1.5"
   "@angular/platform-browser": "22.1.5"
   "@angular/platform-server": "22.1.5"
   "@angular/router": "22.1.5"
   "@angular/ssr": "22.1.7"
-  "@axe-core/playwright": "4.13.0"
-  "@playwright/test": "1.62.1"
-  playwright-core: "1.62.1"
   "@effect/platform-node": "4.0.0-rc.112"
-  "@effect/vitest": "4.0.0-rc.112"
-  "@faker-js/faker": "10.6.0"
   "@oxlint/plugins": "1.81.0"
-  "@tiptap/core": "3.31.3"
-  "@tiptap/starter-kit": "3.31.3"
   "@types/node": "^24.13.3"
-  "@types/better-sqlite3": "^9.6.0"
-  "@vitest/coverage-v8": "4.1.11"
-  better-sqlite3: "13.0.3"
-  drizzle-kit: "1.0.0-rc.5-ab785fc"
-  drizzle-orm: "1.0.0-rc.5-169397b"
   effect: "4.0.0-rc.112"
   esbuild: "^0.28.2"
-  fuse.js: "7.5.0"
   jsdom: "^30.0.1"
   marked: "^18.0.11"
   mermaid: "11.17.2"
@@ -40,15 +25,11 @@ catalog:
   oxlint: "1.81.0"
   rxjs: "~7.8.2"
   tslib: "^2.8.1"
-  tough-cookie: "6.0.2"
   typescript: "~6.0.3"
-  ulid: "3.0.2"
   vitest: "^4.1.11"
 
 allowBuilds:
   "@parcel/watcher": true
-  argon2: true
-  better-sqlite3: true
   esbuild: true
   lmdb: true
   msgpackr-extract: true

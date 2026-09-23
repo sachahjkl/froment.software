@@ -11,30 +11,11 @@
   color: var(--color-ink);
 }
 
-.back-office-shell {
-  display: grid;
-  grid-template-columns: 16rem minmax(0, 1fr);
-  grid-template-rows: auto minmax(0, 1fr);
-  grid-template-areas: "sidebar header" "sidebar content";
-  align-items: start;
-  background: var(--color-surface);
-}
-.back-office-shell main {
-  grid-area: content;
-  width: 100%;
-  max-width: var(--page-width-wide);
-  margin-block: 0;
-  margin-inline: auto;
-}
-.back-office-shell app-copy-notice {
-  display: contents;
-}
 .startup-main {
   display: flex;
   align-self: stretch;
 }
-.startup-status,
-.header-error {
+.startup-status {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -52,10 +33,6 @@
   color: var(--color-ink);
   font-size: var(--text-xl);
   text-align: center;
-}
-.header-error {
-  position: relative;
-  grid-area: header;
 }
 .standalone-progress {
   position: fixed;
@@ -79,13 +56,6 @@
     transform: rotate(360deg);
   }
 }
-@media (max-width: 63.999rem) {
-  .back-office-shell {
-    grid-template-columns: minmax(0, 1fr);
-    grid-template-areas: "header" "content";
-  }
-}
-
 .skip-link {
   position: fixed;
   top: var(--space-2);
@@ -121,7 +91,7 @@ main {
   margin-block: 0;
 }
 
-.app-shell:has(:is(app-notes, app-note, app-policy-page, app-login)) main {
+.app-shell:has(:is(app-notes, app-note, app-policy-page)) main {
   width: min(100% - 3rem, 48rem);
   max-width: none;
   margin-block: 0;
@@ -140,12 +110,6 @@ main {
 }
 
 @media print {
-  .back-office-shell main {
-    max-width: none;
-  }
-  .back-office-shell {
-    display: block;
-  }
   main {
     width: 100%;
     max-width: none;

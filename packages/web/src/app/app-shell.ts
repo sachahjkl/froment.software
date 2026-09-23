@@ -1,11 +1,8 @@
 import { makeStateKey } from '@angular/core';
-import type { ActivatedRouteSnapshot, Routes } from '@angular/router';
+import type { ActivatedRouteSnapshot } from '@angular/router';
 
-export type AppShell = 'public' | 'landing' | 'administrator' | 'client' | 'standalone';
+export type AppShell = 'public' | 'landing' | 'standalone';
 export const APP_SHELL_STATE = makeStateKey<AppShell | undefined>('app-shell');
-
-export const withShell = (shell: AppShell, routes: Routes): Routes =>
-  routes.map((route) => ({ ...route, data: { ...route.data, shell } }));
 
 export function routeShell(root: ActivatedRouteSnapshot): AppShell {
   let shell: AppShell = 'public';

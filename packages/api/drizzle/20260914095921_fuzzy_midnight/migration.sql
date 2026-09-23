@@ -1,1 +1,0 @@
-ALTER TABLE `users` ADD `preferences` text DEFAULT '{"theme":"light","language":"fr","flashMode":"inline"}' NOT NULL;

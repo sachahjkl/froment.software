@@ -1,6 +1,6 @@
 This application does not only separate a web interface from a server. It separates contracts, text, document preparation, business effects and their execution. This structure is most visible when a signed quote must remain linked to an order, an invoice and their PDFs.
 
-This article describes the code present in the repository in August 2026. It distinguishes implemented guarantees from possible intentions.
+This article describes the August 2026 code, now kept in the [backoffice repository](https://github.com/sachahjkl/backoffice). It distinguishes implemented guarantees from possible intentions.
 
 ## Table of contents
 
