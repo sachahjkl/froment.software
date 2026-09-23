@@ -41,16 +41,17 @@
           inherit (package) version;
           src = lib.fileset.toSource {
             root = ./.;
-            fileset = lib.fileset.unions [./package.json ./package-lock.json ./prepare.mjs];
+            fileset = lib.fileset.unions [./package.json ./package-lock.json ./prepare.mjs ./brand/froment.png];
           };
           nodejs = pkgs.nodejs_26;
           nativeBuildInputs = [pkgs.makeWrapper];
-          npmDepsHash = "sha256-dThSXAczLeJS9PQ3e9WxR0o0exh1mk2SF72CuKSypv0=";
+          npmDepsHash = "sha256-4YEkja9ct0FLj0xhirPTV05FXUrWkxx8mbpIU5JgeRY=";
           dontNpmBuild = true;
           installPhase = ''
             runHook preInstall
             mkdir -p "$out/lib/froment-backoffice" "$out/bin"
             cp -r node_modules package.json prepare.mjs "$out/lib/froment-backoffice/"
+            cp brand/froment.png "$out/lib/froment-backoffice/node_modules/@sachahjkl/backoffice/dist/web/brand/froment.png"
             ln -s "$out/lib/froment-backoffice/node_modules/.bin/froment-backoffice" "$out/bin/froment-backoffice"
             makeWrapper ${pkgs.nodejs-slim_26}/bin/node "$out/bin/froment-backoffice-prepare" \
               --add-flags "$out/lib/froment-backoffice/prepare.mjs"
@@ -83,7 +84,7 @@
               "SSL_CERT_FILE=${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt"
               "HOME=/var/lib/froment-software"
               "ENTERPRISE_NAME=Froment Software"
-              "ENTERPRISE_LOGO_URL=/brand/default.svg"
+              "ENTERPRISE_LOGO_URL=/brand/froment.png"
               "TMPDIR=/tmp"
             ];
             User = "froment";

@@ -5,7 +5,7 @@
         PUBLIC_ORIGIN           = "https://backoffice.froment.software"
         DATABASE_PATH           = "/var/lib/froment-software/froment.sqlite"
         ENTERPRISE_NAME         = "Froment Software"
-        ENTERPRISE_LOGO_URL     = "/brand/default.svg"
+        ENTERPRISE_LOGO_URL     = "/brand/froment.png"
         TRUSTED_PROXY_ADDRESSES = "172.18.0.1"
       }
 
