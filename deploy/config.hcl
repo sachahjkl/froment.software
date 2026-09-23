@@ -1,1 +1,1 @@
-        command      = "froment-software"
+        command      = "froment-software-marketing"

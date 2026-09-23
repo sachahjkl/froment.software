@@ -33,6 +33,7 @@ export const defaultRuntimeConfig = {
     sitePhase: 'live',
     githubRepositoryUrl: 'https://github.com/sachahjkl/froment.software',
   },
+  marketing: { backofficeOrigin: 'https://backoffice.froment.software' },
   authentication: defaultAuthenticationRuntimeConfig,
   requestLimiter: {
     enabled: true,
@@ -98,6 +99,12 @@ export const RuntimeConfig = {
       ),
       'GITHUB_REPOSITORY_URL',
     ).pipe(Config.withDefault(defaultRuntimeConfig.application.githubRepositoryUrl)),
+  }),
+  marketing: Config.all({
+    backofficeOrigin: Config.schema(Schema.URL, 'BACKOFFICE_ORIGIN').pipe(
+      Config.withDefault(new URL(defaultRuntimeConfig.marketing.backofficeOrigin)),
+      Config.map((url) => url.origin),
+    ),
   }),
   authentication: Config.all({
     accessTokenLifetimeMillis: positiveInt(

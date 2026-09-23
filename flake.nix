@@ -141,6 +141,7 @@
                 shareDir="$out/share/${pname}"
                 mkdir -p "$out/bin" "$libDir/node_modules/@phc" "$shareDir"
                 cp packages/api/dist/main.cjs "$libDir/server.cjs"
+                cp packages/api/dist/marketing.cjs "$libDir/marketing.cjs"
                 cp packages/api/dist/migrate.cjs "$libDir/migrate.cjs"
                 cp packages/api/dist/backup.cjs "$libDir/backup.cjs"
                 cp -r packages/api/drizzle "$shareDir/drizzle"
@@ -160,6 +161,11 @@
                   --set DOCUMENT_TEMPLATES_PATH "$shareDir/templates" \
                   --set DOCUMENT_FONTS_PATH ${documentFonts}/share/fonts \
                   --set-default DATABASE_PATH data/froment.sqlite \
+                  --set DEPLOYMENT_METADATA ${lib.escapeShellArg (deploymentMetadata commit)} \
+                  --set STATIC_ROOT "$shareDir/web" \
+                  --set-default PORT 3000
+                makeWrapper ${runtimeNode}/bin/node $out/bin/${pname}-marketing \
+                  --add-flags "$libDir/marketing.cjs" \
                   --set DEPLOYMENT_METADATA ${lib.escapeShellArg (deploymentMetadata commit)} \
                   --set STATIC_ROOT "$shareDir/web" \
                   --set-default PORT 3000

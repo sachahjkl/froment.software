@@ -8,11 +8,11 @@ Le guide de plateforme se trouve dans `nixconfig/docs/hosting-and-deployment.md`
 
 L’application utilise trois environnements :
 
-| Environnement | Adresse                            | Exécution   | Données           |
-| ------------- | ---------------------------------- | ----------- | ----------------- |
-| développement | `http://localhost:4200`            | poste local | base locale       |
-| staging       | `https://staging.froment.software` | Nomad       | volume staging    |
-| production    | `https://froment.software`         | Nomad       | volume production |
+| Environnement | Adresse                            | Exécution   | Données |
+| ------------- | ---------------------------------- | ----------- | ------- |
+| développement | `http://localhost:4200`            | poste local | aucune  |
+| staging       | `https://staging.froment.software` | Nomad       | aucune  |
+| production    | `https://froment.software`         | Nomad       | aucune  |
 
 `APP_ENV` identifie l’environnement.
 
@@ -93,68 +93,22 @@ sequenceDiagram
   N-->>G: Retourne le résultat du déploiement
 ```
 
-## Secrets
+## Vitrine indépendante
 
-Nomad Variables stocke deux ensembles séparés.
+Le job `froment-software` lance `froment-software-marketing`.
+Il sert les pages publiques, `/runtime-config.js` et `/api/health` sans ouvrir la base métier.
+Il ne lance aucun worker métier et ne monte aucun volume.
+Les anciennes URL `/backoffice/*` et `/quote/*` redirigent vers `backoffice.froment.software`.
+La vitrine ne sert pas les anciennes routes API métier.
 
-Chaque namespace utilise `nomad/jobs/froment-software`.
-
-Le namespace Nomad distingue la valeur staging de la valeur production.
-
-Les valeurs peuvent être identiques pendant une phase de transition.
-
-Les chemins, droits et cycles de rotation restent séparés.
-
-Nomad injecte les secrets au démarrage avec un bloc `template`.
-
-Angular reçoit `APP_ENV`, `SITE_PHASE`, `GITHUB_REPOSITORY_URL` et le commit déployé dans `/runtime-config.js`.
-
-N’ajoutez jamais un secret applicatif dans cette ressource publique.
-
-L’API valide `PASETO_SECRET_KEY` comme une paire Ed25519 complète au démarrage.
-
-`SETTINGS_ENCRYPTION_KEY` chiffre les clés configurées depuis le backoffice.
-
-`DEMO_PASSWORD` est obligatoire hors production. Il protège la réinitialisation des données de démonstration.
-
-## Données de démonstration staging
-
-Utilisez l’action de réinitialisation depuis Configuration.
-
-Saisissez `DEMO_PASSWORD`, puis confirmez la suppression des données staging.
-
-La commande refuse les environnements autres que staging.
-
-La commande recrée les cinq profils standards et des données déterministes.
-
-Les comptes utilisent les adresses `@demo.invalid`. Le secret reste dans SOPS et Nomad Variables.
-
-Le simulateur local traite l’analyse fournisseur et la télédéclaration sans service facturé.
-
-## Données persistantes
-
-Chaque environnement possède un volume Nomad distinct.
-
-| Environnement | Volume                                 |
-| ------------- | -------------------------------------- |
-| staging       | `67d2bb7c-5ef9-4b65-c100-09d9fb991365` |
-| production    | `d4579349-f86c-330b-381a-bb854f49db21` |
-
-Le conteneur utilise `/var/lib/froment-software/froment.sqlite`.
-
-`tools/prepare.sh` sauvegarde la base avant une migration.
-
-Le script vérifie `PRAGMA integrity_check` et `PRAGMA foreign_key_check`.
-
-La production refuse de démarrer avec une base absente.
-
-Ce contrôle évite une production vide après une erreur de montage.
+`/runtime-config.js` contient uniquement `APP_ENV`, `SITE_PHASE`, `GITHUB_REPOSITORY_URL` et le commit déployé.
+Gardez les secrets métier dans le job `backoffice` du dépôt `backoffice`.
 
 ## Spécifications Nomad
 
 Le Nomad Pack dans `deploy` décrit les deux charges de travail.
 
-`application.yaml` déclare les domaines, le port, la santé et le volume.
+`application.yaml` déclare les domaines, le port et la santé.
 
 GitHub OIDC fournit un jeton Nomad temporaire pour l’environnement demandé.
 
@@ -168,7 +122,7 @@ Après un déploiement staging, vérifiez les points suivants :
 4. Vérifiez que le site public retourne HTTP 200.
 5. Vérifiez l’en-tête `X-Robots-Tag: noindex, nofollow`.
 6. Vérifiez que le bandeau identifie staging.
-7. Vérifiez une connexion et une route authentifiée.
+7. Vérifiez que `/api/auth/account` ne sert plus l’API métier.
 
 Staging reste public.
 
@@ -182,19 +136,19 @@ Approuvez le job dans l’environnement GitHub `production`.
 
 Le workflow vérifie la signature et la provenance du digest staging.
 
-La tâche Nomad `prepare` sauvegarde la base avant la migration et le démarrage.
+Avant de promouvoir cette version en production, préparez le transfert de la base métier vers le job `backoffice`.
+La promotion arrête les workers de l’ancien job.
+Consultez la procédure de migration dans le dépôt `backoffice`.
 
 Après le déploiement, vérifiez les points suivants :
 
 1. Vérifiez que les digests staging et production sont identiques.
 2. Vérifiez que `/api/health` retourne HTTP 200.
-3. Vérifiez que la connexion fonctionne.
-4. Vérifiez les journaux et les traces.
+3. Vérifiez les redirections `/backoffice/login` et `/quote`.
+4. Vérifiez que l’ancienne API métier est inaccessible.
 5. Vérifiez le libellé lié à `SITE_PHASE`.
 
-Conservez `SITE_PHASE=construction` avant le lancement public.
-
-Passez cette valeur à `live` lors du lancement.
+`SITE_PHASE=live` affiche la vitrine publique.
 
 ## Retour arrière
 
@@ -205,10 +159,5 @@ nomad job history froment-software-production
 nomad job revert froment-software-production VERSION
 ```
 
-Pour une erreur de migration, arrêtez d’abord l’allocation défaillante.
-
-Restaurez ensuite la sauvegarde vérifiée qui précède la migration.
-
-Soumettez enfin le digest précédent.
-
-Conservez les journaux de l’allocation pour l’analyse.
+La base métier relève de la procédure de restauration du dépôt `backoffice`.
+Ne réactivez pas les anciens workers si le nouveau job traite déjà ces données.
