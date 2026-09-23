@@ -13,7 +13,12 @@ import { NewLabel } from '@shared/new-label/new-label';
 })
 export class HomeComponent {
   protected readonly i18n = inject(I18nService);
-  protected readonly projectNames = { albumator: 'Albumator', clockin: 'Clock-in', dw: 'dw' };
+  protected readonly projectNames = {
+    albumator: 'Albumator',
+    clockin: 'Clock-in',
+    dw: 'dw',
+    backoffice: 'Backoffice',
+  };
 
   constructor() {
     this.i18n.setLanguage(inject(ActivatedRoute).snapshot.data['language']);
