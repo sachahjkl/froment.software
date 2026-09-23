@@ -222,7 +222,15 @@ export const makeServerLayer = (options: {
     ),
     {
       middleware: (application) =>
-        application.pipe(logRequest, preventHtmlCaching, identifyRequest, traceRequest),
+        Effect.gen(function* () {
+          const request = yield* HttpServerRequest.HttpServerRequest;
+          if (
+            request.method === 'GET' &&
+            new URL(request.url, options.publicOrigin).pathname === '/'
+          )
+            return HttpServerResponse.redirect('/fr');
+          return yield* application;
+        }).pipe(logRequest, preventHtmlCaching, identifyRequest, traceRequest),
       disableLogger: true,
     },
   ).pipe(

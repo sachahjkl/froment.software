@@ -584,10 +584,9 @@ describe('HTTP server', () => {
   });
 
   it('serves static, prerendered, and missing routes correctly', async () => {
-    const root = await fetch(`${baseUrl}/`);
-    expect(root.status).toBe(200);
-    expect(root.headers.get('cache-control')).toBe('no-store');
-    expect(await root.text()).toContain('url=/fr');
+    const root = await fetch(`${baseUrl}/`, { redirect: 'manual' });
+    expect(root.status).toBe(302);
+    expect(root.headers.get('location')).toBe('/fr');
 
     const landing = await fetch(`${baseUrl}/fr`);
     expect(landing.status).toBe(200);
