@@ -102,7 +102,14 @@ Les anciennes URL `/backoffice/*` et `/quote/*` redirigent vers `backoffice.from
 La vitrine ne sert pas les anciennes routes API métier.
 
 `/runtime-config.js` contient uniquement `APP_ENV`, `SITE_PHASE`, `GITHUB_REPOSITORY_URL` et le commit déployé.
-Gardez les secrets métier dans le job `backoffice` du dépôt `backoffice`.
+Gardez les secrets métier dans le job `backoffice` défini dans `backoffice/`.
+
+## Backoffice réel
+
+`backoffice/` assemble la version npm publiée de `@sachahjkl/backoffice` pour `backoffice.froment.software`.
+Le dépôt générique `backoffice` ne contient aucun job Nomad de cette instance.
+Le workflow manuel `backoffice-production.yml` vérifie, publie et déploie l’assemblage avec les actions partagées.
+Consultez [la procédure de transfert](../backoffice/README.md) avant de lancer ce workflow.
 
 ## Spécifications Nomad
 

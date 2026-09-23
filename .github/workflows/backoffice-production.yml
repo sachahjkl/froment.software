@@ -1,0 +1,17 @@
+name: Deploy backoffice production
+
+on:
+  workflow_dispatch:
+
+jobs:
+  production:
+    permissions:
+      attestations: write
+      contents: read
+      id-token: write
+      packages: write
+    uses: sachahjkl/deployment-actions/.github/workflows/application-ci.yml@v6.0.9
+    with:
+      application-directory: backoffice
+      deployment-environment: production
+      image-suffix: -backoffice

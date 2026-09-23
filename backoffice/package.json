@@ -1,0 +1,17 @@
+{
+  "name": "froment-backoffice-instance",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Froment Software production assembly of the published backoffice",
+  "scripts": {
+    "start": "froment-backoffice",
+    "migrate": "froment-backoffice migrate",
+    "backup": "froment-backoffice backup"
+  },
+  "dependencies": {
+    "@sachahjkl/backoffice": "0.2.6"
+  },
+  "engines": {
+    "node": ">=26.7.0 <27"
+  }
+}

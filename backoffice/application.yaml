@@ -1,0 +1,27 @@
+---
+application:
+  name: backoffice
+  port: 3000
+  healthPath: /api/health
+
+modules:
+  config:
+    - deploy/config.hcl
+
+environments:
+  production:
+    domain: backoffice.froment.software
+    modules:
+      group:
+        - deploy/group-production.hcl
+      task:
+        - deploy/task-production.hcl
+
+volume:
+  mountPath: /var/lib/froment-software
+  uid: 1000
+  gid: 1000
+
+resources:
+  cpu: 1000
+  memory: 1024
