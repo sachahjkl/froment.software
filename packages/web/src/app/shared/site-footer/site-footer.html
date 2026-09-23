@@ -10,12 +10,10 @@
       <a routerLink="/cookies">{{ i18n.t('nav.cookies') }}</a>
       <a href="https://backoffice.froment.software/login">{{ i18n.t('backOffice.title') }}</a>
     </nav>
-    @if (showPreferences()) {
     <div class="footer-controls">
       <app-language-selector [compact]="true" />
       <app-theme-toggle />
     </div>
-    }
     <app-environment-status [publicPage]="false" placement="footer" />
   </div>
 </footer>

@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { I18nService } from '@app/i18n.service';
 import { EnvironmentStatus } from '@shared/environment-status/environment-status';
@@ -13,7 +13,6 @@ import { ThemeToggle } from '@shared/theme-toggle/theme-toggle';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class SiteFooter {
-  readonly showPreferences = input(false);
   protected readonly i18n = inject(I18nService);
   protected readonly currentYear = new Date().getFullYear();
 }
