@@ -20,8 +20,6 @@ export interface PolicyDocument {
   titleKey: TranslationKey;
   leadKey: TranslationKey;
   updatedKey: TranslationKey;
-  summaryTitleKey: TranslationKey;
-  summaryContentKey: TranslationKey;
   sections: readonly PolicySection[];
 }
 
@@ -31,8 +29,6 @@ export const policies = {
     titleKey: 'legal.title',
     leadKey: 'legal.lead',
     updatedKey: 'legal.updated',
-    summaryTitleKey: 'legal.summary.title',
-    summaryContentKey: 'legal.summary.content',
     sections: [
       {
         id: 'publisher',
@@ -66,8 +62,6 @@ export const policies = {
     titleKey: 'privacy.title',
     leadKey: 'privacy.lead',
     updatedKey: 'privacy.updated',
-    summaryTitleKey: 'privacy.summary.title',
-    summaryContentKey: 'privacy.summary.content',
     sections: [
       { id: 'who', titleKey: 'privacy.who.title', contentKey: 'privacy.who.content' },
       { id: 'data', titleKey: 'privacy.data.title', contentKey: 'privacy.data.content' },
@@ -105,8 +99,6 @@ export const policies = {
     titleKey: 'cookies.title',
     leadKey: 'cookies.lead',
     updatedKey: 'cookies.updated',
-    summaryTitleKey: 'cookies.summary.title',
-    summaryContentKey: 'cookies.summary.content',
     sections: [
       { id: 'what', titleKey: 'cookies.what.title', contentKey: 'cookies.what.content' },
       { id: 'setting', titleKey: 'cookies.why.title', contentKey: 'cookies.why.content' },

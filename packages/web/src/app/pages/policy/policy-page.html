@@ -5,10 +5,6 @@
     <time class="policy-date" datetime="2026-07-13">{{ i18n.t(policy().updatedKey) }}</time>
   </header>
   <div class="policy-layout">
-    <aside class="policy-summary" [attr.aria-labelledby]="policy().id + '-summary-title'">
-      <h2 [id]="policy().id + '-summary-title'">{{ i18n.t(policy().summaryTitleKey) }}</h2>
-      <p>{{ i18n.t(policy().summaryContentKey) }}</p>
-    </aside>
     <div class="policy-content">
       @for (section of policy().sections; track section.id) {
       <section

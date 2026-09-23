@@ -226,9 +226,6 @@ export const translations = {
     'legal.lead':
       'Les informations essentielles sur l’édition, l’hébergement et l’utilisation des contenus de froment.software.',
     'legal.updated': 'Mis à jour le 23 septembre 2026',
-    'legal.summary.title': 'En bref',
-    'legal.summary.content':
-      'froment.software présente l’activité, les services et les notes techniques de Sacha FROMENT. Le backoffice est un service distinct.',
     'legal.publisher.title': 'Édition du site',
     'legal.publisher.content':
       'Le site froment.software est édité et maintenu par Sacha FROMENT. Les demandes administratives ou juridiques peuvent être adressées par e-mail.',
@@ -253,9 +250,6 @@ export const translations = {
     'privacy.lead':
       'Ce que ce site traite automatiquement, ce qu’il conserve dans votre navigateur et comment poser une question.',
     'privacy.updated': 'Mis à jour le 23 septembre 2026',
-    'privacy.summary.title': 'À retenir',
-    'privacy.summary.content':
-      'La vitrine n’intègre ni outil publicitaire ni mesure d’audience. Le serveur peut journaliser les requêtes techniques. Le navigateur conserve les préférences de langue et de thème.',
     'privacy.who.title': 'Responsable du site',
     'privacy.who.content':
       'Sacha FROMENT édite froment.software et répond aux demandes relatives aux données traitées par ce site.',
@@ -283,9 +277,6 @@ export const translations = {
     'cookies.lead':
       'La vitrine utilise le stockage local du navigateur pour les préférences de langue et de thème.',
     'cookies.updated': 'Mis à jour le 23 septembre 2026',
-    'cookies.summary.title': 'Situation actuelle',
-    'cookies.summary.content':
-      'La vitrine ne crée aucun cookie de connexion, de mesure d’audience ou de publicité.',
     'cookies.what.title': 'Différence entre cookie et stockage local',
     'cookies.what.content':
       'Un cookie peut être envoyé automatiquement au serveur avec une requête. Le stockage local reste dans le navigateur. La vitrine utilise le stockage local pour ses préférences.',
@@ -578,9 +569,6 @@ export const translations = {
     'legal.lead':
       'Essential information about the publishing, hosting and use of froment.software content.',
     'legal.updated': 'Updated 23 September 2026',
-    'legal.summary.title': 'At a glance',
-    'legal.summary.content':
-      'froment.software presents Sacha FROMENT’s work, services and technical notes. The backoffice is a separate service.',
     'legal.publisher.title': 'Site publisher',
     'legal.publisher.content':
       'froment.software is published and maintained by Sacha FROMENT. Administrative or legal requests can be sent by email.',
@@ -604,9 +592,6 @@ export const translations = {
     'privacy.lead':
       'What this site processes automatically, what it keeps in your browser and how to ask a question.',
     'privacy.updated': 'Updated 23 September 2026',
-    'privacy.summary.title': 'Key points',
-    'privacy.summary.content':
-      'The public site has no advertising tool or audience analytics. The server may log technical requests. The browser stores language and theme preferences.',
     'privacy.who.title': 'Site operator',
     'privacy.who.content':
       'Sacha FROMENT publishes froment.software and handles requests about data processed by this site.',
@@ -634,9 +619,6 @@ export const translations = {
     'cookies.lead':
       'The public site uses browser local storage for language and theme preferences.',
     'cookies.updated': 'Updated 23 September 2026',
-    'cookies.summary.title': 'Current behaviour',
-    'cookies.summary.content':
-      'The public site creates no sign-in, audience analytics or advertising cookies.',
     'cookies.what.title': 'Cookies and local storage are different',
     'cookies.what.content':
       'A cookie can be sent to the server automatically with a request. Local storage stays in the browser. The public site uses local storage for preferences.',
