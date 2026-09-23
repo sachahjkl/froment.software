@@ -1,5 +1,9 @@
 export const webUiText = {
   fr: {
+    'blog.diagram.zoomIn': 'Agrandir le schéma',
+    'blog.diagram.zoomOut': 'Réduire le schéma',
+    'blog.diagram.reset': 'Réinitialiser la vue du schéma',
+    'blog.diagram.move': 'Schéma interactif. Utilisez les flèches pour le déplacer après un zoom.',
     'notice.dismiss': 'Fermer le message',
     'shell.contact': 'Contact',
     'shell.contactEmail': 'contact@froment.software',
@@ -157,6 +161,10 @@ export const webUiText = {
     'metadata.publisher': 'Froment Software',
   },
   en: {
+    'blog.diagram.zoomIn': 'Zoom in on diagram',
+    'blog.diagram.zoomOut': 'Zoom out on diagram',
+    'blog.diagram.reset': 'Reset diagram view',
+    'blog.diagram.move': 'Interactive diagram. Use the arrow keys to move it after zooming in.',
     'notice.dismiss': 'Dismiss message',
     'shell.contact': 'Contact',
     'shell.contactEmail': 'contact@froment.software',

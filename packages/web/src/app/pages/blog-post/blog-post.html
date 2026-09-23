@@ -13,7 +13,12 @@
       }
     </ul>
   </header>
-  <div class="blog-body" [appMermaidDiagrams]="article.html" [innerHTML]="article.html"></div>
+  <div
+    class="blog-body"
+    [appBlogJustification]="article.html"
+    [appMermaidDiagrams]="article.html"
+    [innerHTML]="article.html"
+  ></div>
 </article>
 } @else {
 <section class="missing-post">

@@ -61,3 +61,6 @@ overrides:
 peerDependencyRules:
   allowedVersions:
     listr2: "10.2.2"
+
+minimumReleaseAgeExclude:
+  - "@kitlangton/justice@0.3.2"

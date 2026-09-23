@@ -277,12 +277,19 @@ app-page-header .muted {
 .blog-body ol {
   margin-block: var(--space-3) 0;
 }
+.blog-body p:not(:has(.justified-line)) {
+  text-wrap: pretty;
+}
 .blog-body ul,
 .blog-body ol {
   padding-left: var(--space-6);
 }
 .blog-body li + li {
   margin-top: var(--space-1);
+}
+.blog-body .justified-line {
+  display: block;
+  white-space: nowrap;
 }
 .blog-body pre {
   max-width: 100%;
@@ -301,6 +308,51 @@ app-page-header .muted {
 .blog-body .mermaid svg {
   max-width: 100%;
   height: auto;
+}
+.blog-body .mermaid-viewer {
+  position: relative;
+  margin-block: var(--space-4) 0;
+}
+.blog-body .mermaid-viewer pre.mermaid {
+  display: block;
+  margin: 0;
+  max-height: 70vh;
+  overflow: hidden;
+  touch-action: none;
+}
+.blog-body .mermaid-viewer svg {
+  display: block;
+  margin-inline: auto;
+}
+.blog-body .mermaid-viewer pre:focus-visible {
+  outline: 2px solid var(--color-accent-strong);
+  outline-offset: 2px;
+}
+.blog-body .mermaid-controls {
+  position: absolute;
+  z-index: 1;
+  inset-block-start: var(--space-2);
+  inset-inline-end: var(--space-2);
+  display: flex;
+  gap: var(--space-1);
+}
+.blog-body .mermaid-controls button {
+  min-width: 2.75rem;
+  min-height: 2.75rem;
+  border: 1px solid var(--color-line-strong);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  color: var(--color-ink);
+  cursor: pointer;
+}
+.blog-body .mermaid-controls button:focus-visible {
+  outline: 2px solid var(--color-accent-strong);
+  outline-offset: 2px;
+}
+@media print {
+  .blog-body .mermaid-controls {
+    display: none;
+  }
 }
 
 a {

@@ -115,7 +115,7 @@
           inherit pname version src;
           inherit pnpm;
           fetcherVersion = 4;
-          hash = "sha256-nHIMQBQN3lsIIYbNyi1w21j+S4V7N+9MB3rUB8eqCmI=";
+          hash = "sha256-za8oke2pBv0n+raZtlRBVVNHMKt4Mag4gCpucKJPqsw=";
         };
         commonPnpmAttrs = {
           inherit pname version src pnpmDeps;

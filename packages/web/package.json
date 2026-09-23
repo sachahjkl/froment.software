@@ -24,6 +24,8 @@
     "@angular/ssr": "catalog:",
     "@froment/contracts": "workspace:*",
     "@froment/l10n": "workspace:*",
+    "@kitlangton/justice": "0.3.2",
+    "@panzoom/panzoom": "4.6.2",
     "@simplewebauthn/browser": "14.0.0",
     "@tiptap/core": "catalog:",
     "@tiptap/starter-kit": "catalog:",
