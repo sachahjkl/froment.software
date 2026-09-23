@@ -121,7 +121,7 @@ main {
   margin-block: 0;
 }
 
-.app-shell:has(:is(app-blog, app-blog-post, app-policy-page, app-login)) main {
+.app-shell:has(:is(app-notes, app-note, app-policy-page, app-login)) main {
   width: min(100% - 3rem, 48rem);
   max-width: none;
   margin-block: 0;

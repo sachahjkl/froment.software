@@ -77,7 +77,6 @@ export const policies = {
         contentKey: 'privacy.retention.content',
       },
       { id: 'storage', titleKey: 'privacy.storage.title', contentKey: 'privacy.storage.content' },
-      { id: 'session', titleKey: 'privacy.session.title', contentKey: 'privacy.session.content' },
       {
         id: 'external',
         titleKey: 'privacy.external.title',
@@ -112,6 +111,7 @@ export const policies = {
       { id: 'what', titleKey: 'cookies.what.title', contentKey: 'cookies.what.content' },
       { id: 'setting', titleKey: 'cookies.why.title', contentKey: 'cookies.why.content' },
       { id: 'control', titleKey: 'cookies.control.title', contentKey: 'cookies.control.content' },
+      { id: 'card', titleKey: 'cookies.card.title', contentKey: 'cookies.card.content' },
       {
         id: 'privacy',
         titleKey: 'cookies.privacy.title',

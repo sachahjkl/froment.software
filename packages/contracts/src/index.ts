@@ -312,7 +312,6 @@ export {
   AffairsApi,
   AuthenticationApi,
   BootstrapApi,
-  BlogApi,
   ClientPortalApi,
   ClientsApi,
   InvoicesApi,

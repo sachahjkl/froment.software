@@ -1,28 +1,28 @@
-@if (post(); as article) {
-<article class="blog-post">
-  <p class="back-link"><a routerLink="/blog">{{ i18n.t('blog.back') }}</a></p>
+@if (note(); as article) {
+<article class="note">
+  <p class="back-link"><a routerLink="/notes">{{ i18n.t('notes.back') }}</a></p>
   <header>
     <h1>{{ article.title }}</h1>
     <time [attr.datetime]="article.published"
       >{{ article.published | localizedDate: i18n.language() : { dateStyle: "long" } }}</time
     >
     <p>{{ article.description }}</p>
-    <ul class="topics" [attr.aria-label]="i18n.t('blog.topics')">
+    <ul class="topics" [attr.aria-label]="i18n.t('notes.topics')">
       @for (topic of article.topics; track topic) {
       <li>{{ topic }}</li>
       }
     </ul>
   </header>
   <div
-    class="blog-body"
-    [appBlogJustification]="article.html"
+    class="note-body"
+    [appNoteJustification]="article.html"
     [appMermaidDiagrams]="article.html"
     [innerHTML]="article.html"
   ></div>
 </article>
 } @else {
 <section class="missing-post">
-  <h1>{{ i18n.t('blog.missing') }}</h1>
-  <p><a routerLink="/blog">{{ i18n.t('blog.back') }}</a></p>
+  <h1>{{ i18n.t('notes.missing') }}</h1>
+  <p><a routerLink="/notes">{{ i18n.t('notes.back') }}</a></p>
 </section>
 }

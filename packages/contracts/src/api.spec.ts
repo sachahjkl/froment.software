@@ -14,7 +14,6 @@ describe('API contracts', () => {
   it('requires authorization middleware and documented registered permissions on every business endpoint', () => {
     const dedicatedPolicies = new Set([
       'health',
-      'blogFeed',
       'teamInvitationAccept',
       'clientCreditPdf',
       'version',

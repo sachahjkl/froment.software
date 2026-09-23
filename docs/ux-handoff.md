@@ -81,10 +81,10 @@ La CI `34483706906` a validé `d292e426` sans lancer Playwright.
 2. Vérifiez la CI et la publication de l’image.
 3. Confirmez séparément la révision déployée avec `/api/version`.
 
-## Flux Atom
+## Flux Atom actuel
 
-`GET /api/blog/feed` est public et déclaré dans OpenAPI.
-L’API génère le XML depuis `@froment/l10n/blog-posts`, également utilisé par le frontend.
+`GET /notes/feed` est public et servi par le serveur de la vitrine, hors de l’API métier.
+La vitrine génère le XML depuis `@froment/l10n/notes`, également utilisé par le frontend.
 Le flux contient les résumés français. Les corps Markdown restent côté web.
 Les liens absolus utilisent l’origine configurée du serveur.
 Le fichier XML statique, sa déclaration TypeScript et son test de synchronisation sont supprimés.

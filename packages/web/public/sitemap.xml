@@ -25,19 +25,22 @@
     <loc>https://froment.software/tools</loc>
   </url>
   <url>
-    <loc>https://froment.software/blog</loc>
+    <loc>https://froment.software/notes</loc>
   </url>
   <url>
-    <loc>https://froment.software/blog/2026-08-production-observabilite</loc>
+    <loc>https://froment.software/notes/2026-09-du-commit-a-nomad</loc>
   </url>
   <url>
-    <loc>https://froment.software/blog/2026-08-securite-authentification</loc>
+    <loc>https://froment.software/notes/2026-08-production-observabilite</loc>
   </url>
   <url>
-    <loc>https://froment.software/blog/2026-08-architecture-effect</loc>
+    <loc>https://froment.software/notes/2026-08-securite-authentification</loc>
   </url>
   <url>
-    <loc>https://froment.software/blog/2026-08-froment-software-arrive</loc>
+    <loc>https://froment.software/notes/2026-08-architecture-effect</loc>
+  </url>
+  <url>
+    <loc>https://froment.software/notes/2026-08-froment-software-arrive</loc>
   </url>
   <url>
     <loc>https://froment.software/legal</loc>

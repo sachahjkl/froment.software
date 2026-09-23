@@ -18,14 +18,15 @@ Contact : contact@froment.software
 - [Références](https://froment.software/clients): secteurs d'expérience de Sacha Froment.
 - [Projets publics](https://froment.software/tools): prototypes, démonstrations et sites publics de Sacha Froment.
 - [À propos](https://froment.software/about): questions fréquentes sur les missions, les technologies, les délais, la maintenance et la facturation.
-- [Blog technique](https://froment.software/blog): articles techniques, retours d'expérience et idées de Froment Software.
+- [Notes techniques](https://froment.software/notes): notes techniques, retours d'expérience et idées de Froment Software.
+- [Du commit à Nomad](https://froment.software/notes/2026-09-du-commit-a-nomad): déploiement reproductible et traçable.
 
-## Articles
+## Notes
 
-- [De Nix à Grafana : exploiter Froment Software en production](https://froment.software/blog/2026-08-production-observabilite): construction reproductible, résolution des secrets et trajet des journaux et traces.
-- [Sessions, jetons et audit : la sécurité de Froment Software](https://froment.software/blog/2026-08-securite-authentification): parcours d'une identité, de la connexion PASETO à la corrélation des événements d'audit.
-- [De l'API au PDF : l'architecture de Froment Software](https://froment.software/blog/2026-08-architecture-effect): monorepo, contrats Effect, modèle SQLite et chaîne documentaire vérifiable.
-- [Froment Software arrive sur le marché](https://froment.software/blog/2026-08-froment-software-arrive): présentation des missions et de la méthode fondée sur des changements mesurables.
+- [De Nix à Grafana : exploiter Froment Software en production](https://froment.software/notes/2026-08-production-observabilite): construction reproductible, résolution des secrets et trajet des journaux et traces.
+- [Sessions, jetons et audit : la sécurité de Froment Software](https://froment.software/notes/2026-08-securite-authentification): parcours d'une identité, de la connexion PASETO à la corrélation des événements d'audit.
+- [De l'API au PDF : l'architecture de Froment Software](https://froment.software/notes/2026-08-architecture-effect): monorepo, contrats Effect, modèle SQLite et chaîne documentaire vérifiable.
+- [Froment Software arrive sur le marché](https://froment.software/notes/2026-08-froment-software-arrive): présentation des missions et de la méthode fondée sur des changements mesurables.
 
 ## API
 

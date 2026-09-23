@@ -8,6 +8,7 @@ import {
   HttpStaticServer,
 } from 'effect/unstable/http';
 import { createServer } from 'node:http';
+import { notesFeed } from './notes/feed.js';
 import { Deployment, DeploymentLive } from './deployment/deployment.js';
 import { RuntimeConfiguration, RuntimeConfigurationLive } from './runtime-config.js';
 
@@ -25,6 +26,15 @@ export const makeMarketingServerLayer = (options: {
         if (request.method !== 'GET') return yield* application;
         const url = new URL(request.url, options.publicOrigin);
         if (url.pathname === '/api/health') return HttpServerResponse.jsonUnsafe({ status: 'ok' });
+        if (url.pathname === '/notes/feed')
+          return HttpServerResponse.text(notesFeed(options.publicOrigin), {
+            contentType: 'application/atom+xml; charset=utf-8',
+            headers: {
+              'content-language': 'fr',
+              'cache-control': 'no-cache',
+              'x-content-type-options': 'nosniff',
+            },
+          });
         if (url.pathname === '/runtime-config.js')
           return HttpServerResponse.text(
             `globalThis.fromentRuntimeConfig=${JSON.stringify(options.runtimeConfig)};document.documentElement.dataset.appEnvironment=globalThis.fromentRuntimeConfig.appEnvironment;document.documentElement.dataset.sitePhase=globalThis.fromentRuntimeConfig.sitePhase;`,

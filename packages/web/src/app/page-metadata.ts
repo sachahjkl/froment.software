@@ -4,7 +4,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { Meta, Title } from '@angular/platform-browser';
 import { ActivatedRoute, NavigationEnd, Router } from '@angular/router';
 import { filter } from 'rxjs';
-import { blogPosts, type BlogPostMetadata } from '@froment/l10n/blog-posts';
+import { notes, type NoteMetadata } from '@froment/l10n/notes';
 import { I18nService, TranslationKey } from './i18n.service';
 
 const origin = 'https://froment.software';
@@ -76,12 +76,12 @@ export class PageMetadata {
     });
   }
 
-  private setBlogPost(post: BlogPostMetadata): void {
-    const title = this.i18n.t(post.titleKey);
-    const description = this.i18n.t(post.descriptionKey);
-    const topics = post.topicKeys.map((key) => this.i18n.t(key));
+  private setNote(note: NoteMetadata): void {
+    const title = this.i18n.t(note.titleKey);
+    const description = this.i18n.t(note.descriptionKey);
+    const topics = note.topicKeys.map((key) => this.i18n.t(key));
     const pageTitle = `${title} | froment.software`;
-    const url = `${origin}/blog/${post.slug}`;
+    const url = `${origin}/notes/${note.slug}`;
     this.title.setTitle(pageTitle);
     this.meta.updateTag({ name: 'description', content: description });
     this.meta.updateTag({ name: 'keywords', content: topics.join(', ') });
@@ -89,24 +89,24 @@ export class PageMetadata {
     this.meta.updateTag({ property: 'og:title', content: pageTitle });
     this.meta.updateTag({ property: 'og:description', content: description });
     this.meta.updateTag({ property: 'og:url', content: url });
-    this.meta.updateTag({ property: 'article:published_time', content: post.published });
-    this.meta.updateTag({ property: 'article:modified_time', content: post.updated });
+    this.meta.updateTag({ property: 'article:published_time', content: note.published });
+    this.meta.updateTag({ property: 'article:modified_time', content: note.updated });
     this.meta.updateTag({ name: 'twitter:title', content: pageTitle });
     this.meta.updateTag({ name: 'twitter:description', content: description });
-    let script = this.document.head.querySelector<HTMLScriptElement>('script[data-blog-post]');
+    let script = this.document.head.querySelector<HTMLScriptElement>('script[data-note]');
     if (!script) {
       script = this.document.createElement('script');
       script.type = 'application/ld+json';
-      script.setAttribute('data-blog-post', '');
+      script.setAttribute('data-note', '');
       this.document.head.appendChild(script);
     }
     script.textContent = JSON.stringify({
       '@context': 'https://schema.org',
-      '@type': 'BlogPosting',
+      '@type': 'TechArticle',
       headline: title,
       description,
-      datePublished: post.published,
-      dateModified: post.updated,
+      datePublished: note.published,
+      dateModified: note.updated,
       mainEntityOfPage: url,
       author: {
         '@type': 'Person',
@@ -124,17 +124,17 @@ export class PageMetadata {
     let route = this.route.snapshot;
     while (route.firstChild) route = route.firstChild;
     let robots: string = route.data['robots'] ?? 'index, follow';
-    if (route.routeConfig?.path === 'blog/:slug') {
-      const post = blogPosts.find((post) => post.slug === route.paramMap.get('slug'));
-      if (post) {
-        this.setBlogPost(post);
+    if (route.routeConfig?.path === 'notes/:slug') {
+      const note = notes.find((entry) => entry.slug === route.paramMap.get('slug'));
+      if (note) {
+        this.setNote(note);
       } else {
-        this.clearBlogPost();
+        this.clearNote();
         this.setPageText('page.not_found', 'page.description.not_found');
         robots = 'noindex, nofollow';
       }
     } else {
-      this.clearBlogPost();
+      this.clearNote();
       this.setPageText(route.data['titleKey'], route.data['descriptionKey']);
     }
     this.meta.updateTag({ name: 'robots', content: robots });
@@ -185,12 +185,12 @@ export class PageMetadata {
     script.textContent = JSON.stringify(graph);
   }
 
-  private clearBlogPost(): void {
+  private clearNote(): void {
     this.meta.updateTag({ property: 'og:type', content: 'website' });
     this.meta.removeTag('property="article:published_time"');
     this.meta.removeTag('property="article:modified_time"');
     this.meta.removeTag('name="keywords"');
-    this.document.head.querySelector('script[data-blog-post]')?.remove();
+    this.document.head.querySelector('script[data-note]')?.remove();
   }
 
   private canonicalUrl(): string {

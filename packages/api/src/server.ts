@@ -54,7 +54,6 @@ import { RuntimeConfiguration } from './runtime-config.js';
 import { Deployment } from './deployment/deployment.js';
 import { apiCatalog, apiCatalogContentType } from './server/api-catalog.js';
 import { StatusHandlers } from './status/handlers.js';
-import { blogHandlers } from './blog/handlers.js';
 import { AccountingHandlers } from './accounting/handlers.js';
 import { DemoHandlers } from './demo/handlers.js';
 
@@ -65,12 +64,11 @@ const openApiSpecifications = {
   en: OpenApi.fromApi(EnglishApi),
 };
 
-const apiRoutes = (publicOrigin: string) =>
+const apiRoutes = () =>
   HttpApiBuilder.layer(FrenchApi).pipe(
     Layer.provide(
       Layer.mergeAll(
         StatusHandlers,
-        blogHandlers(publicOrigin),
         BootstrapHandlers,
         AuthenticationHandlers,
         PasskeyHandlers,
@@ -208,7 +206,7 @@ export const makeServerLayer = (options: {
 
   return HttpRouter.serve(
     Layer.mergeAll(
-      apiRoutes(options.publicOrigin),
+      apiRoutes(),
       StripeWebhookRoute,
       ApiDocs,
       FrenchApiDocs,

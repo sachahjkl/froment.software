@@ -235,7 +235,7 @@ export const translations = {
     'nav.privacy': 'Confidentialité',
     'nav.cookies': 'Cookies',
     'nav.version': 'Version',
-    'nav.blog': 'Blog',
+    'nav.notes': 'Notes',
     'brand.home': 'froment.software accueil',
     'nav.primary': 'Navigation principale',
     'shell.skip': 'Aller au contenu',
@@ -276,9 +276,9 @@ export const translations = {
     'page.description.cookies':
       'Cookies, préférence de langue et contrôle du stockage local utilisé par froment.software.',
     'page.not_found': 'Page introuvable | froment.software',
-    'page.blog': 'Blog technique | froment.software',
-    'page.description.blog':
-      'Articles techniques, retours d’expérience et idées de Froment Software.',
+    'page.notes': 'Notes techniques | froment.software',
+    'page.description.notes':
+      'Notes techniques, retours d’expérience et idées de Froment Software.',
     'page.back_office': 'Back office',
     'page.description.back_office': 'Accès privé aux documents de Froment Software.',
     'page.back_office_clients': 'Clients | Back office',
@@ -1518,26 +1518,26 @@ export const translations = {
     'about.contact.title': 'Contact',
     'about.contact.mail': 'Nous écrire',
     'about.contact.book': 'Prendre rendez-vous',
-    'blog.title': 'Blog',
-    'blog.lead': 'Notes techniques, retours d’expérience et idées.',
-    'blog.topics': 'Sujets',
-    'blog.back': 'Retour au blog',
-    'blog.missing': 'Article introuvable',
+    'notes.title': 'Notes',
+    'notes.lead': 'Notes techniques, retours d’expérience et idées.',
+    'notes.topics': 'Sujets',
+    'notes.back': 'Retour aux notes',
+    'notes.missing': 'Note introuvable',
 
     'legal.kicker': 'Informations du site',
     'legal.title': 'Mentions légales',
     'legal.lead':
       'Les informations essentielles sur l’édition, l’hébergement et l’utilisation des contenus de froment.software.',
-    'legal.updated': 'Mis à jour le 19 août 2026',
+    'legal.updated': 'Mis à jour le 23 septembre 2026',
     'legal.summary.title': 'En bref',
     'legal.summary.content':
-      'froment.software présente l’activité et les services de conseil en ingénierie logicielle de Sacha FROMENT. Son espace privé fournit des comptes aux clients et aux administrateurs.',
+      'froment.software présente l’activité, les services et les notes techniques de Sacha FROMENT. Le backoffice est un service distinct.',
     'legal.publisher.title': 'Édition du site',
     'legal.publisher.content':
       'Le site froment.software est édité et maintenu par Sacha FROMENT. Les demandes administratives ou juridiques peuvent être adressées par e-mail.',
     'legal.hosting.title': 'Hébergement',
     'legal.hosting.content':
-      'Le site est servi comme un site statique et hébergé sur une infrastructure privée administrée par l’éditeur. Les demandes techniques relatives à l’hébergement peuvent être envoyées au même contact.',
+      'La vitrine est servie depuis une infrastructure privée administrée par l’éditeur. Les demandes techniques relatives à l’hébergement peuvent être envoyées au même contact.',
     'legal.ip.title': 'Contenus et propriété intellectuelle',
     'legal.ip.content':
       'Sauf mention contraire, les textes, éléments graphiques et composants propres à froment.software restent la propriété de leur auteur. Une citation courte avec attribution est possible ; toute autre réutilisation doit faire l’objet d’un accord préalable.',
@@ -1557,10 +1557,10 @@ export const translations = {
     'privacy.title': 'Politique de confidentialité',
     'privacy.lead':
       'Ce que ce site traite automatiquement, ce qu’il conserve dans votre navigateur et comment poser une question.',
-    'privacy.updated': 'Mis à jour le 19 août 2026',
+    'privacy.updated': 'Mis à jour le 23 septembre 2026',
     'privacy.summary.title': 'À retenir',
     'privacy.summary.content':
-      'Le site n’intègre ni outil publicitaire ni mesure d’audience. Le serveur peut journaliser les requêtes techniques. Le navigateur conserve la langue et, après connexion, deux cookies strictement nécessaires.',
+      'La vitrine n’intègre ni outil publicitaire ni mesure d’audience. Le serveur peut journaliser les requêtes techniques. Le navigateur conserve les préférences et les versions de carte de visite enregistrées.',
     'privacy.who.title': 'Responsable du site',
     'privacy.who.content':
       'Sacha FROMENT édite froment.software et répond aux demandes relatives aux données traitées par ce site.',
@@ -1570,12 +1570,9 @@ export const translations = {
     'privacy.retention.title': 'Conservation des journaux',
     'privacy.retention.content':
       'Aucune durée fixe n’est annoncée ici, car elle dépend de la configuration d’exploitation. Vous pouvez demander les informations à jour sur la conservation ou le traitement d’une requête précise.',
-    'privacy.storage.title': 'Préférence de langue',
+    'privacy.storage.title': 'Stockage du navigateur',
     'privacy.storage.content':
-      'Le site enregistre la langue choisie dans le stockage local du navigateur sous la clé « froment.software.language », avec la valeur « fr » ou « en ». Ce réglage persiste jusqu’à sa modification ou sa suppression depuis le navigateur. Il ne s’agit ni d’un cookie ni d’une session.',
-    'privacy.session.title': 'Espace privé',
-    'privacy.session.content':
-      'Après une connexion, le navigateur conserve temporairement un jeton d’accès en mémoire. Un cookie de renouvellement sécurisé maintient la connexion pendant 30 jours au maximum. Le serveur limite ce cookie aux routes d’authentification.',
+      'Le navigateur conserve la langue (« froment.software.language ») et le thème (« froment.software.theme ») dans son stockage local. Les versions de carte de visite enregistrées restent aussi dans ce stockage, sur cet appareil. Ces données ne sont pas envoyées au serveur par la vitrine.',
     'privacy.external.title': 'E-mail et services externes',
     'privacy.external.content':
       'Les liens de contact ouvrent votre logiciel de messagerie ; aucun message n’est envoyé par le site lui-même. Si vous suivez un lien vers un autre domaine, ce service applique ses propres règles de traitement.',
@@ -1591,20 +1588,23 @@ export const translations = {
     'cookies.kicker': 'Stockage du navigateur',
     'cookies.title': 'Cookies et stockage local',
     'cookies.lead':
-      'Le site public mémorise uniquement la langue. L’espace privé utilise deux cookies strictement nécessaires après une connexion.',
-    'cookies.updated': 'Mis à jour le 19 août 2026',
+      'La vitrine utilise le stockage local du navigateur pour les préférences et les versions de carte de visite enregistrées.',
+    'cookies.updated': 'Mis à jour le 23 septembre 2026',
     'cookies.summary.title': 'Situation actuelle',
     'cookies.summary.content':
-      'L’application ne crée aucun cookie de mesure d’audience ou de publicité. Le cookie « __Secure-froment-refresh » maintient la connexion à l’espace privé.',
+      'La vitrine ne crée aucun cookie de connexion, de mesure d’audience ou de publicité.',
     'cookies.what.title': 'Différence entre cookie et stockage local',
     'cookies.what.content':
-      'Un cookie peut être envoyé automatiquement au serveur avec une requête. Le stockage local reste dans le navigateur. froment.software utilise le stockage local pour la langue et les cookies uniquement pour l’espace privé.',
-    'cookies.why.title': 'Réglage enregistré',
+      'Un cookie peut être envoyé automatiquement au serveur avec une requête. Le stockage local reste dans le navigateur. La vitrine utilise le stockage local pour ses réglages et les cartes enregistrées.',
+    'cookies.why.title': 'Préférences enregistrées',
     'cookies.why.content':
-      'La clé « froment.software.language » contient « fr » ou « en ». En l’absence de valeur valide, le site choisit le français si la langue du navigateur commence par « fr », et l’anglais dans les autres cas, puis mémorise ce choix localement.',
-    'cookies.control.title': 'Modifier ou supprimer le réglage',
+      'La clé « froment.software.language » contient « fr » ou « en ». Sans valeur valide, le site choisit la langue du navigateur. La clé « froment.software.theme » contient « light » ou « dark » après un choix de thème.',
+    'cookies.control.title': 'Modifier ou supprimer les données',
     'cookies.control.content':
-      'Utilisez le sélecteur de langue dans l’en-tête pour remplacer la valeur. Vous pouvez aussi supprimer les données du site dans les réglages de votre navigateur. Le site continuera de fonctionner et détectera de nouveau la langue au prochain chargement.',
+      'Utilisez les contrôles de langue et de thème pour modifier ces réglages. Vous pouvez aussi supprimer les données du site dans les réglages du navigateur. Les versions de carte enregistrées sur cet appareil seront alors perdues.',
+    'cookies.card.title': 'Cartes de visite enregistrées',
+    'cookies.card.content':
+      'Si vous enregistrez une version de la carte de visite, le navigateur conserve son nom, sa date et son contenu sous la clé « froment-software.business-card.versions ». Vous pouvez supprimer chaque version depuis la page de la carte.',
     'cookies.privacy.title': 'Données techniques',
     'cookies.privacy.content':
       'Le stockage local est distinct des journaux techniques que le serveur peut produire lorsqu’il répond à une requête.',
@@ -1802,7 +1802,7 @@ export const translations = {
     'nav.privacy': 'Privacy policy',
     'nav.cookies': 'Cookies',
     'nav.version': 'Version',
-    'nav.blog': 'Blog',
+    'nav.notes': 'Notes',
     'brand.home': 'froment.software home',
     'nav.primary': 'Primary navigation',
     'shell.skip': 'Skip to content',
@@ -1843,9 +1843,9 @@ export const translations = {
     'page.description.cookies':
       'Cookies, language preference and local-storage controls used by froment.software.',
     'page.not_found': 'Page not found | froment.software',
-    'page.blog': 'Technical blog | froment.software',
-    'page.description.blog':
-      'Technical articles, experience reports and ideas from Froment Software.',
+    'page.notes': 'Technical notes | froment.software',
+    'page.description.notes':
+      'Technical notes, experience reports and ideas from Froment Software.',
     'page.back_office': 'Back office',
     'page.description.back_office': 'Private access to Froment Software documents.',
     'page.back_office_clients': 'Clients | Back office',
@@ -3054,26 +3054,26 @@ export const translations = {
     'about.contact.title': 'Contact',
     'about.contact.mail': 'Email us',
     'about.contact.book': 'Book an appointment',
-    'blog.title': 'Blog',
-    'blog.lead': 'Technical notes, experience reports and ideas.',
-    'blog.topics': 'Topics',
-    'blog.back': 'Back to the blog',
-    'blog.missing': 'Article not found',
+    'notes.title': 'Notes',
+    'notes.lead': 'Technical notes, experience reports and ideas.',
+    'notes.topics': 'Topics',
+    'notes.back': 'Back to notes',
+    'notes.missing': 'Note not found',
 
     'legal.kicker': 'Site information',
     'legal.title': 'Legal notice',
     'legal.lead':
       'Essential information about the publishing, hosting and use of froment.software content.',
-    'legal.updated': 'Updated 19 August 2026',
+    'legal.updated': 'Updated 23 September 2026',
     'legal.summary.title': 'At a glance',
     'legal.summary.content':
-      'froment.software presents Sacha FROMENT’s software-engineering consultancy work and services. Its private area provides accounts for clients and administrators.',
+      'froment.software presents Sacha FROMENT’s work, services and technical notes. The backoffice is a separate service.',
     'legal.publisher.title': 'Site publisher',
     'legal.publisher.content':
       'froment.software is published and maintained by Sacha FROMENT. Administrative or legal requests can be sent by email.',
     'legal.hosting.title': 'Hosting',
     'legal.hosting.content':
-      'The site is served as a static website and hosted on private infrastructure administered by the publisher. Technical requests relating to hosting can be sent to the same contact.',
+      'The public site is served from private infrastructure administered by the publisher. Technical hosting requests can be sent to the same contact.',
     'legal.ip.title': 'Content and intellectual property',
     'legal.ip.content':
       'Unless stated otherwise, text, graphics and components created for froment.software remain their author’s property. Short quotations with attribution are permitted; any other reuse requires prior agreement.',
@@ -3092,10 +3092,10 @@ export const translations = {
     'privacy.title': 'Privacy policy',
     'privacy.lead':
       'What this site processes automatically, what it keeps in your browser and how to ask a question.',
-    'privacy.updated': 'Updated 19 August 2026',
+    'privacy.updated': 'Updated 23 September 2026',
     'privacy.summary.title': 'Key points',
     'privacy.summary.content':
-      'The site has no advertising tool or audience analytics. The server may log technical requests. The browser stores the language and, after sign-in, two strictly necessary cookies.',
+      'The public site has no advertising tool or audience analytics. The server may log technical requests. The browser stores preferences and saved business-card versions.',
     'privacy.who.title': 'Site operator',
     'privacy.who.content':
       'Sacha FROMENT publishes froment.software and handles requests about data processed by this site.',
@@ -3105,12 +3105,9 @@ export const translations = {
     'privacy.retention.title': 'Log retention',
     'privacy.retention.content':
       'No fixed duration is stated here because it depends on the operating configuration. You may request current information about retention or the handling of a specific request.',
-    'privacy.storage.title': 'Language preference',
+    'privacy.storage.title': 'Browser storage',
     'privacy.storage.content':
-      'The site stores the selected language in the browser’s local storage under the key “froment.software.language”, with the value “fr” or “en”. This setting persists until it is changed or cleared in the browser. It is neither a cookie nor a session.',
-    'privacy.session.title': 'Private area',
-    'privacy.session.content':
-      'After sign-in, the browser temporarily stores an access token in memory. A secure refresh cookie maintains access for up to 30 days. The server restricts this cookie to authentication routes.',
+      'The browser keeps the language (“froment.software.language”) and theme (“froment.software.theme”) in local storage. Saved business-card versions also remain on this device. The public site does not send this stored data to the server.',
     'privacy.external.title': 'Email and external services',
     'privacy.external.content':
       'Contact links open your email application; the site itself does not send a message. If you follow a link to another domain, that service applies its own data-handling rules.',
@@ -3126,20 +3123,23 @@ export const translations = {
     'cookies.kicker': 'Browser storage',
     'cookies.title': 'Cookies and local storage',
     'cookies.lead':
-      'The public site only stores the display language. The private area uses two strictly necessary cookies after sign-in.',
-    'cookies.updated': 'Updated 19 August 2026',
+      'The public site uses browser local storage for preferences and saved business-card versions.',
+    'cookies.updated': 'Updated 23 September 2026',
     'cookies.summary.title': 'Current behaviour',
     'cookies.summary.content':
-      'The application creates no audience analytics or advertising cookie. The “__Secure-froment-refresh” cookie maintains private-area authentication.',
+      'The public site creates no sign-in, audience analytics or advertising cookies.',
     'cookies.what.title': 'Cookies and local storage are different',
     'cookies.what.content':
-      'A cookie may be sent to the server automatically with a request. Local storage remains in the browser. froment.software uses local storage for language and cookies only for the private area.',
-    'cookies.why.title': 'Stored setting',
+      'A cookie can be sent to the server automatically with a request. Local storage stays in the browser. The public site uses local storage for settings and saved cards.',
+    'cookies.why.title': 'Stored preferences',
     'cookies.why.content':
-      'The key “froment.software.language” contains “fr” or “en”. If no valid value exists, the site selects French when the browser language starts with “fr”, and English otherwise, then stores that choice locally.',
-    'cookies.control.title': 'Change or clear the setting',
+      'The key “froment.software.language” contains “fr” or “en”. Without a valid value, the site selects the browser language. The key “froment.software.theme” contains “light” or “dark” after a theme selection.',
+    'cookies.control.title': 'Change or clear stored data',
     'cookies.control.content':
-      'Use the language selector in the header to replace the value. You can also clear site data in your browser settings. The site will continue to work and will detect the language again on the next load.',
+      'Use the language and theme controls to change these settings. You can also clear site data in your browser. This removes saved card versions from this device.',
+    'cookies.card.title': 'Saved business cards',
+    'cookies.card.content':
+      'If you save a business-card version, the browser keeps its name, date and content under “froment-software.business-card.versions”. You can delete each version on the business-card page.',
     'cookies.privacy.title': 'Technical data',
     'cookies.privacy.content':
       'Local storage is separate from the technical logs the server may produce when responding to a request.',

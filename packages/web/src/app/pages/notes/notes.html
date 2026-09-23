@@ -1,23 +1,23 @@
-<article class="blog-index">
+<article class="notes-index">
   <header class="page-intro">
-    <h1>{{ i18n.t('blog.title') }}</h1>
-    <p>{{ i18n.t('blog.lead') }}</p>
-    <a class="feed-link" href="/api/blog/feed" type="application/atom+xml" hreflang="fr">
+    <h1>{{ i18n.t('notes.title') }}</h1>
+    <p>{{ i18n.t('notes.lead') }}</p>
+    <a class="feed-link" href="/notes/feed" type="application/atom+xml" hreflang="fr">
       <app-icon name="rss" />
-      <span>{{ i18n.t('blog.feed') }}</span>
+      <span>{{ i18n.t('notes.feed') }}</span>
     </a>
   </header>
 
   <ol class="post-list">
-    @for (post of blog.posts(); track post.slug) {
+    @for (post of notes.posts(); track post.slug) {
     <li class="ds-panel">
       <article>
         <time [attr.datetime]="post.published"
           >{{ post.published | localizedDate: i18n.language() : { dateStyle: "long" } }}</time
         >
-        <h2><a [routerLink]="['/blog', post.slug]">{{ post.title }}</a></h2>
+        <h2><a [routerLink]="['/notes', post.slug]">{{ post.title }}</a></h2>
         <p>{{ post.description }}</p>
-        <ul class="topics" [attr.aria-label]="i18n.t('blog.topics')">
+        <ul class="topics" [attr.aria-label]="i18n.t('notes.topics')">
           @for (topic of post.topics; track topic) {
           <li>{{ topic }}</li>
           }

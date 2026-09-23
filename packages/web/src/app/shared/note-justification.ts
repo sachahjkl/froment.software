@@ -1,9 +1,9 @@
 import { afterRenderEffect, Directive, ElementRef, inject, input } from '@angular/core';
 import { lineText, prepare, solve } from '@kitlangton/justice';
 
-@Directive({ selector: '[appBlogJustification]' })
-export class BlogJustification {
-  readonly content = input.required<string>({ alias: 'appBlogJustification' });
+@Directive({ selector: '[appNoteJustification]' })
+export class NoteJustification {
+  readonly content = input.required<string>({ alias: 'appNoteJustification' });
   private readonly element = inject<ElementRef<HTMLElement>>(ElementRef);
 
   constructor() {

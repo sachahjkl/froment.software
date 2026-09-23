@@ -1,7 +1,7 @@
 import { _IdGenerator } from '@angular/cdk/a11y';
 import { afterRenderEffect, Directive, ElementRef, inject, input } from '@angular/core';
 import { I18nService, type TranslationKey } from '@app/i18n.service';
-import { blogHeadingId } from './blog-heading-id';
+import { noteHeadingId } from './note-heading-id';
 
 @Directive({
   selector: '[appMermaidDiagrams]',
@@ -21,7 +21,7 @@ export class MermaidDiagrams {
       for (const heading of this.element.nativeElement.querySelectorAll<HTMLElement>(
         'h2,h3,h4,h5,h6',
       )) {
-        heading.id = blogHeadingId(heading.textContent ?? '', headingOccurrences);
+        heading.id = noteHeadingId(heading.textContent ?? '', headingOccurrences);
       }
 
       const diagrams = Array.from(
@@ -61,7 +61,7 @@ export class MermaidDiagrams {
               viewer.append(node);
               const panzoom = Panzoom(svg, { maxScale: 6, minScale: 0.25 });
               node.tabIndex = 0;
-              node.setAttribute('aria-label', this.i18n.t('blog.diagram.move'));
+              node.setAttribute('aria-label', this.i18n.t('notes.diagram.move'));
               const controls = document.createElement('div');
               controls.className = 'mermaid-controls';
               const addButton = (text: string, label: TranslationKey, action: () => void) => {
@@ -72,9 +72,9 @@ export class MermaidDiagrams {
                 button.addEventListener('click', action);
                 controls.append(button);
               };
-              addButton('+', 'blog.diagram.zoomIn', () => panzoom.zoomIn());
-              addButton('−', 'blog.diagram.zoomOut', () => panzoom.zoomOut());
-              addButton('↺', 'blog.diagram.reset', () => panzoom.reset());
+              addButton('+', 'notes.diagram.zoomIn', () => panzoom.zoomIn());
+              addButton('−', 'notes.diagram.zoomOut', () => panzoom.zoomOut());
+              addButton('↺', 'notes.diagram.reset', () => panzoom.reset());
               const fullscreenButton = document.createElement('button');
               fullscreenButton.type = 'button';
               fullscreenButton.textContent = '⛶';
@@ -83,8 +83,8 @@ export class MermaidDiagrams {
                   'aria-label',
                   this.i18n.t(
                     document.fullscreenElement === viewer
-                      ? 'blog.diagram.exitFullscreen'
-                      : 'blog.diagram.fullscreen',
+                      ? 'notes.diagram.exitFullscreen'
+                      : 'notes.diagram.fullscreen',
                   ),
                 );
               updateFullscreenLabel();

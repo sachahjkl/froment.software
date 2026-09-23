@@ -85,6 +85,18 @@ it('serves only the marketing site and redirects legacy business pages', async (
   expect(quote.headers.get('location')).toBe('https://backoffice.froment.software/quote/example');
   expect((await fetch(`${baseUrl}/api/auth/account`)).status).toBe(404);
 
+  const feed = await fetch(`${baseUrl}/notes/feed`, {
+    headers: { 'accept-language': 'en' },
+  });
+  expect(feed.status).toBe(200);
+  expect(feed.headers.get('content-type')).toContain('application/atom+xml');
+  expect(feed.headers.get('content-language')).toBe('fr');
+  expect(feed.headers.get('cache-control')).toBe('no-cache');
+  const xml = await feed.text();
+  expect(xml).toContain(`<id>${baseUrl}/notes/feed</id>`);
+  expect(xml).toContain(`<link rel="alternate" href="${baseUrl}/notes"`);
+  expect((await fetch(`${baseUrl}/api/blog/feed`)).status).toBe(404);
+
   const runtime = await fetch(`${baseUrl}/runtime-config.js`);
   expect(runtime.headers.get('cache-control')).toBe('no-store');
   expect(await runtime.text()).toContain('"appEnvironment":"production"');

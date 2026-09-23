@@ -3,10 +3,10 @@ import { SecurityContext } from '@angular/core';
 import { DomSanitizer } from '@angular/platform-browser';
 import { marked } from 'marked';
 import { I18nService, Language } from '@app/i18n.service';
-import { blogPosts, type BlogPostMetadata } from '@froment/l10n/blog-posts';
+import { notes, type NoteMetadata } from '@froment/l10n/notes';
 import deploymentEn from './posts/2026-09-du-commit-a-nomad.en.md';
 import deploymentFr from './posts/2026-09-du-commit-a-nomad.fr.md';
-import { blogHeadingId } from '@shared/blog-heading-id';
+import { noteHeadingId } from '@shared/note-heading-id';
 import architectureEn from './posts/2026-08-architecture-effect.en.md';
 import architectureFr from './posts/2026-08-architecture-effect.fr.md';
 import launchEn from './posts/2026-08-froment-software-arrive.en.md';
@@ -23,14 +23,11 @@ const escapeHtml = (value: string): string =>
     .replaceAll('>', '&gt;')
     .replaceAll('"', '&quot;');
 
-export type BlogPost = BlogPostMetadata & {
+export type Note = NoteMetadata & {
   body: Record<Language, string>;
 };
 
-export type RenderedBlogPost = Omit<
-  BlogPost,
-  'titleKey' | 'descriptionKey' | 'topicKeys' | 'body'
-> & {
+export type RenderedNote = Omit<Note, 'titleKey' | 'descriptionKey' | 'topicKeys' | 'body'> & {
   title: string;
   description: string;
   topics: string[];
@@ -43,28 +40,28 @@ const bodies = {
   '2026-08-securite-authentification': { fr: securityFr, en: securityEn },
   '2026-08-architecture-effect': { fr: architectureFr, en: architectureEn },
   '2026-08-froment-software-arrive': { fr: launchFr, en: launchEn },
-} satisfies Record<(typeof blogPosts)[number]['slug'], Record<Language, string>>;
+} satisfies Record<(typeof notes)[number]['slug'], Record<Language, string>>;
 
-const posts: BlogPost[] = blogPosts.map((post) => ({ ...post, body: bodies[post.slug] }));
+const posts: Note[] = notes.map((post) => ({ ...post, body: bodies[post.slug] }));
 
-export const blogPostSlugs = posts.map(({ slug }) => slug);
+export const noteSlugs = posts.map(({ slug }) => slug);
 
 @Injectable({
   providedIn: 'root',
 })
-export class Blog {
+export class Notes {
   private readonly i18n = inject(I18nService);
   private readonly sanitizer = inject(DomSanitizer);
 
   readonly posts = computed(() => posts.map((post) => this.localize(post)));
   readonly latest = computed(() => this.posts()[0]);
 
-  find(slug: string, url?: string): RenderedBlogPost | undefined {
+  find(slug: string, url?: string): RenderedNote | undefined {
     const post = posts.find((entry) => entry.slug === slug);
     return post ? this.localize(post, url) : undefined;
   }
 
-  private localize(post: BlogPost, url = `/blog/${post.slug}`): RenderedBlogPost {
+  private localize(post: Note, url = `/notes/${post.slug}`): RenderedNote {
     const language = this.i18n.language();
     const renderer = new marked.Renderer();
     const renderLink = renderer.link.bind(renderer);
@@ -79,7 +76,7 @@ export class Blog {
     };
     renderer.link = (token) => {
       if (!token.href.startsWith('#')) return renderLink(token);
-      const id = blogHeadingId(token.text, new Map());
+      const id = noteHeadingId(token.text, new Map());
       return renderLink({ ...token, href: `${url}#${id}` });
     };
     const html = marked.parse(post.body[language], { async: false, gfm: true, renderer });

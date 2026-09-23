@@ -1,7 +1,7 @@
 :host {
   display: block;
 }
-.blog-index {
+.notes-index {
   padding-block: 4rem 6rem;
 }
 .page-intro {
@@ -9,7 +9,7 @@
   border: 0;
   background: none;
 }
-.blog-index > header p {
+.notes-index > header p {
   margin-top: var(--space-3);
   color: var(--color-muted);
   font-size: var(--text-lg);

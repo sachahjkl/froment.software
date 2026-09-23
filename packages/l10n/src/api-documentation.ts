@@ -163,7 +163,6 @@ export const apiDocumentation = {
         description: 'Conditions réutilisables dans les devis.',
       },
       status: { title: 'État', description: 'Santé et version du déploiement.' },
-      blog: { title: 'Blog', description: 'Publications techniques publiques.' },
       catalog: { title: 'Catalogue', description: 'Prestations réutilisables dans les devis.' },
       banking: { title: 'Banque', description: 'Relevés et rapprochement des règlements.' },
       accounting: {
@@ -191,11 +190,6 @@ export const apiDocumentation = {
         'Exécute une opération métier selon les permissions et les contrôles applicables.',
       ),
       ...auditDocumentation.fr.operations,
-      blogFeed: {
-        summary: 'Lire le flux Atom du blog',
-        description:
-          'Retourne les résumés français des publications au format Atom XML. Aucune authentification requise.',
-      },
       ...workspaceApiDocumentation.fr,
       ...passkeyDocumentation.fr.operations,
       ...emailDraftDocumentation.fr.operations,
@@ -669,7 +663,6 @@ export const apiDocumentation = {
         description: 'Reusable quote terms.',
       },
       status: { title: 'Status', description: 'Deployment health and version.' },
-      blog: { title: 'Blog', description: 'Public technical articles.' },
       catalog: { title: 'Catalog', description: 'Reusable services for quotes.' },
       banking: { title: 'Banking', description: 'Statements and payment reconciliation.' },
       accounting: {
@@ -694,11 +687,6 @@ export const apiDocumentation = {
         'Runs a business operation with the applicable permissions and controls.',
       ),
       ...auditDocumentation.en.operations,
-      blogFeed: {
-        summary: 'Read the blog Atom feed',
-        description:
-          'Returns French article summaries as Atom XML. Authentication is not required.',
-      },
       ...workspaceApiDocumentation.en,
       catalogList: { summary: 'List services', description: 'Lists active and archived services.' },
       ...passkeyDocumentation.en.operations,

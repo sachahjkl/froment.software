@@ -1,4 +1,4 @@
-export const blogHeadingId = (text: string, occurrences: Map<string, number>): string => {
+export const noteHeadingId = (text: string, occurrences: Map<string, number>): string => {
   const base =
     text
       .normalize('NFD')

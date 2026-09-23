@@ -1,5 +1,5 @@
 import { translate } from '@froment/l10n';
-import { blogPosts } from '@froment/l10n/blog-posts';
+import { notes } from '@froment/l10n/notes';
 
 const escapeXml = (value: string): string =>
   value
@@ -9,14 +9,14 @@ const escapeXml = (value: string): string =>
     .replaceAll('"', '&quot;')
     .replaceAll("'", '&apos;');
 
-export const blogFeed = (publicOrigin: string): string => {
+export const notesFeed = (publicOrigin: string): string => {
   const origin = escapeXml(publicOrigin);
-  const updated = blogPosts.reduce<string>(
+  const updated = notes.reduce<string>(
     (latest, post) => (post.updated > latest ? post.updated : latest),
-    blogPosts[0].updated,
+    notes[0].updated,
   );
-  const entries = blogPosts.map((post) => {
-    const url = `${origin}/blog/${escapeXml(post.slug)}`;
+  const entries = notes.map((post) => {
+    const url = `${origin}/notes/${escapeXml(post.slug)}`;
     // oxlint-disable-next-line anti-slop/no-natural-language-literals -- Atom XML markup; all prose comes from translations.
     return `<entry>
   <id>${url}</id>
@@ -37,11 +37,11 @@ export const blogFeed = (publicOrigin: string): string => {
   // oxlint-disable-next-line anti-slop/no-natural-language-literals -- Atom XML markup; all prose comes from translations.
   return `<?xml version="1.0" encoding="UTF-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom" xml:lang="fr">
-  <id>${origin}/api/blog/feed</id>
-  <title>${escapeXml(translate('fr', 'metadata.publisher'))} | ${escapeXml(translate('fr', 'blog.title'))}</title>
-  <subtitle>${escapeXml(translate('fr', 'blog.lead'))}</subtitle>
-  <link rel="self" href="${origin}/api/blog/feed" type="application/atom+xml" />
-  <link rel="alternate" href="${origin}/blog" type="text/html" hreflang="fr" />
+  <id>${origin}/notes/feed</id>
+  <title>${escapeXml(translate('fr', 'metadata.publisher'))} | ${escapeXml(translate('fr', 'notes.title'))}</title>
+  <subtitle>${escapeXml(translate('fr', 'notes.lead'))}</subtitle>
+  <link rel="self" href="${origin}/notes/feed" type="application/atom+xml" />
+  <link rel="alternate" href="${origin}/notes" type="text/html" hreflang="fr" />
   <updated>${updated}T00:00:00Z</updated>
   <author>
     <name>${escapeXml(translate('fr', 'metadata.author'))}</name>

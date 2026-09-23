@@ -115,13 +115,13 @@ export const routes: Routes = [
     data: { titleKey: 'page.products', descriptionKey: 'page.description.products' },
   },
   {
-    path: 'blog',
-    loadComponent: () => import('./pages/blog/blog').then((module) => module.Blog),
-    data: { titleKey: 'page.blog', descriptionKey: 'page.description.blog' },
+    path: 'notes',
+    loadComponent: () => import('./pages/notes/notes').then((module) => module.Notes),
+    data: { titleKey: 'page.notes', descriptionKey: 'page.description.notes' },
   },
   {
-    path: 'blog/:slug',
-    loadComponent: () => import('./pages/blog-post/blog-post').then((module) => module.BlogPost),
+    path: 'notes/:slug',
+    loadComponent: () => import('./pages/note/note').then((module) => module.Note),
   },
   {
     path: 'quote',

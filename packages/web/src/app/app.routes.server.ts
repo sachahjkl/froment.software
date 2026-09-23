@@ -1,5 +1,5 @@
 import { RenderMode, ServerRoute } from '@angular/ssr';
-import { blogPostSlugs } from './blog/blog';
+import { noteSlugs } from './notes/notes';
 
 export const serverRoutes: ServerRoute[] = [
   {
@@ -7,9 +7,9 @@ export const serverRoutes: ServerRoute[] = [
     renderMode: RenderMode.Client,
   },
   {
-    path: 'blog/:slug',
+    path: 'notes/:slug',
     renderMode: RenderMode.Prerender,
-    getPrerenderParams: async () => blogPostSlugs.map((slug) => ({ slug })),
+    getPrerenderParams: async () => noteSlugs.map((slug) => ({ slug })),
   },
   {
     path: 'quote/**',

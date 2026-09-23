@@ -58,7 +58,7 @@ html:has(.back-office-shell, app-design) {
   background-image: none;
 }
 
-html:has(app-home, app-blog, app-blog-post, app-policy-page, app-login) {
+html:has(app-home, app-notes, app-note, app-policy-page, app-login) {
   background-color: var(--color-surface-raised);
   background-image: none;
 }
@@ -86,14 +86,14 @@ body {
   box-shadow: var(--shadow-page);
 }
 
-:is(app-blog, app-blog-post, app-policy-page, app-login).page-container {
+:is(app-notes, app-note, app-policy-page, app-login).page-container {
   border: 0;
   border-radius: 0;
   background: transparent;
   box-shadow: none;
 }
 
-:is(app-blog, app-blog-post, app-policy-page, app-login) :is(h1, h2) {
+:is(app-notes, app-note, app-policy-page, app-login) :is(h1, h2) {
   font-family: var(--font-body);
   letter-spacing: -0.035em;
 }
@@ -235,7 +235,7 @@ app-page-header .muted {
   align-items: baseline;
 }
 
-.blog-body {
+.note-body {
   max-width: var(--measure);
   overflow-wrap: anywhere;
 }
@@ -265,33 +265,33 @@ app-page-header .muted {
   border-end-start-radius: var(--radius-md);
   border-end-end-radius: var(--radius-md);
 }
-.blog-body h1 {
+.note-body h1 {
   margin-bottom: var(--space-5);
 }
-.blog-body h2 {
+.note-body h2 {
   margin-top: var(--space-8);
   scroll-margin-top: var(--space-6);
 }
-.blog-body p,
-.blog-body ul,
-.blog-body ol {
+.note-body p,
+.note-body ul,
+.note-body ol {
   margin-block: var(--space-3) 0;
 }
-.blog-body p:not(:has(.justified-line)) {
+.note-body p:not(:has(.justified-line)) {
   text-wrap: pretty;
 }
-.blog-body ul,
-.blog-body ol {
+.note-body ul,
+.note-body ol {
   padding-left: var(--space-6);
 }
-.blog-body li + li {
+.note-body li + li {
   margin-top: var(--space-1);
 }
-.blog-body .justified-line {
+.note-body .justified-line {
   display: block;
   white-space: nowrap;
 }
-.blog-body pre {
+.note-body pre {
   max-width: 100%;
   margin-block: var(--space-4) 0;
   padding: var(--space-4);
@@ -299,45 +299,45 @@ app-page-header .muted {
   border: 1px solid var(--color-line);
   background: var(--color-surface-sunken);
 }
-.blog-body pre.mermaid {
+.note-body pre.mermaid {
   display: grid;
   min-height: 8rem;
   place-items: center;
   background: var(--color-surface-raised);
 }
-.blog-body .mermaid svg {
+.note-body .mermaid svg {
   max-width: 100%;
   height: auto;
 }
-.blog-body .mermaid-viewer {
+.note-body .mermaid-viewer {
   position: relative;
   margin-block: var(--space-4) 0;
 }
-.blog-body .mermaid-viewer:fullscreen {
+.note-body .mermaid-viewer:fullscreen {
   margin: 0;
   padding: var(--space-4);
   background: var(--color-surface-raised);
 }
-.blog-body .mermaid-viewer:fullscreen pre.mermaid {
+.note-body .mermaid-viewer:fullscreen pre.mermaid {
   height: 100%;
   max-height: none;
 }
-.blog-body .mermaid-viewer pre.mermaid {
+.note-body .mermaid-viewer pre.mermaid {
   display: block;
   margin: 0;
   max-height: 70vh;
   overflow: hidden;
   touch-action: none;
 }
-.blog-body .mermaid-viewer svg {
+.note-body .mermaid-viewer svg {
   display: block;
   margin-inline: auto;
 }
-.blog-body .mermaid-viewer pre:focus-visible {
+.note-body .mermaid-viewer pre:focus-visible {
   outline: 2px solid var(--color-accent-strong);
   outline-offset: 2px;
 }
-.blog-body .mermaid-controls {
+.note-body .mermaid-controls {
   position: absolute;
   z-index: 1;
   inset-block-start: var(--space-2);
@@ -345,7 +345,7 @@ app-page-header .muted {
   display: flex;
   gap: var(--space-1);
 }
-.blog-body .mermaid-controls button {
+.note-body .mermaid-controls button {
   min-width: 2.75rem;
   min-height: 2.75rem;
   border: 1px solid var(--color-line-strong);
@@ -354,12 +354,12 @@ app-page-header .muted {
   color: var(--color-ink);
   cursor: pointer;
 }
-.blog-body .mermaid-controls button:focus-visible {
+.note-body .mermaid-controls button:focus-visible {
   outline: 2px solid var(--color-accent-strong);
   outline-offset: 2px;
 }
 @media print {
-  .blog-body .mermaid-controls {
+  .note-body .mermaid-controls {
     display: none;
   }
 }

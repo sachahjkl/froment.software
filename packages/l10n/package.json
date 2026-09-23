@@ -5,7 +5,7 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
-    "./blog-posts": "./src/blog-posts.ts",
+    "./notes": "./src/notes.ts",
     "./component-reference": "./src/component-reference.ts"
   },
   "scripts": {
