@@ -16,8 +16,16 @@
 
 .brand,
 .brand:visited {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
   color: var(--color-ink);
   font-weight: 700;
   letter-spacing: -0.035em;
   text-decoration: none;
+}
+
+.brand img {
+  flex: none;
+  border-radius: 0.35rem;
 }
