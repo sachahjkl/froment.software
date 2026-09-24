@@ -1,6 +1,8 @@
 @if (note(); as article) {
 <article class="note">
-  <p class="back-link"><a routerLink="/notes">{{ i18n.t('notes.back') }}</a></p>
+  <p class="back-link">
+    <a [routerLink]="i18n.localizedPath('/notes')">{{ i18n.t('notes.back') }}</a>
+  </p>
   <header>
     <h1>{{ article.title }}</h1>
     <time [attr.datetime]="article.published"
@@ -23,6 +25,6 @@
 } @else {
 <section class="missing-post">
   <h1>{{ i18n.t('notes.missing') }}</h1>
-  <p><a routerLink="/notes">{{ i18n.t('notes.back') }}</a></p>
+  <p><a [routerLink]="i18n.localizedPath('/notes')">{{ i18n.t('notes.back') }}</a></p>
 </section>
 }

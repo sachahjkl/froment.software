@@ -7,51 +7,99 @@
     <loc>https://froment.software/en</loc>
   </url>
   <url>
-    <loc>https://froment.software/about</loc>
+    <loc>https://froment.software/fr/about</loc>
   </url>
   <url>
-    <loc>https://froment.software/clients</loc>
+    <loc>https://froment.software/en/about</loc>
   </url>
   <url>
-    <loc>https://froment.software/services</loc>
+    <loc>https://froment.software/fr/clients</loc>
   </url>
   <url>
-    <loc>https://froment.software/services/audit-renovation</loc>
+    <loc>https://froment.software/en/clients</loc>
   </url>
   <url>
-    <loc>https://froment.software/services/developpement</loc>
+    <loc>https://froment.software/fr/services</loc>
   </url>
   <url>
-    <loc>https://froment.software/tools</loc>
+    <loc>https://froment.software/en/services</loc>
   </url>
   <url>
-    <loc>https://froment.software/notes</loc>
+    <loc>https://froment.software/fr/services/audit-renovation</loc>
   </url>
   <url>
-    <loc>https://froment.software/notes/2026-09-du-commit-a-nomad</loc>
+    <loc>https://froment.software/en/services/audit-renovation</loc>
   </url>
   <url>
-    <loc>https://froment.software/notes/2026-08-production-observabilite</loc>
+    <loc>https://froment.software/fr/services/development</loc>
   </url>
   <url>
-    <loc>https://froment.software/notes/2026-08-securite-authentification</loc>
+    <loc>https://froment.software/en/services/development</loc>
   </url>
   <url>
-    <loc>https://froment.software/notes/2026-08-architecture-effect</loc>
+    <loc>https://froment.software/fr/tools</loc>
   </url>
   <url>
-    <loc>https://froment.software/notes/2026-08-froment-software-arrive</loc>
+    <loc>https://froment.software/en/tools</loc>
   </url>
   <url>
-    <loc>https://froment.software/legal</loc>
+    <loc>https://froment.software/fr/notes</loc>
   </url>
   <url>
-    <loc>https://froment.software/privacy</loc>
+    <loc>https://froment.software/en/notes</loc>
   </url>
   <url>
-    <loc>https://froment.software/cookies</loc>
+    <loc>https://froment.software/fr/notes/2026-09-du-commit-a-nomad</loc>
   </url>
   <url>
-    <loc>https://froment.software/version</loc>
+    <loc>https://froment.software/en/notes/2026-09-du-commit-a-nomad</loc>
+  </url>
+  <url>
+    <loc>https://froment.software/fr/notes/2026-08-production-observabilite</loc>
+  </url>
+  <url>
+    <loc>https://froment.software/en/notes/2026-08-production-observabilite</loc>
+  </url>
+  <url>
+    <loc>https://froment.software/fr/notes/2026-08-securite-authentification</loc>
+  </url>
+  <url>
+    <loc>https://froment.software/en/notes/2026-08-securite-authentification</loc>
+  </url>
+  <url>
+    <loc>https://froment.software/fr/notes/2026-08-architecture-effect</loc>
+  </url>
+  <url>
+    <loc>https://froment.software/en/notes/2026-08-architecture-effect</loc>
+  </url>
+  <url>
+    <loc>https://froment.software/fr/notes/2026-08-froment-software-arrive</loc>
+  </url>
+  <url>
+    <loc>https://froment.software/en/notes/2026-08-froment-software-arrive</loc>
+  </url>
+  <url>
+    <loc>https://froment.software/fr/legal</loc>
+  </url>
+  <url>
+    <loc>https://froment.software/en/legal</loc>
+  </url>
+  <url>
+    <loc>https://froment.software/fr/privacy</loc>
+  </url>
+  <url>
+    <loc>https://froment.software/en/privacy</loc>
+  </url>
+  <url>
+    <loc>https://froment.software/fr/cookies</loc>
+  </url>
+  <url>
+    <loc>https://froment.software/en/cookies</loc>
+  </url>
+  <url>
+    <loc>https://froment.software/fr/version</loc>
+  </url>
+  <url>
+    <loc>https://froment.software/en/version</loc>
   </url>
 </urlset>

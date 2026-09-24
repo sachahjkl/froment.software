@@ -16,5 +16,11 @@ it('publishes valid Atom entries for every note', () => {
   );
   expect(
     Array.from(document.querySelectorAll('feed > entry > id'), (id) => id.textContent),
-  ).toEqual(notes.map((note) => `${origin}/notes/${note.slug}`));
+  ).toEqual(notes.map((note) => `${origin}/fr/notes/${note.slug}`));
+  expect(
+    Array.from(
+      document.querySelectorAll('feed > entry > link[rel="alternate"][hreflang="en"]'),
+      (link) => link.getAttribute('href'),
+    ),
+  ).toEqual(notes.map((note) => `${origin}/en/notes/${note.slug}`));
 });

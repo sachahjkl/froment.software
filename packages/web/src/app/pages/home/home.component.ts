@@ -1,5 +1,4 @@
 import { Component, inject, ChangeDetectionStrategy } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
 import { I18nService } from '@app/i18n.service';
 import { Button } from '@shared/button/button';
 import { NewLabel } from '@shared/new-label/new-label';
@@ -19,8 +18,4 @@ export class HomeComponent {
     dw: 'dw',
     backoffice: 'Backoffice',
   };
-
-  constructor() {
-    this.i18n.setLanguage(inject(ActivatedRoute).snapshot.data['language']);
-  }
 }

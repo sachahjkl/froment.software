@@ -8,25 +8,25 @@ Contact : contact@froment.software
 
 ## Prestations
 
-- [Audit et rénovation](https://froment.software/services/audit-renovation): audit technique, plan d'amélioration et rénovation progressive de logiciels métier existants.
-- [Développement tout compris](https://froment.software/services/developpement): conception, réalisation, tests et déploiement de logiciels métier sur mesure.
+- [Audit et rénovation](https://froment.software/fr/services/audit-renovation): audit technique, plan d'amélioration et rénovation progressive de logiciels métier existants.
+- [Développement tout compris](https://froment.software/fr/services/development): conception, réalisation, tests et déploiement de logiciels métier sur mesure.
 
 ## Pages publiques
 
-- [Accueil](https://froment.software/): audit, reprise et rénovation de logiciels existants, et développement d'applications métier sur mesure.
-- [Prestations](https://froment.software/services): audit et rénovation d'applications existantes, ou développement complet de logiciels métier.
-- [Références](https://froment.software/clients): secteurs d'expérience de Sacha Froment.
-- [Projets publics](https://froment.software/tools): prototypes, démonstrations et sites publics de Sacha Froment.
-- [À propos](https://froment.software/about): questions fréquentes sur les missions, les technologies, les délais, la maintenance et la facturation.
-- [Notes techniques](https://froment.software/notes): notes techniques, retours d'expérience et idées de Froment Software.
-- [Du commit à Nomad](https://froment.software/notes/2026-09-du-commit-a-nomad): déploiement reproductible et traçable.
+- [Accueil](https://froment.software/fr): audit, reprise et rénovation de logiciels existants, et développement d'applications métier sur mesure.
+- [Prestations](https://froment.software/fr/services): audit et rénovation d'applications existantes, ou développement complet de logiciels métier.
+- [Références](https://froment.software/fr/clients): secteurs d'expérience de Sacha Froment.
+- [Projets publics](https://froment.software/fr/tools): prototypes, démonstrations et sites publics de Sacha Froment.
+- [À propos](https://froment.software/fr/about): questions fréquentes sur les missions, les technologies, les délais, la maintenance et la facturation.
+- [Notes techniques](https://froment.software/fr/notes): notes techniques, retours d'expérience et idées de Froment Software.
+- [Du commit à Nomad](https://froment.software/fr/notes/2026-09-du-commit-a-nomad): déploiement reproductible et traçable.
 
 ## Notes
 
-- [De Nix à Grafana : exploiter Froment Software en production](https://froment.software/notes/2026-08-production-observabilite): construction reproductible, résolution des secrets et trajet des journaux et traces.
-- [Sessions, jetons et audit : la sécurité de Froment Software](https://froment.software/notes/2026-08-securite-authentification): parcours d'une identité, de la connexion PASETO à la corrélation des événements d'audit.
-- [De l'API au PDF : l'architecture de Froment Software](https://froment.software/notes/2026-08-architecture-effect): monorepo, contrats Effect, modèle SQLite et chaîne documentaire vérifiable.
-- [Froment Software arrive sur le marché](https://froment.software/notes/2026-08-froment-software-arrive): présentation des missions et de la méthode fondée sur des changements mesurables.
+- [De Nix à Grafana : exploiter Froment Software en production](https://froment.software/fr/notes/2026-08-production-observabilite): construction reproductible, résolution des secrets et trajet des journaux et traces.
+- [Sessions, jetons et audit : la sécurité de Froment Software](https://froment.software/fr/notes/2026-08-securite-authentification): parcours d'une identité, de la connexion PASETO à la corrélation des événements d'audit.
+- [De l'API au PDF : l'architecture de Froment Software](https://froment.software/fr/notes/2026-08-architecture-effect): monorepo, contrats Effect, modèle SQLite et chaîne documentaire vérifiable.
+- [Froment Software arrive sur le marché](https://froment.software/fr/notes/2026-08-froment-software-arrive): présentation des missions et de la méthode fondée sur des changements mesurables.
 
 ## API
 
@@ -35,13 +35,13 @@ Contact : contact@froment.software
 
 ## Informations légales
 
-- [Mentions légales](https://froment.software/legal): édition, hébergement, propriété intellectuelle et contact.
-- [Confidentialité](https://froment.software/privacy): données techniques, stockage local et contacts liés à la confidentialité.
-- [Cookies et stockage local](https://froment.software/cookies): cookies, préférence de langue et stockage local.
+- [Mentions légales](https://froment.software/fr/legal): édition, hébergement, propriété intellectuelle et contact.
+- [Confidentialité](https://froment.software/fr/privacy): données techniques, stockage local et contacts liés à la confidentialité.
+- [Cookies et stockage local](https://froment.software/fr/cookies): cookies, préférence de langue et stockage local.
 
 ## Facultatif
 
-- [Version du déploiement](https://froment.software/version): versions des packages et commit Git.
+- [Version du déploiement](https://froment.software/fr/version): versions des packages et commit Git.
 - [Sitemap](https://froment.software/sitemap.xml): liste des pages indexables.
 - [robots.txt](https://froment.software/robots.txt): règles de parcours.
 

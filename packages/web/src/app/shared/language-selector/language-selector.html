@@ -2,7 +2,7 @@
   <select
     [attr.aria-label]="i18n.t('footer.language')"
     [value]="i18n.language()"
-    (change)="setLanguage($any($event.target).value)"
+    (change)="changeLanguage($event)"
   >
     @for (language of i18n.languages; track language.code) {
     <option [value]="language.code" [selected]="i18n.language() === language.code">

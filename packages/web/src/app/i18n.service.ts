@@ -1,5 +1,6 @@
 import { DOCUMENT } from '@angular/common';
 import { afterNextRender, effect, inject, Injectable, signal } from '@angular/core';
+import { localizedPath as pathWithLanguage } from './localized-route';
 import {
   formatTranslation,
   isSupportedLanguage,
@@ -37,6 +38,10 @@ export class I18nService {
 
   t(key: TranslationKey): string {
     return translate(this.language(), key);
+  }
+
+  localizedPath(path: string): string {
+    return pathWithLanguage(this.language(), path);
   }
 
   tf<Key extends ParameterizedTranslationKey>(

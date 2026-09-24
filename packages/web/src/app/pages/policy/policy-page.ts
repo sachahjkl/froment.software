@@ -18,4 +18,8 @@ export class PolicyPage {
   protected label(link: PolicyLink): string {
     return link.labelKey ? this.i18n.t(link.labelKey) : (link.label ?? '');
   }
+
+  protected route(link: PolicyLink): string {
+    return link.route ? this.i18n.localizedPath(link.route) : '';
+  }
 }

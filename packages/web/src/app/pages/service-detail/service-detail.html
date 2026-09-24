@@ -1,6 +1,8 @@
 <article class="service-detail">
   <header class="page-intro">
-    <a class="back-link" routerLink="/services">{{ i18n.t("serviceDetail.back") }}</a>
+    <a class="back-link" [routerLink]="i18n.localizedPath('/services')"
+      >{{ i18n.t("serviceDetail.back") }}</a
+    >
     <h1>{{ i18n.t(content().titleKey) }}</h1>
     <p class="lead">{{ i18n.t(content().leadKey) }}</p>
     <app-contact-actions

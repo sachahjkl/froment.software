@@ -1,5 +1,6 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { I18nService } from '@app/i18n.service';
 import { NavigationProgress } from '../navigation-progress/navigation-progress';
 
 @Component({
@@ -9,4 +10,6 @@ import { NavigationProgress } from '../navigation-progress/navigation-progress';
   styleUrl: './site-header.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class SiteHeader {}
+export class SiteHeader {
+  protected readonly i18n = inject(I18nService);
+}

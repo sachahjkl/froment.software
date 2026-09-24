@@ -3,6 +3,7 @@ import { SecurityContext } from '@angular/core';
 import { DomSanitizer } from '@angular/platform-browser';
 import { marked } from 'marked';
 import { I18nService, Language } from '@app/i18n.service';
+import { localizedPath } from '@app/localized-route';
 import { notes, type NoteMetadata } from '@froment/l10n/notes';
 import deploymentEn from './posts/2026-09-du-commit-a-nomad.en.md';
 import deploymentFr from './posts/2026-09-du-commit-a-nomad.fr.md';
@@ -61,8 +62,9 @@ export class Notes {
     return post ? this.localize(post, url) : undefined;
   }
 
-  private localize(post: Note, url = `/notes/${post.slug}`): RenderedNote {
+  private localize(post: Note, url?: string): RenderedNote {
     const language = this.i18n.language();
+    const currentUrl = url ?? localizedPath(language, `/notes/${post.slug}`);
     const renderer = new marked.Renderer();
     const renderLink = renderer.link.bind(renderer);
     renderer.html = ({ text }) => escapeHtml(text);
@@ -77,7 +79,7 @@ export class Notes {
     renderer.link = (token) => {
       if (!token.href.startsWith('#')) return renderLink(token);
       const id = noteHeadingId(token.text, new Map());
-      return renderLink({ ...token, href: `${url}#${id}` });
+      return renderLink({ ...token, href: `${currentUrl}#${id}` });
     };
     const html = marked.parse(post.body[language], { async: false, gfm: true, renderer });
 

@@ -15,7 +15,9 @@
         <time [attr.datetime]="post.published"
           >{{ post.published | localizedDate: i18n.language() : { dateStyle: "long" } }}</time
         >
-        <h2><a [routerLink]="['/notes', post.slug]">{{ post.title }}</a></h2>
+        <h2>
+          <a [routerLink]="i18n.localizedPath('/notes/' + post.slug)">{{ post.title }}</a>
+        </h2>
         <p>{{ post.description }}</p>
         <ul class="topics" [attr.aria-label]="i18n.t('notes.topics')">
           @for (topic of post.topics; track topic) {

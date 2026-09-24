@@ -3,7 +3,7 @@
 } @else {
 <a
   class="runtime-live-only"
-  routerLink="/notes/2026-08-froment-software-arrive"
+  [routerLink]="i18n.localizedPath('/notes/2026-08-froment-software-arrive')"
   [attr.aria-label]="i18n.t('shell.nowLive')"
 >
   <span>{{ i18n.t("shell.nowLive") }}</span>

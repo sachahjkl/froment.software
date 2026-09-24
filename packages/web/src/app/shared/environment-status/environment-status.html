@@ -1,6 +1,10 @@
 @if (environmentStatus; as status) { @if (placement() !== 'hidden') {
 <span class="environment-ribbon" [class.staging]="environment === 'staging'">
-  <a class="environment-name" routerLink="/version" [attr.aria-label]="i18n.t(status.nameKey)">
+  <a
+    class="environment-name"
+    [routerLink]="i18n.localizedPath('/version')"
+    [attr.aria-label]="i18n.t(status.nameKey)"
+  >
     {{ i18n.t(status.labelKey) }}
   </a>
   @if (shortCommit) {
@@ -16,7 +20,9 @@
   }
 </span>
 } } @else if (placement() === 'sidebar') {
-<a class="version-link" routerLink="/version">{{ i18n.t('nav.version') }}</a>
+<a class="version-link" [routerLink]="i18n.localizedPath('/version')"
+  >{{ i18n.t('nav.version') }}</a
+>
 } @if (publicPage()) {
 <aside class="construction-notice runtime-construction-only" aria-labelledby="construction-title">
   <div class="construction-inner">

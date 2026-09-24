@@ -100,7 +100,8 @@ it('serves only the marketing site and redirects legacy business pages', async (
   expect(feed.headers.get('cache-control')).toBe('no-cache');
   const xml = await feed.text();
   expect(xml).toContain(`<id>${baseUrl}/notes/feed</id>`);
-  expect(xml).toContain(`<link rel="alternate" href="${baseUrl}/notes"`);
+  expect(xml).toContain(`href="${baseUrl}/fr/notes/`);
+  expect(xml).toContain(`hreflang="en"`);
   expect((await fetch(`${baseUrl}/api/blog/feed`)).status).toBe(404);
 
   const runtime = await fetch(`${baseUrl}/runtime-config.js`);

@@ -3,6 +3,7 @@ import { provideRouter } from '@angular/router';
 
 import { Version } from './version';
 import { VersionApi } from './version-api';
+import { I18nService } from '@app/i18n.service';
 
 describe('Version', () => {
   it('displays the exact commit and all package versions', async () => {
@@ -25,6 +26,7 @@ describe('Version', () => {
       ],
     });
     const fixture = TestBed.createComponent(Version);
+    TestBed.inject(I18nService).setLanguage('fr');
     await fixture.whenStable();
     const root: HTMLElement = fixture.nativeElement;
     const content = root.textContent;
@@ -36,6 +38,6 @@ describe('Version', () => {
     expect(root.querySelector<HTMLImageElement>('.identity > img')?.src).toContain(
       '/brand/favicon.png',
     );
-    expect(root.querySelector<HTMLAnchorElement>('.back-link')?.getAttribute('href')).toBe('/');
+    expect(root.querySelector<HTMLAnchorElement>('.back-link')?.getAttribute('href')).toBe('/fr');
   });
 });

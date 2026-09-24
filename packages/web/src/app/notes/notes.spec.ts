@@ -26,11 +26,11 @@ describe('Notes', () => {
   it('preserves the article URL and query in Markdown fragment links', () => {
     const post = TestBed.inject(Notes).find(
       '2026-08-architecture-effect',
-      '/notes/2026-08-architecture-effect?source=contact&mode=reading',
+      '/fr/notes/2026-08-architecture-effect?source=contact&mode=reading',
     );
 
     expect(post?.html).toContain(
-      'href="/notes/2026-08-architecture-effect?source=contact&amp;mode=reading#',
+      'href="/fr/notes/2026-08-architecture-effect?source=contact&amp;mode=reading#',
     );
     expect(post?.html).not.toContain('href="#');
   });
@@ -41,7 +41,7 @@ describe('Notes', () => {
     expect(post?.html).toContain('<pre class="mermaid">');
     expect(post?.html).toContain('flowchart');
     expect(post?.html).toContain(
-      'href="/notes/2026-08-architecture-effect#une-chaine-d-integrite-fondee-sur-sha-256"',
+      'href="/fr/notes/2026-08-architecture-effect#une-chaine-d-integrite-fondee-sur-sha-256"',
     );
   });
 });

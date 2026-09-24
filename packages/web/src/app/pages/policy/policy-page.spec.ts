@@ -2,6 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { policies } from './policy-documents';
 import { PolicyPage } from './policy-page';
+import { I18nService } from '@app/i18n.service';
 
 describe('PolicyPage', () => {
   it('renders unique accessible section identifiers and policy links', async () => {
@@ -10,6 +11,7 @@ describe('PolicyPage', () => {
       providers: [provideRouter([])],
     }).compileComponents();
     const fixture = TestBed.createComponent(PolicyPage);
+    TestBed.inject(I18nService).setLanguage('fr');
     fixture.componentRef.setInput('policy', policies.legal);
     fixture.detectChanges();
     const element: HTMLElement = fixture.nativeElement;
@@ -22,6 +24,6 @@ describe('PolicyPage', () => {
       ),
     ).toBe(true);
     expect(element.querySelector('a[href="mailto:contact@froment.software"]')).not.toBeNull();
-    expect(element.querySelector('a[href="/privacy"]')).not.toBeNull();
+    expect(element.querySelector('a[href="/fr/privacy"]')).not.toBeNull();
   });
 });

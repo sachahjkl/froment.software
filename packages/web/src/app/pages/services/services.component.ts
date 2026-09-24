@@ -26,13 +26,13 @@ export class ServicesComponent {
     {
       title: this.i18n.t('services.offer.renovation.title'),
       description: this.i18n.t('services.offer.renovation.desc'),
-      href: '/services/audit-renovation',
+      href: this.i18n.localizedPath('/services/audit-renovation'),
       cta: this.i18n.t('services.offer.renovation.cta'),
     },
     {
       title: this.i18n.t('services.offer.development.title'),
       description: this.i18n.t('services.offer.development.desc'),
-      href: '/services/development',
+      href: this.i18n.localizedPath('/services/development'),
       cta: this.i18n.t('services.offer.development.cta'),
     },
   ]);

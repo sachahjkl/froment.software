@@ -16,12 +16,14 @@ export const notesFeed = (publicOrigin: string): string => {
     notes[0].updated,
   );
   const entries = notes.map((post) => {
-    const url = `${origin}/notes/${escapeXml(post.slug)}`;
+    const url = `${origin}/fr/notes/${escapeXml(post.slug)}`;
+    const alternateUrl = `${origin}/en/notes/${escapeXml(post.slug)}`;
     // oxlint-disable-next-line anti-slop/no-natural-language-literals -- Atom XML markup; all prose comes from translations.
     return `<entry>
   <id>${url}</id>
   <title>${escapeXml(translate('fr', post.titleKey))}</title>
   <link rel="alternate" href="${url}" type="text/html" hreflang="fr" />
+  <link rel="alternate" href="${alternateUrl}" type="text/html" hreflang="en" />
   <published>${post.published}T00:00:00Z</published>
   <updated>${post.updated}T00:00:00Z</updated>
   <summary>${escapeXml(translate('fr', post.descriptionKey))}</summary>
@@ -41,7 +43,8 @@ export const notesFeed = (publicOrigin: string): string => {
   <title>${escapeXml(translate('fr', 'metadata.publisher'))} | ${escapeXml(translate('fr', 'notes.title'))}</title>
   <subtitle>${escapeXml(translate('fr', 'notes.lead'))}</subtitle>
   <link rel="self" href="${origin}/notes/feed" type="application/atom+xml" />
-  <link rel="alternate" href="${origin}/notes" type="text/html" hreflang="fr" />
+  <link rel="alternate" href="${origin}/fr/notes" type="text/html" hreflang="fr" />
+  <link rel="alternate" href="${origin}/en/notes" type="text/html" hreflang="en" />
   <updated>${updated}T00:00:00Z</updated>
   <author>
     <name>${escapeXml(translate('fr', 'metadata.author'))}</name>

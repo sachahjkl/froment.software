@@ -49,8 +49,10 @@ describe('App shell', () => {
     expect(main.tabIndex).toBe(-1);
     expect(element.querySelector('app-site-header')).toBeNull();
     expect(element.querySelector('app-site-footer')).not.toBeNull();
+    expect(element.querySelector('app-site-footer a[href="/fr"]')).toBeNull();
+    expect(element.querySelector('app-site-footer a[href="/en"]')).toBeNull();
 
-    await navigate(fixture, router, '/about');
+    await navigate(fixture, router, '/fr/about');
 
     expect(element.querySelector('app-about')).not.toBeNull();
   });
@@ -67,8 +69,20 @@ describe('App shell', () => {
     expect(element.querySelector('app-site-footer')).not.toBeNull();
   });
 
+  it('changes the language prefix without changing the current page', async () => {
+    await navigate(fixture, router, '/fr/about?source=menu#contact');
+
+    const select = element.querySelector<HTMLSelectElement>('app-language-selector select')!;
+    select.value = 'en';
+    select.dispatchEvent(new Event('change'));
+    await fixture.whenStable();
+
+    expect(router.url).toBe('/en/about?source=menu#contact');
+    expect(i18n.language()).toBe('en');
+  });
+
   it('uses the standalone shell for the version page', async () => {
-    await navigate(fixture, router, '/version');
+    await navigate(fixture, router, '/fr/version');
 
     expect(element.querySelector('.app-shell')?.classList).toContain('standalone-shell');
     expect(element.querySelector('app-site-header')).toBeNull();
@@ -77,14 +91,13 @@ describe('App shell', () => {
   });
 
   it('updates canonical, robots, and social metadata for route and language changes', async () => {
-    await navigate(fixture, router, '/about');
+    await navigate(fixture, router, '/fr/about');
 
     const frenchTitle = meta('meta[property="og:title"]').content;
     const frenchDescription = meta('meta[property="og:description"]').content;
     const frenchImageAlt = meta('meta[property="og:image:alt"]').content;
 
-    i18n.setLanguage('en');
-    await fixture.whenStable();
+    await navigate(fixture, router, '/en/about');
 
     expect(meta('meta[property="og:title"]').content).not.toBe(frenchTitle);
     expect(meta('meta[property="og:description"]').content).not.toBe(frenchDescription);
@@ -100,12 +113,12 @@ describe('App shell', () => {
       meta('meta[property="og:image:alt"]').content,
     );
 
-    await navigate(fixture, router, '/404');
+    await navigate(fixture, router, '/fr/404');
 
     expect(meta('meta[name="robots"]').content).toBe('noindex, nofollow');
-    expect(meta('meta[property="og:url"]').content).toBe('https://froment.software/404');
+    expect(meta('meta[property="og:url"]').content).toBe('https://froment.software/fr/404');
     expect(document.head.querySelector<HTMLLinkElement>('link[rel="canonical"]')?.href).toBe(
-      'https://froment.software/404',
+      'https://froment.software/fr/404',
     );
     expect(element.querySelector('app-not-found')).not.toBeNull();
   });
@@ -114,22 +127,22 @@ describe('App shell', () => {
     const main = element.querySelector<HTMLElement>('main#main-content')!;
 
     expect(document.activeElement).not.toBe(main);
-    await navigate(fixture, router, '/about');
+    await navigate(fixture, router, '/fr/about');
     expect(document.activeElement).toBe(main);
-    await navigate(fixture, router, '/services');
+    await navigate(fixture, router, '/fr/services');
 
     expect(document.activeElement).toBe(main);
     expect(element.querySelector('app-services')).not.toBeNull();
-    expect(router.url).toBe('/services');
+    expect(router.url).toBe('/fr/services');
   });
 
   it('focuses a fragment heading without overriding anchor scroll on same-route navigation', async () => {
-    await navigate(fixture, router, '/about');
+    await navigate(fixture, router, '/fr/about');
 
     const main = element.querySelector<HTMLElement>('main#main-content')!;
     const heading = element.querySelector<HTMLElement>('h2#contact')!;
 
-    await navigate(fixture, router, '/about#contact');
+    await navigate(fixture, router, '/fr/about#contact');
 
     expect(document.activeElement).toBe(heading);
     expect(document.activeElement).not.toBe(main);
@@ -140,14 +153,14 @@ describe('App shell', () => {
   });
 
   it('focuses the fragment heading when navigating to a fragment on another path', async () => {
-    await navigate(fixture, router, '/services');
-    await navigate(fixture, router, '/about#contact');
+    await navigate(fixture, router, '/fr/services');
+    await navigate(fixture, router, '/fr/about#contact');
 
     expect(document.activeElement).toBe(element.querySelector('h2#contact'));
   });
 
   it('copies a section URL and shows a status message', async () => {
-    await navigate(fixture, router, '/services');
+    await navigate(fixture, router, '/fr/services');
     const writeText = vi.fn().mockResolvedValue(undefined);
     Object.defineProperty(navigator, 'clipboard', { configurable: true, value: { writeText } });
 

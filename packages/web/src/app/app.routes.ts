@@ -1,29 +1,36 @@
-import { Routes } from '@angular/router';
+import { inject } from '@angular/core';
+import { isSupportedLanguage, type Language } from '@froment/l10n';
+import { CanMatchFn, RedirectCommand, ResolveFn, Router, Routes } from '@angular/router';
 import { HomeComponent } from './pages/home/home.component';
 import { policies } from './pages/policy/policy-documents';
+import { I18nService } from './i18n.service';
 
-export const routes: Routes = [
+export const languageCanMatch: CanMatchFn = (_route, segments) =>
+  isSupportedLanguage(segments[0]?.path);
+
+export const languageResolver: ResolveFn<Language> = (route) => {
+  const language = route.paramMap.get('language');
+  if (!isSupportedLanguage(language)) {
+    return new RedirectCommand(inject(Router).parseUrl('/fr'));
+  }
+
+  inject(I18nService).setLanguage(language);
+  return language;
+};
+
+const notFoundData = {
+  titleKey: 'page.not_found' as const,
+  descriptionKey: 'page.description.not_found' as const,
+  robots: 'noindex, nofollow',
+};
+
+const localizedChildren: Routes = [
   {
     path: '',
-    redirectTo: 'fr',
     pathMatch: 'full',
-  },
-  {
-    path: 'fr',
     component: HomeComponent,
     data: {
       shell: 'landing',
-      language: 'fr',
-      titleKey: 'page.home',
-      descriptionKey: 'page.description.home',
-    },
-  },
-  {
-    path: 'en',
-    component: HomeComponent,
-    data: {
-      shell: 'landing',
-      language: 'en',
       titleKey: 'page.home',
       descriptionKey: 'page.description.home',
     },
@@ -121,20 +128,32 @@ export const routes: Routes = [
     path: '404',
     loadComponent: () =>
       import('./pages/not-found/not-found.component').then((module) => module.NotFoundComponent),
-    data: {
-      titleKey: 'page.not_found',
-      descriptionKey: 'page.description.not_found',
-      robots: 'noindex, nofollow',
-    },
+    data: notFoundData,
   },
   {
     path: '**',
     loadComponent: () =>
       import('./pages/not-found/not-found.component').then((module) => module.NotFoundComponent),
-    data: {
-      titleKey: 'page.not_found',
-      descriptionKey: 'page.description.not_found',
-      robots: 'noindex, nofollow',
-    },
+    data: notFoundData,
+  },
+];
+
+export const routes: Routes = [
+  {
+    path: '',
+    redirectTo: 'fr',
+    pathMatch: 'full',
+  },
+  {
+    path: ':language',
+    canMatch: [languageCanMatch],
+    resolve: { language: languageResolver },
+    children: localizedChildren,
+  },
+  {
+    path: '**',
+    loadComponent: () =>
+      import('./pages/not-found/not-found.component').then((module) => module.NotFoundComponent),
+    data: notFoundData,
   },
 ];

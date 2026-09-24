@@ -6,6 +6,7 @@ import { ActivatedRoute, NavigationEnd, Router } from '@angular/router';
 import { filter } from 'rxjs';
 import { notes, type NoteMetadata } from '@froment/l10n/notes';
 import { I18nService, TranslationKey } from './i18n.service';
+import { localizedPath } from './localized-route';
 
 const origin = 'https://froment.software';
 const socialImage = `${origin}/social-card-v4.png`;
@@ -81,7 +82,7 @@ export class PageMetadata {
     const description = this.i18n.t(note.descriptionKey);
     const topics = note.topicKeys.map((key) => this.i18n.t(key));
     const pageTitle = `${title} | froment.software`;
-    const url = `${origin}/notes/${note.slug}`;
+    const url = `${origin}${localizedPath(this.i18n.language(), `/notes/${note.slug}`)}`;
     this.title.setTitle(pageTitle);
     this.meta.updateTag({ name: 'description', content: description });
     this.meta.updateTag({ name: 'keywords', content: topics.join(', ') });

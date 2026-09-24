@@ -17,12 +17,12 @@
         } @if (section.links) { @if (section.linkNavigation) {
         <nav class="policy-links" [attr.aria-label]="i18n.t(section.titleKey)">
           @for (link of section.links; track link.route ?? link.href) {
-          <a [routerLink]="link.route">{{ label(link) }}</a> }
+          <a [routerLink]="route(link)">{{ label(link) }}</a> }
         </nav>
         } @else {
         <p class="policy-links">
           @for (link of section.links; track link.route ?? link.href) { @if (link.route) {
-          <a [routerLink]="link.route">{{ label(link) }}</a> } @else {
+          <a [routerLink]="route(link)">{{ label(link) }}</a> } @else {
           <a [href]="link.href">{{ label(link) }}</a> } }
         </p>
         } }

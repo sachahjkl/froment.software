@@ -25,7 +25,7 @@ pnpm lint
 pnpm format:check
 ```
 
-La route `/version` lit les métadonnées du déploiement depuis `/api/version`. Le flux des notes est disponible sur `/notes/feed`.
+Les pages publiques utilisent `/fr/...` ou `/en/...`. La racine redirige vers `/fr`. Les routes `/fr/version` et `/en/version` lisent les métadonnées du déploiement depuis `/api/version`. Le flux des notes reste disponible sur `/notes/feed`.
 
 ## Construction et déploiement
 
