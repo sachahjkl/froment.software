@@ -72,12 +72,17 @@ describe('App shell', () => {
   it('changes the language prefix without changing the current page', async () => {
     await navigate(fixture, router, '/fr/about?source=menu#contact');
 
+    const navigateByUrl = vi.spyOn(router, 'navigateByUrl');
     const select = element.querySelector<HTMLSelectElement>('app-language-selector select')!;
     select.value = 'en';
     select.dispatchEvent(new Event('change'));
     await fixture.whenStable();
 
     expect(router.url).toBe('/en/about?source=menu#contact');
+    expect(navigateByUrl).toHaveBeenCalledWith('/en/about?source=menu#contact', {
+      replaceUrl: true,
+      scroll: 'manual',
+    });
     expect(i18n.language()).toBe('en');
   });
 

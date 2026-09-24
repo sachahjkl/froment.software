@@ -26,6 +26,6 @@ export class LanguageSelector {
     const url = localizedUrl(this.router.url, select.value);
     if (url === this.router.url) return;
 
-    void this.router.navigateByUrl(url, { replaceUrl: true });
+    void this.router.navigateByUrl(url, { replaceUrl: true, scroll: 'manual' });
   }
 }
