@@ -2,6 +2,7 @@ import { Component, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import mermaid, { type RenderResult } from 'mermaid';
 import { MermaidDiagrams } from './mermaid-diagrams';
+import { TextCopy } from './text-copy';
 
 @Component({
   imports: [MermaidDiagrams],
@@ -25,11 +26,19 @@ describe('MermaidDiagrams', () => {
   });
 
   it('updates heading targets when the HTML changes without diagrams', async () => {
+    const copy = vi.fn().mockResolvedValue(true);
+    TestBed.configureTestingModule({
+      providers: [{ provide: TextCopy, useValue: { copy } }],
+    });
     const fixture = TestBed.createComponent(DiagramContent);
     fixture.componentInstance.content.set('<h2>Premier titre</h2>');
     await fixture.whenStable();
     const root: HTMLElement = fixture.nativeElement;
     expect(root.querySelector('h2')?.id).toBe('premier-titre');
+    const anchor = root.querySelector<HTMLButtonElement>('.note-heading-anchor');
+    expect(anchor?.getAttribute('aria-label')).toBeTruthy();
+    anchor?.click();
+    expect(copy).toHaveBeenCalledWith(expect.stringContaining('#premier-titre'));
 
     fixture.componentInstance.content.set('<h2>Second title</h2><h2>Second title</h2>');
     await fixture.whenStable();

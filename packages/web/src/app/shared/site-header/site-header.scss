@@ -12,6 +12,7 @@
   margin-inline: auto;
   padding-block: 1.25rem;
   border-bottom: 1px solid var(--color-line);
+  border-radius: 0;
 }
 
 .brand,
@@ -26,6 +27,8 @@
 }
 
 .brand img {
+  display: block;
   flex: none;
-  border-radius: 0.35rem;
+  border: 1px solid #159447;
+  border-radius: 0;
 }

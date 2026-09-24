@@ -252,9 +252,34 @@ app-page-header .muted {
 .note-body h1 {
   margin-bottom: var(--space-5);
 }
+.note-body h2,
+.note-body h3,
+.note-body h4,
+.note-body h5,
+.note-body h6 {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+  scroll-margin-top: var(--space-6);
+}
 .note-body h2 {
   margin-top: var(--space-8);
-  scroll-margin-top: var(--space-6);
+}
+.note-body .note-heading-anchor {
+  flex: none;
+  padding-inline: var(--space-1);
+  border: 0;
+  background: transparent;
+  color: var(--color-muted);
+  font: inherit;
+  font-weight: 400;
+  line-height: 1;
+  cursor: pointer;
+  opacity: 0.45;
+}
+.note-body .note-heading-anchor:hover,
+.note-body .note-heading-anchor:focus-visible {
+  opacity: 1;
 }
 .note-body p,
 .note-body ul,

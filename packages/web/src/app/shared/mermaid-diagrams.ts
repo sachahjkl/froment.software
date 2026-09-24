@@ -1,6 +1,7 @@
 import { _IdGenerator } from '@angular/cdk/a11y';
 import { afterRenderEffect, Directive, ElementRef, inject, input } from '@angular/core';
 import { I18nService, type TranslationKey } from '@app/i18n.service';
+import { AnchorCopy } from './anchor-copy';
 import { noteHeadingId } from './note-heading-id';
 
 @Directive({
@@ -10,6 +11,7 @@ export class MermaidDiagrams {
   readonly content = input.required<string>({ alias: 'appMermaidDiagrams' });
   private readonly element = inject<ElementRef<HTMLElement>>(ElementRef);
   private readonly i18n = inject(I18nService);
+  private readonly anchorCopy = inject(AnchorCopy);
   private readonly id = inject(_IdGenerator).getId('mermaid-diagrams-');
   private generation = 0;
 
@@ -21,7 +23,18 @@ export class MermaidDiagrams {
       for (const heading of this.element.nativeElement.querySelectorAll<HTMLElement>(
         'h2,h3,h4,h5,h6',
       )) {
-        heading.id = noteHeadingId(heading.textContent ?? '', headingOccurrences);
+        heading.querySelector('.note-heading-anchor')?.remove();
+        const id = noteHeadingId(heading.textContent ?? '', headingOccurrences);
+        heading.id = id;
+        const anchor = document.createElement('button');
+        anchor.className = 'note-heading-anchor';
+        anchor.type = 'button';
+        anchor.textContent = '#';
+        anchor.setAttribute('aria-label', this.i18n.t('shell.copy_link'));
+        anchor.addEventListener('click', () => {
+          void this.anchorCopy.copy(id, this.i18n.t('shell.link_copied'));
+        });
+        heading.append(anchor);
       }
 
       const diagrams = Array.from(
