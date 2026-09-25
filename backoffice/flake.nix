@@ -37,12 +37,7 @@
         inherit (pkgs) lib;
         package = builtins.fromJSON (builtins.readFile ./package.json);
         publishedVersion = (builtins.fromJSON (builtins.readFile ./package-lock.json)).packages."node_modules/@sachahjkl/backoffice".version;
-        commit =
-          if self ? rev
-          then self.rev
-          else if self ? dirtyRev
-          then self.dirtyRev
-          else "0000000000000000000000000000000000000000";
+        commit = self.rev or (self.dirtyRev or "0000000000000000000000000000000000000000");
         deploymentMetadata = builtins.toJSON {
           inherit commit;
           packages = [
