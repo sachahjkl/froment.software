@@ -197,7 +197,7 @@
       };
       checks = {
         build = application;
-        inherit dockerImage productionClosure;
+        inherit productionClosure;
         format = mkCheck "format" "pnpm format:check";
         lint = mkCheck "lint" "pnpm lint";
         test = mkCheck "test" "pnpm test";

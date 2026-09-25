@@ -34,7 +34,7 @@ nix flake check "path:$PWD" --no-write-lock-file
 nix build .#dockerImage
 ```
 
-L’image OCI démarre `froment-software-marketing` sur le port 3000. Elle contient le site pré-rendu et le serveur Effect, sans base de données ni migration.
+L’image OCI démarre `froment-software-marketing` sur le port 3000. Elle contient le site pré-rendu et le serveur Effect, sans base de données ni migration. Le job de vérification ne construit pas l’image ; le job de publication la construit une seule fois.
 
 La CI déploie d’abord en préproduction. Le workflow `deploy-production.yml` promeut ensuite le digest testé vers la production.
 
