@@ -36,6 +36,26 @@
       pkgs.lib.optionalAttrs (builtins.pathExists ./package-lock.json) (let
         inherit (pkgs) lib;
         package = builtins.fromJSON (builtins.readFile ./package.json);
+        publishedVersion = (builtins.fromJSON (builtins.readFile ./package-lock.json)).packages."node_modules/@sachahjkl/backoffice".version;
+        commit =
+          if self ? rev
+          then self.rev
+          else if self ? dirtyRev
+          then self.dirtyRev
+          else "0000000000000000000000000000000000000000";
+        deploymentMetadata = builtins.toJSON {
+          inherit commit;
+          packages = [
+            {
+              name = "@froment/api";
+              version = publishedVersion;
+            }
+            {
+              name = "@sachahjkl/backoffice";
+              version = publishedVersion;
+            }
+          ];
+        };
         assembly = pkgs.buildNpmPackage {
           pname = package.name;
           inherit (package) version;
@@ -45,7 +65,7 @@
           };
           nodejs = pkgs.nodejs_26;
           nativeBuildInputs = [pkgs.makeWrapper];
-          npmDepsHash = "sha256-wXhAEn31cCL5V98JJI0smtGLSIt5JseH5uZEcqaU540=";
+          npmDepsHash = "sha256-6l0bQTPEV+4796IvTLV0vi09NqvdRV31gDLqUGaSyJU=";
           dontNpmBuild = true;
           installPhase = ''
             runHook preInstall
@@ -80,6 +100,7 @@
               "DATABASE_PATH=/var/lib/froment-software/froment.sqlite"
               "PORT=3000"
               "NODE_ENV=production"
+              "DEPLOYMENT_METADATA=${deploymentMetadata}"
               "PATH=${lib.makeBinPath [assembly pkgs.nodejs-slim_26 pkgs.typst]}"
               "SSL_CERT_FILE=${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt"
               "HOME=/var/lib/froment-software"
