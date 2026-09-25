@@ -19,7 +19,7 @@
     class="note-body"
     [appNoteJustification]="article.html"
     [appMermaidDiagrams]="article.html"
-    [innerHTML]="article.html"
+    [innerHTML]="article.safeHtml"
   ></div>
 </article>
 } @else {

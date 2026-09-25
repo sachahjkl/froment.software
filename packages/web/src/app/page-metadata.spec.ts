@@ -68,6 +68,15 @@ describe('PageMetadata', () => {
       'article',
     );
     expect(document.head.querySelectorAll('script[data-note]')).toHaveLength(1);
+    expect(document.head.querySelector('link[data-page-language="fr"]')?.getAttribute('href')).toBe(
+      `https://froment.software/fr/notes/${note.slug}`,
+    );
+    expect(document.head.querySelector('link[data-page-language="en"]')?.getAttribute('href')).toBe(
+      `https://froment.software/en/notes/${note.slug}`,
+    );
+    expect(
+      document.head.querySelector('link[data-page-language="x-default"]')?.getAttribute('href'),
+    ).toBe(`https://froment.software/fr/notes/${note.slug}`);
     expect(document.head.querySelector('script[data-note]')?.textContent).toContain(
       '"sameAs":["https://sacha.house"]',
     );

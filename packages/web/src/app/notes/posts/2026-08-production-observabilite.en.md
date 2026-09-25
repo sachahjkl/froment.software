@@ -2,20 +2,7 @@ Putting an application into production involves more than producing a container.
 
 The business code cited here now lives in the [backoffice repository](https://github.com/sachahjkl/backoffice).
 
-## Table of contents
-
-- [Two repositories, three responsibilities](#two-repositories-three-responsibilities)
-- [Build the application and image with Nix](#build-the-application-and-image-with-nix)
-- [Check and publish in CI](#check-and-publish-in-ci)
-- [Resolve secrets at startup](#resolve-secrets-at-startup)
-- [Migrate before serving](#migrate-before-serving)
-- [Deploy with an external Compose file](#deploy-with-an-external-compose-file)
-- [Export logs and traces as OTLP JSON](#export-logs-and-traces-as-otlp-json)
-- [Collect, store and inspect](#collect-store-and-inspect)
-- [Correlate a request, an audit and a trace](#correlate-a-request-an-audit-and-a-trace)
-- [The role of nginx](#the-role-of-nginx)
-- [Current limits](#current-limits)
-- [What this architecture guarantees](#what-this-architecture-guarantees)
+<!-- notes-toc -->
 
 ## Two repositories, three responsibilities
 

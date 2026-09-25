@@ -1,16 +1,6 @@
 A reliable release must connect tested source, the published artifact, and the running version. The new Froment Software pipeline uses Nix, GitHub Actions, Tailscale, and Nomad. It deploys every accepted commit to staging, then promotes the same digest to production.
 
-## Table of contents
-
-- [Separate the platform from applications](#separate-the-platform-from-applications)
-- [Develop on one trunk](#develop-on-one-trunk)
-- [Build once](#build-once)
-- [Prove the image origin](#prove-the-image-origin)
-- [Reach Nomad without a public port](#reach-nomad-without-a-public-port)
-- [Isolate environments](#isolate-environments)
-- [Promote the staging digest](#promote-the-staging-digest)
-- [Protect SQLite during migrations](#protect-sqlite-during-migrations)
-- [Return to a known version](#return-to-a-known-version)
+<!-- notes-toc -->
 
 ## Separate the platform from applications
 

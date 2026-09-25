@@ -1,18 +1,6 @@
 Real application security is not the name of an algorithm. It depends on credential paths, checks on each request, stored state, and known limits. This article describes the August 2026 code in the [backoffice repository](https://github.com/sachahjkl/backoffice). It contains no key, token, or secret value.
 
-## Table of contents
-
-- [Two cookies, two purposes](#two-cookies-two-purposes)
-- [Sign-in and passwords](#sign-in-and-passwords)
-- [PASETO v4.public access token](#paseto-v4public-access-token)
-- [Opaque refresh, rotation, and replay](#opaque-refresh-rotation-and-replay)
-- [Browser requests and Angular refresh](#browser-requests-and-angular-refresh)
-- [Sign-out and revocation](#sign-out-and-revocation)
-- [API tokens, permissions, and quotas](#api-tokens-permissions-and-quotas)
-- [Origin, SameSite, and CSRF](#origin-samesite-and-csrf)
-- [Audit and trace correlation](#audit-and-trace-correlation)
-- [Known limits](#known-limits)
-- [Source references](#source-references)
+<!-- notes-toc -->
 
 ## Two cookies, two purposes
 

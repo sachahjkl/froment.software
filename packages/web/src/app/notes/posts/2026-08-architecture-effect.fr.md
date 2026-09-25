@@ -2,19 +2,7 @@ Cette application ne sépare pas seulement une interface web d'un serveur. Elle 
 
 Cet article décrit le code d’août 2026, désormais conservé dans le [dépôt du backoffice](https://github.com/sachahjkl/backoffice). Il distingue les garanties effectives des intentions possibles.
 
-## Table des matières
-
-- [Cinq packages, cinq responsabilités](#cinq-packages-cinq-responsabilites)
-- [Les contrats avant les gestionnaires](#les-contrats-avant-les-gestionnaires)
-- [Des couches Effect explicites](#des-couches-effect-explicites)
-- [SQLite et Drizzle comme dernier rempart](#sqlite-et-drizzle-comme-dernier-rempart)
-- [Du devis à la facture](#du-devis-a-la-facture)
-- [Signer un devis sans état intermédiaire](#signer-un-devis-sans-etat-intermediaire)
-- [Les snapshots figent le document](#les-snapshots-figent-le-document)
-- [Typst compile dans un espace isolé](#typst-compile-dans-un-espace-isole)
-- [Émettre une facture avant de produire son PDF](#emettre-une-facture-avant-de-produire-son-pdf)
-- [Une chaîne d'intégrité fondée sur SHA-256](#une-chaine-d-integrite-fondee-sur-sha-256)
-- [Ce que cette architecture garantit réellement](#ce-que-cette-architecture-garantit-reellement)
+<!-- notes-toc -->
 
 ## Cinq packages, cinq responsabilités
 

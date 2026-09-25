@@ -2,20 +2,7 @@ Mettre une application en production ne consiste pas seulement à produire un co
 
 Le code métier cité se trouve maintenant dans le [dépôt du backoffice](https://github.com/sachahjkl/backoffice).
 
-## Table des matières
-
-- [Deux dépôts, trois responsabilités](#deux-dépôts-trois-responsabilités)
-- [Construire l’application et l’image avec Nix](#construire-lapplication-et-limage-avec-nix)
-- [Vérifier et publier en CI](#vérifier-et-publier-en-ci)
-- [Résoudre les secrets au démarrage](#résoudre-les-secrets-au-démarrage)
-- [Migrer avant de servir](#migrer-avant-de-servir)
-- [Déployer avec un Compose externe](#déployer-avec-un-compose-externe)
-- [Exporter les journaux et les traces en OTLP JSON](#exporter-les-journaux-et-les-traces-en-otlp-json)
-- [Collecter, stocker et consulter](#collecter-stocker-et-consulter)
-- [Corréler une requête, un audit et une trace](#corréler-une-requête-un-audit-et-une-trace)
-- [Rôle de nginx](#rôle-de-nginx)
-- [Limites actuelles](#limites-actuelles)
-- [Ce que cette architecture garantit](#ce-que-cette-architecture-garantit)
+<!-- notes-toc -->
 
 ## Deux dépôts, trois responsabilités
 

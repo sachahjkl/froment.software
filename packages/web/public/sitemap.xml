@@ -1,105 +1,173 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <url>
     <loc>https://froment.software/fr</loc>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://froment.software/fr" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://froment.software/en" />
   </url>
   <url>
     <loc>https://froment.software/en</loc>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://froment.software/fr" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://froment.software/en" />
   </url>
   <url>
     <loc>https://froment.software/fr/about</loc>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://froment.software/fr/about" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://froment.software/en/about" />
   </url>
   <url>
     <loc>https://froment.software/en/about</loc>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://froment.software/fr/about" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://froment.software/en/about" />
   </url>
   <url>
     <loc>https://froment.software/fr/clients</loc>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://froment.software/fr/clients" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://froment.software/en/clients" />
   </url>
   <url>
     <loc>https://froment.software/en/clients</loc>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://froment.software/fr/clients" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://froment.software/en/clients" />
   </url>
   <url>
     <loc>https://froment.software/fr/services</loc>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://froment.software/fr/services" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://froment.software/en/services" />
   </url>
   <url>
     <loc>https://froment.software/en/services</loc>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://froment.software/fr/services" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://froment.software/en/services" />
   </url>
   <url>
     <loc>https://froment.software/fr/services/audit-renovation</loc>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://froment.software/fr/services/audit-renovation" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://froment.software/en/services/audit-renovation" />
   </url>
   <url>
     <loc>https://froment.software/en/services/audit-renovation</loc>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://froment.software/fr/services/audit-renovation" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://froment.software/en/services/audit-renovation" />
   </url>
   <url>
     <loc>https://froment.software/fr/services/development</loc>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://froment.software/fr/services/development" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://froment.software/en/services/development" />
   </url>
   <url>
     <loc>https://froment.software/en/services/development</loc>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://froment.software/fr/services/development" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://froment.software/en/services/development" />
   </url>
   <url>
     <loc>https://froment.software/fr/tools</loc>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://froment.software/fr/tools" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://froment.software/en/tools" />
   </url>
   <url>
     <loc>https://froment.software/en/tools</loc>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://froment.software/fr/tools" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://froment.software/en/tools" />
   </url>
   <url>
     <loc>https://froment.software/fr/notes</loc>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://froment.software/fr/notes" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://froment.software/en/notes" />
   </url>
   <url>
     <loc>https://froment.software/en/notes</loc>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://froment.software/fr/notes" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://froment.software/en/notes" />
   </url>
   <url>
     <loc>https://froment.software/fr/notes/2026-09-du-commit-a-nomad</loc>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://froment.software/fr/notes/2026-09-du-commit-a-nomad" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://froment.software/en/notes/2026-09-du-commit-a-nomad" />
   </url>
   <url>
     <loc>https://froment.software/en/notes/2026-09-du-commit-a-nomad</loc>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://froment.software/fr/notes/2026-09-du-commit-a-nomad" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://froment.software/en/notes/2026-09-du-commit-a-nomad" />
   </url>
   <url>
     <loc>https://froment.software/fr/notes/2026-08-production-observabilite</loc>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://froment.software/fr/notes/2026-08-production-observabilite" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://froment.software/en/notes/2026-08-production-observabilite" />
   </url>
   <url>
     <loc>https://froment.software/en/notes/2026-08-production-observabilite</loc>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://froment.software/fr/notes/2026-08-production-observabilite" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://froment.software/en/notes/2026-08-production-observabilite" />
   </url>
   <url>
     <loc>https://froment.software/fr/notes/2026-08-securite-authentification</loc>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://froment.software/fr/notes/2026-08-securite-authentification" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://froment.software/en/notes/2026-08-securite-authentification" />
   </url>
   <url>
     <loc>https://froment.software/en/notes/2026-08-securite-authentification</loc>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://froment.software/fr/notes/2026-08-securite-authentification" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://froment.software/en/notes/2026-08-securite-authentification" />
   </url>
   <url>
     <loc>https://froment.software/fr/notes/2026-08-architecture-effect</loc>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://froment.software/fr/notes/2026-08-architecture-effect" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://froment.software/en/notes/2026-08-architecture-effect" />
   </url>
   <url>
     <loc>https://froment.software/en/notes/2026-08-architecture-effect</loc>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://froment.software/fr/notes/2026-08-architecture-effect" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://froment.software/en/notes/2026-08-architecture-effect" />
   </url>
   <url>
     <loc>https://froment.software/fr/notes/2026-08-froment-software-arrive</loc>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://froment.software/fr/notes/2026-08-froment-software-arrive" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://froment.software/en/notes/2026-08-froment-software-arrive" />
   </url>
   <url>
     <loc>https://froment.software/en/notes/2026-08-froment-software-arrive</loc>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://froment.software/fr/notes/2026-08-froment-software-arrive" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://froment.software/en/notes/2026-08-froment-software-arrive" />
   </url>
   <url>
     <loc>https://froment.software/fr/legal</loc>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://froment.software/fr/legal" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://froment.software/en/legal" />
   </url>
   <url>
     <loc>https://froment.software/en/legal</loc>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://froment.software/fr/legal" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://froment.software/en/legal" />
   </url>
   <url>
     <loc>https://froment.software/fr/privacy</loc>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://froment.software/fr/privacy" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://froment.software/en/privacy" />
   </url>
   <url>
     <loc>https://froment.software/en/privacy</loc>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://froment.software/fr/privacy" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://froment.software/en/privacy" />
   </url>
   <url>
     <loc>https://froment.software/fr/cookies</loc>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://froment.software/fr/cookies" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://froment.software/en/cookies" />
   </url>
   <url>
     <loc>https://froment.software/en/cookies</loc>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://froment.software/fr/cookies" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://froment.software/en/cookies" />
   </url>
   <url>
     <loc>https://froment.software/fr/version</loc>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://froment.software/fr/version" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://froment.software/en/version" />
   </url>
   <url>
     <loc>https://froment.software/en/version</loc>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://froment.software/fr/version" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://froment.software/en/version" />
   </url>
 </urlset>

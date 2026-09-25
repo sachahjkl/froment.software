@@ -6,7 +6,7 @@ import { ActivatedRoute, NavigationEnd, Router } from '@angular/router';
 import { filter } from 'rxjs';
 import { notes, type NoteMetadata } from '@froment/l10n/notes';
 import { I18nService, TranslationKey } from './i18n.service';
-import { localizedPath } from './localized-route';
+import { localizedPath, localizedUrl } from './localized-route';
 
 const origin = 'https://froment.software';
 const socialImage = `${origin}/social-card-v4.png`;
@@ -151,6 +151,7 @@ export class PageMetadata {
     this.meta.updateTag({ property: 'og:image:alt', content: alt });
     this.meta.updateTag({ name: 'twitter:image:alt', content: alt });
     this.updateCanonicalLink(url);
+    this.updateAlternateLinks(url);
     this.updateSiteGraph();
   }
 
@@ -198,6 +199,29 @@ export class PageMetadata {
     const suffix = this.router.url.search(/[?#]/);
     const path = suffix === -1 ? this.router.url : this.router.url.slice(0, suffix);
     return `${origin}${path.length > 1 && path.endsWith('/') ? path.slice(0, -1) : path || '/'}`;
+  }
+
+  private updateAlternateLinks(url: string): void {
+    const path = url.slice(origin.length).split(/[?#]/, 1)[0] || '/';
+    const frenchUrl = `${origin}${localizedUrl(path, 'fr')}`;
+    const links = [
+      { language: 'fr', href: frenchUrl },
+      { language: 'en', href: `${origin}${localizedUrl(path, 'en')}` },
+      { language: 'x-default', href: frenchUrl },
+    ];
+    for (const alternate of links) {
+      let link = this.document.head.querySelector<HTMLLinkElement>(
+        `link[data-page-language="${alternate.language}"]`,
+      );
+      if (!link) {
+        link = this.document.createElement('link');
+        link.rel = 'alternate';
+        link.dataset['pageLanguage'] = alternate.language;
+        this.document.head.append(link);
+      }
+      link.hreflang = alternate.language;
+      link.href = alternate.href;
+    }
   }
 
   private updateCanonicalLink(url: string): void {

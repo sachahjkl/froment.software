@@ -281,6 +281,32 @@ app-page-header .muted {
 .note-body .note-heading-anchor:focus-visible {
   opacity: 1;
 }
+.note-body .note-toc {
+  margin-block: var(--space-6);
+  padding: var(--space-4);
+  border: 1px solid var(--color-line);
+  background: var(--color-surface-raised);
+}
+.note-body .note-toc-title {
+  margin: 0;
+  color: var(--color-ink);
+  font-weight: 700;
+}
+.note-body .note-toc ol {
+  margin: var(--space-3) 0 0;
+  padding-inline-start: var(--space-6);
+}
+.note-body .note-toc li {
+  margin-top: var(--space-1);
+}
+.note-body .note-toc-depth-3 {
+  margin-inline-start: var(--space-4);
+}
+.note-body .note-toc-depth-4,
+.note-body .note-toc-depth-5,
+.note-body .note-toc-depth-6 {
+  margin-inline-start: var(--space-6);
+}
 .note-body p,
 .note-body ul,
 .note-body ol {

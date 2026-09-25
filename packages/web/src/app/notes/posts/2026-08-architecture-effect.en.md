@@ -2,19 +2,7 @@ This application does not only separate a web interface from a server. It separa
 
 This article describes the August 2026 code, now kept in the [backoffice repository](https://github.com/sachahjkl/backoffice). It distinguishes implemented guarantees from possible intentions.
 
-## Table of contents
-
-- [Five packages, five responsibilities](#five-packages-five-responsibilities)
-- [Contracts before handlers](#contracts-before-handlers)
-- [Explicit Effect layers](#explicit-effect-layers)
-- [SQLite and Drizzle as the last barrier](#sqlite-and-drizzle-as-the-last-barrier)
-- [From quote to invoice](#from-quote-to-invoice)
-- [Signing a quote without an intermediate state](#signing-a-quote-without-an-intermediate-state)
-- [Snapshots freeze the document](#snapshots-freeze-the-document)
-- [Typst compiles in an isolated workspace](#typst-compiles-in-an-isolated-workspace)
-- [Issuing an invoice before producing its PDF](#issuing-an-invoice-before-producing-its-pdf)
-- [An integrity chain based on SHA-256](#an-integrity-chain-based-on-sha-256)
-- [What this architecture actually guarantees](#what-this-architecture-actually-guarantees)
+<!-- notes-toc -->
 
 ## Five packages, five responsibilities
 

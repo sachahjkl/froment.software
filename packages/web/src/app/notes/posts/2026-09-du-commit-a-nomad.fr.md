@@ -1,16 +1,6 @@
 Une livraison fiable doit relier le code testé, l’artefact publié et la version exécutée. La nouvelle chaîne de Froment Software utilise Nix, GitHub Actions, Tailscale et Nomad. Elle déploie chaque commit accepté sur staging, puis promeut le même digest en production.
 
-## Table des matières
-
-- [Séparer la plateforme et les applications](#séparer-la-plateforme-et-les-applications)
-- [Développer sur une branche principale](#développer-sur-une-branche-principale)
-- [Construire une seule fois](#construire-une-seule-fois)
-- [Prouver l’origine de l’image](#prouver-lorigine-de-limage)
-- [Joindre Nomad sans port public](#joindre-nomad-sans-port-public)
-- [Isoler les environnements](#isoler-les-environnements)
-- [Promouvoir le digest staging](#promouvoir-le-digest-staging)
-- [Protéger SQLite pendant les migrations](#protéger-sqlite-pendant-les-migrations)
-- [Revenir à une version connue](#revenir-à-une-version-connue)
+<!-- notes-toc -->
 
 ## Séparer la plateforme et les applications
 

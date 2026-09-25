@@ -11,7 +11,8 @@ describe('Notes', () => {
     const post = notes.find('2026-08-froment-software-arrive');
 
     expect(post?.title).toBe('Froment Software arrive sur le marché');
-    expect(post?.html).toContain('<h2>Pourquoi maintenant ?</h2>');
+    expect(post?.html).toContain('<h2 id="pourquoi-maintenant">Pourquoi maintenant ?</h2>');
+    expect(post?.html).toContain('class="note-toc"');
     expect(post?.topics).toContain('développement logiciel');
   });
 

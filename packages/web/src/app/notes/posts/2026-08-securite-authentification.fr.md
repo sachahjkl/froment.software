@@ -1,18 +1,6 @@
 La sécurité réelle d’une application ne se résume pas au nom d’un algorithme. Elle dépend du trajet des identifiants, des vérifications effectuées à chaque requête, des états conservés et des limites connues. Cet article décrit le code du [backoffice](https://github.com/sachahjkl/backoffice) en août 2026. Il ne contient ni clé, ni jeton, ni valeur de secret.
 
-## Table des matières
-
-- [Deux cookies, deux fonctions](#deux-cookies-deux-fonctions)
-- [Connexion et mots de passe](#connexion-et-mots-de-passe)
-- [Jeton d’accès PASETO v4.public](#jeton-daccès-paseto-v4public)
-- [Renouvellement opaque, rotation et rejeu](#renouvellement-opaque-rotation-et-rejeu)
-- [Requêtes du navigateur et renouvellement Angular](#requêtes-du-navigateur-et-renouvellement-angular)
-- [Déconnexion et révocation](#déconnexion-et-révocation)
-- [Jetons API, permissions et quotas](#jetons-api-permissions-et-quotas)
-- [Origin, SameSite et CSRF](#origin-samesite-et-csrf)
-- [Audit et corrélation des traces](#audit-et-corrélation-des-traces)
-- [Limites connues](#limites-connues)
-- [Références dans le code](#références-dans-le-code)
+<!-- notes-toc -->
 
 ## Deux cookies, deux fonctions
 

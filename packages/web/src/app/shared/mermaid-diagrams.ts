@@ -23,8 +23,9 @@ export class MermaidDiagrams {
       for (const heading of this.element.nativeElement.querySelectorAll<HTMLElement>(
         'h2,h3,h4,h5,h6',
       )) {
+        if (heading.closest('.note-toc')) continue;
         heading.querySelector('.note-heading-anchor')?.remove();
-        const id = noteHeadingId(heading.textContent ?? '', headingOccurrences);
+        const id = heading.id || noteHeadingId(heading.textContent ?? '', headingOccurrences);
         heading.id = id;
         const anchor = document.createElement('button');
         anchor.className = 'note-heading-anchor';

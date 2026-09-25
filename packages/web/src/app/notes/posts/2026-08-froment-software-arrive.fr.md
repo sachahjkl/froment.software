@@ -1,5 +1,7 @@
 Froment Software ouvre ses missions de développement, de reprise d’applications et d’amélioration des chaînes de livraison logicielle.
 
+<!-- notes-toc -->
+
 ## Pourquoi maintenant ?
 
 Les équipes disposent souvent d’applications utiles, mais difficiles à faire évoluer. Les dépendances vieillissent, les builds divergent selon les postes et la CI prend trop de temps. Ces problèmes ne demandent pas toujours une réécriture. Ils demandent d’abord des mesures, un périmètre clair et des changements vérifiables.

@@ -1,5 +1,7 @@
 Froment Software is now available for software development, existing-application takeover and delivery-pipeline improvement engagements.
 
+<!-- notes-toc -->
+
 ## Why now?
 
 Teams often rely on useful applications that have become difficult to change. Dependencies age, builds differ between workstations and CI takes too long. These problems do not always require a rewrite. They first require measurements, a clear scope and verifiable changes.
