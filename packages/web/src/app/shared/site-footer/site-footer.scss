@@ -66,20 +66,49 @@ nav a:hover {
   .footer-bottom {
     grid-template-columns: minmax(0, 1fr);
     align-items: start;
+    gap: var(--space-4);
+  }
+
+  nav {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-2) var(--space-4);
+  }
+
+  nav a + a::before {
+    margin-inline-end: 0;
+    content: none;
   }
 
   .footer-controls {
-    justify-self: start;
+    justify-self: end;
   }
 }
 
 @media (max-width: 40rem) {
+  .footer-inner {
+    gap: var(--space-4);
+    padding-block: var(--space-5) var(--space-8);
+  }
+
   .footer-bottom {
     grid-template-columns: minmax(0, 1fr);
     align-items: start;
+    gap: var(--space-4);
+  }
+
+  nav {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-2) var(--space-4);
+  }
+
+  nav a + a::before {
+    margin-inline-end: 0;
+    content: none;
   }
 
   .footer-controls {
-    justify-self: start;
+    justify-self: end;
   }
 }
