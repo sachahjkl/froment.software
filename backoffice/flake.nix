@@ -60,15 +60,13 @@
           };
           nodejs = pkgs.nodejs_26;
           nativeBuildInputs = [pkgs.makeWrapper];
-          npmDepsHash = "sha256-6l0bQTPEV+4796IvTLV0vi09NqvdRV31gDLqUGaSyJU=";
+          npmDepsHash = "sha256-40gI+lSEWiIXt2STlOYJFmvNLuUTqYGWqt54cdJGRME=";
           dontNpmBuild = true;
           installPhase = ''
             runHook preInstall
             mkdir -p "$out/lib/froment-backoffice" "$out/bin"
             cp -r node_modules package.json prepare.mjs "$out/lib/froment-backoffice/"
             cp brand/froment.png "$out/lib/froment-backoffice/node_modules/@sachahjkl/backoffice/dist/web/brand/froment.png"
-            sed -i 's#</head>#<link rel="icon" type="image/png" href="/brand/froment.png" /><link rel="apple-touch-icon" href="/brand/froment.png" /></head>#' \
-              "$out/lib/froment-backoffice/node_modules/@sachahjkl/backoffice/dist/web/index.csr.html"
             ln -s "$out/lib/froment-backoffice/node_modules/.bin/froment-backoffice" "$out/bin/froment-backoffice"
             makeWrapper ${pkgs.nodejs-slim_26}/bin/node "$out/bin/froment-backoffice-prepare" \
               --add-flags "$out/lib/froment-backoffice/prepare.mjs"
