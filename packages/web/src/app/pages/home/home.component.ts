@@ -65,19 +65,19 @@ export class HomeComponent {
     {
       title: this.i18n.t('home.offers.audit.title'),
       description: this.i18n.t('home.offers.audit.desc'),
-      href: this.i18n.localizedPath('/services/audit-renovation'),
+      href: this.i18n.localizedPath('/services/audit'),
       icon: 'audit',
     },
     {
       title: this.i18n.t('home.offers.renovation.title'),
       description: this.i18n.t('home.offers.renovation.desc'),
-      href: this.i18n.localizedPath('/services/audit-renovation'),
+      href: this.i18n.localizedPath('/services/modernization'),
       icon: 'renovation',
     },
     {
       title: this.i18n.t('home.offers.delivery.title'),
       description: this.i18n.t('home.offers.delivery.desc'),
-      href: this.i18n.localizedPath('/services/development'),
+      href: this.i18n.localizedPath('/services/delivery-operations'),
       icon: 'delivery',
     },
   ]);

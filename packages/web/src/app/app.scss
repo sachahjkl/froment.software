@@ -85,7 +85,7 @@ main {
   outline: none;
 }
 
-.app-shell:has(app-home) main {
+.app-shell:has(:is(app-home, app-services, app-service-detail)) main {
   width: min(100% - 3rem, 48rem);
   max-width: none;
   margin-block: 0;

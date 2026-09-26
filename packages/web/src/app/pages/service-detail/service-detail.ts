@@ -4,7 +4,7 @@ import { I18nService, TranslationKey } from '@app/i18n.service';
 import { AnchorLink } from '@shared/anchor-link/anchor-link';
 import { ContactActions } from '@shared/contact-actions/contact-actions';
 
-type Offer = 'renovation' | 'development';
+type Offer = 'audit' | 'modernization' | 'delivery';
 
 type DetailContent = {
   titleKey: TranslationKey;
@@ -22,84 +22,115 @@ type DetailContent = {
 };
 
 const detailContent = {
-  renovation: {
-    titleKey: 'serviceDetail.renovation.title',
-    leadKey: 'serviceDetail.renovation.lead',
-    scopeTitleKey: 'serviceDetail.renovation.scope.title',
+  audit: {
+    titleKey: 'serviceDetail.audit.title',
+    leadKey: 'serviceDetail.audit.lead',
+    scopeTitleKey: 'serviceDetail.audit.scope.title',
     scopes: [
       {
-        titleKey: 'serviceDetail.renovation.scope.projects.title',
-        descriptionKey: 'serviceDetail.renovation.scope.projects.desc',
+        titleKey: 'serviceDetail.audit.scope.architecture.title',
+        descriptionKey: 'serviceDetail.audit.scope.architecture.desc',
       },
       {
-        titleKey: 'serviceDetail.renovation.scope.delivery.title',
-        descriptionKey: 'serviceDetail.renovation.scope.delivery.desc',
+        titleKey: 'serviceDetail.audit.scope.delivery.title',
+        descriptionKey: 'serviceDetail.audit.scope.delivery.desc',
       },
       {
-        titleKey: 'serviceDetail.renovation.scope.quality.title',
-        descriptionKey: 'serviceDetail.renovation.scope.quality.desc',
+        titleKey: 'serviceDetail.audit.scope.security.title',
+        descriptionKey: 'serviceDetail.audit.scope.security.desc',
         links: [
           {
-            labelKey: 'serviceDetail.renovation.scope.quality.staticAnalysis',
+            labelKey: 'serviceDetail.audit.scope.security.staticAnalysis',
             href: 'https://owasp.org/www-community/Source_Code_Analysis_Tools',
           },
           {
-            labelKey: 'serviceDetail.renovation.scope.quality.trufflehog',
+            labelKey: 'serviceDetail.audit.scope.security.trufflehog',
             href: 'https://trufflesecurity.com/trufflehog',
           },
         ],
       },
       {
-        titleKey: 'serviceDetail.renovation.scope.environment.title',
-        descriptionKey: 'serviceDetail.renovation.scope.environment.desc',
+        titleKey: 'serviceDetail.audit.scope.environment.title',
+        descriptionKey: 'serviceDetail.audit.scope.environment.desc',
       },
     ],
-    deliverablesTitleKey: 'serviceDetail.renovation.deliverables.title',
+    deliverablesTitleKey: 'serviceDetail.audit.deliverables.title',
     deliverableKeys: [
-      'serviceDetail.renovation.deliverables.audit',
-      'serviceDetail.renovation.deliverables.plan',
-      'serviceDetail.renovation.deliverables.work',
-      'serviceDetail.renovation.deliverables.handover',
+      'serviceDetail.audit.deliverables.report',
+      'serviceDetail.audit.deliverables.map',
+      'serviceDetail.audit.deliverables.plan',
+      'serviceDetail.audit.deliverables.review',
     ],
-    fitTitleKey: 'serviceDetail.renovation.fit.title',
-    fitDescriptionKey: 'serviceDetail.renovation.fit.desc',
+    fitTitleKey: 'serviceDetail.audit.fit.title',
+    fitDescriptionKey: 'serviceDetail.audit.fit.desc',
   },
-  development: {
-    titleKey: 'serviceDetail.development.title',
-    leadKey: 'serviceDetail.development.lead',
-    scopeTitleKey: 'serviceDetail.development.scope.title',
+  modernization: {
+    titleKey: 'serviceDetail.modernization.title',
+    leadKey: 'serviceDetail.modernization.lead',
+    scopeTitleKey: 'serviceDetail.modernization.scope.title',
     scopes: [
       {
-        titleKey: 'serviceDetail.development.scope.design.title',
-        descriptionKey: 'serviceDetail.development.scope.design.desc',
+        titleKey: 'serviceDetail.modernization.scope.takeover.title',
+        descriptionKey: 'serviceDetail.modernization.scope.takeover.desc',
       },
       {
-        titleKey: 'serviceDetail.development.scope.build.title',
-        descriptionKey: 'serviceDetail.development.scope.build.desc',
+        titleKey: 'serviceDetail.modernization.scope.stability.title',
+        descriptionKey: 'serviceDetail.modernization.scope.stability.desc',
       },
       {
-        titleKey: 'serviceDetail.development.scope.tests.title',
-        descriptionKey: 'serviceDetail.development.scope.tests.desc',
+        titleKey: 'serviceDetail.modernization.scope.refactoring.title',
+        descriptionKey: 'serviceDetail.modernization.scope.refactoring.desc',
       },
       {
-        titleKey: 'serviceDetail.development.scope.deploy.title',
-        descriptionKey: 'serviceDetail.development.scope.deploy.desc',
+        titleKey: 'serviceDetail.modernization.scope.upgrades.title',
+        descriptionKey: 'serviceDetail.modernization.scope.upgrades.desc',
       },
     ],
-    deliverablesTitleKey: 'serviceDetail.development.deliverables.title',
+    deliverablesTitleKey: 'serviceDetail.modernization.deliverables.title',
     deliverableKeys: [
-      'serviceDetail.development.deliverables.product',
-      'serviceDetail.development.deliverables.source',
-      'serviceDetail.development.deliverables.tests',
-      'serviceDetail.development.deliverables.operations',
+      'serviceDetail.modernization.deliverables.environment',
+      'serviceDetail.modernization.deliverables.changes',
+      'serviceDetail.modernization.deliverables.tests',
+      'serviceDetail.modernization.deliverables.handover',
     ],
-    fitTitleKey: 'serviceDetail.development.fit.title',
-    fitDescriptionKey: 'serviceDetail.development.fit.desc',
+    fitTitleKey: 'serviceDetail.modernization.fit.title',
+    fitDescriptionKey: 'serviceDetail.modernization.fit.desc',
+  },
+  delivery: {
+    titleKey: 'serviceDetail.delivery.title',
+    leadKey: 'serviceDetail.delivery.lead',
+    scopeTitleKey: 'serviceDetail.delivery.scope.title',
+    scopes: [
+      {
+        titleKey: 'serviceDetail.delivery.scope.ci.title',
+        descriptionKey: 'serviceDetail.delivery.scope.ci.desc',
+      },
+      {
+        titleKey: 'serviceDetail.delivery.scope.packaging.title',
+        descriptionKey: 'serviceDetail.delivery.scope.packaging.desc',
+      },
+      {
+        titleKey: 'serviceDetail.delivery.scope.deployment.title',
+        descriptionKey: 'serviceDetail.delivery.scope.deployment.desc',
+      },
+      {
+        titleKey: 'serviceDetail.delivery.scope.operations.title',
+        descriptionKey: 'serviceDetail.delivery.scope.operations.desc',
+      },
+    ],
+    deliverablesTitleKey: 'serviceDetail.delivery.deliverables.title',
+    deliverableKeys: [
+      'serviceDetail.delivery.deliverables.pipeline',
+      'serviceDetail.delivery.deliverables.configuration',
+      'serviceDetail.delivery.deliverables.observability',
+      'serviceDetail.delivery.deliverables.runbook',
+    ],
+    fitTitleKey: 'serviceDetail.delivery.fit.title',
+    fitDescriptionKey: 'serviceDetail.delivery.fit.desc',
   },
 } satisfies Record<Offer, DetailContent>;
 
 @Component({
-  host: { class: 'page-container' },
   selector: 'app-service-detail',
   imports: [AnchorLink, ContactActions, RouterLink],
   templateUrl: './service-detail.html',

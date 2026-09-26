@@ -1,68 +1,70 @@
-<header class="services-hero page-intro">
-  <div class="hero-inner">
-    <h1>{{ i18n.t("services.title") }}</h1>
-    <p class="lead">{{ i18n.t("services.lead") }}</p>
+<article class="services-page">
+  <header class="services-hero">
+    <div class="hero-inner">
+      <h1>{{ i18n.t("services.title") }}</h1>
+      <p class="lead">{{ i18n.t("services.lead") }}</p>
+      <app-contact-actions
+        class="actions"
+        [mailLabel]="i18n.t('services.quote')"
+        [bookLabel]="i18n.t('services.book')"
+        [subject]="i18n.t('services.quote.subject')"
+        [body]="i18n.t('services.quote.body')"
+      />
+    </div>
+  </header>
+
+  <section class="services-listing" aria-labelledby="prestations">
+    <div class="section-heading">
+      <h2 id="prestations" class="anchored-title">
+        <span>{{ i18n.t("services.list.title") }}</span
+        ><app-anchor-link fragment="prestations" />
+      </h2>
+    </div>
+    <ol class="services-grid">
+      @for (service of services(); track service.title; let number = $index) {
+        <li class="service-entry">
+          <span class="service-number" aria-hidden="true">0{{ number + 1 }}</span>
+          <h3>{{ service.title }}</h3>
+          <div>
+            <p>{{ service.description }}</p>
+            <a class="offer-link" [routerLink]="service.href">{{ service.cta }}</a>
+          </div>
+        </li>
+      }
+    </ol>
+  </section>
+
+  <section class="practical" aria-labelledby="modalites">
+    <h2 id="modalites" class="anchored-title">
+      <span>{{ i18n.t("services.practical.title") }}</span
+      ><app-anchor-link fragment="modalites" />
+    </h2>
+    <dl class="practical-list">
+      <div>
+        <dt>{{ i18n.t("services.practical.method") }}</dt>
+        <dd>{{ i18n.t("services.practical.method.desc") }}</dd>
+      </div>
+      <div>
+        <dt>{{ i18n.t("services.practical.schedule") }}</dt>
+        <dd>{{ i18n.t("services.practical.schedule.desc") }}</dd>
+      </div>
+      <div>
+        <dt>{{ i18n.t("services.practical.deliverables") }}</dt>
+        <dd>{{ i18n.t("services.practical.deliverables.desc") }}</dd>
+      </div>
+    </dl>
+    <h3>{{ i18n.t("services.criteria.title") }}</h3>
+    <ul class="criteria-list">
+      <li>{{ i18n.t("services.criteria.context") }}</li>
+      <li>{{ i18n.t("services.criteria.problem") }}</li>
+      <li>{{ i18n.t("services.criteria.deadline") }}</li>
+    </ul>
     <app-contact-actions
-      class="actions"
+      class="actions practical-actions"
       [mailLabel]="i18n.t('services.quote')"
       [bookLabel]="i18n.t('services.book')"
       [subject]="i18n.t('services.quote.subject')"
       [body]="i18n.t('services.quote.body')"
     />
-  </div>
-</header>
-
-<section class="services-listing page-section" aria-labelledby="prestations">
-  <div class="section-heading">
-    <h2 id="prestations" class="anchored-title">
-      <span>{{ i18n.t("services.list.title") }}</span
-      ><app-anchor-link fragment="prestations" />
-    </h2>
-  </div>
-  <ol class="services-grid">
-    @for (service of services(); track service.title; let number = $index) {
-      <li class="service-entry ds-panel">
-        <span class="service-number" aria-hidden="true">0{{ number + 1 }}</span>
-        <h3>{{ service.title }}</h3>
-        <div>
-          <p>{{ service.description }}</p>
-          <a class="offer-link" [routerLink]="service.href">{{ service.cta }}</a>
-        </div>
-      </li>
-    }
-  </ol>
-</section>
-
-<section class="practical page-section contact-panel" aria-labelledby="modalites">
-  <h2 id="modalites" class="anchored-title">
-    <span>{{ i18n.t("services.practical.title") }}</span
-    ><app-anchor-link fragment="modalites" />
-  </h2>
-  <dl class="practical-list">
-    <div>
-      <dt>{{ i18n.t("services.practical.method") }}</dt>
-      <dd>{{ i18n.t("services.practical.method.desc") }}</dd>
-    </div>
-    <div>
-      <dt>{{ i18n.t("services.practical.schedule") }}</dt>
-      <dd>{{ i18n.t("services.practical.schedule.desc") }}</dd>
-    </div>
-    <div>
-      <dt>{{ i18n.t("services.practical.deliverables") }}</dt>
-      <dd>{{ i18n.t("services.practical.deliverables.desc") }}</dd>
-    </div>
-  </dl>
-  <h3>{{ i18n.t("services.criteria.title") }}</h3>
-  <ul class="criteria-list">
-    <li>{{ i18n.t("services.criteria.context") }}</li>
-    <li>{{ i18n.t("services.criteria.problem") }}</li>
-    <li>{{ i18n.t("services.criteria.deadline") }}</li>
-  </ul>
-  <app-contact-actions
-    class="actions practical-actions"
-    [mailLabel]="i18n.t('services.quote')"
-    [bookLabel]="i18n.t('services.book')"
-    [subject]="i18n.t('services.quote.subject')"
-    [body]="i18n.t('services.quote.body')"
-  />
-</section>
+  </section>
+</article>

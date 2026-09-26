@@ -1,5 +1,5 @@
 <article class="service-detail">
-  <header class="page-intro">
+  <header class="service-hero">
     <a class="back-link" [routerLink]="i18n.localizedPath('/services')"
       >{{ i18n.t("serviceDetail.back") }}</a
     >
@@ -20,7 +20,7 @@
     </h2>
     <dl class="scope-grid">
       @for (scope of content().scopes; track scope.titleKey) {
-      <div class="ds-panel">
+      <div>
         <dt>{{ i18n.t(scope.titleKey) }}</dt>
         <dd>
           {{ i18n.t(scope.descriptionKey) }} @if (scope.links) {
@@ -36,8 +36,8 @@
     </dl>
   </section>
 
-  <section class="result-section">
-    <div aria-labelledby="livrables">
+  <section aria-labelledby="livrables">
+    <div class="deliverables">
       <h2 id="livrables" class="anchored-title">
         <span>{{ i18n.t(content().deliverablesTitleKey) }}</span
         ><app-anchor-link fragment="livrables" />
@@ -48,13 +48,13 @@
         }
       </ul>
     </div>
-    <aside class="fit-note">
-      <p class="fit-title">{{ i18n.t(content().fitTitleKey) }}</p>
+    <aside class="fit-note" aria-labelledby="fit-title">
+      <h2 id="fit-title" class="fit-title">{{ i18n.t(content().fitTitleKey) }}</h2>
       <p>{{ i18n.t(content().fitDescriptionKey) }}</p>
     </aside>
   </section>
 
-  <section class="contact-panel" aria-labelledby="contact">
+  <section aria-labelledby="contact">
     <h2 id="contact" class="anchored-title">
       <span>{{ i18n.t("serviceDetail.contact.title") }}</span><app-anchor-link fragment="contact" />
     </h2>

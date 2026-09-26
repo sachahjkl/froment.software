@@ -12,7 +12,6 @@ type ContentEntry = {
 };
 
 @Component({
-  host: { class: 'page-container' },
   selector: 'app-services',
   standalone: true,
   imports: [AnchorLink, ContactActions, RouterLink],
@@ -24,16 +23,22 @@ export class ServicesComponent {
   protected readonly i18n = inject(I18nService);
   protected readonly services = computed<ContentEntry[]>(() => [
     {
-      title: this.i18n.t('services.offer.renovation.title'),
-      description: this.i18n.t('services.offer.renovation.desc'),
-      href: this.i18n.localizedPath('/services/audit-renovation'),
-      cta: this.i18n.t('services.offer.renovation.cta'),
+      title: this.i18n.t('services.offer.audit.title'),
+      description: this.i18n.t('services.offer.audit.desc'),
+      href: this.i18n.localizedPath('/services/audit'),
+      cta: this.i18n.t('services.offer.audit.cta'),
     },
     {
-      title: this.i18n.t('services.offer.development.title'),
-      description: this.i18n.t('services.offer.development.desc'),
-      href: this.i18n.localizedPath('/services/development'),
-      cta: this.i18n.t('services.offer.development.cta'),
+      title: this.i18n.t('services.offer.modernization.title'),
+      description: this.i18n.t('services.offer.modernization.desc'),
+      href: this.i18n.localizedPath('/services/modernization'),
+      cta: this.i18n.t('services.offer.modernization.cta'),
+    },
+    {
+      title: this.i18n.t('services.offer.delivery.title'),
+      description: this.i18n.t('services.offer.delivery.desc'),
+      href: this.i18n.localizedPath('/services/delivery-operations'),
+      cta: this.i18n.t('services.offer.delivery.cta'),
     },
   ]);
 }

@@ -52,7 +52,7 @@ html[data-app-environment="production"][data-site-phase="construction"] .runtime
   display: none;
 }
 
-html:has(app-home, app-notes, app-note, app-policy-page) {
+html:has(app-home, app-services, app-notes, app-note, app-policy-page, app-service-detail) {
   background-color: var(--color-surface-raised);
   background-image: none;
 }
