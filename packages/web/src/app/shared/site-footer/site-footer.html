@@ -1,16 +1,17 @@
 <footer class="footer">
   <div class="footer-inner">
-    <p>{{ i18n.tf('footer.rights', { year: currentYear }) }}</p>
-    <nav [attr.aria-label]="i18n.t('shell.legal_nav')">
-      <a [routerLink]="i18n.localizedPath('/notes')">{{ i18n.t('nav.notes') }}</a>
-      <a [routerLink]="i18n.localizedPath('/legal')">{{ i18n.t('nav.legal') }}</a>
-      <a [routerLink]="i18n.localizedPath('/privacy')">{{ i18n.t('nav.privacy') }}</a>
-      <a [routerLink]="i18n.localizedPath('/cookies')">{{ i18n.t('nav.cookies') }}</a>
-      <a href="https://backoffice.froment.software/login">{{ i18n.t('backOffice.title') }}</a>
-    </nav>
-    <div class="footer-controls">
-      <app-language-selector [compact]="true" />
-      <app-theme-toggle />
+    <p class="footer-copyright">{{ i18n.tf('footer.rights', { year: currentYear }) }}</p>
+    <div class="footer-bottom">
+      <nav [attr.aria-label]="i18n.t('shell.legal_nav')">
+        <a [routerLink]="i18n.localizedPath('/notes')">{{ i18n.t('nav.notes') }}</a>
+        <a [routerLink]="i18n.localizedPath('/legal')">{{ i18n.t('nav.legal') }}</a>
+        <a [routerLink]="i18n.localizedPath('/privacy')">{{ i18n.t('nav.privacy') }}</a>
+        <a [routerLink]="i18n.localizedPath('/cookies')">{{ i18n.t('nav.cookies') }}</a>
+      </nav>
+      <div class="footer-controls">
+        <app-language-selector [compact]="true" />
+        <app-theme-toggle />
+      </div>
     </div>
     <app-environment-status [publicPage]="false" placement="footer" />
   </div>
