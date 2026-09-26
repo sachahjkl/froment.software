@@ -32,24 +32,42 @@
   </header>
 
   <section aria-labelledby="projects-title">
-    <h2 id="projects-title">{{ i18n.t("home.timeline.title") }}</h2>
-    <div class="projects">
-      <a href="https://github.com/sachahjkl/backoffice" target="_blank" rel="noopener noreferrer">
-        <img src="/projects/backoffice.png" width="48" height="48" alt="" loading="lazy" />
-        <span>{{ projectNames.backoffice }} <span aria-hidden="true">↗</span></span>
-      </a>
-      <a href="https://clockin.sacha.house" target="_blank" rel="noopener noreferrer">
-        <img src="/projects/clockin.png" width="48" height="48" alt="" loading="lazy" />
-        <span>{{ projectNames.clockin }} <span aria-hidden="true">↗</span></span>
-      </a>
-      <a href="https://github.com/sachahjkl/dw" target="_blank" rel="noopener noreferrer">
-        <img src="/projects/dw.png" width="48" height="48" alt="" loading="lazy" />
-        <span>{{ projectNames.dw }} <span aria-hidden="true">↗</span></span>
-      </a>
-      <a href="https://albumator.sacha.house" target="_blank" rel="noopener noreferrer">
-        <img src="/projects/albumator.png" width="48" height="48" alt="" loading="lazy" />
-        <span>{{ projectNames.albumator }} <span aria-hidden="true">↗</span></span>
-      </a>
-    </div>
+    <h2 id="projects-title">{{ i18n.t("home.projects.title") }}</h2>
+    <ul class="entry-list projects">
+      @for (project of projects(); track project.href) {
+        <li>
+          <a
+            [href]="project.href"
+            target="_blank"
+            rel="noopener noreferrer"
+            [attr.aria-label]="project.cta"
+          >
+            <img [src]="project.image" width="48" height="48" alt="" loading="lazy" />
+            <span class="entry-copy">
+              <strong>{{ project.name }}</strong>
+              <span>{{ project.description }}</span>
+            </span>
+            <span class="external-arrow" aria-hidden="true">↗</span>
+          </a>
+        </li>
+      }
+    </ul>
+  </section>
+
+  <section aria-labelledby="offers-title">
+    <h2 id="offers-title">{{ i18n.t("home.offers.title") }}</h2>
+    <ul class="entry-list offers">
+      @for (offer of offers(); track offer.title) {
+        <li>
+          <a [routerLink]="offer.href">
+            <app-icon [name]="offer.icon" />
+            <span class="entry-copy">
+              <strong>{{ offer.title }}</strong>
+              <span>{{ offer.description }}</span>
+            </span>
+          </a>
+        </li>
+      }
+    </ul>
   </section>
 </article>

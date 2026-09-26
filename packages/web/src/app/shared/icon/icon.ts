@@ -3,15 +3,18 @@ import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 // SVG paths from the Lucide set on Iconify, licensed under ISC.
 export type IconName =
   | 'ai'
+  | 'audit'
   | 'build'
   | 'calendar'
   | 'ci'
   | 'development'
+  | 'delivery'
   | 'environment'
   | 'external'
   | 'infrastructure'
   | 'mail'
   | 'metrics'
+  | 'renovation'
   | 'secrets'
   | 'tests'
   | 'upgrade'
@@ -57,6 +60,24 @@ export type IconName =
   template: `
     <svg viewBox="0 0 24 24" aria-hidden="true">
       @switch (name()) {
+        @case ('audit') {
+          <path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z" />
+          <path d="M14 2v4a2 2 0 0 0 2 2h4" />
+          <circle cx="11.5" cy="14.5" r="2.5" />
+          <path d="M13.3 16.3 15 18" />
+        }
+        @case ('renovation') {
+          <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" />
+          <path d="M21 3v5h-5m5 4a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" />
+          <path d="M8 16H3v5" />
+        }
+        @case ('delivery') {
+          <path d="M12 22V12m4 5 2 2 4-4" />
+          <path
+            d="M21 11.127V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.729l7 4a2 2 0 0 0 2 .001l1.32-.753"
+          />
+          <path d="M3.29 7 12 12l8.71-5M7.5 4.27l8.997 5.148" />
+        }
         @case ('paragraph') {
           <path d="M13 4v16m4-16v16m2-16H9.5a4.5 4.5 0 0 0 0 9H13" />
         }
@@ -283,13 +304,13 @@ export type IconName =
       color: var(--icon-color, var(--color-muted));
     }
     svg {
-      width: 1.25rem;
-      height: 1.25rem;
+      width: var(--icon-size, 1.25rem);
+      height: var(--icon-size, 1.25rem);
       fill: none;
       stroke: currentColor;
       stroke-linecap: round;
       stroke-linejoin: round;
-      stroke-width: 1.75;
+      stroke-width: var(--icon-stroke-width, 1.75);
     }
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,

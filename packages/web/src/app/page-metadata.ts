@@ -36,6 +36,15 @@ export function siteIdentityGraph(identity: SiteIdentity) {
         founder: { '@id': founderId },
       },
       {
+        '@type': 'ProfessionalService',
+        '@id': `${origin}/#professional-service`,
+        name: identity.publisher,
+        url: origin,
+        email: 'contact@froment.software',
+        areaServed: { '@type': 'Country', name: 'France' },
+        parentOrganization: { '@id': organizationId },
+      },
+      {
         '@type': 'WebSite',
         '@id': websiteId,
         name: identity.publisher,

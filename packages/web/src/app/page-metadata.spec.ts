@@ -92,6 +92,7 @@ describe('PageMetadata', () => {
       }),
     );
     expect(graph).toContain('"@type":"Organization"');
+    expect(graph).toContain('"@type":"ProfessionalService"');
     expect(graph).toContain('"@type":"WebSite"');
     expect(graph).toContain('"@type":"Person"');
     expect(graph).toContain('"sameAs":["https://sacha.house"]');

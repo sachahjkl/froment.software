@@ -11,9 +11,8 @@
 
 .identity,
 .contact-links,
-.projects a {
+.entry-list a {
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
 }
 
@@ -71,38 +70,87 @@ section {
   border-top: 1px solid var(--color-line);
 }
 
-.projects {
+.entry-list {
   display: grid;
   gap: 0.25rem;
   margin-top: 1.5rem;
+  padding: 0;
+  list-style: none;
 }
 
-.projects a {
-  gap: 0.75rem;
+.entry-list a {
+  gap: 1rem;
   min-width: 0;
   padding: 0.75rem;
   border-radius: var(--radius-sm);
   color: var(--color-ink);
-  font-weight: 600;
   text-decoration: none;
 }
 
-.projects a:hover {
+.entry-list a:hover {
   @include ghost.hover;
 }
 
-.projects a:focus-visible {
+.entry-list a:focus-visible {
   @include ghost.focus;
 }
 
-.projects a > span {
-  display: flex;
+.entry-copy {
+  display: grid;
   flex: 1;
-  justify-content: space-between;
-  gap: 1rem;
+  min-width: 0;
+  line-height: 1.35;
+}
+
+.entry-copy strong {
+  font-weight: 600;
+}
+
+.entry-copy > span {
+  color: var(--color-muted);
+  font-size: var(--text-sm);
 }
 
 .projects img {
   display: block;
+  flex: 0 0 auto;
   object-fit: contain;
+}
+
+.external-arrow {
+  flex: 0 0 auto;
+  align-self: center;
+  font-size: 1.25rem;
+}
+
+.offers a {
+  min-height: 4.75rem;
+}
+
+.offers app-icon {
+  --icon-color: var(--color-ink);
+  --icon-size: 2.25rem;
+  --icon-stroke-width: 1.5;
+}
+
+@media (max-width: 32rem) {
+  .home {
+    padding-block: 2.5rem;
+  }
+
+  .identity {
+    margin-bottom: 2.5rem;
+  }
+
+  .contact-links {
+    align-items: stretch;
+  }
+
+  .contact-links a[appLinkButton] {
+    width: 100%;
+  }
+
+  section {
+    margin-top: 3.5rem;
+  }
 }
