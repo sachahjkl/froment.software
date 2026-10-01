@@ -81,7 +81,7 @@
       pnpmDeps = pkgs.fetchPnpmDeps {
         inherit pname version src pnpm;
         fetcherVersion = 4;
-        hash = "sha256-PRdH6UcGdoeSl/t+Q/A5j2Hwzw+ednZIoF9h9r7M2yc=";
+        hash = "sha256-OJm+qOrCDRa5etI+Oq/FPaWDF/GcQQ5CR8icaLNrONw=";
       };
       common = {
         inherit pname version src pnpmDeps;
@@ -152,7 +152,7 @@
           });
       preCommitCheck = git-hooks.lib.${system}.run {
         package = pkgs.prek;
-        src = lib.cleanSource ./.;
+        src = pkgs.nix-gitignore.gitignoreSource [] ./.;
         hooks = {
           actionlint.enable = true;
           check-added-large-files.enable = true;
