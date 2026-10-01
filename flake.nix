@@ -81,10 +81,11 @@
       pnpmDeps = pkgs.fetchPnpmDeps {
         inherit pname version src pnpm;
         fetcherVersion = 4;
-        hash = "sha256-Lt19eXCQhHhQvRkt+TTHsfanaCiEglJGT/EEu2aJNKk=";
+        hash = "sha256-PRdH6UcGdoeSl/t+Q/A5j2Hwzw+ednZIoF9h9r7M2yc=";
       };
       common = {
         inherit pname version src pnpmDeps;
+        NG_BUILD_SASS_EMBEDDED = "false";
         nativeBuildInputs = [node pnpm pkgs.pnpmConfigHook];
       };
       application = pkgs.stdenv.mkDerivation (common
@@ -197,6 +198,7 @@
       };
       checks = {
         build = application;
+        inherit dockerImage;
         inherit productionClosure;
         format = mkCheck "format" "pnpm format:check";
         lint = mkCheck "lint" "pnpm lint";

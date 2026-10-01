@@ -1,12 +1,7 @@
 import { NodeHttpServer } from '@effect/platform-node';
 import type { PublicRuntimeConfigValue } from '@froment/contracts';
 import { Config, Effect, Layer, Schema } from 'effect';
-import {
-  HttpRouter,
-  HttpServerRequest,
-  HttpServerResponse,
-  HttpStaticServer,
-} from 'effect/unstable/http';
+import { HttpRouter, HttpServerRequest, HttpServerResponse, HttpStaticServer } from 'effect/http';
 import { createServer } from 'node:http';
 import { notesFeed } from './notes/feed.js';
 import { Deployment, DeploymentLive } from './deployment/deployment.js';
@@ -68,9 +63,9 @@ export const makeMarketingServerLayer = (options: {
 
 export const MarketingServerLive = Layer.unwrap(
   Effect.gen(function* () {
-    const port = yield* Config.int('PORT').pipe(Config.withDefault(3000));
+    const port = yield* Config.Int('PORT').pipe(Config.withDefault(3000));
     const publicUrl = yield* Config.schema(Schema.URL, 'PUBLIC_ORIGIN');
-    const staticRoot = yield* Config.string('STATIC_ROOT');
+    const staticRoot = yield* Config.String('STATIC_ROOT');
     const runtime = yield* RuntimeConfiguration;
     const deployment = yield* Deployment;
     return makeMarketingServerLayer({
