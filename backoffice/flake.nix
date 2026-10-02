@@ -60,7 +60,7 @@
           };
           nodejs = pkgs.nodejs_26;
           nativeBuildInputs = [pkgs.makeWrapper];
-          npmDepsHash = "sha256-q8vpkW6mLFhuYiHR8u9ecg9dj+GyY+6jY+eCuIrIDMs=";
+          npmDepsHash = "sha256-XupXBMv3zCoQ0NFa/DEqX81tDwUqtpScWGf1VqgxjlA=";
           dontNpmBuild = true;
           installPhase = ''
             runHook preInstall
