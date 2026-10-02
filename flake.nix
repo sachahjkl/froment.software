@@ -19,7 +19,7 @@
   }:
     flake-utils.lib.eachSystem ["x86_64-linux" "aarch64-linux"] (system: let
       pkgs = import nixpkgs {inherit system;};
-      lib = pkgs.lib;
+      inherit (pkgs) lib;
       packageJson = builtins.fromJSON (builtins.readFile ./package.json);
       deploymentPackages =
         map (file: let
@@ -33,12 +33,7 @@
           ./packages/marketing/package.json
           ./packages/web/package.json
         ];
-      commit =
-        if self ? rev
-        then self.rev
-        else if self ? dirtyRev
-        then self.dirtyRev
-        else "0000000000000000000000000000000000000000";
+      commit = self.rev or (self.dirtyRev or "0000000000000000000000000000000000000000");
       deploymentMetadata = builtins.toJSON {
         inherit commit;
         packages = deploymentPackages;
