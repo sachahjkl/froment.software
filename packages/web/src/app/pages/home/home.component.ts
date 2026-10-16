@@ -32,6 +32,13 @@ export class HomeComponent {
 
   protected readonly projects = computed<readonly Project[]>(() => [
     {
+      name: 'PetitPécule',
+      description: this.i18n.t('home.projects.petitpecule.desc'),
+      cta: this.i18n.t('home.projects.petitpecule.cta'),
+      href: 'https://petitpecule.froment.software',
+      image: '/projects/petitpecule.png',
+    },
+    {
       name: 'Backoffice',
       description: this.i18n.t('home.projects.backoffice.desc'),
       cta: this.i18n.t('home.projects.backoffice.cta'),
