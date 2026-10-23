@@ -35,7 +35,7 @@ Contact : contact@froment.software
 
 ## Informations légales
 
-- [Mentions légales](https://froment.software/fr/legal): édition, hébergement, propriété intellectuelle et contact.
+- [Mentions légales](https://froment.software/fr/legal): éditeur, immatriculation, hébergement, propriété intellectuelle et contact.
 - [Confidentialité](https://froment.software/fr/privacy): données techniques, stockage local et contacts liés à la confidentialité.
 - [Cookies et stockage local](https://froment.software/fr/cookies): cookies, préférence de langue et stockage local.
 

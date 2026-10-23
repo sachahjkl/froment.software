@@ -26,7 +26,7 @@ export const translations = {
       'Questions fréquentes sur les missions, les technologies, les délais, la maintenance et la facturation.',
     'page.legal': 'Mentions légales | froment.software',
     'page.description.legal':
-      'Édition, hébergement, propriété intellectuelle et contact du site froment.software.',
+      'Éditeur, immatriculation, hébergement, propriété intellectuelle et contact du site froment.software.',
     'page.privacy': 'Confidentialité | froment.software',
     'page.description.privacy':
       'Données techniques, stockage local et contacts liés à la confidentialité sur froment.software.',
@@ -64,7 +64,7 @@ export const translations = {
       'Automatisation des builds, déploiements, environnements et opérations de logiciels métier.',
     'page.description.products': 'Prototypes, démonstrations et sites publics de Sacha Froment.',
     'meta.socialImageAlt': 'Logo Froment Software',
-    'footer.rights': '© {year} froment.software. Tous droits réservés.',
+    'footer.rights': '© {year} Sacha Froment (Froment Software). Tous droits réservés.',
     'footer.language': 'Langue',
     'lang.fr': 'Français',
     'lang.en': 'English',
@@ -276,17 +276,22 @@ export const translations = {
     'notes.missing': 'Note introuvable',
     'legal.title': 'Mentions légales',
     'legal.lead':
-      'Les informations essentielles sur l’édition, l’hébergement et l’utilisation des contenus de froment.software.',
-    'legal.updated': 'Mis à jour le 23 septembre 2026',
+      'Les informations essentielles sur l’éditeur, l’immatriculation, l’hébergement et l’utilisation des contenus de froment.software.',
+    'legal.updated': 'Mis à jour le 24 octobre 2026',
     'legal.publisher.title': 'Édition du site',
     'legal.publisher.content':
-      'Éditeur : Froment Software. Forme juridique : TBD. Siège social : TBD. SIREN : TBD. SIRET : TBD. Numéro de TVA : TBD. Directeur de la publication : Sacha FROMENT.',
+      'Froment Software, nom commercial de Sacha Froment, entrepreneur individuel. 7 Lieu-dit les Renardières, 72220 Marigné-Laillé, France.',
+    'legal.registration.title': 'Immatriculation',
+    'legal.registration.content':
+      'SIREN 131 941 718. SIRET 131 941 718 00010. Code APE 6201Z (programmation informatique). Immatriculé au registre national des entreprises (RNE) le 23 octobre 2026. TVA non applicable, article 293 B du Code général des impôts (franchise en base de TVA) : il n’y a pas de numéro de TVA.',
+    'legal.director.title': 'Directeur de la publication',
+    'legal.director.content': 'Sacha Froment, à l’adresse de l’éditeur indiquée ci-dessus.',
     'legal.hosting.title': 'Hébergement',
     'legal.hosting.content':
-      'La vitrine est servie depuis une infrastructure privée administrée par l’éditeur. Les demandes techniques relatives à l’hébergement peuvent être envoyées au même contact.',
+      'Le site est hébergé par l’éditeur lui-même, sur une infrastructure privée qu’il administre : aucun hébergeur tiers ne le sert. La zone DNS du nom de domaine est gérée chez Cloudflare, Inc. (101 Townsend Street, San Francisco, CA 94107, États-Unis), sans que le trafic du site transite par ses serveurs. Les demandes techniques relatives à l’hébergement peuvent être envoyées au contact ci-dessous.',
     'legal.ip.title': 'Contenus et propriété intellectuelle',
     'legal.ip.content':
-      'Sauf mention contraire, les textes, éléments graphiques et composants propres à froment.software restent la propriété de leur auteur. Une citation courte avec attribution est possible ; toute autre réutilisation doit faire l’objet d’un accord préalable.',
+      '© Sacha Froment (Froment Software), titulaire du droit d’auteur. Sauf mention contraire, les textes, éléments graphiques et composants propres à froment.software restent la propriété de leur auteur. Une citation courte avec attribution est possible ; toute autre réutilisation doit faire l’objet d’un accord préalable.',
     'legal.links.title': 'Liens externes',
     'legal.links.content':
       'Le site renvoie vers des démonstrations, un service de prise de rendez-vous et d’autres sites. Leur contenu et leurs pratiques relèvent de leurs éditeurs respectifs.',
@@ -301,10 +306,10 @@ export const translations = {
     'privacy.title': 'Politique de confidentialité',
     'privacy.lead':
       'Ce que ce site traite automatiquement, ce qu’il conserve dans votre navigateur et comment poser une question.',
-    'privacy.updated': 'Mis à jour le 23 septembre 2026',
+    'privacy.updated': 'Mis à jour le 24 octobre 2026',
     'privacy.who.title': 'Responsable du site',
     'privacy.who.content':
-      'Sacha FROMENT édite froment.software et répond aux demandes relatives aux données traitées par ce site.',
+      'Froment Software, nom commercial de Sacha Froment, entrepreneur individuel (7 Lieu-dit les Renardières, 72220 Marigné-Laillé, France ; SIREN 131 941 718), édite froment.software et répond aux demandes relatives aux données traitées par ce site.',
     'privacy.data.title': 'Journaux techniques du serveur',
     'privacy.data.content':
       'Lors du chargement d’une page ou d’un fichier, le serveur peut journaliser automatiquement des données de requête telles que l’adresse IP, la date et l’heure, le chemin demandé, l’agent utilisateur et le code de réponse. Cette journalisation technique résulte de la requête adressée au serveur ; elle n’est pas présentée comme reposant sur un consentement. Elle peut servir au diagnostic, à la disponibilité et à la sécurité du service.',
@@ -423,7 +428,7 @@ export const translations = {
       'Frequently asked questions about engagements, technologies, schedules, maintenance and billing.',
     'page.legal': 'Legal notice | froment.software',
     'page.description.legal':
-      'Publishing, hosting, intellectual property and contact information for froment.software.',
+      'Publisher, registration, hosting, intellectual property and contact information for froment.software.',
     'page.privacy': 'Privacy | froment.software',
     'page.description.privacy':
       'Technical request data, local storage and privacy contacts for froment.software.',
@@ -461,7 +466,7 @@ export const translations = {
       'Automated builds, deployments, environments and operations for business software.',
     'page.description.products': 'Public prototypes, demonstrations and websites by Sacha Froment.',
     'meta.socialImageAlt': 'Froment Software logo',
-    'footer.rights': '© {year} froment.software. All rights reserved.',
+    'footer.rights': '© {year} Sacha Froment (Froment Software). All rights reserved.',
     'footer.language': 'Language',
     'lang.fr': 'French',
     'lang.en': 'English',
@@ -671,17 +676,22 @@ export const translations = {
     'notes.missing': 'Note not found',
     'legal.title': 'Legal notice',
     'legal.lead':
-      'Essential information about the publishing, hosting and use of froment.software content.',
-    'legal.updated': 'Updated 23 September 2026',
+      'Essential information about the publisher, registration, hosting and use of froment.software content.',
+    'legal.updated': 'Updated 24 October 2026',
     'legal.publisher.title': 'Site publisher',
     'legal.publisher.content':
-      'Publisher: Froment Software. Legal form: TBD. Registered office: TBD. SIREN: TBD. SIRET: TBD. VAT number: TBD. Publication director: Sacha FROMENT.',
+      'Froment Software, trade name of Sacha Froment, sole proprietor (entrepreneur individuel). 7 Lieu-dit les Renardières, 72220 Marigné-Laillé, France.',
+    'legal.registration.title': 'Registration',
+    'legal.registration.content':
+      'SIREN 131 941 718. SIRET 131 941 718 00010. Activity code (APE) 6201Z, computer programming. Registered with the French national register of companies (RNE) on 23 October 2026. VAT not applicable, article 293 B of the French General Tax Code (franchise en base de TVA): there is no VAT number.',
+    'legal.director.title': 'Publication director',
+    'legal.director.content': 'Sacha Froment, at the publisher’s address given above.',
     'legal.hosting.title': 'Hosting',
     'legal.hosting.content':
-      'The public site is served from private infrastructure administered by the publisher. Technical hosting requests can be sent to the same contact.',
+      'The site is hosted by the publisher himself, on private infrastructure he administers: no third-party host serves it. The DNS zone of the domain name is managed at Cloudflare, Inc. (101 Townsend Street, San Francisco, CA 94107, United States); the site’s traffic does not pass through its servers. Technical hosting requests can be sent to the contact below.',
     'legal.ip.title': 'Content and intellectual property',
     'legal.ip.content':
-      'Unless stated otherwise, text, graphics and components created for froment.software remain their author’s property. Short quotations with attribution are permitted; any other reuse requires prior agreement.',
+      '© Sacha Froment (Froment Software), copyright holder. Unless stated otherwise, text, graphics and components created for froment.software remain their author’s property. Short quotations with attribution are permitted; any other reuse requires prior agreement.',
     'legal.links.title': 'External links',
     'legal.links.content':
       'The site links to demonstrations, a booking service and other websites. Their content and practices are the responsibility of their respective publishers.',
@@ -695,10 +705,10 @@ export const translations = {
     'privacy.title': 'Privacy policy',
     'privacy.lead':
       'What this site processes automatically, what it keeps in your browser and how to ask a question.',
-    'privacy.updated': 'Updated 23 September 2026',
+    'privacy.updated': 'Updated 24 October 2026',
     'privacy.who.title': 'Site operator',
     'privacy.who.content':
-      'Sacha FROMENT publishes froment.software and handles requests about data processed by this site.',
+      'Froment Software, trade name of Sacha Froment, sole proprietor (7 Lieu-dit les Renardières, 72220 Marigné-Laillé, France; SIREN 131 941 718), publishes froment.software and handles requests about data processed by this site.',
     'privacy.data.title': 'Technical server logs',
     'privacy.data.content':
       'When a page or file is loaded, the server may automatically log request data such as the IP address, date and time, requested path, user agent and response status. This technical logging results from the request sent to the server; it is not presented as consent-based. It may be used for service diagnosis, availability and security.',

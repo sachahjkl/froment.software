@@ -20,6 +20,7 @@ export interface PolicyDocument {
   titleKey: TranslationKey;
   leadKey: TranslationKey;
   updatedKey: TranslationKey;
+  updatedDate: string;
   sections: readonly PolicySection[];
 }
 
@@ -29,6 +30,7 @@ export const policies = {
     titleKey: 'legal.title',
     leadKey: 'legal.lead',
     updatedKey: 'legal.updated',
+    updatedDate: '2026-10-24',
     sections: [
       {
         id: 'publisher',
@@ -36,6 +38,12 @@ export const policies = {
         contentKey: 'legal.publisher.content',
         links: [{ href: 'mailto:contact@froment.software', label: 'contact@froment.software' }],
       },
+      {
+        id: 'registration',
+        titleKey: 'legal.registration.title',
+        contentKey: 'legal.registration.content',
+      },
+      { id: 'director', titleKey: 'legal.director.title', contentKey: 'legal.director.content' },
       { id: 'hosting', titleKey: 'legal.hosting.title', contentKey: 'legal.hosting.content' },
       { id: 'ip', titleKey: 'legal.ip.title', contentKey: 'legal.ip.content' },
       { id: 'links', titleKey: 'legal.links.title', contentKey: 'legal.links.content' },
@@ -62,6 +70,7 @@ export const policies = {
     titleKey: 'privacy.title',
     leadKey: 'privacy.lead',
     updatedKey: 'privacy.updated',
+    updatedDate: '2026-10-24',
     sections: [
       { id: 'who', titleKey: 'privacy.who.title', contentKey: 'privacy.who.content' },
       { id: 'data', titleKey: 'privacy.data.title', contentKey: 'privacy.data.content' },
@@ -99,6 +108,7 @@ export const policies = {
     titleKey: 'cookies.title',
     leadKey: 'cookies.lead',
     updatedKey: 'cookies.updated',
+    updatedDate: '2026-09-23',
     sections: [
       { id: 'what', titleKey: 'cookies.what.title', contentKey: 'cookies.what.content' },
       { id: 'setting', titleKey: 'cookies.why.title', contentKey: 'cookies.why.content' },
