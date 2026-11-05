@@ -1,6 +1,6 @@
 En 2001, dix-sept personnes ont écrit une page. Vingt-cinq ans plus tard, toute une industrie vend en son nom ce que cette page refusait, et le logiciel n’a jamais été aussi lourd, aussi lent et aussi fragile.
 
-Froment Software publie sa position : [Comment faire du logiciel](https://how.froment.software/latest).
+Froment Software publie sa position : [Comment faire du logiciel](https://how.froment.software/fr/).
 
 ## Trois phrases
 
@@ -12,4 +12,4 @@ Froment Software publie sa position : [Comment faire du logiciel](https://how.fr
 
 Vingt-cinq positions, leurs sources et un ordre d’adoption, en français et en anglais, pour les produits sur lesquels travaillent plusieurs équipes. Chaque édition est datée et conservée.
 
-[Lire la dernière édition](https://how.froment.software/latest).
+[Lire le texte](https://how.froment.software/fr/).

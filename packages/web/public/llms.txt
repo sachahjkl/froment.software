@@ -19,7 +19,7 @@ Contact : contact@froment.software
 - [Projets publics](https://froment.software/fr/tools): prototypes, démonstrations et sites publics de Sacha Froment.
 - [À propos](https://froment.software/fr/about): questions fréquentes sur les missions, les technologies, les délais, la maintenance et la facturation.
 - [Notes techniques](https://froment.software/fr/notes): notes techniques, retours d'expérience et idées de Froment Software.
-- [Vingt-cinq ans d’agile, et comment faire du logiciel](https://froment.software/fr/notes/2026-11-comment-faire-du-logiciel): la position de Froment Software, publiée sur https://how.froment.software.
+- [Vingt-cinq ans d’agile, et comment faire du logiciel](https://froment.software/fr/notes/2026-11-comment-faire-du-logiciel): la position de Froment Software, publiée sur https://how.froment.software/fr/.
 - [Du commit à Nomad](https://froment.software/fr/notes/2026-09-du-commit-a-nomad): déploiement reproductible et traçable.
 
 ## Notes

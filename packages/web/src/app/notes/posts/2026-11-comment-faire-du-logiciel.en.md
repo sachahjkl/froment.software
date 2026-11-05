@@ -1,6 +1,6 @@
 In 2001, seventeen people wrote one page. Twenty-five years later, an industry sells in its name what that page refused, and software has never been so heavy, so slow and so fragile.
 
-Froment Software publishes its position: [How to make software](https://how.froment.software/latest).
+Froment Software publishes its position: [How to make software](https://how.froment.software/).
 
 ## Three sentences
 
@@ -12,4 +12,4 @@ Froment Software publishes its position: [How to make software](https://how.from
 
 Twenty-five positions, their sources and an order of adoption, in English and French, for products that several teams work on. Every edition is dated and kept.
 
-[Read the latest edition](https://how.froment.software/latest).
+[Read the text](https://how.froment.software/).
