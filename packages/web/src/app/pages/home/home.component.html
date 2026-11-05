@@ -54,7 +54,11 @@
     </ul>
     <a
       class="how-link"
-      [href]="i18n.language() === 'fr' ? 'https://how.froment.software/fr/' : 'https://how.froment.software/'"
+      [href]="
+        i18n.language() === 'fr'
+          ? 'https://how.froment.software/fr/'
+          : 'https://how.froment.software/'
+      "
       target="_blank"
       rel="noopener noreferrer"
       [attr.aria-label]="i18n.t('home.how.cta')"
