@@ -11,6 +11,14 @@ export interface NoteMetadata {
 
 export const notes = [
   {
+    slug: '2026-11-comment-faire-du-logiciel',
+    published: '2026-11-05',
+    updated: '2026-11-05',
+    titleKey: 'notes.how.title',
+    descriptionKey: 'notes.how.description',
+    topicKeys: ['notes.topic.agile', 'notes.topic.method', 'notes.topic.quality'],
+  },
+  {
     slug: '2026-09-du-commit-a-nomad',
     published: '2026-09-11',
     updated: '2026-09-11',

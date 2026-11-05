@@ -52,6 +52,20 @@
         </li>
       }
     </ul>
+    <a
+      class="how-link"
+      href="https://how.froment.software/latest"
+      target="_blank"
+      rel="noopener noreferrer"
+      [attr.aria-label]="i18n.t('home.how.cta')"
+    >
+      <span class="how-mark" aria-hidden="true">how.</span>
+      <span class="entry-copy">
+        <strong>{{ i18n.t("home.how.title") }}</strong>
+        <span>{{ i18n.t("home.how.desc") }}</span>
+      </span>
+      <span class="external-arrow" aria-hidden="true">↗</span>
+    </a>
   </section>
 
   <section aria-labelledby="offers-title">

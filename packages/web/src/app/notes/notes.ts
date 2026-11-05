@@ -5,6 +5,8 @@ import { I18nService, Language } from '@app/i18n.service';
 import { localizedPath } from '@app/localized-route';
 import { notes, type NoteMetadata } from '@froment/l10n/notes';
 import { noteHeadingId } from '@shared/note-heading-id';
+import howEn from './posts/2026-11-comment-faire-du-logiciel.en.md';
+import howFr from './posts/2026-11-comment-faire-du-logiciel.fr.md';
 import deploymentEn from './posts/2026-09-du-commit-a-nomad.en.md';
 import deploymentFr from './posts/2026-09-du-commit-a-nomad.fr.md';
 import architectureEn from './posts/2026-08-architecture-effect.en.md';
@@ -44,6 +46,7 @@ export type RenderedNote = Omit<Note, 'titleKey' | 'descriptionKey' | 'topicKeys
 };
 
 const bodies = {
+  '2026-11-comment-faire-du-logiciel': { fr: howFr, en: howEn },
   '2026-09-du-commit-a-nomad': { fr: deploymentFr, en: deploymentEn },
   '2026-08-production-observabilite': { fr: operationsFr, en: operationsEn },
   '2026-08-securite-authentification': { fr: securityFr, en: securityEn },
