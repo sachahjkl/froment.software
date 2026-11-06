@@ -86,6 +86,10 @@ export const translations = {
     'home.projects.title': 'Projets publics',
     'home.projects.wren.desc': 'Navigateur web écrit en Odin, avec son propre moteur.',
     'home.projects.wren.cta': 'Ouvrir Wren dans un nouvel onglet',
+    'home.projects.opencodenative.name': 'opencode native',
+    'home.projects.opencodenative.desc':
+      'Client de bureau natif pour le serveur opencode. Projet indépendant de l’équipe OpenCode.',
+    'home.projects.opencodenative.cta': 'Ouvrir opencode native dans un nouvel onglet',
     'home.projects.petitpecule.desc': 'Retrouvez vos petits sous.',
     'home.projects.petitpecule.cta': 'Ouvrir PetitPécule dans un nouvel onglet',
     'home.projects.backoffice.desc': 'Backoffice configurable pour applications métier.',
@@ -500,6 +504,10 @@ export const translations = {
     'home.projects.title': 'Public projects',
     'home.projects.wren.desc': 'A web browser written in Odin, with its own engine.',
     'home.projects.wren.cta': 'Open Wren in a new tab',
+    'home.projects.opencodenative.name': 'opencode native',
+    'home.projects.opencodenative.desc':
+      'A native desktop client for the opencode server. Independent from the OpenCode team.',
+    'home.projects.opencodenative.cta': 'Open opencode native in a new tab',
     'home.projects.petitpecule.desc': 'Find your small change.',
     'home.projects.petitpecule.cta': 'Open PetitPécule in a new tab',
     'home.projects.backoffice.desc': 'Configurable back office for business applications.',

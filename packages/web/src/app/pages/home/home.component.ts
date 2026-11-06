@@ -39,6 +39,13 @@ export class HomeComponent {
       image: '/projects/wren.png',
     },
     {
+      name: this.i18n.t('home.projects.opencodenative.name'),
+      description: this.i18n.t('home.projects.opencodenative.desc'),
+      cta: this.i18n.t('home.projects.opencodenative.cta'),
+      href: 'https://ocn.froment.software',
+      image: '/projects/opencode-native.png',
+    },
+    {
       name: 'PetitPécule',
       description: this.i18n.t('home.projects.petitpecule.desc'),
       cta: this.i18n.t('home.projects.petitpecule.cta'),
