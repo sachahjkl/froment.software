@@ -1,10 +1,15 @@
 # Froment Software
 
-> Froment Software conçoit, reprend et rénove des logiciels métier. L'activité couvre l'audit technique, la modernisation progressive et le développement sur mesure.
+> Froment Software vend des licences de logiciels : ses propres logiciels, et des logiciels créés ou rénovés pour ses clients.
 
-Froment Software est l'activité de Sacha Froment, ingénieur logiciel indépendant. Le site présente les prestations, des références et des articles techniques. L'interface est publiée en français et propose une traduction anglaise dans le navigateur.
+Froment Software est la micro-entreprise de Sacha Froment. Le site présente les logiciels, les prestations, les projets publics et des notes techniques. L'interface est publiée en français et propose une traduction anglaise dans le navigateur.
 
 Contact : contact@froment.software
+
+## Logiciels
+
+- [Wren](https://wren.froment.software): navigateur web écrit en Odin, avec son propre moteur. Vendu en licence.
+- [opencode native](https://ocn.froment.software): client de bureau natif pour le serveur opencode, sous licence MIT. Projet indépendant de l'équipe OpenCode.
 
 ## Prestations
 
@@ -13,7 +18,7 @@ Contact : contact@froment.software
 
 ## Pages publiques
 
-- [Accueil](https://froment.software/fr): audit, reprise et rénovation de logiciels existants, et développement d'applications métier sur mesure.
+- [Accueil](https://froment.software/fr): logiciels de Froment Software, création et rénovation de logiciels sous licence.
 - [Projets publics](https://froment.software/fr/tools): prototypes, démonstrations et sites publics de Sacha Froment.
 - [Notes techniques](https://froment.software/fr/notes): notes techniques, retours d'expérience et idées de Froment Software.
 - [Vingt-cinq ans d’agile, et comment faire du logiciel](https://froment.software/fr/notes/2026-11-comment-faire-du-logiciel): la position de Froment Software, publiée sur https://how.froment.software/fr/.

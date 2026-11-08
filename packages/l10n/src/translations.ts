@@ -14,7 +14,7 @@ export const translations = {
     'shell.link_copied': 'Lien copié dans le presse-papiers',
     'shell.theme.dark': 'Activer le mode sombre',
     'shell.theme.light': 'Activer le mode clair',
-    'page.home': 'Froment Software | Audit et rénovation de logiciels',
+    'page.home': 'Froment Software | Éditeur de logiciels',
     'page.products': 'Projets publics | froment.software',
     'page.legal': 'Mentions légales | froment.software',
     'page.description.legal':
@@ -44,7 +44,7 @@ export const translations = {
     'version.error': 'Le serveur ne peut pas charger les informations de version.',
     'page.description.not_found': 'La page demandée n’existe pas ou a changé d’adresse.',
     'page.description.home':
-      'Audit, reprise et rénovation de logiciels existants. Développement complet d’applications métier sur mesure.',
+      'Froment Software vend des licences : ses propres logiciels, dont Wren, et des logiciels créés ou rénovés pour vous.',
     'page.description.products': 'Prototypes, démonstrations et sites publics de Sacha Froment.',
     'meta.socialImageAlt': 'Logo Froment Software',
     'footer.rights': '© {year} Sacha Froment (Froment Software). Tous droits réservés.',
@@ -305,7 +305,7 @@ export const translations = {
     'shell.link_copied': 'Link copied to clipboard',
     'shell.theme.dark': 'Use dark mode',
     'shell.theme.light': 'Use light mode',
-    'page.home': 'Froment Software | Software audit and renovation',
+    'page.home': 'Froment Software | Software publisher',
     'page.products': 'Public projects | froment.software',
     'page.legal': 'Legal notice | froment.software',
     'page.description.legal':
@@ -334,7 +334,7 @@ export const translations = {
     'version.error': 'The server cannot load version information.',
     'page.description.not_found': 'The requested page does not exist or has moved.',
     'page.description.home':
-      'Audit, takeover and renovation of existing software. Complete custom business application development.',
+      'Froment Software sells licences: its own software, including Wren, and software created or renovated for you.',
     'page.description.products': 'Public prototypes, demonstrations and websites by Sacha Froment.',
     'meta.socialImageAlt': 'Froment Software logo',
     'footer.rights': '© {year} Sacha Froment (Froment Software). All rights reserved.',
