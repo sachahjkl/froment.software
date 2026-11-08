@@ -251,12 +251,10 @@ export const translations = {
       'Froment Software prend forme. Le site complet sera bientôt disponible.',
     'notes.launch.title': 'Froment Software arrive sur le marché',
     'notes.launch.description':
-      'Présentation de Froment Software, de ses missions et de sa méthode fondée sur des changements mesurables.',
+      'Présentation de Froment Software : licences de ses logiciels, création et rénovation de logiciels sous licence.',
     'notes.launch.topic.development': 'développement logiciel',
-    'notes.launch.topic.takeover': 'reprise d’applications',
-    'notes.launch.topic.ci': 'CI/CD',
-    'notes.launch.topic.nixos': 'NixOS',
-    'notes.launch.topic.infrastructure': 'infrastructure as code',
+    'notes.launch.topic.licensing': 'licences logicielles',
+    'notes.launch.topic.renovation': 'rénovation de logiciels',
     'notes.architecture.title': 'De l’API au PDF : l’architecture de Froment Software',
     'notes.architecture.description':
       'Une visite du monorepo, des contrats Effect, du modèle SQLite et de la chaîne documentaire vérifiable.',
@@ -539,12 +537,10 @@ export const translations = {
       'Froment Software is taking shape. The complete site will be available soon.',
     'notes.launch.title': 'Froment Software enters the market',
     'notes.launch.description':
-      'Introducing Froment Software, its services and its method based on measurable changes.',
+      'Introducing Froment Software: licences for its own software, and software creation and renovation under licence.',
     'notes.launch.topic.development': 'software development',
-    'notes.launch.topic.takeover': 'application takeover',
-    'notes.launch.topic.ci': 'CI/CD',
-    'notes.launch.topic.nixos': 'NixOS',
-    'notes.launch.topic.infrastructure': 'infrastructure as code',
+    'notes.launch.topic.licensing': 'software licensing',
+    'notes.launch.topic.renovation': 'software renovation',
     'notes.architecture.title': 'From API to PDF: the Froment Software architecture',
     'notes.architecture.description':
       'A tour of the monorepo, Effect contracts, SQLite model, and verifiable document pipeline.',

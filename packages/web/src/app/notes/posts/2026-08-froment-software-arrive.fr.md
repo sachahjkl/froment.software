@@ -1,26 +1,25 @@
-Froment Software ouvre ses missions de développement, de reprise d’applications et d’amélioration des chaînes de livraison logicielle.
+Froment Software est un petit éditeur de logiciels. Il vend des licences : celles de ses propres logiciels, et celles des logiciels qu’il crée ou rénove pour ses clients.
 
 <!-- notes-toc -->
 
 ## Pourquoi maintenant ?
 
-Les équipes disposent souvent d’applications utiles, mais difficiles à faire évoluer. Les dépendances vieillissent, les builds divergent selon les postes et la CI prend trop de temps. Ces problèmes ne demandent pas toujours une réécriture. Ils demandent d’abord des mesures, un périmètre clair et des changements vérifiables.
+Beaucoup de logiciels métier restent utiles, mais deviennent lents et difficiles à utiliser. Les dépendances vieillissent, les temps de réponse augmentent et une tâche simple demande trop d’étapes. Une nouvelle version plus rapide et plus simple corrige ces problèmes. Des mesures avant et après le montrent.
 
-## Ce que nous prenons en charge
+## Ce que Froment Software vend
 
-- développement d’applications web, de logiciels de bureau et d’outils internes ;
-- montée de version des dépendances et bibliothèques ;
-- reprise et accélération des tests, builds et pipelines CI ;
-- environnements reproductibles avec Nix, NixOS et devenv ;
-- infrastructure as code et déploiements sur site ou dans le cloud ;
-- gestion des secrets et intégration d’agents IA spécialisés.
+- **Licences de ses logiciels.** [Wren](https://wren.froment.software) est un navigateur web écrit en Odin, avec son propre moteur. Sa licence est vendue en paiement unique. [opencode native](https://ocn.froment.software) est un client de bureau natif pour le serveur opencode, publié sous licence MIT.
+- **Création de logiciels.** Un logiciel de bureau, une application web ou un outil interne est écrit pour un client. Il est livré avec son code source, ses tests, sa documentation et une licence qui définit les droits d’utilisation du client.
+- **Rénovation de logiciels métier.** Un logiciel métier existant est réécrit en une nouvelle version plus rapide et plus simple à utiliser. La livraison comprend la migration des données existantes et une licence.
 
-## Une méthode mesurable
+## Du code public et des résultats mesurés
 
-Chaque mission commence par le contexte, les contraintes et les critères d’acceptation. Les améliorations de performance reposent sur des mesures avant et après intervention : temps de test, de build, de CI, de déploiement ou de réponse applicative.
+Le code source de Wren et d’opencode native est public. Les performances de Wren sont mesurées et publiées dans son journal des modifications.
 
-Le code source, les tests, la documentation et les instructions de mise en service font partie des livrables définis au devis.
+Pour une rénovation, le temps de réponse, le temps de démarrage et le temps nécessaire à un utilisateur pour réaliser une tâche sont mesurés avant et après.
 
-## Nous contacter
+## En savoir plus
 
-Décrivez l’application concernée, le problème principal et l’échéance connue à [contact@froment.software](mailto:contact@froment.software).
+- [Création de logiciels](/fr/services/creation)
+- [Rénovation de logiciels métier](/fr/services/renovation)
+- [contact@froment.software](mailto:contact@froment.software)

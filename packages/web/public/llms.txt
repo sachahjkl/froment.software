@@ -29,7 +29,7 @@ Contact : contact@froment.software
 - [De Nix à Grafana : exploiter Froment Software en production](https://froment.software/fr/notes/2026-08-production-observabilite): construction reproductible, résolution des secrets et trajet des journaux et traces.
 - [Sessions, jetons et audit : la sécurité de Froment Software](https://froment.software/fr/notes/2026-08-securite-authentification): parcours d'une identité, de la connexion PASETO à la corrélation des événements d'audit.
 - [De l'API au PDF : l'architecture de Froment Software](https://froment.software/fr/notes/2026-08-architecture-effect): monorepo, contrats Effect, modèle SQLite et chaîne documentaire vérifiable.
-- [Froment Software arrive sur le marché](https://froment.software/fr/notes/2026-08-froment-software-arrive): présentation des missions et de la méthode fondée sur des changements mesurables.
+- [Froment Software arrive sur le marché](https://froment.software/fr/notes/2026-08-froment-software-arrive): présentation de Froment Software : licences de ses logiciels, création et rénovation de logiciels sous licence.
 
 ## API
 

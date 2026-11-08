@@ -1,26 +1,25 @@
-Froment Software is now available for software development, existing-application takeover and delivery-pipeline improvement engagements.
+Froment Software is a small software publisher. It sells licences: for its own software, and for the software it creates or renovates for its clients.
 
 <!-- notes-toc -->
 
 ## Why now?
 
-Teams often rely on useful applications that have become difficult to change. Dependencies age, builds differ between workstations and CI takes too long. These problems do not always require a rewrite. They first require measurements, a clear scope and verifiable changes.
+Much business software remains useful but becomes slow and hard to use. Dependencies age, response times grow and a simple task needs too many steps. A new version that is faster and easier to use fixes these problems. Measurements before and after show the result.
 
-## What we handle
+## What Froment Software sells
 
-- web applications, desktop software and internal tools;
-- dependency and library upgrades;
-- faster tests, builds and CI pipelines;
-- reproducible environments with Nix, NixOS and devenv;
-- infrastructure as code and on-premises or cloud deployments;
-- secret management and specialized AI-agent integration.
+- **Licences for its own software.** [Wren](https://wren.froment.software) is a web browser written in Odin, with its own engine. Its licence is sold as a one-time payment. [opencode native](https://ocn.froment.software) is a native desktop client for the opencode server, published under the MIT licence.
+- **Software creation.** Desktop software, a web application or an internal tool is written for a client. It is delivered with its source code, tests, documentation and a licence that defines the rights of use of the client.
+- **Business software renovation.** Existing business software is rewritten into a new version that is faster and easier to use. The delivery includes the migration of the existing data and a licence.
 
-## A measurable method
+## Public code and measured results
 
-Each engagement starts with context, constraints and acceptance criteria. Performance improvements use measurements before and after the work: test, build, CI, deployment or application response times.
+The source code of Wren and opencode native is public. The performance of Wren is measured and published in its changelog.
 
-Source code, tests, documentation and rollout instructions are included in the deliverables defined by the quote.
+For a renovation, the response time, the start time and the time a user needs to complete a task are measured before and after.
 
-## Contact
+## Learn more
 
-Describe the application, main problem and known deadline at [contact@froment.software](mailto:contact@froment.software).
+- [Software creation](/en/services/creation)
+- [Business software renovation](/en/services/renovation)
+- [contact@froment.software](mailto:contact@froment.software)

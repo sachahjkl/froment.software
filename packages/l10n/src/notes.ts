@@ -58,10 +58,8 @@ export const notes = [
     descriptionKey: 'notes.launch.description',
     topicKeys: [
       'notes.launch.topic.development',
-      'notes.launch.topic.takeover',
-      'notes.launch.topic.ci',
-      'notes.launch.topic.nixos',
-      'notes.launch.topic.infrastructure',
+      'notes.launch.topic.licensing',
+      'notes.launch.topic.renovation',
     ],
   },
 ] as const satisfies readonly NoteMetadata[];
