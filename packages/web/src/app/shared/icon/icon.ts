@@ -19,7 +19,6 @@ export type IconName =
   | 'tests'
   | 'upgrade'
   | 'dashboard'
-  | 'clients'
   | 'folder'
   | 'invoice'
   | 'bank'
@@ -114,10 +113,6 @@ export type IconName =
         }
         @case ('dashboard') {
           <path d="M3 3h7v7H3zm11 0h7v7h-7zM3 14h7v7H3zm11 0h7v7h-7z" />
-        }
-        @case ('clients') {
-          <circle cx="9" cy="8" r="3" />
-          <path d="M3 21v-2a6 6 0 0 1 12 0v2m1-17a3 3 0 0 1 0 6m3 11v-2a6 6 0 0 0-3-5.2" />
         }
         @case ('folder') {
           <path d="M3 7V5a2 2 0 0 1 2-2h5l2 3h7a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />

@@ -4,8 +4,6 @@ import { noteSlugs } from './notes/notes';
 const languages = ['fr', 'en'] as const;
 const staticPaths = [
   '',
-  'about',
-  'clients',
   'services',
   'services/audit',
   'services/modernization',

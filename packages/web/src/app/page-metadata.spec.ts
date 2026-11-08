@@ -17,11 +17,11 @@ describe('PageMetadata', () => {
         provideRouter([
           { path: 'notes/:slug', component: MetadataPage },
           {
-            path: 'about',
+            path: 'legal',
             component: MetadataPage,
             data: {
-              titleKey: 'page.about',
-              descriptionKey: 'page.description.about',
+              titleKey: 'page.legal',
+              descriptionKey: 'page.description.legal',
             },
           },
         ]),
@@ -101,7 +101,7 @@ describe('PageMetadata', () => {
 
   it('clears article metadata when leaving the notes', async () => {
     const harness = await RouterTestingHarness.create(`/notes/${note.slug}`);
-    await harness.navigateByUrl('/about');
+    await harness.navigateByUrl('/legal');
     await harness.fixture.whenStable();
 
     expect(document.head.querySelector('meta[property="og:type"]')?.getAttribute('content')).toBe(

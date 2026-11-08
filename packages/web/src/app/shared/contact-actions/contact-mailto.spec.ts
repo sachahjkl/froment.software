@@ -32,28 +32,26 @@ describe('contactMailto', () => {
   it.each(['fr', 'en'] as const)(
     'preserves the %s contact translations after URI decoding',
     (language) => {
-      for (const prefix of ['home.engage', 'services.quote'] as const) {
-        const subject = translate(language, `${prefix}.subject`);
-        const body = translate(language, `${prefix}.body`);
-        const uri = contactMailto(subject, body);
-        const fields = new Map(
-          uri
-            .split('?')[1]
-            .split('&')
-            .map((field) => {
-              const [name, value] = field.split('=');
-              return [name, decodeURIComponent(value)];
-            }),
-        );
+      const subject = translate(language, 'services.quote.subject');
+      const body = translate(language, 'services.quote.body');
+      const uri = contactMailto(subject, body);
+      const fields = new Map(
+        uri
+          .split('?')[1]
+          .split('&')
+          .map((field) => {
+            const [name, value] = field.split('=');
+            return [name, decodeURIComponent(value)];
+          }),
+      );
 
-        expect(fields).toEqual(
-          new Map([
-            ['subject', subject],
-            ['body', body.replace(/\r\n|\r|\n/g, '\r\n')],
-          ]),
-        );
-        expect(uri).not.toContain('+');
-      }
+      expect(fields).toEqual(
+        new Map([
+          ['subject', subject],
+          ['body', body.replace(/\r\n|\r|\n/g, '\r\n')],
+        ]),
+      );
+      expect(uri).not.toContain('+');
     },
   );
 });

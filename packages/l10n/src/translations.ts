@@ -15,15 +15,11 @@ export const translations = {
     'shell.theme.dark': 'Activer le mode sombre',
     'shell.theme.light': 'Activer le mode clair',
     'page.home': 'Froment Software | Audit et rénovation de logiciels',
-    'page.clients': 'Références | froment.software',
     'page.services': 'Prestations | froment.software',
     'page.service.audit': 'Audit logiciel | froment.software',
     'page.service.modernization': 'Reprise et modernisation | froment.software',
     'page.service.delivery': 'Livraison et exploitation | froment.software',
     'page.products': 'Projets publics | froment.software',
-    'page.about': 'À propos | froment.software',
-    'page.description.about':
-      'Questions fréquentes sur les missions, les technologies, les délais, la maintenance et la facturation.',
     'page.legal': 'Mentions légales | froment.software',
     'page.description.legal':
       'Éditeur, immatriculation, hébergement, propriété intellectuelle et contact du site froment.software.',
@@ -53,7 +49,6 @@ export const translations = {
     'page.description.not_found': 'La page demandée n’existe pas ou a changé d’adresse.',
     'page.description.home':
       'Audit, reprise et rénovation de logiciels existants. Développement complet d’applications métier sur mesure.',
-    'page.description.clients': 'Secteurs d’expérience de Sacha Froment.',
     'page.description.services':
       'Audit et rénovation d’applications existantes, ou développement complet de logiciels métier.',
     'page.description.service.audit':
@@ -71,9 +66,6 @@ export const translations = {
     'home.hero.title': 'Des logiciels métier qui avancent.',
     'home.hero.book': 'Prendre rendez-vous',
     'home.engage.mail': 'Nous écrire',
-    'home.engage.subject': 'Premier échange',
-    'home.engage.body':
-      'Bonjour,\n\nJe vous contacte au sujet du besoin suivant :\n\n- Contexte :\n- Problème principal :\n- Échéance connue :\n\nMerci.',
     'home.timeline.title': 'Projets publics',
     'home.timeline.albumator.desc': 'Gestion et partage de bibliothèques d’images.',
     'home.timeline.albumator.cta': 'Ouvrir Albumator',
@@ -238,46 +230,12 @@ export const translations = {
     'services.criteria.problem': 'Le problème principal ou le résultat attendu.',
     'services.criteria.deadline': 'L’échéance connue et les contraintes techniques.',
     'serviceDetail.contact.title': 'Échanger sur votre besoin',
-    'clients.title': 'Expérience',
-    'clients.sectors.title': 'Secteurs d’expérience',
-    'clients.cv': 'Voir le CV complet',
-    'clients.sector.industry': 'Industrie',
-    'clients.sector.insurance': 'Assurance',
-    'clients.sector.services': 'Services',
-    'about.faq.title': 'Questions fréquentes',
-    'about.faq.process.q': 'Comment se déroule une mission ?',
-    'about.faq.stack.q': 'Comment choisissez-vous les technologies ?',
-    'about.faq.remote.q': 'Travaillez-vous à distance ?',
-    'about.faq.nda.q': 'Acceptez-vous les accords de confidentialité ?',
-    'about.faq.timeline.q': 'Comment fixez-vous le calendrier ?',
-    'about.faq.maintenance.q': 'Proposez-vous une maintenance après livraison ?',
-    'about.faq.pricing.q': 'Comment les prestations sont-elles facturées ?',
-    'about.faq.availability.q': 'Quelle est votre disponibilité ?',
-    'about.faq.process.a':
-      'Un premier échange précise le besoin, les contraintes et les critères de réussite. Le devis fixe ensuite le périmètre, les livrables et les modalités de suivi avant le développement et la mise en service.',
-    'about.faq.stack.a':
-      'Le choix dépend du produit, de l’équipe et du système existant. Technologies utilisées : Angular, SvelteKit, ASP.NET, WPF, Go, Linux et PostgreSQL.',
-    'about.faq.remote.a':
-      'Oui, le travail se fait principalement à distance, avec des points de suivi convenus selon la mission.',
-    'about.faq.nda.a':
-      'Oui, après accord sur les obligations, la durée et les informations concernées.',
-    'about.faq.timeline.a':
-      'Le calendrier dépend du périmètre, des dépendances et des validations attendues. Il est défini dans le devis plutôt que promis avant le cadrage.',
-    'about.faq.maintenance.a':
-      'Oui. Correctifs, mises à jour et évolutions peuvent être prévus dès le devis ou convenus après la livraison.',
-    'about.faq.pricing.a':
-      'Au forfait lorsque le périmètre est suffisamment stable. Les incertitudes sont d’abord isolées dans une phase de cadrage.',
-    'about.faq.availability.a':
-      'Les missions sont planifiées à temps partiel. La date de début est confirmée avant le devis.',
     'not_found.title': 'Cette page n’existe pas.',
     'not_found.lead': 'Vérifiez l’adresse ou revenez à l’accueil.',
     'not_found.cta': 'Retour à l’accueil',
     'not_found.links_label': 'Prochaines étapes',
     'not_found.services': 'Voir les prestations',
     'not_found.contact': 'Écrire à Froment Software',
-    'about.contact.title': 'Contact',
-    'about.contact.mail': 'Nous écrire',
-    'about.contact.book': 'Prendre rendez-vous',
     'notes.title': 'Notes',
     'notes.toc': 'Sommaire',
     'notes.lead': 'Notes techniques, retours d’expérience et idées.',
@@ -375,7 +333,6 @@ export const translations = {
     'shell.construction.title': 'Ouverture prochaine',
     'shell.construction.description':
       'Froment Software prend forme. Le site complet sera bientôt disponible.',
-    'about.faq.label': 'FAQ',
     'notes.launch.title': 'Froment Software arrive sur le marché',
     'notes.launch.description':
       'Présentation de Froment Software, de ses missions et de sa méthode fondée sur des changements mesurables.',
@@ -433,15 +390,11 @@ export const translations = {
     'shell.theme.dark': 'Use dark mode',
     'shell.theme.light': 'Use light mode',
     'page.home': 'Froment Software | Software audit and renovation',
-    'page.clients': 'References | froment.software',
     'page.services': 'Services | froment.software',
     'page.service.audit': 'Software audit | froment.software',
     'page.service.modernization': 'Takeover and modernization | froment.software',
     'page.service.delivery': 'Delivery and operations | froment.software',
     'page.products': 'Public projects | froment.software',
-    'page.about': 'About | froment.software',
-    'page.description.about':
-      'Frequently asked questions about engagements, technologies, schedules, maintenance and billing.',
     'page.legal': 'Legal notice | froment.software',
     'page.description.legal':
       'Publisher, registration, hosting, intellectual property and contact information for froment.software.',
@@ -471,7 +424,6 @@ export const translations = {
       'Page not found. Return to the froment.software home page or services.',
     'page.description.home':
       'Audit, takeover and renovation of existing software. Complete custom business application development.',
-    'page.description.clients': 'Sacha Froment’s industry experience.',
     'page.description.services':
       'Audit and renovation of existing applications, or complete business software development.',
     'page.description.service.audit':
@@ -489,9 +441,6 @@ export const translations = {
     'home.hero.title': 'Business software that moves forward.',
     'home.hero.book': 'Book an appointment',
     'home.engage.mail': 'Email us',
-    'home.engage.subject': 'Initial discussion',
-    'home.engage.body':
-      'Hello,\n\nI am contacting you about the following need:\n\n- Context:\n- Main problem:\n- Known deadline:\n\nThank you.',
     'home.timeline.title': 'Public projects',
     'home.timeline.albumator.desc': 'Image library management and sharing.',
     'home.timeline.albumator.cta': 'Open Albumator',
@@ -655,45 +604,12 @@ export const translations = {
     'services.criteria.problem': 'The main problem or expected result.',
     'services.criteria.deadline': 'The known deadline and technical constraints.',
     'serviceDetail.contact.title': 'Discuss your need',
-    'clients.title': 'Experience',
-    'clients.sectors.title': 'Industry experience',
-    'clients.cv': 'View full CV',
-    'clients.sector.industry': 'Industry',
-    'clients.sector.insurance': 'Insurance',
-    'clients.sector.services': 'Services',
-    'about.faq.title': 'Frequently asked questions',
-    'about.faq.process.q': 'How does an engagement work?',
-    'about.faq.stack.q': 'How do you choose technologies?',
-    'about.faq.remote.q': 'Do you work remotely?',
-    'about.faq.nda.q': 'Do you accept confidentiality agreements?',
-    'about.faq.timeline.q': 'How do you set the schedule?',
-    'about.faq.maintenance.q': 'Do you offer maintenance after delivery?',
-    'about.faq.pricing.q': 'How are services billed?',
-    'about.faq.availability.q': 'What is your availability?',
-    'about.faq.process.a':
-      'An initial discussion identifies the need, constraints and success criteria. The quote then defines scope, deliverables and follow-up terms before development and go-live.',
-    'about.faq.stack.a':
-      'The choice depends on the product, team and existing system. Technologies used: Angular, SvelteKit, ASP.NET, WPF, Go, Linux and PostgreSQL.',
-    'about.faq.remote.a':
-      'Yes. Work is mainly remote, with review points agreed for each engagement.',
-    'about.faq.nda.a': 'Yes, after agreement on the obligations, duration and information covered.',
-    'about.faq.timeline.a':
-      'The schedule depends on scope, dependencies and expected approvals. It is defined in the quote rather than promised before scoping.',
-    'about.faq.maintenance.a':
-      'Yes. Fixes, upgrades and further changes can be included in the quote or agreed after delivery.',
-    'about.faq.pricing.a':
-      'Fixed-price when the scope is stable enough. Uncertainty is first isolated in a scoping phase.',
-    'about.faq.availability.a':
-      'Engagements are scheduled part-time. The start date is confirmed before the quote.',
     'not_found.title': 'This page does not exist.',
     'not_found.lead': 'Check the address or return to the home page.',
     'not_found.cta': 'Back to home',
     'not_found.links_label': 'Next steps',
     'not_found.services': 'View services',
     'not_found.contact': 'Email Froment Software',
-    'about.contact.title': 'Contact',
-    'about.contact.mail': 'Email us',
-    'about.contact.book': 'Book an appointment',
     'notes.title': 'Notes',
     'notes.toc': 'Table of contents',
     'notes.lead': 'Technical notes, experience reports and ideas.',
@@ -790,7 +706,6 @@ export const translations = {
     'shell.construction.title': 'Opening soon',
     'shell.construction.description':
       'Froment Software is taking shape. The complete site will be available soon.',
-    'about.faq.label': 'FAQ',
     'notes.launch.title': 'Froment Software enters the market',
     'notes.launch.description':
       'Introducing Froment Software, its services and its method based on measurable changes.',

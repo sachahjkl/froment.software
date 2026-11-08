@@ -11,26 +11,6 @@
     <xhtml:link rel="alternate" hreflang="en" href="https://froment.software/en" />
   </url>
   <url>
-    <loc>https://froment.software/fr/about</loc>
-    <xhtml:link rel="alternate" hreflang="fr" href="https://froment.software/fr/about" />
-    <xhtml:link rel="alternate" hreflang="en" href="https://froment.software/en/about" />
-  </url>
-  <url>
-    <loc>https://froment.software/en/about</loc>
-    <xhtml:link rel="alternate" hreflang="fr" href="https://froment.software/fr/about" />
-    <xhtml:link rel="alternate" hreflang="en" href="https://froment.software/en/about" />
-  </url>
-  <url>
-    <loc>https://froment.software/fr/clients</loc>
-    <xhtml:link rel="alternate" hreflang="fr" href="https://froment.software/fr/clients" />
-    <xhtml:link rel="alternate" hreflang="en" href="https://froment.software/en/clients" />
-  </url>
-  <url>
-    <loc>https://froment.software/en/clients</loc>
-    <xhtml:link rel="alternate" hreflang="fr" href="https://froment.software/fr/clients" />
-    <xhtml:link rel="alternate" hreflang="en" href="https://froment.software/en/clients" />
-  </url>
-  <url>
     <loc>https://froment.software/fr/services</loc>
     <xhtml:link rel="alternate" hreflang="fr" href="https://froment.software/fr/services" />
     <xhtml:link rel="alternate" hreflang="en" href="https://froment.software/en/services" />

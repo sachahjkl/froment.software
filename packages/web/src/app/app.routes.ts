@@ -36,18 +36,6 @@ const localizedChildren: Routes = [
     },
   },
   {
-    path: 'about',
-    loadComponent: () =>
-      import('./pages/about/about.component').then((module) => module.AboutComponent),
-    data: { titleKey: 'page.about', descriptionKey: 'page.description.about' },
-  },
-  {
-    path: 'clients',
-    loadComponent: () =>
-      import('./pages/clients/clients.component').then((module) => module.ClientsComponent),
-    data: { titleKey: 'page.clients', descriptionKey: 'page.description.clients' },
-  },
-  {
     path: 'services',
     loadComponent: () =>
       import('./pages/services/services.component').then((module) => module.ServicesComponent),

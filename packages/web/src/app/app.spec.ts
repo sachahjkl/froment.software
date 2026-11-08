@@ -1,6 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
-import { provideRouter, Router } from '@angular/router';
+import { provideRouter, Router, withComponentInputBinding } from '@angular/router';
 import { App } from './app';
 import { routes } from './app.routes';
 import { I18nService } from './i18n.service';
@@ -30,7 +30,7 @@ describe('App shell', () => {
     localStorage.clear();
     await TestBed.configureTestingModule({
       imports: [App],
-      providers: [provideHttpClient(), provideRouter(routes)],
+      providers: [provideHttpClient(), provideRouter(routes, withComponentInputBinding())],
     }).compileComponents();
     router = TestBed.inject(Router);
     i18n = TestBed.inject(I18nService);
@@ -52,9 +52,9 @@ describe('App shell', () => {
     expect(element.querySelector('app-site-footer a[href="/fr"]')).toBeNull();
     expect(element.querySelector('app-site-footer a[href="/en"]')).toBeNull();
 
-    await navigate(fixture, router, '/fr/about');
+    await navigate(fixture, router, '/fr/notes');
 
-    expect(element.querySelector('app-about')).not.toBeNull();
+    expect(element.querySelector('app-notes')).not.toBeNull();
   });
 
   it('uses the URL to select the landing page language', async () => {
@@ -70,7 +70,7 @@ describe('App shell', () => {
   });
 
   it('changes the language prefix without changing the current page', async () => {
-    await navigate(fixture, router, '/fr/about?source=menu#contact');
+    await navigate(fixture, router, '/fr/legal?source=menu#legal-contact-title');
 
     const navigateByUrl = vi.spyOn(router, 'navigateByUrl');
     const select = element.querySelector<HTMLSelectElement>('app-language-selector select')!;
@@ -78,8 +78,8 @@ describe('App shell', () => {
     select.dispatchEvent(new Event('change'));
     await fixture.whenStable();
 
-    expect(router.url).toBe('/en/about?source=menu#contact');
-    expect(navigateByUrl).toHaveBeenCalledWith('/en/about?source=menu#contact', {
+    expect(router.url).toBe('/en/legal?source=menu#legal-contact-title');
+    expect(navigateByUrl).toHaveBeenCalledWith('/en/legal?source=menu#legal-contact-title', {
       replaceUrl: true,
       scroll: 'manual',
     });
@@ -96,13 +96,13 @@ describe('App shell', () => {
   });
 
   it('updates canonical, robots, and social metadata for route and language changes', async () => {
-    await navigate(fixture, router, '/fr/about');
+    await navigate(fixture, router, '/fr/legal');
 
     const frenchTitle = meta('meta[property="og:title"]').content;
     const frenchDescription = meta('meta[property="og:description"]').content;
     const frenchImageAlt = meta('meta[property="og:image:alt"]').content;
 
-    await navigate(fixture, router, '/en/about');
+    await navigate(fixture, router, '/en/legal');
 
     expect(meta('meta[property="og:title"]').content).not.toBe(frenchTitle);
     expect(meta('meta[property="og:description"]').content).not.toBe(frenchDescription);
@@ -132,7 +132,7 @@ describe('App shell', () => {
     const main = element.querySelector<HTMLElement>('main#main-content')!;
 
     expect(document.activeElement).not.toBe(main);
-    await navigate(fixture, router, '/fr/about');
+    await navigate(fixture, router, '/fr/legal');
     expect(document.activeElement).toBe(main);
     await navigate(fixture, router, '/fr/services');
 
@@ -142,12 +142,12 @@ describe('App shell', () => {
   });
 
   it('focuses a fragment heading without overriding anchor scroll on same-route navigation', async () => {
-    await navigate(fixture, router, '/fr/about');
+    await navigate(fixture, router, '/fr/legal');
 
     const main = element.querySelector<HTMLElement>('main#main-content')!;
-    const heading = element.querySelector<HTMLElement>('h2#contact')!;
+    const heading = element.querySelector<HTMLElement>('h2#legal-contact-title')!;
 
-    await navigate(fixture, router, '/fr/about#contact');
+    await navigate(fixture, router, '/fr/legal#legal-contact-title');
 
     expect(document.activeElement).toBe(heading);
     expect(document.activeElement).not.toBe(main);
@@ -159,9 +159,9 @@ describe('App shell', () => {
 
   it('focuses the fragment heading when navigating to a fragment on another path', async () => {
     await navigate(fixture, router, '/fr/services');
-    await navigate(fixture, router, '/fr/about#contact');
+    await navigate(fixture, router, '/fr/legal#legal-contact-title');
 
-    expect(document.activeElement).toBe(element.querySelector('h2#contact'));
+    expect(document.activeElement).toBe(element.querySelector('h2#legal-contact-title'));
   });
 
   it('copies a section URL and shows a status message', async () => {
