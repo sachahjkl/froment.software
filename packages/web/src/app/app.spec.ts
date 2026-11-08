@@ -134,11 +134,11 @@ describe('App shell', () => {
     expect(document.activeElement).not.toBe(main);
     await navigate(fixture, router, '/fr/legal');
     expect(document.activeElement).toBe(main);
-    await navigate(fixture, router, '/fr/services');
+    await navigate(fixture, router, '/fr/services/creation');
 
     expect(document.activeElement).toBe(main);
-    expect(element.querySelector('app-services')).not.toBeNull();
-    expect(router.url).toBe('/fr/services');
+    expect(element.querySelector('app-service-detail')).not.toBeNull();
+    expect(router.url).toBe('/fr/services/creation');
   });
 
   it('focuses a fragment heading without overriding anchor scroll on same-route navigation', async () => {
@@ -158,14 +158,14 @@ describe('App shell', () => {
   });
 
   it('focuses the fragment heading when navigating to a fragment on another path', async () => {
-    await navigate(fixture, router, '/fr/services');
+    await navigate(fixture, router, '/fr/services/creation');
     await navigate(fixture, router, '/fr/legal#legal-contact-title');
 
     expect(document.activeElement).toBe(element.querySelector('h2#legal-contact-title'));
   });
 
   it('copies a section URL and shows a status message', async () => {
-    await navigate(fixture, router, '/fr/services');
+    await navigate(fixture, router, '/fr/services/creation');
     const writeText = vi.fn().mockResolvedValue(undefined);
     Object.defineProperty(navigator, 'clipboard', { configurable: true, value: { writeText } });
 
@@ -174,7 +174,7 @@ describe('App shell', () => {
     await fixture.whenStable();
 
     expect(router.url).toBe(url);
-    expect(writeText).toHaveBeenCalledWith(expect.stringMatching(/#prestations$/));
+    expect(writeText).toHaveBeenCalledWith(expect.stringMatching(/#perimetre$/));
     expect(element.querySelector('.copy-notice')?.textContent).toContain('Lien copié');
   });
 });

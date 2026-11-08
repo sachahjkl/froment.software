@@ -1,14 +1,14 @@
 <article class="service-detail">
   <header class="service-hero">
-    <a class="back-link" [routerLink]="i18n.localizedPath('/services')"
+    <a class="back-link" [routerLink]="i18n.localizedPath('/')"
       >{{ i18n.t("serviceDetail.back") }}</a
     >
     <h1>{{ i18n.t(content().titleKey) }}</h1>
     <p class="lead">{{ i18n.t(content().leadKey) }}</p>
     <app-contact-actions
       class="actions"
-      [mailLabel]="i18n.t('services.quote')"
-      [bookLabel]="i18n.t('services.book')"
+      [mailLabel]="i18n.t('home.engage.mail')"
+      [bookLabel]="i18n.t('home.hero.book')"
       [subject]="i18n.t('services.quote.subject')"
       [body]="i18n.t('services.quote.body')"
     />
@@ -22,15 +22,7 @@
       @for (scope of content().scopes; track scope.titleKey) {
       <div>
         <dt>{{ i18n.t(scope.titleKey) }}</dt>
-        <dd>
-          {{ i18n.t(scope.descriptionKey) }} @if (scope.links) {
-          <span class="scope-links">
-            @for (link of scope.links; track link.href) {
-            <a [href]="link.href" target="_blank" rel="noreferrer">{{ i18n.t(link.labelKey) }}</a>
-            }
-          </span>
-          }
-        </dd>
+        <dd>{{ i18n.t(scope.descriptionKey) }}</dd>
       </div>
       }
     </dl>
@@ -39,7 +31,7 @@
   <section aria-labelledby="livrables">
     <div class="deliverables">
       <h2 id="livrables" class="anchored-title">
-        <span>{{ i18n.t(content().deliverablesTitleKey) }}</span
+        <span>{{ i18n.t("serviceDetail.deliverables.title") }}</span
         ><app-anchor-link fragment="livrables" />
       </h2>
       <ul>
@@ -48,9 +40,9 @@
         }
       </ul>
     </div>
-    <aside class="fit-note" aria-labelledby="fit-title">
-      <h2 id="fit-title" class="fit-title">{{ i18n.t(content().fitTitleKey) }}</h2>
-      <p>{{ i18n.t(content().fitDescriptionKey) }}</p>
+    <aside class="start-note" aria-labelledby="start-title">
+      <h2 id="start-title" class="start-title">{{ i18n.t("serviceDetail.start.title") }}</h2>
+      <p>{{ i18n.t(content().startDescriptionKey) }}</p>
     </aside>
   </section>
 
@@ -60,8 +52,8 @@
     </h2>
     <app-contact-actions
       class="actions"
-      [mailLabel]="i18n.t('services.quote')"
-      [bookLabel]="i18n.t('services.book')"
+      [mailLabel]="i18n.t('home.engage.mail')"
+      [bookLabel]="i18n.t('home.hero.book')"
       [subject]="i18n.t('services.quote.subject')"
       [body]="i18n.t('services.quote.body')"
     />

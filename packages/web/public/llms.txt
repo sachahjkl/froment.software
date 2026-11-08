@@ -8,13 +8,12 @@ Contact : contact@froment.software
 
 ## Prestations
 
-- [Audit et rénovation](https://froment.software/fr/services/audit-renovation): audit technique, plan d'amélioration et rénovation progressive de logiciels métier existants.
-- [Développement tout compris](https://froment.software/fr/services/development): conception, réalisation, tests et déploiement de logiciels métier sur mesure.
+- [Création de logiciels](https://froment.software/fr/services/creation): logiciel de bureau, application web ou outil interne écrit pour le client, livré avec son code source et une licence.
+- [Rénovation de logiciels métier](https://froment.software/fr/services/renovation): réécriture d'un logiciel métier existant en une nouvelle version plus rapide et plus simple à utiliser, livrée sous licence.
 
 ## Pages publiques
 
 - [Accueil](https://froment.software/fr): audit, reprise et rénovation de logiciels existants, et développement d'applications métier sur mesure.
-- [Prestations](https://froment.software/fr/services): audit et rénovation d'applications existantes, ou développement complet de logiciels métier.
 - [Projets publics](https://froment.software/fr/tools): prototypes, démonstrations et sites publics de Sacha Froment.
 - [Notes techniques](https://froment.software/fr/notes): notes techniques, retours d'expérience et idées de Froment Software.
 - [Vingt-cinq ans d’agile, et comment faire du logiciel](https://froment.software/fr/notes/2026-11-comment-faire-du-logiciel): la position de Froment Software, publiée sur https://how.froment.software/fr/.

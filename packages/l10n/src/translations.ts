@@ -15,10 +15,6 @@ export const translations = {
     'shell.theme.dark': 'Activer le mode sombre',
     'shell.theme.light': 'Activer le mode clair',
     'page.home': 'Froment Software | Audit et rénovation de logiciels',
-    'page.services': 'Prestations | froment.software',
-    'page.service.audit': 'Audit logiciel | froment.software',
-    'page.service.modernization': 'Reprise et modernisation | froment.software',
-    'page.service.delivery': 'Livraison et exploitation | froment.software',
     'page.products': 'Projets publics | froment.software',
     'page.legal': 'Mentions légales | froment.software',
     'page.description.legal':
@@ -49,14 +45,6 @@ export const translations = {
     'page.description.not_found': 'La page demandée n’existe pas ou a changé d’adresse.',
     'page.description.home':
       'Audit, reprise et rénovation de logiciels existants. Développement complet d’applications métier sur mesure.',
-    'page.description.services':
-      'Audit et rénovation d’applications existantes, ou développement complet de logiciels métier.',
-    'page.description.service.audit':
-      'Audit technique de logiciel métier, classement des risques et plan d’action priorisé.',
-    'page.description.service.modernization':
-      'Reprise, stabilisation et modernisation progressive de logiciels métier existants.',
-    'page.description.service.delivery':
-      'Automatisation des builds, déploiements, environnements et opérations de logiciels métier.',
     'page.description.products': 'Prototypes, démonstrations et sites publics de Sacha Froment.',
     'meta.socialImageAlt': 'Logo Froment Software',
     'footer.rights': '© {year} Sacha Froment (Froment Software). Tous droits réservés.',
@@ -97,145 +85,73 @@ export const translations = {
     'home.how.desc': 'Les gens répondent. Le dépôt fait foi. Les mesures jugent.',
     'home.how.cta': 'Ouvrir Comment faire du logiciel dans un nouvel onglet',
     'home.offers.title': 'Ce qu’on fait',
-    'home.offers.audit.title': 'Audit logiciel',
-    'home.offers.audit.desc': 'Identifier les risques, blocages et priorités.',
-    'home.offers.renovation.title': 'Reprise et modernisation',
-    'home.offers.renovation.desc': 'Faire évoluer un existant sans tout réécrire.',
-    'home.offers.delivery.title': 'Livraison et exploitation',
-    'home.offers.delivery.desc': 'Industrialiser les déploiements et l’exploitation.',
     'products.title': 'Projets publics',
     'products.status.prototype': 'Prototype',
     'products.status.experiment': 'Expérimentation',
     'products.status.public': 'Espace public',
-    'services.title': 'Faire avancer un logiciel existant.',
-    'services.lead':
-      'Trois interventions ciblées : comprendre l’existant, le moderniser, puis fiabiliser sa livraison.',
-    'services.quote': 'Demander un devis',
-    'services.book': 'Prendre rendez-vous',
-    'services.list.title': 'Nos prestations',
     'services.quote.subject': 'Demande de devis',
     'services.quote.body':
       'Bonjour,\n\nNous souhaitons échanger au sujet du projet suivant :\n\n- Contexte :\n- Besoin :\n- Périmètre :\n- Contraintes techniques :\n- Échéance souhaitée :\n- Budget indicatif :\n\nMerci.',
-    'services.offer.audit.title': 'Audit logiciel',
-    'services.offer.audit.desc':
-      'Obtenir un constat factuel sur le code, l’architecture, la sécurité et la chaîne de livraison.',
-    'services.offer.audit.cta': 'Voir le détail de l’audit logiciel',
-    'services.offer.modernization.title': 'Reprise et modernisation',
-    'services.offer.modernization.desc':
-      'Stabiliser un logiciel existant, réduire ses risques et le faire évoluer sans réécriture systématique.',
-    'services.offer.modernization.cta': 'Voir le détail de la reprise et de la modernisation',
-    'services.offer.delivery.title': 'Livraison et exploitation',
-    'services.offer.delivery.desc':
-      'Rendre les builds, les déploiements et les opérations reproductibles et observables.',
-    'services.offer.delivery.cta': 'Voir le détail de la livraison et de l’exploitation',
-    'serviceDetail.back': 'Retour aux prestations',
-    'serviceDetail.audit.title': 'Audit logiciel',
-    'serviceDetail.audit.lead':
-      'Obtenir un constat factuel avant de décider où investir et dans quel ordre agir.',
-    'serviceDetail.audit.scope.title': 'Ce que nous examinons',
-    'serviceDetail.audit.scope.architecture.title': 'Code et architecture',
-    'serviceDetail.audit.scope.architecture.desc':
-      'Structure du code, dépendances, flux de données, couplages et points qui ralentissent les évolutions.',
-    'serviceDetail.audit.scope.delivery.title': 'Chaîne de livraison',
-    'serviceDetail.audit.scope.delivery.desc':
-      'Builds, tests, intégration continue, déploiements et délai entre une modification et sa mise en service.',
-    'serviceDetail.audit.scope.security.title': 'Sécurité technique',
-    'serviceDetail.audit.scope.security.desc':
-      'CVE, analyse statique, secrets présents dans le code ou l’historique Git et configuration des accès.',
-    'serviceDetail.audit.scope.security.staticAnalysis': 'Outils d’analyse statique',
-    'serviceDetail.audit.scope.security.trufflehog': 'TruffleHog',
-    'serviceDetail.audit.scope.environment.title': 'Environnement de travail',
-    'serviceDetail.audit.scope.environment.desc':
-      'Installation locale, gestion des secrets, documentation et difficultés rencontrées par l’équipe.',
-    'serviceDetail.audit.deliverables.title': 'Ce que vous recevez',
-    'serviceDetail.audit.deliverables.report':
-      'Un constat documenté et classé par niveau de risque.',
-    'serviceDetail.audit.deliverables.map':
-      'Une carte des composants, dépendances et responsabilités importantes.',
-    'serviceDetail.audit.deliverables.plan':
-      'Un plan d’action priorisé avec les dépendances et les résultats attendus.',
-    'serviceDetail.audit.deliverables.review':
-      'Une restitution pour expliquer les constats et décider des prochaines étapes.',
-    'serviceDetail.audit.fit.title': 'Cette prestation est adaptée si…',
-    'serviceDetail.audit.fit.desc':
-      'Vous manquez de visibilité sur les risques, les blocages ou les investissements prioritaires.',
-    'serviceDetail.modernization.title': 'Reprise et modernisation',
-    'serviceDetail.modernization.lead':
-      'Stabiliser un logiciel utile, puis le faire évoluer sans repartir de zéro.',
-    'serviceDetail.modernization.scope.title': 'Comment nous intervenons',
-    'serviceDetail.modernization.scope.takeover.title': 'Reprise',
-    'serviceDetail.modernization.scope.takeover.desc':
-      'Remise en route du projet, compréhension des usages et sécurisation de l’environnement de travail.',
-    'serviceDetail.modernization.scope.stability.title': 'Stabilisation',
-    'serviceDetail.modernization.scope.stability.desc':
-      'Correction des incidents récurrents, ajout de tests ciblés et réduction des risques immédiats.',
-    'serviceDetail.modernization.scope.refactoring.title': 'Évolution progressive',
-    'serviceDetail.modernization.scope.refactoring.desc':
-      'Refactorisation par étapes autour des besoins métier, sans réécriture globale imposée.',
-    'serviceDetail.modernization.scope.upgrades.title': 'Mises à niveau',
-    'serviceDetail.modernization.scope.upgrades.desc':
-      'Mise à jour des dépendances, outils, runtimes et automatisations devenus obsolètes.',
-    'serviceDetail.modernization.deliverables.title': 'Ce que vous recevez',
-    'serviceDetail.modernization.deliverables.environment':
-      'Un environnement de développement reproductible et documenté.',
-    'serviceDetail.modernization.deliverables.changes':
-      'Les corrections et évolutions validées dans le périmètre convenu.',
-    'serviceDetail.modernization.deliverables.tests':
-      'Des tests ciblés sur les usages et les risques traités.',
-    'serviceDetail.modernization.deliverables.handover':
-      'Le code et les instructions nécessaires pour poursuivre les évolutions.',
-    'serviceDetail.modernization.fit.title': 'Cette prestation est adaptée si…',
-    'serviceDetail.modernization.fit.desc':
-      'Votre logiciel reste utile, mais il devient lent à modifier ou risqué à maintenir.',
-    'serviceDetail.delivery.title': 'Livraison et exploitation',
-    'serviceDetail.delivery.lead':
-      'Rendre chaque mise en production reproductible et chaque incident plus facile à comprendre.',
-    'serviceDetail.delivery.scope.title': 'Ce que nous industrialisons',
-    'serviceDetail.delivery.scope.ci.title': 'Intégration continue',
-    'serviceDetail.delivery.scope.ci.desc':
-      'Builds, tests et contrôles automatiques exécutés de la même façon à chaque modification.',
-    'serviceDetail.delivery.scope.packaging.title': 'Paquetage',
-    'serviceDetail.delivery.scope.packaging.desc':
-      'Artefacts versionnés, images de conteneur et constructions reproductibles selon le produit.',
-    'serviceDetail.delivery.scope.deployment.title': 'Déploiement',
-    'serviceDetail.delivery.scope.deployment.desc':
-      'Configuration des environnements, gestion des secrets, déploiement et retour arrière.',
-    'serviceDetail.delivery.scope.operations.title': 'Exploitation',
-    'serviceDetail.delivery.scope.operations.desc':
-      'Journaux, métriques, traces, alertes et procédures utiles pour diagnostiquer le service.',
-    'serviceDetail.delivery.deliverables.title': 'Ce que vous recevez',
-    'serviceDetail.delivery.deliverables.pipeline':
-      'Une chaîne automatisée pour construire, tester et livrer le logiciel.',
-    'serviceDetail.delivery.deliverables.configuration':
-      'La configuration versionnée des environnements et des déploiements.',
-    'serviceDetail.delivery.deliverables.observability':
-      'Les signaux et tableaux nécessaires au suivi du service.',
-    'serviceDetail.delivery.deliverables.runbook':
-      'Les procédures de mise en service, de retour arrière et de diagnostic.',
-    'serviceDetail.delivery.fit.title': 'Cette prestation est adaptée si…',
-    'serviceDetail.delivery.fit.desc':
-      'Vos livraisons reposent sur des étapes manuelles ou vos incidents restent difficiles à diagnostiquer.',
-    'services.practical.title': 'En pratique',
-    'services.practical.method': 'Méthode',
-    'services.practical.method.desc':
-      'Le devis fixe le périmètre, le prix, les livrables et les critères d’acceptation.',
-    'services.practical.schedule': 'Délais',
-    'services.practical.schedule.desc':
-      'Le calendrier est défini selon le périmètre, les dépendances et les validations attendues.',
-    'services.practical.deliverables': 'Livrables',
-    'services.practical.deliverables.desc':
-      'Code source, tests, documentation et instructions de mise en service selon la mission.',
-    'services.criteria.title': 'Éléments utiles pour commencer',
-    'services.criteria.context': 'Le contexte et les utilisateurs concernés.',
-    'services.criteria.problem': 'Le problème principal ou le résultat attendu.',
-    'services.criteria.deadline': 'L’échéance connue et les contraintes techniques.',
     'serviceDetail.contact.title': 'Échanger sur votre besoin',
     'not_found.title': 'Cette page n’existe pas.',
     'not_found.lead': 'Vérifiez l’adresse ou revenez à l’accueil.',
     'not_found.cta': 'Retour à l’accueil',
     'not_found.links_label': 'Prochaines étapes',
-    'not_found.services': 'Voir les prestations',
     'not_found.contact': 'Écrire à Froment Software',
+    'page.service.creation': 'Création de logiciels | froment.software',
+    'page.service.renovation': 'Rénovation de logiciels métier | froment.software',
+    'page.description.service.creation':
+      'Logiciel de bureau, application web ou outil interne écrit pour vous, livré avec son code source et sa licence.',
+    'page.description.service.renovation':
+      'Réécriture d’un logiciel métier existant en une nouvelle version plus rapide et plus simple à utiliser, livrée sous licence.',
+    'home.offers.creation.title': 'Création de logiciels',
+    'home.offers.creation.desc': 'Un logiciel écrit pour vous, livré avec sa licence.',
+    'home.offers.renovation.title': 'Rénovation de logiciels métier',
+    'home.offers.renovation.desc':
+      'Votre logiciel métier, réécrit plus rapide et plus simple à utiliser, livré sous licence.',
+    'serviceDetail.back': 'Retour à l’accueil',
+    'serviceDetail.deliverables.title': 'Ce que vous recevez',
+    'serviceDetail.deliverables.source': 'Le code source.',
+    'serviceDetail.deliverables.tests': 'Les tests automatisés.',
+    'serviceDetail.deliverables.documentation': 'La documentation d’utilisation et de maintenance.',
+    'serviceDetail.deliverables.setup': 'Les instructions d’installation et de mise en service.',
+    'serviceDetail.deliverables.migration': 'La migration des données existantes.',
+    'serviceDetail.deliverables.measurements': 'Les mesures avant et après la rénovation.',
+    'serviceDetail.deliverables.licence': 'Une licence qui définit vos droits d’utilisation.',
+    'serviceDetail.start.title': 'Pour commencer',
+    'serviceDetail.creation.title': 'Création de logiciels',
+    'serviceDetail.creation.lead':
+      'Un logiciel écrit pour votre besoin, livré avec son code source et une licence d’utilisation.',
+    'serviceDetail.creation.scope.title': 'Ce qui peut être créé',
+    'serviceDetail.creation.scope.desktop.title': 'Logiciel de bureau',
+    'serviceDetail.creation.scope.desktop.desc':
+      'Une application installée sur les postes de vos utilisateurs.',
+    'serviceDetail.creation.scope.web.title': 'Application web',
+    'serviceDetail.creation.scope.web.desc':
+      'Une application utilisée dans le navigateur, avec son serveur.',
+    'serviceDetail.creation.scope.internal.title': 'Outil interne',
+    'serviceDetail.creation.scope.internal.desc':
+      'Un outil qui automatise une tâche de votre équipe ou relie vos systèmes existants.',
+    'serviceDetail.creation.start.desc':
+      'Appelez ou écrivez en décrivant le besoin, les contraintes et l’échéance. Vous recevez ensuite un devis écrit.',
+    'serviceDetail.renovation.title': 'Rénovation de logiciels métier',
+    'serviceDetail.renovation.lead':
+      'Votre logiciel métier, réécrit en une nouvelle version plus rapide et plus simple à utiliser.',
+    'serviceDetail.renovation.scope.title': 'Étapes de la rénovation',
+    'serviceDetail.renovation.scope.study.title': 'Étude de l’existant',
+    'serviceDetail.renovation.scope.study.desc':
+      'Compréhension des usages, des données et des règles métier du logiciel actuel.',
+    'serviceDetail.renovation.scope.baseline.title': 'Mesures initiales',
+    'serviceDetail.renovation.scope.baseline.desc':
+      'Mesure du temps de réponse, du temps de démarrage et du temps nécessaire à un utilisateur pour réaliser une tâche.',
+    'serviceDetail.renovation.scope.rewrite.title': 'Réécriture',
+    'serviceDetail.renovation.scope.rewrite.desc':
+      'Écriture de la nouvelle version autour des besoins métier, avec des tests sur les usages principaux.',
+    'serviceDetail.renovation.scope.comparison.title': 'Comparaison',
+    'serviceDetail.renovation.scope.comparison.desc':
+      'Les mêmes mesures sur la nouvelle version, pour comparer avant et après.',
+    'serviceDetail.renovation.start.desc':
+      'Appelez ou écrivez en décrivant le logiciel actuel, ses problèmes et l’échéance. Vous recevez ensuite un devis écrit.',
     'notes.title': 'Notes',
     'notes.toc': 'Sommaire',
     'notes.lead': 'Notes techniques, retours d’expérience et idées.',
@@ -390,10 +306,6 @@ export const translations = {
     'shell.theme.dark': 'Use dark mode',
     'shell.theme.light': 'Use light mode',
     'page.home': 'Froment Software | Software audit and renovation',
-    'page.services': 'Services | froment.software',
-    'page.service.audit': 'Software audit | froment.software',
-    'page.service.modernization': 'Takeover and modernization | froment.software',
-    'page.service.delivery': 'Delivery and operations | froment.software',
     'page.products': 'Public projects | froment.software',
     'page.legal': 'Legal notice | froment.software',
     'page.description.legal':
@@ -420,18 +332,9 @@ export const translations = {
     'version.packageVersion': 'Version',
     'version.loading': 'Loading version information…',
     'version.error': 'The server cannot load version information.',
-    'page.description.not_found':
-      'Page not found. Return to the froment.software home page or services.',
+    'page.description.not_found': 'The requested page does not exist or has moved.',
     'page.description.home':
       'Audit, takeover and renovation of existing software. Complete custom business application development.',
-    'page.description.services':
-      'Audit and renovation of existing applications, or complete business software development.',
-    'page.description.service.audit':
-      'Technical business software audit, risk ranking and prioritized action plan.',
-    'page.description.service.modernization':
-      'Takeover, stabilization and gradual modernization of existing business software.',
-    'page.description.service.delivery':
-      'Automated builds, deployments, environments and operations for business software.',
     'page.description.products': 'Public prototypes, demonstrations and websites by Sacha Froment.',
     'meta.socialImageAlt': 'Froment Software logo',
     'footer.rights': '© {year} Sacha Froment (Froment Software). All rights reserved.',
@@ -472,144 +375,72 @@ export const translations = {
     'home.how.desc': 'People answer. The repository is the truth. Measurements judge.',
     'home.how.cta': 'Open How to make software in a new tab',
     'home.offers.title': 'What we do',
-    'home.offers.audit.title': 'Software audit',
-    'home.offers.audit.desc': 'Identify risks, blockers and priorities.',
-    'home.offers.renovation.title': 'Takeover and modernization',
-    'home.offers.renovation.desc': 'Improve existing software without rewriting everything.',
-    'home.offers.delivery.title': 'Delivery and operations',
-    'home.offers.delivery.desc': 'Make deployments and operations repeatable.',
     'products.title': 'Public projects',
     'products.status.prototype': 'Prototype',
     'products.status.experiment': 'Experiment',
     'products.status.public': 'Public space',
-    'services.title': 'Move existing software forward.',
-    'services.lead':
-      'Three focused services: understand existing software, modernize it, then make its delivery reliable.',
-    'services.quote': 'Request a quote',
-    'services.book': 'Book a meeting',
-    'services.list.title': 'Our services',
     'services.quote.subject': 'Quote request',
     'services.quote.body':
       'Hello,\n\nWe would like to discuss the following project:\n\n- Context:\n- Need:\n- Scope:\n- Technical constraints:\n- Desired deadline:\n- Approximate budget:\n\nThank you.',
-    'services.offer.audit.title': 'Software audit',
-    'services.offer.audit.desc':
-      'Get a factual assessment of the code, architecture, security and delivery pipeline.',
-    'services.offer.audit.cta': 'View software audit details',
-    'services.offer.modernization.title': 'Takeover and modernization',
-    'services.offer.modernization.desc':
-      'Stabilize existing software, reduce its risks and improve it without a systematic rewrite.',
-    'services.offer.modernization.cta': 'View takeover and modernization details',
-    'services.offer.delivery.title': 'Delivery and operations',
-    'services.offer.delivery.desc':
-      'Make builds, deployments and operations reproducible and observable.',
-    'services.offer.delivery.cta': 'View delivery and operations details',
-    'serviceDetail.back': 'Back to services',
-    'serviceDetail.audit.title': 'Software audit',
-    'serviceDetail.audit.lead':
-      'Get a factual assessment before deciding where to invest and what to address first.',
-    'serviceDetail.audit.scope.title': 'What we examine',
-    'serviceDetail.audit.scope.architecture.title': 'Code and architecture',
-    'serviceDetail.audit.scope.architecture.desc':
-      'Code structure, dependencies, data flows, coupling and constraints that slow further changes.',
-    'serviceDetail.audit.scope.delivery.title': 'Delivery pipeline',
-    'serviceDetail.audit.scope.delivery.desc':
-      'Builds, tests, continuous integration, deployments and lead time from a change to production.',
-    'serviceDetail.audit.scope.security.title': 'Technical security',
-    'serviceDetail.audit.scope.security.desc':
-      'CVEs, static analysis, secrets in source code or Git history and access configuration.',
-    'serviceDetail.audit.scope.security.staticAnalysis': 'Static analysis tools',
-    'serviceDetail.audit.scope.security.trufflehog': 'TruffleHog',
-    'serviceDetail.audit.scope.environment.title': 'Working environment',
-    'serviceDetail.audit.scope.environment.desc':
-      'Local setup, secret management, documentation and problems faced by the team.',
-    'serviceDetail.audit.deliverables.title': 'What you receive',
-    'serviceDetail.audit.deliverables.report': 'A documented assessment ranked by risk level.',
-    'serviceDetail.audit.deliverables.map':
-      'A map of important components, dependencies and responsibilities.',
-    'serviceDetail.audit.deliverables.plan':
-      'A prioritized action plan with dependencies and expected results.',
-    'serviceDetail.audit.deliverables.review':
-      'A review meeting to explain the findings and decide the next steps.',
-    'serviceDetail.audit.fit.title': 'This service fits if…',
-    'serviceDetail.audit.fit.desc':
-      'You lack visibility into risks, blockers or the investments that need priority.',
-    'serviceDetail.modernization.title': 'Takeover and modernization',
-    'serviceDetail.modernization.lead':
-      'Stabilize useful software, then improve it without starting again from zero.',
-    'serviceDetail.modernization.scope.title': 'How we work',
-    'serviceDetail.modernization.scope.takeover.title': 'Takeover',
-    'serviceDetail.modernization.scope.takeover.desc':
-      'Restore the project, understand its uses and secure the working environment.',
-    'serviceDetail.modernization.scope.stability.title': 'Stabilization',
-    'serviceDetail.modernization.scope.stability.desc':
-      'Fix recurring incidents, add targeted tests and reduce immediate risks.',
-    'serviceDetail.modernization.scope.refactoring.title': 'Gradual improvement',
-    'serviceDetail.modernization.scope.refactoring.desc':
-      'Refactor in stages around business needs, without requiring a complete rewrite.',
-    'serviceDetail.modernization.scope.upgrades.title': 'Upgrades',
-    'serviceDetail.modernization.scope.upgrades.desc':
-      'Update obsolete dependencies, tools, runtimes and automation.',
-    'serviceDetail.modernization.deliverables.title': 'What you receive',
-    'serviceDetail.modernization.deliverables.environment':
-      'A reproducible and documented development environment.',
-    'serviceDetail.modernization.deliverables.changes':
-      'The fixes and improvements approved in the agreed scope.',
-    'serviceDetail.modernization.deliverables.tests':
-      'Tests focused on the uses and risks addressed by the work.',
-    'serviceDetail.modernization.deliverables.handover':
-      'The code and instructions required for subsequent changes.',
-    'serviceDetail.modernization.fit.title': 'This service fits if…',
-    'serviceDetail.modernization.fit.desc':
-      'Your software remains useful, but it is slow to change or risky to maintain.',
-    'serviceDetail.delivery.title': 'Delivery and operations',
-    'serviceDetail.delivery.lead':
-      'Make every production rollout reproducible and every incident easier to understand.',
-    'serviceDetail.delivery.scope.title': 'What we industrialize',
-    'serviceDetail.delivery.scope.ci.title': 'Continuous integration',
-    'serviceDetail.delivery.scope.ci.desc':
-      'Builds, tests and automated checks that run the same way for every change.',
-    'serviceDetail.delivery.scope.packaging.title': 'Packaging',
-    'serviceDetail.delivery.scope.packaging.desc':
-      'Versioned artifacts, container images and reproducible builds suited to the product.',
-    'serviceDetail.delivery.scope.deployment.title': 'Deployment',
-    'serviceDetail.delivery.scope.deployment.desc':
-      'Environment configuration, secret management, deployment and rollback.',
-    'serviceDetail.delivery.scope.operations.title': 'Operations',
-    'serviceDetail.delivery.scope.operations.desc':
-      'Logs, metrics, traces, alerts and procedures required to diagnose the service.',
-    'serviceDetail.delivery.deliverables.title': 'What you receive',
-    'serviceDetail.delivery.deliverables.pipeline':
-      'An automated pipeline to build, test and deliver the software.',
-    'serviceDetail.delivery.deliverables.configuration':
-      'Versioned environment and deployment configuration.',
-    'serviceDetail.delivery.deliverables.observability':
-      'The signals and dashboards required to monitor the service.',
-    'serviceDetail.delivery.deliverables.runbook':
-      'Production rollout, rollback and diagnostic procedures.',
-    'serviceDetail.delivery.fit.title': 'This service fits if…',
-    'serviceDetail.delivery.fit.desc':
-      'Your deliveries rely on manual steps or your incidents remain hard to diagnose.',
-    'services.practical.title': 'In practice',
-    'services.practical.method': 'Method',
-    'services.practical.method.desc':
-      'The quote defines scope, price, deliverables and acceptance criteria.',
-    'services.practical.schedule': 'Schedule',
-    'services.practical.schedule.desc':
-      'The schedule is defined from the scope, dependencies and expected approvals.',
-    'services.practical.deliverables': 'Deliverables',
-    'services.practical.deliverables.desc':
-      'Source code, tests, documentation and rollout instructions appropriate to the engagement.',
-    'services.criteria.title': 'Useful information to get started',
-    'services.criteria.context': 'The context and affected users.',
-    'services.criteria.problem': 'The main problem or expected result.',
-    'services.criteria.deadline': 'The known deadline and technical constraints.',
     'serviceDetail.contact.title': 'Discuss your need',
     'not_found.title': 'This page does not exist.',
     'not_found.lead': 'Check the address or return to the home page.',
     'not_found.cta': 'Back to home',
     'not_found.links_label': 'Next steps',
-    'not_found.services': 'View services',
     'not_found.contact': 'Email Froment Software',
+    'page.service.creation': 'Software creation | froment.software',
+    'page.service.renovation': 'Business software renovation | froment.software',
+    'page.description.service.creation':
+      'Desktop software, web application or internal tool written for you, delivered with its source code and licence.',
+    'page.description.service.renovation':
+      'Rewrite of existing business software into a new version that is faster and easier to use, delivered under licence.',
+    'home.offers.creation.title': 'Software creation',
+    'home.offers.creation.desc': 'Software written for you, delivered with its licence.',
+    'home.offers.renovation.title': 'Business software renovation',
+    'home.offers.renovation.desc':
+      'Your business software, rewritten faster and easier to use, delivered under licence.',
+    'serviceDetail.back': 'Back to home',
+    'serviceDetail.deliverables.title': 'What you receive',
+    'serviceDetail.deliverables.source': 'The source code.',
+    'serviceDetail.deliverables.tests': 'The automated tests.',
+    'serviceDetail.deliverables.documentation': 'Documentation for use and maintenance.',
+    'serviceDetail.deliverables.setup': 'Installation and setup instructions.',
+    'serviceDetail.deliverables.migration': 'Migration of the existing data.',
+    'serviceDetail.deliverables.measurements': 'The measurements before and after the renovation.',
+    'serviceDetail.deliverables.licence': 'A licence that defines your rights of use.',
+    'serviceDetail.start.title': 'To get started',
+    'serviceDetail.creation.title': 'Software creation',
+    'serviceDetail.creation.lead':
+      'Software written for your need, delivered with its source code and a licence of use.',
+    'serviceDetail.creation.scope.title': 'What can be created',
+    'serviceDetail.creation.scope.desktop.title': 'Desktop software',
+    'serviceDetail.creation.scope.desktop.desc':
+      'An application installed on the computers of your users.',
+    'serviceDetail.creation.scope.web.title': 'Web application',
+    'serviceDetail.creation.scope.web.desc': 'An application used in the browser, with its server.',
+    'serviceDetail.creation.scope.internal.title': 'Internal tool',
+    'serviceDetail.creation.scope.internal.desc':
+      'A tool that automates a task for your team or connects your existing systems.',
+    'serviceDetail.creation.start.desc':
+      'Call or write with the need, the constraints and the deadline. You then receive a written quote.',
+    'serviceDetail.renovation.title': 'Business software renovation',
+    'serviceDetail.renovation.lead':
+      'Your business software, rewritten into a new version that is faster and easier to use.',
+    'serviceDetail.renovation.scope.title': 'Steps of the renovation',
+    'serviceDetail.renovation.scope.study.title': 'Study of the current software',
+    'serviceDetail.renovation.scope.study.desc':
+      'Understand the uses, data and business rules of the current software.',
+    'serviceDetail.renovation.scope.baseline.title': 'Initial measurements',
+    'serviceDetail.renovation.scope.baseline.desc':
+      'Measure the response time, the start time and the time a user needs to complete a task.',
+    'serviceDetail.renovation.scope.rewrite.title': 'Rewrite',
+    'serviceDetail.renovation.scope.rewrite.desc':
+      'Write the new version around business needs, with tests on the main uses.',
+    'serviceDetail.renovation.scope.comparison.title': 'Comparison',
+    'serviceDetail.renovation.scope.comparison.desc':
+      'Take the same measurements on the new version to compare before and after.',
+    'serviceDetail.renovation.start.desc':
+      'Call or write with a description of the current software, its problems and the deadline. You then receive a written quote.',
     'notes.title': 'Notes',
     'notes.toc': 'Table of contents',
     'notes.lead': 'Technical notes, experience reports and ideas.',

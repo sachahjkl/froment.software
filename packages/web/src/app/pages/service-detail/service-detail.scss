@@ -74,14 +74,6 @@ h2 {
   color: var(--color-muted);
 }
 
-.scope-links {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-2) var(--space-4);
-  margin-top: var(--space-3);
-  font-size: var(--text-sm);
-}
-
 .deliverables ul {
   display: grid;
   gap: var(--space-3);
@@ -93,18 +85,18 @@ h2 {
   padding-inline-start: var(--space-1);
 }
 
-.fit-note {
+.start-note {
   margin-top: var(--space-8);
   padding: var(--space-5) var(--space-6);
   border-inline-start: 3px solid var(--color-line-strong);
   background: var(--color-surface-sunken);
 }
 
-.fit-title {
+.start-title {
   font-size: var(--text-base);
 }
 
-.fit-note p {
+.start-note p {
   margin-top: var(--space-2);
   color: var(--color-ink-soft);
 }

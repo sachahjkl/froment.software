@@ -11,44 +11,24 @@
     <xhtml:link rel="alternate" hreflang="en" href="https://froment.software/en" />
   </url>
   <url>
-    <loc>https://froment.software/fr/services</loc>
-    <xhtml:link rel="alternate" hreflang="fr" href="https://froment.software/fr/services" />
-    <xhtml:link rel="alternate" hreflang="en" href="https://froment.software/en/services" />
+    <loc>https://froment.software/fr/services/creation</loc>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://froment.software/fr/services/creation" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://froment.software/en/services/creation" />
   </url>
   <url>
-    <loc>https://froment.software/en/services</loc>
-    <xhtml:link rel="alternate" hreflang="fr" href="https://froment.software/fr/services" />
-    <xhtml:link rel="alternate" hreflang="en" href="https://froment.software/en/services" />
+    <loc>https://froment.software/en/services/creation</loc>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://froment.software/fr/services/creation" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://froment.software/en/services/creation" />
   </url>
   <url>
-    <loc>https://froment.software/fr/services/audit</loc>
-    <xhtml:link rel="alternate" hreflang="fr" href="https://froment.software/fr/services/audit" />
-    <xhtml:link rel="alternate" hreflang="en" href="https://froment.software/en/services/audit" />
+    <loc>https://froment.software/fr/services/renovation</loc>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://froment.software/fr/services/renovation" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://froment.software/en/services/renovation" />
   </url>
   <url>
-    <loc>https://froment.software/en/services/audit</loc>
-    <xhtml:link rel="alternate" hreflang="fr" href="https://froment.software/fr/services/audit" />
-    <xhtml:link rel="alternate" hreflang="en" href="https://froment.software/en/services/audit" />
-  </url>
-  <url>
-    <loc>https://froment.software/fr/services/modernization</loc>
-    <xhtml:link rel="alternate" hreflang="fr" href="https://froment.software/fr/services/modernization" />
-    <xhtml:link rel="alternate" hreflang="en" href="https://froment.software/en/services/modernization" />
-  </url>
-  <url>
-    <loc>https://froment.software/en/services/modernization</loc>
-    <xhtml:link rel="alternate" hreflang="fr" href="https://froment.software/fr/services/modernization" />
-    <xhtml:link rel="alternate" hreflang="en" href="https://froment.software/en/services/modernization" />
-  </url>
-  <url>
-    <loc>https://froment.software/fr/services/delivery-operations</loc>
-    <xhtml:link rel="alternate" hreflang="fr" href="https://froment.software/fr/services/delivery-operations" />
-    <xhtml:link rel="alternate" hreflang="en" href="https://froment.software/en/services/delivery-operations" />
-  </url>
-  <url>
-    <loc>https://froment.software/en/services/delivery-operations</loc>
-    <xhtml:link rel="alternate" hreflang="fr" href="https://froment.software/fr/services/delivery-operations" />
-    <xhtml:link rel="alternate" hreflang="en" href="https://froment.software/en/services/delivery-operations" />
+    <loc>https://froment.software/en/services/renovation</loc>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://froment.software/fr/services/renovation" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://froment.software/en/services/renovation" />
   </url>
   <url>
     <loc>https://froment.software/fr/tools</loc>

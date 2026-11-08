@@ -36,39 +36,23 @@ const localizedChildren: Routes = [
     },
   },
   {
-    path: 'services',
-    loadComponent: () =>
-      import('./pages/services/services.component').then((module) => module.ServicesComponent),
-    data: { titleKey: 'page.services', descriptionKey: 'page.description.services' },
-  },
-  {
-    path: 'services/audit',
+    path: 'services/creation',
     loadComponent: () =>
       import('./pages/service-detail/service-detail').then((module) => module.ServiceDetail),
     data: {
-      offer: 'audit',
-      titleKey: 'page.service.audit',
-      descriptionKey: 'page.description.service.audit',
+      offer: 'creation',
+      titleKey: 'page.service.creation',
+      descriptionKey: 'page.description.service.creation',
     },
   },
   {
-    path: 'services/modernization',
+    path: 'services/renovation',
     loadComponent: () =>
       import('./pages/service-detail/service-detail').then((module) => module.ServiceDetail),
     data: {
-      offer: 'modernization',
-      titleKey: 'page.service.modernization',
-      descriptionKey: 'page.description.service.modernization',
-    },
-  },
-  {
-    path: 'services/delivery-operations',
-    loadComponent: () =>
-      import('./pages/service-detail/service-detail').then((module) => module.ServiceDetail),
-    data: {
-      offer: 'delivery',
-      titleKey: 'page.service.delivery',
-      descriptionKey: 'page.description.service.delivery',
+      offer: 'renovation',
+      titleKey: 'page.service.renovation',
+      descriptionKey: 'page.description.service.renovation',
     },
   },
   {

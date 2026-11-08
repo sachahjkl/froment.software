@@ -84,22 +84,16 @@ export class HomeComponent {
 
   protected readonly offers = computed<readonly Offer[]>(() => [
     {
-      title: this.i18n.t('home.offers.audit.title'),
-      description: this.i18n.t('home.offers.audit.desc'),
-      href: this.i18n.localizedPath('/services/audit'),
-      icon: 'audit',
+      title: this.i18n.t('home.offers.creation.title'),
+      description: this.i18n.t('home.offers.creation.desc'),
+      href: this.i18n.localizedPath('/services/creation'),
+      icon: 'file-plus',
     },
     {
       title: this.i18n.t('home.offers.renovation.title'),
       description: this.i18n.t('home.offers.renovation.desc'),
-      href: this.i18n.localizedPath('/services/modernization'),
+      href: this.i18n.localizedPath('/services/renovation'),
       icon: 'renovation',
-    },
-    {
-      title: this.i18n.t('home.offers.delivery.title'),
-      description: this.i18n.t('home.offers.delivery.desc'),
-      href: this.i18n.localizedPath('/services/delivery-operations'),
-      icon: 'delivery',
     },
   ]);
 }
