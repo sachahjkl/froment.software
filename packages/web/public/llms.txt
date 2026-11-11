@@ -10,6 +10,9 @@ Contact : contact@froment.software
 
 - [Wren](https://wren.froment.software): navigateur web écrit en Odin, avec son propre moteur. Vendu en licence.
 - [opencode native](https://ocn.froment.software): client de bureau natif pour le serveur opencode, sous licence MIT. Projet indépendant de l'équipe OpenCode.
+- [papier](https://papier.froment.software): historique du presse-papiers, rapide, cherché pendant la frappe, sous licence MIT.
+- [inspecteur](https://inspecteur.froment.software): gestionnaire de tâches natif et rapide pour Linux, sous licence MIT.
+- [classeur](https://classeur.froment.software): gestionnaire de fichiers rapide, pensé pour le clavier, sous licence MIT.
 
 ## Prestations
 

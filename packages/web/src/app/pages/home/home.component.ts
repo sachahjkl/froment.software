@@ -46,6 +46,27 @@ export class HomeComponent {
       image: '/projects/opencode-native.png',
     },
     {
+      name: 'papier',
+      description: this.i18n.t('home.projects.papier.desc'),
+      cta: this.i18n.t('home.projects.papier.cta'),
+      href: 'https://papier.froment.software',
+      image: '/projects/papier.png',
+    },
+    {
+      name: 'inspecteur',
+      description: this.i18n.t('home.projects.inspecteur.desc'),
+      cta: this.i18n.t('home.projects.inspecteur.cta'),
+      href: 'https://inspecteur.froment.software',
+      image: '/projects/inspecteur.png',
+    },
+    {
+      name: 'classeur',
+      description: this.i18n.t('home.projects.classeur.desc'),
+      cta: this.i18n.t('home.projects.classeur.cta'),
+      href: 'https://classeur.froment.software',
+      image: '/projects/classeur.png',
+    },
+    {
       name: 'PetitPécule',
       description: this.i18n.t('home.projects.petitpecule.desc'),
       cta: this.i18n.t('home.projects.petitpecule.cta'),
