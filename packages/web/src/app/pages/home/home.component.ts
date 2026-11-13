@@ -67,6 +67,20 @@ export class HomeComponent {
       image: '/projects/classeur.png',
     },
     {
+      name: 'cliche',
+      description: this.i18n.t('home.projects.cliche.desc'),
+      cta: this.i18n.t('home.projects.cliche.cta'),
+      href: 'https://cliche.froment.software',
+      image: '/projects/cliche.png',
+    },
+    {
+      name: 'modus',
+      description: this.i18n.t('home.projects.modus.desc'),
+      cta: this.i18n.t('home.projects.modus.cta'),
+      href: 'https://modus.froment.software',
+      image: '/projects/modus.png',
+    },
+    {
       name: 'PetitPécule',
       description: this.i18n.t('home.projects.petitpecule.desc'),
       cta: this.i18n.t('home.projects.petitpecule.cta'),

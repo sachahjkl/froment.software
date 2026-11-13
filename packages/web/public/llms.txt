@@ -13,6 +13,8 @@ Contact : contact@froment.software
 - [papier](https://papier.froment.software): historique du presse-papiers, rapide, cherché pendant la frappe, sous licence MIT.
 - [inspecteur](https://inspecteur.froment.software): gestionnaire de tâches natif et rapide pour Linux, sous licence MIT.
 - [classeur](https://classeur.froment.software): gestionnaire de fichiers rapide, pensé pour le clavier, sous licence MIT.
+- [cliche](https://cliche.froment.software): captures et enregistrements d'écran, partagés aussitôt, sous licence MIT.
+- [modus](https://modus.froment.software): système d'exploitation où chaque programme n'atteint que ce qu'on lui donne, sous licence MIT.
 
 ## Prestations
 

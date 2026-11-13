@@ -76,6 +76,11 @@ export const translations = {
     'home.projects.inspecteur.cta': 'Ouvrir inspecteur dans un nouvel onglet',
     'home.projects.classeur.desc': 'Gestionnaire de fichiers rapide, pensé pour le clavier.',
     'home.projects.classeur.cta': 'Ouvrir classeur dans un nouvel onglet',
+    'home.projects.cliche.desc': 'Captures et enregistrements d’écran, partagés aussitôt.',
+    'home.projects.cliche.cta': 'Ouvrir cliche dans un nouvel onglet',
+    'home.projects.modus.desc':
+      'Système d’exploitation où chaque programme n’atteint que ce qu’on lui donne.',
+    'home.projects.modus.cta': 'Ouvrir modus dans un nouvel onglet',
     'home.projects.petitpecule.desc': 'Retrouvez vos petits sous.',
     'home.projects.petitpecule.cta': 'Ouvrir PetitPécule dans un nouvel onglet',
     'home.projects.backoffice.desc': 'Backoffice configurable pour applications métier.',
@@ -370,6 +375,11 @@ export const translations = {
     'home.projects.inspecteur.cta': 'Open inspecteur in a new tab',
     'home.projects.classeur.desc': 'A fast file manager, keyboard first.',
     'home.projects.classeur.cta': 'Open classeur in a new tab',
+    'home.projects.cliche.desc': 'Fast screenshots and screen recordings, shared at once.',
+    'home.projects.cliche.cta': 'Open cliche in a new tab',
+    'home.projects.modus.desc':
+      'An operating system in which each program reaches only what it was given.',
+    'home.projects.modus.cta': 'Open modus in a new tab',
     'home.projects.petitpecule.desc': 'Find your small change.',
     'home.projects.petitpecule.cta': 'Open PetitPécule in a new tab',
     'home.projects.backoffice.desc': 'Configurable back office for business applications.',
