@@ -32,6 +32,13 @@ export class HomeComponent {
 
   protected readonly projects = computed<readonly Project[]>(() => [
     {
+      name: 'atelier',
+      description: this.i18n.t('home.projects.atelier.desc'),
+      cta: this.i18n.t('home.projects.atelier.cta'),
+      href: 'https://atelier.froment.software',
+      image: '/projects/atelier.png',
+    },
+    {
       name: 'Wren',
       description: this.i18n.t('home.projects.wren.desc'),
       cta: this.i18n.t('home.projects.wren.cta'),
@@ -79,6 +86,20 @@ export class HomeComponent {
       cta: this.i18n.t('home.projects.modus.cta'),
       href: 'https://modus.froment.software',
       image: '/projects/modus.png',
+    },
+    {
+      name: 'agora',
+      description: this.i18n.t('home.projects.agora.desc'),
+      cta: this.i18n.t('home.projects.agora.cta'),
+      href: 'https://agora.froment.software',
+      image: '/projects/agora.png',
+    },
+    {
+      name: 'shojiwm-desktop',
+      description: this.i18n.t('home.projects.shojiwmdesktop.desc'),
+      cta: this.i18n.t('home.projects.shojiwmdesktop.cta'),
+      href: 'https://desktop.froment.software',
+      image: '/projects/shojiwm-desktop.png',
     },
     {
       name: 'PetitPécule',

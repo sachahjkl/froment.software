@@ -64,6 +64,9 @@ export const translations = {
     'home.timeline.clockin.desc': 'Application de pointage et de suivi du temps.',
     'home.timeline.clockin.cta': 'Ouvrir Clockin',
     'home.projects.title': 'Projets publics',
+    'home.projects.atelier.desc':
+      'Les outils de bureau de Froment Software en un seul téléchargement : choisis, licences lues, installés d’un coup.',
+    'home.projects.atelier.cta': 'Ouvrir atelier dans un nouvel onglet',
     'home.projects.wren.desc': 'Navigateur web écrit en Odin, avec son propre moteur.',
     'home.projects.wren.cta': 'Ouvrir Wren dans un nouvel onglet',
     'home.projects.opencodenative.name': 'opencode native',
@@ -81,6 +84,12 @@ export const translations = {
     'home.projects.modus.desc':
       'Système d’exploitation où chaque programme n’atteint que ce qu’on lui donne.',
     'home.projects.modus.cta': 'Ouvrir modus dans un nouvel onglet',
+    'home.projects.agora.desc':
+      'Un monde vivant de personnes autonomes, observé pendant qu’il tourne.',
+    'home.projects.agora.cta': 'Ouvrir agora dans un nouvel onglet',
+    'home.projects.shojiwmdesktop.desc':
+      'Un environnement de bureau Wayland complet : barre des tâches, menu Démarrer, panneau de configuration.',
+    'home.projects.shojiwmdesktop.cta': 'Ouvrir shojiwm-desktop dans un nouvel onglet',
     'home.projects.petitpecule.desc': 'Retrouvez vos petits sous.',
     'home.projects.petitpecule.cta': 'Ouvrir PetitPécule dans un nouvel onglet',
     'home.projects.backoffice.desc': 'Backoffice configurable pour applications métier.',
@@ -363,6 +372,9 @@ export const translations = {
     'home.timeline.clockin.desc': 'Clock-in and time-tracking application.',
     'home.timeline.clockin.cta': 'Open Clockin',
     'home.projects.title': 'Public projects',
+    'home.projects.atelier.desc':
+      'The working man’s tools: Froment Software’s desktop programs in one download, chosen and installed at once.',
+    'home.projects.atelier.cta': 'Open atelier in a new tab',
     'home.projects.wren.desc': 'A web browser written in Odin, with its own engine.',
     'home.projects.wren.cta': 'Open Wren in a new tab',
     'home.projects.opencodenative.name': 'opencode native',
@@ -380,6 +392,11 @@ export const translations = {
     'home.projects.modus.desc':
       'An operating system in which each program reaches only what it was given.',
     'home.projects.modus.cta': 'Open modus in a new tab',
+    'home.projects.agora.desc': 'A living world of autonomous people, watched as it runs.',
+    'home.projects.agora.cta': 'Open agora in a new tab',
+    'home.projects.shojiwmdesktop.desc':
+      'A complete Wayland desktop environment: a taskbar, a Start menu, a Control Panel.',
+    'home.projects.shojiwmdesktop.cta': 'Open shojiwm-desktop in a new tab',
     'home.projects.petitpecule.desc': 'Find your small change.',
     'home.projects.petitpecule.cta': 'Open PetitPécule in a new tab',
     'home.projects.backoffice.desc': 'Configurable back office for business applications.',

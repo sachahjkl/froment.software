@@ -8,6 +8,7 @@ Contact : contact@froment.software
 
 ## Logiciels
 
+- [atelier](https://atelier.froment.software): les outils de bureau de Froment Software en un seul téléchargement (papier, classeur, cliche, inspecteur, opencode native), choisis, licences lues, installés d'un coup, sous licence MIT.
 - [Wren](https://wren.froment.software): navigateur web écrit en Odin, avec son propre moteur. Vendu en licence.
 - [opencode native](https://ocn.froment.software): client de bureau natif pour le serveur opencode, sous licence MIT. Projet indépendant de l'équipe OpenCode.
 - [papier](https://papier.froment.software): historique du presse-papiers, rapide, cherché pendant la frappe, sous licence MIT.
@@ -15,6 +16,8 @@ Contact : contact@froment.software
 - [classeur](https://classeur.froment.software): gestionnaire de fichiers rapide, pensé pour le clavier, sous licence MIT.
 - [cliche](https://cliche.froment.software): captures et enregistrements d'écran, partagés aussitôt, sous licence MIT.
 - [modus](https://modus.froment.software): système d'exploitation où chaque programme n'atteint que ce qu'on lui donne, sous licence MIT.
+- [agora](https://agora.froment.software): un monde vivant de personnes autonomes, observé pendant qu'il tourne, sous licence MIT.
+- [shojiwm-desktop](https://desktop.froment.software): un environnement de bureau Wayland complet, avec barre des tâches, menu Démarrer et panneau de configuration.
 
 ## Prestations
 
