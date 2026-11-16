@@ -9,7 +9,7 @@ import { I18nService, TranslationKey } from './i18n.service';
 import { localizedPath, localizedUrl } from './localized-route';
 
 const origin = 'https://froment.software';
-const socialImage = `${origin}/social-card-v4.png`;
+const socialImage = `${origin}/social-card-v5.png`;
 
 export interface SiteIdentity {
   readonly publisher: string;
@@ -90,7 +90,7 @@ export class PageMetadata {
     const title = this.i18n.t(note.titleKey);
     const description = this.i18n.t(note.descriptionKey);
     const topics = note.topicKeys.map((key) => this.i18n.t(key));
-    const pageTitle = `${title} | froment.software`;
+    const pageTitle = `${title} | ${this.i18n.t('metadata.publisher')}`;
     const url = `${origin}${localizedPath(this.i18n.language(), `/notes/${note.slug}`)}`;
     this.title.setTitle(pageTitle);
     this.meta.updateTag({ name: 'description', content: description });

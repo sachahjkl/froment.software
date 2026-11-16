@@ -36,7 +36,7 @@ describe('PageMetadata', () => {
     const harness = await RouterTestingHarness.create(`/notes/${note.slug}`);
     const content = (selector: string) =>
       document.head.querySelector(selector)?.getAttribute('content');
-    expect(document.title).toBe(`${i18n.t(note.titleKey)} | froment.software`);
+    expect(document.title).toBe(`${i18n.t(note.titleKey)} | Froment Software`);
 
     await harness.navigateByUrl('/notes/missing');
     await harness.fixture.whenStable();
@@ -54,7 +54,7 @@ describe('PageMetadata', () => {
 
     await harness.navigateByUrl(`/notes/${note.slug}`);
     await harness.fixture.whenStable();
-    expect(document.title).toBe(`${i18n.t(note.titleKey)} | froment.software`);
+    expect(document.title).toBe(`${i18n.t(note.titleKey)} | Froment Software`);
     expect(content('meta[name="robots"]')).toBe('index, follow');
   });
 
@@ -63,7 +63,7 @@ describe('PageMetadata', () => {
     const i18n = TestBed.inject(I18nService);
     i18n.setLanguage('en');
     await harness.fixture.whenStable();
-    expect(document.title).toBe(`${i18n.t(note.titleKey)} | froment.software`);
+    expect(document.title).toBe(`${i18n.t(note.titleKey)} | Froment Software`);
     expect(document.head.querySelector('meta[property="og:type"]')?.getAttribute('content')).toBe(
       'article',
     );

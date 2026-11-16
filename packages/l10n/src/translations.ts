@@ -15,20 +15,20 @@ export const translations = {
     'shell.theme.dark': 'Activer le mode sombre',
     'shell.theme.light': 'Activer le mode clair',
     'page.home': 'Froment Software | Éditeur de logiciels',
-    'page.products': 'Projets publics | froment.software',
-    'page.legal': 'Mentions légales | froment.software',
+    'page.products': 'Projets publics | Froment Software',
+    'page.legal': 'Mentions légales | Froment Software',
     'page.description.legal':
       'Éditeur, immatriculation, hébergement, propriété intellectuelle et contact du site froment.software.',
-    'page.privacy': 'Confidentialité | froment.software',
+    'page.privacy': 'Confidentialité | Froment Software',
     'page.description.privacy':
       'Données techniques, stockage local et contacts liés à la confidentialité sur froment.software.',
-    'page.cookies': 'Cookies et stockage local | froment.software',
-    'page.version': 'Version | froment.software',
+    'page.cookies': 'Cookies et stockage local | Froment Software',
+    'page.version': 'Version | Froment Software',
     'page.description.version': 'Versions des packages et commit Git du déploiement.',
     'page.description.cookies':
       'Cookies, préférence de langue et contrôle du stockage local utilisé par froment.software.',
-    'page.not_found': 'Page introuvable | froment.software',
-    'page.notes': 'Notes techniques | froment.software',
+    'page.not_found': 'Page introuvable | Froment Software',
+    'page.notes': 'Notes techniques | Froment Software',
     'page.description.notes':
       'Notes techniques, retours d’expérience et idées de Froment Software.',
     'backOffice.title': 'Back office',
@@ -115,8 +115,8 @@ export const translations = {
     'not_found.cta': 'Retour à l’accueil',
     'not_found.links_label': 'Prochaines étapes',
     'not_found.contact': 'Écrire à Froment Software',
-    'page.service.creation': 'Création de logiciels | froment.software',
-    'page.service.renovation': 'Rénovation de logiciels métier | froment.software',
+    'page.service.creation': 'Création de logiciels | Froment Software',
+    'page.service.renovation': 'Rénovation de logiciels métier | Froment Software',
     'page.description.service.creation':
       'Logiciel de bureau, application web ou outil interne écrit pour vous, livré avec son code source et sa licence.',
     'page.description.service.renovation':
@@ -303,7 +303,7 @@ export const translations = {
       'Les gens répondent, le dépôt fait foi, les mesures jugent : la position de Froment Software, en vingt-cinq points.',
     'notes.feed': 'Flux Atom',
     'nav.changelog': 'Versions',
-    'page.changelog': 'Versions | froment.software',
+    'page.changelog': 'Versions | Froment Software',
     'page.description.changelog':
       'Toutes les versions de froment.software, avec leurs ajouts, changements et corrections.',
     'changelog.title': 'Versions',
@@ -340,20 +340,20 @@ export const translations = {
     'shell.theme.dark': 'Use dark mode',
     'shell.theme.light': 'Use light mode',
     'page.home': 'Froment Software | Software publisher',
-    'page.products': 'Public projects | froment.software',
-    'page.legal': 'Legal notice | froment.software',
+    'page.products': 'Public projects | Froment Software',
+    'page.legal': 'Legal notice | Froment Software',
     'page.description.legal':
       'Publisher, registration, hosting, intellectual property and contact information for froment.software.',
-    'page.privacy': 'Privacy | froment.software',
+    'page.privacy': 'Privacy | Froment Software',
     'page.description.privacy':
       'Technical request data, local storage and privacy contacts for froment.software.',
-    'page.cookies': 'Cookies and local storage | froment.software',
-    'page.version': 'Version | froment.software',
+    'page.cookies': 'Cookies and local storage | Froment Software',
+    'page.version': 'Version | Froment Software',
     'page.description.version': 'Package versions and Git commit for this deployment.',
     'page.description.cookies':
       'Cookies, language preference and local-storage controls used by froment.software.',
-    'page.not_found': 'Page not found | froment.software',
-    'page.notes': 'Technical notes | froment.software',
+    'page.not_found': 'Page not found | Froment Software',
+    'page.notes': 'Technical notes | Froment Software',
     'page.description.notes':
       'Technical notes, experience reports and ideas from Froment Software.',
     'backOffice.title': 'Back office',
@@ -439,8 +439,8 @@ export const translations = {
     'not_found.cta': 'Back to home',
     'not_found.links_label': 'Next steps',
     'not_found.contact': 'Email Froment Software',
-    'page.service.creation': 'Software creation | froment.software',
-    'page.service.renovation': 'Business software renovation | froment.software',
+    'page.service.creation': 'Software creation | Froment Software',
+    'page.service.renovation': 'Business software renovation | Froment Software',
     'page.description.service.creation':
       'Desktop software, web application or internal tool written for you, delivered with its source code and licence.',
     'page.description.service.renovation':
@@ -625,7 +625,7 @@ export const translations = {
       'People answer, the repository is the truth, measurements judge: the position of Froment Software, in twenty-five points.',
     'notes.feed': 'Atom feed',
     'nav.changelog': 'Changelog',
-    'page.changelog': 'Changelog | froment.software',
+    'page.changelog': 'Changelog | Froment Software',
     'page.description.changelog':
       'Every version of froment.software, with what was added, changed and fixed.',
     'changelog.title': 'Changelog',
