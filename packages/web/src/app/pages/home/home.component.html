@@ -3,11 +3,13 @@
     <div class="identity">
       <img src="/brand/icon-192.png" width="72" height="72" alt="" />
       <div class="identity-name">
-        <strong>Froment Software</strong>
-        <app-new-label ngSkipHydration />
+        <div class="identity-title">
+          <h1>Froment Software</h1>
+          <app-new-label ngSkipHydration />
+        </div>
+        <p class="tagline">{{ i18n.t("home.hero.title") }}</p>
       </div>
     </div>
-    <h1>{{ i18n.t("home.hero.title") }}</h1>
     <div class="contact-links">
       <a
         appLinkButton
