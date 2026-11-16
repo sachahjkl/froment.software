@@ -12,14 +12,16 @@ Le public est technique. Il comprend le clin d’œil sans explication. Le sloga
 
 - **« Making », pas « Make ».** Le gérondif décrit le métier de l’entreprise. L’impératif donnait un ordre au lecteur.
 - **Pas de « again ».** « Make computers compute again » renvoie au slogan politique de Trump.
-- **L’anglais reste sur le site français.** Le jeu entre *computer* et *compute* ne se traduit pas mot à mot, et le public lit l’anglais.
+- **L’anglais reste sur le site français.** Le jeu entre _computer_ et _compute_ ne se traduit pas mot à mot, et le public lit l’anglais.
 
-## Version française, plus tard
+## Versions françaises retenues
 
-Les pistes retenues pour une future version française :
+Aucune n’est publiée. Le site garde l’anglais. Ces deux versions sont retenues pour le jour où le site aura un slogan français :
 
-- **« Des ordinateurs qui comptent. »** C’est la préférée. *Compter* et *compute* viennent du même latin, *computare*. Le double sens (calculer, avoir de l’importance) remplace le jeu de l’anglais.
-- **« Faire compter les ordinateurs. »** C’est le même jeu, sous la forme d’une action, comme « making ».
-- **« Remettre de l’ordre dans l’ordinateur. »** Ce jeu porte sur *ordonner*, la racine d’« ordinateur ».
+- **« Des ordinateurs qui comptent. »** _Compter_ et _compute_ viennent du même latin, _computare_. Le double sens (calculer, avoir de l’importance) remplace le jeu de l’anglais.
+- **« Faire calculer les ordinateurs. »** C’est la traduction directe de « making computers compute », sous la forme d’une action.
 
-Refusée : « Faire calculer les ordinateurs ». La traduction est littérale et perd le jeu de mots.
+Pistes écartées :
+
+- « Faire compter les ordinateurs. » et « Remettre de l’ordre dans l’ordinateur. » (jeu sur _ordonner_, la racine d’« ordinateur »).
+- « Remettre les ordinateurs au travail. », « Rendre aux machines leur vitesse. », « Un ordinateur, ça calcule. ».
