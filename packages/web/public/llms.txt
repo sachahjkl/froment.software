@@ -16,7 +16,6 @@ Contact : contact@froment.software
 - [classeur](https://classeur.froment.software): gestionnaire de fichiers rapide, pensé pour le clavier, sous licence MIT.
 - [cliche](https://cliche.froment.software): captures et enregistrements d'écran, partagés aussitôt, sous licence MIT.
 - [modus](https://modus.froment.software): système d'exploitation où chaque programme n'atteint que ce qu'on lui donne, sous licence MIT.
-- [agora](https://agora.froment.software): un monde vivant de personnes autonomes, observé pendant qu'il tourne, sous licence MIT.
 - [shojiwm-desktop](https://desktop.froment.software): un environnement de bureau Wayland complet, avec barre des tâches, menu Démarrer et panneau de configuration.
 
 ## Prestations

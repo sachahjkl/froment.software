@@ -88,13 +88,6 @@ export class HomeComponent {
       image: '/projects/modus.png',
     },
     {
-      name: 'agora',
-      description: this.i18n.t('home.projects.agora.desc'),
-      cta: this.i18n.t('home.projects.agora.cta'),
-      href: 'https://agora.froment.software',
-      image: '/projects/agora.png',
-    },
-    {
       name: 'shojiwm-desktop',
       description: this.i18n.t('home.projects.shojiwmdesktop.desc'),
       cta: this.i18n.t('home.projects.shojiwmdesktop.cta'),

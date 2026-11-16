@@ -84,9 +84,6 @@ export const translations = {
     'home.projects.modus.desc':
       'Système d’exploitation où chaque programme n’atteint que ce qu’on lui donne.',
     'home.projects.modus.cta': 'Ouvrir modus dans un nouvel onglet',
-    'home.projects.agora.desc':
-      'Un monde vivant de personnes autonomes, observé pendant qu’il tourne.',
-    'home.projects.agora.cta': 'Ouvrir agora dans un nouvel onglet',
     'home.projects.shojiwmdesktop.desc':
       'Un environnement de bureau Wayland complet : barre des tâches, menu Démarrer, panneau de configuration.',
     'home.projects.shojiwmdesktop.cta': 'Ouvrir shojiwm-desktop dans un nouvel onglet',
@@ -392,8 +389,6 @@ export const translations = {
     'home.projects.modus.desc':
       'An operating system in which each program reaches only what it was given.',
     'home.projects.modus.cta': 'Open modus in a new tab',
-    'home.projects.agora.desc': 'A living world of autonomous people, watched as it runs.',
-    'home.projects.agora.cta': 'Open agora in a new tab',
     'home.projects.shojiwmdesktop.desc':
       'A complete Wayland desktop environment: a taskbar, a Start menu, a Control Panel.',
     'home.projects.shojiwmdesktop.cta': 'Open shojiwm-desktop in a new tab',
