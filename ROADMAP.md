@@ -6,6 +6,6 @@
 
 ## Next
 
-- **Vérification et publication du changelog.** Les checks du flake vérifient le format de `CHANGELOG.md`, des fragments de `changelog.d/` et de cette roadmap. La publication d’une version assemble les fragments avec l’outil `changelog` de gui_toolkit (`-root`).
+- **Vérification et publication du changelog.** Les checks du flake vérifient le format de `CHANGELOG.md`, des fragments de `changelog.d/` et de cette roadmap. La publication d’une version assemble les fragments avec l’outil `changelog` de gui_toolkit (`-root`), monte les numéros des `package.json`, puis crée le tag et la release GitHub. Aujourd’hui, ces étapes sont manuelles.
 
 ## Later

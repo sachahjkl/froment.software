@@ -8,6 +8,7 @@ const staticPaths = [
   'services/renovation',
   'tools',
   'notes',
+  'changelog',
   'legal',
   'privacy',
   'cookies',

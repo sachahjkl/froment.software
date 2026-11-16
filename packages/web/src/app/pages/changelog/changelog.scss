@@ -1,0 +1,135 @@
+:host {
+  display: block;
+}
+.changelog {
+  padding-block: 4rem 6rem;
+}
+.page-intro {
+  padding: 0;
+  border: 0;
+  background: none;
+}
+.page-intro p {
+  margin-top: var(--space-3);
+  color: var(--color-muted);
+  font-size: var(--text-lg);
+}
+.subscribe {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-6);
+  margin: var(--space-4) 0 0;
+  padding: 0;
+  list-style: none;
+}
+.subscribe a,
+.release-link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--color-ink-soft);
+  font-size: var(--text-sm);
+}
+.subscribe a:hover,
+.release-link:hover {
+  color: var(--color-ink);
+}
+app-icon {
+  --icon-color: currentColor;
+}
+.filter {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  margin-top: var(--space-10);
+}
+.filter input {
+  flex: 1;
+  min-width: 0;
+}
+.count {
+  color: var(--color-muted);
+  font-size: var(--text-sm);
+  white-space: nowrap;
+}
+
+// The rail and the dots make the list read as a timeline.
+.timeline {
+  position: relative;
+  margin: var(--space-8) 0 0;
+  padding: 0 0 0 var(--space-8);
+  list-style: none;
+}
+.timeline::before {
+  content: "";
+  position: absolute;
+  inset-block: var(--space-3) 0;
+  left: 0.3125rem;
+  width: 1px;
+  background: var(--color-line-strong);
+}
+.timeline > li {
+  position: relative;
+  padding-bottom: var(--space-10);
+  scroll-margin-top: calc(var(--shell-height) + var(--space-4));
+}
+.timeline > li:not(.empty)::before {
+  content: "";
+  position: absolute;
+  top: 0.4375rem;
+  left: calc(-1 * var(--space-8));
+  width: 0.6875rem;
+  height: 0.6875rem;
+  border: 2px solid var(--color-accent);
+  border-radius: var(--radius-pill);
+  background: var(--color-canvas);
+}
+.timeline > li:first-child::before {
+  background: var(--color-accent);
+}
+.release-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-1) var(--space-4);
+}
+.release-head h2 {
+  font-family: var(--font-mono);
+  font-size: var(--text-xl);
+}
+.release-head time {
+  color: var(--color-muted);
+  font-size: var(--text-sm);
+}
+.release-link {
+  margin-left: auto;
+}
+.changes {
+  margin-top: var(--space-4);
+}
+.changes h3 {
+  color: var(--color-muted);
+  font-size: var(--text-xs);
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+}
+.changes ul {
+  display: grid;
+  gap: var(--space-2);
+  margin: var(--space-2) 0 0;
+  padding-left: var(--space-5);
+  color: var(--color-ink-soft);
+}
+.changes-Added h3 {
+  color: var(--color-success);
+}
+.changes-Fixed h3 {
+  color: var(--color-info);
+}
+.changes-Removed h3,
+.changes-Security h3 {
+  color: var(--color-danger);
+}
+.empty {
+  color: var(--color-muted);
+}

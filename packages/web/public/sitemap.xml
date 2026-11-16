@@ -51,6 +51,16 @@
     <xhtml:link rel="alternate" hreflang="en" href="https://froment.software/en/notes" />
   </url>
   <url>
+    <loc>https://froment.software/fr/changelog</loc>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://froment.software/fr/changelog" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://froment.software/en/changelog" />
+  </url>
+  <url>
+    <loc>https://froment.software/en/changelog</loc>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://froment.software/fr/changelog" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://froment.software/en/changelog" />
+  </url>
+  <url>
     <loc>https://froment.software/fr/notes/2026-11-comment-faire-du-logiciel</loc>
     <xhtml:link rel="alternate" hreflang="fr" href="https://froment.software/fr/notes/2026-11-comment-faire-du-logiciel" />
     <xhtml:link rel="alternate" hreflang="en" href="https://froment.software/en/notes/2026-11-comment-faire-du-logiciel" />

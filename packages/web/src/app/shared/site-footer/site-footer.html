@@ -5,6 +5,9 @@
       <nav [attr.aria-label]="i18n.t('shell.legal_nav')">
         <ul>
           <li><a [routerLink]="i18n.localizedPath('/notes')">{{ i18n.t('nav.notes') }}</a></li>
+          <li>
+            <a [routerLink]="i18n.localizedPath('/changelog')">{{ i18n.t('nav.changelog') }}</a>
+          </li>
           <li><a [routerLink]="i18n.localizedPath('/legal')">{{ i18n.t('nav.legal') }}</a></li>
           <li><a [routerLink]="i18n.localizedPath('/privacy')">{{ i18n.t('nav.privacy') }}</a></li>
           <li><a [routerLink]="i18n.localizedPath('/cookies')">{{ i18n.t('nav.cookies') }}</a></li>

@@ -1,11 +1,12 @@
 {
   "name": "@froment/l10n",
-  "version": "0.2.5",
+  "version": "0.20.0",
   "private": true,
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
-    "./notes": "./src/notes.ts"
+    "./notes": "./src/notes.ts",
+    "./changelog": "./src/changelog.ts"
   },
   "scripts": {
     "build": "tsc --noEmit",

@@ -1,10 +1,10 @@
 {
   "name": "@froment/marketing",
-  "version": "0.2.5",
+  "version": "0.20.0",
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "tsc --noEmit && esbuild src/marketing.ts --bundle --platform=node --format=cjs --out-extension:.js=.cjs --outdir=dist",
+    "build": "tsc --noEmit && esbuild src/marketing.ts --bundle --platform=node --format=cjs --loader:.md=text --out-extension:.js=.cjs --outdir=dist",
     "test": "pnpm build && vitest run"
   },
   "dependencies": {

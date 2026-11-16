@@ -1,0 +1,70 @@
+<article class="changelog">
+  <header class="page-intro">
+    <h1>{{ i18n.t("changelog.title") }}</h1>
+    <p>{{ i18n.t("changelog.lead") }}</p>
+    <ul class="subscribe">
+      <li>
+        <a href="/changelog/feed" type="application/atom+xml" hreflang="fr">
+          <app-icon name="rss" />
+          <span>{{ i18n.t("changelog.feed") }}</span>
+        </a>
+      </li>
+      <li>
+        <a [href]="releasesUrl" target="_blank" rel="noopener noreferrer">
+          <app-icon name="external" />
+          <span>{{ i18n.t("changelog.github") }}</span>
+        </a>
+      </li>
+    </ul>
+  </header>
+
+  <div class="filter">
+    <input
+      #filterInput
+      class="input"
+      type="search"
+      [placeholder]="i18n.t('changelog.filter')"
+      [attr.aria-label]="i18n.t('changelog.filter')"
+      [value]="query()"
+      (input)="query.set(filterInput.value)"
+    />
+    <span class="count" aria-live="polite">{{ count() }}</span>
+  </div>
+
+  <ol class="timeline">
+    @for (release of shown(); track release.version) {
+    <li [id]="'v' + release.version">
+      <article>
+        <header class="release-head">
+          <h2>{{ release.version }}</h2>
+          <time [attr.datetime]="release.date"
+            >{{ release.date | localizedDate: i18n.language() : { dateStyle: "long" } }}</time
+          >
+          @if (release.link; as link) {
+          <a
+            class="release-link"
+            [href]="link"
+            target="_blank"
+            rel="noopener noreferrer"
+            [attr.aria-label]="releaseLabel(release.version)"
+            >GitHub <app-icon name="external"
+          /></a>
+          }
+        </header>
+        @for (section of release.sections; track section.type) {
+        <section [class]="'changes changes-' + section.type">
+          <h3>{{ typeLabel(section.type) }}</h3>
+          <ul>
+            @for (entry of section.entries; track $index) {
+            <li [innerHTML]="entry"></li>
+            }
+          </ul>
+        </section>
+        }
+      </article>
+    </li>
+    } @empty {
+    <li class="empty">{{ i18n.t("changelog.empty") }}</li>
+    }
+  </ol>
+</article>

@@ -91,7 +91,7 @@ main {
   margin-block: 0;
 }
 
-.app-shell:has(:is(app-notes, app-note, app-policy-page)) main {
+.app-shell:has(:is(app-notes, app-note, app-changelog, app-policy-page)) main {
   width: min(100% - 3rem, 48rem);
   max-width: none;
   margin-block: 0;

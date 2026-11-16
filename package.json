@@ -1,6 +1,6 @@
 {
   "name": "froment-software",
-  "version": "0.2.5",
+  "version": "0.20.0",
   "private": true,
   "scripts": {
     "start": "pnpm --filter @froment/web start",

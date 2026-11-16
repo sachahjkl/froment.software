@@ -3,7 +3,12 @@ import type { PublicRuntimeConfigValue } from '@froment/contracts';
 import { Config, Effect, Layer, Schema } from 'effect';
 import { HttpRouter, HttpServerRequest, HttpServerResponse, HttpStaticServer } from 'effect/http';
 import { createServer } from 'node:http';
+import { parseChangelog } from '@froment/l10n/changelog';
+import changelogText from '../../../CHANGELOG.md';
+import { changelogFeed } from './changelog/feed.js';
 import { notesFeed } from './notes/feed.js';
+
+const releases = parseChangelog(changelogText);
 import { Deployment, DeploymentLive } from './deployment/deployment.js';
 import { RuntimeConfiguration, RuntimeConfigurationLive } from './runtime-config.js';
 
@@ -29,6 +34,15 @@ export const makeMarketingServerLayer = (options: {
         }
         if (url.pathname === '/notes/feed')
           return HttpServerResponse.text(notesFeed(options.publicOrigin), {
+            contentType: 'application/atom+xml; charset=utf-8',
+            headers: {
+              'content-language': 'fr',
+              'cache-control': 'no-cache',
+              'x-content-type-options': 'nosniff',
+            },
+          });
+        if (url.pathname === '/changelog/feed')
+          return HttpServerResponse.text(changelogFeed(options.publicOrigin, releases), {
             contentType: 'application/atom+xml; charset=utf-8',
             headers: {
               'content-language': 'fr',

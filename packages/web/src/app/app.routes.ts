@@ -71,6 +71,11 @@ const localizedChildren: Routes = [
     loadComponent: () => import('./pages/note/note').then((module) => module.Note),
   },
   {
+    path: 'changelog',
+    loadComponent: () => import('./pages/changelog/changelog').then((module) => module.Changelog),
+    data: { titleKey: 'page.changelog', descriptionKey: 'page.description.changelog' },
+  },
+  {
     path: 'legal',
     loadComponent: () => import('./pages/policy/policy-page').then((module) => module.PolicyPage),
     data: {

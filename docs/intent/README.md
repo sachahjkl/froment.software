@@ -14,4 +14,5 @@ Le site est pré-rendu par Angular (`packages/web`) et servi par un serveur Effe
 
 ## File Index
 
+- [features/changelog.md](features/changelog.md) : la page des versions, le flux Atom et l’historique reconstruit.
 - [features/slogan.md](features/slogan.md) : le slogan, son public, et pourquoi il reste en anglais.

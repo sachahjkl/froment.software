@@ -47,6 +47,7 @@
         root = ./.;
         fileset = lib.fileset.unions [
           ./.editorconfig
+          ./CHANGELOG.md
           ./.oxfmtrc.json
           ./.oxlintrc.json
           ./package.json

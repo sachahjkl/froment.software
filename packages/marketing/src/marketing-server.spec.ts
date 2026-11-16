@@ -104,6 +104,14 @@ it('serves only the marketing site and redirects legacy business pages', async (
   expect(xml).toContain(`hreflang="en"`);
   expect((await fetch(`${baseUrl}/api/blog/feed`)).status).toBe(404);
 
+  const releases = await fetch(`${baseUrl}/changelog/feed`);
+  expect(releases.status).toBe(200);
+  expect(releases.headers.get('content-type')).toContain('application/atom+xml');
+  const releasesXml = await releases.text();
+  expect(releasesXml).toContain(`<id>${baseUrl}/changelog/feed</id>`);
+  expect(releasesXml).toContain(`<id>${baseUrl}/fr/changelog#v0.1.0</id>`);
+  expect(releasesXml).toContain('&lt;strong&gt;');
+
   const runtime = await fetch(`${baseUrl}/runtime-config.js`);
   expect(runtime.headers.get('cache-control')).toBe('no-store');
   expect(await runtime.text()).toContain('"appEnvironment":"production"');
