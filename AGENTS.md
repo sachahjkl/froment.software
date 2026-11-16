@@ -14,6 +14,23 @@ Each commit should be:
 
 Push after a meaningful batch of commits, or when the work is ready for CI/review.
 
+## Intent
+
+This project follows https://srcmd.org, with the Markdown in `docs/intent` (the project has no root `src` folder). Read [docs/intent/README.md](docs/intent/README.md) first. Change the intent first, then the code and the tests. A change of design changes its intent file in the same commit. The other files of `docs/` are documentation and reviews, not intent.
+
+## Changelog
+
+- [CHANGELOG.md](CHANGELOG.md) follows Keep a Changelog and semantic versioning. Do not edit it by hand.
+- Write each change that a visitor can see as one fragment in `changelog.d/`, in the same commit as the change. [changelog.d/README.md](changelog.d/README.md) gives the format.
+- A change that no visitor can see has no fragment.
+
+## Roadmap
+
+- [ROADMAP.md](ROADMAP.md), next to `CHANGELOG.md`, holds the planned work of this project.
+- Use plain Markdown: `# Roadmap`, then `## Now`, `## Next` and `## Later`, in this order. Each section is a list. Give no dates.
+- Start each entry with a bold summary, then one or two sentences on what it gives the visitor. If a design exists, link its intent file in `docs/intent`.
+- When a work is done, remove its entry in the same commit as its changelog fragment.
+
 ## Tests de l’interface
 
 - Ne lancez pas les tests d’intégration navigateur ou Playwright dans les checks Nix, la CI ou les étapes de publication.
