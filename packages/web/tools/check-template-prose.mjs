@@ -15,7 +15,7 @@ const userFacingAttributes = new Set([
   "title",
   "value",
 ]);
-const crossLanguageTextValues = new Set(["404", "froment.software", "Sacha Froment", "PDF"]);
+const crossLanguageTextValues = new Set(["404", "Froment Software", "Sacha Froment", "PDF"]);
 const machineValue = /^(?:[#€×+←→·.,:;!?%/()\d\s-]|[A-Z]{2}-\d{4}-\d{6})+$/u;
 const machineAttribute =
   /^(?:https?:\/\/\S+|[\w.-]+@[\w.-]+|password|adresse-invalide|#[\da-f]{6}|\d{4}-(?:\d{2}-\d{2}(?:T\d{2}:\d{2})?|W\d{2})|[A-Z\d]{20,})$/iu;
