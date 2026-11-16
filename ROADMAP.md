@@ -2,7 +2,7 @@
 
 ## Now
 
-- **Slogan sur LinkedIn.** Le profil et la page de l’entreprise affichent « Making computers compute. », comme le site.
+- **Slogan sur LinkedIn.** Le profil et la page de l’entreprise affichent « Making computers compute », comme le site.
 
 ## Next
 

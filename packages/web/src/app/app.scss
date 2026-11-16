@@ -85,8 +85,20 @@ main {
   outline: none;
 }
 
-.app-shell:has(:is(app-home, app-service-detail)) main {
+.app-shell:has(app-service-detail) main {
   width: min(100% - 3rem, 48rem);
+  max-width: none;
+  margin-block: 0;
+}
+
+// The home page follows the product sites: a wider column for its screenshot and card grids.
+// The footer reads the same width.
+.app-shell:has(app-home) {
+  --page-column: 60rem;
+}
+
+.app-shell:has(app-home) main {
+  width: min(100% - 3rem, var(--page-column));
   max-width: none;
   margin-block: 0;
 }

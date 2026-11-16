@@ -1,10 +1,10 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { formatPluralTranslation } from '@froment/l10n';
-import { entryHtml, parseChangelog, type ChangeType } from '@froment/l10n/changelog';
+import { entryHtml, type ChangeType } from '@froment/l10n/changelog';
 import { I18nService } from '@app/i18n.service';
+import { releases as allReleases } from '@app/releases';
 import { Icon } from '@shared/icon/icon';
 import { LocalizedDatePipe } from '@shared/localized-date/localized-date-pipe';
-import changelogText from '../../../../../../CHANGELOG.md';
 
 const releasesUrl = 'https://github.com/sachahjkl/froment.software/releases';
 
@@ -16,8 +16,7 @@ interface ShownRelease {
   readonly searchText: string;
 }
 
-// Parsed once when the module loads: the changelog only changes with a new build.
-const releases: readonly ShownRelease[] = parseChangelog(changelogText).map((release) => ({
+const releases: readonly ShownRelease[] = allReleases.map((release) => ({
   ...release,
   sections: release.sections.map((section) => ({
     type: section.type,

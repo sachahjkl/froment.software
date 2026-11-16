@@ -1,89 +1,132 @@
 <article class="home">
-  <header class="intro">
-    <div class="identity">
-      <img src="/brand/icon-192.png" width="72" height="72" alt="" />
-      <div class="identity-name">
-        <div class="identity-title">
-          <h1>Froment Software</h1>
-          <app-new-label ngSkipHydration />
-        </div>
-        <p class="tagline">{{ i18n.t("home.hero.title") }}</p>
-      </div>
-    </div>
-    <div class="contact-links">
-      <a
-        appLinkButton
-        variant="primary"
-        size="large"
-        icon="mail"
-        href="mailto:contact@froment.software"
-      >
-        {{ i18n.t("home.engage.mail") }}
+  <header class="hero">
+    <img class="hero-logo" src="/brand/icon-192.png" width="96" height="96" alt="" />
+    <h1>Froment Software</h1>
+    <p class="tagline">{{ i18n.t("home.hero.title") }}</p>
+    <p class="hero-lead">{{ i18n.t("home.hero.lead") }}</p>
+    <div class="hero-actions">
+      <a class="big-button primary" [href]="contactHref">
+        <app-icon name="mail" />
+        <span class="big-button-label">{{ i18n.t("home.engage.mail") }}</span>
+        <span class="big-button-detail">{{ contactAddress }}</span>
       </a>
-      <a
-        appLinkButton
-        size="large"
-        icon="calendar"
-        href="https://cal.com/sachahjkl"
-        target="_blank"
-        rel="noopener noreferrer"
-      >
-        {{ i18n.t("home.hero.book") }}
+      <a class="big-button" [href]="bookingHref" target="_blank" rel="noopener noreferrer">
+        <app-icon name="calendar" />
+        <span class="big-button-label">{{ i18n.t("home.hero.book") }}</span>
+        <span class="big-button-detail">{{ bookingAddress }}</span>
       </a>
     </div>
   </header>
 
-  <section aria-labelledby="projects-title">
-    <h2 id="projects-title">{{ i18n.t("home.projects.title") }}</h2>
-    <ul class="entry-list projects">
-      @for (project of projects(); track project.href) {
+  <a
+    class="shot showcase"
+    [href]="suite()[0].href"
+    target="_blank"
+    rel="noopener noreferrer"
+    [attr.aria-label]="suite()[0].cta"
+  >
+    <img src="/projects/shots/atelier.webp" width="900" height="640" alt="" fetchpriority="high" />
+  </a>
+
+  <section aria-labelledby="suite-title">
+    <h2 id="suite-title">{{ i18n.t("home.suite.title") }}</h2>
+    <p class="lead">{{ i18n.t("home.suite.lead") }}</p>
+    <ul class="tiles">
+      @for (project of suite(); track project.href) {
         <li>
           <a
+            class="card tile"
             [href]="project.href"
             target="_blank"
             rel="noopener noreferrer"
             [attr.aria-label]="project.cta"
           >
             <img [src]="project.image" width="48" height="48" alt="" loading="lazy" />
-            <span class="entry-copy">
-              <strong>{{ project.name }}</strong>
-              <span>{{ project.description }}</span>
-            </span>
-            <span class="external-arrow" aria-hidden="true">↗</span>
+            <strong>{{ project.name }}</strong>
+            <span>{{ project.description }}</span>
           </a>
         </li>
       }
     </ul>
-    <a
-      class="how-link"
-      [href]="
-        i18n.language() === 'fr'
-          ? 'https://how.froment.software/fr/'
-          : 'https://how.froment.software/'
-      "
-      target="_blank"
-      rel="noopener noreferrer"
-      [attr.aria-label]="i18n.t('home.how.cta')"
-    >
-      <span class="how-mark" aria-hidden="true">{{ i18n.t("home.how.mark") }}</span>
-      <span class="entry-copy">
-        <strong>{{ i18n.t("home.how.title") }}</strong>
-        <span>{{ i18n.t("home.how.desc") }}</span>
-      </span>
-      <span class="external-arrow" aria-hidden="true">↗</span>
-    </a>
   </section>
 
   <section aria-labelledby="offers-title">
     <h2 id="offers-title">{{ i18n.t("home.offers.title") }}</h2>
-    <ul class="entry-list offers">
+    <ul class="cards three">
       @for (offer of offers(); track offer.title) {
         <li>
-          <a [routerLink]="offer.href">
-            <app-icon [name]="offer.icon" />
-            <span class="entry-copy">
-              <strong>{{ offer.title }}</strong>
-              <span>{{ offer.description }}</span>
+          <a class="card feature" [routerLink]="offer.href">
+            <strong>{{ offer.title }}</strong>
+            <span>{{ offer.description }}</span>
+          </a>
+        </li>
+      }
+      <li>
+        <a
+          class="card feature"
+          [href]="howUrl()"
+          target="_blank"
+          rel="noopener noreferrer"
+          [attr.aria-label]="i18n.t('home.how.cta')"
+        >
+          <strong>{{ i18n.t("home.how.title") }}</strong>
+          <span>{{ i18n.t("home.how.desc") }}</span>
+        </a>
+      </li>
+    </ul>
+  </section>
+
+  <section aria-labelledby="news-title">
+    <h2 id="news-title">{{ i18n.t("home.news.title") }}</h2>
+    <ul class="cards three">
+      @for (release of news; track release.version) {
+        <li>
+          <a
+            class="card news"
+            [routerLink]="i18n.localizedPath('/changelog')"
+            [fragment]="'v' + release.version"
+          >
+            <span class="news-head">
+              <strong>{{ release.version }}</strong>
+              <time [attr.datetime]="release.date">{{
+                release.date | localizedDate: i18n.language() : { dateStyle: "medium" }
+              }}</time>
+            </span>
+            <ul>
+              @for (lead of release.leads; track $index) {
+                <li>{{ lead }}</li>
+              }
+            </ul>
+            @if (release.more) {
+              <span class="news-more">{{ moreLabel(release.more) }}</span>
+            }
+          </a>
+        </li>
+      }
+    </ul>
+    <p class="centered">
+      <a class="big-button small" [routerLink]="i18n.localizedPath('/changelog')">{{
+        i18n.t("home.news.all")
+      }}</a>
+    </p>
+  </section>
+
+  <section aria-labelledby="others-title">
+    <h2 id="others-title">{{ i18n.t("home.others.title") }}</h2>
+    <ul class="others">
+      @for (project of others(); track project.href) {
+        <li>
+          <a
+            class="other"
+            [href]="project.href"
+            target="_blank"
+            rel="noopener noreferrer"
+            [attr.aria-label]="project.cta"
+          >
+            <img [src]="project.image" width="28" height="28" alt="" loading="lazy" />
+            <span class="other-copy">
+              <strong>{{ project.name }}</strong>
+              <span>{{ project.description }}</span>
             </span>
           </a>
         </li>

@@ -1,9 +1,29 @@
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { I18nService } from '@app/i18n.service';
-import { Button } from '@shared/button/button';
-import { Icon, type IconName } from '@shared/icon/icon';
-import { NewLabel } from '@shared/new-label/new-label';
+import { releases } from '@app/releases';
+import { Icon } from '@shared/icon/icon';
+import { LocalizedDatePipe } from '@shared/localized-date/localized-date-pipe';
+
+const contactAddress = 'contact@froment.software';
+const bookingAddress = 'cal.com/sachahjkl';
+
+const newsVersions = 3;
+const newsLeads = 3;
+
+// The bold summary that starts each entry, as plain text.
+const summary = (entry: string): string => /^\*\*(.+?)\*\*/.exec(entry)?.[1] ?? entry;
+
+// The latest versions, each with the summaries of its first entries.
+const news = releases.slice(0, newsVersions).map((release) => {
+  const entries = release.sections.flatMap((section) => section.entries);
+  return {
+    version: release.version,
+    date: release.date,
+    leads: entries.slice(0, newsLeads).map(summary),
+    more: Math.max(0, entries.length - newsLeads),
+  };
+});
 
 type Project = {
   name: string;
@@ -17,33 +37,35 @@ type Offer = {
   title: string;
   description: string;
   href: string;
-  icon: IconName;
 };
 
 @Component({
   selector: 'app-home',
-  imports: [Button, Icon, NewLabel, RouterLink],
+  imports: [Icon, LocalizedDatePipe, RouterLink],
   templateUrl: './home.component.html',
   styleUrl: './home.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class HomeComponent {
   protected readonly i18n = inject(I18nService);
+  protected readonly news = news;
+  protected readonly contactAddress = contactAddress;
+  protected readonly contactHref = `mailto:${contactAddress}`;
+  protected readonly bookingAddress = bookingAddress;
+  protected readonly bookingHref = `https://${bookingAddress}`;
 
-  protected readonly projects = computed<readonly Project[]>(() => [
+  protected moreLabel(count: number): string {
+    return this.i18n.tf('home.news.more', { count });
+  }
+
+  // The desktop suite is what atelier installs: a fact, not a ranking.
+  protected readonly suite = computed<readonly Project[]>(() => [
     {
       name: 'atelier',
       description: this.i18n.t('home.projects.atelier.desc'),
       cta: this.i18n.t('home.projects.atelier.cta'),
       href: 'https://atelier.froment.software',
       image: '/projects/atelier.png',
-    },
-    {
-      name: 'Wren',
-      description: this.i18n.t('home.projects.wren.desc'),
-      cta: this.i18n.t('home.projects.wren.cta'),
-      href: 'https://wren.froment.software',
-      image: '/projects/wren.png',
     },
     {
       name: this.i18n.t('home.projects.opencodenative.name'),
@@ -60,13 +82,6 @@ export class HomeComponent {
       image: '/projects/papier.png',
     },
     {
-      name: 'inspecteur',
-      description: this.i18n.t('home.projects.inspecteur.desc'),
-      cta: this.i18n.t('home.projects.inspecteur.cta'),
-      href: 'https://inspecteur.froment.software',
-      image: '/projects/inspecteur.png',
-    },
-    {
       name: 'classeur',
       description: this.i18n.t('home.projects.classeur.desc'),
       cta: this.i18n.t('home.projects.classeur.cta'),
@@ -74,11 +89,28 @@ export class HomeComponent {
       image: '/projects/classeur.png',
     },
     {
+      name: 'inspecteur',
+      description: this.i18n.t('home.projects.inspecteur.desc'),
+      cta: this.i18n.t('home.projects.inspecteur.cta'),
+      href: 'https://inspecteur.froment.software',
+      image: '/projects/inspecteur.png',
+    },
+    {
       name: 'cliche',
       description: this.i18n.t('home.projects.cliche.desc'),
       cta: this.i18n.t('home.projects.cliche.cta'),
       href: 'https://cliche.froment.software',
       image: '/projects/cliche.png',
+    },
+  ]);
+
+  protected readonly others = computed<readonly Project[]>(() => [
+    {
+      name: 'Wren',
+      description: this.i18n.t('home.projects.wren.desc'),
+      cta: this.i18n.t('home.projects.wren.cta'),
+      href: 'https://wren.froment.software',
+      image: '/projects/wren.png',
     },
     {
       name: 'modus',
@@ -136,13 +168,17 @@ export class HomeComponent {
       title: this.i18n.t('home.offers.creation.title'),
       description: this.i18n.t('home.offers.creation.desc'),
       href: this.i18n.localizedPath('/services/creation'),
-      icon: 'file-plus',
     },
     {
       title: this.i18n.t('home.offers.renovation.title'),
       description: this.i18n.t('home.offers.renovation.desc'),
       href: this.i18n.localizedPath('/services/renovation'),
-      icon: 'renovation',
     },
   ]);
+
+  protected readonly howUrl = computed(() =>
+    this.i18n.language() === 'fr'
+      ? 'https://how.froment.software/fr/'
+      : 'https://how.froment.software/',
+  );
 }

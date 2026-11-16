@@ -1,197 +1,352 @@
-@use "shared/button/ghost";
+// The language of the product sites (atelier, papier): a centred hero, a monospace title,
+// big buttons, a large screenshot, then grids of cards. The accent is the brand's green.
+$brand: #29c659;
+$brand-deep: #1f9a44;
+// The product sites' type: the system's UI face for text, a coding face for titles.
+$sans: "Segoe UI Variable Text", "Segoe UI", Inter, system-ui, sans-serif;
+$mono: "Cascadia Mono", "JetBrains Mono", ui-monospace, Consolas, monospace;
 
 :host {
   display: block;
   color: var(--color-ink);
+  font-family: $sans;
 }
 
 .home {
-  padding-block: 4rem;
+  padding-block: 4.5rem 5rem;
 }
 
-.identity,
-.contact-links,
-.entry-list a {
-  display: flex;
-  align-items: center;
-}
-
-.identity {
-  gap: 1rem;
-}
-
-.identity img {
-  display: block;
-  border: 1px solid var(--color-brand-border);
-}
-
-.identity-name {
-  display: grid;
-  justify-items: start;
-  gap: 0.2rem;
-}
-
-.identity-title {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.35rem 0.75rem;
-}
-
-.tagline {
+ul {
   margin: 0;
-  color: var(--color-muted);
-  font-size: 1.2rem;
-  letter-spacing: -0.01em;
-}
-
-h1,
-h2 {
-  color: var(--color-ink);
-  font-family: inherit;
-  letter-spacing: -0.035em;
-}
-
-h1 {
-  font-size: clamp(1.6rem, 4vw, 2rem);
-  line-height: 1.1;
-}
-
-h2 {
-  font-size: 1.05rem;
-}
-
-.contact-links {
-  flex-wrap: wrap;
-  gap: 0.75rem;
-  margin-top: 2.5rem;
-}
-
-.contact-links a[appLinkButton] {
-  min-height: 3.25rem;
-  max-width: 100%;
-  padding: 0.65rem 1rem;
-  border-radius: 0.5rem;
-  font-size: 1.125rem;
-}
-
-section {
-  margin-top: 5rem;
-  padding-top: 1.5rem;
-  border-top: 1px solid var(--color-line);
-}
-
-.entry-list {
-  display: grid;
-  gap: 0.25rem;
-  margin-top: 1.5rem;
   padding: 0;
   list-style: none;
 }
 
-.entry-list a {
-  gap: 1rem;
-  min-width: 0;
-  padding: 0.75rem;
-  border-radius: var(--radius-sm);
-  color: var(--color-ink);
+a {
+  color: inherit;
   text-decoration: none;
 }
 
-.entry-list a:hover {
-  @include ghost.hover;
+a:focus-visible {
+  outline: 2px solid $brand;
+  outline-offset: 3px;
 }
 
-.entry-list a:focus-visible {
-  @include ghost.focus;
-}
-
-.entry-copy {
+// Hero.
+.hero {
   display: grid;
-  flex: 1;
-  min-width: 0;
-  line-height: 1.35;
+  justify-items: center;
+  text-align: center;
 }
 
-.entry-copy strong {
+.hero-logo {
+  display: block;
+  border: 1px solid var(--color-brand-border);
+  box-shadow: 0 10px 30px -12px rgb(41 198 89 / 0.55);
+}
+
+h1 {
+  margin-top: 1.5rem;
+  font-family: $mono;
+  font-size: clamp(2.2rem, 7vw, 3.6rem);
+  font-weight: 700;
+  letter-spacing: -0.04em;
+  line-height: 1.05;
+}
+
+.tagline {
+  margin: 0.75rem 0 0;
+  color: var(--color-ink-soft);
+  font-size: 1.3rem;
+}
+
+.hero-lead {
+  max-width: 34rem;
+  margin: 0.4rem 0 0;
+  color: var(--color-muted);
+  font-size: 1.05rem;
+}
+
+.hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 2rem;
+}
+
+// Buttons drawn as on the product sites: a soft gradient, a light top edge, a dark outline.
+// Both hero buttons share one shape: an icon, a label, a detail line. Only the colour differs.
+.big-button {
+  display: inline-grid;
+  grid-template-columns: auto 1fr;
+  column-gap: 0.75rem;
+  align-items: center;
+  min-width: 15rem;
+  padding: 0.7rem 1.4rem 0.7rem 1.1rem;
+  border: 1px solid rgb(0 0 0 / 0.2);
+  border-radius: 12px;
+  text-align: left;
+  background: linear-gradient(#fdfdfd, #ececef);
+  box-shadow:
+    inset 0 1px rgb(255 255 255 / 0.9),
+    0 1px 3px rgb(0 0 0 / 0.18);
+  color: #20203a;
+  font-size: 1rem;
   font-weight: 600;
 }
 
-.entry-copy > span {
+:host-context([data-theme="dark"]) .big-button:not(.primary) {
+  border-color: rgb(0 0 0 / 0.85);
+  background: linear-gradient(#333, #222);
+  box-shadow:
+    inset 0 1px rgb(255 255 255 / 0.14),
+    0 2px 4px rgb(0 0 0 / 0.6);
+  color: #ece8e1;
+}
+
+.big-button:hover {
+  filter: brightness(1.06);
+}
+
+.big-button app-icon {
+  --icon-color: currentColor;
+  --icon-size: 1.5rem;
+  grid-row: span 2;
+}
+
+.big-button.primary {
+  border-color: rgb(0 0 0 / 0.55);
+  background: linear-gradient(#2fb85c, #17803a);
+  box-shadow:
+    inset 0 1px rgb(255 255 255 / 0.3),
+    0 6px 22px rgb(41 198 89 / 0.28),
+    0 2px 4px rgb(0 0 0 / 0.35);
+  color: #fff;
+  text-shadow: 0 -1px 0 rgb(0 0 0 / 0.3);
+}
+
+.big-button.small {
+  display: inline-block;
+  min-width: 0;
+  padding: 0.5rem 1.1rem;
+  border-radius: 8px;
+}
+
+.big-button-detail {
+  font-size: 0.8rem;
+  font-weight: 400;
+  opacity: 0.85;
+}
+
+// Showcase: the suite in one screenshot.
+.showcase {
+  margin-top: 3.5rem;
+}
+
+.shot {
+  display: block;
+  overflow: hidden;
+  aspect-ratio: 900 / 640;
+  border: 1px solid var(--color-line-strong);
+  border-radius: 10px;
+  box-shadow: 0 24px 60px -30px rgb(0 0 0 / 0.6);
+}
+
+.shot img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top left;
+}
+
+// Sections.
+section {
+  margin-top: 5rem;
+}
+
+h2 {
+  font-family: $mono;
+  font-size: 1.6rem;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  text-align: center;
+}
+
+.lead {
+  max-width: 40rem;
+  margin: 0.6rem auto 0;
+  color: var(--color-muted);
+  text-align: center;
+}
+
+.centered {
+  margin-top: 1.5rem;
+  text-align: center;
+}
+
+// Cards.
+.card {
+  display: grid;
+  align-content: start;
+  gap: 0.4rem;
+  height: 100%;
+  padding: 1.1rem 1.2rem;
+  border: 1px solid var(--color-line);
+  border-radius: 10px;
+  background: color-mix(in oklab, var(--color-ink) 4%, var(--color-surface));
+  box-shadow: inset 0 1px rgb(255 255 255 / 0.06);
+  line-height: 1.4;
+}
+
+.card:hover {
+  border-color: $brand;
+}
+
+.card > span,
+.card ul {
   color: var(--color-muted);
   font-size: var(--text-sm);
 }
 
-.projects img {
-  display: block;
-  flex: 0 0 auto;
-  object-fit: contain;
-}
-
-.external-arrow {
-  flex: 0 0 auto;
-  align-self: center;
-  font-size: 1.25rem;
-}
-
-.how-link {
-  display: flex;
-  align-items: center;
+.tiles,
+.cards {
+  display: grid;
   gap: 1rem;
-  margin-top: 1rem;
-  padding: 0.75rem;
-  border: 1px dashed var(--color-line-strong);
-  border-radius: var(--radius-sm);
-  color: var(--color-ink);
-  text-decoration: none;
+  margin-top: 1.75rem;
 }
 
-.how-link:hover {
-  @include ghost.hover;
+.tiles {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
-.how-link:focus-visible {
-  @include ghost.focus;
+.three {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
-.how-mark {
-  flex: 0 0 3rem;
-  color: var(--color-accent-strong);
-  font-family: var(--font-mono);
-  font-size: 1.1rem;
-  font-weight: 700;
-  letter-spacing: -0.04em;
+.tile {
+  justify-items: center;
   text-align: center;
 }
 
-.offers a {
-  min-height: 4.75rem;
+.tile img {
+  margin-bottom: 0.35rem;
 }
 
-.offers app-icon {
-  --icon-color: var(--color-ink);
-  --icon-size: 2.25rem;
-  --icon-stroke-width: 1.5;
+.tile strong {
+  font-family: $mono;
+  font-size: 1.05rem;
 }
 
-@media (max-width: 32rem) {
+.feature strong {
+  color: $brand-deep;
+  font-family: $mono;
+  font-size: 1rem;
+}
+
+:host-context([data-theme="dark"]) .feature strong,
+:host-context([data-theme="dark"]) .news-head strong {
+  color: $brand;
+}
+
+.news-head {
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+}
+
+.news-head strong {
+  color: $brand-deep;
+  font-family: $mono;
+}
+
+.news-head time {
+  color: var(--color-muted);
+  font-family: $mono;
+  font-size: var(--text-xs);
+}
+
+.news ul {
+  display: grid;
+  gap: 0.3rem;
+  padding-left: 1.1rem;
+  color: var(--color-ink-soft);
+  list-style: disc;
+}
+
+.news-more {
+  color: $brand-deep;
+}
+
+// Other projects: a dense list on two columns, lighter than the cards above.
+.others {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.25rem 2rem;
+  margin-top: 1.5rem;
+}
+
+.other {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.55rem 0.5rem;
+  border-radius: 8px;
+}
+
+.other:hover {
+  background: color-mix(in oklab, var(--color-ink) 5%, transparent);
+}
+
+.other img {
+  flex: none;
+}
+
+.other-copy {
+  display: grid;
+  min-width: 0;
+  line-height: 1.35;
+}
+
+.other-copy strong {
+  font-family: $mono;
+  font-size: 0.95rem;
+}
+
+.other-copy span {
+  overflow: hidden;
+  color: var(--color-muted);
+  font-size: var(--text-sm);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (max-width: 48rem) {
+  .tiles {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .three,
+  .others {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 30rem) {
   .home {
-    padding-block: 2.5rem;
+    padding-block: 3rem;
   }
 
-  .identity {
-    margin-bottom: 2.5rem;
-  }
-
-  .contact-links {
-    align-items: stretch;
-  }
-
-  .contact-links a[appLinkButton] {
+  .big-button {
     width: 100%;
   }
 
-  section {
-    margin-top: 3.5rem;
+  // Cropped from the top left corner, not shrunk.
+  .shot img {
+    width: 48rem;
+    max-width: none;
+    height: auto;
   }
 }

@@ -10,7 +10,7 @@
   container-type: inline-size;
   display: grid;
   gap: var(--space-5);
-  width: min(100% - 3rem, 48rem);
+  width: min(100% - 3rem, var(--page-column, 48rem));
   margin-inline: auto;
   padding-block: var(--space-6) var(--space-10);
   border-top: 1px solid var(--color-line);

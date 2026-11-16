@@ -1,16 +1,18 @@
 # Slogan
 
-Le slogan est « Making computers compute. ». Il est le titre `h1` de la page d’accueil (clé `home.hero.title`). Le site, le profil LinkedIn et la page LinkedIn de l’entreprise utilisent la même phrase.
+Le slogan est « Making computers compute », sans point. Il est le sous-titre de la page d’accueil, sous le nom « Froment Software » (clé `home.hero.title`). Le site, le profil LinkedIn et la page LinkedIn de l’entreprise utilisent la même phrase.
 
 ## Intention
 
 La phrase dit que les ordinateurs actuels ne calculent plus : ils attendent, chargent et rament sur un matériel très puissant. Froment Software fait des logiciels qui rendent à la machine sa vitesse.
 
-Le public est technique. Il comprend le clin d’œil sans explication. Le slogan peut donc être le titre principal, pas seulement une signature.
+Le public est technique. Il comprend le clin d’œil sans explication.
 
 ## Décisions
 
 - **« Making », pas « Make ».** Le gérondif décrit le métier de l’entreprise. L’impératif donnait un ordre au lecteur.
+- **Une signature, pas un titre.** Le slogan était d’abord le grand titre de l’accueil. Il est maintenant le sous-titre, sous le nom. Le `h1` est le nom de l’entreprise. Une phrase sous le slogan dit le métier ([home.md](home.md)).
+- **Pas de point.** En signature, sous le nom, le point final alourdit la phrase.
 - **Pas de « again ».** « Make computers compute again » renvoie au slogan politique de Trump.
 - **L’anglais reste sur le site français.** Le jeu entre _computer_ et _compute_ ne se traduit pas mot à mot, et le public lit l’anglais.
 
