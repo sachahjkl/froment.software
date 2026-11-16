@@ -30,9 +30,52 @@
   src: url("/fonts/Cousine-BoldItalic.ttf") format("truetype");
 }
 
+/* Fira Sans is shipped with the site, so every visitor sees the same face. The files hold the
+   Latin script and the site's punctuation only. Each CSS weight takes the Fira cut one step
+   lighter (400 is Book, 600 is Medium, 700 is SemiBold): the regular cuts read too heavy. */
+@font-face {
+  font-family: "Fira Sans";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/fonts/FiraSans-Book.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Fira Sans";
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/fonts/FiraSans-BookItalic.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Fira Sans";
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("/fonts/FiraSans-Medium.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Fira Sans";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("/fonts/FiraSans-SemiBold.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Fira Sans";
+  font-style: italic;
+  font-weight: 700;
+  font-display: swap;
+  src: url("/fonts/FiraSans-SemiBoldItalic.woff2") format("woff2");
+}
+
 :root {
-  --font-body: "Trebuchet MS", Trebuchet, Arial, sans-serif;
-  --font-display: "Trebuchet MS", Trebuchet, Arial, sans-serif;
+  --font-body: "Fira Sans", sans-serif;
+  --font-display: "Fira Sans", sans-serif;
   --font-mono: Cousine, "Liberation Mono", monospace;
   --font-title: var(--font-display);
 

@@ -2,14 +2,10 @@
 // big buttons, a large screenshot, then grids of cards. The accent is the brand's green.
 $brand: #29c659;
 $brand-deep: #1f9a44;
-// The product sites' type: the system's UI face for text, a coding face for titles.
-$sans: "Segoe UI Variable Text", "Segoe UI", Inter, system-ui, sans-serif;
-$mono: "Cascadia Mono", "JetBrains Mono", ui-monospace, Consolas, monospace;
 
 :host {
   display: block;
   color: var(--color-ink);
-  font-family: $sans;
 }
 
 .home {
@@ -47,10 +43,9 @@ a:focus-visible {
 
 h1 {
   margin-top: 1.5rem;
-  font-family: $mono;
   font-size: clamp(2.2rem, 7vw, 3.6rem);
-  font-weight: 700;
-  letter-spacing: -0.04em;
+  font-weight: 600;
+  letter-spacing: -0.03em;
   line-height: 1.05;
 }
 
@@ -168,7 +163,6 @@ section {
 }
 
 h2 {
-  font-family: $mono;
   font-size: 1.6rem;
   font-weight: 700;
   letter-spacing: -0.03em;
@@ -236,13 +230,11 @@ h2 {
 }
 
 .tile strong {
-  font-family: $mono;
   font-size: 1.05rem;
 }
 
 .feature strong {
   color: $brand-deep;
-  font-family: $mono;
   font-size: 1rem;
 }
 
@@ -259,12 +251,10 @@ h2 {
 
 .news-head strong {
   color: $brand-deep;
-  font-family: $mono;
 }
 
 .news-head time {
   color: var(--color-muted);
-  font-family: $mono;
   font-size: var(--text-xs);
 }
 
@@ -311,7 +301,6 @@ h2 {
 }
 
 .other-copy strong {
-  font-family: $mono;
   font-size: 0.95rem;
 }
 

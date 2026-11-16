@@ -9,7 +9,7 @@ import { I18nService, TranslationKey } from './i18n.service';
 import { localizedPath, localizedUrl } from './localized-route';
 
 const origin = 'https://froment.software';
-const socialImage = `${origin}/social-card-v5.png`;
+const socialImage = `${origin}/social-card-v6.png`;
 
 export interface SiteIdentity {
   readonly publisher: string;

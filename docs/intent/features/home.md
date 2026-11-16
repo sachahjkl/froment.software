@@ -14,7 +14,8 @@ L’accueil parle la même langue que les sites des logiciels (atelier, papier) 
 ## Décisions
 
 - **Le métier sous le slogan.** Le slogan seul ne dit pas ce que l’entreprise vend. La phrase « Logiciels de bureau natifs, et logiciels métier écrits ou rénovés sur commande » le dit, et aucune autre ligne du haut de page ne le répète.
-- **Les polices des sites des logiciels.** Texte en police système (Segoe UI, Inter), titres en Cascadia Mono ou JetBrains Mono. Elles ne s’appliquent qu’à l’accueil ; le reste du site garde ses jetons.
+- **Une seule police, celle du site.** L’accueil reprend la mise en page des sites des logiciels, pas leurs polices. Le mélange d’une police système pour le texte et d’une monospace pour les titres a été essayé puis refusé : deux polices sur une page, c’était une de trop.
+- **Fira Sans, servie par le site.** Le site déclarait Trebuchet MS, absente de Linux et non servable sans licence : chaque système la remplaçait par autre chose (Liberation Sans, un clone d’Arial, sous Linux). Fira Sans est la police libre la plus proche de Trebuchet. Chaque graisse CSS prend la coupe Fira un cran plus légère (400 Book, 600 Medium, 700 SemiBold), et le titre de l’accueil est en Medium : les coupes normales étaient trop grasses. Les schémas Mermaid et l’image de partage utilisent la même police.
 - **Le vert de la marque, texte blanc.** Le bouton principal est un dégradé vert profond avec un texte blanc : le texte sombre sur le vert vif était trop peu lisible.
 - **Une colonne de 60rem.** Les cartes et la capture demandent plus de place que les 48rem des autres pages. Le pied de page lit la même largeur par `--page-column`.
 

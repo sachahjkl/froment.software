@@ -56,6 +56,12 @@ export class MermaidDiagrams {
             startOnLoad: false,
             securityLevel: 'strict',
             theme: 'neutral',
+            // Mermaid draws in its own default face; the diagrams take the site's instead.
+            themeVariables: {
+              fontFamily: getComputedStyle(document.documentElement).getPropertyValue(
+                '--font-body',
+              ),
+            },
             suppressErrorRendering: true,
           });
           for (const [index, { node, source }] of diagrams.entries()) {
