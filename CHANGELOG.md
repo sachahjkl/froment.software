@@ -4,6 +4,14 @@ Les changements visibles de froment.software. Le format suit [Keep a Changelog](
 
 Les changements pas encore publiés sont dans [`changelog.d/`](changelog.d/), pas dans une section « Unreleased ». Ainsi, deux branches ne modifient jamais les mêmes lignes de ce fichier.
 
+## [0.21.0] - 2026-11-17
+
+### Changed
+
+- **Nom du site** : l’en-tête, l’accueil, les titres des pages et l’image de partage affichent « Froment Software » au lieu de « froment.software ».
+- **Nouvel accueil** : la page reprend le style des sites des logiciels. Elle montre le nom, le slogan « Making computers compute » et le métier en tête, les boutons « Nous écrire » et « Prendre rendez-vous », la suite de bureau installée par atelier, les offres sur commande, les dernières versions et les autres projets.
+- **Une police pour tout le site** : les pages, les schémas des notes et l’image de partage utilisent Fira Sans, servie par le site. Chaque visiteur voit la même police, quel que soit son système.
+
 ## [0.20.0] - 2026-11-16
 
 ### Added
@@ -340,6 +348,7 @@ Les changements pas encore publiés sont dans [`changelog.d/`](changelog.d/), pa
 
 - **Premier site** : froment.software présente Froment Software en français et en anglais, avec un accueil, les prestations, les clients, les outils et une vitrine de démonstration.
 
+[0.21.0]: https://github.com/sachahjkl/froment.software/releases/tag/v0.21.0
 [0.20.0]: https://github.com/sachahjkl/froment.software/releases/tag/v0.20.0
 [0.19.0]: https://github.com/sachahjkl/froment.software/releases/tag/v0.19.0
 [0.18.0]: https://github.com/sachahjkl/froment.software/releases/tag/v0.18.0
