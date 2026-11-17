@@ -4,6 +4,7 @@ import { I18nService } from '@app/i18n.service';
 import { releases } from '@app/releases';
 import { Icon } from '@shared/icon/icon';
 import { LocalizedDatePipe } from '@shared/localized-date/localized-date-pipe';
+import { NewLabel } from '@shared/new-label/new-label';
 
 const contactAddress = 'contact@froment.software';
 const bookingAddress = 'cal.com/sachahjkl';
@@ -41,7 +42,7 @@ type Offer = {
 
 @Component({
   selector: 'app-home',
-  imports: [Icon, LocalizedDatePipe, RouterLink],
+  imports: [Icon, LocalizedDatePipe, NewLabel, RouterLink],
   templateUrl: './home.component.html',
   styleUrl: './home.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

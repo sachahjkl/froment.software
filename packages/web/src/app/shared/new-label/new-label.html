@@ -1,0 +1,11 @@
+@if (construction) {
+<span class="label runtime-construction-only">{{ i18n.t("shell.underConstruction") }}</span>
+} @else {
+<a
+  class="runtime-live-only"
+  [routerLink]="i18n.localizedPath('/notes/2026-08-froment-software-arrive')"
+  [attr.aria-label]="i18n.t('shell.nowLive')"
+>
+  <span>{{ i18n.t("shell.nowLive") }}</span>
+</a>
+}
