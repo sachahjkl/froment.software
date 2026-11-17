@@ -17,3 +17,4 @@ Le site est pré-rendu par Angular (`packages/web`) et servi par un serveur Effe
 - [features/home.md](features/home.md) : l’accueil, sa structure et les mises en page refusées.
 - [features/changelog.md](features/changelog.md) : la page des versions, le flux Atom et l’historique reconstruit.
 - [features/slogan.md](features/slogan.md) : le slogan, son public, et pourquoi il reste en anglais.
+- [features/filigrane.md](features/filigrane.md) : la page secrète du QR code gravé, première étape de la chasse.

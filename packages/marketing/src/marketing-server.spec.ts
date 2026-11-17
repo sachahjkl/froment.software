@@ -116,3 +116,19 @@ it('serves only the marketing site and redirects legacy business pages', async (
   expect(runtime.headers.get('cache-control')).toBe('no-store');
   expect(await runtime.text()).toContain('"appEnvironment":"production"');
 });
+
+it('opens the filigrane page only with the engraved token', async () => {
+  const secret = await fetch(`${baseUrl}/filigrane?sceau=gf1MDAWPoTGY`);
+  expect(secret.status).toBe(200);
+  expect(secret.headers.get('x-robots-tag')).toBe('noindex, nofollow');
+  expect(await secret.text()).toContain('<title>Le filigrane</title>');
+
+  const unknown = await fetch(`${baseUrl}/nulle-part`);
+  const unknownBody = await unknown.text();
+  for (const guess of ['/filigrane', '/filigrane?sceau=gf1MDAWPoTGZ', '/filigrane?sceau=']) {
+    const response = await fetch(`${baseUrl}${guess}`);
+    expect(response.status).toBe(unknown.status);
+    expect(response.headers.get('content-type')).toBe(unknown.headers.get('content-type'));
+    expect(await response.text()).toBe(unknownBody);
+  }
+});

@@ -6,6 +6,7 @@ import { createServer } from 'node:http';
 import { parseChangelog } from '@froment/l10n/changelog';
 import changelogText from '../../../CHANGELOG.md';
 import { changelogFeed } from './changelog/feed.js';
+import { filigraneResponse, isFiligraneRequest } from './filigrane/filigrane.js';
 import { notesFeed } from './notes/feed.js';
 
 const releases = parseChangelog(changelogText);
@@ -58,6 +59,7 @@ export const makeMarketingServerLayer = (options: {
               headers: { 'cache-control': 'no-store', 'x-content-type-options': 'nosniff' },
             },
           );
+        if (isFiligraneRequest(url)) return filigraneResponse();
         if (url.pathname === '/') return HttpServerResponse.redirect('/fr');
         if (url.pathname === '/backoffice' || url.pathname.startsWith('/backoffice/')) {
           const destination = new URL(options.backofficeOrigin);
