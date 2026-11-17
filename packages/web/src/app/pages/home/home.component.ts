@@ -103,6 +103,13 @@ export class HomeComponent {
       href: 'https://cliche.froment.software',
       image: '/projects/cliche.png',
     },
+    {
+      name: 'feuille',
+      description: this.i18n.t('home.projects.feuille.desc'),
+      cta: this.i18n.t('home.projects.feuille.cta'),
+      href: 'https://feuille.froment.software',
+      image: '/projects/feuille.png',
+    },
   ]);
 
   protected readonly others = computed<readonly Project[]>(() => [

@@ -82,6 +82,9 @@ export const translations = {
     'home.projects.classeur.cta': 'Ouvrir classeur dans un nouvel onglet',
     'home.projects.cliche.desc': 'Captures et enregistrements d’écran, partagés aussitôt.',
     'home.projects.cliche.cta': 'Ouvrir cliche dans un nouvel onglet',
+    'home.projects.feuille.desc':
+      'Lecteur PDF que rien ne bloque : signatures et formulaires masqués.',
+    'home.projects.feuille.cta': 'Ouvrir feuille dans un nouvel onglet',
     'home.projects.modus.desc':
       'Système d’exploitation où chaque programme n’atteint que ce qu’on lui donne.',
     'home.projects.modus.cta': 'Ouvrir modus dans un nouvel onglet',
@@ -414,6 +417,8 @@ export const translations = {
     'home.projects.classeur.cta': 'Open classeur in a new tab',
     'home.projects.cliche.desc': 'Screenshots and screen recordings, shared at once.',
     'home.projects.cliche.cta': 'Open cliche in a new tab',
+    'home.projects.feuille.desc': 'A PDF reader nothing blocks: signatures and forms hidden.',
+    'home.projects.feuille.cta': 'Open feuille in a new tab',
     'home.projects.modus.desc':
       'An operating system in which each program reaches only what it was given.',
     'home.projects.modus.cta': 'Open modus in a new tab',
