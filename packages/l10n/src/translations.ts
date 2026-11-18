@@ -401,7 +401,7 @@ export const translations = {
     'home.timeline.clockin.desc': 'Clock-in and time-tracking application.',
     'home.timeline.clockin.cta': 'Open Clockin',
     'home.projects.atelier.desc':
-      'The working man’s tools: Froment Software’s desktop programs in one download, chosen and installed at once.',
+      'High power tools for your desktop: Froment Software’s programs in one download, chosen and installed at once.',
     'home.projects.atelier.cta': 'Open atelier in a new tab',
     'home.projects.wren.desc': 'A web browser written in Odin, with its own engine.',
     'home.projects.wren.cta': 'Open Wren in a new tab',
