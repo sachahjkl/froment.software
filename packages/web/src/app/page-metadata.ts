@@ -212,11 +212,11 @@ export class PageMetadata {
 
   private updateAlternateLinks(url: string): void {
     const path = url.slice(origin.length).split(/[?#]/, 1)[0] || '/';
-    const frenchUrl = `${origin}${localizedUrl(path, 'fr')}`;
+    const englishUrl = `${origin}${localizedUrl(path, 'en')}`;
     const links = [
-      { language: 'fr', href: frenchUrl },
-      { language: 'en', href: `${origin}${localizedUrl(path, 'en')}` },
-      { language: 'x-default', href: frenchUrl },
+      { language: 'fr', href: `${origin}${localizedUrl(path, 'fr')}` },
+      { language: 'en', href: englishUrl },
+      { language: 'x-default', href: englishUrl },
     ];
     for (const alternate of links) {
       let link = this.document.head.querySelector<HTMLLinkElement>(

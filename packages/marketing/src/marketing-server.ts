@@ -60,7 +60,7 @@ export const makeMarketingServerLayer = (options: {
             },
           );
         if (isFiligraneRequest(url)) return filigraneResponse();
-        if (url.pathname === '/') return HttpServerResponse.redirect('/fr');
+        if (url.pathname === '/') return HttpServerResponse.redirect('/en');
         if (url.pathname === '/backoffice' || url.pathname.startsWith('/backoffice/')) {
           const destination = new URL(options.backofficeOrigin);
           destination.pathname = url.pathname.slice('/backoffice'.length) || '/';

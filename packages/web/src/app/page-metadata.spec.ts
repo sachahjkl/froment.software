@@ -76,7 +76,7 @@ describe('PageMetadata', () => {
     );
     expect(
       document.head.querySelector('link[data-page-language="x-default"]')?.getAttribute('href'),
-    ).toBe(`https://froment.software/fr/notes/${note.slug}`);
+    ).toBe(`https://froment.software/en/notes/${note.slug}`);
     expect(document.head.querySelector('script[data-note]')?.textContent).toContain(
       '"sameAs":["https://sacha.house"]',
     );

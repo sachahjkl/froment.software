@@ -11,7 +11,7 @@ export const languageCanMatch: CanMatchFn = (_route, segments) =>
 export const languageResolver: ResolveFn<Language> = (route) => {
   const language = route.paramMap.get('language');
   if (!isSupportedLanguage(language)) {
-    return new RedirectCommand(inject(Router).parseUrl('/fr'));
+    return new RedirectCommand(inject(Router).parseUrl('/en'));
   }
 
   inject(I18nService).setLanguage(language);
@@ -128,7 +128,7 @@ const localizedChildren: Routes = [
 export const routes: Routes = [
   {
     path: '',
-    redirectTo: 'fr',
+    redirectTo: 'en',
     pathMatch: 'full',
   },
   {

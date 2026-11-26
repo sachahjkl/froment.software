@@ -11,6 +11,7 @@ Le site est pré-rendu par Angular (`packages/web`) et servi par un serveur Effe
 ## Points subtils
 
 - Une même clé de traduction peut garder un texte identique en français et en anglais. C’est voulu pour le slogan.
+- La racine `/` redirige vers `/en`, et `x-default` désigne l’anglais. Les logiciels de la suite visent un public mondial, et un recruteur ou un client étranger lit l’anglais ; le français reste à un clic. La détection par `Accept-Language` a été refusée : la racine reste une simple redirection, sans variation selon le visiteur.
 
 ## File Index
 

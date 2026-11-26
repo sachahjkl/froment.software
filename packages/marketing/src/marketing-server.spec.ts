@@ -62,7 +62,7 @@ afterAll(async () => {
 it('serves only the marketing site and redirects legacy business pages', async () => {
   const root = await fetch(baseUrl, { redirect: 'manual' });
   expect(root.status).toBe(302);
-  expect(root.headers.get('location')).toBe('/fr');
+  expect(root.headers.get('location')).toBe('/en');
 
   const landing = await fetch(`${baseUrl}/fr`);
   expect(landing.status).toBe(200);

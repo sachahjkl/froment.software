@@ -58,13 +58,13 @@ describe('App shell', () => {
   });
 
   it('uses the URL to select the landing page language', async () => {
-    expect(router.url).toBe('/fr');
-    expect(i18n.language()).toBe('fr');
-
-    await navigate(fixture, router, '/en');
-
+    expect(router.url).toBe('/en');
     expect(i18n.language()).toBe('en');
-    expect(document.documentElement.lang).toBe('en');
+
+    await navigate(fixture, router, '/fr');
+
+    expect(i18n.language()).toBe('fr');
+    expect(document.documentElement.lang).toBe('fr');
     expect(element.querySelector('app-site-header')).toBeNull();
     expect(element.querySelector('app-site-footer')).not.toBeNull();
   });

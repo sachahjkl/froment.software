@@ -20,7 +20,7 @@ const storageKey = 'froment.software.language';
 export class I18nService {
   private readonly document = inject(DOCUMENT);
 
-  readonly language = signal<Language>('fr');
+  readonly language = signal<Language>('en');
   readonly languages = languages;
 
   constructor() {
@@ -65,7 +65,7 @@ export class I18nService {
     const stored = this.readStoredLanguage();
     if (isSupportedLanguage(stored)) return stored;
 
-    const browserLanguage = globalThis.navigator?.language?.toLowerCase() ?? 'fr';
+    const browserLanguage = globalThis.navigator?.language?.toLowerCase() ?? 'en';
     if (browserLanguage.startsWith('fr')) return 'fr';
     return 'en';
   }

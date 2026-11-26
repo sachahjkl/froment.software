@@ -37,6 +37,7 @@ describe('Notes', () => {
   });
 
   it('keeps Mermaid diagrams for browser rendering', () => {
+    TestBed.inject(I18nService).setLanguage('fr');
     const post = TestBed.inject(Notes).find('2026-08-architecture-effect');
 
     expect(post?.html).toContain('<pre class="mermaid">');
