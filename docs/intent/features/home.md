@@ -5,14 +5,15 @@ L’accueil parle la même langue que les sites des logiciels (atelier, papier) 
 ## Structure
 
 1. **Hero** : logo, « Froment Software », le slogan, une phrase qui dit le métier, puis deux boutons de même forme (icône, libellé, détail) : écrire et prendre rendez-vous. Seule la couleur les distingue.
-2. **Capture d’atelier** : la suite entière en une image.
-3. **Suite de bureau** : ce qu’atelier installe. Le classement est un fait, pas un jugement.
-4. **Sur commande** : les deux offres et la méthode `how.`.
+2. **Sur commande** : les deux offres et la méthode `how.`.
+3. **Capture d’atelier** : la suite entière en une image.
+4. **Suite de bureau** : ce qu’atelier installe. Le classement est un fait, pas un jugement.
 5. **Quoi de neuf** : les trois dernières versions, lues dans `CHANGELOG.md` (`app/releases.ts`, partagé avec la page des versions).
 6. **Autres projets** : une liste dense sur deux colonnes, plus légère que les offres.
 
 ## Décisions
 
+- **Les offres avant la suite.** Les prestations sur commande font vivre l’entreprise ; les logiciels de la suite en sont la preuve. Les offres suivent donc le hero, et la suite vient ensuite, comme démonstration de ce que l’entreprise sait construire.
 - **Le métier sous le slogan.** Le slogan seul ne dit pas ce que l’entreprise vend. La phrase « Logiciels de bureau natifs, et logiciels métier écrits ou rénovés sur commande » le dit, et aucune autre ligne du haut de page ne le répète.
 - **Une seule police, celle du site.** L’accueil reprend la mise en page des sites des logiciels, pas leurs polices. Le mélange d’une police système pour le texte et d’une monospace pour les titres a été essayé puis refusé : deux polices sur une page, c’était une de trop.
 - **Fira Sans, servie par le site.** Le site déclarait Trebuchet MS, absente de Linux et non servable sans licence : chaque système la remplaçait par autre chose (Liberation Sans, un clone d’Arial, sous Linux). Fira Sans est la police libre la plus proche de Trebuchet. Chaque graisse CSS prend la coupe Fira un cran plus légère (400 Book, 600 Medium, 700 SemiBold), et le titre de l’accueil est en Medium : les coupes normales étaient trop grasses. Les schémas Mermaid et l’image de partage utilisent la même police.

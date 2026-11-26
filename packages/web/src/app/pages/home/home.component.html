@@ -21,6 +21,32 @@
     </div>
   </header>
 
+  <section aria-labelledby="offers-title">
+    <h2 id="offers-title">{{ i18n.t("home.offers.title") }}</h2>
+    <ul class="cards three">
+      @for (offer of offers(); track offer.title) {
+        <li>
+          <a class="card feature" [routerLink]="offer.href">
+            <strong>{{ offer.title }}</strong>
+            <span>{{ offer.description }}</span>
+          </a>
+        </li>
+      }
+      <li>
+        <a
+          class="card feature"
+          [href]="howUrl()"
+          target="_blank"
+          rel="noopener noreferrer"
+          [attr.aria-label]="i18n.t('home.how.cta')"
+        >
+          <strong>{{ i18n.t("home.how.title") }}</strong>
+          <span>{{ i18n.t("home.how.desc") }}</span>
+        </a>
+      </li>
+    </ul>
+  </section>
+
   <a
     class="shot showcase"
     [href]="suite()[0].href"
@@ -50,32 +76,6 @@
           </a>
         </li>
       }
-    </ul>
-  </section>
-
-  <section aria-labelledby="offers-title">
-    <h2 id="offers-title">{{ i18n.t("home.offers.title") }}</h2>
-    <ul class="cards three">
-      @for (offer of offers(); track offer.title) {
-        <li>
-          <a class="card feature" [routerLink]="offer.href">
-            <strong>{{ offer.title }}</strong>
-            <span>{{ offer.description }}</span>
-          </a>
-        </li>
-      }
-      <li>
-        <a
-          class="card feature"
-          [href]="howUrl()"
-          target="_blank"
-          rel="noopener noreferrer"
-          [attr.aria-label]="i18n.t('home.how.cta')"
-        >
-          <strong>{{ i18n.t("home.how.title") }}</strong>
-          <span>{{ i18n.t("home.how.desc") }}</span>
-        </a>
-      </li>
     </ul>
   </section>
 
