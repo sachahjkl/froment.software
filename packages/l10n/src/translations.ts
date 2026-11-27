@@ -72,7 +72,7 @@ export const translations = {
     'home.projects.wren.cta': 'Ouvrir Wren dans un nouvel onglet',
     'home.projects.tower.name': 'Tower',
     'home.projects.tower.desc':
-      'Lance et suit vos sessions opencode, sur votre ordinateur ou sur un serveur. Projet indépendant de l’équipe OpenCode.',
+      'Lance et suit vos sessions opencode, sur votre ordinateur ou sur un serveur.',
     'home.projects.tower.cta': 'Ouvrir Tower dans un nouvel onglet',
     'home.projects.papier.desc': 'Historique du presse-papiers, cherché pendant la frappe.',
     'home.projects.papier.cta': 'Ouvrir papier dans un nouvel onglet',
@@ -407,7 +407,7 @@ export const translations = {
     'home.projects.wren.cta': 'Open Wren in a new tab',
     'home.projects.tower.name': 'Tower',
     'home.projects.tower.desc':
-      'Runs and follows your opencode sessions, on your computer or on a server. Independent from the OpenCode team.',
+      'Runs and follows your opencode sessions, on your computer or on a server.',
     'home.projects.tower.cta': 'Open Tower in a new tab',
     'home.projects.papier.desc': 'Clipboard history, searched as you type.',
     'home.projects.papier.cta': 'Open papier in a new tab',
