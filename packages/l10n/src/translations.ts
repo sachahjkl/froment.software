@@ -70,10 +70,10 @@ export const translations = {
     'home.projects.atelier.cta': 'Ouvrir atelier dans un nouvel onglet',
     'home.projects.wren.desc': 'Navigateur web écrit en Odin, avec son propre moteur.',
     'home.projects.wren.cta': 'Ouvrir Wren dans un nouvel onglet',
-    'home.projects.opencodenative.name': 'opencode native',
-    'home.projects.opencodenative.desc':
-      'Client de bureau natif pour le serveur opencode. Projet indépendant de l’équipe OpenCode.',
-    'home.projects.opencodenative.cta': 'Ouvrir opencode native dans un nouvel onglet',
+    'home.projects.tower.name': 'Tower',
+    'home.projects.tower.desc':
+      'Lance et suit vos sessions opencode, sur votre ordinateur ou sur un serveur. Projet indépendant de l’équipe OpenCode.',
+    'home.projects.tower.cta': 'Ouvrir Tower dans un nouvel onglet',
     'home.projects.papier.desc': 'Historique du presse-papiers, cherché pendant la frappe.',
     'home.projects.papier.cta': 'Ouvrir papier dans un nouvel onglet',
     'home.projects.inspecteur.desc': 'Gestionnaire de tâches pour Linux.',
@@ -405,10 +405,10 @@ export const translations = {
     'home.projects.atelier.cta': 'Open atelier in a new tab',
     'home.projects.wren.desc': 'A web browser written in Odin, with its own engine.',
     'home.projects.wren.cta': 'Open Wren in a new tab',
-    'home.projects.opencodenative.name': 'opencode native',
-    'home.projects.opencodenative.desc':
-      'A native desktop client for the opencode server. Independent from the OpenCode team.',
-    'home.projects.opencodenative.cta': 'Open opencode native in a new tab',
+    'home.projects.tower.name': 'Tower',
+    'home.projects.tower.desc':
+      'Runs and follows your opencode sessions, on your computer or on a server. Independent from the OpenCode team.',
+    'home.projects.tower.cta': 'Open Tower in a new tab',
     'home.projects.papier.desc': 'Clipboard history, searched as you type.',
     'home.projects.papier.cta': 'Open papier in a new tab',
     'home.projects.inspecteur.desc': 'Task manager for Linux.',

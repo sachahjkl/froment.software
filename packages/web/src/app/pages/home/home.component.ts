@@ -69,11 +69,11 @@ export class HomeComponent {
       image: '/projects/atelier.png',
     },
     {
-      name: this.i18n.t('home.projects.opencodenative.name'),
-      description: this.i18n.t('home.projects.opencodenative.desc'),
-      cta: this.i18n.t('home.projects.opencodenative.cta'),
-      href: 'https://ocn.froment.software',
-      image: '/projects/opencode-native.png',
+      name: this.i18n.t('home.projects.tower.name'),
+      description: this.i18n.t('home.projects.tower.desc'),
+      cta: this.i18n.t('home.projects.tower.cta'),
+      href: 'https://tower.froment.software',
+      image: '/projects/tower.png',
     },
     {
       name: 'papier',
